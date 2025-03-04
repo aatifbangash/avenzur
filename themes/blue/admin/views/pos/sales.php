@@ -165,14 +165,53 @@
             </ul>
         </div>
     </div>
+
     <div class="box-content">
         <div class="row">
             <div class="col-lg-12">
                 <!--<p class="introtext"><?= lang('list_results'); ?></p>-->
 
-                <div class="col-md-3"><input type="text" id="sid" name="sid" class="form-control input-tip"></div>
+                <!-- <div class="col-md-3"><input type="text" id="sid" name="sid" class="form-control input-tip"></div>
                 <div class="col-md-3">
                     <input type="button" id="searchByNumber" class="btn btn-primary" value="Search By Serial Number">
+                </div>  -->
+                
+                <?php 
+                    // MARK: filter
+                ?>
+
+                <div class="row"  style="margin: 15px 0;">
+                    <div class="col-md-2">
+                        <?php echo form_input('text', '', 'class="form-control input-tip"  placeholder="' . $this->lang->line('Enter Serial Number') .'" id="sid"'); ?>
+                    </div>
+
+                    <div class="col-md-2">
+                        <?php echo form_input('date', '', 'class="form-control input-tip datetime" id="sfromDate" placeholder= "From Date"'); ?>
+                    </div>
+
+                    <div class="col-md-2">
+                        <?php echo form_input('date', '', 'class="form-control input-tip datetime" id="stoDate" placeholder= "To Date"'); ?>
+                    </div>
+
+                    <div class="col-md-2">
+                        <div class="controls">
+                            <?php
+                                $wh[''] = '';
+                                foreach ($warehouses as $warehouse) {
+                                    $wh[$warehouse->id] = $warehouse->name;
+                                }
+                                
+                                echo form_dropdown('warehouse', $wh, ($_POST['warehouse'] ?? " "), 'id="spharmacy" class="form-control input-tip select" data-placeholder="' . $this->lang->line('Select Pharmacy') .'" style="width:100%;" ');
+                            ?>
+                        </div>
+                    </div>
+
+                    <div class="col-md-2 ">
+                        <!-- <?php echo form_input('button', 'Search By', 'class="form-control btn btn-primary" id="searchByNumber"'); ?> -->
+                        
+                        <!-- <?php echo form_submit($data, $this->lang->line('submit'), 'id="searchByNumber" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"'); ?> -->
+                        <input type="button" id="searchByNumber" class="btn btn-primary" value="Search By">
+                    </div>
                 </div>
 
                 <div class="table-responsive" id="pdfcontent">
@@ -237,6 +276,27 @@
 
 <script>
     document.getElementById('searchByNumber').addEventListener('click', function() {
+        var paramValues = [document.getElementById('sid').value, 
+                   document.getElementById('sfromDate').value, 
+                   document.getElementById('stoDate').value, 
+                   document.getElementById('spharmacy').value]
+
+        var paramNames = ['sid', 'fromDate', 'toDate', 'pharmacy'];
+    
+        var baseUrl = window.location.href.split('?')[0];
+        var queryParams = [];
+
+        for (let index = 0; index < paramValues.length; index++) {
+            queryParams.push(paramNames[index] + '=' + encodeURIComponent(paramValues[index]));
+        }
+
+        var newUrl = baseUrl + '?' + queryParams.join('&');
+        window.location.href = newUrl;
+    });
+</script>
+
+<!-- <script>
+    document.getElementById('searchByNumber').addEventListener('click', function() {
     var pidValue = document.getElementById('sid').value; 
     if (pidValue) { 
        
@@ -247,6 +307,6 @@
     } else {
         alert("Please enter a purchase number."); 
     }
-});
+    });
 
-</script>
+</script> -->

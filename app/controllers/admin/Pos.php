@@ -802,6 +802,10 @@ class Pos extends MY_Controller
         $this->sma->checkPermissions('index');
        // print_r($this->input->get());
         $sid = $this->input->get('sid');
+        $from_date = $this->input->get('fromDate');
+        $to_date = $this->input->get('toDate');
+        $pharm = $this->input->get('pharmacy') ?? $warehouse_id;
+        
         
         if ((!$this->Owner && !$this->Admin) && !$warehouse_id) {
             $user         = $this->site->getUser();
@@ -862,9 +866,24 @@ class Pos extends MY_Controller
                 ->join('warehouses', 'warehouses.id = sales.warehouse_id', 'left')
                 ->group_by('sales.id');
         }
-        if(is_numeric($sid)) {
-            $this->datatables->where($this->db->dbprefix('sales') .'.id', $sid);
+
+        // if(is_numeric($sid)) {
+        //     $this->datatables->where($this->db->dbprefix('sales') .'.id', $sid);
+        // }
+
+        if (!empty($sid) && is_numeric($sid)) {
+            $this->datatables->where($this->db->dbprefix('sales') . '.id', $sid);
         }
+        
+        if (!empty($from_date) && !empty($to_date)) {
+            $this->datatables->where($this->db->dbprefix('sales') . "date BETWEEN '$from_date' AND '$to_date'");
+        }
+    
+        if (!empty($pharm) && is_numeric($pharm)) {
+            $this->datatables->where($this->db->dbprefix('sales') . '.warehouse_id', $pharm);
+            
+        }
+        
         $this->datatables->where('pos', 1);
         if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
             $this->datatables->where('created_by', $this->session->userdata('user_id'));
@@ -2309,62 +2328,62 @@ class Pos extends MY_Controller
         $this->page_construct('pos/sales_date_wise', $meta, $this->data);
     }
 
-public function sales_date_wise()
-{
-    // echo "<pre>User Session";
-    // error_reporting(-1);
-    // ini_set('display_errors', 1);
-    $this->sma->checkPermissions('index');
-    $at_date = '';
-    $sale_ids = [];
-    if ($this->input->post('at_date') == true) {
-        $at_date_original = $this->input->post('at_date');
-        $sale_id = $this->input->post('sale_id');
-        if ($at_date_original == '') {
-            $this->session->set_flashdata('error', lang('please_select_date'));
-            admin_redirect('pos/sales_date_wise');
+    public function sales_date_wise()
+    {
+        // echo "<pre>User Session";
+        // error_reporting(-1);
+        // ini_set('display_errors', 1);
+        $this->sma->checkPermissions('index');
+        $at_date = '';
+        $sale_ids = [];
+        if ($this->input->post('at_date') == true) {
+            $at_date_original = $this->input->post('at_date');
+            $sale_id = $this->input->post('sale_id');
+            if ($at_date_original == '') {
+                $this->session->set_flashdata('error', lang('please_select_date'));
+                admin_redirect('pos/sales_date_wise');
+            }
+            $at_date =  $this->sma->fld($at_date_original);
+            
+            // Get sale_ids and store in session
+            $sale_ids = $this->pos_model->getSalesByDateRange($at_date,$sale_id);
+            $this->session->set_userdata('sale_ids', $sale_ids);
+            //print_r($sale_ids[0]);
+            admin_redirect('pos/sales_date_wise?at_date='.$at_date_original.'&sale_id='.$sale_ids[0]);
+            //pos/sales_date_wise?sale_id=83
         }
-        $at_date =  $this->sma->fld($at_date_original);
-        
-        // Get sale_ids and store in session
-        $sale_ids = $this->pos_model->getSalesByDateRange($at_date,$sale_id);
-        $this->session->set_userdata('sale_ids', $sale_ids);
-        //print_r($sale_ids[0]);
-        admin_redirect('pos/sales_date_wise?at_date='.$at_date_original.'&sale_id='.$sale_ids[0]);
-        //pos/sales_date_wise?sale_id=83
-    }
 
-    $sale_ids = $this->session->userdata('sale_ids');
+        $sale_ids = $this->session->userdata('sale_ids');
 
-    if (!$sale_ids) {
-        $sale_ids = []; 
-    }
-    $current_index = array_search($this->input->get('sale_id'), $sale_ids);
+        if (!$sale_ids) {
+            $sale_ids = []; 
+        }
+        $current_index = array_search($this->input->get('sale_id'), $sale_ids);
 
-    $sale_id = $this->input->get('sale_id');
-    if ($sale_id) {
-        $inv = $this->sales_model->getInvoiceByID($sale_id);
-        $this->data['inv'] = $inv;
-        $this->data['address'] = $this->site->getAddressByID($inv->address_id);
-        $this->data['rows'] = $this->sales_model->getAllInvoiceItems($sale_id);
-        $this->data['return_sale'] = $inv->return_id ? $this->sales_model->getInvoiceByID($inv->return_id) : null;
-        $this->data['return_rows'] = $inv->return_id ? $this->sales_model->getAllInvoiceItems($inv->return_id) : null;
-        $this->data['sale_id'] = $sale_id;
-    }
-    $this->data['at_date'] = $this->input->get('at_date');
-   
-
-    // Calculate previous and next sale IDs for navigation
-    $prev_sale_id = isset($sale_ids[$current_index - 1]) ? $sale_ids[$current_index - 1] : null;
-    $next_sale_id = isset($sale_ids[$current_index + 1]) ? $sale_ids[$current_index + 1] : null;
+        $sale_id = $this->input->get('sale_id');
+        if ($sale_id) {
+            $inv = $this->sales_model->getInvoiceByID($sale_id);
+            $this->data['inv'] = $inv;
+            $this->data['address'] = $this->site->getAddressByID($inv->address_id);
+            $this->data['rows'] = $this->sales_model->getAllInvoiceItems($sale_id);
+            $this->data['return_sale'] = $inv->return_id ? $this->sales_model->getInvoiceByID($inv->return_id) : null;
+            $this->data['return_rows'] = $inv->return_id ? $this->sales_model->getAllInvoiceItems($inv->return_id) : null;
+            $this->data['sale_id'] = $sale_id;
+        }
+        $this->data['at_date'] = $this->input->get('at_date');
     
-    $this->data['prev_sale_id'] = $prev_sale_id;
-    $this->data['next_sale_id'] = $next_sale_id;
-    $this->data['total_sales'] = count($sale_ids);
 
-    $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('pos'), 'page' => lang('pos')], ['link' => '#', 'page' => lang('sales_date_wise')]];
-    $meta = ['page_title' => lang('sales_date_wise'), 'bc' => $bc];
-    $this->page_construct('pos/sales_date_wise', $meta, $this->data);
-}
+        // Calculate previous and next sale IDs for navigation
+        $prev_sale_id = isset($sale_ids[$current_index - 1]) ? $sale_ids[$current_index - 1] : null;
+        $next_sale_id = isset($sale_ids[$current_index + 1]) ? $sale_ids[$current_index + 1] : null;
+        
+        $this->data['prev_sale_id'] = $prev_sale_id;
+        $this->data['next_sale_id'] = $next_sale_id;
+        $this->data['total_sales'] = count($sale_ids);
+
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('pos'), 'page' => lang('pos')], ['link' => '#', 'page' => lang('sales_date_wise')]];
+        $meta = ['page_title' => lang('sales_date_wise'), 'bc' => $bc];
+        $this->page_construct('pos/sales_date_wise', $meta, $this->data);
+    }
 
 }

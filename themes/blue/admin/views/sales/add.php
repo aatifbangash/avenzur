@@ -439,15 +439,6 @@ table#slTable td input.form-control {
                                         data-target="#myModal"><i class="icon fa fa-upload"></i></a></li>
             </ul>
         </div>
-
-        <!-- CSV upload icon -->
-        <div class="box-icon">
-            <ul class="btn-tasks">
-                <li class="dropdown">
-                    <a href="<?= admin_url('Sales/showUploadSales'); ?>" data-toggle="modal"
-                                        data-target="#myModal"><i class="icon fa fa-upload"></i></a></li>
-            </ul>
-        </div>
     </div>
     <div class="box-content">
         <div class="row">
