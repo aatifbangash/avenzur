@@ -124,33 +124,6 @@
                     ?>
                 </div>
             </div>
-
-            <div class="form-group">
-                <?= lang('Sale_status *', 'slsale_status2'); ?>
-                <?php 
-                    $sst = ['pending' => lang('pending')];
-                    echo form_dropdown('sale_status', $sst, '', 'class="form-control input-tip" required="required" id="slsale_status2"'); 
-                ?>
-            </div>
-
-            <?php if ($Owner || $Admin || $GP['sales-payments']) { ?>
-                <div class="form-group">
-                    <?= lang('Payment_status *', 'slpayment_status2'); ?>
-                    <?php 
-                        $pst = ['pending' => lang('pending'), 'due' => lang('due'), 'partial' => lang('partial'), 'paid' => lang('paid')];
-                        echo form_dropdown('payment_status', $pst, '', 'class="form-control input-tip" required="required" id="slpayment_status2"'); 
-                    ?>
-
-                </div>
-                <?php
-            } else {
-                echo form_hidden('payment_status', 'pending');
-            }?>
-
-            <div class="form-group">
-                <?= lang('attachments', 'document') ?>
-                <input id="attachment" type="file" data-browse-label="<?= lang('browse'); ?>" name="attachment" data-show-upload="false" data-show-preview="false" class="form-control file">
-            </div>
               
             <div class="form-group">
                 <?= lang('csv_file', 'csv_file') ?>
