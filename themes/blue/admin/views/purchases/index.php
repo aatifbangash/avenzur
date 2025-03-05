@@ -6,7 +6,7 @@
             "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?= lang('all') ?>"]],
             "iDisplayLength": <?= $Settings->rows_per_page ?>,
             'bProcessing': true, 'bServerSide': true,
-            'sAjaxSource': '<?= admin_url('purchases/getPurchases' . ($warehouse_id ? '/' . $warehouse_id : '') .'?pid='.$pid. '&fromDate=' .$pfromDate. '&toDate=' .$ptoDate) ?>',
+            'sAjaxSource': '<?= admin_url('purchases/getPurchases' . ($warehouse_id ? '/' . $warehouse_id : '') .'?pid='.$pid. '&from=' .$pfromDate. '&to=' .$ptoDate) ?>',
             'fnServerData': function (sSource, aoData, fnCallback) {
                 aoData.push({
                     "name": "<?= $this->security->get_csrf_token_name() ?>",
@@ -276,7 +276,7 @@
         var ptoDate = document.getElementById('ptoDate').value;
 
         var paramValues = [pid, pfromDate, ptoDate];
-        var paramNames = ['pid', 'fromDate', 'toDate'];
+        var paramNames = ['pid', 'from', 'to'];
 
         var baseUrl = window.location.href.split('?')[0];
         var queryParams = [];

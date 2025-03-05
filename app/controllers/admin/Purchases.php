@@ -1961,8 +1961,8 @@ class Purchases extends MY_Controller
         $this->sma->checkPermissions('index');
 
         $pid = $this->input->get('pid');
-        $pfromDate = $this->input->get('fromDate');
-        $ptoDate = $this->input->get('toDate');
+        $pfromDate = $this->input->get('from');
+        $ptoDate = $this->input->get('to');
 
         if ((!$this->Owner || !$this->Admin) && !$warehouse_id) {
             $user = $this->site->getUser();
@@ -2053,7 +2053,7 @@ class Purchases extends MY_Controller
         if (!empty($pfromDate)) {
             $this->datatables->where('date >=', $pfromDate);
         }
-        
+
         if (!empty($ptoDate)) {
             $this->datatables->where('date <=', $ptoDate);
         }
@@ -2217,8 +2217,8 @@ class Purchases extends MY_Controller
         $this->data['lastInsertedId'] = $this->input->get('lastInsertedId');
         $this->data['pid'] = $this->input->get('pid');
         
-        $this->data['pfromDate'] = $this->input->get('fromDate');
-        $this->data['ptoDate'] = $this->input->get('toDate');
+        $this->data['pfromDate'] = $this->input->get('from');
+        $this->data['ptoDate'] = $this->input->get('to');
 
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('purchases')]];
         $meta = ['page_title' => lang('purchases'), 'bc' => $bc];
