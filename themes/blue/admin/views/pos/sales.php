@@ -19,7 +19,7 @@
             "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?= lang('all') ?>"]],
             "iDisplayLength": <?= $Settings->rows_per_page ?>,
             'bProcessing': true, 'bServerSide': true,
-            'sAjaxSource': '<?= admin_url('pos/getSales'. ($warehouse_id ? '/' . $warehouse_id : '') . '?sid='.$sid. '&from=' .$sfromDate. '&to=' .$stoDate. '&pharmacy=' .$swarehouse. '&v=1') ?>',
+            'sAjaxSource': '<?= admin_url('pos/getSales'. ($warehouse_id ? '/' . $warehouse_id : '') . '?sid='.$sid. '&from=' .$sfromDate. '&to=' .$stoDate. '&warehouse=' .$swarehouse. '&v=1') ?>',
             'fnServerData': function (sSource, aoData, fnCallback) {
                 aoData.push({
                     "name": "<?= $this->security->get_csrf_token_name() ?>",
@@ -204,7 +204,7 @@
                                     $wh[$warehouse->id] = $warehouse->name;
                                 }
                                 
-                                echo form_dropdown('warehouse', $wh, ' ', 'id="spharmacy" class="form-control input-tip select" data-placeholder="' . $this->lang->line('Select Pharmacy') . '" style="width:100%;"'
+                                echo form_dropdown('warehouse', $wh, ' ', 'id="swarehouse" class="form-control input-tip select" data-placeholder="' . $this->lang->line('Select warehouse') . '" style="width:100%;"'
                                 );
                             ?>
                         </div>
@@ -283,14 +283,14 @@
         var paramValues = [document.getElementById('sid').value, 
                    document.getElementById('sfromDate').value, 
                    document.getElementById('stoDate').value, 
-                   document.getElementById('spharmacy').value]
+                   document.getElementById('swarehouse').value]
 
-        var paramNames = ['sid', 'from', 'to', 'pharmacy'];
+        var paramNames = ['sid', 'from', 'to', 'warehouse'];
 
         console.log('sid:', paramValues[0]);
         console.log('sfromDate:', paramValues[1]);
         console.log('stoDate:', paramValues[2]);
-        console.log('spharmacy:', paramValues[3]);
+        console.log('swarehouse:', paramValues[3]);
     
         var baseUrl = window.location.href.split('?')[0];
         var queryParams = [];

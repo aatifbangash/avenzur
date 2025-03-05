@@ -805,7 +805,7 @@ class Pos extends MY_Controller
         $sid = $this->input->get('sid');
         $sfromDate = $this->input->get('from');
         $stoDate = $this->input->get('to');
-        $swarehouse = $this->input->get('pharmacy');
+        $swarehouse = $this->input->get('warehouse');
 
         // echo 'here '. $swarehouse ; exit;
         
@@ -2018,11 +2018,11 @@ class Pos extends MY_Controller
             $this->data['warehouse_id'] = $this->session->userdata('warehouse_id');
             $this->data['warehouse']    = $this->session->userdata('warehouse_id') ? $this->site->getWarehouseByID($this->session->userdata('warehouse_id')) : null;
         }
-        
+
         $this->data['sid'] = $this->input->get('sid');
         $this->data['sfromDate'] = $this->input->get('from');
         $this->data['stoDate'] = $this->input->get('to');
-        $this->data['swarehouse'] = $this->input->get('pharmacy');
+        $this->data['swarehouse'] = $this->input->get('warehouse');
 
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('pos'), 'page' => lang('pos')], ['link' => '#', 'page' => lang('pos_sales')]];
         $meta = ['page_title' => lang('pos_sales'), 'bc' => $bc];
