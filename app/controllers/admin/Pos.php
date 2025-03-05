@@ -801,11 +801,13 @@ class Pos extends MY_Controller
     {
         $this->sma->checkPermissions('index');
        // print_r($this->input->get());
+       
         $sid = $this->input->get('sid');
-        $from_date = $this->input->get('fromDate');
-        $to_date = $this->input->get('toDate');
-        $pharm = $this->input->get('pharmacy') ?? $warehouse_id;
-        
+        $sfromDate = $this->input->get('from');
+        $stoDate = $this->input->get('to');
+        $swarehouse = $this->input->get('pharmacy');
+
+        // echo 'here '. $swarehouse ; exit;
         
         if ((!$this->Owner && !$this->Admin) && !$warehouse_id) {
             $user         = $this->site->getUser();
@@ -875,12 +877,16 @@ class Pos extends MY_Controller
             $this->datatables->where($this->db->dbprefix('sales') . '.id', $sid);
         }
         
-        if (!empty($from_date) && !empty($to_date)) {
-            $this->datatables->where($this->db->dbprefix('sales') . "date BETWEEN '$from_date' AND '$to_date'");
+        if (!empty($sfromDate)) {
+            $this->datatables->where('date >=', $sfromDate);
+        }
+        
+        if (!empty($stoDate)) {
+            $this->datatables->where('date <=', $stoDate);
         }
     
-        if (!empty($pharm) && is_numeric($pharm)) {
-            $this->datatables->where($this->db->dbprefix('sales') . '.warehouse_id', $pharm);
+        if (!empty($swarehouse) && is_numeric($swarehouse)) {
+            $this->datatables->where($this->db->dbprefix('sales') . '.warehouse_id', $swarehouse);
             
         }
         
@@ -1007,7 +1013,7 @@ class Pos extends MY_Controller
     public function index($sid = null)
     {
         $this->sma->checkPermissions();
-        //echo $this->input->post();exit;
+        echo $this->input->get();exit;
 
         if (!$this->pos_settings->default_biller || !$this->pos_settings->default_customer || !$this->pos_settings->default_category) {
             $this->session->set_flashdata('warning', lang('please_update_settings'));
@@ -2012,7 +2018,11 @@ class Pos extends MY_Controller
             $this->data['warehouse_id'] = $this->session->userdata('warehouse_id');
             $this->data['warehouse']    = $this->session->userdata('warehouse_id') ? $this->site->getWarehouseByID($this->session->userdata('warehouse_id')) : null;
         }
+        
         $this->data['sid'] = $this->input->get('sid');
+        $this->data['sfromDate'] = $this->input->get('from');
+        $this->data['stoDate'] = $this->input->get('to');
+        $this->data['swarehouse'] = $this->input->get('pharmacy');
 
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('pos'), 'page' => lang('pos')], ['link' => '#', 'page' => lang('pos_sales')]];
         $meta = ['page_title' => lang('pos_sales'), 'bc' => $bc];

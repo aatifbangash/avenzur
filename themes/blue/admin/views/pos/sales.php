@@ -19,7 +19,7 @@
             "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?= lang('all') ?>"]],
             "iDisplayLength": <?= $Settings->rows_per_page ?>,
             'bProcessing': true, 'bServerSide': true,
-            'sAjaxSource': '<?= admin_url('pos/getSales'. ($warehouse_id ? '/' . $warehouse_id : '') . '?sid='.$sid.'&v=1') ?>',
+            'sAjaxSource': '<?= admin_url('pos/getSales'. ($warehouse_id ? '/' . $warehouse_id : '') . '?sid='.$sid. '&from=' .$sfromDate. '&to=' .$stoDate. '&pharmacy=' .$swarehouse. '&v=1') ?>',
             'fnServerData': function (sSource, aoData, fnCallback) {
                 aoData.push({
                     "name": "<?= $this->security->get_csrf_token_name() ?>",
@@ -177,23 +177,26 @@
                 </div>  -->
                 
                 <?php 
-                    // MARK: filter
+                    // MARK: Filter
                 ?>
-
-                <div class="row"  style="margin: 15px 0;">
-                    <div class="col-md-2">
-                        <?php echo form_input('text', '', 'class="form-control input-tip"  placeholder="' . $this->lang->line('Enter Serial Number') .'" id="sid"'); ?>
+                <div class="row" style="margin: 25px 0; display: flex; align-items: center;">
+                    <div style="flex: 1; margin-right: 20px;">
+                        <input type="text" id="sid" name="sid" class="form-control input-tip" placeholder="Serial Number">
                     </div>
 
-                    <div class="col-md-2">
-                        <?php echo form_input('date', '', 'class="form-control input-tip datetime" id="sfromDate" placeholder= "From Date"'); ?>
+                    <div style="flex: 1;">
+                        <input type="date" name="date" class="form-control input-tip" id="sfromDate" placeholder="From Date">
                     </div>
 
-                    <div class="col-md-2">
-                        <?php echo form_input('date', '', 'class="form-control input-tip datetime" id="stoDate" placeholder= "To Date"'); ?>
+                    <div style="flex: 0; margin: 0 10px; font-size: 18px; font-weight: bold;">
+                        -
                     </div>
 
-                    <div class="col-md-2">
+                    <div style="flex: 1; margin-right: 20px;">
+                        <input type="date" name="date" class="form-control input-tip" id="stoDate" placeholder="To Date">
+                    </div>
+
+                    <div style="flex: 1; margin-right: 20px;">
                         <div class="controls">
                             <?php
                                 $wh[''] = '';
@@ -201,19 +204,20 @@
                                     $wh[$warehouse->id] = $warehouse->name;
                                 }
                                 
-                                echo form_dropdown('warehouse', $wh, ($_POST['warehouse'] ?? " "), 'id="spharmacy" class="form-control input-tip select" data-placeholder="' . $this->lang->line('Select Pharmacy') .'" style="width:100%;" ');
+                                echo form_dropdown('warehouse', $wh, ' ', 'id="spharmacy" class="form-control input-tip select" data-placeholder="' . $this->lang->line('Select Pharmacy') . '" style="width:100%;"'
+                                );
                             ?>
                         </div>
                     </div>
 
-                    <div class="col-md-2 ">
-                        <!-- <?php echo form_input('button', 'Search By', 'class="form-control btn btn-primary" id="searchByNumber"'); ?> -->
-                        
-                        <!-- <?php echo form_submit($data, $this->lang->line('submit'), 'id="searchByNumber" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"'); ?> -->
-                        <input type="button" id="searchByNumber" class="btn btn-primary" value="Search By">
+                    <div style="flex: 0;">
+                        <input type="button" id="searchByNumber" class="btn btn-primary" value="Search">
                     </div>
                 </div>
 
+                <?php 
+                    // MARK: Table
+                ?>
                 <div class="table-responsive" id="pdfcontent">
                     <table id="POSData" class="table table-bordered table-hover table-striped">
                         <thead>
@@ -281,15 +285,22 @@
                    document.getElementById('stoDate').value, 
                    document.getElementById('spharmacy').value]
 
-        var paramNames = ['sid', 'fromDate', 'toDate', 'pharmacy'];
+        var paramNames = ['sid', 'from', 'to', 'pharmacy'];
+
+        console.log('sid:', paramValues[0]);
+        console.log('sfromDate:', paramValues[1]);
+        console.log('stoDate:', paramValues[2]);
+        console.log('spharmacy:', paramValues[3]);
     
         var baseUrl = window.location.href.split('?')[0];
         var queryParams = [];
 
         for (let index = 0; index < paramValues.length; index++) {
-            queryParams.push(paramNames[index] + '=' + encodeURIComponent(paramValues[index]));
+            if(paramValues[index]){
+                queryParams.push(paramNames[index] + '=' + encodeURIComponent(paramValues[index]));
+            }
         }
-
+        
         var newUrl = baseUrl + '?' + queryParams.join('&');
         window.location.href = newUrl;
     });
