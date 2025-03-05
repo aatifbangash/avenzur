@@ -1959,7 +1959,10 @@ class Purchases extends MY_Controller
     public function getPurchases($warehouse_id = null)
     {
         $this->sma->checkPermissions('index');
+        
         $pid = $this->input->get('pid');
+        $pfromDate = $this->input->get('from');
+        $ptoDate = $this->input->get('to');
 
         if ((!$this->Owner || !$this->Admin) && !$warehouse_id) {
             $user = $this->site->getUser();
@@ -2042,8 +2045,17 @@ class Purchases extends MY_Controller
                 ->select("id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, sequence_code, supplier, status, grand_total, paid, (grand_total-paid) as balance, payment_status, attachment")
                 ->from('purchases');
         }
-        if(is_numeric($pid)) {
+        
+        if(!empty($pid) && is_numeric($pid)) {
             $this->datatables->where('id', $pid);
+        }
+
+        if (!empty($pfromDate)) {
+            $this->datatables->where('date >=', $pfromDate);
+        }
+
+        if (!empty($ptoDate)) {
+            $this->datatables->where('date <=', $ptoDate);
         }
 
         // if($this->sma->checkPermissionsForRequest('p_status_pending'))
@@ -2204,6 +2216,8 @@ class Purchases extends MY_Controller
 
         $this->data['lastInsertedId'] = $this->input->get('lastInsertedId');
         $this->data['pid'] = $this->input->get('pid');
+        $this->data['pfromDate'] = $this->input->get('from');
+        $this->data['ptoDate'] = $this->input->get('to');
 
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('purchases')]];
         $meta = ['page_title' => lang('purchases'), 'bc' => $bc];

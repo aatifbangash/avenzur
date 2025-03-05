@@ -802,6 +802,9 @@ class Pos extends MY_Controller
         $this->sma->checkPermissions('index');
        // print_r($this->input->get());
         $sid = $this->input->get('sid');
+        $sfromDate = $this->input->get('from');
+        $stoDate = $this->input->get('to');
+        $swarehouse = $this->input->get('warehouse');
         
         if ((!$this->Owner && !$this->Admin) && !$warehouse_id) {
             $user         = $this->site->getUser();
@@ -862,9 +865,24 @@ class Pos extends MY_Controller
                 ->join('warehouses', 'warehouses.id = sales.warehouse_id', 'left')
                 ->group_by('sales.id');
         }
-        if(is_numeric($sid)) {
-            $this->datatables->where($this->db->dbprefix('sales') .'.id', $sid);
+
+        if (!empty($sid) && is_numeric($sid)) {
+            $this->datatables->where($this->db->dbprefix('sales') . '.id', $sid);
         }
+
+        if (!empty($sfromDate)) {
+            $this->datatables->where('date >=', $sfromDate);
+        }
+
+        if (!empty($stoDate)) {
+            $this->datatables->where('date <=', $stoDate);
+        }
+
+        if (!empty($swarehouse) && is_numeric($swarehouse)) {
+            $this->datatables->where($this->db->dbprefix('sales') . '.warehouse_id', $swarehouse);
+
+        }
+
         $this->datatables->where('pos', 1);
         if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
             $this->datatables->where('created_by', $this->session->userdata('user_id'));
@@ -1993,7 +2011,11 @@ class Pos extends MY_Controller
             $this->data['warehouse_id'] = $this->session->userdata('warehouse_id');
             $this->data['warehouse']    = $this->session->userdata('warehouse_id') ? $this->site->getWarehouseByID($this->session->userdata('warehouse_id')) : null;
         }
+        
         $this->data['sid'] = $this->input->get('sid');
+        $this->data['sfromDate'] = $this->input->get('from');
+        $this->data['stoDate'] = $this->input->get('to');
+        $this->data['swarehouse'] = $this->input->get('warehouse');
 
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('pos'), 'page' => lang('pos')], ['link' => '#', 'page' => lang('pos_sales')]];
         $meta = ['page_title' => lang('pos_sales'), 'bc' => $bc];
