@@ -380,7 +380,7 @@ class Purchases_model extends CI_Model
             ->join('product_variants', 'product_variants.id=purchase_items.option_id', 'left')
             ->join('tax_rates', 'tax_rates.id=purchase_items.tax_rate_id', 'left')
             ->group_by('purchase_items.id')
-            ->order_by('id', 'asc')
+            ->order_by('id', 'desc')
             ->where('purchase_items.purchase_id', $purchase_id);
     
         // Exclude items whose item_code exists in $avz_item_codes
@@ -937,16 +937,6 @@ class Purchases_model extends CI_Model
         if ($this->db->update('purchases', $data, ['id' => $id]) && $this->db->delete('purchase_items', ['purchase_id' => $id])) {
             $purchase_id = $id;
 
-            // Code for serials start here
-            $notification_serials = $this->db->get_where('sma_invoice_serials', ['pid' => $id]);
-            if ($notification_serials->num_rows() > 0) {
-                foreach (($notification_serials->result()) as $row) {
-                    $this->db->update('sma_notification_serials', ['used' => 0], ['serial_no' => $row->serial_number, 'gtin' => $row->gtin, 'batch_no' => $row->batch_no]);
-                    $this->db->delete('sma_invoice_serials', ['id' => $row->id]);
-                }
-            }
-            // Code for serials end here
-
             foreach ($items as $item) {
                 $item['purchase_id'] = $id;
                 $item['option_id']   = !empty($item['option_id']) && is_numeric($item['option_id']) ? $item['option_id'] : null;
@@ -960,40 +950,25 @@ class Purchases_model extends CI_Model
                 if ($data['status'] == 'received' || $data['status'] == 'partial') {
                     $this->updateAVCO(['product_id' => $item['product_id'], 'batch' => $item['batchno'], 'warehouse_id' => $item['warehouse_id'], 'quantity' => $item['quantity'], 'cost' => $item['real_unit_cost']]);
                 }
+
+                $item_exists_in_inventory = false;
+                $q = $this->db->get_where('inventory_movements', ['product_id' => $item['product_id'], 'type' => 'purchase', 'batch_number' => $item['batchno'], 'avz_item_code' => $item['avz_item_code']], 1);
+                if ($q->num_rows() > 0) {
+                    $item_exists_in_inventory = true;
+                }
                 
-                if($item['status']=='received'){
+                if($opurchase->status == 'received' && $item['status']=='received'){
+                    if($item_exists_in_inventory){
+                        $this->Inventory_model->update_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id'], $id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['unit_cost'], $item['avz_item_code'], $item['bonus'], NULL, $item['sale_price'], $data['date']);
+                    }else{
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id'], $id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['unit_cost'], $item['avz_item_code'], $item['bonus'], NULL, $item['sale_price'], $data['date']);
+                    }
+                    
+                }else if($item['status']=='received'){
                     $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id'], $id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['unit_cost'], $item['avz_item_code'], $item['bonus'], NULL, $item['sale_price'], $data['date']);
                 }
                 // $this->Inventory_model->update_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id']);
-                // Code for serials here
-                $serials_reference = $data['reference_no'];
-                $serials_quantity = $item['quantity'];
-                $serials_gtin = $item['product_code'];
-                $serials_batch_no = $item['batchno'];
-                $dispatch_array = $this->db->get_where('sma_rasd_notifications', ['invoice_no' => $serials_reference], 1);
-                if ($dispatch_array->num_rows() > 0) {
-                    foreach (($dispatch_array->result()) as $d_array) {
-                        $dispatch_id = $d_array->dispatch_id;
-                        $notification_serials = $this->db->get_where('sma_notification_serials', ['gtin' => $serials_gtin, 'dispatch_id' => $dispatch_id, 'batch_no' => $serials_batch_no, 'used' => 0], $serials_quantity);
-                        if ($notification_serials->num_rows() > 0) {
-                            foreach (($notification_serials->result()) as $row) {
-                                $serials_data[] = $row;
-                                $invoice_serials = array();
-                                $invoice_serials['serial_number'] = $row->serial_no;
-                                $invoice_serials['gtin'] = $row->gtin;
-                                $invoice_serials['batch_no'] = $row->batch_no;
-                                $invoice_serials['pid'] = $id;
-                                $invoice_serials['date'] = date('Y-m-d');
-
-                                $this->db->update('sma_notification_serials', ['used' => 1], ['serial_no' => $row->serial_no, 'batch_no' => $row->batch_no, 'gtin' => $row->gtin]);
-                                $this->db->insert('sma_invoice_serials', $invoice_serials);
-                            }
-                        }
-                    }
-                }
-
-                // Code for serials end here
-
+                
                 if ($data['status'] == 'received' || $data['status'] == 'partial') {
                     $net_cost_obj = $this->getAverageCost($item['batchno'], $item['product_code']);
                     $net_cost_sales = $net_cost_obj[0]->cost_price;

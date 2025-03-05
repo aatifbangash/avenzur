@@ -520,9 +520,9 @@ class Products extends MY_Controller
         }
     }
 
-    public function update_product_prices()
+    public function update_product_codes()
     {
-        $csvFile = $this->upload_path . 'csv/names_and_brands_file.csv';
+        $csvFile = $this->upload_path . 'csv/avenzur-code-and-retaj-code.csv';
 
         if (!file_exists($csvFile)) {
             echo 'CSV file not found.';
@@ -539,42 +539,28 @@ class Products extends MY_Controller
         $count = 0;
 
         while (($rowData = fgetcsv($handle)) !== false) {
-            $productCode = $rowData[2];
-            $new_code = $rowData[3];
-            $ascon_code = $rowData[4];
-            $old_brand = $rowData[5];
-            $new_brand = $rowData[6];
-
-            $old_name = $rowData[0];
-            $new_name = $rowData[1];
+            $avenzurCode = $rowData[1];
+            $retajCode = $rowData[5];
 
             $this->db->select('*');
             $this->db->from('sma_products');
-            $this->db->where('code', $productCode);
+            $this->db->where('code', $avenzurCode);
             $query = $this->db->get();
             $product = $query->row();
-
-            $this->db->select('*');
-            $this->db->from('sma_brands');
-            $this->db->where('name', $new_brand);
-            $query = $this->db->get();
-            $brand = $query->row();
 
             if ($product) {
 
                 $dataToUpdate = [
-                    'name' => $new_name,
-                    'brand' => $brand->id,
-                    'ascon_code' => $ascon_code,
-                    'new_code' => $new_code
+                    'avenzur_code' => $avenzurCode,
+                    'code' => $retajCode
                 ];
 
-                $this->db->where('id', $product->id);
-                $this->db->update('sma_products', $dataToUpdate);
+                //$this->db->where('id', $product->id);
+                //$this->db->update('sma_products', $dataToUpdate);
 
-                echo "Product with code $productCode has updated name now i.e $new_name from $old_name<br>";
+                echo "Product with code $avenzurCode has updated name now i.e $retajCode<br>";
             } else {
-                echo "Product with code $productCode was not found in database<br>";
+                echo "Product with code $avenzurCode was not found in database<br>";
             }
 
             $count++;
@@ -4106,6 +4092,7 @@ class Products extends MY_Controller
         $s = isset($_POST['product']) ? sizeof($_POST['product']) : 0;
         if ($s > 0) {
             $purchase_id =  $this->input->post('purchase_id') ;
+            $transfer_id =  $this->input->post('transfer_id') ;
             // print barcodes
             $s = isset($_POST['product']) ? sizeof($_POST['product']) : 0;
             if ($s < 1) {
@@ -4129,8 +4116,15 @@ class Products extends MY_Controller
                 $itemDetail = $this->products_model->getProductsBarcodeItems('','','',$item_id);
                 $itemDetail = $itemDetail[0];
                 $pid = $itemDetail->product_id;
-                $quantity = $_POST['quantity'][$item_id];
-                $product = $this->products_model->getProductWithCategory($pid);
+                $quantity = abs($_POST['quantity'][$item_id]);
+
+                //$product = $this->products_model->getProductWithCategory($pid);
+                
+                if($_POST['purchase_id']){
+                    $product = $this->products_model->getProductWithPrice($purchase_id, 'purchase', $pid);
+                }else if($_POST['transfer_id']){
+                    $product = $this->products_model->getProductWithPrice($transfer_id, 'transfer_out', $pid);
+                }
                 $product->price = $this->input->post('check_promo') ? ($product->promotion ? $product->promo_price : $product->price) : $product->price;
                 $pr_item_tax = 0;
 
@@ -4260,12 +4254,17 @@ class Products extends MY_Controller
             //         $items = $this->products_model->getTransferItems($transfer_id);
             //     }
 
-            if ( $this->input->get('item_code') || $this->input->get('purchase') ) {
+            if ( $this->input->get('item_code') || $this->input->get('purchase') || $this->input->get('transfer') ) {
                 $purchase_id = $this->input->get('purchase', true);
+                $transfer_id = $this->input->get('transfer', true);
                 $item_code = $this->input->get('item_code', true);
                 $warehouse_id = $this->input->get('pharmacy', true);
+                if($purchase_id){
+                    $items = $this->products_model->getProductsBarcodeItems($purchase_id, $item_code, $warehouse_id);
+                }else if($transfer_id){
+                    $items = $this->products_model->getProductsBarcodeItemsForTransfer($transfer_id, $item_code, $warehouse_id);
+                }
                 
-                $items = $this->products_model->getProductsBarcodeItems($purchase_id, $item_code, $warehouse_id);
                 if ($items) {
                     foreach ($items as $item) {
                         if ($row = $this->products_model->getProductByID($item->product_id)) {
@@ -4291,6 +4290,7 @@ class Products extends MY_Controller
 
 
             $this->data['purchase_id'] = $this->input->get('purchase', true) ;
+            $this->data['transfer_id'] = $this->input->get('transfer', true) ;
             $this->data['item_code'] = $this->input->get('item_code', true) ;
             $this->data['pharmacy'] = $this->input->get('pharmacy', true) ;
             $this->data['warehouses'] = $this->site->getAllWarehouses();

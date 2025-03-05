@@ -10,6 +10,131 @@ class Sales_model extends CI_Model
         $this->load->admin_model('Inventory_model');
     }
 
+    public function get_rasd_required_fields($data ){
+        //$notification_id = $data['notification_id'];
+        $sale_id = $data['sale_id'];
+        $this->db->select('sale_status');
+        $this->db->from('sma_sales');
+        $this->db->where("id", $sale_id);
+        $query = $this->db->get();
+        $status = "completed";
+        if($query->num_rows() > 0){
+            $status = $query -> row()->sale_status;
+        }
+        if($status != "completed"){
+            return ['payload' => [], 'user' => "", 'pass' => "", 'status' => $status];
+        }
+
+        $source_warehouse_id = $data['source_warehouse_id'];
+        $desitnation_customer_id = $data['destination_customer_id'];
+        $products = $data['products'];
+
+        /**Get GLNs */
+        $this->db->select("gln,rasd_user, rasd_pass");
+        $this->db->from("sma_warehouses");
+        $this->db->where('id', $source_warehouse_id);
+        $query = $this->db->get();
+        $source_gln = "";
+        $destination_gln = "";
+        $rasd_user = "";
+        $rasd_pass = "";
+        $rasd_pharmacy_user = "";
+        $rasd_pharmacy_password = "";
+        if($query->num_rows() > 0){
+            $source_gln = $query -> row()->gln;
+            $rasd_user = $query ->row()->rasd_user;
+            $rasd_pass = $query ->row()->rasd_pass;
+        }
+
+         /**Get GLNs */
+        $this->db->select("gln");
+        $this->db->from("sma_companies");
+        $this->db->where('id', $desitnation_customer_id);
+        $query = $this->db->get();
+
+        if($query->num_rows() > 0){
+            $destination_gln = $query -> row()->gln;
+        }
+
+        $c_2762 = [];
+        $c_2760  = [];
+        $to_update = [];
+        $count = 0;
+      
+        $batch_size = 20; // Max size per payload batch
+        $payload_index = 0;
+        $payloads = [];
+        $payloads_accept_dispatch = [];
+        foreach($products as $product){
+            $qty = (int) $product['quantity'];
+            $expiry = $product['expiry'] . " 00:00:00";
+
+            $gtin = $product['product_code'];
+            if (strlen($gtin) < 13) {  
+                $gtin = str_pad($gtin, 13, "0", STR_PAD_LEFT); // Prepend zero if needed
+            }
+
+            $c_2762[] = [
+                "223" => $gtin,
+                "2766" => $product['batch_no'],
+                "220" => $product['expiry'],
+                "224" => (string) $qty
+            ];
+
+            $c_2760[] = [
+                "223" => $gtin,
+                "219" => $product['batch_no'],
+                "220" => $product['expiry'],
+                "224" => (string) $qty
+            ];
+
+            
+            // If c_2762 reaches the batch size, create a payload
+            if (count($c_2762) == $batch_size) {
+                $payloads[$payload_index] = [
+                    "DicOfDic" => [
+                        "2762" => ["215" => $destination_gln, "3008" => "3010"],
+                        "MH" => ["MN" => "2756", "222" => $source_gln]
+                    ],
+                    "DicOfDT" => ["2762" => $c_2762]
+                ];
+                //$payloads_accept_dispatch[$payload_index] =  $this -> get_accept_dispatch_lot_params($destination_gln, $source_gln, $c_2760);
+
+                $c_2762 = []; // Reset for next batch
+                $c_2760 = [];
+                $payload_index++;
+
+            }
+             
+        }
+        
+        //Add Remaining.
+        if (!empty($c_2762)) {
+            
+            $payloads[$payload_index] = [
+                "DicOfDic" => [
+                    "2762" => ["215" => $destination_gln, "3008" => "3010"],
+                    "MH" => ["MN" => "2756", "222" => $source_gln]
+                ],
+                "DicOfDT" => ["2762" => $c_2762]
+            ];
+         
+             //$payloads_accept_dispatch[$payload_index] = $this -> get_accept_dispatch_lot_params($destination_gln, $source_gln, $c_2760);
+        }
+
+        return ['payload' => $payloads, 
+            'user' => $rasd_user,
+            'pass' => $rasd_pass, 
+            'status' => $status, 
+            'source_gln'  =>$source_gln, 
+            'destination_gln' => $destination_gln
+            //'pharmacy_user' => $rasd_pharmacy_user,
+            //'pharmacy_pass' => $rasd_pharmacy_password,
+            //'payload_for_accept_dispatch' =>$payloads_accept_dispatch,
+            //'update_map_table' =>   $to_update 
+        ];
+    }
+
     public function addDelivery($data = [])
     {
         if ($this->db->insert('deliveries', $data)) {

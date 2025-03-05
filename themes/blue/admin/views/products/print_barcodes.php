@@ -37,6 +37,7 @@
                           
                         </div>
                     <div class="col-md-3">Purchase Inv No:<input type="text" id="purchase_id" name="purchase_id" class="form-control input-tip" value="<?=$purchase_id;?>"></div>
+                    <div class="col-md-3">Transfer Inv No:<input type="text" id="transfer_id" name="transfer_id" class="form-control input-tip" value="<?=$transfer_id;?>"></div>
                     <div class="col-md-3">Item Code*:<input type="text" id="item_code" name="item_code" class="form-control input-tip" value="<?=$item_code;?>"></div>
                     <div class="col-md-3" style="margin-top:19px;"> <input type="button" id="searchByNumber" class="btn btn-primary" value="Search"></div>
              </div>
@@ -57,6 +58,7 @@
                     </div>
                     <?= admin_form_open('products/print_barcodes', 'id="barcode-print-form" data-toggle="validator"'); ?>
                     <input type="hidden" name="purchase_id" value="<?php echo $this->input->get('purchase', true);?>" >
+                    <input type="hidden" name="transfer_id" value="<?php echo $this->input->get('transfer', true);?>" >
                     <div class="controls table-controls">
                         <table id="bcTable"
                                class="table items table-striped table-bordered table-condensed table-hover">
@@ -563,6 +565,7 @@
 
     document.getElementById('searchByNumber').addEventListener('click', function() {
     var pidValue = document.getElementById('purchase_id').value; 
+    var tidValue = document.getElementById('transfer_id').value; 
     var itemCodeValue = document.getElementById('item_code').value;
     var pharmacyValue = document.getElementById('pharmacy').value; 
     if (itemCodeValue) { 

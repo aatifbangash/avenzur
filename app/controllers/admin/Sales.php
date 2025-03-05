@@ -17,6 +17,8 @@ class Sales extends MY_Controller
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect($_SERVER['HTTP_REFERER']);
         }
+        $this->load->admin_model('cmt_model');
+        $this->load->library('RASDCore',$params=null, 'rasd');
         $this->lang->admin_load('sales', $this->Settings->user_language);
         $this->load->library('form_validation');
         $this->load->admin_model('sales_model');
@@ -50,6 +52,296 @@ class Sales extends MY_Controller
     }
 
     /* ------------------------------------------------------------------ */
+
+    public function showUploadSales() {
+        $this->sma->checkPermissions();
+
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['customers'] = $this->site->getAllCompanies('customer');
+        $this->data['billers'] = $this->site->getAllCompanies('biller');
+
+        echo "<script>console.log(" . json_encode($this->data['customers']) . ");</script>";
+        echo "<script>console.log(" . json_encode($this->data['billers']) . ");</script>";
+
+        $this->load->view($this->theme . 'sales/uploadCsvSales', $this->data);
+    }
+
+
+    public function mapSales()
+    {
+        $this->sma->checkPermissions('csv');
+        $this->load->helper('security');
+        $this->form_validation->set_message('is_natural_no_zero', lang('no_zero_required'));
+        $this->form_validation->set_rules('customer', lang('customer'), 'required');
+        $this->form_validation->set_rules('biller', lang('biller'), 'required');
+        //$this->form_validation->set_rules('sale_status', lang('sale_status'), 'required');
+        //$this->form_validation->set_rules('payment_status', lang('payment_status'), 'required');
+        $this->form_validation->set_rules('userfile', lang('upload_file'), 'xss_clean');
+
+        if ($this->form_validation->run() == true) {
+            $reference = $this->input->post('reference_no') ? $this->input->post('reference_no') : $this->site->getReference('so');
+            if ($this->Owner || $this->Admin) {
+                $date = $this->sma->fld(trim($this->input->post('date')));
+            } else {
+                $date = date('Y-m-d H:i:s');
+            }
+            $warehouse_id     = $this->input->post('warehouse');
+            $customer_id      = $this->input->post('customer');
+            $biller_id        = $this->input->post('biller');
+            $total_items      = $this->input->post('total_items');
+            $sale_status      = 'pending';
+            $payment_status   = 'pending';
+            $payment_term     = $this->input->post('payment_term');
+            $due_date         = $payment_term ? date('Y-m-d', strtotime('+' . $payment_term . ' days')) : null;
+            $shipping         = $this->input->post('shipping') ? $this->input->post('shipping') : 0;
+            $customer_details = $this->site->getCompanyByID($customer_id);
+            $customer         = $customer_details->company && $customer_details->company != '-' ? $customer_details->company : $customer_details->name;
+            $biller_details   = $this->site->getCompanyByID($biller_id);
+            $biller           = $biller_details->company && $biller_details->company != '-' ? $biller_details->company : $biller_details->name;
+            $note             = $this->sma->clear_tags($this->input->post('note'));
+            $staff_note       = $this->sma->clear_tags($this->input->post('staff_note'));
+
+            $total            = 0;
+            $total_net_sale   = 0;
+            $product_tax      = 0;
+            $product_discount = 0;
+            $gst_data         = [];
+            $total_cgst       = $total_sgst       = $total_igst       = 0;
+
+            if (isset($_FILES['userfile'])) {
+                $this->load->library('upload');
+                $config['upload_path']   = $this->digital_upload_path;
+                $config['allowed_types'] = 'csv';
+                $config['max_size']      = $this->allowed_file_size;
+                $config['overwrite']     = true;
+                $this->upload->initialize($config);
+                if (!$this->upload->do_upload()) {
+                    $error = $this->upload->display_errors();
+                    $this->session->set_flashdata('error', $error);
+                    admin_redirect('sales/mapSales');
+                }
+                $csv = $this->upload->file_name;
+
+                $arrResult = [];
+                $handle    = fopen($this->digital_upload_path . $csv, 'r');
+                if ($handle) {
+                    while (($row = fgetcsv($handle, 1000, ',')) !== false) {
+                        $arrResult[] = $row;
+                    }
+                    fclose($handle);
+                }
+                $arr_length = count($arrResult);
+                if ($arr_length > 499) {
+                    $this->session->set_flashdata('error', lang('too_many_products'));
+                    redirect($_SERVER['HTTP_REFERER']);
+                    exit();
+                }
+                $titles = array_shift($arrResult);
+                $keys = [
+                    'code',
+                    'avz_code',
+                    'cost_price',
+                    'purchase_price',
+                    'sale_price',
+                    'quantity',
+                    'batch_no',
+                    'expiry',
+                    'bonus',
+                    'dis1',
+                    'dis1_val',
+                    'dis2',
+                    'dis2_val',
+                    'vat',
+                    'vat_val',
+                    'total_sale',
+                    'net_sale',
+                    'unit_sale_price'
+                ];   
+                $final  = [];
+                
+                foreach ($arrResult as $key => $value) {
+                    $final[] = array_combine($keys, $value);
+                }
+                $rw = 2;
+               
+                foreach ($final as $csv_pr) {
+                    if (isset($csv_pr['code']) && isset($csv_pr['unit_sale_price']) && isset($csv_pr['quantity']) && isset($csv_pr['batch_no'])) {    
+                        if ($product_details = $this->sales_model->getProductByCode($csv_pr['code'])) {
+                            
+                            $item_id        = $product_details->id;
+                            $item_type      = $product_details->type;
+                            $item_code      = $product_details->code;
+                            $item_name      = $product_details->name;
+
+                            $total_sale     = $csv_pr['total_sale'];
+                            $cost_price     = $csv_pr['cost_price'];
+                            $purchase_price = $csv_pr['purchase_price'];
+                            $sale_price     = $csv_pr['sale_price'];
+                            $item_net_price = $csv_pr['unit_sale_price'];
+                            $item_quantity  = $csv_pr['quantity'];
+                            $item_bonus     = $csv_pr['bonus'];
+                            $item_tax_rate  = $csv_pr['vat'];
+                            $vat_val        = $csv_pr['vat_val'];
+                            $item_discount  = $csv_pr['discount'];
+                            $item_dis1      = $csv_pr['dis1'];
+                            $item_dis1_val  = $csv_pr['dis1_val'];
+                            $item_dis2      = $csv_pr['dis2'];
+                            $item_dis2_val  = $csv_pr['dis2_val'];
+                            
+                            $item_batchno   = $csv_pr['batch_no'];  
+                            $avz_code       = $csv_pr['avz_code'];
+                            $totalbeforevat = $csv_pr['net_sale'];
+                            $main_net       = ($csv_pr['net_sale'] + $vat_val);
+                           
+                            $item_expiry    = isset($csv_pr['expiry']) ? $this->sma->fsd($csv_pr['expiry']) : null;
+
+                            if (isset($item_code) && isset($item_net_price) && isset($item_quantity)) {
+                                $product_details  = $this->sales_model->getProductByCode($item_code);
+                                
+                                $prroduct_item_discount = ($item_dis1_val + $item_dis2_val);
+                                $product_discount += $prroduct_item_discount;
+
+                                $tax         = '';
+                                
+                                $unit_price  = $sale_price;
+                                $tax_details = ((isset($item_tax_rate) && !empty($item_tax_rate)) ? $this->sales_model->getTaxRateByName($item_tax_rate) : $this->site->getTaxRateByID($product_details->tax_rate));
+                                if ($tax_details) {
+                                    $ctax     = $this->site->calculateTax($product_details, $tax_details, $unit_price);
+                                    $tax      = $ctax['tax'];
+                                }
+
+                                $product_tax += $vat_val;
+                                $subtotal = $csv_pr['total_sale'];
+                                $unit     = $this->site->getUnitByID($product_details->unit);
+
+                                $product = [
+                                    'product_id'        => $product_details->id,
+                                    'product_code'      => $item_code,
+                                    'product_name'      => $item_name,
+                                    'product_type'      => $item_type,
+                                    'net_cost'          => $cost_price,
+                                    'net_unit_price'    => $item_net_price,
+                                    'quantity'          => $item_quantity + $item_bonus,
+                                    'product_unit_id'   => $product_details->unit,
+                                    'product_unit_code' => $unit->code,
+                                    'unit_quantity'     => $item_quantity,
+                                    'warehouse_id'      => $warehouse_id,
+                                    'item_tax'          => $vat_val,
+                                    'tax_rate_id'       => $tax_details ? $tax_details->id : null,
+                                    'tax'               => $tax,
+                                    'item_discount'     => $item_dis1_val,
+                                    'expiry'            => $item_expiry,
+                                    'discount1'         => $item_dis1,
+                                    'discount2'         => $item_dis2,
+                                    'subtotal'          => $subtotal,
+                                    'batch_no'          => $item_batchno,
+                                    'unit_price'        => $unit_price,
+                                    'real_unit_price'   => $unit_price,
+                                    'subtotal2'         => $main_net,
+                                    'bonus'             => $item_bonus,
+                                    'avz_item_code'     => $avz_code ,
+                                    'totalbeforevat'    => $totalbeforevat,
+                                    'main_net'          => $main_net,
+                                    'real_cost'         => $purchase_price,
+                                    'second_discount_value' => $item_dis2_val
+                                    // 'second_discount_value' => $pr_discount2 * $item_quantity
+                                ];
+
+                                $products[] = ($product);
+                                $total += $total_sale;
+                                $total_net_sale += $totalbeforevat;
+                            }
+                        } else {
+                            $this->session->set_flashdata('error', lang('pr_not_found') . ' ( ' . $csv_pr['code'] . ' ). ' . lang('line_no') . ' ' . $rw);
+                            redirect($_SERVER['HTTP_REFERER']);
+                        }
+                        $rw++;
+                    }
+                }
+            }
+
+            $order_discount = $this->site->calculateDiscount($this->input->post('order_discount'), ($total + $product_tax), true);
+            $total_discount = $product_discount;
+            $order_tax      = $this->input->post('order_tax');
+            $total_tax      = $product_tax + $order_tax;
+            $grand_total = $total_net_sale + $total_tax + $shipping;
+            $data        = ['date'  => $date,
+                'reference_no'      => $reference,
+                'customer_id'       => $customer_id,
+                'customer'          => $customer,
+                'biller_id'         => $biller_id,
+                'biller'            => $biller,
+                'warehouse_id'      => $warehouse_id,
+                'note'              => $note,
+                'staff_note'        => $staff_note,
+                'total'             => $total,
+                'total_net_sale'    => $total_net_sale,
+                'product_discount'  => $product_discount,
+                'order_discount_id' => $this->input->post('order_discount'),
+                'order_discount'    => $order_discount,
+                'total_discount'    => $total_discount,
+                'product_tax'       => $product_tax,
+                'order_tax_id'      => $this->input->post('order_tax'),
+                'order_tax'         => $order_tax,
+                'total_tax'         => $total_tax,
+                'shipping'          => $this->sma->formatDecimal($shipping),
+                'grand_total'       => $grand_total,
+                'total_items'       => $total_items,
+                'sale_status'       => $sale_status,
+                'payment_status'    => $payment_status,
+                'payment_term'      => $payment_term,
+                'due_date'          => $due_date,
+                'paid'              => 0,
+                'created_by'        => $this->session->userdata('user_id'),
+            ];
+            if ($this->Settings->indian_gst) {
+                $data['cgst'] = $total_cgst;
+                $data['sgst'] = $total_sgst;
+                $data['igst'] = $total_igst;
+            }
+
+            if ($payment_status == 'paid') {
+                $payment = [
+                    'date'         => $date,
+                    'reference_no' => $this->site->getReference('pay'),
+                    'amount'       => $grand_total,
+                    'paid_by'      => 'cash',
+                    'cheque_no'    => '',
+                    'cc_no'        => '',
+                    'cc_holder'    => '',
+                    'cc_month'     => '',
+                    'cc_year'      => '',
+                    'cc_type'      => '',
+                    'created_by'   => $this->session->userdata('user_id'),
+                    'note'         => lang('auto_added_for_sale_by_csv') . ' (' . lang('sale_reference_no') . ' ' . $reference . ')',
+                    'type'         => 'received',
+                ];
+            } else {
+                $payment = [];
+            }
+
+            $attachments        = $this->attachments->upload();
+            $data['attachment'] = !empty($attachments);
+        }
+
+        if ($this->form_validation->run() == true && $this->sales_model->addSale($data, $products, $payment, [], $attachments)) {
+            $this->session->set_userdata('remove_slls', 1);
+            $this->session->set_flashdata('message', lang('sale_added'));
+            admin_redirect('sales');
+        } else {
+            $data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+
+            $this->data['warehouses'] = $this->site->getAllWarehouses();
+            $this->data['tax_rates']  = $this->site->getAllTaxRates();
+            $this->data['billers']    = $this->site->getAllCompanies('biller');
+            $this->data['slnumber']   = $this->site->getReference('so');
+
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('sales'), 'page' => lang('sales')], ['link' => '#', 'page' => lang('add_sale_by_csv')]];
+            $meta = ['page_title' => lang('add_sale_by_csv'), 'bc' => $bc];
+            $this->page_construct('sales/sale_by_csv', $meta, $this->data);
+        }
+    }
+
 
     public function add($quote_id = null)
     {
@@ -1365,38 +1657,97 @@ class Sales extends MY_Controller
         if ($this->form_validation->run() == true && $this->sales_model->updateSale($id, $data, $products, $attachments)) {
             if($sale_status == 'completed'){
                 $this->convert_sale_invoice($id);
-                           /**
-                             * Zatca Integration B2B Start
-                             */
-                            if($this->zatca_enabled){
-                                $zatca_payload =  $this->Zetca_model->get_zetca_data_b2b($id); 
-                                $zatca_response = $this->zatca->post('',  $zatca_payload);
-                                $is_success = true;
-                                $remarks = "";
-                                if($zatca_response['status'] >= 400){
-                                    $is_success = false;
-                                    if(isset($zatca_response['body']['errors'])){
-                                        if(!empty($zatca_response['body']['errors'])){
-                                            $remarks = $zatca_response['body']['errors'][0];
-                                        }
-                                    }
-                                }
-                                $date = date('Y-m-d H:i:s');
-                                $request = json_encode($zatca_payload, true);
-                                $response = json_encode($zatca_response, true);
-                                $reporting_data = [
-                                    "sale_id" => $id,
-                                    "date" => $date,
-                                    "is_success" => $is_success,
-                                    "request" => $request,
-                                    "response" => $response,
-                                    "remarks" => $remarks
-                                ];
-
-                                $this->Zetca_model->report_zatca_status($reporting_data);
+                /**
+                 * Zatca Integration B2B Start
+                 */
+                if($this->zatca_enabled){
+                    $zatca_payload =  $this->Zetca_model->get_zetca_data_b2b($id); 
+                    $zatca_response = $this->zatca->post('',  $zatca_payload);
+                    $is_success = true;
+                    $remarks = "";
+                    if($zatca_response['status'] >= 400){
+                        $is_success = false;
+                        if(isset($zatca_response['body']['errors'])){
+                            if(!empty($zatca_response['body']['errors'])){
+                                $remarks = $zatca_response['body']['errors'][0];
                             }
+                        }
+                    }
+                    $date = date('Y-m-d H:i:s');
+                    $request = json_encode($zatca_payload, true);
+                    $response = json_encode($zatca_response, true);
+                    $reporting_data = [
+                        "sale_id" => $id,
+                        "date" => $date,
+                        "is_success" => $is_success,
+                        "request" => $request,
+                        "response" => $response,
+                        "remarks" => $remarks
+                    ];
+
+                    $this->Zetca_model->report_zatca_status($reporting_data);
+                }
+
                 if($customer_details->balance > 0){
                     $this->sales_model->update_balance($customer_details->id, $new_balance);
+                }
+
+                /**RASD Integration Code */
+                $data_for_rasd = [
+                    "products" => $products,
+                    "source_warehouse_id" => $data['warehouse_id'],
+                    "destination_customer_id" => $data['customer_id'],
+                    "sale_id" => $id
+                ];
+                $response_model = $this->sales_model->get_rasd_required_fields($data_for_rasd);
+                $body_for_rasd_dispatch = $response_model['payload'];
+
+                //$payload_for_accept_dispatch = $response_model['payload_for_accept_dispatch'];
+                //log_message("info", json_encode($payload_for_accept_dispatch, true));
+
+                $rasd_user = $response_model['user'];
+                $rasd_pass = $response_model['pass'];
+                $resp_sale_status = $response_model['status'];
+                //$ph_user = $response_model['pharmacy_user'];
+                //$ph_pass = $response_model['pharmacy_pass'];
+                //$map_update = $response_model['update_map_table'];
+                $rasd_success = false;
+                log_message("info", json_encode($body_for_rasd_dispatch));
+                $payload_used =  [
+                        'source_gln' => $response_model['source_gln'],
+                        'destination_gln' => $response_model['destination_gln'],
+                        'warehouse_id' => $data['warehouse_id']
+                    ];  
+                    
+                if($resp_sale_status == 'completed'){
+                    foreach($body_for_rasd_dispatch as $index => $payload_dispatch){
+                        log_message("info", "RASD AUTH START");
+                        $this->rasd->set_base_url('https://qdttsbe.qtzit.com:10101/api/web');
+                        $auth_response = $this->rasd->authenticate($rasd_user, $rasd_pass);
+                        if(isset($auth_response['token'])){
+                            $auth_token = $auth_response['token'];
+                            log_message("info", 'RASD Authentication Success: DISPATCH_PRODUCT');
+                            $zadca_dispatch_response = $this->rasd->dispatch_product_133($payload_dispatch, $auth_token);
+                            
+                            
+                            if(isset($zadca_dispatch_response['body']['DicOfDic']['MR']['TRID']) && $zadca_dispatch_response['body']['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){                
+                                log_message("info", "Dispatch successful");
+                                $rasd_success = true;                
+
+                                $this->cmt_model->add_rasd_transactions($payload_used,'sale_dispatch_product',true, $zadca_dispatch_response,$payload_dispatch);
+                            
+                            }else{
+                                $rasd_success = false;
+                                log_message("error", "Dispatch Failed");
+                                log_message("error", json_encode($zadca_dispatch_response,true));
+                                $this->cmt_model->add_rasd_transactions($payload_used,'sale_dispatch_product',false, $zadca_dispatch_response,$payload_dispatch);
+                            }
+                            
+                        }else{
+                            log_message("error", 'RASD Authentication FAILED: DISPATCH_PRODUCT');
+                            $this->cmt_model->add_rasd_transactions($payload_used,'sale_dispatch_product',false, $accept_dispatch_result,$body_for_rasd_dispatch);
+                        }
+                    }
                 }
             }
 

@@ -43,6 +43,257 @@ class Purchases extends MY_Controller
 
     /* -------------------------------------------------------------------------------------------------------------------------------- */
 
+    // show Upload Purchases
+    public function showUploadPurchases() {
+        $this->sma->checkPermissions();
+
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+
+        echo "<script>console.log(" . json_encode($this->data['suppliers']) . ");</script>";
+        echo "<script>console.log(" . json_encode($this->data['warehouses']) . ");</script>";
+
+        $this->load->view($this->theme . 'purchases/uploadCsvPurchases', $this->data);
+    }
+
+    public function mapPurchases(){
+        $this->sma->checkPermissions('csv');
+        $this->load->helper('security');
+        $this->form_validation->set_message('is_natural_no_zero', $this->lang->line('no_zero_required'));
+        $this->form_validation->set_rules('mwarehouse', $this->lang->line('warehouse'), 'required|is_natural_no_zero');
+        $this->form_validation->set_rules('msupplier', $this->lang->line('supplier'), 'required');
+        $this->form_validation->set_rules('userfile', $this->lang->line('upload_file'), 'xss_clean');
+
+        if ($this->form_validation->run() == true) {
+            $quantity = 'quantity';
+            $product = 'product';
+            $unit_cost = 'unit_cost';
+            $tax_rate = 'tax_rate';
+            $reference = $this->input->post('mreference_no') ? $this->input->post('mreference_no') : $this->site->getReference('po');
+            if ($this->Owner || $this->Admin) {
+                $date = $this->sma->fld(trim($this->input->post('mdate')));
+            } else {
+                $date = null;
+            }
+            $warehouse_id = $this->input->post('mwarehouse');
+            $child_supplier_id = $this->input->post('mchildsupplier') ? $this->input->post('mchildsupplier') : 0;
+            $supplier_id = $child_supplier_id ? $child_supplier_id : $this->input->post('msupplier');
+            $status = 'pending';
+            $shipping = $this->input->post('shipping') ? $this->input->post('shipping') : 0;
+            $supplier_details = $this->site->getCompanyByID($supplier_id);
+            $supplier = $supplier_details->company && $supplier_details->company != '-' ? $supplier_details->company : $supplier_details->name;
+            $note = $this->sma->clear_tags($this->input->post('note'));
+
+            $total_sale_price = 0;
+            $total = 0;
+            $product_tax = 0;
+            $product_discount = 0;
+            $gst_data = [];
+            $total_cgst = $total_sgst = $total_igst = 0;
+
+            $grand_total = 0;
+            $grand_total_net_purchase = 0;
+            $total_discount = 0;
+
+            if (isset($_FILES['userfile'])) {
+                $this->load->library('upload');
+
+                $config['upload_path'] = $this->digital_upload_path;
+                $config['allowed_types'] = 'csv';
+                $config['max_size'] = $this->allowed_file_size;
+                $config['overwrite'] = true;
+
+                $this->upload->initialize($config);
+
+                if (!$this->upload->do_upload()) {
+                    $error = $this->upload->display_errors();
+                    $this->session->set_flashdata('error', $error);
+                    admin_redirect('purchases/uploadCsvPurchases');
+                }
+
+                $csv = $this->upload->file_name;
+
+                $arrResult = [];
+                $handle = fopen($this->digital_upload_path . $csv, 'r');
+                if ($handle) {
+                    while (($row = fgetcsv($handle, 5000, ',')) !== false) {
+                        $arrResult[] = $row;
+                    }
+                    fclose($handle);
+                }
+
+                $arr_length = count($arrResult);
+                if ($arr_length > 5000000) {
+                    $this->session->set_flashdata('error', lang('too_many_products'));
+                    redirect($_SERVER['HTTP_REFERER']);
+                    exit();
+                }
+                $titles = array_shift($arrResult);
+                $keys = ['code', 'sale_price', 'purchase_price', 'batchno', 'expiry', 'quantity', 'bonus', 'discount1', 'discount1_val', 'discount2', 'discount2_val', 'item_tax_rate', 'item_tax_val', 'total_purchase', 'total_sale', 'net_purchase', 'net_unit_cost' ];
+                $final = [];
+                foreach ($arrResult as $key => $value) {
+                    $final[] = array_combine($keys, $value);
+                }
+                $rw = 2;
+                foreach ($final as $csv_pr) {
+                    if (isset($csv_pr['code']) && isset($csv_pr['net_unit_cost']) && isset($csv_pr['quantity'])) {
+                        if ($product_details = $this->purchases_model->getProductByCode($csv_pr['code'])) {
+                            
+                            $item_code = $csv_pr['code'];
+                            $item_net_cost = $csv_pr['net_unit_cost'];
+                            $item_quantity = $csv_pr['quantity'];
+                            $quantity_balance = $csv_pr['quantity'];
+                            $item_tax_rate = $csv_pr['item_tax_rate'];
+                            $pr_item_tax = $csv_pr['item_tax_val'];
+                            $item_bonus = $csv_pr['bonus'];
+
+                            $item_expiry = isset($csv_pr['expiry']) ? $this->sma->fsd($csv_pr['expiry']) : null;
+                            $item_purchase_price = $csv_pr['purchase_price'];
+                            $item_sale_price = $csv_pr['sale_price'];
+                            $item_batchno = $csv_pr['batchno'];
+                            $item_discount1 = $csv_pr['discount1'];
+                            $item_discount1_val = $csv_pr['discount1_val'];
+                            $item_discount2 = $csv_pr['discount2'];
+                            $item_discount2_val = $csv_pr['discount2_val'];
+
+                            $total_purchases = $csv_pr['total_purchase'];
+
+                            $total_before_vat = $csv_pr['net_purchase'];
+                            $main_net = ($csv_pr['net_purchase'] + $pr_item_tax);
+                            //$total_purchases = $item_net_cost * $item_quantity;
+
+                            $tax = '';
+                            $unit_cost = $item_net_cost;
+                            $product_tax += $pr_item_tax;
+                            $tax_details = ((isset($item_tax_rate) && !empty($item_tax_rate)) ? $this->purchases_model->getTaxRateByName($item_tax_rate) : $this->site->getTaxRateByID($product_details->tax_rate));
+                            if ($tax_details) {
+                                $ctax = $this->site->calculateTax($product_details, $tax_details, $unit_cost);
+                                $tax = $ctax['tax'];
+                            }
+
+                            $product_discount = $item_discount1_val + $item_discount2_val;
+                            $total_discount += $product_discount;
+
+                            $subtotal = $main_net;
+                            $subtotal2 = (($item_net_cost * $item_quantity));// + $pr_item_tax);
+
+                            $unit = $this->site->getUnitByID($product_details->unit);
+                            $real_unit_cost = $this->sma->formatDecimal(($unit_cost + $pr_discount), 4);
+                            $product = [
+                                'product_id' => $product_details->id,
+                                'product_code' => $item_code,
+                                'product_name' => $product_details->name,
+                                'net_unit_cost' => $item_net_cost,
+                                'quantity' => ($item_quantity  + $item_bonus),
+                                'bonus' => $item_bonus,
+                                'product_unit_id' => $product_details->unit,
+                                'product_unit_code' => $unit->code,
+                                'unit_quantity' => $item_quantity,
+                                'quantity_balance' => $status == 'received' ? $item_quantity + $item_bonus : 0,
+                                'quantity_received' => $status == 'received' ? $item_quantity + $item_bonus : 0,
+                                'warehouse_id' => $warehouse_id,
+                                'item_tax' => $pr_item_tax,
+                                'tax_rate_id' => $tax_details ? $tax_details->id : null,
+                                'tax' => $tax,
+                                'discount' => $item_discount1,
+                                'item_discount' => $item_discount1_val,
+                                'expiry' => $item_expiry,
+                                'sale_price' => $item_sale_price,
+                                'batchno' => $item_batchno,
+                                'discount1' => $item_discount1,
+                                'discount2' => $item_discount2,
+                                'second_discount_value' => $item_discount2_val,
+                                'totalbeforevat' => $total_before_vat,
+                                'main_net' => $main_net,
+                                'subtotal' => $subtotal,
+                                'subtotal2' => $subtotal2,
+                                'date' => date('Y-m-d', strtotime($date)),
+                                'status' => $status,
+                                'unit_cost' => $item_purchase_price, // $this->sma->formatDecimal(($item_net_cost + $item_tax), 4),
+                                'real_unit_cost' => $item_purchase_price,
+                                'base_unit_cost' => $item_purchase_price,
+                            ];
+
+                            $products[] = ($product);
+                            // $total += $this->sma->formatDecimal(($item_net_cost * $item_quantity), 4);
+                            $total += $total_purchases;
+                            $total_sale_price += $this->sma->formatDecimal($item_sale_price, 4);
+
+                        } else {
+                            $this->session->set_flashdata('error', $this->lang->line('pr_not_found') . ' ( ' . $csv_pr['code'] . ' ). ' . $this->lang->line('line_no') . ' ' . $rw);
+                            redirect($_SERVER['HTTP_REFERER']);
+                        }
+
+
+                        $grand_total += $main_net;
+                        $grand_total_net_purchase += $total_before_vat;
+
+                        $rw++;
+                    }
+                }
+            }
+
+            // $order_discount = $this->site->calculateDiscount($this->input->post('discount') ? $this->input->post('order_discount') : null, ($total + $product_tax), true);
+            $order_discount = $this->site->calculateDiscount($this->input->post('discount'), $total, true);//$this->site->calculateDiscount($this->input->post('discount'), ($total + $product_tax), true);
+            
+            $order_tax = $this->site->calculateOrderTax($this->input->post('order_tax'), ($total + $product_tax - $order_discount));
+            $total_tax = $product_tax + $order_tax;
+
+            // $grand_total    = $this->sma->formatDecimal(($this->sma->formatDecimal($total) + $this->sma->formatDecimal($total_tax) + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
+            //$grand_total = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
+            
+            $data = [
+                'reference_no' => $reference,
+                'date' => $date,
+                'supplier_id' => $supplier_id,
+                'supplier' => $supplier,
+                'warehouse_id' => $warehouse_id,
+                'note' => $note,
+                'total' => $total,
+                'total_net_purchase' => $grand_total_net_purchase,
+                'total_sale' => $total_sale_price,
+                'product_discount' => $product_discount,
+                'order_discount_id' => $this->input->post('discount'),
+                'order_discount' => $order_discount,
+                'total_discount' => $total_discount,
+                'product_tax' => $product_tax,
+                'order_tax_id' => $this->input->post('order_tax'),
+                'order_tax' => $order_tax,
+                'total_tax' => $total_tax,
+                'shipping' => $this->sma->formatDecimal($shipping),
+                'grand_total' => $grand_total,
+                'status' => $status,
+                'sequence_code' => $this->sequenceCode->generate('PR', 5),
+                'created_by' => $this->session->userdata('user_id'),
+            ];
+            if ($this->Settings->indian_gst) {
+                $data['cgst'] = $total_cgst;
+                $data['sgst'] = $total_sgst;
+                $data['igst'] = $total_igst;
+            }
+
+            $attachments = $this->attachments->upload();
+            $data['attachment'] = !empty($attachments);
+            // $this->sma->print_arrays($data, $products);
+        }
+
+        if ($this->form_validation->run() == true && $this->purchases_model->addPurchase($data, $products, $attachments)) {
+            $this->session->set_flashdata('message', $this->lang->line('purchase_added'));
+            admin_redirect('purchases');
+        } else {
+            $data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+
+            $this->data['warehouses'] = $this->site->getAllWarehouses();
+            $this->data['tax_rates'] = $this->site->getAllTaxRates();
+            $this->data['ponumber'] = ''; // $this->site->getReference('po');
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('purchases'), 'page' => lang('purchases')], ['link' => '#', 'page' => lang('add_purchase_by_csv')]];
+            $meta = ['page_title' => lang('add_purchase_by_csv'), 'bc' => $bc];
+            $this->page_construct('purchases/purchase_by_csv', $meta, $this->data);
+        }
+    }
+
+
     public function add($quote_id = null)
     {
         $this->sma->checkPermissions();
@@ -797,10 +1048,21 @@ class Purchases extends MY_Controller
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
         }
-        $inv = $this->purchases_model->getPurchaseByID($id);
 
-        if ($inv->status == 'received') {
-             $this->session->set_flashdata('error', 'Cannot edit received orders');
+        $purchase_transferred = 0;
+
+        $inv = $this->purchases_model->getPurchaseByID($id);
+        $pur_inv_items = $this->purchases_model->getAllPurchaseItems($id);
+        foreach ($pur_inv_items as $pur_item) {
+            //$transferreditem = $this->Inventory_model->get_transferred_item($inv->warehouse_id,'transfer_out',$pur_item->product_id,$pur_item->avz_item_code,$pur_item->batchno);
+            $transferreditem = $this->Inventory_model->get_transferred_item('null','transfer_in',$pur_item->product_id,$pur_item->avz_item_code,$pur_item->batchno);
+            if($transferreditem){
+                $purchase_transferred = 1;
+            }
+        }
+
+        if ($inv->status == 'received' && $purchase_transferred == 1) {
+             $this->session->set_flashdata('error', 'This invoice has items already transferred');
 
              admin_redirect('purchases');
         }
@@ -1603,6 +1865,8 @@ class Purchases extends MY_Controller
     public function convert_purchse_invoice($pid)
     {
         if ($this->purchases_model->puchaseToInvoice($pid)) {
+            // Delete exiting entry if available first
+            $this->site->deleteAccountingEntry($pid, 'purchase');
 
             $inv = $this->purchases_model->getPurchaseByID($pid);
             $this->load->admin_model('companies_model');
@@ -2083,7 +2347,9 @@ class Purchases extends MY_Controller
         $from_warehouse = $purchase_detail->warehouse_id;
         $note = $this->sma->clear_tags($purchase_detail->note);
         $shipping = $purchase_detail->shipping;
-        $status = 'completed';
+        //$status = 'completed';
+
+        $status = $this->input->post('status');
         $from_warehouse_details = $this->site->getWarehouseByID($from_warehouse);
         $from_warehouse_code = $from_warehouse_details->code;
         $from_warehouse_name = $from_warehouse_details->name;
@@ -2263,99 +2529,6 @@ class Purchases extends MY_Controller
 
         //if ($this->transfers_model->transferPurchaseInvoice($data, $products, $attachments)) {
         if ($transfer_id = $this->transfers_model->addTransfer($data, $products, $attachments)) {
-            /**RASD Integration Code */
-            $data_for_rasd = [
-                "products" => $products,
-                "source_warehouse_id" => $data['from_warehouse_id'],
-                "destination_warehouse_id" => $data['to_warehouse_id'],
-                "transfer_id" => $transfer_id,
-                "notification_id" => $purchase_notification
-            ];
-            $response_model = $this->transfers_model->get_rasd_required_fields($data_for_rasd);
-            $body_for_rasd_dispatch = $response_model['payload'];
-            $payload_for_accept_dispatch = $response_model['payload_for_accept_dispatch'];
-             log_message("info", json_encode($payload_for_accept_dispatch, true));
-            $rasd_user = $response_model['user'];
-            $rasd_pass = $response_model['pass'];
-            $transfer_status = $response_model['status'];
-            $ph_user = $response_model['pharmacy_user'];
-            $ph_pass = $response_model['pharmacy_pass'];
-            $map_update = $response_model['update_map_table'];
-            $rasd_success = false;
-            log_message("info", json_encode($body_for_rasd_dispatch));
-            $payload_used =  [
-                    'source_gln' => $response_model['source_gln'],
-                    'destination_gln' => $response_model['destination_gln'],
-                    'warehouse_id' => $data['source_warehouse_id'],
-                    'notification_id' => $purchase_notification
-                ];  
-                $accept_dispatch_notification = [
-                    'warehouse_gln' =>$response_model['destination_gln'],
-                    'warehouse_id' => $data['to_warehouse_id'],
-                    'supplier_gln' =>  $response_model['source_gln']
-                ];
-            if($transfer_status == 'completed'){
-                foreach($body_for_rasd_dispatch as $index => $payload_dispatch){
-                    log_message("info", "RASD AUTH START");
-                    $this->rasd->set_base_url('https://qdttsbe.qtzit.com:10101/api/web');
-                    $auth_response = $this->rasd->authenticate($rasd_user, $rasd_pass);
-                    if(isset($auth_response['token'])){
-                        $auth_token = $auth_response['token'];
-                        log_message("info", 'RASD Authentication Success: DISPATCH_PRODUCT');
-                        $zadca_dispatch_response = $this->rasd->dispatch_product_133($payload_dispatch, $auth_token);
-                        
-                        
-                        if(isset($zadca_dispatch_response['body']['DicOfDic']['MR']['TRID']) && $zadca_dispatch_response['body']['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){                
-                            log_message("info", "Dispatch successful");
-                            $rasd_success = true;
-                            $this->transfers_model->update_notification_map($map_update);
-                            $accept_dispatch_body = [
-                                'supplier_gln' => $response_model['source_gln'],
-                                'warehouse_gln' => $response_model['destination_gln'],
-                                'notification_id' => $purchase_notification
-                            ];                
-
-                            $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',true, $zadca_dispatch_response,$payload_dispatch);
-                            /**Accept Dispatch By Pharmacy */
-                            $accept_params  = [
-                                'user' =>  $ph_user,
-                                'pass' => $ph_pass,
-                                'body' => $payload_for_accept_dispatch[$index]
-                            ]; 
-                            $accept_dispatch_result = $this->rasd->accept_dispatch_by_lot($accept_params);                        
-                            if(isset($accept_dispatch_result['body']['DicOfDic']['MR']['TRID']) && $accept_dispatch_result['body']['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){
-                                log_message("info", "Accept Dispatch successful");
-                                $rasd_success = true;
-                                $this->cmt_model->add_rasd_transactions($accept_dispatch_notification,'accept_dispatch',true, $accept_dispatch_result, $payload_for_accept_dispatch[$index]);
-                                
-                            }else{
-                                log_message("error", "Accept Dispatch Failed");
-                                $rasd_success = false;
-                                $this->cmt_model->add_rasd_transactions($accept_dispatch_notification,'accept_dispatch',true, $accept_dispatch_result, $payload_for_accept_dispatch[$index]);
-                            }
-                            
-                        
-                        }else{
-                            $rasd_success = false;
-                            log_message("error", "Dispatch Failed");
-                            log_message("error", json_encode($zadca_dispatch_response,true));
-                            $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',false, $zadca_dispatch_response,$payload_dispatch);
-                        }
-                    
-                        
-                    }else{
-                        log_message("error", 'RASD Authentication FAILED: DISPATCH_PRODUCT');
-                        $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',false, $accept_dispatch_result,$body_for_rasd_dispatch);
-                    }
-                }
-                
-            }else{
-                log_message("warning", 'The Status is not Complete' . $transfer_status);
-            }
-           
-            
-            /**RASD Integration End */
-
 
             $this->session->set_flashdata('message', lang('transfer_added'));
             admin_redirect('transfers');
