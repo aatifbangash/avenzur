@@ -6,7 +6,7 @@
             "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?= lang('all') ?>"]],
             "iDisplayLength": <?= $Settings->rows_per_page ?>,
             'bProcessing': true, 'bServerSide': true,
-            'sAjaxSource': '<?= admin_url('purchases/getPurchases' . ($warehouse_id ? '/' . $warehouse_id : '') .'?pid='.$pid ) ?>',
+            'sAjaxSource': '<?= admin_url('purchases/getPurchases' . ($warehouse_id ? '/' . $warehouse_id : '') .'?pid='.$pid. '&from=' .$pfromDate. '&to=' .$ptoDate) ?>',
             'fnServerData': function (sSource, aoData, fnCallback) {
                 aoData.push({
                     "name": "<?= $this->security->get_csrf_token_name() ?>",
@@ -173,11 +173,35 @@
     <div class="box-content">
         <div class="row">
             <div class="col-lg-12">
-
                 <!-- <p class="introtext"><?= lang('list_results'); ?></p> -->
-                 <div class="col-md-3"><input type="text" id="pid" name="pid" class="form-control input-tip"></div>
-                 <div class="col-md-3"> <input type="button" id="searchByNumber" class="btn btn-primary" value="Search By Purchase Number"></div>
+                <?php 
+                    // MARK: Filters
+                ?>
+                <div class="row" style="margin: 25px 0; display: flex; align-items: center;">
+                    <div style="flex: 1; margin-right: 20px;">
+                        <input type="text" id="pid" name="pid" class="form-control input-tip" placeholder="Purchase Number">
+                    </div>
 
+                    <div style="flex: 1;">
+                        <input type="date" name="date" class="form-control input-tip" id="pfromDate" placeholder="From Date">
+                    </div>
+
+                    <div style="flex: 0; margin: 0 10px; font-size: 18px; font-weight: bold;">
+                        -
+                    </div>
+
+                    <div style="flex: 1; margin-right: 20px;">
+                        <input type="date" name="date" class="form-control input-tip" id="ptoDate" placeholder="To Date">
+                    </div>
+
+                    <div style="flex: 0;">
+                        <input type="button" id="searchByNumber" class="btn btn-primary" value="Search">
+                    </div>
+                </div>
+
+                <?php 
+                    // MARK: Table
+                ?>
                 <div class="table-responsive">
                     <table id="POData" cellpadding="0" cellspacing="0" border="0"
                         class="table table-bordered table-hover table-striped">
@@ -243,15 +267,27 @@
 
 <script>
     document.getElementById('searchByNumber').addEventListener('click', function() {
-    var pidValue = document.getElementById('pid').value; 
-    if (pidValue) { 
-       
-        var baseUrl = window.location.href.split('?')[0]; 
-        var newUrl = baseUrl + "?pid=" + encodeURIComponent(pidValue);
-        window.location.href = newUrl; 
-    } else {
-        alert("Please enter a purchase number."); 
-    }
-});
+        var pid = document.getElementById('pid').value;
+        var pfromDate = document.getElementById('pfromDate').value;
+        var ptoDate = document.getElementById('ptoDate').value;
 
+        if (is_numeric(pid) || pid == ''){
+            var paramValues = [pid, pfromDate, ptoDate];
+            var paramNames = ['pid', 'from', 'to'];
+
+            var baseUrl = window.location.href.split('?')[0];
+            var queryParams = [];
+
+            for (let index = 0; index < paramValues.length; index++) {
+                if (paramValues[index]) {
+                    queryParams.push(paramNames[index] + '=' + encodeURIComponent(paramValues[index]));
+                }
+            }
+
+            var newUrl = baseUrl + '?' + queryParams.join('&');
+            window.location.href = newUrl;
+        } else {
+            alert("Please enter a valid purchase number."); 
+        }
+    });
 </script>
