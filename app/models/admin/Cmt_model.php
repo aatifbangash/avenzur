@@ -43,6 +43,13 @@ class Cmt_model extends CI_Model
             $warehouse_type = 'pharmacy';
         }
 
+        if($function == "pharmacy_sale_product"){
+            $source_gln = $payload_used['source_gln'];
+            $destination_gln = $payload_used['destination_gln'];
+            $warehouse_id = $payload_used['warehouse_id'];
+            $warehouse_type = 'pharmacy';
+        }
+
 
         $transaction = [
             "date" => date("Y-m-d"),
