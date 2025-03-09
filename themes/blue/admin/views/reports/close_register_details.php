@@ -69,7 +69,7 @@
                                 <div class="form-group">
                                     <?php
                                     $selected_warehouse_id[] = isset($warehouse) ? $warehouse : '';
-                                    $dp['all'] = 'All';
+                                    $dp = []; // $dp['all'] = 'All'; 
                                     foreach ($warehouses as $warehouse) {
                                         $dp[$warehouse->id] = $warehouse->name.' ('.$warehouse->code.')';
                                     }
