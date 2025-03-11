@@ -1008,6 +1008,11 @@ class Transfers extends MY_Controller
     {
         $this->sma->checkPermissions('index');
         $tid = $this->input->get('tid');
+        $tfromDate = $this->input->get('from');
+        $ttoDate = $this->input->get('to');
+        $twarehouseFrom = $this->input->get('fromWarehouse');
+        $twarehouseTo = $this->input->get('toWarehouse');
+
         $detail_link   = anchor('admin/transfers/view/$1', '<i class="fa fa-file-text-o"></i> ' . lang('transfer_details'), 'data-toggle="modal" data-target="#myModal"');
         $email_link    = anchor('admin/transfers/email/$1', '<i class="fa fa-envelope"></i> ' . lang('email_transfer'), 'data-toggle="modal" data-target="#myModal"');
         $edit_link     = anchor('admin/transfers/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_transfer'));
@@ -1046,11 +1051,29 @@ class Transfers extends MY_Controller
         }
         
         $this->datatables->where('type', 'transfer');
-        if(is_numeric($tid)) {
+        if (!empty($tid) && is_numeric($tid)) {
             $this->datatables->where('id', $tid);
         }
+        
+        if (!empty($tfromDate)) {
+            $this->datatables->where('date >=', $tfromDate);
+        }
 
-            $this->datatables->add_column('Actions', $action, 'id')
+        if (!empty($ttoDate)) {
+            $this->datatables->where('date <=', $ttoDate);
+        }
+
+        if (!empty($twarehouseFrom) && is_numeric($twarehouseFrom)) {
+            $this->datatables->where('from_warehouse_id', $twarehouseFrom);
+
+        }
+
+        if (!empty($twarehouseTo) && is_numeric($twarehouseTo)) {
+            $this->datatables->where('to_warehouse_id', $twarehouseTo);
+
+        }
+
+        $this->datatables->add_column('Actions', $action, 'id')
             ->unset_column('fcode')
             ->unset_column('tcode');
         echo $this->datatables->generate();
@@ -1058,13 +1081,26 @@ class Transfers extends MY_Controller
 
     public function index()
     {
-       
         $this->sma->checkPermissions();
-
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         
+        if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
+            $this->data['warehouses'] = $this->site->getAllWarehouses();
+            $this->data['warehouse_id'] = $warehouse_id;
+            $this->data['warehouse'] = $warehouse_id ? $this->site->getWarehouseByID($warehouse_id) : null;
+        } else {
+            $this->data['warehouses'] = null;
+            $this->data['warehouse_id'] = $this->session->userdata('warehouse_id');
+            $this->data['warehouse'] = $this->session->userdata('warehouse_id') ? $this->site->getWarehouseByID($this->session->userdata('warehouse_id')) : null;
+        }
+        
         $this->data['lastInsertedId'] =  $this->input->get('lastInsertedId') ;
+        
         $this->data['tid'] = $this->input->get('tid');
+        $this->data['tfromDate'] = $this->input->get('from');
+        $this->data['ttoDate'] = $this->input->get('to');
+        $this->data['twarehouseFrom'] = $this->input->get('fromWarehouse');
+        $this->data['twarehouseTo'] = $this->input->get('toWarehouse');
 
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('transfers')]];
         $meta = ['page_title' => lang('transfers'), 'bc' => $bc];
