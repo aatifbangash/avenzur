@@ -279,6 +279,18 @@
                    document.getElementById('stoDate').value, 
                    document.getElementById('swarehouse').value]
 
+        if (paramValues[1] && paramValues[2]) {
+            // Convert dates to Date objects for comparison
+            let fromDate = new Date(paramValues[1]);
+            let toDate = new Date(paramValues[2]);
+
+            // Ensure 'fromDate' is smaller than or equal to 'toDate'
+            if (fromDate > toDate) {
+                alert("The 'From Date' must be smaller than or equal to the 'To Date'.");
+                return;
+            }
+        }
+        
         // Set 'To Date' to the end of the day (23:59:59) to ensure the query includes the entire day in the db 
         if (paramValues[2]) { 
             let toDate = new Date(paramValues[2]);

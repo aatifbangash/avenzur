@@ -271,11 +271,23 @@
         var pfromDate = document.getElementById('pfromDate').value;
         var ptoDate = document.getElementById('ptoDate').value;
 
+        if (pfromDate && ptoDate) {
+            // Convert dates to Date objects for comparison
+            let fromDate = new Date(pfromDate);
+            let toDate = new Date(ptoDate);
+
+            // Ensure 'fromDate' is smaller than or equal to 'toDate'
+            if (fromDate > toDate) {
+                alert("The 'From Date' must be smaller than or equal to the 'To Date'.");
+                return;
+            }
+        }
+
         // Set 'To Date' to the end of the day (23:59:59) to ensure the query includes the entire day in the db 
-        if (pfromDate) { 
-            let toDate = new Date(pfromDate);
+        if (ptoDate) { 
+            let toDate = new Date(ptoDate);
             toDate.setHours(23, 59, 59);
-            pfromDate = toDate.toISOString().replace('T', ' ').split('.')[0]; // Format as Y-M-D H:M:S
+            ptoDate = toDate.toISOString().replace('T', ' ').split('.')[0]; // Format as Y-M-D H:M:S
         }
 
         if (is_numeric(pid) || pid == ''){
