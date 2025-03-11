@@ -271,6 +271,13 @@
         var pfromDate = document.getElementById('pfromDate').value;
         var ptoDate = document.getElementById('ptoDate').value;
 
+        // Set 'To Date' to the end of the day (23:59:59) to ensure the query includes the entire day in the db 
+        if (pfromDate) { 
+            let toDate = new Date(pfromDate);
+            toDate.setHours(23, 59, 59);
+            pfromDate = toDate.toISOString().replace('T', ' ').split('.')[0]; // Format as Y-M-D H:M:S
+        }
+
         if (is_numeric(pid) || pid == ''){
             var paramValues = [pid, pfromDate, ptoDate];
             var paramNames = ['pid', 'from', 'to'];

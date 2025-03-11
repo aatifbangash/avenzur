@@ -279,6 +279,13 @@
                    document.getElementById('stoDate').value, 
                    document.getElementById('swarehouse').value]
 
+        // Set 'To Date' to the end of the day (23:59:59) to ensure the query includes the entire day in the db 
+        if (paramValues[2]) { 
+            let toDate = new Date(paramValues[2]);
+            toDate.setHours(23, 59, 59);
+            paramValues[2] = toDate.toISOString().replace('T', ' ').split('.')[0]; // Format as Y-M-D H:M:S
+        }          
+
         var paramNames = ['sid', 'from', 'to', 'warehouse'];
 
         if (is_numeric(paramValues[0]) || paramValues[0] == ''){
