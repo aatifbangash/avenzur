@@ -6,7 +6,7 @@
             "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?=lang('all')?>"]],
             "iDisplayLength": <?=$Settings->rows_per_page?>,
             'bProcessing': true, 'bServerSide': true,
-            'sAjaxSource': '<?=admin_url('sales/getSales' . ($warehouse_id ? '/' . $warehouse_id : '') . '?sid='.$sid.'&v=1' . ($this->input->get('shop') ? '&shop=' . $this->input->get('shop') : '') . ($this->input->get('attachment') ? '&attachment=' . $this->input->get('attachment') : '') . ($this->input->get('delivery') ? '&delivery=' . $this->input->get('delivery') : '')); ?>',
+            'sAjaxSource': '<?=admin_url('sales/getSales' . ($warehouse_id ? '/' . $warehouse_id : '') . '?sid='.$sid. '&from=' .$sfromDate. '&to=' .$stoDate. '&customer=' .$scustomer. '&v=1' . ($this->input->get('shop') ? '&shop=' . $this->input->get('shop') : '') . ($this->input->get('attachment') ? '&attachment=' . $this->input->get('attachment') : '') . ($this->input->get('delivery') ? '&delivery=' . $this->input->get('delivery') : '')); ?>',
             'fnServerData': function (sSource, aoData, fnCallback) {
                 aoData.push({
                     "name": "<?=$this->security->get_csrf_token_name()?>",
@@ -319,10 +319,48 @@
             <div class="col-lg-12">
 
                 <!-- <p class="introtext"><?=lang('list_results');?></p> -->
-                <div class="col-md-3"><input type="text" id="sid" name="sid" class="form-control input-tip"></div>
-                <div class="col-md-3"> <input type="button" id="searchByNumber" class="btn btn-primary" value="Search By Serial Number"></div>
+                <?php 
+                    // MARK: Filter
+                ?>
+                <div class="row" style="margin: 25px 0; display: flex; align-items: center;">
+                    <div style="flex: 1; margin-right: 20px;">
+                        <input type="text" id="sid" name="sid" class="form-control input-tip" placeholder="Serial Number">
+                    </div>
 
+                    <div style="flex: 1;">
+                        <input type="date" name="date" class="form-control input-tip" id="sfromDate" placeholder="From Date">
+                    </div>
 
+                    <div style="flex: 0; margin: 0 10px; font-size: 18px; font-weight: bold;">
+                        -
+                    </div>
+
+                    <div style="flex: 1; margin-right: 20px;">
+                        <input type="date" name="date" class="form-control input-tip" id="stoDate" placeholder="To Date">
+                    </div>
+
+                    <div style="flex: 1; margin-right: 20px;">
+                        <div class="controls">
+                            <?php
+                                $cu[''] = '';
+                                foreach ($customers as $customer) {
+                                    $cu[$customer->id] = $customer->name;
+                                }
+
+                                echo form_dropdown('customer', $cu, ' ', 'id="scustomer" class="form-control input-tip select" data-placeholder="' . $this->lang->line('Select customer') . '" style="width:100%;"'
+                                );
+                            ?>
+                        </div>
+                    </div>
+
+                    <div style="flex: 0;">
+                        <input type="button" id="searchByNumber" class="btn btn-primary" value="Search">
+                    </div>
+                </div>
+
+                <?php 
+                    // MARK: Table
+                ?>
                 <div class="table-responsive">
                     <table id="SLData" class="table table-bordered table-hover table-striped" cellpadding="0" cellspacing="0" border="0">
                         <thead>
@@ -384,15 +422,46 @@
 
 <script>
     document.getElementById('searchByNumber').addEventListener('click', function() {
-    var pidValue = document.getElementById('sid').value; 
-    if (pidValue) { 
-       
-        var baseUrl = window.location.href.split('?')[0]; 
-        var newUrl = baseUrl + "?sid=" + encodeURIComponent(pidValue);
-        window.location.href = newUrl; 
-    } else {
-        alert("Please enter a purchase number."); 
-    }
-});
+        var paramValues = [document.getElementById('sid').value, 
+                   document.getElementById('sfromDate').value, 
+                   document.getElementById('stoDate').value, 
+                   document.getElementById('scustomer').value]
 
+        if (paramValues[1] && paramValues[2]) {
+            // Convert dates to Date objects for comparison
+            let fromDate = new Date(paramValues[1]);
+            let toDate = new Date(paramValues[2]);
+
+            // Ensure 'fromDate' is smaller than or equal to 'toDate'
+            if (fromDate > toDate) {
+                alert("The 'From Date' must be smaller than or equal to the 'To Date'.");
+                return;
+            }
+        }
+
+        // Set 'To Date' to the end of the day (23:59:59) to ensure the query includes the entire day in the db 
+        if (paramValues[2]) { 
+            let toDate = new Date(paramValues[2]);
+            toDate.setHours(23, 59, 59);
+            paramValues[2] = toDate.toISOString().replace('T', ' ').split('.')[0]; // Format as Y-M-D H:M:S
+        }
+
+        var paramNames = ['sid', 'from', 'to', 'customer'];
+
+        if (is_numeric(paramValues[0]) || paramValues[0] == ''){
+            var baseUrl = window.location.href.split('?')[0];
+            var queryParams = [];
+
+            for (let index = 0; index < paramValues.length; index++) {
+                if(paramValues[index]){
+                    queryParams.push(paramNames[index] + '=' + encodeURIComponent(paramValues[index]));
+                }
+            }
+
+            var newUrl = baseUrl + '?' + queryParams.join('&');
+            window.location.href = newUrl;
+        } else {
+            alert("Please enter a valid Serial number."); 
+        }
+    });
 </script>

@@ -6,7 +6,7 @@
             "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?= lang('all') ?>"]],
             "iDisplayLength": <?= $Settings->rows_per_page ?>,
             'bProcessing': true, 'bServerSide': true,
-            'sAjaxSource': '<?= admin_url('transfers/getTransfers?tid='.$tid) ?>',
+            'sAjaxSource': '<?= admin_url('transfers/getTransfers?tid='.$tid. '&from=' .$tfromDate. '&to=' .$ttoDate. '&fromWarehouse=' .$twarehouseFrom. '&toWarehouse=' .$twarehouseTo) ?>',
             'fnServerData': function (sSource, aoData, fnCallback) {
                 aoData.push({
                     "name": "<?= $this->security->get_csrf_token_name() ?>",
@@ -115,9 +115,62 @@
             <div class="col-lg-12">
 
                 <!-- <p class="introtext"><?= lang('list_results'); ?></p> -->
-                <div class="col-md-3"><input type="text" id="tid" name="pid" class="form-control input-tip"></div>
-                <div class="col-md-3"> <input type="button" id="searchByNumber" class="btn btn-primary" value="Search By Serial Number"></div>
+                <?php 
+                    // MARK: Filter
+                ?>
+                <div class="row" style="margin: 25px 0; display: flex; align-items: center;">
+                    <div style="flex: 1; margin-right: 20px;">
+                        <input type="text" id="tid" name="tid" class="form-control input-tip" placeholder="Serial Number">
+                    </div>
 
+                    <div style="flex: 1;">
+                        <input type="date" name="date" class="form-control input-tip" id="tfromDate" placeholder="From Date">
+                    </div>
+
+                    <div style="flex: 0; margin: 0 10px; font-size: 18px; font-weight: bold;">
+                        -
+                    </div>
+
+                    <div style="flex: 1; margin-right: 20px;">
+                        <input type="date" name="date" class="form-control input-tip" id="ttoDate" placeholder="To Date">
+                    </div>
+
+                    <div style="flex: 1; margin-right: 20px;">
+                        <div class="controls">
+                            <?php
+                                $wh[''] = '';
+                                foreach ($warehouses as $warehouse) {
+                                    $wh[$warehouse->id] = $warehouse->name;
+                                }
+
+                                echo form_dropdown('warehouse', $wh, ' ', 'id="twarehouseFrom" class="form-control input-tip select" data-placeholder="' . $this->lang->line('From warehouse') . '" style="width:100%;"'
+                                );
+                            ?>
+                        </div>
+                    </div>
+
+                    <div style="flex: 1; margin-right: 20px;">
+                        <div class="controls">
+                            <?php
+                                $wh[''] = '';
+                                foreach ($warehouses as $warehouse) {
+                                    $wh[$warehouse->id] = $warehouse->name;
+                                }
+
+                                echo form_dropdown('warehouse', $wh, ' ', 'id="twarehouseTo" class="form-control input-tip select" data-placeholder="' . $this->lang->line('To warehouse') . '" style="width:100%;"'
+                                );
+                            ?>
+                        </div>
+                    </div>
+
+                    <div style="flex: 0;">
+                        <input type="button" id="searchByNumber" class="btn btn-primary" value="Search">
+                    </div>
+                </div>
+
+                <?php 
+                    // MARK: Table
+                ?>
                 <div class="table-responsive">
                     <table id="TOData" cellpadding="0" cellspacing="0" border="0"
                            class="table table-bordered table-condensed table-hover table-striped">
@@ -173,15 +226,47 @@
 
 <script>
     document.getElementById('searchByNumber').addEventListener('click', function() {
-    var pidValue = document.getElementById('tid').value; 
-    if (pidValue) { 
-       
-        var baseUrl = window.location.href.split('?')[0]; 
-        var newUrl = baseUrl + "?tid=" + encodeURIComponent(pidValue);
-        window.location.href = newUrl; 
-    } else {
-        alert("Please enter a serial number."); 
-    }
-});
+        var paramValues = [document.getElementById('tid').value, 
+                   document.getElementById('tfromDate').value, 
+                   document.getElementById('ttoDate').value, 
+                   document.getElementById('twarehouseFrom').value,
+                   document.getElementById('twarehouseTo').value]
 
+        if (paramValues[1] && paramValues[2]) {
+            // Convert dates to Date objects for comparison
+            let fromDate = new Date(paramValues[1]);
+            let toDate = new Date(paramValues[2]);
+
+            // Ensure 'fromDate' is smaller than or equal to 'toDate'
+            if (fromDate > toDate) {
+                alert("The 'From Date' must be smaller than or equal to the 'To Date'.");
+                return;
+            }
+        }
+        
+        // Set 'To Date' to the end of the day (23:59:59) to ensure the query includes the entire day in the db 
+        if (paramValues[2]) { 
+            let toDate = new Date(paramValues[2]);
+            toDate.setHours(23, 59, 59);
+            paramValues[2] = toDate.toISOString().replace('T', ' ').split('.')[0]; // Format as Y-M-D H:M:S
+        }
+
+        var paramNames = ['tid', 'from', 'to', 'fromWarehouse', 'toWarehouse'];
+
+        if (is_numeric(paramValues[0]) || paramValues[0] == ''){
+            var baseUrl = window.location.href.split('?')[0];
+            var queryParams = [];
+
+            for (let index = 0; index < paramValues.length; index++) {
+                if(paramValues[index]){
+                    queryParams.push(paramNames[index] + '=' + encodeURIComponent(paramValues[index]));
+                }
+            }
+
+            var newUrl = baseUrl + '?' + queryParams.join('&');
+            window.location.href = newUrl;
+        } else {
+            alert("Please enter a valid Serial number."); 
+        }
+    });
 </script>

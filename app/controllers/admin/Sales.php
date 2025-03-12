@@ -3375,7 +3375,12 @@ class Sales extends MY_Controller
     public function getSales($warehouse_id = null)
     {
         $this->sma->checkPermissions('index');
+
         $sid = $this->input->get('sid');
+        $sfromDate = $this->input->get('from');
+        $stoDate = $this->input->get('to');
+        $scustomer = $this->input->get('customer');
+
         if ((!$this->Owner && !$this->Admin) && !$warehouse_id) {
             $user         = $this->site->getUser();
             $warehouse_id = $user->warehouse_id;
@@ -3464,9 +3469,23 @@ class Sales extends MY_Controller
                 ->from('sales')
                 ->where('shop', 0); 
         } 
-        if(is_numeric($sid)) {
-            $this->datatables->where('id', $sid);
+        if (!empty($sid) && is_numeric($sid)) {
+            $this->datatables->where($this->db->dbprefix('sales') . '.id', $sid);
         }
+
+        if (!empty($sfromDate)) {
+            $this->datatables->where('date >=', $sfromDate);
+        }
+
+        if (!empty($stoDate)) {
+            $this->datatables->where('date <=', $stoDate);
+        }
+
+        if (!empty($scustomer) && is_numeric($scustomer)) {
+            $this->datatables->where($this->db->dbprefix('sales') . '.customer_id', $scustomer);
+
+        }
+        
         // $this->datatables->join("{$this->db->dbprefix('aramex_shipment')}", 'sales.id');
         if ($this->input->get('shop') == 'yes') {
             $this->datatables->where('shop', 1);
@@ -3576,7 +3595,13 @@ class Sales extends MY_Controller
         $this->data['lastInsertedId'] =  $this->input->get('lastInsertedId') ;
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('sales')]];
         $meta = ['page_title' => lang('sales'), 'bc' => $bc];
+        
+        $this->data['customers'] = $this->site->getAllCompanies('customer');
         $this->data['sid'] = $this->input->get('sid');
+        $this->data['sfromDate'] = $this->input->get('from');
+        $this->data['stoDate'] = $this->input->get('to');
+        $this->data['scustomer'] = $this->input->get('customer');
+        
         $this->page_construct('sales/index', $meta, $this->data);
     }
 
