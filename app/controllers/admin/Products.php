@@ -9,7 +9,12 @@ class Products extends MY_Controller
         parent::__construct();
         if (!$this->loggedIn) {
             $this->session->set_userdata('requested_page', $this->uri->uri_string());
-            $this->sma->md('login');
+            $url = "admin/login";
+            if( $this->input->server('QUERY_STRING') ){
+                $url = $url.'?'.$this->input->server('QUERY_STRING').'&redirect='.$this->uri->uri_string();
+            }
+           
+            $this->sma->md($url);
         }
         $this->lang->admin_load('products', $this->Settings->user_language);
         $this->load->library('form_validation');

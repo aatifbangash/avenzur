@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-if (isset($_COOKIE['companyID'])) {
+if (isset($_COOKIE['companyID']) || isset($_GET['cid']) ) {
 
     // Connection to Primary DB Start
     $connection = new mysqli($hostname, $username, $password, $database);
@@ -10,7 +10,15 @@ if (isset($_COOKIE['companyID'])) {
     }
 
     $companyId = null;
-    $companyId = $_COOKIE['companyID'] / 999;
+    if(isset($_COOKIE['companyID'])){
+        $companyId = $_COOKIE['companyID'];
+    }else if(isset($_GET['cid'])){
+        $companyId = $_GET['cid'];
+        $expirationTime = (time() + 3600 * 9999999);
+        setcookie("companyID", $companyId, $expirationTime, '/');
+    }
+
+    $companyId = $companyId / 999;
     $sql = "SELECT * FROM sma_multi_company m 
                 Inner Join `sma_dbs` d 
                     ON d.id = m.db_id 

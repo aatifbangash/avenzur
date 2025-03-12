@@ -9,7 +9,12 @@ class Pos extends MY_Controller
         parent::__construct();
         if (!$this->loggedIn) {
             $this->session->set_userdata('requested_page', $this->uri->uri_string());
-            $this->sma->md('login');
+            $url = "admin/login";
+            if( $this->input->server('QUERY_STRING') ){
+                $url = $url.'?'.$this->input->server('QUERY_STRING').'&redirect='.$this->uri->uri_string();
+            }
+           
+            $this->sma->md($url);
         }
         if ($this->Customer || $this->Supplier) {
             $this->session->set_flashdata('warning', lang('access_denied'));
@@ -25,6 +30,7 @@ class Pos extends MY_Controller
         $this->lang->admin_load('pos', $this->Settings->user_language);
         $this->load->library('form_validation');
         $this->load->library('RASDCore',$params=null, 'rasd');
+        $this->load->admin_model('cmt_model');
         $this->load->admin_model("Zetca_model");
         $this->zatca_enabled = false;
         $d = $this->Zetca_model->get_zetca_settings();
@@ -991,12 +997,21 @@ class Pos extends MY_Controller
                     $payload = $this->create_payload_for_gln($row->pharmacy_gln, $item);
                     $response = $this->rasd->patient_pharmacy_sale_product_160($payload);
                     $response_body = $response['body'];
+
+                    $payload_used =  [
+                        'source_gln' => '',
+                        'destination_gln' => $row->pharmacy_gln,
+                        'warehouse_id' => $row->warehouse_id
+                    ];
                     
                     if (isset($response_body['DicOfDic']['MR']['TRID'])&&$response_body['DicOfDic']['MR']['TRID'] ) {
                         $this->sales_model->mark_sales_as_reported([$row->sale_id]);
+
+                        $this->cmt_model->add_rasd_transactions($payload_used,'pharmacy_sale_product',true, $response,$payload);
                     } else {
                         // Log the error
                         echo "Error Calling API";
+                        $this->cmt_model->add_rasd_transactions($payload_used,'pharmacy_sale_product',false, $response,$payload);
                     }
                 }
             }

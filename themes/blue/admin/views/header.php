@@ -360,6 +360,12 @@
         <table class="lt"><tr><td class="sidebar-con">
             <div id="sidebar-left">
                 <div class="sidebar-nav nav-collapse collapse navbar-collapse" id="sidebar_menu">
+                    <?php 
+                        if(isset($Settings->pos_standalone) && $Settings->pos_standalone){
+                            include 'new_customer_menu.php';
+                        }else{
+                    ?>
+                    
                     <ul class="nav main-menu">
                         <li class="mm_welcome">
                             <a href="<?= admin_url() ?>">
@@ -2170,6 +2176,8 @@
                            
                              
                     </ul>
+
+                <?php } ?>
                 </div>
                 <a href="#" id="main-menu-act" class="full visible-md visible-lg">
                     <i class="fa fa-angle-double-left"></i>
