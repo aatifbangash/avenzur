@@ -161,6 +161,25 @@
                                     </li>
                                     
                                 </ul>
-                            </li>    
-
+                            </li> 
+                            
+                            <li class="mm_stock_requests">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-star-o"></i>
+                                    <span class="text"> <?= lang('Stock Requests'); ?> </span>
+                                    <span class="chevron closed"></span>
+                                </a>
+                                <ul>
+                                    <li id="stock_requests_index">
+                                        <a class="submenu" href="<?= admin_url('stock_request/stock_order'); ?>">
+                                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('New Stock Request'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="stock_requests_index">
+                                        <a class="submenu" href="<?= admin_url('stock_request'); ?>">
+                                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('List Stock Requests'); ?></span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
                </ul>
