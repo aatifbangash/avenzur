@@ -9,7 +9,12 @@ class Pos extends MY_Controller
         parent::__construct();
         if (!$this->loggedIn) {
             $this->session->set_userdata('requested_page', $this->uri->uri_string());
-            $this->sma->md('login');
+            $url = "admin/login";
+            if( $this->input->server('QUERY_STRING') ){
+                $url = $url.'?'.$this->input->server('QUERY_STRING').'&redirect='.$this->uri->uri_string();
+            }
+           
+            $this->sma->md($url);
         }
         if ($this->Customer || $this->Supplier) {
             $this->session->set_flashdata('warning', lang('access_denied'));
