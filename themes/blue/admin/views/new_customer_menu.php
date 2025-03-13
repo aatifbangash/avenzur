@@ -162,7 +162,11 @@
                     
                 </ul>
             </li> 
-            
+            <?php 
+
+            if($GP['stock_pharmacist']){
+                ?>
+
             <li class="mm_stock_requests">
                 <a class="dropmenu" href="#">
                     <i class="fa fa-star-o"></i>
@@ -182,6 +186,33 @@
                     </li>
                 </ul>
             </li>
+
+            <?php } 
+
+            if($GP['stock_request_view']){
+                ?>
+
+            <li class="mm_stock_requests">
+                <a class="dropmenu" href="#">
+                    <i class="fa fa-star-o"></i>
+                    <span class="text"> <?= lang('Purchase Requests'); ?> </span>
+                    <span class="chevron closed"></span>
+                </a>
+                <ul>
+                    <li id="stock_requests_index">
+                        <a class="submenu" href="<?= admin_url('stock_request/current_pr'); ?>">
+                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('Opened PR'); ?></span>
+                        </a>
+                    </li>
+                    <li id="stock_requests_index">
+                        <a class="submenu" href="<?= admin_url('stock_request/purchase_requests'); ?>">
+                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('List Purchase Requests'); ?></span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <?php } ?>
 
             <?php
             if (($this->Owner || $this->Admin)) {

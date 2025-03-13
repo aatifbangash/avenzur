@@ -437,7 +437,7 @@ class Auth extends MY_Controller
         //  exit;   
         if( $this->input->get('cid') == 4995 && $this->input->get('uuid') && $this->input->get('source') == 's3cr3tK3yForJWT@1234567890abcd' ){
             //get password and username
-            if( $this->ion_auth->login('admin', 'rEt@j123!@#', true) ) {
+            if( $this->ion_auth->login('test@gmail.com', 'Abc123_@', true) ) {
                 // Get the requested redirect path
                  $redirect_path = str_replace('admin/','',$this->input->get('redirect'));
 
