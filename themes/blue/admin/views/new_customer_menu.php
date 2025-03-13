@@ -189,7 +189,7 @@
 
             <?php } 
 
-            if($GP['stock_request_view']){
+            if(($this->Owner || $this->Admin) || $GP['stock_request_view']){
                 ?>
 
             <li class="mm_stock_requests">
