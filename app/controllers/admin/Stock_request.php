@@ -412,7 +412,7 @@ class stock_request extends MY_Controller
             
         } else{
             $stock_array = $this->stock_request_model->getStockForPharmacy($warehouse_id, $product_ids);
-            $products = $this->products_model->getAllProducts();
+            $products = $this->products_model->getAllProductsOnLocation($warehouse_id);
             $this->data['stock_array'] = $stock_array;
             $this->data['product'] = $product_ids;
             $this->data['products'] = $products;

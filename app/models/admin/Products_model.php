@@ -523,6 +523,25 @@ class Products_model extends CI_Model
         return false;
     }
 
+    public function getAllProductsOnLocation($warehouse_id)
+    {
+        $this->db->select('p.*');
+        $this->db->from('products p');
+        $this->db->join('inventory_movements im', 'p.id = im.product_id', 'inner');
+        $this->db->where('im.location_id', $warehouse_id);
+        $this->db->group_by('p.id'); // To ensure unique products
+
+        $q = $this->db->get();
+
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
     public function getAllProducts()
     {
         $q = $this->db->get('products');
