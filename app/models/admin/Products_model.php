@@ -527,7 +527,7 @@ class Products_model extends CI_Model
     {
         $this->db->select('p.*');
         $this->db->from('products p');
-        $this->db->join('inventory_movement im', 'p.id = im.product_id', 'inner');
+        $this->db->join('inventory_movements im', 'p.id = im.product_id', 'inner');
         $this->db->where('im.location_id', $warehouse_id);
         $this->db->group_by('p.id'); // To ensure unique products
 
