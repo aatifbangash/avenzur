@@ -162,10 +162,7 @@
                     
                 </ul>
             </li> 
-            <?php 
-
-            if($GP['stock_pharmacist']){
-                ?>
+            
 
             <li class="mm_stock_requests">
                 <a class="dropmenu" href="#">
@@ -187,9 +184,9 @@
                 </ul>
             </li>
 
-            <?php } 
+            <?php 
 
-            if($GP['stock_request_view']){
+            if(($this->Owner || $this->Admin) || $GP['stock_request_view']){
                 ?>
 
             <li class="mm_stock_requests">
