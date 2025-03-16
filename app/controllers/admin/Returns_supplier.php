@@ -1474,7 +1474,7 @@ class Returns_supplier extends MY_Controller
 
     public function index($warehouse_id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
