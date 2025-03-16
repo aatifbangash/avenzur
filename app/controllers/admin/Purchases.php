@@ -1969,7 +1969,7 @@ class Purchases extends MY_Controller
         $pfromDate = $this->input->get('from');
         $ptoDate = $this->input->get('to');
 
-        if ((!$this->Owner && !$this->Admin) && !$warehouse_id) {
+        if ((!$this->Owner && !$this->Admin)) {
             $user = $this->site->getUser();
             $warehouse_id = $user->warehouse_id;
         }
