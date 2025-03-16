@@ -323,7 +323,7 @@
                                     //$post = ['received' => lang('received'), 'partial' => lang('partial'), 'pending' => lang('pending'), 'ordered' => lang('ordered')];
                                     $post = ['received' => lang('received'), 'partial' => lang('partial'), 'rejected' => lang('rejected'), 'pending' => lang('pending'), 'ordered' => lang('ordered'), 'arrived' => lang('arrived')];
 
-                                    echo form_dropdown('status', $post, ($_POST['status'] ?? $purchase->status), ' class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . '"disabled="disabled" id="postatus"  style="width:100%;" ');
+                                    echo form_dropdown('status', $post, ($_POST['status'] ?? $purchase->status), ' class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . ' id="postatus"  style="width:100%;" ');
                                     ?>
                                 </div>
                             </div>

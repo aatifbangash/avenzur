@@ -2103,7 +2103,7 @@ class Purchases extends MY_Controller
 
 
 
-        if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
+        if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->Admin && !$this->Pharmacist && !$this->session->userdata('view_right')) {
             $this->datatables->where('created_by', $this->session->userdata('user_id'));
         } elseif ($this->Supplier) {
             $this->datatables->where('supplier_id', $this->session->userdata('user_id'));
