@@ -69,7 +69,7 @@
                                 <div class="form-group">
                                     <?php
                                     $selected_warehouse_id[] = isset($warehouse) ? $warehouse : '';
-                                    $dp['all'] = 'All';
+                                    $dp = []; // $dp['all'] = 'All'; 
                                     foreach ($warehouses as $warehouse) {
                                         $dp[$warehouse->id] = $warehouse->name.' ('.$warehouse->code.')';
                                     }
@@ -185,3 +185,22 @@
         </div>
     </div> 
 </div>
+
+<script>
+    document.getElementById('load_report').addEventListener('click', function() {
+        var cfromDate = document.getElementById('fromdate').value;
+        var ctoDate = document.getElementById('todate').value;
+
+        if (cfromDate && ctoDate) {
+            // Convert dates to Date objects for comparison
+            let fromDate = new Date(cfromDate);
+            let toDate = new Date(ctoDate);
+
+            // Ensure 'fromDate' is smaller than or equal to 'toDate'
+            if (fromDate > toDate) {
+                alert("The 'From Date' must be smaller than or equal to the 'To Date'.");
+                return;
+            }
+        }
+    });
+</script>
