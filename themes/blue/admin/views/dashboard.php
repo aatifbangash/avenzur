@@ -17,7 +17,7 @@ function row_status($x)
 }
 
 ?>
-<?php if (($Owner || $Admin) && $chatData) {
+<?php if ($chatData) {
     foreach ($chatData as $month_sale) {
         $months[]     = date('M-Y', strtotime($month_sale->month));
         $msales[]     = $month_sale->sales;

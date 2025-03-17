@@ -232,7 +232,7 @@ class Returns_supplier extends MY_Controller
 
     public function add()
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->form_validation->set_message('is_natural_no_zero', lang('no_zero_required'));
         $this->form_validation->set_rules('supplier', lang('supplier'), 'required');
         $this->form_validation->set_rules('batch_no[]', lang('Batch Number'), 'required'); 
@@ -1428,7 +1428,7 @@ class Returns_supplier extends MY_Controller
     public function getReturns($warehouse_id = null)
     {
 
-        $this->sma->checkPermissions('index');
+        //$this->sma->checkPermissions('index');
         if ((!$this->Owner && !$this->Admin) && !$warehouse_id) {
             $user = $this->site->getUser();
             $warehouse_id = $user->warehouse_id;
@@ -1679,7 +1679,7 @@ class Returns_supplier extends MY_Controller
 
     public function view($id = null)
     {
-        $this->sma->checkPermissions('index', true);
+        //$this->sma->checkPermissions('index', true);
         $this->load->library('inv_qrcode');
 
         if ($this->input->get('id')) {
@@ -1707,7 +1707,7 @@ class Returns_supplier extends MY_Controller
 
     public function modal_view($return_id = null)
     {
-        $this->sma->checkPermissions('index', true);
+        //$this->sma->checkPermissions('index', true);
 
         if ($this->input->get('id')) {
             $return_id = $this->input->get('id');
