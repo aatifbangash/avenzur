@@ -440,7 +440,10 @@ class Auth extends MY_Controller
             //$logout = $this->ion_auth->logout();
             $expirationTime = (time() + 3600 * 9999999);
             setcookie("companyID", 4995, $expirationTime, '/');
-            if( $this->ion_auth->login('test', 'Abc123_@', true) ) {
+
+            $user = $this->site->getUser($this->input->get('uuid'));
+
+            if( $this->ion_auth->login($user->username, 'Abc123_@', true) ) {
                 // Get the requested redirect path
                  $redirect_path = str_replace('admin/','',$this->input->get('redirect'));
 
