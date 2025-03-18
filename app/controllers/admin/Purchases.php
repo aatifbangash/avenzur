@@ -50,7 +50,7 @@ class Purchases extends MY_Controller
 
     // show Upload Purchases
     public function showUploadPurchases() {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         $this->data['warehouses'] = $this->site->getAllWarehouses();
         $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
@@ -62,7 +62,7 @@ class Purchases extends MY_Controller
     }
 
     public function mapPurchases(){
-        $this->sma->checkPermissions('csv');
+        //$this->sma->checkPermissions('csv');
         $this->load->helper('security');
         $this->form_validation->set_message('is_natural_no_zero', $this->lang->line('no_zero_required'));
         $this->form_validation->set_rules('mwarehouse', $this->lang->line('warehouse'), 'required|is_natural_no_zero');
