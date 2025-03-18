@@ -1190,6 +1190,30 @@ public function logVisitor() {
         return false;
     }
 
+    public function getUserGroupByName($name)
+    {
+        if($name){
+            $q = $this->db->get_where('groups', ['name' => $name]);
+        }
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getUsersByGroup($group_id){
+        if($group_id){
+            $q = $this->db->get_where('users', ['group_id' => $group_id]);
+        }
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
     public function getUserGroup($user_id = false)
     {
         if (!$user_id) {

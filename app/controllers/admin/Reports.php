@@ -5665,6 +5665,7 @@ class Reports extends MY_Controller
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
         $warehouse = $this->input->post('pharmacy') ? $this->input->post('pharmacy') : null;
+        $pharmacist_id = $this->input->post('pharmacist_id') ? $this->input->post('pharmacist_id') : null;
         //print_r($this->input->post());
          //for testing purpose
          /*$user_id ='';
@@ -5677,14 +5678,26 @@ class Reports extends MY_Controller
         if ($this->Owner || $this->Admin) {
             if($warehouse != null){
                 $user_data = $this->site->getUserByWarehouseID($warehouse);
-                $user_id = $user_data->id;
+                if($pharmacist_id){
+                    $user_id = $pharmacist_id;
+                }else{
+                    $user_id = $user_data->id;
+                }
+                
             }
         }else{
             $warehouse = $this->session->userdata('warehouse_id');
-            $user_id = $this->session->userdata('user_id');
+            if($pharmacist_id){
+                $user_id = $pharmacist_id;
+            }else{
+                $user_id = $this->session->userdata('user_id');
+            }
         }   
-        
+
         $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['user_group'] = $this->site->getUserGroupByName('pharmacist');
+        $this->data['pharmacists'] = $this->site->getUsersByGroup($this->data['user_group']->id);
+        
         if ($from_date && $to_date && $warehouse) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
@@ -5722,7 +5735,7 @@ class Reports extends MY_Controller
             //echo "<pre>"; print_r($response_data);exit;
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;
-            $this->data['warehouse'] = $warehouse;
+            $this->data['warehouse_id'] = $warehouse;
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('Close Register Details')]];
             $meta = ['page_title' => lang(''), 'bc' => $bc];
 

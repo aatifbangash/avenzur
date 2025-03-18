@@ -1583,6 +1583,42 @@ class Returns_supplier extends MY_Controller
         }
     }
 
+    private function extract_gs1_data($input)
+    {
+        $data = [
+            'gtin' => null,
+            'batch_number' => null,
+            'expiry_date' => null,
+        ];
+    
+        // Extract GTIN (14 digits after (01))
+        if (preg_match('/\(01\)(\d{14})/', $input, $matches)) {
+            $data['gtin'] = $matches[1];
+        }
+    
+        // Extract Batch Number (variable length after (10), stops at next AI)
+        if (preg_match('/\(10\)([^\(]+)/', $input, $matches)) {
+            $data['batch_number'] = $matches[1];
+        }
+    
+        // Extract Expiry Date (YYMMDD format after (17))
+        if (preg_match('/\(17\)(\d{6})/', $input, $matches)) {
+            $expiry_raw = $matches[1]; // "270228"
+    
+            // Convert YYMMDD to YYYY-MM-DD
+            $year = substr($expiry_raw, 0, 2); // "27"
+            $month = substr($expiry_raw, 2, 2); // "02"
+            $day = substr($expiry_raw, 4, 2); // "28"
+    
+            // Assume year is in 2000s if below 50, otherwise in 1900s
+            $year = ($year < 50) ? '20' . $year : '19' . $year;
+    
+            $data['expiry_date'] = "$day/$month/$year"; // "2027-02-28"
+        }
+    
+        return $data;
+    }
+
     public function bch_suggestions()
     {
         $term = $this->input->get('term', true);
@@ -1592,7 +1628,14 @@ class Returns_supplier extends MY_Controller
         if (strlen($term) < 1 || !$term) {
             die("<script type='text/javascript'>setTimeout(function(){ window.top.location.href = '" . admin_url('welcome') . "'; }, 10);</script>");
         }
-        $analyzed = $this->sma->analyze_term($term);
+        // (01)03664798044249(21)A07GPEY6PHNFDE(10)240413(17)270228
+
+        $extracted_data = $this->extract_gs1_data($term);
+        $search_term = $extracted_data['gtin'] ?? $term;
+        $batch_number = $extracted_data['batch_number'] ?? null;
+        $expiry_date = $extracted_data['expiry_date'] ?? null;
+
+        $analyzed = $this->sma->analyze_term($search_term);
         $sr = $analyzed['term'];
         $option_id = $analyzed['option_id'];
         $sr = addslashes($sr);
