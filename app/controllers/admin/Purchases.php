@@ -3513,14 +3513,14 @@ class Purchases extends MY_Controller
                 $row->sale_price = $row->price;
                 $row->unit = $row->purchase_unit ? $row->purchase_unit : $row->unit;
                 $row->new_entry = 1;
-                $row->expiry = $expiry_date;
+                $row->expiry = $expiry_date != null ? $expiry_date : '';
                 $row->qty = 1;
                 $row->quantity_balance = '';
                 $row->discount = '0';
                 $row->bonus = 0;
                 $row->dis1 = 0;
                 $row->dis2 = 0;
-                $row->batchno = $batch_number;
+                $row->batchno = $batch_number != null ? $batch_number : '';
                 $row->avz_item_code = '';
                 $row->serial_number = '';
                 $row->warehouse_shelf = '';
