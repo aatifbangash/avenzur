@@ -78,7 +78,7 @@ class Purchases extends MY_Controller
             if ($this->Owner || $this->Admin) {
                 $date = $this->sma->fld(trim($this->input->post('mdate')));
             } else {
-                $date = null;
+                $date = $this->sma->fld(trim($this->input->post('mdate')));
             }
             $warehouse_id = $this->input->post('mwarehouse');
             $child_supplier_id = $this->input->post('mchildsupplier') ? $this->input->post('mchildsupplier') : 0;
@@ -279,7 +279,7 @@ class Purchases extends MY_Controller
 
             $attachments = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
-            // $this->sma->print_arrays($data, $products);
+            //$this->sma->print_arrays($data, $products);exit;
         }
 
         if ($this->form_validation->run() == true && $this->purchases_model->addPurchase($data, $products, $attachments)) {
