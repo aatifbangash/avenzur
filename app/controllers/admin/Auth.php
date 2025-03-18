@@ -438,6 +438,8 @@ class Auth extends MY_Controller
         if( $this->input->get('cid') == 4995 && $this->input->get('uuid') && $this->input->get('source') == 's3cr3tK3yForJWT@1234567890abcd' ){
             //get password and username
             //$logout = $this->ion_auth->logout();
+            $expirationTime = (time() + 3600 * 9999999);
+            setcookie("companyID", 4995, $expirationTime, '/');
             if( $this->ion_auth->login('test', 'Abc123_@', true) ) {
                 // Get the requested redirect path
                  $redirect_path = str_replace('admin/','',$this->input->get('redirect'));
