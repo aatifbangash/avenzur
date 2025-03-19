@@ -1815,21 +1815,25 @@ var lang = {
                 GTIN: null,
                 SerialNumber: null,
                 BatchNumber: null,
-                ExpiryDate: null
+                ExpiryDate: null,
+                validData: false
             };
 
             // Extract GTIN (starts with 01 and is 14 digits long)
             const gtinMatch = qrCode.match(/01(\d{14})/);
+            let validityCount = 0;
             if (gtinMatch) {
                 result.GTIN = gtinMatch[1];
                 // Remove GTIN and everything before it from the string
                 qrCode = qrCode.substring(gtinMatch.index + gtinMatch[0].length);
+                validityCount++;
             }
 
             // Extract Batch Number (starts with 10 after the GTIN)
             const batchNumberMatch = qrCode.match(/10([a-zA-Z0-9]+?)(?=17|21|$)/);
             if (batchNumberMatch) {
                 result.BatchNumber = batchNumberMatch[1];
+                validityCount++;
             }
 
             // Extract Expiry Date (starts with 17 and followed by 6 digits)
@@ -1839,15 +1843,77 @@ var lang = {
                 const year = `20${expiryRaw.substring(0, 2)}`; // Prefix '20' for YY
                 const month = expiryRaw.substring(2, 4); // Extract MM
                 result.ExpiryDate = `${month} ${year}`; // Format as "MM YYYY"
+                validityCount++;
             }
 
             // Extract Serial Number (starts with 21 and followed by alphanumeric characters)
             const serialNumberMatch = qrCode.match(/21([a-zA-Z0-9]+)/);
             if (serialNumberMatch) {
                 result.SerialNumber = serialNumberMatch[1];
+                validityCount++;
+            }
+
+            if(validityCount == 4){
+                result.validData = true;
             }
 
             return result;
+        }
+
+        function extractGs1Data(input) {
+            let data = {
+                GTIN: null,
+                BatchNumber: null,
+                SerialNumber: null,
+                ExpiryDate: null,
+                validData: false
+            };
+
+            let validityCount = 0;
+            // Extract GTIN (14 digits after (01))
+            let gtinMatch = input.match(/\(01\)(\d{14})/);
+            if (gtinMatch) {
+                data.GTIN = gtinMatch[1];
+                validityCount++;
+            }
+
+            // Extract Serial Number (variable length after (21), stops at next AI)
+            let serialMatch = input.match(/\(21\)([^\(]+)/);
+            if (serialMatch) {
+                data.SerialNumber = serialMatch[1];
+                validityCount++;
+            }
+
+            // Extract Batch Number (variable length after (10), stops at next AI)
+            let batchMatch = input.match(/\(10\)([^\(]+)/);
+            if (batchMatch) {
+                data.BatchNumber = batchMatch[1];
+                validityCount++;
+            }
+
+            // Extract Expiry Date (YYMMDD format after (17))
+            let expiryMatch = input.match(/\(17\)(\d{6})/);
+            if (expiryMatch) {
+                let expiryRaw = expiryMatch[1]; // "270228"
+
+                // Convert YYMMDD to YYYY-MM-DD
+                let year = parseInt(expiryRaw.substring(0, 2), 10);
+                let month = expiryRaw.substring(2, 4);
+                let day = expiryRaw.substring(4, 6);
+
+                // Assume year is in 2000s if below 50, otherwise in 1900s
+                year = (year < 50) ? `20${year}` : `19${year}`;
+
+                //data.ExpiryDate = `${day}/${month}/${year}`; // "28/02/2027"
+                data.ExpiryDate = `${month} ${year}`;
+                validityCount++;
+            }
+
+            if(validityCount == 4){
+                data.validData = true;
+            }
+
+            return data;
         }
 
         $("#add_item").autocomplete({
@@ -1860,7 +1926,10 @@ var lang = {
                     return false;
                 }
 
-                const parsed = parseMedicineQRCode(request.term);
+                let parsed = extractGs1Data(request.term);
+                if(parsed.validData == false){
+                    parsed = parseMedicineQRCode(request.term);
+                }
 
                 $.ajax({
                     type: 'get',
