@@ -962,7 +962,7 @@ class Pos_model extends CI_Model
             payments.type = 'received' 
             AND payments.paid_by = 'cash'
             AND DATE(payments.date) = '".trim($date)."'
-            AND payments.created_by = ".$user_id."
+            AND payments.created_by IN (".$user_id.")
        ;
     ";
 
@@ -1009,7 +1009,7 @@ class Pos_model extends CI_Model
             payments.type = 'received' 
             AND payments.paid_by = 'CC'
             AND DATE(payments.date) = '".trim($date)."'
-            AND payments.created_by = ".$user_id."
+            AND payments.created_by IN (".$user_id.")
     ";
 
         $q = $this->db->query($sql);
@@ -1037,7 +1037,10 @@ class Pos_model extends CI_Model
             ->join('sales', 'sales.id=payments.sale_id', 'left')
             ->where('type', 'received')->where('payments.date >', $date)->where('paid_by', 'Cheque');
 
-        $this->db->where('payments.created_by', $user_id)->group_by('payments.sale_id');
+        $user_ids = explode(',', $user_id);
+        $user_ids = array_map('trim', $user_ids);
+        $this->db->where_in('payments.created_by', $user_ids);
+        $this->db->group_by('payments.sale_id');
 
         $qu = $this->db->get_compiled_select('payments');
         $q = $this->db->select('SUM(sp.total_cheques) as total_cheques, SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
@@ -1192,7 +1195,7 @@ class Pos_model extends CI_Model
             WHERE 
                 payments.type = 'sent' 
                 AND DATE(payments.date) = '".trim($date)."'  
-                AND payments.created_by = ".$user_id."
+                AND payments.created_by IN (".$user_id.")
             GROUP BY 
                 payments.return_id
         ) AS sp;
@@ -1236,7 +1239,7 @@ FROM (
     WHERE 
         payments.type = 'received' 
         AND DATE(payments.date) = '".trim($date)."'  
-        AND payments.created_by = ".$user_id."
+        AND payments.created_by IN (".$user_id.")
     GROUP BY 
         payments.sale_id
 ) AS sp;

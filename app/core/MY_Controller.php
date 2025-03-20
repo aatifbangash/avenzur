@@ -47,6 +47,8 @@ class MY_Controller extends CI_Controller
             $this->data['Supplier']         = $this->Supplier;
             $this->Admin                    = $this->sma->in_group('admin') ? true : null;
             $this->data['Admin']            = $this->Admin;
+            $this->PurchaseManager          = $this->sma->in_group('purchasemanager') ? true : null;
+            $this->data['PurchaseManager']  = $this->PurchaseManager;
 
             if ($sd = $this->site->getDateFormat($this->Settings->dateformat)) {
                 $dateFormats = [

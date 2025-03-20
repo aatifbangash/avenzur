@@ -5675,11 +5675,17 @@ class Reports extends MY_Controller
             $user_id = 6655 ;
          }*/
 
-        if ($this->Owner || $this->Admin) {
+        if ($this->Owner || $this->Admin || $this->PurchaseManager) {
             if($warehouse != null){
                 $user_data = $this->site->getUserByWarehouseID($warehouse);
                 if($pharmacist_id){
-                    $user_id = $pharmacist_id;
+                    if($pharmacist_id != 'all'){
+                        $user_id = $pharmacist_id;
+                    }else{
+                        $pharmacist_group = $this->site->getUserGroupByName('pharmacist')->id;
+                        $all_pharmacy_pharmacists = $this->site->getUsersByGroupAndLocation($warehouse,$pharmacist_group);
+                        $user_id = $all_pharmacy_pharmacists;
+                    }
                 }else{
                     $user_id = $user_data->id;
                 }

@@ -63,7 +63,7 @@
                         <div class="col-md-3">
                             
                             
-                            <?php if ($Owner || $Admin || !$this->session->userdata('warehouse_id')) {
+                            <?php if ($Owner || $Admin || $PurchaseManager) {
                                 ?>
                                 <?= lang('Pharmacy', 'popharmacy'); ?>
                                 <div class="form-group">
@@ -91,13 +91,13 @@
                         <div class="col-md-3">
                             
                             
-                            <?php if ($Owner || $Admin || !$this->session->userdata('user_id')) {
+                            <?php if ($Owner || $Admin  || $PurchaseManager) {
                                 ?>
                                 <?= lang('Pharmacist', 'popharmacist'); ?>
                                 <div class="form-group">
                                     <?php
                                     $selected_pharmacist_id[] = isset($user_id) ? $user_id : '';
-                                    //$dpp['all'] = 'All';
+                                    $dpp['all'] = 'All';
                                     foreach ($pharmacists as $pharmacist) {
                                         $dpp[$pharmacist->id] = $pharmacist->first_name.' '.$pharmacist->last_name;
                                     }

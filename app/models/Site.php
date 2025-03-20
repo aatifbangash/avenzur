@@ -1190,6 +1190,18 @@ public function logVisitor() {
         return false;
     }
 
+    public function getUsersByGroupAndLocation($warehouse,$pharmacist_group){
+        $q = $this->db->get_where('users', ['warehouse_id' => $warehouse, 'group_id' => $pharmacist_group]);
+        if ($q->num_rows() > 0) {
+            $ids = [];
+            foreach (($q->result()) as $row) {
+                $ids[] = $row->id;
+            }
+            return implode(',', $ids);
+        }
+        return false;
+    }
+
     public function getUserGroupByName($name)
     {
         if($name){
