@@ -47,6 +47,9 @@
             if (localStorage.getItem('rsesupplier')) {
                 localStorage.removeItem('rsesupplier');
             }
+            if(localStorage.getItem('childsupplier')) {
+                localStorage.removeItem('childsupplier');
+            }
             if (localStorage.getItem('rsedate')) {
                 localStorage.removeItem('rsedate');
             }
@@ -81,11 +84,13 @@
         $("#add_item").autocomplete({
             source: function (request, response) {    
                 
+                let supp_id = localStorage.getItem('childsupplier') !== null && localStorage.getItem('childsupplier') !== "null" ? localStorage.getItem('childsupplier') : localStorage.getItem('rsesupplier');
+                
                 $.ajax({
                     type: 'get',
                     url: '<?= admin_url('returns_supplier/bch_suggestions'); ?>',
                     dataType: "json",
-                    data: { term: request.term, warehouse_id: $("#rsewarehouse").val(), supplier_id: $("#supplier_id").val(), },
+                    data: { term: request.term, warehouse_id: $("#rsewarehouse").val(), supplier_id: supp_id, },
                     success: function (data) {
                         if(data[0].id != 0){
                             $(this).removeClass('ui-autocomplete-loading');
@@ -158,6 +163,7 @@
     });
 
     function openPopup(selectedItem) {
+        let supp_id = localStorage.getItem('childsupplier') !== null && localStorage.getItem('childsupplier') !== "null" ? localStorage.getItem('childsupplier') : localStorage.getItem('rsesupplier');
         // Assuming selectedItem has avz_item_code as part of its data
         $.ajax({
             type: 'get',
@@ -166,7 +172,7 @@
             data: {
                 item_id: selectedItem.item_id, // Send the unique item code
                 warehouse_id: $("#rsewarehouse").val(), // Optionally include warehouse ID if needed
-                supplier_id: $("#supplier_id").val()
+                supplier_id: supp_id
             },
             success: function (data) {
                 $(this).removeClass('ui-autocomplete-loading');
@@ -415,6 +421,16 @@
                                 $childSupArr[''] = '';
                                 
                                 echo form_dropdown('childsupplier', $childSupArr, $_POST['childsupplier'], 'id="childsupplier" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('child supplier') . '" required="required" style="width:100%;" '); ?>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('status', 'status'); ?>
+                                <?php
+                                $post = ['pending' => lang('pending')];
+                                echo form_dropdown('status', $post, ($_POST['status'] ?? ''), 'id="status" class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . '" required="required" style="width:100%;" ');
+                                ?>
                             </div>
                         </div>
 

@@ -38,35 +38,41 @@
 
         <?php if ($this->session->userdata('remove_rlls')) {
         ?>
-            if (localStorage.getItem('reitems')) {
-                localStorage.removeItem('reitems');
+            if (localStorage.getItem('rseitems')) {
+                localStorage.removeItem('rseitems');
             }
-            if (localStorage.getItem('rediscount')) {
-                localStorage.removeItem('rediscount');
+            if (localStorage.getItem('rsediscount')) {
+                localStorage.removeItem('rsediscount');
             }
-            if (localStorage.getItem('retax2')) {
-                localStorage.removeItem('retax2');
+            if (localStorage.getItem('rseshipping')) {
+                localStorage.removeItem('rseshipping');
             }
-            if (localStorage.getItem('reref')) {
-                localStorage.removeItem('reref');
+            if (localStorage.getItem('rsetax2')) {
+                localStorage.removeItem('rsetax2');
             }
-            if (localStorage.getItem('rewarehouse')) {
-                localStorage.removeItem('rewarehouse');
+            if (localStorage.getItem('rseref')) {
+                localStorage.removeItem('rseref');
             }
-            if (localStorage.getItem('renote')) {
-                localStorage.removeItem('renote');
+            if (localStorage.getItem('rsewarehouse')) {
+                localStorage.removeItem('rsewarehouse');
             }
-            if (localStorage.getItem('reinnote')) {
-                localStorage.removeItem('reinnote');
+            if (localStorage.getItem('rsenote')) {
+                localStorage.removeItem('rsenote');
             }
-            if (localStorage.getItem('recustomer')) {
-                localStorage.removeItem('recustomer');
+            if (localStorage.getItem('rseinnote')) {
+                localStorage.removeItem('rseinnote');
             }
-            if (localStorage.getItem('rebiller')) {
-                localStorage.removeItem('rebiller');
+            if (localStorage.getItem('rsesupplier')) {
+                localStorage.removeItem('rsesupplier');
             }
-            if (localStorage.getItem('redate')) {
-                localStorage.removeItem('redate');
+            if(localStorage.getItem('childsupplier')) {
+                localStorage.removeItem('childsupplier');
+            }
+            if (localStorage.getItem('rsedate')) {
+                localStorage.removeItem('rsedate');
+            }
+            if (localStorage.getItem('rsebiller')) {
+                localStorage.removeItem('rsebiller');
             }
             
             <?php $this->sma->unset_data('remove_rlls');

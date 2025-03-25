@@ -437,12 +437,16 @@ class Transfers_model extends CI_Model
         $this->site->log('Transfer', ['model' => $this->getTransferByID($id), 'items' => $oitems]);
         $tbl = $ostatus == 'completed' ? 'purchase_items' : 'transfer_items';
         
-        if ($this->db->delete('transfers', ['id' => $id]) && $this->db->delete($tbl, ['transfer_id' => $id]) && $ostatus == 'save') {
+        if ($this->db->delete('transfers', ['id' => $id]) && $this->db->delete($tbl, ['transfer_id' => $id]) && ($ostatus == 'save' || $ostatus == 'sent')) {
             foreach ($oitems as $item) {
                 $this->site->syncQuantity(null, null, null, $item->product_id);
             }
 
-            $this->db->update('sma_invoice_serials', ['tid' => 0], ['tid' => $id]);
+            //$this->db->update('sma_invoice_serials', ['tid' => 0], ['tid' => $id]);
+            
+            $this->db->where('reference_id', $id);
+            $this->db->where_in('type', ['transfer_in', 'transfer_out']);
+            $this->db->delete('inventory_movements');
         }else{
             log_message('error', 'An errors has been occurred while deleting the transfer (Delete:Transfers_model.php)');
             return false;
@@ -996,6 +1000,11 @@ class Transfers_model extends CI_Model
             $tbl = $ostatus == 'completed' ? 'purchase_items' : 'transfer_items';
             $this->db->delete($tbl, ['transfer_id' => $id]);
 
+            /* Delete Inventory */
+            $this->db->where('reference_id', $id);
+            $this->db->where_in('type', ['transfer_in', 'transfer_out']);
+            $this->db->delete('inventory_movements');
+
             foreach ($items as $item) {
                 $item['transfer_id'] = $id;
                 $real_cost = $item['real_cost'];
@@ -1020,12 +1029,12 @@ class Transfers_model extends CI_Model
                     $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $id,  $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['sale_price'], $data['date']);
                 }else if($ostatus == 'sent' && $data['status'] == 'completed'){
                     //Inventory Movement - Transfer OUT
-                    $this->Inventory_model->update_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $id,  $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['sale_price'], $data['date']);
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $id,  $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['sale_price'], $data['date']);
                     //Inventory Movement - Transfer IN
                     $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_in', $item['quantity'], $data['to_warehouse_id'], $id,  $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['sale_price'], $data['date']);
                 }else if($ostatus == 'sent' && $data['status'] == 'sent'){
                     //Inventory Movement - Transfer OUT
-                    $this->Inventory_model->update_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $id,  $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['sale_price'], $data['date']);
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $id,  $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['sale_price'], $data['date']);
                 }
             }
 
