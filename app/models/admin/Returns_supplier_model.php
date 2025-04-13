@@ -234,6 +234,39 @@ class Returns_supplier_model extends CI_Model
         return false;
     }
 
+    public function getReturnItemsModal($return_id){
+        $warehouse_id = 32;  // Define your main warehouse ID here
+        $this->db->select('
+                return_supplier_items.*, 
+                tax_rates.code as tax_code, 
+                tax_rates.name as tax_name, 
+                tax_rates.rate as tax_rate, 
+                products.image, 
+                products.details as details, 
+                product_variants.name as variant, 
+                products.hsn_code as hsn_code, 
+                products.second_name as second_name,
+                SUM(IFNULL(CASE WHEN sma_inventory_movements.location_id = ' . $warehouse_id . ' THEN sma_inventory_movements.quantity ELSE 0 END, 0)) as total_quantity, 
+                SUM(IFNULL(CASE WHEN sma_inventory_movements.location_id = ' . $warehouse_id . ' THEN sma_inventory_movements.bonus ELSE 0 END, 0)) as total_bonus'
+            )
+            ->join('products', 'products.id=return_supplier_items.product_id', 'left')
+            ->join('inventory_movements', 'inventory_movements.avz_item_code=return_supplier_items.avz_item_code', 'left')
+            ->join('product_variants', 'product_variants.id=return_supplier_items.option_id', 'left')
+            ->join('tax_rates', 'tax_rates.id=return_supplier_items.tax_rate_id', 'left')
+            ->where('return_id', $return_id)
+            ->group_by('return_supplier_items.id, return_supplier_items.avz_item_code')
+            ->order_by('id', 'asc');
+
+        $q = $this->db->get('return_supplier_items');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
     public function getReturnItems($return_id)
     {
         $warehouse_id = 32;  // Define your main warehouse ID here

@@ -1820,7 +1820,7 @@ class Returns_supplier extends MY_Controller
         if (!$this->session->userdata('view_right')) {
             $this->sma->view_rights($inv->created_by, true);
         }
-        $this->data['rows'] = $this->returns_supplier_model->getReturnItems($return_id);
+        $this->data['rows'] = $this->returns_supplier_model->getReturnItemsModal($return_id);
         $supplier = $this->site->getCompanyByID($inv->supplier_id);
         $this->data['parent_supplier'] = '';
         if($supplier->level == 2 && $supplier->parent_code != '') {
