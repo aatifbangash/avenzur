@@ -59,6 +59,7 @@
                     <?= admin_form_open('products/print_barcodes', 'id="barcode-print-form" data-toggle="validator"'); ?>
                     <input type="hidden" name="purchase_id" value="<?php echo $this->input->get('purchase', true);?>" >
                     <input type="hidden" name="transfer_id" value="<?php echo $this->input->get('transfer', true);?>" >
+                    <input type="hidden" name="pharmacy_id" id="pharmacy_id" value="" >
                     <div class="controls table-controls">
                         <table id="bcTable"
                                class="table items table-striped table-bordered table-condensed table-hover">
@@ -451,6 +452,11 @@
             delete bcitems[id];
             localStorage.setItem('bcitems', JSON.stringify(bcitems));
             $(this).closest('#row_' + id).remove();
+        });
+
+        $('#pharmacy').on('change', function (){
+            var id = $(this).val();
+            document.getElementById('pharmacy_id').value = id;
         });
 
         $('#reset').click(function (e) {

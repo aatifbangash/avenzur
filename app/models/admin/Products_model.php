@@ -14,6 +14,19 @@ class Products_model extends CI_Model
         $this->load->admin_model('Inventory_model');
     }
 
+    public function addPrintJob($zplCode, $location_details)
+    {
+        $print_job = array(
+            'content' =>  $zplCode,
+            'location_id' => $location_details->id,
+            'location_name' => $location_details->name,
+            'status' => 0,
+            'date_created' => $currentDateTime = date('Y-m-d H:i:s'),
+            'date_updated' => $currentDateTime = date('Y-m-d H:i:s')
+        );
+        $this->db->insert('print_jobs', $print_job);
+    }
+
     public function add_products($products = [])
     {
         if (!empty($products)) {

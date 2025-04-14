@@ -4104,6 +4104,23 @@ class Products extends MY_Controller
                 $this->session->set_flashdata('error', lang('no_product_selected'));
                 admin_redirect('products/print_barcodes');
             }
+
+            if(isset($_POST['pharmacy_id']) && !empty($_POST['pharmacy_id'])) {
+                $location_id = $_POST['pharmacy_id'];
+                $location_details = $this->site->getWarehouseByID($location_id);
+
+                if($location_details->printer_location && $location_details->printer_location != NULL){
+                    $printer_location = $location_details->printer_location;
+                    $print_method     = $location_details->print_method;
+                    $printer_name     = $location_details->printer_name;
+                }else{
+                    $this->session->set_flashdata('error', lang('This location does not support printing'));
+                    admin_redirect('products/print_barcodes');
+                }
+            }else{
+                $this->session->set_flashdata('error', lang('No Print Location Selected'));
+                admin_redirect('products/print_barcodes');
+            }
             
             // $ngrokUrl = $this->getNgrokUrl();
             // if ($ngrokUrl) {
@@ -4151,91 +4168,99 @@ class Products extends MY_Controller
                 $line1 = substr($productName, 0, $maxLength);
                 $line2 = strlen($productName) > $maxLength ? substr($productName, $maxLength) : '';
 
-                // Generate the ZPL code
+                if($printer_name == 'zebra'){
+                    // Generate the ZPL code
+                    for ($i = 1; $i <= ceil($quantity); $i++) {
 
-              
-                for ($i = 1; $i <= ceil($quantity); $i++) {
-                    $zplCode .= "^XA\n"; 
-                    $filePath = FCPATH . 'assets' . DIRECTORY_SEPARATOR . 'new_label.zpl';
-                    $zplCode .= "^FO20,20^A0N,15,15^FD{$line1}^FS\n";
+                        if(isset($_POST['print'])){
+                            $zplCode .= "^XA\n"; 
+                            $filePath = FCPATH . 'assets' . DIRECTORY_SEPARATOR . 'new_label.zpl';
+                            $zplCode .= "^FO20,20^A0N,15,15^FD{$line1}^FS\n";
 
-                    // Add second line if it exists
-                    if ($line2) {
-                        $zplCode .= "^FO20,40^A0N,15,15^FD{$line2}^FS\n";
+                            // Add second line if it exists
+                            if ($line2) {
+                                $zplCode .= "^FO20,40^A0N,15,15^FD{$line2}^FS\n";
+                            }
+                            $zplCode .=
+                                "^FO20,60\n"                               // Position barcode
+                                . "^BY2,2,50\n"                             // Bar width, space between bars, height
+                                . "^BCN,50,Y,N,N\n"                         // Code 128 Barcode, 50 dots tall, HRI off
+                                . "^FD{$avzCode}^FS\n"                   // GTIN Number (dynamic)
+                                . "^FO20,135\n"                             // Position price below the barcode
+                                . "^A0N,20,20\n"                            // Font size for price text
+                                . "^FDitem#{$product->item_code}^FS\n"               // Item Number (dynamic)
+                                . "^FO200,135\n"                            // Position price on the right side
+                                . "^A0N,20,20\n"                            // Font size for price text
+                                . "^FDSR{$productPrice}^FS\n";  // Price (formatted)
+                                //. "^FD{$this->sma->formatMoney($productPrice)}^FS\n";
+                                
+                            
+                            $zplCode .= "^XZ\n";
+                        }
                     }
-                    $zplCode .=
-                        "^FO20,60\n"                               // Position barcode
-                        . "^BY2,2,50\n"                             // Bar width, space between bars, height
-                        . "^BCN,50,Y,N,N\n"                         // Code 128 Barcode, 50 dots tall, HRI off
-                        . "^FD{$avzCode}^FS\n"                   // GTIN Number (dynamic)
-                        . "^FO20,135\n"                             // Position price below the barcode
-                        . "^A0N,20,20\n"                            // Font size for price text
-                        . "^FDitem#{$product->item_code}^FS\n"               // Item Number (dynamic)
-                        . "^FO200,135\n"                            // Position price on the right side
-                        . "^A0N,20,20\n"                            // Font size for price text
-                        . "^FDSR{$productPrice}^FS\n";  // Price (formatted)
-                        //. "^FD{$this->sma->formatMoney($productPrice)}^FS\n";
-                        
-                    
-                    $zplCode .= "^XZ\n";
+                }else if($printer_name == 'tsc'){
+                    // Generate the TSPL code
+                    for ($i = 1; $i <= ceil($quantity); $i++) {
+                        if (isset($_POST['print'])) {
+                            $zplCode = "";
+                            
+                            // Initialize the printer
+                            $zplCode .= "SIZE 50 mm, 30 mm\n";  // Adjust size as per your label
+                            $zplCode .= "GAP 3 mm, 0 mm\n";    // Set the gap between labels
+                            $zplCode .= "CLS\n";               // Clear the buffer
+                            
+                            // Print the first text line
+                            $zplCode .= "TEXT 20, 20, \"3\", 0, 1, 1, \"{$line1}\"\n";
 
-                    //echo $zplCode;exit;
+                            // Add second line if it exists
+                            if ($line2) {
+                                $zplCode .= "TEXT 20, 40, \"3\", 0, 1, 1, \"{$line2}\"\n";
+                            }
 
-                        // first check if ngrok is running or not
-                        
-                    
-                        // if ($url) {
-                        //     echo "Ngrok URL: " . $url . "\n";
-                        // } else {
-                        //     echo "No HTTP tunnel found.\n";
-                        // }
+                            // Print the barcode
+                            $zplCode .= "BARCODE 20, 60, \"128\", 50, 1, 0, 2, 2, \"{$avzCode}\"\n";
 
-                        // exit;
+                            // Print item number
+                            $zplCode .= "TEXT 20, 135, \"3\", 0, 1, 1, \"item#{$product->item_code}\"\n";
 
-                        // CALL PYTHON HELPER LOCALLY
-                     
-                        //END PYTHON HELPER
+                            // Print price
+                            $zplCode .= "TEXT 200, 135, \"3\", 0, 1, 1, \"SR{$productPrice}\"\n";
 
-                    /*file_put_contents($filePath, $zplCode);
-                   
-                    if (!file_exists($filePath)) {
-                        die("Error: File not found at path - $filePath");
+                            // Print command
+                            $zplCode .= "PRINT 1\n";
+                        }
                     }
-                  
-                    $printerPath = "\\\\192.168.30.113\\Zebra_S4M"; 
-                    $command = "copy /B \"$filePath\" \"$printerPath\" 2>&1";
 
-                   
-                    $output = shell_exec($command);
-
-                  
-                    if ($output === null || strpos($output, 'No such file or directory') !== false) {
-                        echo "Error: " . $output;
-                    }*/
+                }else if($printer_name == 'hptest'){
+                    if (isset($_POST['print'])) {
+                        $zplCode = "This is test print job";
+                    }
                 }
-
-
-
             }
            
             // echo "<pre>" . htmlspecialchars($zplCode) . "</pre>";
             // exit;
-            $url = "https://mature-workable-werewolf.ngrok-free.app/print";
-                       
-            $ch = curl_init($url);
+            
 
-           
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/octet-stream'));
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $zplCode);
+            if(isset($_POST['print']) && $printer_location != 'script'){
+                $url = $printer_location;
+                $ch = curl_init($url);
 
             
-            $response = curl_exec($ch);
-            $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/octet-stream'));
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $zplCode);
 
-           
-            curl_close($ch);
+                
+                $response = curl_exec($ch);
+                $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+            
+                curl_close($ch);
+            }else if($printer_location == 'script'){
+                $this->products_model->addPrintJob($zplCode, $location_details);
+            }
 
           
             if ($http_status == 200) {
