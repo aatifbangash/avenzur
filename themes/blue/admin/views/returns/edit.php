@@ -24,16 +24,42 @@
         $('.bootbox').on('hidden.bs.modal', function (e) {
             $('#add_item').focus();
         });
+        
         $("#add_item").autocomplete({
             source: function (request, response) {
+
                 $.ajax({
                     type: 'get',
-                    url: '<?= admin_url('returns/suggestions'); ?>',
+                    url: '<?= admin_url('returns/bch_suggestions'); ?>',
                     dataType: "json",
-                    data: { term: request.term },
+                    data: { term: request.term, warehouse_id: $("#rewarehouse").val() },
                     success: function (data) {
-                        $(this).removeClass('ui-autocomplete-loading');
-                        response(data);
+
+                        if(data[0].id != 0){
+                            $(this).removeClass('ui-autocomplete-loading');
+                            response(data);
+                        }else{
+                            $.ajax({
+                                type: 'get',
+                                url: '<?=admin_url('products/get_items_by_avz_code');?>',
+                                dataType: "json",
+                                data: {
+                                    term: request.term,
+                                    warehouse_id: $("#rewarehouse").val(),
+                                    customer_id: $("#recustomer").val(),
+                                    module: 'return_by_customer'
+                                },
+                                success: function (data) {
+                                    $(this).removeClass('ui-autocomplete-loading');
+                                    if(data){
+                                        add_return_item(data[0]);
+                                    }else{
+                                        bootbox.alert('No records found for this item code.');
+                                    }
+                                    
+                                }
+                            });
+                        }
                     }
                 });
             },
@@ -66,24 +92,157 @@
             select: function (event, ui) {
                 event.preventDefault();
                 if (ui.item.id !== 0) {
-                    var row = add_return_item(ui.item);
-                    if (row)
-                        $(this).val('');
+                    openPopup(ui.item);
+                    //var row = add_return_item(ui.item);
+                    //if (row)
+                    //    $(this).val('');
                 } else {
                     bootbox.alert('<?= lang('no_match_found') ?>');
                 }
             }
         });
 
-        $(window).bind('beforeunload', function (e) {
+        /*$(window).bind('beforeunload', function (e) {
             localStorage.setItem('remove_rlls', true);
             if (count > 1) {
                 var message = "You will loss data!";
                 return message;
             }
-        });
+        });*/
     });
+
+    function openPopup(selectedItem) {
+        // Assuming selectedItem has avz_item_code as part of its data
+        $.ajax({
+            type: 'get',
+            url: '<?= admin_url('products/get_avz_item_code_details'); ?>', // Adjust the URL as needed
+            dataType: "json",
+            data: {
+                item_id: selectedItem.item_id, // Send the unique item code
+                warehouse_id: $("#rewarehouse").val(), // Optionally include warehouse ID if needed
+                customer_id: $('#recustomer').val()
+            },
+            success: function (data) {
+                $(this).removeClass('ui-autocomplete-loading');
+
+                // Populate the modal with the returned data
+                if (data && data.length > 0) {
+                    var modalBody = $('#itemModal .modal-body');
+                    modalBody.empty();
+
+                    // Loop through each item and create clickable entries in the modal
+                    var table = `
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Avz Code</th>
+                                    <th>Product</th>
+                                    <th>Batch No</th>
+                                    <th>Expiry</th>
+                                    <th>Quantity</th>
+                                    <th>Locked</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemTableBody"></tbody>
+                        </table>
+                    `;
+
+                    // Append the table to the modal body
+                    modalBody.append(table);
+                    
+                    // Populate the table body with the data
+                    var count = 0;
+                    var toitemsStorageValue = JSON.parse(localStorage.getItem('reitems'));
+                    data.forEach(function (item) {
+                        count++;
+
+                        var avzItemCode = item.row.avz_item_code;
+                        var found = false;
+
+                        Object.keys(reitems).forEach(function (key) {
+                            if (reitems[key].row && reitems[key].row.avz_item_code === avzItemCode) {
+                                found = true;
+                            }
+                        });
+                        
+                        var tickOrCross = found ? '✔' : '✖';
+
+                        var row = `
+                            <tr style="cursor:pointer;" class="modal-item" tabindex="0" data-item-id="${item.row.avz_item_code}">
+                                <td>${count}</td>
+                                <td data-avzcode="${item.row.avz_item_code}">${item.row.avz_item_code}</td>
+                                <td data-product="${item.row.name}">${item.row.name}</td>
+                                <td data-batchno="${item.row.batchno}">${item.row.batchno}</td>
+                                <td data-expiry="${item.row.expiry}">${item.row.expiry}</td>
+                                <td data-quantity="${item.total_quantity}">${item.total_quantity}</td>
+                                <td>${tickOrCross}</td>
+                            </tr>
+                        `;
+                        $('#itemTableBody').append(row);
+                        $('#itemTableBody tr:last-child').data('available', found);
+                    });
+
+                    // Show the modal
+                    $('#itemModal').modal('show');
+                    $('#itemTableBody').on('click', 'tr', function () {
+                        
+                        var clickedItemCode = $(this).data('item-id');
+                        var selectedItem = data.find(function (item) {
+                            //return item.row.avz_item_code === clickedItemCode;
+                            return String(item.row.avz_item_code).trim() === String(clickedItemCode).trim();
+                        });
+
+                        if (selectedItem) {
+                            $('#itemModal').modal('hide');
+                            var available = $(this).data('available');
+                            if(!available){
+                                add_return_item(selectedItem);
+                            }else{
+                                bootbox.alert('Row already added');
+                            }
+                        }else{
+                            console.log('Item not found');
+                        }
+                    });
+                    
+                } else {
+                    bootbox.alert('No records found for this item code.');
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('AJAX error:', error);
+                bootbox.alert('An error occurred while fetching the item details.');
+            }
+        });
+    }
+
+    function onSelectFromPopup(selectedRecord) {
+        $('#itemModal').modal('hide');
+
+        var row = add_return_item(selectedRecord);
+        if (row) {
+            // If the row was successfully added, you can do additional actions here
+            
+        }
+    }
 </script>
+
+<div class="modal fade" id="itemModal" tabindex="-1" role="dialog" aria-labelledby="itemModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="min-width:800px !important;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="itemModalLabel">Select an Item</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- The content will be dynamically generated here -->
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="box">
     <div class="box-header">
@@ -111,12 +270,7 @@
                         <?php
                 } ?>
 
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <?= lang('reference_no', 'reref'); ?>
-                                <?php echo form_input('reference_no', (isset($_POST['reference_no']) ? $_POST['reference_no'] : ''), 'class="form-control input-tip" id="reref"'); ?>
-                            </div>
-                        </div>
+                        
                         <?php if ($Owner || $Admin || !$this->session->userdata('biller_id')) {
                     ?>
                             <div class="col-md-4">
@@ -166,6 +320,16 @@
 
                     echo form_input($warehouse_input);
                 } ?>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('status', 'status'); ?>
+                                <?php
+                                $post = ['pending' => lang('pending'), 'completed' => lang('completed')];
+                                echo form_dropdown('status', $post, ($_POST['status'] ?? ''), 'id="status" class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . '" required="required" style="width:100%;" ');
+                                ?>
+                            </div>
+                        </div>
 
                         <div class="col-md-4">
                             <div class="form-group">
@@ -251,11 +415,10 @@
                                             <th class="col-md-4"><?= lang('product') . ' (' . lang('code') . ' - ' . lang('name') . ')'; ?></th>
                                             <th class="col-md-1"><?= lang('Sale Price'); ?></th>
                                             <!-- <th class="col-md-1"><?= lang('Purchase Price'); ?></th> -->
-                                            <th class="col-md-1"><?= lang('Serial No.'); ?></th>
                                             <th class="col-md-1"><?= lang('batch'); ?></th>
                                             <th class="col-md-1"><?= lang('expiry_date'); ?></th>
                                             <th class="col-md-1"><?= lang('qty'); ?></th>
-                                            <!--<th class="col-md-1"><?php //echo lang('Bonus'); ?></th>-->
+                                            <th class="col-md-1"><?= lang('Bonus'); ?></th>
                                             <?php
                                             if ($Settings->product_discount && ($Owner || $Admin || $this->session->userdata('allow_discount'))) {
                                                 echo '<th class="col-md-1">' . lang('dis 1') . '</th>';

@@ -19,7 +19,7 @@
                 nRow.className = "oreturn_link";
                 return nRow;
             },
-            "aoColumns": [{"bSortable": false,"mRender": checkbox}, {"mRender": fld}, null, null, null, {"mRender": currencyFormat}, {"bSortable": false,"mRender": attachment}, {"bSortable": false}],
+            "aoColumns": [{"bSortable": false,"mRender": checkbox}, {"mRender": fld}, null, null, null, {"mRender": currencyFormat}, null, {"bSortable": false,"mRender": attachment}, {"bSortable": false}],
             "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                 var gtotal = 0;
                 for (var i = 0; i < aaData.length; i++) {
@@ -205,6 +205,7 @@
                             <th><?= lang('biller'); ?></th>
                             <th><?= lang('customer'); ?></th>
                             <th><?= lang('grand_total'); ?></th>
+                            <th><?= lang('status'); ?></th>
                             <th style="min-width:30px; width: 30px; text-align: center;"><i class="fa fa-chain"></i></th>
                             <th style="width:80px; text-align:center;"><?= lang('actions'); ?></th>
                         </tr>

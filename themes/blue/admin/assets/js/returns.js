@@ -1208,7 +1208,7 @@ function loadItems() {
             const new_item_unit_sale    =   new_calc.new_unit_sale  ;
 
             var row_no = item.id;
-            var newTr = $('<tr id="row_' + row_no + '" class="row_' + item_id + '" data-item-id="' + item_id + '"></tr>');
+            var newTr = $('<tr id="row_' + row_no + '" class="row_' + item_id + '" style="height: 80px;" data-item-id="' + item_id + '"></tr>');
             tr_html =
                 '<td><input name="product_id[]" type="hidden" class="rid" value="' +
                 product_id +

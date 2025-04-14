@@ -382,6 +382,16 @@
                             </div>
                         </div>
 
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('status', 'status'); ?>
+                                <?php
+                                $post = ['pending' => lang('pending'), 'completed' => lang('completed')];
+                                echo form_dropdown('status', $post, ($_POST['status'] ?? ''), 'id="status" class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . '" required="required" style="width:100%;" ');
+                                ?>
+                            </div>
+                        </div>
+
                           <?php if ($Settings->tax2) {  ?>
 
                             <div class="col-md-4">
