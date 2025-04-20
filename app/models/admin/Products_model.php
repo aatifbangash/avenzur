@@ -1534,8 +1534,12 @@ class Products_model extends CI_Model
             $where = " AND a.type='purchase' AND a.reference_id = ".$purchase_id;
         }
                 // Add a condition for item_code if it is not empty and check on the products table
-        if (!empty($item_code)) {
+        /*if (!empty($item_code)) {
             $where .= " AND b.item_code = ".$item_code;
+        }*/
+
+        if (!empty($item_code)) {
+            $where .= " AND (b.item_code = ".$this->db->escape($item_code)." OR b.code = ".$this->db->escape($item_code).")";
         }
         if (!empty($warehouse_id)) {
             $where .= " AND a.location_id = ".$warehouse_id;
