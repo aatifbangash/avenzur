@@ -4275,7 +4275,6 @@ class Products extends MY_Controller
             $meta = ['page_title' => lang('print_barcodes'), 'bc' => $bc];
             $this->page_construct('products/print_barcodes', $meta, $this->data);
         } else {
-
             // if ($this->input->get('purchase') || $this->input->get('transfer')) {
             //     if ($this->input->get('purchase')) {
             //         $purchase_id = $this->input->get('purchase', true);
@@ -4295,6 +4294,8 @@ class Products extends MY_Controller
                     $items = $this->products_model->getProductsBarcodeItems($purchase_id, $item_code, $warehouse_id);
                 }else if($transfer_id){
                     $items = $this->products_model->getProductsBarcodeItemsForTransfer($transfer_id, $item_code, $warehouse_id);
+                }else {
+                    $items = $this->products_model->getProductsBarcodeItems($purchase_id, $item_code, $warehouse_id);
                 }
                 
                 if ($items) {
