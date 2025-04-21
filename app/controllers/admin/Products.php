@@ -4129,6 +4129,7 @@ class Products extends MY_Controller
             //         $ngrokUrl = '';
             //         echo "No HTTP tunnel found.\n";
             //     }
+  
             $zplCode = '';
             for ($m = 0; $m < $s; $m++) {
                 $item_id = $_POST['product'][$m];
@@ -4148,7 +4149,6 @@ class Products extends MY_Controller
                 }else{
                     $product = $this->products_model->getProductWithCategory($pid);
                 }
-                echo '<pre>';print_r($product);exit;
                 $product->price = $this->input->post('check_promo') ? ($product->promotion ? $product->promo_price : $product->price) : $product->price;
                 $pr_item_tax = 0;
 
@@ -4245,7 +4245,7 @@ class Products extends MY_Controller
             
 
             if(isset($_POST['print']) && $printer_location != 'script'){
-                $url = $printer_location;
+                /*$url = $printer_location;
                 $ch = curl_init($url);
 
             
@@ -4259,7 +4259,9 @@ class Products extends MY_Controller
                 $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
             
-                curl_close($ch);
+                curl_close($ch);*/
+
+                $this->products_model->addPrintJob($zplCode, $location_details);
             }else if($printer_location == 'script'){
                 $this->products_model->addPrintJob($zplCode, $location_details);
             }
