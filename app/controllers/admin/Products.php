@@ -4245,7 +4245,7 @@ class Products extends MY_Controller
             
 
             if(isset($_POST['print']) && $printer_location != 'script'){
-                /*$url = $printer_location;
+                $url = $printer_location;
                 $ch = curl_init($url);
 
             
@@ -4259,9 +4259,7 @@ class Products extends MY_Controller
                 $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
             
-                curl_close($ch);*/
-
-                $this->products_model->addPrintJob($zplCode, $location_details);
+                curl_close($ch);
             }else if($printer_location == 'script'){
                 $this->products_model->addPrintJob($zplCode, $location_details);
             }
