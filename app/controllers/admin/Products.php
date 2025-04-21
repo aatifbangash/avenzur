@@ -4129,7 +4129,6 @@ class Products extends MY_Controller
             //         $ngrokUrl = '';
             //         echo "No HTTP tunnel found.\n";
             //     }
-            echo $purchase_id.' -- '.$transfer_id;exit;
             $zplCode = '';
             for ($m = 0; $m < $s; $m++) {
                 $item_id = $_POST['product'][$m];
@@ -4149,6 +4148,7 @@ class Products extends MY_Controller
                 }else{
                     $product = $this->products_model->getProductWithCategory($pid);
                 }
+                echo '<pre>';print_r($product);exit;
                 $product->price = $this->input->post('check_promo') ? ($product->promotion ? $product->promo_price : $product->price) : $product->price;
                 $pr_item_tax = 0;
 
