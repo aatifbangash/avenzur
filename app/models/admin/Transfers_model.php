@@ -371,7 +371,7 @@ class Transfers_model extends CI_Model
                         //Inventory Movement - Transfer IN
                         $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_in', $item['quantity'], $data['to_warehouse_id'], $transfer_id, $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['sale_price'], $data['date']);
                         ////Inventory Movement - Transfer Out
-                        //$this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $transfer_id, $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['sale_price'], $data['date']);
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $transfer_id, $item['net_unit_cost'], $item['expiry'] , $item['sale_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['sale_price'], $data['date']);
                     }
 
                     // This is commented on 2025-02-18 for no valid use case
