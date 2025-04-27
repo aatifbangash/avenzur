@@ -50,7 +50,7 @@ class Suppliers extends MY_Controller
                 $supplier_level = 1;
                 $phone = $data[7];
 
-                $company_detail = $this->companies_model->getCompanyByName($arabic_name);
+                $company_detail = $this->companies_model->getCompanyByNameNew($arabic_name);
                 
                 if($company_detail){
                     // Update existing Company
