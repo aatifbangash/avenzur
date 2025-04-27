@@ -27,6 +27,9 @@ $stmt->bind_param("ss", $start_date, $end_date);
 $stmt->execute();
 $result_unprocessed_sales = $stmt->get_result();
 
+$serial_ids = array();
+$failed_serial_ids = array();
+
 if ($result_unprocessed_sales->num_rows > 0) {
     while ($serial_no = $result_unprocessed_sales->fetch_assoc()) {
         $auth_token = authenticate($serial_no['rasd_user'], $serial_no['rasd_pass']);
@@ -62,6 +65,8 @@ if ($result_unprocessed_sales->num_rows > 0) {
                 add_rasd_transactions($conn, $payload_used,'pharmacy_sale_product',1, $response,$payload);
                 echo 'Script Executed Successfully...';
             } else {
+                $failed_serial_ids[] = $serial_no['id'];
+
                 add_rasd_transactions($conn, $payload_used,'pharmacy_sale_product',0, $response,$payload);
                 echo "Error Calling API";
             }
@@ -72,6 +77,16 @@ if ($result_unprocessed_sales->num_rows > 0) {
     if (!empty($serial_ids)) {
         $serial_ids_str = implode(',', $serial_ids);
         $update_sql = "UPDATE sma_serial_numbers SET is_pushed = 1 WHERE id IN ($serial_ids_str)";
+        if ($conn->query($update_sql) === TRUE) {
+            echo "Records updated successfully.";
+        } else {
+            echo "Error updating records: " . $conn->error;
+        }
+    }
+
+    if (!empty($failed_serial_ids)) {
+        $failed_serial_ids_str = implode(',', $failed_serial_ids);
+        $update_sql = "UPDATE sma_serial_numbers SET is_pushed = 2 WHERE id IN ($failed_serial_ids_str)";
         if ($conn->query($update_sql) === TRUE) {
             echo "Records updated successfully.";
         } else {
