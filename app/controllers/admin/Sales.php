@@ -42,7 +42,7 @@ class Sales extends MY_Controller
         if($d['zatca_enabled']){
             $this->zatca_enabled = true;
             $params = array(
-            'base_url' => "https://dev-middleware.accqrate-erp.com/api/zatca-transmissions/send",
+            'base_url' => $d['zatca_url'],
             "api_key" => $d['zatca_appkey'],
             "api_secret" => $d['zatca_secretKey']
             );

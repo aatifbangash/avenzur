@@ -14,6 +14,7 @@ class Zetca_model extends CI_Model{
         $settings = $this->Settings_model ->getSettings();
         $zetca_settings = array(
             "zatca_enabled" => isset($settings->zatca_enabled) ? $settings->zatca_enabled : null,
+            "zatca_url" => isset($settings->zatca_url) ? $settings->zatca_url : null,
             "zatca_appkey" => isset($settings->zatca_appkey) ? $settings->zatca_appkey : null,
             "zatca_secretKey" => isset($settings->zatca_secretkey) ? $settings->zatca_secretkey : null,
         );
