@@ -4,7 +4,7 @@ define('BASEPATH', true);
 $hostname = "81.208.168.52";
 $username =  "remote_user";
 $password = 're$Pa1msee$ot_ur';
-$database = "rawabi"; 
+$database = "abaad_asaha"; 
 
 $conn = new mysqli($hostname, $username, $password, $database);
 
