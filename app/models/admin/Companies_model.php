@@ -222,6 +222,19 @@ class Companies_model extends CI_Model
         return false;
     }
 
+    public function getCompanyByNameNew($name)
+    {
+        $this->db->order_by('id', 'ASC');
+        $this->db->like('name', $name);
+        $this->db->where(['group_name' => 'customer']);
+        $this->db->limit(1);
+        $q = $this->db->get('companies');
+        if ($q->num_rows() > 0) {
+            return $q->row(); 
+        }
+        return false;
+    }
+
     public function getCompanyByID($id)
     {
         $q = $this->db->get_where('companies', ['id' => $id], 1);
