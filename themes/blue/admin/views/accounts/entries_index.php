@@ -57,6 +57,11 @@
         <div class="box-icon">
             <ul class="btn-tasks">
                 <li class="dropdown">
+                    <a href="<?= admin_url('entries/upload_trial_balance'); ?>" data-toggle="modal" data-target="#myModal">
+                        <i class="icon fa fa-upload"></i>
+                    </a>
+                </li>
+                <li class="dropdown">
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#">
                         <i class="icon fa fa-tasks tip" data-placement="left" title="<?= lang('actions') ?>"></i>
                     </a>

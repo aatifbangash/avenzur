@@ -67,6 +67,162 @@ class Entries extends MY_Controller
         $this->page_construct('accounts/entries_index', $meta, $this->data);
 	}
 
+	public function upload_trial_balance_by_csv(){
+		$this->form_validation->set_rules('ledger', $this->lang->line('ledger'), 'required');
+		$this->form_validation->set_rules('csvfile', $this->lang->line('upload_file'), 'xss_clean');
+
+		if ($this->form_validation->run() == true) {
+			$ledger = $this->input->post('ledger');
+			if (isset($_FILES['csvfile'])) {
+                $this->load->library('upload');
+
+                $config['upload_path'] = $this->digital_upload_path;
+                $config['allowed_types'] = 'csv';
+                $config['max_size'] = $this->allowed_file_size;
+                $config['overwrite'] = true;
+
+                $this->upload->initialize($config);
+				
+                if (!$this->upload->do_upload('csvfile')) {
+                    $error = $this->upload->display_errors();
+                    $this->session->set_flashdata('error', $error);
+                    admin_redirect('entries');
+                }
+                $csv = $this->upload->file_name;
+
+                $arrResult = [];
+                $handle = fopen($this->digital_upload_path . $csv, 'r');
+                if ($handle) {
+                    while (($row = fgetcsv($handle, 5000, ',')) !== false) {
+                        $arrResult[] = $row;
+                    }
+                    fclose($handle);
+                }
+                $arr_length = count($arrResult);
+                if ($arr_length > 5000000) {
+                    $this->session->set_flashdata('error', lang('too_many_records'));
+                    redirect($_SERVER['HTTP_REFERER']);
+                    exit();
+                }
+
+				$parsed = $arrResult;
+
+				$transactions = [];
+				
+				foreach ($parsed as $row) {
+					// Skip rows that look like headers
+					if (
+						isset($row[0]) &&
+						strtolower(trim($row[0])) === 'date' &&
+						isset($row[4]) &&
+						strtolower(trim($row[4])) === 'debit'
+					) {
+						continue;
+					}
+				
+					// Skip completely empty rows
+					if (empty(array_filter($row))) {
+						continue;
+					}
+				
+					// Skip rows that only have account info (e.g., acc no.)
+					if (strtolower(trim($row[0])) === 'acc no.') {
+						continue;
+					}
+				
+					// Optional: check if first column looks like a date
+					if (!preg_match('/\d{1,2}\/\d{1,2}\/\d{4}/', $row[0])) {
+						continue;
+					}
+				
+					// Now extract the transaction row
+					$transactions[] = [
+						'date'        => $row[0] ?? '',
+						'jl_no'       => $row[1] ?? '',
+						'description' => $row[2] ?? '',
+						'doc_no'      => $row[3] ?? '',
+						'debit'       => $row[4] ?? '',
+						'credit'      => $row[5] ?? '',
+						'balance'     => $row[6] ?? '',
+					];
+
+				}
+
+				foreach ($transactions as $transaction){
+
+					if($transaction['credit']){
+						$amount = $transaction['credit'];
+						$dc = 'C';
+					}else{
+						$amount = $transaction['debit'];
+						$dc = 'D';
+					}
+					
+					$this->db->where('id', $transaction['doc_no']);
+					$exists = $this->db->get('sma_accounts_entries')->row();
+
+					if($transaction->doc_no){
+						if (!$exists) {
+							// Only insert if it doesn't already exist
+							$insert_trs = [
+								'id' => $transaction['doc_no'],
+								'entrytype_id' => 4,
+								'transaction_type' => 'balanceupload',
+								'number' => 'TBU-' . $transaction['doc_no'],
+								'date' => date('Y-m-d', strtotime($transaction['date'])),
+								'notes' => 'Trial Balance Upload, Dated: ' . date('Y-m-d')
+							];
+							$this->db->insert('sma_accounts_entries', $insert_trs);
+							$account_entry_id = $this->db->insert_id();
+						} else {
+							// Record already exists, do nothing or log if needed
+							$account_entry_id = $exists->id;
+						}
+
+						$insert_id = $transaction['doc_no'];
+					}else{
+						$insert_trs = [
+							'entrytype_id' => 4,
+							'transaction_type' => 'balanceupload',
+							'number' => 'TBU-' . $transaction['doc_no'],
+							'date' => date('Y-m-d', strtotime($transaction['date'])),
+							'notes' => 'Trial Balance Upload, Dated: ' . date('Y-m-d')
+						];
+						$this->db->insert('sma_accounts_entries', $insert_trs);
+						$account_entry_id = $this->db->insert_id();
+
+						$insert_id = $account_entry_id;
+					}
+
+					$insert_entry_item = [
+						'entry_id' => $insert_id,
+						'ledger_id' => $ledger,
+						'amount' => $amount,
+						'dc' => $dc,
+						'narration' => $transaction['description']
+					];
+					
+					$account_entry_item_id = $this->db->insert('sma_accounts_entryitems', $insert_entry_item);
+				}
+
+				admin_redirect('entries');
+				
+			}
+		} else {
+            $data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+
+            admin_redirect('entries');
+        }
+	}
+
+	public function upload_trial_balance(){
+		$this->data['ledgers'] = $this->site->getCompanyLedgers();
+
+		//$this->data['warehouses'] = $this->site->getAllWarehouses();
+        //$this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+        $this->load->view($this->theme . 'accounts/uploadCsvTrialBalance', $this->data);
+	}
+
 	public function count_entries(){
 
 		$eid         = $this->input->get('eid');

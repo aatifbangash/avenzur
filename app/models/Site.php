@@ -1178,6 +1178,33 @@ public function logVisitor() {
         return false;
     }
 
+    public function getAdjustmentStore($id = null)
+    {
+        $q = $this->db->get_where('warehouses', ['code' => 'adj'], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getCompanyLedgers()
+    {
+        $this->db
+            ->select('sma_accounts_ledgers.*')
+            ->from('sma_accounts_ledgers')
+            ->order_by('sma_accounts_ledgers.name asc');
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data_res[] = $row;
+            }
+        } else {
+            $data_res = array();
+        }
+
+        return $data_res;
+    }
+
     public function getUser($id = null)
     {
         if (!$id) {

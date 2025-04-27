@@ -2036,6 +2036,11 @@
                                     <span class="chevron closed"></span>
                                 </a>
                                 <ul>
+                                    <li id="stock_requests_index">
+                                        <a class="submenu" href="<?= admin_url('stock_request/inventory_check'); ?>">
+                                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('Inventory Check'); ?></span>
+                                        </a>
+                                    </li>
                                     <?php 
                                         if($GP['stock_pharmacist']){
                                     ?>
