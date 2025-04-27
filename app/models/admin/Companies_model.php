@@ -226,7 +226,7 @@ class Companies_model extends CI_Model
     {
         $this->db->order_by('id', 'ASC');
         $this->db->like('name', $name);
-        $this->db->where(['group_name' => 'customer']);
+        $this->db->where(['group_name' => 'supplier']);
         $this->db->limit(1);
         $q = $this->db->get('companies');
         if ($q->num_rows() > 0) {
