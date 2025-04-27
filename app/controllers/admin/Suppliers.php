@@ -32,7 +32,7 @@ class Suppliers extends MY_Controller
     }
 
     public function edit_suppliers_script(){
-        $csvFile = 'files/Retaj_customers_csv.csv';
+        $csvFile = 'files/retaj_supplier_list_new_csv.csv';
 
         // Open the file in read mode
         if (($handle = fopen($csvFile, 'r')) !== false) {
@@ -54,12 +54,12 @@ class Suppliers extends MY_Controller
                 
                 if($company_detail){
                     // Update existing Company
-                    //echo 'Customer Found: '. $company_detail->name.'<br />';
-                    $this->companies_model->updateCompanyNames($company_detail->id, ['name_ar' => $english_name, 'sequence_code' => $ascon_code, 'phone' => $phone, 'parent_code' => $parent_code, 'level' => $supplier_level, 'payment_term' => $payment_term, 'credit_limit' => $credit_limit]);
+                    echo 'Customer Found: '. $company_detail->name.'<br />';
+                    //$this->companies_model->updateCompanyNames($company_detail->id, ['name_ar' => $english_name, 'sequence_code' => $ascon_code, 'phone' => $phone, 'parent_code' => $parent_code, 'level' => $supplier_level, 'payment_term' => $payment_term, 'credit_limit' => $credit_limit]);
                 }else{
                     // Insert New Company
                     echo 'Customer Not Found: '.$arabic_name.'<br />';
-                    $this->companies_model->addCompany(['group_id' => 3, 'group_name' => 'customer', 'name' => $arabic_name, 'name_ar' => $english_name, 'logo' => 'logo.png', 'ledger_account' => 21, 'cogs_ledger' => 174, 'sales_ledger' => 157, 'discount_ledger' => 173, 'return_ledger' => 165, 'sequence_code' => $ascon_code, 'phone' => $phone, 'parent_code' => $parent_code, 'level' => $supplier_level, 'payment_term' => $payment_term, 'credit_limit' => $credit_limit]);
+                    //$this->companies_model->addCompany(['group_id' => 3, 'group_name' => 'customer', 'name' => $arabic_name, 'name_ar' => $english_name, 'logo' => 'logo.png', 'ledger_account' => 21, 'cogs_ledger' => 174, 'sales_ledger' => 157, 'discount_ledger' => 173, 'return_ledger' => 165, 'sequence_code' => $ascon_code, 'phone' => $phone, 'parent_code' => $parent_code, 'level' => $supplier_level, 'payment_term' => $payment_term, 'credit_limit' => $credit_limit]);
                 }
                 
             }
