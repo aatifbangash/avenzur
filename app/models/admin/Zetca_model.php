@@ -63,7 +63,7 @@ class Zetca_model extends CI_Model{
                 //$row['discountFormat'] = "%";
                 //$row['discountAmount'] = round(($row['amount']  * $discount/100),2);
                 $row['discountAmount'] = round(($item['item_discount']),2);
-                $row['netAmount'] =  round(((float) $item['totalbeforevat']  - $row['discountAmount']),2);
+                $row['netAmount'] =  round(((float) $item['totalbeforevat']),2);
                 $totalDiscount = round(($totalDiscount + $row['discountAmount']),2);
             }else{
                 $row['netAmount'] = round(( (float) $item['totalbeforevat']),2);
@@ -150,7 +150,7 @@ class Zetca_model extends CI_Model{
                 //$row['discountFormat'] = "%";
                 //$row['discountAmount'] = round(($row['amount']  * $discount/100),2);
                 $row['discountAmount'] = round(($item['item_discount']),2);
-                $row['netAmount'] =  round(((float) $item['totalbeforevat']  - $row['discountAmount']),2);
+                $row['netAmount'] =  round(((float) $item['totalbeforevat']),2);
                 $totalDiscount = round(($totalDiscount + $row['discountAmount']),2);
             }else{
                 $row['netAmount'] = round(( (float) $item['totalbeforevat']),2);
