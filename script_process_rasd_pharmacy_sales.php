@@ -14,7 +14,7 @@ if ($conn->connect_error) {
 }
 
 $current_date = date('Y-m-d');
-$start_date = date('Y-m-d', strtotime('-5 days'));
+$start_date = date('Y-m-d', strtotime('-10 days'));
 $end_date = date('Y-m-d');
 
 $stmt = $conn->prepare("SELECT sr.*, s.warehouse_id, w.gln as pharmacy_gln, w.rasd_user, w.rasd_pass
@@ -66,7 +66,7 @@ if ($result_unprocessed_sales->num_rows > 0) {
                 echo 'Script Executed Successfully...';
             } else {
                 $failed_serial_ids[] = $serial_no['id'];
-                
+
                 add_rasd_transactions($conn, $payload_used,'pharmacy_sale_product',0, $response,$payload);
                 echo "Error Calling API";
             }
