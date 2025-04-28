@@ -1919,7 +1919,7 @@ class Products extends MY_Controller
                 $rw = 2;
                 $nonImportedProducts = array();
                 foreach ($final as $pr) {
-                    if ($product = $this->products_model->getProductByCode(trim($pr['code']))) {
+                    if ($product = $this->products_model->getProductByCodeForAdj(trim($pr['code']))) {
                         $csv_variant = trim($pr['variant']);
                         $variant = !empty($csv_variant) ? $this->products_model->getProductVariantID($product->id, $csv_variant) : false;
 

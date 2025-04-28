@@ -674,6 +674,23 @@ class Products_model extends CI_Model
         return false;
     }
 
+    public function getProductByCodeForAdj($code)
+    {
+        //echo $code.'###';
+        $this->db->select('*');
+        $this->db->from('sma_products');
+        $this->db->where('code', $code);
+        
+        $query = $this->db->get();
+       //echo $query->num_rows();
+       // $q = $this->db->get_where('products', ['code' => $code], 1);
+        if ($query->num_rows() > 0) {
+           return $query->row();
+        }
+
+        return false;
+    }
+
     public function getProductByCode($code)
     {
         //echo $code.'###';
@@ -1284,7 +1301,7 @@ class Products_model extends CI_Model
             $movement_type = $data['type'] == 'subtraction' ? 'adjustment_decrease': 'adjustment_increase';
             $adjustment_id = isset($data['adjustment_id']) ? $data['adjustment_id'] : null;
             //$this->Inventory_model->add_movement($data['product_id'], $data['batchno'], $movement_type, $data['quantity'], $data['warehouse_id'], $adjustment_id, $data['unit_cost'], $data['expiry'], $data['sale_price'], $data['unit_cost'], $avz_item_code);
-            echo 'here in inventory upload....';
+            //echo 'here in inventory upload....';
             $this->Inventory_model->add_movement($data['product_id'], $data['batchno'], $movement_type, $data['quantity'], $data['warehouse_id'], $adjustment_id, $data['unit_cost'], $data['expiry'], $data['sale_price'], $data['unit_cost'], $avz_item_code, 0, NULL, $data['sale_price'], date('Y-m-d'));  
         }
     }
