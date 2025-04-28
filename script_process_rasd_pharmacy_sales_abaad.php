@@ -14,7 +14,7 @@ if ($conn->connect_error) {
 }
 
 $current_date = date('Y-m-d');
-$start_date = date('Y-m-d', strtotime('-5 days'));
+$start_date = date('Y-m-d', strtotime('-7 days'));
 $end_date = date('Y-m-d');
 
 $stmt = $conn->prepare("SELECT sr.*, s.warehouse_id, w.gln as pharmacy_gln, w.rasd_user, w.rasd_pass
@@ -26,14 +26,13 @@ $stmt = $conn->prepare("SELECT sr.*, s.warehouse_id, w.gln as pharmacy_gln, w.ra
 $stmt->bind_param("ss", $start_date, $end_date);
 $stmt->execute();
 $result_unprocessed_sales = $stmt->get_result();
-
 $serial_ids = array();
 $failed_serial_ids = array();
 
 if ($result_unprocessed_sales->num_rows > 0) {
     while ($serial_no = $result_unprocessed_sales->fetch_assoc()) {
         $auth_token = authenticate($serial_no['rasd_user'], $serial_no['rasd_pass']);
-       
+
         if ($auth_token) {
             $headers = array(
                 'FunctionName:APIReq',
@@ -169,7 +168,7 @@ function authenticate($UEmail, $UPass) {
         $response = $response_data['body'];
         $response_headers = $response_data['headers'];
         
-        preg_match('/token:\s*([^\r\n]+)/i', $response_headers, $matches);
+        preg_match('/token:\s*([^\r\n]+)/i', $response, $matches);
         
         if (isset($matches[1])) {
             $token = $matches[1];

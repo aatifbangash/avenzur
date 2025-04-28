@@ -14,7 +14,7 @@ if ($conn->connect_error) {
 }
 
 $current_date = date('Y-m-d');
-$start_date = date('Y-m-d', strtotime('-10 days'));
+$start_date = date('Y-m-d', strtotime('-7 days'));
 $end_date = date('Y-m-d');
 
 $stmt = $conn->prepare("SELECT sr.*, s.warehouse_id, w.gln as pharmacy_gln, w.rasd_user, w.rasd_pass
