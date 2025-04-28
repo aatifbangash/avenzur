@@ -527,7 +527,7 @@ class Products extends MY_Controller
 
     public function update_product_codes()
     {
-        $csvFile = $this->upload_path . 'csv/salla_items_final_products.csv';
+        $csvFile = $this->upload_path . 'csv/salla_items_final_products_max.csv';
 
         if (!file_exists($csvFile)) {
             echo 'CSV file not found.';
