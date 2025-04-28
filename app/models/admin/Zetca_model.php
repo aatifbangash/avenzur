@@ -37,9 +37,9 @@ class Zetca_model extends CI_Model{
         $totalGrossAmount = 0;
         foreach($items as $item){
             $discount = 0;
-            /*if($sale->order_discount_id){
+            if($sale->order_discount_id){
                 $discount = (float) rtrim($sale->order_discount_id,"%");
-            }*/
+            }
             $row = [];
             $row['product'] = $item ['product_name'];
             $row['quantity'] = (int) $item['quantity'];
@@ -58,12 +58,11 @@ class Zetca_model extends CI_Model{
             }            
           
             $row['amount'] = round(((float) $item['unit_price'] * (int) $item['quantity']),2);
-            if($sale->documentDiscount){
-                //$row['discount'] = $discount;
-                //$row['discountFormat'] = "%";
-                //$row['discountAmount'] = round(($row['amount']  * $discount/100),2);
-                $row['discountAmount'] = round(($item['item_discount']),2);
-                $row['netAmount'] =  round(((float) $item['totalbeforevat']),2);
+            if($discount){
+                $row['discount'] = $discount;
+                $row['discountFormat'] = "%";
+                $row['discountAmount'] = round(($row['amount']  * $discount/100),2);
+                $row['netAmount'] =  round(((float) $item['totalbeforevat']  - $row['discountAmount']),2);
                 $totalDiscount = round(($totalDiscount + $row['discountAmount']),2);
             }else{
                 $row['netAmount'] = round(( (float) $item['totalbeforevat']),2);
@@ -78,8 +77,8 @@ class Zetca_model extends CI_Model{
             $payload['items'][] = $row;
         }
         $payload['amount'] = $totalAmountBeforeVatAndDiscount;
-        if($sale->documentDiscount){
-            $payload['discountAmount'] = $sale->documentDiscount;
+        if($totalDiscount){
+            $payload['discountAmount'] = $totalDiscount;
         }
         $payload['netAmount'] = $totalNetBeforeTax;
         $payload['taxAmount'] = $totalTaxAmount;
@@ -122,12 +121,11 @@ class Zetca_model extends CI_Model{
         $totalNetBeforeTax = 0;
         $totalTaxAmount = 0;
         $totalGrossAmount = 0;
-        $totalAmount = 0;
         foreach($items as $item){
             $discount = 0;
-            /*if($sale->order_discount_id){
+            if($sale->order_discount_id){
                 $discount = (float) rtrim($sale->order_discount_id,"%");
-            }*/
+            }
             $row = [];
             $row['product'] = $item ['product_name'];
             $row['quantity'] = (int) $item['quantity'];
@@ -146,12 +144,11 @@ class Zetca_model extends CI_Model{
             }            
           
             $row['amount'] = round(((float) $item['unit_price'] * (int) $item['quantity']),2);
-            if($sale->documentDiscount){
-                //$row['discount'] = $discount;
-                //$row['discountFormat'] = "%";
-                //$row['discountAmount'] = round(($row['amount']  * $discount/100),2);
-                $row['discountAmount'] = round(($item['item_discount']),2);
-                $row['netAmount'] =  round(((float) $item['totalbeforevat']),2);
+            if($discount){
+                $row['discount'] = $discount;
+                $row['discountFormat'] = "%";
+                $row['discountAmount'] = round(($row['amount']  * $discount/100),2);
+                $row['netAmount'] =  round(((float) $item['totalbeforevat']  - $row['discountAmount']),2);
                 $totalDiscount = round(($totalDiscount + $row['discountAmount']),2);
             }else{
                 $row['netAmount'] = round(( (float) $item['totalbeforevat']),2);
@@ -159,16 +156,15 @@ class Zetca_model extends CI_Model{
              
             $row['taxAmount'] = round(($row['netAmount'] * $row['tax']/100),2);
             $row['grossAmount'] = round(($row['netAmount'] + $row['taxAmount']),2);
-            $totalAmount = round(($totalAmount + $row['amount']),2);
             $totalNetBeforeTax = round(($totalNetBeforeTax + $row['netAmount']),2);
             $totalAmountBeforeVatAndDiscount = round(($totalAmountBeforeVatAndDiscount + $item['totalbeforevat']),2);
             $totalTaxAmount = round(($totalTaxAmount + $row['taxAmount']),2);
             $totalGrossAmount = round(($totalGrossAmount + $row['grossAmount']),2);
             $payload['items'][] = $row;
         }
-        $payload['amount'] = $totalAmount;
-        if($sale->documentDiscount){
-            $payload['discountAmount'] = round(( (float) $sale->documentDiscount),2);
+        $payload['amount'] = $totalAmountBeforeVatAndDiscount;
+        if($totalDiscount){
+            $payload['discountAmount'] = $totalDiscount;
         }
         $payload['netAmount'] = $totalNetBeforeTax;
         $payload['taxAmount'] = $totalTaxAmount;
@@ -178,7 +174,7 @@ class Zetca_model extends CI_Model{
 
     public function get_zetca_data_b2b($saleId){
         
-        $this->db->select("id as invoiceNo, customer_id, date as issueDate,total_discount as documentDiscount,grand_total as grossAmount,order_discount_id, total_tax as taxAmount");
+        $this->db->select("id as invoiceNo, customer_id, date as issueDate,order_discount as documentDiscount,grand_total as grossAmount,order_discount_id, total_tax as taxAmount");
         $this->db->from("sma_sales");
         $this->db->where("id", $saleId);
         $sale = $this->db->get()->row();
@@ -194,7 +190,7 @@ class Zetca_model extends CI_Model{
     }
     public function get_zatca_data($saleId){
 
-        $this->db->select("id as invoiceNo,  date as issueDate,total_discount as documentDiscount,grand_total as grossAmount,order_discount_id, total_tax as taxAmount");
+        $this->db->select("id as invoiceNo,  date as issueDate,order_discount as documentDiscount,grand_total as grossAmount,order_discount_id, total_tax as taxAmount");
         $this->db->from("sma_sales");
         $this->db->where("id", $saleId);
         $sale = $this->db->get()->row();
