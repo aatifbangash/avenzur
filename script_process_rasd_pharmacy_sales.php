@@ -26,7 +26,7 @@ $stmt = $conn->prepare("SELECT sr.*, s.warehouse_id, w.gln as pharmacy_gln, w.ra
 $stmt->bind_param("ss", $start_date, $end_date);
 $stmt->execute();
 $result_unprocessed_sales = $stmt->get_result();
-
+echo '<pre>';print_r($result_unprocessed_sales);exit;
 $serial_ids = array();
 $failed_serial_ids = array();
 
