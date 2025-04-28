@@ -31,9 +31,8 @@ $failed_serial_ids = array();
 
 if ($result_unprocessed_sales->num_rows > 0) {
     while ($serial_no = $result_unprocessed_sales->fetch_assoc()) {
-        echo '<pre>';print_r($serial_no);exit;
         $auth_token = authenticate($serial_no['rasd_user'], $serial_no['rasd_pass']);
-       
+        echo $auth_token;exit;
         if ($auth_token) {
             $headers = array(
                 'FunctionName:APIReq',
