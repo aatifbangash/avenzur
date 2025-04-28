@@ -168,7 +168,7 @@ class Zetca_model extends CI_Model{
         }
         $payload['amount'] = $totalAmount;
         if($sale->documentDiscount){
-            $payload['discountAmount'] = $sale->documentDiscount;
+            $payload['discountAmount'] = round(( (float) $sale->documentDiscount),2);
         }
         $payload['netAmount'] = $totalNetBeforeTax;
         $payload['taxAmount'] = $totalTaxAmount;
