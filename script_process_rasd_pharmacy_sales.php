@@ -165,12 +165,11 @@ function authenticate($UEmail, $UPass) {
     );
 
     $response_data = make_post_request($url, $headers);
-    print_r($response_data);exit;
     if ($response_data) {
         $response = $response_data['body'];
         $response_headers = $response_data['headers'];
         
-        preg_match('/token:\s*([^\r\n]+)/i', $response_headers, $matches);
+        preg_match('/token:\s*([^\r\n]+)/i', $response, $matches);
         
         if (isset($matches[1])) {
             $token = $matches[1];
