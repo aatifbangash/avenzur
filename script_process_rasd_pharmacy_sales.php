@@ -26,12 +26,12 @@ $stmt = $conn->prepare("SELECT sr.*, s.warehouse_id, w.gln as pharmacy_gln, w.ra
 $stmt->bind_param("ss", $start_date, $end_date);
 $stmt->execute();
 $result_unprocessed_sales = $stmt->get_result();
-echo '<pre>';print_r($result_unprocessed_sales);exit;
 $serial_ids = array();
 $failed_serial_ids = array();
 
 if ($result_unprocessed_sales->num_rows > 0) {
     while ($serial_no = $result_unprocessed_sales->fetch_assoc()) {
+        echo '<pre>';print_r($serial_no);exit;
         $auth_token = authenticate($serial_no['rasd_user'], $serial_no['rasd_pass']);
        
         if ($auth_token) {
