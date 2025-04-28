@@ -44,7 +44,7 @@ if ($result_unprocessed_sales->num_rows > 0) {
             $item = array();
             $item[] = (object)[
                 'batchno' => $serial_no['batchno'],
-                'serial_number' => $serial_no['serial_number'],
+                'serial_number' => extractCorrectSerial($serial_no['serial_number']),
                 'gtin' => $serial_no['gtin'],
             ];
 
@@ -93,6 +93,30 @@ if ($result_unprocessed_sales->num_rows > 0) {
         }
     }
 
+}
+
+function extractCorrectSerial($serial) {
+    // Step 1: Check if length > 17
+    if (strlen($serial) >= 17) {
+        // Step 2: Look for position of "17"
+        $pos = strpos($serial, '17');
+        if ($pos !== false) {
+            // Step 3: Get two options
+            $before = substr($serial, 0, $pos);
+            $after = substr($serial, $pos);
+            
+            // Step 4: Decide which one is correct (for now, let's pick the one closer to 17 characters)
+            /*if (abs(strlen($before) - 17) <= abs(strlen($after) - 17)) {
+                return $before;
+            } else {
+                return $after;
+            }*/
+
+            return $before;
+        }
+    }
+    // If length <= 17 or "17" not found, return original
+    return $serial;
 }
 
 function add_rasd_transactions($conn,$payload_used, $function, $is_success, $response, $request)
