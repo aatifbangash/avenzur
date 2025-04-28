@@ -563,8 +563,8 @@ class Products extends MY_Controller
                     'promo_price' => $promo_price
                 ];
 
-                //$this->db->where('id', $product->id);
-                //$this->db->update('sma_products', $dataToUpdate);
+                $this->db->where('id', $product->id);
+                $this->db->update('sma_products', $dataToUpdate);
 
                 echo "Product with code $avenzurCode has updated price now i.e $promo_price<br>";
             } else {
