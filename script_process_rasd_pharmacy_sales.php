@@ -165,6 +165,7 @@ function authenticate($UEmail, $UPass) {
     );
 
     $response_data = make_post_request($url, $headers);
+    echo $response_data;exit;
     if ($response_data) {
         $response = $response_data['body'];
         $response_headers = $response_data['headers'];
