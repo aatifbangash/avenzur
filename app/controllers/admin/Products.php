@@ -527,7 +527,7 @@ class Products extends MY_Controller
 
     public function update_product_codes()
     {
-        $csvFile = $this->upload_path . 'csv/avenzur-code-and-retaj-code.csv';
+        $csvFile = $this->upload_path . 'csv/salla_items_final_products.csv';
 
         if (!file_exists($csvFile)) {
             echo 'CSV file not found.';
@@ -544,8 +544,10 @@ class Products extends MY_Controller
         $count = 0;
 
         while (($rowData = fgetcsv($handle)) !== false) {
-            $avenzurCode = $rowData[1];
-            $retajCode = $rowData[5];
+            $avenzurCode = $rowData[3];
+            //$retajCode = $rowData[5];
+            $price       = $rowData[5];
+            $promo_price = $rowData[6];
 
             $this->db->select('*');
             $this->db->from('sma_products');
@@ -556,14 +558,15 @@ class Products extends MY_Controller
             if ($product) {
 
                 $dataToUpdate = [
-                    'avenzur_code' => $avenzurCode,
-                    'code' => $retajCode
+                    'cost' => $price,
+                    'price' => $price,
+                    'promo_price' => $promo_price
                 ];
 
                 //$this->db->where('id', $product->id);
                 //$this->db->update('sma_products', $dataToUpdate);
 
-                echo "Product with code $avenzurCode has updated name now i.e $retajCode<br>";
+                echo "Product with code $avenzurCode has updated price now i.e $promo_price<br>";
             } else {
                 echo "Product with code $avenzurCode was not found in database<br>";
             }
