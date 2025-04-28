@@ -546,8 +546,8 @@ class Products extends MY_Controller
         while (($rowData = fgetcsv($handle)) !== false) {
             $avenzurCode = $rowData[3];
             //$retajCode = $rowData[5];
-            $price       = $rowData[5];
-            $promo_price = $rowData[6];
+            $price       = $rowData[6];
+            $promo_price = $rowData[7];
 
             $this->db->select('*');
             $this->db->from('sma_products');
