@@ -147,9 +147,8 @@ class Entries extends MY_Controller
 					];
 
 				}
-
+				
 				foreach ($transactions as $transaction){
-
 					if($transaction['credit']){
 						$amount = $transaction['credit'];
 						$dc = 'C';
@@ -160,8 +159,8 @@ class Entries extends MY_Controller
 					
 					$this->db->where('id', $transaction['doc_no']);
 					$exists = $this->db->get('sma_accounts_entries')->row();
-
-					if($transaction->doc_no){
+					
+					if($transaction['doc_no']){
 						if (!$exists) {
 							// Only insert if it doesn't already exist
 							$insert_trs = [
@@ -181,11 +180,13 @@ class Entries extends MY_Controller
 
 						$insert_id = $transaction['doc_no'];
 					}else{
+						$baseTimestamp = strtotime($transaction['date']);
+
 						$insert_trs = [
 							'entrytype_id' => 4,
 							'transaction_type' => 'balanceupload',
 							'number' => 'TBU-' . $transaction['doc_no'],
-							'date' => date('Y-m-d', strtotime($transaction['date'])),
+							'date' => date('Y-m-d', strtotime('-1 day', $baseTimestamp)),
 							'notes' => 'Trial Balance Upload, Dated: ' . date('Y-m-d')
 						];
 						$this->db->insert('sma_accounts_entries', $insert_trs);
@@ -204,7 +205,7 @@ class Entries extends MY_Controller
 					
 					$account_entry_item_id = $this->db->insert('sma_accounts_entryitems', $insert_entry_item);
 				}
-
+			
 				admin_redirect('entries');
 				
 			}

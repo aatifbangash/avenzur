@@ -654,7 +654,7 @@ class Reports_model extends CI_Model
             ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
             ->where('sma_accounts_entries.date >=', $start_date)
             ->where('sma_accounts_entries.date <=', $end_date)
-            ->order_by('sma_accounts_entries.date asc');
+            ->order_by('sma_accounts_entries.date asc, sma_accounts_entries.id asc');
 
         $q = $this->db->get();
 
