@@ -47,14 +47,17 @@
                                                 <td class="dataTables_empty" style="text-align: center;"> <?= $inventory_check_requests->name; ?></td>
                                                 <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check_requests->status; ?></td>
                                                 <td class="dataTables_empty" style="text-align: center;">
-                                                    <a href="<?php echo admin_url('stock_request/view_inventory_check/' . $inventory_check_requests->id); ?>" class="tip" title="" data-original-title="View Request"><i class="fa fa-file-text-o"></i></a>
+                                                    
                                                     <?php 
                                                         if($inventory_check_requests->status != 'adjusted'){
                                                             ?>
+                                                                <a href="<?php echo admin_url('stock_request/view_inventory_check/' . $inventory_check_requests->id); ?>" class="tip" title="" data-original-title="View Request"><i class="fa fa-file-text-o"></i></a>
                                                                 <a href="<?php echo admin_url('stock_request/delete_inventory_check/' . $inventory_check_requests->id); ?>" class="tip" title="" data-original-title="Delete Request"><i class="fa fa-trash-o"></i></a>
                                                             <?php
                                                         }else{
-                                                            echo '';
+                                                            ?>
+                                                                <a href="<?php echo admin_url('stock_request/view_inventory_check_report/' . $inventory_check_requests->id); ?>" class="tip" title="" data-original-title="View Report"><i class="fa fa-file-text-o"></i></a>
+                                                            <?php
                                                         }
                                                     ?>
                                                     

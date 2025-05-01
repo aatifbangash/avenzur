@@ -177,12 +177,16 @@ class Stock_request_model extends CI_Model
     }
 
     public function updateAdjustmentStatus($req_id){
-        $this->db->update('inventory_check_requests', ['id' => $req_id, 'status' => 'adjusted']);
+        $this->db->update('inventory_check_requests', ['status' => 'adjusted'], ['id' => $req_id]);
+    }
+
+    public function createInventoryCheckReport($inventory_check_report_data){
+        $this->db->insert_batch('inventory_check_report', $inventory_check_report_data);
     }
 
     public function getInventoryCheck($req_id, $location_id){
         $response = array();
-        $this->db
+        /*$this->db
             ->select('
                 ci.avz_code,
                 ci.quantity,
@@ -203,7 +207,31 @@ class Stock_request_model extends CI_Model
             ->join('sma_inventory_movements im', 'im.avz_item_code = ci.avz_code AND im.location_id = '.$this->db->escape($location_id), 'left')
             ->join('sma_products p', 'p.id = im.product_id', 'left')
             ->where('ci.inv_check_id', $req_id)
-            ->group_by('ci.avz_code');
+            ->group_by('ci.avz_code');*/
+
+        $this->db
+        ->select('
+                im.avz_item_code as avz_code,
+                IFNULL(ci.quantity, 0) as quantity,
+                SUM(im.quantity) as system_quantity,
+                im.batch_number,
+                im.expiry_date,
+                im.product_id,
+                im.net_unit_cost,
+                im.net_unit_sale,
+                im.real_unit_cost,
+                im.real_unit_sale,
+                p.tax_rate,
+                p.name as product_name,
+                p.code as product_code,
+                p.unit
+            ', false)
+            ->from('sma_inventory_movements im')
+            ->join('sma_inventory_check_items ci', 'im.avz_item_code = ci.avz_code AND ci.inv_check_id = '.$this->db->escape($req_id), 'left')
+            ->join('sma_products p', 'p.id = im.product_id', 'left')
+            ->where('im.location_id', $location_id)
+            ->group_by('im.avz_item_code')
+            ->order_by('quantity', 'desc');
 
         $q = $this->db->get();
         if(!empty($q)){
@@ -219,6 +247,29 @@ class Stock_request_model extends CI_Model
         }
         
         return $data_res; 
+    }
+
+    public function getInventoryCheckReportById($req_id){
+        $response = array();
+        $this->db
+                ->select('sma_inventory_check_report.*')
+                ->from('sma_inventory_check_report')
+                ->where('sma_inventory_check_report.inv_check_id',$req_id);
+
+        $q = $this->db->get();
+        if(!empty($q)){
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $data_res[] = $row;
+                }
+            } else {
+                $data_res = array();
+            }
+        }else{
+            $data_res = array();
+        }
+        
+        return $data_res;
     }
 
     public function getInventoryCheckRequestById($req_id){

@@ -289,10 +289,14 @@ class stock_request extends MY_Controller
             $inventory_check_request_id = $this->input->post('inventory_check_request_id');
             $inventory_check_array = $this->stock_request_model->getInventoryCheck($inventory_check_request_id, $this->input->post('location_id'));
             $adj_warehouse = $this->site->getAdjustmentStore();
-
+            
             $i = sizeof($inventory_check_array);
+            
+            $products = [];
+            $product_tax = 0;
+            $total = 0;
+            $grand_total_cost_price = 0;
             for ($r = 0; $r < $i; $r++) {
-                $products = [];
                 $system_quantity    = $inventory_check_array[$r]->system_quantity ? $inventory_check_array[$r]->system_quantity : 0; 
                 $actual_quantity    = $inventory_check_array[$r]->quantity ? $inventory_check_array[$r]->quantity : 0; 
 
@@ -338,9 +342,7 @@ class stock_request extends MY_Controller
                 $product_details    = $this->transfers_model->getProductById($pr_id);
                 $net_cost = $net_unit_cost;
                 $real_cost = $real_unit_cost;
-                $product_tax = 0;
-                $total = 0;
-                $grand_total_cost_price = 0;
+                
                 if (isset($item_code) && isset($item_quantity)) {
 
                     if (isset($item_tax_rate) && $item_tax_rate != 0) {
@@ -391,8 +393,12 @@ class stock_request extends MY_Controller
                     $grand_total_cost_price +=  ($net_cost* $item_unit_quantity);  
                     $grand_total = $this->sma->formatDecimal(($total + $shipping + $product_tax), 4);
 
-                    $data        = ['transfer_no' => 'inv_check_adjustment',
-                        'date'                    => date('Y-m-d'),
+                }
+            }
+
+            $data = [
+                        'transfer_no' => 'inv_check_adjustment',
+                        'date'                    => date('Y-m-d H:i:s'),
                         'from_warehouse_id'       => $from_warehouse,
                         'from_warehouse_code'     => $from_warehouse_code,
                         'from_warehouse_name'     => $from_warehouse_name,
@@ -411,19 +417,58 @@ class stock_request extends MY_Controller
                         'sequence_code'           => $this->sequenceCode->generate('TR', 5)
                     ];
 
-                    if($transfer_id = $this->transfers_model->addTransfer($data, $products, [])){
-                        $this->stock_request_model->updateAdjustmentStatus($inventory_check_request_id);
-                    }
+            if($transfer_id = $this->transfers_model->addTransfer($data, $products, [])){
+                $this->stock_request_model->updateAdjustmentStatus($inventory_check_request_id);
 
-                    admin_redirect('stock_request/inventory_check');
+                $inventory_check_report_data = [];
+                for ($r = 0; $r < $i; $r++) {
+
+                    $inventory_check_report_record = [
+                        'inv_check_id'        => $inventory_check_request_id,
+                        'avz_code'            => $inventory_check_array[$r]->avz_code,
+                        'old_qty'             => $inventory_check_array[$r]->system_quantity,
+                        'new_qty'             => $inventory_check_array[$r]->quantity,
+                        'item_code'           => $inventory_check_array[$r]->product_code,
+                        'item_name'           => $inventory_check_array[$r]->product_name,
+                        'variance'            => ($inventory_check_array[$r]->quantity - $inventory_check_array[$r]->system_quantity),
+                        'old_cost_price'      => ($inventory_check_array[$r]->net_unit_cost * $inventory_check_array[$r]->system_quantity),
+                        'new_cost_price'      => ($inventory_check_array[$r]->net_unit_cost * $inventory_check_array[$r]->quantity),
+                        'sales_price'         => $inventory_check_array[$r]->net_unit_sale,
+                        'short'               => $inventory_check_array[$r]->net_unit_sale * ($inventory_check_array[$r]->quantity - $inventory_check_array[$r]->system_quantity),
+                        'batch_no'            => $inventory_check_array[$r]->batch_number
+                    ];
+
+                    $inventory_check_report_data[] = ($inventory_check_report_record);
                 }
+
+                $this->stock_request_model->createInventoryCheckReport($inventory_check_report_data);
             }
+
+            admin_redirect('stock_request/inventory_check');
             
         } else {
             $data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
 
             admin_redirect('stock_request/inventory_check');
         }
+    }
+
+    public function view_inventory_check_report(){
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $inventory_check_request_id = $this->uri->segment(4);
+        $inventory_check_request_details = $this->stock_request_model->getInventoryCheckRequestById($inventory_check_request_id );
+        $inventory_check_report_data = $this->stock_request_model->getInventoryCheckReportById($inventory_check_request_id );
+        $warehouse_detail = $this->site->getWarehouseByID($inventory_check_request_details[0]->location_id);
+
+        
+        $this->data['warehouse_detail'] = $warehouse_detail;
+        $this->data['inventory_check_request_details'] = $inventory_check_request_details[0];
+        $this->data['inventory_check_report_data'] = $inventory_check_report_data;
+        //echo '<pre>';print_r($this->data['inventory_check_report_data']);exit;
+        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Inventory Check Report')]];
+        $meta = ['page_title' => lang('Inventory Check Report'), 'bc' => $bc];
+        $this->page_construct('stock_request/view_inventory_check_report', $meta, $this->data);
     }
 
     public function view_inventory_check(){
@@ -435,6 +480,7 @@ class stock_request extends MY_Controller
         $warehouse_detail = $this->site->getWarehouseByID($inventory_check_request_details[0]->location_id);
 
         $inventory_check_array = $this->stock_request_model->getInventoryCheck($inventory_check_request_id, $inventory_check_request_details[0]->location_id);
+        //echo '<pre>';print_r($inventory_check_array);exit;
         $this->data['warehouse_detail'] = $warehouse_detail;
         $this->data['inventory_check_request_details'] = $inventory_check_request_details[0];
         $this->data['inventory_check_array'] = $inventory_check_array;
@@ -490,7 +536,7 @@ class stock_request extends MY_Controller
 
 				$parsed = $arrResult;
 
-				if(sizeOf($parsed > 0)){
+				if(sizeOf($parsed) > 0){
                     $insert_inv_req = [
                         'location_id' => $warehouse,
                         'status' => 'pending',
