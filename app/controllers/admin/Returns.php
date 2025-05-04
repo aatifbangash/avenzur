@@ -37,6 +37,19 @@ class Returns extends MY_Controller
         $this->digital_file_types  = 'zip|psd|ai|rar|pdf|doc|docx|xls|xlsx|ppt|pptx|gif|jpg|jpeg|png|tif|txt';
         $this->allowed_file_size   = '1024';
         $this->data['logo']        = true;
+        $this->load->admin_model("Zetca_model");
+        $this->zatca_enabled = false;
+        $d = $this->Zetca_model->get_zetca_settings();
+
+        if($d['zatca_enabled']){
+            $this->zatca_enabled = true;
+            $params = array(
+            'base_url' => $d['zatca_url'],
+            "api_key" => $d['zatca_appkey'],
+            "api_secret" => $d['zatca_secretKey']
+            );
+           $this->load->library('ZatcaServices', $params, 'zatca');                       
+        }
     }
 
     public function add_return()
@@ -498,6 +511,39 @@ class Returns extends MY_Controller
 
             //$this->returns_model->convert_return_invoice($return_insert_id, $products);
             if($data['status'] == "completed"){
+                if($this->zatca_enabled){
+                    if($data['customer'] == 'WALK-IN CUSTOMER'){
+                        $zatca_payload =  $this->Zetca_model->get_zetca_return_b2c($return_insert_id); 
+                    }else{
+                        $zatca_payload =  $this->Zetca_model->get_zetca_return_b2b($return_insert_id); 
+                    }
+                    
+                    $zatca_response = $this->zatca->post('',  $zatca_payload);
+                    $is_success = true;
+                    $remarks = "";
+                    if($zatca_response['status'] >= 400){
+                        $is_success = false;
+                        if(isset($zatca_response['body']['errors'])){
+                            if(!empty($zatca_response['body']['errors'])){
+                                $remarks = $zatca_response['body']['errors'][0];
+                            }
+                        }
+                    }
+                    $date = date('Y-m-d H:i:s');
+                    $request = json_encode($zatca_payload, true);
+                    $response = json_encode($zatca_response, true);
+                    $reporting_data = [
+                        "return_id" => $return_insert_id,
+                        "date" => $date,
+                        "is_success" => $is_success,
+                        "request" => $request,
+                        "response" => $response,
+                        "remarks" => $remarks
+                    ];
+
+                    $this->Zetca_model->report_zatca_status($reporting_data);
+                }
+
                 $this->convert_return_invoice($return_insert_id);
                 $this->payment_to_customer($returns, $return_insert_id);  
             }
