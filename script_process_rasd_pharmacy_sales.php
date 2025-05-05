@@ -49,7 +49,7 @@ if ($result_unprocessed_sales->num_rows > 0) {
             ];
 
             $payload = create_payload_for_gln($serial_no['pharmacy_gln'], $item);
-            echo $payload;exit;
+            echo '<pre>';print_r($payload);exit;
             $response = api_call($payload, $headers);
             
             $response_body = $response['body'];
