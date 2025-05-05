@@ -382,7 +382,7 @@ class Zetca_model extends CI_Model{
         $this->db->select("id as invoiceNo, customer_id, date as issueDate,total_discount as documentDiscount,grand_total as grossAmount,order_discount_id, total_tax as taxAmount");
         $this->db->from("sma_returns");
         $this->db->where("id", $retrunId);
-        $sale = $this->db->get()->row();
+        $return = $this->db->get()->row();
 
         $this->db->select('product_name, quantity, unit_price, totalbeforevat, tax, item_discount,main_net, tr.rate');
         $this->db->from('sma_return_items');
@@ -398,7 +398,7 @@ class Zetca_model extends CI_Model{
         $this->db->select("id as invoiceNo, customer_id, date as issueDate,total_discount as documentDiscount,grand_total as grossAmount,order_discount_id, total_tax as taxAmount");
         $this->db->from("sma_returns");
         $this->db->where("id", $retrunId);
-        $sale = $this->db->get()->row();
+        $return = $this->db->get()->row();
 
         $this->db->select('product_name, quantity, unit_price, totalbeforevat, tax, item_discount,main_net, tr.rate');
         $this->db->from('sma_return_items');
