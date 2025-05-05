@@ -103,8 +103,10 @@ class Zetca_model extends CI_Model{
         $date = new DateTime($return->issueDate);
         $formatedDate = $date->format("Y-m-d\TH:i:s.v\Z");
         $payload['kind'] = "Simplified-Credit-Note";
+        $payload['invoiceNo'] = $return->invoiceNo;
         $payload['returnInvoiceNo'] = $return->invoiceNo;
         $payload['instructionNote'] = 'Cancellation';
+        $payload['issueDate'] = $formatedDate;
         $payload['returnInvoiceDate'] = $formatedDate;
         $payload['currency'] = 'SAR';
         $payload['clientData'] = [
@@ -192,8 +194,10 @@ class Zetca_model extends CI_Model{
         $date = new DateTime($return->issueDate);
         $formatedDate = $date->format("Y-m-d\TH:i:s.v\Z");
         $payload['kind'] = "Credit-Note";
+        $payload['invoiceNo'] = $return->invoiceNo;
         $payload['returnInvoiceNo'] = $return->invoiceNo;
         $payload['instructionNote'] = 'Cancellation';
+        $payload['issueDate'] = $formatedDate;
         $payload['returnInvoiceDate'] = $formatedDate;
         $payload['currency'] = 'SAR';
         $payload['clientData'] = [
