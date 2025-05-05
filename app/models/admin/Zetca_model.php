@@ -276,7 +276,7 @@ class Zetca_model extends CI_Model{
         /**
          * Fetch the customer details
          */
-        $this->db->select("id,name, vat_no,address,city,state,postal_code,country, phone");
+        $this->db->select("id,name, vat_no,address,city,state,postal_code,country, phone, cr");
         $this->db->from("sma_companies");
         $this->db->where("id", $sale->customer_id);
         $company = $this->db->get()->row();
@@ -290,7 +290,7 @@ class Zetca_model extends CI_Model{
         $payload['issueDate'] = $formatedDate;
         $payload['currency'] = 'SAR';
         $payload['clientData'] = [
-            "clientNo"=> $sale->customer_id,
+            "clientNo"=> $company->cr,
             "name" => $company->name,
             "buildingNo"  => $company->address,
             "taxNo" => $company->vat_no,
