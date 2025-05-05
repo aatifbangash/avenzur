@@ -89,7 +89,7 @@ class Zetca_model extends CI_Model{
         return $payload;
     }
 
-    public function create_return_b2c($return, $items, $saleId){
+    public function create_return_b2c($return, $items){
         /**
          * Fetch the customer details
          */
@@ -103,8 +103,8 @@ class Zetca_model extends CI_Model{
         $date = new DateTime($return->issueDate);
         $formatedDate = $date->format("Y-m-d\TH:i:s.v\Z");
         $payload['kind'] = "Simplified-Credit-Note";
-        $payload['invoiceNo'] = $saleId;
-        $payload['returnInvoiceNo'] = $return->invoiceNo;
+        $payload['invoiceNo'] = 'RS'.$return->invoiceNo;
+        $payload['returnInvoiceNo'] = 'RS'.$return->invoiceNo;
         $payload['instructionNote'] = 'Cancellation';
         $payload['issueDate'] = $formatedDate;
         $payload['returnInvoiceDate'] = $formatedDate;
@@ -180,7 +180,7 @@ class Zetca_model extends CI_Model{
         return $payload;
     }
 
-    public function create_return_b2b($return, $items, $saleId){
+    public function create_return_b2b($return, $items){
         /**
          * Fetch the customer details
          */
@@ -194,13 +194,14 @@ class Zetca_model extends CI_Model{
         $date = new DateTime($return->issueDate);
         $formatedDate = $date->format("Y-m-d\TH:i:s.v\Z");
         $payload['kind'] = "Credit-Note";
-        $payload['invoiceNo'] = $saleId;
-        $payload['returnInvoiceNo'] = $return->invoiceNo;
+        $payload['invoiceNo'] = 'RC'.$return->invoiceNo;
+        $payload['returnInvoiceNo'] = 'RC'.$return->invoiceNo;
         $payload['instructionNote'] = 'Cancellation';
         $payload['issueDate'] = $formatedDate;
         $payload['returnInvoiceDate'] = $formatedDate;
         $payload['currency'] = 'SAR';
         $payload['clientData'] = [
+            "clientId" => $return->customer_id,
             "clientNo"=> $company->cr,
             "name" => $company->name,
             "buildingNo"  => $company->address,
@@ -377,7 +378,7 @@ class Zetca_model extends CI_Model{
         return $payload;
     }
 
-    public function get_zetca_return_b2b($retrunId, $saleId){
+    public function get_zetca_return_b2b($retrunId){
         
         $this->db->select("id as invoiceNo, customer_id, date as issueDate,total_discount as documentDiscount,grand_total as grossAmount,order_discount_id, total_tax as taxAmount");
         $this->db->from("sma_returns");
@@ -390,11 +391,11 @@ class Zetca_model extends CI_Model{
         $this->db->where('return_id', $retrunId);
         $query = $this->db->get();
         $result  = $query->result_array();
-        $payload = $this->create_return_b2b($return, $result, $saleId);
+        $payload = $this->create_return_b2b($return, $result);
         return $payload;
     }
 
-    public function get_zetca_return_b2c($retrunId, $saleId){
+    public function get_zetca_return_b2c($retrunId){
         $this->db->select("id as invoiceNo, customer_id, date as issueDate,total_discount as documentDiscount,grand_total as grossAmount,order_discount_id, total_tax as taxAmount");
         $this->db->from("sma_returns");
         $this->db->where("id", $retrunId);
@@ -406,7 +407,7 @@ class Zetca_model extends CI_Model{
         $this->db->where('return_id', $retrunId);
         $query = $this->db->get();
         $result  = $query->result_array();
-        $payload = $this->create_return_b2c($return, $result, $saleId);
+        $payload = $this->create_return_b2c($return, $result);
         return $payload;
     }
 

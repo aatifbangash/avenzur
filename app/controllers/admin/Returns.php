@@ -511,11 +511,11 @@ class Returns extends MY_Controller
 
             //$this->returns_model->convert_return_invoice($return_insert_id, $products);
             if($data['status'] == "completed"){
-                if($this->zatca_enabled && $data['reference_no']){
+                if($this->zatca_enabled){
                     if($data['customer'] == 'WALK-IN CUSTOMER'){
-                        $zatca_payload =  $this->Zetca_model->get_zetca_return_b2c($return_insert_id, $data['reference_no']); 
+                        $zatca_payload =  $this->Zetca_model->get_zetca_return_b2c($return_insert_id); 
                     }else{
-                        $zatca_payload =  $this->Zetca_model->get_zetca_return_b2b($return_insert_id, $data['reference_no']); 
+                        $zatca_payload =  $this->Zetca_model->get_zetca_return_b2b($return_insert_id); 
                     }
                     
                     $zatca_response = $this->zatca->post('',  $zatca_payload);
