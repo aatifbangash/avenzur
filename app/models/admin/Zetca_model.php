@@ -89,11 +89,11 @@ class Zetca_model extends CI_Model{
         return $payload;
     }
 
-    public function create_return_b2c($return, $items){
+    public function create_return_b2c($return, $items, $saleId){
         /**
          * Fetch the customer details
          */
-        $this->db->select("id,name, vat_no,address,city,state,postal_code,country, phone");
+        $this->db->select("id,name, vat_no,address,city,state,postal_code,country, phone, cr");
         $this->db->from("sma_companies");
         $this->db->where("id", $return->customer_id);
         $company = $this->db->get()->row();
@@ -103,14 +103,14 @@ class Zetca_model extends CI_Model{
         $date = new DateTime($return->issueDate);
         $formatedDate = $date->format("Y-m-d\TH:i:s.v\Z");
         $payload['kind'] = "Simplified-Credit-Note";
-        $payload['invoiceNo'] = $return->invoiceNo;
+        $payload['invoiceNo'] = $saleId;
         $payload['returnInvoiceNo'] = $return->invoiceNo;
         $payload['instructionNote'] = 'Cancellation';
         $payload['issueDate'] = $formatedDate;
         $payload['returnInvoiceDate'] = $formatedDate;
         $payload['currency'] = 'SAR';
         $payload['clientData'] = [
-            "clientNo"=> $return->customer_id,
+            "clientNo"=> $company->cr,
             "name" => $company->name,
             "buildingNo"  => $company->address,
             "taxNo" => $company->vat_no,
@@ -180,11 +180,11 @@ class Zetca_model extends CI_Model{
         return $payload;
     }
 
-    public function create_return_b2b($return, $items){
+    public function create_return_b2b($return, $items, $saleId){
         /**
          * Fetch the customer details
          */
-        $this->db->select("id,name, vat_no,address,city,state,postal_code,country, phone");
+        $this->db->select("id,name, vat_no,address,city,state,postal_code,country, phone, cr");
         $this->db->from("sma_companies");
         $this->db->where("id", $return->customer_id);
         $company = $this->db->get()->row();
@@ -194,14 +194,14 @@ class Zetca_model extends CI_Model{
         $date = new DateTime($return->issueDate);
         $formatedDate = $date->format("Y-m-d\TH:i:s.v\Z");
         $payload['kind'] = "Credit-Note";
-        $payload['invoiceNo'] = 'SL'.$return->invoiceNo;
-        $payload['returnInvoiceNo'] = 'RC'.$return->invoiceNo;
+        $payload['invoiceNo'] = $saleId;
+        $payload['returnInvoiceNo'] = $return->invoiceNo;
         $payload['instructionNote'] = 'Cancellation';
         $payload['issueDate'] = $formatedDate;
         $payload['returnInvoiceDate'] = $formatedDate;
         $payload['currency'] = 'SAR';
         $payload['clientData'] = [
-            "clientNo"=> $return->customer_id,
+            "clientNo"=> $company->cr,
             "name" => $company->name,
             "buildingNo"  => $company->address,
             "taxNo" => $company->vat_no,
@@ -377,7 +377,7 @@ class Zetca_model extends CI_Model{
         return $payload;
     }
 
-    public function get_zetca_return_b2b($retrunId){
+    public function get_zetca_return_b2b($retrunId, $saleId){
         
         $this->db->select("id as invoiceNo, customer_id, date as issueDate,total_discount as documentDiscount,grand_total as grossAmount,order_discount_id, total_tax as taxAmount");
         $this->db->from("sma_returns");
@@ -390,11 +390,11 @@ class Zetca_model extends CI_Model{
         $this->db->where('return_id', $retrunId);
         $query = $this->db->get();
         $result  = $query->result_array();
-        $payload = $this->create_return_b2b($return, $result);
+        $payload = $this->create_return_b2b($return, $result, $saleId);
         return $payload;
     }
 
-    public function get_zetca_return_b2c($retrunId){
+    public function get_zetca_return_b2c($retrunId, $saleId){
         $this->db->select("id as invoiceNo, customer_id, date as issueDate,total_discount as documentDiscount,grand_total as grossAmount,order_discount_id, total_tax as taxAmount");
         $this->db->from("sma_returns");
         $this->db->where("id", $retrunId);
@@ -406,7 +406,7 @@ class Zetca_model extends CI_Model{
         $this->db->where('return_id', $retrunId);
         $query = $this->db->get();
         $result  = $query->result_array();
-        $payload = $this->create_return_b2c($return, $result);
+        $payload = $this->create_return_b2c($return, $result, $saleId);
         return $payload;
     }
 
