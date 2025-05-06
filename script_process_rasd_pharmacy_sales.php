@@ -235,7 +235,38 @@ function create_payload_for_gln($gln, $items) {
 
 function api_call($payload, $headers) {
     $url = 'https://qdttsbe.qtzit.com:10100/api/web'; // The API URL for the product sale
-    return make_post_request($url, $headers, $payload);
+    return make_post_request_body($url, $headers, $payload);
+}
+
+function make_post_request_body($url, $headers, $payload) {
+    $ch = curl_init($url);
+
+    // Convert payload to JSON if it's an array
+    if (is_array($payload)) {
+        $payload = json_encode($payload);
+    }
+
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+    $response = curl_exec($ch);
+    $status_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
+
+    curl_close($ch);
+    
+    if ($status_code == 200) {
+        return [
+            'body' => $response
+        ];
+    } else {
+        echo "Error: " . $error . "\n"; // Show the cURL error
+        echo "HTTP Status Code: " . $status_code . "\n"; // Show HTTP status code
+        echo "Response: " . $response . "\n"; // Show the response body
+        return null;
+    }
 }
 
 
