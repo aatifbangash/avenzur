@@ -51,13 +51,13 @@ if ($result_unprocessed_sales->num_rows > 0) {
             $payload = create_payload_for_gln($serial_no['pharmacy_gln'], $item);
             $response = api_call($payload, $headers);
             
-            $response_body = $response['body'];
+            $response_body = json_decode($response['body'], true);
             $payload_used =  [
                 'source_gln' => '',
                 'destination_gln' => $serial_no['pharmacy_gln'],
                 'warehouse_id' => $serial_no['warehouse_id']
             ];
-            echo '<pre>';print_r($response_body);exit;
+            
             if (isset($response_body['DicOfDic']['MR']['TRID']) && $response_body['DicOfDic']['MR']['TRID']) {
                 $serial_ids[] = $serial_no['id'];
 
