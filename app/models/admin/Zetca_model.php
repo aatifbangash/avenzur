@@ -385,7 +385,7 @@ class Zetca_model extends CI_Model{
         $this->db->where("id", $retrunId);
         $return = $this->db->get()->row();
 
-        $this->db->select('product_name, quantity, unit_price, totalbeforevat, tax, item_discount,main_net, tr.rate');
+        $this->db->select('product_name, quantity, unit_price, subtotal as totalbeforevat, tax, item_discount,main_net, tr.rate');
         $this->db->from('sma_return_items');
         $this->db->join('sma_tax_rates as tr', 'tr.id = tax_rate_id');
         $this->db->where('return_id', $retrunId);
@@ -401,7 +401,7 @@ class Zetca_model extends CI_Model{
         $this->db->where("id", $retrunId);
         $return = $this->db->get()->row();
 
-        $this->db->select('product_name, quantity, unit_price, totalbeforevat, tax, item_discount,main_net, tr.rate');
+        $this->db->select('product_name, quantity, unit_price, subtotal as totalbeforevat, tax, item_discount,main_net, tr.rate');
         $this->db->from('sma_return_items');
         $this->db->join('sma_tax_rates as tr', 'tr.id = tax_rate_id');
         $this->db->where('return_id', $retrunId);
