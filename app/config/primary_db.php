@@ -54,7 +54,7 @@ if (isset($_COOKIE['companyID']) || isset($_GET['cid']) ) {
         $sql = "SELECT * FROM sma_multi_company m 
                     Inner Join `sma_dbs` d 
                         ON d.id = m.db_id 
-                WHERE is_used = 1 AND is_primary <> 1 AND m.company = {$company_name} limit 1";
+                WHERE is_used = 1 AND is_primary <> 1 AND m.company = '".$company_name."' limit 1";
         $result = $connection->query($sql);
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
