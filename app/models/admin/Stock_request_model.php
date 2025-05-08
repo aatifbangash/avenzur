@@ -231,6 +231,7 @@ class Stock_request_model extends CI_Model
             ->join('sma_products p', 'p.id = im.product_id', 'left')
             ->where('im.location_id', $location_id)
             ->group_by('im.avz_item_code')
+            ->having('quantity > 0 OR system_quantity > 0')
             ->order_by('quantity', 'desc');
 
         $q = $this->db->get();
