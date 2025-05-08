@@ -6,7 +6,7 @@
             "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?= lang('all') ?>"]],
             "iDisplayLength": <?= $Settings->rows_per_page ?>,
             'bProcessing': true, 'bServerSide': true,
-            'sAjaxSource': '<?= admin_url('transfers/getTransfers') ?>',
+            'sAjaxSource': '<?= admin_url('transfers/getTransfers?tid='.$tid) ?>',
             'fnServerData': function (sSource, aoData, fnCallback) {
                 aoData.push({
                     "name": "<?= $this->security->get_csrf_token_name() ?>",
@@ -49,6 +49,24 @@
             {column_number: 9, filter_default_label: "[<?=lang('status');?>]", filter_type: "text", data: []},
         ], "footer");
     });
+
+    $(document).ready(function () {
+        var lastInsertedId = '<?= $last_inserted_id; ?>';
+
+        function openModalForLastInsertedId(id) {
+
+            $('#myModal').modal({
+                remote: site.base_url + 'transfers/view/' + lastInsertedId,
+            });
+            $('#myModal').modal('show');
+        }
+        lastInsertedId = '<?php echo $lastInsertedId; ?>';
+        if (lastInsertedId) {
+            openModalForLastInsertedId(lastInsertedId);
+        }
+    });
+
+
 </script>
 <?php if ($Owner || ($GP && $GP['bulk_actions'])) {
     echo admin_form_open('transfers/transfer_actions', 'id="action-form"');
@@ -96,7 +114,9 @@
         <div class="row">
             <div class="col-lg-12">
 
-                <p class="introtext"><?= lang('list_results'); ?></p>
+                <!-- <p class="introtext"><?= lang('list_results'); ?></p> -->
+                <div class="col-md-3"><input type="text" id="tid" name="pid" class="form-control input-tip"></div>
+                <div class="col-md-3"> <input type="button" id="searchByNumber" class="btn btn-primary" value="Search By Serial Number"></div>
 
                 <div class="table-responsive">
                     <table id="TOData" cellpadding="0" cellspacing="0" border="0"
@@ -149,3 +169,19 @@
     <?= form_close() ?>
     <?php
 } ?>
+
+
+<script>
+    document.getElementById('searchByNumber').addEventListener('click', function() {
+    var pidValue = document.getElementById('tid').value; 
+    if (pidValue) { 
+       
+        var baseUrl = window.location.href.split('?')[0]; 
+        var newUrl = baseUrl + "?tid=" + encodeURIComponent(pidValue);
+        window.location.href = newUrl; 
+    } else {
+        alert("Please enter a serial number."); 
+    }
+});
+
+</script>
