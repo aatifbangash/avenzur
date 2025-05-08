@@ -551,7 +551,7 @@ class stock_request extends MY_Controller
                         $record = [
                             'inv_check_id'    => $inv_check_id,
                             'avz_code'        => $row[0] ?? '',
-                            'quantity'        => $row[2] ?? '',
+                            'quantity'        => $row[1] ?? '',
                         ];
                         
                         $inv_item_id = $this->db->insert('sma_inventory_check_items', $record);
