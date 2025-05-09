@@ -64,7 +64,9 @@
                 </div>
                 <div class="form-group">
                   <label for="email">Email Address:</label>
-                  <input type="email" name="email" />
+                  <?php 
+                    echo form_input('email', '', '', 'class="form-control"');
+                  ?>
                 </div>
                 <div class="form-group">
                   <label for="content">Your Message:</label>
