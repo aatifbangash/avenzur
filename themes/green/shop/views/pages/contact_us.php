@@ -54,9 +54,10 @@
                   <label for="type">Query Type:</label>
                   <?php
                   $options = array(
-                    'cancel' => 'Cancel',
-                    'return' => 'Return',
-                    'refund' => 'Refund'
+                    'inquiry' => 'Inquiry',
+                    'cancel'  => 'Cancel',
+                    'return'  => 'Return',
+                    'refund'  => 'Refund'
                   );
                   echo form_dropdown('type', $options, '', 'class="form-control"');
                   ?>

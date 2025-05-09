@@ -542,9 +542,13 @@
                       echo 'active';
                     } ?>" href="<?= site_url('shop/bestsellers'); ?>">Best Sellers</a>
                   </li>
+                  <li class="nav-item">
+                    <a class="nav-link <?php if (site_url('shop/contact_us') == $url) {
+                      echo 'active';
+                    } ?>" href="<?= site_url('shop/contact_us'); ?>">Contact Us</a>
+                  </li>
+
                   
-
-
                   <div id="mobnav">
 
                     </div>
