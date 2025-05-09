@@ -63,6 +63,10 @@
                   ?>
                 </div>
                 <div class="form-group">
+                  <label for="email">Email Address:</label>
+                  <input type="email" name="email" />
+                </div>
+                <div class="form-group">
                   <label for="content">Your Message:</label>
                   <?php
                   $textarea_data = array(
