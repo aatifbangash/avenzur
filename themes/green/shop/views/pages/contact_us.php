@@ -50,7 +50,7 @@
                 }
                 ?>
                 <?php echo form_open('page/contact-us', 'class="validate" id="contact-us"'); ?>
-                <div class="form-group">
+                <!--<div class="form-group">
                   <label for="type">Query Type:</label>
                   <?php
                   $options = array(
@@ -61,11 +61,23 @@
                   );
                   echo form_dropdown('type', $options, '', 'class="form-control"');
                   ?>
+                </div>-->
+
+                <div class="form-group">
+                  <label for="name">Name:</label>
+                  <input type="text" name="name" class="form-control" />
                 </div>
+
                 <div class="form-group">
                   <label for="email">Email Address:</label>
                   <input type="email" name="email" class="form-control" />
                 </div>
+
+                <div class="form-group">
+                  <label for="phone">Phone Number:</label>
+                  <input type="tel" name="phone" class="form-control" />
+                </div>
+                
                 <div class="form-group">
                   <label for="content">Your Message:</label>
                   <?php

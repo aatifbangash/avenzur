@@ -1261,8 +1261,11 @@ class Shop extends MY_Shop_Controller
             if (
                 $this->shop_model->addContactUsRecord([
                     'user_id' => $this->session->userdata('user_id') ? $this->session->userdata('user_id') : null,
-                    'type' => $_POST['type'],
+                    //'type' => $_POST['type'],
+                    'type' => 'Inquiry',
+                    'name' => $_POST['name'],
                     'email' => $_POST['email'],
+                    'phone' => $_POST['phone'],
                     'content' => $_POST['content']
                 ])
             )
