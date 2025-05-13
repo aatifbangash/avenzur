@@ -184,13 +184,12 @@ class Stock_request_model extends CI_Model
         $this->db->insert_batch('inventory_check_report', $inventory_check_report_data);
     }
 
-    public function getInventoryCheck($req_id, $location_id){
-        $response = array();
-        /*$this->db
+    public function getInventoryCheck($req_id, $location_id) {
+        $this->db
             ->select('
-                ci.avz_code,
-                ci.quantity,
-                SUM(im.quantity) as system_quantity,
+                im.avz_item_code as avz_code,
+                IFNULL(ci.quantity, 0) as quantity,
+                im.quantity as system_quantity,
                 im.batch_number,
                 im.expiry_date,
                 im.product_id,
@@ -203,12 +202,61 @@ class Stock_request_model extends CI_Model
                 p.code as product_code,
                 p.unit
             ', false)
-            ->from('sma_inventory_check_items ci')
-            ->join('sma_inventory_movements im', 'im.avz_item_code = ci.avz_code AND im.location_id = '.$this->db->escape($location_id), 'left')
+            ->from('sma_inventory_movements im')
+            ->join(
+                'sma_inventory_check_items ci',
+                'im.avz_item_code = ci.avz_code AND ci.inv_check_id = ' . $this->db->escape($req_id),
+                'left'
+            )
             ->join('sma_products p', 'p.id = im.product_id', 'left')
-            ->where('ci.inv_check_id', $req_id)
-            ->group_by('ci.avz_code');*/
+            ->where('im.location_id', $location_id)
+            ->where('(IFNULL(ci.quantity, 0) > 0 OR im.quantity > 0)', null, false)
+            ->order_by('ci.quantity', 'desc');
+    
+        $q = $this->db->get();
+        $data_res = [];
+    
+        if ($q && $q->num_rows() > 0) {
+            $raw_data = $q->result();
+    
+            // Aggregate by avz_item_code
+            foreach ($raw_data as $row) {
+                $key = $row->avz_code;
+    
+                if (!isset($data_res[$key])) {
+                    $data_res[$key] = (object) [
+                        'avz_code'        => $row->avz_code,
+                        'quantity'        => $row->quantity, // from check_items (static)
+                        'system_quantity' => $row->system_quantity,
+                        'batch_number'    => $row->batch_number, // you can overwrite or collect all
+                        'expiry_date'     => $row->expiry_date,
+                        'product_id'      => $row->product_id,
+                        'net_unit_cost'   => $row->net_unit_cost,
+                        'net_unit_sale'   => $row->net_unit_sale,
+                        'real_unit_cost'  => $row->real_unit_cost,
+                        'real_unit_sale'  => $row->real_unit_sale,
+                        'tax_rate'        => $row->tax_rate,
+                        'product_name'    => $row->product_name,
+                        'product_code'    => $row->product_code,
+                        'unit'            => $row->unit,
+                    ];
+                } else {
+                    // Aggregate system quantity (sum of im.quantity)
+                    $data_res[$key]->system_quantity += $row->system_quantity;
+                }
+            }
+    
+            // Reindex as simple array
+            $data_res = array_values($data_res);
+        }
+    
+        return $data_res;
+    }
+    
 
+    /*public function getInventoryCheck($req_id, $location_id){
+        $response = array();
+        
         $this->db
         ->select('
                 im.avz_item_code as avz_code,
@@ -248,7 +296,7 @@ class Stock_request_model extends CI_Model
         }
         
         return $data_res; 
-    }
+    }*/
 
     public function getInventoryCheckReportById($req_id){
         $response = array();
