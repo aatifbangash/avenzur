@@ -184,7 +184,7 @@ class Stock_request_model extends CI_Model
         $this->db->insert_batch('inventory_check_report', $inventory_check_report_data);
     }
 
-    public function getInventoryCheck($req_id, $location_id) {
+    /*public function getInventoryCheck($req_id, $location_id) {
         $this->db
             ->select('
                 im.avz_item_code as avz_code,
@@ -251,10 +251,10 @@ class Stock_request_model extends CI_Model
         }
     
         return $data_res;
-    }
+    }*/
     
 
-    /*public function getInventoryCheck($req_id, $location_id){
+    public function getInventoryCheck($req_id, $location_id){
         $response = array();
         
         $this->db
@@ -296,7 +296,7 @@ class Stock_request_model extends CI_Model
         }
         
         return $data_res; 
-    }*/
+    }
 
     public function getInventoryCheckReportById($req_id){
         $response = array();
