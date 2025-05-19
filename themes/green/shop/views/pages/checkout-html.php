@@ -1005,6 +1005,7 @@ if ($this->Settings->indian_gst) {
         }
 
         $("#express-delivery-check").hide();
+        $("#express-delivery-details").css("display", "none !important");
     }
 
  
