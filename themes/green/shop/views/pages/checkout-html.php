@@ -883,7 +883,7 @@ if ($this->Settings->indian_gst) {
                     //$("#express-delivery-check").prop("disabled", false);
                     $("#express-delivery-check").show();
                     
-                    $("#express-delivery-details").show(); // After Eid uncomment this line
+                    //$("#express-delivery-details").show(); // After Eid uncomment this line
 
                     if (isExpressDelivery == true) {
                         shipping = 30;
@@ -945,9 +945,9 @@ if ($this->Settings->indian_gst) {
                 deliveryDays = 'Expected delivery 5 to 8 days';
 
                 //$("#express-delivery-check").prop("disabled", true);
-                $("#express-delivery-check").show();
+                //$("#express-delivery-check").show();
                 
-                $("#express-delivery-details").show(); // After eid uncomment this line
+                //$("#express-delivery-details").show(); // After eid uncomment this line
             }
 
             if(totalPrice > 200 && !is_free_shipping && !isExpressDelivery){
