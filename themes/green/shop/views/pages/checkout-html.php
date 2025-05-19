@@ -1003,6 +1003,8 @@ if ($this->Settings->indian_gst) {
             $('#shipping-input').val(parseFloat(shipping).toFixed(2));
             $('#delivery-days').text(deliveryDays);
         }
+
+        $("#express-delivery-check").hide();
     }
 
  
