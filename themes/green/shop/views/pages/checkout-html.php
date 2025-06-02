@@ -94,7 +94,7 @@ if ($this->Settings->indian_gst) {
                 </div>
 
 
-                <h3 class=" fw-bold pb-2">Your Order</h3>
+                <h3 class=" fw-bold pb-2">Your Order <h4 style="color: red;">(Note: Orders will be delayed during EID Holidays)</h4></h3>
                 <div class=" border rounded p-3  mb-4 products-pay">
                     <div class="">
                         <h3 class="fs-5 fw-bold">Shipment <span class="fs-5 fw-medium purpColor">(<?php echo count($cart_contents)?> item<?php echo count($cart_contents) > 1 ? 's':'';?>)</span></h3>
