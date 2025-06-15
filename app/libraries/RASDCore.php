@@ -56,14 +56,14 @@ class RASDCore {
         $this->CI->curl->option(CURLOPT_HTTPHEADER, $headers);
         // Initialize an array to store response headers
         
-        echo '<pre>';print_r($this->headers);exit;
+ 
         
         // Set up a callback function to capture headers
         $this->CI->curl->option(CURLOPT_HEADERFUNCTION,
             function($curl, $header) use (&$response_headers) {
                  
                 $len = strlen($header);
-                
+                echo '--'.$header;
                 $header = explode(':', $header, 2);
                 if (count($header) < 2) // ignore invalid headers
                     return $len;
@@ -75,7 +75,7 @@ class RASDCore {
                 return $len;
             }
         );
-
+        exit;
         switch ($method) {
             case 'GET':
                  $this->CI->curl->option(CURLOPT_URL, $url );
