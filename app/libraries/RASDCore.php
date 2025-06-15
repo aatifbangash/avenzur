@@ -60,7 +60,8 @@ class RASDCore {
         
         // Set up a callback function to capture headers
         $this->CI->curl->option(CURLOPT_HEADERFUNCTION,
-            /*function($curl, $header) use (&$response_headers) {
+            function($curl, $header) use (&$response_headers) {
+                 
                 $len = strlen($header);
                 
                 $header = explode(':', $header, 2);
@@ -72,27 +73,15 @@ class RASDCore {
                 $response_headers[$name] = $value;
                 
                 return $len;
-            }*/
-
-            function($curl, $header) use (&$response_headers) {
-                $len = strlen($header);
-                $header = trim($header);
-                if (strpos($header, ':') !== false) {
-                    list($key, $value) = explode(':', $header, 2);
-                    $response_headers[trim($key)][] = trim($value);
-                }
-                return $len;
             }
         );
-        
+
         switch ($method) {
             case 'GET':
                  $this->CI->curl->option(CURLOPT_URL, $url );
                 break;
             case 'POST':
-                $this->CI->curl->option(CURLOPT_FOLLOWLOCATION, TRUE);
                 $this->CI->curl->option(CURLOPT_POST, TRUE);
-                $this->CI->curl->option(CURLOPT_RETURNTRANSFER, true);
                 $this->CI->curl->option(CURLOPT_POSTFIELDS, json_encode($this->body));
                 break;
             case 'PUT':
@@ -105,7 +94,6 @@ class RASDCore {
         }
 
         $response = $this->CI->curl->execute();
-        echo '<pre>';print_r($response_headers);exit;
         $http_code = $this->CI->curl->info['http_code'];
         
         return array(
