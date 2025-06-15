@@ -43,7 +43,7 @@ class RASDCore {
 
    protected function make_request($method, $endpoint, $params = array()) {
         $url = $this->base_url . '/' . ltrim($endpoint, '/');
-     
+        echo $url;exit;
        $response_headers = array();
         $this->CI->curl->create($url);
         $this->CI->curl->option(CURLOPT_RETURNTRANSFER, TRUE);
