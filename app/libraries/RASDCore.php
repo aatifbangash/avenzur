@@ -132,8 +132,10 @@ class RASDCore {
             'FunctionName: Login',
             'KML:'. '',
             'Accept :*/*',
-            "Accept-Encoding : gzip, deflate, br"
-
+            "Accept-Encoding : gzip, deflate, br",
+            "Access-Control-Expose-Headers: Token",
+            "Access-Control-Expose-Headers: UName",
+            "Access-Control-Expose-Headers: UPRID"
         );
             
         $this->set_headers($headers);
