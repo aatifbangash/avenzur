@@ -75,7 +75,7 @@ class RASDCore {
                 return $len;
             }
         );
-        echo '<pre>';print_r($response_headers);exit;
+        
         switch ($method) {
             case 'GET':
                  $this->CI->curl->option(CURLOPT_URL, $url );
@@ -94,6 +94,7 @@ class RASDCore {
         }
 
         $response = $this->CI->curl->execute();
+        echo '<pre>';print_r($response_headers);exit;
         $http_code = $this->CI->curl->info['http_code'];
         
         return array(
