@@ -43,7 +43,7 @@ class RASDCore {
 
    protected function make_request($method, $endpoint, $params = array()) {
         $url = $this->base_url . '/' . ltrim($endpoint, '/');
-        echo $url;exit;
+     
        $response_headers = array();
         $this->CI->curl->create($url);
         $this->CI->curl->option(CURLOPT_RETURNTRANSFER, TRUE);
@@ -60,8 +60,7 @@ class RASDCore {
         
         // Set up a callback function to capture headers
         $this->CI->curl->option(CURLOPT_HEADERFUNCTION,
-            function($curl, $header) use (&$response_headers) {
-                 echo 'Header: '.$header;
+            /*function($curl, $header) use (&$response_headers) {
                 $len = strlen($header);
                 
                 $header = explode(':', $header, 2);
@@ -73,6 +72,16 @@ class RASDCore {
                 $response_headers[$name] = $value;
                 
                 return $len;
+            }*/
+
+            function($curl, $header) use (&$response_headers) {
+                $len = strlen($header);
+                $header = trim($header);
+                if (strpos($header, ':') !== false) {
+                    list($key, $value) = explode(':', $header, 2);
+                    $response_headers[trim($key)][] = trim($value);
+                }
+                return $len;
             }
         );
         
@@ -81,6 +90,7 @@ class RASDCore {
                  $this->CI->curl->option(CURLOPT_URL, $url );
                 break;
             case 'POST':
+                $this->CI->curl->option(CURLOPT_FOLLOWLOCATION, TRUE);
                 $this->CI->curl->option(CURLOPT_POST, TRUE);
                 $this->CI->curl->option(CURLOPT_RETURNTRANSFER, true);
                 $this->CI->curl->option(CURLOPT_POSTFIELDS, json_encode($this->body));
