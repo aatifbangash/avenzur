@@ -61,7 +61,7 @@ class RASDCore {
         // Set up a callback function to capture headers
         $this->CI->curl->option(CURLOPT_HEADERFUNCTION,
             function($curl, $header) use (&$response_headers) {
-                 
+                 echo 'Header: '.$header;
                 $len = strlen($header);
                 
                 $header = explode(':', $header, 2);
