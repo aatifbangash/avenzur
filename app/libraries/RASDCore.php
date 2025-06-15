@@ -65,8 +65,8 @@ class RASDCore {
                 $len = strlen($header);
                 
                 $header = explode(':', $header, 2);
-                //if (count($header) < 2) // ignore invalid headers
-                //    return $len;
+                if (count($header) < 2) // ignore invalid headers
+                    return $len;
 
                 $name = strtolower(trim($header[0]));
                 $value = trim($header[1]);                
@@ -75,7 +75,7 @@ class RASDCore {
                 return $len;
             }
         );
-
+        echo '<pre>';print_r($response_headers);exit;
         switch ($method) {
             case 'GET':
                  $this->CI->curl->option(CURLOPT_URL, $url );
@@ -95,7 +95,7 @@ class RASDCore {
 
         $response = $this->CI->curl->execute();
         $http_code = $this->CI->curl->info['http_code'];
-        echo '<pre>';print_r($response);exit;
+        
         return array(
             'status' => $http_code,
             'headers' => $response_headers,
