@@ -82,6 +82,7 @@ class RASDCore {
                 break;
             case 'POST':
                 $this->CI->curl->option(CURLOPT_POST, TRUE);
+                $this->CI->curl->option(CURLOPT_HEADER, TRUE);
                 $this->CI->curl->option(CURLOPT_POSTFIELDS, json_encode($this->body));
                 break;
             case 'PUT':
