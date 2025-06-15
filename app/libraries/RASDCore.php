@@ -45,7 +45,6 @@ class RASDCore {
         $url = $this->base_url . '/' . ltrim($endpoint, '/');
      
        $response_headers = array();
-       echo '<pre>';print_r($response_headers);exit;
         $this->CI->curl->create($url);
         $this->CI->curl->option(CURLOPT_RETURNTRANSFER, TRUE);
      
@@ -57,7 +56,7 @@ class RASDCore {
         $this->CI->curl->option(CURLOPT_HTTPHEADER, $headers);
         // Initialize an array to store response headers
         
- 
+        echo '<pre>';print_r($this->headers);exit;
         
         // Set up a callback function to capture headers
         $this->CI->curl->option(CURLOPT_HEADERFUNCTION,
