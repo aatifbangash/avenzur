@@ -63,7 +63,7 @@ class RASDCore {
             function($curl, $header) use (&$response_headers) {
                  
                 $len = strlen($header);
-                echo '--'.$header;
+                
                 $header = explode(':', $header, 2);
                 if (count($header) < 2) // ignore invalid headers
                     return $len;
@@ -75,7 +75,7 @@ class RASDCore {
                 return $len;
             }
         );
-        exit;
+
         switch ($method) {
             case 'GET':
                  $this->CI->curl->option(CURLOPT_URL, $url );
@@ -139,6 +139,7 @@ class RASDCore {
         $this->set_headers($headers);
 
         $response = $this->post('');
+        echo '<pre>';print_r($response);exit;
                  
         if (isset($response['headers']['token'])) {
             $this->set_auth_token($response['headers']['token']);
