@@ -65,8 +65,8 @@ class RASDCore {
                 $len = strlen($header);
                 
                 $header = explode(':', $header, 2);
-                if (count($header) < 2) // ignore invalid headers
-                    return $len;
+                //if (count($header) < 2) // ignore invalid headers
+                //    return $len;
 
                 $name = strtolower(trim($header[0]));
                 $value = trim($header[1]);                
@@ -95,7 +95,7 @@ class RASDCore {
 
         $response = $this->CI->curl->execute();
         $http_code = $this->CI->curl->info['http_code'];
-        
+        echo '<pre>';print_r($response);exit;
         return array(
             'status' => $http_code,
             'headers' => $response_headers,
@@ -139,7 +139,6 @@ class RASDCore {
         $this->set_headers($headers);
 
         $response = $this->post('');
-        echo '<pre>';print_r($response);exit;
                  
         if (isset($response['headers']['token'])) {
             $this->set_auth_token($response['headers']['token']);
