@@ -399,7 +399,6 @@ class Notifications extends MY_Controller
         
             $this->rasd->set_base_url("https://qdttsbe.qtzit.com:10101/api/web");
             $response = $this->rasd->authenticate($user, $password);
-            echo '<pre>';print_r($response);exit;
             if($response['token']){
                 $token = $response['token'];
                 log_message("info", "Authentication successful");

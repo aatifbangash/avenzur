@@ -139,7 +139,7 @@ class RASDCore {
         $this->set_headers($headers);
 
         $response = $this->post('');
-                 
+        echo '<pre>';print_r($response);exit;
         if (isset($response['headers']['token'])) {
             $this->set_auth_token($response['headers']['token']);
             return array( "token" => $response['headers']['token']);
