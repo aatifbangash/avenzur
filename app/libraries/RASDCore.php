@@ -45,6 +45,7 @@ class RASDCore {
         $url = $this->base_url . '/' . ltrim($endpoint, '/');
      
        $response_headers = array();
+       echo '<pre>';print_r($response_headers);exit;
         $this->CI->curl->create($url);
         $this->CI->curl->option(CURLOPT_RETURNTRANSFER, TRUE);
      
@@ -132,16 +133,14 @@ class RASDCore {
             'FunctionName: Login',
             'KML:'. '',
             'Accept :*/*',
-            "Accept-Encoding : gzip, deflate, br",
-            "Access-Control-Expose-Headers: Token",
-            "Access-Control-Expose-Headers: UName",
-            "Access-Control-Expose-Headers: UPRID"
+            "Accept-Encoding : gzip, deflate, br"
+
         );
             
         $this->set_headers($headers);
 
         $response = $this->post('');
-        echo '<pre>';print_r($response);exit;
+                 
         if (isset($response['headers']['token'])) {
             $this->set_auth_token($response['headers']['token']);
             return array( "token" => $response['headers']['token']);
