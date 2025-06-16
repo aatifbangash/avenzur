@@ -6,9 +6,6 @@ $username =  "remote_user";
 $password = 're$Pa1msee$ot_ur';
 $database = "rawabi"; 
 
-$auth_token = authenticate('marwanahmed1991@icloud.com','M123456789');
-        echo $auth_token;exit;
-
 $conn = new mysqli($hostname, $username, $password, $database);
 
 // Check connection
@@ -35,7 +32,7 @@ $failed_serial_ids = array();
 if ($result_unprocessed_sales->num_rows > 0) {
     while ($serial_no = $result_unprocessed_sales->fetch_assoc()) {
         $auth_token = authenticate($serial_no['rasd_user'], $serial_no['rasd_pass']);
-
+        echo '<pre>';print_r($auth_token);exit;
         if ($auth_token) {
             $headers = array(
                 'FunctionName:APIReq',
@@ -186,7 +183,6 @@ function authenticate($UEmail, $UPass) {
         'UEmail: ' . $UEmail,
         'UPass: ' . $UPass,
         'FunctionName: Login',
-        'KML:'. '',
         'Accept: */*',
         'Accept-Encoding: gzip, deflate, br'
     );
@@ -276,14 +272,21 @@ function make_post_request_body($url, $headers, $payload) {
 
 function make_post_request($url, $headers, $data = null) {
     $ch = curl_init();
+
     // Set the URL for the request
     curl_setopt($ch, CURLOPT_URL, $url);
     
     // Set the request method to POST
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    
     // Explicitly set to POST
     curl_setopt($ch, CURLOPT_POST, true);
+    
+    // If we have data to send, set POST and include the data
+    if ($data) {
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data)); // Send data as form data
+    }
 
     // Set option to capture the response headers as well
     curl_setopt($ch, CURLOPT_HEADER, true); // To get the headers
@@ -291,7 +294,6 @@ function make_post_request($url, $headers, $data = null) {
 
     // Execute the request and capture the response
     $response = curl_exec($ch);
-    echo '<pre>';print_r($response);exit;
     $status_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $error = curl_error($ch);
     
