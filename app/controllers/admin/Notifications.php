@@ -348,15 +348,19 @@ class Notifications extends MY_Controller
 
 
     public function acceptDispatch(){
-         if (!$this->input->is_ajax_request()) {
+        if (!$this->input->is_ajax_request()) {
             show_404();
         }
         
         // Get the parameters from the POST data
         $dispatchId = $this->input->post('notificationId');
+        //$dispatch_id = '1741942297';
         $supplierId = $this->input->post('supplierId');
+        //$supplierId = 69;
         $warehouseId = $this->input->post('warehouseId');
+        //$warehouseId = 32;
         $child_id = $this->input->post("childSupplierId");
+        //$child_id = 73;
         if($child_id){
             $supplierId = $child_id;
         }

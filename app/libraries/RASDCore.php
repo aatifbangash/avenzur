@@ -127,13 +127,11 @@ class RASDCore {
       */
     public function authenticate($UEmail, $UPass) {
         $headers = array(
-            'UEmail :'. $UEmail,
-            'UPass :' .$UPass,
+            'UEmail: ' . $UEmail,
+            'UPass: ' . $UPass,
             'FunctionName: Login',
-            'KML:'. '',
-            'Accept :*/*',
-            "Accept-Encoding : gzip, deflate, br"
-
+            'Accept: */*',
+            'Accept-Encoding: gzip, deflate, br'
         );
             
         $this->set_headers($headers);
