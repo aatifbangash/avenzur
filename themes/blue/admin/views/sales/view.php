@@ -97,9 +97,9 @@
                             if ($customer->sequence_code != '-' && $customer->sequence_code != '') {
                                 echo '<br>' . lang('sequence_code') . ': ' . $customer->sequence_code;
                             }
-                            if ($customer->vat_no != '-' && $customer->vat_no != '') {
+                            //if ($customer->vat_no != '-' && $customer->vat_no != '') {
                                 echo '<br>' . lang('vat_no') . ': ' . $customer->vat_no;
-                            }
+                            //}
                             if ($customer->gst_no != '-' && $customer->gst_no != '') {
                                 echo '<br>' . lang('gst_no') . ': ' . $customer->gst_no;
                             }
@@ -133,7 +133,7 @@
 
                         <div class="col-xs-2"><i class="fa fa-3x fa-building padding010 text-muted"></i></div>
                         <div class="col-xs-10">
-                            <h2 class=""><?= $biller->company && $biller->company != '-' ? $biller->company : $biller->name; ?></h2>
+                            <h2 class="">biller <?= $biller->company && $biller->company != '-' ? $biller->company : $biller->name; ?></h2>
                             <?= $biller->company ? '' : 'Attn: ' . $biller->name ?>
 
                             <?php
@@ -141,9 +141,9 @@
 
                             echo '<p>';
 
-                            if ($biller->vat_no != '-' && $biller->vat_no != '') {
+                            //if ($biller->vat_no != '-' && $biller->vat_no != '') {
                                 echo '<br>' . lang('vat_no') . ': ' . $biller->vat_no;
-                            }
+                            //}
                             if ($biller->gst_no != '-' && $biller->gst_no != '') {
                                 echo '<br>' . lang('gst_no') . ': ' . $biller->gst_no;
                             }

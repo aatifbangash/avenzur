@@ -10,7 +10,12 @@ class Suppliers extends MY_Controller
 
         if (!$this->loggedIn) {
             $this->session->set_userdata('requested_page', $this->uri->uri_string());
-            $this->sma->md('login');
+            $url = "admin/login";
+            if( $this->input->server('QUERY_STRING') ){
+                $url = $url.'?'.$this->input->server('QUERY_STRING').'&redirect='.$this->uri->uri_string();
+            }
+           
+            $this->sma->md($url);
         }
         if ($this->Customer || $this->Supplier) {
             $this->session->set_flashdata('warning', lang('access_denied'));
@@ -24,6 +29,47 @@ class Suppliers extends MY_Controller
         // Sequence-Code
         $this->load->library('SequenceCode');
         $this->sequenceCode = new SequenceCode();
+    }
+
+    public function edit_suppliers_script(){
+        $csvFile = 'files/retaj_supplier_list_new_csv.csv';
+
+        // Open the file in read mode
+        if (($handle = fopen($csvFile, 'r')) !== false) {
+            // Read the header row (if needed)
+            $header = fgetcsv($handle);
+
+            // Loop through each row of the file
+            while (($data = fgetcsv($handle, 1000, ',')) !== false) {
+                $ascon_code = $data[0];
+                $arabic_name = $data[1];
+                $english_name = $data[2];
+                $credit_limit = $data[18];
+                $payment_term = $data[25];
+                $parent_code = '';
+                $supplier_level = 1;
+                $phone = $data[7];
+
+                $company_detail = $this->companies_model->getCompanyByNameNew($arabic_name);
+                
+                if($company_detail){
+                    // Update existing Company
+                    echo 'Customer Found: '. $company_detail->name.'<br />';
+                    //$this->companies_model->updateCompanyNames($company_detail->id, ['name_ar' => $english_name, 'sequence_code' => $ascon_code, 'phone' => $phone, 'parent_code' => $parent_code, 'level' => $supplier_level, 'payment_term' => $payment_term, 'credit_limit' => $credit_limit]);
+                }else{
+                    // Insert New Company
+                    echo 'Customer Not Found: '.$arabic_name.'<br />';
+                    //$this->companies_model->addCompany(['group_id' => 3, 'group_name' => 'customer', 'name' => $arabic_name, 'name_ar' => $english_name, 'logo' => 'logo.png', 'ledger_account' => 21, 'cogs_ledger' => 174, 'sales_ledger' => 157, 'discount_ledger' => 173, 'return_ledger' => 165, 'sequence_code' => $ascon_code, 'phone' => $phone, 'parent_code' => $parent_code, 'level' => $supplier_level, 'payment_term' => $payment_term, 'credit_limit' => $credit_limit]);
+                }
+                
+            }
+
+            echo 'Customer script executed successfully...';
+            // Close the file handle
+            fclose($handle);
+        } else {
+            echo "Error opening the file.";
+        }
     }
 
     public function deleteFromAccounting($memo_id){
@@ -47,7 +93,8 @@ class Suppliers extends MY_Controller
             'dr_total'     => $payment_amount + $bank_charges,
             'cr_total'     => $payment_amount + $bank_charges,
             'notes'        => 'Payment Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
-            'pid'          =>  ''
+            'pid'          =>  '',
+            'supplier_id'  => $supplier_id
             );
         $add  = $this->db->insert('sma_accounts_entries', $entry);
         $insert_id = $this->db->insert_id();
@@ -89,6 +136,8 @@ class Suppliers extends MY_Controller
         {
             $this->db->insert('sma_accounts_entryitems' ,$itemdata['Entryitem']);
         }
+
+        return $insert_id;
     }
 
     public function convert_supplier_advance_invoice($memo_id, $supplier_id, $ledger_account, $bank_charges_account, $payment_amount, $bank_charges, $reference_no, $type){
@@ -207,15 +256,34 @@ class Suppliers extends MY_Controller
         }
     }
 
-    public function make_supplier_payment($id, $amount, $reference_no, $date){
+    public function add_supplier_reference($amount, $reference_no, $date, $note, $supplier_id, $bank_charges, $bank_charges_account, $ledger_account){
+        $payment_reference = [
+            'supplier_id' => $supplier_id,
+            'date' => $date,
+            'sequence_code' => $this->sequenceCode->generate('PAY', 5),
+            'note' => $note,
+            'reference_no'  => $reference_no,
+            'amount' => $amount,
+            'bank_charges' => $bank_charges,
+            'bank_charges_ledger' => $bank_charges_account,
+            'transfer_from_ledger' => $ledger_account,
+            'created_by'    => $this->session->userdata('user_id')
+        ];
+
+        $payment_id = $this->purchases_model->addPaymentReference($payment_reference);
+        return $payment_id;
+    }
+
+    public function make_supplier_payment($id, $amount, $reference_no, $date, $note, $payment_id){
         $payment = [
-            'date'         => $date,
-            'purchase_id'  => $id,
-            'reference_no' => $reference_no,
-            'amount'       => $amount,
-            'note'         => 'Multiple invoices payment',
-            'created_by'   => $this->session->userdata('user_id'),
-            'type'         => 'sent',
+            'date'          => $date,
+            'purchase_id'   => $id,
+            'reference_no'  => $reference_no,
+            'amount'        => $amount,
+            'note'          => $note,
+            'created_by'    => $this->session->userdata('user_id'),
+            'type'          => 'sent',
+            'payment_id'    => $payment_id
         ];
 
         $this->purchases_model->addPayment($payment);
@@ -530,8 +598,31 @@ class Suppliers extends MY_Controller
         }
     }
 
+    public function view_payment($id = null){
+        $this->sma->checkPermissions(false, true);
+        $this->form_validation->set_rules('id', $this->lang->line('id'), 'required');
+
+        $data = [];
+        $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('View Supplier Payments')]];
+        $meta = ['page_title' => lang('View Supplier Payments'), 'bc' => $bc];
+
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+        $this->data['payment_ref']  = $this->purchases_model->getPaymentReferenceByID($id);
+        $this->data['payments']  = $this->purchases_model->getPaymentByReferenceID($id);
+        $this->page_construct('suppliers/view_payment', $meta, $this->data);
+        
+    }
+
     public function list_payments(){
-        $this->data['payments'] = $this->purchases_model->getPayments();
+        $data = [];
+        $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Supplier Payments')]];
+        $meta = ['page_title' => lang('Supplier Payments'), 'bc' => $bc];
+
+        $this->data['payments'] = $this->purchases_model->getPaymentReferences();
         $this->page_construct('suppliers/list_payments', $meta, $this->data);
     }
 
@@ -539,6 +630,8 @@ class Suppliers extends MY_Controller
     {
         $this->sma->checkPermissions(false, true);
         $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
+        $this->form_validation->set_rules('ledger_account', $this->lang->line('ledger_account'), 'required');
+        $this->form_validation->set_rules('bank_charges_account', $this->lang->line('bank_charges_account'), 'required');
 
         $data = [];
         $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('add payment')]];
@@ -553,48 +646,67 @@ class Suppliers extends MY_Controller
             $ledger_account = $this->input->post('ledger_account');
             $bank_charges_account = $this->input->post('bank_charges_account');
             $bank_charges = $this->input->post('bank_charges');
-            //$date = $this->input->post('date');
-            $due_amount_array = $this->input->post('due_amount');
+            $note = $this->input->post('note');
 
-            $date_fmt = $this->input->post('date');
-            
-            $formattedDate = DateTime::createFromFormat('Y-m-d', $date_fmt);
-            $isDateValid = $formattedDate && $formattedDate->format('Y-m-d') === $date_fmt;
-            
-            if($isDateValid){
-                $date = $date_fmt;
-            }else{
-                $formattedDate = DateTime::createFromFormat('d/m/Y', $date_fmt);
+            if($bank_charges == '') {
+                $bank_charges = 0;
+            }
+
+            $date_fmt = $this->input->post('date'); 
+            $formattedDate = DateTime::createFromFormat('d/m/Y H:i', $date_fmt);
+
+            if ($formattedDate) {
                 $date = $formattedDate->format('Y-m-d');
+            } else {
+                echo 'Invalid date format!';
+                $date = null; // Handle invalid input as needed
             }
             
-            for($i = 0; $i < count($payments_array); $i++){
-                $payment_amount = $payments_array[$i];
-                $item_id = $item_ids[$i];
-                $due_amount = $due_amount_array[$i];
-                if($payment_amount > $due_amount){
-                    $this->session->set_flashdata('error', 'Amount paid cannot be greater than due amount');
-                    redirect($_SERVER['HTTP_REFERER']);
-                }
-            }
+            if(!$payments_array || sizeOf($payments_array) == 0){
+                if($payment_total > 0){
+                    $payment_id = $this->add_supplier_reference($payment_total, $reference_no, $date, $note, $supplier_id, $bank_charges, $bank_charges_account, $ledger_account);
+                    $this->make_supplier_payment(NULL, $payment_total, $reference_no, $date, $note, $payment_id);
+                    $this->purchases_model->update_supplier_balance($supplier_id, $payment_total);
 
-            if(array_sum($payments_array) == $payment_total){
-                for ($i = 0; $i < count($payments_array); $i++) {
+                    $journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $ledger_account, $bank_charges_account, $payment_total, $bank_charges, $reference_no, 'supplierpayment');
+                    $this->purchases_model->update_payment_reference($payment_id, $journal_id);
+                    $this->session->set_flashdata('message', lang('Advance payment added Successfully!'));
+                    admin_redirect('suppliers/view_payment/'.$payment_id);
+                }
+            }else{
+                //$date = $this->input->post('date');
+                $due_amount_array = $this->input->post('due_amount');
+                $payment_id = $this->add_supplier_reference($payment_total, $reference_no, $date, $note, $supplier_id, $bank_charges, $bank_charges_account, $ledger_account);
+                
+                for($i = 0; $i < count($payments_array); $i++){
                     $payment_amount = $payments_array[$i];
                     $item_id = $item_ids[$i];
                     $due_amount = $due_amount_array[$i];
-                    if($payment_amount > 0){
-                        $this->update_purchase_order($item_id, $payment_amount);
-                        $this->make_supplier_payment($item_id, $payment_amount, $reference_no, $date);
+                    if($payment_amount > $due_amount){
+                        $this->session->set_flashdata('error', 'Amount paid cannot be greater than due amount');
+                        redirect($_SERVER['HTTP_REFERER']);
                     }
                 }
 
-                $this->convert_supplier_payment_multiple_invoice($supplier_id, $ledger_account, $bank_charges_account, $payment_total, $bank_charges, $reference_no, 'supplierpayment');
-                $this->session->set_flashdata('message', lang('Payment invoice added Successfully!'));
-                admin_redirect($_SERVER['HTTP_REFERER']);
-            }else{
-                $this->session->set_flashdata('error', 'Total Sum Of Amounts do not match');
-                redirect($_SERVER['HTTP_REFERER']);
+                if(array_sum($payments_array) == $payment_total){
+                    for ($i = 0; $i < count($payments_array); $i++) {
+                        $payment_amount = $payments_array[$i];
+                        $item_id = $item_ids[$i];
+                        $due_amount = $due_amount_array[$i];
+                        if($payment_amount > 0){
+                            $this->update_purchase_order($item_id, $payment_amount);
+                            $this->make_supplier_payment($item_id, $payment_amount, $reference_no, $date, $note, $payment_id);
+                        }
+                    }
+
+                    $journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $ledger_account, $bank_charges_account, $payment_total, $bank_charges, $reference_no, 'supplierpayment');
+                    $this->purchases_model->update_payment_reference($payment_id, $journal_id);
+                    $this->session->set_flashdata('message', lang('Payment invoice added Successfully!'));
+                    admin_redirect('suppliers/view_payment/'.$payment_id);
+                }else{
+                    $this->session->set_flashdata('error', 'Total Sum Of Amounts do not match');
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
             }
             
         } else {
@@ -623,6 +735,8 @@ class Suppliers extends MY_Controller
         if ($this->form_validation->run('companies/add') == true) {
             $data = [
                 'name'        => $this->input->post('name'),
+                'name_ar'        => $this->input->post('name_ar'), 
+                'category'        => $this->input->post('category'),
                 'email'       => $this->input->post('email'),
                 'group_id'    => '4',
                 'group_name'  => 'supplier',
@@ -642,6 +756,8 @@ class Suppliers extends MY_Controller
                 'cf6'         => $this->input->post('cf6'),
                 'gst_no'      => $this->input->post('gst_no'),
                 'ledger_account' => $this->input->post('ledger_account'),
+                'payment_term' => $this->input->post('payment_term'),
+                'credit_limit'        => $this->input->post('credit_limit') ? $this->input->post('credit_limit') : '0',
                 'sequence_code'  => $this->sequenceCode->generate('SUP', 5)
             ];
         } elseif ($this->input->post('add_supplier')) {
@@ -732,6 +848,7 @@ class Suppliers extends MY_Controller
         }
 
         $company_details = $this->companies_model->getCompanyByID($id);
+        //echo '<pre>';  print_r($company_details); exit;
         if ($this->input->post('email') != $company_details->email) {
             $this->form_validation->set_rules('code', lang('email_address'), 'is_unique[companies.email]');
         }
@@ -739,6 +856,8 @@ class Suppliers extends MY_Controller
         if ($this->form_validation->run('companies/add') == true) {
             $data = [
                 'name'        => $this->input->post('name'),
+                'name_ar'        => $this->input->post('name_ar'), 
+                'category'        => $this->input->post('category'),
                 'email'       => $this->input->post('email'),
                 'group_id'    => '4',
                 'group_name'  => 'supplier',
@@ -758,7 +877,13 @@ class Suppliers extends MY_Controller
                 'cf6'         => $this->input->post('cf6'),
                 'gst_no'      => $this->input->post('gst_no'),
                 'ledger_account'      => $this->input->post('ledger_account'),
+                'payment_term' => $this->input->post('payment_term'),
+                'credit_limit'        => $this->input->post('credit_limit') ? $this->input->post('credit_limit') : '0',
             ];
+            if(empty($company_details->sequence_code)){
+                $data['sequence_code'] =$this->sequenceCode->generate('SUP', 5); 
+            } 
+
         } elseif ($this->input->post('edit_supplier')) {
             $this->session->set_flashdata('error', validation_errors());
             redirect($_SERVER['HTTP_REFERER']);
@@ -779,7 +904,7 @@ class Suppliers extends MY_Controller
     {
         // $this->sma->checkPermissions('index');
         $row = $this->companies_model->getCompanyByID($id);
-        $this->sma->send_json([['id' => $row->id, 'text' => $row->company]]);
+        $this->sma->send_json([['id' => $row->id, 'text' => $row->name]]);
     }
 
     public function getSuppliers()
@@ -843,23 +968,28 @@ class Suppliers extends MY_Controller
                     $supplier = [
                         'company'     => isset($value[0]) ? trim($value[0]) : '',
                         'name'        => isset($value[1]) ? trim($value[1]) : '',
-                        'email'       => isset($value[2]) ? trim($value[2]) : '',
-                        'phone'       => isset($value[3]) ? trim($value[3]) : '',
-                        'address'     => isset($value[4]) ? trim($value[4]) : '',
-                        'city'        => isset($value[5]) ? trim($value[5]) : '',
-                        'state'       => isset($value[6]) ? trim($value[6]) : '',
-                        'postal_code' => isset($value[7]) ? trim($value[7]) : '',
-                        'country'     => isset($value[8]) ? trim($value[8]) : '',
-                        'vat_no'      => isset($value[9]) ? trim($value[9]) : '',
-                        'gst_no'      => isset($value[10]) ? trim($value[10]) : '',
-                        'cf1'         => isset($value[11]) ? trim($value[11]) : '',
-                        'cf2'         => isset($value[12]) ? trim($value[12]) : '',
-                        'cf3'         => isset($value[13]) ? trim($value[13]) : '',
-                        'cf4'         => isset($value[14]) ? trim($value[14]) : '',
-                        'cf5'         => isset($value[15]) ? trim($value[15]) : '',
-                        'cf6'         => isset($value[16]) ? trim($value[16]) : '',
+                        'name_ar'     => isset($value[2]) ? trim($value[2]) : '',
+                        'category'    => isset($value[3]) ? trim($value[3]) : '',
+                        'email'       => isset($value[4]) ? trim($value[4]) : '',
+                        'phone'       => isset($value[5]) ? trim($value[5]) : '',
+                        'address'     => isset($value[6]) ? trim($value[6]) : '',
+                        'city'        => isset($value[7]) ? trim($value[7]) : '',
+                        'state'       => isset($value[8]) ? trim($value[8]) : '',
+                        'postal_code' => isset($value[9]) ? trim($value[9]) : '',
+                        'country'     => isset($value[10]) ? trim($value[10]) : '',
+                        'vat_no'      => isset($value[11]) ? trim($value[11]) : '',
+                        'gst_no'      => isset($value[12]) ? trim($value[12]) : '',
+                        'cf1'         => isset($value[13]) ? trim($value[13]) : '',
+                        'cf2'         => isset($value[14]) ? trim($value[14]) : '',
+                        'cf3'         => isset($value[15]) ? trim($value[15]) : '',
+                        'cf4'         => isset($value[16]) ? trim($value[16]) : '',
+                        'cf5'         => isset($value[17]) ? trim($value[17]) : '',
+                        'cf6'         => isset($value[18]) ? trim($value[18]) : '',
+                        'payment_term'        => isset($value[19]) ? trim($value[19]) : '',
+                        'credit_limit'        => isset($value[20]) ? trim($value[20]) : '',
                         'group_id'    => 4,
                         'group_name'  => 'supplier',
+                        'sequence_code'  => $this->sequenceCode->generate('SUP', 5)
                     ];
                     if (empty($supplier['company']) || empty($supplier['name']) || empty($supplier['email'])) {
                         $this->session->set_flashdata('error', lang('company') . ', ' . lang('name') . ', ' . lang('email') . ' ' . lang('are_required') . ' (' . lang('line_no') . ' ' . $rw . ')');
@@ -872,6 +1002,9 @@ class Suppliers extends MY_Controller
                         if ($supplier_details = $this->companies_model->getCompanyByEmail($supplier['email'])) {
                             if ($supplier_details->group_id == 4) {
                                 $updated .= '<p>' . lang('supplier_updated') . ' (' . $supplier['email'] . ')</p>';
+                                if(!empty($supplier_details->sequence_code)){
+                                    $supplier['sequence_code']=$supplier_details->sequence_code; 
+                                }
                                 $this->companies_model->updateCompany($supplier_details->id, $supplier);
                             }
                         } else {
@@ -932,6 +1065,42 @@ class Suppliers extends MY_Controller
         $this->sma->send_json($rows);
     }
 
+    public function parentsuggestions($term = null, $limit = null)
+    {
+        // $this->sma->checkPermissions('index');
+        if ($this->input->get('term')) {
+            $term = $this->input->get('term', true);
+        }
+        $term            = addslashes($term);
+        $limit           = $this->input->get('limit', true);
+        $rows['results'] = $this->companies_model->getParentSupplierSuggestions($term, $limit);
+        $this->sma->send_json($rows);
+    }
+
+    public function getChildById($term = null, $limit = null, $pid = null){
+        if ($this->input->get('pid')) {
+            $pid = $this->input->get('pid', true);
+            $term = $this->input->get('term', true);
+        }
+        //echo 'Pid: '.$pid.' and term '.$term;exit;
+        $term            = addslashes($term);
+        //$limit           = $this->input->get('limit', true);
+        $rows['results'] = $this->companies_model->getCompaniesByParentId($pid);
+        $this->sma->send_json($rows);  
+    }
+
+    public function childsuggestions($term = null, $limit = null)
+    {
+        // $this->sma->checkPermissions('index');
+        if ($this->input->get('term')) {
+            $term = $this->input->get('term', true);
+        }
+        $term            = addslashes($term);
+        $limit           = $this->input->get('limit', true);
+        $rows['results'] = $this->companies_model->getChildSupplierSuggestions($term, $limit);
+        $this->sma->send_json($rows);
+    }
+
     public function supplier_actions()
     {
         if (!$this->Owner && !$this->GP['bulk_actions']) {
@@ -966,21 +1135,23 @@ class Suppliers extends MY_Controller
                     $this->excel->getActiveSheet()->SetCellValue('A1', lang('company'));
                     $this->excel->getActiveSheet()->SetCellValue('B1', lang('sequence_code'));
                     $this->excel->getActiveSheet()->SetCellValue('C1', lang('name'));
-                    $this->excel->getActiveSheet()->SetCellValue('D1', lang('email'));
-                    $this->excel->getActiveSheet()->SetCellValue('E1', lang('phone'));
-                    $this->excel->getActiveSheet()->SetCellValue('F1', lang('address'));
-                    $this->excel->getActiveSheet()->SetCellValue('G1', lang('city'));
-                    $this->excel->getActiveSheet()->SetCellValue('H1', lang('state'));
-                    $this->excel->getActiveSheet()->SetCellValue('I1', lang('postal_code'));
-                    $this->excel->getActiveSheet()->SetCellValue('J1', lang('country'));
-                    $this->excel->getActiveSheet()->SetCellValue('K1', lang('vat_no'));
-                    $this->excel->getActiveSheet()->SetCellValue('L1', lang('gst_no'));
-                    $this->excel->getActiveSheet()->SetCellValue('M1', lang('scf1'));
-                    $this->excel->getActiveSheet()->SetCellValue('N1', lang('scf2'));
-                    $this->excel->getActiveSheet()->SetCellValue('O1', lang('scf3'));
-                    $this->excel->getActiveSheet()->SetCellValue('P1', lang('scf4'));
-                    $this->excel->getActiveSheet()->SetCellValue('Q1', lang('scf5'));
-                    $this->excel->getActiveSheet()->SetCellValue('R1', lang('scf6'));
+                    $this->excel->getActiveSheet()->SetCellValue('D1', lang('name_arabic'));
+                    $this->excel->getActiveSheet()->SetCellValue('E1', lang('category'));
+                    $this->excel->getActiveSheet()->SetCellValue('F1', lang('email'));
+                    $this->excel->getActiveSheet()->SetCellValue('G1', lang('phone'));
+                    $this->excel->getActiveSheet()->SetCellValue('H1', lang('address'));
+                    $this->excel->getActiveSheet()->SetCellValue('I1', lang('city'));
+                    $this->excel->getActiveSheet()->SetCellValue('J1', lang('state'));
+                    $this->excel->getActiveSheet()->SetCellValue('K1', lang('postal_code'));
+                    $this->excel->getActiveSheet()->SetCellValue('L1', lang('country'));
+                    $this->excel->getActiveSheet()->SetCellValue('M1', lang('vat_no'));
+                    $this->excel->getActiveSheet()->SetCellValue('N1', lang('gst_no'));
+                    $this->excel->getActiveSheet()->SetCellValue('O1', lang('scf1'));
+                    $this->excel->getActiveSheet()->SetCellValue('P1', lang('scf2'));
+                    $this->excel->getActiveSheet()->SetCellValue('Q1', lang('scf3'));
+                    $this->excel->getActiveSheet()->SetCellValue('R1', lang('scf4'));
+                    $this->excel->getActiveSheet()->SetCellValue('S1', lang('scf5'));
+                    $this->excel->getActiveSheet()->SetCellValue('T1', lang('scf6'));
 
                     $row = 2;
                     foreach ($_POST['val'] as $id) {
@@ -988,21 +1159,24 @@ class Suppliers extends MY_Controller
                         $this->excel->getActiveSheet()->SetCellValue('A' . $row, $customer->company);
                         $this->excel->getActiveSheet()->SetCellValue('B' . $row, $customer->sequence_code);
                         $this->excel->getActiveSheet()->SetCellValue('C' . $row, $customer->name);
-                        $this->excel->getActiveSheet()->SetCellValue('D' . $row, $customer->email);
-                        $this->excel->getActiveSheet()->SetCellValue('E' . $row, $customer->phone);
-                        $this->excel->getActiveSheet()->SetCellValue('F' . $row, $customer->address);
-                        $this->excel->getActiveSheet()->SetCellValue('G' . $row, $customer->city);
-                        $this->excel->getActiveSheet()->SetCellValue('H' . $row, $customer->state);
-                        $this->excel->getActiveSheet()->SetCellValue('I' . $row, $customer->postal_code);
-                        $this->excel->getActiveSheet()->SetCellValue('J' . $row, $customer->country);
-                        $this->excel->getActiveSheet()->SetCellValue('K' . $row, $customer->vat_no);
-                        $this->excel->getActiveSheet()->SetCellValue('L' . $row, $customer->gst_no);
-                        $this->excel->getActiveSheet()->SetCellValue('M' . $row, $customer->cf1);
-                        $this->excel->getActiveSheet()->SetCellValue('N' . $row, $customer->cf2);
-                        $this->excel->getActiveSheet()->SetCellValue('O' . $row, $customer->cf3);
-                        $this->excel->getActiveSheet()->SetCellValue('P' . $row, $customer->cf4);
-                        $this->excel->getActiveSheet()->SetCellValue('Q' . $row, $customer->cf5);
-                        $this->excel->getActiveSheet()->SetCellValue('QR' . $row, $customer->cf6);
+                        $this->excel->getActiveSheet()->SetCellValue('D' . $row, $customer->name_ar);
+                        $this->excel->getActiveSheet()->SetCellValue('E' . $row, $customer->category);
+                        $this->excel->getActiveSheet()->SetCellValue('F' . $row, $customer->email);
+                        $this->excel->getActiveSheet()->SetCellValue('G' . $row, $customer->phone);
+                        $this->excel->getActiveSheet()->SetCellValue('H' . $row, $customer->address);
+                        $this->excel->getActiveSheet()->SetCellValue('I' . $row, $customer->city);
+                        $this->excel->getActiveSheet()->SetCellValue('J' . $row, $customer->state);
+                        $this->excel->getActiveSheet()->SetCellValue('K' . $row, $customer->postal_code);
+                        $this->excel->getActiveSheet()->SetCellValue('L' . $row, $customer->country);
+                        $this->excel->getActiveSheet()->SetCellValue('M' . $row, $customer->vat_no);
+                        $this->excel->getActiveSheet()->SetCellValue('N' . $row, $customer->gst_no);
+                        $this->excel->getActiveSheet()->SetCellValue('O' . $row, $customer->cf1);
+                        $this->excel->getActiveSheet()->SetCellValue('P' . $row, $customer->cf2);
+                        $this->excel->getActiveSheet()->SetCellValue('Q' . $row, $customer->cf3);
+                        $this->excel->getActiveSheet()->SetCellValue('R' . $row, $customer->cf4);
+                        $this->excel->getActiveSheet()->SetCellValue('S' . $row, $customer->cf5);
+                        $this->excel->getActiveSheet()->SetCellValue('T' . $row, $customer->cf6);
+                        //$this->excel->getActiveSheet()->SetCellValue('QR' . $row, $customer->cf6);
                         $row++;
                     }
 
