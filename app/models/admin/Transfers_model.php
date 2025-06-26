@@ -348,8 +348,13 @@ class Transfers_model extends CI_Model
                     $item['date']         = date('Y-m-d');
                     $item['warehouse_id'] = $data['to_warehouse_id'];
                     $item['status']       = 'received';
-                    $this->db->insert('purchase_items', $item);
+                    //$this->db->insert('purchase_items', $item);
                 } else {
+                    //$this->db->insert('transfer_items', $item);
+                }
+
+                $this->db->insert('purchase_items', $item);
+                if ($status != 'completed') {
                     $this->db->insert('transfer_items', $item);
                 }
 
@@ -1001,7 +1006,8 @@ class Transfers_model extends CI_Model
         $status  = $data['status'];
         if ($this->db->update('transfers', $data, ['id' => $id])) {
             $tbl = $ostatus == 'completed' ? 'purchase_items' : 'transfer_items';
-            $this->db->delete($tbl, ['transfer_id' => $id]);
+            $this->db->delete('purchase_items', ['transfer_id' => $id]);
+            $this->db->delete('transfer_items', ['transfer_id' => $id]);
 
             /* Delete Inventory */
             $this->db->where('reference_id', $id);
@@ -1017,10 +1023,11 @@ class Transfers_model extends CI_Model
                     $item['date']         = date('Y-m-d');
                     $item['warehouse_id'] = $data['to_warehouse_id'];
                     $item['status']       = 'received';
-                    $this->db->insert('purchase_items', $item);
+                    //$this->db->insert('purchase_items', $item);
                 } else {
                     $this->db->insert('transfer_items', $item);
                 }
+                $this->db->insert('purchase_items', $item);
 
                 if($ostatus == 'save' && $data['status'] == 'sent'){
                     //Inventory Movement - Transfer Out
