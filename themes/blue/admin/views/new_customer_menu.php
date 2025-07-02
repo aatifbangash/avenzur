@@ -13,6 +13,18 @@
             </a>
     </li> 
 
+    <li id="reports_stocks">
+        <a href="<?= admin_url('reports/stock') ?>">
+            <i class="fa fa-money"></i><span class="text"> <?= lang('Stock_report'); ?></span>
+        </a>
+    </li>
+
+    <li id="reports_item_movement_report">
+        <a href="<?= admin_url('reports/item_movement_report') ?>">
+            <i class="fa fa-users"></i><span class="text"> <?= lang('item_movement_report'); ?></span>
+        </a>
+    </li>
+
     <li class="mm_products">
                 <a class="dropmenu" href="#">
                     <i class="fa fa-barcode"></i>
