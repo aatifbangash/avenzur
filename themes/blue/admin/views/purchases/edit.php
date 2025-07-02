@@ -309,7 +309,7 @@
                                     <?= lang('status', 'postatus'); ?>
                                     <?php
                                     //$post = ['received' => lang('received'), 'partial' => lang('partial'), 'pending' => lang('pending'), 'ordered' => lang('ordered')];
-                                    $post = ['received' => lang('received'), 'partial' => lang('partial'), 'rejected' => lang('rejected'), 'pending' => lang('pending'), 'ordered' => lang('ordered'), 'arrived' => lang('arrived')];
+                                    $post = ['received' => lang('received'), 'rejected' => lang('rejected'), 'pending' => lang('pending')];
 
                                     echo form_dropdown('status', $post, ($_POST['status'] ?? $purchase->status), ' class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . '" id="postatus"  style="width:100%;" ');
                                     ?>
@@ -321,7 +321,7 @@
                                     <?= lang('status', 'postatus'); ?>
                                     <?php
                                     //$post = ['received' => lang('received'), 'partial' => lang('partial'), 'pending' => lang('pending'), 'ordered' => lang('ordered')];
-                                    $post = ['received' => lang('received'), 'partial' => lang('partial'), 'rejected' => lang('rejected'), 'pending' => lang('pending'), 'ordered' => lang('ordered'), 'arrived' => lang('arrived')];
+                                    $post = ['received' => lang('received'),  'rejected' => lang('rejected'), 'pending' => lang('pending')];
 
                                     echo form_dropdown('status', $post, ($_POST['status'] ?? $purchase->status), ' class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . ' id="postatus"  style="width:100%;" ');
                                     ?>
@@ -524,7 +524,7 @@
                         if ($Owner) {
 
                             // OWNER 
-                            if ($purchase->status == 'pending' || $purchase->status == 'ordered' || $purchase->status == 'rejected') {
+                            /*if ($purchase->status == 'pending' || $purchase->status == 'ordered' || $purchase->status == 'rejected') {
 
                                 echo '<div class="col-md-12"><div class="fprom-group">
                                             <input type="submit" class="btn btn-primary" id="postatus1" name="status" value="ordered" style="margin:15px 0;"/>
@@ -558,7 +558,7 @@
                                     echo form_submit('validate', 'validate', 'id="edit_pruchase" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"');
                                     echo "</div></div>";
                                 }
-                            }
+                            }*/
                             echo '<div class="col-md-12"><div class="fprom-group">';
                             echo form_submit('edit_pruchase', $this->lang->line('submit'), 'id="edit_pruchase" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"');
                             echo "</div></div>";
