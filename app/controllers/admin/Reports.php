@@ -4772,7 +4772,7 @@ class Reports extends MY_Controller
     public function item_movement_report()
     {
 
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $filterOnTypeArr = [
