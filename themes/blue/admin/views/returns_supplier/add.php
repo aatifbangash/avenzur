@@ -103,7 +103,7 @@
                                 data: {
                                     term: request.term,
                                     warehouse_id: $("#rsewarehouse").val(),
-                                    supplier_id: $("#supplier_id").val()
+                                    supplier_id: supp_id
                                 },
                                 success: function (data) {
                                     $(this).removeClass('ui-autocomplete-loading');
