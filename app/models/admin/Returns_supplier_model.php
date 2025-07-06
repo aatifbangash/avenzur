@@ -144,6 +144,33 @@ class Returns_supplier_model extends CI_Model
 
     public function getProductNamesWithBatches($term, $warehouse_id, $pos = false, $limit = 5)
     {
+        $this->db->select('products.id, products.price, code, name, SUM(sma_inventory_movements.quantity) as quantity, cost, tax_rate, sma_products.type, unit, purchase_unit, tax_method')
+        ->join('inventory_movements', 'inventory_movements.product_id=products.id', 'left')
+        //   ->join('warehouses_products', 'warehouses_products.product_id=products.id', 'left')
+         //    ->join('purchase_items', 'purchase_items.product_id=products.id', 'left')
+            ->group_by('products.id');
+        if ($this->Settings->overselling) {
+            $this->db->where("products.type = 'standard' AND (name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR  concat(name, ' (', code, ')') LIKE '%" . $term . "%')");
+        } else {
+            $this->db->where("products.type = 'standard' AND inventory_movements.location_id = '" . $warehouse_id . "' AND "
+                . "(name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR  concat(name, ' (', code, ')') LIKE '%" . $term . "%')");
+        }
+        $this->db->having("SUM(sma_inventory_movements.quantity)>0"); 
+        $this->db->limit($limit);
+        $q = $this->db->get('products');
+        //echo  $this->db->last_query(); exit; 
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+
+                $row->serial_number=''; 
+                $data[] = $row;
+            }
+            return $data;
+        }  
+    }
+
+    public function getProductNamesWithBatches_BK($term, $warehouse_id, $pos = false, $limit = 5)
+    {
         $wp = "( SELECT product_id, warehouse_id, quantity as quantity from {$this->db->dbprefix('warehouses_products')} ) FWP";
 
         $this->db->select('products.*, purchase_items.serial_number, FWP.quantity as quantity, categories.id as category_id, categories.name as category_name', false)
