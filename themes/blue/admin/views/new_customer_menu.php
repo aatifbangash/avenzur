@@ -102,6 +102,26 @@
                 </ul>
             </li>
 
+            <li class="mm_transfers">
+                <a class="dropmenu" href="#">
+                    <i class="fa fa-star-o"></i>
+                    <span class="text"> <?= lang('transfers'); ?> </span>
+                    <span class="chevron closed"></span>
+                </a>
+                <ul>
+                    <li id="transfers_index">
+                        <a class="submenu" href="<?= admin_url('transfers'); ?>">
+                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('list_transfers'); ?></span>
+                        </a>
+                    </li>
+                    <li id="transfers_add">
+                        <a class="submenu" href="<?= admin_url('transfers/add'); ?>">
+                            <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_transfer'); ?></span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
             <li class="mm_returns">
                 <a class="dropmenu" href="#">
                     <i class="fa fa-random"></i>
