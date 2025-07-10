@@ -1268,7 +1268,7 @@ class Pos extends MY_Controller
                 'total'             => $grand_total_sale,
                 'total_net_sale'    => $grand_total_net_sale,
                 'product_discount'  => $product_discount,
-                'order_discount_id' => $this->input->post('discount'),
+                'order_discount_id' => str_replace('%', '', $this->input->post('discount')),
                 'order_discount'    => $order_discount,
                 'total_discount'    => $grand_total_discount,
                 'product_tax'       => $product_tax,
