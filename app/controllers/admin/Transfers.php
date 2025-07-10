@@ -1184,7 +1184,7 @@ class Transfers extends MY_Controller
         } else if ($this->Admin || $this->Owner) {
             // Admins see everything except saved transfers not created by them
 
-            $this->datatables->where("(status != 'saved' OR (status = 'saved' AND created_by = {$this->session->userdata('user_id')}))", null, false);
+            $this->datatables->where("(status != 'save' OR (status = 'save' AND created_by = {$this->session->userdata('user_id')}))", null, false);
             
         }
         
