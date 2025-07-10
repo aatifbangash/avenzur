@@ -1183,13 +1183,9 @@ class Transfers extends MY_Controller
             $this->datatables->where('from_warehouse_id', $this->session->userdata('warehouse_id'));
         } else if ($this->Admin) {
             // Admins see everything except saved transfers not created by them
-            $this->datatables->group_start();
-                $this->datatables->where('status !=', 'saved');
-                $this->datatables->or_group_start();
-                    $this->datatables->where('status', 'saved');
-                    $this->datatables->where('created_by', $this->session->userdata('user_id'));
-                $this->datatables->group_end();
-            $this->datatables->group_end();
+
+            $this->datatables->where("(status != 'saved' OR (status = 'saved' AND created_by = {$this->session->userdata('user_id')}))", null, false);
+            
         }
         
         //$this->datatables->where('type', 'transfer');
