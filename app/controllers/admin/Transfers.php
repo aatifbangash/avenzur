@@ -1183,7 +1183,7 @@ class Transfers extends MY_Controller
             $this->datatables->where('from_warehouse_id', $this->session->userdata('warehouse_id'));
         }
         
-        $this->datatables->where('type', 'transfer');
+        //$this->datatables->where('type', 'transfer');
         if(is_numeric($tid)) {
             $this->datatables->where('id', $tid);
         }
