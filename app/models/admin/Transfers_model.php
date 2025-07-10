@@ -468,14 +468,14 @@ class Transfers_model extends CI_Model
 
     public function getAllTransferItemsForModule($transfer_id, $status)
     {
-        if ($status == 'completed') {
+        if ($status == 'completed' || $status == 'save' || $status == 'sent') {
             $this->db->select('purchase_items.*, product_variants.name as variant, products.unit, products.hsn_code as hsn_code, products.second_name as second_name')
                 ->from('purchase_items')
                 ->join('products', 'products.id=purchase_items.product_id', 'left')
                 ->join('product_variants', 'product_variants.id=purchase_items.option_id', 'left')
                 ->group_by('purchase_items.id')
                 ->where('transfer_id', $transfer_id)
-                ->order_by('transfer_items.id', 'DESC');
+                ->order_by('purchase_items.id', 'DESC');
         } else {
                 $this->db->select('transfer_items.*, SUM(IFNULL(im.quantity, 0)) as base_quantity, im.avz_item_code, product_variants.name as variant, products.unit, products.hsn_code as hsn_code, products.second_name as second_name')
                 ->from('transfer_items')
