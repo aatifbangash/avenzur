@@ -2348,206 +2348,206 @@ class Purchases extends MY_Controller
 
         if($check_existing_transfer){
             $this->session->set_flashdata('error', lang('Invoice with this reference no. is already transferred'));
-        }
+            admin_redirect('purchases');
+        }else{
+            $date = date('Y-m-d H:i:s');
+            $transfer_no = $purchase_detail->reference_no;
+            $purchase_notification = $purchase_detail->notification_id;
 
-        $date = date('Y-m-d H:i:s');
-        $transfer_no = $purchase_detail->reference_no;
-        $purchase_notification = $purchase_detail->notification_id;
+            $to_warehouse = $warehouse;
+            $from_warehouse = $purchase_detail->warehouse_id;
+            $note = $this->sma->clear_tags($purchase_detail->note);
+            $shipping = $purchase_detail->shipping;
+            //$status = 'completed';
 
-        $to_warehouse = $warehouse;
-        $from_warehouse = $purchase_detail->warehouse_id;
-        $note = $this->sma->clear_tags($purchase_detail->note);
-        $shipping = $purchase_detail->shipping;
-        //$status = 'completed';
+            $status = $this->input->post('status');
+            $from_warehouse_details = $this->site->getWarehouseByID($from_warehouse);
+            $from_warehouse_code = $from_warehouse_details->code;
+            $from_warehouse_name = $from_warehouse_details->name;
+            $to_warehouse_details = $this->site->getWarehouseByID($to_warehouse);
+            $to_warehouse_code = $to_warehouse_details->code;
+            $to_warehouse_name = $to_warehouse_details->name;
 
-        $status = $this->input->post('status');
-        $from_warehouse_details = $this->site->getWarehouseByID($from_warehouse);
-        $from_warehouse_code = $from_warehouse_details->code;
-        $from_warehouse_name = $from_warehouse_details->name;
-        $to_warehouse_details = $this->site->getWarehouseByID($to_warehouse);
-        $to_warehouse_code = $to_warehouse_details->code;
-        $to_warehouse_name = $to_warehouse_details->name;
+            $total = 0;
+            $product_tax = 0;
+            $gst_data = [];
+            $total_cgst = $total_sgst = $total_igst = 0;
+            $grand_total = 0;
+            $grand_total_cost_price      = 0;
 
-        $total = 0;
-        $product_tax = 0;
-        $gst_data = [];
-        $total_cgst = $total_sgst = $total_igst = 0;
-        $grand_total = 0;
-        $grand_total_cost_price      = 0;
-
-        if ($purchase_detail->return_id > 0) {
-            // get purchase return products
-            $purchase_inovice_return = $this->purchases_model->getAllPurchaseItems($purchase_detail->return_id);
-            $return_products = array();
-            foreach ($purchase_inovice_return as $row) {
-                $return_products[$row->product_id] =  $row->quantity;
-            }
-        }
-       
-        //
-
-        for ($i = 0; $i < sizeOf($purchase_inovice); $i++) {
-
-            $item_code = $purchase_inovice[$i]->product_code;
-            $item_net_cost = $this->sma->formatDecimal($purchase_inovice[$i]->net_unit_cost);
-            $unit_cost = $this->sma->formatDecimal($purchase_inovice[$i]->unit_cost);
-            //$real_unit_cost = $this->sma->formatDecimal($purchase_inovice[$i]->real_unit_cost);
-            $real_unit_cost = $unit_cost;
-            $item_unit_quantity = $purchase_inovice[$i]->quantity;
-            $item_returned_quantity = $purchase_inovice[$i]->returned_quantity;
-
-            if($item_unit_quantity - $item_returned_quantity <= 0){
-                continue;
-            }
-
-            $item_tax_rate = $purchase_inovice[$i]->tax_rate_id;
-            $item_batchno = $purchase_inovice[$i]->batchno;
-            $item_serial_no = $purchase_inovice[$i]->serial_number;
-            $item_expiry = isset($purchase_inovice[$i]->expiry) ? $purchase_inovice[$i]->expiry : null;
-
-            $item_option = $purchase_inovice[$i]->option_id;
-            $item_unit = $purchase_inovice[$i]->product_unit_id;
-            $item_quantity = $purchase_inovice[$i]->quantity;
-            $avz_code = $purchase_inovice[$i]->avz_item_code;
-                //check quantity with reutrn products
-                $pid = $purchase_inovice[$i]->product_id;
-                if( isset($return_products[$pid]) ) {
-                    $item_quantity = $purchase_inovice[$i]->quantity + $return_products[$pid];
-                    if($item_quantity <= 0) {
-                        continue;
-                    }
+            if ($purchase_detail->return_id > 0) {
+                // get purchase return products
+                $purchase_inovice_return = $this->purchases_model->getAllPurchaseItems($purchase_detail->return_id);
+                $return_products = array();
+                foreach ($purchase_inovice_return as $row) {
+                    $return_products[$row->product_id] =  $row->quantity;
                 }
-    
+            }
+        
+            //
 
-            $unit_cost = $item_net_cost;
+            for ($i = 0; $i < sizeOf($purchase_inovice); $i++) {
 
-            $product_details = $this->transfers_model->getProductById($purchase_inovice[$i]->product_id);
+                $item_code = $purchase_inovice[$i]->product_code;
+                $item_net_cost = $this->sma->formatDecimal($purchase_inovice[$i]->net_unit_cost);
+                $unit_cost = $this->sma->formatDecimal($purchase_inovice[$i]->unit_cost);
+                //$real_unit_cost = $this->sma->formatDecimal($purchase_inovice[$i]->real_unit_cost);
+                $real_unit_cost = $unit_cost;
+                $item_unit_quantity = $purchase_inovice[$i]->quantity;
+                $item_returned_quantity = $purchase_inovice[$i]->returned_quantity;
 
-            $net_cost = $item_net_cost;
-            $real_cost = $real_unit_cost;
-            //$net_cost = $this->site->getAvgCost($item_batchno, $product_details->id);
-            //$real_cost = $this->site->getRealAvgCost($item_batchno, $product_details->id);
-
-            if (isset($item_code) && isset($item_quantity)) {
-
-                $warehouse_quantity = $this->transfers_model->getWarehouseProduct($from_warehouse_details->id, $product_details->id, $item_option, $item_batchno);
-
-                /*if ($warehouse_quantity->quantity < $item_quantity) {
-                    $this->session->set_flashdata('error', lang('no_match_found') . ' (' . lang('product_name') . ' <strong>' . $product_details->name . '</strong> ' . lang('product_code') . ' <strong>' . $product_details->code . '</strong>)');
-                    admin_redirect('purchases');
-                }*/
-
-                $pr_item_tax = $item_tax = 0;
-                $tax = '';
-                $item_net_cost = $unit_cost;
-
-                if (isset($item_tax_rate) && $item_tax_rate != 0) {
-                    $tax_details = $this->site->getTaxRateByID($item_tax_rate);
-                    $tax_rate = $tax_details->rate;
-                    //$ctax = $this->site->calculateTax($product_details, $tax_details, $purchase_inovice[$i]->sale_price);
-                    //$item_tax = $ctax['amount'];
-                    //$tax = $ctax['tax'];
-
-                    //echo '<pre>';print_r($tax_details);exit;
-
-                    $item_tax = (($purchase_inovice[$i]->sale_price) * $tax_rate / 100); 
-                    $tax = $tax_rate;
-
-                    if (!empty($product_details) && $product_details->tax_method != 1) {
-                        $item_net_cost = $purchase_inovice[$i]->sale_price - $item_tax;
-                    }
-
-                    $pr_item_tax = $this->sma->formatDecimal(($item_tax * $item_unit_quantity), 4);
-                    if ($this->Settings->indian_gst && $gst_data = $this->gst->calculateIndianGST($pr_item_tax, false, $tax_details)) {
-                        $total_cgst += $gst_data['cgst'];
-                        $total_sgst += $gst_data['sgst'];
-                        $total_igst += $gst_data['igst'];
-                    }
+                if($item_unit_quantity - $item_returned_quantity <= 0){
+                    continue;
                 }
 
-                $product_tax += $pr_item_tax;
-                $subtotal = $this->sma->formatDecimal((($purchase_inovice[$i]->sale_price * $item_unit_quantity) + $pr_item_tax), 4);
-                $unit = $this->site->getUnitByID($item_unit);
+                $item_tax_rate = $purchase_inovice[$i]->tax_rate_id;
+                $item_batchno = $purchase_inovice[$i]->batchno;
+                $item_serial_no = $purchase_inovice[$i]->serial_number;
+                $item_expiry = isset($purchase_inovice[$i]->expiry) ? $purchase_inovice[$i]->expiry : null;
 
-                $product = [
-                    'product_id' => $product_details->id,
-                    'product_code' => $item_code,
-                    'product_name' => $product_details->name,
-                    'option_id' => $item_option,
-                    'net_unit_cost' => $net_cost,
-                    'unit_cost' => $this->sma->formatDecimal($item_net_cost + $item_tax, 4),
-                    'quantity' => ($item_quantity - $item_returned_quantity),
-                    'product_unit_id' => $item_unit,
-                    'product_unit_code' => $unit->code,
-                    'unit_quantity' => ($item_unit_quantity - $item_returned_quantity),
-                    'quantity_balance' => ($item_quantity - $item_returned_quantity),
-                    'warehouse_id' => $to_warehouse,
-                    'item_tax' => $pr_item_tax,
-                    'tax_rate_id' => $item_tax_rate,
-                    'tax' => str_replace('%', '', $tax),
-                    'subtotal' => $this->sma->formatDecimal($subtotal),
-                    'expiry' => $item_expiry,
-                    'real_unit_cost' => $real_unit_cost,
-                    'sale_price' => $this->sma->formatDecimal($purchase_inovice[$i]->sale_price, 4),
-                    'date' => date('Y-m-d', strtotime($date)),
-                    'batchno' => $item_batchno,
-                    'serial_number' => $item_serial_no,
-                    'real_cost' => $real_cost,
-                    'avz_item_code'     => $avz_code
-                ];
+                $item_option = $purchase_inovice[$i]->option_id;
+                $item_unit = $purchase_inovice[$i]->product_unit_id;
+                $item_quantity = $purchase_inovice[$i]->quantity;
+                $avz_code = $purchase_inovice[$i]->avz_item_code;
+                    //check quantity with reutrn products
+                    $pid = $purchase_inovice[$i]->product_id;
+                    if( isset($return_products[$pid]) ) {
+                        $item_quantity = $purchase_inovice[$i]->quantity + $return_products[$pid];
+                        if($item_quantity <= 0) {
+                            continue;
+                        }
+                    }
+        
 
-                $products[] = ($product + $gst_data);
-                $total += ($purchase_inovice[$i]->sale_price * $item_unit_quantity);
-                $grand_total += $subtotal;
-                $grand_total_cost_price +=  ($net_cost* $item_unit_quantity);   
+                $unit_cost = $item_net_cost;
+
+                $product_details = $this->transfers_model->getProductById($purchase_inovice[$i]->product_id);
+
+                $net_cost = $item_net_cost;
+                $real_cost = $real_unit_cost;
+                //$net_cost = $this->site->getAvgCost($item_batchno, $product_details->id);
+                //$real_cost = $this->site->getRealAvgCost($item_batchno, $product_details->id);
+
+                if (isset($item_code) && isset($item_quantity)) {
+
+                    $warehouse_quantity = $this->transfers_model->getWarehouseProduct($from_warehouse_details->id, $product_details->id, $item_option, $item_batchno);
+
+                    /*if ($warehouse_quantity->quantity < $item_quantity) {
+                        $this->session->set_flashdata('error', lang('no_match_found') . ' (' . lang('product_name') . ' <strong>' . $product_details->name . '</strong> ' . lang('product_code') . ' <strong>' . $product_details->code . '</strong>)');
+                        admin_redirect('purchases');
+                    }*/
+
+                    $pr_item_tax = $item_tax = 0;
+                    $tax = '';
+                    $item_net_cost = $unit_cost;
+
+                    if (isset($item_tax_rate) && $item_tax_rate != 0) {
+                        $tax_details = $this->site->getTaxRateByID($item_tax_rate);
+                        $tax_rate = $tax_details->rate;
+                        //$ctax = $this->site->calculateTax($product_details, $tax_details, $purchase_inovice[$i]->sale_price);
+                        //$item_tax = $ctax['amount'];
+                        //$tax = $ctax['tax'];
+
+                        //echo '<pre>';print_r($tax_details);exit;
+
+                        $item_tax = (($purchase_inovice[$i]->sale_price) * $tax_rate / 100); 
+                        $tax = $tax_rate;
+
+                        if (!empty($product_details) && $product_details->tax_method != 1) {
+                            $item_net_cost = $purchase_inovice[$i]->sale_price - $item_tax;
+                        }
+
+                        $pr_item_tax = $this->sma->formatDecimal(($item_tax * $item_unit_quantity), 4);
+                        if ($this->Settings->indian_gst && $gst_data = $this->gst->calculateIndianGST($pr_item_tax, false, $tax_details)) {
+                            $total_cgst += $gst_data['cgst'];
+                            $total_sgst += $gst_data['sgst'];
+                            $total_igst += $gst_data['igst'];
+                        }
+                    }
+
+                    $product_tax += $pr_item_tax;
+                    $subtotal = $this->sma->formatDecimal((($purchase_inovice[$i]->sale_price * $item_unit_quantity) + $pr_item_tax), 4);
+                    $unit = $this->site->getUnitByID($item_unit);
+
+                    $product = [
+                        'product_id' => $product_details->id,
+                        'product_code' => $item_code,
+                        'product_name' => $product_details->name,
+                        'option_id' => $item_option,
+                        'net_unit_cost' => $net_cost,
+                        'unit_cost' => $this->sma->formatDecimal($item_net_cost + $item_tax, 4),
+                        'quantity' => ($item_quantity - $item_returned_quantity),
+                        'product_unit_id' => $item_unit,
+                        'product_unit_code' => $unit->code,
+                        'unit_quantity' => ($item_unit_quantity - $item_returned_quantity),
+                        'quantity_balance' => ($item_quantity - $item_returned_quantity),
+                        'warehouse_id' => $to_warehouse,
+                        'item_tax' => $pr_item_tax,
+                        'tax_rate_id' => $item_tax_rate,
+                        'tax' => str_replace('%', '', $tax),
+                        'subtotal' => $this->sma->formatDecimal($subtotal),
+                        'expiry' => $item_expiry,
+                        'real_unit_cost' => $real_unit_cost,
+                        'sale_price' => $this->sma->formatDecimal($purchase_inovice[$i]->sale_price, 4),
+                        'date' => date('Y-m-d', strtotime($date)),
+                        'batchno' => $item_batchno,
+                        'serial_number' => $item_serial_no,
+                        'real_cost' => $real_cost,
+                        'avz_item_code'     => $avz_code
+                    ];
+
+                    $products[] = ($product + $gst_data);
+                    $total += ($purchase_inovice[$i]->sale_price * $item_unit_quantity);
+                    $grand_total += $subtotal;
+                    $grand_total_cost_price +=  ($net_cost* $item_unit_quantity);   
+                }
+
             }
 
+            if (empty($products)) {
+                $this->session->set_flashdata('error', lang('No products found to transfer'));
+                admin_redirect('purchases');
+            } else {
+                krsort($products);
+            }
+
+            //$grand_total = $this->sma->formatDecimal(($total), 4);
+            $data = [
+                'transfer_no' => $transfer_no,
+                'date' => $date,
+                'from_warehouse_id' => $from_warehouse,
+                'from_warehouse_code' => $from_warehouse_code,
+                'from_warehouse_name' => $from_warehouse_name,
+                'to_warehouse_id' => $to_warehouse,
+                'to_warehouse_code' => $to_warehouse_code,
+                'to_warehouse_name' => $to_warehouse_name,
+                'note' => $note,
+                'total_tax' => $product_tax,
+                'total' => $total,
+                'total_cost' => $grand_total_cost_price,
+                'grand_total' => $grand_total,
+                'created_by' => $this->session->userdata('user_id'),
+                'status' => $status,
+                'shipping' => $shipping,
+                'type' => 'transfer',
+                'sequence_code' => $this->sequenceCode->generate('TR', 5)
+            ];
+
+            $attachments = $this->attachments->upload();
+            $data['attachment'] = !empty($attachments);
+
+            //$this->sma->print_arrays($data, $products);exit;
+
+            //if ($this->transfers_model->transferPurchaseInvoice($data, $products, $attachments)) {
+            if ($transfer_id = $this->transfers_model->addTransfer($data, $products, $attachments)) {
+
+                $this->session->set_flashdata('message', lang('transfer_added'));
+                admin_redirect('transfers');
+            } else {
+                $this->session->set_flashdata('error', lang('Error adding transfer'));
+                admin_redirect('purchases');
+            }
         }
-
-        if (empty($products)) {
-            $this->session->set_flashdata('error', lang('No products found to transfer'));
-            admin_redirect('purchases');
-        } else {
-            krsort($products);
-        }
-
-        //$grand_total = $this->sma->formatDecimal(($total), 4);
-        $data = [
-            'transfer_no' => $transfer_no,
-            'date' => $date,
-            'from_warehouse_id' => $from_warehouse,
-            'from_warehouse_code' => $from_warehouse_code,
-            'from_warehouse_name' => $from_warehouse_name,
-            'to_warehouse_id' => $to_warehouse,
-            'to_warehouse_code' => $to_warehouse_code,
-            'to_warehouse_name' => $to_warehouse_name,
-            'note' => $note,
-            'total_tax' => $product_tax,
-            'total' => $total,
-            'total_cost' => $grand_total_cost_price,
-            'grand_total' => $grand_total,
-            'created_by' => $this->session->userdata('user_id'),
-            'status' => $status,
-            'shipping' => $shipping,
-            'type' => 'transfer',
-            'sequence_code' => $this->sequenceCode->generate('TR', 5)
-        ];
-
-        $attachments = $this->attachments->upload();
-        $data['attachment'] = !empty($attachments);
-
-        //$this->sma->print_arrays($data, $products);exit;
-
-        //if ($this->transfers_model->transferPurchaseInvoice($data, $products, $attachments)) {
-        if ($transfer_id = $this->transfers_model->addTransfer($data, $products, $attachments)) {
-
-            $this->session->set_flashdata('message', lang('transfer_added'));
-            admin_redirect('transfers');
-        } else {
-            $this->session->set_flashdata('error', lang('Error adding transfer'));
-            admin_redirect('purchases');
-        }
-
     }
 
     /* ----------------------------------------------------------------------------- */
