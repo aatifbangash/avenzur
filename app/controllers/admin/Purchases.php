@@ -2344,6 +2344,12 @@ class Purchases extends MY_Controller
         $purchase_inovice = $this->purchases_model->getPurchaseItemsWithExclude($purchase_id, $product_ids);
         $purchase_detail = $this->purchases_model->getPurchaseByID($purchase_id);
 
+        $check_existing_transfer = $this->transfers_model->getTransferByReferenceId($purchase_detail->reference_no);
+
+        if($check_existing_transfer){
+            $this->session->set_flashdata('error', lang('Invoice with this reference no. is already transferred'));
+        }
+
         $date = date('Y-m-d H:i:s');
         $transfer_no = $purchase_detail->reference_no;
         $purchase_notification = $purchase_detail->notification_id;

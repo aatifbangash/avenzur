@@ -545,6 +545,16 @@ class Transfers_model extends CI_Model
         return false;
     }
 
+    public function getTransferByReferenceId($transfer_no)
+    {
+        $q = $this->db->get_where('transfers', ['transfer_no' => $transfer_no], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+
+        return false;
+    }
+
     public function getProductByCode($code)
     {
         $q = $this->db->get_where('products', ['code' => $code], 1);
