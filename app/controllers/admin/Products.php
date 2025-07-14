@@ -4288,12 +4288,12 @@ class Products extends MY_Controller
             //         $items = $this->products_model->getTransferItems($transfer_id);
             //     }
 
-            if ( $this->input->get('item_code') || $this->input->get('purchase') || $this->input->get('transfer') ) {
+            if ( $this->input->get('item_code') || $this->input->get('purchase') || $this->input->get('transfer') || $product_id) {
                 $purchase_id = $this->input->get('purchase', true);
                 $transfer_id = $this->input->get('transfer', true);
                 $item_code = $this->input->get('item_code', true);
                 $warehouse_id = $this->input->get('pharmacy', true);
-                
+
                 if($purchase_id){
                     $items = $this->products_model->getProductsBarcodeItems($purchase_id, $item_code, $warehouse_id);
                 }else if($transfer_id){
