@@ -4298,7 +4298,8 @@ class Products extends MY_Controller
                 }else if($transfer_id){
                     $items = $this->products_model->getProductsBarcodeItemsForTransfer($transfer_id, $item_code, $warehouse_id);
                 }else {
-                    $items = $this->products_model->getProductsBarcodeItems($purchase_id, $item_code, $warehouse_id);
+                    $pr_row = $this->products_model->getProductByID($product_id);
+                    $items = $this->products_model->getProductsBarcodeItems('', $pr_row->code, $warehouse_id);
                 }
                 
                 if ($items) {
