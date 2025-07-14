@@ -1727,7 +1727,7 @@ function loadItems() {
       count += parseFloat(item_qty);
       an++;
 
-      if (parseFloat(base_quantity) < parseFloat(item_qty)) {
+      if (parseFloat(base_quantity) < (parseFloat(item_qty) + parseFloat(bonus))) {
         $("#row_" + row_no).addClass("danger");
         $("#add_return, #edit_return").attr("disabled", true);
       }
