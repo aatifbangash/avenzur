@@ -4293,6 +4293,7 @@ class Products extends MY_Controller
                 $transfer_id = $this->input->get('transfer', true);
                 $item_code = $this->input->get('item_code', true);
                 $warehouse_id = $this->input->get('pharmacy', true);
+                
                 if($purchase_id){
                     $items = $this->products_model->getProductsBarcodeItems($purchase_id, $item_code, $warehouse_id);
                 }else if($transfer_id){
