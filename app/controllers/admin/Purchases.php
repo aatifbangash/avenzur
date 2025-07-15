@@ -1059,14 +1059,14 @@ class Purchases extends MY_Controller
         $inv = $this->purchases_model->getPurchaseByID($id);
         $pur_inv_items = $this->purchases_model->getAllPurchaseItems($id);
         foreach ($pur_inv_items as $pur_item) {
-            $transferreditem = $this->Inventory_model->get_transferred_item($inv->warehouse_id,'transfer_out',$pur_item->product_id,$pur_item->avz_item_code,$pur_item->batchno);
-            //$transferreditem = $this->Inventory_model->get_transferred_item('null','transfer_in',$pur_item->product_id,$pur_item->avz_item_code,$pur_item->batchno);
+            //$transferreditem = $this->Inventory_model->get_transferred_item($inv->warehouse_id,'transfer_out',$pur_item->product_id,$pur_item->avz_item_code,$pur_item->batchno);
+            $transferreditem = $this->Inventory_model->get_transferred_item('null','transfer_in',$pur_item->product_id,$pur_item->avz_item_code,$pur_item->batchno);
             if($transferreditem){
                 $purchase_transferred = 1;
             }
         }
 
-        if ($inv->status == 'received' && $purchase_transferred == 1) {
+        if ($inv->status == 'received') {
              $this->session->set_flashdata('error', 'This invoice has items already transferred');
 
              admin_redirect('purchases');
