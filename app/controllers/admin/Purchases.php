@@ -1066,11 +1066,11 @@ class Purchases extends MY_Controller
             }
         }
 
-        if ($inv->status == 'received') {
+        /*if ($inv->status == 'received' && $purchase_transferred == 1) {
              $this->session->set_flashdata('error', 'This invoice has items already transferred');
 
              admin_redirect('purchases');
-        }
+        }*/
 
         $supplier_purchase_discount = $this->deals_model->getPurchaseDiscount($inv->supplier_id);
         if ($inv->status == 'returned' || $inv->return_id || $inv->return_purchase_ref) {
