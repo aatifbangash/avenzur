@@ -119,7 +119,6 @@ class Inventory_model extends CI_Model {
             $this->db->where('type', $type);
         }
         $query = $this->db->get();
-        echo $this->db->last_query();exit;
         if ($query->num_rows() > 0) {
             $result = $query->row();
             return $result;
