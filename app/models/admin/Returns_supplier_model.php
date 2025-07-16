@@ -320,6 +320,7 @@ class Returns_supplier_model extends CI_Model
             ->order_by('id', 'asc');
 
         $q = $this->db->get('return_supplier_items');
+        echo $this->db->last_query();exit;
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
