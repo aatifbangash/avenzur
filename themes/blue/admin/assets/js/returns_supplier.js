@@ -1067,7 +1067,7 @@ $(document).ready(function (e) {
                     }
                 });
             }*/
-      rseitems[item_id].row.qty = new_qty;
+      rseitems[item_id].row.base_quantity = new_qty;
       localStorage.setItem("rseitems", JSON.stringify(rseitems));
       loadItems();
     });
