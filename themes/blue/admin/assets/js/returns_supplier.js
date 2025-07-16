@@ -1565,7 +1565,7 @@ function loadItems() {
         '<td><input class="form-control text-center rquantity" tabindex="' +
         (site.settings.set_focus == 1 ? an : an + 1) +
         '" name="quantity[]" type="text" value="' +
-        formatQuantity2(item_qty) +
+        formatQuantity2(base_quantity) +
         '" data-id="' +
         row_no +
         '" data-item="' +
