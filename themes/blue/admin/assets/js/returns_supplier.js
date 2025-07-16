@@ -1319,6 +1319,7 @@ function loadItems() {
       var cost_price = item.row.net_cost;
       var batch_no = item.row.batch_no;
       var bonus = item.row.bonus ? item.row.bonus : 0;
+      var obonus = item.row.obonus ? item.row.obonus : 0;
       var expiry = item_expiry_date; //item.row.expiry;
       var discount1 = item.row.discount1;
       var discount2 = item.row.discount2;
@@ -1565,7 +1566,7 @@ function loadItems() {
         '<td><input class="form-control text-center rquantity" tabindex="' +
         (site.settings.set_focus == 1 ? an : an + 1) +
         '" name="quantity[]" type="text" value="' +
-        formatQuantity2(base_quantity) +
+        formatQuantity2(item_aqty) +
         '" data-id="' +
         row_no +
         '" data-item="' +
@@ -1584,7 +1585,7 @@ function loadItems() {
         '<td class="text-right"><input class="form-control input-sm text-right rbonus" name="bonus[]" type="text" id="bonus_' +
         row_no +
         '" value="' +
-        bonus +
+        obonus +
         '"></td>';
 
       tr_html +=
