@@ -273,7 +273,7 @@
                                     <?php
                                 } ?>
                                 <td style="text-align:center; vertical-align:middle;">
-                                    <?= $this->sma->formatQuantity($row->unit_quantity); ?></td>
+                                    <?= $this->sma->formatQuantity($row->quantity); ?></td>
                                 <?php
                                 if ($inv->status == 'partial') {
                                     echo '<td style="text-align:center;vertical-align:middle;width:80px;">' . $this->sma->formatQuantity($row->quantity_received) . '</td>';
