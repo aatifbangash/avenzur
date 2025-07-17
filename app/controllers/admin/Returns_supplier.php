@@ -556,7 +556,7 @@ class Returns_supplier extends MY_Controller
                     // $row->discount2          = $item->discount2;
                     $row->net_unit_cost = $item->net_unit_cost;
                     $row->expiry = (($item->expiry && $item->expiry != '0000-00-00') ? $this->sma->hrsd($item->expiry) : '');
-                    $row->base_quantity = $item->quantity;
+                    $row->base_quantity = $item->quantity - $item->bonus;
                     
                     $row->base_unit = $row->unit ? $row->unit : $item->product_unit_id;
                     $row->base_unit_cost = $row->cost ? $row->cost : $item->unit_cost;
