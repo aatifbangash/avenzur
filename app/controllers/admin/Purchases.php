@@ -2346,10 +2346,10 @@ class Purchases extends MY_Controller
 
         $check_existing_transfer = $this->transfers_model->getTransferByReferenceId($purchase_detail->reference_no);
 
-        if($check_existing_transfer){
-            $this->session->set_flashdata('error', lang('Invoice with this reference no. is already transferred'));
-            admin_redirect('purchases');
-        }else{
+        //if($check_existing_transfer){
+        //    $this->session->set_flashdata('error', lang('Invoice with this reference no. is already transferred'));
+        //    admin_redirect('purchases');
+       // }else{
             $date = date('Y-m-d H:i:s');
             $transfer_no = $purchase_detail->reference_no;
             $purchase_notification = $purchase_detail->notification_id;
@@ -2547,7 +2547,7 @@ class Purchases extends MY_Controller
                 $this->session->set_flashdata('error', lang('Error adding transfer'));
                 admin_redirect('purchases');
             }
-        }
+       // }
     }
 
     /* ----------------------------------------------------------------------------- */
