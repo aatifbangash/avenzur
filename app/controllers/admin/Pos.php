@@ -877,11 +877,11 @@ class Pos extends MY_Controller
         }
 
         if (!empty($sfromDate)) {
-            $this->datatables->where('date >=', $sfromDate);
+            $this->datatables->where('DATE(date) >=', $sfromDate);
         }
 
         if (!empty($stoDate)) {
-            $this->datatables->where('date <=', $stoDate);
+            $this->datatables->where('DATE(date) <=', $stoDate);
         }
 
         if (!empty($swarehouse) && is_numeric($swarehouse)) {
