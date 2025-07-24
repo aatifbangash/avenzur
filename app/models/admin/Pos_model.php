@@ -1007,7 +1007,7 @@ class Pos_model extends CI_Model
             sma_sales sales ON sales.id = payments.sale_id
         WHERE 
             payments.type = 'received' 
-            AND payments.paid_by = 'CC'
+            AND payments.paid_by = 'card'
             AND DATE(payments.date) = '".trim($date)."'
             AND payments.created_by IN (".$user_id.")
     ";
