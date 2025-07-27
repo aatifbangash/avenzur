@@ -1193,14 +1193,14 @@ class Pos_model extends CI_Model
             LEFT JOIN 
                 sma_returns returns ON returns.id = payments.return_id
             WHERE 
-                payments.type = 'sent' 
+                payments.type = 'completed' 
                 AND DATE(payments.date) = '".trim($date)."'  
                 AND payments.created_by IN (".$user_id.")
             GROUP BY 
                 payments.return_id
         ) AS sp;
         ";
-
+       
         $q = $this->db->query($sql);
         if ($q->num_rows() > 0) {
             return $q->row();
