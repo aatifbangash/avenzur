@@ -135,13 +135,13 @@
                 <tr>
                     <td style="border-bottom: 1px solid #EEE;"><h4><?= lang('cash_sale_with_halala'); ?>:</h4></td>
                     <td style="text-align:right; border-bottom: 1px solid #EEE;"><h4>
-                            <span><?= $this->sma->formatMoney($cashsales->total_with_halala ? $cashsales->total_with_halala : '0.00') ; ?></span>
+                            <span><?= $cashsales->total_with_halala ? $cashsales->total_with_halala : '0.00' ; ?></span>
                         </h4></td>
                 </tr>
                 <tr>
                     <td style="border-bottom: 1px solid #EEE;"><h4><?= lang('cash_sale'); ?>:</h4></td>
                     <td style="text-align:right; border-bottom: 1px solid #EEE;"><h4>
-                            <span><?= $this->sma->formatMoney($cashsales->total ? $cashsales->total : '0.00') ; ?></span>
+                            <span><?= $cashsales->total ? $cashsales->total : '0.00' ; ?></span>
                         </h4></td>
                 </tr>
                 <!-- <tr>
