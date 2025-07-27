@@ -119,6 +119,7 @@
                 <?php echo form_close(); 
                 }
                 $total_sale = $cashsales->total + $ccsales->total;
+                $total_sale_with_halala = $cashsales->total_with_halala + $ccsales->total;
                 ?>
                 <hr />
                 <div class="row">
@@ -130,10 +131,17 @@
                             <span><?= $this->sma->formatMoney($this->session->userdata('cash_in_hand')); ?></span></h4>
                     </td>
                 </tr>
+                
+                <tr>
+                    <td style="border-bottom: 1px solid #EEE;"><h4><?= lang('cash_sale_with_halala'); ?>:</h4></td>
+                    <td style="text-align:right; border-bottom: 1px solid #EEE;"><h4>
+                            <span><?= $cashsales->total_with_halala ? $cashsales->total_with_halala : '0.00' ; ?></span>
+                        </h4></td>
+                </tr>
                 <tr>
                     <td style="border-bottom: 1px solid #EEE;"><h4><?= lang('cash_sale'); ?>:</h4></td>
                     <td style="text-align:right; border-bottom: 1px solid #EEE;"><h4>
-                            <span><?= $this->sma->formatMoney($cashsales->total ? $cashsales->total : '0.00') ; ?></span>
+                            <span><?= $cashsales->total ? $cashsales->total : '0.00' ; ?></span>
                         </h4></td>
                 </tr>
                 <!-- <tr>
@@ -170,6 +178,13 @@
                 </tr>
 
                 <tr>
+                    <td width="300px;" style="font-weight:bold;"><h4><?= lang('total_sales_with_halala'); ?>:</h4></td>
+                    <td width="200px;" style="font-weight:bold;text-align:right;"><h4>
+                            <span><?=  $total_sale_with_halala; ?></span>
+                        </h4></td>
+                </tr>
+
+                <tr>
                     <td width="300px;" style="font-weight:bold;"><h4><?= lang('total_returns'); ?>:</h4></td>
                     <td width="200px;" style="font-weight:bold;text-align:right;"><h4>
                             <span><?=  $totalreturns->total ? $totalreturns->total : '0.00'; ?></span>
@@ -180,6 +195,13 @@
                     <td width="300px;" style="font-weight:bold;"><h4><?= lang('Net Sale'); ?>:</h4></td>
                     <td width="200px;" style="font-weight:bold;text-align:right;"><h4>
                             <span><?=  $total_sale ? $total_sale - $totalreturns->total : '0.00'; ?></span>
+                        </h4></td>
+                </tr>
+
+                 <tr>
+                    <td width="300px;" style="font-weight:bold;"><h4><?= lang('Net Sale with halala'); ?>:</h4></td>
+                    <td width="200px;" style="font-weight:bold;text-align:right;"><h4>
+                            <span><?=  $total_sale_with_halala ? $total_sale_with_halala - $totalreturns->total : '0.00'; ?></span>
                         </h4></td>
                 </tr>
 

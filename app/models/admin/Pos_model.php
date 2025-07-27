@@ -947,13 +947,35 @@ class Pos_model extends CI_Model
         //     return $q->row();
         // }
 
-       $sql = "
+    //    $sql = "
+    //     SELECT 
+    //         SUM( CASE
+    //             WHEN MOD(amount, 1) > 0.50 THEN FLOOR(amount) + 1
+    //             ELSE FLOOR(amount)
+    //             END 
+    //         ) AS total
+    //     FROM 
+    //         sma_payments payments
+    //     LEFT JOIN 
+    //         sma_sales sales ON sales.id = payments.sale_id
+    //     WHERE 
+    //         payments.type = 'received' 
+    //         AND payments.paid_by = 'cash'
+    //         AND DATE(payments.date) = '".trim($date)."'
+    //         AND payments.created_by IN (".$user_id.")
+    //    ;
+    // ";
+
+      $sql = "
         SELECT 
             SUM( CASE
                 WHEN MOD(amount, 1) > 0.50 THEN FLOOR(amount) + 1
                 ELSE FLOOR(amount)
                 END 
-            ) AS total
+            ) AS total,
+             
+               SUM(amount)
+             AS total_with_halala
         FROM 
             sma_payments payments
         LEFT JOIN 
@@ -968,7 +990,7 @@ class Pos_model extends CI_Model
 
         $q = $this->db->query($sql);
         $result = array();
-        //echo $this->db->last_query();
+        // $this->db->last_query();
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $result = $row;
