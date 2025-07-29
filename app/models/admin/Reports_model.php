@@ -4509,7 +4509,7 @@ class Reports_model extends CI_Model
                sum(p.amount) , 
                  SUM(
                     CASE
-                    WHEN p.paid_by = 'cash' THEN
+                    WHEN p.paid_by = 'cash' AND p.sale_id IS NOT NULL THEN
                         CASE
                         WHEN MOD(p.amount, 1) > 0.50 THEN FLOOR(p.amount) + 1
                         ELSE FLOOR(p.amount)
@@ -4518,7 +4518,7 @@ class Reports_model extends CI_Model
                     END
                 ) AS total_cash,
                 sum( if(p.paid_by = 'cash' , p.amount, 0) ) as total_cash_old,
-                sum( if(p.paid_by = 'card' , p.amount, 0) ) as total_credit_card,
+                sum( if(p.paid_by = 'card' AND p.sale_id IS NOT NULL , p.amount, 0) ) as total_credit_card,
                 0 AS total_discount,
                 sum( if(p.return_id IS NOT NULL , amount, 0) ) AS total_returns
                 FROM `sma_payments` as p
