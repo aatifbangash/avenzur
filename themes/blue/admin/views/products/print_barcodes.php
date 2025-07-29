@@ -200,7 +200,7 @@
                             }
                             echo '<button type="button" onclick="window.print();return false;" class="btn btn-primary btn-block tip no-print" title="' . lang('print') . '"><i class="icon fa fa-print"></i> ' . lang('print') . '</button>';
                         } else {
-                            echo '<h3>' . lang('no_product_selected') . '</h3>';
+                            //echo '<h3>' . lang('no_product_selected') . '</h3>'; 
                         }
                     }
                     ?>
