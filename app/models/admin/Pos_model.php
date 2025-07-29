@@ -928,10 +928,13 @@ class Pos_model extends CI_Model
         return false;
     }
 
-    public function getRegisterCashSales($date, $user_id = null)
+    public function getRegisterCashSales($date, $user_id = null, $end_date=null)
     {
         if (!$date) {
             $date = $this->session->userdata('register_open_time');
+        }
+        if (!$end_date) {
+            $end_date = date('Y-m-d H:i:s');
         }
         if (!$user_id) {
             $user_id = $this->session->userdata('user_id');
@@ -983,14 +986,15 @@ class Pos_model extends CI_Model
         WHERE 
             payments.type = 'received' 
             AND payments.paid_by = 'cash'
-            AND DATE(payments.date) = '".trim($date)."'
+            AND DATE(payments.date) >= '".trim($date)."'
+            AND DATE(payments.date) <= '".trim($end_date)."'
             AND payments.created_by IN (".$user_id.")
        ;
     ";
 
         $q = $this->db->query($sql);
         $result = array();
-        // $this->db->last_query();
+        //echo $this->db->last_query();
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $result = $row;
@@ -1001,13 +1005,16 @@ class Pos_model extends CI_Model
         return false;
     }
 
-    public function getRegisterCCSales($date, $user_id = null)
+    public function getRegisterCCSales($date, $user_id = null, $end_date = null)
     {
         if (!$date) {
             $date = $this->session->userdata('register_open_time');
         }
         if (!$user_id) {
             $user_id = $this->session->userdata('user_id');
+        }
+         if (!$end_date) {
+            $end_date = date('Y-m-d');
         }
         // $this->db->select('COUNT(' . $this->db->dbprefix('payments') . '.id) as total_cc_slips, COALESCE( grand_total, 0 ) AS total, SUM( COALESCE( amount, 0 ) ) AS paid', false)
         //     ->join('sales', 'sales.id=payments.sale_id', 'left')
@@ -1030,7 +1037,8 @@ class Pos_model extends CI_Model
         WHERE 
             payments.type = 'received' 
             AND payments.paid_by = 'card'
-            AND DATE(payments.date) = '".trim($date)."'
+            AND DATE(payments.date) >= '".trim($date)."'
+            AND DATE(payments.date) <= '".trim($end_date)."'
             AND payments.created_by IN (".$user_id.")
     ";
 
@@ -1193,12 +1201,15 @@ class Pos_model extends CI_Model
         return false;
     }
 
-    public function getRegisterReturnsNew($date, $user_id = null){
+    public function getRegisterReturnsNew($date, $user_id = null, $end_date = null){
         if (!$date) {
             $date = $this->session->userdata('register_open_time');
         }
         if (!$user_id) {
             $user_id = $this->session->userdata('user_id');
+        }
+        if (!$end_date) {
+            $end_date = date('Y-m-d');
         }
 
         $sql = "SELECT 
@@ -1207,7 +1218,7 @@ class Pos_model extends CI_Model
             COUNT(sp.id) AS total_returns
         FROM (
             SELECT 
-                COALESCE(returns.grand_total, 0) AS total, 
+                COALESCE(returns.total, 0) AS total, 
                 SUM(COALESCE(payments.amount, 0)) AS paid,
                 returns.id
             FROM 
@@ -1216,7 +1227,8 @@ class Pos_model extends CI_Model
                 sma_returns returns ON returns.id = payments.return_id
             WHERE 
                 payments.type = 'completed' 
-                AND DATE(payments.date) = '".trim($date)."'  
+                AND DATE(payments.date) >= '".trim($date)."'  
+                AND DATE(payments.date) <= '".trim($end_date)."' 
                 AND payments.created_by IN (".$user_id.")
             GROUP BY 
                 payments.return_id
@@ -1230,13 +1242,16 @@ class Pos_model extends CI_Model
         return false;
     }
 
-    public function getRegisterSales($date, $user_id = null)
+    public function getRegisterSales($date, $user_id = null, $end_date = null)
     {
         if (!$date) {
             $date = $this->session->userdata('register_open_time');
         }
         if (!$user_id) {
             $user_id = $this->session->userdata('user_id');
+        }
+        if (!$end_date) {
+            $end_date = date('Y-m-d');
         }
         // $this->db->select('COALESCE( grand_total, 0 ) AS total, SUM( COALESCE( amount, 0 ) ) AS paid', false)
         //     ->join('sales', 'sales.id=payments.sale_id', 'left')
@@ -1260,7 +1275,8 @@ FROM (
         sma_sales sales ON sales.id = payments.sale_id
     WHERE 
         payments.type = 'received' 
-        AND DATE(payments.date) = '".trim($date)."'  
+        AND DATE(payments.date) >= '".trim($date)."'  
+        AND DATE(payments.date) <= '".trim($end_date)."'  
         AND payments.created_by IN (".$user_id.")
     GROUP BY 
         payments.sale_id

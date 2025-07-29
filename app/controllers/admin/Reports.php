@@ -5719,24 +5719,27 @@ class Reports extends MY_Controller
                 $this->data['register_open_time'] = null;
             }
             $register_open_time = $start_date;
+            $register_end_time = $end_date;
 
             //$response_data = $this->reports_model->getCloseRegisterDetails($start_date, $end_date, $warehouse);
-            $this->data['ccsales']         = $this->pos_model->getRegisterCCSales($register_open_time, $user_id);
-            $this->data['cashsales']       = $this->pos_model->getRegisterCashSales($register_open_time, $user_id);
-            $this->data['chsales']         = $this->pos_model->getRegisterChSales($register_open_time, $user_id);
-            $this->data['gcsales']         = $this->pos_model->getRegisterGCSales($register_open_time);
-            $this->data['pppsales']        = $this->pos_model->getRegisterPPPSales($register_open_time, $user_id);
-            $this->data['stripesales']     = $this->pos_model->getRegisterStripeSales($register_open_time, $user_id);
+            //$this->data['chsales']         = $this->pos_model->getRegisterChSales($register_open_time, $user_id);
+            //$this->data['gcsales']         = $this->pos_model->getRegisterGCSales($register_open_time);
+            //$this->data['pppsales']        = $this->pos_model->getRegisterPPPSales($register_open_time, $user_id);
+            //$this->data['stripesales']     = $this->pos_model->getRegisterStripeSales($register_open_time, $user_id);
+             //$this->data['refunds']         = $this->pos_model->getRegisterRefunds($register_open_time, $user_id);
+            //$this->data['returns']         = $this->pos_model->getRegisterReturns($register_open_time, $user_id);
+            //$this->data['cashrefunds']     = $this->pos_model->getRegisterCashRefunds($register_open_time, $user_id);
+            //$this->data['expenses']        = $this->pos_model->getRegisterExpenses($register_open_time, $user_id);
+            //$this->data['users']           = $this->pos_model->getUsers($user_id);
+            //$this->data['suspended_bills'] = $this->pos_model->getSuspendedsales($user_id);
+              //$this->data['authorizesales']  = $this->pos_model->getRegisterAuthorizeSales($register_open_time, $user_id);
+            
+            $this->data['ccsales']         = $this->pos_model->getRegisterCCSales($register_open_time, $user_id, $register_end_time);
+            $this->data['cashsales']       = $this->pos_model->getRegisterCashSales($register_open_time, $user_id, $register_end_time);
             $this->data['othersales']      = $this->pos_model->getRegisterOtherSales($register_open_time);
-            $this->data['authorizesales']  = $this->pos_model->getRegisterAuthorizeSales($register_open_time, $user_id);
-            $this->data['totalsales']      = $this->pos_model->getRegisterSales($register_open_time, $user_id);
-            $this->data['totalreturns']    = $this->pos_model->getRegisterReturnsNew($register_open_time, $user_id);
-            $this->data['refunds']         = $this->pos_model->getRegisterRefunds($register_open_time, $user_id);
-            $this->data['returns']         = $this->pos_model->getRegisterReturns($register_open_time, $user_id);
-            $this->data['cashrefunds']     = $this->pos_model->getRegisterCashRefunds($register_open_time, $user_id);
-            $this->data['expenses']        = $this->pos_model->getRegisterExpenses($register_open_time, $user_id);
-            $this->data['users']           = $this->pos_model->getUsers($user_id);
-            $this->data['suspended_bills'] = $this->pos_model->getSuspendedsales($user_id);
+            $this->data['totalsales']      = $this->pos_model->getRegisterSales($register_open_time, $user_id, $register_end_time);
+            $this->data['totalreturns']    = $this->pos_model->getRegisterReturnsNew($register_open_time, $user_id, $register_end_time);
+           
             $this->data['user_id']         = $user_id;
             //echo "<pre>"; print_r($response_data);exit;
             $this->data['start_date'] = $from_date;
