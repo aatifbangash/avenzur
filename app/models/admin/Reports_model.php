@@ -830,8 +830,9 @@ class Reports_model extends CI_Model
             ->from('accounts_ledgers')
             ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=accounts_ledgers.id')
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-            ->where('sma_accounts_entries.date >=', $start_date)
-            ->where('sma_accounts_entries.date <=', $end_date);
+            ->where('DATE(sma_accounts_entries.date) >=', trim($start_date))
+            ->where('DATE(sma_accounts_entries.date) <=', trim($end_date))
+            ->where('sma_accounts_entries.sid !=', 128);
 
         if (!empty($employee)) {
             $this->db->where('sma_accounts_entryitems.employee_id', $employee);
@@ -861,8 +862,10 @@ class Reports_model extends CI_Model
             ->from('accounts_ledgers')
             ->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=accounts_ledgers.id')
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-            ->where('sma_accounts_entries.date <', $start_date);
+            ->where('DATE(sma_accounts_entries.date) <', trim($start_date)
+             );
 
+        $this->db->where('sma_accounts_entries.sid !=', 128);     
         if (!empty($employee)) {
             $this->db->where('sma_accounts_entries.employee_id', $employee);
         }
