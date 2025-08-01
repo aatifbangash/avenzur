@@ -149,24 +149,24 @@
                                                 <td><?= $count; ?></td>
                                                 <td><?= $data->code; ?></td>
                                                 <td><?= $data->name; ?></td>
-                                                <td><?= $ob_debit > 0 ? $this->sma->formatNumber($ob_debit) : '-'; ?></td>
-                                                <td><?= $ob_credit > 0 ? $this->sma->formatNumber($ob_credit) : '-'; ?></td>
-                                                <td><?= $data->trs_debit > 0 ? $this->sma->formatNumber($data->trs_debit) : '-'; ?></td>
-                                                <td><?= $data->trs_credit >0 ? $this->sma->formatNumber($data->trs_credit) : '-'; ?></td>
-                                                <td><?= $eb_debit > 0 ? $this->sma->formatNumber($eb_debit) : '-'; ?></td>
-                                                <td><?= $eb_credit > 0 ? $this->sma->formatNumber($eb_credit) : '-'; ?></td>
+                                                <td><?= $ob_debit > 0 ? $ob_debit : '-'; ?></td>
+                                                <td><?= $ob_credit > 0 ? $ob_credit : '-'; ?></td>
+                                                <td><?= $data->trs_debit > 0 ? $data->trs_debit : '-'; ?></td>
+                                                <td><?= $data->trs_credit >0 ? $data->trs_credit : '-'; ?></td>
+                                                <td><?= $eb_debit > 0 ? $eb_debit : '-'; ?></td>
+                                                <td><?= $eb_credit > 0 ? $eb_credit : '-'; ?></td>
                                             </tr>
                                         <?php
                                     }
                                 ?>
                                 <tr>
                                     <td colspan="3"><strong>Totals: </strong></td>
-                                    <td colspan="1"><strong><?= $this->sma->formatNumber($total_ob_debit); ?></strong></td>
-                                    <td colspan="1"><strong><?= $this->sma->formatNumber($total_ob_credit); ?></strong></td>
-                                    <td colspan="1"><strong><?= $this->sma->formatNumber($total_trs_debit); ?></strong></td>
-                                    <td colspan="1"><strong><?= $this->sma->formatNumber($total_trs_credit); ?></strong></td>
-                                    <td colspan="1"><strong><?= $this->sma->formatNumber($total_eb_debit); ?></strong></td>
-                                    <td colspan="1"><strong><?= $this->sma->formatNumber($total_eb_credit); ?></strong></td>
+                                    <td colspan="1"><strong><?= $total_ob_debit; ?></strong></td>
+                                    <td colspan="1"><strong><?= $total_ob_credit; ?></strong></td>
+                                    <td colspan="1"><strong><?= $total_trs_debit; ?></strong></td>
+                                    <td colspan="1"><strong><?= $total_trs_credit; ?></strong></td>
+                                    <td colspan="1"><strong><?= $total_eb_debit; ?></strong></td>
+                                    <td colspan="1"><strong><?= $total_eb_credit; ?></strong></td>
                                 </tr>
                             </tbody>
                             <tfoot></tfoot>

@@ -3873,9 +3873,9 @@ class Reports extends MY_Controller
                     if ($response_item->id == $supplier_data->id) {
                         $idExists = true;
                         if ($supplier_data->dc == 'D') {
-                            $response_item->trs_debit = $this->sma->formatDecimal($response_item->trs_debit + $supplier_data->total_amount);
+                            $response_item->trs_debit = $response_item->trs_debit + $supplier_data->total_amount; //$this->sma->formatDecimal($response_item->trs_debit + $supplier_data->total_amount);
                         } else if ($supplier_data->dc == 'C') {
-                            $response_item->trs_credit = $this->sma->formatDecimal($response_item->trs_credit + $supplier_data->total_amount);
+                            $response_item->trs_credit = $response_item->trs_credit + $supplier_data->total_amount; //$this->sma->formatDecimal($response_item->trs_credit + $supplier_data->total_amount);
                         }
                         break;
                     }
@@ -3894,9 +3894,9 @@ class Reports extends MY_Controller
                     $obj->total_trs_credit = 0;
                     $obj->total_trs_debit = 0;
                     if ($supplier_data->dc == 'D') {
-                        $obj->trs_debit = $this->sma->formatDecimal($supplier_data->total_amount);
+                        $obj->trs_debit = $supplier_data->total_amount; //$this->sma->formatDecimal($supplier_data->total_amount);
                     } else if ($supplier_data->dc == 'C') {
-                        $obj->trs_credit = $this->sma->formatDecimal($supplier_data->total_amount);
+                        $obj->trs_credit = $supplier_data->total_amount; //$this->sma->formatDecimal($supplier_data->total_amount);
                     }
                     array_push($response_arr, $obj);
                 }
@@ -3908,9 +3908,9 @@ class Reports extends MY_Controller
                     if ($response_item->id == $supplier_data->id) {
                         $idExists = true;
                         if ($supplier_data->dc == 'D') {
-                            $response_item->ob_debit = $this->sma->formatDecimal($supplier_data->total_amount);
+                            $response_item->ob_debit = $supplier_data->total_amount;//$this->sma->formatDecimal($supplier_data->total_amount);
                         } else if ($supplier_data->dc == 'C') {
-                            $response_item->ob_credit = $this->sma->formatDecimal($supplier_data->total_amount);
+                            $response_item->ob_credit = $supplier_data->total_amount; //$this->sma->formatDecimal($supplier_data->total_amount);
                         }
                         break;
                     }
@@ -3930,9 +3930,9 @@ class Reports extends MY_Controller
                     $obj->total_trs_credit = 0;
                     $obj->total_trs_debit = 0;
                     if ($supplier_data->dc == 'D') {
-                        $obj->ob_debit = $this->sma->formatDecimal($supplier_data->total_amount);
+                        $obj->ob_debit = $supplier_data->total_amount; //$this->sma->formatDecimal($supplier_data->total_amount);
                     } else if ($supplier_data->dc == 'C') {
-                        $obj->ob_credit = $this->sma->formatDecimal($supplier_data->total_amount);
+                        $obj->ob_credit = $supplier_data->total_amount; //$this->sma->formatDecimal($supplier_data->total_amount);
                     }
                     array_push($response_arr, $obj);
                 }
