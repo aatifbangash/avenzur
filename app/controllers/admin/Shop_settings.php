@@ -22,7 +22,7 @@ class Shop_settings extends MY_Controller
         $this->load->admin_model('shop_admin_model');
         $this->upload_path       = 'assets/uploads/';
         $this->image_types       = 'gif|jpg|jpeg|png';
-        $this->allowed_file_size = '1024';
+        $this->allowed_file_size = '2048';
     }
 
     public function add_page()
