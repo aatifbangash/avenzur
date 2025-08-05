@@ -18,7 +18,9 @@ file_put_contents($filePath, $zpl);
 // Print (adjust printer path)
 $printerPath = '\\\\PC-A\\Zebra GK420t - ZPL';
  // Double backslashes are necessary in PHP strings
-
+ if (!file_exists($filePath)) {
+                die("Error: File not found at path - $filePath");
+            }
 // Build the copy command
 $command = "copy /B \"$filePath\" \"$printerPath\" 2>&1";
 
@@ -30,7 +32,6 @@ $output = shell_exec($command);
             } else {
                 echo "Command output: $output";
             }
-    exit;        
 
 ?>
 <html>
