@@ -495,11 +495,7 @@
             var pharmacy_address = '<?php echo $pharmacy_address; ?>';
             var printing_date = '<?php echo date('Y-m-d'); ?>';
 
-            for (var medication in instructionsData) {
-                if (instructionsData.hasOwnProperty(medication)) {
-                    var instruction = instructionsData[medication];
-
-                    var printWindow = window.open('', 'Instructions', 'height=200,width=400');
+              var printWindow = window.open('', 'Instructions', 'height=700,width=700');
                     printWindow.document.write('<html><head><title>Instructions</title>');
                     printWindow.document.write('<style>');
                     // Set the top margin to 0.5 inch (or adjust as needed)
@@ -508,9 +504,14 @@
                     printWindow.document.write('b { font-size: 16px; }');
                     printWindow.document.write('</style>');
                     printWindow.document.write('</head><body>');
+             var html = '';
+            for (var medication in instructionsData) {
+                console.log(medication);
+                if (instructionsData.hasOwnProperty(medication)) {
+                    var instruction = instructionsData[medication];
 
                     var instrt = instruction.split(':');
-                    var html = '<b>' + medication + '</b><br />';
+                    html += '<b>' + medication + '</b><br />';
                     html += instrt[0] + '<br />';
                     html += pharmacy_name + '<br />';
                     html += pharmacy_address + '<br />';
@@ -519,14 +520,17 @@
                     html += 'Exp. ' + instrt[1] + '<br />';
                     html += 'اسم المريض';
 
-                    printWindow.document.write(html);
+                    
 
-                    printWindow.document.write('</body></html>');
-
-                    printWindow.print();
-                    printWindow.close();
                 }
             }
+
+            printWindow.document.write(html);
+
+            printWindow.document.write('</body></html>');
+
+            printWindow.print();
+            printWindow.close();
 
             return true;
         }
