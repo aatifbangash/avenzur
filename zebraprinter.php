@@ -10,30 +10,27 @@ if (!is_dir($zplDir)) {
 }
 
 // Generate unique filename
-$tempFile = $zplDir . '/label_' . uniqid() . '.zpl';
+$filePath = $zplDir . '/label_' . uniqid() . '.zpl';
 
 // Save ZPL to file
-file_put_contents($tempFile, $zpl);
+file_put_contents($filePath, $zpl);
 
-echo "ZPL file sent to printer: " . $tempFile;
 // Print (adjust printer path)
-if (!copy($tempFile, $printerPath)) {
-    // ❌ Error occurred while copying
-    $error = error_get_last(); // Get the last error that occurred
-    echo "❌ Failed to send to printer.<br>";
-    echo "Error: " . $error['message'] . "<br>";
-    echo "File: " . $tempFile . "<br>";
-    echo "Printer Path: " . $printerPath;
-} else {
-    echo "✅ ZPL file successfully sent to printer.<br>";
-    echo "File: " . $tempFile;
-    // Optionally delete file:
-    // unlink($tempFile);
-}
+$printerPath = '\\\\PC-A\\Zebra GK420t - ZPL';
+ // Double backslashes are necessary in PHP strings
 
+// Build the copy command
+$command = "copy /B \"$filePath\" \"$printerPath\" 2>&1";
 
-exit;
+// Execute the cp command and capture output
+$output = shell_exec($command);
 
+ if ($output === null || strpos($output, 'No such file or directory') !== false) {
+                echo "Error: " . $output;
+            } else {
+                echo "Command output: $output";
+            }
+    exit;        
 
 ?>
 <html>
