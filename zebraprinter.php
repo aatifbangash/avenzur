@@ -1,3 +1,41 @@
+<?php
+
+
+$zpl = "^XA^FO50,50^ADN,36,20^FDHello Zebra^FS^XZ"; // Your ZPL command
+
+// Set path relative to project root
+$zplDir = __DIR__ . '/zplfiles'; // __DIR__ is the current PHP file's directory
+if (!is_dir($zplDir)) {
+    mkdir($zplDir, 0777, true); // Create directory if it doesn't exist
+}
+
+// Generate unique filename
+$tempFile = $zplDir . '/label_' . uniqid() . '.zpl';
+
+// Save ZPL to file
+file_put_contents($tempFile, $zpl);
+
+echo "ZPL file sent to printer: " . $tempFile;
+// Print (adjust printer path)
+if (!copy($tempFile, $printerPath)) {
+    // ❌ Error occurred while copying
+    $error = error_get_last(); // Get the last error that occurred
+    echo "❌ Failed to send to printer.<br>";
+    echo "Error: " . $error['message'] . "<br>";
+    echo "File: " . $tempFile . "<br>";
+    echo "Printer Path: " . $printerPath;
+} else {
+    echo "✅ ZPL file successfully sent to printer.<br>";
+    echo "File: " . $tempFile;
+    // Optionally delete file:
+    // unlink($tempFile);
+}
+
+
+exit;
+
+
+?>
 <html>
 <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
 <head>
