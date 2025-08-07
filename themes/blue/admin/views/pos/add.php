@@ -653,7 +653,7 @@
                                     <div class="row">
                                         <div class="col-sm-5">
                                             <div class="form-group">
-                                                <?=lang('Customer Name', 'customer_name');?>
+                                                <?=lang('Patient Name', 'customer_name');?>
                                                 <input name="customer_name[]" type="text" id="customer_name"
                                                        class="pa form-control customer_name"/>
                                             </div>
@@ -799,7 +799,19 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-block btn-lg btn-primary" id="submit-sale"><?=lang('submit');?></button>
+                <?php if(trim($biller->name) == 'Jarir Alkhair'){?>
+                    <div class="row">
+                        <div class="col-md-6 col-sm-6">
+                            
+                        <button class="btn btn-block btn-lg btn-primary" id="submit-sale"><?=lang('submit');?></button>
+                        </div>
+                <div class="col-md-6 col-sm-6">
+                    <button class="btn btn-block btn-lg btn-warning" id="jarir_print_instructions">Print instructions</button>
+                    </div>
+                    </div>
+                <?php } else { ?>
+                    <button class="btn btn-block btn-lg btn-primary" id="submit-sale"><?=lang('submit');?></button>
+                    <?php }?>    
             </div>
         </div>
     </div>
@@ -3354,6 +3366,57 @@ if (isset($print) && !empty($print)) {
     include 'remote_printing.php';
 }
 ?>
+
+
+<script>
+  $('#jarir_print_instructions').on('click', function () {
+    const printerUrl = "https://6f7ddeb37917.ngrok-free.app"; // Flask endpoint
+
+    // Construct the ZPL code dynamically, or you can get this from hidden input, or render in JS
+    const zpl_patient_name = $('#customer_name').val();
+    if (!zpl_patient_name) {
+        alert('Please enter patient name');
+        return;
+    }
+    var instructions = [];
+    
+   $('textarea#instructions').each(function () {
+        var medicine_name = $(this).data('medicinename');
+        var instruction_text = $(this).val();
+
+        instructions.push({
+            medicine_name: medicine_name,
+            instruction: instruction_text
+        });
+    });
+
+    let zplCode = '';
+
+    instructions.forEach(function (item) {
+        zplCode += `^XA^FO280,20^ADN,25,10^FDJarir Alkhair Pharmacy^FS`;
+        zplCode += `^FO320,50^ADN,25,10^FD${zpl_patient_name}^FS`;
+        zplCode += `^FO300,80^ADN,25,10^FD${item.medicine_name}^FS`;
+        zplCode += `^FO300,120^ADN,25,10^FD${item.instruction}^FS^XZ\n`;
+    });
+
+
+    // Send the POST request
+    $.ajax({
+      url: printerUrl,
+      type: "POST",
+      data: zplCode,
+      contentType: "application/octet-stream",
+      success: function (res) {
+        alert('Printed Successfully!');
+        console.log(res);
+      },
+      error: function (xhr, status, error) {
+        alert('Error printing: ' + xhr.responseText);
+        console.error(error);
+      }
+    });
+  });
+</script>
 
 <script type="text/javascript" src="<?= base_url('assets/custom/pos.js') ?>"></script>
 <script type="text/javascript" src="<?= base_url('assets/custom/pos.js') ?>"></script>
