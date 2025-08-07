@@ -3370,7 +3370,7 @@ if (isset($print) && !empty($print)) {
 
 <script>
   $('#jarir_print_instructions').on('click', function () {
-    const printerUrl = "https://6f7ddeb37917.ngrok-free.app"; // Flask endpoint
+    const printerUrl = "https://6f7ddeb37917.ngrok-free.app/print"; // Flask endpoint
 
     // Construct the ZPL code dynamically, or you can get this from hidden input, or render in JS
     const zpl_patient_name = $('#customer_name').val();
