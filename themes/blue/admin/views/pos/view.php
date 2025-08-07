@@ -387,8 +387,12 @@
                     </div>
                     <div class="btn-group" role="group">
                         <?php
+                        if(trim($biller->name) == 'Jarir Alkhair') {
+                                echo '<a href="<?= admin_url("pos/view/'.$sid.'?mode=print_instructions"); ?>" <button  class="btn btn-block btn-primary">' . lang('Print Instructions') . '</button>';
+                        }else {
                             echo '<button onclick="print_instructions();" class="btn btn-block btn-primary">' . lang('Print Instructions') . '</button>';
-                        ?>
+                        }
+                    ?>
                     </div>
                     <div class="btn-group" role="group">
                         <a class="btn btn-block btn-success" href="#" id="email"><?= lang('email'); ?></a>
@@ -412,7 +416,12 @@
                 </span>
                 <span class="pull-left col-xs-12">
                         <?php
+                         
+                        if(trim($biller->name) == 'Jarir Alkhair') {
+                                echo '<a href="'.admin_url("pos/view/".$sid."?mode=print_instructions").'"> <button  class="btn btn-block btn-primary">' . lang('Print Instructions') . '</button></a>';
+                        }else {
                             echo '<button onclick="print_instructions();" class="btn btn-block btn-primary">' . lang('Print Instructions') . '</button>';
+                        }
                         ?>
                 </span>
                 <span class="pull-left col-xs-12"><a class="btn btn-block btn-success" href="#" id="email"><?= lang('email'); ?></a></span>
