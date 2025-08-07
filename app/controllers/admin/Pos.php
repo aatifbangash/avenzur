@@ -2272,7 +2272,7 @@ class Pos extends MY_Controller
         if (isset($_GET['mode']) && $_GET['mode'] === 'print_instructions') {
             
             // Printer URL
-            $printer_location = "https://6f7ddeb37917.ngrok-free.app";
+            $printer_location = "https://6f7ddeb37917.ngrok-free.app/print";
             $zpl_patient_name = $this->data['inv']->customer_name ? $this->data['inv']->customer_name : 'Patient';
           $zplCode = '';
           foreach ($instructions as $key => $value) {
