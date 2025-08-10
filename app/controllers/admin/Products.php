@@ -4203,7 +4203,41 @@ class Products extends MY_Controller
                             $zplCode .= "^XZ\n";
                         }
                     }
-                }else if($printer_name == 'tsc'){
+                } else if($printer_name == 'zebra_zd230') {
+
+                    for ($i = 1; $i <= ceil($quantity); $i++) {
+
+                        if(isset($_POST['print'])){
+
+                        //$zplCode .= "^XA^FO280,20^ADN,25,10^FDJarir Alkhair Pharmacy^FS^FO320,50^ADN,25,10^FD".$zpl_patient_name."^FS^FO300,80^ADN,25,10^FD".$key."^FS^FO300,120^ADN,25,10^FD".$value."^FS^XZ\n";
+    
+                            $zplCode .= "^XA\n"; 
+                            
+                            $zplCode .= "^FO280,20^ADN,15,15^FD{$line1}^FS\n";
+
+                            // Add second line if it exists
+                            if ($line2) {
+                                $zplCode .= "^FO280,45^A0N,15,15^FD{$line2}^FS\n";
+                            }
+                            $zplCode .=
+                                "^FO280,60\n"                               // Position barcode
+                                . "^BY2,2,50\n"                             // Bar width, space between bars, height
+                                . "^BCN,50,Y,N,N\n"                         // Code 128 Barcode, 50 dots tall, HRI off
+                                . "^FD{$avzCode}^FS\n"                   // GTIN Number (dynamic)
+                                . "^FO280,135\n"                             // Position price below the barcode
+                                . "^ADN,20,20\n"                            // Font size for price text
+                                //. "^FDitem#{$product->item_code}^FS\n"               // Item Number (dynamic)
+                                . "^FO350,135\n"                            // Position price on the right side
+                                . "^ADN,20,20\n"                            // Font size for price text
+                                . "^FDSR{$productPrice}^FS\n";  // Price (formatted)
+                                //. "^FD{$this->sma->formatMoney($productPrice)}^FS\n";
+                                
+                            
+                            $zplCode .= "^XZ\n";
+                        }
+                    }
+
+                } else if($printer_name == 'tsc'){
                     // Generate the TSPL code
                     for ($i = 1; $i <= ceil($quantity); $i++) {
                         if (isset($_POST['print'])) {
