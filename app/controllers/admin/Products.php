@@ -10,10 +10,10 @@ class Products extends MY_Controller
         if (!$this->loggedIn) {
             $this->session->set_userdata('requested_page', $this->uri->uri_string());
             $url = "admin/login";
-            if( $this->input->server('QUERY_STRING') ){
-                $url = $url.'?'.$this->input->server('QUERY_STRING').'&redirect='.$this->uri->uri_string();
+            if ($this->input->server('QUERY_STRING')) {
+                $url = $url . '?' . $this->input->server('QUERY_STRING') . '&redirect=' . $this->uri->uri_string();
             }
-           
+
             $this->sma->md($url);
         }
         $this->lang->admin_load('products', $this->Settings->user_language);
@@ -72,17 +72,17 @@ class Products extends MY_Controller
             Vegan
             Certified B Corporation
             Find Support With Raspberry Leaf
-            
+
             Raspberry Leaf has been traditionally used by midwives and Western herbalists during pregnancy as well as to help ease the discomfort of menstruation, and to support the uterus. Enjoy the pleasant, earthy-sweet flavor of Woman\'s Raspberry Leaf tea to support the female system.
-            
+
             At Yogi, it\'s about more than creating deliciously purposeful teas.
-            
+
             Yogi Principles
-            
+
             We blend with intention. Our flavorful teas are created to support body and mind.
-            
+
             We believe in the synergetic benefit of herbs, combining ingredients to enhance their wellness-supporting potential.
-            
+
             We blend the best of what nature has to offer using the finest spices and botanicals from around the globe.',
             'availability' => 'in stock',
             'condition' => 'new',
@@ -546,7 +546,7 @@ class Products extends MY_Controller
         while (($rowData = fgetcsv($handle)) !== false) {
             $avenzurCode = $rowData[3];
             //$retajCode = $rowData[5];
-            $price       = $rowData[6];
+            $price = $rowData[6];
             $promo_price = $rowData[7];
 
             $this->db->select('*');
@@ -655,21 +655,21 @@ class Products extends MY_Controller
         //$csvFile = '/var/www/backup25May2023/assets/uploads/temp/iherb_updated.csv';
 
         $csvFile = $this->upload_path.'temp/12-may-upload-file.csv';
-        
+
         if (!file_exists($csvFile)) {
             echo 'CSV file not found.';
             return;
         }
-    
+
         // Read the CSV file
         $handle = fopen($csvFile, 'r');
-    
+
         // Check if the file was opened successfully
         if ($handle === false) {
             echo 'Error opening CSV file.';
             return;
         }
-    
+
         // Iterate through rows in the CSV file
         while (($rowData = fgetcsv($handle)) !== false) {
             // Assuming 'B' and 'C' are the columns for 'code' and 'ic' respectively
@@ -680,14 +680,14 @@ class Products extends MY_Controller
             $ascon_code = isset($rowData[11]) ? $rowData[11] : '';
             $imported = 1;
             $source = isset($rowData[10]) ? $rowData[10] : '';
-    
+
             // Find the product in the database based on the code
             $this->db->select('*');
             $this->db->from('sma_products');
             $this->db->where('CAST(code AS UNSIGNED) = ' . (int)$excelCode, NULL, FALSE);
             $query = $this->db->get();
             $product = $query->row();
-            
+
             if ($product) {
                 // Update the code in the database with the ic from CSV
                 $dataToUpdate = [
@@ -696,7 +696,7 @@ class Products extends MY_Controller
                     'imported' => $imported
                     //'source' => $source
                 ];
-    
+
                 $this->db->where('id', $product->id);
                 $this->db->update('sma_products', $dataToUpdate);
                 echo "Updated product with code $excelCode. Tax rate: $tax_rate<br>";
@@ -704,7 +704,7 @@ class Products extends MY_Controller
                 echo "Product with code $excelCode not found in the database.<br>";
             }
         }
-    
+
         // Close the file handle
         fclose($handle);
     }*/
@@ -796,7 +796,7 @@ class Products extends MY_Controller
 
     /*public function convertImagesThumbs(){
         $images = "23f464d2ca3d69f8f160003dcb22c11b.jpg,73d17cc2bdc0a0e3906469fc4842c62f.jpeg";
- 
+
         $this->load->library('image_lib');
         $imgArr = explode(",",$images);
 
@@ -3710,8 +3710,8 @@ class Products extends MY_Controller
                         'unit' => isset($value[5]) ? trim($value[5]) : 1,
                         'sale_unit' => isset($value[6]) ? trim($value[6]) : 1,
                         'purchase_unit' => isset($value[7]) ? trim($value[7]) : 1,
-                        'cost' => isset($value[8]) ? $this->sma->formatDecimal( trim($value[8]) ): '',
-                        'price' => isset($value[9]) ? $this->sma->formatDecimal( trim($value[9]) ): '',
+                        'cost' => isset($value[8]) ? $this->sma->formatDecimal(trim($value[8])) : '',
+                        'price' => isset($value[9]) ? $this->sma->formatDecimal(trim($value[9])) : '',
                         'alert_quantity' => isset($value[10]) ? trim($value[10]) : 2,
                         'tax_rate' => isset($value[11]) ? trim($value[11]) : '',
                         'tax_method' => isset($value[12]) ? (trim($value[12]) == 'exclusive' ? 1 : 0) : '',
@@ -4067,23 +4067,24 @@ class Products extends MY_Controller
         return $zpl;
     }
 
-    public function getNgrokUrl() {
+    public function getNgrokUrl()
+    {
         // Try to fetch the ngrok tunnels via the ngrok API
         $ch = curl_init('http://localhost:4040/api/tunnels');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    
+
         $response = curl_exec($ch);
-      //  var_dump($response);exit;
+        //  var_dump($response);exit;
         if ($response === false) {
             // If the request failed, ngrok is probably not running
-           // echo "Ngrok is not running, starting ngrok...\n";
+            // echo "Ngrok is not running, starting ngrok...\n";
             exec('ngrok http 5000 > /dev/null &');  // Start ngrok in the background
             sleep(2);  // Give ngrok some time to initialize
             return getNgrokUrl();  // Recursive call to try getting the URL again
         }
-    
+
         $data = json_decode($response, true);
-    
+
         if (isset($data['tunnels']) && !empty($data['tunnels'])) {
             foreach ($data['tunnels'] as $tunnel) {
                 if ($tunnel['proto'] === 'http' || $tunnel['proto'] === 'https') {  // Find the HTTP tunnel
@@ -4091,7 +4092,7 @@ class Products extends MY_Controller
                 }
             }
         }
-    
+
         return null;
     }
     public function print_barcodes($product_id = null)
@@ -4099,8 +4100,8 @@ class Products extends MY_Controller
         $this->sma->checkPermissions('barcode', true);
         $s = isset($_POST['product']) ? sizeof($_POST['product']) : 0;
         if ($s > 0) {
-            $purchase_id =  $this->input->post('purchase_id') ;
-            $transfer_id =  $this->input->post('transfer_id') ;
+            $purchase_id = $this->input->post('purchase_id');
+            $transfer_id = $this->input->post('transfer_id');
             // print barcodes
             $s = isset($_POST['product']) ? sizeof($_POST['product']) : 0;
             if ($s < 1) {
@@ -4108,23 +4109,23 @@ class Products extends MY_Controller
                 admin_redirect('products/print_barcodes');
             }
 
-            if(isset($_POST['pharmacy_id']) && !empty($_POST['pharmacy_id'])) {
+            if (isset($_POST['pharmacy_id']) && !empty($_POST['pharmacy_id'])) {
                 $location_id = $_POST['pharmacy_id'];
                 $location_details = $this->site->getWarehouseByID($location_id);
 
-                if($location_details->printer_location && $location_details->printer_location != NULL){
+                if ($location_details->printer_location && $location_details->printer_location != NULL) {
                     $printer_location = $location_details->printer_location;
-                    $print_method     = $location_details->print_method;
-                    $printer_name     = $location_details->printer_name;
-                }else{
+                    $print_method = $location_details->print_method;
+                    $printer_name = $location_details->printer_name;
+                } else {
                     $this->session->set_flashdata('error', lang('This location does not support printing'));
                     admin_redirect('products/print_barcodes');
                 }
-            }else{
+            } else {
                 $this->session->set_flashdata('error', lang('No Print Location Selected'));
                 admin_redirect('products/print_barcodes');
             }
-            
+
             // $ngrokUrl = $this->getNgrokUrl();
             // if ($ngrokUrl) {
             //         echo "Ngrok URL: " . $ngrokUrl . "\n";
@@ -4132,24 +4133,24 @@ class Products extends MY_Controller
             //         $ngrokUrl = '';
             //         echo "No HTTP tunnel found.\n";
             //     }
-  
+
             $zplCode = '';
             for ($m = 0; $m < $s; $m++) {
                 $item_id = $_POST['product'][$m];
                 //get item details from purchase
                 //$itemDetail = $this->purchases_model->getItemByID($item_id);
-                $itemDetail = $this->products_model->getProductsBarcodeItems('','','',$item_id);
+                $itemDetail = $this->products_model->getProductsBarcodeItems('', '', '', $item_id);
                 $itemDetail = $itemDetail[0];
                 $pid = $itemDetail->product_id;
                 $quantity = abs($_POST['quantity'][$item_id]);
 
                 //$product = $this->products_model->getProductWithCategory($pid);
-                
-                if($_POST['purchase_id']){
+
+                if ($_POST['purchase_id']) {
                     $product = $this->products_model->getProductWithPrice($purchase_id, 'purchase', $pid);
-                }else if($_POST['transfer_id']){
+                } else if ($_POST['transfer_id']) {
                     $product = $this->products_model->getProductWithPrice($transfer_id, 'transfer_out', $pid);
-                }else{
+                } else {
                     $product = $this->products_model->getProductWithCategory($pid);
                 }
                 $product->price = $this->input->post('check_promo') ? ($product->promotion ? $product->promo_price : $product->price) : $product->price;
@@ -4167,18 +4168,18 @@ class Products extends MY_Controller
 
                 $productPrice = $product->price + $pr_item_tax;
                 $productName = $product->name;//substr($product->name, 0, 80); 
-                $avzCode = $itemDetail->avz_item_code ;//$this->products_model->getProductAvzCode($pid, $purchase_id);
+                $avzCode = $itemDetail->avz_item_code;//$this->products_model->getProductAvzCode($pid, $purchase_id);
 
                 $maxLength = 30;
                 $line1 = substr($productName, 0, $maxLength);
                 $line2 = strlen($productName) > $maxLength ? substr($productName, $maxLength) : '';
 
-                if($printer_name == 'zebra'){
+                if ($printer_name == 'zebra') {
                     // Generate the ZPL code
                     for ($i = 1; $i <= ceil($quantity); $i++) {
 
-                        if(isset($_POST['print'])){
-                            $zplCode .= "^XA\n"; 
+                        if (isset($_POST['print'])) {
+                            $zplCode .= "^XA\n";
                             $filePath = FCPATH . 'assets' . DIRECTORY_SEPARATOR . 'new_label.zpl';
                             $zplCode .= "^FO20,20^A0N,15,15^FD{$line1}^FS\n";
 
@@ -4197,22 +4198,22 @@ class Products extends MY_Controller
                                 . "^FO200,135\n"                            // Position price on the right side
                                 . "^A0N,20,20\n"                            // Font size for price text
                                 . "^FDSR{$productPrice}^FS\n";  // Price (formatted)
-                                //. "^FD{$this->sma->formatMoney($productPrice)}^FS\n";
-                                
-                            
+                            //. "^FD{$this->sma->formatMoney($productPrice)}^FS\n";
+
+
                             $zplCode .= "^XZ\n";
                         }
                     }
-                } else if($printer_name == 'zebra_zd230') {
+                } else if ($printer_name == 'zebra_zd230') {
 
                     for ($i = 1; $i <= ceil($quantity); $i++) {
 
-                        if(isset($_POST['print'])){
+                        if (isset($_POST['print'])) {
 
-                        //$zplCode .= "^XA^FO280,20^ADN,25,10^FDJarir Alkhair Pharmacy^FS^FO320,50^ADN,25,10^FD".$zpl_patient_name."^FS^FO300,80^ADN,25,10^FD".$key."^FS^FO300,120^ADN,25,10^FD".$value."^FS^XZ\n";
-    
-                            $zplCode .= "^XA\n"; 
-                            
+                            //$zplCode .= "^XA^FO280,20^ADN,25,10^FDJarir Alkhair Pharmacy^FS^FO320,50^ADN,25,10^FD".$zpl_patient_name."^FS^FO300,80^ADN,25,10^FD".$key."^FS^FO300,120^ADN,25,10^FD".$value."^FS^XZ\n";
+
+                            $zplCode .= "^XA\n";
+
                             $zplCode .= "^FO280,20^ADN,15,15^FD{$line1}^FS\n";
 
                             // Add second line if it exists
@@ -4230,24 +4231,24 @@ class Products extends MY_Controller
                                 . "^FO350,135\n"                            // Position price on the right side
                                 . "^ADN,20,20\n"                            // Font size for price text
                                 . "^FDSR{$productPrice}^FS\n";  // Price (formatted)
-                                //. "^FD{$this->sma->formatMoney($productPrice)}^FS\n";
-                                
-                            
+                            //. "^FD{$this->sma->formatMoney($productPrice)}^FS\n";
+
+
                             $zplCode .= "^XZ\n";
                         }
                     }
 
-                } else if($printer_name == 'tsc'){
+                } else if ($printer_name == 'tsc') {
                     // Generate the TSPL code
                     for ($i = 1; $i <= ceil($quantity); $i++) {
                         if (isset($_POST['print'])) {
                             $zplCode = "";
-                            
+
                             // Initialize the printer
                             $zplCode .= "SIZE 50 mm, 30 mm\n";  // Adjust size as per your label
                             $zplCode .= "GAP 3 mm, 0 mm\n";    // Set the gap between labels
                             $zplCode .= "CLS\n";               // Clear the buffer
-                            
+
                             // Print the first text line
                             $zplCode .= "TEXT 20, 20, \"3\", 0, 1, 1, \"{$line1}\"\n";
 
@@ -4270,38 +4271,38 @@ class Products extends MY_Controller
                         }
                     }
 
-                }else if($printer_name == 'hptest'){
+                } else if ($printer_name == 'hptest') {
                     if (isset($_POST['print'])) {
                         $zplCode = "This is test print job";
                     }
                 }
             }
-           
+
             // echo "<pre>" . htmlspecialchars($zplCode) . "</pre>";
             // exit;
-            
 
-            if(isset($_POST['print']) && $printer_location != 'script'){
+
+            if (isset($_POST['print']) && $printer_location != 'script') {
                 $url = $printer_location;
                 $ch = curl_init($url);
 
-            
+
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                 curl_setopt($ch, CURLOPT_POST, true);
                 curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/octet-stream'));
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $zplCode);
 
-                
+
                 $response = curl_exec($ch);
                 $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
-            
+
                 curl_close($ch);
-            }else if($printer_location == 'script'){
+            } else if ($printer_location == 'script') {
                 $this->products_model->addPrintJob($zplCode, $location_details);
             }
 
-          
+
             if ($http_status == 200) {
                 //echo "Print request successful: " . $response;
             } else {
@@ -4322,23 +4323,23 @@ class Products extends MY_Controller
             //         $items = $this->products_model->getTransferItems($transfer_id);
             //     }
 
-            if ( $this->input->get('item_code') || $this->input->get('purchase') || $this->input->get('transfer') || $product_id) {
+            if ($this->input->get('item_code') || $this->input->get('purchase') || $this->input->get('transfer') || $product_id) {
                 $purchase_id = $this->input->get('purchase', true);
                 $transfer_id = $this->input->get('transfer', true);
                 $item_code = $this->input->get('item_code', true);
                 $warehouse_id = $this->input->get('pharmacy', true);
 
-                if($purchase_id){
+                if ($purchase_id) {
                     $items = $this->products_model->getProductsBarcodeItems($purchase_id, $item_code, $warehouse_id);
-                }else if($transfer_id){
+                } else if ($transfer_id) {
                     $items = $this->products_model->getProductsBarcodeItemsForTransfer($transfer_id, $item_code, $warehouse_id);
-                }else {
+                } else {
                     //echo 'productId: '.$product_id;
                     $pr_row = $this->products_model->getProductByID($product_id);
                     //echo '<pre>';print_r($pr_row);exit;
                     $items = $this->products_model->getProductsBarcodeItems('', $pr_row->code, $warehouse_id);
                 }
-                
+
                 if ($items) {
                     foreach ($items as $item) {
                         if ($row = $this->products_model->getProductByID($item->product_id)) {
@@ -4348,14 +4349,17 @@ class Products extends MY_Controller
                                     $selected_variants[$variant->id] = isset($pr[$row->id]['selected_variants'][$variant->id]) && !empty($pr[$row->id]['selected_variants'][$variant->id]) ? 1 : ($variant->id == $item->option_id ? 1 : 0);
                                 }
                             }
-                            $pr[] = ['id' => $item->id, 'label' => $row->name . ' (' . $row->code . ')',
-                                     'code' => $row->code, 
-                                     'name' => $row->name, 
-                                     'price' => $row->price, 
-                                     'qty' => $item->quantity, 
-                                     'avz_item_code' => $item->avz_item_code,
-                                     'batchno' => $item->batchno,
-                                    'expiry' => $item->expiry];
+                            $pr[] = [
+                                'id' => $item->id,
+                                'label' => $row->name . ' (' . $row->code . ')',
+                                'code' => $row->code,
+                                'name' => $row->name,
+                                'price' => $row->price,
+                                'qty' => $item->quantity,
+                                'avz_item_code' => $item->avz_item_code,
+                                'batchno' => $item->batchno,
+                                'expiry' => $item->expiry
+                            ];
                         }
                     }
                     $this->data['message'] = lang('products_added_to_list');
@@ -4363,10 +4367,10 @@ class Products extends MY_Controller
             }
 
 
-            $this->data['purchase_id'] = $this->input->get('purchase', true) ;
-            $this->data['transfer_id'] = $this->input->get('transfer', true) ;
-            $this->data['item_code'] = $this->input->get('item_code', true) ;
-            $this->data['pharmacy'] = $this->input->get('pharmacy', true) ;
+            $this->data['purchase_id'] = $this->input->get('purchase', true);
+            $this->data['transfer_id'] = $this->input->get('transfer', true);
+            $this->data['item_code'] = $this->input->get('item_code', true);
+            $this->data['pharmacy'] = $this->input->get('pharmacy', true);
             $this->data['warehouses'] = $this->site->getAllWarehouses();
             $this->data['items'] = isset($pr) ? json_encode($pr) : false;
             $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
@@ -5071,7 +5075,8 @@ class Products extends MY_Controller
         $this->load->view($this->theme . 'products/view_count', $this->data);
     }
 
-    public function get_item_by_gtin_batch_expiry(){
+    public function get_item_by_gtin_batch_expiry()
+    {
         $gtin = $this->input->get('gtin');
         $batch = $this->input->get('batch');
         $expiry = $this->input->get('expiry');
@@ -5102,7 +5107,7 @@ class Products extends MY_Controller
             if (count($expiry_parts) === 2) {
                 $expiry_month = $expiry_parts[0];
                 $expiry_year = $expiry_parts[1];
-    
+
                 // Use YEAR() and MONTH() functions to compare with the database expiry_date
                 $this->db->where("YEAR(im.expiry_date)", $expiry_year);
                 $this->db->where("MONTH(im.expiry_date)", $expiry_month);
@@ -5186,7 +5191,7 @@ class Products extends MY_Controller
                             im.product_id,
                             pr.name as product_name, im.batch_number as batchno, im.expiry_date as expiry,
                             pr.tax_rate, pr.type, pr.unit, pr.code as product_code, im.avz_item_code,
-                            (SUM(CASE WHEN im.type = 'customer_return' AND im.customer_id = ".$customer_id." THEN -1*im.quantity ELSE 0 END) - SUM(CASE WHEN im.type IN ('sale', 'pos') AND im.customer_id = ".$customer_id." THEN im.quantity ELSE 0 END) ) AS total_quantity", false);
+                            (SUM(CASE WHEN im.type = 'customer_return' AND im.customer_id = " . $customer_id . " THEN -1*im.quantity ELSE 0 END) - SUM(CASE WHEN im.type IN ('sale', 'pos') AND im.customer_id = " . $customer_id . " THEN im.quantity ELSE 0 END) ) AS total_quantity", false);
             $this->db->from('sma_inventory_movements im');
             $this->db->join('sma_products pr', 'pr.id = im.product_id', 'left');
             $this->db->where('im.location_id', $warehouse_id);
@@ -5322,7 +5327,7 @@ class Products extends MY_Controller
         $warehouse_id = $this->input->get('warehouse_id'); // Optionally filter by warehouse if needed
         $customer_id = $this->input->get('customer_id');
         //echo json_encode(['status' => 'error', 'message' => $customer_id.'-'.$item_id.'-'.$warehouse_id]);
-       // return;
+        // return;
         // Validate that avz_item_code is provided
         if (!$item_id) {
             echo json_encode(['status' => 'error', 'message' => 'No item code provided']);
@@ -5338,7 +5343,7 @@ class Products extends MY_Controller
                             im.product_id,
                             pr.name as product_name, im.batch_number as batchno, im.expiry_date as expiry,
                             pr.tax_rate, pr.type, pr.unit, pr.code as product_code, im.avz_item_code,
-                            (SUM(CASE WHEN im.type = 'customer_return' AND im.customer_id = ".$customer_id." THEN -1*im.quantity ELSE 0 END) - SUM(CASE WHEN im.type IN ('sale','pos') AND im.customer_id = ".$customer_id." THEN im.quantity ELSE 0 END) ) AS total_quantity", false);
+                            (SUM(CASE WHEN im.type = 'customer_return' AND im.customer_id = " . $customer_id . " THEN -1*im.quantity ELSE 0 END) - SUM(CASE WHEN im.type IN ('sale','pos') AND im.customer_id = " . $customer_id . " THEN im.quantity ELSE 0 END) ) AS total_quantity", false);
             $this->db->from('sma_inventory_movements im');
             $this->db->join('sma_products pr', 'pr.id = im.product_id', 'inner');
             $this->db->where('im.location_id', $warehouse_id);
@@ -5447,5 +5452,82 @@ class Products extends MY_Controller
             echo json_encode(['status' => 'error', 'message' => 'No items found for this item code']);
         }
 
+    }
+
+    public function add_qr_products()
+    {
+        if ($this->input->post()) {
+
+            $this->form_validation->set_rules('category', 'Category', 'required');
+
+            $product_names = $this->input->post('product_name'); // array
+            $gtins = $this->input->post('gtin');                 // array
+            $prices = $this->input->post('price');               // array
+            $costs = $this->input->post('cost');                 // array
+            $taxes = $this->input->post('tax');                   // array
+            $category_id = $this->input->post('category');
+            $subcategory_id = $this->input->post('subcategory');        // single value
+
+            // Prepare insert data per product
+            $data_to_insert = [];
+
+            for ($i = 0; $i < count($product_names); $i++) {
+                // Optional: skip empty product names or gtin
+                if (empty($product_names[$i]) || empty($gtins[$i])) {
+                    continue;
+                }
+
+                if ($this->products_model->existsByGTIN($gtins[$i])) {
+                    // Skip this product because GTIN exists
+                    continue;
+                }
+
+                $data_to_insert[] = [
+                    'name' => $product_names[$i],
+                    'code' => $gtins[$i],
+                    'price' => $prices[$i] ?: 0,
+                    'cost' => $costs[$i] ?: 0,
+                    'tax_rate' => $taxes[$i] ?: 0,
+                    'category_id' => $subcategory_id > 0 ? $subcategory_id :  $category_id
+                ];
+            }
+
+            // Insert into DB, assuming you have Product_model with insert_batch method
+            $this->products_model->insert_batch($data_to_insert);
+        }
+
+        $this->data['categories'] = $this->site->getAllCategories();
+
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('products'), 'page' => lang('products')], ['link' => '#', 'page' => lang('add_product')]];
+        $meta = ['page_title' => lang('add_product'), 'bc' => $bc];
+        $this->page_construct('products/add_qr_products', $meta, $this->data);
+    }
+
+     public function master_data_search() {
+        $q = $this->input->get('q');
+
+        if (!$q) {
+            echo json_encode([]);
+            return;
+        }
+
+        $this->db->select('id,trade_name, public_price');
+        $this->db->from('sma_master_data');
+        $this->db->like('trade_name', $q);
+        $this->db->limit(20);
+
+        $query = $this->db->get();
+
+        $results = [];
+        foreach ($query->result() as $row) {
+            $results[] = [
+                'id' => $row->id,
+                'trade_name' => $row->trade_name,
+                'public_price' => $row->public_price
+            ];
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($results);
     }
 }
