@@ -44,6 +44,12 @@
                             <span class="text"> <?= lang('add_product'); ?></span>
                         </a>
                     </li>
+                      <li id="products_add_qr_products">
+                                        <a class="submenu" href="<?= admin_url('products/add_qr_products'); ?>">
+                                            <i class="fa fa-plus-circle"></i>
+                                            <span class="text"> <?= lang('Add QR Code Products'); ?></span>
+                                        </a>
+                                    </li>
                     <li id="products_import_csv">
                         <a class="submenu" href="<?= admin_url('products/import_csv'); ?>">
                             <i class="fa fa-file-text"></i>
