@@ -1037,6 +1037,8 @@ function loadItems() {
 		// 	return [parseInt(o.order)];
 		// }).reverse();
 
+		console.log(site.settings);
+
 		var serial = 1;
 		var order_no = new Date().getTime();
 		/**
@@ -1253,6 +1255,9 @@ function loadItems() {
 
 			var row_no = item.id;
 
+			let displayName = (site.settings.site_name !== "Jarir Alkhair") ? item_code + "-" + item_name: item_name;
+			let expiryWidth = ( site.settings.site_name !== "Jarir Alkhair") ? "100%" : "80px"; 
+
 			var newTr = $(
 				'<tr id="row_' +
 					row_no +
@@ -1300,10 +1305,8 @@ function loadItems() {
 				warehouse_shelf +
 				'"><span class="sname" id="name_' +
 				row_no +
-				'">' +
-				item_code +
-				" - " +
-				item_name +
+				'">' 
+				+ displayName +
 				(sel_opt != "" ? " (" + sel_opt + ")" : "") +
 				' <span class="label label-default">' +
 				item_supplier_part_no +
@@ -1384,7 +1387,7 @@ function loadItems() {
 
 			if (site.settings.product_expiry == 1) {
 				tr_html +=
-					'<td><input class="form-control date rexpiry" name="expiry[]" type="text" value="' +
+					'<td><input style="width:'+expiryWidth+'" class="form-control date rexpiry" name="expiry[]" type="text" value="' +
 					item_expiry +
 					'" data-id="' +
 					row_no +

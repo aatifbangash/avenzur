@@ -4214,21 +4214,22 @@ class Products extends MY_Controller
 
                             $zplCode .= "^XA\n";
 
-                            $zplCode .= "^FO280,20^ADN,15,15^FD{$line1}^FS\n";
+                            $zplCode .= "^FO280,20^ADN,15,15^FDJarir Alkhair Pharmacy^FS\n";
+                            $zplCode .= "^FO280,45^ADN,15,15^FD{$line1}^FS\n";
 
                             // Add second line if it exists
                             if ($line2) {
-                                $zplCode .= "^FO280,45^A0N,15,15^FD{$line2}^FS\n";
+                                $zplCode .= "^FO280,60^A0N,15,15^FD{$line2}^FS\n";
                             }
                             $zplCode .=
-                                "^FO280,60\n"                               // Position barcode
+                                "^FO280,90\n"                               // Position barcode
                                 . "^BY2,2,50\n"                             // Bar width, space between bars, height
                                 . "^BCN,50,Y,N,N\n"                         // Code 128 Barcode, 50 dots tall, HRI off
                                 . "^FD{$avzCode}^FS\n"                   // GTIN Number (dynamic)
-                                . "^FO280,135\n"                             // Position price below the barcode
-                                . "^ADN,20,20\n"                            // Font size for price text
+                               // . "^FO280,135\n"                             // Position price below the barcode
+                                //. "^ADN,20,20\n"                            // Font size for price text
                                 //. "^FDitem#{$product->item_code}^FS\n"               // Item Number (dynamic)
-                                . "^FO350,135\n"                            // Position price on the right side
+                                . "^FO350,140\n"                            // Position price on the right side
                                 . "^ADN,20,20\n"                            // Font size for price text
                                 . "^FDSR{$productPrice}^FS\n";  // Price (formatted)
                             //. "^FD{$this->sma->formatMoney($productPrice)}^FS\n";
