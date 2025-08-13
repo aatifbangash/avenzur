@@ -1684,12 +1684,13 @@ function parse_scale_barcode(barcode) {
 const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(5, Decimal.ROUND_DOWN);
 
 function calculatePurchaseInventory(item) {
+    console.log(item)
     // Convert all inputs to Decimal and ensure precision
     const cost_price = toTwoDecimals(item.cost);
     const sale_price = toTwoDecimals(item.sale_price);
     const base_quantity = new Decimal(item.qty);
     const bonus = new Decimal(item.bonus);
-    const tax_rate = toTwoDecimals(item.tax_rate);
+    const tax_rate = toTwoDecimals(item.tax_rate !== null ? item.tax_rate : 0);
     const discount1 = toTwoDecimals(item.dis1);
     const discount2 = toTwoDecimals(item.dis2);
 

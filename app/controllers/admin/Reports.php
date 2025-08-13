@@ -5758,4 +5758,17 @@ class Reports extends MY_Controller
            $this->page_construct('reports/close_register_details', $meta, $this->data);
         }
     }
+
+     public function get_register_ids() {
+        $pharmacy_id = $this->input->get('pharmacyId');
+        $pharmacist_id = $this->input->get('closedBy');
+        $from_date = $this->input->get('fromDate');
+        $to_date = $this->input->get('toDate');
+
+        $registers = $this->pos_model->search_register_ids($pharmacy_id, $pharmacist_id, $from_date, $to_date);
+
+        echo json_encode($registers);
+    }
+
+
 }

@@ -1872,5 +1872,28 @@ $q = $this->db->query($sql);
 
     }
 
+    public function search_register_ids($pharmacy_id, $pharmacist_id, $from_date, $to_date) {
+        $this->db->select('id,register_id, date as open_date_time, closed_at as close_date_time');
+        $this->db->from('sma_pos_register');
+
+        if (!empty($pharmacy_id)) {
+            $this->db->where('pharmacy_id', $pharmacy_id);
+        }
+        if (!empty($pharmacist_id)) {
+            $this->db->where('closed_by', $pharmacist_id);
+        }
+        if (!empty($from_date) && !empty($to_date)) {
+            $from_date = DateTime::createFromFormat('d/m/Y', $from_date)->format('Y-m-d');
+            $to_date   = DateTime::createFromFormat('d/m/Y', $to_date)->format('Y-m-d');
+            
+            $this->db->where('DATE(closed_at) >=', $from_date);
+            $this->db->where('DATE(closed_at) <=', $to_date);
+        }
+
+        $query = $this->db->get();
+        //echo $this->db->last_query();
+        return $query->result();
+    }
+
 
 }
