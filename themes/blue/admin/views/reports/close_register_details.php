@@ -107,8 +107,31 @@
                             }?>
                         </div>
 
+                         <div class="col-md-3">                            
+                                Register Numbers
+                                <div class="form-group">
+                                    <select name="registerId" id="registerId" class="form-control"></select>        
+                            </div>
+                             
+                        </div>
 
-                        <div class="col-md-4">
+                          <div class="col-md-2">                            
+                                Register Open Date&Time
+                                <div class="form-group">
+                                    <input type="text" class="form-control" name="register_open_date_time" id="register_open_date_time" readonly value="" >       
+                            </div>
+                             
+                        </div>
+
+                          <div class="col-md-2">                            
+                                Register Close Date&Time
+                                <div class="form-group">
+                                    <input type="text" class="form-control" name="register_close_date_time" id="register_close_date_time" readonly value="" >       
+                            </div>
+                             
+                        </div>
+
+                        <div class="col-md-2">
                             <div class="from-group">
                                 <button type="submit" style="margin-top: 28px;" class="btn btn-primary" id="load_report"><?= lang('Load Report') ?></button>
                             </div>
@@ -235,3 +258,68 @@
         </div>
     </div> 
 </div>
+
+<script>
+    let registerOpenCloseDateTime = {};
+    function loadRegisterIds() {
+    let registerDropdown = $('#registerId');
+    
+    let fromDate = $('#fromdate').val();
+    let toDate = $('#todate').val();
+    let pharmacyId = $('#warehouse_id').val();
+    let pharmacistId = $('#pharmacist_id').val();
+
+ registerDropdown.val(null).trigger('change');
+ registerDropdown.empty();
+    if (fromDate && toDate && pharmacyId && pharmacistId) {
+        $.ajax({
+            url: '<?=admin_url('reports/get_register_ids')?>',
+            type: 'GET',
+            data: {
+                fromDate: fromDate,
+                toDate: toDate,
+                pharmacyId: pharmacyId,
+                closedBy: pharmacistId
+            },
+            dataType: "json",
+            success: function(data) {
+                console.log(data);
+               
+              
+                if (data.length > 0) {
+                     registerDropdown.val(null).trigger('change');
+                    registerDropdown.append(`<option value="">Select Register Number</option>`);
+                     data.forEach(function(item) {
+                         registerOpenCloseDateTime[item.id] =  { 
+                            register_open_date_time : item.open_date_time,
+                            register_close_date_time : item.close_date_time
+                         };
+                            registerDropdown.append(`<option value="${item.id}">${item.register_id}</option>`);
+                        });
+                } else {
+                    registerDropdown.append('<option>No registers found</option>');
+                    $('#register_open_date_time').val('');
+                    $('#register_close_date_time').val('');
+                    registerDropdown.val(null).trigger('change');
+                   
+                }
+            }
+        });
+    }
+}
+
+$('#registerId').on('change', function() {
+    const selectedId = $(this).val();
+    if (registerOpenCloseDateTime[selectedId]) {
+        $('#register_open_date_time').val(registerOpenCloseDateTime[selectedId].register_open_date_time);
+        $('#register_close_date_time').val(registerOpenCloseDateTime[selectedId].register_close_date_time);
+    } else {
+        $('#register_open_date_time').val('');
+        $('#register_close_date_time').val('');
+    }
+});
+
+console.log(registerOpenCloseDateTime);
+$('#fromdate, #todate, #warehouse_id, #pharmacist_id').change(loadRegisterIds);
+
+</script>
