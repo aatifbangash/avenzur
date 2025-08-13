@@ -17,6 +17,9 @@
 
     });
 </script>
+<?php 
+$registerIdsJson = '';
+?>
 <?php if($viewtype=='pdf'){ ?>
     <link href="<?= $assets ?>styles/pdf/pdf.css" rel="stylesheet"> 
   <?php  } ?>
@@ -108,30 +111,41 @@
                         </div>
 
                          <div class="col-md-3">                            
-                                Register Numbers
+                              <label>  Register Numbers </label>
                                 <div class="form-group">
-                                    <select name="registerId" id="registerId" class="form-control"></select>        
+                                    <select name="registerId" id="registerId" class="form-control">
+                                        <?php if( isset($registerIds) && !empty($registerIds) ) {
+                                           ?>
+                                        <option value="">Please select number</option>
+                                        <?php foreach($registerIds as $key => $val) {
+                                           
+                                            ?>
+                                            <option value="<?php echo $val->id;?>" <?php if($val->id == $register_id) {?> selected="selected" <?php }?>> <?php echo $val->register_id;?> </option>
+                                        <?php }
+                                        $registerIdsJson = json_encode($registerOpenCloseDateTime);
+                                     }?>
+                                    </select>        
                             </div>
                              
                         </div>
 
-                          <div class="col-md-2">                            
-                                Register Open Date&Time
+                          <div class="col-md-3">                            
+                                <label>Register Open Date&Time</label>
                                 <div class="form-group">
-                                    <input type="text" class="form-control" name="register_open_date_time" id="register_open_date_time" readonly value="" >       
+                                    <input type="text" class="form-control" name="register_open_date_time" id="register_open_date_time" readonly value="<?php echo isset($register_open_date_time) ? $register_open_date_time : ''; ?>" >       
                             </div>
                              
                         </div>
 
-                          <div class="col-md-2">                            
-                                Register Close Date&Time
+                          <div class="col-md-3">                            
+                               <label> Register Close Date&Time </label>
                                 <div class="form-group">
-                                    <input type="text" class="form-control" name="register_close_date_time" id="register_close_date_time" readonly value="" >       
+                                    <input type="text" class="form-control" name="register_close_date_time" id="register_close_date_time" readonly value="<?php echo isset($register_close_date_time) ? $register_close_date_time : ''; ?>" >       
                             </div>
                              
                         </div>
 
-                        <div class="col-md-2">
+                        <div class="col-md-2" >
                             <div class="from-group">
                                 <button type="submit" style="margin-top: 28px;" class="btn btn-primary" id="load_report"><?= lang('Load Report') ?></button>
                             </div>
@@ -188,7 +202,7 @@
                         </h4></td>
                 </tr> -->
                 <tr>
-                    <td style="border-bottom: 1px solid #EEE;"><h4><?= lang('cc_sale'); ?>:</h4></td>
+                    <td style="border-bottom: 1px solid #EEE;"><h4>Network Sales:</h4></td>
                     <td style="text-align:right;border-bottom: 1px solid #EEE;"><h4>
                             <span><?= $ccsales->total ? $ccsales->total : '0.00'; ?></span>
                         </h4></td>
@@ -259,8 +273,9 @@
     </div> 
 </div>
 
+
 <script>
-    let registerOpenCloseDateTime = {};
+
     function loadRegisterIds() {
     let registerDropdown = $('#registerId');
     
@@ -290,10 +305,7 @@
                      registerDropdown.val(null).trigger('change');
                     registerDropdown.append(`<option value="">Select Register Number</option>`);
                      data.forEach(function(item) {
-                         registerOpenCloseDateTime[item.id] =  { 
-                            register_open_date_time : item.open_date_time,
-                            register_close_date_time : item.close_date_time
-                         };
+                       
                             registerDropdown.append(`<option value="${item.id}">${item.register_id}</option>`);
                         });
                 } else {
@@ -308,18 +320,51 @@
     }
 }
 
+// $('#registerId').on('change', function() {
+//     const selectedId = $(this).val();
+//     console.log("ids here");
+//     console.log(registerOpenCloseDateTime);
+//     if (registerOpenCloseDateTime[selectedId]) {
+//         $('#register_open_date_time').val(registerOpenCloseDateTime[selectedId].register_open_date_time);
+//         $('#register_close_date_time').val(registerOpenCloseDateTime[selectedId].register_close_date_time);
+//     } else {
+//         $('#register_open_date_time').val('');
+//         $('#register_close_date_time').val('');
+//     }
+// });
+
 $('#registerId').on('change', function() {
     const selectedId = $(this).val();
-    if (registerOpenCloseDateTime[selectedId]) {
-        $('#register_open_date_time').val(registerOpenCloseDateTime[selectedId].register_open_date_time);
-        $('#register_close_date_time').val(registerOpenCloseDateTime[selectedId].register_close_date_time);
-    } else {
+
+    if (!selectedId) {
         $('#register_open_date_time').val('');
         $('#register_close_date_time').val('');
+        return;
     }
+
+    $.ajax({
+        url: '<?=admin_url('reports/get_register_id_dates')?>', // replace with your API
+        type: 'GET',
+        data: { register_id: selectedId },
+        dataType: 'json',
+        success: function(response) {
+            console.log(response);
+            if (response && response.open_date_time && response.close_date_time) {
+                $('#register_open_date_time').val(response.open_date_time);
+                $('#register_close_date_time').val(response.close_date_time);
+            } else {
+                $('#register_open_date_time').val('');
+                $('#register_close_date_time').val('');
+            }
+        },
+        error: function() {
+            $('#register_open_date_time').val('');
+            $('#register_close_date_time').val('');
+        }
+    });
 });
 
-console.log(registerOpenCloseDateTime);
+
 $('#fromdate, #todate, #warehouse_id, #pharmacist_id').change(loadRegisterIds);
 
 </script>

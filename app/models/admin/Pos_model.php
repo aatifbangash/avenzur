@@ -969,6 +969,14 @@ class Pos_model extends CI_Model
     //    ;
     // ";
 
+       $dateWhere =  " AND DATE(payments.date) >= '".trim($date)."'
+            AND DATE(payments.date) <= '".trim($end_date)."' " ;
+        if( !empty($this->input->post('registerId'))  && $this->input->post('registerId') > 0 )
+        {
+            $dateWhere =  " AND payments.date >= '".trim($this->input->post('register_open_date_time'))."'
+            AND payments.date <= '".trim($this->input->post('register_close_date_time'))."' " ;
+        } 
+
       $sql = "
         SELECT 
             SUM( CASE
@@ -986,8 +994,7 @@ class Pos_model extends CI_Model
         WHERE 
             payments.type = 'received' 
             AND payments.paid_by = 'cash'
-            AND DATE(payments.date) >= '".trim($date)."'
-            AND DATE(payments.date) <= '".trim($end_date)."'
+            ".$dateWhere."
             AND payments.created_by IN (".$user_id.")
        ;
     ";
@@ -1026,6 +1033,15 @@ class Pos_model extends CI_Model
         // if ($q->num_rows() > 0) {
         //     return $q->row();
         // }
+        
+        
+        $dateWhere =  " AND DATE(payments.date) >= '".trim($date)."'
+            AND DATE(payments.date) <= '".trim($end_date)."' " ;
+        if( !empty($this->input->post('registerId'))  && $this->input->post('registerId') > 0 )
+        {
+            $dateWhere =  " AND payments.date >= '".trim($this->input->post('register_open_date_time'))."'
+            AND payments.date <= '".trim($this->input->post('register_close_date_time'))."' " ;
+        } 
 
         $sql = "
         SELECT 
@@ -1037,14 +1053,13 @@ class Pos_model extends CI_Model
         WHERE 
             payments.type = 'received' 
             AND payments.paid_by = 'card'
-            AND DATE(payments.date) >= '".trim($date)."'
-            AND DATE(payments.date) <= '".trim($end_date)."'
+           ".$dateWhere."
             AND payments.created_by IN (".$user_id.")
     ";
 
         $q = $this->db->query($sql);
         $result = array();
-        //echo $this->db->last_query();
+       //cho $this->db->last_query();
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $result = $row;
@@ -1212,6 +1227,14 @@ class Pos_model extends CI_Model
             $end_date = date('Y-m-d');
         }
 
+        $dateWhere =  "   AND DATE(payments.date) >= '".trim($date)."'  
+        AND DATE(payments.date) <= '".trim($end_date)."' " ;
+        if( !empty($this->input->post('registerId'))  && $this->input->post('registerId') > 0 )
+        {
+            $dateWhere =  " AND payments.date >= '".trim($this->input->post('register_open_date_time'))."'
+            AND payments.date <= '".trim($this->input->post('register_close_date_time'))."' " ;
+        } 
+
         $sql = "SELECT 
             SUM(sp.total) AS total, 
             SUM(sp.paid) AS paid,
@@ -1227,8 +1250,7 @@ class Pos_model extends CI_Model
                 sma_returns returns ON returns.id = payments.return_id
             WHERE 
                 payments.type = 'completed' 
-                AND DATE(payments.date) >= '".trim($date)."'  
-                AND DATE(payments.date) <= '".trim($end_date)."' 
+                ".$dateWhere."
                 AND payments.created_by IN (".$user_id.")
             GROUP BY 
                 payments.return_id
@@ -1260,28 +1282,35 @@ class Pos_model extends CI_Model
         // $qu = $this->db->get_compiled_select('payments');
         // $q = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
 
+      $dateWhere =  "   AND DATE(payments.date) >= '".trim($date)."'  
+        AND DATE(payments.date) <= '".trim($end_date)."' " ;
+        if( !empty($this->input->post('registerId'))  && $this->input->post('registerId') > 0 )
+        {
+            $dateWhere =  " AND payments.date >= '".trim($this->input->post('register_open_date_time'))."'
+            AND payments.date <= '".trim($this->input->post('register_close_date_time'))."' " ;
+        } 
+
         $sql = "SELECT 
-    SUM(sp.total) AS total, 
-    SUM(sp.paid) AS paid,
-    COUNT(sp.id) AS total_sales
-FROM (
-    SELECT 
-        COALESCE(sales.grand_total, 0) AS total, 
-        SUM(COALESCE(payments.amount, 0)) AS paid,
-        sales.id
-    FROM 
-        sma_payments payments
-    LEFT JOIN 
-        sma_sales sales ON sales.id = payments.sale_id
-    WHERE 
-        payments.type = 'received' 
-        AND DATE(payments.date) >= '".trim($date)."'  
-        AND DATE(payments.date) <= '".trim($end_date)."'  
-        AND payments.created_by IN (".$user_id.")
-    GROUP BY 
-        payments.sale_id
-) AS sp;
-";
+                    SUM(sp.total) AS total, 
+                    SUM(sp.paid) AS paid,
+                    COUNT(sp.id) AS total_sales
+                FROM (
+                    SELECT 
+                        COALESCE(sales.grand_total, 0) AS total, 
+                        SUM(COALESCE(payments.amount, 0)) AS paid,
+                        sales.id
+                    FROM 
+                        sma_payments payments
+                    LEFT JOIN 
+                        sma_sales sales ON sales.id = payments.sale_id
+                    WHERE 
+                        payments.type = 'received' 
+                    ".$dateWhere."
+                        AND payments.created_by IN (".$user_id.")
+                    GROUP BY 
+                        payments.sale_id
+                ) AS sp;
+                ";
 
 $q = $this->db->query($sql);
         if ($q->num_rows() > 0) {
@@ -1894,6 +1923,21 @@ $q = $this->db->query($sql);
         //echo $this->db->last_query();
         return $query->result();
     }
+
+     public function get_register_id_dates($register_id) {
+        $this->db->select('id,register_id, date as open_date_time, closed_at as close_date_time');
+        $this->db->from('sma_pos_register');
+
+       
+            $this->db->where('id', $register_id);
+       
+
+        $query = $this->db->get();
+        //echo $this->db->last_query();
+        return $query->result();
+    }
+
+    
 
 
 }

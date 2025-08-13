@@ -5733,6 +5733,8 @@ class Reports extends MY_Controller
             //$this->data['users']           = $this->pos_model->getUsers($user_id);
             //$this->data['suspended_bills'] = $this->pos_model->getSuspendedsales($user_id);
               //$this->data['authorizesales']  = $this->pos_model->getRegisterAuthorizeSales($register_open_time, $user_id);
+
+
             
             $this->data['ccsales']         = $this->pos_model->getRegisterCCSales($register_open_time, $user_id, $register_end_time);
             $this->data['cashsales']       = $this->pos_model->getRegisterCashSales($register_open_time, $user_id, $register_end_time);
@@ -5745,6 +5747,10 @@ class Reports extends MY_Controller
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;
             $this->data['warehouse_id'] = $warehouse;
+            $this->data['register_id'] = $this->input->post('registerId');
+            $this->data['register_open_date_time'] = $this->input->post('register_open_date_time');
+            $this->data['register_close_date_time'] = $this->input->post('register_close_date_time');
+            $this->data['registerIds'] = $this->pos_model->search_register_ids($warehouse, $pharmacist_id, $from_date, $to_date);
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('Close Register Details')]];
             $meta = ['page_title' => lang(''), 'bc' => $bc];
 
@@ -5769,6 +5775,16 @@ class Reports extends MY_Controller
 
         echo json_encode($registers);
     }
+
+     public function get_register_id_dates() {
+        $register_id = $this->input->get('register_id');
+
+        $registers = $this->pos_model->get_register_id_dates($register_id);
+
+        echo json_encode($registers[0]);
+    }
+
+    
 
 
 }
