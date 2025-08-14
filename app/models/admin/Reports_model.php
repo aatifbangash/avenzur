@@ -4811,7 +4811,7 @@ class Reports_model extends CI_Model
 
                 SELECT
                     -SUM(ri.quantity) AS grand_quantity,
-                    0 AS grand_cost,
+                    -SUM(ri.net_cost * ri.quantity) AS grand_cost,
                     -SUM(ri.real_unit_price * ri.quantity) AS grand_sale,
                     0 AS grand_discount,
                     -SUM(ri.totalbeforevat) AS grand_beforvate,
