@@ -10,7 +10,7 @@
 </head>
 
 <body>
-<div id="wrap">
+<div id="wrap"  style="width: 90%; font-size: 12px;">
     <div class="row">
         <div class="col-lg-12">
 
@@ -142,76 +142,117 @@
             <div class="table-responsive">
                 <table class="table table-bordered table-hover table-striped">
                     <thead>
-                    <tr class="active">
-                        <th><?=lang('no.');?></th>
-                        <th><?=lang('description');?></th>
+                    <tr>
+                        <th><?= lang('no.'); ?></th>
+                        <th><?= lang('description'); ?></th>
+                        <th><?= lang('Batch No');?></th>
                         <?php if ($Settings->indian_gst) {
-                ?>
+                            $total_col +=1; 
+                        ?>
                             <th><?= lang('hsn_sac_code'); ?></th>
                         <?php
-            } ?>
-                        <th><?=lang('quantity');?></th>
+                    } ?>
+                        <th><?= lang('quantity'); ?></th>
                         <?php
                             if ($inv->status == 'partial') {
+                                $total_col +=1; 
                                 echo '<th>' . lang('received') . '</th>';
                             }
                         ?>
-                        <th><?=lang('unit_cost');?></th>
-                        <?php
-                            if ($Settings->tax1 && $inv->product_tax > 0) {
-                                echo '<th>' . lang('tax') . '</th>';
-                            }
+                        <th><?= lang('Sale_price'); ?></th>
+                     
+                        <th><?= lang('subtotal'); ?></th>
+                        <?php if ($Settings->product_discount && $inv->product_discount != 0) {
+                            $total_col +=2; 
+                            echo '<th>' . lang('Disc1 %') . '</th>';
+                            echo '<th>' . lang('Disc1 Value') . '</th>';
+                        }
+
+                        if ($Settings->product_discount && $inv->product_discount != 0) {
+                            $total_col +=2; 
+                            echo '<th>' . lang('Disc2 %') . '</th>';
+                            echo '<th>' . lang('Disc2 Value') . '</th>';
+                        } ?>
+                         <th><?= lang('Total_without_VAT'); ?></th>
+                         <?php
+                        if ($Settings->tax1 && $inv->product_tax > 0) {
+                            $total_col +=2; 
+                            echo '<th>' . lang('VAT%') . '</th>';
+                            echo '<th>' . lang('VAT_value') . '</th>';
+                        }
+                        echo '<th>' . lang('Total_with_VAT') . '</th>';
                         ?>
-                        <?php
-                            if ($Settings->product_discount && $inv->product_discount != 0) {
-                                echo '<th>' . lang('discount') . '</th>';
-                            }
-                        ?>
-                        <th><?=lang('subtotal');?></th>
                     </tr>
                     </thead>
                     <tbody>
                     <?php
                         $r = 1;
                         foreach ($rows as $row):
+                            $subTotal = $this->sma->formatNumber($row->sale_price * $row->unit_quantity);
                             ?>
-                            <tr>
-                                <td style="text-align:center; width:40px; vertical-align:middle;"><?=$r;?></td>
-                                <td style="vertical-align:middle;">
-                                    <?= $row->product_code . ' - ' . $row->product_name . ($row->variant ? ' (' . $row->variant . ')' : ''); ?>
-                                    <?= $row->second_name ? '<br>' . $row->second_name : ''; ?>
-                                    <?= $row->supplier_part_no ? '<br>' . lang('supplier_part_no') . ': ' . $row->supplier_part_no : ''; ?>
-                                    <?=$row->details ? '<br>' . $row->details : '';?>
-                                    <?= ($row->expiry && $row->expiry != '0000-00-00') ? '<br>' . lang('expiry') . ': ' . $this->sma->hrsd($row->expiry) : ''; ?>
-                                </td>
-                                <?php if ($Settings->indian_gst) {
+                                <tr>
+                                    <td style="text-align:center; width:40px; vertical-align:middle;"><?= $r; ?></td>
+                                    <td style="width: 30%; vertical-align:middle;">
+                                        <?= $row->product_code . ' - ' . $row->product_name . ($row->variant ? ' (' . $row->variant . ')' : ''); ?>
+                                        <?= $row->second_name ? '<br>' . $row->second_name : ''; ?>
+                                        <?= $row->supplier_part_no ? '<br>' . lang('supplier_part_no') . ': ' . $row->supplier_part_no : ''; ?>
+                                        <?= $row->details ? '<br>' . $row->details : ''; ?>
+                                        <?= ($row->expiry && $row->expiry != '0000-00-00') ? '<br>' . lang('EX') . ': ' . $this->sma->hrsd($row->expiry) : ''; ?>
+                                    </td>
+                                    <td style="width: 8%;text-align:center; vertical-align:middle;"><?= $row->batchno ?: ''; ?></td>
+                                    <?php if ($Settings->indian_gst) {
                                 ?>
-                                <td style="width: 80px; text-align:center; vertical-align:middle;"><?= $row->hsn_code ?: ''; ?></td>
-                                <?php
-                            } ?>
-                                <td style="width: 80px; text-align:center; vertical-align:middle;"><?=$this->sma->formatQuantity($row->quantity) . ' ' . $row->product_unit_code;?></td>
-                                <?php
+                                    <td style=" text-align:center; vertical-align:middle;"><?= $row->hsn_code ?: ''; ?></td>
+                                    <?php
+                                    } ?>
+                                    <td style="text-align:center; vertical-align:middle;"><?= $this->sma->formatQuantity($row->unit_quantity); ?></td>
+                                    <?php
                                     if ($inv->status == 'partial') {
-                                        echo '<td style="text-align:center;vertical-align:middle;width:120px;">' . $this->sma->formatQuantity($row->quantity_received) . ' ' . $row->product_unit_code . '</td>';
+                                        echo '<td style="text-align:center;vertical-align:middle;width:80px;">' . $this->sma->formatQuantity($row->quantity_received). '</td>';
                                     }
-                                ?>
-                                <td style="text-align:right; width:100px;">
-                                    <?= $row->unit_cost != $row->real_unit_cost && $row->item_discount > 0 ? '<del>' . $this->sma->formatMoney($row->real_unit_cost) . '</del>' : ''; ?>
-                                    <?=$this->sma->formatMoney($row->unit_cost);?>
-                                </td>
-                                <?php
+                                    ?>
+                                    <td style="text-align:right; width:100px;">
+                                        <!-- <?= $row->unit_cost != $row->real_unit_cost && $row->item_discount > 0 ? '<del>' . $this->sma->formatMoney($row->real_unit_cost) . '</del>' : ''; ?> -->
+                                        <?= $this->sma->formatNumber($row->sale_price); ?>
+                                    </td>
+                                   
+                                    <td style="text-align:right; width:120px;"><?=$subTotal; ?></td>
+                                    <?php
+                                     if ($Settings->product_discount && $inv->product_discount != 0) {
+                                        echo '<td style=" text-align:right; vertical-align:middle;">' . ($row->discount != 0 ?  $row->discount  : '') .  '</td>'; 
+                                        echo '<td style=" text-align:right; vertical-align:middle;">' . $this->sma->formatNumber($row->item_discount) . '</td>';
+                                    }
+                                    if ($Settings->product_discount != 0 && $inv->product_discount != 0) { 
+                                        $unit_cost=$row->unit_cost;
+                                        $pr_discount      = $this->site->calculateDiscount($row->discount1.'%', $row->unit_cost);
+                                        $amount_after_dis1 = $unit_cost - $pr_discount;
+                                        $pr_discount2      = $this->site->calculateDiscount($row->discount2.'%', $amount_after_dis1);  
+                                        $pr_item_discount2 = $this->sma->formatDecimal($pr_discount2 * $row->quantity);
+                                        $row->discount2= $this->sma->formatNumber($row->discount2,null);
+                                        echo '<td style="width: 120px; text-align:right; vertical-align:middle;">' . ($row->discount2 != 0 ?  $row->discount2  : '') . '</td>';
+                                        echo '<td style="width: 100px; text-align:right; vertical-align:middle;">' . $this->sma->formatNumber($pr_item_discount2) . '</td>';
+                                    }
+                                    ?>
+                                    <td style="text-align:right; width:120px;"><?= $this->sma->formatNumber($row->subtotal, null); ?></td>
+                                    <?php
+                                    $vat_value = 0;
                                     if ($Settings->tax1 && $inv->product_tax > 0) {
-                                        echo '<td style="width: 100px; text-align:right; vertical-align:middle;">' . ($row->item_tax != 0 ? '<small>(' . ($Settings->indian_gst ? $row->tax : $row->tax_code) . ')</small> ' : '') . $this->sma->formatMoney($row->item_tax) . '</td>';
+                                        $vat_value = $this->sma->formatNumber($row->item_tax);
+                                        echo '<td style="width: 100px; text-align:right; vertical-align:middle;">' . ($row->item_tax != 0 ?  ($Settings->indian_gst ? $row->tax : $row->tax_code)  : '') . '</td>';
+                                        echo '<td>'.$vat_value.'</td>';
                                     }
-                                ?>
+                                    ?>
+                                    
+                                    <td style="text-align:right; width:120px;"><?= $this->sma->formatNumber($row->subtotal + $total_without_vat); ?></td>
+                                    
+                                </tr>
                                 <?php
-                                    if ($Settings->product_discount && $inv->product_discount != 0) {
-                                        echo '<td style="width: 100px; text-align:right; vertical-align:middle;">' . ($row->discount != 0 ? '<small>(' . $row->discount . ')</small> ' : '') . $this->sma->formatMoney($row->item_discount) . '</td>';
-                                    }
-                                ?>
-                                <td style="text-align:right; width:120px;"><?=$this->sma->formatMoney($row->subtotal);?></td>
-                            </tr>
-                            <?php
+                                            //t-disc, net_before_vat, total_vat,total_after_vat
+                                        $totalAmount += $subTotal;
+                                        $totalDiscount += $row->item_discount + $pr_item_discount2;
+                                        $netBeforeVAT += $row->subtotal;
+                                        $totalVAT  += $vat_value;
+            
                             $r++;
                         endforeach;
                         if ($return_rows) {

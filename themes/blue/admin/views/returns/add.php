@@ -1,10 +1,37 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <script type="text/javascript">
     var count = 1, an = 1, product_variant = 0, DT = <?= $Settings->default_tax_rate ?>,
-        product_tax = 0, invoice_tax = 0, product_discount = 0, order_discount = 0, total_discount = 0, total = 0, allow_discount = <?= ($Owner || $Admin || $this->session->userdata('allow_discount')) ? 1 : 0; ?>,
+        product_tax = 0, invoice_tax = 0, product_discount = 0, reitems = {}, order_discount = 0, total_discount = 0, total = 0, allow_discount = <?= ($Owner || $Admin || $this->session->userdata('allow_discount')) ? 1 : 0; ?>,
         tax_rates = <?php echo json_encode($tax_rates); ?>;
+    var reitems = {};
+
+    <?php if ($inv) {
+    ?>
+        //localStorage.setItem('redate', '<?= $this->sma->hrld($inv->date) ?>');
+        localStorage.setItem('reref', '<?= $reference ?>');
+        localStorage.setItem('renote', '<?= $this->sma->decode_html($inv->note); ?>');
+        localStorage.setItem('reitems', JSON.stringify(<?= $inv_items; ?>));
+        localStorage.setItem('rediscount', '<?= $inv->order_discount_id ?>');
+        localStorage.setItem('retax2', '<?= $inv->order_tax_id ?>');
+        localStorage.setItem('return_surcharge', '0');
+        <?php
+    } ?>
 
     $(document).ready(function () {
+
+        if (!localStorage.getItem('redate')) {
+            $("#redate").datetimepicker({
+                format: site.dateFormats.js_ldate,
+                fontAwesome: true,
+                language: 'sma',
+                weekStart: 1,
+                todayBtn: 1,
+                autoclose: 1,
+                todayHighlight: 1,
+                startView: 2,
+                forceParse: 0
+            }).datetimepicker('update', new Date());
+        }
 
         if (localStorage.getItem('remove_rlls')) {
             if (localStorage.getItem('reitems')) {
@@ -51,14 +78,39 @@
         });
         $("#add_item").autocomplete({
             source: function (request, response) {
+
                 $.ajax({
                     type: 'get',
                     url: '<?= admin_url('returns/bch_suggestions'); ?>',
                     dataType: "json",
-                    data: { term: request.term, warehouse_id: $("#rewarehouse").val(), },
+                    data: { term: request.term, warehouse_id: $("#rewarehouse").val() },
                     success: function (data) {
-                        $(this).removeClass('ui-autocomplete-loading');
-                        response(data);
+
+                        if(data[0].id != 0){
+                            $(this).removeClass('ui-autocomplete-loading');
+                            response(data);
+                        }else{
+                            $.ajax({
+                                type: 'get',
+                                url: '<?=admin_url('products/get_items_by_avz_code');?>',
+                                dataType: "json",
+                                data: {
+                                    term: request.term,
+                                    warehouse_id: $("#rewarehouse").val(),
+                                    customer_id: $("#recustomer").val(),
+                                    module: 'return_by_customer'
+                                },
+                                success: function (data) {
+                                    $(this).removeClass('ui-autocomplete-loading');
+                                    if(data){
+                                        add_return_item(data[0]);
+                                    }else{
+                                        bootbox.alert('No records found for this item code.');
+                                    }
+                                    
+                                }
+                            });
+                        }
                     }
                 });
             },
@@ -91,16 +143,149 @@
             select: function (event, ui) {
                 event.preventDefault();
                 if (ui.item.id !== 0) {
-                    var row = add_return_item(ui.item);
-                    if (row)
-                        $(this).val('');
+                    openPopup(ui.item);
+                    //var row = add_return_item(ui.item);
+                    //if (row)
+                    //    $(this).val('');
                 } else {
                     bootbox.alert('<?= lang('no_match_found') ?>');
                 }
             }
         });
     });
+
+    function openPopup(selectedItem) {
+        // Assuming selectedItem has avz_item_code as part of its data
+        $.ajax({
+            type: 'get',
+            url: '<?= admin_url('products/get_avz_item_code_details'); ?>', // Adjust the URL as needed
+            dataType: "json",
+            data: {
+                item_id: selectedItem.item_id, // Send the unique item code
+                warehouse_id: $("#rewarehouse").val(), // Optionally include warehouse ID if needed
+                customer_id: $('#recustomer').val()
+            },
+            success: function (data) {
+                $(this).removeClass('ui-autocomplete-loading');
+
+                // Populate the modal with the returned data
+                if (data && data.length > 0) {
+                    var modalBody = $('#itemModal .modal-body');
+                    modalBody.empty();
+
+                    // Loop through each item and create clickable entries in the modal
+                    var table = `
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Avz Code</th>
+                                    <th>Product</th>
+                                    <th>Batch No</th>
+                                    <th>Expiry</th>
+                                    <th>Quantity</th>
+                                    <th>Locked</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemTableBody"></tbody>
+                        </table>
+                    `;
+
+                    // Append the table to the modal body
+                    modalBody.append(table);
+                    
+                    // Populate the table body with the data
+                    var count = 0;
+                    var toitemsStorageValue = JSON.parse(localStorage.getItem('reitems'));
+                    data.forEach(function (item) {
+                        count++;
+
+                        var avzItemCode = item.row.avz_item_code;
+                        var found = false;
+
+                        Object.keys(reitems).forEach(function (key) {
+                            if (reitems[key].row && reitems[key].row.avz_item_code === avzItemCode) {
+                                found = true;
+                            }
+                        });
+                        
+                        var tickOrCross = found ? '✔' : '✖';
+
+                        var row = `
+                            <tr style="cursor:pointer;" class="modal-item" tabindex="0" data-item-id="${item.row.avz_item_code}">
+                                <td>${count}</td>
+                                <td data-avzcode="${item.row.avz_item_code}">${item.row.avz_item_code}</td>
+                                <td data-product="${item.row.name}">${item.row.name}</td>
+                                <td data-batchno="${item.row.batchno}">${item.row.batchno}</td>
+                                <td data-expiry="${item.row.expiry}">${item.row.expiry}</td>
+                                <td data-quantity="${item.total_quantity}">${item.total_quantity}</td>
+                                <td>${tickOrCross}</td>
+                            </tr>
+                        `;
+                        $('#itemTableBody').append(row);
+                        $('#itemTableBody tr:last-child').data('available', found);
+                    });
+
+                    // Show the modal
+                    $('#itemModal').modal('show');
+                    $('#itemTableBody').on('click', 'tr', function () {
+                        
+                        var clickedItemCode = $(this).data('item-id');
+                        var selectedItem = data.find(function (item) {
+                            //return item.row.avz_item_code === clickedItemCode;
+                            return String(item.row.avz_item_code).trim() === String(clickedItemCode).trim();
+                        });
+
+                        if (selectedItem) {
+                            $('#itemModal').modal('hide');
+                            var available = $(this).data('available');
+                            if(!available){
+                                add_return_item(selectedItem);
+                            }else{
+                                bootbox.alert('Row already added');
+                            }
+                        }else{
+                            console.log('Item not found');
+                        }
+                    });
+                    
+                } else {
+                    bootbox.alert('No records found for this item code.');
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('AJAX error:', error);
+                bootbox.alert('An error occurred while fetching the item details.');
+            }
+        });
+    }
+
+    function onSelectFromPopup(selectedRecord) {
+        $('#itemModal').modal('hide');
+
+        var row = add_return_item(selectedRecord);
+        if (row) {
+            // If the row was successfully added, you can do additional actions here
+            
+        }
+    }
 </script>
+
+<div class="modal fade" id="itemModal" tabindex="-1" role="dialog" aria-labelledby="itemModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="min-width:800px !important;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="itemModalLabel">Select an Item</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- The content will be dynamically generated here -->
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="box">
     <div class="box-header">
@@ -129,13 +314,14 @@
                             </div>
                         <?php
                 } ?>
+                      <input type="hidden" name="reference_no" value="<?= $reference; ?>">
 
-                        <div class="col-md-4">
+                        <!-- <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('reference_no', 'reref'); ?>
                                 <?php echo form_input('reference_no', (isset($_POST['reference_no']) ? $_POST['reference_no'] : ''), 'class="form-control input-tip" id="reref"'); ?>
                             </div>
-                        </div>
+                        </div> -->
                         <?php if ($Owner || $Admin || !$this->session->userdata('biller_id')) {
                     ?>
                             <div class="col-md-4">
@@ -169,8 +355,9 @@
                                     <?php
                                     $wh[''] = '';
                     foreach ($warehouses as $warehouse) {
-                        $wh[$warehouse->id] = $warehouse->name;
+                        $wh[$warehouse->id] = $warehouse->name.' ('.$warehouse->code.')';
                     }
+                    
                     echo form_dropdown('warehouse', $wh, (isset($_POST['warehouse']) ? $_POST['warehouse'] : $Settings->default_warehouse), 'id="rewarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" required="required" style="width:100%;" '); ?>
                                 </div>
                             </div>
@@ -191,6 +378,16 @@
                                 <?= lang('customer', 'recustomer'); ?>
                                 <?php
                                     echo form_input('customer', (isset($_POST['customer']) ? $_POST['customer'] : ''), 'id="recustomer" data-placeholder="' . lang('select') . ' ' . lang('customer') . '" required="required" class="form-control ssr-customer input-tip" style="width:100%;"');
+                                ?>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('status', 'status'); ?>
+                                <?php
+                                $post = ['pending' => lang('pending'), 'completed' => lang('completed')];
+                                echo form_dropdown('status', $post, ($_POST['status'] ?? ''), 'id="status" class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . '" required="required" style="width:100%;" ');
                                 ?>
                             </div>
                         </div>
@@ -275,11 +472,11 @@
                                            
                                             <th class="col-md-1"><?= lang('Sale Price'); ?></th>
                                             <!-- <th class="col-md-1"><?= lang('Purchase Price'); ?></th> -->
-                                            <th class="col-md-1"><?= lang('Serial No.'); ?></th>
+                                            <!--<th class="col-md-1"><?= lang('Serial No.'); ?></th>-->
                                             <th class="col-md-1"><?= lang('batch'); ?></th>
                                             <th class="col-md-1"><?= lang('expiry_date'); ?></th>
                                             <th class="col-md-1"><?= lang('qty'); ?></th>
-                                            <!--<th class="col-md-1"><?php //echo lang('Bonus'); ?></th>-->
+                                            <th class="col-md-1"><?= lang('Bonus'); ?></th>
                                             <?php
                                             if ($Settings->product_discount && ($Owner || $Admin || $this->session->userdata('allow_discount'))) {
                                                 echo '<th class="col-md-1">' . lang('dis 1') . '</th>';

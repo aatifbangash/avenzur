@@ -7,6 +7,7 @@ class Site extends CI_Model
     public function __construct()
     {
         parent::__construct();
+        $this->load->admin_model('Inventory_model');
     }
 
     public function calculateAVCost($product_id, $warehouse_id, $batch_no, $net_unit_price, $unit_price, $quantity, $product_name, $option_id, $item_quantity)
@@ -85,16 +86,22 @@ class Site extends CI_Model
                 break;
             }
         }
-        if ($quantity > 0) {
-            $this->session->set_flashdata('error', sprintf(lang('quantity_out_of_stock_for_%s'), ($pi->product_name ?? $product_name)));
-            redirect($_SERVER['HTTP_REFERER']);
-        }
+        // get quantity from inventory movement
+       
+        // $quantity = $this->Inventory_model->get_current_stock($product_id, $warehouse_id);
+       
+        // if ($quantity <= 0) {
+        //     $this->session->set_flashdata('error', sprintf(lang('quantity_out_of_stock_for_%s'), ($pi->product_name ?? $product_name)));
+        //     redirect($_SERVER['HTTP_REFERER']);
+        // }
+
         return $cost;
     }
 
     public function calculateDiscount($discount = null, $amount = 0, $order = null)
     {
         if ($discount && ($order || $this->Settings->product_discount)) {
+            $discount = $discount.'%';
             $dpos = strpos($discount, '%');
             if ($dpos !== false) {
                 $pds = explode('%', $discount);
@@ -277,9 +284,9 @@ class Site extends CI_Model
         }
         // $this->sma->print_arrays($combo_items, $citems);
         $cost = [];
-        foreach ($citems as $item) {
+        foreach ($citems as $item) {  
             $item['aquantity'] = $citems['p' . $item['product_id'] . 'o' . $item['option_id']]['aquantity'];
-            $cost[]            = $this->item_costing($item, true);
+            $cost[] = $this->item_costing($item, true); 
         }
         
         return $cost;
@@ -383,6 +390,30 @@ class Site extends CI_Model
         return false;
     }
 
+    public function getAllParentCompanies($group_name)
+    {
+        $q = $this->db->get_where('companies', ['group_name' => $group_name, 'level' => 1]);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
+    public function getAllChildCompanies($group_name)
+    {
+        $q = $this->db->get_where('companies', ['group_name' => $group_name, 'level' => 2]);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
     public function getAllCurrencies()
     {
         $q = $this->db->get('currencies');
@@ -467,6 +498,18 @@ class Site extends CI_Model
         return false;
     }
 
+    public function getMainWarehouse()
+    {
+        $q = $this->db->get_where('warehouses', ['warehouse_type' => 'warehouse', 'goods_in_transit' => 0]);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
     public function getAllWarehouses()
     {
         $q = $this->db->get('warehouses');
@@ -477,6 +520,46 @@ class Site extends CI_Model
             return $data;
         }
         return false;
+    }
+    public function getAvgCost($item_batchno, $item_id){
+        $avgCostQuery = "SELECT 
+                    SUM(iv.quantity * iv.net_unit_cost) / SUM(iv.quantity) AS average_cost
+                 FROM 
+                    sma_inventory_movements iv
+                 WHERE 
+                    iv.product_id = '{$item_id}' 
+                    AND iv.batch_number = '{$item_batchno}' 
+                    AND iv.type IN ('purchase', 'adjustment_increase')";
+        $avgCost = $this->db->query($avgCostQuery);
+        //echo $this->db->last_query(); exit;
+        $avgObj = $avgCost->row();
+        if($avgObj){
+            $average_cost = $avgObj->average_cost;
+        }else{
+            $average_cost = 0;
+        }
+        
+        return $average_cost;
+    }
+
+    public function getRealAvgCost($item_batchno, $item_id){
+        $avgCostQuery = "SELECT 
+                    SUM(iv.quantity * iv.real_unit_cost) / SUM(iv.quantity) AS real_average_cost
+                 FROM 
+                    sma_inventory_movements iv
+                 WHERE 
+                    iv.product_id = '{$item_id}' 
+                    AND iv.batch_number = '{$item_batchno}' 
+                    AND iv.type IN ('purchase', 'adjustment_increase')";
+        $avgCost = $this->db->query($avgCostQuery);
+        $avgObj = $avgCost->row();
+        if($avgObj){
+            $average_cost = $avgObj->real_average_cost;
+        }else{
+            $average_cost = 0;
+        }
+        
+        return $average_cost;
     }
 
     public function getAllCouriers()
@@ -502,6 +585,7 @@ class Site extends CI_Model
 
 public function getallCountry()
 {
+    $this->db->order_by('name', 'ASC');
     $q = $this->db->get('countries');
     if ($q->num_rows() > 0) {
         foreach (($q->result()) as $row) {
@@ -510,6 +594,55 @@ public function getallCountry()
         return $data;
     }
     return false;
+}
+
+public function logVisitor() {
+    if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+        $ip = $_SERVER['HTTP_CLIENT_IP'];
+    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+    } else {
+        $ip = $_SERVER['REMOTE_ADDR'];
+    }
+    
+    if ($ip == '::1') {
+        $ip = '127.0.0.1';
+    }
+
+    $userAgent = $_SERVER['HTTP_USER_AGENT'];
+    $bots = [
+        'Googlebot', 'Bingbot', 'Slurp', 'DuckDuckBot', 'Baiduspider',
+        'YandexBot', 'Sogou', 'Exabot', 'facebot', 'ia_archiver'
+    ];
+
+    $isBot = false;
+    
+    foreach ($bots as $bot) {
+        if (stripos($userAgent, $bot) !== false) {
+            $isBot = true;
+        }
+    }
+
+    $location = @file_get_contents("http://ip-api.com/json/{$ip}");
+    
+    if ($location) {
+        $locationData = json_decode($location, true);
+        $location = $locationData['city'] . ', ' . $locationData['regionName'] . ', ' . $locationData['country'];
+    }else{
+        $location = 'Unknown';
+    }
+    
+    $landingUrl = $_SERVER['REQUEST_URI'];
+    $accessTime = date('Y-m-d H:i:s');
+
+    $this->db->insert('user_logs', [
+        'ip_address' => $ip,
+        'location' => $location,
+        'is_bot' => $isBot,
+        'user_agent' => $userAgent,
+        'landing_url' => $landingUrl,
+        'access_time' => $accessTime,
+    ]);
 }
 
  public function getallWCountry()
@@ -531,6 +664,15 @@ public function getallCountry()
     public function getBrandByID($id)
     {
         $q = $this->db->get_where('brands', ['id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getSMSServiceByName($name)
+    {
+        $q = $this->db->get_where('sms_services', ['name' => $name], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -767,10 +909,12 @@ public function getallCountry()
     public function getPurchasedItems($product_id, $warehouse_id, $option_id = null, $nonPurchased = false)
     {
         $orderby = empty($this->Settings->accounting_method) ? 'asc' : 'desc';
-        $this->db->select('id, purchase_id, transfer_id, quantity, quantity_balance, batchno, net_unit_cost, unit_cost, item_tax, base_unit_cost,expiry');
+        $this->db->select('id, purchase_id, transfer_id, quantity, quantity_balance, serial_number, batchno, net_unit_cost, unit_cost, item_tax, base_unit_cost,expiry');
         $this->db->where('product_id', $product_id)
         //->where('warehouse_id', $warehouse_id)
-        ->where('quantity_balance !=', 0); 
+        ->where('quantity_balance !=', 0)
+        ->where('quantity >', 0)
+        ->where("batchno !=", null);
         /*if (!isset($option_id) || empty($option_id)) {
             $this->db->group_start()->where('option_id', null)->or_where('option_id', 0)->group_end();
         } else {
@@ -785,6 +929,8 @@ public function getallCountry()
         $this->db->order_by('expiry', $orderby);
         $this->db->order_by('purchase_id', $orderby);
         $q = $this->db->get('purchase_items');
+        //echo $this->db->last_query();exit;
+
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
@@ -935,6 +1081,30 @@ public function getallCountry()
         }
         return false;
     }
+    public function getSubSpecialities($parent_id)
+    {
+        $this->db->where('parent_id', $parent_id)->order_by('name');
+        $q = $this->db->get('specialities');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+    public function getSubTopics($parent_id)
+    {
+        $this->db->where('parent_id', $parent_id)->order_by('name');
+        $q = $this->db->get('topics');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
 
     public function getTaxRateByID($id)
     {
@@ -987,6 +1157,54 @@ public function getallCountry()
         return false;
     }
 
+    public function getUserFromCompany($id = null)
+    {
+        if (!$id) {
+            $id = $this->session->userdata('company_id');
+        }
+        $q = $this->db->get_where('companies', ['id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getUserByWarehouseID($id = null)
+    {
+        $q = $this->db->get_where('users', ['warehouse_id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getAdjustmentStore($id = null)
+    {
+        $q = $this->db->get_where('warehouses', ['code' => 'adj'], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getCompanyLedgers()
+    {
+        $this->db
+            ->select('sma_accounts_ledgers.*')
+            ->from('sma_accounts_ledgers')
+            ->order_by('sma_accounts_ledgers.name asc');
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data_res[] = $row;
+            }
+        } else {
+            $data_res = array();
+        }
+
+        return $data_res;
+    }
+
     public function getUser($id = null)
     {
         if (!$id) {
@@ -995,6 +1213,42 @@ public function getallCountry()
         $q = $this->db->get_where('users', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
+        }
+        return false;
+    }
+
+    public function getUsersByGroupAndLocation($warehouse,$pharmacist_group){
+        $q = $this->db->get_where('users', ['warehouse_id' => $warehouse, 'group_id' => $pharmacist_group]);
+        if ($q->num_rows() > 0) {
+            $ids = [];
+            foreach (($q->result()) as $row) {
+                $ids[] = $row->id;
+            }
+            return implode(',', $ids);
+        }
+        return false;
+    }
+
+    public function getUserGroupByName($name)
+    {
+        if($name){
+            $q = $this->db->get_where('groups', ['name' => $name]);
+        }
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getUsersByGroup($group_id){
+        if($group_id){
+            $q = $this->db->get_where('users', ['group_id' => $group_id]);
+        }
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
         }
         return false;
     }
@@ -1089,6 +1343,7 @@ public function getallCountry()
 
     public function item_costing($item, $pi = null)
     {
+
         $item_quantity = $pi ? $item['aquantity'] : $item['quantity'];
         if (!isset($item['option_id']) || empty($item['option_id']) || $item['option_id'] == 'null') {
             $item['option_id'] = null;
@@ -1178,7 +1433,7 @@ public function getallCountry()
         return '<script type="text/javascript">' . file_get_contents($this->data['assets'] . 'js/modal.js') . '</script>';
     }
 
-    public function setAdjustmentPurchaseItem($clause, $qty){
+    public function setAdjustmentPurchaseItem($clause, $qty, $avz_item_code){
         if ($product = $this->getProductByID($clause['product_id'])) {
             $vat = $clause['vat'];
             unset($clause['vat']);
@@ -1203,6 +1458,7 @@ public function getallCountry()
             $clause['net_unit_cost']     = $clause['real_unit_cost']     = $clause['unit_cost'];
             $clause['quantity_balance']  = $clause['quantity']  = $clause['unit_quantity']  = $clause['quantity_received']  = $qty;
             $clause['subtotal']          = ($clause['net_unit_cost'] * $qty);
+            $clause['avz_item_code']     = $avz_item_code;
             
             if (isset($vat) && $vat != 0) {
                 $tax_details           = $this->site->getTaxRateByID($vat);
@@ -1360,6 +1616,16 @@ public function getallCountry()
         if(isset($items) && !empty($items)) {
 
             foreach ($items as $item) {
+                $virtual_pharmacy = 0;
+                $query = $this->db->select('warehouses_products.*')
+                        ->from('warehouses_products')
+                        ->where('warehouses_products.warehouse_id', 6)
+                        ->where('warehouses_products.product_id', $item->product_id);
+                $result = $query->get();
+                if ($result->num_rows() > 0) {
+                    $virtual_pharmacy = 1;
+                }
+                
                 $this->db->insert('product_qty_onhold_request',
                  ['sale_id' => $sale_id, 
                  'product_id' => $item->product_id, 
@@ -1369,7 +1635,8 @@ public function getallCountry()
                  'customer_id' => $item->customer_id,
                  'customer_name' => $item->customer_name,
                  'status' => 'onhold',
-                 'date_created' => NOW()
+                 'virtual_pharmacy' => $virtual_pharmacy,
+                 'date_created' => date('Y-m-d H:i:s')
                 ]);
             }
         }
@@ -1684,9 +1951,110 @@ public function getallCountry()
         return 0;
     }
 
-    public function getProductBatchesData($product_id, $warehouse)
+    public function getProductSupplierBatchesData($product_id, $warehouse, $supplier_id)
+    {  
+         
+        $this->db->select(' inv.product_id, inv.batch_number as batchno ,SUM(inv.quantity) as quantity, 
+        inv.location_id as warehouse_id, inv.net_unit_cost, inv.real_unit_cost, inv.expiry_date as expiry,item.expiry,
+        item.unit_cost,item.real_unit_cost,item.sale_price,item.discount, item.discount1, item.discount2, item.main_net,
+         item.tax_rate_id, item.tax
+
+        ');
+        $this->db->from('sma_inventory_movements inv'); 
+        $this->db->join('sma_purchase_items item', 'item.batchno=inv.batch_number AND item.product_id=inv.product_id');  
+        $this->db->join('purchases po', 'po.id=item.purchase_id  AND po.supplier_id='.$supplier_id);   
+        $this->db->where('inv.location_id',$warehouse);
+        $this->db->where('inv.product_id',$product_id); 
+        $this->db->group_by('inv.batch_number'); 
+        $this->db->having('SUM(inv.quantity)>=0'); 
+	    $query = $this->db->get();
+        // echo $this->db->last_query(); exit; 
+        if($query->num_rows() > 0){
+            foreach (($query->result()) as $row) {
+
+                $query = $this->db->get_where('sma_purchase_items', ['product_id' => $product_id, 'warehouse_id' => $warehouse, 'batchno' => $row->batchno, 'sale_price >' => 0], 1);
+                if ($query->num_rows() > 0) {
+                    $rowp = $query->row();
+                    $batch_sale_price = $rowp->sale_price;
+                }else{
+                    $batch_sale_price = 0;
+                }
+                $row->batch_sale_price = $batch_sale_price;
+                $data[] = $row; 
+            }
+          //  echo '<pre>'; print_r($data); exit;  
+          return $data; 
+         }  
+        return false;
+    } 
+
+    public function getProductSupplierBatchesData_BK($product_id, $warehouse, $supplier_id)
+    {  
+         
+        $this->db->select(' inv.product_id, inv.batch_number as batchno ,SUM(inv.quantity) as quantity, inv.location_id as warehouse_id, inv.net_unit_cost, inv.real_unit_cost, wp.rack, wp.avg_cost, inv.expiry_date as expiry, wp.purchase_cost');
+        $this->db->from('sma_inventory_movements inv');
+        $this->db->join('warehouses_products wp', 'wp.batchno=inv.batch_number AND  wp.product_id= inv.product_id and wp.warehouse_id=inv.location_id', 'LEFT'); 
+        $this->db->join('purchases po', 'po.id=inv.reference_id AND inv.type="purchase" AND  po.supplier_id='.$supplier_id);   
+        $this->db->where('inv.location_id',$warehouse);
+        $this->db->where('inv.product_id',$product_id); 
+        $this->db->group_by('inv.batch_number'); 
+        $this->db->having('SUM(inv.quantity)>=0'); 
+	    $query = $this->db->get();
+        //echo $this->db->last_query(); exit; 
+        if($query->num_rows() > 0){
+            foreach (($query->result()) as $row) {
+
+                $query = $this->db->get_where('sma_purchase_items', ['product_id' => $product_id, 'warehouse_id' => $warehouse, 'batchno' => $row->batchno, 'sale_price >' => 0], 1);
+                if ($query->num_rows() > 0) {
+                    $rowp = $query->row();
+                    $batch_sale_price = $rowp->sale_price;
+                }else{
+                    $batch_sale_price = 0;
+                }
+                $row->batch_sale_price = $batch_sale_price;
+                $data[] = $row; 
+            }
+          //  echo '<pre>'; print_r($data); exit;  
+          return $data; 
+         }  
+        return false;
+    } 
+
+     public function getProductBatchesData($product_id, $warehouse)
+    {  
+         
+        $this->db->select(' inv.product_id, inv.batch_number as batchno ,SUM(inv.quantity) as quantity, inv.net_unit_cost, inv.location_id as warehouse_id, wp.rack, wp.avg_cost, inv.expiry_date as expiry, wp.purchase_cost');
+        $this->db->from('sma_inventory_movements inv');
+        $this->db->join('warehouses_products wp', 'wp.batchno=inv.batch_number AND  wp.product_id= inv.product_id and wp.warehouse_id=inv.location_id', 'LEFT');   
+        $this->db->where('inv.location_id',$warehouse);
+        $this->db->where('inv.product_id',$product_id); 
+        $this->db->group_by('inv.batch_number, inv.expiry_date'); 
+        $this->db->having('SUM(inv.quantity)>=0'); 
+	    $query = $this->db->get();
+        // echo $this->db->last_query();exit; 
+        if($query->num_rows() > 0){
+            foreach (($query->result()) as $row) {
+
+                $query = $this->db->get_where('sma_purchase_items', ['product_id' => $product_id, 'warehouse_id' => $warehouse, 'batchno' => $row->batchno, 'sale_price >' => 0], 1);
+                if ($query->num_rows() > 0) {
+                    $rowp = $query->row();
+                    $batch_sale_price = $rowp->sale_price;
+                }else{
+                    $batch_sale_price = 0;
+                }
+                $row->batch_sale_price = $batch_sale_price;
+                $data[] = $row; 
+            }
+          //  echo '<pre>'; print_r($data); exit;  
+          return $data; 
+         }  
+        return false;
+    } 
+
+    public function getProductBatchesData__BK($product_id, $warehouse)
     {
-        $q = $this->db->get_where('warehouses_products', ['product_id' => $product_id, 'warehouse_id' => $warehouse]);
+        //$q = $this->db->get_where('warehouses_products', ['product_id' => $product_id, 'warehouse_id' => $warehouse]);
+        $q = $this->db->get_where('warehouses_products', ['product_id' => $product_id, 'warehouse_id' => $warehouse]);  
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
 
@@ -1698,10 +2066,15 @@ public function getallCountry()
                     $batch_sale_price = 0;
                 }
 
+                //if($this->db->platform == 'pharma'){
+                   $total_batch_quantity = $this->Inventory_model->get_current_stock( $product_id, $warehouse, $row->batchno);
+                   $row->quantity = $total_batch_quantity;
+                // }
+
                 $row->batch_sale_price = $batch_sale_price;
                 $data[] = $row;
             }
-        
+            // echo '<pre>'; print_r($data); exit; 
             return $data;
         }
         return false;
@@ -1722,6 +2095,73 @@ public function getallCountry()
     public function getAllEmployees()
     {
         $q = $this->db->get('employees');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
+    public function getCompanyByParentCode($parent_id)
+    {
+        $q = $this->db->get_where('companies', ['parent_code' => $parent_id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function deleteAccountingEntry($id, $type){
+
+        if($type == 'purchase'){ 
+            $q = $this->db->get_where('sma_accounts_entries', ['pid' => $id], 1);
+        }else if($type == 'sale'){
+            $q = $this->db->get_where('sma_accounts_entries', ['sid' => $id], 1);
+        }else if($type == 'transfer'){
+            $q = $this->db->get_where('sma_accounts_entries', ['tid' => $id], 1);
+        }else if($type == 'return_supplier'){
+            $q = $this->db->get_where('sma_accounts_entries', ['rsid' => $id], 1);
+        }else if($type == 'return_customer'){
+            $q = $this->db->get_where('sma_accounts_entries', ['rid' => $id], 1);
+        }
+
+        if ($q->num_rows() > 0) {
+            $result = $q->row();
+
+            if ($this->db->delete('sma_accounts_entries', ['id' => $result->id])) {
+                $this->db->delete('sma_accounts_entryitems', ['entry_id' => $result->id]);
+                return true;
+            }
+        }else{
+            return false;
+        }
+        
+    }
+
+    public function getJournalEntryByTypeId($type='', $type_id)
+    {
+        if($type == '' || $type_id == '') {
+            return false;
+        }
+        if($type == 'purchase') {
+            $this->db->where('pid',$type_id); 
+            $q = $this->db->get_where('sma_accounts_entries', ['pid' => $type_id], 1);
+        }
+        if($type == 'return_supplier') {
+            $this->db->where('rsid',$type_id); 
+            $q = $this->db->get_where('sma_accounts_entries', ['rsid' => $type_id], 1);
+        }
+        
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getAllPharmacists(){
+        $q = $this->db->get_where('users', ['group_id' => 8]);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;

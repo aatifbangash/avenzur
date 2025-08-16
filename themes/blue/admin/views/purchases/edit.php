@@ -286,7 +286,7 @@
                         } ?>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <?= lang('reference_no', 'poref'); ?>
+                                <?= lang('Supplier Reference Number', 'poref'); ?>
                                 <?php echo form_input('reference_no', ($_POST['reference_no'] ?? $purchase->reference_no), 'class="form-control input-tip" id="poref" required="required"'); ?>
                             </div>
                         </div>
@@ -296,8 +296,8 @@
                                 <?php
                                 $wh[''] = '';
                                 foreach ($warehouses as $warehouse) {
-                                    $wh[$warehouse->id] = $warehouse->name;
-                                }
+                                    $wh[$warehouse->id] = $warehouse->name.' ('.$warehouse->code.')';
+                                }     
                                 echo form_dropdown('warehouse', $wh, ($_POST['warehouse'] ?? $purchase->warehouse_id), 'id="powarehouse" class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('warehouse') . '" required="required" style="width:100%;" ');
                                 ?>
                             </div>
@@ -309,7 +309,7 @@
                                     <?= lang('status', 'postatus'); ?>
                                     <?php
                                     //$post = ['received' => lang('received'), 'partial' => lang('partial'), 'pending' => lang('pending'), 'ordered' => lang('ordered')];
-                                    $post = ['received' => lang('received'), 'partial' => lang('partial'), 'rejected' => lang('rejected'), 'pending' => lang('pending'), 'ordered' => lang('ordered'), 'arrived' => lang('arrived')];
+                                    $post = ['received' => lang('received'), 'rejected' => lang('rejected'), 'pending' => lang('pending')];
 
                                     echo form_dropdown('status', $post, ($_POST['status'] ?? $purchase->status), ' class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . '" id="postatus"  style="width:100%;" ');
                                     ?>
@@ -321,9 +321,9 @@
                                     <?= lang('status', 'postatus'); ?>
                                     <?php
                                     //$post = ['received' => lang('received'), 'partial' => lang('partial'), 'pending' => lang('pending'), 'ordered' => lang('ordered')];
-                                    $post = ['received' => lang('received'), 'partial' => lang('partial'), 'rejected' => lang('rejected'), 'pending' => lang('pending'), 'ordered' => lang('ordered'), 'arrived' => lang('arrived')];
+                                    $post = ['received' => lang('received'),  'rejected' => lang('rejected'), 'pending' => lang('pending')];
 
-                                    echo form_dropdown('status', $post, ($_POST['status'] ?? $purchase->status), ' class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . '"disabled="disabled" id="postatus"  style="width:100%;" ');
+                                    echo form_dropdown('status', $post, ($_POST['status'] ?? $purchase->status), ' class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . ' id="postatus"  style="width:100%;" ');
                                     ?>
                                 </div>
                             </div>
@@ -432,10 +432,12 @@
                                     <table id="poTable" class="table items table-striped table-bordered table-condensed table-hover sortable_table">
                                         <thead>
                                             <tr>
+                                                <th class="col-md-1">#</th>
                                                 <th class="col-md-2">item name</th>
+                                                <th class="col-md-1">avz code</th>
                                                 <th class="col-md-1">sale price</th>
                                                 <th class="col-md-1">purchase price</th>
-                                                <th class="col-md-1">Serial No.</th>
+                                                <!--<th class="col-md-1">Serial No.</th>-->
                                                 <th class="col-md-1">Batch</th>
                                                 <?php
                                                 if ($Settings->product_expiry) {
@@ -443,7 +445,7 @@
                                                 }
                                                 ?>
                                                 <th class="col-md-1">qty</th>
-                                                <!--<th class="col-md-1">bonus</th>-->
+                                                <th class="col-md-1">bonus</th>
                                                 <th class="col-md-1">dis 1</th>
                                                 <th class="col-md-1">dis 2</th>
                                                 <th class="col-md-1">Vat 15%</th>
@@ -473,7 +475,7 @@
                             <div class="row" id="extras-con" style="display: none;">
                                 <?php if ($Settings->tax2) {
                                 ?>
-                                    <div class="col-md-4">
+                                    <!-- <div class="col-md-4">
                                         <div class="form-group">
                                             <?= lang('order_tax', 'potax2') ?>
                                             <?php
@@ -483,7 +485,7 @@
                                             }
                                             echo form_dropdown('order_tax', $tr, '', 'id="potax2" class="form-control input-tip select" style="width:100%;"'); ?>
                                         </div>
-                                    </div>
+                                    </div> -->
                                 <?php
                                 } ?>
 
@@ -522,7 +524,7 @@
                         if ($Owner) {
 
                             // OWNER 
-                            if ($purchase->status == 'pending' || $purchase->status == 'ordered' || $purchase->status == 'rejected') {
+                            /*if ($purchase->status == 'pending' || $purchase->status == 'ordered' || $purchase->status == 'rejected') {
 
                                 echo '<div class="col-md-12"><div class="fprom-group">
                                             <input type="submit" class="btn btn-primary" id="postatus1" name="status" value="ordered" style="margin:15px 0;"/>
@@ -556,7 +558,7 @@
                                     echo form_submit('validate', 'validate', 'id="edit_pruchase" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"');
                                     echo "</div></div>";
                                 }
-                            }
+                            }*/
                             echo '<div class="col-md-12"><div class="fprom-group">';
                             echo form_submit('edit_pruchase', $this->lang->line('submit'), 'id="edit_pruchase" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"');
                             echo "</div></div>";
@@ -620,8 +622,10 @@
                             <td><?= lang('order_discount') ?> <span class="totals_val pull-right" id="tds">0.00</span></td>
                             <?php if ($Settings->tax2) {
                             ?>
-                                <td><?= lang('order_tax') ?> <span class="totals_val pull-right" id="ttax2">0.00</span></td>
-                            <?php
+                                <!-- <td><?= lang('order_tax') ?> <span class="totals_val pull-right" id="ttax2">0.00</span></td> -->
+                                <td><?= lang('VAT') ?> <span class="totals_val pull-right" id="grand_vat">0.00</span></td>
+                           
+                           <?php
                             } ?>
                             <td><?= lang('shipping') ?> <span class="totals_val pull-right" id="tship">0.00</span></td>
                             <td><?= lang('grand_total') ?> <span class="totals_val pull-right" id="gtotal">0.00</span></td>

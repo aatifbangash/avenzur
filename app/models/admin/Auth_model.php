@@ -802,9 +802,12 @@ class Auth_model extends CI_Model
             $user = $query->row();
              $allow_discount_value      = $user->allow_discount_value;
              // Password not required for OTP login
-            $password = true; //$this->hash_password_db($user->id, $password);
-
-            if ($password === true) {
+            //$password = true; //$this->hash_password_db($user->id, $password);
+            $verify_password = true;
+            if($user->group_id != 3){
+                $verify_password = $this->hash_password_db($user->id, $password);
+             }
+            if ($verify_password === true) {
                 if ($user->active != 1) {
                     $this->trigger_events('post_login_unsuccessful');
                     $this->set_error('login_unsuccessful_not_active');
