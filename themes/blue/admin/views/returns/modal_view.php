@@ -86,7 +86,7 @@
                                 echo '<br>';
                             }
                         } ?>
-                        <?= lang('Return Status'); ?>: <?= 'Complete'; ?><br>
+                        <?= lang('Return Status'); ?>: <?= $inv->status; ?><br>
                         <?= $inv->payment_method ? lang('payment_method') . ': ' . lang($inv->payment_method) : ''; ?>
                         <?php
                         if ($inv->payment_status != 'paid' && $inv->due_date) {
@@ -356,7 +356,7 @@
                             <td style=" text-align:center; vertical-align:middle;"><?= $row->hsn_code ?: ''; ?></td>
                             <?php
                             } ?>
-                            <td style="text-align:center; vertical-align:middle;"><?= $this->sma->formatQuantity($row->unit_quantity); ?></td>
+                            <td style="text-align:center; vertical-align:middle;"><?= $this->sma->formatQuantity($row->quantity); ?></td>
                             <?php
                             if ($inv->status == 'partial') {
                                 echo '<td style="text-align:center;vertical-align:middle;width:80px;">' . $this->sma->formatQuantity($row->quantity_received). '</td>';
@@ -381,7 +381,7 @@
                                 $pr_discount      = $this->site->calculateDiscount($row->discount1.'%', $row->real_unit_price);
                                 $amount_after_dis1 = $unit_cost - $pr_discount;
                                 $pr_discount2      = $this->site->calculateDiscount($row->discount2.'%', $amount_after_dis1);  
-                                $pr_item_discount2 = $this->sma->formatDecimal($pr_discount2 * $row->unit_quantity);
+                                $pr_item_discount2 = $this->sma->formatDecimal($pr_discount2 * $row->quantity);
                                 $row->discount2= $this->sma->formatNumber($row->discount2,null);
                                 echo '<td style=" text-align:right; vertical-align:middle;">' . $this->sma->formatNumber($row->item_discount) . '</td>';
                        
