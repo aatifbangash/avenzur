@@ -1,96 +1,6 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <script>
     $(document).ready(function () {
-        oTable = $('#POData').dataTable({
-            "aaSorting": [[1, "desc"], [2, "desc"]],
-            "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?= lang('all') ?>"]],
-            "iDisplayLength": <?= $Settings->rows_per_page ?>,
-            'bProcessing': true, 'bServerSide': true,
-            'sAjaxSource': '<?= admin_url('purchases/getPurchases' . ($warehouse_id ? '/' . $warehouse_id : '') .'?pid='.$pid. '&from=' .$pfromDate. '&to=' .$ptoDate) ?>',
-            'fnServerData': function (sSource, aoData, fnCallback) {
-                aoData.push({
-                    "name": "<?= $this->security->get_csrf_token_name() ?>",
-                    "value": "<?= $this->security->get_csrf_hash() ?>"
-                });
-                $.ajax({ 'dataType': 'json', 'type': 'POST', 'url': sSource, 'data': aoData, 'success': fnCallback });
-            },
-            "aoColumns": [{ "bSortable": false, "mRender": checkbox }, { "mRender": fld }, null, null, null, { "mRender": row_status_p }, { "mRender": currencyFormat }, { "mRender": currencyFormat }, { "mRender": currencyFormat }, { "mRender": pay_status }, { "bSortable": false, "mRender": attachment }, { "bSortable": false }],
-            'fnRowCallback': function (nRow, aData, iDisplayIndex) {
-                var oSettings = oTable.fnSettings();
-                nRow.id = aData[0];
-                nRow.className = "purchase_link";
-                return nRow;
-            },
-            "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
-                var total = 0, paid = 0, balance = 0;
-                for (var i = 0; i < aaData.length; i++) {
-                    total += parseFloat(aaData[aiDisplay[i]][6]);
-                    paid += parseFloat(aaData[aiDisplay[i]][7]);
-                    balance += parseFloat(aaData[aiDisplay[i]][8]);
-                }
-                var nCells = nRow.getElementsByTagName('th');
-                console.log(nCells)
-                nCells[6].innerHTML = currencyFormat(total);
-                nCells[7].innerHTML = currencyFormat(paid);
-                nCells[8].innerHTML = currencyFormat(balance);
-            }
-        }).fnSetFilteringDelay().dtFilter([
-            { column_number: 1, filter_default_label: "[<?= lang('date'); ?> (yyyy-mm-dd)]", filter_type: "text", data: [] },
-            { column_number: 2, filter_default_label: "[<?= lang('ref_no'); ?>]", filter_type: "text", data: [] },
-            { column_number: 3, filter_default_label: "[<?= lang('Sequence Code'); ?>]", filter_type: "text", data: [] },
-            { column_number: 4, filter_default_label: "[<?= lang('supplier'); ?>]", filter_type: "text", data: [] },
-            { column_number: 5, filter_default_label: "[<?= lang('purchase_status'); ?>]", filter_type: "text", data: [] },
-            { column_number: 9, filter_default_label: "[<?= lang('payment_status'); ?>]", filter_type: "text", data: [] },
-        ], "footer");
-
-        <?php if ($this->session->userdata('remove_pols')) {
-            ?>
-            if (localStorage.getItem('poitems')) {
-                localStorage.removeItem('poitems');
-            }
-            if (localStorage.getItem('podiscount')) {
-                localStorage.removeItem('podiscount');
-            }
-            if (localStorage.getItem('potax2')) {
-                localStorage.removeItem('potax2');
-            }
-            if (localStorage.getItem('poshipping')) {
-                localStorage.removeItem('poshipping');
-            }
-            if (localStorage.getItem('poref')) {
-                localStorage.removeItem('poref');
-            }
-            if (localStorage.getItem('powarehouse')) {
-                localStorage.removeItem('powarehouse');
-            }
-            if (localStorage.getItem('ponote')) {
-                localStorage.removeItem('ponote');
-            }
-            if (localStorage.getItem('posupplier')) {
-                localStorage.removeItem('posupplier');
-            }
-            if (localStorage.getItem('pocurrency')) {
-                localStorage.removeItem('pocurrency');
-            }
-            if (localStorage.getItem('poextras')) {
-                localStorage.removeItem('poextras');
-            }
-            if (localStorage.getItem('podate')) {
-                localStorage.removeItem('podate');
-            }
-            if (localStorage.getItem('postatus')) {
-                localStorage.removeItem('postatus');
-            }
-            if (localStorage.getItem('popayment_term')) {
-                localStorage.removeItem('popayment_term');
-            }
-            <?php $this->sma->unset_data('remove_pols');
-        }
-        ?>
-    });
-
-
-    $(document).ready(function () {
         var lastInsertedId = '<?= $last_inserted_id; ?>';
 
         function openModalForLastInsertedId(id) {
@@ -174,16 +84,18 @@
         <div class="row">
             <div class="col-lg-12">
                 <!-- <p class="introtext"><?= lang('list_results'); ?></p> -->
-                <?php 
-                    // MARK: Filters
+                <?php
+                // MARK: Filters
                 ?>
                 <div class="row" style="margin: 25px 0; display: flex; align-items: center;">
                     <div style="flex: 1; margin-right: 20px;">
-                        <input type="text" id="pid" name="pid" class="form-control input-tip" placeholder="Purchase Number">
+                        <input type="text" id="pid" name="pid" class="form-control input-tip"
+                            placeholder="Purchase Number">
                     </div>
 
                     <div style="flex: 1;">
-                        <input type="date" name="date" class="form-control input-tip" id="pfromDate" placeholder="From Date">
+                        <input type="date" name="date" class="form-control input-tip" id="pfromDate"
+                            placeholder="From Date">
                     </div>
 
                     <div style="flex: 0; margin: 0 10px; font-size: 18px; font-weight: bold;">
@@ -191,7 +103,8 @@
                     </div>
 
                     <div style="flex: 1; margin-right: 20px;">
-                        <input type="date" name="date" class="form-control input-tip" id="ptoDate" placeholder="To Date">
+                        <input type="date" name="date" class="form-control input-tip" id="ptoDate"
+                            placeholder="To Date">
                     </div>
 
                     <div style="flex: 0;">
@@ -199,40 +112,116 @@
                     </div>
                 </div>
 
-                <?php 
-                    // MARK: Table
+                <?php
+                // MARK: Table
                 ?>
                 <div class="table-responsive">
                     <table id="POData" cellpadding="0" cellspacing="0" border="0"
                         class="table table-bordered table-hover table-striped">
                         <thead>
                             <tr class="active">
-                                <th style="min-width:30px; width: 30px; text-align: center;">
-                                    <input class="checkbox checkft" type="checkbox" name="check" />
-                                </th>
+                                <th style="min-width:30px; width: 30px; text-align: center;">No</th>
                                 <th><?= lang('date'); ?></th>
-                                <th><?= lang('ref_no'); ?></th>
-                                <th><?= lang('Sequence Code'); ?></th>
+                                <th style="width: 20px"><?= lang('ref_no'); ?></th>
+                                <!-- <th><?= lang('Sequence Code'); ?></th> -->
                                 <th><?= lang('supplier'); ?></th>
-                                <th><?= lang('purchase_status'); ?></th>
-                                <th><?= lang('grand_total'); ?></th>
-                                <th><?= lang('paid'); ?></th>
-                                <th><?= lang('balance'); ?></th>
-                                <th><?= lang('payment_status'); ?></th>
-                                <th style="min-width:30px; width: 30px; text-align: center;"><i class="fa fa-chain"></i>
-                                </th>
+                                <th style="width: 20px"><?= lang('Status'); ?></th>
+                                <th style="width: 20px"><?= lang('grand_total'); ?></th>
+                                <!-- <th><?= lang('paid'); ?></th> -->
+                                <!-- <th><?= lang('balance'); ?></th> -->
+                                <!-- <th><?= lang('payment_status'); ?></th> -->
+                                <!-- <th style="min-width:30px; width: 30px; text-align: center;"><i class="fa fa-chain"></i>
+                                </th> -->
+                                <th>Transfer Status</th>
+                                <th>Transfer Id</th>
+                                <th>Transfer At</th>
+
                                 <th style="width:100px;"><?= lang('actions'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td colspan="12" class="dataTables_empty"><?= lang('loading_data_from_server'); ?></td>
-                            </tr>
+                            <?php
+                            if (!empty($purchases)): ?>
+                                <?php foreach ($purchases as $purchase):
+                                    $pid = $purchase->id;
+                                    $detail_link = anchor('admin/purchases/view/'.$pid, '<i class="fa fa-file-text-o"></i> ' . lang('purchase_details'));
+                                    $payments_link = anchor('admin/purchases/payments/'.$pid, '<i class="fa fa-money"></i> ' . lang('view_payments'), 'data-toggle="modal" data-target="#myModal"');
+                                    $transfer_link = anchor('admin/purchases/transfer/'.$pid, '<i class="fa fa-money"></i> ' . lang('Transfer to Pharmacy'), 'data-toggle="modal" data-target="#myModal"');
+                                    $journal_entry_link = anchor('admin/entries/view/journal/?pid='.$pid, '<i class="fa fa-eye"></i> ' . lang('Journal Entry'));
+                                    
+                                    $add_payment_link = anchor('admin/purchases/add_payment/'.$pid, '<i class="fa fa-money"></i> ' . lang('add_payment'), 'data-toggle="modal" data-target="#myModal"');
+
+                                    $email_link = anchor('admin/purchases/email/'.$pid, '<i class="fa fa-envelope"></i> ' . lang('email_purchase'), 'data-toggle="modal" data-target="#myModal"');
+                                    $edit_link = anchor('admin/purchases/edit/'.$pid, '<i class="fa fa-edit"></i> ' . lang('edit_purchase'));
+                                    $pdf_link = anchor('admin/purchases/pdf/'.$pid, '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf'));
+                                    $print_barcode = anchor('admin/products/print_barcodes/?purchase='.$pid, '<i class="fa fa-print"></i> ' . lang('print_barcodes'));
+                                    $return_link = anchor('admin/returns_supplier/add/?purchase='.$pid, '<i class="fa fa-angle-double-left"></i> ' . lang('return_purchase'));
+                                    $delete_link = "<a href='#' class='po' title='<b>" . $this->lang->line('delete_purchase') . "</b>' data-content=\"<p>"
+                                        . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('purchases/delete/'.$pid) . "'>"
+                                        . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i> "
+                                        . lang('delete_purchase') . '</a>';
+
+                                    ?>
+                                    <tr class="purchase_link" id="<?=$pid?>">
+                                        <td><?= $purchase->id ?></td>
+                                        <td><?= $purchase->date ?></td>
+                                        <td><?= $purchase->reference_no ?></td>
+                                        <!-- <td><?= $purchase->sequence_code ?></td> -->
+                                        <td><?= $purchase->supplier ?></td>
+                                        <td><?= $purchase->status ?></td>
+                                        <td><?= number_format($purchase->grand_total, 2) ?></td>
+                                        <!-- <td><?= number_format($purchase->paid, 2) ?></td> -->
+                                        <!-- <td><?= number_format($purchase->grand_total - $purchase->paid, 2) ?></td> -->
+                                        <!-- <td><?= $purchase->payment_status ?></td> -->
+                                        <!-- <td><?= $purchase->attachment ?></td> -->
+                                        <td> <?= $purchase->is_transfer == 1 ? "Transferred" : "Pending"; ?> </td>
+                                        <td> <?= $purchase->transfer_id > 0 ? $purchase->transfer_id : ''; ?></td>
+                                        <td> <?= $purchase->transfer_at ?> </td>
+                                        <td>
+                                            <div class="text-center">
+                                                <div class="btn-group text-left">
+                                                    <button type="button"
+                                                        class="btn btn-default btn-xs btn-primary dropdown-toggle"
+                                                        data-toggle="dropdown">Action<span class="caret"></span></button>
+                                                    <ul class="dropdown-menu pull-right" role="menu">
+                                                        <li><?= $detail_link ?> </li>
+                                                        <li><?= $payments_link ?></li>
+                                                        <li><?= $add_payment_link ?></li>
+                                                        <?php if($purchase->status != 'received') {?>
+                                                        <li><?= $edit_link ?></li>
+                                                        <?php }?>
+                                                        <!-- <li><?= $pdf_link ?></li>
+                                                        <li><?= $email_link ?></li> -->
+                                                        <li><?= $print_barcode ?></li>
+                                                        <?php if($purchase->status == 'received') {?>
+                                                        <li><?= $return_link ?></li>
+                                                        <?php } ?>
+                                                        <?php if($purchase->status != 'received') {?>
+                                                        <li><?= $delete_link ?></li>
+                                                        <?php }?>
+                                                        <?php if($purchase->is_transfer !=1 && $purchase->status == 'received') {?>
+                                                            <li><?= $transfer_link ?></li>
+                                                        <?php }?>
+                                                        <?php if($purchase->status == 'received') {?>
+                                                        <li><?= $journal_entry_link ?></li>
+                                                        <?php } ?>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="8" class="text-center">No purchases found</td>
+                                </tr>
+                            <?php endif; ?>
+
                         </tbody>
-                        <tfoot class="dtFilter">
+                        <!-- <tfoot class="dtFilter">
                             <tr class="active">
                                 <th style="min-width:30px; width: 30px; text-align: center;">
-                                    <input class="checkbox checkft" type="checkbox" name="check" />
+                                    
                                 </th>
                                 <th></th>
                                 <th></th>
@@ -247,8 +236,11 @@
                                 </th>
                                 <th style="width:100px; text-align: center;"><?= lang('actions'); ?></th>
                             </tr>
-                        </tfoot>
+                        </tfoot> -->
                     </table>
+                    <div class="mt-3">
+                        <?= $pagination ?>
+                    </div>
                 </div>
             </div>
         </div>
@@ -266,12 +258,12 @@
 ?>
 
 <script>
-    document.getElementById('searchByNumber').addEventListener('click', function() {
+    document.getElementById('searchByNumber').addEventListener('click', function () {
         var pid = document.getElementById('pid').value;
         var pfromDate = document.getElementById('pfromDate').value;
         var ptoDate = document.getElementById('ptoDate').value;
 
-        if (is_numeric(pid) || pid == ''){
+        if (is_numeric(pid) || pid == '') {
             var paramValues = [pid, pfromDate, ptoDate];
             var paramNames = ['pid', 'from', 'to'];
 
@@ -287,7 +279,7 @@
             var newUrl = baseUrl + '?' + queryParams.join('&');
             window.location.href = newUrl;
         } else {
-            alert("Please enter a valid purchase number."); 
+            alert("Please enter a valid purchase number.");
         }
     });
 </script>

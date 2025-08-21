@@ -1,7 +1,5 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<?php 
-    if($inv->invoice_number != ''){
-?>
+
 <div class="modal-dialog modal-lg">
     <div class="modal-content">
         <div class="modal-header">
@@ -70,15 +68,3 @@
         <?php echo form_close(); ?>
     </div>
 </div>
-
-<?php } else { ?>
-
-<script>
-    var invoiced = '<?= $inv->invoice_number; ?>';
-    if(invoiced == ''){
-        window.location.href = window.location.origin + '/admin/purchases';
-    }
-
-</script>
-
-<?php } ?>
