@@ -390,7 +390,8 @@ class Purchases_model extends CI_Model
             ->order_by('id', 'desc')
             ->where('purchase_items.purchase_id', $purchase_id);
 
-        // Exclude items whose item_code exists in $avz_item_codes
+        $this->db->where('purchase_items.is_transfer !=', 1);
+            // Exclude items whose item_code exists in $avz_item_codes
         if (!empty($avz_item_codes)) {
             $this->db->where_not_in('purchase_items.avz_item_code', $avz_item_codes);
         }
@@ -1349,16 +1350,61 @@ class Purchases_model extends CI_Model
         return $this->db->count_all_results();
     }
 
-    public function updatePurchaseForTransfer($purchase_id, $transfer_id, $location_to)
+    public function updatePurchaseForTransfer($purchase_id, $transfer_id, $location_to, $excluded_avz_item_codes, $total_items)
     {
+   
+        $is_transfer = 1;
+        $this->db->where("purchase_id", $purchase_id);
+        if (!empty($excluded_avz_item_codes)) {
+            $is_transfer = 2;
+            $this->db->where_not_in('avz_item_code', $excluded_avz_item_codes);
+        }
+        $this->db->update("purchase_items", ["is_transfer" => 1]);
+      
 
         $data = array(
-            'is_transfer' => 1,
+            'is_transfer' => $is_transfer,
             'transfer_id' => $transfer_id,
             'location_to' => $location_to,
             'transfer_by' => $this->session->userdata('user_id'),
             'transfer_at' => date('Y-m-d h:i:s')
         );
         $this->db->update('purchases', $data, ['id' => $purchase_id]);
+
+         $data = array(
+            'pid' => $purchase_id,
+            'tid' => $transfer_id,
+            'transfer_to' => $location_to,
+            'transfer_by' => $this->session->userdata('user_id'),
+            'transfer_at' => date('Y-m-d h:i:s'),
+            'transfer_items' => $total_items
+        );
+      
+        $this->db->insert('purchase_transfers', $data);
+       
+    }
+
+    public function getAllPurchaseTransferItems($purchase_id)
+    {
+        $this->db->select('purchase_items.*, tax_rates.code as tax_code, tax_rates.name as tax_name, tax_rates.rate as tax_rate,
+         products.unit, products.details as details, product_variants.name as variant, products.hsn_code as hsn_code, 
+         products.second_name as second_name, products.item_code')
+            ->join('products', 'products.id=purchase_items.product_id', 'left')
+            ->join('product_variants', 'product_variants.id=purchase_items.option_id', 'left')
+            ->join('tax_rates', 'tax_rates.id=purchase_items.tax_rate_id', 'left')
+            ->group_by('purchase_items.id')
+            ->order_by('id', 'asc');
+        //$q = $this->db->get_where('purchase_items', ['purchase_id' => $purchase_id]);
+        $this->db->where('purchase_items.purchase_id', $purchase_id);
+        $this->db->where('purchase_items.is_transfer !=', 1);
+
+        $q = $this->db->get('purchase_items');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
     }
 }

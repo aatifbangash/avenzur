@@ -160,7 +160,13 @@
                                         . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('purchases/delete/'.$pid) . "'>"
                                         . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i> "
                                         . lang('delete_purchase') . '</a>';
-
+                                    
+                                    $transfer_status = "Pending";
+                                    if($purchase->is_transfer == 1){
+                                        $transfer_status = "Transferred";
+                                    }else if   ($purchase->is_transfer == 2){
+                                        $transfer_status = "Partially Transferred";
+                                    }
                                     ?>
                                     <tr class="purchase_link" id="<?=$pid?>">
                                         <td><?= $purchase->id ?></td>
@@ -174,7 +180,7 @@
                                         <!-- <td><?= number_format($purchase->grand_total - $purchase->paid, 2) ?></td> -->
                                         <!-- <td><?= $purchase->payment_status ?></td> -->
                                         <!-- <td><?= $purchase->attachment ?></td> -->
-                                        <td> <?= $purchase->is_transfer == 1 ? "Transferred" : "Pending"; ?> </td>
+                                        <td> <?= $transfer_status; ?> </td>
                                         <td> <?= $purchase->transfer_id > 0 ? $purchase->transfer_id : ''; ?></td>
                                         <td> <?= $purchase->transfer_at ?> </td>
                                         <td>
@@ -187,7 +193,7 @@
                                                         <li><?= $detail_link ?> </li>
                                                         <li><?= $payments_link ?></li>
                                                         <li><?= $add_payment_link ?></li>
-                                                        <?php if($purchase->status != 'received') {?>
+                                                        <?php if($purchase->is_transfer !=1) {?>
                                                         <li><?= $edit_link ?></li>
                                                         <?php }?>
                                                         <!-- <li><?= $pdf_link ?></li>
@@ -196,7 +202,7 @@
                                                         <?php if($purchase->status == 'received') {?>
                                                         <li><?= $return_link ?></li>
                                                         <?php } ?>
-                                                        <?php if($purchase->status != 'received') {?>
+                                                        <?php if($purchase->status == 'pending') {?>
                                                         <li><?= $delete_link ?></li>
                                                         <?php }?>
                                                         <?php if($purchase->is_transfer !=1 && $purchase->status == 'received') {?>
