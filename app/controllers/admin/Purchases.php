@@ -2239,7 +2239,7 @@ class Purchases extends MY_Controller
             'lastInsertedId' => $this->input->get('lastInsertedId')
         ];
 
-        $limit = $this->input->get('limit') ?? 5;
+        $limit = $this->input->get('limit') ?? 100;
         $page = $this->input->get('page') ?? 1;
         $offset = ($page - 1) * $limit;
 
@@ -2386,7 +2386,7 @@ class Purchases extends MY_Controller
        
         $this->data['warehouses'] = $this->site->getAllWarehouses();
         $this->data['payments'] = $this->purchases_model->getPurchasePayments($id);
-        $this->data['purchase_items'] = $this->purchases_model->getAllPurchaseItems($id);
+        $this->data['purchase_items'] = $this->purchases_model->getAllPurchaseTransferItems($id);
         $this->load->view($this->theme . 'purchases/transfer', $this->data);
 
     }
@@ -2398,8 +2398,14 @@ class Purchases extends MY_Controller
         $purchase_id = $this->input->post('purchase_id');
         $warehouse = $this->input->post('warehouse');
         $product_ids = $this->input->post('product_ids');
+        $excluded_avz_item_codes = $product_ids; 
 
         $purchase_inovice = $this->purchases_model->getPurchaseItemsWithExclude($purchase_id, $product_ids);
+        if(!$purchase_inovice){
+           $this->session->set_flashdata('error', lang('No products available for transfer. Please check the excluded products and try again.'));
+           admin_redirect('purchases');
+        }
+        $totalItemsToBeTransferred = sizeOf($purchase_inovice); 
         $purchase_detail = $this->purchases_model->getPurchaseByID($purchase_id);
 
         $check_existing_transfer = $this->transfers_model->getTransferByReferenceId($purchase_detail->reference_no);
@@ -2600,8 +2606,9 @@ class Purchases extends MY_Controller
         if ($transfer_id = $this->transfers_model->addTransfer($data, $products, $attachments)) {
 
             // update purchase with transfer id
-            $this->purchases_model->updatePurchaseForTransfer($purchase_id, $transfer_id,$to_warehouse );
-
+            $this->purchases_model->updatePurchaseForTransfer($purchase_id, $transfer_id,$to_warehouse,$excluded_avz_item_codes, $totalItemsToBeTransferred );
+            
+            
             $this->session->set_flashdata('message', lang('transfer_added'));
             admin_redirect('transfers');
         } else {
