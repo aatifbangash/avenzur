@@ -1275,7 +1275,7 @@ class Returns extends MY_Controller
                 ->from('returns');
         }
 
-        if (!$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
+        if (!$this->Owner && !$this->Admin) {
             $this->datatables->where('created_by', $this->session->userdata('user_id'));
         }
        
