@@ -4506,6 +4506,16 @@ class Reports_model extends CI_Model
     DATE(e.date)
     ORDER BY 
     DATE(e.date) */
+        
+        $dateWhere =  " AND DATE(p.date) >= '".trim($start_date)."'
+            AND DATE(p.date) <= '".trim($end_date)."' " ;
+
+        if( !empty($this->input->post('registerId'))  && $this->input->post('registerId') > 0 )
+        {
+            $dateWhere =  " AND p.date >= '".trim($this->input->post('register_open_date_time'))."'
+            AND p.date <= '".trim($this->input->post('register_close_date_time'))."' " ;
+        }
+
          $sql = "
                    
               SELECT DATE(p.date) as transaction_date,
@@ -4527,9 +4537,8 @@ class Reports_model extends CI_Model
                 FROM `sma_payments` as p
                 LEFT JOIN sma_sales as s ON s.id = p.sale_id 
                 LEFT JOIN sma_returns AS r ON r.id = p.return_id
-                WHERE 
-                 DATE(p.date) >= '" . trim($start_date) . "' 
-                  AND DATE(p.date) <= '" . trim($end_date) . "'  
+                WHERE 1=1
+                 ".$dateWhere."
                 AND (s.warehouse_id = " . $warehouse . "  OR r.warehouse_id = " . $warehouse . ")
                  GROUP BY 
                     DATE(p.date)
@@ -4557,6 +4566,16 @@ class Reports_model extends CI_Model
         if( $warehouse != '' ){
             $where = " AND s.warehouse_id = " . $warehouse ;
         }
+
+        $saleDateWhere =  " AND DATE(s.date) >= '".trim($start_date)."'
+            AND DATE(s.date) <= '".trim($end_date)."' " ;
+
+        if( !empty($this->input->post('registerId'))  && $this->input->post('registerId') > 0 )
+        {
+            $saleDateWhere =  " AND s.date >= '".trim($this->input->post('register_open_date_time'))."'
+            AND s.date <= '".trim($this->input->post('register_close_date_time'))."' " ;
+        }
+
         $sql = " SELECT 
                     c.category_code,
                     c.name as category_name,
@@ -4582,13 +4601,11 @@ class Reports_model extends CI_Model
                     FROM 
                         sma_sale_items si
                     INNER JOIN sma_sales s ON si.sale_id = s.id
-                    WHERE 
-                    DATE(s.date) >= '" . trim($start_date) . "' 
-                    AND DATE(s.date) <= '" . trim($end_date) . "'   
+                    WHERE 1=1 
+                    ".$saleDateWhere."   
                 ) t
-            WHERE 
-                DATE(s.date) >= '" . trim($start_date) . "' 
-                AND DATE(s.date) <= '" . trim($end_date) . "'
+            WHERE 1=1
+                ".$saleDateWhere."
                 ".$where."
                 GROUP BY 
                     c.name
@@ -4632,13 +4649,11 @@ class Reports_model extends CI_Model
             FROM 
                 sma_return_items si
             INNER JOIN sma_returns s ON si.return_id = s.id
-            WHERE 
-            DATE(s.date) >= '" . trim($start_date) . "' 
-            AND DATE(s.date) <= '" . trim($end_date) . "'   
+            WHERE 1=1
+           ".$saleDateWhere."   
         ) t
-        WHERE 
-        DATE(s.date) >= '" . trim($start_date) . "' 
-        AND DATE(s.date) <= '" . trim($end_date) . "'
+        WHERE 1=1
+        ".$saleDateWhere."
        ".$where."
         GROUP BY 
             c.category_code, c.name
@@ -4659,9 +4674,8 @@ class Reports_model extends CI_Model
                        FROM  
                      sma_sales s 
                                          
-                     WHERE 
-                         DATE(s.date) >= '" . trim($start_date) . "' 
-                         AND DATE(s.date) <= '" . trim($end_date) . "'
+                     WHERE 1=1
+                         ".$saleDateWhere."
                          ".$where."
                      ";
      
@@ -4685,6 +4699,24 @@ class Reports_model extends CI_Model
             $where_return = " AND r.warehouse_id = " . $warehouse ;
         }
         
+        $saleDateWhere =  " AND DATE(s.date) >= '".trim($start_date)."'
+            AND DATE(s.date) <= '".trim($end_date)."' " ;
+
+        if( !empty($this->input->post('registerId'))  && $this->input->post('registerId') > 0 )
+        {
+            $saleDateWhere =  " AND s.date >= '".trim($this->input->post('register_open_date_time'))."'
+            AND s.date <= '".trim($this->input->post('register_close_date_time'))."' " ;
+        }
+
+        $returnDateWhere =  " AND DATE(r.date) >= '".trim($start_date)."'
+            AND DATE(r.date) <= '".trim($end_date)."' " ;
+
+        if( !empty($this->input->post('registerId'))  && $this->input->post('registerId') > 0 )
+        {
+            $returnDateWhere =  " AND r.date >= '".trim($this->input->post('register_open_date_time'))."'
+            AND r.date <= '".trim($this->input->post('register_close_date_time'))."' " ;
+        }
+
         $sql = "
             SELECT 
                 item_code,
@@ -4728,9 +4760,8 @@ class Reports_model extends CI_Model
                     sma_sales s ON s.id = si.sale_id
                 JOIN 
                     sma_products p ON si.product_id = p.id
-                WHERE 
-                    DATE(s.date) >= '" . trim($start_date) . "' 
-                    AND DATE(s.date) <= '" . trim($end_date) . "'
+                WHERE 1=1
+                    ".$saleDateWhere."
                     " . $where . "
 
                 UNION ALL
@@ -4758,9 +4789,8 @@ class Reports_model extends CI_Model
                     sma_returns r ON r.id = ri.return_id
                 JOIN 
                     sma_products p ON ri.product_id = p.id
-                WHERE 
-                    DATE(r.date) >= '" . trim($start_date) . "' 
-                    AND DATE(r.date) <= '" . trim($end_date) . "'
+                WHERE 1=1
+                   ".$returnDateWhere."
                     " . $where_return . "
             ) AS combined
             ORDER BY 
@@ -4802,9 +4832,8 @@ class Reports_model extends CI_Model
                 sma_sales s ON s.id = si.sale_id
                 JOIN 
                     sma_products p ON si.product_id = p.id
-                WHERE 
-                DATE(s.date) >= '" . trim($start_date) . "' 
-                AND DATE(s.date) <= '" . trim($end_date) . "'
+                WHERE 1=1
+                ".$saleDateWhere."
                 ".$where."
 
                 UNION ALL
@@ -4821,9 +4850,8 @@ class Reports_model extends CI_Model
                     sma_return_items ri
                 JOIN 
                     sma_returns r ON r.id = ri.return_id
-                WHERE 
-                    DATE(r.date) >= '" . trim($start_date) . "' 
-                    AND DATE(r.date) <= '" . trim($end_date) . "'
+                WHERE 1=1
+                ".$returnDateWhere."  
                 ".$where_return."
                 ) AS combined
             ";
@@ -4842,9 +4870,8 @@ class Reports_model extends CI_Model
                   FROM  
                 sma_sales s 
                                     
-                WHERE 
-                    DATE(s.date) >= '" . trim($start_date) . "' 
-                    AND DATE(s.date) <= '" . trim($end_date) . "'
+                WHERE 1=1
+                    ".$saleDateWhere."
                     ".$where."
                 ";
 
