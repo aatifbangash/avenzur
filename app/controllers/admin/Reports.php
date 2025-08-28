@@ -5440,6 +5440,11 @@ class Reports extends MY_Controller
             $this->data['end_date'] = $to_date;
             $this->data['warehouse'] = $warehouse;
             $this->data['collections_data'] = $collections_data;
+            $this->data['register_id'] = $this->input->post('registerId');
+            $this->data['register_open_date_time'] = $this->input->post('register_open_date_time');
+            $this->data['register_close_date_time'] = $this->input->post('register_close_date_time');
+            $this->data['registerIds'] = $this->pos_model->search_register_ids($warehouse, 0, $from_date, $to_date);
+            
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('collection_pharmacy')]];
             $meta = ['page_title' => lang('collection_pharmacy'), 'bc' => $bc];
 
@@ -5481,6 +5486,12 @@ class Reports extends MY_Controller
             $this->data['end_date'] = $to_date;
             $this->data['warehouse'] = $warehouse;
             $this->data['sales_data'] = $sales_data;
+
+            $this->data['register_id'] = $this->input->post('registerId');
+            $this->data['register_open_date_time'] = $this->input->post('register_open_date_time');
+            $this->data['register_close_date_time'] = $this->input->post('register_close_date_time');
+            $this->data['registerIds'] = $this->pos_model->search_register_ids($warehouse, 0, $from_date, $to_date);
+
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('sales_by_category')]];
             $meta = ['page_title' => lang('sales_by_category'), 'bc' => $bc];
 
@@ -5524,6 +5535,11 @@ class Reports extends MY_Controller
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('sales_by_category')]];
             $meta = ['page_title' => lang('sales_by_item'), 'bc' => $bc];
 
+            $this->data['register_id'] = $this->input->post('registerId');
+            $this->data['register_open_date_time'] = $this->input->post('register_open_date_time');
+            $this->data['register_close_date_time'] = $this->input->post('register_close_date_time');
+            $this->data['registerIds'] = $this->pos_model->search_register_ids($warehouse, 0, $from_date, $to_date);
+            
           
             $this->page_construct('reports/sales_by_item', $meta, $this->data);
          

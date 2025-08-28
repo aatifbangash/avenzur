@@ -113,16 +113,17 @@ $registerIdsJson = '';
                          <div class="col-md-3">                            
                               <label>  Register Numbers </label>
                                 <div class="form-group">
+                                    
                                     <select name="registerId" id="registerId" class="form-control">
-                                        <?php if( isset($registerIds) && !empty($registerIds) ) {
+                                    <option value="">Please select number</option>
+                                    <?php if( isset($registerIds) && !empty($registerIds) ) {
                                            ?>
-                                        <option value="">Please select number</option>
                                         <?php foreach($registerIds as $key => $val) {
                                            
                                             ?>
                                             <option value="<?php echo $val->id;?>" <?php if($val->id == $register_id) {?> selected="selected" <?php }?>> <?php echo $val->register_id;?> </option>
                                         <?php }
-                                        $registerIdsJson = json_encode($registerOpenCloseDateTime);
+                                        //$registerIdsJson = json_encode($registerOpenCloseDateTime);
                                      }?>
                                     </select>        
                             </div>
@@ -303,7 +304,7 @@ $registerIdsJson = '';
               
                 if (data.length > 0) {
                      registerDropdown.val(null).trigger('change');
-                    registerDropdown.append(`<option value="">Select Register Number</option>`);
+                      registerDropdown.append(`<option value="">Select Register Number</option>`);
                      data.forEach(function(item) {
                        
                             registerDropdown.append(`<option value="${item.id}">${item.register_id}</option>`);
