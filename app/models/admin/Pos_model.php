@@ -1905,10 +1905,10 @@ $q = $this->db->query($sql);
         $this->db->select('id,register_id, date as open_date_time, closed_at as close_date_time');
         $this->db->from('sma_pos_register');
 
-        if (!empty($pharmacy_id)) {
+        if (!empty($pharmacy_id) ) {
             $this->db->where('pharmacy_id', $pharmacy_id);
         }
-        if (!empty($pharmacist_id)) {
+        if (!empty($pharmacist_id) && $pharmacist_id > 0) {
             $this->db->where('closed_by', $pharmacist_id);
         }
         if (!empty($from_date) && !empty($to_date)) {
