@@ -1003,6 +1003,7 @@ class Transfers extends MY_Controller
                 if($this->data['transfer']->status == 'sent'){
                     //echo 'here in sent';exit;
                    // $row->base_quantity = $row->base_quantity + $row->quantity;
+                   $row->base_quantity = $row->quantity;
                 }
                 
                 $row->real_unit_cost = $item->real_unit_cost;
