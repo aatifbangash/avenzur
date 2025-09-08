@@ -473,16 +473,49 @@ class Transfers_model extends CI_Model
         return false;
     }
 
-    public function getAllTransferItemsForModule($transfer_id, $status)
+    public function getAllTransferItemsForModule($transfer_id, $status, $warehouse_id=null)
     {
         if ($status == 'completed' || $status == 'save' || $status == 'sent') {
-            $this->db->select('purchase_items.*, product_variants.name as variant, products.unit, products.hsn_code as hsn_code, products.second_name as second_name')
-                ->from('purchase_items')
-                ->join('products', 'products.id=purchase_items.product_id', 'left')
-                ->join('product_variants', 'product_variants.id=purchase_items.option_id', 'left')
-                ->group_by('purchase_items.id')
-                ->where('transfer_id', $transfer_id)
-                ->order_by('purchase_items.id', 'DESC');
+            // $this->db->select('purchase_items.*, product_variants.name as variant, products.unit, products.hsn_code as hsn_code, products.second_name as second_name')
+            //     ->from('purchase_items')
+            //     ->join('products', 'products.id=purchase_items.product_id', 'left')
+            //     ->join('product_variants', 'product_variants.id=purchase_items.option_id', 'left')
+            //     ->group_by('purchase_items.id')
+            //     ->where('transfer_id', $transfer_id)
+            //     ->order_by('purchase_items.id', 'DESC');
+
+            $sql = "SELECT 
+                        pi.*,
+                       
+                        p.unit,
+                        p.hsn_code AS hsn_code,
+                        p.second_name AS second_name,
+                        im_summary.current_quantity
+                    FROM sma_purchase_items pi
+                    LEFT JOIN sma_products p 
+                        ON p.id = pi.product_id
+                    
+                    JOIN (
+                    SELECT 
+                        avz_item_code,
+                        batch_number,
+                        expiry_date,
+                        net_unit_sale,
+                        net_unit_cost,
+                        real_unit_cost,
+                        SUM(quantity) AS current_quantity
+                    FROM sma_inventory_movements
+                    WHERE location_id = " . $warehouse_id . " 
+
+                    GROUP BY avz_item_code, batch_number, expiry_date
+                ) im_summary
+                    ON im_summary.avz_item_code = pi.avz_item_code    
+                    WHERE pi.transfer_id = $transfer_id
+                    GROUP BY pi.id
+                    ORDER BY pi.id DESC
+                    ";
+            $q = $this->db->query($sql);
+
         } else {
             $this->db->select('transfer_items.*, SUM(IFNULL(im.quantity, 0)) as base_quantity, im.avz_item_code, product_variants.name as variant, products.unit, products.hsn_code as hsn_code, products.second_name as second_name')
                 ->from('transfer_items')
@@ -492,8 +525,9 @@ class Transfers_model extends CI_Model
                 ->group_by(['transfer_items.id', 'im.avz_item_code'])
                 ->where('transfer_id', $transfer_id)
                 ->order_by('transfer_items.id', 'DESC');
+                $q = $this->db->get();
         }
-        $q = $this->db->get();
+        
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
@@ -1098,6 +1132,26 @@ class Transfers_model extends CI_Model
             return $id;
         }
 
+        return false;
+    }
+
+    public function getAllPurchaseItemsWithQuantity($purchase_id)
+    {
+        $sql = "SELECT pi.*, im.*, SUM(im.quantity) AS current_quantity 
+        FROM sma_purchase_items pi 
+        LEFT JOIN sma_inventory_movements im ON pi.avz_item_code = im.avz_item_code 
+        AND im.location_id = 32 
+        AND im.product_id = pi.product_id
+        AND im.type IN ('purchase', 'transfer_out') 
+        WHERE pi.purchase_id = $purchase_id GROUP BY pi.id HAVING current_quantity > 0 ORDER BY pi.id DESC
+     ";
+        $q = $this->db->query($sql);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }       
         return false;
     }
 }
