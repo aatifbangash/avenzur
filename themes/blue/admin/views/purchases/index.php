@@ -132,9 +132,9 @@
                                 <!-- <th><?= lang('payment_status'); ?></th> -->
                                 <!-- <th style="min-width:30px; width: 30px; text-align: center;"><i class="fa fa-chain"></i>
                                 </th> -->
-                                <th>Transfer Status</th>
+                                <!-- <th>Transfer Status</th>
                                 <th>Transfer Id</th>
-                                <th>Transfer At</th>
+                                <th>Transfer At</th> -->
 
                                 <th style="width:100px;"><?= lang('actions'); ?></th>
                             </tr>
@@ -146,7 +146,7 @@
                                     $pid = $purchase->id;
                                     $detail_link = anchor('admin/purchases/view/'.$pid, '<i class="fa fa-file-text-o"></i> ' . lang('purchase_details'));
                                     $payments_link = anchor('admin/purchases/payments/'.$pid, '<i class="fa fa-money"></i> ' . lang('view_payments'), 'data-toggle="modal" data-target="#myModal"');
-                                    $transfer_link = anchor('admin/transfers/add?purchase_id='.$pid.'&warehouse_id='.$this->session->userdata('warehouse_id'), '<i class="fa fa-money"></i> ' . lang('Transfer to Pharmacy') );
+                                    $transfer_link = anchor('admin/transfers/add?purchase_id='.$pid.'&warehouse_id='.$purchase->warehouse_id, '<i class="fa fa-money"></i> ' . lang('Transfer to Pharmacy') );
                                     $journal_entry_link = anchor('admin/entries/view/journal/?pid='.$pid, '<i class="fa fa-eye"></i> ' . lang('Journal Entry'));
                                     
                                     $add_payment_link = anchor('admin/purchases/add_payment/'.$pid, '<i class="fa fa-money"></i> ' . lang('add_payment'), 'data-toggle="modal" data-target="#myModal"');
@@ -180,9 +180,9 @@
                                         <!-- <td><?= number_format($purchase->grand_total - $purchase->paid, 2) ?></td> -->
                                         <!-- <td><?= $purchase->payment_status ?></td> -->
                                         <!-- <td><?= $purchase->attachment ?></td> -->
-                                        <td> <?= $transfer_status; ?> </td>
+                                        <!-- <td> <?= $transfer_status; ?> </td>
                                         <td> <?= $purchase->transfer_id > 0 ? $purchase->transfer_id : ''; ?></td>
-                                        <td> <?= $purchase->transfer_at ?> </td>
+                                        <td> <?= $purchase->transfer_at ?> </td> -->
                                         <td>
                                             <div class="text-center">
                                                 <div class="btn-group text-left">
@@ -193,7 +193,7 @@
                                                         <li><?= $detail_link ?> </li>
                                                         <li><?= $payments_link ?></li>
                                                         <li><?= $add_payment_link ?></li>
-                                                        <?php if($purchase->is_transfer !=1) {?>
+                                                        <?php if($purchase->status != "received") {?>
                                                         <li><?= $edit_link ?></li>
                                                         <?php }?>
                                                         <!-- <li><?= $pdf_link ?></li>

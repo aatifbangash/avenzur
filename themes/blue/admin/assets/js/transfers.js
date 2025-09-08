@@ -470,6 +470,7 @@ function loadItems() {
 		toitems = JSON.parse(localStorage.getItem("toitems"));
 		console.log('items',toitems);
 		currentstatus = localStorage.getItem("currentstatus");
+		
 		sortedItems =
 			site.settings.item_addition == 1
 				? _.sortBy(toitems, function (o) {
@@ -614,7 +615,7 @@ function loadItems() {
 
 			if (site.settings.product_expiry == 1) {
 				tr_html +=
-					'<td><input class="form-control date rexpiry" name="expiry[]" type="text" value="' +
+					'<td><input class="form-control rexpiry" readonly name="expiry[]" type="text" value="' +
 					item_expiry +
 					'" data-id="' +
 					row_no +
@@ -626,7 +627,7 @@ function loadItems() {
 			}
 
 			tr_html +=
-				'<td class="text-right"><input class="form-control input-sm text-left rcost" name="net_cost[]" type="text" id="cost_' +
+				'<td class="text-right"><input class="form-control input-sm text-left rcost lockWhenSent" name="net_cost[]" type="text" id="cost_' +
 				row_no +
 				'" value="' +
 				item_cost +
@@ -648,7 +649,7 @@ function loadItems() {
 				formatDecimal(item_bqty, 4) +
 				'"><input name="ordered_quantity[]" type="hidden" class="roqty" value="' +
 				formatDecimal(item_oqty, 4) +
-				'"><input class="form-control text-center rquantity" tabindex="' +
+				'"><input class="form-control text-center rquantity lockWhenSent" tabindex="' +
 				(site.settings.set_focus == 1 ? an : an + 1) +
 				'" name="quantity[]" type="text" value="' +
 				formatQuantity2(item_qty) +
@@ -714,12 +715,20 @@ function loadItems() {
                 $('#row_' + row_no).addClass('danger');
                 $('#add_transfer, #edit_transfer').attr('disabled', true);
             }*/
-
+            console.log('item_qty',item_qty);
+			console.log('base_quantity',base_quantity);
+			// Check quantity
 			if ((parseFloat(base_quantity) < parseFloat(item_qty))) {
 				$("#row_" + row_no).addClass("danger");
 				$("#add_transfer, #edit_transfer").attr("disabled", true);
 			}
 		});
+
+		if (currentstatus && currentstatus.toLowerCase() === "sent") {
+			document.querySelectorAll(".lockWhenSent").forEach(el => {
+			el.readOnly = true;
+			});
+		}
 
 		var col = 5;
 		if (site.settings.product_expiry == 1) {
