@@ -42,6 +42,7 @@ class Transfers extends MY_Controller
         // Sequence-Code
         $this->load->library('SequenceCode');
         $this->sequenceCode = new SequenceCode();
+        $this->load->admin_model('products_model');
     }
 
     public function push_serials_to_rasd_manually(){
@@ -284,7 +285,13 @@ class Transfers extends MY_Controller
             $this->data['warehouses'] = $this->site->getAllWarehouses();
             $this->data['tax_rates']  = $this->site->getAllTaxRates();
             $this->data['rnumber']    = ''; //$this->site->getReference('to');
-
+            if($this->input->get('purchase_id')) {
+                //$this->data['purchase_items'] = $this->transfers_model->getAllPurchaseItemsWithQuantity($this->input->get('purchase_id'));
+                $this->data['purchase_items'] = $this->products_model->getAVZItemCodeDetails();
+                //print_r($this->data['purchase_items']);exit;
+                $this->data['purchase_id'] = $this->input->get('purchase_id');
+            }
+            
             $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('transfers'), 'page' => lang('transfers')], ['link' => '#', 'page' => lang('add_transfer')]];
             $meta = ['page_title' => lang('transfer_quantity'), 'bc' => $bc];
             $this->page_construct('transfers/add', $meta, $this->data);
@@ -958,7 +965,7 @@ class Transfers extends MY_Controller
         } else {
             $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
             $this->data['transfer'] = $this->transfers_model->getTransferByID($id);
-            $transfer_items         = $this->transfers_model->getAllTransferItemsForModule($id, $this->data['transfer']->status);
+            $transfer_items         = $this->transfers_model->getAllTransferItemsForModule($id, $this->data['transfer']->status, $this->data['transfer']->from_warehouse_id);
             
             if(!empty($transfer_items)) {
                 krsort($transfer_items);
@@ -974,7 +981,7 @@ class Transfers extends MY_Controller
                 }
                 $row->quantity         = 0;
                 $row->expiry           = (($item->expiry && $item->expiry != '0000-00-00') ? $this->sma->hrsd($item->expiry) : '');
-                $row->base_quantity    = $item->base_quantity;
+                $row->base_quantity    = $item->current_quantity;//$item->base_quantity;
                 $row->avz_item_code    = $item->avz_item_code;
                 $row->base_unit        = $row->unit ? $row->unit : $item->product_unit_id;
                 $row->base_unit_cost   = $row->cost ? $row->cost : $item->unit_cost;
@@ -995,7 +1002,7 @@ class Transfers extends MY_Controller
 
                 if($this->data['transfer']->status == 'sent'){
                     //echo 'here in sent';exit;
-                    $row->base_quantity = $row->base_quantity + $row->quantity;
+                   // $row->base_quantity = $row->base_quantity + $row->quantity;
                 }
                 
                 $row->real_unit_cost = $item->real_unit_cost;

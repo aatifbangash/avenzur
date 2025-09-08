@@ -17,7 +17,7 @@ function row_status($x)
 }
 
 ?>
-<?php if ($chatData) {
+<?php  if ($chatData) {
     foreach ($chatData as $month_sale) {
         $months[]     = date('M-Y', strtotime($month_sale->month));
         $msales[]     = $month_sale->sales;
@@ -25,7 +25,7 @@ function row_status($x)
         $mtax2[]      = $month_sale->tax2;
         $mpurchases[] = $month_sale->purchases;
         $mtax3[]      = $month_sale->ptax;
-    } ?>
+    } }?>
     <div class="box" style="margin-bottom: 15px;">
         <div class="box-header">
             <h2 class="blue"><i class="fa-fw fa fa-bar-chart-o"></i><?= lang('Item_Movement_History_Report'); ?></h2>
@@ -268,7 +268,7 @@ function row_status($x)
         </div>
     </div>
 
-<?php } ?>
+<?php //} ?>
 
 <?php if($Owner || $Admin) { ?>
 

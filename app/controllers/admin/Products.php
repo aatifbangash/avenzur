@@ -5324,6 +5324,16 @@ class Products extends MY_Controller
 
     public function get_avz_item_code_details()
     {
+        if($this->input->get('purchase_id')){
+           return $this->products_model->getAVZItemCodeDetails();
+        }
+        else {
+            $this->products_model->getAVZItemCodeDetails();
+        }
+    }
+    public function get_avz_item_code_details_old()
+    {
+        //return $this->products_model->getAVZItemCodeDetails();
         $item_id = $this->input->get('item_id');
         $warehouse_id = $this->input->get('warehouse_id'); // Optionally filter by warehouse if needed
         $customer_id = $this->input->get('customer_id');
@@ -5449,7 +5459,7 @@ class Products extends MY_Controller
             $this->sma->send_json($pr);
 
         } else {
-            // Return an error if no records found
+            
             echo json_encode(['status' => 'error', 'message' => 'No items found for this item code']);
         }
 

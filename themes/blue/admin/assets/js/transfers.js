@@ -185,7 +185,11 @@ $(document).ready(function () {
 	$(document).on("click", ".todel", function () {
 		var row = $(this).closest("tr");
 		var item_id = row.attr("data-item-id");
+		console.log('delete item_id',item_id);
+		console.log('toitems before delete',toitems);
 		delete toitems[item_id];
+		console.log('deleted item_id',toitems[item_id]);
+		console.log('toitems after delete',toitems);
 		row.remove();
 		if (toitems.hasOwnProperty(item_id)) {
 		} else {
@@ -516,8 +520,14 @@ function loadItems() {
 			var batchno = item.row.batch_no;
 			//var unit_cost = item.row.real_unit_cost;
 			var unit_cost = item.row.net_unit_sale;
-			var product_unit = item.row.unit,
-				base_quantity = item.row.base_quantity;
+			var product_unit = item.row.unit;
+			//base_quantity = item.row.base_quantity;
+				if(typeof item.row.current_qty != "undefined"){
+				item.row.base_quantity = item.row.current_qty;
+			}
+			base_quantity = item.row.base_quantity;
+	
+				
 			
 			var pr_tax = item.tax_rate;
 			var pr_tax_val = 0,
@@ -769,8 +779,9 @@ function add_transfer_item(item) {
 			return;
 		}
 	}
+	console.log('add item called');
 	if (item == null) return;
-
+console.log('add item',item);
 	var item_id = site.settings.item_addition == 1 ? item.item_id : item.id;
 	if (toitems[item_id]) {
 		var new_qty = parseFloat(toitems[item_id].row.qty) + 1;

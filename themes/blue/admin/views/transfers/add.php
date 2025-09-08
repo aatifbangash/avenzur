@@ -1,5 +1,16 @@
-<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<?php defined('BASEPATH') or exit('No direct script access allowed');
+?>
+
 <script type="text/javascript">
+    <?php 
+   
+    if(!empty($purchase_items)) {
+        ?>
+        console.log(<?= json_encode($purchase_items); ?>);
+             localStorage.setItem('toitems', JSON.stringify(<?= json_encode($purchase_items); ?>));
+        <?php } ?>
+
+   // localStorage.setItem('toitems', JSON.stringify(<?= json_encode($purchase_items); ?>));
     <?php if ($this->session->userdata('remove_tols')) {
         ?>
         if (localStorage.getItem('toitems')) {

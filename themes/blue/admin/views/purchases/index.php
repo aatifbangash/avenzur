@@ -146,7 +146,7 @@
                                     $pid = $purchase->id;
                                     $detail_link = anchor('admin/purchases/view/'.$pid, '<i class="fa fa-file-text-o"></i> ' . lang('purchase_details'));
                                     $payments_link = anchor('admin/purchases/payments/'.$pid, '<i class="fa fa-money"></i> ' . lang('view_payments'), 'data-toggle="modal" data-target="#myModal"');
-                                    $transfer_link = anchor('admin/purchases/transfer/'.$pid, '<i class="fa fa-money"></i> ' . lang('Transfer to Pharmacy'), 'data-toggle="modal" data-target="#myModal"');
+                                    $transfer_link = anchor('admin/transfers/add?purchase_id='.$pid.'&warehouse_id='.$this->session->userdata('warehouse_id'), '<i class="fa fa-money"></i> ' . lang('Transfer to Pharmacy') );
                                     $journal_entry_link = anchor('admin/entries/view/journal/?pid='.$pid, '<i class="fa fa-eye"></i> ' . lang('Journal Entry'));
                                     
                                     $add_payment_link = anchor('admin/purchases/add_payment/'.$pid, '<i class="fa fa-money"></i> ' . lang('add_payment'), 'data-toggle="modal" data-target="#myModal"');
