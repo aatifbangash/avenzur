@@ -1,4 +1,34 @@
 $(document).ready(function () {
+
+
+ const pageKey = window.location.pathname; // e.g. "/transfer/add" or "/transfer/edit"
+const lockKey = "pageLock_" + pageKey;
+
+console.log(window.location);
+function checkPageLock() {
+  // Check if this page is already open in another tab
+  if (localStorage.getItem(lockKey)) {
+    // Redirect to a common page (dashboard or list page)
+    alert("This page is already open in another tab. Redirecting you...");
+	if(window.location.origin != "http://localhost"){ 
+    	window.location.href ="/admin/transfers";
+	}
+	else{
+		window.location.href ="/avenzur/admin/transfers";
+	}
+  } else {
+    // Lock this page for this tab
+    localStorage.setItem(lockKey, "locked");
+
+    // Release the lock when tab is closed or refreshed
+    window.addEventListener("beforeunload", function () {
+      localStorage.removeItem(lockKey);
+    });
+  }
+}
+
+checkPageLock();
+
 	$("body a, body button").attr("tabindex", -1);
 	//check_add_item_val();
 	if (site.settings.set_focus != 1) {
