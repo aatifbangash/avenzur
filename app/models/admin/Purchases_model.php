@@ -440,7 +440,7 @@ class Purchases_model extends CI_Model
             products.details as details, 
             product_variants.name as variant, 
             products.hsn_code as hsn_code, 
-            products.second_name as second_name, 
+            products.second_name as second_name,
             SUM(IFNULL(CASE WHEN sma_inventory_movements.location_id = ' . $warehouse_id . ' THEN sma_inventory_movements.quantity ELSE 0 END, 0)) as total_quantity, 
             SUM(IFNULL(CASE WHEN sma_inventory_movements.location_id = ' . $warehouse_id . ' THEN sma_inventory_movements.bonus ELSE 0 END, 0)) as total_bonus
         ')
@@ -454,7 +454,7 @@ class Purchases_model extends CI_Model
 
         // Fetch the purchase items for the given purchase ID
         $q = $this->db->get_where('purchase_items', ['purchase_items.purchase_id' => $purchase_id]);
-
+        //echo $this->db->last_query();exit;
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
