@@ -288,6 +288,10 @@ class Transfers extends MY_Controller
             if($this->input->get('purchase_id')) {
                 //$this->data['purchase_items'] = $this->transfers_model->getAllPurchaseItemsWithQuantity($this->input->get('purchase_id'));
                 $this->data['purchase_items'] = $this->products_model->getAVZItemCodeDetails();
+                if(empty($this->data['purchase_items'])) {
+                    $this->session->set_flashdata('message', lang('No Item found in the selected Purchase'));
+                    admin_redirect('purchases');
+                }
                 //print_r($this->data['purchase_items']);exit;
                 $this->data['purchase_id'] = $this->input->get('purchase_id');
             }
