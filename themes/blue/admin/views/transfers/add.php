@@ -2,9 +2,6 @@
 ?>
 
 <script type="text/javascript">
-    <?php 
-
-   // localStorage.setItem('toitems', JSON.stringify(<?= json_encode($purchase_items); ?>));
     <?php if ($this->session->userdata('remove_tols')) {
         ?>
         if (localStorage.getItem('toitems')) {
