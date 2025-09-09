@@ -3,12 +3,6 @@
 
 <script type="text/javascript">
     <?php 
-   
-    if(!empty($purchase_items)) {
-        ?>
-        console.log(<?= json_encode($purchase_items); ?>);
-             localStorage.setItem('toitems', JSON.stringify(<?= json_encode($purchase_items); ?>));
-        <?php } ?>
 
    // localStorage.setItem('toitems', JSON.stringify(<?= json_encode($purchase_items); ?>));
     <?php if ($this->session->userdata('remove_tols')) {
@@ -45,6 +39,12 @@
     if (localStorage.getItem('currentstatus')) {
         localStorage.removeItem('currentstatus');
     }
+    <?php 
+     if(!empty($purchase_items)) {
+        ?>
+        console.log(<?= json_encode($purchase_items); ?>);
+             localStorage.setItem('toitems', JSON.stringify(<?= json_encode($purchase_items); ?>));
+    <?php } ?>
     var count = 1, an = 1, product_variant = 0, shipping = 0,
         product_tax = 0, total = 0,
         tax_rates = <?php echo json_encode($tax_rates); ?>, toitems = {},
