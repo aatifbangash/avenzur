@@ -542,8 +542,17 @@ class Returns_supplier extends MY_Controller
                 $this->data['warehouses'] = $this->site->getMainWarehouse();
                 $this->data['tax_rates'] = $this->site->getAllTaxRates();
                 $inv_items = $this->purchases_model->getAllReturnInvoiceItems($_GET['purchase']);
+
+                if(empty($inv_items)){
+                    $this->session->set_flashdata('error', lang('Invoice completely returned or transferred'));
+                    admin_redirect('purchases');
+                }
+
                 $c = rand(100000, 9999999);
                 foreach ($inv_items as $item) {
+                    //echo '<pre>';print_r($item);exit;
+                    //$bonus_to_deduct = $item->returned_bonus ? $item->returned_bonus : $row->bonus;
+                    $item->total_bonus = $item->total_bonus >= 0 ? $item->total_bonus : 0;
                     $row = $this->site->getProductByID($item->product_id);
                     $this->Inventory_model->get_current_stock($item->product_id,'null',$item->batchno);
                     $row->batchno = $item->batchno;
@@ -556,7 +565,8 @@ class Returns_supplier extends MY_Controller
                     // $row->discount2          = $item->discount2;
                     $row->net_unit_cost = $item->net_unit_cost;
                     $row->expiry = (($item->expiry && $item->expiry != '0000-00-00') ? $this->sma->hrsd($item->expiry) : '');
-                    $row->base_quantity = $item->quantity - $item->bonus;
+                    //$row->base_quantity = $item->quantity - $item->bonus;
+                    $row->base_quantity = ($item->total_quantity - $row->bonus);
                     
                     $row->base_unit = $row->unit ? $row->unit : $item->product_unit_id;
                     $row->base_unit_cost = $row->cost ? $row->cost : $item->unit_cost;
@@ -1321,19 +1331,19 @@ class Returns_supplier extends MY_Controller
             $inv_items = $this->returns_supplier_model->getReturnItems($id);
             $c = rand(100000, 9999999);
             foreach ($inv_items as $item) {
-
                 $row = $this->site->getProductByID($item->product_id);
-
+                //echo '<pre>';print_r($item);exit;
+                //echo '<pre>';print_r($row);exit;
                 $row->batchno = $item->batch_no;
                 $row->batch_no = $item->batch_no;
-                $row->bonus = $item->total_bonus;
-                $row->obonus = $item->bonus;
+                $row->bonus = $item->bonus;
+                $row->obonus = $item->total_bonus;
                 $row->avz_item_code = $item->avz_item_code;
                 $row->discount1 = $item->discount1;
                 $row->discount2 = $item->discount2;
                 $row->net_unit_cost = $item->net_cost;
                 $row->expiry = (($item->expiry && $item->expiry != '0000-00-00') ? $this->sma->hrsd($item->expiry) : '');
-                $row->base_quantity = $item->quantity;
+                $row->base_quantity = $item->quantity - $item->bonus;
                 $row->base_unit = $row->unit ? $row->unit : $item->product_unit_id;
                 $row->base_unit_cost = $row->cost ? $row->cost : $item->cost_price;
                 $row->unit = $item->product_unit_id;

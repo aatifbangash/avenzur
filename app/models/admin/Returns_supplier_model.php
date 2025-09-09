@@ -61,7 +61,7 @@ class Returns_supplier_model extends CI_Model
                     //TODO will check later
                     $this->site->setPurchaseItem($clause, -1 * $item['quantity'], 'supplier');
                     $this->site->syncQuantityReturnSupplier($return_id, $item['product_id']);
-                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'return_to_supplier', $item['quantity'], $item['warehouse_id'], $return_id,  $item['net_cost'], $item['expiry'], $item['unit_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['unit_price'], $data['date']);
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'return_to_supplier', $item['quantity'], $item['warehouse_id'], $return_id,  $item['net_cost'], $item['expiry'], $item['unit_price'], $real_cost, $item['avz_item_code'], $item['bonus'], NULL, $item['unit_price'], $data['date']);
                     
                 } elseif ($item['product_type'] == 'combo' && $data['status'] == 'completed') {
                     $combo_items = $this->site->getProductComboItems($item['product_id']);
@@ -365,7 +365,7 @@ class Returns_supplier_model extends CI_Model
                     $clause = ['product_id' => $item['product_id'], 'purchase_id' => null, 'transfer_id' => null, 'option_id' => $item['option_id']];
                     $this->site->setPurchaseItem($clause, $item['quantity']);
                     $this->site->syncQuantity(null, null, null, $item['product_id']);
-                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'return_to_supplier', $item['quantity'], $item['warehouse_id'], $id,  $item['net_cost'], $item['expiry'], $item['unit_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['unit_price'], $data['date']);
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'return_to_supplier', $item['quantity'], $item['warehouse_id'], $id,  $item['net_cost'], $item['expiry'], $item['unit_price'], $real_cost, $item['avz_item_code'], $item['bonus'], NULL, $item['unit_price'], $data['date']);
                 } elseif ($item['product_type'] == 'combo' && $data['status'] == 'completed') {
                     $combo_items = $this->site->getProductComboItems($item['product_id']);
                     foreach ($combo_items as $combo_item) {
