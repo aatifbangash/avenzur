@@ -1,4 +1,33 @@
 $(document).ready(function (e) {
+
+   const pageKey = window.location.pathname; // e.g. "/transfer/add" or "/transfer/edit"
+    const lockKey = "pageLock_" + pageKey;
+
+    console.log(window.location);
+    function checkPageLock() {
+      // Check if this page is already open in another tab
+      if (localStorage.getItem(lockKey)) {
+        // Redirect to a common page (dashboard or list page)
+        alert("This page is already open in another tab. Redirecting you...");
+      if(window.location.origin != "http://localhost"){ 
+          window.location.href ="/admin/returns_supplier";
+      }
+      else{
+        window.location.href ="/avenzur/admin/returns_supplier";
+      }
+      } else {
+        // Lock this page for this tab
+        localStorage.setItem(lockKey, "locked");
+
+        // Release the lock when tab is closed or refreshed
+        window.addEventListener("beforeunload", function () {
+          localStorage.removeItem(lockKey);
+        });
+      }
+    }
+
+  checkPageLock();
+
   $("body a, body button").attr("tabindex", -1);
   check_add_item_val();
   if (site.settings.set_focus != 1) {
@@ -1131,10 +1160,10 @@ $(document).ready(function (e) {
       }
       var new_bonus = parseFloat($(this).val()),
         item_id = row.attr("data-item-id");
-      console.log(parseFloat(rseitems[item_id].row.qty));
+      
       if (
-        parseFloat(new_bonus) + parseFloat(rseitems[item_id].row.qty) >
-        parseFloat(rseitems[item_id].row.base_quantity)
+        parseFloat(new_bonus) + parseFloat(rseitems[item_id].row.base_quantity) >
+        parseFloat(rseitems[item_id].row.total_quantity)
       ) {
         $(this).val(old_row_bonus);
         bootbox.alert("Bonus cannot exceed the available quantity");
@@ -1234,7 +1263,7 @@ function loadItems() {
       const new_item = {
         cost: item.row.net_unit_cost ?? 0,
         sale_price: item.row.real_unit_sale ?? item.row.net_unit_sale,
-        qty: item.row.qty,
+        qty: item.row.base_quantity,
         bonus: item.row.bonus ?? 0,
         tax_rate: item.row.tax_rate,
         dis1: 0,
@@ -1585,7 +1614,7 @@ function loadItems() {
         '<td class="text-right"><input class="form-control input-sm text-right rbonus" name="bonus[]" type="text" id="bonus_' +
         row_no +
         '" value="' +
-        obonus +
+        bonus +
         '"></td>';
 
       tr_html +=
@@ -1727,8 +1756,8 @@ function loadItems() {
 
       count += parseFloat(item_qty);
       an++;
-
-      if (parseFloat(base_quantity) < (parseFloat(item_qty) + parseFloat(bonus))) {
+      
+      if (parseFloat(base_quantity) < (parseFloat(item.row.base_quantity) + parseFloat(bonus))) {
         $("#row_" + row_no).addClass("danger");
         $("#add_return, #edit_return").attr("disabled", true);
       }
