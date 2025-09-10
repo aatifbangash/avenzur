@@ -173,6 +173,7 @@
 
                     //if ($biller->vat_no != '-' && $biller->vat_no != '') {
                         echo '<br>' . lang('vat_no') . ': ' . $biller->vat_no;
+                        echo '<br>' . lang('CR No') . ': ' . $biller->cr;
                     //}
                     if ($biller->gst_no != '-' && $biller->gst_no != '') {
                         echo '<br>' . lang('gst_no') . ': ' . $biller->gst_no;
