@@ -1764,7 +1764,7 @@ class Sales extends MY_Controller
                     redirect($_SERVER['HTTP_REFERER']);
                 }
             }
-            $inv_items = $this->sales_model->getAllInvoiceItems($id);
+            $inv_items = $this->sales_model->getAllInvoiceItems($id, null, $this->data['inv']);
 
             
             // krsort($inv_items);
@@ -1791,7 +1791,7 @@ class Sales extends MY_Controller
                 $row->code            = $item->product_code;
                 $row->name            = $item->product_name;
                 $row->type            = $item->product_type;
-                $row->base_quantity   = $item->quantity;
+                $row->base_quantity   = $item->total_quantity;
                 $row->base_unit       = !empty($row->unit) ? $row->unit : $item->product_unit_id;
                 $row->base_unit_price = !empty($row->price) ? $row->price : $item->unit_price;
                 $row->cost            = $item->net_cost;

@@ -561,9 +561,10 @@ class Returns extends MY_Controller
                 
                 $c = rand(100000, 9999999);
                 foreach ($inv_items as $item) {
+                    //echo '<pre>';print_r($item);exit;
                     $row = $this->site->getProductByID($item->product_id);
                     $row->batch_no = $item->batch_no;
-                    $row->bonus = -1*($item->total_bonus);
+                    $row->bonus = $item->bonus;
                     $row->obonus = -1*($item->total_bonus);
                     $row->avz_item_code = $item->avz_item_code;
                     $row->discount1 = $item->discount1;
@@ -580,7 +581,7 @@ class Returns extends MY_Controller
                     //$row->oqty = $item->unit_quantity - $row->bonus;
 
                     //$row->qty = $row->base_quantity - $row->bonus;
-                    $row->qty = $item->quantity;
+                    $row->qty = $item->quantity - $row->bonus;
                     $row->oqty = $row->base_quantity - $row->bonus;
                     
                     $row->sale_item_id = $item->id;
@@ -598,6 +599,7 @@ class Returns extends MY_Controller
                     $row->net_unit_sale = $this->sma->formatDecimal($item->net_unit_price);
                     $row->tax_rate = $item->tax_rate_id;
                     $row->main_net = $item->main_net;
+                    //echo '<pre>';print_r($row);exit;
                     unset($row->details, $row->product_details, $row->price, $row->file, $row->product_group_id);
                     $units = $this->site->getUnitsByBUID($row->base_unit);
                     $tax_rate = $this->site->getTaxRateByID($row->tax_rate);
@@ -1193,10 +1195,11 @@ class Returns extends MY_Controller
             $inv_items = $this->returns_model->getReturnItemsNew($id, $inv->customer_id);
             $c         = rand(100000, 9999999);
             foreach ($inv_items as $item) {
+                //echo '<pre>';print_r($item);exit;
                 $row = $this->site->getProductByID($item->product_id);
                 $row->batch_no = $item->batch_no;
-                $row->bonus = -1*($item->total_bonus);
-                $row->obonus = -1*($item->total_bonus);
+                $row->bonus = $item->bonus;
+                $row->obonus = $item->bonus;
                 $row->avz_item_code = $item->avz_item_code;
                 $row->discount1 = $item->discount1;
                 $row->discount2 = $item->discount2;
@@ -1212,7 +1215,7 @@ class Returns extends MY_Controller
                 //$row->oqty = $item->unit_quantity - $row->bonus;
 
                 //$row->qty = $row->base_quantity - $row->bonus;
-                $row->qty = $item->quantity;
+                $row->qty = $item->quantity - $row->bonus;
                 $row->oqty = $row->base_quantity - $row->bonus;
                 
                 $row->sale_item_id = $item->id;
