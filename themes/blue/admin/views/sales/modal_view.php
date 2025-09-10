@@ -376,7 +376,7 @@
                             <td style="text-align:right; width:120px;"><?= $this->sma->formatNumber($row->subtotal); ?></td>
                             <?php
                              if ($Settings->product_discount && $inv->product_discount != 0) {
-                                echo '<td style=" text-align:right; vertical-align:middle;">' . ($row->discount1 != 0 ?  $row->discount1  : '') .  '</td>'; 
+                                echo '<td style=" text-align:right; vertical-align:middle;">' . ($row->discount1 != 0 ?  $this->sma->formatNumber($row->discount1)  : '') .  '</td>'; 
                               
                                 $unit_cost=$row->real_unit_price;
                                 $pr_discount      = $this->site->calculateDiscount($row->discount1.'%', $row->real_unit_price);
