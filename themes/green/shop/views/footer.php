@@ -96,7 +96,7 @@
                   <h5 class="footer-header-collapse arrow-down"><a class="text-dark text-decoration-none" ><b>About Us</b></a></h5>
                   <ul class="hide">
                     <li> 
-                    <a href="<?= site_url('shop/page/about-us'); ?>" class="text-dark text-decoration-none"> About Avenzur</a></li>
+                    <a href="<?= site_url('shop/page/about-us'); ?>" class="text-dark text-decoration-none"> About Avnzor</a></li>
                     <li> <a href="<?= site_url('shop/contact_us'); ?>" class="text-dark text-decoration-none" >Contact Us </a> </li>
                     <li> <a href="<?= site_url('profile'); ?>" class="text-dark text-decoration-none" >My Account </a> </li>
                     <li> <a href="<?= site_url('shop/blog'); ?>" class="text-dark text-decoration-none" >Blog </a> </li>
@@ -144,7 +144,7 @@
             </div>
           </div>
           <div class="text-center border-top pt-3 pb-2">
-            <p class="m-0 fw-bold copyr">Copyright &copy; Avenzur, All rights reserved</p>
+            <p class="m-0 fw-bold copyr">Copyright &copy; Avnzor, All rights reserved</p>
           </div>
           <div id="live-chat" style="position: fixed;z-index: 999;bottom: 0.2rem;right: 2rem;">
             <a href="https://api.whatsapp.com/send?phone=966551251997" title="whatsapp chat" target="_blank" rel="nofollow noreferrer">

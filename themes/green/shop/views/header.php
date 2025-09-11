@@ -24,8 +24,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <?php
-  $seo_title = isset($page_title2) ? $page_title2 : 'avenzur  | Health, Wellness & Beauty';
-  $seo_description = 'Avenzur is a Health, Wellness and Beauty Store. Shop daily vitamins, supplements, beauty, skin care products and more.';
+  $seo_title = isset($page_title2) ? $page_title2 : 'avnzor  | Health, Wellness & Beauty';
+  $seo_description = 'Avnzor is a Health, Wellness and Beauty Store. Shop daily vitamins, supplements, beauty, skin care products and more.';
   
   if (isset($seoSetting) && !empty($seoSetting) && isset($product) && !empty($product)) {
     $seo_title = strip_tags(str_replace('{{title}}', $product->name, $seoSetting->title));
@@ -67,12 +67,12 @@
   <meta name="description" content="<?php echo htmlspecialchars($seo_description); ?>">
   <meta name="keywords" content="<?php echo $seo_keywords; ?>">
   <meta name="p:domain_verify" content="0704e772b1ab59012494397c16667a45"/>
-  <meta property="og:title" content="avenzur | Health, Wellness & Beauty">
-  <meta property="og:description" content="Avenzur is a Health, Wellness and Beauty Store. Shop daily vitamins, supplements, beauty, skin care products and more.">
+  <meta property="og:title" content="avnzor | Health, Wellness & Beauty">
+  <meta property="og:description" content="Avnzor is a Health, Wellness and Beauty Store. Shop daily vitamins, supplements, beauty, skin care products and more.">
   <meta property="og:image" content="https://avenzur.com/assets/uploads/logos/avenzur-logo-social-media.jpg">
   <meta property="og:url" content="https://avenzur.com">
-  <meta name="twitter:title" content="avenzur | Health, Wellness & Beauty">
-  <meta name="twitter:description" content="Avenzur is a Health, Wellness and Beauty Store. Shop daily vitamins, supplements, beauty, skin care products and more.">
+  <meta name="twitter:title" content="avnzor | Health, Wellness & Beauty">
+  <meta name="twitter:description" content="Avnzor is a Health, Wellness and Beauty Store. Shop daily vitamins, supplements, beauty, skin care products and more.">
   <meta name="twitter:url" content="https://avenzur.com/assets/uploads/logos/avenzur-logo-social-media.jpg">
   <meta name="twitter:card" content="summary">
   <!--<link rel="preconnect" href="https://fonts.googleapis.com">
@@ -366,7 +366,7 @@
                     </div>
                     <div class="logo-k">
                       <a class="navbar-brand" href="<?= base_url(); ?>">
-                        <img src="<?= base_url('assets/uploads/logos/avenzur-logov2-024.png') ?>" alt="AVENZUR">
+                        <img src="<?= base_url('assets/uploads/logos/avenzur-logov2-024.png') ?>" alt="AVNZOR">
                       </a>
                     </div>
                     <h4 class="fw-bold letstart">Let's get started</h4>
