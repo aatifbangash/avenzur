@@ -122,7 +122,7 @@
         <div class="well" style="width: 96%; height: 8%; background-color: #f6f6f6; padding: 15px;">
             <div style="width: 50%; float: left;">
                 <p>Date: <?= $this->sma->hrld($inv->date); ?></p>
-                <p>Reference: <?= $inv->reference_no; ?></p>
+                <p>Reference: <?= date("Y").'/'.$inv->id; ?></p>
                 <p>Sale Status: <?= $inv->sale_status; ?></p>
                 <p>Payment Status: <?= $inv->payment_status; ?></p>
             </div>
