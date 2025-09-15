@@ -509,7 +509,7 @@ class Transfers_model extends CI_Model
 
                     GROUP BY avz_item_code, batch_number, expiry_date
                 ) im_summary
-                    ON im_summary.avz_item_code = pi.avz_item_code    
+                    ON im_summary.avz_item_code = pi.avz_item_code and im_summary.batch_number=pi.batchno and im_summary.expiry_date=pi.expiry
                     WHERE pi.transfer_id = $transfer_id
                     GROUP BY pi.id
                     ORDER BY pi.id DESC
