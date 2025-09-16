@@ -834,6 +834,28 @@ class Transfers_model extends CI_Model
         return false;
     }
 
+
+    public function getWarehouseProductQuantityNewForTransfer($warehouse_id, $product_id, $item_batchno, $expiry, $avz_item_code)
+    {
+        // $q = $this->db->get_where('warehouses_products', ['warehouse_id' => $warehouse_id, 'product_id' => $product_id, 'batchno' => $item_batchno], 1);
+        // if ($q->num_rows() > 0) {
+        //     return $q->row();
+        // }  
+        $this->db->select('SUM(inv.quantity) as quantity ');
+        $this->db->from('inventory_movements inv');
+        // $this->db->join('warehouses_products wp', 'wp.warehouse_id=inv.location_id AND inv.product_id=wp.product_id AND wp.batchno=inv.batch_number', 'LEFT'); 
+        $this->db->where('inv.location_id', $warehouse_id);
+        $this->db->where('inv.product_id', $product_id);
+        $this->db->where('inv.batch_number', $item_batchno);
+        $this->db->where('inv.expiry_date', $expiry);
+        $this->db->where('inv.avz_item_code', $avz_item_code);
+        $query = $this->db->get();
+        if ($query->num_rows() > 0) {
+            return $query->row();
+        }
+        return false;
+    }
+
     public function getWHProduct($id)
     {
         $this->db->select('products.id, code, name, warehouses_products.quantity, cost, tax_rate')

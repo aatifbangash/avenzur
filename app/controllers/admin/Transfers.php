@@ -157,12 +157,13 @@ class Transfers extends MY_Controller
                 if (isset($item_code) && isset($item_quantity)) {
                     
                     // if (!$this->Settings->overselling) {
-                    $warehouse_quantity = $this->transfers_model->getWarehouseProduct($from_warehouse_details->id, $product_details->id, $item_option, $item_batchno);
-
+                    //$warehouse_quantity = $this->transfers_model->getWarehouseProduct($from_warehouse_details->id, $product_details->id, $item_option, $item_batchno);
+                     $warehouse_quantity =  $this->transfers_model->getWarehouseProductQuantityNewForTransfer($from_warehouse_details->id, $product_details->id, $item_batchno, $item_expiry, $avz_code);      
                     if ($warehouse_quantity->quantity < $item_quantity) {
                         $this->session->set_flashdata('error', lang('no_match_found') . ' (' . lang('product_name') . ' <strong>' . $product_details->name . '</strong> ' . lang('product_code') . ' <strong>' . $product_details->code . '</strong>)');
                         admin_redirect('transfers/add');
                     }
+
                     // }
 
                     $pr_item_tax   = $item_tax   = 0;
