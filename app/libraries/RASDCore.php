@@ -52,7 +52,7 @@ class RASDCore {
         // if ($this->auth_token) {
         //    $headers[] = 'Token: ' . $this->auth_token;
         // }
-        echo json_encode($this->headers);
+        //echo json_encode($this->headers);
         $this->CI->curl->option(CURLOPT_HTTPHEADER, $headers);
         // Initialize an array to store response headers
         
