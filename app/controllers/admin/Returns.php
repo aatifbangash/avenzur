@@ -50,6 +50,10 @@ class Returns extends MY_Controller
             );
            $this->load->library('ZatcaServices', $params, 'zatca');                       
         }
+
+        // Sequence-Code
+        $this->load->library('SequenceCode');
+        $this->sequenceCode = new SequenceCode();
     }
 
     public function add_return()
@@ -256,7 +260,7 @@ class Returns extends MY_Controller
             $return_screen     = $this->input->post('return_screen');
 
             $date             = ($this->Owner || $this->Admin) ? $this->sma->fld(trim($this->input->post('date'))) : date('Y-m-d H:i:s');
-            $reference        = $this->input->post('reference_no') ? $this->input->post('reference_no') : $this->site->getReference('re');
+            $reference        = $this->input->post('reference_no') ? $this->input->post('reference_no') : $this->site->getReference('reference');
             //$reference        = $this->input->post('sale_id') ? $this->input->post('sale_id') : '0';
             $warehouse_id     = $this->input->post('warehouse');
             $customer_id      = $this->input->post('customer');
@@ -480,6 +484,7 @@ class Returns extends MY_Controller
                 'created_by'        => $this->session->userdata('user_id'),
                 'hash'              => hash('sha256', microtime() . mt_rand()),
                 'status'            => $status,
+                'sale_id'           => $reference
             ];
             if ($this->Settings->indian_gst) {
                 $data['cgst'] = $total_cgst;
@@ -635,11 +640,28 @@ class Returns extends MY_Controller
         }
     }
 
-    public function payment_to_customer($returns, $return_insert_id){
+    public function add_customer_reference($amount, $reference_no, $date, $note, $customer_id, $ledger_account){
+        $payment_reference = [
+            'customer_id' => $customer_id,
+            'date' => $date,
+            'sequence_code' => $this->sequenceCode->generate('PAY', 5),
+            'note' => $note,
+            'reference_no'  => $reference_no,
+            'amount' => $amount,
+            'transfer_from_ledger' => $ledger_account,
+            'created_by'    => $this->session->userdata('user_id')
+        ];
 
+        $payment_id = $this->sales_model->addPaymentReference($payment_reference);
+        return $payment_id;
+    }
+
+    public function payment_to_customer($returns, $return_insert_id, $journal_id = NULL){
+        
         $result = [];
         foreach ($returns as $item) {
             $sale_id = $item['sale_id'];
+            $customer_id = $item['customer_id'];
             $amount = $item['amount'];
 
             if($sale_id){
@@ -668,6 +690,7 @@ class Returns extends MY_Controller
             }
         }
         
+        $payment_id = $this->add_customer_reference($net_amount, '', date('Y-m-d h:i:s'), 'Return By Customer', $customer_id, NULL);
 
         $payment = [
             'date'          => date('Y-m-d h:i:s'),
@@ -678,10 +701,11 @@ class Returns extends MY_Controller
             'note'          => 'Return By Customer',
             'created_by'    => $this->session->userdata('user_id'),
             'type'          => 'sent',
-            'payment_id'    => NULL
+            'payment_id'    => $payment_id
         ];
 
         $this->sales_model->addPayment($payment);
+        $this->sales_model->update_payment_reference($payment_id, $journal_id);
     }
 
     public function convert_return_invoice($rid){
@@ -875,6 +899,8 @@ class Returns extends MY_Controller
         {
                 $this->db->insert('sma_accounts_entryitems', $itemdata['Entryitem']);
         }
+
+        return $insert_id;
 
     }
 
@@ -1081,7 +1107,8 @@ class Returns extends MY_Controller
 
                 $sl_inv = $this->sales_model->get_sale_by_avzcode($avz_item_code);
                 $return = [
-                    'sale_id' => $sl_inv->sale_id,
+                    'sale_id' => $inv->sale_id,
+                    'customer_id' => $inv->customer_id,
                     'amount' => ($totalbeforevat + $new_item_vat_value)
                 ];
                 $returns[] = $return;
@@ -1174,8 +1201,8 @@ class Returns extends MY_Controller
         if ($this->form_validation->run() == true && $this->returns_model->updateReturn($id, $data, $products)) {
 
             if($data['status'] == "completed"){
-                $this->convert_return_invoice($id);
-                $this->payment_to_customer($returns, $id);  
+                $journal_id = $this->convert_return_invoice($id);
+                $this->payment_to_customer($returns, $id, $journal_id);  
             }
 
             $this->session->set_userdata('remove_rels', 1);

@@ -296,7 +296,7 @@ class Customers extends MY_Controller
                 }
             }else{
                 $payment_id = $this->add_customer_reference($payment_total, $reference_no, $date, $note, $customer_id, $ledger_account);
-
+                
                 for($i = 0; $i < count($payments_array); $i++){
                     $payment_amount = $payments_array[$i];
                     $item_id = $item_ids[$i];
@@ -306,7 +306,7 @@ class Customers extends MY_Controller
                         redirect($_SERVER['HTTP_REFERER']);
                     }
                 }
-
+                
                 if(array_sum($payments_array) == $payment_total){
                     for ($i = 0; $i < count($payments_array); $i++) {
                         $payment_amount = $payments_array[$i];
