@@ -114,8 +114,8 @@
                                         echo '<th>' . lang('entries_views_views_th_dr_cr') . '</th>';
                                     }
                                     echo '<th>' . lang('entries_views_views_th_ledger') . '</th>';
-                                    echo '<th>' . lang('entries_views_views_th_dr_amount') . ' (' . $this->mAccountSettings->currency_symbol . ')' . '</th>';
-                                    echo '<th>' . lang('entries_views_views_th_cr_amount') . ' (' . $this->mAccountSettings->currency_symbol . ')' . '</th>';
+                                    echo '<th>' . lang('entries_views_views_th_dr_amount') . '</th>';
+                                    echo '<th>' . lang('entries_views_views_th_cr_amount') . '</th>';
                                     echo '<th>' . lang('entries_views_views_th_narration') . '</th>';    
                                     $customer_exists = false;
                                     $supplier_exists = false;
