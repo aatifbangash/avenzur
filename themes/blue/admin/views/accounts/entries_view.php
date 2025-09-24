@@ -339,8 +339,11 @@
         putOnlyUsedFonts: true
     });
 
+    const hostname = window.location.hostname; // e.g., retaj.avenzur.com
+    const domainParts = hostname.split('.'); 
+    const subdomain = domainParts.length > 2 ? domainParts[0] : 'www'; // first part if exists
     // Load your logo from a URL (replace with the actual URL of your logo)
-    const logoUrl = 'https://retaj.avenzur.com/assets/uploads/logos/avenzur-logov2-024.png'; // Replace with your logo URL
+    const logoUrl = `https://${subdomain}.avenzur.com/assets/uploads/logos/avenzur-logov2-024.png`; // Replace with your logo URL
 
     // Define logo dimensions
     const logoWidth = 196; // Width of the logo in points
