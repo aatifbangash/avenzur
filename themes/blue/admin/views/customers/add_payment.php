@@ -119,7 +119,7 @@
                                 tr_html = '<td>'+purchase_date+'</td>';
                                 tr_html += '<td>'+reference_id+'</td>';
                                 tr_html += '<td>'+total_amount.toFixed(2)+'</td>';
-                                tr_html += '<td>'+due_amount.toFixed(2)+'<input name="due_amount[]" data-item-id="' + response[i].id + '" value="'+due_amount+'" type="hidden" class="rid" /></td>';
+                                tr_html += '<td>'+due_amount.toFixed(2)+'<input name="due_amount[]" data-item-id="' + response[i].id + '" value="'+due_amount.toFixed(2)+'" type="hidden" class="rid" /></td>';
                                 tr_html += '<td><input name="payment_amount[]" data-item-id="' + response[i].id + '" type="text" class="rid" value="'+to_pay.toFixed(2)+'" /><input name="item_id[]" type="hidden" value="' + response[i].id + '"></td>';
                                 newTr.html(tr_html);
                                 newTr.appendTo('#poTable');
