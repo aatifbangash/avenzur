@@ -776,6 +776,7 @@ class Reports_model extends CI_Model
             ->group_by('sma_accounts_entryitems.dc')
             ->group_by('sma_accounts_entries.date')
             ->group_by('sma_accounts_entries.transaction_type')
+            ->group_by('sma_accounts_entryitems.entry_id')
             ->order_by('sma_accounts_entries.date asc');
         $q = $this->db->get();
         //lq($this);
