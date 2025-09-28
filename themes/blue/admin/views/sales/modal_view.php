@@ -62,13 +62,10 @@
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
                 <i class="fa fa-2x">&times;</i>
             </button>
-            <button type="button" class="btn btn-xs btn-default no-print pull-right" style="margin-right:15px;" onclick="window.print();">
-                <i class="fa fa-print"></i> <?= lang('print'); ?>
-            </button> 
-           
-                <div class="text-center" style="margin-bottom:20px;">
-                <h1><?= lang('VAT_Invoice'); ?></h1>
-                </div>
+            
+            <div class="text-center" style="margin-bottom:20px;">
+            <h1><?= lang('VAT_Invoice'); ?></h1>
+            </div>
 
             <div class="well well-sm">
                 <div class="row bold">
