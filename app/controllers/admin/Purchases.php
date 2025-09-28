@@ -2647,6 +2647,7 @@ class Purchases extends MY_Controller
         if (!$this->Settings->barcode_img) {
             $html = preg_replace("'\<\?xml(.*)\?\>'", '', $html);
         }
+        //echo $html;exit;
         if ($view) {
             echo $html;
             die();

@@ -67,10 +67,10 @@
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
                 <i class="fa fa-2x">&times;</i>
             </button>
-            <button type="button" id="Print" class="print btn btn-xs btn-default no-print pull-right"
+            <!--<button type="button" id="Print" class="print btn btn-xs btn-default no-print pull-right"
                 style="margin-right:15px;">
                 <i class="fa fa-print"></i> <?= lang('print'); ?>
-            </button>
+            </button>-->
             <?php if ($logo) {
                 ?>
                 <div class="text-center" style="margin-bottom:20px;">

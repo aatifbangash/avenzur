@@ -196,8 +196,8 @@
                                                         <?php if($purchase->status != "received") {?>
                                                         <li><?= $edit_link ?></li>
                                                         <?php }?>
-                                                        <!-- <li><?= $pdf_link ?></li>
-                                                        <li><?= $email_link ?></li> -->
+                                                        <li><?= $pdf_link ?></li>
+                                                        <!--<li><?= $email_link ?></li> -->
                                                         <li><?= $print_barcode ?></li>
                                                         <?php if($purchase->status == 'received') {?>
                                                         <li><?= $return_link ?></li>
