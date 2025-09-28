@@ -3702,20 +3702,14 @@ class Sales extends MY_Controller
         $this->data['rows']        = $this->sales_model->getAllInvoiceItems($id);
         $this->data['return_sale'] = $inv->return_id ? $this->sales_model->getInvoiceByID($inv->return_id) : null;
         $this->data['return_rows'] = $inv->return_id ? $this->sales_model->getAllInvoiceItems($inv->return_id) : null;
-        //$this->data['paypal'] = $this->sales_model->getPaypalSettings();
-        //$this->data['skrill'] = $this->sales_model->getSkrillSettings();
-        // echo "<pre>";
-        // print_r($this->data);exit;
+        
         $name = lang('sale') . '_' . str_replace('/', '_', $inv->reference_no) . '.pdf';
         $html = $this->load->view($this->theme . 'sales/pdf/sales_invoice_report', $this->data, true);
-        //echo $html;exit;
+        
         if (!$this->Settings->barcode_img) {
             $html = preg_replace("'\<\?xml(.*)\?\>'", '', $html);
         }
        
-       // $outputPath = FCPATH . 'reports/sample_report.pdf';
-        //$this->pdfService->generatePDF( $html, 'sale_invoice.pdf');
-       // echo "PDF generated at: " . base_url('reports/sample_report.pdf');
         $this->load->view($this->theme . 'sales/pdf/sales_invoice_report', $this->data);
         if ($view) {
             $this->load->view($this->theme . 'sales/pdf/sales_invoice_report', $this->data);
