@@ -254,64 +254,7 @@
         </h2>
 
         <div class="box-icon">
-            <ul class="btn-tasks">
-                <li class="dropdown">
-                    <a data-toggle="dropdown" class="dropdown-toggle" href="#">
-                        <i class="icon fa fa-tasks tip" data-placement="left" title="<?=lang('actions')?>"></i>
-                    </a>
-                    <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
-                        <li>
-                            <a href="<?=admin_url('sales/add')?>">
-                                <i class="fa fa-plus-circle"></i> <?=lang('add_sale')?>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" id="excel" data-action="export_excel">
-                                <i class="fa fa-file-excel-o"></i> <?=lang('export_to_excel')?>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" id="combine" data-action="combine">
-                                <i class="fa fa-file-pdf-o"></i> <?=lang('combine_to_pdf')?>
-                            </a>
-                        </li>
-                        <li class="divider"></li>
-                        <li>
-                            <a href="#" class="bpo" title="<b><?=lang('delete_sales')?></b>" data-content="<p><?=lang('r_u_sure')?></p><button type='button' class='btn btn-danger' id='delete' data-action='delete'><?=lang('i_m_sure')?></a> <button class='btn bpo-close'><?=lang('no')?></button>" data-html="true" data-placement="left">
-                                <i class="fa fa-trash-o"></i> <?=lang('delete_sales')?>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-                <?php if (!empty($warehouses)) {
-                    ?>
-                    <li class="dropdown">
-                        <a data-toggle="dropdown" class="dropdown-toggle" href="#"><i class="icon fa fa-building-o tip" data-placement="left" title="<?=lang('warehouses')?>"></i></a>
-                        <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
-                            <li><a href="<?=admin_url('sales')?>"><i class="fa fa-building-o"></i> <?=lang('all_warehouses')?></a></li>
-                            <li class="divider"></li>
-                            <?php
-                            foreach ($warehouses as $warehouse) {
-                                echo '<li><a href="' . admin_url('sales/' . $warehouse->id) . '"><i class="fa fa-building"></i>' . $warehouse->name . '</a></li>';
-                            } ?>
-                        </ul>
-                    </li>
-                    <?php
-                }
-                ?>
-                <?php if (SHOP) {
-                    ?>
-                <li class="dropdown">
-                    <a data-toggle="dropdown" class="dropdown-toggle" href="#"><i class="icon fa fa-list-alt tip" data-placement="left" title="<?=lang('sales')?>"></i></a>
-                    <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
-                        <li<?= $this->input->get('shop') == 'yes' ? ' class="active"' : ''; ?>><a href="<?=admin_url('sales?shop=yes')?>"><i class="fa fa-shopping-cart"></i> <?=lang('shop_sales')?></a></li>
-                        <li<?= $this->input->get('shop') == 'no' ? ' class="active"' : ''; ?>><a href="<?=admin_url('sales?shop=no')?>"><i class="fa fa-heart"></i> <?=lang('staff_sales')?></a></li>
-                        <li<?= !$this->input->get('shop') ? ' class="active"' : ''; ?>><a href="<?=admin_url('sales')?>"><i class="fa fa-list-alt"></i> <?=lang('all_sales')?></a></li>
-                    </ul>
-                </li>
-                    <?php
-                } ?>
-            </ul>
+            
         </div>
     </div>
     <div class="box-content">

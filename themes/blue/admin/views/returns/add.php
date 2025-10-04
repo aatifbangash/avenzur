@@ -392,7 +392,7 @@
                             </div>
                         </div>
 
-                          <?php if ($Settings->tax2) {  ?>
+                          <?php if ($Settings->tax2 && !1 == 1) {  ?>
 
                             <div class="col-md-4">
                                 <div class="form-group">
@@ -412,20 +412,20 @@
 
                         <?php if ($Owner || $Admin || $this->session->userdata('allow_discount')) {
                                     ?>
-                            <div class="col-md-4">
+                            <!--<div class="col-md-4">
                                 <div class="form-group">
                                     <?= lang('order_discount', 'rediscount'); ?>
                                     <?php echo form_input('order_discount', '', 'class="form-control input-tip" id="rediscount"'); ?>
                                 </div>
-                            </div>
+                            </div>-->
                         <?php
                                 } ?>
-                        <div class="col-md-4">
+                        <!--<div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('shipping', 'reshipping'); ?>
                                 <?php echo form_input('shipping', '', 'class="form-control input-tip" id="reshipping"'); ?>
                             </div>
-                        </div>
+                        </div>-->
 
                         <div class="col-md-4">
                             <div class="form-group">

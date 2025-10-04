@@ -75,7 +75,7 @@
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-star-o"></i><?= lang('transfers'); ?></h2>
 
-        <div class="box-icon">
+        <!--<div class="box-icon">
             <ul class="btn-tasks">
                 <li class="dropdown">
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#">
@@ -108,7 +108,7 @@
                  </ul>
              </li>
             </ul>
-        </div>
+        </div>-->
     </div>
     <div class="box-content">
         <div class="row">

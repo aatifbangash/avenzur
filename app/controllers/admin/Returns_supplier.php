@@ -1494,12 +1494,12 @@ class Returns_supplier extends MY_Controller
         $this->load->library('datatables');
         if ($warehouse_id) {
             $this->datatables
-                ->select("{$this->db->dbprefix('returns_supplier')}.id as id, DATE_FORMAT({$this->db->dbprefix('returns_supplier')}.date, '%Y-%m-%d %T') as date, reference_no, sequence_code, status, {$this->db->dbprefix('returns_supplier')}.supplier, grand_total, {$this->db->dbprefix('returns_supplier')}.attachment")
+                ->select("{$this->db->dbprefix('returns_supplier')}.id as id, DATE_FORMAT({$this->db->dbprefix('returns_supplier')}.date, '%Y-%m-%d %T') as date, reference_no, sequence_code, status, {$this->db->dbprefix('returns_supplier')}.supplier, grand_total, CONCAT('files/', {$this->db->dbprefix('returns_supplier')}.attachment) as attachment")
                 ->from('returns_supplier')
                 ->where('warehouse_id', $warehouse_id);
         } else {
             $this->datatables
-                ->select("{$this->db->dbprefix('returns_supplier')}.id as id, DATE_FORMAT({$this->db->dbprefix('returns_supplier')}.date, '%Y-%m-%d %T') as date, reference_no, sequence_code, status, {$this->db->dbprefix('returns_supplier')}.supplier, grand_total, {$this->db->dbprefix('returns_supplier')}.attachment")
+                ->select("{$this->db->dbprefix('returns_supplier')}.id as id, DATE_FORMAT({$this->db->dbprefix('returns_supplier')}.date, '%Y-%m-%d %T') as date, reference_no, sequence_code, status, {$this->db->dbprefix('returns_supplier')}.supplier, grand_total, CONCAT('files/', {$this->db->dbprefix('returns_supplier')}.attachment) as attachment")
                 ->from('returns_supplier');
         }
 

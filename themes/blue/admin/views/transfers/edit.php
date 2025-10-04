@@ -422,12 +422,12 @@
                             </div>
                         </div>
 
-                        <div class="col-md-6">
+                        <!--<div class="col-md-6">
                             <div class="form-group" style="margin-bottom:5px;">
                                 <?= lang('shipping', 'toshipping'); ?>
                                 <?php echo form_input('shipping', '', 'class="form-control input-tip" id="toshipping"'); ?>
                             </div>
-                        </div>
+                        </div>-->
 
                         <div class="col-md-6">
                             <div class="form-group">

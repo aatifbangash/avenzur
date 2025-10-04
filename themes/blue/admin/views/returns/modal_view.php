@@ -514,7 +514,7 @@
                 ?>
                 <div class="buttons">
                     <div class="btn-group btn-group-justified">
-                        <div class="btn-group">
+                        <!--<div class="btn-group">
                             <a href="<?= admin_url('sales/add_payment/' . $inv->id) ?>" class="tip btn btn-primary" title="<?= lang('add_payment') ?>" data-toggle="modal" data-target="#myModal2">
                                 <i class="fa fa-dollar"></i>
                                 <span class="hidden-sm hidden-xs"><?= lang('payment') ?></span>
@@ -531,7 +531,7 @@
                                 <i class="fa fa-envelope-o"></i>
                                 <span class="hidden-sm hidden-xs"><?= lang('email') ?></span>
                             </a>
-                        </div>
+                        </div>-->
                         <!-- <div class="btn-group">
                             <a href="<?= admin_url('sales/pdf/' . $inv->id) ?>" class="tip btn btn-primary" title="<?= lang('download_pdf') ?>">
                                 <i class="fa fa-download"></i>
@@ -540,7 +540,7 @@
                         </div> -->
                         <?php if (!$inv->sale_id) {
                             ?>
-                        <div class="btn-group">
+                        <!--<div class="btn-group">
                             <a href="<?= admin_url('sales/edit/' . $inv->id) ?>" class="tip btn btn-warning sledit" title="<?= lang('edit') ?>">
                                 <i class="fa fa-edit"></i>
                                 <span class="hidden-sm hidden-xs"><?= lang('edit') ?></span>
@@ -553,7 +553,7 @@
                                 <i class="fa fa-trash-o"></i>
                                 <span class="hidden-sm hidden-xs"><?= lang('delete') ?></span>
                             </a>
-                        </div>
+                        </div>-->
                             <?php
                         } ?>
                     </div>

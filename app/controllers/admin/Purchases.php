@@ -599,8 +599,25 @@ class Purchases extends MY_Controller
                 $data['igst'] = $total_igst;
             }
 
-            $attachments = $this->attachments->upload();
-            $data['attachment'] = !empty($attachments);
+            if ($_FILES['attachment']['size'] > 0) {
+                $this->load->library('upload');
+                $config['upload_path'] = $this->digital_upload_path;
+                $config['allowed_types'] = $this->digital_file_types;
+                $config['max_size'] = $this->allowed_file_size;
+                $config['overwrite'] = false;
+                $config['encrypt_name'] = true;
+                $this->upload->initialize($config);
+                if (!$this->upload->do_upload('attachment')) {
+                    $error = $this->upload->display_errors();
+                    $this->session->set_flashdata('error', $error);
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
+                $photo = $this->upload->file_name;
+                $data['attachment'] = $photo;
+            }
+
+            //$attachments = $this->attachments->upload();
+            //$data['attachment'] = !empty($attachments);
             //$this->sma->print_arrays($data, $products);exit;
         }
 
@@ -1390,8 +1407,24 @@ class Purchases extends MY_Controller
                 $data['igst'] = $total_igst;
             }
 
-            $attachments = $this->attachments->upload();
-            $data['attachment'] = !empty($attachments);
+            if ($_FILES['attachment']['size'] > 0) { 
+                $this->load->library('upload'); 
+                $config['upload_path'] = $this->digital_upload_path; 
+                $config['allowed_types'] = $this->digital_file_types; 
+                $config['max_size'] = $this->allowed_file_size; 
+                $config['overwrite'] = false; 
+                $config['encrypt_name'] = true; $this->upload->initialize($config); 
+                if (!$this->upload->do_upload('attachment')) { 
+                    $error = $this->upload->display_errors(); 
+                    $this->session->set_flashdata('error', $error); 
+                    redirect($_SERVER['HTTP_REFERER']); 
+                } 
+                $photo = $this->upload->file_name; 
+                $data['attachment'] = $photo; 
+            }
+
+            //$attachments = $this->attachments->upload();
+            //$data['attachment'] = !empty($attachments);
             //$this->sma->print_arrays($data, $products);exit;
 
             // echo "<pre>";

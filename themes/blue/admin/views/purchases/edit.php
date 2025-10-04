@@ -333,7 +333,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('attachments', 'document') ?>
-                                <input id="document" type="file" data-browse-label="<?= lang('browse'); ?>" name="attachments[]" multiple data-show-upload="false" data-show-preview="false" class="form-control file">
+                                <input id="document" type="file" data-browse-label="<?= lang('browse'); ?>" name="attachment" multiple data-show-upload="false" data-show-preview="false" class="form-control file">
                             </div>
                         </div>
                         <?php //if($inv->shelf_status != NULL || $inv->shelf_status == NULL){ 
@@ -489,7 +489,7 @@
                                 <?php
                                 } ?>
 
-                                <div class="col-md-4">
+                                <!--<div class="col-md-4">
                                     <div class="form-group">
                                         <?= lang('discount_label', 'podiscount'); ?>
                                         <?php echo form_input('discount', '', 'class="form-control input-tip" id="podiscount"'); ?>
@@ -501,7 +501,7 @@
                                         <?= lang('shipping', 'poshipping'); ?>
                                         <?php echo form_input('shipping', '', 'class="form-control input-tip" id="poshipping"'); ?>
                                     </div>
-                                </div>
+                                </div>-->
 
                                 <div class="col-md-4">
                                     <div class="form-group">
