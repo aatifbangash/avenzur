@@ -162,7 +162,7 @@ $registerIdsJson = '';
                 <hr />
                 <div class="row">
                     <div class="controls table-controls" style="font-size: 12px !important;">
-                    <table width="100%" class="stable">
+                    <table width="100%" class="stable" id="poTable">
                 <!-- <tr>
                     <td style="border-bottom: 1px solid #EEE;"><h4><?= lang('cash_in_hand'); ?>:</h4></td>
                     <td style="text-align:right; border-bottom: 1px solid #EEE;"><h4>
