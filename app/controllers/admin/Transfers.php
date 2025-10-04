@@ -1173,10 +1173,10 @@ class Transfers extends MY_Controller
             . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
             . lang('actions') . ' <span class="caret"></span></button>
         <ul class="dropdown-menu pull-right" role="menu">
-            <li>' . $detail_link . '</li>
+            
             <li>' . $edit_link . '</li>
             <li>' . $pdf_link . '</li>
-            <li>' . $email_link . '</li>
+            
             <li>' . $print_barcode . '</li>
             <li>' . $journal_entry_link . '</li>
             <li>' . $delete_link . '</li>
@@ -1186,7 +1186,7 @@ class Transfers extends MY_Controller
         $this->load->library('datatables');
 
         $this->datatables
-            ->select('id, date, transfer_no, sequence_code, from_warehouse_name as fname, from_warehouse_code as fcode, to_warehouse_name as tname,to_warehouse_code as tcode, total, total_tax, grand_total, status, attachment')
+            ->select("id, date, transfer_no, sequence_code, from_warehouse_name as fname, from_warehouse_code as fcode, to_warehouse_name as tname,to_warehouse_code as tcode, total, total_tax, grand_total, status, CONCAT('files/', {$this->db->dbprefix('transfers')}.attachment) as attachment")
             ->from('transfers')
             ->edit_column('fname', '$1 ($2)', 'fname, fcode')
             ->edit_column('tname', '$1 ($2)', 'tname, tcode');

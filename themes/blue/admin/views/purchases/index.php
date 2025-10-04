@@ -28,7 +28,7 @@
                 class="fa-fw fa fa-star"></i><?= lang('purchases') . ' (' . ($warehouse_id ? $warehouse->name : lang('all_warehouses')) . ')'; ?>
         </h2>
 
-        <div class="box-icon">
+        <!--<div class="box-icon">
             <ul class="btn-tasks">
                 <li class="dropdown">
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#"><i class="icon fa fa-tasks tip"
@@ -78,7 +78,7 @@
                 }
                 ?>
             </ul>
-        </div>
+        </div>-->
     </div>
     <div class="box-content">
         <div class="row">
@@ -130,8 +130,9 @@
                                 <!-- <th><?= lang('paid'); ?></th> -->
                                 <!-- <th><?= lang('balance'); ?></th> -->
                                 <!-- <th><?= lang('payment_status'); ?></th> -->
-                                <!-- <th style="min-width:30px; width: 30px; text-align: center;"><i class="fa fa-chain"></i>
-                                </th> -->
+                                <th style="width: 10px !important">
+                                    <i class="fa fa-chain"></i>
+                                </th>
                                 <!-- <th>Transfer Status</th>
                                 <th>Transfer Id</th>
                                 <th>Transfer At</th> -->
@@ -179,7 +180,13 @@
                                         <!-- <td><?= number_format($purchase->paid, 2) ?></td> -->
                                         <!-- <td><?= number_format($purchase->grand_total - $purchase->paid, 2) ?></td> -->
                                         <!-- <td><?= $purchase->payment_status ?></td> -->
-                                        <!-- <td><?= $purchase->attachment ?></td> -->
+                                        <td style="width:10px !important;">
+                                            <?php 
+                                                if($purchase->attachment){
+                                                    echo '<a href="files/'.$purchase->attachment.'" class="tip" title="" data-original-title="Download"><i class="fa fa-file"></i></a>';
+                                                }
+                                            ?>
+                                        </td>
                                         <!-- <td> <?= $transfer_status; ?> </td>
                                         <td> <?= $purchase->transfer_id > 0 ? $purchase->transfer_id : ''; ?></td>
                                         <td> <?= $purchase->transfer_at ?> </td> -->
@@ -190,9 +197,9 @@
                                                         class="btn btn-default btn-xs btn-primary dropdown-toggle"
                                                         data-toggle="dropdown">Action<span class="caret"></span></button>
                                                     <ul class="dropdown-menu pull-right" role="menu">
-                                                        <li><?= $detail_link ?> </li>
+                                                        <!--<li><?= $detail_link ?> </li>
                                                         <li><?= $payments_link ?></li>
-                                                        <li><?= $add_payment_link ?></li>
+                                                        <li><?= $add_payment_link ?></li>-->
                                                         <?php if($purchase->status != "received") {?>
                                                         <li><?= $edit_link ?></li>
                                                         <?php }?>
