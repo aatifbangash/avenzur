@@ -110,6 +110,15 @@
             background-color: #007bff;
             color: #fff;
         }
+
+        @media print {
+        thead {
+            display: table-header-group;
+        }
+        tfoot {
+            display: table-footer-group; /* Optional: makes footers repeat too */
+        }
+        }
     </style>
 </head>
 
@@ -426,7 +435,32 @@
             } ?>
         </div>-->
 
+        
+
     </div>
+
+    <!--<div style="margin-top: 60px; width: 100%; font-size: 12px;float:left;">
+        <table style="width: 100%; border: none !important; ">
+            <tr>
+                <td style="width: 25%; text-align: left; border: none;">
+                    <strong>STORE KEEPER:</strong>
+                    <div style="height: 40px; border-bottom: 1px solid #000;"></div>
+                </td>
+                <td style="width: 25%; text-align: left; border: none;">
+                    <strong>SALES MANAGER:</strong>
+                    <div style="height: 40px; border-bottom: 1px solid #000;"></div>
+                </td>
+                <td style="width: 25%; text-align: left; border: none;">
+                    <strong>RECEIVED BY:</strong>
+                    <div style="height: 40px; border-bottom: 1px solid #000;"></div>
+                </td>
+                <td style="width: 25%; text-align: left; border: none;">
+                    <strong>SIGNATURE / STAMP:</strong>
+                    <div style="height: 40px; border-bottom: 1px solid #000;"></div>
+                </td>
+            </tr>
+        </table>
+    </div>-->
 
 </body>
 
