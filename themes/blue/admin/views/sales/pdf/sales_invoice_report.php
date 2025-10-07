@@ -246,6 +246,8 @@
                     <tr>
                         <th>#</th>
                         <th><?= lang('Description'); ?></th>
+                        <th><?= lang('Batch'); ?></th>
+                        <th><?= lang('Expiry'); ?></th>
                         <th><?= lang('Qty'); ?></th>
                         <th><?= lang('Bonus'); ?></th>
                         <th><?= lang('S.Price'); ?></th>
@@ -284,6 +286,12 @@
                             <td style="vertical-align:middle;">
                                 <?= $row->product_name . ($row->variant ? ' (' . $row->variant . ')' : ''); ?>
                                 <?= $row->details ? '<br>' . $row->details : ''; ?>
+                            </td>
+                            <td style="text-align:center; vertical-align:middle;">
+                                <?= $row->batch_no; ?>
+                            </td>
+                            <td style="text-align:center; vertical-align:middle;">
+                                <?= $row->expiry; ?>
                             </td>
                             <td style="text-align:center; vertical-align:middle;">
                                 <?= $this->sma->formatQuantity($row->unit_quantity); ?>
