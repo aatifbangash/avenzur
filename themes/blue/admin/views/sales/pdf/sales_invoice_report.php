@@ -13,7 +13,7 @@
         }
 
         td {
-            font-size: 11px;
+            font-size: 10px;
             border: 1px solid;
             padding: 3px !important;
             padding-top: 5px !important;
@@ -21,7 +21,7 @@
         }
 
         th {
-            font-size: 12px;
+            font-size: 11px;
             border: 1px solid;
             padding: 3px !important;
 
@@ -48,7 +48,7 @@
         .row {
             display: flex;
             width: 100%;
-            font-size: 12px;
+            font-size: 11px;
         }
 
         .col-half {
@@ -119,6 +119,8 @@
             display: table-footer-group; /* Optional: makes footers repeat too */
         }
         }
+
+        
     </style>
 </head>
 
@@ -439,28 +441,34 @@
 
     </div>
 
-    <!--<div style="margin-top: 60px; width: 100%; font-size: 12px;float:left;">
-        <table style="width: 100%; border: none !important; ">
-            <tr>
-                <td style="width: 25%; text-align: left; border: none;">
-                    <strong>STORE KEEPER:</strong>
-                    <div style="height: 40px; border-bottom: 1px solid #000;"></div>
-                </td>
-                <td style="width: 25%; text-align: left; border: none;">
-                    <strong>SALES MANAGER:</strong>
-                    <div style="height: 40px; border-bottom: 1px solid #000;"></div>
-                </td>
-                <td style="width: 25%; text-align: left; border: none;">
-                    <strong>RECEIVED BY:</strong>
-                    <div style="height: 40px; border-bottom: 1px solid #000;"></div>
-                </td>
-                <td style="width: 25%; text-align: left; border: none;">
-                    <strong>SIGNATURE / STAMP:</strong>
-                    <div style="height: 40px; border-bottom: 1px solid #000;"></div>
-                </td>
-            </tr>
-        </table>
-    </div>-->
+    <div style="clear: both;"></div>
+
+    <div style="margin-top: 60px; width: 100%; font-size: 12px; page-break-inside: avoid; text-align: left;">
+
+    <div style="display: inline-block; width: 23%; vertical-align: top; margin-right: 2%;">
+        <strong>STORE KEEPER:</strong>
+        <div style="height: 40px; width: 100%; border-bottom: 1px solid #000; margin-top: 4px;"></div>
+    </div>
+
+    <div style="display: inline-block; width: 23%; vertical-align: top; margin-right: 2%;">
+        <strong>SALES MANAGER:</strong>
+        <div style="height: 40px; width: 100%; border-bottom: 1px solid #000; margin-top: 4px;"></div>
+    </div>
+
+    <div style="display: inline-block; width: 23%; vertical-align: top; margin-right: 2%;">
+        <strong>RECEIVED BY:</strong>
+        <div style="height: 40px; width: 100%; border-bottom: 1px solid #000; margin-top: 4px;"></div>
+    </div>
+
+    <div style="display: inline-block; width: 23%; vertical-align: top;">
+        <strong>SIGNATURE / STAMP:</strong>
+        <div style="height: 40px; width: 100%; border-bottom: 1px solid #000; margin-top: 4px;"></div>
+    </div>
+
+</div>
+
+
+
 
 </body>
 
