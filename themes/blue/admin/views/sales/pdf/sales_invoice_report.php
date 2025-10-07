@@ -441,31 +441,31 @@
 
     </div>
 
-    <div style="clear: both;"></div>
+    <!--<div style="clear: both;"></div>
 
     <div style="margin-top: 60px; width: 100%; font-size: 12px; page-break-inside: avoid; text-align: left;">
 
-    <div style="display: inline-block; width: 23%; vertical-align: top; margin-right: 2%;">
-        <strong>STORE KEEPER:</strong>
-        <div style="height: 40px; width: 100%; border-bottom: 1px solid #000; margin-top: 4px;"></div>
-    </div>
+        <div style="display: inline-block; width: 23%; vertical-align: top; margin-right: 2%;">
+            <strong>STORE KEEPER:</strong>
+            <div style="height: 40px; width: 100%; border-bottom: 1px solid #000; margin-top: 4px;"></div>
+        </div>
 
-    <div style="display: inline-block; width: 23%; vertical-align: top; margin-right: 2%;">
-        <strong>SALES MANAGER:</strong>
-        <div style="height: 40px; width: 100%; border-bottom: 1px solid #000; margin-top: 4px;"></div>
-    </div>
+        <div style="display: inline-block; width: 23%; vertical-align: top; margin-right: 2%;">
+            <strong>SALES MANAGER:</strong>
+            <div style="height: 40px; width: 100%; border-bottom: 1px solid #000; margin-top: 4px;"></div>
+        </div>
 
-    <div style="display: inline-block; width: 23%; vertical-align: top; margin-right: 2%;">
-        <strong>RECEIVED BY:</strong>
-        <div style="height: 40px; width: 100%; border-bottom: 1px solid #000; margin-top: 4px;"></div>
-    </div>
+        <div style="display: inline-block; width: 23%; vertical-align: top; margin-right: 2%;">
+            <strong>RECEIVED BY:</strong>
+            <div style="height: 40px; width: 100%; border-bottom: 1px solid #000; margin-top: 4px;"></div>
+        </div>
 
-    <div style="display: inline-block; width: 23%; vertical-align: top;">
-        <strong>SIGNATURE / STAMP:</strong>
-        <div style="height: 40px; width: 100%; border-bottom: 1px solid #000; margin-top: 4px;"></div>
-    </div>
+        <div style="display: inline-block; width: 23%; vertical-align: top;">
+            <strong>SIGNATURE / STAMP:</strong>
+            <div style="height: 40px; width: 100%; border-bottom: 1px solid #000; margin-top: 4px;"></div>
+        </div>
 
-</div>
+    </div>-->
 
 
 
