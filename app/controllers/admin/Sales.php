@@ -1,6 +1,7 @@
 <?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
+use Mpdf\Mpdf;
 //require_once(APPPATH . 'factories/PdfServiceFactory.php');
 class Sales extends MY_Controller
 {
@@ -3395,7 +3396,7 @@ class Sales extends MY_Controller
         $add_delivery_link = anchor('admin/sales/add_delivery/$1', '<i class="fa fa-truck"></i> ' . lang('add_delivery'), 'data-toggle="modal" data-target="#myModal"');
         $email_link        = anchor('admin/sales/email/$1', '<i class="fa fa-envelope"></i> ' . lang('email_sale'), 'data-toggle="modal" data-target="#myModal"');
         $edit_link         = anchor('admin/sales/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_sale'), 'class="sledit"');
-        $pdf_link          = anchor('admin/sales/pdf/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf'));
+        $pdf_link          = anchor('admin/sales/pdf_new/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf'));
         $return_link       = anchor('admin/returns/add/?sale=$1', '<i class="fa fa-angle-double-left"></i> ' . lang('return_sale'));
         //$shipment_link     = anchor('$1', '<i class="fa fa-angle-double-left"></i> ' . lang('Shipping_Slip'));
         $delete_link       = "<a href='#' class='po' title='<b>" . lang('delete_sale') . "</b>' data-content=\"<p>"
@@ -3692,7 +3693,7 @@ class Sales extends MY_Controller
         
         $name = lang('sale') . '_' . str_replace('/', '_', $inv->reference_no) . '.pdf';
         $html = $this->load->view($this->theme . 'sales/pdf/sales_invoice_report', $this->data, true);
-        
+        echo $html;exit;
         if (!$this->Settings->barcode_img) {
             $html = preg_replace("'\<\?xml(.*)\?\>'", '', $html);
         }
@@ -3705,6 +3706,225 @@ class Sales extends MY_Controller
         } else {
             $this->sma->generate_pdf($html, $name, 'I', $this->data['biller']->invoice_footer);
         }
+    }
+
+    public function pdf_new($id = null, $view = null, $save_bufffer = null)
+    {
+        $this->sma->checkPermissions();
+        $this->load->library('inv_qrcode');
+
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $inv                 = $this->sales_model->getInvoiceByID($id);
+        if (!$this->session->userdata('view_right')) {
+            $this->sma->view_rights($inv->created_by);
+        }
+        $this->data['barcode']     = "<img src='" . admin_url('products/gen_barcode/' . $inv->reference_no) . "' alt='" . $inv->reference_no . "' class='pull-left' />";
+        $this->data['customer']    = $this->site->getCompanyByID($inv->customer_id);
+        $this->data['payments']    = $this->sales_model->getPaymentsForSale($id);
+        $this->data['biller']      = $this->site->getCompanyByID($inv->biller_id);
+        $biller = $this->site->getCompanyByID($inv->biller_id);
+        $customer = $this->data['customer'] ;
+        $this->data['user']        = $this->site->getUser($inv->created_by);
+        $this->data['warehouse']   = $this->site->getWarehouseByID($inv->warehouse_id);
+        $this->data['inv']         = $inv;
+        $this->data['rows']        = $this->sales_model->getAllInvoiceItems($id);
+        $this->data['return_sale'] = $inv->return_id ? $this->sales_model->getInvoiceByID($inv->return_id) : null;
+        $this->data['return_rows'] = $inv->return_id ? $this->sales_model->getAllInvoiceItems($inv->return_id) : null;
+        
+        $name = lang('sale') . '_' . str_replace('/', '_', $inv->reference_no) . '.pdf';
+        $html = $this->load->view($this->theme . 'sales/pdf/sales_invoice_report_new', $this->data, true);
+        
+        if (!$this->Settings->barcode_img) {
+            $html = preg_replace("'\<\?xml(.*)\?\>'", '', $html);
+        }
+       
+        $this->load->view($this->theme . 'sales/pdf/sales_invoice_report', $this->data);
+        if ($view) {
+            $this->load->view($this->theme . 'sales/pdf/sales_invoice_report', $this->data);
+        } elseif ($save_bufffer) {
+           // return $this->sma->generate_pdf($html, $name, $save_bufffer, $this->data['biller']->invoice_footer);
+        } else {
+            
+            $mpdf = new Mpdf([
+            'format' => 'A4',
+            'margin_top' => 80,
+            'margin_bottom' => 70,
+            ]);
+               
+            /*$mpdf->SetHTMLHeader('
+                <div style="text-align: center;margin-bottom: 10px;">
+                    <img width="50" src="data:image/png;base64,'.base64_encode(file_get_contents(base_url() . 'assets/uploads/logos/avenzur-logov2-024.png')).'
+                    alt="Avenzur" height="50" style="width: 100px;text-align: center;">
+                    <div style="width: 50%; float: left;">
+                    <p>Date: '.$this->sma->hrld($inv->date).'</p>
+                    <p>Reference: '.date("Y").'/'.$inv->id .'</p>
+                    <p>Sale Status: '. $inv->sale_status .'</p>
+                    <p>Payment Status: '.$inv->payment_status .'</p>
+                </div>
+
+                <div style="width: 96%; height: 8%; background-color: #f6f6f6; padding: 15px;">
+                    <div style="width: 50%; float: left;">
+                        <p>Date: '. $this->sma->hrld($inv->date) .'</p>
+                        <p>Reference: '. date("Y").'/'.$inv->id .'</p>
+                        <p>Sale Status: '. $inv->sale_status .'</p>
+                        <p>Payment Status: '. $inv->payment_status .'</p>
+                    </div>
+
+                    <div style="width: 50%; text-align: right; padding-top: 5px;float: left;">hereeer
+                        <img src="'.admin_url('misc/barcode/' . $this->sma->base64url_encode($inv->reference_no) . '/code128/74/0/1').'
+                            alt="'.$inv->reference_no.'" class="bcimg" />
+                        
+                    </div>
+                </div>
+
+                <div class="row" style="overflow:hidden;">
+                    <div class="col-half" style="margin-top:30px;float:left;">
+                        <p class="bold">To: '.$customer->company .'</p>
+                        <p>Address: '.$customer->address.'<p>'.'
+                        <p>City: '.$customer->city.
+                        '</p>'.'
+                        <p class="bold">VAT Number: '.$biller->vat_no .'</p>
+                        <p>Tel: '
+                        .$biller->phone.
+                        '</p>'.'
+                        <p>Email: '
+                        .$biller->email.
+                        '</p>'.'
+                    
+                    </div>
+
+                    <div class="col-half" style="margin-top:30px;float:left;">
+                        <p class="bold">To: '.$customer->company .'</p>
+                        <p>Address: '.$customer->address.'<p>'.'
+                        <p>City: '.$customer->city.
+                        '</p>'.'
+                        <p class="bold">VAT Number: '.$biller->vat_no .'</p>
+                        <p>Tel: '
+                        .$biller->phone.
+                        '</p>'.'
+                        <p>Email: '
+                        .$biller->email.
+                        '</p>'.'
+                    </div>
+                
+                </div>
+                <hr>
+                </div>
+            ');*/
+
+            $mpdf->SetHTMLHeader('
+<div style="width:100%; font-family: DejaVu Sans, sans-serif; font-size:11px;">
+
+    <!-- LOGO -->
+    <div style="text-align:center; margin-bottom:5px;">
+        <img src="data:image/png;base64,' . base64_encode(file_get_contents(base_url() . 'assets/uploads/logos/avenzur-logov2-024.png')) . '"
+            alt="Avenzur" style="max-width:120px; height:auto;">
+    </div>
+
+    <!-- INVOICE INFO & BARCODE -->
+    <div style="width:100%; background-color:#f6f6f6; padding:5px 8px; margin-bottom:5px; overflow:hidden; font-size:11px;">
+
+        <!-- Left: Invoice Info -->
+        <div style="float:left; width:55%;">
+            <p style="margin:2px 0;"><strong>Date:</strong> ' . $this->sma->hrld($inv->date) . '</p>
+            <p style="margin:2px 0;"><strong>Reference:</strong> ' . date("Y") . '/' . $inv->id . '</p>
+            <p style="margin:2px 0;"><strong>Sale Status:</strong> ' . $inv->sale_status . '</p>
+            <p style="margin:2px 0;"><strong>Payment Status:</strong> ' . $inv->payment_status . '</p>
+        </div>
+
+        <!-- Right: Barcode -->
+        <div style="float:right; width:40%; text-align:right;">
+            <img src="' . admin_url('misc/barcode/' . $this->sma->base64url_encode($inv->reference_no) . '/code128/74/0/1') . '"
+                alt="' . $inv->reference_no . '" style="height:40px;">
+        </div>
+
+    </div>
+
+    <!-- TO & FROM BLOCK -->
+    <div style="width:100%; overflow:hidden; margin-top:10px; font-size:11px;">
+
+        <!-- TO -->
+        <div style="float:left; width:48%; vertical-align:top;">
+            <p style="margin:2px 0;"><strong>To:</strong> '. $customer->name .'</p>
+            <p style="margin:2px 0;">Address: '. $customer->address .'</p>
+            <p style="margin:2px 0;">City: '. $customer->city .'</p>
+            <p style="margin:2px 0;">VAT Number: '. $customer->vat_no .'</p>
+            <p style="margin:2px 0;">Tel: '. $customer->phone .'</p>
+            <p style="margin:2px 0;">Email: '. $customer->email .'</p>
+        </div>
+
+        <!-- FROM -->
+        <div style="float:right; width:48%; vertical-align:top;">
+            <p style="margin:2px 0;"><strong>From:</strong> '.  $biller->name .'</p>
+            <p style="margin:2px 0;">Address: '. $biller->address .'</p>
+            <p style="margin:2px 0;">City: '. $biller->city .'</p>
+            <p style="margin:2px 0;">VAT Number: '. $biller->vat_no .'</p>
+            <p style="margin:2px 0;">Tel: '. $biller->phone .'</p>
+            <p style="margin:2px 0;">Email: '. $biller->email .'</p>
+        </div>
+
+    </div>
+
+    <hr style="margin:8px 0 0 0; border-top:1px solid #000;">
+</div>
+');
+
+
+        
+            $mpdf->SetHTMLFooter('
+    <hr style="margin-bottom:5px;">
+
+    <div style="width:100%; font-size:12px; font-family: DejaVu Sans, sans-serif;">
+
+        <!-- Totals Table -->
+        <div style="width:35%; float:right; text-align:left; margin-bottom:15px;">
+            <table border="1" cellpadding="4" cellspacing="0" width="100%" style="border-collapse:collapse;">
+                <tr><td>Total</td><td>'.$this->sma->formatNumber($inv->total).'</td></tr>
+                <tr><td>T-DISC</td><td>'.$this->sma->formatNumber($inv->total_discount).'</td></tr>
+                <tr><td>Net Before VAT</td><td>'.$this->sma->formatNumber($inv->total_net_sale).'</td></tr>
+                <tr><td>Total VAT</td><td>'.$this->sma->formatNumber($inv->total_tax).'</td></tr>
+                <tr><td><strong>Total After VAT</strong></td><td><strong>'.$this->sma->formatNumber($inv->grand_total).'</strong></td></tr>
+            </table>
+        </div>
+
+        <!-- Signature Section -->
+        <div style="width:100%; overflow:hidden; margin-top:50px; font-size:12px;">
+            
+            <div style="float:left; width:24%; text-align:center;">
+                <p>_________________________</p>
+                <p><strong>STORE KEEPER</strong></p>
+            </div>
+
+            <div style="float:right; width:24%; text-align:center;">
+                <p>_________________________</p>
+                <p><strong>SALES MANAGER</strong></p>
+            </div>
+
+            <div style="float:right; width:24%; text-align:center;">
+                <p>_________________________</p>
+                <p><strong>RECEIVED BY</strong></p>
+            </div>
+
+            <div style="float:right; width:24%; text-align:center;">
+                <p>_________________________</p>
+                <p><strong>SIGNATURE</strong></p>
+            </div>
+
+        </div>
+    </div>
+');
+
+
+
+            $mpdf->WriteHTML($html);
+            $mpdf->Output("sale_invoice.pdf", "D");
+
+                //$this->sma->generate_pdf($html, $name, 'I', $this->data['biller']->invoice_footer);
+            }
     }
 
     public function pdf_delivery($id = null, $view = null, $save_bufffer = null)
