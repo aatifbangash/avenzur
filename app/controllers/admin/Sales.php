@@ -3711,10 +3711,7 @@ class Sales extends MY_Controller
     public function pdf_new($id = null, $view = null, $save_bufffer = null)
     {
 
-        ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-error_reporting(E_ALL);
-
+        
         $this->sma->checkPermissions();
         $this->load->library('inv_qrcode');
 
