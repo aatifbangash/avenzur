@@ -3871,6 +3871,11 @@ echo $qr_code;exit;*/
 </div>
 ');
 
+if($inv->note != ""){
+    $note_text = 'Note:';
+}else{
+    $note_text = '';
+}
 
         
             $mpdf->SetHTMLFooter('
@@ -3880,7 +3885,7 @@ echo $qr_code;exit;*/
 
         <!-- Notes Section (Left) -->
         <div style="float:left; width:60%; text-align:left; padding-right:10px;">
-            <p style="margin:0 0 5px 0;"><strong>Note:</strong></p>
+            <p style="margin:0 0 5px 0;"><strong>'.$note_text.'</strong></p>
             <p style="margin:0;">
             '.$inv->note.'
             </p>
