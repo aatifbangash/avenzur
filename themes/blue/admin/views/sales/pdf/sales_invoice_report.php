@@ -115,9 +115,6 @@
         thead {
             display: table-header-group;
         }
-        tfoot {
-            display: table-footer-group; /* Optional: makes footers repeat too */
-        }
         }
     </style>
 </head>
