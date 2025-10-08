@@ -3709,9 +3709,7 @@ class Sales extends MY_Controller
     }
 
     public function pdf_new($id = null, $view = null, $save_bufffer = null)
-    {
-
-        
+    {   
         $this->sma->checkPermissions();
         $this->load->library('inv_qrcode');
 
@@ -3743,6 +3741,58 @@ class Sales extends MY_Controller
         if (!$this->Settings->barcode_img) {
             $html = preg_replace("'\<\?xml(.*)\?\>'", '', $html);
         }
+
+        // Generate QR code Base64 string
+        if ($this->Settings->ksa_qrcode) {
+            $qrtext = $this->inv_qrcode->base64([
+                'seller' => $biller->company && $biller->company != '-' ? $biller->company : $biller->name,
+                'vat_no' => $biller->vat_no ?: $biller->get_no,
+                'date' => $inv->date,
+                'grand_total' => $return_sale ? ($inv->grand_total + $return_sale->grand_total) : $inv->grand_total,
+                'total_tax_amount' => $return_sale ? ($inv->total_tax + $return_sale->total_tax) : $inv->total_tax,
+            ]);
+
+            // Convert payload to Base64 manually (for QR content)
+            $qrtext = base64_encode(json_encode($qrtext));
+            //echo "test";
+            $qr_code = $this->sma->qrcode('text', $qrtext, 2, $level = 'H', $sq = null, $svg = true);
+            $svg = base64_decode($qrtext);
+
+// Use Imagick to convert to PNG
+/*echo "here";
+$imagick = new Imagick();
+echo "iamgic called";
+$imagick->readImageBlob($svg);
+$imagick->setImageFormat("png");
+echo "test";
+// Save or encode to Base64 for embedding
+$png_base64 = base64_encode($imagick);
+echo '<img src="data:image/png;base64,' . $png_base64 . '"/>';*/
+
+            //$qr_code = $this->sma->qrcode('text', $qrtext, 2);
+        } else {
+            //$qr_code = $this->sma->qrcode('link', urlencode(site_url('view/sale/' . $inv->hash)), 2);
+        }
+        //echo $qr_code;
+
+        if ($this->Settings->ksa_qrcode) {
+    $qrtext = $this->inv_qrcode->base64([
+        'seller' => $biller->company && $biller->company != '-' ? $biller->company : $biller->name,
+        'vat_no' => $biller->vat_no ?: $biller->get_no,
+        'date' => $inv->date,
+        'grand_total' => $return_sale ? ($inv->grand_total + $return_sale->grand_total) : $inv->grand_total,
+        'total_tax_amount' => $return_sale ? ($inv->total_tax + $return_sale->total_tax) : $inv->total_tax,
+    ]);
+
+    // If $qrtext is already Base64 from inv_qrcode->base64(), no need to encode again
+    $qr_image = $this->sma->qrcode('text', $qrtext, 2); // Ensure this returns raw PNG data
+    $qr_code = '<img src="data:image/png;base64,' . $qrtext . '" style="width:100px; height:100px;" width="100" height="100">';
+} else {
+    $qr_code = '<img src="data:image/png;base64,' . base64_encode(file_get_contents(site_url('view/sale/' . $inv->hash))) . '" style="width:100px; height:100px;">';
+}
+//echo $qr_code;exit;
+        // Now explicitly generate Base64 PNG
+        //$qr_code = $this->inv_qrcode->generate_base64($qrtext, 150); // 150px size
        
         $this->load->view($this->theme . 'sales/pdf/sales_invoice_report', $this->data);
         if ($view) {
@@ -3756,75 +3806,22 @@ class Sales extends MY_Controller
             'margin_top' => 80,
             'margin_bottom' => 70,
             ]);
-               
-            /*$mpdf->SetHTMLHeader('
-                <div style="text-align: center;margin-bottom: 10px;">
-                    <img width="50" src="data:image/png;base64,'.base64_encode(file_get_contents(base_url() . 'assets/uploads/logos/avenzur-logov2-024.png')).'
-                    alt="Avenzur" height="50" style="width: 100px;text-align: center;">
-                    <div style="width: 50%; float: left;">
-                    <p>Date: '.$this->sma->hrld($inv->date).'</p>
-                    <p>Reference: '.date("Y").'/'.$inv->id .'</p>
-                    <p>Sale Status: '. $inv->sale_status .'</p>
-                    <p>Payment Status: '.$inv->payment_status .'</p>
-                </div>
-
-                <div style="width: 96%; height: 8%; background-color: #f6f6f6; padding: 15px;">
-                    <div style="width: 50%; float: left;">
-                        <p>Date: '. $this->sma->hrld($inv->date) .'</p>
-                        <p>Reference: '. date("Y").'/'.$inv->id .'</p>
-                        <p>Sale Status: '. $inv->sale_status .'</p>
-                        <p>Payment Status: '. $inv->payment_status .'</p>
-                    </div>
-
-                    <div style="width: 50%; text-align: right; padding-top: 5px;float: left;">hereeer
-                        <img src="'.admin_url('misc/barcode/' . $this->sma->base64url_encode($inv->reference_no) . '/code128/74/0/1').'
-                            alt="'.$inv->reference_no.'" class="bcimg" />
-                        
-                    </div>
-                </div>
-
-                <div class="row" style="overflow:hidden;">
-                    <div class="col-half" style="margin-top:30px;float:left;">
-                        <p class="bold">To: '.$customer->company .'</p>
-                        <p>Address: '.$customer->address.'<p>'.'
-                        <p>City: '.$customer->city.
-                        '</p>'.'
-                        <p class="bold">VAT Number: '.$biller->vat_no .'</p>
-                        <p>Tel: '
-                        .$biller->phone.
-                        '</p>'.'
-                        <p>Email: '
-                        .$biller->email.
-                        '</p>'.'
-                    
-                    </div>
-
-                    <div class="col-half" style="margin-top:30px;float:left;">
-                        <p class="bold">To: '.$customer->company .'</p>
-                        <p>Address: '.$customer->address.'<p>'.'
-                        <p>City: '.$customer->city.
-                        '</p>'.'
-                        <p class="bold">VAT Number: '.$biller->vat_no .'</p>
-                        <p>Tel: '
-                        .$biller->phone.
-                        '</p>'.'
-                        <p>Email: '
-                        .$biller->email.
-                        '</p>'.'
-                    </div>
-                
-                </div>
-                <hr>
-                </div>
-            ');*/
 
             $mpdf->SetHTMLHeader('
 <div style="width:100%; font-family: DejaVu Sans, sans-serif; font-size:11px;">
+
+    <!-- TOP BAR WITH PAGE NUMBER -->
+    <div style="width:100%; overflow:hidden; font-size:10px; color:#666; margin-bottom:3px;">
+        <div style="float:right; text-align:right;">
+            Page {PAGENO} of {nbpg}
+        </div>
+    </div>
 
     <!-- LOGO -->
     <div style="text-align:center; margin-bottom:5px;">
         <img src="data:image/png;base64,' . base64_encode(file_get_contents(base_url() . 'assets/uploads/logos/avenzur-logov2-024.png')) . '"
             alt="Avenzur" style="max-width:120px; height:auto;">
+        ' . $qr_code . '
     </div>
 
     <!-- INVOICE INFO & BARCODE -->
@@ -3838,17 +3835,17 @@ class Sales extends MY_Controller
             <p style="margin:2px 0;"><strong>Payment Status:</strong> ' . $inv->payment_status . '</p>
         </div>
 
-        <!-- Right: Barcode -->
+        <!-- Right: Barcode and QR -->
         <div style="float:right; width:40%; text-align:right;">
             <img src="' . admin_url('misc/barcode/' . $this->sma->base64url_encode($inv->reference_no) . '/code128/74/0/1') . '"
-                alt="' . $inv->reference_no . '" style="height:40px;">
+                alt="' . $inv->reference_no . '" style="height:40px; vertical-align:top; margin-right:5px;"/>
+            
         </div>
 
     </div>
 
     <!-- TO & FROM BLOCK -->
     <div style="width:100%; overflow:hidden; margin-top:10px; font-size:11px;">
-
         <!-- TO -->
         <div style="float:left; width:48%; vertical-align:top;">
             <p style="margin:2px 0;"><strong>To:</strong> '. $customer->name .'</p>
@@ -3868,7 +3865,6 @@ class Sales extends MY_Controller
             <p style="margin:2px 0;">Tel: '. $biller->phone .'</p>
             <p style="margin:2px 0;">Email: '. $biller->email .'</p>
         </div>
-
     </div>
 
     <hr style="margin:8px 0 0 0; border-top:1px solid #000;">
@@ -3881,6 +3877,14 @@ class Sales extends MY_Controller
     <hr style="margin-bottom:5px;">
 
     <div style="width:100%; font-size:12px; font-family: DejaVu Sans, sans-serif;">
+
+        <!-- Notes Section (Left) -->
+        <div style="float:left; width:60%; text-align:left; padding-right:10px;">
+            <p style="margin:0 0 5px 0;"><strong>Note:</strong></p>
+            <p style="margin:0;">
+            '.$inv->note.'
+            </p>
+        </div>
 
         <!-- Totals Table -->
         <div style="width:35%; float:right; text-align:left; margin-bottom:15px;">
@@ -3923,7 +3927,7 @@ class Sales extends MY_Controller
 
 
             $mpdf->WriteHTML($html);
-            $mpdf->Output("sale_invoice.pdf", "D");
+            $mpdf->Output("sale_invoice.pdf", "I");
 
                 //$this->sma->generate_pdf($html, $name, 'I', $this->data['biller']->invoice_footer);
             }
