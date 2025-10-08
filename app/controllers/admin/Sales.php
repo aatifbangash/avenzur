@@ -3843,7 +3843,7 @@ class Sales extends MY_Controller
 </div>
 ');
 
-if($inv->note != ""){
+if($inv->warning_note != ""){
     $note_text = 'Note:';
 }else{
     $note_text = '';
@@ -3859,7 +3859,7 @@ if($inv->note != ""){
         <div style="float:left; width:60%; text-align:left; padding-right:10px;">
             <p style="margin:0 0 5px 0;"><strong>'.$note_text.'</strong></p>
             <p style="margin:0;">
-            '.$inv->note.'
+            '.$inv->warning_note.'
             </p>
         </div>
 
