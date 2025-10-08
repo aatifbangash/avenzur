@@ -3743,7 +3743,7 @@ class Sales extends MY_Controller
         }
 
         // Generate QR code Base64 string
-        if ($this->Settings->ksa_qrcode) {
+       /* if ($this->Settings->ksa_qrcode) {
             $qrtext = $this->inv_qrcode->base64([
                 'seller' => $biller->company && $biller->company != '-' ? $biller->company : $biller->name,
                 'vat_no' => $biller->vat_no ?: $biller->get_no,
@@ -3754,26 +3754,26 @@ class Sales extends MY_Controller
 
             // Convert payload to Base64 manually (for QR content)
             $qrtext = base64_encode(json_encode($qrtext));
-            //echo "test";
-            $qr_code = $this->sma->qrcode('text', $qrtext, 2, $level = 'H', $sq = null, $svg = true);
-            $svg = base64_decode($qrtext);
+            //$qr_code = $this->sma->qrcode('text', $qrtext, 2, $level = 'H', $sq = null, $svg = true);
+            ob_start();*/
++
+            //$svg = base64_decode($qrtext);
+            //echo $qr_code_png;exit;
 
 // Use Imagick to convert to PNG
-/*echo "here";
-$imagick = new Imagick();
-echo "iamgic called";
-$imagick->readImageBlob($svg);
-$imagick->setImageFormat("png");
-echo "test";
+//$imagick = new Imagick();
+//$imagick->readImageBlob($svg);
+//$imagick->setImageFormat("png");
+//echo "test";
 // Save or encode to Base64 for embedding
-$png_base64 = base64_encode($imagick);
-echo '<img src="data:image/png;base64,' . $png_base64 . '"/>';*/
-
-            //$qr_code = $this->sma->qrcode('text', $qrtext, 2);
+/*$png_base64 = base64_encode($qr_code_png);
+echo '<img src="data:image/png;base64,' . $png_base64 . '"/>';
+exit;
+            $qr_code = $this->sma->qrcode('text', $qrtext, 2);
         } else {
-            //$qr_code = $this->sma->qrcode('link', urlencode(site_url('view/sale/' . $inv->hash)), 2);
+            $qr_code = $this->sma->qrcode('link', urlencode(site_url('view/sale/' . $inv->hash)), 2);
         }
-        //echo $qr_code;
+        echo $qr_code;
 
         if ($this->Settings->ksa_qrcode) {
     $qrtext = $this->inv_qrcode->base64([
@@ -3790,7 +3790,7 @@ echo '<img src="data:image/png;base64,' . $png_base64 . '"/>';*/
 } else {
     $qr_code = '<img src="data:image/png;base64,' . base64_encode(file_get_contents(site_url('view/sale/' . $inv->hash))) . '" style="width:100px; height:100px;">';
 }
-//echo $qr_code;exit;
+echo $qr_code;exit;*/
         // Now explicitly generate Base64 PNG
         //$qr_code = $this->inv_qrcode->generate_base64($qrtext, 150); // 150px size
        
@@ -3927,7 +3927,7 @@ echo '<img src="data:image/png;base64,' . $png_base64 . '"/>';*/
 
 
             $mpdf->WriteHTML($html);
-            $mpdf->Output("sale_invoice.pdf", "I");
+            $mpdf->Output("sale_invoice.pdf", "D");
 
                 //$this->sma->generate_pdf($html, $name, 'I', $this->data['biller']->invoice_footer);
             }
