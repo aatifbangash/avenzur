@@ -3743,54 +3743,25 @@ class Sales extends MY_Controller
         }
 
         // Generate QR code Base64 string
-       /* if ($this->Settings->ksa_qrcode) {
-            $qrtext = $this->inv_qrcode->base64([
+       if ($this->Settings->ksa_qrcode) {
+            $payload = [
                 'seller' => $biller->company && $biller->company != '-' ? $biller->company : $biller->name,
                 'vat_no' => $biller->vat_no ?: $biller->get_no,
                 'date' => $inv->date,
                 'grand_total' => $return_sale ? ($inv->grand_total + $return_sale->grand_total) : $inv->grand_total,
                 'total_tax_amount' => $return_sale ? ($inv->total_tax + $return_sale->total_tax) : $inv->total_tax,
-            ]);
+            ];
 
-            // Convert payload to Base64 manually (for QR content)
-            $qrtext = base64_encode(json_encode($qrtext));
-            //$qr_code = $this->sma->qrcode('text', $qrtext, 2, $level = 'H', $sq = null, $svg = true);
-            ob_start();*/
-+
-            //$svg = base64_decode($qrtext);
-            //echo $qr_code_png;exit;
-
-// Use Imagick to convert to PNG
-//$imagick = new Imagick();
-//$imagick->readImageBlob($svg);
-//$imagick->setImageFormat("png");
-//echo "test";
-// Save or encode to Base64 for embedding
-/*$png_base64 = base64_encode($qr_code_png);
-echo '<img src="data:image/png;base64,' . $png_base64 . '"/>';
-exit;
-            $qr_code = $this->sma->qrcode('text', $qrtext, 2);
+            // Convert to JSON directly
+            $qrtext = json_encode($payload);
+            $qr_code = $this->sma->qrcodepng('text', $qrtext, 2, $level = 'H', $sq = null, $svg = false);
+           //echo $qr_code;exit;
+            $png_base64 = base64_encode($qr_code);
+            
         } else {
             $qr_code = $this->sma->qrcode('link', urlencode(site_url('view/sale/' . $inv->hash)), 2);
         }
-        echo $qr_code;
 
-        if ($this->Settings->ksa_qrcode) {
-    $qrtext = $this->inv_qrcode->base64([
-        'seller' => $biller->company && $biller->company != '-' ? $biller->company : $biller->name,
-        'vat_no' => $biller->vat_no ?: $biller->get_no,
-        'date' => $inv->date,
-        'grand_total' => $return_sale ? ($inv->grand_total + $return_sale->grand_total) : $inv->grand_total,
-        'total_tax_amount' => $return_sale ? ($inv->total_tax + $return_sale->total_tax) : $inv->total_tax,
-    ]);
-
-    // If $qrtext is already Base64 from inv_qrcode->base64(), no need to encode again
-    $qr_image = $this->sma->qrcode('text', $qrtext, 2); // Ensure this returns raw PNG data
-    $qr_code = '<img src="data:image/png;base64,' . $qrtext . '" style="width:100px; height:100px;" width="100" height="100">';
-} else {
-    $qr_code = '<img src="data:image/png;base64,' . base64_encode(file_get_contents(site_url('view/sale/' . $inv->hash))) . '" style="width:100px; height:100px;">';
-}
-echo $qr_code;exit;*/
         // Now explicitly generate Base64 PNG
         //$qr_code = $this->inv_qrcode->generate_base64($qrtext, 150); // 150px size
        
@@ -3821,7 +3792,7 @@ echo $qr_code;exit;*/
     <div style="text-align:center; margin-bottom:5px;">
         <img src="data:image/png;base64,' . base64_encode(file_get_contents(base_url() . 'assets/uploads/logos/avenzur-logov2-024.png')) . '"
             alt="Avenzur" style="max-width:120px; height:auto;">
-        ' . $qr_code . '
+        
     </div>
 
     <!-- INVOICE INFO & BARCODE -->
@@ -3840,6 +3811,7 @@ echo $qr_code;exit;*/
             <img src="' . admin_url('misc/barcode/' . $this->sma->base64url_encode($inv->reference_no) . '/code128/74/0/1') . '"
                 alt="' . $inv->reference_no . '" style="height:40px; vertical-align:top; margin-right:5px;"/>
             
+            <img src="data:image/png;base64,' . $png_base64 . '" width="50" height="50" />
         </div>
 
     </div>

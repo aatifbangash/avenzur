@@ -497,6 +497,29 @@ class Sma
         return "<img src='data:image/svg+xml;base64," . base64_encode($svgData) . "' alt='{$text}' class='qrimg' width='100' height='100' style='max-width:" . ($size * 40) . 'px;max-height:' . ($size * 40) . "px;'' />";
     }
 
+    public function qrcodepng($type = 'text', $text = 'http://tecdiary.com', $size = 2, $level = 'H', $sq = null, $svg = false)
+    {
+        if ($type == 'link') {
+            $text = urldecode($text);
+        }
+
+        $this->load->library('tec_qrcode');
+
+        // When SVG requested
+        if ($svg) {
+            $svgData = $this->tec_qrcode->generate_new(['data' => $text]);
+            return $svgData;
+        }
+        
+        $pngData = $this->tec_qrcode->generate_new([
+            'data' => $text,
+            'png'  => true,
+        ]);
+
+        return $pngData;
+        //return $pngData;
+    }
+
     public function roundMoney($num, $nearest = 0.05)
     {
         return round($num * (1 / $nearest)) * $nearest;
