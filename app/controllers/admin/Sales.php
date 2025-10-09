@@ -3734,6 +3734,7 @@ class Sales extends MY_Controller
         $this->data['rows']        = $this->sales_model->getAllInvoiceItems($id);
         $this->data['return_sale'] = $inv->return_id ? $this->sales_model->getInvoiceByID($inv->return_id) : null;
         $this->data['return_rows'] = $inv->return_id ? $this->sales_model->getAllInvoiceItems($inv->return_id) : null;
+        //echo '<pre>';print_r($this->data);exit;
         
         $name = lang('sale') . '_' . str_replace('/', '_', $inv->reference_no) . '.pdf';
         $html = $this->load->view($this->theme . 'sales/pdf/sales_invoice_report_new', $this->data, true);
@@ -3764,6 +3765,12 @@ class Sales extends MY_Controller
 
         // Now explicitly generate Base64 PNG
         //$qr_code = $this->inv_qrcode->generate_base64($qrtext, 150); // 150px size
+
+        if($customer->gln != ''){
+            $customer_gln_text = 'GLN: ';
+        }else{
+            $customer_gln_text = '';
+        }
        
         $this->load->view($this->theme . 'sales/pdf/sales_invoice_report', $this->data);
         if ($view) {
@@ -3826,6 +3833,7 @@ class Sales extends MY_Controller
             <p style="margin:2px 0;">VAT Number: '. $customer->vat_no .'</p>
             <p style="margin:2px 0;">Tel: '. $customer->phone .'</p>
             <p style="margin:2px 0;">Email: '. $customer->email .'</p>
+            <p style="margin:2px 0;">'.$customer_gln_text.''. $customer->gln .'</p>
         </div>
 
         <!-- FROM -->
@@ -3836,6 +3844,7 @@ class Sales extends MY_Controller
             <p style="margin:2px 0;">VAT Number: '. $biller->vat_no .'</p>
             <p style="margin:2px 0;">Tel: '. $biller->phone .'</p>
             <p style="margin:2px 0;">Email: '. $biller->email .'</p>
+            <p style="margin:2px 0;">GLN: '. $this->data['warehouse']->gln .'</p>
         </div>
     </div>
 
