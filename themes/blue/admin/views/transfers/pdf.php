@@ -75,6 +75,8 @@
                                 <th><?= lang('hsn_code'); ?></th>
                                 <?php
             } ?>
+                            <th style="text-align:center; vertical-align:middle;"><?php echo $this->lang->line('batch'); ?></th>
+                            <th style="text-align:center; vertical-align:middle;"><?php echo $this->lang->line('expiry'); ?></th>
                             <th style="text-align:center; vertical-align:middle;"><?php echo $this->lang->line('quantity'); ?></th>
                             <th style="text-align:center; vertical-align:middle;"><?php echo $this->lang->line('unit_price'); ?></th>
                             <?php
@@ -101,6 +103,8 @@
                                     <td style="width: 80px; text-align:center; vertical-align:middle;"><?= $row->hsn_code; ?></td>
                                     <?php
                             } ?>
+                                <td style="text-align:center;width:80px; "><?php echo $row->batchno; ?></td>
+                                <td style="text-align:center;width:80px; "><?php echo $row->expiry; ?></td>
                                 <td style="text-align:center;width:80px; "><?php echo $this->sma->formatQuantity($row->unit_quantity) . ' ' . $row->product_unit_code; ?></td>
                                 <td style="width:90px;text-align:right;vertical-align:middle;"><?php echo $this->sma->formatMoney($row->net_unit_cost); ?></td>
                                 <?php
