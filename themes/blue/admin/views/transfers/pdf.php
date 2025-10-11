@@ -119,7 +119,7 @@
                         ?>
                     </tbody>
                     <tfoot>
-                        <?php $col = $Settings->indian_gst ? 6 : 6;
+                        <?php $col = $Settings->indian_gst ? 6 : 5;
                         if ($Settings->tax1) {
                             $col += 1;
                         } ?>
