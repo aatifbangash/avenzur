@@ -105,7 +105,7 @@
                             } ?>
                                 <td style="text-align:center;width:80px; "><?php echo $row->batchno; ?></td>
                                 <td style="text-align:center;width:80px; "><?php echo $row->expiry; ?></td>
-                                <td style="text-align:center;width:80px; "><?php echo $this->sma->formatQuantity($row->unit_quantity) . ' ' . $row->product_unit_code; ?></td>
+                                <td style="text-align:center;width:80px; "><?php echo $this->sma->formatQuantity($row->unit_quantity); ?></td>
                                 <td style="width:90px;text-align:right;vertical-align:middle;"><?php echo $this->sma->formatMoney($row->net_unit_cost); ?></td>
                                 <?php
                                 if ($Settings->tax1) {
@@ -119,7 +119,7 @@
                         ?>
                     </tbody>
                     <tfoot>
-                        <?php $col = $Settings->indian_gst ? 4 : 3;
+                        <?php $col = $Settings->indian_gst ? 6 : 6;
                         if ($Settings->tax1) {
                             $col += 1;
                         } ?>
