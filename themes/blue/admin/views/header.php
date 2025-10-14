@@ -406,7 +406,7 @@
                                             <span class="text"> <?= lang('print_barcode_label'); ?></span>
                                         </a>
                                     </li>
-                                    <!--<li id="products_quantity_adjustments">
+                                    <li id="products_quantity_adjustments">
                                         <a class="submenu" href="<?= admin_url('products/quantity_adjustments'); ?>">
                                             <i class="fa fa-filter"></i>
                                             <span class="text"> <?= lang('quantity_adjustments'); ?></span>
@@ -418,7 +418,7 @@
                                             <span class="text"> <?= lang('add_adjustment'); ?></span>
                                         </a>
                                     </li>
-                                    <li id="products_stock_counts">
+                                    <!--<li id="products_stock_counts">
                                         <a class="submenu" href="<?= admin_url('products/stock_counts'); ?>">
                                             <i class="fa fa-list-ol"></i>
                                             <span class="text"> <?= lang('stock_counts'); ?></span>
@@ -1040,8 +1040,8 @@
                                         <a href="<?= admin_url('reports/products') ?>">
                                             <i class="fa fa-barcode"></i><span class="text"> <?= lang('products_report'); ?></span>
                                         </a>
-                                    </li>
-                                    <li id="reports_adjustments">
+                                    </li>-->
+                                    <!--<li id="reports_adjustments">
                                         <a href="<?= admin_url('reports/adjustments') ?>">
                                             <i class="fa fa-filter"></i><span class="text"> <?= lang('adjustments_report'); ?></span>
                                         </a>
@@ -2153,7 +2153,7 @@
                              if (isset($this->GP) && $GP['truck_registration_view'] || ($Owner || $Admin) ) { 
                              ?>
                              
-                            <!--<li class="mm_truck">
+                            <li class="mm_truck">
                                 <a class="dropmenu" href="#">
                                     <i class="fa fa-heart-o"></i>
                                     <span class="text"> <?= lang('Truck Registration'); ?> </span>
@@ -2173,7 +2173,7 @@
                                         </a>
                                     </li>
                                 </ul>
-                            </li>-->
+                            </li>
 
                             
                         <?php } ?>

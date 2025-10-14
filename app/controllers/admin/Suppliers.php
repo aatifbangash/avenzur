@@ -346,7 +346,8 @@ class Suppliers extends MY_Controller
         $meta = ['page_title' => lang('Advance To Supplier'), 'bc' => $bc];
         if ($this->form_validation->run() == true) {
             $request_type = $this->input->post('request_type');
-            $supplier_id      = $this->input->post('supplier');
+            $parentsupplier_id      = $this->input->post('supplier');
+            $childsupplier_id = $this->input->post('childsupplier');
             $payments_array      = $this->input->post('payment_amount');
             $descriptions_array      = $this->input->post('description');
             $item_ids = $this->input->post('item_id');
@@ -360,6 +361,12 @@ class Suppliers extends MY_Controller
             $formattedDate = DateTime::createFromFormat('Y-m-d', $date_fmt);
             $isDateValid = $formattedDate && $formattedDate->format('Y-m-d') === $date_fmt;
             
+            if($childsupplier_id){
+                $supplier_id = $childsupplier_id;
+            }else{
+                $supplier_id = $parentsupplier_id;
+            }
+
             if($isDateValid){
                 $date = $date_fmt;
             }else{
@@ -417,6 +424,8 @@ class Suppliers extends MY_Controller
     public function list_advance_to_supplier(){
         $this->data['debit_memo'] = $this->purchases_model->getDebitMemo('supplieradvance');
         $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+        //echo '<pre>';print_r($this->data['debit_memo']);exit;
+        $this->data['company'] = $this->site->getCompanyByID($this->data['debit_memo'][0]->supplier_id);
         $this->page_construct('suppliers/list_advance_to_supplier', $meta, $this->data);
     }
 
@@ -638,7 +647,8 @@ class Suppliers extends MY_Controller
         $meta = ['page_title' => lang('Supplier Payments'), 'bc' => $bc];
 
         if ($this->form_validation->run() == true) {
-            $supplier_id      = $this->input->post('supplier');
+            $parentsupplier      = $this->input->post('supplier');
+            $childsupplier    = $this->input->post('childsupplier');
             $payments_array      = $this->input->post('payment_amount');
             $item_ids = $this->input->post('item_id');
             $reference_no = $this->input->post('reference_no');
@@ -647,6 +657,12 @@ class Suppliers extends MY_Controller
             $bank_charges_account = $this->input->post('bank_charges_account');
             $bank_charges = $this->input->post('bank_charges');
             $note = $this->input->post('note');
+
+            if($childsupplier){
+                $supplier_id = $childsupplier;
+            }else{
+                $supplier_id = $parentsupplier;
+            }
 
             if($bank_charges == '') {
                 $bank_charges = 0;
