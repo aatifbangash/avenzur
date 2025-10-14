@@ -53,6 +53,18 @@
             loadInvoices($('#pssupplier').val());
         }
 
+        $(document).on('change', '#childsupplier', function (e) {
+            localStorage.setItem('childsupplier', $(this).val());
+
+            loadInvoices($('#pssupplier').val());
+        });
+
+        if (childsupplier = localStorage.getItem('pssupplier')) {
+            $('#childsupplier').val(childsupplier);
+
+            loadInvoices($('#pssupplier').val());
+        }
+
         $(document).on('change', '#psledger', function (e) {
             localStorage.setItem('psledger', $(this).val());
         });
@@ -83,6 +95,14 @@
 
         function loadInvoices(supplier_id){
             var v = supplier_id;
+            var ch = $('#childsupplier').val();
+
+            if(typeof ch != 'undefined' && ch != "" && ch != 0){
+                v = ch;
+            }
+
+            console.log('CH: ', ch);
+
             var payment_amount = parseFloat($('#pspayment').val());
             if (supplier_id) {
                 $.ajax({
@@ -172,6 +192,11 @@
             $('#pssupplier').val('');
         }
 
+        if (localStorage.getItem('childsupplier')) {
+            localStorage.removeItem('childsupplier');
+            $('#childsupplier').val('');
+        }
+
         if (localStorage.getItem('psledger')) {
             localStorage.removeItem('psledger');
             $('#psledger').val('');
@@ -229,7 +254,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4">
+                        <!--<div class="col-md-4">
                             <div class="form-group">
                             <?= lang('supplier', 'pssupplier'); ?>
                             <?php
@@ -238,6 +263,53 @@
                                 $sp[$supplier->id] = $supplier->company. ' ('. $supplier->name.')';
                             }
                             echo form_dropdown('supplier', $sp, '', 'id="pssupplier" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('supplier') . '" required="required" style="width:100%;" '); ?>
+                            </div>
+                        </div>-->
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('Parent Supplier', 'pssupplier'); ?>
+                                <?php if ($Owner || $Admin || $GP['suppliers-add'] || $GP['suppliers-index']) {
+                                    ?><div class="input-group"><?php
+                                } ?>
+                                    <input type="hidden" name="supplier" value="" id="pssupplier"
+                                            class="form-control" style="width:100%;"
+                                            placeholder="<?= lang('select') . ' ' . lang('supplier') ?>">
+                                    <input type="hidden" name="supplier_id" value="" id="supplier_id"
+                                            class="form-control">
+                                    <?php if ($Owner || $Admin || $GP['suppliers-index']) {
+                                    ?>
+                                        <div class="input-group-addon no-print" style="padding: 2px 5px; border-left: 0;">
+                                            <a href="#" id="view-supplier" class="external" data-toggle="modal" data-target="#myModal">
+                                                <i class="fa fa-2x fa-user" id="addIcon"></i>
+                                            </a>
+                                        </div>
+                                    <?php
+                                    } ?>
+                                    <?php if ($Owner || $Admin || $GP['suppliers-add']) {
+                                    ?>
+                                    <div class="input-group-addon no-print" style="padding: 2px 5px;">
+                                        <a href="<?= admin_url('suppliers/add'); ?>" id="add-supplier" class="external" data-toggle="modal" data-target="#myModal">
+                                            <i class="fa fa-2x fa-plus-circle" id="addIcon"></i>
+                                        </a>
+                                    </div>
+                                    <?php
+                                    } ?>
+                                    <?php if ($Owner || $Admin || $GP['suppliers-add'] || $GP['suppliers-index']) {
+                                    ?></div><?php
+                                    } ?>
+                            </div>
+                        </div>
+
+                        <!-- Child Suppliers -->
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('Child Supplier', 'pssupplier'); ?>
+                                <?php
+                                $childSupArr[''] = '';
+                                
+                                echo form_dropdown('childsupplier', $childSupArr, $_POST['childsupplier'], 'id="childsupplier" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('child supplier') . '" required="required" style="width:100%;" '); ?>
                             </div>
                         </div>
 
@@ -323,9 +395,11 @@
                             <div class="from-group">
                                 <button type="submit" style="margin-top: 28px;" class="btn btn-primary" id="add_payment"><?= lang('Add Payments') ?></button>
                                 <button type="button" style="margin-top: 28px;" class="btn btn-danger" id="reset" onclick="resetValues();"><?= lang('reset') ?></button>
+                                <hr />
                             </div>
                         </div>
                     </div>
+                    
 
 
 
@@ -353,4 +427,132 @@
         </div>
     </div>
 </div>
+
+<script type="text/javascript" src="<?= $assets ?>js/select2.min.js"></script>
+<script type="text/javascript">
+    const hostname = "<?= base_url(); ?>";
+
+    var $supplier = $("#pssupplier");
+    var $childsupplierselectbox = $("#childsupplier");
+
+    $supplier.change(function (e) {
+		localStorage.setItem("pssupplier", $(this).val());
+		localStorage.setItem("childsupplier", null);
+		$("#supplier_id").val($(this).val());
+		populateChildSuppliers($(this).val());
+	});
+
+	$childsupplierselectbox.change(function (e) {
+		localStorage.setItem("childsupplier", $(this).val());
+		$("#child_supplier_id").val($(this).val());
+	});
+
+    function populateChildSuppliers(pid) {
+		$.ajax({
+			url: hostname + "/admin/suppliers/getChildById",
+			data: { term: "", limit: 10, pid: pid },
+			dataType: "json",
+			success: function (data) {
+				$childsupplierselectbox.empty();
+				$.each(data.results, function (index, value) {
+					$childsupplierselectbox.append(new Option(value.text, value.id));
+				});
+
+				if (localStorage.getItem("childsupplier")) {
+					$childsupplierselectbox
+						.val(localStorage.getItem("childsupplier"))
+						.trigger("change");
+				}
+			},
+		});
+	}
+
+    if ((pssupplier = localStorage.getItem("pssupplier"))) {
+		$supplier.val(pssupplier).select2({
+			minimumInputLength: 1,
+			data: [],
+			initSelection: function (element, callback) {
+				$.ajax({
+					type: "get",
+					async: false,
+					url: hostname + "/admin/suppliers/getSupplier/" + $(element).val(),
+					dataType: "json",
+					success: function (data) {
+						callback(data[0]);
+					},
+				});
+			},
+			ajax: {
+				url: hostname + "/admin/suppliers/suggestions",
+				dataType: "json",
+				quietMillis: 15,
+				data: function (term, page) {
+					return {
+						term: term,
+						limit: 10,
+					};
+				},
+				results: function (data, page) {
+					if (data.results != null) {
+						return { results: data.results };
+					} else {
+						return { results: [{ id: "", text: "No Match Found" }] };
+					}
+				},
+			},
+		});
+
+		populateChildSuppliers(pssupplier);
+	} else {
+		nsSupplier();
+	}
+
+    function nsChildSupplier() {
+        $("#childsupplier").select2({
+            minimumInputLength: 1,
+            ajax: {
+                url: hostname + "admin/suppliers/childsuggestions",
+                dataType: "json",
+                quietMillis: 15,
+                data: function (term, page) {
+                    return {
+                        term: term,
+                        limit: 10,
+                    };
+                },
+                results: function (data, page) {
+                    if (data.results != null) {
+                        return { results: data.results };
+                    } else {
+                        return { results: [{ id: "", text: "No Match Found" }] };
+                    }
+                },
+            },
+        });
+    }
+
+    function nsSupplier() {
+        $("#pssupplier").select2({
+            minimumInputLength: 1,
+            ajax: {
+                url: hostname + "admin/suppliers/suggestions",
+                dataType: "json",
+                quietMillis: 15,
+                data: function (term, page) {
+                    return {
+                        term: term,
+                        limit: 10,
+                    };
+                },
+                results: function (data, page) {
+                    if (data.results != null) {
+                        return { results: data.results };
+                    } else {
+                        return { results: [{ id: "", text: "No Match Found" }] };
+                    }
+                },
+            },
+        });
+    }
+</script>
 
