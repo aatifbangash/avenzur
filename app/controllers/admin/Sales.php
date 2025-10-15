@@ -1548,7 +1548,7 @@ class Sales extends MY_Controller
             $biller_id        = $this->input->post('biller');
             $total_items      = $this->input->post('total_items');
             $sale_status      = $this->input->post('sale_status');
-            $payment_status   = $this->input->post('payment_status');
+            $payment_status   = "pending";
             $payment_term     = $this->input->post('payment_term');
             $due_date         = $payment_term ? date('Y-m-d', strtotime('+' . $payment_term . ' days', strtotime($date))) : null;
             $shipping         = $this->input->post('shipping') ? $this->input->post('shipping') : 0;
@@ -1808,20 +1808,20 @@ class Sales extends MY_Controller
                 'updated_at'        => date('Y-m-d H:i:s'),
             ];
 
-            if($customer_details->balance > 0 && $sale_status == 'completed'){
-                if($customer_details->balance >= $grand_total){
-                    $paid = $grand_total;
-                    $new_balance = $customer_details->balance - $grand_total;
-                    $payment_status = 'paid';
-                }else{
-                    $paid = $grand_total - $customer_details->balance;
-                    $new_balance = 0;
-                    $payment_status = 'partial';
-                }
+            // if($customer_details->balance > 0 && $sale_status == 'completed'){
+            //     if($customer_details->balance >= $grand_total){
+            //         $paid = $grand_total;
+            //         $new_balance = $customer_details->balance - $grand_total;
+            //         $payment_status = 'paid';
+            //     }else{
+            //         $paid = $grand_total - $customer_details->balance;
+            //         $new_balance = 0;
+            //         $payment_status = 'partial';
+            //     }
 
-                $data['paid'] = $paid;
-                $data['payment_status'] = $payment_status;
-            }
+            //     $data['paid'] = $paid;
+            //     $data['payment_status'] = $payment_status;
+            // }
 
             if ($this->Settings->indian_gst) {
                 $data['cgst'] = $total_cgst;
