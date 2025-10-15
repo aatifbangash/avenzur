@@ -84,20 +84,31 @@ class Suppliers extends MY_Controller
         $this->load->admin_model('companies_model');
         $supplier = $this->companies_model->getCompanyByID($supplier_id);
 
+        // Calculate VAT on bank charges (15%)
+        $bank_charge_vat = 0;
+        if ($bank_charges > 0) {
+            $bank_charge_vat = $bank_charges * 0.15; // 15% VAT
+        }
+        
+        // Total includes payment, bank charges, and VAT on bank charges
+        $total_amount = $payment_amount + $bank_charges + $bank_charge_vat;
+
         /*Accounts Entries*/
         $entry = array(
             'entrytype_id' => 4,
             'transaction_type' => $type,
             'number'       => 'PM-'.$reference_no,
             'date'         => date('Y-m-d'), 
-            'dr_total'     => $payment_amount + $bank_charges,
-            'cr_total'     => $payment_amount + $bank_charges,
+            'dr_total'     => $total_amount,
+            'cr_total'     => $total_amount,
             'notes'        => 'Payment Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
             'pid'          =>  '',
             'supplier_id'  => $supplier_id
             );
         $add  = $this->db->insert('sma_accounts_entries', $entry);
         $insert_id = $this->db->insert_id();
+
+        $entryitemdata = array(); // Initialize array
 
         //supplier
         $entryitemdata[] = array(
@@ -110,27 +121,48 @@ class Suppliers extends MY_Controller
             )
         );
 
-        //bank charges
-        $entryitemdata[] = array(
-            'Entryitem' => array(
-                'entry_id' => $insert_id,
-                'dc' => 'D',
-                'ledger_id' => $bank_charges_account,
-                'amount' => $bank_charges,
-                'narration' => ''
-            )
-        );
+        //bank charges (only add if bank_charges > 0 and valid ledger account)
+        if($bank_charges > 0 && $bank_charges_account > 0) {
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $bank_charges_account,
+                    'amount' => $bank_charges,
+                    'narration' => ''
+                )
+            );
+        }
 
-        //transfer legdger
-        $entryitemdata[] = array(
-            'Entryitem' => array(
-                'entry_id' => $insert_id,
-                'dc' => 'C',
-                'ledger_id' => $ledger_account,
-                'amount' => $payment_amount + $bank_charges,
-                'narration' => ''
-            )
-        );
+        // VAT on bank charges (only add if bank_charge_vat > 0)
+        if($bank_charge_vat > 0 && $bank_charges_account > 0) {
+            // Get VAT ledger from system settings (you might need to configure this)
+            $settings = $this->Settings;
+            $vat_ledger = isset($settings->vat_ledger_id) ? $settings->vat_ledger_id : $bank_charges_account;
+            
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $vat_ledger,
+                    'amount' => $bank_charge_vat,
+                    'narration' => 'VAT on Bank Charges (15%)'
+                )
+            );
+        }
+
+        //transfer legdger (only add if valid ledger_id)
+        if($ledger_account > 0) {
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'C',
+                    'ledger_id' => $ledger_account,
+                    'amount' => $total_amount,
+                    'narration' => ''
+                )
+            );
+        }
 
         foreach ($entryitemdata as $row => $itemdata)
         {
@@ -144,14 +176,23 @@ class Suppliers extends MY_Controller
         $this->load->admin_model('companies_model');
         $supplier = $this->companies_model->getCompanyByID($supplier_id);
 
+        // Calculate VAT on bank charges (15%)
+        $bank_charge_vat = 0;
+        if ($bank_charges > 0) {
+            $bank_charge_vat = $bank_charges * 0.15; // 15% VAT
+        }
+        
+        // Total includes payment, bank charges, and VAT on bank charges
+        $total_amount = $payment_amount + $bank_charges + $bank_charge_vat;
+
         /*Accounts Entries*/
         $entry = array(
             'entrytype_id' => 4,
             'transaction_type' => $type,
             'number'       => 'SPADV-'.$reference_no,
             'date'         => date('Y-m-d'), 
-            'dr_total'     => $payment_amount + $bank_charges,
-            'cr_total'     => $payment_amount + $bank_charges,
+            'dr_total'     => $total_amount,
+            'cr_total'     => $total_amount,
             'notes'        => 'Supplier Advance Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
             'pid'          =>  '',
             'memo_id'      => $memo_id
@@ -171,15 +212,34 @@ class Suppliers extends MY_Controller
         );
 
         //bank charges
-        $entryitemdata[] = array(
-            'Entryitem' => array(
-                'entry_id' => $insert_id,
-                'dc' => 'D',
-                'ledger_id' => $bank_charges_account,
-                'amount' => $bank_charges,
-                'narration' => ''
-            )
-        );
+        if($bank_charges > 0) {
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $bank_charges_account,
+                    'amount' => $bank_charges,
+                    'narration' => ''
+                )
+            );
+        }
+
+        // VAT on bank charges (only add if bank_charge_vat > 0)
+        if($bank_charge_vat > 0 && $bank_charges_account > 0) {
+            // Get VAT ledger from system settings (you might need to configure this)
+            $settings = $this->Settings;
+            $vat_ledger = isset($settings->vat_ledger_id) ? $settings->vat_ledger_id : $bank_charges_account;
+            
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $vat_ledger,
+                    'amount' => $bank_charge_vat,
+                    'narration' => 'VAT on Bank Charges (15%)'
+                )
+            );
+        }
 
         //transfer legdger
         $entryitemdata[] = array(
@@ -187,7 +247,7 @@ class Suppliers extends MY_Controller
                 'entry_id' => $insert_id,
                 'dc' => 'C',
                 'ledger_id' => $ledger_account,
-                'amount' => $payment_amount + $bank_charges,
+                'amount' => $total_amount,
                 'narration' => ''
             )
         );
@@ -202,14 +262,23 @@ class Suppliers extends MY_Controller
         $this->load->admin_model('companies_model');
         $supplier = $this->companies_model->getCompanyByID($supplier_id);
 
+        // Calculate VAT on bank charges (15%)
+        $bank_charge_vat = 0;
+        if ($bank_charges > 0) {
+            $bank_charge_vat = $bank_charges * 0.15; // 15% VAT
+        }
+        
+        // Total includes payment, bank charges, and VAT on bank charges
+        $total_amount = $payment_amount + $bank_charges + $bank_charge_vat;
+
         /*Accounts Entries*/
         $entry = array(
             'entrytype_id' => 4,
             'transaction_type' => $type,
             'number'       => 'DM-'.$reference_no,
             'date'         => date('Y-m-d'), 
-            'dr_total'     => $payment_amount + $bank_charges,
-            'cr_total'     => $payment_amount + $bank_charges,
+            'dr_total'     => $total_amount,
+            'cr_total'     => $total_amount,
             'notes'        => 'Debit Memo Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
             'pid'          =>  '',
             'memo_id'      => $memo_id
@@ -229,15 +298,34 @@ class Suppliers extends MY_Controller
         );
 
         //bank charges
-        $entryitemdata[] = array(
-            'Entryitem' => array(
-                'entry_id' => $insert_id,
-                'dc' => 'D',
-                'ledger_id' => $bank_charges_account,
-                'amount' => $bank_charges,
-                'narration' => ''
-            )
-        );
+        if($bank_charges > 0) {
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $bank_charges_account,
+                    'amount' => $bank_charges,
+                    'narration' => ''
+                )
+            );
+        }
+
+        // VAT on bank charges (only add if bank_charge_vat > 0)
+        if($bank_charge_vat > 0 && $bank_charges_account > 0) {
+            // Get VAT ledger from system settings (you might need to configure this)
+            $settings = $this->Settings();
+            $vat_ledger = isset($settings->vat_ledger_id) ? $settings->vat_ledger_id : $bank_charges_account;
+            
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $vat_ledger,
+                    'amount' => $bank_charge_vat,
+                    'narration' => 'VAT on Bank Charges (15%)'
+                )
+            );
+        }
 
         //transfer legdger
         $entryitemdata[] = array(
@@ -245,7 +333,7 @@ class Suppliers extends MY_Controller
                 'entry_id' => $insert_id,
                 'dc' => 'C',
                 'ledger_id' => $ledger_account,
-                'amount' => $payment_amount + $bank_charges,
+                'amount' => $total_amount,
                 'narration' => ''
             )
         );
@@ -257,6 +345,12 @@ class Suppliers extends MY_Controller
     }
 
     public function add_supplier_reference($amount, $reference_no, $date, $note, $supplier_id, $bank_charges, $bank_charges_account, $ledger_account){
+        // Calculate VAT on bank charges (15%)
+        $bank_charge_vat = 0;
+        if ($bank_charges > 0) {
+            $bank_charge_vat = $bank_charges * 0.15; // 15% VAT
+        }
+        
         $payment_reference = [
             'supplier_id' => $supplier_id,
             'date' => $date,
@@ -265,12 +359,20 @@ class Suppliers extends MY_Controller
             'reference_no'  => $reference_no,
             'amount' => $amount,
             'bank_charges' => $bank_charges,
+            'bank_charge_vat' => $bank_charge_vat,
             'bank_charges_ledger' => $bank_charges_account,
             'transfer_from_ledger' => $ledger_account,
             'created_by'    => $this->session->userdata('user_id')
         ];
 
         $payment_id = $this->purchases_model->addPaymentReference($payment_reference);
+        
+        // Debug: Log if payment reference creation failed
+        if (!$payment_id) {
+            error_log('Failed to create payment reference. Data: ' . json_encode($payment_reference));
+            error_log('Database error: ' . $this->db->last_query());
+        }
+        
         return $payment_id;
     }
 
@@ -283,6 +385,21 @@ class Suppliers extends MY_Controller
             'note'          => $note,
             'created_by'    => $this->session->userdata('user_id'),
             'type'          => 'sent',
+            'payment_id'    => $payment_id
+        ];
+
+        $this->purchases_model->addPayment($payment);
+    }
+
+    public function make_supplier_advance_payment($supplier_id, $amount, $reference_no, $date, $note, $payment_id){
+        $payment = [
+            'date'          => $date,
+            'purchase_id'   => NULL, // No specific purchase for advance payment
+            'reference_no'  => $reference_no,
+            'amount'        => $amount,
+            'note'          => $note . ' (Advance Payment)',
+            'created_by'    => $this->session->userdata('user_id'),
+            'type'          => 'advance',
             'payment_id'    => $payment_id
         ];
 
@@ -637,6 +754,9 @@ class Suppliers extends MY_Controller
 
     public function add_payment()
     {
+        // ini_set('display_errors', '1');
+        // ini_set('display_startup_errors', '1');
+        // error_reporting(E_ALL);
         $this->sma->checkPermissions(false, true);
         $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
         $this->form_validation->set_rules('ledger_account', $this->lang->line('ledger_account'), 'required');
@@ -657,7 +777,9 @@ class Suppliers extends MY_Controller
             $bank_charges_account = $this->input->post('bank_charges_account');
             $bank_charges = $this->input->post('bank_charges');
             $note = $this->input->post('note');
-
+            $vat = $this->input->post('vat');
+            $supplier_advance_ledger = $this->input->post('supplier_advance_ledger');
+            
             if($childsupplier){
                 $supplier_id = $childsupplier;
             }else{
@@ -679,20 +801,40 @@ class Suppliers extends MY_Controller
             }
             
             if(!$payments_array || sizeOf($payments_array) == 0){
-                if($payment_total > 0){
-                    $payment_id = $this->add_supplier_reference($payment_total, $reference_no, $date, $note, $supplier_id, $bank_charges, $bank_charges_account, $ledger_account);
-                    $this->make_supplier_payment(NULL, $payment_total, $reference_no, $date, $note, $payment_id);
-                    $this->purchases_model->update_supplier_balance($supplier_id, $payment_total);
-
-                    $journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $ledger_account, $bank_charges_account, $payment_total, $bank_charges, $reference_no, 'supplierpayment');
+                // Server-side validation for advance payments (no invoices scenario)
+                // Get supplier advance ledger from settings
+                $settings = $this->Settings;
+                $supplier_advance_ledger = isset($settings->supplier_advance_ledger) && !empty($settings->supplier_advance_ledger) 
+                                         ? $settings->supplier_advance_ledger 
+                                         : null;
+                
+                if (!$supplier_advance_ledger && $payment_total > 0) {
+                    $this->session->set_flashdata('error', 'Cannot process advance payment. Supplier Advance Ledger is not configured in system settings.');
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
+                
+                if($payment_total > 0 && $supplier_advance_ledger){
+                    // Create payment reference using supplier advance ledger (NOT regular ledger_account)
+                    $payment_id = $this->add_supplier_reference($payment_total, $reference_no, $date, $note . ' (Pure Advance)', $supplier_id, $bank_charges, $bank_charges_account, $supplier_advance_ledger);
+                    
+                    // Verify payment reference was created successfully
+                    if (!$payment_id) {
+                        $this->session->set_flashdata('error', 'Failed to create pure advance payment reference. Please check system configuration.');
+                        redirect($_SERVER['HTTP_REFERER']);
+                    }
+                    
+                    // Use advance payment method since there are no invoices - this is pure advance
+                    $this->make_supplier_advance_payment($supplier_id, $payment_total, $reference_no, $date, $note, $payment_id);
+                    
+                    // Create journal entry using supplier advance ledger (NOT regular payment ledger)
+                    $journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $supplier_advance_ledger, $bank_charges_account, $payment_total, $bank_charges, $reference_no, 'supplieradvance');
                     $this->purchases_model->update_payment_reference($payment_id, $journal_id);
-                    $this->session->set_flashdata('message', lang('Advance payment added Successfully!'));
+                    $this->session->set_flashdata('message', lang('Pure advance payment added Successfully!'));
                     admin_redirect('suppliers/view_payment/'.$payment_id);
                 }
             }else{
                 //$date = $this->input->post('date');
                 $due_amount_array = $this->input->post('due_amount');
-                $payment_id = $this->add_supplier_reference($payment_total, $reference_no, $date, $note, $supplier_id, $bank_charges, $bank_charges_account, $ledger_account);
                 
                 for($i = 0; $i < count($payments_array); $i++){
                     $payment_amount = $payments_array[$i];
@@ -704,30 +846,110 @@ class Suppliers extends MY_Controller
                     }
                 }
 
-                if(array_sum($payments_array) == $payment_total){
-                    for ($i = 0; $i < count($payments_array); $i++) {
-                        $payment_amount = $payments_array[$i];
-                        $item_id = $item_ids[$i];
-                        $due_amount = $due_amount_array[$i];
-                        if($payment_amount > 0){
-                            $this->update_purchase_order($item_id, $payment_amount);
-                            $this->make_supplier_payment($item_id, $payment_amount, $reference_no, $date, $note, $payment_id);
+                // Calculate total due amount
+                $total_due = array_sum($due_amount_array);
+                
+                // Check if payment exceeds total due amount
+                if($payment_total > $total_due) {
+                    // Check if supplier_advance_ledger is configured in settings
+                    $settings = $this->Settings;
+                    $supplier_advance_ledger = isset($settings->supplier_advance_ledger) && !empty($settings->supplier_advance_ledger) 
+                                             ? $settings->supplier_advance_ledger 
+                                             : null;
+                    
+                    if(!$supplier_advance_ledger) {
+                        $this->session->set_flashdata('error', 'Payment amount exceeds total due amount. Please configure Supplier Advance Ledger in settings to allow advance payments.');
+                        redirect($_SERVER['HTTP_REFERER']);
+                    }
+                }
+
+                // Case 4 Check: Ensure payment_total can cover the selected invoice payments
+                if(array_sum($payments_array) > $payment_total){
+                    $this->session->set_flashdata('error', 'Total payment amount is insufficient to cover selected invoice payments. Required: ' . array_sum($payments_array) . ', Provided: ' . $payment_total);
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
+
+                // Split payment into invoice payment and advance payment
+                $total_invoice_payment = array_sum($payments_array); // Actual amount going to invoices
+                $advance_payment = $payment_total - $total_invoice_payment; // Excess amount
+                
+                $main_payment_id = null;
+                    
+                    // Process invoice payments first (if there are any)
+                    if($total_invoice_payment > 0) {
+                        // Create payment reference for invoice payments only
+                        $invoice_payment_id = $this->add_supplier_reference($total_invoice_payment, $reference_no, $date, $note, $supplier_id, $bank_charges, $bank_charges_account, $ledger_account);
+                        
+                        // Verify payment reference was created successfully
+                        if (!$invoice_payment_id) {
+                            $this->session->set_flashdata('error', 'Failed to create invoice payment reference. Please check system configuration.');
+                            redirect($_SERVER['HTTP_REFERER']);
+                        }
+                        
+                        for ($i = 0; $i < count($payments_array); $i++) {
+                            $payment_amount = $payments_array[$i];
+                            $item_id = $item_ids[$i];
+                            $due_amount = $due_amount_array[$i];
+                            if($payment_amount > 0){
+                                $this->update_purchase_order($item_id, $payment_amount);
+                                $this->make_supplier_payment($item_id, $payment_amount, $reference_no, $date, $note, $invoice_payment_id);
+                            }
+                        }
+
+                        // Create journal entry for invoice payments
+                        $journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $ledger_account, $bank_charges_account, $total_invoice_payment, $bank_charges, $reference_no, 'supplierpayment');
+                        $this->purchases_model->update_payment_reference($invoice_payment_id, $journal_id);
+                        $main_payment_id = $invoice_payment_id;
+                    }
+                    
+                    // Process advance payment separately (if there is any)
+                    if($advance_payment > 0) {
+                        // Get supplier advance ledger from settings
+                        $settings = $this->Settings;
+                        $supplier_advance_ledger = isset($settings->supplier_advance_ledger) && !empty($settings->supplier_advance_ledger) 
+                                                 ? $settings->supplier_advance_ledger 
+                                                 : null;
+                        
+                        if($supplier_advance_ledger) {
+                            // Create separate payment reference for advance payment
+                            $advance_reference_no = $reference_no . '-ADV';
+                            $advance_payment_id = $this->add_supplier_reference($advance_payment, $advance_reference_no, $date, $note . ' (Advance)', $supplier_id, 0, $bank_charges_account, $supplier_advance_ledger);
+                            
+                            // Verify payment reference was created successfully
+                            if (!$advance_payment_id) {
+                                $this->session->set_flashdata('error', 'Failed to create advance payment reference. Please check system configuration.');
+                                redirect($_SERVER['HTTP_REFERER']);
+                            }
+                            
+                            // Make advance payment entry
+                            $this->make_supplier_advance_payment($supplier_id, $advance_payment, $advance_reference_no, $date, $note, $advance_payment_id);
+                            
+                            // Create journal entry for advance payment
+                            $advance_journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $supplier_advance_ledger, $bank_charges_account, $advance_payment, 0, $advance_reference_no, 'supplieradvance');
+                            $this->purchases_model->update_payment_reference($advance_payment_id, $advance_journal_id);
+                            
+                            // Set main payment id to advance if no invoice payment
+                            if(!$main_payment_id) {
+                                $main_payment_id = $advance_payment_id;
+                            }
                         }
                     }
 
-                    $journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $ledger_account, $bank_charges_account, $payment_total, $bank_charges, $reference_no, 'supplierpayment');
-                    $this->purchases_model->update_payment_reference($payment_id, $journal_id);
-                    $this->session->set_flashdata('message', lang('Payment invoice added Successfully!'));
-                    admin_redirect('suppliers/view_payment/'.$payment_id);
-                }else{
-                    $this->session->set_flashdata('error', 'Total Sum Of Amounts do not match');
-                    redirect($_SERVER['HTTP_REFERER']);
-                }
+                $this->session->set_flashdata('message', lang('Payment processed Successfully!'));
+                admin_redirect('suppliers/view_payment/' . $main_payment_id);
             }
             
         } else {
+            // Check if supplier_advance_ledger is configured in settings
+            $settings = $this->Settings;
+           
+            $supplier_advance_ledger = isset($settings->supplier_advance_ledger) && !empty($settings->supplier_advance_ledger) 
+                                     ? $settings->supplier_advance_ledger 
+                                     : null;
+            
             $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
             $this->data['warehouses'] = $this->site->getAllWarehouses();
+            $this->data['supplier_advance_ledger'] = $supplier_advance_ledger;
             $this->page_construct('suppliers/add_payment', $meta, $this->data);
         }
     }

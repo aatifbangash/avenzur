@@ -1,5 +1,23 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<style>
+    .required-field::after {
+        content: " *";
+        color: red;
+        font-weight: bold;
+    }
+    
+    .form-control[required] {
+        border-left: 3px solid #ff6b6b;
+    }
+    
+    .form-control[required]:valid {
+        border-left: 3px solid #51cf66;
+    }
+</style>
 <script>
+    // Supplier Advance Ledger configuration
+    var supplier_advance_ledger_configured = <?= $supplier_advance_ledger ? 'true' : 'false' ?>;
+    
     $(document).ready(function () {
 
         if (!localStorage.getItem('psdate')) {
@@ -81,9 +99,33 @@
 
         $(document).on('change', '#psbankchargesamt', function (e) {
             localStorage.setItem('psbankchargesamt', $(this).val());
+            // Auto-calculate VAT (15% of bank charges)
+            var bankCharges = parseFloat($(this).val()) || 0;
+            var vat = bankCharges * 0.15; // 15% VAT
+            $('#psvat').val(vat.toFixed(2));
+            localStorage.setItem('psvat', vat.toFixed(2));
         });
+        
+        // Also trigger VAT calculation on input (real-time)
+        $(document).on('input', '#psbankchargesamt', function (e) {
+            var bankCharges = parseFloat($(this).val()) || 0;
+            var vat = bankCharges * 0.15; // 15% VAT
+            $('#psvat').val(vat.toFixed(2));
+        });
+        
         if (psbankchargesamt = localStorage.getItem('psbankchargesamt')) {
             $('#psbankchargesamt').val(psbankchargesamt);
+            // Recalculate VAT when loading from localStorage
+            var bankCharges = parseFloat(psbankchargesamt) || 0;
+            var vat = bankCharges * 0.15;
+            $('#psvat').val(vat.toFixed(2));
+        }
+
+        $(document).on('change', '#psvat', function (e) {
+            localStorage.setItem('psvat', $(this).val());
+        });
+        if (psvat = localStorage.getItem('psvat')) {
+            $('#psvat').val(psvat);
         }
 
         $(document).on('change', '#psnote', function (e) {
@@ -103,7 +145,7 @@
 
             console.log('CH: ', ch);
 
-            var payment_amount = parseFloat($('#pspayment').val());
+            var payment_amount = parseFloat($('#pspayment').val()) || 0;
             if (supplier_id) {
                 $.ajax({
                     url: '<?= admin_url('suppliers/pending_invoices?supplier_id=') ?>' + v,
@@ -119,10 +161,38 @@
                             var newTr = $('<tr class="row"><td colspan="4">No Pending Invoices Found</td></tr>');
                             newTr.prependTo('#poTable');
 
+                            // Show advance payment if payment amount is entered but no invoices
+                            var payment_amount_val = parseFloat($('#pspayment').val()) || 0;
+                            if (payment_amount_val > 0) {
+                                // When no invoices, entire amount is advance payment
+                                var advance_amount = payment_amount_val;
+                                
+                                // Only show advance payment row if advance amount > 0 and not NaN
+                                if (advance_amount > 0 && !isNaN(advance_amount)) {
+                                    if (!supplier_advance_ledger_configured) {
+                                        // Show error if advance ledger not configured
+                                        var errorTr = $('<tr class="row error-row" style="background-color: #ffebee;"></tr>');
+                                        var error_html = '<td colspan="4" style="color: #d32f2f;"><b>Error: Supplier Advance Ledger not configured in settings. Cannot process advance payment.</b></td>';
+                                        errorTr.html(error_html);
+                                        errorTr.appendTo('#poTable');
+                                    } else {
+                                        // Show advance payment row
+                                        var advanceTr = $('<tr class="row advance-row" style="background-color: #f0f8ff;"></tr>');
+                                        var advance_html = '<td colspan="3"><b>Advance Payment:</b></td>';
+                                        advance_html += '<td><b>'+advance_amount.toFixed(2)+'</b></td>';
+                                        advanceTr.html(advance_html);
+                                        advanceTr.appendTo('#poTable');
+                                    }
+                                }
+                            }
+
                         }else{
                             total_due = 0;
                             total_amt = 0;
                             total_paying = 0;
+                            var original_payment_amount = parseFloat($('#pspayment').val()) || 0;
+                            var remaining_payment = original_payment_amount;
+                            
                             for(var i=0;i<response.length;i++){
                                 var purchase_date = response[i].date;
                                 var reference_id = response[i].reference_no;
@@ -133,15 +203,16 @@
                                 total_due += parseFloat(due_amount);
                                 total_amt += parseFloat(total_amount);
 
-                                if(payment_amount > due_amount){
-                                    payment_amount = payment_amount - due_amount;
-                                    to_pay = due_amount;
-                                }else if(payment_amount <= due_amount){
-                                    to_pay = payment_amount;
-                                    payment_amount = 0;
-                                }else{
-                                    payment_amount = 0;
-                                    to_pay = 0;
+                                // Calculate payment for this invoice
+                                var to_pay = 0;
+                                if (remaining_payment > 0) {
+                                    if (remaining_payment >= due_amount) {
+                                        to_pay = due_amount;
+                                        remaining_payment -= due_amount;
+                                    } else {
+                                        to_pay = remaining_payment;
+                                        remaining_payment = 0;
+                                    }
                                 }
 
                                 total_paying += parseFloat(to_pay);
@@ -156,6 +227,10 @@
                                 newTr.prependTo('#poTable');
                             }
 
+                            // Calculate advance payment
+                            // Advance payment = total amount entered - total invoice payments entered (not total due)
+                            var advance_payment = original_payment_amount - total_paying;
+                            
                             var newTr = $('<tr class="row"></tr>');
                                 tr_html = '<td colspan="1"><b>Totals:</b> </td>';
                                 tr_html += '<td><b>'+total_amt.toFixed(2)+'</b></td>';
@@ -163,6 +238,23 @@
                                 tr_html += '<td><b>'+total_paying.toFixed(2)+'</b></td>';
                                 newTr.html(tr_html);
                                 newTr.appendTo('#poTable');
+
+                            // Show advance payment row only if advance amount > 0 and not NaN
+                            if (advance_payment > 0 && !isNaN(advance_payment)) {
+                                var advanceTr = $('<tr class="row advance-row" style="background-color: #f0f8ff;"></tr>');
+                                var advance_html = '<td colspan="3"><b>Advance Payment:</b></td>';
+                                advance_html += '<td><b>'+advance_payment.toFixed(2)+'</b></td>';
+                                advanceTr.html(advance_html);
+                                advanceTr.appendTo('#poTable');
+                                
+                                // Show error if advance ledger not configured
+                                if (!supplier_advance_ledger_configured) {
+                                    var errorTr = $('<tr class="row error-row" style="background-color: #ffebee;"></tr>');
+                                    var error_html = '<td colspan="4" style="color: #d32f2f;"><b>Error: Supplier Advance Ledger not configured in settings. Cannot process advance payment.</b></td>';
+                                    errorTr.html(error_html);
+                                    errorTr.appendTo('#poTable');
+                                }
+                            }
                         }
                     }
                 });
@@ -212,8 +304,98 @@
             $('#psbankchargesamt').val('');
         }
 
+        if (localStorage.getItem('psvat')) {
+            localStorage.removeItem('psvat');
+            $('#psvat').val('');
+        }
+
         window.location.reload();
     }
+
+    // Function to update bank charges ledger requirement based on amount
+    function updateBankChargesLedgerRequirement() {
+        var bankChargesAmount = parseFloat($('#bank_charges').val()) || 0;
+        var bankChargesSelect = $('#psbankcharges');
+        var bankChargesLabel = $('#bank-charges-label');
+        
+        if (bankChargesAmount > 0) {
+            bankChargesSelect.attr('required', 'required');
+            bankChargesLabel.addClass('required-field');
+        } else {
+            bankChargesSelect.removeAttr('required');
+            bankChargesLabel.removeClass('required-field');
+        }
+    }
+
+    // Form submission validation
+    function validateAdvancePayment() {
+        if (!supplier_advance_ledger_configured) {
+            var payment_amount = parseFloat($('#pspayment').val()) || 0;
+            var total_invoice_payments = 0;
+            
+            // Calculate total invoice payments entered (not due amounts)
+            $('#poTable tbody tr').each(function() {
+                var payment_input = $(this).find('input[name="payment_amount[]"]');
+                if (payment_input.length > 0) {
+                    total_invoice_payments += parseFloat(payment_input.val()) || 0;
+                }
+            });
+            
+            var advance_payment = payment_amount - total_invoice_payments;
+            
+            if (advance_payment > 0) {
+                alert('Error: Cannot process advance payment. Supplier Advance Ledger is not configured in system settings.');
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // Real-time validation for bank charges
+    function updateBankChargesLedgerRequirement() {
+        var bankCharges = parseFloat($('#psbankchargesamt').val()) || 0;
+        var bankChargesLedgerSelect = $('#psbankcharges');
+        
+        // Auto-calculate VAT (15% of bank charges)
+        var vat = bankCharges * 0.15;
+        $('#psvat').val(vat.toFixed(2));
+        
+        if (bankCharges > 0) {
+            // Make bank charges ledger mandatory
+            bankChargesLedgerSelect.attr('required', 'required');
+            bankChargesLedgerSelect.closest('.col-md-4').find('label').addClass('required-field');
+        } else {
+            // Remove mandatory requirement
+            bankChargesLedgerSelect.removeAttr('required');
+            bankChargesLedgerSelect.closest('.col-md-4').find('label').removeClass('required-field');
+        }
+    }
+
+    // Add form validation on submit
+    $(document).ready(function() {
+        // Add real-time validation for bank charges field
+        $('#psbankchargesamt').on('input change', function() {
+            updateBankChargesLedgerRequirement();
+        });
+
+        // Initial check on page load
+        updateBankChargesLedgerRequirement();
+
+        // Form submission validation
+        $('form').on('submit', function(e) {
+            // Validate mandatory ledgers first
+            if (!validateMandatoryLedgers()) {
+                e.preventDefault();
+                return false;
+            }
+            
+            // Then validate advance payment
+            if (!validateAdvancePayment()) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    });
 </script>
 
 <div class="box">
@@ -232,6 +414,10 @@
             $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
             echo admin_form_open_multipart('suppliers/add_payment', $attrib)
             ?>
+            
+            <!-- Hidden field for supplier advance ledger -->
+            <input type="hidden" name="supplier_advance_ledger" value="<?= $supplier_advance_ledger ?? '' ?>" id="supplier_advance_ledger_hidden">
+            
             <div class="col-lg-12">
                 
                 <div class="row">
@@ -357,7 +543,7 @@
                             
                         <div class="col-md-4">
                             <div class="form-group">
-                            <?= lang('Transfer From', 'psledger'); ?>
+                            <label class="required-field"><?= lang('Transfer From', 'psledger'); ?></label>
                             <?php 
 
                                 echo form_dropdown('ledger_account', $LO, ($_POST['ledger_account'] ?? $purchase->ledger_account), 'id="psledger" class="ledger-dropdown form-control" required="required"',$DIS);  
@@ -368,7 +554,7 @@
 
                         <div class="col-md-4">
                             <div class="form-group">
-                            <?= lang('Bank Charges', 'psbankcharges'); ?>
+                            <label id="bank-charges-label"><?= lang('Bank Charges', 'psbankcharges'); ?></label>
                             <?php 
 
                                 echo form_dropdown('bank_charges_account', $LO, ($_POST['bank_charges_account'] ?? $purchase->bank_charges_account), 'id="psbankcharges" class="ledger-dropdown form-control" required="required"',$DIS);  
@@ -381,6 +567,13 @@
                             <div class="form-group">
                                 <?= lang('Bank Charges Amount', 'psbankchargesamt'); ?>
                                 <?php echo form_input('bank_charges', ($_POST['bank_charges'] ?? $_POST['bank_charges']), 'class="form-control input-tip" id="psbankchargesamt"'); ?>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('VAT on Bank Charges (15%)', 'psvat'); ?>
+                                <?php echo form_input('vat', ($_POST['vat'] ?? ''), 'class="form-control input-tip" id="psvat" placeholder="Auto-calculated from bank charges" readonly'); ?>
                             </div>
                         </div>
 
