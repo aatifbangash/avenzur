@@ -59,7 +59,7 @@ class Customers extends MY_Controller
         $add  = $this->db->insert('sma_accounts_entries', $entry);
         $insert_id = $this->db->insert_id();
 
-        //customer
+        //customer - Credit to reduce receivable
         $entryitemdata[] = array(
             'Entryitem' => array(
                 'entry_id' => $insert_id,
@@ -70,18 +70,7 @@ class Customers extends MY_Controller
             )
         );
 
-        //vat charges
-        /*$entryitemdata[] = array(
-            'Entryitem' => array(
-                'entry_id' => $insert_id,
-                'dc' => 'C',
-                'ledger_id' => $vat_account,
-                'amount' => $va_charges,
-                'narration' => ''
-            )
-        );*/
-
-        //transfer legdger
+        //payment ledger - Debit to increase cash/bank
         $entryitemdata[] = array(
             'Entryitem' => array(
                 'entry_id' => $insert_id,
@@ -89,6 +78,68 @@ class Customers extends MY_Controller
                 'ledger_id' => $ledger_account,
                 'amount' => $payment_amount,
                 'narration' => ''
+            )
+        );
+
+        foreach ($entryitemdata as $row => $itemdata)
+        {
+            $this->db->insert('sma_accounts_entryitems' ,$itemdata['Entryitem']);
+        }
+
+        return $insert_id;
+    }
+
+    /**
+     * Create accounting entry for customer advance payment
+     * 
+     * @param int $customer_id Customer ID
+     * @param int $payment_ledger Bank/Cash ledger where payment is received
+     * @param int $advance_ledger Customer advance ledger (liability account)
+     * @param float $payment_amount Amount received
+     * @param string $reference_no Payment reference
+     * @param string $type Transaction type
+     * @return int Entry ID
+     */
+    public function convert_customer_payment_advance($customer_id, $payment_ledger, $advance_ledger, $payment_amount, $reference_no, $type){
+        $this->load->admin_model('companies_model');
+        $customer = $this->companies_model->getCompanyByID($customer_id);
+
+        /*Accounts Entries*/
+        $entry = array(
+            'entrytype_id' => 4,
+            'transaction_type' => $type,
+            'number'       => 'ADV-'.$reference_no,
+            'date'         => date('Y-m-d'),
+            'dr_total'     => $payment_amount,
+            'cr_total'     => $payment_amount,
+            'notes'        => 'Customer Advance Payment Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
+            'sid'          =>  '',
+            'customer_id'  => $customer_id
+            );
+        $add  = $this->db->insert('sma_accounts_entries', $entry);
+        $insert_id = $this->db->insert_id();
+
+        $entryitemdata = array();
+
+        // Debit: Bank/Payment account (asset increases - we received money)
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'D',
+                'ledger_id' => $payment_ledger,
+                'amount' => $payment_amount,
+                'narration' => 'Advance received from customer'
+            )
+        );
+
+        // Credit: Customer Advance Ledger (liability increases - we owe customer)
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'C',
+                'ledger_id' => $advance_ledger,
+                'amount' => $payment_amount,
+                'narration' => 'Customer advance liability'
             )
         );
 
@@ -283,20 +334,81 @@ class Customers extends MY_Controller
                 $date = null; // Handle invalid input as needed
             }
 
+            // Get customer advance ledger from settings
+            $settings = $this->Settings;
+            $customer_advance_ledger = isset($settings->customer_advance_ledger) && !empty($settings->customer_advance_ledger) 
+                                     ? $settings->customer_advance_ledger 
+                                     : null;
+
             if(!$payments_array || sizeOf($payments_array) == 0){
-                if($payment_total > 0){
-                    $payment_id = $this->add_customer_reference($payment_total, $reference_no, $date, $note, $customer_id, $ledger_account);
+                // Pure advance payment scenario (no invoices selected)
+                if (!$customer_advance_ledger && $payment_total > 0) {
+                    $this->session->set_flashdata('error', 'Cannot process advance payment. Customer Advance Ledger is not configured in system settings.');
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
+
+                if($payment_total > 0 && $customer_advance_ledger){
+                    // Create payment reference using payment ledger (bank/cash account)
+                    $payment_id = $this->add_customer_reference($payment_total, $reference_no, $date, $note . ' (Pure Advance)', $customer_id, $ledger_account);
+                    
+                    if (!$payment_id) {
+                        $this->session->set_flashdata('error', 'Failed to create pure advance payment reference. Please check system configuration.');
+                        redirect($_SERVER['HTTP_REFERER']);
+                    }
+
                     $this->make_customer_payment(NULL, $payment_total, $reference_no, $date, $note, $payment_id);
                     $this->sales_model->update_customer_balance($customer_id, $payment_total);
 
-                    $journal_id = $this->convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $payment_total, $reference_no, 'customerpayment');
+                    // Create journal entry: Pass payment ledger and customer advance ledger
+                    $journal_id = $this->convert_customer_payment_advance($customer_id, $ledger_account, $customer_advance_ledger, $payment_total, $reference_no, 'customeradvance');
                     $this->sales_model->update_payment_reference($payment_id, $journal_id);
-                    $this->session->set_flashdata('message', lang('Advance payment received Successfully!'));
+                    $this->session->set_flashdata('message', lang('Pure advance payment received Successfully!'));
                     admin_redirect('customers/view_payment/'.$payment_id);
                 }
             }else{
-                $payment_id = $this->add_customer_reference($payment_total, $reference_no, $date, $note, $customer_id, $ledger_account);
+                // Invoice payment scenario
+                // Get settle_with_advance checkbox value
+                $settle_with_advance = $this->input->post('settle_with_advance') ? true : false;
                 
+                // Calculate total due amount
+                $total_due = array_sum($due_amount_array);
+                
+                // Check if payment exceeds total due - this would be advance
+                if($payment_total > $total_due) {
+                    if(!$customer_advance_ledger) {
+                        $this->session->set_flashdata('error', 'Payment amount exceeds total due amount. Please configure Customer Advance Ledger in settings to allow advance payments.');
+                        redirect($_SERVER['HTTP_REFERER']);
+                    }
+                }
+
+                // Handle advance settlement if checkbox is checked
+                // Calculate shortage between total invoice due and payment entered
+                $cash_payment = $payment_total;
+                $advance_settlement_amount = 0;
+                
+                if($settle_with_advance) {
+                    if($customer_advance_ledger) {
+                        // Get current advance balance
+                        $current_advance_balance = $this->getCustomerAdvanceBalance($customer_id, $customer_advance_ledger);
+                        
+                        if($current_advance_balance > 0) {
+                            // Calculate shortage (total invoice amount - payment entered)
+                            $shortage_amount = $total_due - $payment_total;
+                            
+                            if($shortage_amount > 0) {
+                                // Use advance to cover the shortage (minimum of shortage or available advance)
+                                $advance_settlement_amount = min($current_advance_balance, $shortage_amount);
+                                // Cash payment remains as entered
+                                $cash_payment = $payment_total;
+                                
+                                // Add note about settlement
+                                $note .= " (Settlement: Cash {$cash_payment}, Advance {$advance_settlement_amount}, Total: " . ($cash_payment + $advance_settlement_amount) . ")";
+                            }
+                        }
+                    }
+                }
+
+                // Validate payment amounts
                 for($i = 0; $i < count($payments_array); $i++){
                     $payment_amount = $payments_array[$i];
                     $item_id = $item_ids[$i];
@@ -307,33 +419,204 @@ class Customers extends MY_Controller
                     }
                 }
                 
-                if(array_sum($payments_array) == $payment_total){
-                    for ($i = 0; $i < count($payments_array); $i++) {
-                        $payment_amount = $payments_array[$i];
-                        $item_id = $item_ids[$i];
-                        $due_amount = $due_amount_array[$i];
-    
-                        if($payment_amount > 0){
-                            $this->update_sale_order($item_id, $payment_amount);
-                            $this->make_customer_payment($item_id, $payment_amount, $reference_no, $date, $note, $payment_id);
-                        }
-                    }
-    
-                    $journal_id = $this->convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $payment_total, $reference_no, 'customerpayment');
-                    $this->sales_model->update_payment_reference($payment_id, $journal_id);
-                    $this->session->set_flashdata('message', lang('Customer invoice added Successfully!'));
-                    admin_redirect('customers/view_payment/'.$payment_id);
-                }else{
-                    $this->session->set_flashdata('error', 'Total Sum Of Amounts do not match');
+                // Case 4 Check: Ensure payment_total can cover the selected invoice payments
+                if(array_sum($payments_array) > $payment_total){
+                    $this->session->set_flashdata('error', 'Total payment amount is insufficient to cover selected invoice payments. Required: ' . array_sum($payments_array) . ', Provided: ' . $payment_total);
                     redirect($_SERVER['HTTP_REFERER']);
                 }
+
+                // Split payment into invoice payment and advance payment
+                $total_invoice_payment = array_sum($payments_array); // Actual amount going to invoices
+                $advance_payment = $cash_payment - $total_invoice_payment; // Excess cash amount
+                
+                $main_payment_id = null;
+                
+                // Process invoice payments (if there are any invoices OR if settling with advance)
+                if($total_invoice_payment > 0 || $advance_settlement_amount > 0) {
+                    // Calculate total settlement amount (cash + advance adjustment)
+                    $total_settlement_amount = $cash_payment + $advance_settlement_amount;
+                    
+                    // Validation: Ensure we have some payment method
+                    if($total_settlement_amount <= 0) {
+                        $this->session->set_flashdata('error', 'Total settlement amount must be greater than zero.');
+                        redirect($_SERVER['HTTP_REFERER']);
+                    }
+                    
+                    // Create combined payment reference for the total settlement amount
+                    $combined_payment_id = $this->add_customer_reference($total_settlement_amount, $reference_no, $date, $note, $customer_id, $ledger_account);
+                    
+                    // Verify payment reference was created successfully
+                    if (!$combined_payment_id) {
+                        $this->session->set_flashdata('error', 'Failed to create payment reference. Please check system configuration.');
+                        redirect($_SERVER['HTTP_REFERER']);
+                    }
+                    
+                    // Distribute payments to invoices (cash + advance settlement)
+                    $remaining_advance = $advance_settlement_amount;
+                    
+                    for ($i = 0; $i < count($payments_array); $i++) {
+                        $cash_payment_for_invoice = $payments_array[$i];
+                        $item_id = $item_ids[$i];
+                        $due_amount = $due_amount_array[$i];
+                        
+                        // Calculate shortage for this invoice
+                        $invoice_shortage = $due_amount - $cash_payment_for_invoice;
+                        
+                        // Determine how much advance to use for this invoice
+                        $advance_for_this_invoice = 0;
+                        if ($remaining_advance > 0 && $invoice_shortage > 0) {
+                            $advance_for_this_invoice = min($remaining_advance, $invoice_shortage);
+                            $remaining_advance -= $advance_for_this_invoice;
+                        }
+                        
+                        // Total payment for this invoice (cash + advance)
+                        $total_payment_for_invoice = $cash_payment_for_invoice + $advance_for_this_invoice;
+                        
+                        if($total_payment_for_invoice > 0){
+                            // Update sale with total payment amount
+                            $this->update_sale_order($item_id, $total_payment_for_invoice);
+                            
+                            // Record cash payment (only if there is cash for this invoice)
+                            if ($cash_payment_for_invoice > 0) {
+                                $this->make_customer_payment($item_id, $cash_payment_for_invoice, $reference_no, $date, $note . ' (Cash)', $combined_payment_id);
+                            }
+                            
+                            // Record advance settlement payment (only if advance used for this invoice)
+                            if ($advance_for_this_invoice > 0) {
+                                $this->make_customer_payment($item_id, $advance_for_this_invoice, $reference_no . '-ADV', $date, $note . ' (Advance Settlement)', $combined_payment_id);
+                            }
+                        }
+                    }
+
+                    // Create accounting journal entries
+                    if($advance_settlement_amount > 0) {
+                        // If we are settling with advance, create separate journal entries
+                        
+                        // Create cash payment journal entry (only if cash payment > 0)
+                        if($cash_payment > 0) {
+                            $cash_journal_id = $this->convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $cash_payment, $reference_no . '-CASH', 'customerpayment');
+                        }
+                        
+                        // Create advance settlement journal entry (debit advance ledger, credit customer ledger)
+                        // This reduces the advance balance and settles the customer receivable
+                        $advance_journal_id = $this->create_customer_advance_settlement_entry($customer_id, $customer_advance_ledger, $advance_settlement_amount, $reference_no . '-ADV', $date, 'Advance Settlement');
+                        
+                        // Update payment reference with the journal ID (prefer cash journal if exists, otherwise advance journal)
+                        $this->sales_model->update_payment_reference($combined_payment_id, isset($cash_journal_id) ? $cash_journal_id : $advance_journal_id);
+                    } else {
+                        // Regular payment without advance settlement (cash only)
+                        if($cash_payment > 0) {
+                            $journal_id = $this->convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $cash_payment, $reference_no, 'customerpayment');
+                            $this->sales_model->update_payment_reference($combined_payment_id, $journal_id);
+                        }
+                    }
+                    
+                    $main_payment_id = $combined_payment_id;
+                }
+                
+                // Process advance payment separately (if there is any)
+                if($advance_payment > 0) {
+                    if($customer_advance_ledger) {
+                        // Create separate payment reference for advance payment
+                        $advance_reference_no = $reference_no . '-ADV';
+                        $advance_payment_id = $this->add_customer_reference($advance_payment, $advance_reference_no, $date, $note . ' (Advance)', $customer_id, $ledger_account);
+                        
+                        // Verify payment reference was created successfully
+                        if (!$advance_payment_id) {
+                            $this->session->set_flashdata('error', 'Failed to create advance payment reference. Please check system configuration.');
+                            redirect($_SERVER['HTTP_REFERER']);
+                        }
+                        
+                        // Make advance payment entry  
+                        $this->make_customer_payment(NULL, $advance_payment, $advance_reference_no, $date, $note, $advance_payment_id);
+                        
+                        // Create journal entry for advance payment
+                        $advance_journal_id = $this->convert_customer_payment_advance($customer_id, $ledger_account, $customer_advance_ledger, $advance_payment, $advance_reference_no, 'customeradvance');
+                        $this->sales_model->update_payment_reference($advance_payment_id, $advance_journal_id);
+                        
+                        // Set main payment id to advance if no invoice payment
+                        if(!$main_payment_id) {
+                            $main_payment_id = $advance_payment_id;
+                        }
+                    }
+                }
+
+                $this->session->set_flashdata('message', lang('Payment processed Successfully!'));
+                admin_redirect('customers/view_payment/' . $main_payment_id);
             }
 
         } else {
+            // Check if customer_advance_ledger is configured in settings
+            $settings = $this->Settings;
+           
+            $customer_advance_ledger = isset($settings->customer_advance_ledger) && !empty($settings->customer_advance_ledger) 
+                                     ? $settings->customer_advance_ledger 
+                                     : null;
+            
             $this->data['customers']  = $this->site->getAllCompanies('customer');
             $this->data['warehouses'] = $this->site->getAllWarehouses();
+            $this->data['customer_advance_ledger'] = $customer_advance_ledger;
             $this->page_construct('customers/add_payment', $meta, $this->data);
         }
+    }
+
+    /**
+     * Create accounting entry for customer advance settlement
+     * This is used when customer's existing advance is used to pay invoices
+     * 
+     * @param int $customer_id Customer ID
+     * @param int $customer_advance_ledger Customer advance ledger (asset account)
+     * @param float $advance_amount Amount of advance being used
+     * @param string $reference_no Payment reference
+     * @param string $date Transaction date
+     * @param string $description Transaction description
+     * @return int Entry ID
+     */
+    private function create_customer_advance_settlement_entry($customer_id, $customer_advance_ledger, $advance_amount, $reference_no, $date, $description) {
+        // Get customer details
+        $this->load->admin_model('companies_model');
+        $customer = $this->companies_model->getCompanyByID($customer_id);
+        
+        // Create journal entry for advance settlement
+        $entry = array(
+            'entrytype_id' => 4,
+            'transaction_type' => 'advancesettlement',
+            'number' => $reference_no,
+            'date' => $date,
+            'dr_total' => $advance_amount,
+            'cr_total' => $advance_amount,
+            'notes' => $description . ' for ' . $customer->name,
+            'customer_id' => $customer_id
+        );
+        
+        $add = $this->db->insert('sma_accounts_entries', $entry);
+        $entry_id = $this->db->insert_id();
+        
+        if ($add) {
+            // Debit customer advance ledger (reducing advance balance - liability decreases)
+            $entryitem1 = array(
+                'entry_id' => $entry_id,
+                'ledger_id' => $customer_advance_ledger,
+                'amount' => $advance_amount,
+                'dc' => 'D',
+                'reconciliation_date' => $date
+            );
+            $this->db->insert('sma_accounts_entryitems', $entryitem1);
+            
+            // Credit customer ledger (reducing customer receivable - asset decreases)
+            $entryitem2 = array(
+                'entry_id' => $entry_id,
+                'ledger_id' => $customer->ledger_account,
+                'amount' => $advance_amount,
+                'dc' => 'C',
+                'reconciliation_date' => $date
+            );
+            $this->db->insert('sma_accounts_entryitems', $entryitem2);
+            
+            return $entry_id;
+        }
+        
+        return false;
     }
 
     public function add_credit_memo($memo_id, $customer_id, $reference_no, $description, $payment_amount, $date){
@@ -1428,4 +1711,95 @@ class Customers extends MY_Controller
         $this->data['customer'] = $this->companies_model->getCompanyByID($id);
         $this->load->view($this->theme . 'customers/view', $this->data);
     }
+
+    /**
+     * Get customer advance balance via AJAX
+     * Used by the payment form to show current advance balance
+     */
+    public function get_customer_advance_balance(){
+        try {
+            $customer_id = isset($_GET['customer_id']) ? $_GET['customer_id'] : null;
+            
+            if (!$customer_id) {
+                echo json_encode(array(
+                    'advance_balance' => 0,
+                    'advance_ledger_configured' => false,
+                    'error' => 'No customer ID provided'
+                ));
+                return;
+            }
+            
+            // Get customer advance ledger from settings
+            $settings = $this->Settings;
+            $customer_advance_ledger = isset($settings->customer_advance_ledger) && !empty($settings->customer_advance_ledger) 
+                                     ? $settings->customer_advance_ledger 
+                                     : null;
+            
+            $advance_balance = 0;
+            
+            if($customer_advance_ledger && $customer_id) {
+                $advance_balance = $this->getCustomerAdvanceBalance($customer_id, $customer_advance_ledger);
+            }
+            
+            $data = array(
+                'advance_balance' => $advance_balance,
+                'advance_ledger_configured' => $customer_advance_ledger ? true : false,
+                'customer_id' => $customer_id,
+                'advance_ledger' => $customer_advance_ledger
+            );
+            
+            echo json_encode($data);
+            
+        } catch (Exception $e) {
+            // Log the full error for debugging
+            log_message('error', 'Customer Advance Balance Error: ' . $e->getMessage());
+            log_message('error', 'SQL Error: ' . $this->db->last_query());
+            
+            echo json_encode(array(
+                'advance_balance' => 0,
+                'advance_ledger_configured' => false,
+                'error' => 'Database error: ' . $e->getMessage(),
+                'query' => $this->db->last_query()
+            ));
+        }
+    }
+
+    /**
+     * Get customer advance balance from ledger
+     * 
+     * @param int $customer_id Customer ID
+     * @param int $customer_advance_ledger Ledger ID for customer advance
+     * @return float Advance balance (Credit - Debit)
+     */
+    private function getCustomerAdvanceBalance($customer_id, $customer_advance_ledger) {
+        if(!$customer_advance_ledger || !$customer_id) {
+            return 0;
+        }
+        
+        // Query for advance balance using customer_id field
+        $this->db->select('
+            COALESCE(SUM(CASE WHEN ei.dc = "C" THEN ei.amount ELSE 0 END), 0) as credit_total,
+            COALESCE(SUM(CASE WHEN ei.dc = "D" THEN ei.amount ELSE 0 END), 0) as debit_total
+        ');
+        $this->db->from('sma_accounts_entryitems ei');
+        $this->db->join('sma_accounts_entries e', 'e.id = ei.entry_id', 'inner');
+        $this->db->where('ei.ledger_id', $customer_advance_ledger);
+        $this->db->where('e.customer_id', $customer_id);
+        
+        // Check if deleted column exists before filtering
+        if ($this->db->field_exists('deleted', 'sma_accounts_entries')) {
+            $this->db->where('e.deleted', 0);
+        }
+        
+        $query = $this->db->get();
+        
+        if($query->num_rows() > 0) {
+            $result = $query->row();
+            // For customer advance: Credit means advance received, Debit means advance used
+            return $result->credit_total - $result->debit_total;
+        }
+        
+        return 0;
+    }
 }
+

@@ -72,6 +72,15 @@
 
                             <div class="col-md-4">
                                 <div class="form-group">
+                                    <label class="control-label" for="customer_advance_ledger"><?= lang('Customer Advance Ledger'); ?></label>
+                                    <?php 
+                                        echo form_dropdown('customer_advance_ledger', $LO, $settings->customer_advance_ledger, 'id="customer_advance_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                                    ?>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group">
                                     <label class="control-label" for="vat_ledger_id"><?= lang('VAT on Bank Charges Ledger'); ?></label>
                                     <?php 
                                         echo form_dropdown('vat_ledger_id', $LO, $settings->vat_ledger_id, 'id="vat_ledger_id" class="ledger-dropdown form-control"',$DIS);  
