@@ -23,7 +23,9 @@ class Sales extends MY_Controller
         $this->lang->admin_load('sales', $this->Settings->user_language);
         $this->load->library('form_validation');
         $this->load->admin_model('sales_model');
+        $this->load->admin_model('quotes_model');
         $this->load->admin_model('companies_model');
+        $this->load->admin_model('products_model');
         $this->digital_upload_path = 'files/';
         $this->upload_path         = 'assets/uploads/';
         $this->thumbs_path         = 'assets/uploads/thumbs/';
@@ -343,6 +345,186 @@ class Sales extends MY_Controller
         }
     }
 
+    public function add_from_quote($quote_id = null){
+        $this->sma->checkPermissions();
+
+        if (!$quote_id) {
+            $this->session->set_flashdata('error', lang('Quote ID not provided.'));
+            admin_redirect('quotes');exit;
+        }
+
+        $quote = $this->quotes_model->getQuoteByID($quote_id);
+
+        if($quote->status == 'converted_to_sale'){
+            $this->session->set_flashdata('error', 'Quote already converted to sale order');
+
+            admin_redirect('quotes');
+        }
+
+        $quote_items = $this->quotes_model->getAllQuoteItems($quote_id, $quote);
+
+        $date = date('Y-m-d H:i:s');
+        $reference = $quote->reference_no;
+        $customer_id = $quote->customer_id;
+        $customer = $quote->customer;
+        $biller_id = $quote->biller_id;
+        $biller = $quote->biller;
+        $warehouse_id = $quote->warehouse_id;
+        $note = $quote->note;
+        $staff_note = $quote->staff_note;
+        $warning_note =  $quote->warning_note;
+        $product_discount = $quote->product_discount;
+        $total_items = $quote->total_items;
+        $payment_term = $quote->payment_term;
+        $due_date = $due_date         = $payment_term ? date('Y-m-d', strtotime('+' . $payment_term . ' days', strtotime($date))) : null;
+        $attachment = $quote->attachment;
+        
+        $total            = $quote->total;
+        $product_tax      = $quote->product_tax;
+        $product_discount = $quote->product_discount;
+        $grand_total_discount = $quote->total_discount;
+        $grand_total_vat = $quote->total_tax;
+        $grand_total = $quote->grand_total;
+        $grand_total_sale = $quote->total;
+        $grand_total_net_sale = $quote->total_net_sale; 
+
+        $i = sizeof($quote_items);
+        for ($r = 0; $r < $i; $r++) {
+            $item_id = $quote_items[$r]->product_id;
+            $item_code = $quote_items[$r]->product_code;
+            $item_name = $quote_items[$r]->product_name;
+            $item_type = $quote_items[$r]->product_type;
+            $item_option = $quote_items[$r]->option_id;
+            $net_cost = $quote_items[$r]->net_cost;
+            $item_net_price = $quote_items[$r]->net_unit_price;
+            $item_quantity = $quote_items[$r]->quantity;
+            $item_bonus = $quote_items[$r]->bonus;
+            $item_unit_quantity = $quote_items[$r]->unit_quantity;
+            $warehouse_id = $quote_items[$r]->warehouse_id;
+            $pr_item_tax = $quote_items[$r]->warehouse_id;
+            $item_tax_rate = $quote_items[$r]->tax_rate_id;
+            $new_item_vat_value = $quote_items[$r]->warehouse_id;
+            $item_discount = $quote_items[$r]->item_discount;
+            $new_item_first_discount = $quote_items[$r]->item_discount;
+            $new_item_total_sale = $quote_items[$r]->subtotal;
+            $item_serial = '';
+            $item_serial_no = '';
+            $item_expiry = $quote_items[$r]->expiry;
+            $item_batchno = $quote_items[$r]->batch_no;
+            $real_unit_price = $quote_items[$r]->real_unit_price;
+            $subtotal2 = $quote_items[$r]->subtotal2;
+            $item_dis1 = $quote_items[$r]->discount1;
+            $item_dis2 = $quote_items[$r]->discount2;
+            $new_item_second_discount = $quote_items[$r]->second_discount_value;
+            $totalbeforevat = $quote_items[$r]->totalbeforevat;
+            $main_net = $quote_items[$r]->main_net;
+            $real_cost = $quote_items[$r]->real_cost;
+            $avz_code = $quote_items[$r]->avz_item_code ?? '';
+
+            $inventoryObj = $this->products_model->check_inventory($warehouse_id, $item_id, $item_batchno, $item_expiry, $item_quantity, $avz_code);
+            
+            if(!$inventoryObj){
+                $this->session->set_flashdata('error', 'Quote cannot be converted to sale order. The item: '.$item_code.'-'.$item_name.' has no stock in Warehouse');
+                admin_redirect('quotes');
+            }
+
+            $product = [
+                'product_id'        => $item_id,
+                'product_code'      => $item_code,
+                'product_name'      => $item_name,
+                'product_type'      => $item_type,
+                'option_id'         => $item_option,
+                'net_cost'          => $net_cost,
+                'net_unit_price'    => $item_net_price,
+                'unit_price'        => $item_net_price,
+                'quantity'          => $item_quantity + $item_bonus,
+                'product_unit_id'   => $quote_items[$r]->product_unit_id,
+                'product_unit_code' => $quote_items[$r]->product_unit_code,
+                'unit_quantity'     => $item_unit_quantity,
+                'warehouse_id'      => $warehouse_id,
+                'item_tax'          => $pr_item_tax,
+                'tax_rate_id'       => $item_tax_rate,
+                'tax'               => $new_item_vat_value,
+                'discount'          => $item_discount,
+                'item_discount'     => $new_item_first_discount,
+                'subtotal'          => $new_item_total_sale,
+                'serial_no'         => $item_serial,
+                'serial_number'     => $item_serial_no,
+                'expiry'            => $item_expiry,
+                'batch_no'          => $item_batchno,
+                //'lot_no'            => $item_lotno,
+                'real_unit_price'   => $real_unit_price,
+                'subtotal2'         => $this->sma->formatDecimal($subtotal2),
+                'bonus'             => $item_bonus,
+                //'bonus'             => 0,
+                'discount1'         => $item_dis1,
+                'discount2'         => $item_dis2,
+                'second_discount_value' => $new_item_second_discount,
+                'totalbeforevat'    => $totalbeforevat,
+                'main_net'          => $main_net,
+                'real_cost'         => $real_cost,
+                'avz_item_code'     => $avz_code
+            ];
+
+            $products[] = ($product);
+        }
+        exit;
+
+        if (empty($products)) {
+            $this->form_validation->set_rules('product', lang('order_items'), 'required');
+        } else {
+            krsort($products);
+        }
+
+        $data = [
+            'date'  => $date,
+            'reference_no'      => $reference,
+            'customer_id'       => $customer_id,
+            'customer'          => $customer,
+            'biller_id'         => $biller_id,
+            'biller'            => $biller,
+            'warehouse_id'      => $warehouse_id,
+            'note'              => $note,
+            'staff_note'        => $staff_note,
+            'warning_note'      => $warning_note, 
+            'total'             => $grand_total_sale,
+            'total_net_sale'    => $grand_total_net_sale,
+            'product_discount'  => $product_discount,
+            'order_discount_id' => 0,
+            'order_discount'    => 0,
+            'total_discount'    => $grand_total_discount,
+            'product_tax'       => $product_tax,
+            'order_tax_id'      => 0,
+            'order_tax'         => 0,
+            'total_tax'         => $grand_total_vat,
+            'shipping'          => 0,
+            'grand_total'       => $grand_total,
+            'total_items'       => $total_items,
+            'attachment'        => $attachment,
+            'sale_id'           => $quote_id,
+            'sale_status'       => 'ready',
+            'payment_status'    => 'pending',
+            'payment_term'      => $payment_term,
+            'due_date'          => $due_date,
+            'paid'              => 0,
+            'created_by'        => $this->session->userdata('user_id'),
+            'hash'              => hash('sha256', microtime() . mt_rand()),
+        ];
+
+        $payment = [];
+
+        if ($sale_id = $this->sales_model->addSaleNew($data, $products, $payment, [])) {
+
+            $this->quotes_model->updateStatus($quote_id, 'converted_to_sale', 'Converted to Sale');
+
+            $this->session->set_flashdata('message', lang('Sale Order Added'));
+            admin_redirect('sales?lastInsertedId='.$sale_id);
+        }else{
+            $this->session->set_flashdata('error', lang('Failed Adding Sale Order'));
+            admin_redirect('quotes');
+        }
+
+    }  
 
     public function add($quote_id = null)
     {

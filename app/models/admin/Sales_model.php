@@ -345,6 +345,57 @@ class Sales_model extends CI_Model
         return false;
     }
 
+    public function addSaleNew($data = [], $items = [], $payment = [], $si_return = [], $attachments = [])
+    {
+        // Sequence-Code
+        $this->load->library('SequenceCode');
+        $this->sequenceCode = new SequenceCode();
+        $data['sequence_code'] = $this->sequenceCode->generate('SL', 5);
+
+        $this->db->trans_start();
+        if ($this->db->insert('sales', $data)) {
+            
+            $sale_id = $this->db->insert_id();
+            if ($this->site->getReference('so') == $data['reference_no']) {
+                $this->site->updateReference('so');
+            }
+
+            foreach ($items as $item) {
+                $item['sale_id'] = $sale_id;
+                $real_cost = $item['real_cost'];
+                //unset($item['real_cost']);
+                $this->db->insert('sale_items', $item);
+
+                $sale_item_id = $this->db->insert_id();
+
+                if ($data['sale_status'] == 'ready'){ //handle inventory movement 
+                    //$this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id']); 
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $sale_id, $item['net_cost'], $item['expiry'], $item['net_unit_price'], $real_cost, $item['avz_item_code'], $item['bonus'], $data['customer_id'], $item['real_unit_price'], $data['date']);
+                } 
+                
+            }
+
+            if (!empty($attachments)) {
+                foreach ($attachments as $attachment) {
+                    $attachment['subject_id']   = $sale_id;
+                    $attachment['subject_type'] = 'sale';
+                    $this->db->insert('attachments', $attachment);
+                }
+            }
+
+            //Check this for loyality later
+            //$this->sma->update_award_points($data['grand_total'], $data['customer_id'], $data['created_by']);
+        }
+        $this->db->trans_complete();
+        if ($this->db->trans_status() === false) {
+            log_message('error', 'An errors has been occurred while adding the sale (Add:Sales_model.php)');
+        } else {
+            return $sale_id;
+        }
+
+        return false;
+    }
+
     public function addSale($data = [], $items = [], $payment = [], $si_return = [], $attachments = [])
     {
         // Sequence-Code

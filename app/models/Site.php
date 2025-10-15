@@ -500,7 +500,7 @@ class Site extends CI_Model
 
     public function getMainWarehouse()
     {
-        $q = $this->db->get_where('warehouses', ['warehouse_type' => 'warehouse', 'goods_in_transit' => 0]);
+        $q = $this->db->get_where('warehouses', ['is_main' => 1]);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
