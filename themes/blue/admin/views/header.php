@@ -433,6 +433,30 @@
                                 </ul>
                             </li>
 
+
+                            <li class="mm_purchase_requisition">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-star"></i>
+                                    <span class="text"> <?= lang('Purchase Requisition'); ?>
+                                    </span> <span class="chevron closed"></span>
+                                </a>
+                                <ul>
+                                    <li id="purchases_index">
+                                        <a class="submenu" href="<?= admin_url('purchase_requisition'); ?>">
+                                            <i class="fa fa-star"></i>
+                                            <span class="text"> <?= lang('list_purchases_requisition'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="purchases_add">
+                                        <a class="submenu" href="<?= admin_url('purchase_requisition/save'); ?>">
+                                            <i class="fa fa-plus-circle"></i>
+                                            <span class="text"> <?= lang('create_purchase_requisition'); ?></span>
+                                        </a>
+                                    </li>
+                                </ul>    
+                            </li>
+                        
+
                             <li class="mm_purchases">
                                 <a class="dropmenu" href="#">
                                     <i class="fa fa-star"></i>
