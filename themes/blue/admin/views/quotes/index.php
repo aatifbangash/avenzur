@@ -20,15 +20,18 @@
                 nRow.className = "quote_link";
                 return nRow;
             },
-            "aoColumns": [{"bSortable": false,"mRender": checkbox}, {"mRender": fld}, null, null, null, null, {"mRender": currencyFormat}, {"mRender": row_status}, {"bSortable": false,"mRender": attachment2}, {"bSortable": false}]
+            "aoColumns": [{"bSortable": false,"mRender": checkbox}, {"mRender": fld}, null, null, null, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": row_status}, {"bSortable": false,"mRender": attachment2}, {"bSortable": false}]
         }).fnSetFilteringDelay().dtFilter([
             {column_number: 1, filter_default_label: "[<?=lang('date');?> (yyyy-mm-dd)]", filter_type: "text", data: []},
             {column_number: 2, filter_default_label: "[<?=lang('reference_no');?>]", filter_type: "text", data: []},
             {column_number: 3, filter_default_label: "[<?=lang('biller');?>]", filter_type: "text", data: []},
             {column_number: 4, filter_default_label: "[<?=lang('customer');?>]", filter_type: "text", data: []},
-            {column_number: 5, filter_default_label: "[<?=lang('supplier');?>]", filter_type: "text", data: []},
-            {column_number: 6, filter_default_label: "[<?=lang('total');?>]", filter_type: "text", data: []},
-            {column_number: 7, filter_default_label: "[<?=lang('status');?>]", filter_type: "text", data: []},
+            {column_number: 5, filter_default_label: "[<?=lang('total');?>]", filter_type: "text", data: []},
+            {column_number: 6, filter_default_label: "[<?=lang('total_discount');?>]", filter_type: "text", data: []},
+            {column_number: 7, filter_default_label: "[<?=lang('total_tax');?>]", filter_type: "text", data: []},
+            {column_number: 8, filter_default_label: "[<?=lang('grand_total');?>]", filter_type: "text", data: []},
+            {column_number: 9, filter_default_label: "[<?=lang('total');?>]", filter_type: "text", data: []},
+            {column_number: 10, filter_default_label: "[<?=lang('status');?>]", filter_type: "text", data: []},
         ], "footer");
         <?php if ($this->session->userdata('remove_quls')) {
             ?>
@@ -150,8 +153,10 @@
                             <th><?= lang('reference_no'); ?></th>
                             <th><?= lang('biller'); ?></th>
                             <th><?= lang('customer'); ?></th>
-                            <th><?= lang('supplier'); ?></th>
                             <th><?= lang('total'); ?></th>
+                            <th><?= lang('total_discount'); ?></th>
+                            <th><?= lang('total_tax'); ?></th>
+                            <th><?= lang('grand_total'); ?></th>
                             <th><?= lang('status'); ?></th>
                             <th style="min-width:30px; width: 30px; text-align: center;"><i class="fa fa-chain"></i></th>
                             <th style="width:115px; text-align:center;"><?= lang('actions'); ?></th>
@@ -168,7 +173,7 @@
                             <th style="min-width:30px; width: 30px; text-align: center;">
                                 <input class="checkbox checkft" type="checkbox" name="check"/>
                             </th>
-                            <th></th><th></th><th></th><th></th><th></th><th></th><th></th>
+                            <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
                             <th style="min-width:30px; width: 30px; text-align: center;"><i class="fa fa-chain"></i></th>
                             <th style="width:115px; text-align:center;"><?= lang('actions'); ?></th>
                         </tr>

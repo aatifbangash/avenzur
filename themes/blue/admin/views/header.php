@@ -601,7 +601,7 @@
                                 </ul>
                             </li>
 
-                           <!--<li class="mm_quotes">
+                           <li class="mm_quotes">
                                 <a class="dropmenu" href="#">
                                     <i class="fa fa-heart-o"></i>
                                     <span class="text"> <?= lang('quotes'); ?> </span>
@@ -621,7 +621,7 @@
                                         </a>
                                     </li>
                                 </ul>
-                            </li>-->
+                            </li>
                             <!--<li class="mm_dealss">
                                 <a class="dropmenu" href="#">
                                     <i class="fa fa-heart-o"></i>
