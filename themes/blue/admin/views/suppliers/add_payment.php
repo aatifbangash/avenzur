@@ -135,6 +135,165 @@
             $('#psnote').val(psnote);
         }
 
+        // Event handlers for advance settlement
+        $(document).on('change', '#pspayment', function (e) {
+            updateAdvanceSettlementCalculation();
+            // Reload invoices to recalculate the advance adjustment row
+            var supplier_id = $('#pssupplier').val();
+            if (supplier_id) {
+                loadInvoices(supplier_id);
+            }
+        });
+        
+        $(document).on('input', '#pspayment', function (e) {
+            updateAdvanceSettlementCalculation();
+        });
+        
+        $(document).on('change', '#settle-with-advance', function (e) {
+            // Sync with table checkbox
+            $('#settle-with-advance-table').prop('checked', $(this).is(':checked'));
+            updateAdvanceSettlementCalculation();
+        });
+        
+        // Event handler for the checkbox in the table
+        $(document).on('change', '#settle-with-advance-table', function (e) {
+            // Sync with original checkbox
+            $('#settle-with-advance').prop('checked', $(this).is(':checked'));
+            updateAdvanceSettlementCalculation();
+        });
+        
+        // Also update when invoice payment amounts change
+        $(document).on('change', 'input[name="payment_amount[]"]', function (e) {
+            // Recalculate totals
+            var total_paying = 0;
+            $('input[name="payment_amount[]"]').each(function() {
+                total_paying += parseFloat($(this).val()) || 0;
+            });
+            
+            // Update total invoice amount from due amounts
+            total_invoice_amount = 0;
+            $('input[name="due_amount[]"]').each(function() {
+                total_invoice_amount += parseFloat($(this).val()) || 0;
+            });
+            
+            updateAdvanceSettlementCalculation();
+        });
+
+        // Global variable to store current advance balance
+        var current_advance_balance = 0;
+
+        function loadSupplierAdvanceBalance(supplier_id) {
+            if (!supplier_id) {
+                $('#advance-balance').text('Please select a supplier');
+                $('#settle-with-advance').prop('disabled', true);
+                current_advance_balance = 0;
+                updateAdvanceSettlementCalculation();
+                return;
+            }
+
+            $.ajax({
+                url: '<?= admin_url('suppliers/get_supplier_advance_balance?supplier_id=') ?>' + supplier_id,
+                type: 'GET',
+                dataType: 'json',
+                success: function (response) {
+                    console.log('Advance Balance Response:', response);
+                    
+                    current_advance_balance = parseFloat(response.advance_balance) || 0;
+                    
+                    if (response.error) {
+                        $('#advance-balance').html('<span style="color: #dc3545;">' + response.error + '</span>');
+                        $('#settle-with-advance').prop('disabled', true);
+                        return;
+                    }
+                    
+                    if (current_advance_balance > 0) {
+                        $('#advance-balance').html('<strong style="color: #28a745;">Available: ' + current_advance_balance.toFixed(2) + '</strong>');
+                        $('#settle-with-advance').prop('disabled', false);
+                        // The table checkbox will be created dynamically in loadInvoices
+                    } else {
+                        $('#advance-balance').html('<span style="color: #6c757d;">No advance available</span>');
+                        $('#settle-with-advance').prop('disabled', true);
+                        $('#settle-with-advance').prop('checked', false);
+                        $('#settle-with-advance-table').prop('disabled', true);
+                        $('#settle-with-advance-table').prop('checked', false);
+                    }
+                    
+                    if (!response.advance_ledger_configured) {
+                        $('#advance-balance').html('<span style="color: #dc3545;">Advance ledger not configured</span>');
+                        $('#settle-with-advance').prop('disabled', true);
+                        $('#settle-with-advance-table').prop('disabled', true);
+                    }
+                    
+                    updateAdvanceSettlementCalculation();
+                },
+                error: function (xhr, status, error) {
+                    console.log('AJAX Error:', xhr.responseText);
+                    console.log('Status:', status);
+                    console.log('Error:', error);
+                    
+                    var errorMsg = 'Error loading advance balance';
+                    if (xhr.responseText) {
+                        try {
+                            var errorResponse = JSON.parse(xhr.responseText);
+                            if (errorResponse.error) {
+                                errorMsg += ': ' + errorResponse.error;
+                            }
+                        } catch (e) {
+                            // If not JSON, show first 50 characters of response
+                            errorMsg += ': ' + xhr.responseText.substring(0, 50);
+                        }
+                    }
+                    
+                    $('#advance-balance').html('<span style="color: #dc3545;">' + errorMsg + '</span>');
+                    $('#settle-with-advance').prop('disabled', true);
+                    current_advance_balance = 0;
+                    updateAdvanceSettlementCalculation();
+                }
+            });
+        }
+
+        // Global variable to store total invoice amount
+        var total_invoice_amount = 0;
+
+        function updateAdvanceSettlementCalculation() {
+            var payment_amount = parseFloat($('#pspayment').val()) || 0;
+            var use_advance = $('#settle-with-advance').is(':checked');
+            
+            // Calculate the shortage (invoice total - payment entered)
+            var shortage_amount = total_invoice_amount - payment_amount;
+            
+            if (use_advance && current_advance_balance > 0 && shortage_amount > 0) {
+                // Amount to adjust from advance = minimum of shortage or available advance
+                var advance_to_use = Math.min(current_advance_balance, shortage_amount);
+                var cash_payment = payment_amount;
+                var total_settlement = cash_payment + advance_to_use;
+                
+                $('#cash-payment-amount').text(cash_payment.toFixed(2));
+                $('#advance-settlement-amount').text(advance_to_use.toFixed(2));
+                $('#total-settlement-amount').text(total_settlement.toFixed(2));
+                $('#advance-settlement-info').show();
+                
+                // Update the advance adjustment row in the table if it exists
+                updateAdvanceRowInTable(advance_to_use);
+            } else {
+                $('#cash-payment-amount').text(payment_amount.toFixed(2));
+                $('#advance-settlement-amount').text('0.00');
+                $('#total-settlement-amount').text(payment_amount.toFixed(2));
+                $('#advance-settlement-info').hide();
+                
+                // Update the advance adjustment row to show 0 when unchecked
+                updateAdvanceRowInTable(0);
+            }
+        }
+
+        function updateAdvanceRowInTable(advance_amount) {
+            // Update the advance adjustment amount in the table row
+            var advanceRow = $('#advance-adjustment-row');
+            if (advanceRow.length > 0) {
+                advanceRow.find('#advance-adjustment-amount').text(advance_amount.toFixed(2));
+            }
+        }
+
         function loadInvoices(supplier_id){
             var v = supplier_id;
             var ch = $('#childsupplier').val();
@@ -147,6 +306,9 @@
 
             var payment_amount = parseFloat($('#pspayment').val()) || 0;
             if (supplier_id) {
+                // Load supplier advance balance first
+                loadSupplierAdvanceBalance(v);
+                
                 $.ajax({
                     url: '<?= admin_url('suppliers/pending_invoices?supplier_id=') ?>' + v,
                     type: 'POST',
@@ -231,6 +393,9 @@
                             // Advance payment = total amount entered - total invoice payments entered (not total due)
                             var advance_payment = original_payment_amount - total_paying;
                             
+                            // Store total invoice amount (total due) for advance calculation
+                            total_invoice_amount = total_due;
+                            
                             var newTr = $('<tr class="row"></tr>');
                                 tr_html = '<td colspan="1"><b>Totals:</b> </td>';
                                 tr_html += '<td><b>'+total_amt.toFixed(2)+'</b></td>';
@@ -239,10 +404,27 @@
                                 newTr.html(tr_html);
                                 newTr.appendTo('#poTable');
 
+                            // Add advance adjustment row (for settling with existing advance)
+                            if (supplier_advance_ledger_configured && current_advance_balance > 0) {
+                                var shortage = total_due - original_payment_amount;
+                                var is_checked = $('#settle-with-advance').is(':checked');
+                                var adjustable_amount = is_checked && shortage > 0 ? Math.min(shortage, current_advance_balance) : 0;
+                                
+                                var advanceAdjustTr = $('<tr id="advance-adjustment-row" class="row" style="background-color: #e3f2fd;"></tr>');
+                                var advance_adjust_html = '<td colspan="2"><b>Available Advance to Adjust:</b> <span style="color: #28a745;">' + current_advance_balance.toFixed(2) + '</span></td>';
+                                advance_adjust_html += '<td><label class="checkbox-inline" style="margin-top: 5px;"><input type="checkbox" id="settle-with-advance-table" style="margin-right: 5px;"> Settle with Advance</label></td>';
+                                advance_adjust_html += '<td><b id="advance-adjustment-amount">' + adjustable_amount.toFixed(2) + '</b></td>';
+                                advanceAdjustTr.html(advance_adjust_html);
+                                advanceAdjustTr.appendTo('#poTable');
+                                
+                                // Sync the checkbox states
+                                $('#settle-with-advance-table').prop('checked', is_checked);
+                            }
+
                             // Show advance payment row only if advance amount > 0 and not NaN
                             if (advance_payment > 0 && !isNaN(advance_payment)) {
                                 var advanceTr = $('<tr class="row advance-row" style="background-color: #f0f8ff;"></tr>');
-                                var advance_html = '<td colspan="3"><b>Advance Payment:</b></td>';
+                                var advance_html = '<td colspan="3"><b>Advance Payment (New):</b></td>';
                                 advance_html += '<td><b>'+advance_payment.toFixed(2)+'</b></td>';
                                 advanceTr.html(advance_html);
                                 advanceTr.appendTo('#poTable');
@@ -255,6 +437,9 @@
                                     errorTr.appendTo('#poTable');
                                 }
                             }
+                            
+                            // Update the settlement calculation
+                            updateAdvanceSettlementCalculation();
                         }
                     }
                 });
@@ -503,6 +688,30 @@
                             <div class="form-group">
                                 <?= lang('Payment Amount', 'pspayment'); ?>
                                 <?php echo form_input('payment_total', ($_POST['payment_amount'] ?? $_POST['payment_total']), 'class="form-control input-tip" id="pspayment"'); ?>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label><?= lang('Available Advance'); ?></label>
+                                <div id="supplier-advance-info" style="padding: 8px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
+                                    <span id="advance-balance">Please select a supplier</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4" style="display: none;">
+                            <div class="form-group">
+                                <label>&nbsp;</label><br>
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" id="settle-with-advance" name="settle_with_advance" value="1" disabled> 
+                                    Settle with Available Advance
+                                </label>
+                                <div id="advance-settlement-info" style="display:none; font-size:12px; color:#666; margin-top:5px;">
+                                    <div>Cash Payment: <span id="cash-payment-amount">0.00</span></div>
+                                    <div>Advance Settlement: <span id="advance-settlement-amount">0.00</span></div>
+                                    <div><strong>Total Payment: <span id="total-settlement-amount">0.00</span></strong></div>
+                                </div>
                             </div>
                         </div>
 
