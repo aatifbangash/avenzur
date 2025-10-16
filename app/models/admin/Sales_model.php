@@ -135,6 +135,31 @@ class Sales_model extends CI_Model
         ];
     }
 
+    public function addSaleLabel($sale_id, $number_of_cartons, $refrigirated_items){
+        $data = array();
+        $data['sale_id'] = $sale_id;
+        $data['number_of_cartons'] = $number_of_cartons;
+        $data['refrigerated_items'] = $refrigirated_items;
+        $data['created_by'] = $this->session->userdata('user_id');
+        $data['updated_by'] = $this->session->userdata('user_id');
+        $data['date_created'] = date('Y-m-d h:i:s');
+
+        $this->db->trans_start();
+        $this->db->insert('sale_labels', $data);
+        $label_id = $this->db->insert_id();
+
+        $this->db->update('sales', ['sale_status' => 'added_label', 'note' => 'label added'], ['id' => $sale_id]);
+
+        $this->db->trans_complete();
+
+        if ($this->db->trans_status() === false) {
+            log_message('error', 'An error occurred while adding the label (addSaleLabel: Sales_model.php)');
+            return false;
+        }
+
+        return $label_id; // Return the inserted label ID
+    }
+
     public function addDelivery($data = [])
     {
         if ($this->db->insert('deliveries', $data)) {
