@@ -43,7 +43,7 @@
     <!-- Header -->
     <div class="header">
         <h1>Purchase Request Details</h1>
-        <button id="" class="btn btn-primary" style="float:right; margin-top:-35px">Create PO</button>
+        <a href="<?= admin_url('purchase_order/add?action=create_po&id='.base64_encode($id)) ?>" id="" class="btn btn-primary" style="float:right; margin-top:-35px">Create PO</a>
     </div>
 
     <!-- Tabs -->
@@ -58,9 +58,9 @@
     <!-- Tab Content -->
     <div class="tab-content active" id="info">
         <table>
-            <tr><th>PR Number</th><td><?= $pr['number'] ?? 'N/A'; ?></td></tr>
-            <tr><th>Date</th><td><?= $pr['date'] ?? 'N/A'; ?></td></tr>
-            <tr><th>Status</th><td><?= $pr['status'] ?? 'Pending'; ?></td></tr>
+            <tr><th>PR Number</th><td><?= $requisition->pr_number ?? 'N/A'; ?></td></tr>
+            <tr><th>Date</th><td><?= $requisition->created_at ?? 'N/A'; ?></td></tr>
+            <tr><th>Status</th><td><?= $requisition->status ?? 'Pending'; ?></td></tr>
         </table>
     </div>
 
@@ -69,17 +69,15 @@
             <tr>
                 <th>Item</th>
                 <th>Quantity</th>
-                <th>Unit Price</th>
-                <th>Total</th>
+            
             </tr>
             <?php 
             //print_r($items);exit;
             foreach($items as $key => $item): ?>
             <tr>
-                <td><?= $item->name; ?></td>
+                <td><?= $item->product_name; ?></td>
                 <td><?= $item->quantity; ?></td>
-                <td><?= $item->unit_price; ?></td>
-                <td><?= $item->total; ?></td>
+         
             </tr>
             <?php endforeach; ?>
         </table>
@@ -88,8 +86,10 @@
     <div class="tab-content" id="logs">
         <div class="logs">
             <?php foreach($logs as $log): ?>
-                <p>[<?= $log['time']; ?>] <?= $log['action']; ?> by <?= $log['user']; ?></p>
+                <p>[<?= $log->created_at; ?>] <?= $log->action; ?> by user <?= $log->done_by_name; ?></p>
+
             <?php endforeach; ?>
+
         </div>
     </div>
 
@@ -97,43 +97,40 @@
         <ul>
             <?php 
 
-
-
             foreach($suppliers as $key => $supplier): ?>
-                <li><?= $supplier->name; ?> (<?= $supplier->email; ?>)</li>
+                <li><?= $supplier->name; ?> (<?= $supplier->id; ?>)</li>
             <?php endforeach; ?>
         </ul>
     </div>
 
       <div class="tab-content" id="send-supplier">
-         <?= form_open('admin/purchase_requisition/create', ['class' => 'needs-validation', 'novalidate' => true]); ?>
+         <?= form_open('admin/purchase_requisition/send_to_supplier', ['class' => 'needs-validation', 'novalidate' => true]); ?>
 
+         <input type="hidden" name="pr_id" value="<?= $id; ?>">
             <div class="row mb-3">
                  <div class="col-md-4">
-                    <?= form_label('supplier', 'supplier_id'); 
-                  $supplier_options = [];
-        foreach ($suppliers as $wh) {
-            $supplier_options[$wh->id] = $wh->name;
-        }
+                    <?= form_label('Supplier', 'supplier_id'); 
+                        $supplier_options = [];
+                        foreach ($suppliers as $wh) {
+                            $supplier_options[$wh->id] = $wh->name;
+                        }
                     ?>
-                    <?= form_dropdown('supplier_id', $supplier_options, set_value('warehouse_id'), ['class' => 'form-control', 'id' => 'warehouse_id']); ?>
-                </div>
-            
-
-                <div class="col-md-4">
-                    <?= form_label('Supplier Email', 'requested_by'); ?>
-                    <input type="text" name="supplier_email" class="form-control" 
-       value=""  />
+                    <?= form_multiselect(
+                        'supplier_id[]',           // name must be an array for multiple selection
+                        $supplier_options,         // options
+                        set_value('supplier_id[]'),// selected value(s)
+                        ['class' => 'form-control select2', 'id' => 'supplier_id', 'multiple' => 'multiple']
+                    ); ?>
                 </div>
 
-                
+               
             </div>
 
             <div class="row mb-3">
 
             <div class="col-md-4">
                     <?= form_label('Subject', 'subject'); ?>
-                    <input type="text" name="requested_by" class="form-control" 
+                    <input type="text" name="subject" class="form-control" 
        value=""  />
                 </div>
     </div>
