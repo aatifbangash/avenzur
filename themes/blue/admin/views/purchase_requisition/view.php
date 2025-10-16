@@ -43,7 +43,7 @@
     <!-- Header -->
     <div class="header">
         <h1>Purchase Request Details</h1>
-        <button id="" class="btn btn-primary" style="float:right; margin-top:-35px">Create PO</button>
+        <a href="<?= admin_url('purchase_order/add?action=create_po&id='.base64_encode($id)) ?>" id="" class="btn btn-primary" style="float:right; margin-top:-35px">Create PO</a>
     </div>
 
     <!-- Tabs -->
@@ -97,8 +97,6 @@
         <ul>
             <?php 
 
-
-
             foreach($suppliers as $key => $supplier): ?>
                 <li><?= $supplier->name; ?> (<?= $supplier->email; ?>)</li>
             <?php endforeach; ?>
@@ -106,34 +104,33 @@
     </div>
 
       <div class="tab-content" id="send-supplier">
-         <?= form_open('admin/purchase_requisition/create', ['class' => 'needs-validation', 'novalidate' => true]); ?>
+         <?= form_open('admin/purchase_requisition/send_to_supplier', ['class' => 'needs-validation', 'novalidate' => true]); ?>
 
+         <input type="hidden" name="pr_id" value="<?= $id; ?>">
             <div class="row mb-3">
                  <div class="col-md-4">
-                    <?= form_label('supplier', 'supplier_id'); 
-                  $supplier_options = [];
-        foreach ($suppliers as $wh) {
-            $supplier_options[$wh->id] = $wh->name;
-        }
+                    <?= form_label('Supplier', 'supplier_id'); 
+                        $supplier_options = [];
+                        foreach ($suppliers as $wh) {
+                            $supplier_options[$wh->id] = $wh->name;
+                        }
                     ?>
-                    <?= form_dropdown('supplier_id', $supplier_options, set_value('warehouse_id'), ['class' => 'form-control', 'id' => 'warehouse_id']); ?>
-                </div>
-            
-
-                <div class="col-md-4">
-                    <?= form_label('Supplier Email', 'requested_by'); ?>
-                    <input type="text" name="supplier_email" class="form-control" 
-       value=""  />
+                    <?= form_multiselect(
+                        'supplier_id[]',           // name must be an array for multiple selection
+                        $supplier_options,         // options
+                        set_value('supplier_id[]'),// selected value(s)
+                        ['class' => 'form-control select2', 'id' => 'supplier_id', 'multiple' => 'multiple']
+                    ); ?>
                 </div>
 
-                
+               
             </div>
 
             <div class="row mb-3">
 
             <div class="col-md-4">
                     <?= form_label('Subject', 'subject'); ?>
-                    <input type="text" name="requested_by" class="form-control" 
+                    <input type="text" name="subject" class="form-control" 
        value=""  />
                 </div>
     </div>
