@@ -5,9 +5,9 @@ use Mpdf\Mpdf;
 class Purchase_requisition extends MY_Controller {
 
     public function __construct()
-    {
-        // error_reporting(E_ALL);        // Report all errors
-        // ini_set('display_errors', 1); 
+    { 
+        //error_reporting(E_ALL);        // Report all errors
+        //ini_set('display_errors', 1); 
         parent::__construct();
         $this->load->admin_model('users_model');
         $this->load->admin_model('pr_audit_logs_model');
@@ -294,7 +294,7 @@ public function download_pdf($id)
 }
 
 
-    public function search_product()
+public function search_product()
     {
         $query = $this->input->get('q');
         $this->db->like('name', $query);
@@ -303,55 +303,70 @@ public function download_pdf($id)
         echo json_encode($products);
     }
 
-    public function send_to_supplier($pr_id) {
-    $this->load->library('email');
-
-    $supplier_id = $this->input->post('supplier_id');
-    $supplier_email = $this->input->post('supplier_email');
-    $email_body = $this->input->post('email_body');
-
-    // Handle file upload
-    if (!empty($_FILES['pr_pdf']['name'])) {
-        $config['upload_path'] = './uploads/pr_pdfs/';
-        $config['allowed_types'] = 'pdf';
-        $config['file_name'] = 'PR_'.$pr_id.'_'.time();
-        $this->load->library('upload', $config);
-
-        if (!$this->upload->do_upload('pr_pdf')) {
-            $error = $this->upload->display_errors();
-            $this->session->set_flashdata('error', $error);
-            redirect('pr_controller/view/'.$pr_id);
-        }
-        $pdf_file = $this->upload->data('full_path');
-    }
+public function send_to_supplier() {
 
     // Save who sent PR to which supplier
-    $this->db->insert('pr_supplier', [
-        'pr_id' => $pr_id,
-        'supplier_id' => $supplier_id,
-        'sent_by' => $this->session->userdata('user_id'),
-        'sent_at' => date('Y-m-d H:i:s'),
-        'email_body' => $email_body,
-        'pdf_path' => isset($pdf_file) ? $pdf_file : null
-    ]);
+    // $this->db->insert('pr_supplier', [
+    //     'pr_id' => $pr_id,
+    //     'supplier_id' => $supplier_id,
+    //     'sent_by' => $this->session->userdata('user_id'),
+    //     'sent_at' => date('Y-m-d H:i:s'),
+    //     'email_body' => $email_body,
+    //     'pdf_path' => isset($pdf_file) ? $pdf_file : null
+    // ]);
+    $supplier_ids = $this->input->post('supplier_id'); // email or phone
+    $subject = $this->input->post('subject');
+    $message = $this->input->post('remarks');
+    $pr_id = $this->input->post('pr_id');
+    $attachment = FCPATH . 'assets/uploads/pr_pdfs/PR_' . $pr_id . '.pdf'; 
 
-    // Send Email
-    $this->email->from('your@email.com', 'Your Company');
-    $this->email->to($supplier_email);
-    $this->email->subject('Purchase Request #'.$pr_id);
-    $this->email->message($email_body);
+    if (!file_exists($attachment)) {
+        $this->session->set_flashdata('error', 'PDF attachment not found. Please regenerate it first.');
+        admin_redirect('purchase_requisition/view/' . $pr_id);
+   }
 
-    if (isset($pdf_file)) {
-        $this->email->attach($pdf_file);
+   foreach ($supplier_ids as $supplier_id) {
+    // Fetch supplier details
+    $supplier = $this->purchase_requisition_model->getSupplierById($supplier_id);
+    if ($supplier && !empty($supplier->email)) {
+
+        $email_to = $supplier->email;
+        $email_subject = $subject ?: 'Purchase Requisition - ' . $pr_id;
+        $email_message = "
+            Dear {$supplier->name},<br><br>
+            {$message}<br><br>
+            Please find attached the Purchase Requisition (PR #{$pr_id}).<br><br>
+            Regards,<br>
+            Procurement Team
+        ";
+
+        // Send email later
+        // $this->sma->send_email(
+        //     $email_to, 
+        //     $email_subject, 
+        //     $email_message, 
+        //     null,                // from
+        //     null,                // from name
+        //     $attachment          // attachment
+        // );
+
+        // Log activity (optional)
+        $logData = [
+            'pr_id' => $pr_id,
+            'supplier_id' => $supplier_id,
+            'sent_by' => $this->session->userdata('user_id'),
+            'sent_at' => date('Y-m-d H:i:s'),
+            'email_body' => $email_message,
+            'pdf_path' => $attachment
+        ];
+        $this->purchase_requisition_model->log_pr_sent($logData);
     }
+}
 
-    if ($this->email->send()) {
-        $this->session->set_flashdata('success', 'PR sent to supplier successfully.');
-    } else {
-        $this->session->set_flashdata('error', 'Email sending failed.');
-    }
-
-    redirect('pr_controller/view/'.$pr_id);
+ 
+admin_redirect('purchase_requisition/view/' . $pr_id);
+    
+    
 }
 
 

@@ -53,7 +53,13 @@ class Purchase_requisition_model extends CI_Model {
     {
         $req = $this->db->get_where('purchase_requisitions', ['id' => $id])->row();
         if ($req) {
-            $req->items = $this->db->get_where('purchase_requisition_items', ['requisition_id' => $id])->result();
+            //$req->items = $this->db->get_where('purchase_requisition_items', ['requisition_id' => $id])->result();
+            $this->db->select('pri.*, p.name as product_name, p.code as product_code , p.cost, p.price, p.tax_rate as tax_rate');
+            $this->db->from('purchase_requisition_items as pri');
+            $this->db->join('products as p', 'p.id = pri.product_id', 'left');
+            $this->db->where('pri.requisition_id', $id);
+            $req->items = $this->db->get()->result();
+
         }
         return $req;
     }
@@ -91,4 +97,16 @@ class Purchase_requisition_model extends CI_Model {
         ->where('pri.requisition_id', $requisition_id)
         ->get()->result();
 }
+
+    public function getSupplierById($id)
+    {
+        return $this->db->get_where('companies', ['id' => $id])->row();
+    }
+
+    public function log_pr_sent($data)
+    {
+        return $this->db->insert('purchase_requisition_supplier', $data);
+    }
+
+
 }

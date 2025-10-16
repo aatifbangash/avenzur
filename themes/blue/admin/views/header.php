@@ -522,6 +522,31 @@
                                             <span class="text"> <?= lang('create_purchase_requisition'); ?></span>
                                         </a>
                                     </li>
+                                </ul>    
+                            </li>
+
+                             <li class="mm_purchase_order">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-star"></i>
+                                    <span class="text"> <?= lang('Purchase Order'); ?>
+                                    </span> <span class="chevron closed"></span>
+                                </a>
+                                <ul>
+                                    <li id="purchases_index">
+                                        <a class="submenu" href="<?= admin_url('purchase_order'); ?>">
+                                            <i class="fa fa-star"></i>
+                                            <span class="text"> <?= lang('list_purchases_order'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="purchases_add">
+                                        <a class="submenu" href="<?= admin_url('purchase_order/save'); ?>">
+                                            <i class="fa fa-plus-circle"></i>
+                                            <span class="text"> <?= lang('create_purchase_order'); ?></span>
+                                        </a>
+                                    </li>
+                                </ul>    
+                            </li>
+                        
 
                                     <!-- Purchases -->
                                     <li id="purchases_index">
