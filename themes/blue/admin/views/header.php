@@ -524,6 +524,7 @@
                                     </li>
                                 </ul>    
                             </li>
+                      
 
                              <li class="mm_purchase_order">
                                 <a class="dropmenu" href="#">
@@ -622,7 +623,7 @@
                                     </li>-->
 
 
-                                </ul>
+                                
                             </li>
 
                             <li class="mm_sales <?= strtolower($this->router->fetch_method()) == 'sales' ? 'mm_pos' : '' ?>">
