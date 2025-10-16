@@ -374,14 +374,23 @@
                             </a>
                         </li>
 
-                      <?php  if ($Owner || $Admin ) { ?>
+                      <?php  
+                      // ========================================
+                      // ROLE-BASED MENU STRUCTURE
+                      // Roles: Admin, Accounts & Finance, Warehouse, Operations, Sales, Customer Management, Pharmacist
+                      // ========================================
+                      
+                      // WAREHOUSE MANAGEMENT ROLE
+                      if ($Owner || $Admin || (isset($GP['warehouse_manager']) && $GP['warehouse_manager'])) { 
+                      ?>
                             <li class="mm_products">
                                 <a class="dropmenu" href="#">
                                     <i class="fa fa-barcode"></i>
-                                    <span class="text"> <?= lang('products'); ?> </span>
+                                    <span class="text"> <?= lang('Warehouse Management'); ?> </span>
                                     <span class="chevron closed"></span>
                                 </a>
                                 <ul>
+                                    <!-- Products Section -->
                                     <li id="products_index">
                                         <a class="submenu" href="<?= admin_url('products'); ?>">
                                             <i class="fa fa-barcode"></i>
@@ -418,29 +427,89 @@
                                             <span class="text"> <?= lang('add_adjustment'); ?></span>
                                         </a>
                                     </li>
-                                    <!--<li id="products_stock_counts">
-                                        <a class="submenu" href="<?= admin_url('products/stock_counts'); ?>">
-                                            <i class="fa fa-list-ol"></i>
-                                            <span class="text"> <?= lang('stock_counts'); ?></span>
+
+                                    <!-- Transfers Section -->
+                                    <li id="transfers_index">
+                                        <a class="submenu" href="<?= admin_url('transfers'); ?>">
+                                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('list_transfers'); ?></span>
                                         </a>
                                     </li>
-                                    <li id="products_count_stock">
-                                        <a class="submenu" href="<?= admin_url('products/count_stock'); ?>">
-                                            <i class="fa fa-plus-circle"></i>
-                                            <span class="text"> <?= lang('count_stock'); ?></span>
+                                    <li id="transfers_add">
+                                        <a class="submenu" href="<?= admin_url('transfers/add'); ?>">
+                                            <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_transfer'); ?></span>
                                         </a>
-                                    </li>-->
+                                    </li>
+
+                                    <!-- Stock Requests -->
+                                    <li id="stock_requests_index">
+                                        <a class="submenu" href="<?= admin_url('stock_request/inventory_check'); ?>">
+                                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('Inventory Check'); ?></span>
+                                        </a>
+                                    </li>
+                                    <?php if($Owner || $Admin || (isset($GP['stock_request_view']) && $GP['stock_request_view'])){ ?>
+                                    <li id="stock_requests_index">
+                                        <a class="submenu" href="<?= admin_url('stock_request/current_pr'); ?>">
+                                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('Opened PR'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="stock_requests_index">
+                                        <a class="submenu" href="<?= admin_url('stock_request/purchase_requests'); ?>">
+                                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('List Purchase Requests'); ?></span>
+                                        </a>
+                                    </li>
+                                    <?php } ?>
+
+                                    <!-- Warehouse Reports -->
+                                    <li class="divider"></li>
+                                    <li class="mm_submenu_header">
+                                        <span class="text" style="font-weight:bold; padding-left:10px;"><?= lang('Inventory Reports'); ?></span>
+                                    </li>
+                                    <li id="reports_item_movement_report">
+                                        <a href="<?= admin_url('reports/item_movement_report') ?>">
+                                            <i class="fa fa-bar-chart-o"></i><span class="text"> <?= lang('item_movement_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_inventory_trial_balance_report">
+                                        <a href="<?= admin_url('reports/inventory_trial_balance') ?>">
+                                            <i class="fa fa-bar-chart-o"></i><span class="text"> <?= lang('inventory_trial_balance'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_stocks">
+                                        <a href="<?= admin_url('reports/stock') ?>">
+                                            <i class="fa fa-bar-chart-o"></i><span class="text"> <?= lang('Stock_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_stocks">
+                                        <a href="<?= admin_url('reports/supplier_stock') ?>">
+                                            <i class="fa fa-bar-chart-o"></i><span class="text"> <?= lang('Supplier Stock Report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_stocks">
+                                        <a href="<?= admin_url('reports/stock') ?>">
+                                            <i class="fa fa-bar-chart-o"></i><span class="text"> <?= lang('Inventory Ageing Report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_items_monthly_transfer">
+                                        <a href="<?= admin_url('reports/transfer_items_monthly_wise') ?>">
+                                            <i class="fa fa-bar-chart-o"></i><span class="text"> <?= lang('Transfer Items Report'); ?></span>
+                                        </a>
+                                    </li> 
                                 </ul>
                             </li>
+                      <?php } ?>
 
-
-                            <li class="mm_purchase_requisition">
+                      <?php  
+                      // OPERATIONS ROLE (Purchases, Purchase Requisition, Returns, Suppliers)
+                      if ($Owner || $Admin || (isset($GP['operations_manager']) && $GP['operations_manager'])) { 
+                      ?>
+                            <li class="mm_purchases">
                                 <a class="dropmenu" href="#">
                                     <i class="fa fa-star"></i>
-                                    <span class="text"> <?= lang('Purchase Requisition'); ?>
-                                    </span> <span class="chevron closed"></span>
+                                    <span class="text"> <?= lang('Operations'); ?> </span>
+                                    <span class="chevron closed"></span>
                                 </a>
                                 <ul>
+                                    <!-- Purchase Requisition -->
                                     <li id="purchases_index">
                                         <a class="submenu" href="<?= admin_url('purchase_requisition'); ?>">
                                             <i class="fa fa-star"></i>
@@ -453,17 +522,8 @@
                                             <span class="text"> <?= lang('create_purchase_requisition'); ?></span>
                                         </a>
                                     </li>
-                                </ul>    
-                            </li>
-                        
 
-                            <li class="mm_purchases">
-                                <a class="dropmenu" href="#">
-                                    <i class="fa fa-star"></i>
-                                    <span class="text"> <?= lang('purchases'); ?>
-                                    </span> <span class="chevron closed"></span>
-                                </a>
-                                <ul>
+                                    <!-- Purchases -->
                                     <li id="purchases_index">
                                         <a class="submenu" href="<?= admin_url('purchases'); ?>">
                                             <i class="fa fa-star"></i>
