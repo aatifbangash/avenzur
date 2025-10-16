@@ -9,6 +9,8 @@ class Purchase_requisition extends MY_Controller {
         // error_reporting(E_ALL);        // Report all errors
         // ini_set('display_errors', 1); 
         parent::__construct();
+        $this->load->admin_model('users_model');
+        $this->load->admin_model('pr_audit_logs_model');
         $this->load->admin_model('purchase_requisition_model');
     }
 
@@ -174,7 +176,8 @@ public function save($id = null)
 
         } else {
             // For create
-            $data['pr_number'] = 'PR-' . time();
+            $pr_number_temp = 'PR-' . time();
+            $data['pr_number'] = $pr_number_temp;
             $data['requested_by'] = $this->session->userdata('user_id');
             $data['status'] = 'submitted';
             $items = $this->input->post('items');
@@ -182,6 +185,16 @@ public function save($id = null)
             $id = $this->purchase_requisition_model->create_requisition($data, $items);
 
             if ($id) {
+                 $user_id = $this->session->userdata('user_id') ;
+
+            $log_result = $this->pr_audit_logs_model->log($pr_number_temp, 'created', $user_id);
+
+            if ($log_result) {
+                log_message('info', 'Audit log created successfully for PR: ' . $pr_number_temp . ' by user: ' . $user_id);
+            } else {
+                log_message('error', 'Failed to create audit log for PR: ' . $pr_number_temp . ' by user: ' . $user_id);
+            }
+
                 $this->session->set_flashdata('message', 'Purchase Requisition created successfully!');
                 admin_redirect('purchase_requisition');
             } else {
@@ -199,6 +212,7 @@ public function save($id = null)
         // ini_set('display_errors', 1); 
         $this->data['requisition'] = $this->purchase_requisition_model->get_by_id($id);
         $this->data['items'] = $this->purchase_requisition_model->get_items($id);
+        
     } else {
         $this->data['requisition'] = null;
         $this->data['items'] = [];
@@ -223,12 +237,18 @@ public function save($id = null)
         // ini_set('display_errors', 1); 
         $this->data['items'] = $this->purchase_requisition_model->get_items($id);
     
-        $this->data['suppliers'] = $this->site->getAllParentCompanies('supplier');
-        //$this->data['logs'] = $this->purchase_requisition_model->get_audit_logs($id);
+        $this->data['suppliers'] = $this->site->getParentCompanyByGroupAndId('supplier', 63);
+// $this->data['logs'] = $this->pr_audit_logs_model->get_by_pr_number($this->data['requisition']->pr_number);
+$logs = $this->pr_audit_logs_model->get_by_pr_number($this->data['requisition']->pr_number);
+
+
+
+$this->data['logs'] = $logs;
         $this->data['id'] = $id;
         //print_r( $this->data['suppliers']); exit;
         $meta = ['page_title' => 'View Requisition', 'bc' => [['link' => admin_url('purchase_requisition'), 'page' => 'Purchase Requisitions'], ['link' => '#', 'page' => 'View Requisition']]];
         $this->page_construct('purchase_requisition/view', $meta, $this->data);
+
     }
 
     /**
