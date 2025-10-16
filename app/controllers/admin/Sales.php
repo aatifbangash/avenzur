@@ -468,7 +468,6 @@ class Sales extends MY_Controller
 
             $products[] = ($product);
         }
-        exit;
 
         if (empty($products)) {
             $this->form_validation->set_rules('product', lang('order_items'), 'required');
@@ -3652,7 +3651,7 @@ class Sales extends MY_Controller
             $this->datatables->where('payment_status !=', 'paid')->where('attachment !=', null);
         }
         $this->datatables->where('pos !=', 1); // ->where('sale_status !=', 'returned');
-        if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
+        if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->Admin && !$this->GP['sales-index']) {
             $this->datatables->where('created_by', $this->session->userdata('user_id'));
         } elseif ($this->Customer) {
             $this->datatables->where('customer_id', $this->session->userdata('user_id'));
@@ -3782,9 +3781,10 @@ class Sales extends MY_Controller
         }
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $inv                 = $this->sales_model->getInvoiceByID($id);
-        if (!$this->session->userdata('view_right')) {
+        if (!$this->GP['sales-index']) {
             $this->sma->view_rights($inv->created_by, true);
         }
+
         $this->data['customer']    = $this->site->getCompanyByID($inv->customer_id);
         $this->data['biller']      = $this->site->getCompanyByID($inv->biller_id);
         $this->data['created_by']  = $this->site->getUser($inv->created_by);
@@ -5083,6 +5083,302 @@ if($inv->warning_note != ""){
         }
     }
 
+    public function add_label($id = null){
+        $this->sma->checkPermissions('index', true);
+
+        $this->form_validation->set_rules('number_of_cartons', lang('number_of_cartons'), 'required');
+        $this->form_validation->set_rules('refrigirated_items', lang('refrigirated_items'), 'required');
+        $this->form_validation->set_rules('sale_id', lang('sale_id'), 'required');
+
+        if ($this->form_validation->run() == true) {
+            $sale_id = $this->input->post('sale_id');
+            $number_of_cartons = $this->input->post('number_of_cartons');
+            $refrigirated_items = $this->input->post('refrigirated_items');
+
+            if($label_id = $this->sales_model->addSaleLabel($sale_id, $number_of_cartons, $refrigirated_items)){
+                $this->session->set_flashdata('message', lang('label_added_successfully'));
+                admin_redirect('sales/view/'.$sale_id);
+            }else{
+                $this->session->set_flashdata('error', lang('failed adding label'));
+                admin_redirect('sales/view/'.$sale_id);
+            }
+
+        }else{
+            if ($this->input->get('id')) {
+                $id = $this->input->get('id');
+            }
+            $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+            $inv                 = $this->sales_model->getInvoiceByID($id);
+            if (!$this->GP['sales-index']) {
+                $this->sma->view_rights($inv->created_by, true);
+            }
+            $this->data['sale_id'] = $id;
+            $this->load->view($this->theme . 'sales/add_label', $this->data);
+        }
+    }
+
+    public function verify_label($id = null){
+        $this->sma->checkPermissions();
+
+        // ----- CONSTANT TEST DATA -----
+        $invoice_no    = '37412';
+        $customer_name = 'maimonah alkhair medical pharmacy - makkah';
+        $region        = 'Makkah';
+        $region_no     = '2';
+        $num_cartons   = 2;
+
+        // <img src="data:image/png;base64,' . $png_base64 . '" width="50" height="50" />
+        // Logo: inline base64 (place your logo at assets/uploads/logos/label-logo.png)
+        $logo_file = FCPATH . 'assets/uploads/logos/label-logo.png';
+        $logo_img  = '';
+        if (is_file($logo_file)) {
+            $logo_img = 'data:image/png;base64,' . base64_encode(file_get_contents($logo_file));
+        } else {
+            // Fallback to your existing logo path, or leave empty
+            $fallback = FCPATH . 'assets/uploads/logos/logo.png';
+            if (is_file($fallback)) {
+                $logo_img = 'data:image/png;base64,' . base64_encode(file_get_contents($fallback));
+            }
+        }
+
+        // Barcode (server-side route like elsewhere in your app)
+        $barcode_url = admin_url('misc/barcode/' . $this->sma->base64url_encode($invoice_no) . '/code128/60/0/1');
+
+        // Print date
+        $print_dt = $this->sma->hrld(date('Y-m-d H:i:s'));
+
+        $payload = [
+            'seller' => '$biller->company && $biller->company != '-' ? $biller->company : $biller->name',
+            'vat_no' => '$biller->vat_no ?: $biller->get_no',
+            'date' => '$inv->date',
+            'grand_total' => '$return_sale ? ($inv->grand_total + $return_sale->grand_total) : $inv->grand_total',
+            'total_tax_amount' => '$return_sale ? ($inv->total_tax + $return_sale->total_tax) : $inv->total_tax',
+        ];
+
+        // Convert to JSON directly
+        $qrtext = json_encode($payload);
+        $qr_code = $this->sma->qrcodepng('text', $qrtext, 2, $level = 'H', $sq = null, $svg = false);
+
+        $png_base64 = base64_encode($qr_code);
+        $mpdf = new Mpdf([
+            'mode'         => 'utf-8',
+            'format'        => [150, 105], 
+            'margin_top'    => 6,
+            'margin_right'  => 6,
+            'margin_bottom' => 6,
+            'margin_left'   => 6,
+        ]);
+
+        // Minimal CSS for label
+        $css = "";
+
+        for ($i = 1; $i <= $num_cartons; $i++) {
+            // Per-label HTML (one page per carton)
+            $html = $css . '<!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body {
+                        margin: 0;
+                        padding: 20px;
+                        background: #2a2a2a;
+                        font-family: Arial, sans-serif;
+                    }
+                    
+                    .ticket {
+                        width: 500px;
+                        height: 300px;
+                        background: white;
+                        padding: 20px;
+                        position: relative;
+                        direction: rtl;
+                    }
+                    
+                    .header {
+                        width: 100%;
+                        margin-bottom: 15px;
+                    }
+                    
+                    .header table {
+                        width: 100%;
+                        border-collapse: collapse;
+                    }
+                    
+                    .logo {
+                        width: 60px;
+                        height: 60px;
+                        background: #1a1a1a;
+                    }
+                    
+                    .ticket-number {
+                        font-size: 36px;
+                        font-weight: bold;
+                        letter-spacing: 4px;
+                        background-color: #1a1a1a;
+                        color: white;
+                        padding: 4px 8px;
+                        text-align: center;
+                    }
+                    
+                    .info-section {
+                        margin: 20px 0;
+                        text-align: center;
+                    }
+                    .info-section-below {
+                        margin: 20px 0;
+                        width: 100%;
+                    }
+                    
+                    .info-section-below table {
+                        width: 100%;
+                        border-collapse: collapse;
+                    }
+                    
+                    .value {
+                        font-weight: bold;
+                        font-size: 28px;
+                        text-align: center;
+                    }
+                    
+                    .big-display {
+                        margin: 10px 0;
+                        text-align: center;
+                    }
+                    
+                    .big-display table {
+                        margin: 0 auto;
+                        border-collapse: collapse;
+                    }
+                    
+                    .digit-box {
+                        width: 80px;
+                        height: 40px;
+                        background: #1a1a1a;
+                        color: white;
+                        font-size: 30px;
+                        font-weight: bold;
+                        text-align: center;
+                        vertical-align: middle;
+                        padding: 5px;
+                    }
+                    .digit-box-text {
+                        color: black;
+                        font-size: 30px;
+                        font-weight: bold;
+                        text-align: center;
+                        vertical-align: middle;
+                        padding: 5px 10px;
+                    }
+                    
+                    .of-label {
+                        font-size: 24px;
+                        font-weight: bold;
+                        text-align: center;
+                        vertical-align: middle;
+                        padding: 0 10px;
+                    }
+                    
+                    .qr-code {
+                        width: 60px;
+                        height: 60px;
+                        background: #1a1a1a;
+                        color: white;
+                        font-size: 8px;
+                        text-align: center;
+                        vertical-align: middle;
+                        margin: 0 0 0 40px;
+                    }
+                    
+                    .datetime {
+                        text-align: center;
+                        font-size: 12px;
+                    }
+                    .region-label {
+                        font-size: 22px;
+                        text-align: center;
+                    }
+                    
+                    .spacer {
+                        width: 68px;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="ticket">
+                    <div class="header">
+                        <table>
+                            <tr>
+                                <td style="width: 60px;"></td>
+                                <td style="text-align: center;">
+                                    <div class="ticket-number">37412</div>
+                                </td>
+                                <td style="width: 60px; margin-right: 20px;"></td>
+                                <td  >
+                                    <img src="https://placehold.co/100x40/png"/>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div class="info-section">
+                        <div class="value">صيدلية ميمونة الخير الطبية - مكة</div>
+                    </div>
+                    
+                    <div class="big-display">
+                        <table>
+                            <tr>
+                                <td class="digit-box-text">عدد كرتون</td>
+                                <td class="digit-box">1</td>
+                                <td class="of-label">OF</td>
+                                <td class="digit-box">1</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div class="big-display" style="margin-right:0px !important">
+                        <table>
+                            <tr >
+                                <td class="digit-box-text">ربطة ثلاجة</td>
+                                <td class="digit-box">0</td>
+                                <td class="spacer"></td>
+                                <td class="spacer"></td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div class="info-section-below">
+                        <table>
+                            <tr>
+                                <td style="width: 100px; vertical-align: bottom;">
+                                    <img src="data:image/png;base64,' . $png_base64 . '" width="80" height="80" />
+                                </td>
+                                <td class="spacer"></td>
+                                <td class="spacer"></td>
+                                <td class="spacer"></td>
+                                <td style="text-align: center; vertical-align: bottom;">
+                                    <div class="region-label">مكة المكرمة     2</div>
+                                    <div class="datetime">12/10/25 4:52 PM</div>
+                                </td>
+                                <td style="width: 100px;"></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </body>
+            </html>
+            ';
+
+            $mpdf->WriteHTML($html);
+            if ($i < $num_cartons) {
+                $mpdf->AddPage();
+            }
+        }
+
+        $fname = 'test_labels_' . str_replace('/', '_', $invoice_no) . '_x' . $num_cartons . '.pdf';
+        $mpdf->Output($fname, 'I'); // download
+    }
+
     public function view($id = null)
     {
         $this->sma->checkPermissions('index');
@@ -5093,7 +5389,7 @@ if($inv->warning_note != ""){
         }
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $inv                 = $this->sales_model->getInvoiceByID($id);
-        if (!$this->session->userdata('view_right')) {
+        if (!$this->GP['sales-index']) {
             $this->sma->view_rights($inv->created_by);
         }
         $this->data['barcode']     = "<img src='" . admin_url('products/gen_barcode/' . $inv->reference_no) . "' alt='" . $inv->reference_no . "' class='pull-left' />";
@@ -5113,7 +5409,7 @@ if($inv->warning_note != ""){
 
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('sales'), 'page' => lang('sales')], ['link' => '#', 'page' => lang('view')]];
         $meta = ['page_title' => lang('view_sales_details'), 'bc' => $bc];
-        $this->page_construct('sales/view', $meta, $this->data);
+        $this->page_construct('sales/view_new', $meta, $this->data);
     }
 
     public function view_delivery($id = null)
