@@ -185,6 +185,13 @@
 
                         <div class="col-md-4">
                             <div class="form-group">
+                                <?= lang('VAT on Bank Charges (15%)', 'psbankchargesvat'); ?>
+                                <?php echo form_input('bank_charge_vat', ($payment_ref->bank_charge_vat ?? 0), 'class="form-control input-tip" readonly id="psbankchargesvat"'); ?>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
                                 <?= lang('Note', 'psnote'); ?>
                                 <?php echo form_input('note', ($payment_ref->note ?? $payment_ref->note), 'class="form-control input-tip" readonly id="psnote"'); ?>
                             </div>

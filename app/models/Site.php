@@ -401,6 +401,19 @@ class Site extends CI_Model
         }
         return false;
     }
+    public function getParentCompanyByGroupAndId($group_name, $id)
+{
+    $this->db->where('group_name', $group_name);
+    $this->db->where('id', $id);
+    $q = $this->db->get('companies');
+
+    if ($q->num_rows() > 0) {
+        return $q->row(); // single record since id is unique
+    }
+
+    return false;
+}
+
 
     public function getAllChildCompanies($group_name)
     {
@@ -500,7 +513,7 @@ class Site extends CI_Model
 
     public function getMainWarehouse()
     {
-        $q = $this->db->get_where('warehouses', ['warehouse_type' => 'warehouse', 'goods_in_transit' => 0]);
+        $q = $this->db->get_where('warehouses', ['is_main' => 1]);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;

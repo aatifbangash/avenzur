@@ -1606,15 +1606,47 @@ class Products_model extends CI_Model
         return false;
     }
 
+     public function check_inventory($warehouse_id, $item_id, $item_batchno, $item_expiry, $item_quantity, $avz_code){
+        $this->db->select("im.net_unit_sale, 
+                            im.net_unit_cost, 
+                            im.real_unit_cost,
+                            im.real_unit_sale,
+                            im.customer_id,
+                            im.product_id,
+                            im.batch_number as batchno, 
+                            im.expiry_date as expiry,
+                            im.avz_item_code,
+                            (SUM(im.quantity)) AS total_quantity", false);
+            $this->db->from('sma_inventory_movements im');
+            $this->db->where('im.location_id', $warehouse_id);
+            $this->db->where('im.product_id', $item_id);
+            $this->db->where('im.batch_number', $item_batchno);
+            $this->db->where('im.expiry_date', $item_expiry);
+            if($avz_code != '' && $avz_code != 'null'){
+                $this->db->where('im.avz_item_code', $avz_code);
+            }
+            $this->db->group_by(['im.product_id', 'im.batch_number', 'im.expiry_date']);
+            $this->db->having('total_quantity >=', $item_quantity);
+            $query = $this->db->get();
+
+        if ($query->num_rows() > 0) {
+            $rows = $query->result();
+            return $rows[0];
+        }else{
+            return false;
+        }
+    }
+
     public function getAVZItemCodeDetails()
     {
         $item_id = $this->input->get('item_id');
         $warehouse_id = $this->input->get('warehouse_id'); // Optionally filter by warehouse if needed
         $customer_id = $this->input->get('customer_id');
+        $quote_id = $this->input->get('quote_id');
         //echo json_encode(['status' => 'error', 'message' => $customer_id.'-'.$item_id.'-'.$warehouse_id]);
         // return;
         // Validate that avz_item_code is provided
-    if (!$item_id && !$this->input->get('purchase_id') ) {
+    if (!$item_id && !$this->input->get('purchase_id') && !$quote_id) {
             echo json_encode(['status' => 'error', 'message' => 'No item code provided']);
             return;
         }
@@ -1691,6 +1723,41 @@ AND im_summary.total_quantity > 0";
             $query = $this->db->query($sql);
             
             //echo $this->db->last_query();exit;
+        } else if($quote_id){
+            $this->db->select("im.net_unit_sale, 
+                            im.net_unit_cost, 
+                            im.real_unit_cost,
+                            im.real_unit_sale,
+                            im.customer_id,
+                            im.product_id,
+                            pr.name as product_name, im.batch_number as batchno, im.expiry_date as expiry,
+                            pr.tax_rate, pr.type, pr.unit, pr.code as product_code, im.avz_item_code,
+                            (SUM(CASE WHEN im.type = 'customer_return' THEN -1*im.quantity ELSE 0 END) - SUM(CASE WHEN im.type IN ('sale','pos') THEN im.quantity ELSE 0 END) ) AS total_quantity", false);
+            $this->db->from('sma_inventory_movements im');
+            $this->db->join('sma_products pr', 'pr.id = im.product_id', 'inner');
+            $this->db->where('im.location_id', $warehouse_id);
+            $this->db->where('im.product_id', $item_id);
+            //$this->db->where('im.customer_id', $customer_id);
+            $this->db->group_by(['im.avz_item_code', 'im.batch_number', 'im.expiry_date']);
+            $this->db->having('total_quantity !=', 0);
+            $query = $this->db->get();
+
+            //echo $this->db->last_query();exit;
+            
+            if ($query->num_rows() <= 0) {
+                $this->db->select("pr.price as net_unit_sale, 
+                                pr.cost as net_unit_cost, 
+                                pr.cost as real_unit_cost,
+                                pr.id as product_id,
+                                pr.name as product_name, im.batch_number as batchno, im.expiry_date as expiry,
+                                SUM(IFNULL(im.quantity, 0)) as total_quantity,
+                                pr.tax_rate, pr.type, pr.unit, pr.code as product_code, im.avz_item_code", false);
+                $this->db->from('sma_products pr');
+                $this->db->join('sma_inventory_movements im', 'im.product_id = pr.id', 'left');
+                $this->db->where('pr.id', $item_id);
+                $this->db->group_by(['im.avz_item_code', 'im.batch_number', 'im.expiry_date']);
+                $query = $this->db->get();
+            }
         }  else {
             /*$this->db->select('pi.avz_item_code, pi.product_code, im.net_unit_sale, im.net_unit_cost, im.real_unit_cost, pr.tax_rate, pr.type, pr.unit, p.supplier_id, p.supplier, pi.product_id, pi.product_name, pi.batchno, pi.expiry, SUM(IFNULL(im.quantity, 0)) as total_quantity');
             $this->db->from('sma_purchase_items pi');

@@ -2888,6 +2888,9 @@ class system_settings extends MY_Controller
         $this->form_validation->set_rules('bank_fund_cash_ledger', lang('Bank Fund Cash Ledger'), 'trim|numeric|required');
         $this->form_validation->set_rules('bank_fees_ledger', lang('Bank Fees Ledger'), 'trim|numeric|required');
         $this->form_validation->set_rules('bank_checking_account_ledger', lang('Bank Checking Account Ledger'), 'trim|numeric|required');
+        $this->form_validation->set_rules('supplier_advance_ledger', lang('Supplier Advance Ledger'), 'trim|numeric|required');
+        $this->form_validation->set_rules('customer_advance_ledger', lang('Customer Advance Ledger'), 'trim|numeric|required');
+        $this->form_validation->set_rules('vat_ledger_id', lang('VAT on Bank Charges Ledger'), 'trim|numeric');
 
         if ($this->form_validation->run() == true) {
             $vat_on_purchase_ledger = $this->input->post('vat_on_purchase_ledger');
@@ -2895,6 +2898,9 @@ class system_settings extends MY_Controller
             $bank_fund_cash_ledger = $this->input->post('bank_fund_cash_ledger');
             $bank_fees_ledger = $this->input->post('bank_fees_ledger');
             $bank_checking_account_ledger = $this->input->post('bank_checking_account_ledger');
+            $supplier_advance_ledger = $this->input->post('supplier_advance_ledger');
+            $customer_advance_ledger = $this->input->post('customer_advance_ledger');
+            $vat_ledger_id = $this->input->post('vat_ledger_id');
 
             $data = [
                 'vat_on_purchase_ledger' => $vat_on_purchase_ledger,
@@ -2902,6 +2908,9 @@ class system_settings extends MY_Controller
                 'bank_fund_cash_ledger' => $bank_fund_cash_ledger,
                 'bank_fees_ledger' => $bank_fees_ledger,
                 'bank_checking_account_ledger' => $bank_checking_account_ledger,
+                'supplier_advance_ledger' => $supplier_advance_ledger,
+                'customer_advance_ledger' => $customer_advance_ledger,
+                'vat_ledger_id' => $vat_ledger_id,
             ];
         }
 

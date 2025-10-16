@@ -58,9 +58,9 @@
     <!-- Tab Content -->
     <div class="tab-content active" id="info">
         <table>
-            <tr><th>PR Number</th><td><?= $pr['number'] ?? 'N/A'; ?></td></tr>
-            <tr><th>Date</th><td><?= $pr['date'] ?? 'N/A'; ?></td></tr>
-            <tr><th>Status</th><td><?= $pr['status'] ?? 'Pending'; ?></td></tr>
+            <tr><th>PR Number</th><td><?= $requisition->pr_number ?? 'N/A'; ?></td></tr>
+            <tr><th>Date</th><td><?= $requisition->created_at ?? 'N/A'; ?></td></tr>
+            <tr><th>Status</th><td><?= $requisition->status ?? 'Pending'; ?></td></tr>
         </table>
     </div>
 
@@ -69,17 +69,15 @@
             <tr>
                 <th>Item</th>
                 <th>Quantity</th>
-                <th>Unit Price</th>
-                <th>Total</th>
+            
             </tr>
             <?php 
             //print_r($items);exit;
             foreach($items as $key => $item): ?>
             <tr>
-                <td><?= $item->name; ?></td>
+                <td><?= $item->product_name; ?></td>
                 <td><?= $item->quantity; ?></td>
-                <td><?= $item->unit_price; ?></td>
-                <td><?= $item->total; ?></td>
+         
             </tr>
             <?php endforeach; ?>
         </table>
@@ -88,8 +86,10 @@
     <div class="tab-content" id="logs">
         <div class="logs">
             <?php foreach($logs as $log): ?>
-                <p>[<?= $log['time']; ?>] <?= $log['action']; ?> by <?= $log['user']; ?></p>
+                <p>[<?= $log->created_at; ?>] <?= $log->action; ?> by user <?= $log->done_by_name; ?></p>
+
             <?php endforeach; ?>
+
         </div>
     </div>
 
@@ -98,7 +98,7 @@
             <?php 
 
             foreach($suppliers as $key => $supplier): ?>
-                <li><?= $supplier->name; ?> (<?= $supplier->email; ?>)</li>
+                <li><?= $supplier->name; ?> (<?= $supplier->id; ?>)</li>
             <?php endforeach; ?>
         </ul>
     </div>
