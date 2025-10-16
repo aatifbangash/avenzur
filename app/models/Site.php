@@ -401,6 +401,19 @@ class Site extends CI_Model
         }
         return false;
     }
+    public function getParentCompanyByGroupAndId($group_name, $id)
+{
+    $this->db->where('group_name', $group_name);
+    $this->db->where('id', $id);
+    $q = $this->db->get('companies');
+
+    if ($q->num_rows() > 0) {
+        return $q->row(); // single record since id is unique
+    }
+
+    return false;
+}
+
 
     public function getAllChildCompanies($group_name)
     {
