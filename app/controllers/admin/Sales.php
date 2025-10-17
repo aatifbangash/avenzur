@@ -3896,7 +3896,7 @@ class Sales extends MY_Controller
           $this->sma->checkPermissions();
 
     // ----- CONSTANT TEST DATA -----
-     $invoice_no    = '37412';
+    $invoice_no    = '37412';
     $customer_name = 'maimonah alkhair medical pharmacy - makkah';
     $region        = 'Makkah';
     $region_no     = '2';
@@ -3947,12 +3947,11 @@ class Sales extends MY_Controller
         'margin_left'   => 6,
     ]);
 
-    // Minimal CSS for label
-    $css = "";
+    
 
     for ($i = 1; $i <= $num_cartons; $i++) {
         // Per-label HTML (one page per carton)
-        $html = $css . '<!DOCTYPE html>
+        $html = '<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -4104,7 +4103,7 @@ class Sales extends MY_Controller
         </div>
         
         <div class="info-section">
-            <div class="value">صيدلية ميمونة الخير الطبية - مكة</div>
+            <div class="value"></div>
         </div>
         
         <div class="big-display">
@@ -5434,223 +5433,9 @@ if($inv->warning_note != ""){
         $qr_code = $this->sma->qrcodepng('text', $qrtext, 2, $level = 'H', $sq = null, $svg = false);
 
         $png_base64 = base64_encode($qr_code);
-        $mpdf = new Mpdf([
-            'mode'         => 'utf-8',
-            'format'        => [150, 105], 
-            'margin_top'    => 6,
-            'margin_right'  => 6,
-            'margin_bottom' => 6,
-            'margin_left'   => 6,
-        ]);
+       
 
-        // Minimal CSS for label
-        $css = "";
-
-        for ($i = 1; $i <= $num_cartons; $i++) {
-            // Per-label HTML (one page per carton)
-            $html = $css . '<!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body {
-                        margin: 0;
-                        padding: 20px;
-                        background: #2a2a2a;
-                        font-family: Arial, sans-serif;
-                    }
-                    
-                    .ticket {
-                        width: 500px;
-                        height: 300px;
-                        background: white;
-                        padding: 20px;
-                        position: relative;
-                        direction: rtl;
-                    }
-                    
-                    .header {
-                        width: 100%;
-                        margin-bottom: 15px;
-                    }
-                    
-                    .header table {
-                        width: 100%;
-                        border-collapse: collapse;
-                    }
-                    
-                    .logo {
-                        width: 60px;
-                        height: 60px;
-                        background: #1a1a1a;
-                    }
-                    
-                    .ticket-number {
-                        font-size: 36px;
-                        font-weight: bold;
-                        letter-spacing: 4px;
-                        background-color: #1a1a1a;
-                        color: white;
-                        padding: 4px 8px;
-                        text-align: center;
-                    }
-                    
-                    .info-section {
-                        margin: 20px 0;
-                        text-align: center;
-                    }
-                    .info-section-below {
-                        margin: 20px 0;
-                        width: 100%;
-                    }
-                    
-                    .info-section-below table {
-                        width: 100%;
-                        border-collapse: collapse;
-                    }
-                    
-                    .value {
-                        font-weight: bold;
-                        font-size: 28px;
-                        text-align: center;
-                    }
-                    
-                    .big-display {
-                        margin: 10px 0;
-                        text-align: center;
-                    }
-                    
-                    .big-display table {
-                        margin: 0 auto;
-                        border-collapse: collapse;
-                    }
-                    
-                    .digit-box {
-                        width: 80px;
-                        height: 40px;
-                        background: #1a1a1a;
-                        color: white;
-                        font-size: 30px;
-                        font-weight: bold;
-                        text-align: center;
-                        vertical-align: middle;
-                        padding: 5px;
-                    }
-                    .digit-box-text {
-                        color: black;
-                        font-size: 30px;
-                        font-weight: bold;
-                        text-align: center;
-                        vertical-align: middle;
-                        padding: 5px 10px;
-                    }
-                    
-                    .of-label {
-                        font-size: 24px;
-                        font-weight: bold;
-                        text-align: center;
-                        vertical-align: middle;
-                        padding: 0 10px;
-                    }
-                    
-                    .qr-code {
-                        width: 60px;
-                        height: 60px;
-                        background: #1a1a1a;
-                        color: white;
-                        font-size: 8px;
-                        text-align: center;
-                        vertical-align: middle;
-                        margin: 0 0 0 40px;
-                    }
-                    
-                    .datetime {
-                        text-align: center;
-                        font-size: 12px;
-                    }
-                    .region-label {
-                        font-size: 22px;
-                        text-align: center;
-                    }
-                    
-                    .spacer {
-                        width: 68px;
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="ticket">
-                    <div class="header">
-                        <table>
-                            <tr>
-                                <td style="width: 60px;"></td>
-                                <td style="text-align: center;">
-                                    <div class="ticket-number">37412</div>
-                                </td>
-                                <td style="width: 60px; margin-right: 20px;"></td>
-                                <td  >
-                                    <img src="https://placehold.co/100x40/png"/>
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                    
-                    <div class="info-section">
-                        <div class="value">صيدلية ميمونة الخير الطبية - مكة</div>
-                    </div>
-                    
-                    <div class="big-display">
-                        <table>
-                            <tr>
-                                <td class="digit-box-text">عدد كرتون</td>
-                                <td class="digit-box">1</td>
-                                <td class="of-label">OF</td>
-                                <td class="digit-box">1</td>
-                            </tr>
-                        </table>
-                    </div>
-                    
-                    <div class="big-display" style="margin-right:0px !important">
-                        <table>
-                            <tr >
-                                <td class="digit-box-text">ربطة ثلاجة</td>
-                                <td class="digit-box">0</td>
-                                <td class="spacer"></td>
-                                <td class="spacer"></td>
-                            </tr>
-                        </table>
-                    </div>
-                    
-                    <div class="info-section-below">
-                        <table>
-                            <tr>
-                                <td style="width: 100px; vertical-align: bottom;">
-                                    <img src="data:image/png;base64,' . $png_base64 . '" width="80" height="80" />
-                                </td>
-                                <td class="spacer"></td>
-                                <td class="spacer"></td>
-                                <td class="spacer"></td>
-                                <td style="text-align: center; vertical-align: bottom;">
-                                    <div class="region-label">مكة المكرمة     2</div>
-                                    <div class="datetime">12/10/25 4:52 PM</div>
-                                </td>
-                                <td style="width: 100px;"></td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-            </body>
-            </html>
-            ';
-
-            $mpdf->WriteHTML($html);
-            if ($i < $num_cartons) {
-                $mpdf->AddPage();
-            }
-        }
-
-        $fname = 'test_labels_' . str_replace('/', '_', $invoice_no) . '_x' . $num_cartons . '.pdf';
-        $mpdf->Output($fname, 'I'); // download
+          $this->load->view($this->theme . 'sales/verify_label', $this->data);
     }
 
     public function view($id = null)
