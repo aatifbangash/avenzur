@@ -4136,7 +4136,6 @@ class Sales extends MY_Controller
                     </td>
                     <td class="spacer"></td>
                     <td class="spacer"></td>
-                    <td class="spacer"></td>
                     <td style="text-align: center; vertical-align: bottom;">
                         <div class="region-label">مكة المكرمة     2</div>
                         <div class="datetime">12/10/25 4:52 PM</div>
@@ -4188,7 +4187,7 @@ class Sales extends MY_Controller
         $this->data['rows']        = $this->sales_model->getAllInvoiceItems($id);
         $this->data['return_sale'] = $inv->return_id ? $this->sales_model->getInvoiceByID($inv->return_id) : null;
         $this->data['return_rows'] = $inv->return_id ? $this->sales_model->getAllInvoiceItems($inv->return_id) : null;
-        //echo '<pre>';print_r($this->data);exit;
+        // echo '<pre>';print_r($this->data);exit;
         
         $name = lang('sale') . '_' . str_replace('/', '_', $inv->reference_no) . '.pdf';
         $html = $this->load->view($this->theme . 'sales/pdf/sales_invoice_report_new', $this->data, true);
@@ -4338,6 +4337,19 @@ if($inv->warning_note != ""){
             </table>
         </div>
 
+       
+
+        <!-- Totals Table -->
+ <div style="width:60%; float:left; text-align:left; margin-bottom:15px;">
+    <table class="table-label" border="1"  cellspacing="0" cellpadding="10" width="100%" style="border-collapse:collapse; font-size: 10px">
+        <tr><td colspan="3" style="text-align: center; vertical-align: middle; background-color: #f2f2f2; font-size: 20px;">37412</td> <td colspan="3">Pick Team - فريق التحضير</td></tr>
+        <tr><td colspan="3">Pick Start - تحضير بداية</td> <td colspan="3">Pick End - تحضير نهاية</td></tr>
+        <tr><td colspan="2">Check Start - بداية تشييك</td> <td colspan="2">CheckedBy - اسم المشيك</td> <td colspan="2">Cam - كمرا</td></tr>
+        <tr><td colspan="2">Box - عدد كرتون</td> <td colspan="2">Refrigpack - ربطة الثلاجة</td> <td colspan="2">Error - خطأ</td></tr>
+    </table>
+</div>
+
+
         <!-- Signature Section -->
         <div style="width:100%; overflow:hidden; margin-top:50px; font-size:12px;">
             
@@ -4366,7 +4378,16 @@ if($inv->warning_note != ""){
 ');
 
 
+$html = '
+<style>
 
+
+.table-label td {
+  height: 70px;                   /* vertical space for handwriting */
+  vertical-align: top;            /* keep text at the top */
+}
+</style>
+' . $html;
             $mpdf->WriteHTML($html);
             $mpdf->Output("sale_invoice.pdf", "D");
 
