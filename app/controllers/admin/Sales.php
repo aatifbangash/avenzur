@@ -3693,10 +3693,10 @@ class Sales extends MY_Controller
             $action .=  '<li>' . $pdf_link . '</li>
                 <li>' . $return_link . '</li>';
 
-            if(($Admin || $owner)){
+            if(($Admin || $Owner)){
                 $action .=  '<li>' . $delete_link . '</li>';
             }
-            if(($Admin || $owner)){
+            if(($Admin || $Owner)){
                 $action .=  '<li>' . $journal_entry_link . '</li>';
             }
             $action .=  '</ul>
