@@ -503,7 +503,7 @@
                       //echo '<pre>';print_r($this->GP);exit;
                       if ($Owner || $Admin || $this->GP['purchase_manager'] || $this->GP['sales-coordinator']) { 
                         
-                        if($this->GP['purchase_manager']){
+                        if($Admin || $Owner || $this->GP['purchase_manager']){
                         ?>
                             <li class="mm_purchases">
                                 <a class="dropmenu" href="#">
@@ -634,7 +634,7 @@
                 ?>
                 <?php 
               
-                if($this->GP['sales-coordinator']){
+                if($Admin || $Owner || $this->GP['sales-coordinator']){
                 ?>
                             <li class="mm_sales <?= strtolower($this->router->fetch_method()) == 'sales' ? 'mm_pos' : '' ?>">
                                 <a class="dropmenu" href="#">
@@ -649,7 +649,7 @@
                                             <span class="text"> <?= lang('list_sales'); ?></span>
                                         </a>
                                     </li>
-                                    <?php if (POS) {
+                                    <?php if (POS && $this->Settings->site_name != 'Hills Business Medical') {
                                         ?>
                                     <li id="pos_sales">
                                         <a class="submenu" href="<?= admin_url('pos/sales'); ?>">
@@ -664,12 +664,15 @@
                                     </li>
                                         <?php
                                     } ?>
+                                    <?php if (POS && $this->Settings->site_name != 'Hills Business Medical') {
+                                        ?>
                                     <li id="sales_add">
                                         <a class="submenu" href="<?= admin_url('sales/add'); ?>">
                                             <i class="fa fa-plus-circle"></i>
                                             <span class="text"> <?= lang('add_sale'); ?></span>
                                         </a>
                                     </li>
+                                    <?php } ?>
                                     <!-- <li id="sales_sale_by_csv">
                                         <a class="submenu" href="<?= admin_url('sales/sale_by_csv'); ?>">
                                             <i class="fa fa-plus-circle"></i>
@@ -775,6 +778,9 @@
                                     <span class="chevron closed"></span>
                                 </a>
                                 <ul>
+                                    <?php 
+                                    if($Admin || $Owner || $this->GP['sales-coordinator']){
+                                    ?>
                                     <li id="returns_index">
                                         <a class="submenu" href="<?= admin_url('returns'); ?>">
                                             <i class="fa fa-random"></i><span class="text"> <?= lang('list_returns'); ?></span>
@@ -786,7 +792,10 @@
                                             <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Add_Return_Customer'); ?></span>
                                         </a>
                                     </li>
-
+                                    <?php } ?>
+                                    <?php 
+                                    if($Admin || $Owner || $this->GP['purchase_manager']){
+                                    ?>
 
                                     <li id="returns_index">
                                         <a class="submenu" href="<?= admin_url('returns_supplier'); ?>">
@@ -799,7 +808,7 @@
                                             <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Add_Return_Supplier'); ?></span>
                                         </a>
                                     </li>
-                                    
+                                    <?php } ?>
                                     <!--<li id="returns_add">
                                         <a class="submenu" href="<?php //echo admin_url('returns/add_return'); ?>">
                                             <i class="fa fa-plus-circle"></i><span class="text"> <?php //echo lang('Add_Return_Supplier'); ?></span>

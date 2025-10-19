@@ -3655,29 +3655,28 @@ class Sales extends MY_Controller
         
        if(isset($this->GP) && $this->Accountant)
         {
-
-        $action = '<div class="text-center"><div class="btn-group text-left">'
-            . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
-            . lang('actions') . ' <span class="caret"></span></button>
-            <ul class="dropdown-menu pull-right" role="menu">
-                
-                <li>' . $detail_link . '</li>
-                <li>' . $pdf_link . '</li>
-                <li>' . $journal_entry_link . '</li>
-            </ul>
-        </div></div>';
+            $action = '<div class="text-center"><div class="btn-group text-left">'
+                . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+                . lang('actions') . ' <span class="caret"></span></button>
+                <ul class="dropdown-menu pull-right" role="menu">
+                    
+                    <li>' . $detail_link . '</li>
+                    <li>' . $pdf_link . '</li>
+                    <li>' . $journal_entry_link . '</li>
+                </ul>
+            </div></div>';
         }if(isset($this->GP) && $this->WarehouseSupervisor)
         {
 
-        $action = '<div class="text-center"><div class="btn-group text-left">'
-            . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
-            . lang('actions') . ' <span class="caret"></span></button>
-            <ul class="dropdown-menu pull-right" role="menu">
-                
-                <li>' . $detail_link . '</li>
-                <li>' . $pdf_link . '</li>
-            </ul>
-        </div></div>';
+            $action = '<div class="text-center"><div class="btn-group text-left">'
+                . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+                . lang('actions') . ' <span class="caret"></span></button>
+                <ul class="dropdown-menu pull-right" role="menu">
+                    
+                    <li>' . $detail_link . '</li>
+                    <li>' . $pdf_link . '</li>
+                </ul>
+            </div></div>';
         }else{
 
             $action = '<div class="text-center"><div class="btn-group text-left">'
@@ -3685,13 +3684,22 @@ class Sales extends MY_Controller
             . lang('actions') . ' <span class="caret"></span></button>
             <ul class="dropdown-menu pull-right" role="menu">
             
-                <li>' . $detail_link . '</li>
-                <li>' . $edit_link . '</li>
-                <li>' . $pdf_link . '</li>
-                <li>' . $return_link . '</li>
-                <li>' . $delete_link . '</li>
-                <li>' . $journal_entry_link . '</li>
-            </ul>
+                <li>' . $detail_link . '</li>';
+
+            if($this->Settings->site_name != 'Hills Business Medical'){
+                $action .= '<li>' . $edit_link . '</li>';
+            }
+            
+            $action .=  '<li>' . $pdf_link . '</li>
+                <li>' . $return_link . '</li>';
+
+            if(($Admin || $owner)){
+                $action .=  '<li>' . $delete_link . '</li>';
+            }
+            if(($Admin || $owner)){
+                $action .=  '<li>' . $journal_entry_link . '</li>';
+            }
+            $action .=  '</ul>
         </div></div>';
         }
         //$action = '<div class="text-center">' . $detail_link . ' ' . $edit_link . ' ' . $email_link . ' ' . $delete_link . '</div>';
@@ -3969,7 +3977,7 @@ class Sales extends MY_Controller
 
     public function pdf_new($id = null, $view = null, $save_bufffer = null)
     {   
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->load->library('inv_qrcode');
 
         if ($this->input->get('id')) {
@@ -3978,7 +3986,7 @@ class Sales extends MY_Controller
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $inv                 = $this->sales_model->getInvoiceByID($id);
-        if (!$this->session->userdata('view_right')) {
+        if (!$this->GP['sales-index']) {
             $this->sma->view_rights($inv->created_by);
         }
         $this->data['barcode']     = "<img src='" . admin_url('products/gen_barcode/' . $inv->reference_no) . "' alt='" . $inv->reference_no . "' class='pull-left' />";

@@ -247,7 +247,7 @@ class Returns extends MY_Controller
 
     public function add()
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->form_validation->set_message('is_natural_no_zero', lang('no_zero_required'));
         $this->form_validation->set_rules('customer', lang('customer'), 'required');
         $this->form_validation->set_rules('biller', lang('biller'), 'required');
@@ -560,6 +560,13 @@ class Returns extends MY_Controller
 
             if(isset($_GET['sale']) && !empty($_GET['sale'])){
                 $sale = $this->sales_model->getSaleByID($_GET['sale']);
+
+                if($sale->sale_status != 'completed'){
+                    $this->session->set_flashdata('error', lang('Only completed sales can be returned'));
+                    admin_redirect('sales');
+                    exit;
+                }
+
                 $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
                 $this->data['inv'] = $sale;
                 $inv_items = $this->sales_model->getAllReturnInvoiceItems($_GET['sale'], $sale->customer_id);
