@@ -26,6 +26,7 @@ class Sales extends MY_Controller
         $this->load->admin_model('quotes_model');
         $this->load->admin_model('companies_model');
         $this->load->admin_model('products_model');
+        $this->load->admin_model('settings_model');
         $this->digital_upload_path = 'files/';
         $this->upload_path         = 'assets/uploads/';
         $this->thumbs_path         = 'assets/uploads/thumbs/';
@@ -346,7 +347,11 @@ class Sales extends MY_Controller
     }
 
     public function add_from_quote($quote_id = null){
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
+        if(!$this->Admin && !$this->Owner && !$this->GP['sales-coordinator']){
+            $this->session->set_flashdata('error', lang('You do not have permission for this action.'));
+            admin_redirect('quotes');exit;
+        }
 
         if (!$quote_id) {
             $this->session->set_flashdata('error', lang('Quote ID not provided.'));
@@ -527,7 +532,12 @@ class Sales extends MY_Controller
 
     public function add($quote_id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
+        if(!$this->Admin && !$this->Owner && !$this->GP['sales-coordinator']){
+            $this->session->set_flashdata('error', lang('You do not have permission for this action.'));
+            admin_redirect('quotes');exit;
+        }
+
         $sale_id = $this->input->get('sale_id') ? $this->input->get('sale_id') : null;
 
         $this->form_validation->set_message('is_natural_no_zero', lang('no_zero_required'));
@@ -1012,10 +1022,10 @@ class Sales extends MY_Controller
             $id = $this->input->get('id');
         }
         $sale = $this->sales_model->getInvoiceByID($id);
-        if ($sale->sale_status != 'completed') {
+        /*if ($sale->sale_status != 'completed') {
             $this->session->set_flashdata('error', lang('status_is_x_completed'));
             $this->sma->md();
-        }
+        }*/
 
         if ($delivery = $this->sales_model->getDeliveryBySaleID($id)) {
             $this->edit_delivery($delivery->id);
@@ -1492,7 +1502,11 @@ class Sales extends MY_Controller
 
     public function edit($id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
+        if(!$this->Admin && !$this->Owner && !$this->GP['sales-coordinator']){
+            $this->session->set_flashdata('error', lang('You do not have permission for this action.'));
+            admin_redirect('quotes');exit;
+        }
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -1870,9 +1884,9 @@ class Sales extends MY_Controller
                     $this->Zetca_model->report_zatca_status($reporting_data);
                 }
 
-                if($customer_details->balance > 0){
+                /*if($customer_details->balance > 0){
                     $this->sales_model->update_balance($customer_details->id, $new_balance);
-                }
+                }*/
 
                 /**RASD Integration Code */
                 $data_for_rasd = [
@@ -2081,6 +2095,61 @@ class Sales extends MY_Controller
         }
 
         $this->form_validation->set_rules('do_reference_no', lang('do_reference_no'), 'required');
+        $this->form_validation->set_rules('sale_id', lang('sale_id'), 'required');
+        
+
+        if ($this->form_validation->run() == true) {
+            $dlDetails = [
+                'sale_id'           => $this->input->post('sale_id'),
+                'do_reference_no'   => $this->input->post('do_reference_no'),
+                'status'            => $this->input->post('status'),
+                'received_by'       => $this->input->post('received_by'),
+                'note'              => $this->sma->clear_tags($this->input->post('note'))
+            ];
+
+            if ($_FILES['document']['size'] > 0) {
+                $this->load->library('upload');
+                $config['upload_path']   = $this->digital_upload_path;
+                $config['allowed_types'] = $this->digital_file_types;
+                $config['max_size']      = $this->allowed_file_size;
+                $config['overwrite']     = false;
+                $config['encrypt_name']  = true;
+                $this->upload->initialize($config);
+                if (!$this->upload->do_upload('document')) {
+                    $error = $this->upload->display_errors();
+                    $this->session->set_flashdata('error', $error);
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
+                $photo                   = $this->upload->file_name;
+                $dlDetails['attachment'] = $photo;
+            }
+        } elseif ($this->input->post('edit_delivery')) {
+            $this->session->set_flashdata('error', validation_errors());
+            redirect($_SERVER['HTTP_REFERER']);
+        }
+
+        if ($this->form_validation->run() == true && $this->sales_model->updateDelivery($id, $dlDetails)) {
+            $this->sales_model->updateSaleStatus($this->input->post('sale_id'), 'delivered');
+
+            $this->session->set_flashdata('message', lang('delivery_updated'));
+            admin_redirect('sales/deliveries');
+        } else {
+            $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+            $this->data['delivery'] = $this->sales_model->getDeliveryBySaleID($id);
+            $this->data['modal_js'] = $this->site->modal_js();
+            $this->load->view($this->theme . 'sales/edit_delivery', $this->data);
+        }
+    }
+
+    /*public function edit_delivery($id = null)
+    {
+        $this->sma->checkPermissions();
+
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $this->form_validation->set_rules('do_reference_no', lang('do_reference_no'), 'required');
         $this->form_validation->set_rules('sale_reference_no', lang('sale_reference_no'), 'required');
         $this->form_validation->set_rules('customer', lang('customer'), 'required');
         $this->form_validation->set_rules('address', lang('address'), 'required');
@@ -2134,7 +2203,7 @@ class Sales extends MY_Controller
             $this->data['modal_js'] = $this->site->modal_js();
             $this->load->view($this->theme . 'sales/edit_delivery', $this->data);
         }
-    }
+    }*/
 
     public function edit_gift_card($id = null)
     {
@@ -2433,9 +2502,7 @@ class Sales extends MY_Controller
         . lang('actions') . ' <span class="caret"></span></button>
     <ul class="dropdown-menu pull-right" role="menu">
         <li>' . $detail_link . '</li>
-        <li>' . $edit_link . '</li>
         <li>' . $pdf_link . '</li>
-        <li>' . $delete_link . '</li>
     </ul>
 </div></div>';
 
@@ -2478,7 +2545,7 @@ class Sales extends MY_Controller
             # Update Sales to Completed
             if(isset($this->GP) && $this->GP['accountant']){
                 $this->db->update('sales', ['sale_status' => 'completed'], ['id' => $sid]);
-                $this->site->syncQuantity($sid);
+                //$this->site->syncQuantity($sid);
             }
             
             $this->load->admin_model('companies_model');
@@ -3586,37 +3653,47 @@ class Sales extends MY_Controller
         . lang('delete_sale') . '</a>';
         $journal_entry_link      = anchor('admin/entries/view/journal/?sid=$1', '<i class="fa fa-eye"></i> ' . lang('Journal Entry'));
         
-       if(isset($this->GP) && $this->GP['accountant'])
+       if(isset($this->GP) && $this->Accountant)
         {
 
         $action = '<div class="text-center"><div class="btn-group text-left">'
-        . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
-        . lang('actions') . ' <span class="caret"></span></button>
-        <ul class="dropdown-menu pull-right" role="menu">
-            
-            <li>' . $edit_link . '</li>
-            <li>' . $pdf_link . '</li>
-            <li>' . $return_link . '</li>
-            <li>' . $delete_link . '</li>
-            <li>' . $journal_entry_link . '</li>
-        </ul>
-    </div></div>';
-    }else{
+            . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+            . lang('actions') . ' <span class="caret"></span></button>
+            <ul class="dropdown-menu pull-right" role="menu">
+                
+                <li>' . $detail_link . '</li>
+                <li>' . $pdf_link . '</li>
+                <li>' . $journal_entry_link . '</li>
+            </ul>
+        </div></div>';
+        }if(isset($this->GP) && $this->WarehouseSupervisor)
+        {
 
         $action = '<div class="text-center"><div class="btn-group text-left">'
-        . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
-        . lang('actions') . ' <span class="caret"></span></button>
-        <ul class="dropdown-menu pull-right" role="menu">
-         <li>' . $convert_sale_invoice . '</li>
-            <li>' . $detail_link . '</li>
-            <li>' . $edit_link . '</li>
-            <li>' . $pdf_link . '</li>
-            <li>' . $return_link . '</li>
-            <li>' . $delete_link . '</li>
-            <li>' . $journal_entry_link . '</li>
-        </ul>
-    </div></div>';
-    }
+            . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+            . lang('actions') . ' <span class="caret"></span></button>
+            <ul class="dropdown-menu pull-right" role="menu">
+                
+                <li>' . $detail_link . '</li>
+                <li>' . $pdf_link . '</li>
+            </ul>
+        </div></div>';
+        }else{
+
+            $action = '<div class="text-center"><div class="btn-group text-left">'
+            . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+            . lang('actions') . ' <span class="caret"></span></button>
+            <ul class="dropdown-menu pull-right" role="menu">
+            
+                <li>' . $detail_link . '</li>
+                <li>' . $edit_link . '</li>
+                <li>' . $pdf_link . '</li>
+                <li>' . $return_link . '</li>
+                <li>' . $delete_link . '</li>
+                <li>' . $journal_entry_link . '</li>
+            </ul>
+        </div></div>';
+        }
         //$action = '<div class="text-center">' . $detail_link . ' ' . $edit_link . ' ' . $email_link . ' ' . $delete_link . '</div>';
 
         $this->load->library('datatables');
@@ -5083,23 +5160,134 @@ if($inv->warning_note != ""){
         }
     }
 
-    public function add_label($id = null){
-        $this->sma->checkPermissions('index', true);
+    public function create_sale_invoice($id = null){
+        //$this->form_validation->set_rules('sale_id', lang('sale_id'), 'required');
+        if ($this->form_validation->run() == true) {
 
-        $this->form_validation->set_rules('number_of_cartons', lang('number_of_cartons'), 'required');
-        $this->form_validation->set_rules('refrigirated_items', lang('refrigirated_items'), 'required');
+            $sale_id = $this->input->post('sale_id');
+            $this->convert_sale_invoice($sale_id);
+
+            /**
+             * Zatca Integration B2B Start
+             */
+            if($this->zatca_enabled){
+                $zatca_payload =  $this->Zetca_model->get_zetca_data_b2b($id); 
+                $zatca_response = $this->zatca->post('',  $zatca_payload);
+                $is_success = true;
+                $remarks = "";
+                if($zatca_response['status'] >= 400){
+                    $is_success = false;
+                    if(isset($zatca_response['body']['errors'])){
+                        if(!empty($zatca_response['body']['errors'])){
+                            $remarks = $zatca_response['body']['errors'][0];
+                        }
+                    }
+                }
+                $date = date('Y-m-d H:i:s');
+                $request = json_encode($zatca_payload, true);
+                $response = json_encode($zatca_response, true);
+                $reporting_data = [
+                    "sale_id" => $id,
+                    "date" => $date,
+                    "is_success" => $is_success,
+                    "request" => $request,
+                    "response" => $response,
+                    "remarks" => $remarks
+                ];
+
+                $this->Zetca_model->report_zatca_status($reporting_data);
+            }
+
+            /**RASD Integration Code */
+            $data_for_rasd = [
+                "products" => $products,
+                "source_warehouse_id" => $data['warehouse_id'],
+                "destination_customer_id" => $data['customer_id'],
+                "sale_id" => $id
+            ];
+            $response_model = $this->sales_model->get_rasd_required_fields($data_for_rasd);
+            $body_for_rasd_dispatch = $response_model['payload'];
+
+            $rasd_user = $response_model['user'];
+            $rasd_pass = $response_model['pass'];
+            $resp_sale_status = $response_model['status'];
+            
+            $rasd_success = false;
+            log_message("info", json_encode($body_for_rasd_dispatch));
+            $payload_used =  [
+                    'source_gln' => $response_model['source_gln'],
+                    'destination_gln' => $response_model['destination_gln'],
+                    'warehouse_id' => $data['warehouse_id']
+                ];  
+                
+            if($resp_sale_status == 'completed' && $rasd_user){
+                foreach($body_for_rasd_dispatch as $index => $payload_dispatch){
+                    log_message("info", "RASD AUTH START");
+                    $this->rasd->set_base_url('https://qdttsbe.qtzit.com:10101/api/web');
+                    $auth_response = $this->rasd->authenticate($rasd_user, $rasd_pass);
+                    if(isset($auth_response['token'])){
+                        $auth_token = $auth_response['token'];
+                        log_message("info", 'RASD Authentication Success: DISPATCH_PRODUCT');
+                        $zadca_dispatch_response = $this->rasd->dispatch_product_133($payload_dispatch, $auth_token);
+                        
+                        
+                        if(isset($zadca_dispatch_response['body']['DicOfDic']['MR']['TRID']) && $zadca_dispatch_response['body']['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){                
+                            log_message("info", "Dispatch successful");
+                            $rasd_success = true;                
+
+                            $this->cmt_model->add_rasd_transactions($payload_used,'sale_dispatch_product',true, $zadca_dispatch_response,$payload_dispatch);
+                        
+                        }else{
+                            $rasd_success = false;
+                            log_message("error", "Dispatch Failed");
+                            log_message("error", json_encode($zadca_dispatch_response,true));
+                            $this->cmt_model->add_rasd_transactions($payload_used,'sale_dispatch_product',false, $zadca_dispatch_response,$payload_dispatch);
+                        }
+                        
+                    }else{
+                        log_message("error", 'RASD Authentication FAILED: DISPATCH_PRODUCT');
+                        $this->cmt_model->add_rasd_transactions($payload_used,'sale_dispatch_product',false, $accept_dispatch_result,$body_for_rasd_dispatch);
+                    }
+                }
+            }
+
+            $this->session->set_flashdata('message', lang('sale_invoiced_successfully'));
+            admin_redirect('sales/view/'.$sale_id);
+        }else{
+            if ($this->input->get('id')) {
+                $id = $this->input->get('id');
+            }
+            $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+            $inv                 = $this->sales_model->getInvoiceByID($id);
+            
+            if (!$this->GP['sales-index']) {
+                $this->sma->view_rights($inv->created_by, true);
+            }
+            $this->data['sale_id'] = $id;
+            
+            $this->load->view($this->theme . 'sales/create_invoice', $this->data);
+        }
+    }
+
+    public function add_driver($id = null){
+        //$this->sma->checkPermissions('index', true);
+
+        $this->form_validation->set_rules('driver_id', lang('driver_id'), 'required');
+        $this->form_validation->set_rules('address', lang('address'), 'required');
         $this->form_validation->set_rules('sale_id', lang('sale_id'), 'required');
 
         if ($this->form_validation->run() == true) {
             $sale_id = $this->input->post('sale_id');
-            $number_of_cartons = $this->input->post('number_of_cartons');
-            $refrigirated_items = $this->input->post('refrigirated_items');
+            $driver_id = $this->input->post('driver_id');
+            $address = $this->input->post('address');
 
-            if($label_id = $this->sales_model->addSaleLabel($sale_id, $number_of_cartons, $refrigirated_items)){
-                $this->session->set_flashdata('message', lang('label_added_successfully'));
+            $sale_details = $this->sales_model->getSaleByID($sale_id);
+
+            if($delivery_id = $this->sales_model->addDriver($sale_id, $driver_id, $address, $sale_details->customer, $sale_details->reference_no)){
+                $this->session->set_flashdata('message', lang('driver_added_successfully'));
                 admin_redirect('sales/view/'.$sale_id);
             }else{
-                $this->session->set_flashdata('error', lang('failed adding label'));
+                $this->session->set_flashdata('error', lang('failed adding driver'));
                 admin_redirect('sales/view/'.$sale_id);
             }
 
@@ -5109,29 +5297,64 @@ if($inv->warning_note != ""){
             }
             $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
             $inv                 = $this->sales_model->getInvoiceByID($id);
+            $groupDetails        = $this->settings_model->getGroupByName('driver');
+            $drivers            = $this->settings_model->getUserByGroupId($groupDetails->id);
+
             if (!$this->GP['sales-index']) {
                 $this->sma->view_rights($inv->created_by, true);
             }
             $this->data['sale_id'] = $id;
-            $this->load->view($this->theme . 'sales/add_label', $this->data);
+            $this->data['driver'] = $drivers;
+            $this->load->view($this->theme . 'sales/add_driver', $this->data);
         }
     }
 
-    public function verify_label($id = null){
-        $this->sma->checkPermissions();
+    public function edit_label($id = null){
+        //$this->sma->checkPermissions('index', true);
+
+        $this->form_validation->set_rules('number_of_cartons', lang('number_of_cartons'), 'required');
+        $this->form_validation->set_rules('refrigirated_items', lang('refrigirated_items'), 'required');
+        $this->form_validation->set_rules('sale_id', lang('sale_id'), 'required');
+        $label = $this->sales_model->getSaleLabels($id);
+
+        if ($this->form_validation->run() == true) {
+            $sale_id = $this->input->post('sale_id');
+            $number_of_cartons = $this->input->post('number_of_cartons');
+            $refrigirated_items = $this->input->post('refrigirated_items');
+
+            if($label_id = $this->sales_model->updateSaleLabel($sale_id, $number_of_cartons, $refrigirated_items)){
+                $this->session->set_flashdata('message', lang('label_updated_successfully'));
+                admin_redirect('sales/view/'.$sale_id);
+            }else{
+                $this->session->set_flashdata('error', lang('failed updating label'));
+                admin_redirect('sales/view/'.$sale_id);
+            }
+        }
+        
+        $this->data['sale_id'] = $id;
+        $this->data['label'] = $label;
+        $this->load->view($this->theme . 'sales/edit_label', $this->data);
+    }
+
+    public function pdf_new_label($id = null, $view = null, $save_bufffer = null)
+    {  
+        //$this->sma->checkPermissions();
+
+        $label = $this->sales_model->getSaleLabels($id);
+        $sale = $this->sales_model->getSaleByID($id);
+        $customer = $this->companies_model->getCompanyByID($sale->customer_id);
+        $biller      = $this->site->getCompanyByID($sale->biller_id);
 
         // ----- CONSTANT TEST DATA -----
-        $invoice_no    = '37412';
-        $customer_name = 'maimonah alkhair medical pharmacy - makkah';
-        $region        = 'Makkah';
-        $region_no     = '2';
-        $num_cartons   = 2;
+        $invoice_no    = $sale->id;
+        $customer_name = $customer->name;
+        $region        = $customer->address;
+        $region_no     = '';
+        $num_cartons   = $label->number_of_cartons;
 
-        // <img src="data:image/png;base64,' . $png_base64 . '" width="50" height="50" />
-        // Logo: inline base64 (place your logo at assets/uploads/logos/label-logo.png)
-        $logo_file = FCPATH . 'assets/uploads/logos/label-logo.png';
-        $logo_img  = '';
-        if (is_file($logo_file)) {
+        //$logo_file = FCPATH . 'assets/uploads/logos/label-logo.png';
+        $logo_img  = 'https://retaj.avenzur.com/assets/uploads/logos/avenzur-logov2-0241.png';
+        /*if (is_file($logo_file)) {
             $logo_img = 'data:image/png;base64,' . base64_encode(file_get_contents($logo_file));
         } else {
             // Fallback to your existing logo path, or leave empty
@@ -5139,20 +5362,17 @@ if($inv->warning_note != ""){
             if (is_file($fallback)) {
                 $logo_img = 'data:image/png;base64,' . base64_encode(file_get_contents($fallback));
             }
-        }
+        }*/
 
-        // Barcode (server-side route like elsewhere in your app)
         $barcode_url = admin_url('misc/barcode/' . $this->sma->base64url_encode($invoice_no) . '/code128/60/0/1');
-
-        // Print date
         $print_dt = $this->sma->hrld(date('Y-m-d H:i:s'));
 
         $payload = [
-            'seller' => '$biller->company && $biller->company != '-' ? $biller->company : $biller->name',
-            'vat_no' => '$biller->vat_no ?: $biller->get_no',
-            'date' => '$inv->date',
-            'grand_total' => '$return_sale ? ($inv->grand_total + $return_sale->grand_total) : $inv->grand_total',
-            'total_tax_amount' => '$return_sale ? ($inv->total_tax + $return_sale->total_tax) : $inv->total_tax',
+            'seller' => $biller->company && $biller->company != '-' ? $biller->company : $biller->name,
+            'vat_no' => $biller->vat_no ?: $biller->get_no,
+            'date' => $sale->date,
+            'grand_total' => $return_sale ? ($sale->grand_total + $return_sale->grand_total) : $sale->grand_total,
+            'total_tax_amount' => $return_sale ? ($sale->total_tax + $return_sale->total_tax) : $sale->total_tax,
         ];
 
         // Convert to JSON directly
@@ -5160,6 +5380,7 @@ if($inv->warning_note != ""){
         $qr_code = $this->sma->qrcodepng('text', $qrtext, 2, $level = 'H', $sq = null, $svg = false);
 
         $png_base64 = base64_encode($qr_code);
+
         $mpdf = new Mpdf([
             'mode'         => 'utf-8',
             'format'        => [150, 105], 
@@ -5311,27 +5532,27 @@ if($inv->warning_note != ""){
                             <tr>
                                 <td style="width: 60px;"></td>
                                 <td style="text-align: center;">
-                                    <div class="ticket-number">37412</div>
+                                    <div class="ticket-number">'.$invoice_no.'</div>
                                 </td>
                                 <td style="width: 60px; margin-right: 20px;"></td>
                                 <td  >
-                                    <img src="https://placehold.co/100x40/png"/>
+                                    <img src="'.$logo_img.'" width="160" />
                                 </td>
                             </tr>
                         </table>
                     </div>
                     
                     <div class="info-section">
-                        <div class="value">صيدلية ميمونة الخير الطبية - مكة</div>
+                        <div class="value">'.$customer->name.'</div>
                     </div>
                     
                     <div class="big-display">
                         <table>
                             <tr>
                                 <td class="digit-box-text">عدد كرتون</td>
-                                <td class="digit-box">1</td>
+                                <td class="digit-box">'.$i.'</td>
                                 <td class="of-label">OF</td>
-                                <td class="digit-box">1</td>
+                                <td class="digit-box">'.$num_cartons.'</td>
                             </tr>
                         </table>
                     </div>
@@ -5340,7 +5561,7 @@ if($inv->warning_note != ""){
                         <table>
                             <tr >
                                 <td class="digit-box-text">ربطة ثلاجة</td>
-                                <td class="digit-box">0</td>
+                                <td class="digit-box">'.$label->refrigerated_items.'</td>
                                 <td class="spacer"></td>
                                 <td class="spacer"></td>
                             </tr>
@@ -5357,8 +5578,8 @@ if($inv->warning_note != ""){
                                 <td class="spacer"></td>
                                 <td class="spacer"></td>
                                 <td style="text-align: center; vertical-align: bottom;">
-                                    <div class="region-label">مكة المكرمة     2</div>
-                                    <div class="datetime">12/10/25 4:52 PM</div>
+                                    <div class="region-label">'.$customer->address.'</div>
+                                    <div class="datetime">'.date('d/m/y g:i A').'</div>
                                 </td>
                                 <td style="width: 100px;"></td>
                             </tr>
@@ -5376,12 +5597,77 @@ if($inv->warning_note != ""){
         }
 
         $fname = 'test_labels_' . str_replace('/', '_', $invoice_no) . '_x' . $num_cartons . '.pdf';
-        $mpdf->Output($fname, 'I'); // download
+        $mpdf->Output($fname, 'D'); // download
+    }
+
+    public function add_label($id = null){
+        //$this->sma->checkPermissions('index', true);
+
+        $this->form_validation->set_rules('number_of_cartons', lang('number_of_cartons'), 'required');
+        $this->form_validation->set_rules('refrigirated_items', lang('refrigirated_items'), 'required');
+        $this->form_validation->set_rules('sale_id', lang('sale_id'), 'required');
+
+        if ($this->form_validation->run() == true) {
+            $sale_id = $this->input->post('sale_id');
+            $number_of_cartons = $this->input->post('number_of_cartons');
+            $refrigirated_items = $this->input->post('refrigirated_items');
+
+            if($label_id = $this->sales_model->addSaleLabel($sale_id, $number_of_cartons, $refrigirated_items)){
+                $this->session->set_flashdata('message', lang('label_added_successfully'));
+                admin_redirect('sales/view/'.$sale_id);
+            }else{
+                $this->session->set_flashdata('error', lang('failed adding label'));
+                admin_redirect('sales/view/'.$sale_id);
+            }
+
+        }else{
+            if ($this->input->get('id')) {
+                $id = $this->input->get('id');
+            }
+            $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+            $inv                 = $this->sales_model->getInvoiceByID($id);
+            if (!$this->GP['sales-index']) {
+                $this->sma->view_rights($inv->created_by, true);
+            }
+            $this->data['sale_id'] = $id;
+            $this->load->view($this->theme . 'sales/add_label', $this->data);
+        }
+    }
+
+    public function verify_label($id = null){
+        //$this->sma->checkPermissions();
+        $this->load->library('inv_qrcode');
+        
+        $label = $this->sales_model->getSaleLabels($id);
+        $sale = $this->sales_model->getSaleByID($id);
+        $customer = $this->companies_model->getCompanyByID($sale->customer_id);
+
+        $qrtext = 'yup';
+        $qr_code = $this->sma->qrcodepng('text', $qrtext, 2, $level = 'H', $sq = null, $svg = false);
+        $png_base64 = base64_encode($qr_code);
+
+        $this->data['sale_id'] = $id;
+        $this->data['label'] = $label;
+        $this->data['sale'] = $sale;
+        $this->data['customer'] = $customer;
+        $this->data['biller']      = $this->site->getCompanyByID($sale->biller_id);
+
+        $this->load->view($this->theme . 'sales/verify_label', $this->data);
+    }
+
+    public function label_verification($id = null){
+        
+        if($label_id = $this->sales_model->verifyLabel($id)){
+            echo json_encode(['status' => 'success', 'message' => 'Label verified successfully']);
+        }else{
+            echo json_encode(['status' => 'error', 'message' => 'Verification failed']);
+        }
+        return true;
     }
 
     public function view($id = null)
     {
-        $this->sma->checkPermissions('index');
+        //$this->sma->checkPermissions('index');
         $this->load->library('inv_qrcode');
 
         if ($this->input->get('id')) {
@@ -5414,7 +5700,7 @@ if($inv->warning_note != ""){
 
     public function view_delivery($id = null)
     {
-        $this->sma->checkPermissions('deliveries');
+        //$this->sma->checkPermissions('deliveries');
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');

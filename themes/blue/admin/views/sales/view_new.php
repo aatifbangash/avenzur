@@ -51,12 +51,12 @@
 
 /* --- Active Step --- */
 .progress-step.active .step-circle {
-    background-color: #28a745; /* Green */
+    background-color: #007bff; /* Green */
 }
 
 /* --- Completed Step --- */
 .progress-step.completed .step-circle {
-    background-color: #007bff; /* Blue */
+    background-color: #28a745; /* Blue */
 }
 
 /* --- Step Text --- */
@@ -87,53 +87,7 @@
 
         <div class="box-icon">
             <ul class="btn-tasks">
-                <li class="dropdown">
-                    <a data-toggle="dropdown" class="dropdown-toggle" href="#">
-                        <i class="icon fa fa-tasks tip" data-placement="left" title="<?= lang('actions') ?>">
-                        </i>
-                    </a>
-                    <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
-                        <li>
-                            <a href="<?= admin_url('sales/edit/' . $inv->id) ?>" class="sledit">
-                                <i class="fa fa-edit"></i> <?= lang('edit_sale') ?>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="<?= admin_url('sales/payments/' . $inv->id) ?>" data-target="#myModal" data-toggle="modal">
-                                <i class="fa fa-money"></i> <?= lang('view_payments') ?>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="<?= admin_url('sales/add_payment/' . $inv->id) ?>" data-target="#myModal" data-toggle="modal">
-                                <i class="fa fa-dollar"></i> <?= lang('add_payment') ?>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="<?= admin_url('sales/email/' . $inv->id) ?>" data-target="#myModal" data-toggle="modal">
-                                <i class="fa fa-envelope-o"></i> <?= lang('send_email') ?>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="<?= admin_url('sales/pdf/' . $inv->id) ?>">
-                                <i class="fa fa-file-pdf-o"></i> <?= lang('export_to_pdf') ?>
-                            </a>
-                        </li>
-                        <?php if (!$inv->sale_id) {
-                            ?>
-                        <li>
-                            <a href="<?= admin_url('sales/add_delivery/' . $inv->id) ?>" data-target="#myModal" data-toggle="modal">
-                                <i class="fa fa-truck"></i> <?= lang('add_delivery') ?>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="<?= admin_url('sales/return_sale/' . $inv->id) ?>">
-                                <i class="fa fa-angle-double-left"></i> <?= lang('return_sale') ?>
-                            </a>
-                        </li>
-                            <?php
-                        } ?>
-                    </ul>
-                </li>
+                <li class="dropdown"></li>
             </ul>
         </div>
     </div>
@@ -268,6 +222,7 @@
             $label_verifired_status = '';
             $driver_assigned_status = '';
             $delivered = '';
+            $invoiced = '';
 
             if($inv->sale_status == 'ready'){
                 $ready_status = 'completed';
@@ -275,31 +230,43 @@
                 $label_verifired_status = '';
                 $driver_assigned_status = '';
                 $delivered = '';
+                $invoiced = '';
             }else if($inv->sale_status == 'added_label'){
                 $ready_status = 'completed';
                 $printed_label_status = 'completed';
                 $label_verifired_status = 'active';
                 $driver_assigned_status = '';
                 $delivered = '';
+                $invoiced = '';
             }else if($inv->sale_status == 'label_verifired'){
                 $ready_status = 'completed';
                 $printed_label_status = 'completed';
                 $label_verifired_status = 'completed';
                 $driver_assigned_status = 'active';
                 $delivered = '';
+                $invoiced = '';
             }else if($inv->sale_status == 'driver_assigned'){
                 $ready_status = 'completed';
                 $printed_label_status = 'completed';
                 $label_verifired_status = 'completed';
                 $driver_assigned_status = 'completed';
                 $delivered = 'active';
+                $invoiced = '';
             }else if($inv->sale_status == 'delivered'){
                 $ready_status = 'completed';
                 $printed_label_status = 'completed';
                 $label_verifired_status = 'completed';
                 $driver_assigned_status = 'completed';
                 $delivered = 'completed';
-            }   
+                $invoiced = 'active';
+            } else if($inv->sale_status == 'completed'){
+                $ready_status = 'completed';
+                $printed_label_status = 'completed';
+                $label_verifired_status = 'completed';
+                $driver_assigned_status = 'completed';
+                $delivered = 'completed';
+                $invoiced = 'completed';
+            } 
         ?>
 
         <!-- Stepper HTML -->
@@ -310,7 +277,7 @@
             </div>
             <div class="progress-step <?php echo $printed_label_status; ?>">
                 <div class="step-circle">2</div>
-                <div class="step-label">Added Label</div>
+                <div class="step-label">Label Added</div>
             </div>
             <div class="progress-step <?php echo $label_verifired_status; ?>">
                 <div class="step-circle">3</div>
@@ -324,6 +291,10 @@
                 <div class="step-circle">5</div>
                 <div class="step-label">Delivered</div>
             </div>
+            <div class="progress-step <?php echo $invoiced; ?>">
+                <div class="step-circle">6</div>
+                <div class="step-label">Sale Invoiced</div>
+            </div>
         </div>
 
         <div class="clearfix"></div>
@@ -332,7 +303,7 @@
         <div class="buttons">
             <div class="btn-group btn-group-justified">
                 <?php 
-                    if($this->GP['sales-index']){
+                    if(($this->Admin || $this->Owner || $this->WarehouseSupervisor) && ($inv->sale_status == 'ready')){
                 ?>
                 <div class="btn-group">
                     <a href="<?= admin_url('sales/add_label/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-primary tip" title="<?= lang('add_label') ?>">
@@ -343,29 +314,53 @@
                     }
                 ?>
 
+                <?php 
+                    if($this->GP['sales-index'] || $this->Admin || $this->Owner){
+                ?>
                 <div class="btn-group">
                     <a href="<?= admin_url('sales/verify_label/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-primary tip" title="<?= lang('verify_label') ?>">
                         <i class="fa fa-money"></i> <span class="hidden-sm hidden-xs"><?= lang('verify_label') ?></span>
                     </a>
                 </div>
+                <?php 
+                    }
+                ?>
 
+                <?php 
+                    if(($this->Admin || $this->Owner || $this->WarehouseSupervisor) && ($inv->sale_status == 'label_verifired')){
+                ?>
                 <div class="btn-group">
                     <a href="<?= admin_url('sales/add_driver/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-primary tip" title="<?= lang('add_driver') ?>">
                         <i class="fa fa-money"></i> <span class="hidden-sm hidden-xs"><?= lang('add_driver') ?></span>
                     </a>
                 </div>
+                <?php 
+                    }
+                ?>
 
+                <?php 
+                    if(($this->Admin || $this->Owner || $this->WarehouseSupervisor)  && ($inv->sale_status == 'driver_assigned')){
+                ?>
                 <div class="btn-group">
-                    <a href="<?= admin_url('sales/add_delivery/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-primary tip" title="<?= lang('add_delivery') ?>">
-                        <i class="fa fa-truck"></i> <span class="hidden-sm hidden-xs"><?= lang('add_delivery') ?></span>
+                    <a href="<?= admin_url('sales/edit_delivery/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-primary tip" title="<?= lang('add_delivery') ?>">
+                        <i class="fa fa-truck"></i> <span class="hidden-sm hidden-xs"><?= lang('add_delivery_note') ?></span>
                     </a>
                 </div>
+                <?php 
+                    }
+                ?>
 
+                <?php 
+                    if(($this->Admin || $this->Owner || $this->Accountant) && ($inv->sale_status == 'delivered')){
+                ?>
                 <div class="btn-group">
-                    <a href="<?= admin_url('sales/pdf/' . $inv->id) ?>" class="tip btn btn-primary" title="<?= lang('sale_invoice') ?>">
-                        <i class="fa fa-download"></i> <span class="hidden-sm hidden-xs"><?= lang('sale_invoice') ?></span>
+                    <a href="<?= admin_url('sales/create_sale_invoice/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-primary" title="<?= lang('sale_invoice') ?>">
+                        <i class="fa fa-download"></i> <span class="hidden-sm hidden-xs"><?= lang('create_sale_invoice') ?></span>
                     </a>
                 </div>
+                <?php 
+                    }
+                ?>
             </div>
         </div>
     </div>
