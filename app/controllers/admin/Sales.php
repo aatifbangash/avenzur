@@ -4189,7 +4189,7 @@ if($inv->warning_note != ""){
 
 
             $mpdf->WriteHTML($html);
-            $mpdf->Output("sale_invoice.pdf", "I");
+            $mpdf->Output("sale_invoice.pdf", "D");
 
                 //$this->sma->generate_pdf($html, $name, 'I', $this->data['biller']->invoice_footer);
             }
