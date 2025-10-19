@@ -135,6 +135,47 @@ class Sales_model extends CI_Model
         ];
     }
 
+    public function getSaleLabels($sale_id){
+        $q = $this->db->get_where('sale_labels', ['sale_id' => $sale_id], 1);
+        if ($q->num_rows() > 0) {
+            $row = $q->row();
+            
+            return $row;
+        }
+        return false;
+    }
+
+    public function verifyLabel($sale_id){
+        $this->db->update('sales', ['sale_status' => 'label_verifired', 'note' => 'label_verifired'], ['id' => $sale_id]);
+
+        return $sale_id;
+    }
+
+    public function updateSaleLabel($sale_id, $number_of_cartons, $refrigirated_items){
+        $data = array();
+        $data['sale_id'] = $sale_id;
+        $data['number_of_cartons'] = $number_of_cartons;
+        $data['refrigerated_items'] = $refrigirated_items;
+        //$data['created_by'] = $this->session->userdata('user_id');
+        $data['updated_by'] = $this->session->userdata('user_id');
+        //$data['date_created'] = date('Y-m-d H:i:s');
+
+        $this->db->trans_start();
+        $this->db->where('sale_id', $sale_id);
+        $this->db->update('sale_labels', $data);
+
+        $this->db->update('sales', ['sale_status' => 'label_verifired', 'note' => 'label_verifired'], ['id' => $sale_id]);
+
+        $this->db->trans_complete();
+
+        if ($this->db->trans_status() === false) {
+            log_message('error', 'An error occurred while updating the label (updateSaleLabel: Sales_model.php)');
+            return false;
+        }
+
+        return true; // Return the inserted label ID
+    }
+
     public function addSaleLabel($sale_id, $number_of_cartons, $refrigirated_items){
         $data = array();
         $data['sale_id'] = $sale_id;
@@ -142,7 +183,7 @@ class Sales_model extends CI_Model
         $data['refrigerated_items'] = $refrigirated_items;
         $data['created_by'] = $this->session->userdata('user_id');
         $data['updated_by'] = $this->session->userdata('user_id');
-        $data['date_created'] = date('Y-m-d h:i:s');
+        $data['date_created'] = date('Y-m-d H:i:s');
 
         $this->db->trans_start();
         $this->db->insert('sale_labels', $data);
@@ -158,6 +199,34 @@ class Sales_model extends CI_Model
         }
 
         return $label_id; // Return the inserted label ID
+    }
+
+    public function addDriver($sale_id, $driver_id, $address, $customer, $sale_ref_no){
+        $data = array();
+        $data['date'] = date('Y-m-d');
+        $data['sale_id'] = $sale_id;
+        $data['sale_reference_no'] = $sale_ref_no;
+        $data['delivered_by'] = $driver_id;
+        $data['customer'] = $customer;
+        $data['address'] = $address;
+        $data['status'] = 'in_delivery';
+        $data['created_by'] = $this->session->userdata('user_id');
+        $data['updated_by'] = $this->session->userdata('user_id');
+        $data['updated_at'] = date('Y-m-d H:i:s');
+
+        $this->db->trans_start();
+        $this->db->insert('deliveries', $data);
+        $delivery_id = $this->db->insert_id();
+        $this->db->update('sales', ['sale_status' => 'driver_assigned', 'note' => 'driver assigned'], ['id' => $sale_id]);
+        
+        $this->db->trans_complete();
+
+        if ($this->db->trans_status() === false) {
+            log_message('error', 'An error occurred while adding the driver (addDriver: Sales_model.php)');
+            return false;
+        }
+
+        return $delivery_id;
     }
 
     public function addDelivery($data = [])
@@ -1397,6 +1466,13 @@ class Sales_model extends CI_Model
             return false;
         }
 
+    }
+
+    public function updateSaleStatus($id, $status){
+        $data = array();
+        $data['sale_status'] = $status;
+
+        $this->db->update('sales', $data, ['id' => $id]);
     }
 
     public function updateSale($id, $data, $items = [], $attachments = [])

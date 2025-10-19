@@ -262,6 +262,25 @@ class Settings_model extends CI_Model
         return false;
     }
 
+    public function getGroupByName($name)
+    {
+        $this->db->where('name', $name);
+        $query = $this->db->get('groups');
+        return $query->row();
+    }
+
+    public function getUserByGroupId($id)
+    {
+        $q = $this->db->get_where('users', ['group_id' => $id]);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
     public function deleteGroup($id)
     {
         if ($this->db->delete('groups', ['id' => $id])) {

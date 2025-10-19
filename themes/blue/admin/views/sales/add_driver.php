@@ -109,68 +109,39 @@
         transform: translateY(-2px);
     }
 </style>
-<div class="modal-dialog modal-lg">
+<div class="modal-dialog">
     <div class="modal-content">
         <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true"><i class="fa fa-2x">&times;</i>
             </button>
-            <h4 class="modal-title" id="myModalLabel"><?= lang('delivery_note'); ?></h4>
+            <h4 class="modal-title" id="myModalLabel"><?php echo lang('add_driver'); ?></h4>
         </div>
-        <?php $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
-        echo admin_form_open_multipart('sales/edit_delivery/' . $delivery->id, $attrib); ?>
+        <?php $attrib = ['data-toggle' => 'validator', 'role' => 'form', 'id' => "crud-label-form"];
+        echo admin_form_open_multipart('sales/add_driver', $attrib); ?>
         <div class="modal-body">
             <p><?= lang('enter_info'); ?></p>
-            <div class="row">
-            <div class="col-md-6">
-
-                <div class="form-group">
-                    <?= lang('do_reference_no', 'do_reference_no'); ?>
-                    <?= form_input('do_reference_no', (isset($_POST['do_reference_no']) ? $_POST['do_reference_no'] : $delivery->do_reference_no), 'class="form-control tip" id="do_reference_no" required="required"'); ?>
-                </div>
-
-                <div class="form-group">
-                    <?= lang('received_by', 'received_by'); ?>
-                    <?= form_input('received_by', (isset($_POST['received_by']) ? $_POST['received_by'] : $delivery->received_by), 'class="form-control" id="received_by"'); ?>
-                </div>
-
-                <div class="form-group">
-                    <?= lang('attachment', 'attachment') ?>
-                    <input id="attachment" type="file" data-browse-label="<?= lang('browse'); ?>" name="document" data-show-upload="false" data-show-preview="false" class="form-control file">
-                </div>
-
-                <input type="hidden" value="<?= $delivery->sale_id; ?>" name="sale_id"/>
+            <!-- Driver Dropdown -->
+            <div class="form-group">
+                <label class="control-label" for="driver_id"><?= lang('select_driver'); ?></label>
+                <select name="driver_id" id="driver_id" class="form-control" required>
+                    <option value=""><?= lang('select_driver'); ?></option>
+                    <?php if (!empty($driver)) : ?>
+                        <?php foreach ($driver as $d) : ?>
+                            <option value="<?= $d->id; ?>"><?= $d->first_name . ' ' . $d->last_name; ?></option>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </select>
             </div>
-            <div class="col-md-6">
-
-                <div class="form-group">
-                    <?= lang('status', 'status'); ?>
-                    <?php
-                    $opts = ['delivered' => lang('delivered')];
-                    ?>
-                    <?= form_dropdown('status', $opts, (isset($_POST['status']) ? $_POST['status'] : $delivery->status), 'class="form-control" id="status" required="required" style="width:100%;"'); ?>
-                </div>
-
-                <div class="form-group">
-                    <?= lang('note', 'note'); ?>
-                    <?= form_textarea('note', (isset($_POST['note']) ? $_POST['note'] : $delivery->note), 'class="form-control" id="note"'); ?>
-                </div>
+            <div class="form-group">
+                <label class="control-label" for="address"><?php echo $this->lang->line('address'); ?></label>
+                <?php echo form_textarea('address', '', 'class="form-control" id="address" required="required"'); ?>
             </div>
-            </div>
-
+            <input type="hidden" name="sale_id" value="<?= $sale_id; ?>" />
+            
         </div>
         <div class="modal-footer">
-            <?= form_submit('edit_delivery', lang('complete_delivery'), 'class="btn btn-primary"'); ?>
+            <?php echo form_submit('add_driver', lang('add_driver'), 'class="btn btn-primary"'); ?>
         </div>
     </div>
-    <?= form_close(); ?>
+    <?php echo form_close(); ?>
 </div>
-<script type="text/javascript" src="<?= $assets ?>js/custom.js"></script>
-<script type="text/javascript" charset="UTF-8">
-    $.fn.datetimepicker.dates['sma'] = <?=$dp_lang?>;
-</script>
-<?= $modal_js ?>
-<script type="text/javascript" charset="UTF-8">
-    $(document).ready(function () {
-        $.fn.datetimepicker.dates['sma'] = <?=$dp_lang?>;
-    });
-</script>
