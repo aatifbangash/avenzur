@@ -4117,19 +4117,33 @@ if($inv->warning_note != ""){
     $note_text = '';
 }
 
+    $footer_table = '';
+    $footer_note = '';
+    if($this->Settings->site_name == 'Hills Business Medical'){
+        $footer_table = '<div style="width:60%; float:left; text-align:left; margin-bottom:15px;">
+            <table class="table-label" border="1"  cellspacing="0" cellpadding="10" width="100%" style="border-collapse:collapse; font-size: 10px">
+                <tr><td colspan="3" style="text-align: center; vertical-align: middle; background-color: #f2f2f2; font-size: 20px;">'.$inv->id.'</td> <td colspan="3">فريق التحضير</td></tr>
+                <tr><td colspan="3">تحضير بداية</td> <td colspan="3">تحضير نهاية</td></tr>
+                <tr><td colspan="2">بداية تشييك</td> <td colspan="2">اسم المشيك</td> <td colspan="2">كمرا</td></tr>
+                <tr><td colspan="2">عدد كرتون</td> <td colspan="2">ربطة الثلاجة</td> <td colspan="2">خطأ</td></tr>
+            </table>
+        </div>';
+    }else{
+        $footer_note = '<div style="float:left; width:60%; text-align:left; padding-right:10px;">
+            <p style="margin:0 0 5px 0;"><strong>'.$note_text.'</strong></p>
+            <p style="margin:0;">
+            '.$inv->warning_note.'
+            </p>
+        </div>';
+    }
         
-            $mpdf->SetHTMLFooter('
+    $mpdf->SetHTMLFooter('
     <hr style="margin-bottom:5px;">
 
     <div style="width:100%; font-size:12px; font-family: DejaVu Sans, sans-serif;">
 
         <!-- Notes Section (Left) -->
-        <div style="float:left; width:60%; text-align:left; padding-right:10px;">
-            <p style="margin:0 0 5px 0;"><strong>'.$note_text.'</strong></p>
-            <p style="margin:0;">
-            '.$inv->warning_note.'
-            </p>
-        </div>
+        '.$footer_note.'
 
         <!-- Totals Table -->
         <div style="width:35%; float:right; text-align:left; margin-bottom:15px;">
@@ -4141,6 +4155,9 @@ if($inv->warning_note != ""){
                 <tr><td><strong>Total After VAT</strong></td><td><strong>'.$this->sma->formatNumber($inv->grand_total).'</strong></td></tr>
             </table>
         </div>
+
+        <!-- Totals Table -->
+        '.$footer_table.'
 
         <!-- Signature Section -->
         <div style="width:100%; overflow:hidden; margin-top:50px; font-size:12px;">
@@ -4172,7 +4189,7 @@ if($inv->warning_note != ""){
 
 
             $mpdf->WriteHTML($html);
-            $mpdf->Output("sale_invoice.pdf", "D");
+            $mpdf->Output("sale_invoice.pdf", "I");
 
                 //$this->sma->generate_pdf($html, $name, 'I', $this->data['biller']->invoice_footer);
             }
