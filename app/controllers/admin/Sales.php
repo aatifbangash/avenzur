@@ -3578,6 +3578,7 @@ class Sales extends MY_Controller
         $email_link        = anchor('admin/sales/email/$1', '<i class="fa fa-envelope"></i> ' . lang('email_sale'), 'data-toggle="modal" data-target="#myModal"');
         $edit_link         = anchor('admin/sales/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_sale'), 'class="sledit"');
         $pdf_link          = anchor('admin/sales/pdf_new/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf'));
+        $pdf_label          = anchor('admin/sales/pdf_new_label/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf'));
         $return_link       = anchor('admin/returns/add/?sale=$1', '<i class="fa fa-angle-double-left"></i> ' . lang('return_sale'));
         //$shipment_link     = anchor('$1', '<i class="fa fa-angle-double-left"></i> ' . lang('Shipping_Slip'));
         $delete_link       = "<a href='#' class='po' title='<b>" . lang('delete_sale') . "</b>' data-content=\"<p>"
@@ -3611,6 +3612,7 @@ class Sales extends MY_Controller
             <li>' . $detail_link . '</li>
             <li>' . $edit_link . '</li>
             <li>' . $pdf_link . '</li>
+            <li>' . $pdf_label . '</li>
             <li>' . $return_link . '</li>
             <li>' . $delete_link . '</li>
             <li>' . $journal_entry_link . '</li>
@@ -3889,6 +3891,275 @@ class Sales extends MY_Controller
             $this->sma->generate_pdf($html, $name, 'I', $this->data['biller']->invoice_footer);
         }
     }
+     public function pdf_new_label($id = null, $view = null, $save_bufffer = null)
+    {  
+          $this->sma->checkPermissions();
+
+    // ----- CONSTANT TEST DATA -----
+    $invoice_no    = '37412';
+    $customer_name = 'maimonah alkhair medical pharmacy - makkah';
+    $region        = 'Makkah';
+    $region_no     = '2';
+    $num_cartons   = 2;
+    
+    // <img src="data:image/png;base64,' . $png_base64 . '" width="50" height="50" />
+
+    // Logo: inline base64 (place your logo at assets/uploads/logos/label-logo.png)
+    $logo_file = FCPATH . 'assets/uploads/logos/label-logo.png';
+    $logo_img  = '';
+    if (is_file($logo_file)) {
+        $logo_img = 'data:image/png;base64,' . base64_encode(file_get_contents($logo_file));
+    } else {
+        // Fallback to your existing logo path, or leave empty
+        $fallback = FCPATH . 'assets/uploads/logos/logo.png';
+        if (is_file($fallback)) {
+            $logo_img = 'data:image/png;base64,' . base64_encode(file_get_contents($fallback));
+        }
+    }
+
+    // Barcode (server-side route like elsewhere in your app)
+    $barcode_url = admin_url('misc/barcode/' . $this->sma->base64url_encode($invoice_no) . '/code128/60/0/1');
+
+    // Print date
+    $print_dt = $this->sma->hrld(date('Y-m-d H:i:s'));
+
+    $payload = [
+                'seller' => '$biller->company && $biller->company != '-' ? $biller->company : $biller->name',
+                'vat_no' => '$biller->vat_no ?: $biller->get_no',
+                'date' => '$inv->date',
+                'grand_total' => '$return_sale ? ($inv->grand_total + $return_sale->grand_total) : $inv->grand_total',
+                'total_tax_amount' => '$return_sale ? ($inv->total_tax + $return_sale->total_tax) : $inv->total_tax',
+            ];
+
+            // Convert to JSON directly
+            $qrtext = json_encode($payload);
+            $qr_code = $this->sma->qrcodepng('text', $qrtext, 2, $level = 'H', $sq = null, $svg = false);
+           
+            $png_base64 = base64_encode($qr_code);
+
+
+    $mpdf = new Mpdf([
+        'mode'         => 'utf-8',
+        'format'        => [150, 105], 
+        'margin_top'    => 6,
+        'margin_right'  => 6,
+        'margin_bottom' => 6,
+        'margin_left'   => 6,
+    ]);
+
+    
+
+    for ($i = 1; $i <= $num_cartons; $i++) {
+        // Per-label HTML (one page per carton)
+        $html = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #2a2a2a;
+            font-family: Arial, sans-serif;
+        }
+        
+        .ticket {
+            width: 500px;
+            height: 300px;
+            background: white;
+            padding: 20px;
+            position: relative;
+            direction: rtl;
+        }
+        
+        .header {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        .header table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: #1a1a1a;
+        }
+        
+        .ticket-number {
+            font-size: 36px;
+            font-weight: bold;
+            letter-spacing: 4px;
+            background-color: #1a1a1a;
+            color: white;
+            padding: 4px 8px;
+            text-align: center;
+        }
+        
+        .info-section {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .info-section-below {
+            margin: 20px 0;
+            width: 100%;
+        }
+        
+        .info-section-below table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .value {
+            font-weight: bold;
+            font-size: 28px;
+            text-align: center;
+        }
+        
+        .big-display {
+            margin: 10px 0;
+            text-align: center;
+        }
+        
+        .big-display table {
+            margin: 0 auto;
+            border-collapse: collapse;
+        }
+        
+        .digit-box {
+            width: 80px;
+            height: 40px;
+            background: #1a1a1a;
+            color: white;
+            font-size: 30px;
+            font-weight: bold;
+            text-align: center;
+            vertical-align: middle;
+            padding: 5px;
+        }
+
+        .digit-box-text {
+            color: black;
+            font-size: 30px;
+            font-weight: bold;
+            text-align: center;
+            vertical-align: middle;
+            padding: 5px 10px;
+        }
+        
+        .of-label {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            vertical-align: middle;
+            padding: 0 10px;
+        }
+        
+        .qr-code {
+            width: 60px;
+            height: 60px;
+            background: #1a1a1a;
+            color: white;
+            font-size: 8px;
+            text-align: center;
+            vertical-align: middle;
+            margin: 0 0 0 40px;
+        }
+        
+        .datetime {
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .region-label {
+            font-size: 22px;
+            text-align: center;
+        }
+        
+        .spacer {
+            width: 68px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="ticket">
+        <div class="header">
+            <table>
+                <tr>
+                    <td style="width: 60px;"></td>
+                    <td style="text-align: center;">
+                        <div class="ticket-number">37412</div>
+                    </td>
+                      <td style="width: 60px; margin-right: 20px;"></td>
+                    <td  >
+                        <img src="https://placehold.co/100x40/png"/>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="info-section">
+            <div class="value"></div>
+        </div>
+        
+        <div class="big-display">
+            <table>
+                <tr>
+                    <td class="digit-box-text">عدد كرتون</td>
+                    <td class="digit-box">1</td>
+                    <td class="of-label">OF</td>
+                    <td class="digit-box">1</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="big-display" style="margin-right:0px !important">
+            <table>
+                <tr >
+                    <td class="digit-box-text">ربطة ثلاجة</td>
+                    <td class="digit-box">0</td>
+                    <td class="spacer"></td>
+                    <td class="spacer"></td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="info-section-below">
+            <table>
+                <tr>
+                    <td style="width: 100px; vertical-align: bottom;">
+                        <img src="data:image/png;base64,' . $png_base64 . '" width="80" height="80" />
+                    </td>
+                    <td class="spacer"></td>
+                    <td class="spacer"></td>
+                    <td style="text-align: center; vertical-align: bottom;">
+                        <div class="region-label">مكة المكرمة     2</div>
+                        <div class="datetime">12/10/25 4:52 PM</div>
+                    </td>
+                    <td style="width: 100px;"></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
+';
+
+        $mpdf->WriteHTML($html);
+        if ($i < $num_cartons) {
+            $mpdf->AddPage();
+        }
+    }
+
+    $fname = 'test_labels_' . str_replace('/', '_', $invoice_no) . '_x' . $num_cartons . '.pdf';
+    $mpdf->Output($fname, 'D'); // download
+     }
+
+
 
     public function pdf_new($id = null, $view = null, $save_bufffer = null)
     {   
@@ -3916,7 +4187,7 @@ class Sales extends MY_Controller
         $this->data['rows']        = $this->sales_model->getAllInvoiceItems($id);
         $this->data['return_sale'] = $inv->return_id ? $this->sales_model->getInvoiceByID($inv->return_id) : null;
         $this->data['return_rows'] = $inv->return_id ? $this->sales_model->getAllInvoiceItems($inv->return_id) : null;
-        //echo '<pre>';print_r($this->data);exit;
+        // echo '<pre>';print_r($this->data);exit;
         
         $name = lang('sale') . '_' . str_replace('/', '_', $inv->reference_no) . '.pdf';
         $html = $this->load->view($this->theme . 'sales/pdf/sales_invoice_report_new', $this->data, true);
@@ -3938,11 +4209,12 @@ class Sales extends MY_Controller
             // Convert to JSON directly
             $qrtext = json_encode($payload);
             $qr_code = $this->sma->qrcodepng('text', $qrtext, 2, $level = 'H', $sq = null, $svg = false);
-           //echo $qr_code;exit;
+        //    echo $qr_code;exit;
             $png_base64 = base64_encode($qr_code);
             
         } else {
             $qr_code = $this->sma->qrcode('link', urlencode(site_url('view/sale/' . $inv->hash)), 2);
+            //  echo $qr_code;exit;
         }
 
         // Now explicitly generate Base64 PNG
@@ -4065,6 +4337,19 @@ if($inv->warning_note != ""){
             </table>
         </div>
 
+       
+
+        <!-- Totals Table -->
+ <div style="width:60%; float:left; text-align:left; margin-bottom:15px;">
+    <table class="table-label" border="1"  cellspacing="0" cellpadding="10" width="100%" style="border-collapse:collapse; font-size: 10px">
+        <tr><td colspan="3" style="text-align: center; vertical-align: middle; background-color: #f2f2f2; font-size: 20px;">37412</td> <td colspan="3">Pick Team - فريق التحضير</td></tr>
+        <tr><td colspan="3">Pick Start - تحضير بداية</td> <td colspan="3">Pick End - تحضير نهاية</td></tr>
+        <tr><td colspan="2">Check Start - بداية تشييك</td> <td colspan="2">CheckedBy - اسم المشيك</td> <td colspan="2">Cam - كمرا</td></tr>
+        <tr><td colspan="2">Box - عدد كرتون</td> <td colspan="2">Refrigpack - ربطة الثلاجة</td> <td colspan="2">Error - خطأ</td></tr>
+    </table>
+</div>
+
+
         <!-- Signature Section -->
         <div style="width:100%; overflow:hidden; margin-top:50px; font-size:12px;">
             
@@ -4093,7 +4378,16 @@ if($inv->warning_note != ""){
 ');
 
 
+$html = '
+<style>
 
+
+.table-label td {
+  height: 70px;                   /* vertical space for handwriting */
+  vertical-align: top;            /* keep text at the top */
+}
+</style>
+' . $html;
             $mpdf->WriteHTML($html);
             $mpdf->Output("sale_invoice.pdf", "D");
 
@@ -5160,223 +5454,9 @@ if($inv->warning_note != ""){
         $qr_code = $this->sma->qrcodepng('text', $qrtext, 2, $level = 'H', $sq = null, $svg = false);
 
         $png_base64 = base64_encode($qr_code);
-        $mpdf = new Mpdf([
-            'mode'         => 'utf-8',
-            'format'        => [150, 105], 
-            'margin_top'    => 6,
-            'margin_right'  => 6,
-            'margin_bottom' => 6,
-            'margin_left'   => 6,
-        ]);
+       
 
-        // Minimal CSS for label
-        $css = "";
-
-        for ($i = 1; $i <= $num_cartons; $i++) {
-            // Per-label HTML (one page per carton)
-            $html = $css . '<!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body {
-                        margin: 0;
-                        padding: 20px;
-                        background: #2a2a2a;
-                        font-family: Arial, sans-serif;
-                    }
-                    
-                    .ticket {
-                        width: 500px;
-                        height: 300px;
-                        background: white;
-                        padding: 20px;
-                        position: relative;
-                        direction: rtl;
-                    }
-                    
-                    .header {
-                        width: 100%;
-                        margin-bottom: 15px;
-                    }
-                    
-                    .header table {
-                        width: 100%;
-                        border-collapse: collapse;
-                    }
-                    
-                    .logo {
-                        width: 60px;
-                        height: 60px;
-                        background: #1a1a1a;
-                    }
-                    
-                    .ticket-number {
-                        font-size: 36px;
-                        font-weight: bold;
-                        letter-spacing: 4px;
-                        background-color: #1a1a1a;
-                        color: white;
-                        padding: 4px 8px;
-                        text-align: center;
-                    }
-                    
-                    .info-section {
-                        margin: 20px 0;
-                        text-align: center;
-                    }
-                    .info-section-below {
-                        margin: 20px 0;
-                        width: 100%;
-                    }
-                    
-                    .info-section-below table {
-                        width: 100%;
-                        border-collapse: collapse;
-                    }
-                    
-                    .value {
-                        font-weight: bold;
-                        font-size: 28px;
-                        text-align: center;
-                    }
-                    
-                    .big-display {
-                        margin: 10px 0;
-                        text-align: center;
-                    }
-                    
-                    .big-display table {
-                        margin: 0 auto;
-                        border-collapse: collapse;
-                    }
-                    
-                    .digit-box {
-                        width: 80px;
-                        height: 40px;
-                        background: #1a1a1a;
-                        color: white;
-                        font-size: 30px;
-                        font-weight: bold;
-                        text-align: center;
-                        vertical-align: middle;
-                        padding: 5px;
-                    }
-                    .digit-box-text {
-                        color: black;
-                        font-size: 30px;
-                        font-weight: bold;
-                        text-align: center;
-                        vertical-align: middle;
-                        padding: 5px 10px;
-                    }
-                    
-                    .of-label {
-                        font-size: 24px;
-                        font-weight: bold;
-                        text-align: center;
-                        vertical-align: middle;
-                        padding: 0 10px;
-                    }
-                    
-                    .qr-code {
-                        width: 60px;
-                        height: 60px;
-                        background: #1a1a1a;
-                        color: white;
-                        font-size: 8px;
-                        text-align: center;
-                        vertical-align: middle;
-                        margin: 0 0 0 40px;
-                    }
-                    
-                    .datetime {
-                        text-align: center;
-                        font-size: 12px;
-                    }
-                    .region-label {
-                        font-size: 22px;
-                        text-align: center;
-                    }
-                    
-                    .spacer {
-                        width: 68px;
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="ticket">
-                    <div class="header">
-                        <table>
-                            <tr>
-                                <td style="width: 60px;"></td>
-                                <td style="text-align: center;">
-                                    <div class="ticket-number">37412</div>
-                                </td>
-                                <td style="width: 60px; margin-right: 20px;"></td>
-                                <td  >
-                                    <img src="https://placehold.co/100x40/png"/>
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                    
-                    <div class="info-section">
-                        <div class="value">صيدلية ميمونة الخير الطبية - مكة</div>
-                    </div>
-                    
-                    <div class="big-display">
-                        <table>
-                            <tr>
-                                <td class="digit-box-text">عدد كرتون</td>
-                                <td class="digit-box">1</td>
-                                <td class="of-label">OF</td>
-                                <td class="digit-box">1</td>
-                            </tr>
-                        </table>
-                    </div>
-                    
-                    <div class="big-display" style="margin-right:0px !important">
-                        <table>
-                            <tr >
-                                <td class="digit-box-text">ربطة ثلاجة</td>
-                                <td class="digit-box">0</td>
-                                <td class="spacer"></td>
-                                <td class="spacer"></td>
-                            </tr>
-                        </table>
-                    </div>
-                    
-                    <div class="info-section-below">
-                        <table>
-                            <tr>
-                                <td style="width: 100px; vertical-align: bottom;">
-                                    <img src="data:image/png;base64,' . $png_base64 . '" width="80" height="80" />
-                                </td>
-                                <td class="spacer"></td>
-                                <td class="spacer"></td>
-                                <td class="spacer"></td>
-                                <td style="text-align: center; vertical-align: bottom;">
-                                    <div class="region-label">مكة المكرمة     2</div>
-                                    <div class="datetime">12/10/25 4:52 PM</div>
-                                </td>
-                                <td style="width: 100px;"></td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-            </body>
-            </html>
-            ';
-
-            $mpdf->WriteHTML($html);
-            if ($i < $num_cartons) {
-                $mpdf->AddPage();
-            }
-        }
-
-        $fname = 'test_labels_' . str_replace('/', '_', $invoice_no) . '_x' . $num_cartons . '.pdf';
-        $mpdf->Output($fname, 'I'); // download
+          $this->load->view($this->theme . 'sales/verify_label', $this->data);
     }
 
     public function view($id = null)
