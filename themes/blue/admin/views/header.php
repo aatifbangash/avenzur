@@ -1343,7 +1343,7 @@
                                     } ?>
 
                                     <?php 
-                                        if($this->GP['sales-coordinator']){
+                                        if($Admin || $Owner || $this->GP['sales-coordinator']){
                                     ?>
                                     <li id="customers_index">
                                         <a class="submenu" href="<?= admin_url('customers'); ?>">
