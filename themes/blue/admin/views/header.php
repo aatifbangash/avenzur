@@ -1359,7 +1359,7 @@
                                     }
                                     ?>
                                     <?php 
-                                        if($this->GP['purchase_manager']){
+                                        if($Admin || $Owner || $this->GP['purchase_manager']){
                                     ?>
                                     <li id="suppliers_index">
                                         <a class="submenu" href="<?= admin_url('suppliers'); ?>">

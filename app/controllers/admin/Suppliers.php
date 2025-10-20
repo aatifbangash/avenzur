@@ -1,7 +1,9 @@
 <?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
-
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
 class Suppliers extends MY_Controller
 {
     public function __construct()
@@ -1386,6 +1388,194 @@ class Suppliers extends MY_Controller
             ->add_column('Actions', "<div class=\"text-center\"><a class=\"tip\" title='" . $this->lang->line('list_products') . "' href='" . admin_url('products?supplier=$1') . "'><i class=\"fa fa-list\"></i></a> <a class=\"tip\" title='" . $this->lang->line('list_users') . "' href='" . admin_url('suppliers/users/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-users\"></i></a> <a class=\"tip\" title='" . $this->lang->line('add_user') . "' href='" . admin_url('suppliers/add_user/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-plus-circle\"></i></a> <a class=\"tip\" title='" . $this->lang->line('edit_supplier') . "' href='" . admin_url('suppliers/edit/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . $this->lang->line('delete_supplier') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('suppliers/delete/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
         //->unset_column('id');
         echo $this->datatables->generate();
+    }
+
+    private function _get_companies_table_fields()
+    {
+        return [
+            'external_id' => 'Customer No',
+            'name' => 'Customer Name',
+            'company' => 'C R Name',
+            'cr' => 'C R Number',
+            'cr_expiration' => 'C R Expiration',
+            'vat_no' => 'VAT No',
+            'gln' => 'GLN No',
+            'sfda_certificate' => 'SFDA Certificate',
+            'short_address' => 'Short Address',
+            'city' => 'City',
+            'unit_number' => 'Unit Number',
+            'building_number' => 'Building Number',
+            'postal_code' => 'Postal Code',
+            'additional_number' => 'Additional Number',
+            'contact_name' => 'Contact Name',
+            'contact_number' => 'Contact Number',
+            'credit_limit' => 'Credit Limit',
+            'payment_term' => 'Credit Period',
+            'cf1' => 'Salesman Name',
+            'promessory_note_amount' => 'Promissory Note Amount',
+            'balance' => 'Customer Balance',
+            'note' => 'Note',
+            'sales_agent' => 'Sales Agent Name',
+            'category' => 'Classification',
+            'email' => 'Email'
+        ];
+    }
+
+    public function process_import()
+    {
+        $mapping  = $this->input->post('mapping');    // mapping array: file column index => db field
+        $filePath = $this->input->post('file_path');  // uploaded Excel file path
+
+        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($filePath);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $imported = 0;
+        $errors   = 0;
+        $i = 0;
+
+        // ✅ Read all rows as an array (handles weird Excel formats properly)
+        $rows = $sheet->toArray(null, true, true, false);
+        //echo '<pre>';print_r($rows);exit;
+        foreach ($rows as $rowIndex => $columns) {
+            $i++;
+
+            // Skip header row (first row)
+            if ($rowIndex == 0) continue;
+
+            // Convert associative row to numeric array
+            $rowData = array_values($columns);
+            //echo '<pre>';print_r($rowData);exit;
+            // Map Excel columns to DB fields
+            $data = [];
+            foreach ($mapping as $index => $field) {
+                if (!empty($field) && isset($rowData[$index])) {
+                    $data[$field] = trim($rowData[$index]);
+                }
+            }
+            //echo '<pre>';print_r($data);exit;
+            // Skip invalid rows
+            if (empty($data['name'])) {
+                continue;
+            }
+
+            // Check if supplier already exists
+            $exists = $this->db->get_where('companies', [
+                'name'       => $data['name'],
+                'group_name' => 'supplier'
+            ])->row();
+
+            if ($exists) {
+                // Update existing record
+                $this->db->where('id', $exists->id)->update('companies', $data);
+            } else {
+                // Generate sequence code like SUP-00001
+                $seq_code = 'SUP-' . str_pad($i, 5, '0', STR_PAD_LEFT);
+
+                // Insert new record with defaults
+                $data['group_id']      = 4;
+                $data['group_name']    = 'supplier';
+                $data['country']       = 'Saudi Arabia';
+                $data['sequence_code'] = $seq_code;
+                $data['level']         = 1;
+
+                $this->db->insert('companies', $data);
+                $supplier_id = $this->db->insert_id();
+
+                // This block is to add child supplier
+                if($this->Settings->site_name == 'Hills Business Medical'){
+
+                    $data['level']               = 2;
+                    $parent_code = $seq_code = 'SUP-' . str_pad($i, 5, '0', STR_PAD_LEFT);
+                    $i++;
+                    $seq_code = 'SUP-' . str_pad($i, 5, '0', STR_PAD_LEFT);
+
+                    $this->db->insert('companies', $data);
+                }
+            }
+
+            if ($this->db->affected_rows() > 0) {
+                $imported++;
+            } else {
+                $errors++;
+            }
+        }
+
+        // Clean up
+        if (file_exists($filePath)) {
+            unlink($filePath);
+        }
+
+        $this->session->set_flashdata('message', "Imported: {$imported}, Errors: {$errors}");
+        redirect(admin_url('suppliers'));
+    }
+
+
+    
+    public function import_excel(){
+        $this->load->helper('security');
+        $this->form_validation->set_rules('excel_file', lang('upload_file'), 'xss_clean');
+
+        if ($this->form_validation->run() == true) {
+
+            $this->load->library('excel');
+            if (isset($_FILES['excel_file']) && $_FILES['excel_file']['size'] > 0) {
+                $this->load->library('upload');
+
+                $config['upload_path']   = 'files/';
+                $config['allowed_types'] = 'xlsx|xls|csv';
+                $config['max_size']      = '10000';
+                $config['overwrite']     = false;
+                $config['encrypt_name']  = true;
+
+                $this->upload->initialize($config);
+                $this->upload->initialize($config);
+
+                if (!$this->upload->do_upload('excel_file')) {
+                    $error = $this->upload->display_errors();
+                    $this->session->set_flashdata('error', $error);
+                    admin_redirect('suppliers');
+                }
+
+                $upload_data = $this->upload->data();
+                $file_path = $upload_data['full_path'];
+
+                $spreadsheet = IOFactory::load($file_path);
+                $sheet = $spreadsheet->getActiveSheet();
+                $rows = $sheet->toArray(null, true, true, true);
+                
+                 // Extract headers (first row)
+                $headers = array_shift($rows);
+               
+                // Filter out empty headers
+                $headers = array_filter($headers, function($value) {
+                    return trim($value) !== '';
+                });
+
+                // Optionally reindex headers numerically
+                $headers = array_values($headers);
+
+                // Pass to view for mapping
+                $this->data['headers']   = $headers;
+                $this->data['rows']      = $rows;
+                $this->data['file_path'] = $file_path;
+                $this->data['db_fields'] = $this->_get_companies_table_fields();
+
+                //$this->load->view($this->theme . 'customers/map_fields', $this->data);
+
+                $this->session->set_userdata('user_csrf', $value);
+                $this->data['csrf'] = $this->session->userdata('user_csrf');
+                $bc = [['link' => base_url(), 'page' => lang('suppliers_mapper')], ['link' => admin_url('suppliers'), 'page' => lang('suppliers_mapper')], ['link' => '#', 'page' => lang('suppliers_mapper')]];
+                $meta = ['page_title' => lang('suppliers_mapper'), 'bc' => $bc];
+                $this->page_construct('suppliers/map_fields', $meta, $this->data);
+                
+            }
+        }else{
+             $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+            $this->data['modal_js'] = $this->site->modal_js();
+            $this->load->view($this->theme . 'suppliers/import_excel', $this->data);
+        }
     }
 
     public function import_csv()
