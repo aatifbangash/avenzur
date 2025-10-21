@@ -1413,7 +1413,7 @@ class Quotes extends MY_Controller
         . lang('actions') . ' <span class="caret"></span></button>
                     <ul class="dropdown-menu pull-right" role="menu">
                         <li>' . $edit_link . '</li>';
-                        if($this->Settings->site_name != 'Hills Business Medical'){
+                        if($this->Settings->site_name == 'Hills Business Medical'){
                             $action .= '<li>' . $convert_link . '</li>';
                         }
                         $action .= '<li>' . $pdf_link . '</li>
