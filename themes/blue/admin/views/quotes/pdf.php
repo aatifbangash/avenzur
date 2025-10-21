@@ -140,7 +140,7 @@
                             <td style="vertical-align:middle;">
                                 <?= $row->product_code . ' - ' . $row->product_name . ($row->variant ? ' (' . $row->variant . ')' : ''); ?>
                                 <?= $row->second_name ? '<br>' . $row->second_name : ''; ?>
-                                <?= $row->details ? '<br>' . $row->details : ''; ?>
+                                
                             </td>
                             <?php if ($Settings->indian_gst) {
                                 ?>
