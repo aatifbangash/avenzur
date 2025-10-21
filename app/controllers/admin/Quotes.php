@@ -1532,7 +1532,7 @@ class Quotes extends MY_Controller
         if (!$this->Settings->barcode_img) {
             $html = preg_replace("'\<\?xml(.*)\?\>'", '', $html);
         }
-        echo $html;exit;
+        //echo $html;exit;
         if ($view) {
             $this->load->view($this->theme . 'quotes/pdf', $this->data);
         } elseif ($save_bufffer) {
