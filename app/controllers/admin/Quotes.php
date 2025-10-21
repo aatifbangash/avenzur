@@ -1412,9 +1412,11 @@ class Quotes extends MY_Controller
         . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
         . lang('actions') . ' <span class="caret"></span></button>
                     <ul class="dropdown-menu pull-right" role="menu">
-                        <li>' . $edit_link . '</li>
-                        <li>' . $convert_link . '</li>
-                        <li>' . $pdf_link . '</li>
+                        <li>' . $edit_link . '</li>';
+                        if($this->Settings->site_name != 'Hills Business Medical'){
+                            $action .= '<li>' . $convert_link . '</li>';
+                        }
+                        $action .= '<li>' . $pdf_link . '</li>
                         <li>' . $delete_link . '</li>
                     </ul>
                 </div></div>';
@@ -1509,7 +1511,7 @@ class Quotes extends MY_Controller
 
     public function pdf($quote_id = null, $view = null, $save_bufffer = null)
     {
-        $this->sma->checkPermissions();
+        // /$this->sma->checkPermissions();
 
         if ($this->input->get('id')) {
             $quote_id = $this->input->get('id');
@@ -1519,7 +1521,7 @@ class Quotes extends MY_Controller
         if (!$this->session->userdata('view_right')) {
             $this->sma->view_rights($inv->created_by);
         }
-        $this->data['rows']       = $this->quotes_model->getAllQuoteItems($quote_id);
+        $this->data['rows']       = $this->quotes_model->getAllQuoteItems($quote_id, $inv);
         $this->data['customer']   = $this->site->getCompanyByID($inv->customer_id);
         $this->data['biller']     = $this->site->getCompanyByID($inv->biller_id);
         $this->data['created_by'] = $this->site->getUser($inv->created_by);
@@ -1530,6 +1532,7 @@ class Quotes extends MY_Controller
         if (!$this->Settings->barcode_img) {
             $html = preg_replace("'\<\?xml(.*)\?\>'", '', $html);
         }
+        echo $html;exit;
         if ($view) {
             $this->load->view($this->theme . 'quotes/pdf', $this->data);
         } elseif ($save_bufffer) {
