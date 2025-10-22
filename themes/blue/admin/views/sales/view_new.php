@@ -315,7 +315,7 @@
                 ?>
 
                 <?php 
-                    if($this->GP['sales-index'] || $this->Admin || $this->Owner){
+                    if($this->Admin || $this->Owner || $this->WarehouseSupervisor){
                 ?>
                 <div class="btn-group">
                     <a href="<?= admin_url('sales/verify_label/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-primary tip" title="<?= lang('verify_label') ?>">

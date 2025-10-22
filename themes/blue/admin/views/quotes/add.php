@@ -471,7 +471,7 @@ table#slTable td input.form-control {
                 ?>
                 <div class="row">
                     <div class="col-lg-12">
-                        <?php if ($Owner || $Admin) {
+                        <?php if ($Owner || $Admin || $GP['sales-coordinator']) {
                     ?>
                             <div class="col-md-4">
                                 <div class="form-group">
@@ -488,7 +488,7 @@ table#slTable td input.form-control {
                                 <?php echo form_input('reference_no', ($_POST['reference_no'] ?? $slnumber), 'class="form-control input-tip" id="slref"'); ?>
                             </div>
                         </div>-->
-                        <?php if ($Owner || $Admin || !$this->session->userdata('biller_id')) {
+                        <?php if ($Owner || $Admin || $GP['sales-coordinator']) {
                     ?>
                             <div class="col-md-4">
                                 <div class="form-group">
@@ -519,7 +519,7 @@ table#slTable td input.form-control {
                                 <div
                                     class="panel-heading"><?= lang('please_select_these_before_adding_product') ?></div>
                                 <div class="panel-body" style="padding: 5px;">
-                                    <?php if ($Owner || $Admin || !$this->session->userdata('warehouse_id')) {
+                                    <?php if ($Owner || $Admin || $GP['sales-coordinator']) {
                     ?>
                                         <div class="col-md-4">
                                             <div class="form-group">
@@ -724,7 +724,7 @@ table#slTable td input.form-control {
                                 <?php echo form_input('quote_status', 'open','hidden', 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('quote_status') . '" id="qtquote_status"'); ?>
                              <?php  } ?>
 
-                           <?php if ($Owner || $Admin || !$GP['sales-coordinator']) { ?>
+                           <?php if ($Owner || $Admin || $GP['sales-coordinator']) { ?>
                             
                              <div class="col-sm-4">
                                 <div class="form-group">

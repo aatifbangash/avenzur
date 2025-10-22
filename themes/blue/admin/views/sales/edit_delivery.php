@@ -138,7 +138,7 @@
                     <input id="attachment" type="file" data-browse-label="<?= lang('browse'); ?>" name="document" data-show-upload="false" data-show-preview="false" class="form-control file">
                 </div>
 
-                <input type="hidden" value="<?= $delivery->sale_id; ?>" name="sale_id"/>
+                <input type="hidden" value="<?= $sale_id; ?>" name="sale_id"/>
             </div>
             <div class="col-md-6">
 

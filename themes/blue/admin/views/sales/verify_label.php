@@ -213,7 +213,7 @@
                 class="btn btn-success">
                 <i class="fa fa-check"></i> Verify
                 </a>-->
-                <?php if($sale->sale_status == 'label_added') { ?>
+                <?php if($sale->sale_status == 'added_label') { ?>
                 <a href="#" class="btn btn-success po"
                     title="<b>Confirm Verification</b>"
                     data-content="
