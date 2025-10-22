@@ -5413,7 +5413,7 @@ if($inv->warning_note != ""){
 
         $mpdf = new Mpdf([
             'mode'         => 'utf-8',
-            'format'        => [150, 105], 
+            'format'        => [150, 122], 
             'margin_top'    => 6,
             'margin_right'  => 6,
             'margin_bottom' => 6,
