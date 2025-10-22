@@ -362,7 +362,11 @@ class Sales extends MY_Controller
 
         if($quote->status == 'converted_to_sale'){
             $this->session->set_flashdata('error', 'Quote already converted to sale order');
-
+            admin_redirect('quotes');
+        }
+        
+        if($quote->status != 'approved'){
+            $this->session->set_flashdata('error', 'Approved quotes are converted to sale order');
             admin_redirect('quotes');
         }
 
@@ -1429,7 +1433,7 @@ class Sales extends MY_Controller
 
     public function deliveries()
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         $data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
         $bc            = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('sales'), 'page' => lang('sales')], ['link' => '#', 'page' => lang('deliveries')]];
@@ -2088,7 +2092,7 @@ class Sales extends MY_Controller
 
     public function edit_delivery($id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -2136,6 +2140,7 @@ class Sales extends MY_Controller
         } else {
             $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
             $this->data['delivery'] = $this->sales_model->getDeliveryBySaleID($id);
+            $this->data['sale_id'] = $id;
             $this->data['modal_js'] = $this->site->modal_js();
             $this->load->view($this->theme . 'sales/edit_delivery', $this->data);
         }
@@ -2487,7 +2492,7 @@ class Sales extends MY_Controller
 
     public function getDeliveries()
     {
-        $this->sma->checkPermissions('deliveries');
+        //$this->sma->checkPermissions('deliveries');
 
         $detail_link = anchor('admin/sales/view_delivery/$1', '<i class="fa fa-file-text-o"></i> ' . lang('delivery_details'), 'data-toggle="modal" data-target="#myModal"');
         $email_link  = anchor('admin/sales/email_delivery/$1', '<i class="fa fa-envelope"></i> ' . lang('email_delivery'), 'data-toggle="modal" data-target="#myModal"');
@@ -5186,7 +5191,7 @@ if($inv->warning_note != ""){
     }
 
     public function create_sale_invoice($id = null){
-        //$this->form_validation->set_rules('sale_id', lang('sale_id'), 'required');
+        $this->form_validation->set_rules('sale_id', lang('sale_id'), 'required');
         if ($this->form_validation->run() == true) {
 
             $sale_id = $this->input->post('sale_id');

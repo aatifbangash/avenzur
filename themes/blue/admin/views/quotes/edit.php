@@ -24,7 +24,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
     ?>
         localStorage.setItem('sldate', '<?= $this->sma->hrld($inv->date) ?>');
         localStorage.setItem('qtcustomer', '<?= $inv->customer_id ?>');
-        localStorage.setItem('slbiller', '<?= $inv->biller_id ?>');
+        localStorage.setItem('qtbiller', '<?= $inv->biller_id ?>');
         localStorage.setItem('slref', '<?= $inv->reference_no ?>');
         localStorage.setItem('slwarehouse', '<?= $inv->warehouse_id ?>');
         localStorage.setItem('slsale_status', '<?= $inv->sale_status ?>');
@@ -48,11 +48,11 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
         }
         <?php
     } ?>
-        $(document).on('change', '#slbiller', function (e) {
-            localStorage.setItem('slbiller', $(this).val());
+        $(document).on('change', '#qtbiller', function (e) {
+            localStorage.setItem('qtbiller', $(this).val());
         });
-        if (slbiller = localStorage.getItem('slbiller')) {
-            $('#slbiller').val(slbiller);
+        if (qtbiller = localStorage.getItem('qtbiller')) {
+            $('#qtbiller').val(qtbiller);
         }
         ItemnTotals();
         $("#add_item").autocomplete({
@@ -366,7 +366,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
 
                 <div class="row">
                     <div class="col-lg-12">
-                        <?php if ($Owner || $Admin) {
+                        <?php if ($Owner || $Admin || $GP['sales-coordinator']) {
                     ?>
                             <div class="col-md-4">
                                 <div class="form-group">
@@ -382,29 +382,30 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                                 <?php echo form_input('reference_no', ($_POST['reference_no'] ?? ''), 'class="form-control input-tip" id="slref" required="required"'); ?>
                             </div>
                         </div>-->
-                        <?php if ($Owner || $Admin || !$this->session->userdata('biller_id')) {
-                    ?>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <?= lang('biller', 'slbiller'); ?>
-                                    <?php
-                                    $bl[''] = '';
-                    foreach ($billers as $biller) {
-                        $bl[$biller->id] = $biller->company && $biller->company != '-' ? $biller->company : $biller->name;
-                    }
-                    echo form_dropdown('biller', $bl, ($_POST['biller'] ?? $inv->biller_id), 'id="slbiller" data-placeholder="' . lang('select') . ' ' . lang('biller') . '" required="required" class="form-control input-tip select" style="width:100%;"'); ?>
-                                </div>
-                            </div>
-                        <?php
-                } else {
-                    $biller_input = [
-                        'type'  => 'hidden',
-                        'name'  => 'biller',
-                        'id'    => 'slbiller',
-                        'value' => $this->session->userdata('biller_id'),
-                    ];
-                    echo form_input($biller_input);
-                } ?>
+                        <?php if ($Owner || $Admin || $GP['sales-coordinator']) {
+                            //echo '<pre>';print_r($billers);exit;
+                            ?>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <?= lang('biller', 'qtbiller'); ?>
+                                            <?php
+                                            $bl[''] = '';
+                                            foreach ($billers as $biller) {
+                                                $bl[$biller->id] = $biller->company && $biller->company != '-' ? $biller->company : $biller->name;
+                                            }
+                                            echo form_dropdown('biller', $bl, ($_POST['biller'] ?? $inv->biller_id), 'id="qtbiller" data-placeholder="' . lang('select') . ' ' . lang('biller') . '" required="required" class="form-control input-tip select" style="width:100%;"'); ?>
+                                        </div>
+                                    </div>
+                                <?php
+                        } else {
+                            $biller_input = [
+                                'type'  => 'hidden',
+                                'name'  => 'biller',
+                                'id'    => 'qtbiller',
+                                'value' => $this->session->userdata('biller_id'),
+                            ];
+                            echo form_input($biller_input);
+                        } ?>
 
                         <div class="clearfix"></div>
                         <div class="col-md-12">
@@ -413,7 +414,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                                     class="panel-heading"><?= lang('please_select_these_before_adding_product') ?></div>
                                 <div class="panel-body" style="padding: 5px;">
 
-                                    <?php if ($Owner || $Admin || !$this->session->userdata('warehouse_id')) {
+                                    <?php if ($Owner || $Admin || $GP['sales-coordinator']) {
                     ?>
                                         <div class="col-md-4">
                                             <div class="form-group">
@@ -582,24 +583,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                         <?php echo form_input('quote_status', 'open','hidden', 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('quote_status') . '" id="qtquote_status"'); ?>
                         <?php  } ?>
 
-                        <?php if ($Owner || $Admin || $GP['sales-warehouse_supervisor_shipping'] && $inv->sale_status =="pending") { ?>
-                               <?php echo form_input('sale_status', 'Ready','hidden', 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('sale_status') . '" id="slsale_status"'); ?>
-                             <?php  } ?>
-
-                             <?php if ($Owner || $Admin || $GP['sales-quality_supervisor'] && $inv->sale_status =="Ready") { ?>
-                               <?php echo form_input('sale_status', 'Approved','hidden', 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('sale_status') . '" id="slsale_status"'); ?>
-                             <?php  } ?>
-
-                           <?php if ($Owner || $Admin || $GP['sales-warehouse_supervisor'] && $inv->sale_status =="Approved") { ?>
-                            <?php echo form_input('sale_status', 'Shipped','hidden', 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('sale_status') . '" id="slsale_status"'); ?>
-                             <?php  } ?>
-
-                          
-                              <?php if ($Owner || $Admin || $GP['sales-warehouse_supervisor_shipping'] && $inv->sale_status =="Shipped") { ?>
-                               <?php echo form_input('sale_status', 'completed','hidden', 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('sale_status') . '" id="slsale_status"'); ?>
-                             <?php  } ?>
-
-                             <?php if ($Owner || $Admin || !$GP['sales-warehouse_supervisor'] && !$GP['sales-warehouse_supervisor_shipping'] && !$GP['sales-quality_supervisor'] && !$GP['sales-coordinator']) { ?>
+                             <?php if ($Owner || $Admin || $GP['sales-coordinator']) { ?>
                             <div class="col-sm-4">
                             <div class="form-group">
                             <?= lang('quote_status', 'qtquote_status'); ?>
