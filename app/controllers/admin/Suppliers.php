@@ -1572,7 +1572,7 @@ class Suppliers extends MY_Controller
                 
             }
         }else{
-             $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+            $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
             $this->data['modal_js'] = $this->site->modal_js();
             $this->load->view($this->theme . 'suppliers/import_excel', $this->data);
         }

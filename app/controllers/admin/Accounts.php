@@ -1,16 +1,22 @@
 <?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
 
 class Accounts extends MY_Controller
 {
     public function __construct() {
         parent::__construct(); 
+
+		$this->load->library('form_validation');
     } 
     
     	public function index() {
 		
 		$this->load->library('AccountList');
+		
 		
 		$accountlist = new AccountList();
 		$accountlist->Group = &$this->Group;
@@ -104,7 +110,369 @@ class Accounts extends MY_Controller
     	}
 	}
 
-		public function import($result, $keys)
+	public function import_excel()
+	{
+		$this->load->helper('security');
+		$this->form_validation->set_rules('excel_file', lang('upload_file'), 'xss_clean');
+
+		if ($this->form_validation->run() == true) {
+
+			$this->load->library('excel');
+			if (isset($_FILES['excel_file']) && $_FILES['excel_file']['size'] > 0) {
+				$this->load->library('upload');
+
+				$config['upload_path']   = 'files/';
+				$config['allowed_types'] = 'xlsx|xls|csv';
+				$config['max_size']      = '10000';
+				$config['overwrite']     = false;
+				$config['encrypt_name']  = true;
+
+				$this->upload->initialize($config);
+
+				if (!$this->upload->do_upload('excel_file')) {
+					$error = $this->upload->display_errors();
+					$this->session->set_flashdata('error', $error);
+					admin_redirect('accounts');
+				}
+
+				$upload_data = $this->upload->data();
+				$filePath = $upload_data['full_path'];
+
+				// Load spreadsheet
+				$reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+				$reader->setReadDataOnly(true);
+				$spreadsheet = $reader->load($filePath);
+				$sheet = $spreadsheet->getActiveSheet();
+				$rows = $sheet->toArray(null, true, true, true);
+
+				$this->db->trans_start();
+
+				$groupCache = []; // cache to avoid duplicate group creation
+				$opening_ledgers = []; // collect ledger balances for entries
+
+				foreach ($rows as $index => $row) {
+					if ($index == 1) continue; // skip header row
+
+					$type                = isset($row['A']) ? trim($row['A']) : '';
+					$col1                = isset($row['B']) ? trim($row['B']) : '';
+					$finMain             = isset($row['C']) ? trim($row['C']) : '';
+					$finSub              = isset($row['D']) ? trim($row['D']) : '';
+					$account_code        = isset($row['E']) ? trim($row['E']) : '';
+					$account_name_arabic = isset($row['F']) ? trim($row['F']) : '';
+					$debit               = isset($row['G']) ? (float) str_replace(',', '', $row['G']) : 0.0;
+					$credit              = isset($row['H']) ? (float) str_replace(',', '', $row['H']) : 0.0;
+
+					if (empty($account_name_arabic)) continue;
+
+					// Only Financial Report Main and Sub will form the group hierarchy
+					$levels = array_filter([$finMain, $finSub]);
+					$parent_id = NULL;
+					$path = '';
+
+					foreach ($levels as $level) {
+						$level = trim($level);
+						if ($level === '') continue;
+						$path .= '>' . $level;
+
+						if (!isset($groupCache[$path])) {
+							$existing = $this->db->get_where('sma_accounts_groups', [
+								'name' => $level,
+								'parent_id' => $parent_id
+							])->row();
+
+							if ($existing) {
+								$group_id = $existing->id;
+							} else {
+								$this->db->insert('sma_accounts_groups', [
+									'parent_id'     => $parent_id,
+									'name'          => $level,
+									'name_arabic'   => $level,
+									'affects_gross' => 0
+								]);
+								$group_id = $this->db->insert_id();
+
+								if ($group_id) {
+									$group_code = 'GRP-' . str_pad($group_id, 5, '0', STR_PAD_LEFT);
+									$this->db->where('id', $group_id)->update('sma_accounts_groups', ['code' => $group_code]);
+								}
+							}
+							$groupCache[$path] = $group_id;
+						}
+
+						$parent_id = $groupCache[$path];
+					}
+
+					// Determine opening balance and DC
+					if ($debit > 0) {
+						$op_balance    = $debit;
+						$op_balance_dc = 'D';
+					} else {
+						$op_balance    = $credit;
+						$op_balance_dc = 'C';
+					}
+
+					// Insert or update ledger
+					$ledger = [
+						'group_id'       => ($parent_id ? $parent_id : 0),
+						'name'           => $account_name_arabic,
+						'name_arabic'    => $account_name_arabic,
+						'type1'          => $type,
+						'type2'          => $col1,
+						'category'       => $finMain,
+						'code'           => $account_code,
+						'op_balance'     => $op_balance,
+						'op_balance_dc'  => $op_balance_dc,
+						'type'           => 0,
+						'reconciliation' => 0,
+						'notes'          => ''
+					];
+
+					if (!empty($account_code)) {
+						$exists = $this->db->get_where('sma_accounts_ledgers', ['code' => $account_code])->row();
+					} else {
+						$exists = $this->db->get_where('sma_accounts_ledgers', [
+							'name_arabic' => $account_name_arabic,
+							'group_id' => ($parent_id ? $parent_id : 0)
+						])->row();
+					}
+
+					if ($exists) {
+						$this->db->where('id', $exists->id)->update('sma_accounts_ledgers', $ledger);
+						$ledger_id = $exists->id;
+					} else {
+						$this->db->insert('sma_accounts_ledgers', $ledger);
+						$ledger_id = $this->db->insert_id();
+					}
+
+					// Collect opening balance for entry
+					if ($op_balance > 0) {
+						$opening_ledgers[] = [
+							'ledger_id'      => $ledger_id,
+							'op_balance'     => $op_balance,
+							'op_balance_dc'  => $op_balance_dc
+						];
+					}
+				}
+
+				// ---- Insert Opening Balance Entry ----
+				if (!empty($opening_ledgers)) {
+					$dr_total = 0;
+					$cr_total = 0;
+					foreach ($opening_ledgers as $item) {
+						if ($item['op_balance_dc'] == 'D') {
+							$dr_total += $item['op_balance'];
+						} else {
+							$cr_total += $item['op_balance'];
+						}
+					}
+
+					$entry_data = [
+						'entrytype_id'     => 1, // define a type for opening balance
+						'transaction_type' => 'opening_balance',
+						'number'           => 'OB-' . date('YmdHis'),
+						'date'             => date('Y-m-d'),
+						'dr_total'         => $dr_total,
+						'cr_total'         => $cr_total,
+						'notes'            => 'Opening balances import',
+						//'created_by'       => $this->session->userdata('user_id'),
+					];
+					$this->db->insert('sma_accounts_entries', $entry_data);
+					$entry_id = $this->db->insert_id();
+
+					foreach ($opening_ledgers as $item) {
+						$item_data = [
+							'entry_id' => $entry_id,
+							'ledger_id' => $item['ledger_id'],
+							'dc' => $item['op_balance_dc'],  // D or C
+							'amount' => $item['op_balance'],
+							'narration' => 'Opening balance',
+						];
+						$this->db->insert('sma_accounts_entryitems', $item_data);
+					}
+				}
+
+				$this->db->trans_complete();
+
+				if ($this->db->trans_status() === false) {
+					$this->session->set_flashdata('error', 'Import failed! Please check data.');
+				} else {
+					$this->session->set_flashdata('message', 'Chart of Accounts imported successfully!');
+				}
+
+				if (file_exists($filePath)) unlink($filePath);
+
+				redirect(admin_url('accounts'));
+			}
+
+		} else {
+			$this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+			$this->data['modal_js'] = $this->site->modal_js();
+			$this->load->view($this->theme . 'accounts/import_excel', $this->data);
+		}
+	}
+
+
+	/*public function import_excel()
+	{
+		$this->load->helper('security');
+		$this->form_validation->set_rules('excel_file', lang('upload_file'), 'xss_clean');
+
+		if ($this->form_validation->run() == true) {
+
+			$this->load->library('excel');
+			if (isset($_FILES['excel_file']) && $_FILES['excel_file']['size'] > 0) {
+				$this->load->library('upload');
+
+				$config['upload_path']   = 'files/';
+				$config['allowed_types'] = 'xlsx|xls|csv';
+				$config['max_size']      = '10000';
+				$config['overwrite']     = false;
+				$config['encrypt_name']  = true;
+
+				$this->upload->initialize($config);
+
+				if (!$this->upload->do_upload('excel_file')) {
+					$error = $this->upload->display_errors();
+					$this->session->set_flashdata('error', $error);
+					admin_redirect('accounts');
+				}
+
+				$upload_data = $this->upload->data();
+				$filePath = $upload_data['full_path'];
+
+				// Load spreadsheet
+				$reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+				$reader->setReadDataOnly(true);
+				$spreadsheet = $reader->load($filePath);
+				$sheet = $spreadsheet->getActiveSheet();
+				$rows = $sheet->toArray(null, true, true, true);
+
+				$this->db->trans_start();
+
+				$groupCache = []; // cache to avoid duplicate group creation
+
+				foreach ($rows as $index => $row) {
+					if ($index == 1) continue; // skip header row
+
+					// Columns mapping (adjust letters if your sheet differs)
+					$type                = isset($row['A']) ? trim($row['A']) : '';
+					$col1                = isset($row['B']) ? trim($row['B']) : '';
+					$finMain             = isset($row['C']) ? trim($row['C']) : '';
+					$finSub              = isset($row['D']) ? trim($row['D']) : '';
+					$account_code        = isset($row['E']) ? trim($row['E']) : '';
+					$account_name_arabic = isset($row['F']) ? trim($row['F']) : '';
+					$debit               = isset($row['G']) ? (float) str_replace(',', '', $row['G']) : 0.0;
+					$credit              = isset($row['H']) ? (float) str_replace(',', '', $row['H']) : 0.0;
+
+					if (empty($account_name_arabic)) continue;
+
+					// Only Financial Report Main and Sub will form the group hierarchy
+					$levels = array_filter([$finMain, $finSub]);
+
+					$parent_id = NULL;
+					$path = '';
+					foreach ($levels as $level) {
+						$level = trim($level);
+						if ($level === '') continue;
+						$path .= '>' . $level;
+						if (!isset($groupCache[$path])) {
+							// check DB if group already exists with same name and parent
+							$existing = $this->db->get_where('sma_accounts_groups', [
+								'name' => $level,
+								'parent_id' => $parent_id
+							])->row();
+
+							if ($existing) {
+								$group_id = $existing->id;
+								// cache existing
+								$groupCache[$path] = $group_id;
+							} else {
+								// insert and then set a readable code
+								$insert = [
+									'parent_id'     => $parent_id,
+									'name'          => $level,
+									'name_arabic'   => $level,
+									'affects_gross' => 0,
+									// do not set type1/type2/category here (kept in ledgers)
+								];
+								$this->db->insert('sma_accounts_groups', $insert);
+								$group_id = $this->db->insert_id();
+
+								if ($group_id) {
+									// generate simple code and update group record
+									$group_code = 'GRP-' . str_pad($group_id, 5, '0', STR_PAD_LEFT);
+									$this->db->where('id', $group_id)->update('sma_accounts_groups', ['code' => $group_code]);
+								}
+								$groupCache[$path] = $group_id;
+							}
+						}
+
+						$parent_id = $groupCache[$path];
+					}
+
+					// Determine opening balance and DC
+					if ($debit > 0) {
+						$op_balance    = $debit;
+						$op_balance_dc = 'D';
+					} else {
+						$op_balance    = $credit;
+						$op_balance_dc = 'C';
+					}
+
+					// Insert or update ledger (ledgers keep type/col1/category)
+					$ledger = [
+						'group_id'       => ($parent_id ? $parent_id : 0),
+						'name'           => $account_name_arabic,
+						'name_arabic'    => $account_name_arabic,
+						'type1'          => $type,
+						'type2'          => $col1,
+						'category'       => $finMain,
+						'code'           => $account_code,
+						'op_balance'     => $op_balance,
+						'op_balance_dc'  => $op_balance_dc,
+						'type'           => 0,
+						'reconciliation' => 0,
+						'notes'          => ''
+					];
+
+					// Check if ledger exists (by code) -> update, else insert
+					if (!empty($account_code)) {
+						$exists = $this->db->get_where('sma_accounts_ledgers', ['code' => $account_code])->row();
+					} else {
+						// fall back: try match by (name + group_id)
+						$exists = $this->db->get_where('sma_accounts_ledgers', [
+							'name_arabic' => $account_name_arabic,
+							'group_id' => ($parent_id ? $parent_id : 0)
+						])->row();
+					}
+
+					if ($exists) {
+						$this->db->where('id', $exists->id)->update('sma_accounts_ledgers', $ledger);
+					} else {
+						$this->db->insert('sma_accounts_ledgers', $ledger);
+					}
+				}
+
+				$this->db->trans_complete();
+
+				if ($this->db->trans_status() === false) {
+					$this->session->set_flashdata('error', 'Import failed! Please check data.');
+				} else {
+					$this->session->set_flashdata('message', 'Chart of Accounts imported successfully!');
+				}
+
+				if (file_exists($filePath)) unlink($filePath);
+
+				redirect(admin_url('accounts'));
+			}
+		} else {
+			$this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+			$this->data['modal_js'] = $this->site->modal_js();
+			$this->load->view($this->theme . 'accounts/import_excel', $this->data);
+		}
+	}*/
+
+	public function import($result, $keys)
 	{
 		if (count($result) > 1) {
 	    	$g_counter = 0;
