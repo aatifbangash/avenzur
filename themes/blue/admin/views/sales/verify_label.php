@@ -155,7 +155,7 @@
                                     <div class="ticket-number"><?= $invoice_no ?></div>
                                 </td>
                                 <td style="width: 60px; margin-right: 20px;"></td>
-                                <td><img src="https://retaj.avenzur.com/assets/uploads/logos/avenzur-logov2-0241.png" alt="Logo"></td>
+                                <td><img src="https://retaj.avenzur.com/assets/uploads/logos/<?= $billler->logo; ?>" alt="Logo"></td>
                             </tr>
                         </table>
                     </div>
