@@ -94,10 +94,10 @@
                             if (!empty($purchases)): ?>
                                 <?php foreach ($purchases as $purchase):
                                     $pid = $purchase->id;
-                                    $detail_link = anchor('admin/purchase_order/view/'.$pid, '<i class="fa fa-file-text-o"></i> ' . lang('purchase_details'));
+                                    $detail_link = anchor('admin/purchase_order/view/'.$pid, '<i class="fa fa-file-text-o"></i> ' . lang('purchase_order_details'));
                                     
                                   
-                                    $edit_link = anchor('admin/purchases/edit/'.$pid, '<i class="fa fa-edit"></i> ' . lang('edit_purchase'));
+                                    $edit_link = anchor('admin/purchase_order/edit/'.$pid, '<i class="fa fa-edit"></i> ' . lang('edit_purchase'));
                                    //$return_link = anchor('admin/returns_supplier/add/?purchase='.$pid, '<i class="fa fa-angle-double-left"></i> ' . lang('return_purchase'));
                                     // $delete_link = "<a href='#' class='po' title='<b>" . $this->lang->line('delete_purchase') . "</b>' data-content=\"<p>"
                                     //     . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('purchases/delete/'.$pid) . "'>"
@@ -111,7 +111,7 @@
                                         $transfer_status = "Partially Transferred";
                                     }
                                     ?>
-                                    <tr class="purchase_link" id="<?=$pid?>">
+                                    <tr class="purchase_order_link" id="<?=$pid?>">
                                         <td><?= $purchase->id ?></td>
                                         <td><?= $purchase->date ?></td>
                                         <td><?= $purchase->reference_no ?></td>
@@ -129,9 +129,7 @@
                                                 }
                                             ?>
                                         </td>
-                                        <!-- <td> <?= $transfer_status; ?> </td>
-                                        <td> <?= $purchase->transfer_id > 0 ? $purchase->transfer_id : ''; ?></td>
-                                        <td> <?= $purchase->transfer_at ?> </td> -->
+                                       
                                         <td>
                                             <div class="text-center">
                                                 <div class="btn-group text-left">
@@ -139,27 +137,13 @@
                                                         class="btn btn-default btn-xs btn-primary dropdown-toggle"
                                                         data-toggle="dropdown">Action<span class="caret"></span></button>
                                                     <ul class="dropdown-menu pull-right" role="menu">
-                                                        <!--<li><?= $detail_link ?> </li>
-                                                        <li><?= $payments_link ?></li>
-                                                        <li><?= $add_payment_link ?></li>-->
+                                                        
                                                         <?php if($purchase->status != "received") {?>
                                                         <li><?= $edit_link ?></li>
                                                         <?php }?>
-                                                        <li><?= $pdf_link ?></li>
-                                                        <!--<li><?= $email_link ?></li> -->
-                                                        <li><?= $print_barcode ?></li>
-                                                        <?php if($purchase->status == 'received') {?>
-                                                        <li><?= //$return_link ?></li>
-                                                        <?php } ?>
-                                                        <?php if($purchase->status == 'pending') {?>
-                                                        <li><?= //$delete_link ?></li>
-                                                        <?php }?>
-                                                        <?php if($purchase->is_transfer !=1 && $purchase->status == 'received') {?>
-                                                            <li><?= //$transfer_link ?></li>
-                                                        <?php }?>
-                                                        <?php if($purchase->status == 'received') {?>
-                                                        <li><?= //$journal_entry_link ?></li>
-                                                        <?php } ?>
+                                                        <li><?= $detail_link ?></li>
+                                                        
+                                                       
                                                     </ul>
                                                 </div>
                                             </div>
@@ -237,4 +221,21 @@
             alert("Please enter a valid purchase number.");
         }
     });
+
+    
+
+    $(document).ready(function () {
+
+         $('body').on('click', '.purchase_order_link td:not(:first-child, :nth-child(5), :nth-last-child(2), :last-child)', function () {
+        $('#myModal').modal({
+            remote: site.base_url + 'purchase_order/modal_view/' + $(this).parent('.purchase_order_link').attr('id'),
+        });
+        $('#myModal').modal('show');
+        //window.location.href = site.base_url + 'purchases/view/' + $(this).parent('.purchase_link').attr('id');
+    });
+   
+});
+
+
+
 </script>

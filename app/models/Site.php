@@ -2183,4 +2183,68 @@ public function logVisitor() {
         }
         return false;
     }
+
+    public function getPrePorcessPurchaseItems($inv_items=[])
+    {
+    
+        // krsort($inv_items);
+            $c = rand(100000, 9999999);
+            $pItems = [];
+            foreach ($inv_items as $item) {
+                $row = $this->site->getProductByID($item->product_id);
+                if (!$row) {
+                    $this->session->set_flashdata('error', lang('product_deleted_x_edit'));
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
+                $row->expiry = (($item->expiry && $item->expiry != '0000-00-00') ? $this->sma->hrsd($item->expiry) : '');
+                $row->base_quantity = $item->quantity;
+                $row->base_unit = $row->unit ? $row->unit : $item->product_unit_id;
+                $row->base_unit_cost = $row->cost ? $row->cost : $item->unit_cost;
+                $row->sale_price = $item->sale_price;
+                $row->unit = $item->product_unit_id;
+                $row->qty =$item->quantity; // $item->unit_quantity;
+                $row->oqty = $item->quantity;
+                $row->supplier_part_no = $item->supplier_part_no;
+                $row->received = $item->quantity_received ? $item->quantity_received : $item->quantity;
+                $row->quantity_balance = $item->quantity_balance + ($item->quantity - $row->received);
+                $row->discount = $item->discount ? $item->discount : '0';
+                $options = [];//$this->purchases_model->getProductOptions($row->id);
+                $row->option = $item->option_id;
+                $row->real_unit_cost = $item->real_unit_cost;
+                //$row->cost             = $this->sma->formatDecimal($item->net_unit_cost + ($item->item_discount / $item->quantity));
+                $row->cost = $item->unit_cost;
+                $row->tax_rate = $item->tax_rate_id;
+                $row->bonus = $item->bonus;
+                $row->dis1 = $item->discount1;
+                $row->dis2 = $item->discount2;
+                $row->totalbeforevat = $item->totalbeforevat;
+                $row->main_net = $item->main_net;
+                $row->batchno = $item->batchno;
+                $row->avz_item_code = isset($item->avz_item_code) && !empty($item->avz_item_code) ? $item->avz_item_code : '';
+                $row->serial_number = $item->serial_number;
+                $row->get_supplier_discount = $supplier_purchase_discount;
+                //$row->three_month_sale = $this->purchases_model->getThreeMonthSale($item->product_id, $start_date, $end_date);
+                $row->warehouse_shelf = $item->warehouse_shelf;
+                unset($row->details, $row->product_details, $row->price, $row->file, $row->product_group_id);
+                $units = $this->getUnitsByBUID($row->base_unit);
+                $tax_rate = $this->getTaxRateByID($row->tax_rate);
+                $ri = $this->Settings->item_addition ? $row->id : $c;
+                $row->dis3 = $item->discount3;
+                $row->item_third_discount = $item->third_discount_value;
+
+                $pItems[$ri] = [
+                    'id' => $c,
+                    'item_id' => $row->id,
+                    'label' => $row->name . ' (' . $row->code . ')',
+                    'row' => $row,
+                    'tax_rate' => $tax_rate,
+                    'units' => $units,
+                    'options' => $options,
+                ];
+                $c++;
+            }
+
+        return $pItems;
+    }
+        
 }

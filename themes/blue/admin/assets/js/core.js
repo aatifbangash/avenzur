@@ -1693,6 +1693,8 @@ function calculatePurchaseInventory(item) {
     const tax_rate = toTwoDecimals(item.tax_rate !== null ? item.tax_rate : 0);
     const discount1 = toTwoDecimals(item.dis1);
     const discount2 = toTwoDecimals(item.dis2);
+    const discount3 = toTwoDecimals(item.dis3 || 0);
+
 
     // Calculations
     const total_quantity = base_quantity.plus(bonus);
@@ -1706,8 +1708,8 @@ function calculatePurchaseInventory(item) {
     const total_discount = toTwoDecimals(first_discount.plus(second_discount));
 
 
-    const net_purchase = toTwoDecimals(total_purchase.minus(first_discount).minus(second_discount));
-    const net_cost = total_quantity.greaterThan(0)
+    let net_purchase = toTwoDecimals(total_purchase.minus(first_discount).minus(second_discount));
+    let net_cost = total_quantity.greaterThan(0)
         ? toTwoDecimals(net_purchase.dividedBy(total_quantity))
         : new Decimal(0);
 
@@ -1717,6 +1719,20 @@ function calculatePurchaseInventory(item) {
         total_vat = toTwoDecimals(net_purchase.times(new Decimal(15).dividedBy(100)));
     }
 
+    // SPECIAL DISCOUNT 3 - RECALCULATE THE NET PURCHASE AND NET COST EXCLUDED VAT
+     let third_discount = new Decimal(0);
+    if( discount3.greaterThan(0) ) {
+                 third_discount = toTwoDecimals(net_purchase.times(discount3.dividedBy(100)));
+                console.log('third_discount', third_discount.toNumber());
+                net_purchase = toTwoDecimals( net_purchase.minus(third_discount) );
+
+         net_cost = total_quantity.greaterThan(0)
+        ? toTwoDecimals(net_purchase.dividedBy(total_quantity))
+        : new Decimal(0);     
+    }
+
+
+   
     // Grant Total
     const grant_total = toTwoDecimals(net_purchase.plus(total_vat));
 
@@ -1733,6 +1749,7 @@ function calculatePurchaseInventory(item) {
         new_vat_value: total_vat.toNumber(),
         new_unit_cost: net_cost.toNumber(),
         new_grant_total: grant_total.toNumber(),
+        new_third_discount: third_discount.toNumber(),
     };
 }
 

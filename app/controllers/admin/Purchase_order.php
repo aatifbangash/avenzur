@@ -6,17 +6,21 @@ class Purchase_order extends MY_Controller
 {
     public function __construct()
     {
+        // error_reporting(E_ALL);        
+        //ini_set('display_errors', 1); 
         parent::__construct();
-        if (!$this->loggedIn) {
-            $this->session->set_userdata('requested_page', $this->uri->uri_string());
-            $url = "admin/login";
-            if ($this->input->server('QUERY_STRING')) {
-                $url = $url . '?' . $this->input->server('QUERY_STRING') . '&redirect=' . $this->uri->uri_string();
-            }
+      //print_r(!$this->loggedIn);exit;
+        // if (!$this->loggedIn) {
+        //     $this->session->set_userdata('requested_page', $this->uri->uri_string());
+        //     $url = "admin/login";
+        //     if ($this->input->server('QUERY_STRING')) {
+        //         $url = $url . '?' . $this->input->server('QUERY_STRING') . '&redirect=' . $this->uri->uri_string();
+        //     }
 
-            $this->sma->md($url);
-        }
+        //     $this->sma->md($url);
+        // }
         if ($this->Customer) {
+        
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect($_SERVER['HTTP_REFERER']);
         }
@@ -51,20 +55,16 @@ class Purchase_order extends MY_Controller
 
     /* -------------------------------------------------------------------------------------------------------------------------------- */
 
-
-    public function add($quote_id = null)
+    private function setValidationRule($product_id_arr)
     {
-        
-        $this->sma->checkPermissions();
-
-        $this->form_validation->set_message('is_natural_no_zero', $this->lang->line('no_zero_required'));
+        if (!empty($product_id_arr)) {
+           
+        foreach ($product_id_arr as $index => $prid) {
+            // Set validation rules for each quantity field 
+            //$this->form_validation->set_rules('product', lang('order_items'), 'required');
+            $this->form_validation->set_message('is_natural_no_zero', $this->lang->line('no_zero_required'));
         $this->form_validation->set_rules('warehouse', $this->lang->line('warehouse'), 'required|is_natural_no_zero');
         $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
-        // $this->form_validation->set_rules('batchno[]', lang('Batch'), 'required');
-        $product_id_arr = $this->input->post('product_id');
-
-        foreach ($product_id_arr as $index => $prid) {
-            // Set validation rules for each quantity field
             $this->form_validation->set_rules(
                 'quantity[' . $index . ']',
                 'Quantity for Product ' . $_POST['product_name'][$index],  // Replace with actual product identifier
@@ -74,11 +74,8 @@ class Purchase_order extends MY_Controller
                     'greater_than' => 'Quantity for Product <b>' . $_POST['product_name'][$index] . '</b> must be greater than zero.'
                 )
             );
-        }
 
-        foreach ($product_id_arr as $index => $prid) {
-            // Set validation rules for prduct expiry field
-            $this->form_validation->set_rules(
+             $this->form_validation->set_rules(
                 'expiry[' . $index . ']',
                 'Expiry Date for Product ' . $_POST['product_name'][$index],  // Replace with actual product identifier
                 'required',
@@ -87,38 +84,17 @@ class Purchase_order extends MY_Controller
                 )
             );
         }
+        }
+    }
 
+    private function preparePurchaseItems()
+    {
+        $products = [];
+        $total_items = sizeof($_POST['product']);
+        $warehouse_id = $this->input->post('warehouse');
+        $status = $this->input->post('status');
+        for ($r = 0; $r < $total_items; $r++) {
 
-        $this->session->unset_userdata('csrf_token');
-        if ($this->form_validation->run() == true) {
-
-            // echo "<pre>";
-            // print_r($this->input->post());exit;
-            $reference = $this->input->post('reference_no') ? $this->input->post('reference_no') : $this->site->getReference('po');
-            if ($this->Owner || $this->Admin) {
-                $date = $this->sma->fld(trim($this->input->post('date')));
-            } else {
-                $date = date('Y-m-d H:i:s');
-            }
-            $warehouse_id = $this->input->post('warehouse');
-            $child_supplier_id = $this->input->post('childsupplier') ? $this->input->post('childsupplier') : 0;
-            $supplier_id = $child_supplier_id ? $child_supplier_id : $this->input->post('supplier');
-            $status = $this->input->post('status');
-            $shipping = $this->input->post('shipping') ? $this->input->post('shipping') : 0;
-            $supplier_details = $this->site->getCompanyByID($supplier_id);
-            $supplier = $supplier_details->company && $supplier_details->company != '-' ? $supplier_details->company : $supplier_details->name;
-            $note = $this->sma->clear_tags($this->input->post('note'));
-            $payment_term = $this->input->post('payment_term');
-            $due_date = $payment_term ? date('Y-m-d', strtotime('+' . $payment_term . ' days', strtotime($date))) : null;
-
-            $total = 0;
-            $total_sale_price = 0;
-            $product_tax = 0;
-            $product_discount = 0;
-            $i = sizeof($_POST['product']);
-            $gst_data = [];
-            $total_cgst = $total_sgst = $total_igst = 0;
-            for ($r = 0; $r < $i; $r++) {
                 $product_id = $_POST['product_id'][$r];
                 $item_code = $_POST['product'][$r];
                 $avz_item_code = isset($_POST['avz_item_code'][$r]) && !empty($_POST['avz_item_code'][$r]) ? $_POST['avz_item_code'][$r] : '';
@@ -147,6 +123,8 @@ class Purchase_order extends MY_Controller
                 $item_dis2 = $_POST['dis2'][$r];
                 $totalbeforevat = $_POST['totalbeforevat'][$r];
                 $main_net = $_POST['main_net'][$r];
+                $discount3 = $_POST['dis3'][$r];
+                $item_third_discount = $_POST['item_third_discount'][$r];
 
                 //$net_cost_obj = $this->purchases_model->getAverageCost($item_batchno, $item_code);
                 //$net_cost_sales = $net_cost_obj[0]->cost_price;
@@ -256,7 +234,9 @@ class Purchase_order extends MY_Controller
                         'discount2' => $item_dis2,
                         'second_discount_value' => $new_item_second_discount,
                         'totalbeforevat' => $_POST['item_net_purchase'][$r],
-                        'main_net' => $main_net
+                        'main_net' => $main_net,
+                        'discount3' => $discount3,
+                        'third_discount_value' => $item_third_discount,
                     ];
 
                     if ($avz_item_code) {
@@ -269,10 +249,57 @@ class Purchase_order extends MY_Controller
                         $product['base_unit_cost'] = $real_unit_cost;
                     }
 
-                    $products[] = ($product + $gst_data);
+                    $products[] = $product ;
                     $total_sale_price += $this->sma->formatDecimal($item_sale_price, 4);
                     $total += $this->sma->formatDecimal($main_net, 4);//$this->sma->formatDecimal(($item_net_cost * $item_unit_quantity), 4);
                 }
+            }
+        return $products;
+    }
+
+    public function add($quote_id = null)
+    {
+       
+        
+        //$this->sma->checkPermissions();
+        
+        // $this->form_validation->set_rules('batchno[]', lang('Batch'), 'required');
+        $product_id_arr = $this->input->post('product_id');
+
+        $this->setValidationRule($product_id_arr);
+        
+
+        $this->session->unset_userdata('csrf_token');
+        if ($this->form_validation->run() == true) {
+            //echo "<pre>";
+            //print_r($this->input->post());exit;
+            $reference = $this->input->post('reference_no') ? $this->input->post('reference_no') : $this->site->getReference('po');
+            if ($this->Owner || $this->Admin) {
+                $date = $this->sma->fld(trim($this->input->post('date')));
+            } else {
+                $date = date('Y-m-d H:i:s');
+            }
+            $warehouse_id = $this->input->post('warehouse');
+            $child_supplier_id = $this->input->post('childsupplier') ? $this->input->post('childsupplier') : 0;
+            $supplier_id = $child_supplier_id ? $child_supplier_id : $this->input->post('supplier');
+            $status = $this->input->post('status');
+            $shipping = $this->input->post('shipping') ? $this->input->post('shipping') : 0;
+            $supplier_details = $this->site->getCompanyByID($supplier_id);
+            $supplier = $supplier_details->company && $supplier_details->company != '-' ? $supplier_details->company : $supplier_details->name;
+            $note = $this->sma->clear_tags($this->input->post('note'));
+            $payment_term = $this->input->post('payment_term');
+            $due_date = $payment_term ? date('Y-m-d', strtotime('+' . $payment_term . ' days', strtotime($date))) : null;
+
+            $total = 0;
+            $total_sale_price = 0;
+            $product_tax = 0;
+            $product_discount = 0;
+            $i = sizeof($_POST['product']);
+            $gst_data = [];
+            $total_cgst = $total_sgst = $total_igst = 0;
+            //$_POST['warehouse_id'] = $warehouse_id;
+            $products = $this->preparePurchaseItems();
+            
             }
             if (empty($products)) {
                 $this->form_validation->set_rules('product', lang('order_items'), 'required');
@@ -301,6 +328,7 @@ class Purchase_order extends MY_Controller
             $grand_total_vat = $this->input->post('grand_total_vat');
             $grand_total_sale = $this->input->post('grand_total_sale');
             $grand_total = $this->input->post('grand_total');
+            $grand_deal_discount = $this->input->post('grand_deal_discount');
 
             $data = [
                 'reference_no' => $reference,
@@ -326,7 +354,8 @@ class Purchase_order extends MY_Controller
                 'created_by' => $this->session->userdata('user_id'),
                 'payment_term' => $payment_term,
                 'due_date' => $due_date,
-                'sequence_code' => $this->sequenceCode->generate('PR', 5)
+                'sequence_code' => $this->sequenceCode->generate('PR', 5),
+                'grand_deal_discount' => $grand_deal_discount
             ];
 
             if ($supplier_details->balance > 0 && $status == 'received') {
@@ -370,13 +399,42 @@ class Purchase_order extends MY_Controller
             //$attachments = $this->attachments->upload();
             //$data['attachment'] = !empty($attachments);
             //$this->sma->print_arrays($data, $products);exit;
-        }
-
+    
+     //echo "<pre>";print_r($data);print_r($products);exit;
         if ($this->form_validation->run() == true && $purchase_id = $this->purchase_order_model->addPurchase($data, $products, $attachments)) {
             
+
             $this->session->set_userdata('remove_pols', 1);
             $this->session->set_flashdata('message', $this->lang->line('purchase_added'));
+
+
+              $pr_id = $this->input->post('pr_id');
+              if( $pr_id != '' ) {
+                // update pr status to closed
+                $this->purchase_requisition_model->update_status( $pr_id, 'closed' );
+                $this->db->update('purchase_requisitions', ['status' => 'po-created', 
+                                                            'updated_by' => $this->session->userdata('user_id'),
+                                                            'updated_at' => date('Y-m-d H:i:s')],
+                                                            ['id' => $pr_id]);
+              }
             admin_redirect('purchase_order?lastInsertedId=' . $purchase_id);
+            // check for action against pr
+
+            //if( $this->input->post->('action') == 'create_po' && $this->input->post('pr_id') ) {
+              
+                // log activity
+            //     $audit_log = array(
+            //     'pr_id' => $pr_id,
+            //     'action' => 'PO Created',
+            //     'details' => 'PO created by '.$this->session->userdata('username').' with PO ID: '.$purchase_id,
+            //     'done_by' => $this->session->userdata('user_id'),
+            //     'created_at' => date('Y-m-d H:i:s')
+            // );
+
+            // $this->db->insert('pr_audit_logs', $audit_log);
+                                                        
+            
+
         } else if($this->input->get('action') == 'create_po') {
                 $pr_info = $this->getPurchaseRequesitionItems($this->input->get('pr_id'));
 
@@ -385,6 +443,7 @@ class Purchase_order extends MY_Controller
               
                 //$this->data['pr_data'] = $pr_data;
                 $this->data['pr_id'] = $pr_id;
+                $this->data['action'] = $this->input->get('action') ;
                 $this->data['module_name'] = 'purchase_order';
 
 
@@ -521,32 +580,6 @@ class Purchase_order extends MY_Controller
    
 
 
-    /* --------------------------------------------------------------------------- */
-
-    public function delete($id = null)
-    {
-        $this->sma->checkPermissions(null, true);
-
-        if ($this->input->get('id')) {
-            $id = $this->input->get('id');
-        }
-        if (!$id) {
-            $this->sma->send_json(['error' => 1, 'msg' => lang('id_not_found')]);
-        }
-
-        if ($this->purchases_model->deletePurchase($id)) {
-            if ($this->input->is_ajax_request()) {
-                $this->sma->send_json(['error' => 0, 'msg' => lang('purchase_deleted')]);
-            }
-            $this->session->set_flashdata('message', lang('purchase_deleted'));
-            admin_redirect('welcome');
-        } else {
-            $this->sma->send_json(['error' => 1, 'msg' => 'Cannot delete this purchase']);
-        }
-    }
-
-
-
     /* ------------------------------------------------------------------------------------- */
 
     public function edit($id = null)
@@ -559,27 +592,10 @@ class Purchase_order extends MY_Controller
 
         $purchase_transferred = 0;
 
-        $inv = $this->purchases_model->getPurchaseByID($id);
-        $pur_inv_items = $this->purchases_model->getAllPurchaseItems($id);
-        foreach ($pur_inv_items as $pur_item) {
-            //$transferreditem = $this->Inventory_model->get_transferred_item($inv->warehouse_id,'transfer_out',$pur_item->product_id,$pur_item->avz_item_code,$pur_item->batchno);
-            $transferreditem = $this->Inventory_model->get_transferred_item('null', 'transfer_in', $pur_item->product_id, $pur_item->avz_item_code, $pur_item->batchno);
-            if ($transferreditem) {
-                $purchase_transferred = 1;
-            }
-        }
+        $inv = $this->purchase_order_model->getPurchaseByID($id);
+        $pur_inv_items = $this->purchase_order_model->getAllPurchaseItems($id);
 
-        /*if ($inv->status == 'received' && $purchase_transferred == 1) {
-             $this->session->set_flashdata('error', 'This invoice has items already transferred');
-
-             admin_redirect('purchases');
-        }*/
-
-        $supplier_purchase_discount = $this->deals_model->getPurchaseDiscount($inv->supplier_id);
-        if ($inv->status == 'returned' || $inv->return_id || $inv->return_purchase_ref) {
-            $this->session->set_flashdata('error', lang('purchase_x_action'));
-            admin_redirect($_SERVER['HTTP_REFERER'] ?? 'welcome');
-        }
+       
         if (!$this->session->userdata('edit_right')) {
             $this->sma->view_rights($inv->created_by);
         }
@@ -662,6 +678,8 @@ class Purchase_order extends MY_Controller
                 $totalbeforevat = $_POST['totalbeforevat'][$r];
                 $main_net = $_POST['main_net'][$r];
                 $warehouse_shelf = $_POST['warehouse_shelf'][$r];
+                $discount3 = $_POST['dis3'][$r];
+                $item_third_discount = $_POST['item_third_discount'][$r];
 
                 if ($status == 'received' || $status == 'partial') {
                     /*if ($quantity_received < $item_quantity) {
@@ -783,7 +801,9 @@ class Purchase_order extends MY_Controller
                         'second_discount_value' => $new_item_second_discount,
                         'totalbeforevat' => $_POST['item_net_purchase'][$r],
                         'main_net' => $main_net,
-                        'warehouse_shelf' => ($warehouse_shelf ? $warehouse_shelf : '')
+                        'warehouse_shelf' => ($warehouse_shelf ? $warehouse_shelf : ''),
+                        'discount3' => $discount3,
+                        'third_discount_value' => $item_third_discount,
                     ];
 
                     if ($avz_item_code) {
@@ -833,6 +853,7 @@ class Purchase_order extends MY_Controller
             $grand_total_vat = $this->input->post('grand_total_vat');
             $grand_total_sale = $this->input->post('grand_total_sale');
             $grand_total = $this->input->post('grand_total');
+            $grand_deal_discount = $this->input->post('grand_deal_discount');
 
             $data = [
                 'reference_no' => $reference,
@@ -861,7 +882,8 @@ class Purchase_order extends MY_Controller
                 'tempstatus' => $tempstatus,
                 'lotnumber' => $lotnumber,
                 'shelf_status' => $shelf_status,
-                'validate' => $validate
+                'validate' => $validate,
+                'grand_deal_discount' => $grand_deal_discount
 
 
             ];
@@ -918,19 +940,12 @@ class Purchase_order extends MY_Controller
         }
 
 
-        if ($this->form_validation->run() == true && $this->purchases_model->updatePurchase($id, $data, $products, $attachments)) {
-            if ($status == 'received') {
-                $this->convert_purchse_invoice($id);
-
-                if ($supplier_details->balance > 0) {
-                    $this->purchases_model->update_balance($supplier_details->id, $new_balance);
-                }
-            }
+        if ($this->form_validation->run() == true && $this->purchase_order_model->updatePurchase($id, $data, $products, $attachments)) {
 
             $this->session->set_userdata('remove_pols', 1);
             $this->session->set_flashdata('message', $this->lang->line('purchase_added'));
 
-            admin_redirect('purchases');
+            admin_redirect('purchase_order');
         } else {
             $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
             $this->data['inv'] = $inv;
@@ -940,7 +955,7 @@ class Purchase_order extends MY_Controller
                     redirect($_SERVER['HTTP_REFERER']);
                 }
             }
-            $inv_items = $this->purchases_model->getAllPurchaseItems($id);
+            $inv_items = $this->purchase_order_model->getAllPurchaseItems($id);
             $end_date = date('d/m/Y h:i');
             $start_date = date('d/m/Y h:i', strtotime('-3 month'));
             // krsort($inv_items);
@@ -963,7 +978,7 @@ class Purchase_order extends MY_Controller
                 $row->received = $item->quantity_received ? $item->quantity_received : $item->quantity;
                 $row->quantity_balance = $item->quantity_balance + ($item->quantity - $row->received);
                 $row->discount = $item->discount ? $item->discount : '0';
-                $options = $this->purchases_model->getProductOptions($row->id);
+                $options = $this->purchase_order_model->getProductOptions($row->id);
                 $row->option = $item->option_id;
                 $row->real_unit_cost = $item->real_unit_cost;
                 //$row->cost             = $this->sma->formatDecimal($item->net_unit_cost + ($item->item_discount / $item->quantity));
@@ -978,12 +993,14 @@ class Purchase_order extends MY_Controller
                 $row->avz_item_code = isset($item->avz_item_code) && !empty($item->avz_item_code) ? $item->avz_item_code : '';
                 $row->serial_number = $item->serial_number;
                 $row->get_supplier_discount = $supplier_purchase_discount;
-                $row->three_month_sale = $this->purchases_model->getThreeMonthSale($item->product_id, $start_date, $end_date);
+                $row->three_month_sale = $this->purchase_order_model->getThreeMonthSale($item->product_id, $start_date, $end_date);
                 $row->warehouse_shelf = $item->warehouse_shelf;
                 unset($row->details, $row->product_details, $row->price, $row->file, $row->product_group_id);
                 $units = $this->site->getUnitsByBUID($row->base_unit);
                 $tax_rate = $this->site->getTaxRateByID($row->tax_rate);
                 $ri = $this->Settings->item_addition ? $row->id : $c;
+                $row->dis3 = $item->discount3;
+                $row->item_third_discount = $item->third_discount_value;
 
                 $pr[$ri] = [
                     'id' => $c,
@@ -1000,7 +1017,7 @@ class Purchase_order extends MY_Controller
             $this->data['inv_items'] = json_encode($pr);
             $this->data['id'] = $id;
             $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
-            $this->data['purchase'] = $this->purchases_model->getPurchaseByID($id);
+            $this->data['purchase'] = $this->purchase_order_model->getPurchaseByID($id);
             $this->data['categories'] = $this->site->getAllCategories();
             $this->data['tax_rates'] = $this->site->getAllTaxRates();
             $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -1012,166 +1029,19 @@ class Purchase_order extends MY_Controller
             $this->data['csrf'] = $this->session->userdata('user_csrf');
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('purchases'), 'page' => lang('purchases')], ['link' => '#', 'page' => lang('edit_purchase')]];
             $meta = ['page_title' => lang('edit_purchase'), 'bc' => $bc];
-            $this->page_construct('purchases/edit', $meta, $this->data);
+            $this->page_construct('purchase_order/edit', $meta, $this->data);
         }
     }
 
     
-    public function getPurchases($warehouse_id = null)
-    {
-        $this->sma->checkPermissions('index');
-
-        $pid = $this->input->get('pid');
-        $pfromDate = $this->input->get('from');
-        $ptoDate = $this->input->get('to');
-
-        if ((!$this->Owner && !$this->Admin)) {
-            $user = $this->site->getUser();
-            $warehouse_id = $user->warehouse_id;
-        }
-        $detail_link = anchor('admin/purchases/view/$1', '<i class="fa fa-file-text-o"></i> ' . lang('purchase_details'));
-        $payments_link = anchor('admin/purchases/payments/$1', '<i class="fa fa-money"></i> ' . lang('view_payments'), 'data-toggle="modal" data-target="#myModal"');
-        $transfer_link = anchor('admin/purchases/transfer/$1', '<i class="fa fa-money"></i> ' . lang('Transfer to Pharmacy'), 'data-toggle="modal" data-target="#myModal"');
-        $journal_entry_link = anchor('admin/entries/view/journal/?pid=$1', '<i class="fa fa-eye"></i> ' . lang('Journal Entry'));
-
-        if (isset($this->GP) && $this->GP['accountant']) {
-            $convert_purchase_invoice = anchor('admin/purchases/convert_purchse_invoice/$1', '<i class="fa fa-money"></i> ' . lang('Convert to Invoice'));
-        }
-
-        $add_payment_link = anchor('admin/purchases/add_payment/$1', '<i class="fa fa-money"></i> ' . lang('add_payment'), 'data-toggle="modal" data-target="#myModal"');
-
-        $email_link = anchor('admin/purchases/email/$1', '<i class="fa fa-envelope"></i> ' . lang('email_purchase'), 'data-toggle="modal" data-target="#myModal"');
-        $edit_link = anchor('admin/purchases/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_purchase'));
-        $pdf_link = anchor('admin/purchases/pdf/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf'));
-        $print_barcode = anchor('admin/products/print_barcodes/?purchase=$1', '<i class="fa fa-print"></i> ' . lang('print_barcodes'));
-        $return_link = anchor('admin/returns_supplier/add/?purchase=$1', '<i class="fa fa-angle-double-left"></i> ' . lang('return_purchase'));
-        $delete_link = "<a href='#' class='po' title='<b>" . $this->lang->line('delete_purchase') . "</b>' data-content=\"<p>"
-            . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('purchases/delete/$1') . "'>"
-            . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i> "
-            . lang('delete_purchase') . '</a>';
-
-
-        if (isset($this->GP) && $this->GP['accountant']) {
-
-            $action = '<div class="text-center"><div class="btn-group text-left">'
-                . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
-                . lang('actions') . ' <span class="caret"></span></button>
-            <ul class="dropdown-menu pull-right" role="menu">
-                <li>' . $convert_purchase_invoice . '</li>
-                <li>' . $detail_link . '</li>
-                <li>' . $payments_link . '</li>
-                <li>' . $add_payment_link . '</li>
-                <li>' . $edit_link . '</li>
-                <li>' . $pdf_link . '</li>
-                <li>' . $email_link . '</li>
-                <li>' . $print_barcode . '</li>
-                <li>' . $return_link . '</li>
-                <li>' . $journal_entry_link . '</li>
-                <li>' . $delete_link . '</li> 
-            </ul>
-            </div></div>';
-
-        } else {
-
-            $action = '<div class="text-center"><div class="btn-group text-left">'
-                . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
-                . lang('actions') . ' <span class="caret"></span></button>
-            <ul class="dropdown-menu pull-right" role="menu">
-                <li>' . $detail_link . '</li>
-                <li>' . $payments_link . '</li>
-                <li>' . $add_payment_link . '</li>
-                <li>' . $edit_link . '</li>
-                <li>' . $pdf_link . '</li>
-                <li>' . $email_link . '</li>
-                <li>' . $print_barcode . '</li>
-                <li>' . $return_link . '</li>
-                <li>' . $delete_link . '</li>
-                <li>' . $transfer_link . '</li>
-               <li>' . $journal_entry_link . '</li>
-            </ul>
-            </div></div>';
-
-
-        }
-        //$action = '<div class="text-center">' . $detail_link . ' ' . $edit_link . ' ' . $email_link . ' ' . $delete_link . '</div>';
-
-        $this->load->library('datatables');
-        if ($warehouse_id) {
-            $this->datatables
-                ->select("id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, sequence_code, supplier, status, grand_total, paid, (grand_total-paid) as balance, payment_status, attachment")
-                ->from('purchases')
-                ->where('warehouse_id', $warehouse_id);
-        } else {
-            $this->datatables
-                ->select("id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, sequence_code, supplier, status, grand_total, paid, (grand_total-paid) as balance, payment_status, attachment")
-                ->from('purchases');
-        }
-
-        if (!empty($pid) && is_numeric($pid)) {
-            $this->datatables->where('id', $pid);
-        }
-
-        if (!empty($pfromDate)) {
-            $this->datatables->where('date >=', $pfromDate);
-        }
-
-        if (!empty($ptoDate)) {
-            $this->datatables->where('date <=', $ptoDate);
-        }
-
-        // if($this->sma->checkPermissionsForRequest('p_status_pending'))
-        // {
-        //     $this->datatables->where('status', 'pending');
-        //}
-        // $this->datatables->where('status !=', 'returned');
-
-        if (isset($this->GP) && $this->GP["purchase_supervisor"]) {
-            $this->datatables->where('status', 'pending');
-            $this->datatables->or_where('shelf_status', 'Shelves Added');
-
-        }
-
-        if (isset($this->GP) && $this->GP["purchase_manager"]) {
-            $this->datatables->where('status', 'pending');
-            $this->datatables->or_where('status', 'ordered');
-            $this->datatables->or_where('status', 'rejected');
-        }
-
-        if (isset($this->GP) && $this->GP["purchase_receiving_supervisor"]) {
-            $this->datatables->where('status', 'arrived');
-            $this->datatables->or_where('status', 'received');
-            $this->datatables->or_where('status', 'partial');
-            $this->datatables->or_where('status', 'rejected');
-
-        }
-
-        if (isset($this->GP) && $this->GP["purchase_warehouse_supervisor"]) {
-            $this->datatables->where('status', 'received');
-            $this->datatables->or_where('status', 'partial');
-
-        }
-        if (isset($this->GP) && $this->GP["accountant"]) {
-            $this->datatables->where('status', 'received');
-            $this->datatables->or_where('status', 'partial');
-            //$this->datatables->or_where('status', 'partial');
-
-        }
-
-
-
-        if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->Admin && !$this->Pharmacist && !$this->session->userdata('view_right')) {
-            $this->datatables->where('created_by', $this->session->userdata('user_id'));
-        } elseif ($this->Supplier) {
-            $this->datatables->where('supplier_id', $this->session->userdata('user_id'));
-        }
-        $this->datatables->add_column('Actions', $action, 'id');
-        echo $this->datatables->generate();
-    }
-
+  
     /* ------------------------------------------------------------------------- */
 
     public function index($warehouse_id = null)
     {
+        //error_reporting(E_ALL);        // Report all errorsP
+        //ini_set('display_errors', 1); 
+        
         $this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
@@ -1206,6 +1076,7 @@ class Purchase_order extends MY_Controller
         $offset = ($page - 1) * $limit;
 
         $total_rows = $this->purchase_order_model->count_purchases($filters);
+        
 
         $config['base_url'] = admin_url('purchases/index');
         $config['total_rows'] = $total_rows;
@@ -1242,27 +1113,7 @@ class Purchase_order extends MY_Controller
         $this->page_construct('purchase_order/index', $meta, $this->data);
     }
 
-    public function status($statuswise = null, $warehouse_id = null)
-    {
-        //$this->sma->checkPermissions();
 
-        // $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
-        if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
-            $this->data['warehouses'] = $this->site->getAllWarehouses();
-            $this->data['warehouse_id'] = $warehouse_id;
-            $this->data['warehouse'] = $warehouse_id ? $this->site->getWarehouseByID($warehouse_id) : null;
-            $this->data['statuswise'] = $statuswise;
-        } else {
-            $this->data['warehouses'] = null;
-            $this->data['warehouse_id'] = $this->session->userdata('warehouse_id');
-            $this->data['warehouse'] = $this->session->userdata('warehouse_id') ? $this->site->getWarehouseByID($this->session->userdata('warehouse_id')) : null;
-            $this->data['statuswise'] = $statuswise;
-        }
-
-        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('purchases')]];
-        $meta = ['page_title' => lang('purchases'), 'bc' => $bc];
-        $this->page_construct('purchases/status_listwise', $meta, $this->data);
-    }
 
     /* ----------------------------------------------------------------------------- */
 
@@ -1274,11 +1125,11 @@ class Purchase_order extends MY_Controller
             $purchase_id = $this->input->get('id');
         }
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
-        $inv = $this->purchases_model->getPurchaseByID($purchase_id);
+        $inv = $this->purchase_order_model->getPurchaseByID($purchase_id);
         if (!$this->session->userdata('view_right')) {
             $this->sma->view_rights($inv->created_by, true);
         }
-        $this->data['rows'] = $this->purchases_model->getAllPurchaseItems($purchase_id);
+        $this->data['rows'] = $this->purchase_order_model->getAllPurchaseItems($purchase_id);
         $supplier = $this->site->getCompanyByID($inv->supplier_id);
         $this->data['parent_supplier'] = '';
         if ($supplier->level == 2 && $supplier->parent_code != '') {
@@ -1299,23 +1150,10 @@ class Purchase_order extends MY_Controller
         $this->data['attachments'] = $this->site->getAttachments($purchase_id, 'purchase');
         $this->data['purchase_id'] = $purchase_id;
 
-        $this->load->view($this->theme . 'purchases/modal_view', $this->data);
+        $this->load->view($this->theme . 'purchase_order/modal_view', $this->data);
     }
 
-    public function payment_note($id = null)
-    {
-        $this->sma->checkPermissions('payments', true);
-        $payment = $this->purchases_model->getPaymentByID($id);
-        $inv = $this->purchases_model->getPurchaseByID($payment->purchase_id);
-        $this->data['supplier'] = $this->site->getCompanyByID($inv->supplier_id);
-        $this->data['warehouse'] = $this->site->getWarehouseByID($inv->warehouse_id);
-        $this->data['inv'] = $inv;
-        $this->data['payment'] = $payment;
-        $this->data['page_title'] = $this->lang->line('payment_note');
-
-        $this->load->view($this->theme . 'purchases/payment_note', $this->data);
-    }
-
+ 
     /* -------------------------------------------------------------------------------- */
 
    
@@ -1757,15 +1595,15 @@ class Purchase_order extends MY_Controller
             $purchase_id = $this->input->get('id');
         }
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
-        $inv = $this->purchases_model->getPurchaseByID($purchase_id);
+        $inv = $this->purchase_order_model->getPurchaseByID($purchase_id);
         if (!$this->session->userdata('view_right')) {
             $this->sma->view_rights($inv->created_by);
         }
-        $this->data['rows'] = $this->purchases_model->getAllPurchaseItems($purchase_id);
+        $this->data['rows'] = $this->purchase_order_model->getAllPurchaseItems($purchase_id);
         $this->data['supplier'] = $this->site->getCompanyByID($inv->supplier_id);
         $this->data['warehouse'] = $this->site->getWarehouseByID($inv->warehouse_id);
         $this->data['inv'] = $inv;
-        $this->data['payments'] = $this->purchases_model->getPaymentsForPurchase($purchase_id);
+        $this->data['payments'] = $this->purchase_order_model->getPaymentsForPurchase($purchase_id);
         $this->data['created_by'] = $this->site->getUser($inv->created_by);
         $this->data['updated_by'] = $inv->updated_by ? $this->site->getUser($inv->updated_by) : null;
         $this->data['return_purchase'] = $inv->return_id ? $this->purchases_model->getPurchaseByID($inv->return_id) : null;
@@ -1774,8 +1612,164 @@ class Purchase_order extends MY_Controller
 
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('purchases'), 'page' => lang('purchases')], ['link' => '#', 'page' => lang('view')]];
         $meta = ['page_title' => lang('view_purchase_details'), 'bc' => $bc];
-        $this->page_construct('purchases/view', $meta, $this->data);
+        $this->page_construct('purchase_order/view', $meta, $this->data);
     }
+
+    public function send_to_supplier()
+    {
+        $purchase_id = $this->input->post('purchase_order_id');
+        $notes = $this->input->post('notes');
+
+        $data = [
+            'status' => 'sent_to_supplier',
+            'sending_notes' => $notes,
+            'updated_by' => $this->session->userdata('user_id'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        $this->db->where('id', $purchase_id)->update('purchase_orders', $data);
+
+        echo json_encode(['success' => true]);
+    }
+
+
+    public function add_grn($po_id) {
+
+     if( $this->input->post() ) {
+        $items = $this->input->post('items', true);
+
+         if (empty($items)) {
+            show_error('No items to update.');
+        }
+
+            // Initialize CASE expressions for each field
+        $quantityCase       = "CASE id";
+        $actualQtyCase      = "CASE id";
+        $commentCase        = "CASE id";
+        $ids = [];
+        
+        foreach ($items as $item) {
+            if ($item['quantity'] <= 0 || $item['quantity'] > $item['actual_quantity']) {
+                //show_error("Invalid quantity for item ID: " . $item['item_id']);
+            }
+
+            $id = (int) $item['item_id'];
+            $quantity = (float) $item['quantity'];
+            $actualQty = (float) $item['actual_quantity'];
+            $comment = $this->db->escape($item['remarks']); // safe escape for string
+
+            // Optional: Validation to avoid invalid entries
+            if ($quantity <= 0 || $quantity > $actualQty) {
+                continue; // skip invalid entries
+            }
+
+            $quantityCase  .= " WHEN {$id} THEN {$quantity}";
+            $actualQtyCase .= " WHEN {$id} THEN {$actualQty}";
+            $commentCase   .= " WHEN {$id} THEN {$comment}";
+
+            $ids[] = $id;
+
+
+        }
+
+         if (empty($ids)) {
+            show_error('No valid items to update.');
+        }
+
+         // Close CASE statements
+        $quantityCase  .= " END";
+        $actualQtyCase .= " END";
+        $commentCase   .= " END";
+
+        $idList = implode(',', $ids);
+
+           $sql = "
+        UPDATE sma_purchase_order_items
+        SET 
+            quantity = {$quantityCase},
+            actual_quantity = {$actualQtyCase},
+            grn_comments = {$commentCase}
+        WHERE id IN ({$idList})
+        ";
+
+        // Execute query
+        $this->db->query($sql);
+        
+        // Update purchase order status
+        $this->db->where('id', $po_id)->update('purchase_orders', [
+            'status' => 'goods_received',
+            'total_items_received' => sizeof($items),
+            'grn_notes' => $this->input->post('remarks'),
+            'received_by' => $this->session->userdata('user_id'),
+            'updated_by' => $this->session->userdata('user_id'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ]);
+
+
+        // Redirect or show success message
+        $this->session->set_flashdata('message', 'Purchase items updated successfully!');
+        admin_redirect('purchase_order/view/' . $po_id);
+
+     }   
+     
+    $this->data['rows'] = $this->purchase_order_model->getAllPurchaseItems($po_id);
+    $this->data['po_id'] = $po_id;
+
+    $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('purchases'), 'page' => lang('purchases')], ['link' => '#', 'page' => lang('add_purchase')]];
+    $meta = ['page_title' => lang('add_purchase'), 'bc' => $bc];
+    $this->page_construct('purchase_order/grn', $meta, $this->data);
+
+    // $purchase_order_id = $this->input->post('purchase_order_id');
+    // $received_date = $this->input->post('received_date');
+    // $received_by = $this->session->userdata('user_id'); ;
+    // $grn_notes = $this->input->post('grn_notes');
+    // $received_qty = $this->input->post('received_qty'); // array
+    // $total_items = $this->input->post('total_items'); // array
+    // $total_quantity = $this->input->post('total_quantity'); // array
+
+    // // Handle file upload
+    // $attachment_path = null;
+    // if (!empty($_FILES['grn_attachment']['name'])) {
+    //     $config['upload_path'] = './assets/uploads/grn/';
+    //     $config['allowed_types'] = 'pdf|jpg|png|jpeg';
+    //     $config['max_size'] = 2048;
+    //     $config['encrypt_name'] = TRUE;
+
+    //     $this->load->library('upload', $config);
+
+    //     if ($this->upload->do_upload('grn_attachment')) {
+    //         $data = $this->upload->data();
+    //         $attachment_path = 'uploads/grn/' . $data['file_name'];
+    //     } else {
+    //         echo $this->upload->display_errors();
+    //         return;
+    //     }
+    // }
+
+    // // Insert GRN record
+    // $grn_data = [
+    //     'purchase_order_id' => $purchase_order_id,
+    //     'received_date' => $received_date,
+    //     'received_by' => $received_by,
+    //     'notes' => $grn_notes,
+    //     'attachment' => $attachment_path,
+    //     'total_items' => $total_items,
+    //     'total_quantity' => $total_quantity,
+    //     'created_at' => date('Y-m-d H:i:s')
+    // ];
+    // $this->db->insert('purchase_order_grn', $grn_data);
+    // $grn_id = $this->db->insert_id();
+
+    // // Update purchase order status
+    // $this->db->where('id', $purchase_order_id)->update('purchase_orders', [
+    //     'status' => 'goods_received',
+    //     'grn_id' => $grn_id,
+    //     'updated_by' => $this->session->userdata('user_id'),
+    //     'updated_at' => date('Y-m-d H:i:s')
+    // ]);
+
+    // echo json_encode(['success' => true]);
+}
 
     public function view_return($id = null)
     {
@@ -1806,47 +1800,5 @@ class Purchase_order extends MY_Controller
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('check_status'), 'page' => lang('Check Status')], ['link' => '#', 'page' => lang('Check Status')]];
         $meta = ['page_title' => lang('Check Status'), 'bc' => $bc];
         $this->page_construct('purchases/check_status', $meta, $this->data);
-    }
-
-    public function searchBySequenceCode()
-    {
-        $sequenceCode = $this->input->post('sequence_code');
-        $purchase = $this->purchases_model->searchBySequenceCode($sequenceCode);
-        if ($purchase == 420) {
-            $this->data['purchase'] = 420;
-        } else {
-            $this->data['purchase'] = $purchase;
-        }
-        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('check_status'), 'page' => lang('Check Status')], ['link' => '#', 'page' => lang('Check Status')]];
-        $meta = ['page_title' => lang('Check Status'), 'bc' => $bc];
-        $this->page_construct('purchases/check_status_list', $meta, $this->data);
-    }
-
-    public function searchByReference()
-    {
-        $referenceNo = $this->input->post('reference_no');
-        $purchase = $this->purchases_model->searchByReference($referenceNo);
-        if ($purchase == 420) {
-            $this->data['purchase'] = 420;
-        } else {
-            $this->data['purchase'] = $purchase;
-        }
-        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('check_status'), 'page' => lang('Check Status')], ['link' => '#', 'page' => lang('Check Status')]];
-        $meta = ['page_title' => lang('Check Status'), 'bc' => $bc];
-        $this->page_construct('purchases/check_status_list', $meta, $this->data);
-    }
-
-    public function searchByDate()
-    {
-        $start_date = $this->sma->fld(trim($this->input->post('start_date')));
-        $end_date = $this->sma->fld(trim($this->input->post('end_date')));
-        //     $start_date_time   = $start_date.' 00:00:00';
-        //   echo  $end_date_time     = $end_date.' 23:59:59';    
-
-        $purchase = $this->purchases_model->searchByDate($start_date, $end_date);
-        $this->data['purchase'] = $purchase;
-        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('check_status'), 'page' => lang('Check Status')], ['link' => '#', 'page' => lang('Check Status')]];
-        $meta = ['page_title' => lang('Check Status'), 'bc' => $bc];
-        $this->page_construct('purchases/check_status_list', $meta, $this->data);
     }
 }
