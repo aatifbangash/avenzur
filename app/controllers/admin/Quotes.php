@@ -1394,10 +1394,9 @@ class Quotes extends MY_Controller
         $email_link   = anchor('admin/quotes/email/$1', '<i class="fa fa-envelope"></i> ' . lang('email_quote'), 'data-toggle="modal" data-target="#myModal"');
         $edit_link    = anchor('admin/quotes/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_quote'));
         //$convert_link = anchor('admin/sales/add_from_quote/$1', '<i class="fa fa-heart"></i> ' . lang('create_sale_order'));
-        $convert_link  = "<a href='#' class='po' title='<b>" . $this->lang->line('create_sale_order') . "</b>' data-content=\"<p>"
-        . lang('Are you sure, you want to convert quotation to sale order?') . "</p><a class='btn btn-info po-delete' href='" . admin_url('sales/add_from_quote/$1') . "'>"
-        . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-heart-o\"></i> "
-        . lang('create_sale_order') . '</a>';
+        $convert_link = "<a href='" . admin_url('sales/add_from_quote/$1') . "' 
+                        onclick=\"return confirm('Are you sure you want to convert this quotation to a sale order?');\" >
+                        <i class='fa fa-heart-o'></i> " . lang('create_sale_order') . "</a>";
         $pc_link      = anchor('admin/purchases/add/$1', '<i class="fa fa-star"></i> ' . lang('create_purchase'));
         $pdf_link     = anchor('admin/quotes/pdf/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf'));
         $delete_link  = "<a href='#' class='po' title='<b>" . $this->lang->line('delete_quote') . "</b>' data-content=\"<p>"
