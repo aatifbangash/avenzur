@@ -340,15 +340,16 @@ class Purchase_order_model extends CI_Model
 
     public function getAllPurchaseItems($purchase_id)
     {
-        $this->db->select('purchase_items.*, tax_rates.code as tax_code, tax_rates.name as tax_name, tax_rates.rate as tax_rate,
+        $this->db->select('purchase_order_items.*, tax_rates.code as tax_code, tax_rates.name as tax_name, tax_rates.rate as tax_rate,
          products.unit, products.details as details, product_variants.name as variant, products.hsn_code as hsn_code, 
          products.second_name as second_name, products.item_code')
-            ->join('products', 'products.id=purchase_items.product_id', 'left')
-            ->join('product_variants', 'product_variants.id=purchase_items.option_id', 'left')
-            ->join('tax_rates', 'tax_rates.id=purchase_items.tax_rate_id', 'left')
-            ->group_by('purchase_items.id')
+            ->join('products', 'products.id=purchase_order_items.product_id', 'left')
+            ->join('product_variants', 'product_variants.id=purchase_order_items.option_id', 'left')
+            ->join('tax_rates', 'tax_rates.id=purchase_order_items.tax_rate_id', 'left')
+            ->group_by('purchase_order_items.id')
             ->order_by('id', 'asc');
-        $q = $this->db->get_where('purchase_items', ['purchase_id' => $purchase_id]);
+        $q = $this->db->get_where('purchase_order_items', ['purchase_id' => $purchase_id]);
+        //echo $this->db->last_query();exit;
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
@@ -726,7 +727,7 @@ class Purchase_order_model extends CI_Model
 
     public function getPurchaseByID($id)
     {
-        $q = $this->db->get_where('purchases', ['id' => $id], 1);
+        $q = $this->db->get_where('purchase_orders', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -878,49 +879,22 @@ class Purchase_order_model extends CI_Model
         $this->db->trans_start();
         $opurchase = $this->getPurchaseByID($id);
         $oitems = $this->getAllPurchaseItems($id);
-        if ($this->db->update('purchases', $data, ['id' => $id]) && $this->db->delete('purchase_items', ['purchase_id' => $id])) {
+        if ($this->db->update('purchase_orders', $data, ['id' => $id]) && $this->db->delete('purchase_order_items', ['purchase_id' => $id])) {
             $purchase_id = $id;
 
             foreach ($items as $item) {
                 $item['purchase_id'] = $id;
                 $item['option_id'] = !empty($item['option_id']) && is_numeric($item['option_id']) ? $item['option_id'] : null;
 
-                if ($data['status'] == 'received' && !$item['avz_item_code']) {
-                    $uuid = $this->sma->generateUUIDv4();
-                    $item['avz_item_code'] = $uuid;
-                }
-
-                $this->db->insert('purchase_items', $item);
-                if ($data['status'] == 'received' || $data['status'] == 'partial') {
-                    $this->updateAVCO(['product_id' => $item['product_id'], 'batch' => $item['batchno'], 'warehouse_id' => $item['warehouse_id'], 'quantity' => $item['quantity'], 'cost' => $item['real_unit_cost']]);
-                }
-
+                $this->db->insert('purchase_order_items', $item);
+                
                 $item_exists_in_inventory = false;
-                $q = $this->db->get_where('inventory_movements', ['product_id' => $item['product_id'], 'type' => 'purchase', 'batch_number' => $item['batchno'], 'avz_item_code' => $item['avz_item_code']], 1);
-                if ($q->num_rows() > 0) {
-                    $item_exists_in_inventory = true;
-                }
-
-                if ($opurchase->status == 'received' && $item['status'] == 'received') {
-                    if ($item_exists_in_inventory) {
-                        $this->Inventory_model->update_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id'], $id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['unit_cost'], $item['avz_item_code'], $item['bonus'], NULL, $item['sale_price'], $data['date']);
-                    } else {
-                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id'], $id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['unit_cost'], $item['avz_item_code'], $item['bonus'], NULL, $item['sale_price'], $data['date']);
-                    }
-
-                } else if ($item['status'] == 'received') {
-                    $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id'], $id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $item['unit_cost'], $item['avz_item_code'], $item['bonus'], NULL, $item['sale_price'], $data['date']);
-                }
+                
                 // $this->Inventory_model->update_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id']);
 
-                if ($data['status'] == 'received' || $data['status'] == 'partial') {
-                    $net_cost_obj = $this->getAverageCost($item['batchno'], $item['product_code']);
-                    $net_cost_sales = $net_cost_obj[0]->cost_price;
-                    $this->updateSalesCostPrice($net_cost_sales, $item['batchno'], $item['product_code']);
-                    $this->updateReturnsCostPrice($net_cost_sales, $item['batchno'], $item['product_code']);
-                }
+
             }
-            $this->site->syncQuantity(null, null, $oitems);
+           
 
             if (!empty($attachments)) {
                 foreach ($attachments as $attachment) {
@@ -929,17 +903,11 @@ class Purchase_order_model extends CI_Model
                     $this->db->insert('attachments', $attachment);
                 }
             }
-            if ($data['status'] == 'received' || $data['status'] == 'partial') {
-                $this->site->syncQuantity(null, $id);
-                foreach ($oitems as $oitem) {
-                    $this->updateAVCO(['product_id' => $oitem->product_id, 'batch' => $item['batchno'], 'warehouse_id' => $oitem->warehouse_id, 'quantity' => (0 - $oitem->quantity), 'cost' => $oitem->real_unit_cost]);
-                }
-            }
-            $this->site->syncPurchasePayments($id);
+            
         }
         $this->db->trans_complete();
         if ($this->db->trans_status() === false) {
-            log_message('error', 'An errors has been occurred while adding the sale (Update:Purchases_model.php)');
+            log_message('error', 'An errors has been occurred while adding the sale (Update:Purchase_order_model.php)');
         } else {
             return true;
         }
@@ -1337,5 +1305,13 @@ class Purchase_order_model extends CI_Model
             return $data;
         }
         return false;
+    }
+
+    public function updatePurchaseOrderInvoicedStatus($po_id, $purchase_id) {
+
+        if ($this->db->update('purchase_orders', ['status' => "invoiced", "purchase_id" => $purchase_id], 
+                        ['id' => $po_id]) ) {
+                return true;
+            }
     }
 }
