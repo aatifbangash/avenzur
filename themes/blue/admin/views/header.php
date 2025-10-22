@@ -1334,6 +1334,11 @@
                                             <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_supplier'); ?></span>
                                         </a>
                                     </li>
+                                    <li id="suppliers_index">
+                                        <a class="submenu" href="https://malhr.com/en/account/login" target="_blank">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('HCM'); ?></span>
+                                        </a>
+                                    </li>
                                     <li class="mm_employees">
                                         <a class="dropmenu" href="#">
                                             <i class="fa fa-users"></i>
