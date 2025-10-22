@@ -5383,7 +5383,7 @@ if($inv->warning_note != ""){
         $num_cartons   = $label->number_of_cartons;
 
         //$logo_file = FCPATH . 'assets/uploads/logos/label-logo.png';
-        $logo_img  = 'https://retaj.avenzur.com/assets/uploads/logos/avenzur-logov2-0241.png';
+        $logo_img  = 'https://retaj.avenzur.com/assets/uploads/logos/'.$biller->logo;
         /*if (is_file($logo_file)) {
             $logo_img = 'data:image/png;base64,' . base64_encode(file_get_contents($logo_file));
         } else {
