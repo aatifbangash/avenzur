@@ -3701,7 +3701,7 @@ class Sales extends MY_Controller
             if(($Admin || $Owner)){
                 $action .=  '<li>' . $delete_link . '</li>';
             }
-            if(($Admin || $Owner)){
+            if(($Admin || $Owner || $this->Accountant)){
                 $action .=  '<li>' . $journal_entry_link . '</li>';
             }
             $action .=  '</ul>
