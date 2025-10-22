@@ -759,7 +759,7 @@ class Suppliers extends MY_Controller
         // ini_set('display_errors', '1');
         // ini_set('display_startup_errors', '1');
         // error_reporting(E_ALL);
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
         $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
         $this->form_validation->set_rules('ledger_account', $this->lang->line('ledger_account'), 'required');
         $this->form_validation->set_rules('bank_charges_account', $this->lang->line('bank_charges_account'), 'required');

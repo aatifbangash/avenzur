@@ -310,7 +310,7 @@ class Customers extends MY_Controller
     }
 
     public function payment_from_customer(){
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
         $this->form_validation->set_rules('customer', $this->lang->line('customer'), 'required');
 
         $data = [];

@@ -46,7 +46,7 @@ class Quotes extends MY_Controller
         $this->form_validation->set_rules('quote_status', lang('sale_status'), 'required');
         $this->form_validation->set_rules('payment_term', lang('payment_term'), 'required');
         $this->form_validation->set_rules('quantity[]', lang('quantity'), 'required'); 
-        $this->form_validation->set_rules('batchno[]', lang('batchno'), 'required'); 
+       // $this->form_validation->set_rules('batchno[]', lang('batchno'), 'required'); 
         
         $product_id_arr= $this->input->post('product_id');  
         foreach ($product_id_arr as $index => $prid) {
@@ -770,6 +770,14 @@ class Quotes extends MY_Controller
                     $new_item_total_sale = $_POST['item_total_sale'][$r];
                     $item_net_unit_sale = $_POST['item_unit_sale'][$r];
                     $item_unit_sale = $_POST['unit_price'][$r];
+
+                    if($quote_status){
+                        $inventoryObj = $this->products_model->check_inventory($warehouse_id, $item_id, $item_batchno, $item_expiry, $item_quantity, $item_avz_code);
+                        if(!$inventoryObj){
+                            $this->session->set_flashdata('error', 'Quote cannot be approved. The item: '.$item_code.'-'.$item_name.' has no stock in Warehouse');
+                            admin_redirect('quotes');
+                        }
+                    }
 
                     $product = [
                         'product_id'        => $item_id,

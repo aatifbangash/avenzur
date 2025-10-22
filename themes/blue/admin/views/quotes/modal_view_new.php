@@ -236,7 +236,7 @@
                     <tr>
                         <th><?= lang('no.'); ?></th>
                         <th><?= lang('description'); ?></th>
-                        <th><?= lang('Avz Code');?></th>
+                        
                         <th><?= lang('Batch No');?></th>
                         <?php if ($Settings->indian_gst) {
                             $total_col +=1; 
@@ -301,7 +301,7 @@
                                 
                                 <?= ($row->expiry && $row->expiry != '0000-00-00') ? '<br>' . lang('EX') . ': ' . $this->sma->hrsd($row->expiry) : ''; ?>
                             </td>
-                            <td style="width: 8%;text-align:center; vertical-align:middle;"><?= $row->avz_item_code ?: ''; ?></td>
+                            
                             <td style="width: 8%;text-align:center; vertical-align:middle;"><?= $row->batch_no ?: ''; ?></td>
                             <?php if ($Settings->indian_gst) {
                         ?>
