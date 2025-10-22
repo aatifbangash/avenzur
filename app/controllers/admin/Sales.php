@@ -4064,7 +4064,7 @@ class Sales extends MY_Controller
 
     <!-- LOGO -->
     <div style="text-align:center; margin-bottom:5px;">
-        <img src="data:image/png;base64,' . base64_encode(file_get_contents(base_url() . 'assets/uploads/logos/avenzur-logov2-024.png')) . '"
+        <img src="data:image/png;base64,' . base64_encode(file_get_contents(base_url() . 'assets/uploads/logos/' . $biller->logo)) . '"
             alt="Avenzur" style="max-width:120px; height:auto;">
         
     </div>
