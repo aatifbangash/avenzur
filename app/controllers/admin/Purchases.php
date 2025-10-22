@@ -7,6 +7,7 @@ class Purchases extends MY_Controller
     public function __construct()
     {
         parent::__construct();
+        //print_r(!$this->loggedIn);exit;
         if (!$this->loggedIn) {
             $this->session->set_userdata('requested_page', $this->uri->uri_string());
             $url = "admin/login";
@@ -28,6 +29,7 @@ class Purchases extends MY_Controller
         $this->load->admin_model('transfers_model');
         $this->load->admin_model('Inventory_model');
         $this->load->admin_model('deals_model');
+        $this->load->admin_model('purchase_order_model');
         $this->digital_upload_path = 'files/';
         $this->upload_path = 'assets/uploads/';
         $this->thumbs_path = 'assets/uploads/thumbs/';
@@ -341,8 +343,8 @@ class Purchases extends MY_Controller
         $this->session->unset_userdata('csrf_token');
         if ($this->form_validation->run() == true) {
 
-            // echo "<pre>";
-            // print_r($this->input->post());exit;
+             //echo "<pre>";
+             //print_r($this->input->post());exit;
             $reference = $this->input->post('reference_no') ? $this->input->post('reference_no') : $this->site->getReference('po');
             if ($this->Owner || $this->Admin) {
                 $date = $this->sma->fld(trim($this->input->post('date')));
@@ -359,6 +361,8 @@ class Purchases extends MY_Controller
             $note = $this->sma->clear_tags($this->input->post('note'));
             $payment_term = $this->input->post('payment_term');
             $due_date = $payment_term ? date('Y-m-d', strtotime('+' . $payment_term . ' days', strtotime($date))) : null;
+
+            //$status = 'received';
 
             $total = 0;
             $total_sale_price = 0;
@@ -396,6 +400,8 @@ class Purchases extends MY_Controller
                 $item_dis2 = $_POST['dis2'][$r];
                 $totalbeforevat = $_POST['totalbeforevat'][$r];
                 $main_net = $_POST['main_net'][$r];
+                $discount3 = $_POST['dis3'][$r];
+                $item_third_discount = $_POST['item_third_discount'][$r];
 
                 //$net_cost_obj = $this->purchases_model->getAverageCost($item_batchno, $item_code);
                 //$net_cost_sales = $net_cost_obj[0]->cost_price;
@@ -505,7 +511,10 @@ class Purchases extends MY_Controller
                         'discount2' => $item_dis2,
                         'second_discount_value' => $new_item_second_discount,
                         'totalbeforevat' => $_POST['item_net_purchase'][$r],
-                        'main_net' => $main_net
+                        'main_net' => $main_net,
+                        'discount3' => $discount3,
+                        'third_discount_value' => $item_third_discount,
+
                     ];
 
                     if ($avz_item_code) {
@@ -550,6 +559,7 @@ class Purchases extends MY_Controller
             $grand_total_vat = $this->input->post('grand_total_vat');
             $grand_total_sale = $this->input->post('grand_total_sale');
             $grand_total = $this->input->post('grand_total');
+            $grand_deal_discount = $this->input->post('grand_deal_discount');
 
             $data = [
                 'reference_no' => $reference,
@@ -575,7 +585,8 @@ class Purchases extends MY_Controller
                 'created_by' => $this->session->userdata('user_id'),
                 'payment_term' => $payment_term,
                 'due_date' => $due_date,
-                'sequence_code' => $this->sequenceCode->generate('PR', 5)
+                'sequence_code' => $this->sequenceCode->generate('PR', 5),
+                'grand_deal_discount' => $grand_deal_discount
             ];
 
             if ($supplier_details->balance > 0 && $status == 'received') {
@@ -628,6 +639,11 @@ class Purchases extends MY_Controller
                 if ($supplier_details->balance > 0) {
                     $this->purchases_model->update_balance($supplier_details->id, $new_balance);
                 }
+
+                if($this->input->post('action') == 'create_invoice' && $this->input->post('po_id') > 0){
+                    $this->purchase_order_model->updatePurchaseOrderInvoicedStatus($this->input->post('po_id'),$purchase_id);
+                }
+
             }
             //   echo "<pre>";
             // print_r($this->input->post());exit;
@@ -726,6 +742,40 @@ class Purchases extends MY_Controller
 
                 $this->data['quote_items'] = json_encode($pr);
             }
+            elseif($this->input->get('action') == 'create_invoice') {
+                $po_id = base64_decode( $this->input->get('po_number') );
+                 // Check if PR exists
+                $pr_data = $this->purchase_order_model->getPurchaseByID($po_id);
+                //echo "<pre>";print_r($pr_data);exit;
+                if (!$pr_data || $pr_data->status == 'invoiced') {
+                    $this->session->set_flashdata('error', 'Purchase Order not found or already Invoiced.');
+                    admin_redirect('purchase_order'); // redirect back
+                }
+                else if ($pr_data->status != 'goods_received') {
+                    $this->session->set_flashdata('error', 'No goods received notes found. Please add grn then make invoice.');
+                    admin_redirect('purchase_order'); // redirect back
+                }
+
+                $po_info = $this->getPurchaseOrderItems($po_id);
+       
+                 $this->data['purchase'] = $pr_data;
+                //$this->data['pr_data'] = $pr_data;
+                $this->data['action'] = 'create_invoice';
+                $this->data['po_id'] = $this->input->get('po_number');
+                $this->data['pr_data'] = $pr_data;
+                $this->data['module_name'] = 'purchase_order';
+                $this->data['inv_items'] = json_encode($po_info);
+
+                // $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+                // $this->data['purchase'] = $this->purchases_model->getPurchaseByID($id);
+                // $this->data['categories'] = $this->site->getAllCategories();
+                // $this->data['tax_rates'] = $this->site->getAllTaxRates();
+                // $this->data['warehouses'] = $this->site->getAllWarehouses();
+                // $this->data['shelves'] = $this->site->getAllShelf($inv->warehouse_id);
+
+            }
+
+
 
             $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
             $this->data['quote_id'] = $quote_id;
@@ -744,6 +794,15 @@ class Purchases extends MY_Controller
         }
     }
 
+    private function getPurchaseOrderItems($po_id){
+         
+            $inv_items = $this->purchase_order_model->getAllPurchaseItems($po_id);
+            //print_r($inv_items);exit;
+          
+            return $this->site->getPrePorcessPurchaseItems($inv_items);
+            
+    }
+    
     public function push_serials_to_rasd_manually()
     {
         $purchase_id = $_GET['purchase_id'];
@@ -1179,6 +1238,8 @@ class Purchases extends MY_Controller
                 $totalbeforevat = $_POST['totalbeforevat'][$r];
                 $main_net = $_POST['main_net'][$r];
                 $warehouse_shelf = $_POST['warehouse_shelf'][$r];
+                $discount3 = $_POST['dis3'][$r];
+                $item_third_discount = $_POST['item_third_discount'][$r];
 
                 if ($status == 'received' || $status == 'partial') {
                     /*if ($quantity_received < $item_quantity) {
@@ -1300,7 +1361,9 @@ class Purchases extends MY_Controller
                         'second_discount_value' => $new_item_second_discount,
                         'totalbeforevat' => $_POST['item_net_purchase'][$r],
                         'main_net' => $main_net,
-                        'warehouse_shelf' => ($warehouse_shelf ? $warehouse_shelf : '')
+                        'warehouse_shelf' => ($warehouse_shelf ? $warehouse_shelf : ''),
+                        'discount3' => $discount3,
+                        'third_discount_value' => $item_third_discount,
                     ];
 
                     if ($avz_item_code) {
@@ -1350,6 +1413,7 @@ class Purchases extends MY_Controller
             $grand_total_vat = $this->input->post('grand_total_vat');
             $grand_total_sale = $this->input->post('grand_total_sale');
             $grand_total = $this->input->post('grand_total');
+            $grand_deal_discount = $this->input->post('grand_deal_discount');
 
             $data = [
                 'reference_no' => $reference,
@@ -1378,7 +1442,8 @@ class Purchases extends MY_Controller
                 'tempstatus' => $tempstatus,
                 'lotnumber' => $lotnumber,
                 'shelf_status' => $shelf_status,
-                'validate' => $validate
+                'validate' => $validate,
+                'grand_deal_discount' => $grand_deal_discount
 
 
             ];
@@ -1501,6 +1566,8 @@ class Purchases extends MY_Controller
                 $units = $this->site->getUnitsByBUID($row->base_unit);
                 $tax_rate = $this->site->getTaxRateByID($row->tax_rate);
                 $ri = $this->Settings->item_addition ? $row->id : $c;
+                $row->dis3 = $item->discount3;
+                $row->item_third_discount = $item->third_discount_value;
 
                 $pr[$ri] = [
                     'id' => $c,
@@ -1961,7 +2028,7 @@ class Purchases extends MY_Controller
                     'dc' => 'C',
                     'ledger_id' => $supplier->ledger_account,
                     //'amount' => $inv->grand_total + $inv->product_tax,
-                    'amount' => $inv->grand_total,
+                    'amount' => $inv->grand_total + $inv->grand_deal_discount,
                     'narration' => 'Accounts payable'
                 )
             );
@@ -1978,6 +2045,19 @@ class Purchases extends MY_Controller
                     'narration' => 'Inventory'
                 )
             );
+
+            if($inv->grand_deal_discount > 0){
+                // Purchase Discount
+                $entryitemdata[] = array(
+                    'Entryitem' => array(
+                        'entry_id' => $insert_id,
+                        'dc' => 'D',
+                        'ledger_id' => $warehouse_ledgers->deal_discount_ledger,
+                        'amount' => $inv->grand_deal_discount,
+                        'narration' => 'Deal Discount'
+                    )
+                );
+            }
 
             //vat on purchase
             $entryitemdata[] = array(

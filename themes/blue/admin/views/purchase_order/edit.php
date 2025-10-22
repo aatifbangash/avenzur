@@ -257,7 +257,7 @@
 
 <div class="box">
     <div class="box-header">
-        <h2 class="blue"><i class="fa-fw fa fa-edit"></i><?= lang('edit_purchase'); ?></h2>
+        <h2 class="blue"><i class="fa-fw fa fa-edit"></i><?= lang('edit_purchase order'); ?></h2>
     </div>
     <div class="box-content">
         <div class="row">
@@ -266,31 +266,29 @@
                 <p class="introtext"><?php echo lang('enter_info'); ?></p>
                 <?php
                 $attrib = ['data-toggle' => 'validator', 'role' => 'form', 'class' => 'edit-po-form'];
-                echo admin_form_open_multipart('purchases/edit/' . $inv->id, $attrib)
+                echo admin_form_open_multipart('purchase_order/edit/' . $inv->id, $attrib)
                 ?>
 
 
                 <div class="row">
                     <div class="col-lg-12">
 
-                        <?php if ($Owner || $Admin) {
-                        ?>
-                            <div class="col-md-4">
+                       
+                            <div class="col-md-3">
                                 <div class="form-group">
                                     <?= lang('date', 'podate'); ?>
                                     <?php echo form_input('date', ($_POST['date'] ?? $this->sma->hrld($purchase->date)), 'class="form-control input-tip datetime" id="podate" required="required"'); ?>
                                 </div>
                             </div>
 
-                        <?php
-                        } ?>
-                        <div class="col-md-4">
+                       
+                        <div class="col-md-3">
                             <div class="form-group">
                                 <?= lang('Supplier Reference Number', 'poref'); ?>
                                 <?php echo form_input('reference_no', ($_POST['reference_no'] ?? $purchase->reference_no), 'class="form-control input-tip" id="poref" required="required"'); ?>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="form-group">
                                 <?= lang('warehouse', 'powarehouse'); ?>
                                 <?php
@@ -302,127 +300,75 @@
                                 ?>
                             </div>
                         </div>
-                        <?php if ($Owner || $Admin) {
-                        ?>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <?= lang('status', 'postatus'); ?>
-                                    <?php
-                                    //$post = ['received' => lang('received'), 'partial' => lang('partial'), 'pending' => lang('pending'), 'ordered' => lang('ordered')];
-                                    $post = ['received' => lang('received'), 'rejected' => lang('rejected'), 'pending' => lang('pending')];
+                      
+                           
 
-                                    echo form_dropdown('status', $post, ($_POST['status'] ?? $purchase->status), ' class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . '" id="postatus"  style="width:100%;" ');
-                                    ?>
+
+                         <div class="col-md-3">
+                                    <div class="form-group">
+                                  <?= lang('Status', 'Status');
+                                   $post = [
+                                    'approved' => lang('approved'),
+                                    'pending'  => lang('pending'),
+                                ];
+                                  ?>
+                                   
+                                        <select id="status" name="status" class="form-control select2" style="width:100%;">
+                                            <option value="">Select Status</option>
+                                            <?php foreach ($post as $status): ?>
+                                                <option value="<?= $status; ?>" <?php if($status == $purchase->status) {?> selected <?php }?>  ><?= $status; ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    
                                 </div>
-                            </div>
-                        <?php } else { ?>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <?= lang('status', 'postatus'); ?>
-                                    <?php
-                                    //$post = ['received' => lang('received'), 'partial' => lang('partial'), 'pending' => lang('pending'), 'ordered' => lang('ordered')];
-                                    $post = ['received' => lang('received'),  'rejected' => lang('rejected'), 'pending' => lang('pending')];
+                         </div>
 
-                                    echo form_dropdown('status', $post, ($_POST['status'] ?? $purchase->status), ' class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . ' id="postatus"  style="width:100%;" ');
-                                    ?>
-                                </div>
-                            </div>
 
-                        <?php } ?>
 
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="form-group">
                                 <?= lang('attachments', 'document') ?>
                                 <input id="document" type="file" data-browse-label="<?= lang('browse'); ?>" name="attachment" multiple data-show-upload="false" data-show-preview="false" class="form-control file">
                             </div>
                         </div>
-                        <?php //if($inv->shelf_status != NULL || $inv->shelf_status == NULL){ 
-                        if (!is_null($inv->shelf_status)) {
-                        ?>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <?= lang('Shelf Status', 'Shelf Status') ?>
-                                    <input type="text" name="shelf_status" class="form-control input-tip" readonly="readonly" value="<?= $inv->shelf_status; ?>">
-                                </div>
-                            </div>
-                        <?php } ?>
 
-                        <?php //if($inv->validate != NULL || $inv->validate == NULL){ 
-                        if (!is_null($inv->validate)) {
-                        ?>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <?= lang('Validation Status', 'Validation Status') ?>
-                                    <input type="text" name="validate" class="form-control input-tip" readonly="readonly" value="<?= $inv->validate; ?>">
-                                </div>
-                            </div>
-                        <?php } ?>
-
-                        <div class="row" id="temp_lot">
-                            <div class="col-lg-12">
-                                <div class="col-md-4">
+                         <div class="col-md-3">
                                     <div class="form-group">
-                                        <?= lang('Temperature', 'Temperature'); ?>
-                                        <?php
-
-                                        $temp = ['accepted' => lang('Accepted'), 'rejected' => lang('Rejected')];
-                                        echo form_dropdown('tempstatus', $temp, ($_POST['temp'] ?? ''), 'id="tempstatus" class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('temperature') . '"  style="width:100%;" ');
-                                        ?>
-
-                                    </div>
+                                  <?= lang('Supplier', 'Supplier'); ?>
+                                   
+                                        <select id="supplier_id" name="supplier" class="form-control select2" style="width:100%;">
+                                            <option value="">Select Supplier</option>
+                                            <?php foreach ($suppliers as $supplier): ?>
+                                                <option value="<?= $supplier->id; ?>"><?= $supplier->name; ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    
                                 </div>
-                                <!--<div class="col-md-4">
-                                <div class="form-group">
-                                <?php //lang('Lot Number', 'Lot Number'); 
-                                ?>
-                                    <?php //echo form_input('lotnumber', ($_POST['lotnumber'] ?? $purchase->lotnumber), 'class="form-control input-tip" id="lotnumber"'); 
-                                    ?>
-                                </div>
-                           </div>-->
-                            </div>
-                        </div>
-
-                        <div class="col-md-12">
-                            <div class="panel panel-warning">
-                                <div class="panel-heading"><?= lang('please_select_these_before_adding_product') ?></div>
-                                <div class="panel-body" style="padding: 5px;">
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <?= lang('supplier', 'posupplier'); ?>
-                                            <div class="input-group">
-                                                <input type="hidden" name="supplier" value="" id="posupplier" class="form-control" style="width:100%;" placeholder="<?= lang('select') . ' ' . lang('supplier') ?>">
-
-                                                <div class="input-group-addon" style="padding-left: 10px; padding-right: 10px;">
-                                                    <a href="#" id="removeReadonly">
-                                                        <i class="fa fa-unlock" id="unLock"></i>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                            <input type="hidden" name="supplier_id" value="" id="supplier_id" class="form-control">
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
-                            <div class="clearfix"></div>
-                        </div>
-
+                         </div>
+                       
+                        
                         <div class="col-md-12" id="sticker">
                             <div class="well well-sm">
                                 <div class="form-group" style="margin-bottom:0;">
                                     <div class="input-group wide-tip">
                                         <div class="input-group-addon" style="padding-left: 10px; padding-right: 10px;">
-                                            <i class="fa fa-2x fa-barcode addIcon"></i></a>
-                                        </div>
+                                            <i class="fa fa-2x fa-barcode addIcon"></i></a></div>
                                         <?php echo form_input('add_item', '', 'class="form-control input-lg" id="add_item" placeholder="' . $this->lang->line('add_product_to_order') . '"'); ?>
+                                        <?php if ($Owner || $Admin || $GP['products-add']) {
+                                    ?>
                                         <div class="input-group-addon" style="padding-left: 10px; padding-right: 10px;">
-                                            <a href="#" id="addManually"><i class="fa fa-2x fa-plus-circle addIcon" id="addIcon"></i></a>
-                                        </div>
+                                            <a href="<?= admin_url('products/add') ?>" id="addManually1"><i
+                                                    class="fa fa-2x fa-plus-circle addIcon" id="addIcon"></i></a></div>
+                                        <?php
+                                } ?>
                                     </div>
                                 </div>
                                 <div class="clearfix"></div>
                             </div>
                         </div>
+
+
+                         
 
                         <div class="col-md-12">
                             <div class="control-group table-group">
@@ -444,7 +390,7 @@
                                                     echo '<th class="col-md-1">' . $this->lang->line('expiry_date') . '</th>';
                                                 }
                                                 ?>
-                                            <th class="col-md-1" style="width: 5%">qty</th>
+                                               <th class="col-md-1" style="width: 5%">qty</th>
                                             <th class="col-md-1" style="width: 5%">bonus</th>
                                             <th class="col-md-1" style="width: 5%">dis 1%</th>
                                             <th class="col-md-1" style="width: 5%">dis 2%</th>
@@ -525,42 +471,6 @@
 
                         if ($Owner) {
 
-                            // OWNER 
-                            /*if ($purchase->status == 'pending' || $purchase->status == 'ordered' || $purchase->status == 'rejected') {
-
-                                echo '<div class="col-md-12"><div class="fprom-group">
-                                            <input type="submit" class="btn btn-primary" id="postatus1" name="status" value="ordered" style="margin:15px 0;"/>
-                                     </div></div>
-                                    <div class="col-md-12"><div class="fprom-group">
-                                            <input type="submit" class="btn btn-warning" id="postatus2" name="status" value="rejected" style="margin:15px 0;"/>
-                                    </div></div>';
-                            }
-
-                            if ($inv->status == 'received' || $inv->status == 'partial') {
-                                echo '<div class="col-md-12"><div class="fprom-group">';
-                                echo form_submit('shelf_status', 'Shelves Added', 'id="edit_pruchase" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"');
-                                echo '</div></div>';
-                            } else {
-                                echo '<div class="col-md-12"><div class="fprom-group">
-                                            <input type="submit" class="btn btn-primary" id="postatus1" name="status" value="received" style="margin:15px 0;"/>
-                                        </div></div>
-                                        <div class="col-md-12"><div class="fprom-group">
-                                            <input type="submit" class="btn btn-warning" id="postatus2" name="status" value="partial" style="margin:15px 0;"/>
-                                        </div></div>
-                                        <div class="col-md-12"><div class="fprom-group">
-                                            <input type="submit" class="btn btn-danger" id="postatus3" name="status" value="rejected" style="margin:15px 0;"/>
-                                        </div></div>';
-                            }
-
-                            if (($inv->shelf_status != NULL)) {
-
-                                if ($inv->validate != NULL) {
-                                } else {
-                                    echo '<div class="col-md-12"><div class="fprom-group">';
-                                    echo form_submit('validate', 'validate', 'id="edit_pruchase" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"');
-                                    echo "</div></div>";
-                                }
-                            }*/
                             echo '<div class="col-md-12"><div class="fprom-group">';
                             echo form_submit('edit_pruchase', $this->lang->line('submit'), 'id="edit_pruchase" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"');
                             echo "</div></div>";
@@ -868,3 +778,4 @@
         </div>
     </div>
 </div>
+

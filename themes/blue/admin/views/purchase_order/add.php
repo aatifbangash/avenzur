@@ -10,6 +10,7 @@ table#poTable td input.form-control {
 }
 </style>
 <script type="text/javascript">
+     localStorage.removeItem('poitems');
     <?php if ($this->session->userdata('remove_pols')) {
     ?>
     if (localStorage.getItem('poitems')) {
@@ -272,7 +273,10 @@ table#poTable td input.form-control {
                 $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
                 echo admin_form_open_multipart('purchase_order/add', $attrib)
                 ?>
-                <input type="hidden" name="module_name" value="<?= $module_name; ?>">
+                <?php if( isset( $action ) && $action == 'create_po' && isset($pr_id)) { ?>
+                <input type="hidden" name="action" value="<?= $action; ?>">
+                <input type="hidden" name="pr_id" value="<?= $pr_id; ?>">
+                <?php }?>
 
                 <div class="row">
                     <div class="col-lg-12">
@@ -423,7 +427,7 @@ table#poTable td input.form-control {
                                            class="table items table-striped table-bordered table-condensed table-hover sortable_table">
                                         <thead>
                                         <tr>
-                                            <th class="col-md-1">#</th>
+                                            <th class="col-md-1" style="width:3%">#</th>
                                             <th class="col-md-2">item name</th>
                                             <th class="col-md-1">avz code</th>
                                             <th class="col-md-1">sale price</th>
@@ -437,11 +441,13 @@ table#poTable td input.form-control {
                                             ?>
                                             
                                             
-                                            <th class="col-md-1">qty</th>
-                                            <th class="col-md-1">bonus</th>
-                                            <th class="col-md-1">dis 1</th>
-                                            <th class="col-md-1">dis 2</th>
-                                            <th class="col-md-1">Vat 15%</th>
+                                            <th class="col-md-1" style="width: 5%">qty</th>
+                                            <th class="col-md-1" style="width: 5%">bonus</th>
+                                            <th class="col-md-1" style="width: 5%">dis 1%</th>
+                                            <th class="col-md-1" style="width: 5%">dis 2%</th>
+                                            <th class="col-md-1" style="width: 5%">Vat 15%</th>
+                                            <th class="col-md-1" style="width: 5%">dis 3%</th>
+                                            <th class="col-md-1" style="width: 5%">deal%</th>
                                             <?php
                                             /*if ($Settings->product_discount) {
                                                 echo '<th class="col-md-1">' . $this->lang->line('discount') . '</th>';

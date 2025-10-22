@@ -108,5 +108,33 @@ class Purchase_requisition_model extends CI_Model {
         return $this->db->insert('purchase_requisition_supplier', $data);
     }
 
+    public function get_suppliers_for_requisition($requisition_id)
+    {
+        // $this->db->select('prs.id, prs.pdf_path, c.id as supplier_id, c.name as supplier_name, c.phone as supplier_phone, c.email as supplier_email');
+        // $this->db->from('purchase_requisition_supplier prs');
+        // $this->db->join('companies c', 'c.id = prs.supplier_id', 'left');
+        // $this->db->where('prs.pr_id', $requisition_id);
+        // $query = $this->db->get();
+     
+         $this->db->select('prs.pr_id, prs.pdf_path, c.id as supplier_id, c.name as supplier_name, c.phone as supplier_phone, c.email as supplier_email');
+        $this->db->from('purchase_requisition_supplier prs');
+        $this->db->join('companies c', 'c.id = prs.supplier_id', 'left');
+        $this->db->where('prs.pr_id', $requisition_id);
+        $this->db->group_by('c.id'); // One row per supplier
+        $suppliers = $this->db->get()->result();
+
+        //echo $this->db->last_query(); // Debugging line to see the executed SQL query
+
+          foreach ($suppliers as $supplier) {
+            $this->db->select('doc_name, pdf_path');
+            $this->db->from('purchase_requisition_supplier_response');
+            $this->db->where('pr_id', $requisition_id);
+            $this->db->where('supplier_id', $supplier->supplier_id);
+            $supplier->responses = $this->db->get()->result();
+        }
+
+    return $suppliers;
+    }
+
 
 }
