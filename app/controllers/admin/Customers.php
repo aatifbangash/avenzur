@@ -964,7 +964,12 @@ class Customers extends MY_Controller
 
     public function add()
     {
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
+
+        if (!$this->Owner && !$this->Admin && !$this->GP['customers-add']) {
+            $this->session->set_flashdata('warning', lang('access_denied'));
+            admin_redirect($_SERVER['HTTP_REFERER']);
+        }
 
         $this->form_validation->set_rules('email', lang('email_address'), 'is_unique[companies.email]');
 
@@ -1334,7 +1339,12 @@ class Customers extends MY_Controller
 
     public function edit($id = null)
     {
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
+
+        if (!$this->Owner && !$this->Admin && !$this->GP['customers-edit']) {
+            $this->session->set_flashdata('warning', lang('access_denied'));
+            admin_redirect($_SERVER['HTTP_REFERER']);
+        }
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -1919,7 +1929,12 @@ class Customers extends MY_Controller
 
     public function index($action = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
+
+        if (!$this->Owner && !$this->Admin && !$this->GP['customers-index']) {
+            $this->session->set_flashdata('warning', lang('access_denied'));
+            admin_redirect($_SERVER['HTTP_REFERER']);
+        }
 
         $this->data['error']  = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['action'] = $action;
