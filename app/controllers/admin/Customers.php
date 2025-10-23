@@ -7,7 +7,6 @@ class Customers extends MY_Controller
     public function __construct()
     {
         parent::__construct();
-
         if (!$this->loggedIn) {
             $this->session->set_userdata('requested_page', $this->uri->uri_string());
             $url = "admin/login";
@@ -26,6 +25,10 @@ class Customers extends MY_Controller
         $this->load->admin_model('purchases_model');
         $this->load->library('form_validation');
         $this->load->admin_model('companies_model');
+        $this->load->admin_model('salesman_model');
+        
+        $this->load->admin_model('customer_saleman_model');
+
 
         // Sequence-Code
         $this->load->library('SequenceCode');
@@ -960,71 +963,86 @@ class Customers extends MY_Controller
         }
     }
 
-    public function add()
-    {
-        $this->sma->checkPermissions(false, true);
+   public function add()
+{
 
-        $this->form_validation->set_rules('email', lang('email_address'), 'is_unique[companies.email]');
+    // $sales_agent_id = "temp"; // Temporary initialization
+    $this->sma->checkPermissions(false, true);
 
-        if ($this->form_validation->run('companies/add') == true) {
-            $cg   = $this->site->getCustomerGroupByID($this->input->post('customer_group'));
-            $pg   = $this->site->getPriceGroupByID($this->input->post('price_group'));
-            $data = [
-                'name'                => $this->input->post('name'),
-                'name_ar'                => $this->input->post('name_ar'),
-                'email'               => $this->input->post('email'),
-                'group_id'            => '3',
-                'group_name'          => 'customer',
-                'customer_group_id'   => $this->input->post('customer_group'),
-                'customer_group_name' => $cg->name,
-                'price_group_id'      => $this->input->post('price_group') ? $this->input->post('price_group') : null,
-                'price_group_name'    => $this->input->post('price_group') ? $pg->name : null,
-                'credit_limit'        => $this->input->post('credit_limit') ? $this->input->post('credit_limit') : '0',
-                'payment_term'        => $this->input->post('payment_term') ? $this->input->post('payment_term') : '0', 
-                'company'             => $this->input->post('company'),
-                'address'             => $this->input->post('address'),
-                'vat_no'              => $this->input->post('vat_no'),
-                'city'                => $this->input->post('city'),
-                'state'               => $this->input->post('state'),
-                'postal_code'         => $this->input->post('postal_code'),
-                'country'             => $this->input->post('country'),
-                'phone'               => $this->input->post('phone'),
-                'cf1'                 => $this->input->post('cf1'),
-                'cf2'                 => $this->input->post('cf2'),
-                'cf3'                 => $this->input->post('cf3'),
-                'cf4'                 => $this->input->post('cf4'),
-                'cf5'                 => $this->input->post('cf5'),
-                'cf6'                 => $this->input->post('cf6'),
-                'gst_no'              => $this->input->post('gst_no'),
-                'ledger_account'      => $this->input->post('ledger_account'),
-                //'fund_books_ledger'   => $this->input->post('fund_books_ledger'),
-                //'credit_card_ledger'  => $this->input->post('credit_card_ledger'),
-                'cogs_ledger'         => $this->input->post('cogs_ledger'),
-                //'inventory_ledger'    => $this->input->post('inventory_ledger'),
-                'sales_ledger'        => $this->input->post('sales_ledger'),
-                //'price_difference_ledger'   => $this->input->post('price_difference_ledger'),
-                'discount_ledger'     => $this->input->post('discount_ledger'),
-                'return_ledger'     => $this->input->post('return_ledger'),
-                //'vat_on_sales_ledger' => $this->input->post('vat_on_sales_ledger'),
-                'sequence_code'       => $this->sequenceCode->generate('CUS', 5)
-            ];
-        } elseif ($this->input->post('add_customer')) {
-            $this->session->set_flashdata('error', validation_errors());
-            admin_redirect('customers');
-        }
+    $this->form_validation->set_rules('email', lang('email_address'), 'is_unique[companies.email]');
 
-        if ($this->form_validation->run() == true && $cid = $this->companies_model->addCompany($data)) {
-            $this->session->set_flashdata('message', lang('customer_added'));
-            $ref = isset($_SERVER['HTTP_REFERER']) ? explode('?', $_SERVER['HTTP_REFERER']) : null;
-            admin_redirect($ref[0] . '?customer=' . $cid);
-        } else {
-            $this->data['error']           = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
-            $this->data['modal_js']        = $this->site->modal_js();
-            $this->data['customer_groups'] = $this->companies_model->getAllCustomerGroups();
-            $this->data['price_groups']    = $this->companies_model->getAllPriceGroups();
-            $this->load->view($this->theme . 'customers/add', $this->data);
-        }
+    if ($this->form_validation->run('companies/add') == true) {
+        $cg   = $this->site->getCustomerGroupByID($this->input->post('customer_group'));
+        $pg   = $this->site->getPriceGroupByID($this->input->post('price_group'));
+        $sales_agent_id = $this->input->post('sales_agent'); // id
+        $data = [
+            'name'                    => $this->input->post('name'),
+            'name_ar'                 => $this->input->post('name_ar'),
+            'email'                   => $this->input->post('email'),
+            'group_id'                => '3',
+            'group_name'              => 'customer',
+            'customer_group_id'       => $this->input->post('customer_group'),
+            'customer_group_name'     => $cg->name,
+            'price_group_id'          => $this->input->post('price_group') ? $this->input->post('price_group') : null,
+            'price_group_name'        => $this->input->post('price_group') ? $pg->name : null,
+            'credit_limit'            => $this->input->post('credit_limit') ? $this->input->post('credit_limit') : '0',
+            'payment_term'            => $this->input->post('payment_term') ? $this->input->post('payment_term') : '0', 
+            'company'                 => $this->input->post('company'),
+            'address'                 => $this->input->post('address'),
+            'vat_no'                  => $this->input->post('vat_no'),
+            'city'                    => $this->input->post('city'),
+            'state'                   => $this->input->post('state'),
+            'postal_code'             => $this->input->post('postal_code'),
+            'country'                 => $this->input->post('country'),
+            'phone'                   => $this->input->post('phone'),
+            'ledger_account'          => $this->input->post('ledger_account'),
+            'cogs_ledger'             => $this->input->post('cogs_ledger'),
+            'sales_ledger'            => $this->input->post('sales_ledger'),
+            'discount_ledger'         => $this->input->post('discount_ledger'),
+            'return_ledger'           => $this->input->post('return_ledger'),
+            'sequence_code'           => $this->sequenceCode->generate('CUS', 5),
+            // New fields
+            'cr'                      => $this->input->post('cr'),
+            'cr_expiration'           => $this->input->post('cr_expiration'),
+            'gln'                     => $this->input->post('gln'),
+            'sfda_certificate'        => $this->input->post('sfda_certificate'),
+            'short_address'           => $this->input->post('short_address'),
+            'building_number'         => $this->input->post('building_number'),
+            'unit_number'             => $this->input->post('unit_number'),
+            'additional_number'       => $this->input->post('additional_number'),
+            'contact_name'            => $this->input->post('contact_name'),
+            'contact_number'          => $this->input->post('contact_number'),
+            'sales_agent'             => $this->input->post('sales_agent_name'), // Name
+            'balance'                 => $this->input->post('balance'),
+            'promessory_note_amount'  => $this->input->post('promessory_note_amount'),
+            'note'                    => $this->input->post('note'),
+        ];
+    } elseif ($this->input->post('add_customer')) {
+        $this->session->set_flashdata('error', validation_errors());
+        admin_redirect('customers');
     }
+
+    if ($this->form_validation->run() == true && $cid = $this->companies_model->addCompany($data)) {
+
+        $saleman_data = array(
+    'customer_id' => $cid,
+    'salesman_id' => $sales_agent_id
+);
+$this->customer_saleman_model->addCustomerSaleman($saleman_data);
+
+        $this->session->set_flashdata('message', lang('customer_added'));
+        $ref = isset($_SERVER['HTTP_REFERER']) ? explode('?', $_SERVER['HTTP_REFERER']) : null;
+        admin_redirect($ref[0] . '?customer=' . $cid);
+    } else {
+        $this->data['error']           = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+        $this->data['modal_js']        = $this->site->modal_js();
+        $this->data['customer_groups'] = $this->companies_model->getAllCustomerGroups();
+        $this->data['price_groups']    = $this->companies_model->getAllPriceGroups();
+        $this->data['sales_agents']    = $this->salesman_model->getAllSalesmen();
+        $this->load->view($this->theme . 'customers/add', $this->data);
+    }
+
+}
 
     public function add_address($company_id = null)
     {
