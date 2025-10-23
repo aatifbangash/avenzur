@@ -135,6 +135,33 @@
             $('#psnote').val(psnote);
         }
 
+        // Payment Mode handler
+        $(document).on('change', '#payment_mode', function (e) {
+            localStorage.setItem('payment_mode', $(this).val());
+            var payment_mode = $(this).val();
+            
+            if (payment_mode === 'advance_only') {
+                // Hide invoice table when advance only is selected
+                $('#poTable-holder').hide();
+                // Update label
+                $('label[for="pspayment"]').html('<?= lang("Payment Amount") ?> <span style="color: #28a745;">(Advance Payment)</span>');
+            } else {
+                // Show invoice table for invoice settlement
+                $('#poTable-holder').show();
+                // Reset label
+                $('label[for="pspayment"]').html('<?= lang("Payment Amount", "pspayment") ?>');
+            }
+        });
+        
+        // Restore payment mode from localStorage
+        if (payment_mode = localStorage.getItem('payment_mode')) {
+            $('#payment_mode').val(payment_mode);
+            if (payment_mode === 'advance_only') {
+                $('#poTable-holder').hide();
+                $('label[for="pspayment"]').html('<?= lang("Payment Amount") ?> <span style="color: #28a745;">(Advance Payment)</span>');
+            }
+        }
+
         // Event handlers for advance settlement
         $(document).on('change', '#pspayment', function (e) {
             updateAdvanceSettlementCalculation();
@@ -688,6 +715,16 @@
                             <div class="form-group">
                                 <?= lang('Payment Amount', 'pspayment'); ?>
                                 <?php echo form_input('payment_total', ($_POST['payment_amount'] ?? $_POST['payment_total']), 'class="form-control input-tip" id="pspayment"'); ?>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="payment_mode">Payment Mode</label>
+                                <select name="payment_mode" id="payment_mode" class="form-control" required="required">
+                                    <option value="invoice_settlement">Invoice Settlement</option>
+                                    <option value="advance_only">Advance Only</option>
+                                </select>
                             </div>
                         </div>
 

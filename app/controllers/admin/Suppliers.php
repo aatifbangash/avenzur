@@ -174,6 +174,97 @@ class Suppliers extends MY_Controller
         return $insert_id;
     }
 
+    public function create_supplier_advance_journal_entry($supplier_id, $transfer_ledger, $advance_ledger, $bank_charges_account, $payment_amount, $bank_charges, $reference_no, $date){
+        $this->load->admin_model('companies_model');
+        $supplier = $this->companies_model->getCompanyByID($supplier_id);
+
+        // Calculate VAT on bank charges (15%)
+        $bank_charge_vat = 0;
+        if ($bank_charges > 0) {
+            $bank_charge_vat = $bank_charges * 0.15; // 15% VAT
+        }
+        
+        // Total includes payment, bank charges, and VAT on bank charges
+        $total_amount = $payment_amount + $bank_charges + $bank_charge_vat;
+
+        /*Accounts Entries*/
+        $entry = array(
+            'entrytype_id' => 4,
+            'transaction_type' => 'supplieradvance',
+            'number'       => 'SPADV-'.$reference_no,
+            'date'         => $date, 
+            'dr_total'     => $total_amount,
+            'cr_total'     => $total_amount,
+            'notes'        => 'Supplier Advance Payment Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
+            'pid'          =>  '',
+            'supplier_id'  => $supplier_id
+            );
+        $add  = $this->db->insert('sma_accounts_entries', $entry);
+        $insert_id = $this->db->insert_id();
+
+        $entryitemdata = array();
+
+        // Debit: Transfer/Bank ledger (cash out)
+        if($transfer_ledger > 0) {
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $transfer_ledger,
+                    'amount' => $payment_amount,
+                    'narration' => 'Advance payment to supplier'
+                )
+            );
+        }
+
+        // Debit: Bank charges (if any)
+        if($bank_charges > 0 && $bank_charges_account > 0) {
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $bank_charges_account,
+                    'amount' => $bank_charges,
+                    'narration' => 'Bank charges'
+                )
+            );
+        }
+
+        // Debit: VAT on bank charges (if any)
+        if($bank_charge_vat > 0 && $bank_charges_account > 0) {
+            $settings = $this->Settings;
+            $vat_ledger = isset($settings->vat_ledger_id) ? $settings->vat_ledger_id : $bank_charges_account;
+            
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $vat_ledger,
+                    'amount' => $bank_charge_vat,
+                    'narration' => 'VAT on Bank Charges (15%)'
+                )
+            );
+        }
+
+        // Credit: Supplier Advance ledger (advance balance increases)
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'C',
+                'ledger_id' => $advance_ledger,
+                'amount' => $total_amount,
+                'narration' => 'Advance payment received from supplier'
+            )
+        );
+
+        foreach ($entryitemdata as $row => $itemdata)
+        {
+            $this->db->insert('sma_accounts_entryitems' ,$itemdata['Entryitem']);
+        }
+
+        return $insert_id;
+    }
+
     public function convert_supplier_advance_invoice($memo_id, $supplier_id, $ledger_account, $bank_charges_account, $payment_amount, $bank_charges, $reference_no, $type){
         $this->load->admin_model('companies_model');
         $supplier = $this->companies_model->getCompanyByID($supplier_id);
@@ -782,6 +873,7 @@ class Suppliers extends MY_Controller
             $vat = $this->input->post('vat');
             $supplier_advance_ledger = $this->input->post('supplier_advance_ledger');
             $settle_with_advance = $this->input->post('settle_with_advance');
+            $payment_mode = $this->input->post('payment_mode'); // Get payment mode
             
             if($childsupplier){
                 $supplier_id = $childsupplier;
@@ -801,6 +893,44 @@ class Suppliers extends MY_Controller
             } else {
                 echo 'Invalid date format!';
                 $date = null; // Handle invalid input as needed
+            }
+            
+            // Handle Advance Only payment mode
+            if ($payment_mode == 'advance_only') {
+                // Validate supplier advance ledger is configured
+                $settings = $this->Settings;
+                $supplier_advance_ledger = isset($settings->supplier_advance_ledger) && !empty($settings->supplier_advance_ledger) 
+                                         ? $settings->supplier_advance_ledger 
+                                         : null;
+                
+                if (!$supplier_advance_ledger) {
+                    $this->session->set_flashdata('error', 'Cannot process advance payment. Supplier Advance Ledger is not configured in system settings.');
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
+                
+                if ($payment_total > 0) {
+                    // Create payment reference using supplier advance ledger
+                    $payment_id = $this->add_supplier_reference($payment_total, $reference_no, $date, $note . ' (Advance Only)', $supplier_id, $bank_charges, $bank_charges_account, $supplier_advance_ledger);
+                    
+                    if (!$payment_id) {
+                        $this->session->set_flashdata('error', 'Failed to create advance payment reference. Please check system configuration.');
+                        redirect($_SERVER['HTTP_REFERER']);
+                    }
+                    
+                    // Make advance payment - do NOT settle any invoices
+                    $this->make_supplier_advance_payment($supplier_id, $payment_total, $reference_no, $date, $note, $payment_id);
+                    
+                    // Create journal entry for advance payment
+                    // We need both: the transfer ledger (cash out) and advance ledger (advance in)
+                    $journal_id = $this->create_supplier_advance_journal_entry($supplier_id, $ledger_account, $supplier_advance_ledger, $bank_charges_account, $payment_total, $bank_charges, $reference_no, $date);
+                    $this->purchases_model->update_payment_reference($payment_id, $journal_id);
+                    
+                    $this->session->set_flashdata('message', lang('Advance payment added successfully!'));
+                    admin_redirect('suppliers/view_payment/'.$payment_id);
+                } else {
+                    $this->session->set_flashdata('error', 'Please enter a payment amount.');
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
             }
             
             if(!$payments_array || sizeOf($payments_array) == 0){
