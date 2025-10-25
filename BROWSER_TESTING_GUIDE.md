@@ -17,6 +17,7 @@
 ## 🧪 Test 1: Dashboard Loads
 
 ### What to Check
+
 ```
 1. Page loads without errors
 2. You see: KPI cards, pharmacy table, filters
@@ -25,9 +26,11 @@
 ```
 
 ### Expected Result
+
 ✅ Dashboard displays with company-wide KPI data
 
 ### If It Fails
+
 ```
 ❌ Blank page → Check browser console for errors
 ❌ 404 error → Check URL has /avenzur/ subdirectory
@@ -40,9 +43,11 @@
 ## 🧪 Test 2: Pharmacy Filter Dropdown
 
 ### What to Locate
+
 Find the section labeled "Filter by Pharmacy" with a dropdown menu
 
 ### What to Do
+
 ```
 1. Click dropdown menu
 2. You should see list of 8 pharmacies:
@@ -51,9 +56,11 @@ Find the section labeled "Filter by Pharmacy" with a dropdown menu
 ```
 
 ### Expected Result
+
 ✅ Dropdown lists all pharmacies
 
 ### If It Fails
+
 ```
 ❌ Dropdown empty → Check model returns pharmacies
 ❌ Dropdown closed → Dropdown not working
@@ -66,6 +73,7 @@ Find the section labeled "Filter by Pharmacy" with a dropdown menu
 ## 🧪 Test 3: Pharmacy Filter Action
 
 ### What to Do
+
 ```
 1. Open browser console (F12 → Console)
 2. Select pharmacy from dropdown: "E&M Central Plaza Pharmacy"
@@ -76,6 +84,7 @@ Find the section labeled "Filter by Pharmacy" with a dropdown menu
 ```
 
 ### Expected Result
+
 ```
 ✅ Console shows API URL
 ✅ API call succeeds (Response 200)
@@ -86,6 +95,7 @@ Find the section labeled "Filter by Pharmacy" with a dropdown menu
 ### If It Fails
 
 **Scenario A: No console log messages**
+
 ```
 ❌ Dropdown event not firing
 → Open browser DevTools (F12)
@@ -94,6 +104,7 @@ Find the section labeled "Filter by Pharmacy" with a dropdown menu
 ```
 
 **Scenario B: API URL shows but returns 404**
+
 ```
 ❌ API endpoint not found
 → Check URL format in console
@@ -103,6 +114,7 @@ Find the section labeled "Filter by Pharmacy" with a dropdown menu
 ```
 
 **Scenario C: API returns error JSON**
+
 ```
 ❌ Data error from API
 → Check Network tab (F12 → Network)
@@ -113,6 +125,7 @@ Find the section labeled "Filter by Pharmacy" with a dropdown menu
 ```
 
 **Scenario D: KPI cards don't update**
+
 ```
 ❌ Response received but UI not updating
 → Check console for JavaScript errors
@@ -125,6 +138,7 @@ Find the section labeled "Filter by Pharmacy" with a dropdown menu
 ## 🧪 Test 4: "View" Button Navigation
 
 ### What to Do
+
 ```
 1. Click "View →" button on any pharmacy row
 2. Observe browser URL bar
@@ -132,6 +146,7 @@ Find the section labeled "Filter by Pharmacy" with a dropdown menu
 ```
 
 ### Expected Result
+
 ```
 ✅ URL changes to: /admin/cost_center/pharmacy/52?period=2025-10
 ✅ Pharmacy detail page loads
@@ -141,6 +156,7 @@ Find the section labeled "Filter by Pharmacy" with a dropdown menu
 ### If It Fails
 
 **Scenario A: Nothing happens**
+
 ```
 ❌ Button click not registered
 → Inspect button element (F12 → Inspector)
@@ -149,6 +165,7 @@ Find the section labeled "Filter by Pharmacy" with a dropdown menu
 ```
 
 **Scenario B: URL changes but page still dashboard**
+
 ```
 ❌ Route not matching correctly
 → Check URL format exactly
@@ -157,6 +174,7 @@ Find the section labeled "Filter by Pharmacy" with a dropdown menu
 ```
 
 **Scenario C: Redirects to login**
+
 ```
 ❌ User session expired
 → Logout completely
@@ -165,6 +183,7 @@ Find the section labeled "Filter by Pharmacy" with a dropdown menu
 ```
 
 **Scenario D: Shows 404 or error**
+
 ```
 ❌ Page/method not found
 → Check route in routes.php
@@ -177,6 +196,7 @@ Find the section labeled "Filter by Pharmacy" with a dropdown menu
 ## 🧪 Test 5: Pharmacy Detail Page Display
 
 ### What to Check
+
 If View button worked, verify pharmacy detail page shows:
 
 ```
@@ -189,6 +209,7 @@ If View button worked, verify pharmacy detail page shows:
 ```
 
 ### If Something's Missing
+
 ```
 - KPI cards blank → Data not fetched
 - Table empty → No branches for pharmacy
@@ -203,6 +224,7 @@ If View button worked, verify pharmacy detail page shows:
 ### If Any Test Fails:
 
 **Step 1: Check Browser Console**
+
 ```
 Open: F12 → Console tab
 Look for:
@@ -213,6 +235,7 @@ Look for:
 ```
 
 **Step 2: Check Network Tab**
+
 ```
 Open: F12 → Network tab
 Reload page
@@ -225,6 +248,7 @@ Look for:
 ```
 
 **Step 3: Verify URL Format**
+
 ```
 Check address bar shows:
 http://localhost:8080/avenzur/admin/cost_center/dashboard?period=2025-10
@@ -233,6 +257,7 @@ http://localhost:8080/avenzur/admin/cost_center/dashboard?period=2025-10
 ```
 
 **Step 4: Check Authentication**
+
 ```
 If redirected to login page:
 - Login with admin credentials
@@ -241,6 +266,7 @@ If redirected to login page:
 ```
 
 **Step 5: Run SQL Verification**
+
 ```
 Verify data exists:
 SELECT COUNT(*) FROM sma_warehouses WHERE warehouse_type='pharmacy'
@@ -257,21 +283,25 @@ SELECT COUNT(*) FROM sma_fact_cost_center WHERE warehouse_id=52 AND period='2025
 If something isn't working, collect:
 
 1. **Screenshot of Problem**
+
    - Show full page
    - Show browser URL
    - Show any error messages
 
 2. **Console Output (F12)**
+
    - Copy any red errors
    - Copy any warning messages
    - Copy relevant log messages
 
 3. **Network Errors (F12 → Network)**
+
    - Screenshot of failed requests
    - HTTP status codes
    - Response text
 
 4. **Specific Issue**
+
    - Does dashboard load? (Y/N)
    - Does dropdown appear? (Y/N)
    - Does filter work? (Y/N)
@@ -287,6 +317,7 @@ If something isn't working, collect:
 ## ✅ Success Scenarios
 
 ### Scenario 1: Everything Works 🎉
+
 ```
 ✅ Dashboard loads
 ✅ Pharmacy filter dropdown appears
@@ -299,6 +330,7 @@ If something isn't working, collect:
 ```
 
 ### Scenario 2: Minor Issues Fixed
+
 ```
 ⚠️ Some issues found
 ✅ Issues documented
@@ -308,6 +340,7 @@ If something isn't working, collect:
 ```
 
 ### Scenario 3: Data Issues
+
 ```
 ❌ Dashboard shows zeros
 ✅ Code is working correctly
@@ -338,12 +371,14 @@ If you encounter issues:
 Testing all scenarios: **15-30 minutes**
 
 If issues found:
+
 - Simple fixes: 5-15 minutes
 - Complex fixes: 30+ minutes
 
 ---
 
 **Next Steps:**
+
 1. Open browser
 2. Navigate to dashboard
 3. Run tests in order 1-5

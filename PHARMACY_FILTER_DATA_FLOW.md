@@ -6,6 +6,7 @@
 ## Overview
 
 When you select a pharmacy from the dashboard dropdown, the system now:
+
 1. Fetches pharmacy-specific KPI data via API
 2. Updates KPI cards with filtered data
 3. Recalculates margins (gross & net) for selected pharmacy
@@ -17,11 +18,13 @@ When you select a pharmacy from the dashboard dropdown, the system now:
 ### Total Revenue Source
 
 **Company-Wide (Default):**
+
 - Source: `view_cost_center_summary` VIEW
 - Field: `sum(fcc.total_revenue)` aggregated across ALL warehouses
 - Query: Sums sales from all pharmacies for the selected period
 
 **Pharmacy-Specific (When filtered):**
+
 - Source: `sma_fact_cost_center` TABLE joined with `sma_warehouses`
 - Field: Sum of `total_revenue` where `warehouse_id = selected_pharmacy_id`
 - Period: Filtered by `YYYY-MM` format
@@ -50,7 +53,7 @@ API Controller
 ### 2. Database Query (Pharmacy Detail)
 
 ```sql
-SELECT 
+SELECT
     w.id AS pharmacy_id,
     w.code AS pharmacy_code,
     w.name AS pharmacy_name,
@@ -66,10 +69,10 @@ SELECT
     net_margin_pct,  -- ((Revenue - All Costs) / Revenue) * 100
     branch_count
 FROM sma_warehouses w
-LEFT JOIN sma_fact_cost_center fcc 
-    ON w.id = fcc.warehouse_id 
+LEFT JOIN sma_fact_cost_center fcc
+    ON w.id = fcc.warehouse_id
     AND period = ?
-LEFT JOIN sma_warehouses db 
+LEFT JOIN sma_warehouses db
     ON db.warehouse_type = 'branch' AND db.parent_id = w.id
 WHERE w.warehouse_type = 'pharmacy' AND w.id = ?
 GROUP BY w.id
@@ -113,10 +116,12 @@ handlePharmacyFilter(null)
 **Purpose:** Fetch single pharmacy KPI data
 
 **Parameters:**
+
 - `$pharmacy_id` - Warehouse ID of pharmacy
 - `$period` - YYYY-MM format
 
 **Returns:**
+
 ```php
 [
     'pharmacy_id' => 52,
@@ -143,9 +148,11 @@ handlePharmacyFilter(null)
 **URL:** `GET /api/v1/cost-center/pharmacy-detail/{id}`
 
 **Query Parameters:**
+
 - `period` - YYYY-MM (optional, defaults to current month)
 
 **Response:**
+
 ```json
 {
     "success": true,
@@ -166,6 +173,7 @@ handlePharmacyFilter(null)
 ## Key Calculations
 
 ### Revenue
+
 - **Company Level:** `SUM(fcc.total_revenue)` across all pharmacy warehouses
 - **Pharmacy Level:** `SUM(fcc.total_revenue)` where `warehouse_id = selected_pharmacy_id`
 - **Per Period:** Filtered by `CONCAT(period_year, '-', LPAD(period_month, 2, '0')) = ?`
@@ -173,11 +181,13 @@ handlePharmacyFilter(null)
 ### Cost Breakdown
 
 **Three Cost Components:**
+
 1. **COGS** (Cost of Goods Sold) - `total_cogs`
 2. **Inventory Movement Cost** - `inventory_movement_cost`
 3. **Operational Cost** - `operational_cost`
 
 **Total Cost Calculation:**
+
 ```
 Total Cost = COGS + Inventory Movement + Operational Cost
 ```
@@ -185,17 +195,20 @@ Total Cost = COGS + Inventory Movement + Operational Cost
 ### Profit Margin Calculation
 
 **Gross Margin:**
+
 ```
 Gross Margin % = ((Revenue - COGS) / Revenue) * 100
 ```
 
 **Net Margin (Profit Margin):**
+
 ```
 Net Margin % = ((Revenue - All Costs) / Revenue) * 100
            = ((Revenue - COGS - Inventory - Operational) / Revenue) * 100
 ```
 
 **Example with Real Numbers:**
+
 ```
 Revenue: 648,800.79
 COGS: 324,400.40
@@ -231,8 +244,11 @@ Company Level (All Pharmacies)
 When filtering is applied, the browser:
 
 1. **Table Filtering:** Uses simple JavaScript filter
+
    ```javascript
-   tableData = dashboardData.pharmacies.filter(p => p.pharmacy_id == pharmacyId)
+   tableData = dashboardData.pharmacies.filter(
+   	(p) => p.pharmacy_id == pharmacyId
+   );
    ```
 
 2. **KPI Card Update:** Fetches fresh data from API and swaps `dashboardData.summary`
@@ -244,22 +260,26 @@ When filtering is applied, the browser:
 ## Important Notes
 
 ⚠️ **Data Accuracy:**
+
 - All numbers come from `sma_fact_cost_center` table
 - Fact table is populated from `sma_sales_details` and cost transactions
 - Each period's data is finalized and should not change (immutable fact)
 
 ⚠️ **Performance:**
+
 - Company summary loads once (all pharmacies aggregated)
 - Pharmacy detail is fetched on-demand via API
 - No real-time recalculation; based on fact table snapshots
 
 ⚠️ **Missing Data:**
+
 - If a pharmacy has no transactions in selected period, it shows zeros
 - Health status calculated based on margin thresholds (see health.md)
 
 ## Testing URLs
 
 **Local:**
+
 ```
 # View dashboard
 http://localhost/admin/cost_center/dashboard?period=2025-10
@@ -278,15 +298,18 @@ http://localhost/admin/cost_center/pharmacy/52?period=2025-10
 ## Related Files
 
 - **Model:** `app/models/admin/Cost_center_model.php`
+
   - `get_summary_stats()` - Company totals
   - `get_pharmacies_with_health_scores()` - All pharmacies list
   - `get_pharmacy_detail()` - Single pharmacy KPIs
 
 - **Controllers:**
+
   - `app/controllers/admin/Cost_center.php` - View rendering
   - `app/controllers/api/v1/Cost_center.php` - API endpoints
 
 - **Views:**
+
   - `themes/blue/admin/views/cost_center/cost_center_dashboard_modern.php`
     - `handlePharmacyFilter()` - Filter logic
     - `renderKPICards()` - KPI display

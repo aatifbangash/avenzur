@@ -39,6 +39,7 @@ $route['admin/cost_center/dashboard'] = 'admin/cost_center/dashboard';
 ```
 
 **How it works:**
+
 - URL `/admin/cost_center/pharmacy/52` matches pattern `pharmacy/(:num)`
 - `(:num)` captures `52` and passes as `$1` to controller
 - Routes to: `admin/cost_center` controller, `pharmacy(52)` method
@@ -76,7 +77,7 @@ public function pharmacy($pharmacy_id = null) {
 
         // 5. Calculate health scores
         $health = $this->cost_center->calculate_health_score($pharmacy_data['pharmacy']['kpi_profit_margin_pct']);
-        
+
         // 6. Add health to branches
         foreach ($pharmacy_data['branches'] as &$branch) {
             $branch_health = $this->cost_center->calculate_health_score($branch['kpi_profit_margin_pct']);
@@ -103,16 +104,19 @@ public function pharmacy($pharmacy_id = null) {
 ### Features:
 
 1. **Breadcrumb Navigation**
+
    - "Dashboard" link back to main dashboard
    - Current location: "Pharmacy Name - Period"
 
 2. **Pharmacy KPI Cards** (4 metrics)
+
    - Total Revenue (SAR)
    - Total Cost (SAR)
    - Profit Loss (SAR)
    - Profit Margin (%)
 
 3. **Sections:**
+
    - Pharmacy-level overview
    - Branch performance table
    - Margin trend chart (12 months)
@@ -158,11 +162,14 @@ User sees: Pharmacy detail page with all metrics
 ## Model Methods Required
 
 ### 1. `pharmacy_exists($pharmacy_id)`
+
 **Returns:** Boolean  
 **Purpose:** Validate pharmacy exists in system
 
 ### 2. `get_pharmacy_with_branches($pharmacy_id, $period)`
+
 **Returns:** Array with keys:
+
 ```php
 [
     'pharmacy' => [
@@ -184,7 +191,9 @@ User sees: Pharmacy detail page with all metrics
 ```
 
 ### 3. `get_profit_margins_both_types($pharmacy_id, $period)`
+
 **Returns:** Array with both margin types
+
 ```php
 [
     'gross_margin' => 49.98,
@@ -193,7 +202,9 @@ User sees: Pharmacy detail page with all metrics
 ```
 
 ### 4. `get_pharmacy_trends($pharmacy_id, $months = 12)`
+
 **Returns:** Array of trend data over 12 months
+
 ```php
 [
     [
@@ -207,7 +218,9 @@ User sees: Pharmacy detail page with all metrics
 ```
 
 ### 5. `get_cost_breakdown_detailed($pharmacy_id, $period)`
+
 **Returns:** Cost breakdown by component
+
 ```php
 [
     'cogs' => 324400.40,           # Cost of goods
@@ -218,7 +231,9 @@ User sees: Pharmacy detail page with all metrics
 ```
 
 ### 6. `calculate_health_score($margin_percentage, $revenue = 0)`
+
 **Returns:** Array with health metrics
+
 ```php
 [
     'status' => 'Healthy|Good|Warning|Critical',
@@ -267,12 +282,12 @@ User sees: Pharmacy detail page with all metrics
 
 ## Files Involved
 
-| File | Purpose | Status |
-|------|---------|--------|
-| `app/config/routes.php` | Route definitions | ✅ Added |
-| `app/controllers/admin/Cost_center.php` | Pharmacy method | ✅ Exists |
-| `app/models/admin/Cost_center_model.php` | Data queries | ✅ All methods exist |
-| `themes/blue/.../cost_center_pharmacy_modern.php` | View template | ✅ Exists |
+| File                                               | Purpose                   | Status                      |
+| -------------------------------------------------- | ------------------------- | --------------------------- |
+| `app/config/routes.php`                            | Route definitions         | ✅ Added                    |
+| `app/controllers/admin/Cost_center.php`            | Pharmacy method           | ✅ Exists                   |
+| `app/models/admin/Cost_center_model.php`           | Data queries              | ✅ All methods exist        |
+| `themes/blue/.../cost_center_pharmacy_modern.php`  | View template             | ✅ Exists                   |
 | `themes/blue/.../cost_center_dashboard_modern.php` | Dashboard with navigation | ✅ Has navigateToPharmacy() |
 
 ---
@@ -282,10 +297,12 @@ User sees: Pharmacy detail page with all metrics
 ### From Dashboard to Pharmacy Detail
 
 1. **User clicks "View →" button**
+
    - Located in last column of pharmacy table row
    - Calls: `navigateToPharmacy(pharmacy_id, period)`
 
 2. **JavaScript navigation function**
+
    ```javascript
    function navigateToPharmacy(pharmacyId, period) {
        const url = new URL('<?php echo admin_url('cost_center/pharmacy'); ?>' + '/' + pharmacyId);
@@ -295,6 +312,7 @@ User sees: Pharmacy detail page with all metrics
    ```
 
 3. **URL formed**
+
    ```
    Base: http://localhost:8080/avenzur/admin/cost_center/pharmacy
    With ID: http://localhost:8080/avenzur/admin/cost_center/pharmacy/52
@@ -302,6 +320,7 @@ User sees: Pharmacy detail page with all metrics
    ```
 
 4. **CodeIgniter routing**
+
    ```
    Route pattern: admin/cost_center/pharmacy/(:num)
    Matches: pharmacy/52
@@ -309,6 +328,7 @@ User sees: Pharmacy detail page with all metrics
    ```
 
 5. **Controller method executes**
+
    ```
    Cost_center.pharmacy(52)
    - Gets period from query: 2025-10
@@ -325,7 +345,7 @@ User sees: Pharmacy detail page with all metrics
 ### Get Pharmacy with Branches
 
 ```sql
-SELECT 
+SELECT
     w.id, w.name, w.code,
     SUM(fcc.total_revenue) as kpi_total_revenue,
     SUM(fcc.total_cogs + fcc.inventory_movement_cost + fcc.operational_cost) as kpi_total_cost,
@@ -344,7 +364,7 @@ WHERE parent_id = 52 AND warehouse_type = 'branch'
 ### Get Pharmacy Trends (12 months)
 
 ```sql
-SELECT 
+SELECT
     CONCAT(period_year, '-', LPAD(period_month, 2, '0')) as period,
     SUM(total_revenue) as revenue,
     SUM(...) as cost,
@@ -371,6 +391,7 @@ LIMIT 12
 ### Issue: 404 Not Found on pharmacy detail page
 
 **Solution:**
+
 1. Check route is defined in `config/routes.php`
 2. Verify route pattern: `admin/cost_center/pharmacy/(:num)`
 3. Test URL format: `/admin/cost_center/pharmacy/52` (numeric ID)
@@ -378,6 +399,7 @@ LIMIT 12
 ### Issue: Page shows "Pharmacy not found"
 
 **Solution:**
+
 1. Check pharmacy ID exists in database
 2. Run: `SELECT * FROM sma_warehouses WHERE id=52 AND warehouse_type='pharmacy'`
 3. Verify warehouse_type is 'pharmacy' (not warehouse/branch)
@@ -385,6 +407,7 @@ LIMIT 12
 ### Issue: KPI cards show 0 or blank
 
 **Solution:**
+
 1. Check data exists in sma_fact_cost_center
 2. Run: `SELECT * FROM sma_fact_cost_center WHERE warehouse_id=52 AND period='2025-10'`
 3. Verify period format is YYYY-MM
@@ -392,6 +415,7 @@ LIMIT 12
 ### Issue: Branch table shows no branches
 
 **Solution:**
+
 1. Check pharmacy has branches assigned
 2. Run: `SELECT * FROM sma_warehouses WHERE parent_id=52 AND warehouse_type='branch'`
 3. Parent relationship must be set correctly
@@ -401,16 +425,19 @@ LIMIT 12
 ## Next Steps
 
 1. **Manual Testing** (Priority: HIGH)
+
    - Test pharmacy detail page loads correctly
    - Verify all KPI values display
    - Test navigation from dashboard
 
 2. **Branch Detail Page** (Priority: HIGH)
+
    - Similar setup for branch detail view
    - Already has route and controller method
    - Test clicking "View" on branch row
 
 3. **Edge Cases** (Priority: MEDIUM)
+
    - Test with periods that have no data
    - Test with pharmacies that have no branches
    - Test with invalid IDs
@@ -429,7 +456,7 @@ LIMIT 12
 ✅ All model methods exist  
 ✅ View template exists  
 ✅ Navigation JavaScript function ready  
-✅ Ready for testing  
+✅ Ready for testing
 
 **Status:** READY FOR TESTING 🚀
 

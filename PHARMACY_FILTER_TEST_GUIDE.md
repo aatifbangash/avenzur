@@ -3,6 +3,7 @@
 ## Testing Pharmacy Filter Functionality
 
 ### Step 1: Check Dashboard
+
 1. Go to: `http://localhost/admin/cost_center/dashboard?period=2025-10`
 2. Should show:
    - Company totals in KPI cards (all pharmacies)
@@ -10,6 +11,7 @@
    - Pharmacy dropdown populated
 
 ### Step 2: Test Pharmacy Selection
+
 1. Click pharmacy dropdown
 2. Select "E&M Central Plaza Pharmacy (PHR-004)"
 3. Observe:
@@ -20,6 +22,7 @@
    - ✅ Margins recalculate for selected pharmacy
 
 ### Step 3: Direct API Test
+
 ```bash
 # Test the new API endpoint
 curl "http://localhost/api/v1/cost-center/pharmacy-detail/52?period=2025-10"
@@ -40,14 +43,17 @@ curl "http://localhost/api/v1/cost-center/pharmacy-detail/52?period=2025-10"
 ### Step 4: Verify Numbers Match
 
 **Company Dashboard (Default):**
+
 - Total Revenue: Sum of all pharmacies
 - Example: Pharmacy 1 (100,000) + Pharmacy 2 (80,000) + ... = 648,800.79
 
 **Filtered (Select Pharmacy 1):**
+
 - Revenue: Only Pharmacy 1 = 100,000
 - This value comes from: `SUM(total_revenue) WHERE warehouse_id = 52`
 
 ### Step 5: Browser Console Check
+
 1. Open DevTools (F12) → Console tab
 2. Select pharmacy
 3. Check logs:
@@ -57,6 +63,7 @@ curl "http://localhost/api/v1/cost-center/pharmacy-detail/52?period=2025-10"
    ```
 
 ### Step 6: Test Reset
+
 1. Select "All Pharmacies" or click reset
 2. Verify:
    - KPI cards show company totals again
@@ -66,22 +73,29 @@ curl "http://localhost/api/v1/cost-center/pharmacy-detail/52?period=2025-10"
 ## Common Issues & Troubleshooting
 
 ### Issue: Dropdown shows only warehouses
+
 **Solution:** Model now correctly filters by `warehouse_type = 'pharmacy'`
 
 ### Issue: KPI cards don't update
+
 **Check:**
+
 1. Browser console for errors
 2. API endpoint returning data: `GET /api/v1/cost-center/pharmacy-detail/52`
 3. Network tab shows 200 response
 
 ### Issue: Revenue doesn't match
+
 **Verify:**
+
 - Company view: Sum across all warehouses
 - Pharmacy filter: Only one warehouse ID
 - Period is consistent
 
 ### Issue: Data shows "0" or "NULL"
+
 **Check:**
+
 - Selected period has data in `sma_fact_cost_center`
 - Pharmacy warehouse ID is correct (52, 53, 54, etc.)
 - Not selecting warehouse type 'warehouse' (only 'pharmacy')
@@ -90,17 +104,17 @@ curl "http://localhost/api/v1/cost-center/pharmacy-detail/52?period=2025-10"
 
 ```sql
 -- Check what pharmacies exist
-SELECT id, code, name, warehouse_type FROM sma_warehouses 
+SELECT id, code, name, warehouse_type FROM sma_warehouses
 WHERE warehouse_type = 'pharmacy';
 
 -- Check data for October 2025
-SELECT DISTINCT warehouse_id, SUM(total_revenue) as revenue 
-FROM sma_fact_cost_center 
+SELECT DISTINCT warehouse_id, SUM(total_revenue) as revenue
+FROM sma_fact_cost_center
 WHERE period_year = 2025 AND period_month = 10
 GROUP BY warehouse_id;
 
 -- Check specific pharmacy
-SELECT SUM(total_revenue), SUM(total_cogs), 
+SELECT SUM(total_revenue), SUM(total_cogs),
        SUM(inventory_movement_cost), SUM(operational_cost)
 FROM sma_fact_cost_center
 WHERE warehouse_id = 52 AND period_year = 2025 AND period_month = 10;
@@ -109,9 +123,11 @@ WHERE warehouse_id = 52 AND period_year = 2025 AND period_month = 10;
 ## Files Modified
 
 1. **Model:** `app/models/admin/Cost_center_model.php`
+
    - Added `get_pharmacy_detail()` method
 
 2. **API:** `app/controllers/api/v1/Cost_center.php`
+
    - Added `pharmacy_detail_get()` endpoint
    - URL: `/api/v1/cost-center/pharmacy-detail/{id}`
 
@@ -122,6 +138,7 @@ WHERE warehouse_id = 52 AND period_year = 2025 AND period_month = 10;
 ## Expected Output
 
 ### Pharmacy Filter Test Result
+
 ```
 ✅ Pharmacy Selection: Works
 ✅ KPI Cards Update: Shows pharmacy-specific numbers

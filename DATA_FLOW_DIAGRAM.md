@@ -207,7 +207,7 @@
 
   SELECT SUM(total_revenue) FROM sma_fact_cost_center
   WHERE period_year=2025 AND period_month=10
-  
+
   Pharmacy 1: 648,800.79
   Pharmacy 2: 520,640.63
   Pharmacy 3: 432,533.86
@@ -226,11 +226,11 @@
 
   SELECT SUM(total_revenue) FROM sma_fact_cost_center
   WHERE warehouse_id=52 AND period_year=2025 AND period_month=10
-  
+
   Only Pharmacy 52 (E&M Central): 648,800.79
   ─────────────────────────────────────────
   TOTAL: 648,800.79 ← Updated in KPI Card when pharmacy selected
-  
+
   ∴ Revenue decreased from 2.6M to 648K
   ✓ Shows filtering is working
   ✓ Data is pharmacy-specific, not company-wide
@@ -277,7 +277,7 @@ Profit Calculation:
 Margin %:
   (Profit / Revenue) × 100 = Margin %
   (275,740.33 / 648,800.79) × 100 = 42.45%
-  
+
   ✓ This is the "Net Profit Margin" displayed
   ✓ Recalculates for each pharmacy
   ✓ Based on actual transaction data
@@ -310,13 +310,13 @@ Margin %:
       │Br-001│     │Br-002│ │Br-003│ │Br-004│ │Br-005│ │Br-006│
       │Branch│     │Branch│ │Branch│ │Branch│ │Branch│ │Branch│
       └──────┘     └──────┘ └──────┘ └──────┘ └──────┘ └──────┘
-      
+
   (4 more pharmacies + branches below)
 
 KEY RELATIONSHIP:
   Parent Pharmacy ──one:many──► Child Branches
   Company ──one:many──► Pharmacies
-  
+
   When you select a pharmacy:
   • Revenue shows ONLY that pharmacy
   • Branches show ONLY that pharmacy's branches

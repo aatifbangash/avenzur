@@ -2,10 +2,10 @@
 
 ## 📊 Where Revenue Comes From
 
-| Level | Source | SQL | Result |
-|-------|--------|-----|--------|
-| **Company** | All pharmacies | `SUM(total_revenue) FROM sma_fact_cost_center WHERE period='2025-10'` | ~2.6M (all pharma) |
-| **Pharmacy** | Single pharmacy | `SUM(total_revenue) WHERE warehouse_id=52 AND period='2025-10'` | ~648K (only pharma 52) |
+| Level        | Source          | SQL                                                                   | Result                 |
+| ------------ | --------------- | --------------------------------------------------------------------- | ---------------------- |
+| **Company**  | All pharmacies  | `SUM(total_revenue) FROM sma_fact_cost_center WHERE period='2025-10'` | ~2.6M (all pharma)     |
+| **Pharmacy** | Single pharmacy | `SUM(total_revenue) WHERE warehouse_id=52 AND period='2025-10'`       | ~648K (only pharma 52) |
 
 ## 💰 Cost Components
 
@@ -28,6 +28,7 @@ Profit: 275,740.33 (42.5%)
 ## 🔄 Implementation
 
 ### Model
+
 ```php
 // app/models/admin/Cost_center_model.php
 public function get_pharmacy_detail($pharmacy_id, $period)
@@ -36,6 +37,7 @@ public function get_pharmacy_detail($pharmacy_id, $period)
 ```
 
 ### API
+
 ```
 GET /api/v1/cost-center/pharmacy-detail/52?period=2025-10
 ├─ Calls: get_pharmacy_detail(52, '2025-10')
@@ -43,6 +45,7 @@ GET /api/v1/cost-center/pharmacy-detail/52?period=2025-10
 ```
 
 ### Frontend
+
 ```javascript
 // themes/blue/.../cost_center_dashboard_modern.php
 handlePharmacyFilter(pharmacyId)
@@ -91,14 +94,14 @@ View:
 
 ## 📋 Data Sources
 
-| Field | Source Table | Notes |
-|-------|--------------|-------|
-| `total_revenue` | sma_fact_cost_center | Sales for warehouse in period |
-| `total_cogs` | sma_fact_cost_center | Direct cost of goods |
-| `inventory_movement_cost` | sma_fact_cost_center | Inventory handling |
-| `operational_cost` | sma_fact_cost_center | Ops expenses |
-| `warehouse_id` | sma_fact_cost_center | Links to pharmacy |
-| `period_year`, `period_month` | sma_fact_cost_center | Time dimension |
+| Field                         | Source Table         | Notes                         |
+| ----------------------------- | -------------------- | ----------------------------- |
+| `total_revenue`               | sma_fact_cost_center | Sales for warehouse in period |
+| `total_cogs`                  | sma_fact_cost_center | Direct cost of goods          |
+| `inventory_movement_cost`     | sma_fact_cost_center | Inventory handling            |
+| `operational_cost`            | sma_fact_cost_center | Ops expenses                  |
+| `warehouse_id`                | sma_fact_cost_center | Links to pharmacy             |
+| `period_year`, `period_month` | sma_fact_cost_center | Time dimension                |
 
 ## 🎯 Key Facts
 
@@ -106,7 +109,7 @@ View:
 ✓ **8 pharmacies** displayed from sma_warehouses  
 ✓ **Each pharmacy independent** in cost tracking  
 ✓ **Filtering is dynamic** - fetches on selection  
-✓ **Margins recalculate** - based on pharmacy costs  
+✓ **Margins recalculate** - based on pharmacy costs
 
 ## 🚀 How It Works (Step by Step)
 
@@ -128,12 +131,12 @@ View:
 
 ## 🔍 Troubleshooting
 
-| Problem | Solution |
-|---------|----------|
+| Problem                  | Solution                                             |
+| ------------------------ | ---------------------------------------------------- |
 | Pharmacy shows 0 revenue | Check sma_fact_cost_center has data for warehouse_id |
-| Dropdown empty | Model not filtering by warehouse_type='pharmacy' |
-| KPI cards don't update | Check browser console for API errors |
-| Wrong numbers | Verify period filter (YYYY-MM format) |
+| Dropdown empty           | Model not filtering by warehouse_type='pharmacy'     |
+| KPI cards don't update   | Check browser console for API errors                 |
+| Wrong numbers            | Verify period filter (YYYY-MM format)                |
 
 ## 📚 Documentation Files
 
@@ -146,10 +149,12 @@ View:
 ## 📞 Files to Check
 
 1. **If KPI cards don't update:**
+
    - View: `handlePharmacyFilter()` function
    - API: `pharmacy_detail_get()` endpoint
 
 2. **If revenue numbers wrong:**
+
    - Model: `get_pharmacy_detail()` query
    - Database: `sma_fact_cost_center` data
 
