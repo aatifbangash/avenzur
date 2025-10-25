@@ -92,7 +92,8 @@ class Purchase_order extends MY_Controller
         $products = [];
         $total_items = sizeof($_POST['product']);
         $warehouse_id = $this->input->post('warehouse');
-        $status = $this->input->post('status');
+        //$status = $this->input->post('status');
+        $status = $this->input->post('status') ?? "pending";
         for ($r = 0; $r < $total_items; $r++) {
 
                 $product_id = $_POST['product_id'][$r];
@@ -139,7 +140,7 @@ class Purchase_order extends MY_Controller
                         // update product sale price
                         $this->purchase_order_model->updateProductSalePrice($item_code, $item_sale_price, $item_tax_rate);
                     }
-
+                   
                     if ($item_expiry) {
                         $today = date('Y-m-d');
                         if ($item_expiry <= $today) {
@@ -260,7 +261,6 @@ class Purchase_order extends MY_Controller
     public function add($quote_id = null)
     {
        
-        
         //$this->sma->checkPermissions();
         
         // $this->form_validation->set_rules('batchno[]', lang('Batch'), 'required');
@@ -282,7 +282,7 @@ class Purchase_order extends MY_Controller
             $warehouse_id = $this->input->post('warehouse');
             $child_supplier_id = $this->input->post('childsupplier') ? $this->input->post('childsupplier') : 0;
             $supplier_id = $child_supplier_id ? $child_supplier_id : $this->input->post('supplier');
-            $status = $this->input->post('status');
+            $status = $this->input->post('status') ?? "pending";
             $shipping = $this->input->post('shipping') ? $this->input->post('shipping') : 0;
             $supplier_details = $this->site->getCompanyByID($supplier_id);
             $supplier = $supplier_details->company && $supplier_details->company != '-' ? $supplier_details->company : $supplier_details->name;
