@@ -89,6 +89,67 @@ class Cost_center extends Base_api {
      * Query Parameters:
      * - period: YYYY-MM (default: current month)
      */
+    /**
+     * GET /api/v1/cost-center/pharmacy-detail/{id}
+     * 
+     * Get pharmacy detail (KPIs only - for dashboard filtering)
+     * 
+     * URL Parameters:
+     * - id: pharmacy_id
+     * 
+     * Query Parameters:
+     * - period: YYYY-MM (default: current month)
+     */
+    public function pharmacy_detail_get($pharmacy_id = null) {
+        try {
+            if (!$pharmacy_id) {
+                return $this->response([
+                    'success' => false,
+                    'message' => 'Pharmacy ID is required',
+                    'status' => 400
+                ]);
+            }
+
+            $period = $this->get('period') ?: date('Y-m');
+
+            // Validate period format
+            if (!$this->_validate_period($period)) {
+                return $this->response([
+                    'success' => false,
+                    'message' => 'Invalid period format. Use YYYY-MM',
+                    'status' => 400
+                ]);
+            }
+
+            $data = $this->cost_center->get_pharmacy_detail($pharmacy_id, $period);
+
+            if (!$data) {
+                return $this->response([
+                    'success' => false,
+                    'message' => 'Pharmacy not found or no data available for selected period',
+                    'status' => 404
+                ]);
+            }
+
+            return $this->response([
+                'success' => true,
+                'data' => $data,
+                'period' => $period,
+                'timestamp' => date('Y-m-d\TH:i:s\Z'),
+                'status' => 200
+            ]);
+
+        } catch (Exception $e) {
+            log_message('error', 'Cost Center API - Pharmacy Detail: ' . $e->getMessage());
+            return $this->response([
+                'success' => false,
+                'message' => 'Error fetching pharmacy detail',
+                'error' => $e->getMessage(),
+                'status' => 500
+            ]);
+        }
+    }
+
     public function pharmacy_branches_get($pharmacy_id = null) {
         try {
             if (!$pharmacy_id) {

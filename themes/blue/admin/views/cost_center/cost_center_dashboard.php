@@ -8,12 +8,26 @@ if (isset($_GET['budget_api'])) {
     $response = [
         'success' => false,
         'data' => [],
-        'message' => 'Unknown action'
+        'message' => 'Unknown action',
+        'debug' => [
+            'action' => $action,
+            'period' => $period,
+            'get_instance_check' => false,
+            'db_check' => false
+        ]
     ];
 
     try {
         // Get the CI instance from global scope
         $CI = &get_instance();
+        $response['debug']['get_instance_check'] = $CI !== null;
+        
+        // Check if database connection is available
+        if (!$CI || !isset($CI->db)) {
+            throw new Exception('Database connection not available. CI=' . ($CI ? 'OK' : 'NULL'));
+        }
+        
+        $response['debug']['db_check'] = true;
         
         switch ($action) {
             case 'allocated':
@@ -22,51 +36,70 @@ if (isset($_GET['budget_api'])) {
                 $result = $CI->db->query($query, [$period]);
                 $response = [
                     'success' => true,
-                    'data' => $result->result_array() ?: []
+                    'data' => $result->result_array() ?: [],
+                    'query' => $query,
+                    'period_param' => $period
                 ];
                 break;
 
             case 'tracking':
                 // Get budget tracking data
-                $query = "SELECT * FROM sma_budget_tracking WHERE period = ? ORDER BY updated_at DESC";
+                $query = "SELECT * FROM sma_budget_tracking WHERE period = ? ORDER BY calculated_at DESC";
                 $result = $CI->db->query($query, [$period]);
                 $response = [
                     'success' => true,
-                    'data' => $result->result_array() ?: []
+                    'data' => $result->result_array() ?: [],
+                    'query' => $query,
+                    'period_param' => $period,
+                    'count' => $result->num_rows()
                 ];
                 break;
 
             case 'forecast':
                 // Get forecast data
-                $query = "SELECT * FROM sma_budget_forecast WHERE period = ? ORDER BY created_at DESC";
+                $query = "SELECT * FROM sma_budget_forecast WHERE period = ? ORDER BY calculated_at DESC";
                 $result = $CI->db->query($query, [$period]);
                 $response = [
                     'success' => true,
-                    'data' => $result->result_array() ?: []
+                    'data' => $result->result_array() ?: [],
+                    'query' => $query,
+                    'period_param' => $period
                 ];
                 break;
 
             case 'alerts':
-                // Get alerts
-                $query = "SELECT * FROM sma_budget_alert_events WHERE period = ? ORDER BY triggered_at DESC";
+                // Get alerts (joined with allocation for period)
+                $query = "SELECT ae.*, ba.period FROM sma_budget_alert_events ae 
+                         JOIN sma_budget_allocation ba ON ae.allocation_id = ba.allocation_id 
+                         WHERE ba.period = ? AND ae.status = 'active' 
+                         ORDER BY ae.triggered_at DESC";
                 $result = $CI->db->query($query, [$period]);
                 $response = [
                     'success' => true,
-                    'data' => $result->result_array() ?: []
+                    'data' => $result->result_array() ?: [],
+                    'query' => $query,
+                    'period_param' => $period
                 ];
                 break;
+                
+            default:
+                throw new Exception("Unknown action: $action");
         }
         
-    } catch (Exception $e) {
+    } catch (Throwable $e) {
         $response = [
             'success' => false,
-            'message' => 'Error: ' . $e->getMessage()
+            'message' => 'Error: ' . $e->getMessage(),
+            'error_file' => $e->getFile(),
+            'error_line' => $e->getLine(),
+            'debug' => $response['debug']
         ];
-        error_log('Budget dashboard error: ' . $e->getMessage());
+        error_log('Budget dashboard error: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
     }
 
     // Output JSON and exit
     header('Content-Type: application/json');
+    http_response_code($response['success'] ? 200 : 500);
     echo json_encode($response);
     exit;
 }
@@ -124,55 +157,35 @@ if (isset($_GET['budget_api'])) {
     <div class="box-content">
         <!-- Top KPI Cards Row -->
         <div class="row">
-            <!-- Sales KPI with Trend -->
+            <!-- Sales KPI with Trend (Simplified) -->
             <div class="col-lg-3 col-sm-6 col-xs-12">
-                <div class="info-box blue-bg">
-                    <i class="fa fa-arrow-up"></i>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Total Sales</span>
-                        <span class="info-box-number" id="totalSales">-</span>
-                        <span class="info-box-number" style="font-size: 12px; margin-top: 5px;">
-                            <i class="fa fa-arrow-up" id="salesTrendIcon"></i> <span id="salesTrend">0%</span>
-                        </span>
-                    </div>
+                <div class="stat-card indigo">
+                    <div class="fs-4 fw-semibold"><span id="totalSales">-</span> <span class="fs-6 fw-normal">(<span id="salesTrendValue">+1.2%</span> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon" role="img" aria-hidden="true"><polygon fill="currentColor" points="367.997 338.75 271.999 434.747 271.999 17.503 239.999 17.503 239.999 434.745 144.003 338.75 121.376 361.377 256 496 390.624 361.377 367.997 338.75" class="ci-primary"></polygon></svg>)</span></div>
+                    <small class="text-white-75">Total Sales</small>
                 </div>
             </div>
 
-            <!-- Expenses KPI with Trend -->
+            <!-- Expenses KPI with Trend (Simplified) -->
             <div class="col-lg-3 col-sm-6 col-xs-12">
-                <div class="info-box orange-bg">
-                    <i class="fa fa-bar-chart"></i>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Total Expenses</span>
-                        <span class="info-box-number" id="totalExpenses">-</span>
-                        <span class="info-box-number" style="font-size: 12px; margin-top: 5px;">
-                            <i class="fa fa-arrow-down" id="expensesTrendIcon"></i> <span id="expensesTrend">0%</span>
-                        </span>
-                    </div>
+                <div class="stat-card light-blue">
+                    <div class="fs-4 fw-semibold"><span id="totalExpenses">-</span> <span class="fs-6 fw-normal">(<span id="expensesTrendValue">+0.8%</span> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon" role="img" aria-hidden="true"><polygon fill="currentColor" points="367.997 338.75 271.999 434.747 271.999 17.503 239.999 17.503 239.999 434.745 144.003 338.75 121.376 361.377 256 496 390.624 361.377 367.997 338.75" class="ci-primary"></polygon></svg>)</span></div>
+                    <small class="text-white-75">Total Expenses</small>
                 </div>
             </div>
 
-            <!-- Best Performing Pharmacy -->
+            <!-- Best Performing Pharmacy (Simplified) -->
             <div class="col-lg-3 col-sm-6 col-xs-12">
-                <div class="info-box green-bg">
-                    <i class="fa fa-trophy"></i>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Best Pharmacy</span>
-                        <span class="info-box-number" id="bestPharmacy" style="font-size: 14px;">-</span>
-                        <span class="info-box-number" style="font-size: 11px; margin-top: 3px;" id="bestPharmacySales">Sales: -</span>
-                    </div>
+                <div class="stat-card green">
+                    <div class="fs-4 fw-semibold"><span id="bestPharmacy">-</span> <span class="fs-6 fw-normal">(<span id="bestPharmacySales">-</span>)</span></div>
+                    <small class="text-white-75">Best Pharmacy</small>
                 </div>
             </div>
 
-            <!-- Worst Performing Pharmacy -->
+            <!-- Worst Performing Pharmacy (Simplified) -->
             <div class="col-lg-3 col-sm-6 col-xs-12">
-                <div class="info-box red-bg">
-                    <i class="fa fa-exclamation-triangle"></i>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Worst Pharmacy</span>
-                        <span class="info-box-number" id="worstPharmacy" style="font-size: 14px;">-</span>
-                        <span class="info-box-number" style="font-size: 11px; margin-top: 3px;" id="worstPharmacySales">Sales: -</span>
-                    </div>
+                <div class="stat-card red">
+                    <div class="fs-4 fw-semibold"><span id="worstPharmacy">-</span> <span class="fs-6 fw-normal">(<span id="worstPharmacySales">-</span>)</span></div>
+                    <small class="text-white-75">Worst Pharmacy</small>
                 </div>
             </div>
         </div>
@@ -185,51 +198,35 @@ if (isset($_GET['budget_api'])) {
         </div>
 
         <div class="row">
-            <!-- Budget Allocated KPI -->
+            <!-- Budget Allocated KPI (Simplified) -->
             <div class="col-lg-3 col-sm-6 col-xs-12">
-                <div class="info-box purple-bg">
-                    <i class="fa fa-money"></i>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Total Budget Allocated</span>
-                        <span class="info-box-number" id="budgetAllocated">-</span>
-                        <span class="info-box-number" style="font-size: 12px; margin-top: 5px;" id="budgetPeriodLabel">-</span>
-                    </div>
+                <div class="stat-card indigo">
+                    <div class="fs-4 fw-semibold"><span id="budgetAllocated">-</span> <span class="fs-6 fw-normal">(<span id="budgetPeriodLabel">-</span>)</span></div>
+                    <small class="text-white-75">Total Budget Allocated</small>
                 </div>
             </div>
 
-            <!-- Budget Spent KPI -->
+            <!-- Budget Spent KPI (Simplified) -->
             <div class="col-lg-3 col-sm-6 col-xs-12">
-                <div class="info-box orange-bg">
-                    <i class="fa fa-credit-card"></i>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Budget Spent</span>
-                        <span class="info-box-number" id="budgetSpent">-</span>
-                        <span class="info-box-number" style="font-size: 12px; margin-top: 5px;" id="budgetPercentage">-</span>
-                    </div>
+                <div class="stat-card yellow">
+                    <div class="fs-4 fw-semibold"><span id="budgetSpent">-</span> <span class="fs-6 fw-normal">(<span id="budgetPercentage">-</span>)</span></div>
+                    <small class="text-dark-75">Budget Spent</small>
                 </div>
             </div>
 
-            <!-- Budget Remaining KPI -->
+            <!-- Budget Remaining KPI (Simplified) -->
             <div class="col-lg-3 col-sm-6 col-xs-12">
-                <div class="info-box green-bg">
-                    <i class="fa fa-plus-circle"></i>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Budget Remaining</span>
-                        <span class="info-box-number" id="budgetRemaining">-</span>
-                        <span class="info-box-number" style="font-size: 12px; margin-top: 5px;" id="budgetStatus">-</span>
-                    </div>
+                <div class="stat-card green">
+                    <div class="fs-4 fw-semibold"><span id="budgetRemaining">-</span> <span class="fs-6 fw-normal">(<span id="budgetStatus">-</span>)</span></div>
+                    <small class="text-white-75">Budget Remaining</small>
                 </div>
             </div>
 
-            <!-- Budget Forecast KPI -->
+            <!-- Budget Forecast KPI (Simplified) -->
             <div class="col-lg-3 col-sm-6 col-xs-12">
-                <div class="info-box blue-bg">
-                    <i class="fa fa-line-chart"></i>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Projected End-of-Month</span>
-                        <span class="info-box-number" id="budgetForecast">-</span>
-                        <span class="info-box-number" style="font-size: 12px; margin-top: 5px; color: #fff;" id="riskLevel">Low Risk</span>
-                    </div>
+                <div class="stat-card light-blue">
+                    <div class="fs-4 fw-semibold"><span id="budgetForecast">-</span> <span class="fs-6 fw-normal">(<span id="riskLevel">Low Risk</span>)</span></div>
+                    <small class="text-white-75">Projected End-of-Month</small>
                 </div>
             </div>
         </div>
@@ -544,42 +541,62 @@ function loadBudgetData() {
     // Show loading state
     showBudgetLoading();
     
-    // Get the current page URL path to construct the endpoint
-    // This will use a local endpoint in the same view
-    const pageUrl = window.location.pathname;
-    const budgetDataUrl = pageUrl + '?budget_api=1&period=' + budgetPeriod;
+    // Use the built-in dashboard API handler via query parameters
+    // The backend handler is in this same view file (lines 1-90)
+    // Calls the dashboard page with budget_api parameter to trigger the handler
+    const currentPageUrl = window.location.pathname + window.location.search;
     
     Promise.all([
-        fetch(budgetDataUrl + '&action=allocated')
+        fetch(`${currentPageUrl}${currentPageUrl.includes('?') ? '&' : '?'}budget_api=1&action=allocated&period=${budgetPeriod}`)
             .then(r => {
-                if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+                console.log('Allocated response:', r.status);
+                if (!r.ok) {
+                    return r.text().then(text => {
+                        throw new Error(`HTTP ${r.status}: ${text.substring(0, 200)}`);
+                    });
+                }
                 return r.json();
             })
             .catch(e => {
                 console.error('Error fetching allocated budget:', e);
                 return { data: [] };
             }),
-        fetch(budgetDataUrl + '&action=tracking')
+        fetch(`${currentPageUrl}${currentPageUrl.includes('?') ? '&' : '?'}budget_api=1&action=tracking&period=${budgetPeriod}`)
             .then(r => {
-                if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+                console.log('Tracking response:', r.status);
+                if (!r.ok) {
+                    return r.text().then(text => {
+                        throw new Error(`HTTP ${r.status}: ${text.substring(0, 200)}`);
+                    });
+                }
                 return r.json();
             })
             .catch(e => {
                 console.error('Error fetching budget tracking:', e);
                 return { data: [] };
             }),
-        fetch(budgetDataUrl + '&action=forecast')
+        fetch(`${currentPageUrl}${currentPageUrl.includes('?') ? '&' : '?'}budget_api=1&action=forecast&period=${budgetPeriod}`)
             .then(r => {
-                if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+                console.log('Forecast response:', r.status);
+                if (!r.ok) {
+                    return r.text().then(text => {
+                        throw new Error(`HTTP ${r.status}: ${text.substring(0, 200)}`);
+                    });
+                }
                 return r.json();
             })
             .catch(e => {
                 console.error('Error fetching forecast:', e);
                 return { data: [] };
             }),
-        fetch(budgetDataUrl + '&action=alerts')
+        fetch(`${currentPageUrl}${currentPageUrl.includes('?') ? '&' : '?'}budget_api=1&action=alerts&period=${budgetPeriod}`)
             .then(r => {
-                if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+                console.log('Alerts response:', r.status);
+                if (!r.ok) {
+                    return r.text().then(text => {
+                        throw new Error(`HTTP ${r.status}: ${text.substring(0, 200)}`);
+                    });
+                }
                 return r.json();
             })
             .catch(e => {
@@ -703,10 +720,15 @@ function loadBudgetDataFallback() {
 
 // Show budget loading state
 function showBudgetLoading() {
-    document.getElementById('budgetAllocated').innerHTML = '<i class="fa fa-spinner fa-spin"></i> Loading...';
-    document.getElementById('budgetSpent').innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
-    document.getElementById('budgetRemaining').innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
-    document.getElementById('budgetForecast').innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+    const budgetAllocatedEl = document.getElementById('budgetAllocated');
+    const budgetSpentEl = document.getElementById('budgetSpent');
+    const budgetRemainingEl = document.getElementById('budgetRemaining');
+    const budgetForecastEl = document.getElementById('budgetForecast');
+    
+    if (budgetAllocatedEl) budgetAllocatedEl.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Loading...';
+    if (budgetSpentEl) budgetSpentEl.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+    if (budgetRemainingEl) budgetRemainingEl.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+    if (budgetForecastEl) budgetForecastEl.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
 }
 
 // Hide budget loading state
@@ -719,28 +741,36 @@ function updateBudgetKPICards(budgetData) {
     if (!budgetData) return;
     
     // Budget Allocated
-    document.getElementById('budgetAllocated').textContent = 'SAR ' + formatNumber(budgetData.allocated);
-    document.getElementById('budgetPeriodLabel').textContent = budgetData.period;
+    const budgetAllocatedEl = document.getElementById('budgetAllocated');
+    if (budgetAllocatedEl) budgetAllocatedEl.textContent = formatNumber(budgetData.allocated / 1000) + 'K';
+    const budgetPeriodLabelEl = document.getElementById('budgetPeriodLabel');
+    if (budgetPeriodLabelEl) budgetPeriodLabelEl.textContent = budgetData.period;
     
     // Budget Spent
-    document.getElementById('budgetSpent').textContent = 'SAR ' + formatNumber(budgetData.spent);
-    document.getElementById('budgetPercentage').textContent = budgetData.percentageUsed.toFixed(2) + '%';
+    const budgetSpentEl = document.getElementById('budgetSpent');
+    if (budgetSpentEl) budgetSpentEl.textContent = formatNumber(budgetData.spent / 1000) + 'K';
+    const budgetPercentageEl = document.getElementById('budgetPercentage');
+    if (budgetPercentageEl) budgetPercentageEl.textContent = budgetData.percentageUsed.toFixed(2) + '%';
     
     // Budget Remaining
-    document.getElementById('budgetRemaining').textContent = 'SAR ' + formatNumber(budgetData.remaining);
+    const budgetRemainingEl = document.getElementById('budgetRemaining');
+    if (budgetRemainingEl) budgetRemainingEl.textContent = formatNumber(budgetData.remaining / 1000) + 'K';
     
     const statusText = budgetData.status === 'safe' ? '✓ Safe' : 
                       (budgetData.status === 'warning' ? '⚠ Warning' :
                        (budgetData.status === 'danger' ? '⚠ Danger' : '✕ Exceeded'));
-    document.getElementById('budgetStatus').textContent = statusText;
+    const budgetStatusEl = document.getElementById('budgetStatus');
+    if (budgetStatusEl) budgetStatusEl.textContent = statusText;
     
     // Budget Forecast
-    document.getElementById('budgetForecast').textContent = 'SAR ' + formatNumber(budgetData.projected);
+    const budgetForecastEl = document.getElementById('budgetForecast');
+    if (budgetForecastEl) budgetForecastEl.textContent = formatNumber(budgetData.projected / 1000) + 'K';
     
     const riskLabel = budgetData.riskLevel === 'low' ? 'Low Risk ✓' :
                      (budgetData.riskLevel === 'medium' ? 'Medium Risk ⚠' :
                       (budgetData.riskLevel === 'high' ? 'High Risk ⚠' : 'Critical ✕'));
-    document.getElementById('riskLevel').textContent = riskLabel;
+    const riskLevelEl = document.getElementById('riskLevel');
+    if (riskLevelEl) riskLevelEl.textContent = riskLabel;
 }
 
 // Update Budget Meter
@@ -870,26 +900,32 @@ function generateMockData() {
 // Update KPI Cards
 function updateKPICards(data) {
     // Sales KPI
-    document.getElementById('totalSales').textContent = 'SAR ' + formatNumber(data.totalSales);
-    document.getElementById('salesTrend').textContent = Math.abs(data.salesTrend).toFixed(1) + '%';
-    const salesIcon = document.getElementById('salesTrendIcon');
-    salesIcon.className = data.salesTrend >= 0 ? 'fa fa-arrow-up' : 'fa fa-arrow-down';
-    salesIcon.style.color = data.salesTrend >= 0 ? '#10b981' : '#ef4444';
+    const totalSalesEl = document.getElementById('totalSales');
+    if (totalSalesEl) totalSalesEl.textContent = formatNumber(data.totalSales / 1000) + 'K';
+    
+    const salesTrendEl = document.getElementById('salesTrendValue');
+    if (salesTrendEl) salesTrendEl.textContent = (data.salesTrend >= 0 ? '+' : '') + Math.abs(data.salesTrend).toFixed(1) + '%';
     
     // Expenses KPI
-    document.getElementById('totalExpenses').textContent = 'SAR ' + formatNumber(data.totalExpenses);
-    document.getElementById('expensesTrend').textContent = Math.abs(data.expensesTrend).toFixed(1) + '%';
-    const expensesIcon = document.getElementById('expensesTrendIcon');
-    expensesIcon.className = data.expensesTrend <= 0 ? 'fa fa-arrow-down' : 'fa fa-arrow-up';
-    expensesIcon.style.color = data.expensesTrend <= 0 ? '#10b981' : '#ef4444';
+    const totalExpensesEl = document.getElementById('totalExpenses');
+    if (totalExpensesEl) totalExpensesEl.textContent = formatNumber(data.totalExpenses / 1000) + 'K';
+    
+    const expensesTrendEl = document.getElementById('expensesTrendValue');
+    if (expensesTrendEl) expensesTrendEl.textContent = (data.expensesTrend >= 0 ? '+' : '') + Math.abs(data.expensesTrend).toFixed(1) + '%';
     
     // Best Pharmacy
-    document.getElementById('bestPharmacy').textContent = data.bestPharmacy.name;
-    document.getElementById('bestPharmacySales').textContent = 'Sales: SAR ' + formatNumber(data.bestPharmacy.sales);
+    const bestPharmacyEl = document.getElementById('bestPharmacy');
+    if (bestPharmacyEl) bestPharmacyEl.textContent = data.bestPharmacy.name;
+    
+    const bestPharmacySalesEl = document.getElementById('bestPharmacySales');
+    if (bestPharmacySalesEl) bestPharmacySalesEl.textContent = 'SAR ' + formatNumber(data.bestPharmacy.sales);
     
     // Worst Pharmacy
-    document.getElementById('worstPharmacy').textContent = data.worstPharmacy.name;
-    document.getElementById('worstPharmacySales').textContent = 'Sales: SAR ' + formatNumber(data.worstPharmacy.sales);
+    const worstPharmacyEl = document.getElementById('worstPharmacy');
+    if (worstPharmacyEl) worstPharmacyEl.textContent = data.worstPharmacy.name;
+    
+    const worstPharmacySalesEl = document.getElementById('worstPharmacySales');
+    if (worstPharmacySalesEl) worstPharmacySalesEl.textContent = 'SAR ' + formatNumber(data.worstPharmacy.sales);
 }
 
 // Initialize Trend Chart with ECharts
@@ -1087,6 +1123,76 @@ function formatNumber(num) {
 .info-box-number small {
     font-size: 12px;
     opacity: 0.9;
+}
+
+/* Stats Grid - New Simplified Cards */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+}
+
+.stat-card {
+    background-color: var(--stat-color);
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 1.5rem 1rem;
+    color: white;
+}
+
+.stat-card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    transform: translateY(-4px);
+}
+
+.stat-card.indigo {
+    --stat-color: #4f46e5;
+}
+
+.stat-card.light-blue {
+    --stat-color: #3b82f6;
+}
+
+.stat-card.yellow {
+    --stat-color: #fbbf24;
+    color: #1a1a1a;
+}
+
+.stat-card.red {
+    --stat-color: #e55354;
+}
+
+.stat-card.green {
+    --stat-color: #10b981;
+}
+
+.stat-card .fs-4 {
+    font-size: 1.5rem !important;
+}
+
+.stat-card .fs-6 {
+    font-size: 0.9rem !important;
+}
+
+.stat-card .icon {
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+    margin-left: 4px;
+    vertical-align: middle;
+}
+
+.stat-card .text-white-75 {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.875rem;
+}
+
+.stat-card .text-dark-75 {
+    color: rgba(26, 26, 26, 0.75);
+    font-size: 0.875rem;
 }
 
 /* Color variants */

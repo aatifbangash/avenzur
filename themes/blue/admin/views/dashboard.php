@@ -1,1059 +1,861 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<?php
-function row_status($x)
-{
-    if ($x == null) {
-        return '';
-    } elseif ($x == 'pending') {
-        return '<div class="text-center"><span class="label label-warning">' . lang($x) . '</span></div>';
-    } elseif ($x == 'completed' || $x == 'paid' || $x == 'sent' || $x == 'received') {
-        return '<div class="text-center"><span class="label label-success">' . lang($x) . '</span></div>';
-    } elseif ($x == 'partial' || $x == 'transferring') {
-        return '<div class="text-center"><span class="label label-info">' . lang($x) . '</span></div>';
-    } elseif ($x == 'due') {
-        return '<div class="text-center"><span class="label label-danger">' . lang($x) . '</span></div>';
+
+<style>
+    :root {
+        --primary: #2c3e50;
+        --success: #27ae60;
+        --danger: #e74c3c;
+        --warning: #f39c12;
+        --info: #3498db;
+        --light: #ecf0f1;
+        --dark: #2c3e50;
+        --gray-100: #f8f9fa;
+        --gray-200: #e9ecef;
+        --gray-300: #dee2e6;
+        --gray-400: #ced4da;
+        --gray-500: #adb5bd;
+        --gray-600: #6c757d;
+        --gray-700: #495057;
+        --gray-800: #343a40;
+        --gray-900: #212529;
     }
-    return '<div class="text-center"><span class="label label-default">' . lang($x) . '</span></div>';
-}
 
-?>
-<?php  if ($chatData) {
-    foreach ($chatData as $month_sale) {
-        $months[]     = date('M-Y', strtotime($month_sale->month));
-        $msales[]     = $month_sale->sales;
-        $mtax1[]      = $month_sale->tax1;
-        $mtax2[]      = $month_sale->tax2;
-        $mpurchases[] = $month_sale->purchases;
-        $mtax3[]      = $month_sale->ptax;
-    } }?>
-    <div class="box" style="margin-bottom: 15px;">
-        <div class="box-header">
-            <h2 class="blue"><i class="fa-fw fa fa-bar-chart-o"></i><?= lang('Item_Movement_History_Report'); ?></h2>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        background-color: var(--gray-100);
+    }
+
+    .dashboard-wrapper {
+        padding: 1.5rem;
+        background-color: var(--gray-100);
+    }
+
+    /* Header Section */
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding: 0;
+    }
+
+    .dashboard-header-left h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin: 0;
+    }
+
+    .dashboard-header-left p {
+        font-size: 0.95rem;
+        color: var(--gray-600);
+        margin: 0.25rem 0 0 0;
+    }
+
+    .dashboard-header-right {
+        text-align: right;
+    }
+
+    /* Stats Grid - Multi Row Smaller Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .stat-card {
+        background-color: var(--stat-color);
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        padding: 1.5rem 1rem;
+        color: white;
+    }
+
+    .stat-card:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        transform: translateY(-4px);
+    }
+
+    .stat-card.indigo {
+        --stat-color: #4f46e5;
+    }
+
+    .stat-card.light-blue {
+        --stat-color: #3b82f6;
+    }
+
+    .stat-card.yellow {
+        --stat-color: #fbbf24;
+        color: #1a1a1a;
+    }
+
+    .stat-card.red {
+        --stat-color: #e55354;
+    }
+
+    .stat-card .fs-4 {
+        font-size: 1.5rem !important;
+    }
+
+    .stat-card .fs-6 {
+        font-size: 0.9rem !important;
+    }
+
+    .stat-card .icon {
+        width: 12px;
+        height: 12px;
+        display: inline-block;
+        margin: 0 0.2rem;
+        vertical-align: middle;
+    }
+
+    /* Section Container */
+    .section {
+        background: white;
+        border-radius: 0.375rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+
+    .section-header {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        border-bottom: 1px solid var(--gray-300);
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: white;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .section-title i {
+        font-size: 1.5rem;
+        color: var(--info);
+    }
+
+    .section-body {
+        padding: 1.5rem;
+    }
+
+    /* Quick Links Grid */
+    .quick-links {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .quick-link {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        border-radius: 0.375rem;
+        border: 2px solid var(--gray-200);
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: var(--gray-900);
+        font-weight: 500;
+        font-size: 0.85rem;
+        text-align: center;
+        gap: 0.5rem;
+    }
+
+    .quick-link i {
+        font-size: 1.75rem;
+    }
+
+    .quick-link:hover {
+        border-color: var(--primary);
+        background-color: rgba(44, 62, 80, 0.05);
+        color: var(--primary);
+        transform: translateY(-2px);
+    }
+
+    /* Data Tables */
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+
+    .data-table thead {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        border-bottom: 2px solid var(--gray-300);
+    }
+
+    .data-table thead th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: white;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+    }
+
+    .data-table tbody tr {
+        border-bottom: 1px solid var(--gray-200);
+        transition: background-color 0.2s ease;
+    }
+
+    .data-table tbody tr:hover {
+        background-color: var(--gray-50);
+    }
+
+    .data-table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+    }
+
+    /* Badges */
+    .badge {
+        display: inline-block;
+        padding: 0.35rem 0.65rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border-radius: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .badge-primary {
+        background-color: #d6eaf8;
+        color: #154360;
+    }
+
+    .badge-success {
+        background-color: #d5f4e6;
+        color: #0b5345;
+    }
+
+    .badge-danger {
+        background-color: #fadbd8;
+        color: #78281f;
+    }
+
+    .badge-warning {
+        background-color: #fef5e7;
+        color: #7d6608;
+    }
+
+    .badge-info {
+        background-color: #d6eaf8;
+        color: #154360;
+    }
+
+    .badge-secondary {
+        background-color: #e2e3e5;
+        color: #41464b;
+    }
+
+    /* Tabs */
+    .nav-tabs {
+        display: flex;
+        border-bottom: 2px solid var(--gray-300);
+        list-style: none;
+        padding: 0;
+        margin: 0 0 1.5rem 0;
+        gap: 0;
+    }
+
+    .nav-tabs li {
+        margin: 0;
+    }
+
+    .nav-tabs a {
+        display: block;
+        padding: 1rem 1.5rem;
+        text-decoration: none;
+        color: var(--gray-700);
+        font-weight: 500;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .nav-tabs a:hover {
+        color: var(--primary);
+        border-bottom-color: var(--primary);
+    }
+
+    .nav-tabs a.active {
+        color: white;
+        background-color: var(--primary);
+        border-bottom-color: transparent;
+    }
+
+    /* Tab Content */
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    /* Charts Section */
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .chart-container {
+        background: white;
+        border-radius: 0.375rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        padding: 1.5rem;
+        min-height: 400px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .chart-placeholder {
+        width: 100%;
+        height: 350px;
+        background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+        border-radius: 0.375rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--gray-400);
+        font-size: 0.9rem;
+        text-align: center;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .dashboard-header {
+            flex-direction: column;
+            align-items: flex-start;
+            text-align: left;
+        }
+
+        .dashboard-header-right {
+            margin-top: 1rem;
+            text-align: left;
+        }
+
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .quick-links {
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        }
+
+        .data-table {
+            font-size: 0.8rem;
+        }
+
+        .data-table thead th,
+        .data-table tbody td {
+            padding: 0.75rem 0.5rem;
+        }
+
+        .section-header {
+            padding: 1rem;
+        }
+
+        .section-body {
+            padding: 1rem;
+        }
+    }
+</style>
+
+<div class="dashboard-wrapper">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <div class="dashboard-header-left">
+            <h1><?= lang('dashboard') ?></h1>
+            <p><?= lang('welcome_back') ?>, <strong><?= $this->session->userdata('username') ?></strong>!</p>
         </div>
-        <div class="box-content">
-            <!-- <div class="row">
-                <div class="col-md-12">
-                    <p class="introtext"><?php echo lang('overview_chart_heading'); ?></p>
-
-                    <div id="ov-chart" style="width:100%; height:450px;"></div>
-                    <p class="text-center"><?= lang('chart_lable_toggle'); ?></p>
-
-                </div>
-            </div> -->
-
-            <div class="row">
-            <?php
-            $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
-            echo admin_form_open_multipart('', $attrib)
-            ?>
-            <div class="col-lg-12">
-                <div class="row">
-
-                    <div class="col-lg-12">
-
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <?= lang('Product', 'product'); ?>
-                                <?php // echo form_dropdown('product', $allProducts, set_value('product',$product),array('class' => 'form-control', 'id'=>'product'));
-                                ?>
-                                <?php echo form_input('sgproduct', (isset($_POST['sgproduct']) ? $_POST['sgproduct'] : ''), 'class="form-control" id="suggest_product2" data-bv-notempty="true"'); ?>
-                                <input type="hidden" name="product" value="<?= isset($_POST['product']) ? $_POST['product'] : 0 ?>" id="report_product_id2" />
-                            </div>
-                        </div>
-
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <?= lang('Type', 'Type'); ?>
-                                <?php echo form_dropdown('filterOnType', $filterOnTypeArr, set_value('filterOnType', $_POST['filterOnType']), array('class' => 'form-control', 'data-placeholder' => "-- Select Type --", 'id' => 'filterOnType'),  array('none')); ?>
-
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label class="control-label" for="warehouse"><?= lang('warehouse'); ?></label>
-                                <?php 
-                                $wh[''] = lang('select') . ' ' . lang('warehouse');
-                                foreach ($warehouses as $warehouse) {
-                                    $wh[$warehouse->id] = $warehouse->name;
-                                }
-                                echo form_dropdown('warehouse', $wh, set_value('warehouse', $_POST['warehouse']), array('class' => 'form-control', 'data-placeholder' => "-- Select Type --", 'id' => 'warehouse'),  array('none'));
-                                ?> 
-
-                            </div>
-                        </div> 
-                        <div class="col-md-2">
-                                <div class="form-group">
-                                <?= lang('start_date', 'start_date'); ?>
-                                <?php echo form_input('start_date', (isset($_POST['start_date']) ? $_POST['start_date'] : ''), 'class="form-control date" id="start_date"'); ?>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                <?= lang('end_date', 'end_date'); ?>
-                                <?php echo form_input('end_date', (isset($_POST['end_date']) ? $_POST['end_date'] : ''), 'class="form-control date" id="end_date"'); ?>
-                                </div>
-                            </div>
-
-
-                        <div class="col-md-2">
-                            <div class="from-group">
-                                <button type="submit" style="" class="btn btn-primary" id="load_report"><?= lang('Load Report') ?></button>
-                            </div>
-                        </div>
-
-                    </div>
-
-                   
-                </div>
-                <hr />
-                <div class="row">
-                    <div class="controls table-controls" style="font-size: 12px !important;">
-                        <table id="poTable" class="table items table-striped table-bordered table-condensed table-hover">
-                            <thead>
-                                <tr>
-                                    <th><?= lang('SN'); ?></th>
-                                    <th><?= lang('Date'); ?></th>
-                                    <th><?= lang('Item Name'); ?></th>
-                                    <th><?= lang('Item Code'); ?></th>
-                                    <th><?= lang('Type'); ?></th>
-                                    <th><?= lang('Warehouse/Pharmacy'); ?></th>
-                                 
-                                    <th><?= lang('Batch No.'); ?></th>
-                                  
-                                    <th><?= lang('Quantity'); ?></th>
-                               
-                                </tr>
-                            </thead>
-
-                            <?php if ($reportData) { ?>
-                                <tbody style="text-align:center;">
-                                 
-
-                                    <?php
-                                    $count = 1;
-                                    $balanceQantity = 0;
-                                    $totalValueOfItem  = 0;
-                                    foreach ($reportData as $rp) {
-                                        $balanceQantity += $rp->quantity;
-                                       
-
-                                    ?>
-                                        <tr>
-                                            <td><?= $count; ?></td>
-                                            <td><?= $rp->movement_date; ?></td>
-                                            <td><?= $rp->product_name; ?></td>
-                                            <td><?= $rp->item_code; ?></td>
-                                            <td><?= $rp->type; ?></td>
-                                            <td><?= $rp->warehouse_name; ?></td>
-                                         
-                                            <td><?= $rp->batch_number; ?></td>
-                                         
-                                          
-                                            <td><?= $this->sma->formatQuantity($rp->quantity); ?></td>
-                                          
-                                        </tr>
-                                    <?php
-                                        $count++;
-                                    }
-
-
-                                    ?>
-
-                                    <tr>
-                                        <td colspan="6"><stong>Total Quantity</strong></td>
-                                       
-                                        <td><?php echo $this->sma->formatQuantity($balanceQantity); ?></td>
-                                      
-
-                                    </tr>
-
-                                </tbody>
-                            <?php } ?>
-                            <tfoot></tfoot>
-                        </table>
-                    </div>
-
-                </div>
-
-            </div>
-        </div>
-        <?php echo form_close(); ?>
-
-
+        <div class="dashboard-header-right">
+            <p style="font-size: 0.9rem; color: var(--gray-600);"><?= date('l, F j, Y') ?></p>
         </div>
     </div>
 
-    <div class="box" style="margin-bottom: 15px;">
-        <div class="box-header">
-            <h2 class="blue"><i class="fa-fw fa fa-bar-chart-o"></i><?= lang('Item_Current_Quantity_Pharmacy_Wise_Report'); ?></h2>
+    <!-- Statistics Grid -->
+    <div class="stats-grid">
+        <!-- Sales Card - Indigo -->
+        <div class="stat-card indigo">
+            <div class="fs-4 fw-semibold"><?php 
+                $total_sales = 0;
+                if($sales) foreach($sales as $sale) $total_sales += $sale->total;
+                echo round($total_sales / 1000, 1) . 'K';
+            ?> <span class="fs-6 fw-normal">(+1.2% <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon" role="img" aria-hidden="true"><polygon fill="var(--ci-primary-color, currentColor)" points="367.997 338.75 271.999 434.747 271.999 17.503 239.999 17.503 239.999 434.745 144.003 338.75 121.376 361.377 256 496 390.624 361.377 367.997 338.75" class="ci-primary"></polygon></svg>)</span></div>
+            <small class="text-white-75"><?= lang('sales') ?></small>
         </div>
-        <div class="box-content">
-            <!-- <div class="row">
-                <div class="col-md-12">
-                    <p class="introtext"><?php echo lang('overview_chart_heading'); ?></p>
 
-                    <div id="ov-chart" style="width:100%; height:450px;"></div>
-                    <p class="text-center"><?= lang('chart_lable_toggle'); ?></p>
-
-                </div>
-            </div> -->
-
-            <div class="row">
-            <?php
-            // $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
-            // echo admin_form_open_multipart('', $attrib)
-            ?>
-            <div class="col-lg-12">
-                <div class="row">
-                    <div class="controls table-controls" style="font-size: 12px !important;">
-                        <table id="poTable" class="table items table-striped table-bordered table-condensed table-hover">
-                            <thead>
-                                <tr>
-                                    <th><?= lang('SN'); ?></th>
-                                    <th><?= lang('Product Name'); ?></th>
-                                    <?php foreach($warehouses as $warehouse) {?>
-                                        <th><?= lang($warehouse->name); ?></th>
-                                    <?php }?>    
-                                  
-                                    <th><?= lang('Total Quantity'); ?></th>
-                               
-                                </tr>
-                            </thead>
-
-                            <?php if ($locationWiseData) { ?>
-                                <tbody style="text-align:center;">
-                                 
-
-                                    <?php
-                                    $count = 1;
-                                    $balanceQantity = 0;
-                                    $totalValueOfItem  = 0;
-                                    foreach ($locationWiseData as $row_loc) {
-                                       
-                                    ?>
-                                        <tr>
-                                            <td><?= $count; ?></td>
-                                            <td><?= $row_loc->product_name; ?></td>
-                                            <?php foreach($warehouses as $warehouse) {
-                                                $col = "loc_".$warehouse->id; ?>
-                                                <td><?= $row_loc->$col; ?></td>
-                                            <?php } ?>
-                                          
-                                            <td><?= $this->sma->formatQuantity($row_loc->total_quantity); ?></td>
-                                          
-                                        </tr>
-                                    <?php
-                                        $count++;
-                                    }
-
-
-                                    ?>
-
-
-                                </tbody>
-                            <?php } ?>
-                            <tfoot></tfoot>
-                        </table>
-                    </div>
-
-                </div>
-
-            </div>
+        <!-- Purchases Card - Light Blue -->
+        <div class="stat-card light-blue">
+            <div class="fs-4 fw-semibold"><?php 
+                $total_purchases = 0;
+                if($purchases) foreach($purchases as $purchase) $total_purchases += $purchase->total;
+                echo round($total_purchases / 1000, 1) . 'K';
+            ?> <span class="fs-6 fw-normal">(+0.8% <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon" role="img" aria-hidden="true"><polygon fill="var(--ci-primary-color, currentColor)" points="367.997 338.75 271.999 434.747 271.999 17.503 239.999 17.503 239.999 434.745 144.003 338.75 121.376 361.377 256 496 390.624 361.377 367.997 338.75" class="ci-primary"></polygon></svg>)</span></div>
+            <small class="text-white-75"><?= lang('purchases') ?></small>
         </div>
-        <?php 
-        // echo form_close(); 
-        ?>
 
+        <!-- Quotes Card - Yellow -->
+        <div class="stat-card yellow">
+            <div class="fs-4 fw-semibold"><?php echo isset($quotes) && is_array($quotes) ? count($quotes) : 0; ?> <span class="fs-6 fw-normal">(-0.5% <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon" role="img" aria-hidden="true"><polygon fill="var(--ci-primary-color, currentColor)" points="256 16 121.376 150.623 144.003 173.25 240 77.255 240 494.497 272 494.497 272 77.257 367.997 173.25 390.624 150.623 256 16" class="ci-primary"></polygon></svg>)</span></div>
+            <small class="text-dark-75"><?= lang('quotes') ?></small>
+        </div>
 
+        <!-- Stock Value Card - Red -->
+        <div class="stat-card red">
+            <div class="fs-4 fw-semibold"><?php echo isset($stock) ? round($stock->total / 1000, 1) . 'K' : '0K'; ?> <span class="fs-6 fw-normal">(+2.1% <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon" role="img" aria-hidden="true"><polygon fill="var(--ci-primary-color, currentColor)" points="367.997 338.75 271.999 434.747 271.999 17.503 239.999 17.503 239.999 434.745 144.003 338.75 121.376 361.377 256 496 390.624 361.377 367.997 338.75" class="ci-primary"></polygon></svg>)</span></div>
+            <small class="text-white-75"><?= lang('stock_value') ?></small>
         </div>
     </div>
 
-<?php //} ?>
-
-<?php if($Owner || $Admin) { ?>
-
-<div class="row" style="margin-bottom: 15px;">
-    <div class="col-lg-12">
-        <div class="box">
-            <div class="box-header">
-                <h2 class="blue"><i class="fa fa-th"></i><span class="break"></span><?= lang('quick_links') ?></h2>
+    <!-- Charts Section -->
+    <?php if (($Owner || $Admin) && $chatData) {
+        foreach ($chatData as $month_sale) {
+            $months[]     = date('M-Y', strtotime($month_sale->month));
+            $msales[]     = $month_sale->sales;
+            $mtax1[]      = $month_sale->tax1;
+            $mtax2[]      = $month_sale->tax2;
+            $mpurchases[] = $month_sale->purchases;
+            $mtax3[]      = $month_sale->ptax;
+        } ?>
+    <div class="section" style="margin-bottom: 2rem;">
+        <div class="section-header">
+            <h2 class="section-title"><i class="fa fa-bar-chart-o"></i><?= lang('overview_chart') ?></h2>
+        </div>
+        <div class="section-body">
+            <div class="chart-placeholder">
+                <div id="ov-chart" style="width:100%; height:350px;"></div>
             </div>
-            <div class="box-content">
+            <p style="text-align: center; color: var(--gray-600); margin-top: 1rem; font-size: 0.9rem;"><?= lang('chart_lable_toggle') ?></p>
+        </div>
+    </div>
+    <?php } ?>
 
-                <div class="col-lg-1 col-md-2 col-xs-6">
-                    <a class="bblue white quick-button small" href="<?= admin_url('products') ?>">
-                        <i class="fa fa-barcode"></i>
-                        <p><?= lang('products') ?></p>
-                    </a>
-                </div>
-
-                <div class="col-lg-1 col-md-2 col-xs-6">
-                    <a class="bdarkGreen white quick-button small" href="<?= admin_url('sales') ?>">
-                        <i class="fa fa-heart"></i>
-                        <p><?= lang('sales') ?></p>
-                    </a>
-                </div>
-
-                <div class="col-lg-1 col-md-2 col-xs-6">
-                    <a class="blightOrange white quick-button small" href="<?= admin_url('quotes') ?>">
-                        <i class="fa fa-heart-o"></i>
-
-                        <p><?= lang('quotes') ?></p>
-                    </a>
-                </div>
-
-                <div class="col-lg-1 col-md-2 col-xs-6">
-                    <a class="bred white quick-button small" href="<?= admin_url('purchases') ?>">
-                        <i class="fa fa-star"></i>
-
-                        <p><?= lang('purchases') ?></p>
-                    </a>
-                </div>
-
-                <div class="col-lg-1 col-md-2 col-xs-6">
-                    <a class="bpink white quick-button small" href="<?= admin_url('transfers') ?>">
-                        <i class="fa fa-star-o"></i>
-
-                        <p><?= lang('transfers') ?></p>
-                    </a>
-                </div>
-
-                <div class="col-lg-1 col-md-2 col-xs-6">
-                    <a class="bgrey white quick-button small" href="<?= admin_url('customers') ?>">
-                        <i class="fa fa-users"></i>
-
-                        <p><?= lang('customers') ?></p>
-                    </a>
-                </div>
-
-                <div class="col-lg-1 col-md-2 col-xs-6">
-                    <a class="bgrey white quick-button small" href="<?= admin_url('suppliers') ?>">
-                        <i class="fa fa-users"></i>
-                        <p><?= lang('suppliers') ?></p>
-                    </a>
-                </div>
-
-                <div class="col-lg-1 col-md-2 col-xs-6">
-                    <a class="blightBlue white quick-button small" href="<?= admin_url('notifications') ?>">
-                        <i class="fa fa-comments"></i>
-
-                        <p><?= lang('notifications') ?></p>
-                        <!--<span class="notification green">4</span>
-                    </a>
-                </div>
-
-                <?php if ($Owner) {
-            ?>
-                    <div class="col-lg-1 col-md-2 col-xs-6">
-                        <a class="bblue white quick-button small" href="<?= admin_url('auth/users') ?>">
-                            <i class="fa fa-group"></i>
-                            <p><?= lang('users') ?></p>
+    <!-- Quick Links Section -->
+    <div class="section" style="margin-bottom: 2rem;">
+        <div class="section-header">
+            <h2 class="section-title"><i class="fa fa-bolt"></i><?= lang('quick_links') ?></h2>
+        </div>
+        <div class="section-body">
+            <div class="quick-links">
+                <?php if ($Owner || $Admin) { ?>
+                    <?php if ($GP['products-index']) { ?>
+                        <a href="<?= admin_url('products') ?>" class="quick-link">
+                            <i class="fa fa-barcode"></i>
+                            <span><?= lang('products') ?></span>
                         </a>
-                    </div>
-                    <div class="col-lg-1 col-md-2 col-xs-6">
-                        <a class="bblue white quick-button small" href="<?= admin_url('system_settings') ?>">
+                    <?php } ?>
+                    
+                    <?php if ($GP['sales-index']) { ?>
+                        <a href="<?= admin_url('sales') ?>" class="quick-link">
+                            <i class="fa fa-shopping-cart"></i>
+                            <span><?= lang('sales') ?></span>
+                        </a>
+                    <?php } ?>
+                    
+                    <?php if ($GP['quotes-index']) { ?>
+                        <a href="<?= admin_url('quotes') ?>" class="quick-link">
+                            <i class="fa fa-file-text"></i>
+                            <span><?= lang('quotes') ?></span>
+                        </a>
+                    <?php } ?>
+                    
+                    <?php if ($GP['purchases-index']) { ?>
+                        <a href="<?= admin_url('purchases') ?>" class="quick-link">
+                            <i class="fa fa-inbox"></i>
+                            <span><?= lang('purchases') ?></span>
+                        </a>
+                    <?php } ?>
+                    
+                    <?php if ($GP['transfers-index']) { ?>
+                        <a href="<?= admin_url('transfers') ?>" class="quick-link">
+                            <i class="fa fa-exchange"></i>
+                            <span><?= lang('transfers') ?></span>
+                        </a>
+                    <?php } ?>
+                    
+                    <?php if ($GP['customers-index']) { ?>
+                        <a href="<?= admin_url('customers') ?>" class="quick-link">
+                            <i class="fa fa-users"></i>
+                            <span><?= lang('customers') ?></span>
+                        </a>
+                    <?php } ?>
+                    
+                    <?php if ($GP['suppliers-index']) { ?>
+                        <a href="<?= admin_url('suppliers') ?>" class="quick-link">
+                            <i class="fa fa-building"></i>
+                            <span><?= lang('suppliers') ?></span>
+                        </a>
+                    <?php } ?>
+                    
+                    <a href="<?= admin_url('notifications') ?>" class="quick-link">
+                        <i class="fa fa-bell"></i>
+                        <span><?= lang('notifications') ?></span>
+                    </a>
+                    
+                    <?php if ($Owner) { ?>
+                        <a href="<?= admin_url('auth/users') ?>" class="quick-link">
+                            <i class="fa fa-key"></i>
+                            <span><?= lang('users') ?></span>
+                        </a>
+                        <a href="<?= admin_url('system_settings') ?>" class="quick-link">
                             <i class="fa fa-cogs"></i>
-
-                            <p><?= lang('settings') ?></p>
+                            <span><?= lang('settings') ?></span>
                         </a>
-                    </div>
-                <?php
-        } ?>
-                <div class="clearfix"></div>
-            </div>
-        </div>
-    </div>
-</div>
-<?php
-    } else {
-        ?>
-<div class="row" style="margin-bottom: 15px;">
-    <div class="col-lg-12">
-        <div class="box">
-            <div class="box-header">
-                <h2 class="blue"><i class="fa fa-th"></i><span class="break"></span><?= lang('quick_links') ?></h2>
-            </div>
-            <div class="box-content">
-            <?php if ($GP['products-index']) {
-            ?>
-                <div class="col-lg-1 col-md-2 col-xs-6">
-                    <a class="bblue white quick-button small" href="<?= admin_url('products') ?>">
-                        <i class="fa fa-barcode"></i>
-                        <p><?= lang('products') ?></p>
-                    </a>
-                </div>
-            <?php
-        }
-        if ($GP['sales-index']) {
-            ?>
-                <div class="col-lg-1 col-md-2 col-xs-6">
-                    <a class="bdarkGreen white quick-button small" href="<?= admin_url('sales') ?>">
-                        <i class="fa fa-heart"></i>
-                        <p><?= lang('sales') ?></p>
-                    </a>
-                </div>
-            <?php
-        }
-        if ($GP['quotes-index']) {
-            ?>
-                <div class="col-lg-1 col-md-2 col-xs-6">
-                    <a class="blightOrange white quick-button small" href="<?= admin_url('quotes') ?>">
-                        <i class="fa fa-heart-o"></i>
-                        <p><?= lang('quotes') ?></p>
-                    </a>
-                </div>
-            <?php
-        }
-        if ($GP['purchases-index']) {
-            ?>
-                <div class="col-lg-1 col-md-2 col-xs-6">
-                    <a class="bred white quick-button small" href="<?= admin_url('purchases') ?>">
-                        <i class="fa fa-star"></i>
-                        <p><?= lang('purchases') ?></p>
-                    </a>
-                </div>
-            <?php
-        }
-        if ($GP['transfers-index']) {
-            ?>
-                <div class="col-lg-1 col-md-2 col-xs-6">
-                    <a class="bpink white quick-button small" href="<?= admin_url('transfers') ?>">
-                        <i class="fa fa-star-o"></i>
-                        <p><?= lang('transfers') ?></p>
-                    </a>
-                </div>
-            <?php
-        }
-        if ($GP['customers-index']) {
-            ?>
-                <div class="col-lg-1 col-md-2 col-xs-6">
-                    <a class="bgrey white quick-button small" href="<?= admin_url('customers') ?>">
-                        <i class="fa fa-users"></i>
-                        <p><?= lang('customers') ?></p>
-                    </a>
-                </div>
-            <?php
-        }
-        if ($GP['suppliers-index']) {
-            ?>
-                <div class="col-lg-1 col-md-2 col-xs-6">
-                    <a class="bgrey white quick-button small" href="<?= admin_url('suppliers') ?>">
-                        <i class="fa fa-users"></i>
-
-                        <p><?= lang('suppliers') ?></p>
-                    </a>
-                </div>
-            <?php
-        } ?>
-            <div class="clearfix"></div>
-            </div>
-        </div>
-    </div>
-</div>
-<?php
-    } ?>
-
-<div class="row" style="margin-bottom: 15px;">
-    <div class="col-md-12">
-        <div class="box">
-            <div class="box-header">
-                <h2 class="blue"><i class="fa-fw fa fa-tasks"></i> <?= lang('latest_five') ?></h2>
-            </div>
-            <div class="box-content">
-                <div class="row">
-                    <div class="col-md-12">
-
-                        <ul id="dbTab" class="nav nav-tabs">
-                            <?php if ($Owner || $Admin || $GP['sales-index']) {
-        ?>
-                            <li class=""><a href="#sales"><?= lang('sales') ?></a></li>
-                            <?php
-    } if ($Owner || $Admin || $GP['quotes-index']) {
-        ?>
-                            <li class=""><a href="#quotes"><?= lang('quotes') ?></a></li>
-                            <?php
-    } if ($Owner || $Admin || $GP['purchases-index']) {
-        ?>
-                            <li class=""><a href="#purchases"><?= lang('purchases') ?></a></li>
-                            <?php
-    } if ($Owner || $Admin || $GP['transfers-index']) {
-        ?>
-                            <li class=""><a href="#transfers"><?= lang('transfers') ?></a></li>
-                            <?php
-    } if ($Owner || $Admin || $GP['customers-index']) {
-        ?>
-                            <li class=""><a href="#customers"><?= lang('customers') ?></a></li>
-                            <?php
-    } if ($Owner || $Admin || $GP['suppliers-index']) {
-        ?>
-                            <li class=""><a href="#suppliers"><?= lang('suppliers') ?></a></li>
-                            <?php
-    } ?>
-                        </ul>
-
-                        <div class="tab-content">
-                        <?php if ($Owner || $Admin || $GP['sales-index']) {
-        ?>
-
-                            <div id="sales" class="tab-pane fade in">
-                                <div class="row">
-                                    <div class="col-sm-12">
-                                        <div class="table-responsive">
-                                            <table id="sales-tbl" cellpadding="0" cellspacing="0" border="0"
-                                                   class="table table-bordered table-hover table-striped"
-                                                   style="margin-bottom: 0;">
-                                                <thead>
-                                                <tr>
-                                                    <th style="width:30px !important;">#</th>
-                                                    <th><?= $this->lang->line('date'); ?></th>
-                                                    <th><?= $this->lang->line('reference_no'); ?></th>
-                                                    <th><?= $this->lang->line('customer'); ?></th>
-                                                    <th><?= $this->lang->line('status'); ?></th>
-                                                    <th><?= $this->lang->line('total'); ?></th>
-                                                    <th><?= $this->lang->line('payment_status'); ?></th>
-                                                    <th><?= $this->lang->line('paid'); ?></th>
-                                                </tr>
-                                                </thead>
-                                                <tbody>
-                                            <?php if (!empty($sales)) {
-                                            $r = 1;
-                                            foreach ($sales as $order) {
-                                            echo '<tr id="' . $order->id . '" class="' . ($order->pos ? 'receipt_link' : 'invoice_link') . '"><td>' . $r . '</td>
-                                            <td>' . $this->sma->hrld($order->date) . '</td>
-                                            <td>' . $order->reference_no . '</td>
-                                            <td>' . $order->customer . '</td>
-                                            <td>' . row_status($order->sale_status) . '</td>
-                                            <td class="text-right">' . $this->sma->formatMoney($order->grand_total) . '</td>
-                                            <td>' . row_status($order->payment_status) . '</td>
-                                            <td class="text-right">' . $this->sma->formatMoney($order->paid) . '</td>
-                                            </tr>';
-                                            $r++;
-                                            }
-                                            } else {
-                                            ?>
-                                                    <tr>
-                                                        <td colspan="7"
-                                                            class="dataTables_empty"><?= lang('no_data_available') ?></td>
-                                                    </tr>
-                                                <?php
-        } ?>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <?php
-    } if ($Owner || $Admin || $GP['quotes-index']) {
-        ?>
-
-                            <div id="quotes" class="tab-pane fade">
-                                <div class="row">
-                                    <div class="col-sm-12">
-                                        <div class="table-responsive">
-                                            <table id="quotes-tbl" cellpadding="0" cellspacing="0" border="0"
-                                                   class="table table-bordered table-hover table-striped"
-                                                   style="margin-bottom: 0;">
-                                                <thead>
-                                                <tr>
-                                                    <th style="width:30px !important;">#</th>
-                                                    <th><?= $this->lang->line('date'); ?></th>
-                                                    <th><?= $this->lang->line('reference_no'); ?></th>
-                                                    <th><?= $this->lang->line('customer'); ?></th>
-                                                    <th><?= $this->lang->line('status'); ?></th>
-                                                    <th><?= $this->lang->line('amount'); ?></th>
-                                                </tr>
-                                                </thead>
-                                                <tbody>
-                                                <?php if (!empty($quotes)) {
-            $r = 1;
-            foreach ($quotes as $quote) {
-                echo '<tr id="' . $quote->id . '" class="quote_link"><td>' . $r . '</td>
-                                                        <td>' . $this->sma->hrld($quote->date) . '</td>
-                                                        <td>' . $quote->reference_no . '</td>
-                                                        <td>' . $quote->customer . '</td>
-                                                        <td>' . row_status($quote->status) . '</td>
-                                                        <td class="text-right">' . $this->sma->formatMoney($quote->grand_total) . '</td>
-                                                    </tr>';
-                $r++;
-            }
-        } else {
-            ?>
-                                                    <tr>
-                                                        <td colspan="6"
-                                                            class="dataTables_empty"><?= lang('no_data_available') ?></td>
-                                                    </tr>
-                                                <?php
-        } ?>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <?php
-    } if ($Owner || $Admin || $GP['purchases-index']) {
-        ?>
-
-                            <div id="purchases" class="tab-pane fade in">
-                                <div class="row">
-                                    <div class="col-sm-12">
-                                        <div class="table-responsive">
-                                            <table id="purchases-tbl" cellpadding="0" cellspacing="0" border="0"
-                                                   class="table table-bordered table-hover table-striped"
-                                                   style="margin-bottom: 0;">
-                                                <thead>
-                                                <tr>
-                                                    <th style="width:30px !important;">#</th>
-                                                    <th><?= $this->lang->line('date'); ?></th>
-                                                    <th><?= $this->lang->line('reference_no'); ?></th>
-                                                    <th><?= $this->lang->line('supplier'); ?></th>
-                                                    <th><?= $this->lang->line('status'); ?></th>
-                                                    <th><?= $this->lang->line('amount'); ?></th>
-                                                </tr>
-                                                </thead>
-                                                <tbody>
-                                                <?php if (!empty($purchases)) {
-            $r = 1;
-            foreach ($purchases as $purchase) {
-                echo '<tr id="' . $purchase->id . '" class="purchase_link"><td>' . $r . '</td>
-                                                    <td>' . $this->sma->hrld($purchase->date) . '</td>
-                                                    <td>' . $purchase->reference_no . '</td>
-                                                    <td>' . $purchase->supplier . '</td>
-                                                    <td>' . row_status($purchase->status) . '</td>
-                                                    <td class="text-right">' . $this->sma->formatMoney($purchase->grand_total) . '</td>
-                                                </tr>';
-                $r++;
-            }
-        } else {
-            ?>
-                                                    <tr>
-                                                        <td colspan="6"
-                                                            class="dataTables_empty"><?= lang('no_data_available') ?></td>
-                                                    </tr>
-                                                <?php
-        } ?>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <?php
-    } if ($Owner || $Admin || $GP['transfers-index']) {
-        ?>
-
-                            <div id="transfers" class="tab-pane fade">
-                                <div class="row">
-                                    <div class="col-sm-12">
-                                        <div class="table-responsive">
-                                            <table id="transfers-tbl" cellpadding="0" cellspacing="0" border="0"
-                                                   class="table table-bordered table-hover table-striped"
-                                                   style="margin-bottom: 0;">
-                                                <thead>
-                                                <tr>
-                                                    <th style="width:30px !important;">#</th>
-                                                    <th><?= $this->lang->line('date'); ?></th>
-                                                    <th><?= $this->lang->line('reference_no'); ?></th>
-                                                    <th><?= $this->lang->line('from'); ?></th>
-                                                    <th><?= $this->lang->line('to'); ?></th>
-                                                    <th><?= $this->lang->line('status'); ?></th>
-                                                    <th><?= $this->lang->line('amount'); ?></th>
-                                                </tr>
-                                                </thead>
-                                                <tbody>
-                                                <?php if (!empty($transfers)) {
-            $r = 1;
-            foreach ($transfers as $transfer) {
-                echo '<tr id="' . $transfer->id . '" class="transfer_link"><td>' . $r . '</td>
-                                                <td>' . $this->sma->hrld($transfer->date) . '</td>
-                                                <td>' . $transfer->transfer_no . '</td>
-                                                <td>' . $transfer->from_warehouse_name . '</td>
-                                                <td>' . $transfer->to_warehouse_name . '</td>
-                                                <td>' . row_status($transfer->status) . '</td>
-                                                <td class="text-right">' . $this->sma->formatMoney($transfer->grand_total) . '</td>
-                                            </tr>';
-                $r++;
-            }
-        } else {
-            ?>
-                                                    <tr>
-                                                        <td colspan="7"
-                                                            class="dataTables_empty"><?= lang('no_data_available') ?></td>
-                                                    </tr>
-                                                <?php
-        } ?>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <?php
-    } if ($Owner || $Admin || $GP['customers-index']) {
-        ?>
-
-                            <div id="customers" class="tab-pane fade in">
-                                <div class="row">
-                                    <div class="col-sm-12">
-                                        <div class="table-responsive">
-                                            <table id="customers-tbl" cellpadding="0" cellspacing="0" border="0"
-                                                   class="table table-bordered table-hover table-striped"
-                                                   style="margin-bottom: 0;">
-                                                <thead>
-                                                <tr>
-                                                    <th style="width:30px !important;">#</th>
-                                                    <th><?= $this->lang->line('company'); ?></th>
-                                                    <th><?= $this->lang->line('name'); ?></th>
-                                                    <th><?= $this->lang->line('email'); ?></th>
-                                                    <th><?= $this->lang->line('phone'); ?></th>
-                                                    <th><?= $this->lang->line('address'); ?></th>
-                                                </tr>
-                                                </thead>
-                                                <tbody>
-                                                <?php if (!empty($customers)) {
-            $r = 1;
-            foreach ($customers as $customer) {
-                echo '<tr id="' . $customer->id . '" class="customer_link pointer"><td>' . $r . '</td>
-                                            <td>' . $customer->company . '</td>
-                                            <td>' . $customer->name . '</td>
-                                            <td>' . $customer->email . '</td>
-                                            <td>' . $customer->phone . '</td>
-                                            <td>' . $customer->address . '</td>
-                                        </tr>';
-                $r++;
-            }
-        } else {
-            ?>
-                                                    <tr>
-                                                        <td colspan="6"
-                                                            class="dataTables_empty"><?= lang('no_data_available') ?></td>
-                                                    </tr>
-                                                <?php
-        } ?>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <?php
-    } if ($Owner || $Admin || $GP['suppliers-index']) {
-        ?>
-
-                            <div id="suppliers" class="tab-pane fade">
-                                <div class="row">
-                                    <div class="col-sm-12">
-                                        <div class="table-responsive">
-                                            <table id="suppliers-tbl" cellpadding="0" cellspacing="0" border="0"
-                                                   class="table table-bordered table-hover table-striped"
-                                                   style="margin-bottom: 0;">
-                                                <thead>
-                                                <tr>
-                                                    <th style="width:30px !important;">#</th>
-                                                    <th><?= $this->lang->line('company'); ?></th>
-                                                    <th><?= $this->lang->line('name'); ?></th>
-                                                    <th><?= $this->lang->line('email'); ?></th>
-                                                    <th><?= $this->lang->line('phone'); ?></th>
-                                                    <th><?= $this->lang->line('address'); ?></th>
-                                                </tr>
-                                                </thead>
-                                                <tbody>
-                                                <?php if (!empty($suppliers)) {
-            $r = 1;
-            foreach ($suppliers as $supplier) {
-                echo '<tr id="' . $supplier->id . '" class="supplier_link pointer"><td>' . $r . '</td>
-                                        <td>' . $supplier->company . '</td>
-                                        <td>' . $supplier->name . '</td>
-                                        <td>' . $supplier->email . '</td>
-                                        <td>' . $supplier->phone . '</td>
-                                        <td>' . $supplier->address . '</td>
-                                    </tr>';
-                $r++;
-            }
-        } else {
-            ?>
-                                                    <tr>
-                                                        <td colspan="6"
-                                                            class="dataTables_empty"><?= lang('no_data_available') ?></td>
-                                                    </tr>
-                                                <?php
-        } ?>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <?php
-    } ?>
-
-                        </div>
-
-
-                    </div>
-
-                </div>
-
+                    <?php } ?>
+                <?php } else { ?>
+                    <?php if ($GP['products-index']) { ?>
+                        <a href="<?= admin_url('products') ?>" class="quick-link">
+                            <i class="fa fa-barcode"></i>
+                            <span><?= lang('products') ?></span>
+                        </a>
+                    <?php } ?>
+                    
+                    <?php if ($GP['sales-index']) { ?>
+                        <a href="<?= admin_url('sales') ?>" class="quick-link">
+                            <i class="fa fa-shopping-cart"></i>
+                            <span><?= lang('sales') ?></span>
+                        </a>
+                    <?php } ?>
+                    
+                    <?php if ($GP['quotes-index']) { ?>
+                        <a href="<?= admin_url('quotes') ?>" class="quick-link">
+                            <i class="fa fa-file-text"></i>
+                            <span><?= lang('quotes') ?></span>
+                        </a>
+                    <?php } ?>
+                    
+                    <?php if ($GP['purchases-index']) { ?>
+                        <a href="<?= admin_url('purchases') ?>" class="quick-link">
+                            <i class="fa fa-inbox"></i>
+                            <span><?= lang('purchases') ?></span>
+                        </a>
+                    <?php } ?>
+                    
+                    <?php if ($GP['transfers-index']) { ?>
+                        <a href="<?= admin_url('transfers') ?>" class="quick-link">
+                            <i class="fa fa-exchange"></i>
+                            <span><?= lang('transfers') ?></span>
+                        </a>
+                    <?php } ?>
+                    
+                    <?php if ($GP['customers-index']) { ?>
+                        <a href="<?= admin_url('customers') ?>" class="quick-link">
+                            <i class="fa fa-users"></i>
+                            <span><?= lang('customers') ?></span>
+                        </a>
+                    <?php } ?>
+                    
+                    <?php if ($GP['suppliers-index']) { ?>
+                        <a href="<?= admin_url('suppliers') ?>" class="quick-link">
+                            <i class="fa fa-building"></i>
+                            <span><?= lang('suppliers') ?></span>
+                        </a>
+                    <?php } ?>
+                <?php } ?>
             </div>
         </div>
     </div>
 
+    <!-- Latest Data Section -->
+    <div class="section" style="margin-bottom: 2rem;">
+        <div class="section-header">
+            <h2 class="section-title"><i class="fa fa-list"></i><?= lang('latest_five') ?></h2>
+        </div>
+        <div class="section-body">
+            <ul class="nav-tabs" id="dbTab">
+                <?php if ($Owner || $Admin || $GP['sales-index']) { ?>
+                    <li><a href="#sales" onclick="switchTab(event, 'sales')" class="active"><?= lang('sales') ?></a></li>
+                <?php } ?>
+                
+                <?php if ($Owner || $Admin || $GP['quotes-index']) { ?>
+                    <li><a href="#quotes" onclick="switchTab(event, 'quotes')"><?= lang('quotes') ?></a></li>
+                <?php } ?>
+                
+                <?php if ($Owner || $Admin || $GP['purchases-index']) { ?>
+                    <li><a href="#purchases" onclick="switchTab(event, 'purchases')"><?= lang('purchases') ?></a></li>
+                <?php } ?>
+                
+                <?php if ($Owner || $Admin || $GP['suppliers-index']) { ?>
+                    <li><a href="#suppliers" onclick="switchTab(event, 'suppliers')"><?= lang('suppliers') ?></a></li>
+                <?php } ?>
+                
+                <?php if ($Owner || $Admin || $GP['customers-index']) { ?>
+                    <li><a href="#customers" onclick="switchTab(event, 'customers')"><?= lang('customers') ?></a></li>
+                <?php } ?>
+                
+                <?php if ($Owner || $Admin || $GP['transfers-index']) { ?>
+                    <li><a href="#transfers" onclick="switchTab(event, 'transfers')"><?= lang('transfers') ?></a></li>
+                <?php } ?>
+            </ul>
+
+            <!-- Sales Tab -->
+            <?php if ($Owner || $Admin || $GP['sales-index']) { ?>
+                <div id="sales" class="tab-content active">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th><?= lang('ref_no') ?></th>
+                                <th><?= lang('customer') ?></th>
+                                <th><?= lang('date') ?></th>
+                                <th><?= lang('amount') ?></th>
+                                <th><?= lang('status') ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if ($sales) {
+                                foreach ($sales as $sale) { ?>
+                                    <tr>
+                                        <td><a href="<?= admin_url('sales/view/' . $sale->id) ?>" style="color: var(--primary); text-decoration: none;"><?= $sale->reference_no ?></a></td>
+                                        <td><?= $sale->customer_name ?></td>
+                                        <td><?= date('M d, Y', strtotime($sale->date)) ?></td>
+                                        <td><?= $this->sma->convertNumber($sale->total) ?></td>
+                                        <td><?= row_status($sale->status) ?></td>
+                                    </tr>
+                                <?php }
+                            } else { ?>
+                                <tr><td colspan="5" style="text-align: center; color: var(--gray-600);">No sales found</td></tr>
+                            <?php } ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php } ?>
+
+            <!-- Quotes Tab -->
+            <?php if ($Owner || $Admin || $GP['quotes-index']) { ?>
+                <div id="quotes" class="tab-content">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th><?= lang('ref_no') ?></th>
+                                <th><?= lang('customer') ?></th>
+                                <th><?= lang('date') ?></th>
+                                <th><?= lang('amount') ?></th>
+                                <th><?= lang('status') ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if ($quotes) {
+                                foreach ($quotes as $quote) { ?>
+                                    <tr>
+                                        <td><a href="<?= admin_url('quotes/view/' . $quote->id) ?>" style="color: var(--primary); text-decoration: none;"><?= $quote->reference_no ?></a></td>
+                                        <td><?= $quote->customer_name ?></td>
+                                        <td><?= date('M d, Y', strtotime($quote->date)) ?></td>
+                                        <td><?= $this->sma->convertNumber($quote->total) ?></td>
+                                        <td><?= row_status($quote->status) ?></td>
+                                    </tr>
+                                <?php }
+                            } else { ?>
+                                <tr><td colspan="5" style="text-align: center; color: var(--gray-600);">No quotes found</td></tr>
+                            <?php } ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php } ?>
+
+            <!-- Purchases Tab -->
+            <?php if ($Owner || $Admin || $GP['purchases-index']) { ?>
+                <div id="purchases" class="tab-content">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th><?= lang('ref_no') ?></th>
+                                <th><?= lang('supplier') ?></th>
+                                <th><?= lang('date') ?></th>
+                                <th><?= lang('amount') ?></th>
+                                <th><?= lang('status') ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if ($purchases) {
+                                foreach ($purchases as $purchase) { ?>
+                                    <tr>
+                                        <td><a href="<?= admin_url('purchases/view/' . $purchase->id) ?>" style="color: var(--primary); text-decoration: none;"><?= $purchase->reference_no ?></a></td>
+                                        <td><?= $purchase->supplier_name ?></td>
+                                        <td><?= date('M d, Y', strtotime($purchase->date)) ?></td>
+                                        <td><?= $this->sma->convertNumber($purchase->total) ?></td>
+                                        <td><?= row_status($purchase->status) ?></td>
+                                    </tr>
+                                <?php }
+                            } else { ?>
+                                <tr><td colspan="5" style="text-align: center; color: var(--gray-600);">No purchases found</td></tr>
+                            <?php } ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php } ?>
+
+            <!-- Suppliers Tab -->
+            <?php if ($Owner || $Admin || $GP['suppliers-index']) { ?>
+                <div id="suppliers" class="tab-content">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th><?= lang('name') ?></th>
+                                <th><?= lang('email') ?></th>
+                                <th><?= lang('phone') ?></th>
+                                <th><?= lang('city') ?></th>
+                                <th><?= lang('status') ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if ($suppliers) {
+                                foreach ($suppliers as $supplier) { ?>
+                                    <tr>
+                                        <td><a href="<?= admin_url('suppliers/view/' . $supplier->id) ?>" style="color: var(--primary); text-decoration: none;"><?= $supplier->company ?></a></td>
+                                        <td><?= $supplier->email ?></td>
+                                        <td><?= $supplier->phone ?></td>
+                                        <td><?= $supplier->city ?></td>
+                                        <td><?= row_status($supplier->status) ?></td>
+                                    </tr>
+                                <?php }
+                            } else { ?>
+                                <tr><td colspan="5" style="text-align: center; color: var(--gray-600);">No suppliers found</td></tr>
+                            <?php } ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php } ?>
+
+            <!-- Customers Tab -->
+            <?php if ($Owner || $Admin || $GP['customers-index']) { ?>
+                <div id="customers" class="tab-content">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th><?= lang('name') ?></th>
+                                <th><?= lang('email') ?></th>
+                                <th><?= lang('phone') ?></th>
+                                <th><?= lang('city') ?></th>
+                                <th><?= lang('status') ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if ($customers) {
+                                foreach ($customers as $customer) { ?>
+                                    <tr>
+                                        <td><a href="<?= admin_url('customers/view/' . $customer->id) ?>" style="color: var(--primary); text-decoration: none;"><?= $customer->name ?></a></td>
+                                        <td><?= $customer->email ?></td>
+                                        <td><?= $customer->phone ?></td>
+                                        <td><?= $customer->city ?></td>
+                                        <td><?= row_status($customer->status) ?></td>
+                                    </tr>
+                                <?php }
+                            } else { ?>
+                                <tr><td colspan="5" style="text-align: center; color: var(--gray-600);">No customers found</td></tr>
+                            <?php } ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php } ?>
+
+            <!-- Transfers Tab -->
+            <?php if ($Owner || $Admin || $GP['transfers-index']) { ?>
+                <div id="transfers" class="tab-content">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th><?= lang('ref_no') ?></th>
+                                <th><?= lang('from_warehouse') ?></th>
+                                <th><?= lang('to_warehouse') ?></th>
+                                <th><?= lang('date') ?></th>
+                                <th><?= lang('status') ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if ($transfers) {
+                                foreach ($transfers as $transfer) { ?>
+                                    <tr>
+                                        <td><a href="<?= admin_url('transfers/view/' . $transfer->id) ?>" style="color: var(--primary); text-decoration: none;"><?= $transfer->reference_no ?></a></td>
+                                        <td><?= $transfer->from_warehouse ?></td>
+                                        <td><?= $transfer->to_warehouse ?></td>
+                                        <td><?= date('M d, Y', strtotime($transfer->date)) ?></td>
+                                        <td><?= row_status($transfer->status) ?></td>
+                                    </tr>
+                                <?php }
+                            } else { ?>
+                                <tr><td colspan="5" style="text-align: center; color: var(--gray-600);">No transfers found</td></tr>
+                            <?php } ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php } ?>
+        </div>
+    </div>
+
+    <!-- Best Sellers Section (for Admin) -->
+    <?php if ($Owner || $Admin) { ?>
+        <div class="charts-grid">
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fa fa-trending-up"></i><?= lang('best_sellers') ?> (<?= date('M-Y', time()) ?>)</h2>
+                </div>
+                <div class="section-body">
+                    <div id="bschart" style="width:100%; height:350px;"></div>
+                </div>
+            </div>
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fa fa-trending-up"></i><?= lang('best_sellers') ?> (<?= date('M-Y', strtotime('-1 month')) ?>)</h2>
+                </div>
+                <div class="section-body">
+                    <div id="lmbschart" style="width:100%; height:350px;"></div>
+                </div>
+            </div>
+        </div>
+    <?php } ?>
 </div>
 
-<script type="text/javascript">
-    $(document).ready(function () {
-        $('.order').click(function () {
-            window.location.href = '<?=admin_url()?>orders/view/' + $(this).attr('id') + '#comments';
-        });
-        $('.invoice').click(function () {
-            window.location.href = '<?=admin_url()?>orders/view/' + $(this).attr('id');
-        });
-        $('.quote').click(function () {
-            window.location.href = '<?=admin_url()?>quotes/view/' + $(this).attr('id');
-        });
+<script>
+    function switchTab(e, tabName) {
+        e.preventDefault();
+        
+        // Hide all tab contents
+        const contents = document.querySelectorAll('.tab-content');
+        contents.forEach(content => content.classList.remove('active'));
+        
+        // Remove active class from all links
+        const links = document.querySelectorAll('#dbTab a');
+        links.forEach(link => link.classList.remove('active'));
+        
+        // Show selected tab and mark link as active
+        const selectedTab = document.getElementById(tabName);
+        if (selectedTab) {
+            selectedTab.classList.add('active');
+        }
+        e.target.classList.add('active');
+    }
+    
+    // Set first tab as active on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const firstTab = document.querySelector('#dbTab a');
+        if (firstTab) {
+            firstTab.classList.add('active');
+        }
     });
 </script>
-
-<?php if (($Owner || $Admin) && $chatData) {
-        ?>
-    <style type="text/css" media="screen">
-        .tooltip-inner {
-            max-width: 500px;
-        }
-    </style>
-    <script src="<?= $assets; ?>js/hc/highcharts.js"></script>
-    <script type="text/javascript">
-        $(function () {
-            Highcharts.getOptions().colors = Highcharts.map(Highcharts.getOptions().colors, function (color) {
-                return {
-                    radialGradient: {cx: 0.5, cy: 0.3, r: 0.7},
-                    stops: [[0, color], [1, Highcharts.Color(color).brighten(-0.3).get('rgb')]]
-                };
-            });
-            $('#ov-chart').highcharts({
-                chart: {direction: '<?= $Settings->user_rtl ? 'rtl' : 'ltr'; ?>'},
-                credits: {enabled: false},
-                title: {text: ''},
-                xAxis: {categories: <?= json_encode($months); ?>},
-                yAxis: {min: 0, title: ""},
-                tooltip: {
-                    shared: true,
-                    followPointer: true,
-                    formatter: function () {
-                        if (this.key) {
-                            return '<div dir="<?= $Settings->user_rtl ? 'rtl' : 'ltr'; ?>" class="tooltip-inner hc-tip" style="margin-bottom:0;">' + this.key + '<br><strong>' + currencyFormat(this.y) + '</strong> (' + formatNumber(this.percentage) + '%)';
-                        } else {
-                            var s = '<div dir="<?= $Settings->user_rtl ? 'rtl' : 'ltr'; ?>" class="well well-sm hc-tip" style="margin-bottom:0;"><h2 style="margin-top:0;">' + this.x + '</h2><table class="table table-striped"  style="margin-bottom:0;">';
-                            $.each(this.points, function () {
-                                s += '<tr><td style="color:{series.color};padding:0;text-align:<?= $Settings->user_rtl ? 'right' : 'left'; ?>;">' + this.series.name + ': </td><td style="color:{series.color};padding:0;text-align:right;"> <b>' +
-                                currencyFormat(this.y) + '</b></td></tr>';
-                            });
-                            s += '</table></div>';
-                            return s;
-                        }
-                    },
-                    useHTML: true, borderWidth: 0, shadow: false, valueDecimals: site.settings.decimals,
-                    style: {fontSize: '14px', padding: '0', color: '#000000'}
-                },
-                series: [{
-                    type: 'column',
-                    name: '<?= lang('sp_tax'); ?>',
-                    data: [<?php
-                    echo implode(', ', $mtax1); ?>]
-                },
-                    {
-                        type: 'column',
-                        name: '<?= lang('order_tax'); ?>',
-                        data: [<?php
-                    echo implode(', ', $mtax2); ?>]
-                    },
-                    {
-                        type: 'column',
-                        name: '<?= lang('sales'); ?>',
-                        data: [<?php
-                    echo implode(', ', $msales); ?>]
-                    }, {
-                        type: 'spline',
-                        name: '<?= lang('purchases'); ?>',
-                        data: [<?php
-                    echo implode(', ', $mpurchases); ?>],
-                        marker: {
-                            lineWidth: 2,
-                            states: {
-                                hover: {
-                                    lineWidth: 4
-                                }
-                            },
-                            lineColor: Highcharts.getOptions().colors[3],
-                            fillColor: 'white'
-                        }
-                    }, {
-                        type: 'spline',
-                        name: '<?= lang('pp_tax'); ?>',
-                        data: [<?php
-                    echo implode(', ', $mtax3); ?>],
-                        marker: {
-                            lineWidth: 2,
-                            states: {
-                                hover: {
-                                    lineWidth: 4
-                                }
-                            },
-                            lineColor: Highcharts.getOptions().colors[3],
-                            fillColor: 'white'
-                        }
-                    }, {
-                        type: 'pie',
-                        name: '<?= lang('stock_value'); ?>',
-                        data: [
-                            ['', 0],
-                            ['', 0],
-                            ['<?= lang('stock_value_by_price'); ?>', <?php echo $stock->stock_by_price; ?>],
-                            ['<?= lang('stock_value_by_cost'); ?>', <?php echo $stock->stock_by_cost; ?>],
-                        ],
-                        center: [80, 42],
-                        size: 80,
-                        showInLegend: false,
-                        dataLabels: {
-                            enabled: false
-                        }
-                    }]
-            });
-        });
-    </script>
-
-    <script type="text/javascript">
-        $(function () {
-            <?php if ($lmbs) {
-                        ?>
-            $('#lmbschart').highcharts({
-                chart: {type: 'column', direction: '<?= $Settings->user_rtl ? 'rtl' : 'ltr'; ?>'},
-                title: {text: ''},
-                credits: {enabled: false},
-                xAxis: {type: 'category', labels: {rotation: -60, style: {fontSize: '13px'}}},
-                yAxis: {min: 0, title: {text: ''}},
-                legend: {enabled: false},
-                tooltip: {
-                    shared: true,
-                    followPointer: true,
-                    formatter: function () {
-                        var s = '<div class="well well-sm hc-tip" style="margin-bottom:0;text-align:<?= $Settings->user_rtl ? 'right' : 'left'; ?>;">';
-                        $.each(this.points, function () {
-                            s += '<span style="color:{series.color};padding:0"><b>' + this.key + '</b><br /> ' + this.series.name + ' <b>' +
-                            currencyFormat(this.y) + '</b></span>';
-                        });
-                        s += '</div>';
-                        return s;
-                    },
-                    useHTML: true, borderWidth: 0, shadow: false, valueDecimals: site.settings.decimals,
-                    style: {fontSize: '14px', padding: '0', color: '#000000'}
-                },
-                series: [{
-                    name: '<?=lang('sold'); ?>',
-                    data: [<?php
-                    foreach ($lmbs as $r) {
-                        if ($r->quantity > 0) {
-                            echo "['" . addSlashes($r->product_name) . '<br>(' . $r->product_code . ")', " . $r->quantity . '],';
-                        }
-                    } ?>],
-                    dataLabels: {
-                        enabled: true,
-                        rotation: -90,
-                        color: '#000',
-                        align: 'right',
-                        y: -25,
-                        style: {fontSize: '12px'}
-                    }
-                }]
-            });
-            <?php
-                    }
-        if ($bs) {
-            ?>
-            $('#bschart').highcharts({
-                chart: {type: 'column', direction: '<?= $Settings->user_rtl ? 'rtl' : 'ltr'; ?>'},
-                title: {text: ''},
-                credits: {enabled: false},
-                xAxis: {type: 'category', labels: {rotation: -60, style: {fontSize: '13px'}}},
-                yAxis: {min: 0, title: {text: ''}},
-                legend: {enabled: false},
-                tooltip: {
-                    shared: true,
-                    followPointer: true,
-                    formatter: function () {
-                        var s = '<div class="well well-sm hc-tip" style="margin-bottom:0;text-align:<?= $Settings->user_rtl ? 'right' : 'left'; ?>;">';
-                        $.each(this.points, function () {
-                            s += '<span style="color:{series.color};padding:0"><b>' + this.key + '</b><br /> ' + this.series.name + ' <b>' +
-                            currencyFormat(this.y) + '</b></span>';
-                        });
-                        s += '</div>';
-                        return s;
-                    },
-                    useHTML: true, borderWidth: 0, shadow: false, valueDecimals: site.settings.decimals,
-                    style: {fontSize: '14px', padding: '0', color: '#000000'}
-                },
-                series: [{
-                    name: '<?=lang('sold'); ?>',
-                    data: [<?php
-                foreach ($bs as $r) {
-                    if ($r->quantity > 0) {
-                        echo "['" . addSlashes($r->product_name) . '<br>(' . $r->product_code . ")', " . $r->quantity . '],';
-                    }
-                } ?>],
-                    dataLabels: {
-                        enabled: true,
-                        rotation: -90,
-                        color: '#000',
-                        align: 'right',
-                        y: -25,
-                        style: {fontSize: '12px'}
-                    }
-                }]
-            });
-            <?php
-        } ?>
-        });
-    </script>
-    <div class="row" style="margin-bottom: 15px;">
-        <div class="col-sm-6">
-            <div class="box">
-                <div class="box-header">
-                    <h2 class="blue"><i
-                            class="fa-fw fa fa-line-chart"></i><?= lang('best_sellers'), ' (' . date('M-Y', time()) . ')'; ?>
-                    </h2>
-                </div>
-                <div class="box-content">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div id="bschart" style="width:100%; height:450px;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6">
-            <div class="box">
-                <div class="box-header">
-                    <h2 class="blue"><i
-                            class="fa-fw fa fa-line-chart"></i><?= lang('best_sellers') . ' (' . date('M-Y', strtotime('-1 month')) . ')'; ?>
-                    </h2>
-                </div>
-                <div class="box-content">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div id="lmbschart" style="width:100%; height:450px;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-<?php
-    } ?>

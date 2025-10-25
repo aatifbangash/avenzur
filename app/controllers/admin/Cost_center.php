@@ -54,9 +54,38 @@ class Cost_center extends MY_Controller {
             $summary = $this->cost_center->get_summary_stats($period);
             error_log('[COST_CENTER] Summary stats retrieved: ' . json_encode($summary));
             
-            error_log('[COST_CENTER] Fetching pharmacies with KPIs');
-            $pharmacies = $this->cost_center->get_pharmacies_with_kpis($period, 'revenue', 100, 0);
+            error_log('[COST_CENTER] Fetching pharmacies with health scores and margins');
+            $pharmacies = $this->cost_center->get_pharmacies_with_health_scores($period, 100, 0);
             error_log('[COST_CENTER] Pharmacies retrieved: ' . count($pharmacies ?? []) . ' records');
+            
+            error_log('[COST_CENTER] Fetching branches with health scores and margins');
+            $branches = $this->cost_center->get_branches_with_health_scores($period, 100, 0);
+            error_log('[COST_CENTER] Branches retrieved: ' . count($branches ?? []) . ' records');
+            
+            error_log('[COST_CENTER] Fetching profit margins (both types)');
+            $margins = $this->cost_center->get_profit_margins_both_types(null, $period);
+            error_log('[COST_CENTER] Margins retrieved: Gross=' . $margins['gross_margin'] . '%, Net=' . $margins['net_margin'] . '%');
+            
+            error_log('[COST_CENTER] Fetching profit margin trends');
+            $margin_trends_monthly = [];
+            $margin_trends_weekly = [];
+            
+            // Get company-level trends by aggregating top pharmacies
+            if (!empty($pharmacies)) {
+                // For trends, we can get company-wide data
+                $trend_data = $this->cost_center->get_pharmacy_trends($pharmacies[0]['pharmacy_id'] ?? null, 12);
+                $margin_trends_monthly = isset($trend_data['monthly']) ? $trend_data['monthly'] : [];
+                $margin_trends_weekly = isset($trend_data['weekly']) ? $trend_data['weekly'] : [];
+                error_log('[COST_CENTER] Trends retrieved: Monthly=' . count($margin_trends_monthly) . ', Weekly=' . count($margin_trends_weekly));
+            }
+            
+            error_log('[COST_CENTER] Calculating health scores for pharmacies');
+            foreach ($pharmacies as &$pharmacy) {
+                $health = $this->cost_center->calculate_health_score($pharmacy['net_margin_pct'], $pharmacy['kpi_total_revenue']);
+                $pharmacy['health_status'] = $health['status'];
+                $pharmacy['health_color'] = $health['color'];
+                $pharmacy['health_description'] = $health['description'];
+            }
             
             error_log('[COST_CENTER] Fetching available periods');
             $periods = $this->cost_center->get_available_periods(24);
@@ -67,7 +96,11 @@ class Cost_center extends MY_Controller {
                 'page_title' => 'Cost Center Dashboard',
                 'period' => $period,
                 'summary' => $summary,
+                'margins' => $margins,
                 'pharmacies' => $pharmacies,
+                'branches' => $branches,
+                'margin_trends_monthly' => $margin_trends_monthly,
+                'margin_trends_weekly' => $margin_trends_weekly,
                 'periods' => $periods,
             ]);
 
@@ -76,8 +109,8 @@ class Cost_center extends MY_Controller {
             // Load template header
             $this->load->view($this->theme . 'header', $view_data);
             
-            // Load main dashboard view
-            $this->load->view($this->theme . 'cost_center/cost_center_dashboard', $view_data);
+            // Load modern dashboard view (Horizon UI with ECharts)
+            $this->load->view($this->theme . 'cost_center/cost_center_dashboard_modern', $view_data);
             
             // Load template footer
             $this->load->view($this->theme . 'footer', $view_data);
@@ -120,9 +153,28 @@ class Cost_center extends MY_Controller {
             // Fetch data
             $pharmacy_data = $this->cost_center->get_pharmacy_with_branches($pharmacy_id, $period);
             $periods = $this->cost_center->get_available_periods(24);
+            
+            // Get profit margins and trends for pharmacy
+            $pharmacy_margins = $this->cost_center->get_profit_margins_both_types($pharmacy_id, $period);
+            $pharmacy_trends = $this->cost_center->get_pharmacy_trends($pharmacy_id, 12);
+            $cost_breakdown = $this->cost_center->get_cost_breakdown_detailed($pharmacy_id, $period);
 
             if (!$pharmacy_data['pharmacy']) {
                 show_error('No data available for selected period', 404);
+            }
+
+            // Add health score to pharmacy
+            $health = $this->cost_center->calculate_health_score($pharmacy_data['pharmacy']['kpi_profit_margin_pct']);
+            $pharmacy_data['pharmacy']['health_status'] = $health['status'];
+            $pharmacy_data['pharmacy']['health_color'] = $health['color'];
+            $pharmacy_data['pharmacy']['health_description'] = $health['description'];
+            
+            // Add health scores to branches
+            foreach ($pharmacy_data['branches'] as &$branch) {
+                $branch_health = $this->cost_center->calculate_health_score($branch['kpi_profit_margin_pct']);
+                $branch['health_status'] = $branch_health['status'];
+                $branch['health_color'] = $branch_health['color'];
+                $branch['health_description'] = $branch_health['description'];
             }
 
             // Prepare view data - merge with $this->data for layout/assets
@@ -131,14 +183,17 @@ class Cost_center extends MY_Controller {
                 'period' => $period,
                 'pharmacy' => $pharmacy_data['pharmacy'],
                 'branches' => $pharmacy_data['branches'],
+                'pharmacy_margins' => $pharmacy_margins,
+                'pharmacy_trends' => $pharmacy_trends,
+                'cost_breakdown' => $cost_breakdown,
                 'periods' => $periods,
             ]);
 
             // Load template header
             $this->load->view($this->theme . 'header', $view_data);
             
-            // Load pharmacy detail view
-            $this->load->view($this->theme . 'cost_center/cost_center_pharmacy', $view_data);
+            // Load pharmacy detail view (modern Horizon UI)
+            $this->load->view($this->theme . 'cost_center/cost_center_pharmacy_modern', $view_data);
             
             // Load template footer
             $this->load->view($this->theme . 'footer', $view_data);
@@ -178,10 +233,20 @@ class Cost_center extends MY_Controller {
             $timeseries = $this->cost_center->get_timeseries_data($branch_id, 12, 'branch');
             $breakdown = $this->cost_center->get_cost_breakdown($branch_id, $period);
             $periods = $this->cost_center->get_available_periods(24);
+            
+            // Get profit margins and trends for branch
+            $branch_margins = $this->cost_center->get_profit_margins_both_types(null, $period); // Company-level for reference
+            $branch_trends = $this->cost_center->get_branch_trends($branch_id, 12);
 
             if (!$branch) {
                 show_error('No data available for selected period', 404);
             }
+
+            // Add health score to branch
+            $health = $this->cost_center->calculate_health_score($branch['kpi_profit_margin_pct']);
+            $branch['health_status'] = $health['status'];
+            $branch['health_color'] = $health['color'];
+            $branch['health_description'] = $health['description'];
 
             // Prepare view data - merge with $this->data for layout/assets
             $view_data = array_merge($this->data, [
@@ -190,14 +255,16 @@ class Cost_center extends MY_Controller {
                 'branch' => $branch,
                 'timeseries' => $timeseries,
                 'breakdown' => $breakdown,
+                'branch_margins' => $branch_margins,
+                'branch_trends' => $branch_trends,
                 'periods' => $periods,
             ]);
 
             // Load template header
             $this->load->view($this->theme . 'header', $view_data);
             
-            // Load branch detail view
-            $this->load->view($this->theme . 'cost_center/cost_center_branch', $view_data);
+            // Load branch detail view (modern Horizon UI)
+            $this->load->view($this->theme . 'cost_center/cost_center_branch_modern', $view_data);
             
             // Load template footer
             $this->load->view($this->theme . 'footer', $view_data);
