@@ -103,3 +103,9 @@ $route['api/v1/cost-center/pharmacy-detail/(:num)'] = 'api/v1/cost_center/pharma
 $route['api/v1/cost-center/branches'] = 'api/v1/cost_center/branches';
 $route['api/v1/cost-center/summary'] = 'api/v1/cost_center/summary';
 
+// Cost Center Admin routes
+$route['admin/cost_center/pharmacy/(:num)'] = 'admin/cost_center/pharmacy/$1';
+$route['admin/cost_center/branch/(:num)'] = 'admin/cost_center/branch/$1';
+$route['admin/cost_center'] = 'admin/cost_center/dashboard';
+$route['admin/cost_center/dashboard'] = 'admin/cost_center/dashboard';
+
