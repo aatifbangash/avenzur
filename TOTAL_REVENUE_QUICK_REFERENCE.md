@@ -33,10 +33,10 @@ Result: 2,599,800 SAR
 ## 🔍 The SQL Query
 
 ```sql
-SELECT 
+SELECT
     SUM(total_revenue) AS kpi_total_revenue
 FROM sma_fact_cost_center
-WHERE period_year = 2025 
+WHERE period_year = 2025
   AND period_month = 10;
 
 Result: 2,599,800.79 SAR
@@ -70,13 +70,14 @@ Result: 2,599,800.79 SAR
 ✅ **Pharmacy Level** = SUM for THAT pharmacy ONLY  
 ✅ **Period Dependent** = Changes for each month  
 ✅ **Real-time** = Updated as new transactions occur  
-✅ **Aggregated** = Sums daily/weekly/monthly data into monthly view  
+✅ **Aggregated** = Sums daily/weekly/monthly data into monthly view
 
 ---
 
 ## 🔄 Pharmacy Filter Example
 
 ### Before Filter (All Pharmacies)
+
 ```
 Total Revenue: SAR 2,599,800
 ├─ Pharmacy 52: 648,800
@@ -90,6 +91,7 @@ Total Revenue: SAR 2,599,800
 ```
 
 ### After Filter (Pharmacy 52 Only)
+
 ```
 Total Revenue: SAR 648,800  ← Only pharmacy 52
 (Changed from 2,599,800 to 648,800 when filtering)
@@ -109,23 +111,25 @@ Company Total = Pharmacy A + Pharmacy B + ... + Pharmacy H
 
 ## 🗂️ Files Involved
 
-| File | Purpose |
-|------|---------|
-| `app/controllers/admin/Cost_center.php` | Calls model.get_summary_stats() |
-| `app/models/admin/Cost_center_model.php` | Queries database view |
-| Database View `view_cost_center_summary` | Sums revenues by period |
-| `sma_fact_cost_center` TABLE | Contains actual revenue data |
-| `themes/blue/.../dashboard.php` | Displays result |
+| File                                     | Purpose                         |
+| ---------------------------------------- | ------------------------------- |
+| `app/controllers/admin/Cost_center.php`  | Calls model.get_summary_stats() |
+| `app/models/admin/Cost_center_model.php` | Queries database view           |
+| Database View `view_cost_center_summary` | Sums revenues by period         |
+| `sma_fact_cost_center` TABLE             | Contains actual revenue data    |
+| `themes/blue/.../dashboard.php`          | Displays result                 |
 
 ---
 
 ## 🧮 Calculation Steps
 
 ### Step 1: Identify Period
+
 - User selects: 2025-10
 - System filters: period_year=2025, period_month=10
 
 ### Step 2: Sum All Pharmacy Revenue
+
 - Pharmacy 52: +648,800.79
 - Pharmacy 53: +520,000.00
 - Pharmacy 54: +450,000.00
@@ -137,6 +141,7 @@ Company Total = Pharmacy A + Pharmacy B + ... + Pharmacy H
 - **TOTAL: 2,599,800.79**
 
 ### Step 3: Validate
+
 - Count pharmacies: 8
 - Check sum: 648,800 + ... + 16,000 = 2,599,800 ✓
 - Expected range: ~2.5M per month ✓
@@ -151,7 +156,7 @@ Company Total = Pharmacy A + Pharmacy B + ... + Pharmacy H
 **Contains:** Monthly revenue per warehouse
 
 ```sql
-SELECT * FROM sma_fact_cost_center 
+SELECT * FROM sma_fact_cost_center
 WHERE warehouse_id=52 AND period_year=2025 AND period_month=10;
 
 Results:
@@ -167,14 +172,14 @@ Results:
 
 ## 🎛️ Filtering Impact
 
-| Filter | Total Revenue |
-|--------|---------------|
-| No filter (Company) | 2,599,800 |
-| Pharmacy 52 | 648,800 |
-| Pharmacy 53 | 520,000 |
-| Pharmacy 54 | 450,000 |
-| Period 2025-09 | 2,450,000 |
-| Period 2025-08 | 2,300,000 |
+| Filter              | Total Revenue |
+| ------------------- | ------------- |
+| No filter (Company) | 2,599,800     |
+| Pharmacy 52         | 648,800       |
+| Pharmacy 53         | 520,000       |
+| Pharmacy 54         | 450,000       |
+| Period 2025-09      | 2,450,000     |
+| Period 2025-08      | 2,300,000     |
 
 ---
 
@@ -218,7 +223,7 @@ FROM sma_fact_cost_center
 WHERE period_year = 2025 AND period_month = 10;
 
 -- Test 2: Break down by pharmacy
-SELECT 
+SELECT
     fcc.warehouse_id,
     w.name,
     SUM(fcc.total_revenue) as revenue

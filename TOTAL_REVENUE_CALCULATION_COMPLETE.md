@@ -2,7 +2,7 @@
 
 **Date:** 2025-10-25  
 **Topic:** How Total Revenue is Calculated in Cost Center Dashboard  
-**Status:** ✅ FULLY DOCUMENTED  
+**Status:** ✅ FULLY DOCUMENTED
 
 ---
 
@@ -14,7 +14,7 @@ The **Total Revenue** shown in the Cost Center Dashboard is calculated by:
 Total Revenue = SUM(total_revenue column)
                 FROM sma_fact_cost_center table
                 WHERE period matches selected period
-                
+
 For October 2025: 2,599,800.79 SAR (sum of all 8 pharmacies)
 ```
 
@@ -25,7 +25,9 @@ This value represents the **total sales/revenue** for the entire company for tha
 ## 📚 Documentation Files Created
 
 ### 1. **TOTAL_REVENUE_CALCULATION_GUIDE.md** (14 Sections, 700+ lines)
+
 Comprehensive technical documentation with:
+
 - Exact SQL queries
 - Code paths (Controller → Model → View)
 - Database schema
@@ -34,10 +36,12 @@ Comprehensive technical documentation with:
 - Verification queries
 
 **Best for:** Developers, Database Admins, Technical Team  
-**Read time:** 20-30 minutes  
+**Read time:** 20-30 minutes
 
 ### 2. **TOTAL_REVENUE_QUICK_REFERENCE.md** (Quick Card)
+
 One-page visual summary with:
+
 - Quick formula
 - Data source
 - Code path diagram
@@ -46,7 +50,7 @@ One-page visual summary with:
 - Test queries
 
 **Best for:** Quick lookup, testing, verification  
-**Read time:** 5 minutes  
+**Read time:** 5 minutes
 
 ---
 
@@ -54,10 +58,11 @@ One-page visual summary with:
 
 **Q: How is total revenue calculated?**
 
-**A:** 
+**A:**
+
 ```
-Total Revenue = Pharmacy 52 (648,800) 
-              + Pharmacy 53 (520,000) 
+Total Revenue = Pharmacy 52 (648,800)
+              + Pharmacy 53 (520,000)
               + Pharmacy 54 (450,000)
               + Pharmacy 55 (380,000)
               + Pharmacy 56 (320,000)
@@ -74,11 +79,13 @@ The system queries the `sma_fact_cost_center` table and sums the `total_revenue`
 ## 🔍 The Process
 
 ### 1️⃣ User Opens Dashboard
+
 ```
 http://localhost:8080/avenzur/admin/cost_center/dashboard?period=2025-10
 ```
 
 ### 2️⃣ Controller Receives Request
+
 ```php
 // File: app/controllers/admin/Cost_center.php
 public function dashboard() {
@@ -89,6 +96,7 @@ public function dashboard() {
 ```
 
 ### 3️⃣ Model Queries Database
+
 ```php
 // File: app/models/admin/Cost_center_model.php
 public function get_summary_stats($period = null) {
@@ -98,6 +106,7 @@ public function get_summary_stats($period = null) {
 ```
 
 ### 4️⃣ Database Calculates Sum
+
 ```sql
 -- Database View: view_cost_center_summary
 SELECT SUM(fcc.total_revenue) AS kpi_total_revenue
@@ -107,6 +116,7 @@ WHERE CONCAT(fcc.period_year, '-', LPAD(fcc.period_month, 2, '0')) = '2025-10'
 ```
 
 ### 5️⃣ View Displays Result
+
 ```php
 // File: themes/blue/admin/views/cost_center/cost_center_dashboard_modern.php
 <div class="kpi-card">
@@ -120,16 +130,17 @@ WHERE CONCAT(fcc.period_year, '-', LPAD(fcc.period_month, 2, '0')) = '2025-10'
 
 ## 📊 Data Source
 
-| Aspect | Details |
-|--------|---------|
-| **Primary Table** | `sma_fact_cost_center` |
-| **Column** | `total_revenue` (DECIMAL 15,2) |
-| **Time Period** | Monthly (period_year, period_month) |
-| **Aggregation** | SUM function |
-| **Filter** | warehouse_id (ALL for company total) |
-| **Count** | 8 pharmacies per month |
+| Aspect            | Details                              |
+| ----------------- | ------------------------------------ |
+| **Primary Table** | `sma_fact_cost_center`               |
+| **Column**        | `total_revenue` (DECIMAL 15,2)       |
+| **Time Period**   | Monthly (period_year, period_month)  |
+| **Aggregation**   | SUM function                         |
+| **Filter**        | warehouse_id (ALL for company total) |
+| **Count**         | 8 pharmacies per month               |
 
 ### Table Structure
+
 ```sql
 sma_fact_cost_center
 ├── id (Primary Key)
@@ -148,6 +159,7 @@ sma_fact_cost_center
 ## 🧮 Calculation Details
 
 ### Company Level (All Pharmacies)
+
 ```
 Period: 2025-10
 
@@ -164,6 +176,7 @@ TOTAL:      2,599,800.79 ✓
 ```
 
 ### Pharmacy Level (Single Pharmacy)
+
 ```
 When you filter by Pharmacy 52:
 Total Revenue = 648,800.79 (only this pharmacy)
@@ -177,6 +190,7 @@ Total Revenue = 520,000.00 (only this pharmacy)
 ## 🔄 Filtering Example
 
 ### No Filter (Dashboard Load)
+
 ```javascript
 // dashboardData.summary.kpi_total_revenue
 2,599,800.79  ← Sum of ALL pharmacies
@@ -185,6 +199,7 @@ Displayed: "SAR 2,599,800"
 ```
 
 ### Filter by Pharmacy 52
+
 ```javascript
 // User clicks "View" on Pharmacy 52
 // JavaScript calls: handlePharmacyFilter(52)
@@ -231,6 +246,7 @@ Total Revenue:        2,599,800 SAR  (100%)
 ## 🛠️ How to Verify
 
 ### Test 1: Direct Database Query
+
 ```sql
 SELECT SUM(total_revenue) as total_revenue
 FROM sma_fact_cost_center
@@ -240,8 +256,9 @@ Expected: 2,599,800.79
 ```
 
 ### Test 2: Pharmacy Breakdown
+
 ```sql
-SELECT 
+SELECT
     fcc.warehouse_id,
     w.name,
     SUM(fcc.total_revenue) as revenue
@@ -255,8 +272,9 @@ Expected: 8 rows totaling 2,599,800.79
 ```
 
 ### Test 3: View Query
+
 ```sql
-SELECT kpi_total_revenue FROM view_cost_center_summary 
+SELECT kpi_total_revenue FROM view_cost_center_summary
 WHERE period = '2025-10';
 
 Expected: 2,599,800.79
@@ -273,6 +291,7 @@ GET /api/v1/cost-center/pharmacy-detail/52?period=2025-10
 ```
 
 **Response:**
+
 ```json
 {
     "success": true,
@@ -294,21 +313,25 @@ GET /api/v1/cost-center/pharmacy-detail/52?period=2025-10
 ## 📁 Code Files Involved
 
 ### Controllers
+
 - **File:** `app/controllers/admin/Cost_center.php`
 - **Method:** `dashboard()` → calls `get_summary_stats()`
 - **Purpose:** Receives request, loads data, renders view
 
 ### Models
+
 - **File:** `app/models/admin/Cost_center_model.php`
 - **Method:** `get_summary_stats($period)` → queries view
 - **Method:** `get_pharmacy_detail($id, $period)` → single pharmacy
 - **Purpose:** Database queries
 
 ### Views
+
 - **File:** `themes/blue/admin/views/cost_center/cost_center_dashboard_modern.php`
 - **Purpose:** Displays `$summary['kpi_total_revenue']` in KPI card
 
 ### API
+
 - **File:** `app/controllers/api/v1/Cost_center.php`
 - **Method:** `pharmacy_detail($id)` → called when filtering
 - **Purpose:** Returns pharmacy-specific data as JSON
@@ -327,15 +350,17 @@ GET /api/v1/cost-center/pharmacy-detail/52?period=2025-10
 ## 🔧 Common Issues & Solutions
 
 ### Issue 1: Total Revenue Shows 0
+
 ```
 Cause: No data in sma_fact_cost_center for the period
-Solution: 
-  SELECT COUNT(*) FROM sma_fact_cost_center 
+Solution:
+  SELECT COUNT(*) FROM sma_fact_cost_center
   WHERE period_year=2025 AND period_month=10;
   -- If 0, need to add data
 ```
 
 ### Issue 2: Pharmacy Shows Blank
+
 ```
 Cause: No data for that pharmacy_id
 Solution:
@@ -345,6 +370,7 @@ Solution:
 ```
 
 ### Issue 3: Filter Doesn't Update
+
 ```
 Cause: API not responding or authentication issue
 Solution:
@@ -376,6 +402,7 @@ Solution:
 ### Three-Tier Architecture
 
 **Tier 1: Data Layer**
+
 ```
 Database Table: sma_fact_cost_center
         ↓
@@ -383,6 +410,7 @@ Database View: view_cost_center_summary (aggregation)
 ```
 
 **Tier 2: Business Logic**
+
 ```
 Model: get_summary_stats()
 Controller: dashboard()
@@ -390,6 +418,7 @@ API: pharmacy_detail()
 ```
 
 **Tier 3: Presentation**
+
 ```
 View: Dashboard HTML/CSS/JavaScript
 Display: KPI Cards with formatted values
@@ -400,18 +429,22 @@ Display: KPI Cards with formatted values
 ## 💡 Key Concepts
 
 ### 1. **Aggregation**
+
 - Multiple monthly transactions per pharmacy → Single monthly row per pharmacy
 - Multiple pharmacies → Single company total
 
 ### 2. **Filtering**
+
 - Company Level: SUM(all pharmacies)
 - Pharmacy Level: SUM(single pharmacy only)
 
 ### 3. **Time Dimension**
+
 - Each period has its own revenue
 - Changing period → Different total
 
 ### 4. **Real-time**
+
 - Updates as new transactions entered
 - Historical data preserved for trends
 
@@ -440,17 +473,17 @@ Display: KPI Cards with formatted values
 
 ## ✅ Final Summary
 
-| Question | Answer |
-|----------|--------|
-| **What is total revenue?** | Sum of all pharmacy sales for a month |
+| Question                     | Answer                                               |
+| ---------------------------- | ---------------------------------------------------- |
+| **What is total revenue?**   | Sum of all pharmacy sales for a month                |
 | **Where does it come from?** | `sma_fact_cost_center` table, `total_revenue` column |
-| **How is it calculated?** | `SUM(total_revenue)` SQL query |
-| **For Oct 2025?** | 2,599,800.79 SAR (all 8 pharmacies) |
-| **For Pharmacy 52?** | 648,800.79 SAR (only pharmacy 52) |
-| **When does it update?** | When new transactions added to database |
-| **What affects it?** | Period filter, pharmacy filter |
-| **Is it real-time?** | Yes, queries current data |
-| **Can I verify it?** | Yes, use SQL queries in this guide |
+| **How is it calculated?**    | `SUM(total_revenue)` SQL query                       |
+| **For Oct 2025?**            | 2,599,800.79 SAR (all 8 pharmacies)                  |
+| **For Pharmacy 52?**         | 648,800.79 SAR (only pharmacy 52)                    |
+| **When does it update?**     | When new transactions added to database              |
+| **What affects it?**         | Period filter, pharmacy filter                       |
+| **Is it real-time?**         | Yes, queries current data                            |
+| **Can I verify it?**         | Yes, use SQL queries in this guide                   |
 
 ---
 
@@ -458,7 +491,7 @@ Display: KPI Cards with formatted values
 **Last Updated:** 2025-10-25  
 **Version:** 1.0  
 **Audience:** Everyone  
-**Technical Level:** Beginner to Advanced  
+**Technical Level:** Beginner to Advanced
 
 ---
 
