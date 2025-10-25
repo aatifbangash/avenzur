@@ -108,7 +108,7 @@
                 </ul>
                 <ul class="nav navbar-nav pull-right">
                 <li class="dropdown hidden-xs"><a class="btn tip" title="<?= lang('Print Barcode') ?>" data-placement="bottom" href="<?= admin_url('products/print_barcodes') ?>"><i class="fa fa-barcode"></i></a></li>
-                    <li class="dropdown hidden-xs"><a class="btn tip" title="<?= lang('dashboard') ?>" data-placement="bottom" href="<?= admin_url('welcome') ?>"><i class="fa fa-dashboard"></i></a></li>
+                    <li class="dropdown hidden-xs"><a class="btn tip" title="<?= lang('Cost Center') ?>" data-placement="bottom" href="<?= admin_url('cost_center/dashboard') ?>"><i class="fa fa-dashboard"></i></a></li>
                     <?php if (0){//(SHOP) {
                         ?>
                     <li class="dropdown hidden-xs"><a class="btn tip" title="<?= lang('shop') ?>" data-placement="bottom" href="<?= base_url() ?>"><i class="fa fa-shopping-cart"></i></a></li>
@@ -368,10 +368,17 @@
                     ?>
                     
                     <ul class="nav main-menu">
-                        <li class="mm_welcome">
-                            <a href="<?= admin_url() ?>">
+                        <li class="mm_cost_center">
+                            <a href="<?= admin_url('cost_center/dashboard') ?>">
                                 <i class="fa fa-dashboard"></i>
-                                <span class="text"> <?= lang('dashboard'); ?></span>
+                                <span class="text"> <?= lang('Cost Center'); ?></span>
+                            </a>
+                        </li>
+                        
+                        <li class="mm_quick_search">
+                            <a href="<?= admin_url() ?>">
+                                <i class="fa fa-search"></i>
+                                <span class="text"> <?= lang('Quick Search'); ?></span>
                             </a>
                         </li>
 
@@ -1427,6 +1434,11 @@
                                         <li id="system_settings_warehouses">
                                             <a href="<?= admin_url('system_settings/warehouses') ?>">
                                                 <i class="fa fa-building-o"></i><span class="text"> <?= lang('warehouses'); ?></span>
+                                            </a>
+                                        </li>
+                                        <li id="organization_setup_pharmacy_hierarchy">
+                                            <a href="<?= admin_url('organization_setup/pharmacy_hierarchy') ?>">
+                                                <i class="fa fa-hospital-o"></i><span class="text"> <?= lang('harmacy_hierarchy_setup'); ?></span>
                                             </a>
                                         </li>
                                         <li class="mm_departments">

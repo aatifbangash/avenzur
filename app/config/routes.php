@@ -88,3 +88,12 @@ $route['admin/customscript/(:num)']   = 'admin/customscript/index/$1';
 $route['courier/stc/callback'] = 'shop/courier/stc_callback';
 $route['api/update_ngrok_url'] = 'api/v1/ngrok/index';
 
+// Budget API routes
+$route['api/v1/budgets/allocate'] = 'api/v1/budgets/allocate';
+$route['api/v1/budgets/allocated'] = 'api/v1/budgets/allocated';
+$route['api/v1/budgets/tracking'] = 'api/v1/budgets/tracking';
+$route['api/v1/budgets/forecast'] = 'api/v1/budgets/forecast';
+$route['api/v1/budgets/alerts'] = 'api/v1/budgets/alerts';
+$route['api/v1/budgets/alerts/configure'] = 'api/v1/budgets/alerts/configure';
+$route['api/v1/budgets/alerts/(:num)/acknowledge'] = 'api/v1/budgets/alerts/$1/acknowledge';
+
