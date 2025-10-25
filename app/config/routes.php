@@ -97,3 +97,9 @@ $route['api/v1/budgets/alerts'] = 'api/v1/budgets/alerts';
 $route['api/v1/budgets/alerts/configure'] = 'api/v1/budgets/alerts/configure';
 $route['api/v1/budgets/alerts/(:num)/acknowledge'] = 'api/v1/budgets/alerts/$1/acknowledge';
 
+// Cost Center API routes
+$route['api/v1/cost-center/pharmacies'] = 'api/v1/cost_center/pharmacies';
+$route['api/v1/cost-center/pharmacy-detail/(:num)'] = 'api/v1/cost_center/pharmacy_detail/$1';
+$route['api/v1/cost-center/branches'] = 'api/v1/cost_center/branches';
+$route['api/v1/cost-center/summary'] = 'api/v1/cost_center/summary';
+

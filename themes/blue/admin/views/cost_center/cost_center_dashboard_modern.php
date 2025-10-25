@@ -739,6 +739,7 @@ const COLORS = {
 };
 
 let dashboardData = {
+    baseUrl: '<?php echo base_url(); ?>',
     summary: <?php echo json_encode($summary ?? []); ?>,
     pharmacies: <?php echo json_encode($pharmacies ?? []); ?>,
     branches: <?php echo json_encode($branches ?? []); ?>,
@@ -871,7 +872,9 @@ function handlePharmacyFilter(pharmacyId) {
     
     // Fetch pharmacy detail data for KPI cards
     console.log('Fetching pharmacy detail for ID:', pharmacyId);
-    fetch(`/api/v1/cost-center/pharmacy-detail/${pharmacyId}?period=${dashboardData.currentPeriod}`)
+    const apiUrl = `${dashboardData.baseUrl}api/v1/cost-center/pharmacy-detail/${pharmacyId}?period=${dashboardData.currentPeriod}`;
+    console.log('API URL:', apiUrl);
+    fetch(apiUrl)
         .then(response => response.json())
         .then(result => {
             console.log('Pharmacy detail response:', result);

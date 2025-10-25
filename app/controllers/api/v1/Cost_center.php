@@ -100,7 +100,7 @@ class Cost_center extends Base_api {
      * Query Parameters:
      * - period: YYYY-MM (default: current month)
      */
-    public function pharmacy_detail_get($pharmacy_id = null) {
+    public function pharmacy_detail($pharmacy_id = null) {
         try {
             if (!$pharmacy_id) {
                 return $this->response([
