@@ -1,7 +1,7 @@
 # VISUAL: Before & After - Cost Calculation Change
 
 **Date:** October 25, 2025  
-**Change Type:** CRITICAL FINANCIAL METRIC UPDATE  
+**Change Type:** CRITICAL FINANCIAL METRIC UPDATE
 
 ---
 
@@ -75,6 +75,7 @@
 ## 🔄 Data Source Flow
 
 ### BEFORE (Incorrect)
+
 ```
 ┌──────────────────┐
 │  sma_sales       │
@@ -99,6 +100,7 @@
 ```
 
 ### AFTER (Correct)
+
 ```
 ┌──────────────────┐         ┌──────────────────┐
 │  sma_sales       │         │ sma_purchases    │
@@ -142,7 +144,7 @@
         650k ┤   ║New ║          ║    ║ (Same)
              ┤   ║RevØ║          ║OldP║
         600k ┤   ║    ║          ║    ║
-             ┤───╫────╫──────────╫────╫─── 
+             ┤───╫────╫──────────╫────╫───
         550k ┤   ║648 ║          ║648 ║
              ┤   ╚════╝          ╚════╝
              ┤
@@ -167,12 +169,12 @@ Profit Comparison:
 
 ### Table: Detailed Comparison
 
-| Metric | Old Value | New Value | Change | % Change |
-|--------|-----------|-----------|--------|----------|
-| **Revenue** | 648,800 SAR | 648,800 SAR | 0 | 0% |
-| **Cost** | 450,000 SAR | 520,000 SAR | +70,000 | +15.6% |
-| **Profit** | 198,800 SAR | 128,800 SAR | -70,000 | -35.2% |
-| **Profit Margin** | 30.6% | 19.8% | -10.8pp | -35.3% |
+| Metric            | Old Value   | New Value   | Change  | % Change |
+| ----------------- | ----------- | ----------- | ------- | -------- |
+| **Revenue**       | 648,800 SAR | 648,800 SAR | 0       | 0%       |
+| **Cost**          | 450,000 SAR | 520,000 SAR | +70,000 | +15.6%   |
+| **Profit**        | 198,800 SAR | 128,800 SAR | -70,000 | -35.2%   |
+| **Profit Margin** | 30.6%       | 19.8%       | -10.8pp | -35.3%   |
 
 **Key Insight:** Cost increased by 15.6%, making profit more realistic.
 
@@ -181,6 +183,7 @@ Profit Comparison:
 ## 🗃️ Table Join Visualization
 
 ### Old Method (WRONG)
+
 ```
                     sma_fact_cost_center
                     (Aggregated daily fact table)
@@ -197,6 +200,7 @@ Profit Comparison:
 ```
 
 ### New Method (CORRECT)
+
 ```
         sma_purchases
         (Individual transactions)
@@ -231,6 +235,7 @@ Profit Comparison:
 ### Pharmacy Level Impact
 
 **All 8 Pharmacies Will See:**
+
 - ✅ Revenue: No change (same from sma_sales)
 - ⚠️ Cost: Increased (now matches actual purchases)
 - ⚠️ Profit: Decreased (more realistic)
@@ -239,6 +244,7 @@ Profit Comparison:
 ### Company Level Impact
 
 **Company Total Will Show:**
+
 - ✅ Total Revenue: ~2,600,000 SAR (no change)
 - ⚠️ Total Cost: Higher (matches actual purchases)
 - ⚠️ Total Profit: Lower (more realistic)
@@ -247,6 +253,7 @@ Profit Comparison:
 ### Dashboard Appearance
 
 **What Users Will Notice:**
+
 - Revenue cards: No change ✅
 - Cost cards: Numbers updated 📊
 - Profit cards: Lower values (but more accurate) 📉
@@ -257,12 +264,14 @@ Profit Comparison:
 ## ✨ Why This Matters
 
 ### Before (Wrong)
+
 - Cost didn't reflect actual purchase amounts
 - Profit was overstated
 - Margins seemed too high (unrealistic)
 - Couldn't compare with accounting records
 
 ### After (Correct)
+
 - ✅ Cost matches sma_purchases (actual)
 - ✅ Profit reflects reality
 - ✅ Margins align with industry standards
@@ -275,6 +284,7 @@ Profit Comparison:
 ## 📝 Key Takeaway
 
 **The dashboard will now show:**
+
 - Revenue: Same numbers (already correct)
 - Cost: NEW, from actual purchases
 - Profit: Lower, but MORE ACCURATE

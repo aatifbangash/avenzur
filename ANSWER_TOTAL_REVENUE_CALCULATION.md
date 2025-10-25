@@ -11,7 +11,7 @@
 **Total Revenue = SUM of all pharmacy sales (`total_revenue` column) from `sma_fact_cost_center` table for the selected period (YYYY-MM)**
 
 ```sql
-SELECT SUM(total_revenue) 
+SELECT SUM(total_revenue)
 FROM sma_fact_cost_center
 WHERE period = '2025-10'
 -- Result: ~2,600,000 SAR (all 8 pharmacies combined)
@@ -40,21 +40,25 @@ Total Revenue = SUM(total_revenue)
 ### How It's Implemented
 
 #### 1. Database View (SQL)
+
 - **File:** `app/migrations/cost-center/005_create_views.sql`
 - **View Name:** `view_cost_center_summary`
 - **Purpose:** Aggregates revenue by period
 
 #### 2. Model Method (PHP)
+
 - **File:** `app/models/admin/Cost_center_model.php`
 - **Method:** `get_summary_stats($period)`
 - **Action:** Queries the view for company totals
 
 #### 3. Controller (PHP)
+
 - **File:** `app/controllers/admin/Cost_center.php`
 - **Method:** `dashboard()`
 - **Action:** Gets period from URL, calls model, passes to view
 
 #### 4. Display (HTML/JavaScript)
+
 - **File:** `themes/blue/admin/views/cost_center/cost_center_dashboard_modern.php`
 - **Display:** Shows formatted revenue with SAR and commas
 
@@ -62,7 +66,7 @@ Total Revenue = SUM(total_revenue)
 
 ```sql
 -- This is what runs when you open the dashboard:
-SELECT 
+SELECT
     'company' AS level,
     'RETAJ AL-DAWA' AS entity_name,
     '2025-10' AS period,
@@ -95,6 +99,7 @@ TOTAL:     2,600,000.79 SAR  ← This is displayed in KPI card
 ## How the Dashboard Shows It
 
 ### Company Level (All Pharmacies)
+
 ```
 ┌─────────────────────────────────┐
 │ Total Revenue                   │
@@ -103,6 +108,7 @@ TOTAL:     2,600,000.79 SAR  ← This is displayed in KPI card
 ```
 
 ### When You Filter to One Pharmacy
+
 ```
 URL: admin/cost_center/pharmacy/52?period=2025-10
 
@@ -123,8 +129,8 @@ URL: admin/cost_center/pharmacy/52?period=2025-10
 ```sql
 Total Cost = COGS + Inventory Movement + Operational Cost
 
-Total Cost = total_cogs 
-           + inventory_movement_cost 
+Total Cost = total_cogs
+           + inventory_movement_cost
            + operational_cost
 ```
 
@@ -146,18 +152,19 @@ See: `TOTAL_COST_ANALYSIS_CRITICAL_FINDINGS.md`
 
 For detailed information, see these files:
 
-| File | Content |
-|------|---------|
-| `HOW_TOTAL_REVENUE_IS_CALCULATED.md` | Complete revenue calculation with examples |
-| `TOTAL_REVENUE_CALCULATION_GUIDE.md` | Step-by-step revenue guide |
-| `TOTAL_COST_ANALYSIS_CRITICAL_FINDINGS.md` | ⚠️ Cost calculation issues |
-| `SESSION_SUMMARY_2025_10_25_FINAL.md` | Complete session overview |
+| File                                       | Content                                    |
+| ------------------------------------------ | ------------------------------------------ |
+| `HOW_TOTAL_REVENUE_IS_CALCULATED.md`       | Complete revenue calculation with examples |
+| `TOTAL_REVENUE_CALCULATION_GUIDE.md`       | Step-by-step revenue guide                 |
+| `TOTAL_COST_ANALYSIS_CRITICAL_FINDINGS.md` | ⚠️ Cost calculation issues                 |
+| `SESSION_SUMMARY_2025_10_25_FINAL.md`      | Complete session overview                  |
 
 ---
 
 ## Summary
 
 **Total Revenue is calculated by:**
+
 1. Reading `total_revenue` from `sma_fact_cost_center`
 2. Filtering by period (YYYY-MM)
 3. Summing across all pharmacies

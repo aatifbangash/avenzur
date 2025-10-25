@@ -11,7 +11,7 @@
 **Total Revenue = SUM of `total_revenue` column from `sma_fact_cost_center` table, grouped by period (YYYY-MM)**
 
 ```sql
-SELECT 
+SELECT
     SUM(total_revenue) AS total_revenue
 FROM sma_fact_cost_center
 WHERE CONCAT(period_year, '-', LPAD(period_month, 2, '0')) = '2025-10'
@@ -37,7 +37,7 @@ URL: http://localhost:8080/avenzur/admin/cost_center/dashboard?period=2025-10
 public function dashboard() {
     $period = $this->input->get('period') ?: date('Y-m');
     // $period = '2025-10'
-    
+
     $summary = $this->cost_center->get_summary_stats($period);
     // Call model method
 }
@@ -50,7 +50,7 @@ public function dashboard() {
 ```php
 public function get_summary_stats($period = null) {
     $query = "
-        SELECT 
+        SELECT
             level,
             entity_name,
             period,
@@ -63,7 +63,7 @@ public function get_summary_stats($period = null) {
         FROM view_cost_center_summary
         WHERE period = ?
     ";
-    
+
     $result = $this->db->query($query, ['2025-10']);
     return $result->row_array();
     // Returns: ['kpi_total_revenue' => 2600000, ...]
@@ -76,11 +76,12 @@ public function get_summary_stats($period = null) {
 
 ```html
 <div class="kpi-card">
-    <div class="kpi-title">Total Revenue</div>
-    <div class="kpi-value">
-        SAR <?php echo number_format($summary['kpi_total_revenue'], 2); ?>
-        <!-- Displays: SAR 2,600,000.00 -->
-    </div>
+	<div class="kpi-title">Total Revenue</div>
+	<div class="kpi-value">
+		SAR
+		<?php echo number_format($summary['kpi_total_revenue'], 2); ?>
+		<!-- Displays: SAR 2,600,000.00 -->
+	</div>
 </div>
 ```
 
@@ -96,21 +97,21 @@ public function get_summary_stats($period = null) {
 CREATE VIEW `view_cost_center_summary` AS
 
 -- PART 1: COMPANY TOTALS
-SELECT 
+SELECT
     'company' AS level,                          -- Level = COMPANY
     'RETAJ AL-DAWA' AS entity_name,
-    CONCAT(fcc.period_year, '-', 
+    CONCAT(fcc.period_year, '-',
            LPAD(fcc.period_month, 2, '0')) AS period,  -- '2025-10'
     COALESCE(SUM(fcc.total_revenue), 0) AS kpi_total_revenue,  ← ⭐ TOTAL REVENUE
-    COALESCE(SUM(fcc.total_cogs + fcc.inventory_movement_cost + 
+    COALESCE(SUM(fcc.total_cogs + fcc.inventory_movement_cost +
                  fcc.operational_cost), 0) AS kpi_total_cost,
-    COALESCE(SUM(fcc.total_revenue - (fcc.total_cogs + 
-                 fcc.inventory_movement_cost + 
+    COALESCE(SUM(fcc.total_revenue - (fcc.total_cogs +
+                 fcc.inventory_movement_cost +
                  fcc.operational_cost)), 0) AS kpi_profit_loss,
-    CASE 
+    CASE
         WHEN SUM(fcc.total_revenue) = 0 THEN 0
-        ELSE ROUND((SUM(fcc.total_revenue - (fcc.total_cogs + 
-                        fcc.inventory_movement_cost + 
+        ELSE ROUND((SUM(fcc.total_revenue - (fcc.total_cogs +
+                        fcc.inventory_movement_cost +
                         fcc.operational_cost)) / SUM(fcc.total_revenue)) * 100, 2)
     END AS kpi_profit_margin_pct,
     COUNT(DISTINCT dp.pharmacy_id) AS entity_count,
@@ -124,7 +125,7 @@ GROUP BY fcc.period_year, fcc.period_month
 UNION ALL
 
 -- PART 2: INDIVIDUAL PHARMACY TOTALS (for drilldown)
-SELECT 
+SELECT
     'pharmacy' AS level,
     dp.pharmacy_name AS entity_name,
     CONCAT(fcc.period_year, '-', LPAD(fcc.period_month, 2, '0')) AS period,
@@ -143,14 +144,14 @@ GROUP BY fcc.warehouse_id, dp.pharmacy_id, fcc.period_year, fcc.period_month
 **What gets executed in the database:**
 
 ```sql
-SELECT 
+SELECT
     'company' AS level,
     'RETAJ AL-DAWA' AS entity_name,
     '2025-10' AS period,
     SUM(fcc.total_revenue) AS kpi_total_revenue,    ← ⭐ THIS SUMS ALL REVENUE
     SUM(fcc.total_cogs + fcc.inventory_movement_cost + fcc.operational_cost) AS kpi_total_cost,
     SUM(fcc.total_revenue - (fcc.total_cogs + fcc.inventory_movement_cost + fcc.operational_cost)) AS kpi_profit_loss,
-    ROUND((SUM(fcc.total_revenue - (fcc.total_cogs + fcc.inventory_movement_cost + fcc.operational_cost)) / 
+    ROUND((SUM(fcc.total_revenue - (fcc.total_cogs + fcc.inventory_movement_cost + fcc.operational_cost)) /
            SUM(fcc.total_revenue)) * 100, 2) AS kpi_profit_margin_pct,
     COUNT(DISTINCT dp.pharmacy_id) AS entity_count,
     MAX(fcc.updated_at) AS last_updated
@@ -187,9 +188,9 @@ warehouse_id | total_revenue  | period
 **Calculation (SUM):**
 
 ```
-Total Revenue = 648,800.79 + 520,000.00 + 450,000.00 + 385,000.00 
+Total Revenue = 648,800.79 + 520,000.00 + 450,000.00 + 385,000.00
               + 298,500.00 + 175,200.00 + 87,500.00 + 35,000.00
-              
+
             = 2,600,000.79 SAR  ← THIS IS DISPLAYED IN DASHBOARD
 ```
 
@@ -264,7 +265,7 @@ Total Revenue: SAR 648,800.79 ← Only this pharmacy
 
 ```sql
 -- 1. Get company total (all pharmacies)
-SELECT 
+SELECT
     'COMPANY TOTAL' as description,
     SUM(total_revenue) as total_revenue
 FROM sma_fact_cost_center
@@ -274,7 +275,7 @@ WHERE YEAR(STR_TO_DATE(CONCAT(period_year, '-', LPAD(period_month, 2, '0')), '%Y
 -- Result: ~2,600,000.79
 
 -- 2. Get individual pharmacy total
-SELECT 
+SELECT
     w.name as pharmacy_name,
     SUM(fcc.total_revenue) as pharmacy_revenue
 FROM sma_fact_cost_center fcc
@@ -288,7 +289,7 @@ GROUP BY fcc.warehouse_id, w.name;
 -- Result: 648,800.79 for pharmacy 52
 
 -- 3. Get all pharmacies breakdown
-SELECT 
+SELECT
     w.id,
     w.name,
     SUM(fcc.total_revenue) as revenue
@@ -335,9 +336,9 @@ PHARMACY DETAIL:
 └─────────────────┴─────────────────┴─────────────────┴─────────────────┘
 
 Calculation:
-Revenue = SUM(total_revenue FROM sma_fact_cost_center 
+Revenue = SUM(total_revenue FROM sma_fact_cost_center
               WHERE warehouse_id=52 AND period='2025-10')
-Cost = SUM(total_cogs + inventory + operational 
+Cost = SUM(total_cogs + inventory + operational
           WHERE warehouse_id=52 AND period='2025-10')
 Profit = Revenue - Cost
 Margin = (Profit / Revenue) * 100
@@ -358,13 +359,13 @@ Margin = (Profit / Revenue) * 100
 
 ## Files Involved
 
-| File | Role | Formula |
-|------|------|---------|
-| `sma_fact_cost_center` table | Data source | `SUM(total_revenue)` |
-| `view_cost_center_summary` | Aggregation | Creates the sum |
-| `Cost_center_model.php` | Query layer | Queries the view |
-| `Cost_center controller` | Business logic | Passes to view |
-| `Dashboard view` | Display | Shows formatted revenue |
+| File                         | Role           | Formula                 |
+| ---------------------------- | -------------- | ----------------------- |
+| `sma_fact_cost_center` table | Data source    | `SUM(total_revenue)`    |
+| `view_cost_center_summary`   | Aggregation    | Creates the sum         |
+| `Cost_center_model.php`      | Query layer    | Queries the view        |
+| `Cost_center controller`     | Business logic | Passes to view          |
+| `Dashboard view`             | Display        | Shows formatted revenue |
 
 ---
 
@@ -383,6 +384,7 @@ Margin = (Profit / Revenue) * 100
 - **TOTAL:** **2,600,000.79 SAR**
 
 This is calculated by:
+
 1. Reading from `sma_fact_cost_center.total_revenue`
 2. Filtering by period (YYYY-MM)
 3. Summing across all warehouses

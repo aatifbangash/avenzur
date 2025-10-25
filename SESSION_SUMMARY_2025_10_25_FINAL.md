@@ -10,18 +10,21 @@
 ### Work Completed ✅
 
 1. **Fixed 404 API Error**
+
    - ❌ Problem: REST method naming not supported in Base_api class
    - ✅ Solution: Renamed `pharmacy_detail_get()` → `pharmacy_detail()`
    - ✅ Solution: Added cost-center routes to routes.php
    - ✅ Result: API endpoint now works correctly
 
 2. **Fixed JavaScript Base URL Issue**
+
    - ❌ Problem: Fetch calls used wrong port (80 instead of 8080)
    - ✅ Solution: Added baseUrl to dashboardData JavaScript object
    - ✅ Solution: Use `${dashboardData.baseUrl}api/...` in fetch calls
    - ✅ Result: API calls now use correct URL
 
 3. **Implemented Pharmacy Detail Page Routing**
+
    - ✅ Added routes: `/admin/cost_center/pharmacy/{id}` → controller method
    - ✅ Route already has controller & view implemented
    - ✅ "View" button from table correctly navigates to detail page
@@ -39,11 +42,13 @@
 The **total cost calculation DOES NOT include the `sma_purchases` table.**
 
 Current calculation only uses:
+
 - `total_cogs` (from sma_fact_cost_center)
 - `inventory_movement_cost` (from sma_fact_cost_center)
 - `operational_cost` (from sma_fact_cost_center)
 
 Missing:
+
 - `sma_purchases` table (may contain purchase costs)
 
 **Impact:** Total cost may be INCOMPLETE and understated
@@ -57,7 +62,7 @@ Missing:
 **Table:** `sma_fact_cost_center`
 
 ```sql
-SELECT 
+SELECT
     warehouse_id,           -- Links to pharmacy/branch
     period_year,            -- 2025
     period_month,           -- 10
@@ -109,8 +114,8 @@ Pharmacy Level (Selected Pharmacy):
 ### Current Cost Formula
 
 ```sql
-Total Cost = total_cogs 
-           + inventory_movement_cost 
+Total Cost = total_cogs
+           + inventory_movement_cost
            + operational_cost
 
 FROM sma_fact_cost_center
@@ -118,17 +123,17 @@ FROM sma_fact_cost_center
 
 ### Cost Components (Included)
 
-| Component | Table | Column | Example Value |
-|-----------|-------|--------|---|
-| COGS | `sma_fact_cost_center` | `total_cogs` | 324,400 SAR |
-| Inventory Movement | `sma_fact_cost_center` | `inventory_movement_cost` | 16,220 SAR |
-| Operational | `sma_fact_cost_center` | `operational_cost` | 32,440 SAR |
-| **Total** | | | **373,060 SAR** |
+| Component          | Table                  | Column                    | Example Value   |
+| ------------------ | ---------------------- | ------------------------- | --------------- |
+| COGS               | `sma_fact_cost_center` | `total_cogs`              | 324,400 SAR     |
+| Inventory Movement | `sma_fact_cost_center` | `inventory_movement_cost` | 16,220 SAR      |
+| Operational        | `sma_fact_cost_center` | `operational_cost`        | 32,440 SAR      |
+| **Total**          |                        |                           | **373,060 SAR** |
 
 ### Cost Components (NOT Included)
 
-| Component | Table | Column | Status |
-|-----------|-------|--------|--------|
+| Component | Table           | Column         | Status          |
+| --------- | --------------- | -------------- | --------------- |
 | Purchases | `sma_purchases` | `total_amount` | ❌ NOT INCLUDED |
 
 ---
@@ -144,10 +149,10 @@ FROM sma_fact_cost_center
 ```sql
 -- view_cost_center_summary (005_create_views.sql)
 CREATE VIEW `view_cost_center_summary` AS
-SELECT 
+SELECT
     SUM(fcc.total_revenue) AS kpi_total_revenue,
-    SUM(fcc.total_cogs 
-        + fcc.inventory_movement_cost 
+    SUM(fcc.total_cogs
+        + fcc.inventory_movement_cost
         + fcc.operational_cost) AS kpi_total_cost
     -- ❌ NO JOIN to sma_purchases
 FROM sma_fact_cost_center fcc
@@ -157,11 +162,13 @@ FROM sma_fact_cost_center fcc
 ### Potential Issues
 
 1. **Cost Understated**
+
    - If purchases should be included, current cost is too low
    - Profit would be overstated
    - Margins would be inflated
 
 2. **Data Completeness**
+
    - COGS may be pre-calculated from purchases
    - Or purchases may be separate cost category
    - System unclear on relationship
@@ -210,6 +217,7 @@ WHERE warehouse_id=52 AND MONTH(purchase_date)=10;
 ### Step 3: Business Logic Clarification
 
 **Questions to answer:**
+
 1. Is COGS calculated from purchases? (If yes, purchases already in COGS)
 2. Should total cost include purchases separately? (If yes, need to add JOIN)
 3. What does each cost component represent?
@@ -221,19 +229,19 @@ WHERE warehouse_id=52 AND MONTH(purchase_date)=10;
 
 ### Files Modified This Session
 
-| File | Change | Status |
-|------|--------|--------|
-| `app/config/routes.php` | Added cost-center API routes | ✅ Complete |
-| `app/controllers/api/v1/Cost_center.php` | Renamed method (pharmacy_detail) | ✅ Complete |
-| `themes/.../cost_center_dashboard_modern.php` | Added baseUrl, fixed fetch URL | ✅ Complete |
+| File                                          | Change                           | Status      |
+| --------------------------------------------- | -------------------------------- | ----------- |
+| `app/config/routes.php`                       | Added cost-center API routes     | ✅ Complete |
+| `app/controllers/api/v1/Cost_center.php`      | Renamed method (pharmacy_detail) | ✅ Complete |
+| `themes/.../cost_center_dashboard_modern.php` | Added baseUrl, fixed fetch URL   | ✅ Complete |
 
 ### Files Involved in Cost Calculation
 
-| File | Purpose | Status |
-|------|---------|--------|
-| `app/migrations/cost-center/005_create_views.sql` | Creates KPI views | ⚠️ Potentially incomplete |
-| `app/models/admin/Cost_center_model.php` | Queries views | ⚠️ Uses incomplete data |
-| `themes/.../cost_center_dashboard_modern.php` | Displays data | ⚠️ Shows incomplete metrics |
+| File                                              | Purpose           | Status                      |
+| ------------------------------------------------- | ----------------- | --------------------------- |
+| `app/migrations/cost-center/005_create_views.sql` | Creates KPI views | ⚠️ Potentially incomplete   |
+| `app/models/admin/Cost_center_model.php`          | Queries views     | ⚠️ Uses incomplete data     |
+| `themes/.../cost_center_dashboard_modern.php`     | Displays data     | ⚠️ Shows incomplete metrics |
 
 ---
 
@@ -242,11 +250,13 @@ WHERE warehouse_id=52 AND MONTH(purchase_date)=10;
 ### Immediate Actions (Today)
 
 1. **Clarify with business:**
+
    - "Should total cost include purchases from sma_purchases?"
    - "How does COGS relate to purchases?"
    - "What cost components should be included?"
 
 2. **Verify database:**
+
    - Check sma_purchases table structure
    - Query sample data for Oct 2025
    - Compare with COGS values
@@ -279,11 +289,13 @@ WHERE warehouse_id=52 AND MONTH(purchase_date)=10;
 ### Before Production
 
 - [ ] **Cost Calculation Clarified**
+
   - Is sma_purchases needed? (YES / NO / UNKNOWN)
   - Document decision in requirements
   - Update code if needed
 
 - [ ] **Manual Dashboard Testing**
+
   - Open http://localhost:8080/avenzur/admin/cost_center/dashboard
   - Verify all 8 pharmacies display
   - Test pharmacy filter
@@ -291,6 +303,7 @@ WHERE warehouse_id=52 AND MONTH(purchase_date)=10;
   - Check database matches displayed data
 
 - [ ] **Pharmacy Detail Testing**
+
   - Click "View" on pharmacy row
   - Navigate to detail page
   - Verify pharmacy-specific data loads
@@ -298,12 +311,14 @@ WHERE warehouse_id=52 AND MONTH(purchase_date)=10;
   - Test margin toggle
 
 - [ ] **Data Validation**
+
   - Run SQL queries to verify totals
   - Compare dashboard vs database
   - Verify all periods work
   - Check edge cases (empty periods, etc)
 
 - [ ] **Performance Testing**
+
   - Dashboard load time <2 seconds
   - API responses <200ms
   - Chart rendering <500ms
@@ -319,30 +334,33 @@ WHERE warehouse_id=52 AND MONTH(purchase_date)=10;
 
 ## Outstanding Issues
 
-| Issue | Status | Impact | Action |
-|-------|--------|--------|--------|
-| sma_purchases not included | ⚠️ OPEN | HIGH | Clarify requirements |
-| Cost may be understated | ⚠️ OPEN | HIGH | Need decision |
-| Dashboard not tested in browser | ⏳ PENDING | MEDIUM | Manual testing needed |
-| Authentication required | ⏳ PENDING | MEDIUM | Login required for testing |
+| Issue                           | Status     | Impact | Action                     |
+| ------------------------------- | ---------- | ------ | -------------------------- |
+| sma_purchases not included      | ⚠️ OPEN    | HIGH   | Clarify requirements       |
+| Cost may be understated         | ⚠️ OPEN    | HIGH   | Need decision              |
+| Dashboard not tested in browser | ⏳ PENDING | MEDIUM | Manual testing needed      |
+| Authentication required         | ⏳ PENDING | MEDIUM | Login required for testing |
 
 ---
 
 ## Next Session Focus
 
 ### Priority 1: Resolve Cost Calculation (TODAY)
+
 - [ ] Meet with business stakeholder
 - [ ] Clarify sma_purchases requirement
 - [ ] Update implementation if needed
 - [ ] Document decision
 
 ### Priority 2: Comprehensive Testing (TOMORROW)
+
 - [ ] Manual browser testing
 - [ ] Verify all 8 pharmacies
 - [ ] Test all periods
 - [ ] Validate calculations
 
 ### Priority 3: Production Readiness (THIS WEEK)
+
 - [ ] Performance optimization
 - [ ] Security review
 - [ ] Deployment checklist
@@ -368,6 +386,7 @@ WHERE warehouse_id=52 AND MONTH(purchase_date)=10;
 ## Session Summary
 
 ### What Works ✅
+
 - API endpoints functional
 - Routes configured
 - Pharmacy filter implemented
@@ -376,11 +395,13 @@ WHERE warehouse_id=52 AND MONTH(purchase_date)=10;
 - Navigation complete
 
 ### What Needs Clarification ⚠️
+
 - **Total cost calculation** - Missing sma_purchases?
 - **Financial accuracy** - Are metrics correct?
 - **Business requirements** - What should be included?
 
 ### What Needs Testing 🧪
+
 - Dashboard in browser
 - All 8 pharmacies
 - All periods
@@ -395,6 +416,7 @@ WHERE warehouse_id=52 AND MONTH(purchase_date)=10;
 **The pharmacy filter dashboard is FUNCTIONALLY COMPLETE, but the total cost calculation may be INCOMPLETE.**
 
 **Before production deployment:**
+
 1. Clarify if sma_purchases should be included
 2. Update implementation if needed
 3. Thoroughly test all functionality
@@ -412,4 +434,4 @@ WHERE warehouse_id=52 AND MONTH(purchase_date)=10;
 **Work Hours:** ~4-5 hours  
 **Git Commits:** 5  
 **Files Created:** 8  
-**Critical Issues Found:** 1  
+**Critical Issues Found:** 1
