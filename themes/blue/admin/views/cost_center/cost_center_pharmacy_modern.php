@@ -459,6 +459,20 @@
         </div>
     </div>
 
+    <!-- Empty Data Alert -->
+    <?php if (isset($pharmacy['is_empty_data']) && $pharmacy['is_empty_data']): ?>
+    <div style="background: #e3f2fd; border: 1px solid #90caf9; border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; margin-left: 24px; margin-right: 24px; display: flex; align-items: flex-start; gap: 12px;">
+        <div style="color: #1976d2; font-size: 20px; flex-shrink: 0;">ℹ️</div>
+        <div>
+            <strong style="color: #1565c0;">No transaction data available</strong>
+            <p style="margin: 4px 0 0 0; color: #1565c0; font-size: 14px;">
+                No sales or cost transactions were recorded for <?php echo htmlspecialchars($pharmacy['pharmacy_name']); ?> 
+                in <?php echo htmlspecialchars($period); ?>. Showing pharmacy information with zero values.
+            </p>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- Pharmacy KPI Cards -->
     <div class="kpi-cards-grid">
         <div class="metric-card">

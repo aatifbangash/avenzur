@@ -376,7 +376,7 @@
                         </li>
                         
                         <li class="mm_quick_search">
-                            <a href="<?= admin_url() ?>">
+                            <a href="<?= admin_url('/dashboard') ?>">
                                 <i class="fa fa-search"></i>
                                 <span class="text"> <?= lang('Quick Search'); ?></span>
                             </a>

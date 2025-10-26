@@ -142,7 +142,7 @@ class Cost_center extends MY_Controller {
             if (!$this->cost_center->pharmacy_exists($pharmacy_id)) {
                 show_error('Pharmacy not found', 404);
             }
-
+             
             $period = $this->input->get('period') ?: date('Y-m');
 
             // Validate period format
@@ -152,6 +152,14 @@ class Cost_center extends MY_Controller {
 
             // Fetch data
             $pharmacy_data = $this->cost_center->get_pharmacy_with_branches($pharmacy_id, $period);
+            $is_empty_data = false;
+            
+            // If no transaction data exists, initialize empty record
+            if (!$pharmacy_data['pharmacy']) {
+                $pharmacy_data = $this->_init_empty_pharmacy_data($pharmacy_id, $period);
+                $is_empty_data = true;
+            }
+            
             $periods = $this->cost_center->get_available_periods(24);
             
             // Get profit margins and trends for pharmacy
@@ -159,19 +167,16 @@ class Cost_center extends MY_Controller {
             $pharmacy_trends = $this->cost_center->get_pharmacy_trends($pharmacy_id, 12);
             $cost_breakdown = $this->cost_center->get_cost_breakdown_detailed($pharmacy_id, $period);
 
-            if (!$pharmacy_data['pharmacy']) {
-                show_error('No data available for selected period', 404);
-            }
-
             // Add health score to pharmacy
-            $health = $this->cost_center->calculate_health_score($pharmacy_data['pharmacy']['kpi_profit_margin_pct']);
+            $health = $this->cost_center->calculate_health_score($pharmacy_data['pharmacy']['kpi_profit_margin_pct'] ?? 0);
             $pharmacy_data['pharmacy']['health_status'] = $health['status'];
             $pharmacy_data['pharmacy']['health_color'] = $health['color'];
             $pharmacy_data['pharmacy']['health_description'] = $health['description'];
+            $pharmacy_data['pharmacy']['is_empty_data'] = $is_empty_data;
             
             // Add health scores to branches
             foreach ($pharmacy_data['branches'] as &$branch) {
-                $branch_health = $this->cost_center->calculate_health_score($branch['kpi_profit_margin_pct']);
+                $branch_health = $this->cost_center->calculate_health_score($branch['kpi_profit_margin_pct'] ?? 0);
                 $branch['health_status'] = $branch_health['status'];
                 $branch['health_color'] = $branch_health['color'];
                 $branch['health_description'] = $branch_health['description'];
@@ -349,5 +354,39 @@ class Cost_center extends MY_Controller {
         http_response_code($status);
         echo json_encode($data);
         exit;
+    }
+
+    /**
+     * Helper: Initialize empty pharmacy data structure for periods with no transactions
+     * 
+     * @param int $pharmacy_id
+     * @param string $period YYYY-MM
+     * @return array
+     * @throws Exception
+     */
+    private function _init_empty_pharmacy_data($pharmacy_id, $period) {
+        $pharmacy_info = $this->cost_center->get_pharmacy_info($pharmacy_id);
+        
+        if (!$pharmacy_info) {
+            show_error('Pharmacy not found', 404);
+        }
+        
+        return [
+            'pharmacy' => [
+                'pharmacy_id' => $pharmacy_id,
+                'warehouse_id' => $pharmacy_info['warehouse_id'],
+                'pharmacy_name' => $pharmacy_info['pharmacy_name'],
+                'pharmacy_code' => $pharmacy_info['pharmacy_code'],
+                'period' => $period,
+                'kpi_total_revenue' => 0,
+                'kpi_total_cost' => 0,
+                'kpi_profit_loss' => 0,
+                'kpi_profit_margin_pct' => 0,
+                'kpi_cost_ratio_pct' => 0,
+                'branch_count' => 0,
+                'last_updated' => date('Y-m-d H:i:s'),
+            ],
+            'branches' => []
+        ];
     }
 }

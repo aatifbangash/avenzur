@@ -96,7 +96,7 @@ function execute_etl($mysqli, $transaction_date) {
         $log_id = $mysqli->insert_id;
 
         // Delete existing data for safety (allows re-runs)
-        $delete_stmt = $mysqli->prepare("DELETE FROM fact_cost_center WHERE DATE(transaction_date) = ?");
+        $delete_stmt = $mysqli->prepare("DELETE FROM sma_fact_cost_center WHERE DATE(transaction_date) = ?");
         $delete_stmt->bind_param('s', $transaction_date);
         $delete_stmt->execute();
         echo "  - Deleted existing records for $transaction_date\n";
@@ -104,8 +104,13 @@ function execute_etl($mysqli, $transaction_date) {
         // ============================================================
         // Process Sales Revenue
         // ============================================================
+        // UPDATED: Now includes warehouses (type="warehouse") at pharmacy level
+        // - Branches: pharmacy_id = parent_id (pharmacy warehouse_id)
+        // - Warehouses: pharmacy_id = NULL (company-level central warehouses)
+        // - Both roll up to pharmacy group revenue at company level
+        // ============================================================
         $sales_query = "
-            INSERT INTO fact_cost_center (
+            INSERT INTO sma_fact_cost_center (
                 warehouse_id, warehouse_name, warehouse_type,
                 pharmacy_id, pharmacy_name, branch_id, branch_name,
                 parent_warehouse_id, transaction_date, period_year, period_month,
@@ -115,21 +120,38 @@ function execute_etl($mysqli, $transaction_date) {
                 w.id,
                 w.name,
                 COALESCE(w.warehouse_type, 'warehouse'),
-                CASE WHEN w.warehouse_type = 'branch' THEN w.parent_id ELSE NULL END,
-                CASE WHEN w.warehouse_type = 'branch' THEN pw.name ELSE NULL END,
-                CASE WHEN w.warehouse_type = 'branch' THEN w.id ELSE NULL END,
-                CASE WHEN w.warehouse_type = 'branch' THEN w.name ELSE NULL END,
+                CASE 
+                    WHEN w.warehouse_type = 'branch' THEN w.parent_id 
+                    WHEN w.warehouse_type = 'warehouse' AND w.parent_id IS NULL THEN NULL
+                    ELSE w.parent_id
+                END AS pharmacy_id,
+                CASE 
+                    WHEN w.warehouse_type = 'branch' THEN pw.name 
+                    WHEN w.warehouse_type = 'warehouse' AND w.parent_id IS NULL THEN NULL
+                    ELSE pw.name
+                END AS pharmacy_name,
+                CASE WHEN w.warehouse_type = 'branch' THEN w.id ELSE NULL END AS branch_id,
+                CASE WHEN w.warehouse_type = 'branch' THEN w.name ELSE NULL END AS branch_name,
                 w.parent_id,
-                DATE(s.date),
-                YEAR(s.date),
-                MONTH(s.date),
-                COALESCE(SUM(s.grand_total), 0)
+                DATE(s.date) AS transaction_date,
+                YEAR(s.date) AS period_year,
+                MONTH(s.date) AS period_month,
+                COALESCE(SUM(s.grand_total), 0) AS total_revenue
             FROM sma_sales s
             LEFT JOIN sma_warehouses w ON s.warehouse_id = w.id
             LEFT JOIN sma_warehouses pw ON w.parent_id = pw.id
             WHERE DATE(s.date) = ?
             AND s.sale_status = 'completed'
-            GROUP BY w.id, w.name, w.warehouse_type, w.parent_id, DATE(s.date)
+            GROUP BY 
+                w.id, 
+                w.name, 
+                w.warehouse_type, 
+                w.parent_id,
+                pw.id,
+                pw.name,
+                DATE(s.date),
+                YEAR(s.date),
+                MONTH(s.date)
             ON DUPLICATE KEY UPDATE total_revenue = VALUES(total_revenue)
         ";
 
@@ -142,8 +164,13 @@ function execute_etl($mysqli, $transaction_date) {
         // ============================================================
         // Process Purchase Costs (COGS)
         // ============================================================
+        // UPDATED: Now includes warehouses (type="warehouse") at pharmacy level
+        // - Branches: pharmacy_id = parent_id (pharmacy warehouse_id)
+        // - Warehouses: pharmacy_id = NULL (company-level central warehouses)
+        // - Both roll up to pharmacy group costs at company level
+        // ============================================================
         $purchases_query = "
-            INSERT INTO fact_cost_center (
+            INSERT INTO sma_fact_cost_center (
                 warehouse_id, warehouse_name, warehouse_type,
                 pharmacy_id, pharmacy_name, branch_id, branch_name,
                 parent_warehouse_id, transaction_date, period_year, period_month,
@@ -153,21 +180,38 @@ function execute_etl($mysqli, $transaction_date) {
                 w.id,
                 w.name,
                 COALESCE(w.warehouse_type, 'warehouse'),
-                CASE WHEN w.warehouse_type = 'branch' THEN w.parent_id ELSE NULL END,
-                CASE WHEN w.warehouse_type = 'branch' THEN pw.name ELSE NULL END,
-                CASE WHEN w.warehouse_type = 'branch' THEN w.id ELSE NULL END,
-                CASE WHEN w.warehouse_type = 'branch' THEN w.name ELSE NULL END,
+                CASE 
+                    WHEN w.warehouse_type = 'branch' THEN w.parent_id 
+                    WHEN w.warehouse_type = 'warehouse' AND w.parent_id IS NULL THEN NULL
+                    ELSE w.parent_id
+                END AS pharmacy_id,
+                CASE 
+                    WHEN w.warehouse_type = 'branch' THEN pw.name 
+                    WHEN w.warehouse_type = 'warehouse' AND w.parent_id IS NULL THEN NULL
+                    ELSE pw.name
+                END AS pharmacy_name,
+                CASE WHEN w.warehouse_type = 'branch' THEN w.id ELSE NULL END AS branch_id,
+                CASE WHEN w.warehouse_type = 'branch' THEN w.name ELSE NULL END AS branch_name,
                 w.parent_id,
-                DATE(p.date),
-                YEAR(p.date),
-                MONTH(p.date),
-                COALESCE(SUM(p.grand_total), 0)
+                DATE(p.date) AS transaction_date,
+                YEAR(p.date) AS period_year,
+                MONTH(p.date) AS period_month,
+                COALESCE(SUM(p.grand_total), 0) AS total_cogs
             FROM sma_purchases p
             LEFT JOIN sma_warehouses w ON p.warehouse_id = w.id
             LEFT JOIN sma_warehouses pw ON w.parent_id = pw.id
             WHERE DATE(p.date) = ?
             AND p.status = 'received'
-            GROUP BY w.id, w.name, w.warehouse_type, w.parent_id, DATE(p.date)
+            GROUP BY 
+                w.id, 
+                w.name, 
+                w.warehouse_type, 
+                w.parent_id,
+                pw.id,
+                pw.name,
+                DATE(p.date),
+                YEAR(p.date),
+                MONTH(p.date)
             ON DUPLICATE KEY UPDATE total_cogs = VALUES(total_cogs)
         ";
 
@@ -181,7 +225,7 @@ function execute_etl($mysqli, $transaction_date) {
         // Process Operational Costs (shipping, surcharge)
         // ============================================================
         $operational_query = "
-            UPDATE fact_cost_center f
+            UPDATE sma_fact_cost_center f
             SET f.operational_cost = (
                 SELECT COALESCE(SUM(p.shipping + COALESCE(p.surcharge, 0)), 0)
                 FROM sma_purchases p
@@ -208,8 +252,8 @@ function execute_etl($mysqli, $transaction_date) {
             SET end_time = NOW(),
                 status = 'COMPLETED',
                 duration_seconds = ?,
-                rows_processed = (SELECT COUNT(*) FROM fact_cost_center WHERE DATE(transaction_date) = ?)
-            WHERE log_id = ?
+                rows_processed = (SELECT COUNT(*) FROM sma_fact_cost_center WHERE DATE(transaction_date) = ?)
+            WHERE id = ?
         ");
         $update_log->bind_param('isi', $duration, $transaction_date, $log_id);
         $update_log->execute();
@@ -226,7 +270,7 @@ function execute_etl($mysqli, $transaction_date) {
                 SET end_time = NOW(),
                     status = 'FAILED',
                     error_message = ?
-                WHERE log_id = ?
+                WHERE id = ?
             ");
             $error_msg = $e->getMessage();
             $update_log->bind_param('si', $error_msg, $log_id);

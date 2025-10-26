@@ -78,7 +78,7 @@ class Cost_center_model extends CI_Model {
      * @param string $period YYYY-MM format
      * @return array
      */
-    public function get_pharmacy_with_branches($pharmacy_id, $period = null) {
+    public function get_pharmacy_with_branches($warehouse_id, $period = null) {
         if (!$period) {
             $period = date('Y-m');
         }
@@ -99,32 +99,54 @@ class Cost_center_model extends CI_Model {
                 branch_count,
                 last_updated
             FROM view_cost_center_pharmacy
-            WHERE pharmacy_id = ? AND period = ?
+            WHERE warehouse_id = ? AND period = ?
         ";
 
-        $pharmacy_result = $this->db->query($pharmacy_query, [$pharmacy_id, $period]);
+        $pharmacy_result = $this->db->query($pharmacy_query, [$warehouse_id, $period]);
         $pharmacy = $pharmacy_result->row_array();
-
-        // Get branches for this pharmacy
+        
+        // Get branches for this pharmacy using warehouse_id (natural key)
+        // FIXED: Using warehouse_id (parent's warehouse_id) instead of pharmacy_id (surrogate)
+        // This query works with both pre and post-migration database states
+        $period_parts = explode('-', $period);
+        $period_year = $period_parts[0];
+        $period_month = $period_parts[1];
+        
         $branches_query = "
             SELECT 
-                branch_id,
-                warehouse_id,
-                branch_name,
-                branch_code,
-                period,
-                kpi_total_revenue,
-                kpi_total_cost,
-                kpi_profit_loss,
-                kpi_profit_margin_pct,
-                kpi_cost_ratio_pct,
-                last_updated
-            FROM view_cost_center_branch
-            WHERE pharmacy_id = ? AND period = ?
+                db.warehouse_id,
+                db.branch_name,
+                db.branch_code,
+                COALESCE(SUM(fcf.total_revenue), 0) AS kpi_total_revenue,
+                COALESCE(SUM(fcf.total_cogs), 0) AS kpi_total_cost,
+                COALESCE(SUM(fcf.total_revenue - fcf.total_cogs), 0) AS kpi_profit_loss,
+                CASE 
+                    WHEN COALESCE(SUM(fcf.total_revenue), 0) = 0 THEN 0
+                    ELSE ROUND(
+                        ((COALESCE(SUM(fcf.total_revenue), 0) - COALESCE(SUM(fcf.total_cogs), 0)) 
+                         / COALESCE(SUM(fcf.total_revenue), 0)) * 100, 2
+                    )
+                END AS kpi_profit_margin_pct,
+                CASE 
+                    WHEN COALESCE(SUM(fcf.total_revenue), 0) = 0 THEN 0
+                    ELSE ROUND(
+                        (COALESCE(SUM(fcf.total_cogs), 0) / COALESCE(SUM(fcf.total_revenue), 0)) * 100, 2
+                    )
+                END AS kpi_cost_ratio_pct,
+                NOW() AS last_updated
+            FROM sma_dim_branch db
+            INNER JOIN sma_warehouses w ON db.warehouse_id = w.id
+            LEFT JOIN sma_fact_cost_center fcf 
+                ON db.warehouse_id = fcf.warehouse_id 
+                AND fcf.period_year = ? 
+                AND fcf.period_month = ?
+            WHERE w.parent_id = ?
+            AND db.is_active = 1
+            GROUP BY db.warehouse_id, db.branch_name, db.branch_code
             ORDER BY kpi_total_revenue DESC
         ";
 
-        $branches_result = $this->db->query($branches_query, [$pharmacy_id, $period]);
+        $branches_result = $this->db->query($branches_query, [$period_year, $period_month, $warehouse_id]);
         $branches = $branches_result->result_array();
 
         return [
@@ -183,7 +205,7 @@ class Cost_center_model extends CI_Model {
         if ($level === 'branch') {
             $query = "
                 SELECT 
-                    branch_id,
+                    warehouse_id,
                     branch_name,
                     period,
                     kpi_total_revenue AS revenue,
@@ -192,14 +214,15 @@ class Cost_center_model extends CI_Model {
                     kpi_profit_margin_pct AS margin_pct,
                     last_updated
                 FROM view_cost_center_branch
-                WHERE branch_id = ?
+                WHERE warehouse_id = ?
                 ORDER BY period DESC
                 LIMIT ?
             ";
         } else {
+            // FIXED: Using warehouse_id (natural key) instead of pharmacy_id (surrogate)
             $query = "
                 SELECT 
-                    pharmacy_id,
+                    warehouse_id,
                     pharmacy_name,
                     period,
                     kpi_total_revenue AS revenue,
@@ -208,7 +231,7 @@ class Cost_center_model extends CI_Model {
                     kpi_profit_margin_pct AS margin_pct,
                     last_updated
                 FROM view_cost_center_pharmacy
-                WHERE pharmacy_id = ?
+                WHERE warehouse_id = ?
                 ORDER BY period DESC
                 LIMIT ?
             ";
@@ -294,9 +317,33 @@ class Cost_center_model extends CI_Model {
      * @return boolean
      */
     public function pharmacy_exists($pharmacy_id) {
-        $query = "SELECT 1 FROM sma_dim_pharmacy WHERE pharmacy_id = ? AND is_active = 1";
+        $query = "SELECT 1 FROM sma_dim_pharmacy WHERE warehouse_id = ?";
         $result = $this->db->query($query, [$pharmacy_id]);
+        
         return $result->num_rows() > 0;
+    }
+
+    /**
+     * Get basic pharmacy info from dimension table
+     * Used when no transaction data exists for the period
+     * 
+     * FIXED: Using warehouse_id (natural key) instead of pharmacy_id (surrogate)
+     * @param int $warehouse_id
+     * @return array|null
+     */
+    public function get_pharmacy_info($warehouse_id) {
+        $query = "
+            SELECT 
+                warehouse_id,
+                pharmacy_name,
+                pharmacy_code
+            FROM sma_dim_pharmacy
+            WHERE warehouse_id = ? AND is_active = 1
+            LIMIT 1
+        ";
+        
+        $result = $this->db->query($query, [$warehouse_id]);
+        return $result->num_rows() > 0 ? $result->row_array() : null;
     }
 
     /**
@@ -622,7 +669,8 @@ class Cost_center_model extends CI_Model {
             $period = date('Y-m');
         }
 
-        // Query that joins warehouses (pharmacies) with cost center facts
+        // Query that joins warehouses (pharmacies + central warehouses) with cost center facts
+        // Now includes central warehouses (type='warehouse' with parent_id IS NULL)
         $query = "
             SELECT 
                 w.id AS pharmacy_id,
@@ -656,7 +704,7 @@ class Cost_center_model extends CI_Model {
             FROM sma_warehouses w
             LEFT JOIN sma_fact_cost_center fcc ON w.id = fcc.warehouse_id AND CONCAT(fcc.period_year, '-', LPAD(fcc.period_month, 2, '0')) = ?
             LEFT JOIN sma_warehouses db ON db.warehouse_type = 'branch' AND db.parent_id = w.id
-            WHERE w.warehouse_type = 'pharmacy' AND w.id NOT IN (32, 48, 51)
+            WHERE (w.warehouse_type = 'pharmacy') OR (w.warehouse_type = 'warehouse' AND w.parent_id IS NULL)
             GROUP BY w.id, w.code, w.name, fcc.period_year, fcc.period_month
             ORDER BY kpi_total_revenue DESC
             LIMIT ? OFFSET ?

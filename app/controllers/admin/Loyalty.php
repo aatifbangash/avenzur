@@ -18,7 +18,7 @@ class Loyalty extends MY_Controller
         }
 
         $this->load->library('form_validation');
-        $this->load->admin_model('loyalty_model');
+        $this->load->admin_model('ployalty_model');
     }
 
     /**

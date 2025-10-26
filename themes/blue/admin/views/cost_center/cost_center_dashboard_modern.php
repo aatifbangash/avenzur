@@ -623,14 +623,30 @@
             <div class="horizon-select-group">
                 <label>Period</label>
                 <select id="periodSelector" onchange="handlePeriodChange(this.value)">
-                    <option value="">Loading...</option>
+                    <option value="">Select Period</option>
                 </select>
             </div>
-            <div class="horizon-select-group">
+            <!-- Hidden pharmacy selection that still passes data to JS -->
+            <div style="display: none;">
+                <div class="horizon-select-group">
+                    <label>Pharmacy</label>
+                    <select id="pharmacyFilter" onchange="handlePharmacyFilter(this.value)">
+                        <option value="" selected>All Pharmacies</option>
+                    </select>
+                </div>
+            </div>
+            <!-- <div class="horizon-select-group">
                 <label>Pharmacy</label>
-                <select id="pharmacyFilter" onchange="handlePharmacyFilter(this.value)">
-                    <option value="">All Pharmacies</option>
+                <select id="pharmacyFilter" disabled style="opacity: 0.6; cursor: not-allowed;" onchange="handlePharmacyFilter(this.value)">
+                    <option value="" selected>All Pharmacies</option>
                 </select>
+            </div> -->
+            <div class="horizon-select-group">
+                <label>Selected Period</label>
+                <div style="color: #000000; padding: 8px 12px; border-radius: 6px; font-size: 14px; font-weight: 600; min-width: 120px; text-align: center;">
+                    <i class="fa fa-calendar" style="margin-right: 6px;"></i>
+                    <?php echo $period ?? date('Y-m'); ?>
+                </div>
             </div>
         </div>
         <div class="horizon-controls-right">
@@ -855,6 +871,13 @@ function handlePeriodChange(period) {
         const url = new URL(window.location);
         url.searchParams.set('period', period);
         window.location.href = url.toString();
+        // Set the period selector to the current period after navigation
+        window.addEventListener('DOMContentLoaded', function() {
+            const selector = document.getElementById('periodSelector');
+            if (selector) {
+                selector.value = period;
+            }
+        });
     }
 }
 
