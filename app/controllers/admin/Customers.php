@@ -1573,7 +1573,8 @@ class Customers extends MY_Controller
             'promessory_note_amount' => 'Promissory Note Amount',
             'balance' => 'Customer Balance',
             'note' => 'Note',
-            'sales_agent' => 'Sales Agent Name'
+            'sales_agent' => 'Sales Agent Name',
+            'category' => 'Classification'
         ];
     }
 
@@ -1712,7 +1713,6 @@ class Customers extends MY_Controller
         foreach ($sheet->getRowIterator() as $row) {
             $i++;
             $rowIndex = $row->getRowIndex();
-
             // Skip header row
             if ($rowIndex == 1) continue;
 
@@ -1737,10 +1737,8 @@ class Customers extends MY_Controller
                 if (!empty($field) && isset($rowData[$index])) {
                     $data[$field] = trim($rowData[$index]);
                 }
-
-                //echo '<pre>';print_r($data[$field]);
             }
-
+           
             // Skip row if 'name' is missing
             if (empty($data['name'])) continue;
 
@@ -1752,6 +1750,7 @@ class Customers extends MY_Controller
 
             if ($exists) {
                 // Update existing record
+                //echo '<pre>';print_r($data);exit;
                 $this->db->where('id', $exists->id)->update('companies', $data);
             } else {
                 $seq_code = 'CUS-' . str_pad($i, 5, '0', STR_PAD_LEFT);
