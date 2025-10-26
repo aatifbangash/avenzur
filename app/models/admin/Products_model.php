@@ -913,8 +913,8 @@ class Products_model extends CI_Model
     {
         $this->db->select(
             $this->db->dbprefix('products') . '.*, ' .
-            $this->db->dbprefix('categories') . '.name as category, ' .
-            $this->db->dbprefix('inventory_movements') . '.net_unit_sale as price'
+                $this->db->dbprefix('categories') . '.name as category, ' .
+                $this->db->dbprefix('inventory_movements') . '.net_unit_sale as price'
         )
             ->join('categories', 'categories.id = products.category_id', 'left')
             ->join('inventory_movements', 'sma_inventory_movements.product_id = products.id', 'left')
@@ -1599,14 +1599,16 @@ class Products_model extends CI_Model
         return $this->db->where('code', $gtin)->count_all_results('sma_products') > 0;
     }
 
-     public function insert_batch($data) {
+    public function insert_batch($data)
+    {
         if (!empty($data)) {
             return $this->db->insert_batch("sma_products", $data);
         }
         return false;
     }
 
-     public function check_inventory($warehouse_id, $item_id, $item_batchno, $item_expiry, $item_quantity, $avz_code){
+    public function check_inventory($warehouse_id, $item_id, $item_batchno, $item_expiry, $item_quantity, $avz_code)
+    {
         $this->db->select("im.net_unit_sale, 
                             im.net_unit_cost, 
                             im.real_unit_cost,
@@ -1617,22 +1619,22 @@ class Products_model extends CI_Model
                             im.expiry_date as expiry,
                             im.avz_item_code,
                             (SUM(im.quantity)) AS total_quantity", false);
-            $this->db->from('sma_inventory_movements im');
-            $this->db->where('im.location_id', $warehouse_id);
-            $this->db->where('im.product_id', $item_id);
-            $this->db->where('im.batch_number', $item_batchno);
-            $this->db->where('im.expiry_date', $item_expiry);
-            if($avz_code != '' && $avz_code != 'null'){
-                $this->db->where('im.avz_item_code', $avz_code);
-            }
-            $this->db->group_by(['im.product_id', 'im.batch_number', 'im.expiry_date']);
-            $this->db->having('total_quantity >=', $item_quantity);
-            $query = $this->db->get();
+        $this->db->from('sma_inventory_movements im');
+        $this->db->where('im.location_id', $warehouse_id);
+        $this->db->where('im.product_id', $item_id);
+        $this->db->where('im.batch_number', $item_batchno);
+        $this->db->where('im.expiry_date', $item_expiry);
+        if ($avz_code != '' && $avz_code != 'null') {
+            $this->db->where('im.avz_item_code', $avz_code);
+        }
+        $this->db->group_by(['im.product_id', 'im.batch_number', 'im.expiry_date']);
+        $this->db->having('total_quantity >=', $item_quantity);
+        $query = $this->db->get();
 
         if ($query->num_rows() > 0) {
             $rows = $query->result();
             return $rows[0];
-        }else{
+        } else {
             return false;
         }
     }
@@ -1646,11 +1648,11 @@ class Products_model extends CI_Model
         //echo json_encode(['status' => 'error', 'message' => $customer_id.'-'.$item_id.'-'.$warehouse_id]);
         // return;
         // Validate that avz_item_code is provided
-    if (!$item_id && !$this->input->get('purchase_id') && !$quote_id) {
+        if (!$item_id && !$this->input->get('purchase_id') && !$quote_id) {
             echo json_encode(['status' => 'error', 'message' => 'No item code provided']);
             return;
         }
-    
+
 
         if ($customer_id) {
             $this->db->select("im.net_unit_sale, 
@@ -1670,8 +1672,8 @@ class Products_model extends CI_Model
             $this->db->group_by(['im.avz_item_code', 'im.batch_number', 'im.expiry_date']);
             $this->db->having('total_quantity !=', 0);
             $query = $this->db->get();
-        } else if($this->input->get('purchase_id')) {
-            
+        } else if ($this->input->get('purchase_id')) {
+
             // $this->db->select("im.net_unit_sale, 
             //                 im.net_unit_cost, 
             //                 im.real_unit_cost,
@@ -1721,9 +1723,9 @@ JOIN (
 WHERE pi.purchase_id = " . $this->input->get('purchase_id') . " 
 AND im_summary.total_quantity > 0";
             $query = $this->db->query($sql);
-            
+
             //echo $this->db->last_query();exit;
-        } else if($quote_id){
+        } else if ($quote_id) {
             $this->db->select("im.net_unit_sale, 
                             im.net_unit_cost, 
                             im.real_unit_cost,
@@ -1761,7 +1763,7 @@ AND im_summary.total_quantity > 0";
                 $this->db->group_by(['im.avz_item_code', 'im.batch_number', 'im.expiry_date']);
                 $query = $this->db->get();
             }
-        }  else {
+        } else {
             /*$this->db->select('pi.avz_item_code, pi.product_code, im.net_unit_sale, im.net_unit_cost, im.real_unit_cost, pr.tax_rate, pr.type, pr.unit, p.supplier_id, p.supplier, pi.product_id, pi.product_name, pi.batchno, pi.expiry, SUM(IFNULL(im.quantity, 0)) as total_quantity');
             $this->db->from('sma_purchase_items pi');
             $this->db->join('sma_purchases p', 'p.id = pi.purchase_id', 'inner');
@@ -1796,7 +1798,6 @@ AND im_summary.total_quantity > 0";
             $this->db->group_by(['im.avz_item_code', 'im.batch_number', 'im.expiry_date']);
             $this->db->having('total_quantity !=', 0);
             $query = $this->db->get();
-
         }
 
         if ($query->num_rows() > 0) {
@@ -1817,7 +1818,7 @@ AND im_summary.total_quantity > 0";
                 //$row->unit             = $row->purchase_unit ? $row->purchase_unit : $row->unit;
                 $row->qty = $row->total_quantity;
                 $row->discount = '0';
-                if($this->input->get('purchase_id')) {
+                if ($this->input->get('purchase_id')) {
                     $row->current_qty = $row->total_quantity;
                 }
 
@@ -1835,10 +1836,10 @@ AND im_summary.total_quantity > 0";
                 $row->code = $row->product_code;
 
                 $row->base_unit = $row->unit;
-               
-                $units =$this->site->getUnitsByBUID($row->base_unit);
+
+                $units = $this->site->getUnitsByBUID($row->base_unit);
                 $tax_rate = $this->site->getTaxRateByID($row->tax_rate);
-                
+
                 //$tax_rate = $row->tax_rate = 5 ? 15 : 0;
                 $batches = [];
                 $options = [];
@@ -1846,50 +1847,94 @@ AND im_summary.total_quantity > 0";
                 $count++;
                 $row->serial_no = $count;
 
-                 if($this->input->get('purchase_id')) {
-                   $randid = sha1($c . $r); 
-                $pr[$randid] = [
-                    'id' => $randid,
-                    'item_id' => $row->product_id,
-                    'label' => $row->product_name . ' (' . $row->code . ')',
-                    'row' => $row,
-                    'tax_rate' => $tax_rate,
-                    'units' => $units,
-                    'options' => $options,
-                    'batches' => $batches,
-                    'total_quantity' => $total_quantity
-                ];
-            }else {
-                   $pr[] = [
-                    'id' => sha1($c . $r),
-                    'item_id' => $row->product_id,
-                    'label' => $row->product_name . ' (' . $row->code . ')',
-                    'row' => $row,
-                    'tax_rate' => $tax_rate,
-                    'units' => $units,
-                    'options' => $options,
-                    'batches' => $batches,
-                    'total_quantity' => $total_quantity
-                ];
-            }
+                if ($this->input->get('purchase_id')) {
+                    $randid = sha1($c . $r);
+                    $pr[$randid] = [
+                        'id' => $randid,
+                        'item_id' => $row->product_id,
+                        'label' => $row->product_name . ' (' . $row->code . ')',
+                        'row' => $row,
+                        'tax_rate' => $tax_rate,
+                        'units' => $units,
+                        'options' => $options,
+                        'batches' => $batches,
+                        'total_quantity' => $total_quantity
+                    ];
+                } else {
+                    $pr[] = [
+                        'id' => sha1($c . $r),
+                        'item_id' => $row->product_id,
+                        'label' => $row->product_name . ' (' . $row->code . ')',
+                        'row' => $row,
+                        'tax_rate' => $tax_rate,
+                        'units' => $units,
+                        'options' => $options,
+                        'batches' => $batches,
+                        'total_quantity' => $total_quantity
+                    ];
+                }
 
 
                 $r++;
             }
-            if($this->input->get('purchase_id')) {
+            if ($this->input->get('purchase_id')) {
                 return $pr;
-            }
-            else{
+            } else {
                 $this->sma->send_json($pr);
             }
-           // print_r($pr);exit;  
-            
+            // print_r($pr);exit;  
+
 
         } else {
             // Return an error if no records found
             echo json_encode(['status' => 'error', 'message' => 'No items found for this item code']);
         }
-
     }
+
+   public function getProductNamesBySupplier($term, $supplier_id)
+{
+    $this->db->select('
+        p.id, 
+        p.code, 
+        p.name, 
+        d.deal_type, 
+        d.dis1_percentage,
+        d.dis2_percentage,
+        d.dis3_percentage,
+        d.deal_percentage, 
+        d.threshold
+    ');
+    $this->db->from('products p');
+    $this->db->join('purchase_contract_deal_items d', 'd.item_id = p.id', 'left'); // LEFT JOIN to include all products
+
+    $this->db->where('p.supplier1', $supplier_id);
+    $this->db->group_start()
+        ->like('p.name', $term)
+        ->or_like('p.code', $term)
+        ->or_like("CONCAT(p.name, ' (', p.code, ')')", $term, 'both', false)
+    ->group_end();
+
+    $this->db->group_by('p.id');
+
+    $q = $this->db->get();
+
+    if ($q->num_rows() > 0) {
+        $data = [];
+        foreach ($q->result() as $row) {
+            $deal_available = ($row->deal_type && $row->deal_percentage  && $row->threshold) ?? false;
+            $data[] = (object)[
+                'id'             => $row->id,
+                'code'           => $row->code,
+                'name'           => $row->name,
+                'deal_type'      => $row->deal_type ?? '',
+                'deal_percentage'=> $row->deal_percentage ?? '',
+                'threshold'      => $row->threshold ?? '',
+                'deal_available' => $deal_available
+            ];
+        }
+        return $data;
+    }
+    return false;
+}
 
 }
