@@ -2,291 +2,249 @@
 
 <div class="box">
     <div class="box-header">
-        <h2 class="blue"><i class="fa-fw fa fa-plus"></i><?= lang('Procurement Dashboard'); ?></h2>
-
-        
+        <h2 class="blue"><i class="fa-fw fa fa-bar-chart"></i> <?= lang('Procurement Dashboard'); ?></h2>
     </div>
-    
 </div>
 
-<!-- Quick Lookup Inputs -->
-<div class="box mt-3">
-    <div class="box-content">
-        <div class="row">
-            <div class="col-md-4">
-                <div class="form-group">
-                    <label for="prNumber">PR Number</label>
-                    <div class="input-group">
-                        <input id="prNumber" class="form-control" placeholder="Enter PR number">
-                        <span class="input-group-btn">
-                            <button class="btn btn-primary" type="button" onclick="viewByNumber('pr')">View</button>
-                        </span>
-                    </div>
+<!-- Redesigned Quick Metrics Section with Background Colors -->
+<div class="row mt-4 text-center">
+    <div class="col-md-3">
+        <div class="card shadow-sm" style="border: 1px solid #e3e3e3; height: 100px; background-color: #007bff; color: #fff;">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="card-title">Total Suppliers</h6>
+                    <h4 class="card-text font-weight-bold mb-0">
+                        <?= isset($total_suppliers) ? (int)$total_suppliers : 0 ?>
+                    </h4>
                 </div>
+                <i class="fa fa-users fa-2x"></i>
             </div>
-            <div class="col-md-4">
-                <div class="form-group">
-                    <label for="poNumber">PO Number</label>
-                    <div class="input-group">
-                        <input id="poNumber" class="form-control" placeholder="Enter PO number">
-                        <span class="input-group-btn">
-                            <button class="btn btn-primary" type="button" onclick="viewByNumber('po')">View</button>
-                        </span>
-                    </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm" style="border: 1px solid #e3e3e3; height: 100px; background-color: #28a745; color: #fff;">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="card-title">Total Purchases</h6>
+                    <h4 class="card-text font-weight-bold mb-0">
+                        <?= isset($total_po) ? (int)$total_po : 0 ?>
+                    </h4>
                 </div>
+                <i class="fa fa-shopping-cart fa-2x"></i>
             </div>
-            <div class="col-md-4">
-                <div class="form-group">
-                    <label for="piNumber">PI Number</label>
-                    <div class="input-group">
-                        <input id="piNumber" class="form-control" placeholder="Enter PI number">
-                        <span class="input-group-btn">
-                            <button class="btn btn-primary" type="button" onclick="viewByNumber('pi')">View</button>
-                        </span>
-                    </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm" style="border: 1px solid #e3e3e3; height: 100px; background-color: #ffc107; color: #212529;">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="card-title">Total Expenditure</h6>
+                    <h4 class="card-text font-weight-bold mb-0">
+                        $<?= isset($total_po_amount) ? number_format($total_po_amount, 2) : '0.00' ?>
+                    </h4>
                 </div>
+                <i class="fa fa-dollar-sign fa-2x"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm" style="border: 1px solid #e3e3e3; height: 100px; background-color: #dc3545; color: #fff;">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="card-title">Invoices</h6>
+                    <h4 class="card-text font-weight-bold mb-0">
+                        <?= isset($total_invoices) ? (int)$total_invoices : 0 ?>
+                    </h4>
+                </div>
+                <i class="fa fa-file-invoice fa-2x"></i>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Charts Grid (3x2) with vertical metrics box -->
-<div class="box mt-4">
-    <div class="box-header">
-        <h2 class="blue"><i class="fa-fw fa fa-bar-chart"></i> <?= lang('Procurement Charts') ?></h2>
-    </div>
-    <div class="box-content">
-        <div class="row">
-            <div class="col-md-3">
-                <div style="olor:#fff;padding:15px;border-radius:6px;">
-                    <h5 style="color:#fff;font-weight:700;margin-top:0;">Totals</h5>
-                    <div style="background-color:#145214;color:#fff; padding:8px 0;border-top:1px solid rgba(255,255,255,0.08);">
-                        <strong>Total Suppliers:</strong>
-                        <div style="font-size:18px;font-weight:700;"><?= isset($total_suppliers) ? (int)$total_suppliers : 0 ?></div>
-                    </div>
-                    <div style="background:#0b3d91;color:#fff;padding:8px 0;border-top:1px solid rgba(255,255,255,0.08);">
-                        <strong>Total PR:</strong>
-                        <div style="font-size:18px;font-weight:700;"><?= isset($total_pr) ? (int)$total_pr : 0 ?></div>
-                    </div>
-                    <div style="background:#c69500;color:#fff;padding:8px 0;border-top:1px solid rgba(255,255,255,0.08);">
-                        <strong>Total PO:</strong>
-                        <div style="font-size:18px;font-weight:700;"><?= isset($total_po) ? (int)$total_po : 0 ?></div>
-                    </div>
-                    <div style="background:#d35400;color:#fff;padding:8px 0;border-top:1px solid rgba(255,255,255,0.08);">
-                        <strong>Total PI:</strong>
-                        <div style="font-size:18px;font-weight:700;"><?= isset($total_pi) ? (int)$total_pi : 0 ?></div>
-                    </div>
-                </div>
+<!-- Enhanced Charts Section -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5>Supplier Performance</h5>
             </div>
-            <div class="col-md-9">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="panel panel-default">
-                            <div class="panel-heading" style="background:transparent;border-bottom:0;padding-bottom:0;"><strong>1. Invoice & Amount (Supplier-wise)</strong></div>
-                            <div class="panel-body" style="padding-top:5px;">
-                                <div id="chart1" style="min-height:220px;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="panel panel-default">
-                            <div class="panel-heading" style="background:transparent;border-bottom:0;padding-bottom:0;"><strong>2. Invoices (Monthly)</strong></div>
-                            <div class="panel-body" style="padding-top:5px;">
-                                <div id="chart2" style="min-height:220px;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- <div class="col-md-4">
-                        <div class="panel panel-default">
-                            <div class="panel-heading" style="background:transparent;border-bottom:0;padding-bottom:0;"><strong>3. VAT (Monthly)</strong></div>
-                            <div class="panel-body" style="padding-top:5px;">
-                                <div id="chart3" style="min-height:220px;"></div>
-                            </div>
-                        </div>
-                    </div> -->
-                </div>
-
+            <div class="card-body">
+                <div id="supplierPerformanceChart" style="height: 300px;"></div>
             </div>
         </div>
-
-
-                <div class="row" style="margin-top:10px;">
-                    <div class="col-md-4">
-                        <div class="panel panel-default">
-                            <div class="panel-heading" style="background:transparent;border-bottom:0;padding-bottom:0;"><strong>4. Other Dashboard</strong></div>
-                            <div class="panel-body" style="padding-top:5px;">
-                                <div id="chart4" style="min-height:220px;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="panel panel-default">
-                            <div class="panel-heading" style="background:transparent;border-bottom:0;padding-bottom:0;"><strong>5. Top Suppliers (Amount)</strong></div>
-                            <div class="panel-body" style="padding-top:5px;">
-                                <div id="chart5" style="min-height:220px;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="panel panel-default">
-                            <div class="panel-heading" style="background:transparent;border-bottom:0;padding-bottom:0;"><strong>6. Additional Metric</strong></div>
-                            <div class="panel-body" style="padding-top:5px;">
-                                <div id="chart6" style="min-height:220px;"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5>Monthly Expenditure</h5>
+            </div>
+            <div class="card-body">
+                <div id="monthlyExpenditureChart" style="height: 300px;"></div>
+            </div>
+        </div>
     </div>
 </div>
 
+<!-- Additional Charts Section -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Top Suppliers by Expenditure</h5>
+            </div>
+            <div class="card-body">
+                <div id="topSuppliersChart" style="height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Purchase Trends (Quarterly)</h5>
+            </div>
+            <div class="card-body">
+                <div id="purchaseTrendsChart" style="height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Item-Level Insights -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Top Purchased Items</h5>
+            </div>
+            <div class="card-body">
+                <ul>
+                    <li>Item A - 500 units</li>
+                    <li>Item B - 300 units</li>
+                    <li>Item C - 200 units</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Items Nearing Expiry</h5>
+            </div>
+            <div class="card-body">
+                <ul>
+                    <li>Item X - Expiry: 2025-11-01</li>
+                    <li>Item Y - Expiry: 2025-12-15</li>
+                    <li>Item Z - Expiry: 2026-01-10</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
 <script>
-    function viewByNumber(type) {
-        var base = '<?= admin_url('') ?>';
-        if (type === 'pr') {
-            var v = document.getElementById('prNumber').value.trim();
-            if (!v) return alert('Enter PR number');
-            window.location.href = base + 'purchase_requisition/view/' + encodeURIComponent(v);
-        } else if (type === 'po') {
-            var v = document.getElementById('poNumber').value.trim();
-            if (!v) return alert('Enter PO number');
-            window.location.href = base + 'purchases/view/' + encodeURIComponent(v);
-        } else if (type === 'pi') {
-            var v = document.getElementById('piNumber').value.trim();
-            if (!v) return alert('Enter PI number');
-            window.location.href = base + 'purchases/view/' + encodeURIComponent(v);
-        }
-    }
-</script>
-
-<!-- ApexCharts CDN -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/apexcharts@3.36.0/dist/apexcharts.css">
-<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.36.0"></script>
-<script>
-    (function(){
-        /*
-         Expected PHP data structures (controller should pass):
-         - $supplier_invoice_stats = [ ['name'=>'Supplier A','invoices'=>12,'amount'=>1500], ... ]
-         - $monthly_invoices = [ ['period'=>'2025-01','invoices'=>120], ... ] // period labels
-         - $monthly_vat = [ ['period'=>'2025-01','vat'=>250], ... ]
-         - $other_dashboard = [ ['label'=>'Metric A','value'=>40], ... ] // for donut
-        */
-
-        var supplierInvoiceStats = <?= isset($supplier_invoice_stats) ? json_encode($supplier_invoice_stats) : 'null' ?>;
-        var monthlyInvoices = <?= isset($monthly_invoices) ? json_encode($monthly_invoices) : 'null' ?>;
-        var monthlyVat = <?= isset($monthly_vat) ? json_encode($monthly_vat) : 'null' ?>;
-        var otherDashboard = <?= isset($other_dashboard) ? json_encode($other_dashboard) : 'null' ?>;
-
-        // Fallback sample data
-        if (!supplierInvoiceStats) {
-            supplierInvoiceStats = [
-                {name: 'Supplier A', invoices: 12, amount: 1500},
-                {name: 'Supplier B', invoices: 9, amount: 980},
-                {name: 'Supplier C', invoices: 6, amount: 700},
-                {name: 'Supplier D', invoices: 4, amount: 420}
-            ];
-        }
-        if (!monthlyInvoices) {
-            monthlyInvoices = [
-                {period: 'Jan', invoices: 120}, {period: 'Feb', invoices: 95}, {period: 'Mar', invoices: 110}, {period: 'Apr', invoices: 130}
-            ];
-        }
-        if (!monthlyVat) {
-            monthlyVat = [
-                {period: 'Jan', vat: 250}, {period: 'Feb', vat: 200}, {period: 'Mar', vat: 230}, {period: 'Apr', vat: 270}
-            ];
-        }
-        if (!otherDashboard) {
-            otherDashboard = [ {label: 'Pending', value: 12}, {label: 'Approved', value: 30}, {label: 'Rejected', value: 5} ];
-        }
-
-        // Chart 1: supplier invoices (bar) and amount (line) - combo chart
-        (function(){
-            var categories = supplierInvoiceStats.map(function(s){ return s.name; });
-            var invoicesSeries = supplierInvoiceStats.map(function(s){ return s.invoices; });
-            var amountSeries = supplierInvoiceStats.map(function(s){ return s.amount; });
-
-            var options = {
-                series: [{ name: 'Invoices', type: 'column', data: invoicesSeries }, { name: 'Amount', type: 'line', data: amountSeries }],
-                chart: { height: 320, type: 'line' },
-                stroke: { width: [0, 3] },
-                xaxis: { categories: categories },
-                yaxis: [{ title: { text: 'Invoices' } }, { opposite: true, title: { text: 'Amount' } }],
-                colors: ['#0d6efd', '#198754'],
-                dataLabels: { enabled: false }
-            };
-            new ApexCharts(document.querySelector('#chart1'), options).render();
-        })();
-
-        // Chart 2: monthly invoices (bar)
-        (function(){
-            var cats = monthlyInvoices.map(function(m){ return m.period; });
-            var data = monthlyInvoices.map(function(m){ return m.invoices; });
-            var options = {
-                chart: { type: 'bar', height: 320 },
-                series: [{ name: 'Invoices', data: data }],
-                xaxis: { categories: cats },
-                plotOptions: { bar: { borderRadius: 6 } },
-                colors: ['#0d6efd']
-            };
-            new ApexCharts(document.querySelector('#chart2'), options).render();
-        })();
-
-        // Chart 3: monthly VAT (area)
-        (function(){
-            var cats = monthlyVat.map(function(m){ return m.period; });
-            var data = monthlyVat.map(function(m){ return m.vat; });
-            var options = {
-                chart: { type: 'area', height: 320 },
-                series: [{ name: 'VAT', data: data }],
-                xaxis: { categories: cats },
-                colors: ['#ffc107'],
-                dataLabels: { enabled: false }
-            };
-            new ApexCharts(document.querySelector('#chart3'), options).render();
-        })();
-
-        // Chart 4: other dashboard (donut)
-        (function(){
-            var labels = otherDashboard.map(function(o){ return o.label; });
-            var values = otherDashboard.map(function(o){ return o.value; });
-            var options = {
-                chart: { type: 'donut', height: 220 },
-                series: values,
-                labels: labels,
-                colors: ['#0d6efd','#198754','#ffc107','#dc3545']
-            };
-            new ApexCharts(document.querySelector('#chart4'), options).render();
-        })();
-
-        // Chart 5: Top suppliers by amount (bar)
-        (function(){
-            var topSup = <?= isset($top_suppliers_amount) ? json_encode($top_suppliers_amount) : 'null' ?>;
-            if (!topSup) {
-                topSup = [ {name:'Supplier A', amount:1500}, {name:'Supplier B', amount:980}, {name:'Supplier C', amount:700} ];
+    // Supplier Performance Chart
+    var supplierChart = echarts.init(document.getElementById('supplierPerformanceChart'));
+    var supplierOption = {
+        title: {
+            text: 'Supplier Performance'
+        },
+        tooltip: {
+            trigger: 'axis'
+        },
+        legend: {
+            data: ['Purchases']
+        },
+        xAxis: {
+            type: 'category',
+            data: <?= json_encode(array_column($supplier_invoices, 'supplier')) ?>
+        },
+        yAxis: {
+            type: 'value'
+        },
+        series: [{
+            name: 'Purchases',
+            type: 'bar',
+            data: <?= json_encode(array_column($supplier_invoices, 'total_amount')) ?>,
+            itemStyle: {
+                color: '#007bff'
             }
-            var cats = topSup.map(function(s){ return s.name; });
-            var data = topSup.map(function(s){ return s.amount; });
-            var options = {
-                chart: { type: 'bar', height: 220 },
-                series: [{ name: 'Amount', data: data }],
-                xaxis: { categories: cats },
-                colors: ['#20c997']
-            };
-            new ApexCharts(document.querySelector('#chart5'), options).render();
-        })();
+        }]
+    };
+    supplierChart.setOption(supplierOption);
 
-        // Chart 6: Additional metric (radialBar)
-        (function(){
-            var metric = <?= isset($chart6_data) ? json_encode($chart6_data) : 'null' ?>;
-            if (!metric) { metric = {label:'Completion', value:65}; }
-            var options = {
-                chart: { type: 'radialBar', height: 220 },
-                series: [metric.value],
-                labels: [metric.label],
-                colors: ['#6610f2']
-            };
-            new ApexCharts(document.querySelector('#chart6'), options).render();
-        })();
+    // Monthly Expenditure Chart
+    var expenditureChart = echarts.init(document.getElementById('monthlyExpenditureChart'));
+    var expenditureOption = {
+        title: {
+            text: 'Monthly Expenditure'
+        },
+        tooltip: {
+            trigger: 'axis'
+        },
+        legend: {
+            data: ['Expenditure']
+        },
+        xAxis: {
+            type: 'category',
+            data: <?= json_encode(array_column($monthly_invoices, 'month')) ?>
+        },
+        yAxis: {
+            type: 'value'
+        },
+        series: [{
+            name: 'Expenditure',
+            type: 'line',
+            data: <?= json_encode(array_column($monthly_invoices, 'total_amount')) ?>,
+            itemStyle: {
+                color: '#28a745'
+            }
+        }]
+    };
+    expenditureChart.setOption(expenditureOption);
 
-    })();
+    // Top Suppliers by Expenditure Chart
+    var topSuppliersChart = echarts.init(document.getElementById('topSuppliersChart'));
+    var topSuppliersOption = {
+        title: {
+            text: 'Top Suppliers by Expenditure'
+        },
+        tooltip: {},
+        xAxis: {
+            type: 'category',
+            data: <?= json_encode(array_column($top_suppliers, 'supplier')) ?>
+        },
+        yAxis: {
+            type: 'value'
+        },
+        series: [{
+            name: 'Expenditure',
+            type: 'bar',
+            data: <?= json_encode(array_column($top_suppliers, 'total_expenditure')) ?>
+        }]
+    };
+    topSuppliersChart.setOption(topSuppliersOption);
+
+    // Purchase Trends (Quarterly) Chart
+    var purchaseTrendsChart = echarts.init(document.getElementById('purchaseTrendsChart'));
+    var purchaseTrendsOption = {
+        title: {
+            text: 'Purchase Trends (Quarterly)'
+        },
+        tooltip: {},
+        xAxis: {
+            type: 'category',
+            data: <?= json_encode(array_column($quarterly_trends, 'quarter')) ?>
+        },
+        yAxis: {
+            type: 'value'
+        },
+        series: [{
+            name: 'Purchases',
+            type: 'line',
+            data: <?= json_encode(array_column($quarterly_trends, 'total_amount')) ?>
+        }]
+    };
+    purchaseTrendsChart.setOption(purchaseTrendsOption);
 </script>

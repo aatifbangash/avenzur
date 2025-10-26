@@ -529,6 +529,29 @@
                             </li>
                       
 
+                              <li class="mm_purchase_contract_deals">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-star"></i>
+                                    <span class="text"> <?= lang('Purchase Contract Deals'); ?>
+                                    </span> <span class="chevron closed"></span>
+                                </a>
+                                <ul>
+                                    <li id="purchases_index">
+                                        <a class="submenu" href="<?= admin_url('purchase_contract_deals'); ?>">
+                                            <i class="fa fa-star"></i>
+                                            <span class="text"> <?= lang('list_purchases_contract_deals'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="purchases_add">
+                                        <a class="submenu" href="<?= admin_url('purchase_contract_deals/add'); ?>">
+                                            <i class="fa fa-plus-circle"></i>
+                                            <span class="text"> <?= lang('create_purchase_contract_deal'); ?></span>
+                                        </a>
+                                    </li>
+                                </ul>    
+                            </li>
+                        
+
                              <li class="mm_purchase_order">
                                 <a class="dropmenu" href="#">
                                     <i class="fa fa-star"></i>
@@ -543,7 +566,7 @@
                                         </a>
                                     </li>
                                     <li id="purchases_add">
-                                        <a class="submenu" href="<?= admin_url('purchase_order/save'); ?>">
+                                        <a class="submenu" href="<?= admin_url('purchase_order/add'); ?>">
                                             <i class="fa fa-plus-circle"></i>
                                             <span class="text"> <?= lang('create_purchase_order'); ?></span>
                                         </a>

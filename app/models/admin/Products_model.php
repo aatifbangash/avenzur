@@ -1895,6 +1895,9 @@ AND im_summary.total_quantity > 0";
         p.code, 
         p.name, 
         d.deal_type, 
+        d.dis1_percentage,
+        d.dis2_percentage,
+        d.dis3_percentage,
         d.deal_percentage, 
         d.threshold
     ');

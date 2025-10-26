@@ -234,21 +234,24 @@
             select: function(event, ui) {
                 event.preventDefault();
                 if (ui.item.id !== 0) {
-                    console.log("uitem = " + JSON.stringify(ui.item));
+                    //console.log("uitem = " + JSON.stringify(ui.item));
                     selectedItem = ui.item;
+                    console.log("selectedItem = " + JSON.stringify(selectedItem));
                     //var row = add_purchase_item(ui.item);
                     $("input[name='item_name']").val(selectedItem.label || selectedItem.row.name);
                     //$("input[name='avz_code']").val(ui.item.row.code || '');
                     $("input[name='sale_price']").val(selectedItem.row.sale_price || '');
                     $("input[name='purchase_price']").val(selectedItem.row.cost || '');
-                    $("input[name='batch']").val(selectedItem.row.batchno || '');
-                    $("input[name='expiry_date']").val(selectedItem.row.expiry || '');
+                    //$("input[name='batch']").val(selectedItem.row.batchno || '');
+                    //$("input[name='expiry_date']").val(selectedItem.row.expiry || '');
                     $("input[name='qty']").val(selectedItem.row.qty || 1);
                     $("input[name='bonus']").val(selectedItem.row.bonus || 0);
                     $("input[name='discount1']").val(selectedItem.row.dis1 || 0);
                     $("input[name='discount2']").val(selectedItem.row.dis2 || 0);
-                    $("input[name='discount3']").val(selectedItem.row.discount || 0);
-                    $("input[name='deal']").val(selectedItem.row.deal || 0);
+                    // $("input[name='discount3']").val(selectedItem.row.discount || 0);
+                    // $("input[name='deal']").val(selectedItem.row.deal || 0);
+                    $("input[name='discount3']").val(selectedItem.row.dis3 || 0);
+                    $("input[name='deal']").val(selectedItem.row.deal_discount || 0);
                     $("input[name='vat']").val(selectedItem.tax_rate.rate || 15);
                     $("input[name='total_purchases']").val(selectedItem.row.base_unit_cost || '');
                     $("input[name='total_sales']").val(selectedItem.row.sale_price || '');
@@ -298,7 +301,7 @@
                 selectedItem.row.expiry = "";
             }
             // Update ui.item.row with new input field values
-            selectedItem.row.batchno = $("input[name='batch']").val();
+            //selectedItem.row.batchno = $("input[name='batch']").val();
             //selectedItem.row.expiry = $("input[name='expiry_date']").val();
             selectedItem.row.qty = parseFloat($("input[name='qty']").val()) || 0;
             selectedItem.row.bonus = parseFloat($("input[name='bonus']").val()) || 0;
@@ -315,6 +318,7 @@
             add_purchase_item(selectedItem);
 
             $('.new_item_cls').val('');
+            $("#add_item_new").focus();
         });
 
     });
@@ -351,16 +355,10 @@
                         <div class="col-md-2">
                             <div class="form-group">
                                 <?= lang('date', 'podate'); ?>
-                                <?php echo form_input('date', ($_POST['date'] ?? ''), 'class="form-control input-tip datetime" id="podate" required="required"'); ?>
+                                <?php echo form_input('date', ($_POST['date'] ?? date('d/m/Y')), 'class="form-control input-tip date" id="podate" required="required"'); ?>
                             </div>
                         </div>
 
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <?= lang('Supplier Inv No.', 'poref'); ?>
-                                <?php echo form_input('reference_no', ($_POST['reference_no'] ?? $ponumber), 'class="form-control input-tip" id="poref"'); ?>
-                            </div>
-                        </div>
 
                         <div class="col-md-3">
                             <div class="form-group">
@@ -374,17 +372,9 @@
                             </div>
                         </div>
 
-
-                        <div class="col-md-3">
+                          <div class="col-md-3">
                             <div class="form-group">
-                                <?= lang('attachments', 'document') ?>
-                                <input id="document" type="file" data-browse-label="<?= lang('browse'); ?>" name="attachment" multiple data-show-upload="false" data-show-preview="false" class="form-control file">
-                            </div>
-                        </div>
-
-                        <div class="col-md-3">
-                            <div class="form-group">
-
+                                  <?= lang('supplier', 'Supplier'); ?>
                                 <input type="hidden" name="supplier" value="" id="posupplier"
                                     class="form-control" style="width:100%;"
                                     placeholder="<?= lang('select') . ' ' . lang('supplier') ?>">
@@ -393,6 +383,14 @@
 
                             </div>
                         </div>
+
+
+                        <!-- <div class="col-md-2">
+                            <div class="form-group">
+                                <?= lang('attachments', 'document') ?>
+                                <input id="document" type="file" data-browse-label="<?= lang('browse'); ?>" name="attachment" multiple data-show-upload="false" data-show-preview="false" class="form-control file">
+                            </div>
+                        </div> -->
 
                         
 
@@ -447,29 +445,20 @@
                                 <div class="col-md-2">
                                     <input type="number" class="form-control new_item_cls" name="purchase_price" step="0.01" placeholder="0.00">
                                 </div>
-
-                                <label class="col-md-2 control-label">Batch</label>
+                                <label class="col-md-2 control-label">Bonus</label>
                                 <div class="col-md-2">
-                                    <input type="text" class="form-control new_item_cls" name="batch" placeholder="Batch no.">
+                                    <input type="number" class="form-control new_item_cls" name="bonus" placeholder="0">
                                 </div>
-                            </div>
 
-                            <div class="form-group">
-                                <label class="col-md-2 control-label">Expiry Date</label>
-                                <div class="col-md-2">
-                                    <input type="date" class="form-control new_item_cls" name="expiry_date">
-                                </div>
 
                                 <label class="col-md-2 control-label">Quantity</label>
                                 <div class="col-md-2">
                                     <input type="number" class="form-control new_item_cls" name="qty" placeholder="0">
                                 </div>
-
-                                <label class="col-md-2 control-label">Bonus</label>
-                                <div class="col-md-2">
-                                    <input type="number" class="form-control new_item_cls" name="bonus" placeholder="0">
-                                </div>
+                               
                             </div>
+
+                           
 
                             <div class="form-group">
                                 <label class="col-md-2 control-label">Discount 1 (%)</label>
@@ -484,7 +473,7 @@
 
                                 <label class="col-md-2 control-label">Discount 3 (%)</label>
                                 <div class="col-md-2">
-                                    <input type="number" class="form-control" name="discount3 new_item_cls" step="0.01" placeholder="0%">
+                                    <input type="number" class="form-control new_item_cls" name="discount3" step="0.01" placeholder="0%">
                                 </div>
                             </div>
 
@@ -532,24 +521,17 @@
                                         <tr>
                                             <th class="col-md-1" style="width:3%">#</th>
                                             <th class="col-md-2">item name</th>
-                                            <th class="col-md-1">avz code</th>
-                                            <th class="col-md-1">sale price</th>
+                                            <!-- <th class="col-md-1">avz code</th> -->
+                                            <th class="col-md-1">public price</th>
                                             <th class="col-md-1">purchase price</th>
                                             <!--<th class="col-md-1">Serial No.</th>-->
-                                            <th class="col-md-1">Batch</th>
-                                            <?php
-                                            if ($Settings->product_expiry) {
-                                                echo '<th class="col-md-1">' . $this->lang->line('expiry_date') . '</th>';
-                                            }
-                                            ?>
-
 
                                             <th class="col-md-1" style="width: 5%">qty</th>
                                             <th class="col-md-1" style="width: 5%">bonus</th>
                                             <th class="col-md-1" style="width: 5%">dis 1%</th>
                                             <th class="col-md-1" style="width: 5%">dis 2%</th>
-                                            <th class="col-md-1" style="width: 5%">Vat 15%</th>
                                             <th class="col-md-1" style="width: 5%">dis 3%</th>
+                                            <th class="col-md-1" style="width: 5%">Vat 15%</th>
                                             <th class="col-md-1" style="width: 5%">deal%</th>
                                             <?php
                                             /*if ($Settings->product_discount) {

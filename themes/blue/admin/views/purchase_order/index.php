@@ -76,9 +76,9 @@
                                 <th><?= lang('supplier'); ?></th>
                                 <th style="width: 20px"><?= lang('Status'); ?></th>
                                 <th style="width: 20px"><?= lang('grand_total'); ?></th>
-                                <th><?= lang('paid'); ?></th>
+                                <!-- <th><?= lang('paid'); ?></th>
                                 <th><?= lang('balance'); ?></th>
-                                <th><?= lang('payment_status'); ?></th>
+                                <th><?= lang('payment_status'); ?></th> -->
                                 <th style="width: 10px !important">
                                     <i class="fa fa-chain"></i>
                                 </th>
@@ -119,9 +119,9 @@
                                         <td><?= $purchase->supplier ?></td>
                                         <td><?= $purchase->status ?></td>
                                         <td><?= number_format($purchase->grand_total, 2) ?></td>
-                                        <td><?= number_format($purchase->paid, 2) ?></td>
+                                        <!-- <td><?= number_format($purchase->paid, 2) ?></td>
                                         <td><?= number_format($purchase->grand_total - $purchase->paid, 2) ?></td>
-                                        <td><?= $purchase->payment_status ?></td>
+                                        <td><?= $purchase->payment_status ?></td> -->
                                         <td style="width:10px !important;">
                                             <?php 
                                                 if($purchase->attachment){
