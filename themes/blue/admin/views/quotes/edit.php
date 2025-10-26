@@ -214,6 +214,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                                     <th>Batch No</th>
                                     <th>Expiry</th>
                                     <th>Quantity</th>
+                                    <th>Unit Cost</th>
                                     <th>Locked</th>
                                 </tr>
                             </thead>
@@ -250,6 +251,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                                 <td data-batchno="${item.row.batchno}">${item.row.batchno}</td>
                                 <td data-expiry="${item.row.expiry}">${item.row.expiry}</td>
                                 <td data-quantity="${item.total_quantity}">${item.total_quantity}</td>
+                                <td data-netcost="${item.net_unit_cost}">${item.row.net_unit_cost}</td>
                                 <td>${tickOrCross}</td>
                             </tr>
                         `;
@@ -407,14 +409,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                             echo form_input($biller_input);
                         } ?>
 
-                        <div class="clearfix"></div>
-                        <div class="col-md-12">
-                            <div class="panel panel-warning">
-                                <div
-                                    class="panel-heading"><?= lang('please_select_these_before_adding_product') ?></div>
-                                <div class="panel-body" style="padding: 5px;">
-
-                                    <?php if ($Owner || $Admin || $GP['sales-coordinator']) {
+                        <?php if ($Owner || $Admin || $GP['sales-coordinator']) {
                     ?>
                                         <div class="col-md-4">
                                             <div class="form-group">
@@ -438,6 +433,23 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                     echo form_input($warehouse_input);
                 } ?>
 
+                        <div class="clearfix"></div>
+                        <div class="col-md-12">
+                            <div class="panel panel-warning">
+                                <div
+                                    class="panel-heading"><?= lang('please_select_these_before_adding_product') ?></div>
+                                <div class="panel-body" style="padding: 5px;">
+
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <?= lang('Payment_Type', 'payment_type'); ?>
+                                            <select name="payment_type" id="payment_type" class="form-control">
+                                                <option value="cash"><?= lang('Cash'); ?></option>
+                                                <option value="credit"><?= lang('Credit'); ?></option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <?= lang('customer', 'qtcustomer'); ?>

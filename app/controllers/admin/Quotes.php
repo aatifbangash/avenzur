@@ -951,6 +951,8 @@ class Quotes extends MY_Controller
                 $row->avz_item_code   = $item->avz_item_code; 
                 $row->net_unit_cost   = $item->net_cost;
                 $row->real_unit_cost  = $item->real_cost;
+                $row->cash_discount   = $item->cash_discount;
+                $row->credit_discount   = $item->credit_discount;
 
                 //Discount calculation----------------------------------
                 // this row is deleted becasue of discount must not be added in sale price 

@@ -424,6 +424,8 @@ class Accounts extends MY_Controller
 			$ledger_name = isset($row['E']) ? trim($row['E']) : '';
 			$ledger_name_ar = isset($row['F']) ? trim($row['F']) : '';
 			$old_code  = isset($row['G']) ? trim($row['G']) : '';
+			$debit = isset($row['H']) ? (float) str_replace(',', '', $row['H']) : 0.0;
+			$credit = isset($row['I']) ? (float) str_replace(',', '', $row['I']) : 0.0;
 
 			if ($l1_name === '' && $l2_name === '' && $l3_name === '' && $l4_name === '' && $ledger_name === '') continue;
 
@@ -465,6 +467,15 @@ class Accounts extends MY_Controller
 				$level_num++;
 			}
 
+			// Determine opening balance and DC
+			if ($debit > 0) {
+				$op_balance    = $debit;
+				$op_balance_dc = 'D';
+			} else {
+				$op_balance    = $credit;
+				$op_balance_dc = 'C';
+			}
+
 			// --- Ledger creation ---
 			if ($ledger_name) {
 				$suffix = $get_next_suffix('sma_accounts_ledgers', 'code', $parent_code, 5);
@@ -495,9 +506,57 @@ class Accounts extends MY_Controller
 
 				if ($exists) {
 					$this->db->where('id', $exists->id)->update('sma_accounts_ledgers', $ledger_data);
+					$ledger_id = $exists->id;
 				} else {
 					$this->db->insert('sma_accounts_ledgers', $ledger_data);
+					$ledger_id = $this->db->insert_id();
 				}
+
+				// Collect opening balance for entry
+				if ($op_balance > 0) {
+					$opening_ledgers[] = [
+						'ledger_id'      => $ledger_id,
+						'op_balance'     => $op_balance,
+						'op_balance_dc'  => $op_balance_dc
+					];
+				}
+			}
+		}
+
+		// ---- Insert Opening Balance Entry ----
+		if (!empty($opening_ledgers)) {
+			$dr_total = 0;
+			$cr_total = 0;
+			foreach ($opening_ledgers as $item) {
+				if ($item['op_balance_dc'] == 'D') {
+					$dr_total += $item['op_balance'];
+				} else {
+					$cr_total += $item['op_balance'];
+				}
+			}
+
+			$entry_data = [
+				'entrytype_id'     => 1, // define a type for opening balance
+				'transaction_type' => 'opening_balance',
+				'number'           => 'OB-' . date('YmdHis'),
+				'date'             => date('Y-m-d'),
+				'dr_total'         => $dr_total,
+				'cr_total'         => $cr_total,
+				'notes'            => 'Opening balances import',
+				//'created_by'       => $this->session->userdata('user_id'),
+			];
+			$this->db->insert('sma_accounts_entries', $entry_data);
+			$entry_id = $this->db->insert_id();
+
+			foreach ($opening_ledgers as $item) {
+				$item_data = [
+					'entry_id' => $entry_id,
+					'ledger_id' => $item['ledger_id'],
+					'dc' => $item['op_balance_dc'],  // D or C
+					'amount' => $item['op_balance'],
+					'narration' => 'Opening balance',
+				];
+				$this->db->insert('sma_accounts_entryitems', $item_data);
 			}
 		}
 
