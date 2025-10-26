@@ -728,6 +728,7 @@ class Purchase_order_model extends CI_Model
     public function getPurchaseByID($id)
     {
         $q = $this->db->get_where('purchase_orders', ['id' => $id], 1);
+        //echo $this->db->last_query();
         if ($q->num_rows() > 0) {
             return $q->row();
         }

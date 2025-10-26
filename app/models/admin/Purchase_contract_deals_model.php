@@ -125,6 +125,24 @@ class Purchase_contract_deals_model extends CI_Model
         return [];
     }
 
+    public function getActiveDealsForSupplierProduct($supplier_id, $product_id)
+    {
+        $today = date('Y-m-d');
+        $this->db->select('purchase_contract_deals.*, purchase_contract_deal_items.*');
+        $this->db->from('purchase_contract_deals');
+        $this->db->join('purchase_contract_deal_items', 'purchase_contract_deals.id = purchase_contract_deal_items.deal_id', 'inner');
+        $this->db->where('purchase_contract_deals.supplier_id', $supplier_id);
+        $this->db->where('purchase_contract_deal_items.item_id', $product_id);
+        $this->db->order_by('purchase_contract_deal_items.id', 'asc');
+        $this->db->limit(1);
+        $q = $this->db->get();
+
+        if ($q->num_rows() > 0) {
+            return $q->result()[0];
+        }
+        return [];
+    }
+
 
     public function deleteDeal($id)
     {

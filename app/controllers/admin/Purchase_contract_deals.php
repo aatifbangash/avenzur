@@ -91,6 +91,9 @@ class Purchase_contract_deals extends MY_Controller
                         'deal_type'      => $item['deal_type'],
                         'item_id'        => $item['item_id'],
                         'threshold'      => $item['threshold'],
+                        'dis1_percentage' => $item['dis1_percentage'],
+                        'dis2_percentage' => $item['dis2_percentage'],
+                        'dis3_percentage' => $item['dis3_percentage'],
                         'deal_percentage' => $item['deal_percentage']
                     ];
 
@@ -125,6 +128,9 @@ class Purchase_contract_deals extends MY_Controller
                         'item_id'        => $item['item_id'],
                         'deal_type'      => $item['deal_type'],
                         'threshold'      => $item['threshold'],
+                        'dis1_percentage' => $item['dis1_percentage'],
+                        'dis2_percentage' => $item['dis2_percentage'],
+                        'dis3_percentage' => $item['dis3_percentage'],
                         'deal_percentage' => $item['deal_percentage']
                     ];
                     $this->db->insert('purchase_contract_deal_items', $item_data);
@@ -269,6 +275,9 @@ class Purchase_contract_deals extends MY_Controller
                     'price' => $row->price,
                     'qty' => 1,
                     'deal_type' => $row->deal_type,
+                    'dis1_percentage' => $row->dis1_percentage,
+                    'dis2_percentage' => $row->dis2_percentage,
+                    'dis3_percentage' => $row->dis3_percentage,
                     'deal_percentage' => $row->deal_percentage,
                     'threshold' => $row->threshold
                 ];
