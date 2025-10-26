@@ -160,7 +160,7 @@
                     <i class="fa fa-info me-1"></i> Already Sent to Supplier
                   </button>
                   <button class="btn btn-outline-secondary btn-sm me-2 mb-2 text-primary">
-                    <i class="fa fa-download me-1"></i> GRN Created
+                    <i class="fa fa-check me-1"></i> GRN Created
                   </button>
                 <?php } else { ?>
                   <button class="btn btn-outline-primary btn-sm me-2 mb-2 text-primary" data-toggle="modal" data-target="#sendToSupplierModal">

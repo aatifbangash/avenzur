@@ -83,6 +83,7 @@ class Purchase_order extends MY_Controller
     {
         $products = [];
         $total_items = sizeof($_POST['product']);
+        $date = $this->sma->fld(trim($this->input->post('date')));
         //$status = $this->input->post('status');
         $reference = $this->input->post('reference_no') ? $this->input->post('reference_no') : $this->site->getReference('po');
         $status = $this->input->post('status') ?? "pending";
@@ -176,7 +177,7 @@ class Purchase_order extends MY_Controller
                     'option_id' => $item_option,
                     'net_unit_cost' => $_POST['item_unit_cost'][$r], //item_net_cost,
                     'unit_cost' => $_POST['net_cost'][$r], //+ $item_tax),
-                    'quantity' => $item_quantity + $item_bonus,
+                    'quantity' => $item_quantity,
                     'product_unit_id' => $item_unit,
                     'product_unit_code' => $unit->code,
                     'unit_quantity' => $item_unit_quantity,
@@ -1847,7 +1848,9 @@ class Purchase_order extends MY_Controller
                 $quantity = (float) $item['quantity'];
                 $actualQty = (float) $item['actual_quantity'];
                 $batchNumber = $this->db->escape($item['batch_number']);
-                $expiryDate = $item['expiry_date'] ;
+                //$expiryDate = $item['expiry_date'] ;
+                $expiryDate = $item['expiry_date'] ;//date('YYYY-m-d',strtotime(trim($item['expiry_date'])));
+                //echo $expiryDate;exit;
                 $comment = $this->db->escape($item['remarks']); // safe escape for string
 
                 // Optional: Validation to avoid invalid entries
@@ -1859,7 +1862,7 @@ class Purchase_order extends MY_Controller
                 $actualQtyCase .= " WHEN {$id} THEN {$actualQty}";
                 $commentCase   .= " WHEN {$id} THEN {$comment}";
                 $batchNumberCase .= " WHEN {$id} THEN {$batchNumber}";
-                $expiryDateCase .= " WHEN {$id} THEN {$expiryDate}";
+                $expiryDateCase .= " WHEN {$id} THEN '{$expiryDate}'";
 
                 $ids[] = $id;
             }
@@ -1877,7 +1880,7 @@ class Purchase_order extends MY_Controller
 
             $idList = implode(',', $ids);
 
-            $sql = "
+             $sql = "
         UPDATE sma_purchase_order_items
         SET 
             quantity = {$quantityCase},
@@ -1908,6 +1911,8 @@ class Purchase_order extends MY_Controller
             admin_redirect('purchase_order/view/' . $po_id);
         }
 
+        $this->data['po_info'] = $this->purchase_order_model->getPurchaseOrderDetails($po_id);
+        //print_r($this->data['po_info']);exit;
         $this->data['rows'] = $this->purchase_order_model->getAllPurchaseItems($po_id);
         $this->data['po_id'] = $po_id;
 

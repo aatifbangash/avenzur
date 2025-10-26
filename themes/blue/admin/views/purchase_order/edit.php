@@ -371,16 +371,11 @@
                         <div class="col-md-2">
                             <div class="form-group">
                                 <?= lang('date', 'podate'); ?>
-                                <?php echo form_input('date', ($_POST['date'] ?? ''), 'class="form-control input-tip datetime" id="podate" required="required"'); ?>
+                                <?php echo form_input('date', ($_POST['date'] ?? $purchase->date), 'class="form-control input-tip datetime" id="podate" required="required"'); ?>
                             </div>
                         </div>
 
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <?= lang('Supplier Inv No.', 'poref'); ?>
-                                <?php echo form_input('reference_no', ($_POST['reference_no'] ?? $ponumber), 'class="form-control input-tip" id="poref"'); ?>
-                            </div>
-                        </div>
+                      
 
                         <div class="col-md-3">
                             <div class="form-group">
@@ -394,17 +389,9 @@
                             </div>
                         </div>
 
-
-                        <div class="col-md-3">
+                         <div class="col-md-3">
                             <div class="form-group">
-                                <?= lang('attachments', 'document') ?>
-                                <input id="document" type="file" data-browse-label="<?= lang('browse'); ?>" name="attachment" multiple data-show-upload="false" data-show-preview="false" class="form-control file">
-                            </div>
-                        </div>
-
-                        <div class="col-md-3">
-                            <div class="form-group">
-
+                                <?= lang('supplier', 'Supplier'); ?>
                                 <input type="hidden" name="supplier" value="" id="posupplier"
                                     class="form-control" style="width:100%;"
                                     placeholder="<?= lang('select') . ' ' . lang('supplier') ?>">
@@ -413,7 +400,6 @@
 
                             </div>
                         </div>
-
                         
 
                     </div>

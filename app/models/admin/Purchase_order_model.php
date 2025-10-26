@@ -105,14 +105,14 @@ class Purchase_order_model extends CI_Model
         $this->db->trans_start();
         if ($this->db->insert('purchase_orders', $data)) {
             $purchase_id = $this->db->insert_id();
-           
+
             foreach ($items as $item) {
                 $item['purchase_id'] = $purchase_id;
                 $this->db->insert('purchase_order_items', $item);
 
                 //handle inventory movement
-              
-               
+
+
             }
 
             if (!empty($attachments)) {
@@ -122,8 +122,6 @@ class Purchase_order_model extends CI_Model
                     $this->db->insert('attachments', $attachment);
                 }
             }
-           
-          
         }
         $this->db->trans_complete();
         if ($this->db->trans_status() === false) {
@@ -322,7 +320,7 @@ class Purchase_order_model extends CI_Model
             ->where('purchase_items.purchase_id', $purchase_id);
 
         $this->db->where('purchase_items.is_transfer !=', 1);
-            // Exclude items whose item_code exists in $avz_item_codes
+        // Exclude items whose item_code exists in $avz_item_codes
         if (!empty($avz_item_codes)) {
             $this->db->where_not_in('purchase_items.avz_item_code', $avz_item_codes);
         }
@@ -888,14 +886,14 @@ class Purchase_order_model extends CI_Model
                 $item['option_id'] = !empty($item['option_id']) && is_numeric($item['option_id']) ? $item['option_id'] : null;
 
                 $this->db->insert('purchase_order_items', $item);
-                
+
                 $item_exists_in_inventory = false;
-                
+
                 // $this->Inventory_model->update_movement($item['product_id'], $item['batchno'], 'purchase', $item['quantity'], $item['warehouse_id']);
 
 
             }
-           
+
 
             if (!empty($attachments)) {
                 foreach ($attachments as $attachment) {
@@ -904,7 +902,6 @@ class Purchase_order_model extends CI_Model
                     $this->db->insert('attachments', $attachment);
                 }
             }
-            
         }
         $this->db->trans_complete();
         if ($this->db->trans_status() === false) {
@@ -1124,12 +1121,9 @@ class Purchase_order_model extends CI_Model
 
         if ($q !== false) {
             return $q->row()->sold;
-
         } else {
             return 0;
         }
-
-
     }
 
     public function searchByReference($referenceNo)
@@ -1252,7 +1246,7 @@ class Purchase_order_model extends CI_Model
 
     public function updatePurchaseForTransfer($purchase_id, $transfer_id, $location_to, $excluded_avz_item_codes, $total_items)
     {
-   
+
         $is_transfer = 1;
         $this->db->where("purchase_id", $purchase_id);
         if (!empty($excluded_avz_item_codes)) {
@@ -1260,7 +1254,7 @@ class Purchase_order_model extends CI_Model
             $this->db->where_not_in('avz_item_code', $excluded_avz_item_codes);
         }
         $this->db->update("purchase_items", ["is_transfer" => 1]);
-      
+
 
         $data = array(
             'is_transfer' => $is_transfer,
@@ -1271,7 +1265,7 @@ class Purchase_order_model extends CI_Model
         );
         $this->db->update('purchases', $data, ['id' => $purchase_id]);
 
-         $data = array(
+        $data = array(
             'pid' => $purchase_id,
             'tid' => $transfer_id,
             'transfer_to' => $location_to,
@@ -1279,9 +1273,8 @@ class Purchase_order_model extends CI_Model
             'transfer_at' => date('Y-m-d h:i:s'),
             'transfer_items' => $total_items
         );
-      
+
         $this->db->insert('purchase_transfers', $data);
-       
     }
 
     public function getAllPurchaseTransferItems($purchase_id)
@@ -1308,11 +1301,33 @@ class Purchase_order_model extends CI_Model
         return false;
     }
 
-    public function updatePurchaseOrderInvoicedStatus($po_id, $purchase_id) {
+    public function updatePurchaseOrderInvoicedStatus($po_id, $purchase_id)
+    {
 
-        if ($this->db->update('purchase_orders', ['status' => "invoiced", "purchase_id" => $purchase_id], 
-                        ['id' => $po_id]) ) {
-                return true;
-            }
+        if ($this->db->update(
+            'purchase_orders',
+            ['status' => "invoiced", "purchase_id" => $purchase_id],
+            ['id' => $po_id]
+        )) {
+            return true;
+        }
+    }
+
+    public function getPurchaseOrderDetails($po_id)
+    {
+        $this->db->select('po.*, 
+                   COUNT(poi.id) AS total_items, 
+                   SUM(poi.quantity) AS total_quantity');
+        $this->db->from('purchase_orders po');
+        $this->db->join('sma_purchase_order_items poi', 'poi.purchase_id = po.id', 'left');
+        $this->db->where('po.id', $po_id);
+        $this->db->group_by('po.id');
+        $q = $this->db->get();
+        //echo $this->db->last_query();exit;
+
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
     }
 }
