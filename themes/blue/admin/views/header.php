@@ -375,12 +375,12 @@
                             </a>
                         </li>
                         
-                        <li class="mm_quick_search">
-                            <a href="<?= admin_url('/dashboard') ?>">
+                        <!-- <li class="mm_quick_search">
+                            <a href="<?= admin_url('welcome/quick_search') ?>">
                                 <i class="fa fa-search"></i>
                                 <span class="text"> <?= lang('Quick Search'); ?></span>
                             </a>
-                        </li>
+                        </li> -->
 
                       <?php  
                       // ========================================

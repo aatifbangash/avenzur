@@ -103,6 +103,20 @@ class Welcome extends MY_Controller
             admin_redirect('sync');
         }
 
+        // Redirect to Cost Center Dashboard
+        admin_redirect('cost_center/dashboard');
+    }
+
+    /**
+     * Old dashboard - accessible via Quick Search
+     */
+    public function quick_search()
+    {
+        if ($this->Settings->version == '2.3') {
+            $this->session->set_flashdata('warning', 'Please complete your update by synchronizing your database.');
+            admin_redirect('sync');
+        }
+
         $filterOnTypeArr = [
             "" => "-- ALL --",
             "purchase" => "Purchases",
