@@ -20,6 +20,7 @@ class Quotes extends MY_Controller
         $this->load->admin_model('quotes_model');
         $this->load->admin_model('companies_model');
         $this->load->admin_model('sales_model');
+        $this->load->admin_model('products_model');
         $this->digital_upload_path = 'files/';
         $this->digital_file_types  = 'zip|psd|ai|rar|pdf|doc|docx|xls|xlsx|ppt|pptx|gif|jpg|jpeg|png|tif|txt';
         $this->allowed_file_size   = '1024';
