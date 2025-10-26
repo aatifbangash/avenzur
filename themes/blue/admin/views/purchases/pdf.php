@@ -346,7 +346,7 @@
             </div>
             <div class="clearfix"></div>
 
-            <!--<div class="row">
+            <div class="row">
                 <div class="col-xs-7 pull-left">
                     <?php if ($inv->note || $inv->note != '') {
                         ?>
@@ -359,7 +359,7 @@
                     }
                     ?>
                 </div>
-                <div class="col-xs-4 pull-right">
+                <!--<div class="col-xs-4 pull-right">
                     <p><?=lang('order_by');?>: <?=$created_by->first_name . ' ' . $created_by->last_name;?> </p>
 
                     <p>&nbsp;</p>
@@ -367,8 +367,8 @@
                     <p>&nbsp;</p>
                     <hr>
                     <p><?=lang('stamp_sign');?></p>
-                </div>
-            </div>-->
+                </div>-->
+            </div>
 
         </div>
     </div>

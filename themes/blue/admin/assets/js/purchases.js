@@ -751,6 +751,29 @@ $(document).ready(function () {
 			localStorage.setItem("poitems", JSON.stringify(poitems));
 			loadItems();
 		});
+
+/* --------------------------
+     * Edit Row Discount3 Method rdis3 rbatchno
+     -------------------------- */
+	var old_row_dis3;
+	$(document)
+		.on("focus", ".rdis3", function () {
+			old_row_dis3 = $(this).val();
+		})
+		.on("change", ".rdis3", function () {
+			var row = $(this).closest("tr");
+			if (!is_numeric($(this).val()) || parseFloat($(this).val()) < 0) {
+				$(this).val(old_row_dis3);
+				bootbox.alert(lang.unexpected_value);
+				return;
+			}
+			var new_dis3 = parseFloat($(this).val()),
+				item_id = row.attr("data-item-id");
+			poitems[item_id].row.dis3 = new_dis3;
+			localStorage.setItem("poitems", JSON.stringify(poitems));
+			loadItems();
+		});
+
 		
 	/* --------------------------
      * Edit Row Discount2 Method rdis2 rbatchno
@@ -1050,6 +1073,7 @@ function loadItems() {
 		let new_total_vat = new Decimal(0);
 		let new_total_discount = new Decimal(0);
 		let new_grant_total = new Decimal(0);
+		let new_grand_deal_discount = new Decimal(0);
 
 		$.each(poitems, function () {
 			var item = this;
@@ -1057,8 +1081,13 @@ function loadItems() {
 			if(item.id != '') {
 
 			}
+			console.log("itemrow"+item.row);
 			const new_calc = calculateInventory(item.row, 'purchase');
 			console.log(new_calc);
+			//new_calc.new_third_discount = 0.0;
+			new_calc.deal_discount = 0.0;  
+			 item_dis3 = item.row.dis3 ? item.row.dis3 : 0.0;
+			 item_deal = item.row.deal_discount ? item.row.deal_discount : 0.0;  
 
 			/**
 			 * NEW TOTAL CALCULATION ASSIGNMENT
@@ -1081,6 +1110,9 @@ function loadItems() {
 
 			const calc_grant_total = new Decimal(new_calc.new_grant_total); 
 			new_grant_total = new_grant_total.plus(calc_grant_total);
+
+			const calc_grand_deal_discount = new Decimal(new_calc.new_third_discount);
+			new_grand_deal_discount = new_grand_deal_discount.plus(calc_grand_deal_discount);
 
 
 			var item_id = site.settings.item_addition == 1 ? item.item_id : item.id;
@@ -1196,6 +1228,7 @@ function loadItems() {
 			var dis2_a = 0.0;
 			var dis1_b = 0.0;
 			var dis2_b = 0.0;
+			var disc3 = 0.0;
 
 			var main_net = 0.0;
 
@@ -1301,6 +1334,8 @@ function loadItems() {
 				new_calc.new_total_sale +
 				'"><input name="item_unit_cost[]" type="hidden" class="main_net" value="' +
 				new_calc.new_unit_cost +
+				'"><input name="item_third_discount[]" type="hidden" class="main_net" value="' +
+				new_calc.new_third_discount +
 				'"><input name="warehouse_shelf[]" type="hidden" class="warehouse_shelf" value="' +
 				warehouse_shelf +
 				'"><span class="sname" id="name_' +
@@ -1387,7 +1422,7 @@ function loadItems() {
 
 			if (site.settings.product_expiry == 1) {
 				tr_html +=
-					'<td><input style="width:'+expiryWidth+'" class="form-control date rexpiry" name="expiry[]" type="text" value="' +
+					'<td><input style="width:'+expiryWidth+'" class="form-control date rexpiry" name="expiry[]" autocomplete="off" type="text" value="' +
 					item_expiry +
 					'" data-id="' +
 					row_no +
@@ -1505,6 +1540,33 @@ function loadItems() {
                     formatMoney(pr_tax_val * item_qty) +
                     '</span></td>';
             } formatMoney((parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty))*/
+
+			tr_html +=
+				'<td><input class="form-control text-center rdis3" name="dis3[]" type="text" data-id="' +
+				row_no +
+				'" data-item="' +
+				item_id +
+				'" id="dis3_' +
+				row_no +
+				'" value="' +
+				formatDecimal(item_dis3) +
+				'" onClick="this.select();"><span style="position:absolute;font-size:10px;margin-top:5px;">' +
+				new_calc.new_third_discount;
+			("</span></td>");
+
+			tr_html +=
+				'<td><input class="form-control text-center rdeal" name="deal[]" type="text" data-id="' +
+				row_no +
+				'" data-item="' +
+				item_id +
+				'" id="deal_' +
+				row_no +
+				'" value="' +
+				formatDecimal(item_deal) +
+				'" onClick="this.select();"><span style="position:absolute;font-size:10px;margin-top:5px;">' +
+				new_calc.deal_discount;
+			("</span></td>");
+
 			tr_html +=
 				'<td class="text-right"><span class="text-right ssubtotal mycalss" id="subtotal_' +
 				row_no +
@@ -1558,7 +1620,7 @@ function loadItems() {
 			$(".row_" + trRowClas).css("color", "green");
 		}
 
-		var col = 10;
+		var col = 12;
 		if (site.settings.product_expiry == 1) {
 			col++;
 		}
@@ -1586,6 +1648,8 @@ function loadItems() {
 		tfoot += '<input type="hidden" name="grand_total_vat" value="' + new_total_vat + '">';
 		tfoot += '<input type="hidden" name="grand_total_sale" value="' + new_total_sale + '">';
 		tfoot += '<input type="hidden" name="grand_total" value="' + new_grant_total + '">';
+		tfoot += '<input type="hidden" name="grand_deal_discount" value="' + new_grand_deal_discount + '">';
+		
 	
 		tfoot += "</th></tr>";
 

@@ -290,6 +290,7 @@ table#slTable td input.form-control {
                 quote_id : true
             },
             success: function (data) {
+                console.log('Data: ', data);
                 $(this).removeClass('ui-autocomplete-loading');
                 // Populate the modal with the returned data
                 if (data && data.length > 1) {
@@ -308,6 +309,7 @@ table#slTable td input.form-control {
                                     <th>Batch No</th>
                                     <th>Expiry</th>
                                     <th>Quantity</th>
+                                    <th>Unit Cost</th>
                                     <th>Locked</th>
                                 </tr>
                             </thead>
@@ -344,6 +346,7 @@ table#slTable td input.form-control {
                                 <td data-batchno="${item.row.batchno}">${item.row.batchno}</td>
                                 <td data-expiry="${item.row.expiry}">${item.row.expiry}</td>
                                 <td data-quantity="${item.total_quantity}">${item.total_quantity}</td>
+                                <td data-netcost="${item.net_unit_cost}">${item.row.net_unit_cost}</td>
                                 <td>${tickOrCross}</td>
                             </tr>
                         `;
@@ -471,7 +474,7 @@ table#slTable td input.form-control {
                 ?>
                 <div class="row">
                     <div class="col-lg-12">
-                        <?php if ($Owner || $Admin) {
+                        <?php if ($Owner || $Admin || $GP['sales-coordinator']) {
                     ?>
                             <div class="col-md-4">
                                 <div class="form-group">
@@ -488,7 +491,7 @@ table#slTable td input.form-control {
                                 <?php echo form_input('reference_no', ($_POST['reference_no'] ?? $slnumber), 'class="form-control input-tip" id="slref"'); ?>
                             </div>
                         </div>-->
-                        <?php if ($Owner || $Admin || !$this->session->userdata('biller_id')) {
+                        <?php if ($Owner || $Admin || $GP['sales-coordinator']) {
                     ?>
                             <div class="col-md-4">
                                 <div class="form-group">
@@ -513,13 +516,7 @@ table#slTable td input.form-control {
                     echo form_input($biller_input);
                 } ?>
 
-                        <div class="clearfix"></div>
-                        <div class="col-md-12">
-                            <div class="panel panel-warning">
-                                <div
-                                    class="panel-heading"><?= lang('please_select_these_before_adding_product') ?></div>
-                                <div class="panel-body" style="padding: 5px;">
-                                    <?php if ($Owner || $Admin || !$this->session->userdata('warehouse_id')) {
+                <?php if ($Owner || $Admin || $GP['sales-coordinator']) {
                     ?>
                                         <div class="col-md-4">
                                             <div class="form-group">
@@ -543,6 +540,24 @@ table#slTable td input.form-control {
 
                     echo form_input($warehouse_input);
                 } ?>
+
+                        <div class="clearfix"></div>
+                        <div class="col-md-12">
+                          <div class="row">
+                            <div class="panel">
+                               
+                                <div class="panel-body" style="padding: 5px;">
+
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <?= lang('Payment_Type', 'payment_type'); ?>
+                                            <select name="payment_type" id="payment_type" class="form-control">
+                                                <option value="cash"><?= lang('Cash'); ?></option>
+                                                <option value="credit"><?= lang('Credit'); ?></option>
+                                            </select>
+                                        </div>
+                                    </div>
+
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <?= lang('customer', 'qtcustomer'); ?>
@@ -570,11 +585,11 @@ table#slTable td input.form-control {
                                                 <?php
                                                 } ?>
                                             </div>
-                                        </div>
+                                        </div>  
                                     </div>
                                 </div>
                             </div>
-
+                           </div>
                         </div>
 
 
@@ -724,7 +739,7 @@ table#slTable td input.form-control {
                                 <?php echo form_input('quote_status', 'open','hidden', 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('quote_status') . '" id="qtquote_status"'); ?>
                              <?php  } ?>
 
-                           <?php if ($Owner || $Admin || !$GP['sales-coordinator']) { ?>
+                           <?php if ($Owner || $Admin || $GP['sales-coordinator']) { ?>
                             
                              <div class="col-sm-4">
                                 <div class="form-group">

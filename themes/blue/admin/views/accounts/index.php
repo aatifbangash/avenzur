@@ -113,6 +113,11 @@
                     </a>
                     <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
                         <li>
+                            <a href="<?= admin_url('accounts/import_excel') ?>" data-toggle="modal" data-target="#myModal">
+                                <i class="fa fa-plus-circle"></i> <?= lang('import_chart_excel') ?>
+                            </a>
+                        </li>
+                        <li>
                             <a href="<?= admin_url('groups/add') ?>">
                                 <i class="fa fa-plus-circle"></i> <?= lang('accounts_index_add_group_btn') ?>
                             </a>

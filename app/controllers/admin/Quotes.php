@@ -32,8 +32,13 @@ class Quotes extends MY_Controller
     }
 
     public function add(){
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         //$sale_id = $this->input->get('sale_id') ? $this->input->get('sale_id') : null;
+
+        if(!$this->Admin && !$this->Owner && !$this->GP['sales-coordinator']){
+            $this->session->set_flashdata('error', lang('You do not have permission for this action.'));
+            admin_redirect('quotes');exit;
+        }
 
         $this->form_validation->set_message('is_natural_no_zero', lang('no_zero_required'));
         $this->form_validation->set_rules('customer', lang('customer'), 'required');
@@ -41,7 +46,7 @@ class Quotes extends MY_Controller
         $this->form_validation->set_rules('quote_status', lang('sale_status'), 'required');
         $this->form_validation->set_rules('payment_term', lang('payment_term'), 'required');
         $this->form_validation->set_rules('quantity[]', lang('quantity'), 'required'); 
-        $this->form_validation->set_rules('batchno[]', lang('batchno'), 'required'); 
+       // $this->form_validation->set_rules('batchno[]', lang('batchno'), 'required'); 
         
         $product_id_arr= $this->input->post('product_id');  
         foreach ($product_id_arr as $index => $prid) {
@@ -565,7 +570,11 @@ class Quotes extends MY_Controller
 
     public function edit($id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
+        if(!$this->Admin && !$this->Owner && !$this->GP['sales-coordinator']){
+            $this->session->set_flashdata('error', lang('You do not have permission for this action.'));
+            admin_redirect('quotes');exit;
+        }
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -577,10 +586,6 @@ class Quotes extends MY_Controller
             $this->session->set_flashdata('error', 'Cannot edit completed or converted quotes');
 
             admin_redirect('quotes');
-        }
-        
-        if (!$this->session->userdata('edit_right')) {
-            $this->sma->view_rights($inv->created_by);
         }
 
         $this->form_validation->set_message('is_natural_no_zero', lang('no_zero_required'));
@@ -766,6 +771,14 @@ class Quotes extends MY_Controller
                     $item_net_unit_sale = $_POST['item_unit_sale'][$r];
                     $item_unit_sale = $_POST['unit_price'][$r];
 
+                    if($quote_status){
+                        $inventoryObj = $this->products_model->check_inventory($warehouse_id, $item_id, $item_batchno, $item_expiry, $item_quantity, $item_avz_code);
+                        if(!$inventoryObj){
+                            $this->session->set_flashdata('error', 'Quote cannot be approved. The item: '.$item_code.'-'.$item_name.' has no stock in Warehouse');
+                            admin_redirect('quotes');
+                        }
+                    }
+
                     $product = [
                         'product_id'        => $item_id,
                         'product_code'      => $item_code,
@@ -938,6 +951,8 @@ class Quotes extends MY_Controller
                 $row->avz_item_code   = $item->avz_item_code; 
                 $row->net_unit_cost   = $item->net_cost;
                 $row->real_unit_cost  = $item->real_cost;
+                $row->cash_discount   = $item->cash_discount;
+                $row->credit_discount   = $item->credit_discount;
 
                 //Discount calculation----------------------------------
                 // this row is deleted becasue of discount must not be added in sale price 
@@ -1013,7 +1028,7 @@ class Quotes extends MY_Controller
             $this->data['inv_items'] = json_encode($pr);
             $this->data['id']        = $id;
             //$this->data['currencies'] = $this->site->getAllCurrencies();
-            $this->data['billers']    = ($this->Owner || $this->Admin || !$this->session->userdata('biller_id')) ? $this->site->getAllCompanies('biller') : null;
+            $this->data['billers']    = $this->site->getAllCompanies('biller');
             $this->data['units']      = $this->site->getAllBaseUnits();
             $this->data['tax_rates']  = $this->site->getAllTaxRates();
             $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -1379,7 +1394,7 @@ class Quotes extends MY_Controller
 
     public function getQuotes($warehouse_id = null)
     {
-        $this->sma->checkPermissions('index');
+        //$this->sma->checkPermissions('index');
 
         if ((!$this->Owner || !$this->Admin) && !$warehouse_id) {
             $user         = $this->site->getUser();
@@ -1388,11 +1403,10 @@ class Quotes extends MY_Controller
         $detail_link  = anchor('admin/quotes/view/$1', '<i class="fa fa-file-text-o"></i> ' . lang('quote_details'));
         $email_link   = anchor('admin/quotes/email/$1', '<i class="fa fa-envelope"></i> ' . lang('email_quote'), 'data-toggle="modal" data-target="#myModal"');
         $edit_link    = anchor('admin/quotes/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_quote'));
-        $convert_link = anchor('admin/sales/add_from_quote/$1', '<i class="fa fa-heart"></i> ' . lang('create_sale_order'));
-        /*$convert_link  = "<a href='#' class='po' title='<b>" . $this->lang->line('create_sale_order') . "</b>' data-content=\"<p>"
-        . lang('Are you sure, you want to convert quotation to sale order?') . "</p><a class='btn btn-info po-delete' href='" . admin_url('sales/add_from_quote/$1') . "'>"
-        . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-heart-o\"></i> "
-        . lang('create_sale_order') . '</a>';*/
+        //$convert_link = anchor('admin/sales/add_from_quote/$1', '<i class="fa fa-heart"></i> ' . lang('create_sale_order'));
+        $convert_link = "<a href='" . admin_url('sales/add_from_quote/$1') . "' 
+                        onclick=\"return confirm('Are you sure you want to convert this quotation to a sale order?');\" >
+                        <i class='fa fa-heart-o'></i> " . lang('create_sale_order') . "</a>";
         $pc_link      = anchor('admin/purchases/add/$1', '<i class="fa fa-star"></i> ' . lang('create_purchase'));
         $pdf_link     = anchor('admin/quotes/pdf/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf'));
         $delete_link  = "<a href='#' class='po' title='<b>" . $this->lang->line('delete_quote') . "</b>' data-content=\"<p>"
@@ -1403,9 +1417,11 @@ class Quotes extends MY_Controller
         . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
         . lang('actions') . ' <span class="caret"></span></button>
                     <ul class="dropdown-menu pull-right" role="menu">
-                        <li>' . $edit_link . '</li>
-                        <li>' . $convert_link . '</li>
-                        <li>' . $pdf_link . '</li>
+                        <li>' . $edit_link . '</li>';
+                        if($this->Settings->site_name == 'Hills Business Medical'){
+                            $action .= '<li>' . $convert_link . '</li>';
+                        }
+                        $action .= '<li>' . $pdf_link . '</li>
                         <li>' . $delete_link . '</li>
                     </ul>
                 </div></div>';
@@ -1422,7 +1438,7 @@ class Quotes extends MY_Controller
                 ->select('id, date, reference_no, biller, customer, total, total_discount, total_tax, grand_total, status, attachment')
                 ->from('quotes');
         }
-        if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
+        if (!$this->Owner && !$this->Admin && !$this->GP['sales-coordinator']) {
             $this->datatables->where('created_by', $this->session->userdata('user_id'));
         } elseif ($this->Customer) {
             $this->datatables->where('customer_id', $this->session->userdata('user_id'));
@@ -1433,7 +1449,7 @@ class Quotes extends MY_Controller
 
     public function index($warehouse_id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
@@ -1453,7 +1469,7 @@ class Quotes extends MY_Controller
 
     public function modal_view($quote_id = null)
     {
-        $this->sma->checkPermissions('index', true);
+        //$this->sma->checkPermissions('index', true);
         $this->load->library('inv_qrcode');
         if ($this->input->get('id')) {
             $quote_id = $this->input->get('id');
@@ -1500,7 +1516,7 @@ class Quotes extends MY_Controller
 
     public function pdf($quote_id = null, $view = null, $save_bufffer = null)
     {
-        $this->sma->checkPermissions();
+        // /$this->sma->checkPermissions();
 
         if ($this->input->get('id')) {
             $quote_id = $this->input->get('id');
@@ -1510,7 +1526,7 @@ class Quotes extends MY_Controller
         if (!$this->session->userdata('view_right')) {
             $this->sma->view_rights($inv->created_by);
         }
-        $this->data['rows']       = $this->quotes_model->getAllQuoteItems($quote_id);
+        $this->data['rows']       = $this->quotes_model->getAllQuoteItems($quote_id, $inv);
         $this->data['customer']   = $this->site->getCompanyByID($inv->customer_id);
         $this->data['biller']     = $this->site->getCompanyByID($inv->biller_id);
         $this->data['created_by'] = $this->site->getUser($inv->created_by);
@@ -1521,6 +1537,7 @@ class Quotes extends MY_Controller
         if (!$this->Settings->barcode_img) {
             $html = preg_replace("'\<\?xml(.*)\?\>'", '', $html);
         }
+        //echo $html;exit;
         if ($view) {
             $this->load->view($this->theme . 'quotes/pdf', $this->data);
         } elseif ($save_bufffer) {

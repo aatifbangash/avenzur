@@ -55,10 +55,15 @@
                                 <i class="fa fa-plus-circle"></i> <?= lang('add_supplier'); ?>
                             </a>
                         </li>
-                        <li>
+                        <!--<li>
                             <a href="<?= admin_url('suppliers/import_csv'); ?>" data-toggle="modal" data-target="#myModal">
                                 <i class="fa fa-plus-circle"></i> <?= lang('import_by_csv'); ?>
 
+                            </a>
+                        </li>-->
+                        <li>
+                            <a href="<?= admin_url('suppliers/import_excel'); ?>" data-toggle="modal" data-target="#myModal">
+                                <i class="fa fa-plus-circle"></i> <?= lang('import_by_excel'); ?>
                             </a>
                         </li>
                         <li>
@@ -67,12 +72,12 @@
                             </a>
                         </li>
                         <li class="divider"></li>
-                        <li>
+                        <!--<li>
                             <a href="#" class="bpo" title="<b><?= $this->lang->line('delete_suppliers') ?></b>"
                                 data-content="<p><?= lang('r_u_sure') ?></p><button type='button' class='btn btn-danger' id='delete' data-action='delete'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button>" data-html="true" data-placement="left">
                                 <i class="fa fa-trash-o"></i> <?= lang('delete_suppliers') ?>
                             </a>
-                        </li>
+                        </li>-->
                     </ul>
                 </li>
             </ul>

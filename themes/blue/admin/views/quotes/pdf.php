@@ -105,36 +105,6 @@
 
             </div>
             <div class="clearfix"></div>
-            <div class="padding10">
-                <div class="col-xs-5">
-                    <h2 class=""><?= $Settings->site_name; ?></h2>
-                    <?= $warehouse->name ?>
-
-                    <?php
-                    echo $warehouse->address . '<br>';
-                    echo($warehouse->phone ? lang('tel') . ': ' . $warehouse->phone . '<br>' : '') . ($warehouse->email ? lang('email') . ': ' . $warehouse->email : '');
-                    ?>
-                    <div class="clearfix"></div>
-                </div>
-                <div class="col-xs-6">
-                    <div class="bold">
-                        <?=lang('date');?>: <?=$this->sma->hrld($inv->date);?><br>
-                        <?=lang('ref');?>: <?=$inv->reference_no;?>
-                        <div class="order_barcodes">
-                            <?php
-                            if ($Settings->pdf_lib == 'dompdf') {
-                                echo $this->sma->qrcode('link', urlencode(site_url('view/quote/' . $inv->hash)), 2);
-                            } else {
-                                $svg = $this->sma->qrcode('link', urlencode(site_url('view/quote/' . $inv->hash)), 2, null, null, true);
-                                echo '<img src="data:image/svg+xml;base64,' . base64_encode($svg) . '"  width="100" height="100" />';
-                            }
-                            ?>
-                        </div>
-                    </div>
-                    <div class="clearfix"></div>
-                </div>
-            </div>
-            <div class="clearfix"></div>
 
             <div class="">
             <div class="table-responsive">
@@ -170,14 +140,14 @@
                             <td style="vertical-align:middle;">
                                 <?= $row->product_code . ' - ' . $row->product_name . ($row->variant ? ' (' . $row->variant . ')' : ''); ?>
                                 <?= $row->second_name ? '<br>' . $row->second_name : ''; ?>
-                                <?= $row->details ? '<br>' . $row->details : ''; ?>
+                                
                             </td>
                             <?php if ($Settings->indian_gst) {
                                 ?>
                             <td style="width: 80px; text-align:center; vertical-align:middle;"><?= $row->hsn_code ?: ''; ?></td>
                                 <?php
                             } ?>
-                            <td style="width: 80px; text-align:center; vertical-align:middle;"><?= $this->sma->formatQuantity($row->unit_quantity) . ' ' . $row->product_unit_code; ?></td>
+                            <td style="width: 80px; text-align:center; vertical-align:middle;"><?= $this->sma->formatQuantity($row->unit_quantity); ?></td>
                             <td style="text-align:right; width:90px;"><?= $this->sma->formatMoney($row->unit_price); ?></td>
                             <?php
                             if ($Settings->tax1 && $inv->product_tax > 0) {

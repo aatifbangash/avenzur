@@ -10,6 +10,10 @@ table#poTable td input.form-control {
 }
 </style>
 <script type="text/javascript">
+    localStorage.removeItem('poitems');
+     if (localStorage.getItem('poitems')) {
+        localStorage.removeItem('poitems');
+    }
     <?php if ($this->session->userdata('remove_pols')) {
     ?>
     if (localStorage.getItem('poitems')) {
@@ -68,6 +72,13 @@ table#poTable td input.form-control {
     localStorage.setItem('poitems', JSON.stringify(<?= $quote_items; ?>));
     <?php
 } ?>
+
+<?php
+if(isset($action) && $action = 'create_invoice' && $inv_items != null)  {
+    $readonly = !empty($pr_data) ? 'readonly' : '';
+    ?>
+  localStorage.setItem('poitems', JSON.stringify(<?= $inv_items; ?>));
+ <?php } ?>   
 
     var count = 1, an = 1, po_edit = false, product_variant = 0, DT = <?= $Settings->default_tax_rate ?>, DC = '<?= $default_currency->code ?>', shipping = 0,
         product_tax = 0, invoice_tax = 0, total_discount = 0, total = 0,
@@ -258,9 +269,16 @@ table#poTable td input.form-control {
                 <p class="introtext"><?php echo lang('enter_info'); ?></p>
                 <?php
                 $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
-                echo admin_form_open_multipart('purchases/add', $attrib)
+                echo admin_form_open_multipart('purchases/add', $attrib);
+                $status = 'pending';
+                if($action == "create_invoice"  && $po_id != ''){
+                    echo form_hidden('po_id', $pr_data->id);
+                    echo form_hidden('action', 'create_invoice');
+                    $status = 'received';
+                }
                 ?>
-
+               
+               
 
                 <div class="row">
                     <div class="col-lg-12">
@@ -278,7 +296,11 @@ table#poTable td input.form-control {
                         <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('Supplier Reference Number', 'poref'); ?>
-                                <?php echo form_input('reference_no', ($_POST['reference_no'] ?? $ponumber), 'class="form-control input-tip" id="poref"'); ?>
+                                <?php 
+                                $reference_no = !empty($pr_data->reference_no)
+                                                ? $pr_data->reference_no
+                                                : ($_POST['reference_no'] ?? $ponumber);
+                                echo form_input('reference_no',$reference_no, 'class="form-control input-tip" id="poref" '.$readonly); ?>
                             </div>
                         </div>
                         <?php if ($Owner || $Admin || !$this->session->userdata('warehouse_id')) {
@@ -291,7 +313,11 @@ table#poTable td input.form-control {
                     foreach ($warehouses as $warehouse) {
                         $wh[$warehouse->id] = $warehouse->name.' ('.$warehouse->code.')';
                     }
-                    echo form_dropdown('warehouse', $wh, ($_POST['warehouse'] ?? $Settings->default_warehouse), 'id="powarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" required="required" style="width:100%;" '); ?>
+                     $parent_warehouse_id = !empty($pr_data->warehouse_id)
+                                                ? $pr_data->warehouse_id
+                                                : ($_POST['warehouse'] ?? $Settings->default_warehouse);
+
+                    echo form_dropdown('warehouse', $wh, $parent_warehouse_id, 'id="powarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" required="required" style="width:100%;" '); ?>
                                 </div>
                             </div>
                         <?php
@@ -310,7 +336,7 @@ table#poTable td input.form-control {
                         'type'  => 'hidden',
                         'name'  => 'status',
                         'id'    => 'postatus',
-                        'value' => 'pending',
+                        'value' => $status,
                     ];
 
                     echo form_input($warehouse_status);
@@ -343,7 +369,7 @@ table#poTable td input.form-control {
                                         <div class="form-group">
                                             <?= lang('Parent Supplier', 'posupplier'); ?>
                                             <?php if ($Owner || $Admin || $GP['suppliers-add'] || $GP['suppliers-index']) {
-                                                ?><div class="input-group"><?php
+                                                ?><?php
                                             } ?>
                                                 <input type="hidden" name="supplier" value="" id="posupplier"
                                                        class="form-control" style="width:100%;"
@@ -352,24 +378,16 @@ table#poTable td input.form-control {
                                                        class="form-control">
                                                 <?php if ($Owner || $Admin || $GP['suppliers-index']) {
                                                 ?>
-                                                    <div class="input-group-addon no-print" style="padding: 2px 5px; border-left: 0;">
-                                                        <a href="#" id="view-supplier" class="external" data-toggle="modal" data-target="#myModal">
-                                                            <i class="fa fa-2x fa-user" id="addIcon"></i>
-                                                        </a>
-                                                    </div>
+                                                    
                                                 <?php
                                                 } ?>
                                                 <?php if ($Owner || $Admin || $GP['suppliers-add']) {
                                                 ?>
-                                                <div class="input-group-addon no-print" style="padding: 2px 5px;">
-                                                    <a href="<?= admin_url('suppliers/add'); ?>" id="add-supplier" class="external" data-toggle="modal" data-target="#myModal">
-                                                        <i class="fa fa-2x fa-plus-circle" id="addIcon"></i>
-                                                    </a>
-                                                </div>
+                                                
                                                 <?php
                                                 } ?>
                                                 <?php if ($Owner || $Admin || $GP['suppliers-add'] || $GP['suppliers-index']) {
-                                                ?></div><?php
+                                                ?><?php
                                                 } ?>
                                         </div>
                                     </div>
@@ -421,7 +439,7 @@ table#poTable td input.form-control {
                                            class="table items table-striped table-bordered table-condensed table-hover sortable_table">
                                         <thead>
                                         <tr>
-                                            <th class="col-md-1">#</th>
+                                            <th class="col-md-1" style="width: 3%">#</th>
                                             <th class="col-md-2">item name</th>
                                             <th class="col-md-1">avz code</th>
                                             <th class="col-md-1">sale price</th>
@@ -435,11 +453,13 @@ table#poTable td input.form-control {
                                             ?>
                                             
                                             
-                                            <th class="col-md-1">qty</th>
-                                            <th class="col-md-1">bonus</th>
-                                            <th class="col-md-1">dis 1</th>
-                                            <th class="col-md-1">dis 2</th>
-                                            <th class="col-md-1">Vat 15%</th>
+                                           <th class="col-md-1" style="width: 5%">qty</th>
+                                            <th class="col-md-1" style="width: 5%">bonus</th>
+                                            <th class="col-md-1" style="width: 5%">dis 1%</th>
+                                            <th class="col-md-1" style="width: 5%">dis 2%</th>
+                                            <th class="col-md-1" style="width: 5%">Vat 15%</th>
+                                            <th class="col-md-1" style="width: 5%">dis 3%</th>
+                                            <th class="col-md-1" style="width: 5%">deal%</th>
                                             <?php
                                             /*if ($Settings->product_discount) {
                                                 echo '<th class="col-md-1">' . $this->lang->line('discount') . '</th>';

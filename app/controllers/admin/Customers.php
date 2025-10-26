@@ -1,7 +1,9 @@
 <?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
-
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
 class Customers extends MY_Controller
 {
     public function __construct()
@@ -308,7 +310,7 @@ class Customers extends MY_Controller
     }
 
     public function payment_from_customer(){
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
         $this->form_validation->set_rules('customer', $this->lang->line('customer'), 'required');
 
         $data = [];
@@ -962,7 +964,12 @@ class Customers extends MY_Controller
 
     public function add()
     {
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
+
+        if (!$this->Owner && !$this->Admin && !$this->GP['customers-add']) {
+            $this->session->set_flashdata('warning', lang('access_denied'));
+            admin_redirect($_SERVER['HTTP_REFERER']);
+        }
 
         $this->form_validation->set_rules('email', lang('email_address'), 'is_unique[companies.email]');
 
@@ -1332,7 +1339,12 @@ class Customers extends MY_Controller
 
     public function edit($id = null)
     {
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
+
+        if (!$this->Owner && !$this->Admin && !$this->GP['customers-edit']) {
+            $this->session->set_flashdata('warning', lang('access_denied'));
+            admin_redirect($_SERVER['HTTP_REFERER']);
+        }
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -1536,6 +1548,262 @@ class Customers extends MY_Controller
         echo $this->datatables->generate();
     }
 
+    private function _get_companies_table_fields()
+    {
+        return [
+            'external_id' => 'Customer No',
+            'name' => 'Customer Name',
+            'company' => 'C R Name',
+            'cr' => 'C R Number',
+            'cr_expiration' => 'C R Expiration',
+            'vat_no' => 'VAT No',
+            'gln' => 'GLN No',
+            'sfda_certificate' => 'SFDA Certificate',
+            'short_address' => 'Short Address',
+            'city' => 'City',
+            'unit_number' => 'Unit Number',
+            'building_number' => 'Building Number',
+            'postal_code' => 'Postal Code',
+            'additional_number' => 'Additional Number',
+            'contact_name' => 'Contact Name',
+            'contact_number' => 'Contact Number',
+            'credit_limit' => 'Credit Limit',
+            'payment_term' => 'Credit Period',
+            'cf1' => 'Salesman Name',
+            'promessory_note_amount' => 'Promissory Note Amount',
+            'balance' => 'Customer Balance',
+            'note' => 'Note',
+            'sales_agent' => 'Sales Agent Name'
+        ];
+    }
+
+    public function import_excel()
+    {
+        //$this->sma->checkPermissions('add', true);
+        $this->load->helper('security');
+        $this->form_validation->set_rules('excel_file', lang('upload_file'), 'xss_clean');
+
+        if ($this->form_validation->run() == true) {
+
+            $this->load->library('excel');
+            if (isset($_FILES['excel_file']) && $_FILES['excel_file']['size'] > 0) {
+                $this->load->library('upload');
+
+                $config['upload_path']   = 'files/';
+                $config['allowed_types'] = 'xlsx|xls|csv';
+                $config['max_size']      = '10000';
+                $config['overwrite']     = false;
+                $config['encrypt_name']  = true;
+
+                $this->upload->initialize($config);
+                $this->upload->initialize($config);
+
+                if (!$this->upload->do_upload('excel_file')) {
+                    $error = $this->upload->display_errors();
+                    $this->session->set_flashdata('error', $error);
+                    admin_redirect('customers');
+                }
+
+                $upload_data = $this->upload->data();
+                $file_path = $upload_data['full_path'];
+
+                $spreadsheet = IOFactory::load($file_path);
+                $sheet = $spreadsheet->getActiveSheet();
+                $rows = $sheet->toArray(null, true, true, true);
+                
+                 // Extract headers (first row)
+                $headers = array_shift($rows);
+               
+                // Filter out empty headers
+                $headers = array_filter($headers, function($value) {
+                    return trim($value) !== '';
+                });
+
+                // Optionally reindex headers numerically
+                $headers = array_values($headers);
+
+                // Pass to view for mapping
+                $this->data['headers']   = $headers;
+                $this->data['rows']      = $rows;
+                $this->data['file_path'] = $file_path;
+                $this->data['db_fields'] = $this->_get_companies_table_fields();
+
+                //$this->load->view($this->theme . 'customers/map_fields', $this->data);
+
+                $this->session->set_userdata('user_csrf', $value);
+                $this->data['csrf'] = $this->session->userdata('user_csrf');
+                $bc = [['link' => base_url(), 'page' => lang('customers_mapper')], ['link' => admin_url('customers'), 'page' => lang('customers_mapper')], ['link' => '#', 'page' => lang('customers_mapper')]];
+                $meta = ['page_title' => lang('customers_mapper'), 'bc' => $bc];
+                $this->page_construct('customers/map_fields', $meta, $this->data);
+                
+            }
+        }else{
+             $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+            $this->data['modal_js'] = $this->site->modal_js();
+            $this->load->view($this->theme . 'customers/import_excel', $this->data);
+        }
+    }
+
+    /*public function process_import()
+    {
+        //$this->sma->checkPermissions('add', true);
+        $mapping = $this->input->post('mapping');
+        $filePath = $this->input->post('file_path');
+        $spreadsheet = IOFactory::load($filePath);
+        $rows = $spreadsheet->getActiveSheet()->toArray();
+    
+        array_shift($rows); // remove header row
+
+        $imported = 0;
+        $errors = 0;
+        
+        foreach ($rows as $row) {
+            echo '<pre>';print_r($row);exit;
+            $data = [];
+            foreach ($mapping as $index => $field) {
+                if (!empty($field)) {
+                    $data[$field] = trim($row[$index]);
+                }
+            }
+
+            if (empty($data['name'])) continue; // skip invalid rows
+            
+            $exists = $this->db->get_where('companies', ['name' => $data['name'], 'group_name' => 'customer'])->row();
+
+            if ($exists) {
+                $this->db->where('id', $exists->id)->update('companies', $data);
+            } else {
+                // defaults
+                $data['group_id'] = 3;
+                $data['group_name'] = 'customer';
+                $data['customer_group_id'] = 1;
+                $data['customer_group_name'] = 'default';
+                $data['country'] = 'Saudi Arabia';
+                
+                $this->db->insert('companies', $data);
+            }
+
+            if ($this->db->affected_rows() > 0) {
+                $imported++;
+            } else {
+                $errors++;
+            }
+        }
+
+        unlink($filePath);
+        $this->session->set_flashdata('message', "Imported: {$imported}, Errors: {$errors}");
+        redirect(admin_url('customers'));
+    }*/
+
+    public function process_import()
+    {
+        $mapping  = $this->input->post('mapping');    // mapping array: file column index => db field
+        $filePath = $this->input->post('file_path');  // uploaded Excel file path
+
+        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($filePath);
+        $sheet       = $spreadsheet->getActiveSheet();
+
+        $imported = 0;
+        $errors   = 0;
+        $i = 0;
+
+        foreach ($sheet->getRowIterator() as $row) {
+            $i++;
+            $rowIndex = $row->getRowIndex();
+
+            // Skip header row
+            if ($rowIndex == 1) continue;
+
+            $cellIterator = $row->getCellIterator();
+            $cellIterator->setIterateOnlyExistingCells(true); // only actual cells
+
+            $rowData = [];
+            foreach ($cellIterator as $cell) {
+                $value = $cell->getValue();
+
+                // Convert very large numbers to string to avoid scientific notation
+                if (is_numeric($value) && strlen((string)$value) > 10) {
+                    $value = (string)$value;
+                }
+
+                $rowData[] = $value;
+            }
+
+            // Apply mapping: map Excel columns to DB fields
+            $data = [];
+            foreach ($mapping as $index => $field) {
+                if (!empty($field) && isset($rowData[$index])) {
+                    $data[$field] = trim($rowData[$index]);
+                }
+
+                //echo '<pre>';print_r($data[$field]);
+            }
+
+            // Skip row if 'name' is missing
+            if (empty($data['name'])) continue;
+
+            // Check if company already exists
+            $exists = $this->db->get_where('companies', [
+                'name'       => $data['name'],
+                'group_name' => 'customer'
+            ])->row();
+
+            if ($exists) {
+                // Update existing record
+                $this->db->where('id', $exists->id)->update('companies', $data);
+            } else {
+                $seq_code = 'CUS-' . str_pad($i, 5, '0', STR_PAD_LEFT);
+
+                // Insert new record with defaults
+                $data['group_id']            = 3;
+                $data['group_name']          = 'customer';
+                $data['customer_group_id']   = 1;
+                $data['customer_group_name'] = 'default';
+                $data['country']             = 'Saudi Arabia';
+                $data['sequence_code']       = $seq_code;
+                $data['level']               = 1;
+
+                $this->db->insert('companies', $data);
+
+                $customer_id = $this->db->insert_id(); // Get newly created customer ID
+
+                // --- Link salesman if found ---
+                if (!empty($data['sales_agent'])) {
+                    $salesman = $this->db
+                        ->select('id')
+                        ->where('name', trim($data['sales_agent']))
+                        ->get('sma_sales_man')
+                        ->row();
+
+                    if ($salesman) {
+                        $this->db->insert('sma_customer_saleman', [
+                            'customer_id' => $customer_id,
+                            'salesman_id' => $salesman->id
+                        ]);
+                    }
+                }
+            }
+
+            if ($this->db->affected_rows() > 0) {
+                $imported++;
+            } else {
+                $errors++;
+            }
+        }
+
+        // Delete uploaded file
+        if (file_exists($filePath)) {
+            unlink($filePath);
+        }
+
+        // Set flash message
+        $this->session->set_flashdata('message', "Imported: {$imported}, Errors: {$errors}");
+        redirect(admin_url('customers'));
+    }
+
+
     public function import_csv()
     {
         $this->sma->checkPermissions('add', true);
@@ -1661,7 +1929,12 @@ class Customers extends MY_Controller
 
     public function index($action = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
+
+        if (!$this->Owner && !$this->Admin && !$this->GP['customers-index']) {
+            $this->session->set_flashdata('warning', lang('access_denied'));
+            admin_redirect($_SERVER['HTTP_REFERER']);
+        }
 
         $this->data['error']  = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['action'] = $action;

@@ -444,11 +444,13 @@
                                                     echo '<th class="col-md-1">' . $this->lang->line('expiry_date') . '</th>';
                                                 }
                                                 ?>
-                                                <th class="col-md-1">qty</th>
-                                                <th class="col-md-1">bonus</th>
-                                                <th class="col-md-1">dis 1</th>
-                                                <th class="col-md-1">dis 2</th>
-                                                <th class="col-md-1">Vat 15%</th>
+                                            <th class="col-md-1" style="width: 5%">qty</th>
+                                            <th class="col-md-1" style="width: 5%">bonus</th>
+                                            <th class="col-md-1" style="width: 5%">dis 1%</th>
+                                            <th class="col-md-1" style="width: 5%">dis 2%</th>
+                                            <th class="col-md-1" style="width: 5%">Vat 15%</th>
+                                            <th class="col-md-1" style="width: 5%">dis 3%</th>
+                                            <th class="col-md-1" style="width: 5%">deal%</th>
                                                 <th class="col-md-1">Total Purchases</th>
                                                 <th class="col-md-1">Total Sales</th>
                                                 <th class="col-md-1">Net Purchases</th>

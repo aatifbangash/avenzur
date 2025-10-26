@@ -247,16 +247,17 @@ class Returns extends MY_Controller
 
     public function add()
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->form_validation->set_message('is_natural_no_zero', lang('no_zero_required'));
         $this->form_validation->set_rules('customer', lang('customer'), 'required');
         $this->form_validation->set_rules('biller', lang('biller'), 'required');
 
+        if (!$this->Owner && !$this->Admin && !$this->GP['returns-add']) {
+            $this->session->set_flashdata('warning', lang('access_denied'));
+            admin_redirect($_SERVER['HTTP_REFERER']);
+        }
+
         if ($this->form_validation->run() == true) {
-
-            // echo "<pre>";
-            // print_r($_POST);exit;
-
             $return_screen     = $this->input->post('return_screen');
 
             $date             = ($this->Owner || $this->Admin) ? $this->sma->fld(trim($this->input->post('date'))) : date('Y-m-d H:i:s');
@@ -560,6 +561,13 @@ class Returns extends MY_Controller
 
             if(isset($_GET['sale']) && !empty($_GET['sale'])){
                 $sale = $this->sales_model->getSaleByID($_GET['sale']);
+
+                if($sale->sale_status != 'completed'){
+                    $this->session->set_flashdata('error', lang('Only completed sales can be returned'));
+                    admin_redirect('sales');
+                    exit;
+                }
+
                 $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
                 $this->data['inv'] = $sale;
                 $inv_items = $this->sales_model->getAllReturnInvoiceItems($_GET['sale'], $sale->customer_id);
@@ -933,7 +941,7 @@ class Returns extends MY_Controller
 
     public function edit($id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
         }
@@ -944,9 +952,11 @@ class Returns extends MY_Controller
             admin_redirect('returns');
         }
 
-        if (!$this->session->userdata('edit_right')) {
-            $this->sma->view_rights($inv->created_by);
+        if (!$this->Owner && !$this->Admin && !$this->GP['returns-edit']) {
+            $this->session->set_flashdata('warning', lang('access_denied'));
+            admin_redirect($_SERVER['HTTP_REFERER']);
         }
+        
         $this->form_validation->set_message('is_natural_no_zero', lang('no_zero_required'));
         $this->form_validation->set_rules('customer', lang('customer'), 'required');
         $this->form_validation->set_rules('biller', lang('biller'), 'required');
@@ -1334,7 +1344,12 @@ class Returns extends MY_Controller
 
     public function index($warehouse_id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
+
+        if (!$this->Owner && !$this->Admin && !$this->GP['returns-index']) {
+            $this->session->set_flashdata('warning', lang('access_denied'));
+            admin_redirect($_SERVER['HTTP_REFERER']);
+        }
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {

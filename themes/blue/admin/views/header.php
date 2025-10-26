@@ -508,8 +508,11 @@
 
                       <?php  
                       // OPERATIONS ROLE (Purchases, Purchase Requisition, Returns, Suppliers)
-                      if ($Owner || $Admin || (isset($GP['operations_manager']) && $GP['operations_manager'])) { 
-                      ?>
+                      //echo '<pre>';print_r($this->GP);exit;
+                      if ($Owner || $Admin || $this->GP['purchase_manager'] || $this->GP['sales-coordinator']) { 
+                        
+                        if($Admin || $Owner || $this->GP['purchase_manager']){
+                        ?>
                             <li class="mm_purchases">
                                 <a class="dropmenu" href="#">
                                     <i class="fa fa-star"></i>
@@ -530,6 +533,55 @@
                                             <span class="text"> <?= lang('create_purchase_requisition'); ?></span>
                                         </a>
                                     </li>
+                                </ul>    
+                            </li>
+                      
+
+                              <li class="mm_purchase_contract_deals">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-star"></i>
+                                    <span class="text"> <?= lang('Purchase Contract Deals'); ?>
+                                    </span> <span class="chevron closed"></span>
+                                </a>
+                                <ul>
+                                    <li id="purchases_index">
+                                        <a class="submenu" href="<?= admin_url('purchase_contract_deals'); ?>">
+                                            <i class="fa fa-star"></i>
+                                            <span class="text"> <?= lang('list_purchases_contract_deals'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="purchases_add">
+                                        <a class="submenu" href="<?= admin_url('purchase_contract_deals/add'); ?>">
+                                            <i class="fa fa-plus-circle"></i>
+                                            <span class="text"> <?= lang('create_purchase_contract_deal'); ?></span>
+                                        </a>
+                                    </li>
+                                </ul>    
+                            </li>
+                        
+
+                             <li class="mm_purchase_order">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-star"></i>
+                                    <span class="text"> <?= lang('Purchase Order'); ?>
+                                    </span> <span class="chevron closed"></span>
+                                </a>
+                                <ul>
+                                    <li id="purchases_index">
+                                        <a class="submenu" href="<?= admin_url('purchase_order'); ?>">
+                                            <i class="fa fa-star"></i>
+                                            <span class="text"> <?= lang('list_purchases_order'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="purchases_add">
+                                        <a class="submenu" href="<?= admin_url('purchase_order/add'); ?>">
+                                            <i class="fa fa-plus-circle"></i>
+                                            <span class="text"> <?= lang('create_purchase_order'); ?></span>
+                                        </a>
+                                    </li>
+                                </ul>    
+                            </li>
+                        
 
                                     <!-- Purchases -->
                                     <li id="purchases_index">
@@ -605,9 +657,16 @@
                                     </li>-->
 
 
-                                </ul>
+                                
                             </li>
+                <?php 
 
+                }
+                ?>
+                <?php 
+              
+                if($Admin || $Owner || $this->GP['sales-coordinator']){
+                ?>
                             <li class="mm_sales <?= strtolower($this->router->fetch_method()) == 'sales' ? 'mm_pos' : '' ?>">
                                 <a class="dropmenu" href="#">
                                     <i class="fa fa-heart"></i>
@@ -621,7 +680,7 @@
                                             <span class="text"> <?= lang('list_sales'); ?></span>
                                         </a>
                                     </li>
-                                    <?php if (POS) {
+                                    <?php if (POS && $this->Settings->site_name != 'Hills Business Medical') {
                                         ?>
                                     <li id="pos_sales">
                                         <a class="submenu" href="<?= admin_url('pos/sales'); ?>">
@@ -636,12 +695,15 @@
                                     </li>
                                         <?php
                                     } ?>
+                                    <?php if (POS && $this->Settings->site_name != 'Hills Business Medical') {
+                                        ?>
                                     <li id="sales_add">
                                         <a class="submenu" href="<?= admin_url('sales/add'); ?>">
                                             <i class="fa fa-plus-circle"></i>
                                             <span class="text"> <?= lang('add_sale'); ?></span>
                                         </a>
                                     </li>
+                                    <?php } ?>
                                     <!-- <li id="sales_sale_by_csv">
                                         <a class="submenu" href="<?= admin_url('sales/sale_by_csv'); ?>">
                                             <i class="fa fa-plus-circle"></i>
@@ -747,6 +809,9 @@
                                     <span class="chevron closed"></span>
                                 </a>
                                 <ul>
+                                    <?php 
+                                    if($Admin || $Owner || $this->GP['sales-coordinator']){
+                                    ?>
                                     <li id="returns_index">
                                         <a class="submenu" href="<?= admin_url('returns'); ?>">
                                             <i class="fa fa-random"></i><span class="text"> <?= lang('list_returns'); ?></span>
@@ -758,7 +823,10 @@
                                             <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Add_Return_Customer'); ?></span>
                                         </a>
                                     </li>
-
+                                    <?php } ?>
+                                    <?php 
+                                    if($Admin || $Owner || $this->GP['purchase_manager']){
+                                    ?>
 
                                     <li id="returns_index">
                                         <a class="submenu" href="<?= admin_url('returns_supplier'); ?>">
@@ -771,7 +839,7 @@
                                             <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Add_Return_Supplier'); ?></span>
                                         </a>
                                     </li>
-                                    
+                                    <?php } ?>
                                     <!--<li id="returns_add">
                                         <a class="submenu" href="<?php //echo admin_url('returns/add_return'); ?>">
                                             <i class="fa fa-plus-circle"></i><span class="text"> <?php //echo lang('Add_Return_Supplier'); ?></span>
@@ -781,101 +849,9 @@
 
                                 </ul>
                           </li>
-
-                          <li class="mm_truck">
-                            <a class="dropmenu" href="#">
-                                <i class="fa fa-money"></i>
-                                <span class="text"> <?= lang('Payments'); ?> </span>
-                                <span class="chevron closed"></span>
-                            </a>
-                            <ul>
-                                <li id="quotes_index">
-                                    <a class="submenu" href="<?= admin_url('suppliers/add_payment'); ?>">
-                                        <i class="fa fa-money"></i>
-                                        <span class="text"> <?= lang('Add Supplier Payment'); ?></span>
-                                    </a>
-                                </li>
-                                <li id="quotes_index">
-                                    <a class="submenu" href="<?= admin_url('suppliers/list_payments'); ?>">
-                                        <i class="fa fa-money"></i>
-                                        <span class="text"> <?= lang('List Supplier Payment'); ?></span>
-                                    </a>
-                                </li>
-                                <!--<li id="quotes_index">
-                                    <a class="submenu" href="<?= admin_url('suppliers/debit_memo'); ?>">
-                                        <i class="fa fa-money"></i>
-                                        <span class="text"> <?= lang('Add Debit Memo'); ?></span>
-                                    </a>
-                                </li>
-                                <li id="quotes_index">
-                                    <a class="submenu" href="<?= admin_url('suppliers/list_debit_memo'); ?>">
-                                        <i class="fa fa-money"></i>
-                                        <span class="text"> <?= lang('List Debit Memo'); ?></span>
-                                    </a>
-                                </li>
-                                <li id="quotes_index">
-                                    <a class="submenu" href="<?= admin_url('suppliers/advance_to_supplier'); ?>">
-                                        <i class="fa fa-money"></i>
-                                        <span class="text"> <?= lang('Add Supplier Advance'); ?></span>
-                                    </a>
-                                </li>
-                                <li id="quotes_index">
-                                    <a class="submenu" href="<?= admin_url('suppliers/list_advance_to_supplier'); ?>">
-                                        <i class="fa fa-money"></i>
-                                        <span class="text"> <?= lang('List Supplier Advance'); ?></span>
-                                    </a>
-                                </li>
-                                <li id="quotes_index">
-                                    <a class="submenu" href="<?= admin_url('suppliers/service_invoice'); ?>">
-                                        <i class="fa fa-money"></i>
-                                        <span class="text"> <?= lang('Add Supplier Service Invoice'); ?></span>
-                                    </a>
-                                </li>
-                                <li id="quotes_index">
-                                    <a class="submenu" href="<?= admin_url('suppliers/list_service_invoice'); ?>">
-                                        <i class="fa fa-money"></i>
-                                        <span class="text"> <?= lang('List Supplier Service Invoice'); ?></span>
-                                    </a>
-                                </li>-->
-
-                                <li id="quotes_index">
-                                    <a class="submenu" href="<?= admin_url('customers/payment_from_customer'); ?>">
-                                        <i class="fa fa-money"></i>
-                                        <span class="text"> <?= lang('Add Customer Payment'); ?></span>
-                                    </a>
-                                </li>
-                                <li id="quotes_index">
-                                    <a class="submenu" href="<?= admin_url('customers/list_payments'); ?>">
-                                        <i class="fa fa-money"></i>
-                                        <span class="text"> <?= lang('List Customer Payment'); ?></span>
-                                    </a>
-                                </li>
-                               <!-- <li id="quotes_index">
-                                    <a class="submenu" href="<?= admin_url('customers/credit_memo'); ?>">
-                                        <i class="fa fa-money"></i>
-                                        <span class="text"> <?= lang('Add Credit Memo'); ?></span>
-                                    </a>
-                                </li>
-                                <li id="quotes_index">
-                                    <a class="submenu" href="<?= admin_url('customers/list_credit_memo'); ?>">
-                                        <i class="fa fa-money"></i>
-                                        <span class="text"> <?= lang('List Credit Memo'); ?></span>
-                                    </a>
-                                </li>
-                                <li id="quotes_index">
-                                    <a class="submenu" href="<?= admin_url('customers/service_invoice'); ?>">
-                                        <i class="fa fa-money"></i>
-                                        <span class="text"> <?= lang('Add Service Invoice'); ?></span>
-                                    </a>
-                                </li>
-                                <li id="quotes_index">
-                                    <a class="submenu" href="<?= admin_url('customers/list_service_invoice'); ?>">
-                                        <i class="fa fa-money"></i>
-                                        <span class="text"> <?= lang('List Service Invoice'); ?></span>
-                                    </a>
-                                </li>-->
-                            </ul>
-                        </li>
+                <?php
+                }
+                ?>
 
                           
                             <li class="mm_reports">
@@ -1316,7 +1292,7 @@
                                 <span class="chevron closed"></span>
                                 </a>
                                 <ul>
-                                    <?php if ($Owner) {
+                                    <?php if ($Owner || $Admin) {
                                         ?>
                                     <li id="auth_users">
                                         <a class="submenu" href="<?= admin_url('users'); ?>">
@@ -1340,6 +1316,10 @@
                                     </li>
                                         <?php
                                     } ?>
+
+                                    <?php 
+                                        if($Admin || $Owner || $this->GP['sales-coordinator']){
+                                    ?>
                                     <li id="customers_index">
                                         <a class="submenu" href="<?= admin_url('customers'); ?>">
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('list_customers'); ?></span>
@@ -1350,6 +1330,12 @@
                                             <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_customer'); ?></span>
                                         </a>
                                     </li>
+                                    <?php 
+                                    }
+                                    ?>
+                                    <?php 
+                                        if($Admin || $Owner || $this->GP['purchase_manager']){
+                                    ?>
                                     <li id="suppliers_index">
                                         <a class="submenu" href="<?= admin_url('suppliers'); ?>">
                                             <i class="fa fa-users"></i><span class="text"> <?= lang('list_suppliers'); ?></span>
@@ -1360,6 +1346,10 @@
                                             <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_supplier'); ?></span>
                                         </a>
                                     </li>
+                                    <?php 
+                                    }
+                                    ?>
+                                    <?php if($Admin || $Owner || $this->GP['accountant']){ ?>
                                     <li class="mm_employees">
                                         <a class="dropmenu" href="#">
                                             <i class="fa fa-users"></i>
@@ -1381,10 +1371,11 @@
                                             </li>
                                         </ul>
                                     </li>
+                                    <?php } ?>
                                 </ul>
                             </li>
 
-                            <?php if ($Owner) { //Anus change
+                            <?php if ($Owner) {
                                 ?>
                                 <li class="mm_system_settings <?= strtolower($this->router->fetch_method()) == 'sales' ? '' : 'mm_pos' ?>">
                                     <a class="dropmenu" href="#">
@@ -2132,6 +2123,100 @@
                             <?php 
                              if (isset($GP) && $GP['accountant'] || ($Owner || $Admin) ) {
                              ?>    
+                             <li class="mm_truck">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-money"></i>
+                                    <span class="text"> <?= lang('Payments'); ?> </span>
+                                    <span class="chevron closed"></span>
+                                </a>
+                                <ul>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('suppliers/add_payment'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('Add Supplier Payment'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('suppliers/list_payments'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('List Supplier Payment'); ?></span>
+                                        </a>
+                                    </li>
+                                    <!--<li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('suppliers/debit_memo'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('Add Debit Memo'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('suppliers/list_debit_memo'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('List Debit Memo'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('suppliers/advance_to_supplier'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('Add Supplier Advance'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('suppliers/list_advance_to_supplier'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('List Supplier Advance'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('suppliers/service_invoice'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('Add Supplier Service Invoice'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('suppliers/list_service_invoice'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('List Supplier Service Invoice'); ?></span>
+                                        </a>
+                                    </li>-->
+
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('customers/payment_from_customer'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('Add Customer Payment'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('customers/list_payments'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('List Customer Payment'); ?></span>
+                                        </a>
+                                    </li>
+                                    <!-- <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('customers/credit_memo'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('Add Credit Memo'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('customers/list_credit_memo'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('List Credit Memo'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('customers/service_invoice'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('Add Service Invoice'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('customers/list_service_invoice'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('List Service Invoice'); ?></span>
+                                        </a>
+                                    </li>-->
+                                </ul>
+                            </li>
                              <li class="mm_accounts">
                                 <a class="dropmenu" href="#">
                                     <i class="fa fa-sitemap"></i>
@@ -2235,7 +2320,7 @@
                             <?php }
                             ?>
 
-                            <?php //if ($Owner || $Admin || $GP['stock_request_view']) { ?>
+                            <?php if ($Owner || $Admin || $this->GP['purchase_manager']) { ?>
                              <li class="mm_stock_requests">
                                 <a class="dropmenu" href="#">
                                     <i class="fa fa-star-o"></i>
@@ -2288,7 +2373,7 @@
                                     </li>-->
                                 </ul>
                              </li>
-                             <?php //} ?>
+                             <?php } ?>
 
                              <?php 
                              if (isset($this->GP) && $GP['truck_registration_view'] || ($Owner || $Admin) ) { 

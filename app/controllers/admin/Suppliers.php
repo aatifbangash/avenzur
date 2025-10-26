@@ -1,7 +1,9 @@
 <?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
-
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
 class Suppliers extends MY_Controller
 {
     public function __construct()
@@ -163,6 +165,97 @@ class Suppliers extends MY_Controller
                 )
             );
         }
+
+        foreach ($entryitemdata as $row => $itemdata)
+        {
+            $this->db->insert('sma_accounts_entryitems' ,$itemdata['Entryitem']);
+        }
+
+        return $insert_id;
+    }
+
+    public function create_supplier_advance_journal_entry($supplier_id, $transfer_ledger, $advance_ledger, $bank_charges_account, $payment_amount, $bank_charges, $reference_no, $date){
+        $this->load->admin_model('companies_model');
+        $supplier = $this->companies_model->getCompanyByID($supplier_id);
+
+        // Calculate VAT on bank charges (15%)
+        $bank_charge_vat = 0;
+        if ($bank_charges > 0) {
+            $bank_charge_vat = $bank_charges * 0.15; // 15% VAT
+        }
+        
+        // Total includes payment, bank charges, and VAT on bank charges
+        $total_amount = $payment_amount + $bank_charges + $bank_charge_vat;
+
+        /*Accounts Entries*/
+        $entry = array(
+            'entrytype_id' => 4,
+            'transaction_type' => 'supplieradvance',
+            'number'       => 'SPADV-'.$reference_no,
+            'date'         => $date, 
+            'dr_total'     => $total_amount,
+            'cr_total'     => $total_amount,
+            'notes'        => 'Supplier Advance Payment Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
+            'pid'          =>  '',
+            'supplier_id'  => $supplier_id
+            );
+        $add  = $this->db->insert('sma_accounts_entries', $entry);
+        $insert_id = $this->db->insert_id();
+
+        $entryitemdata = array();
+
+        // Debit: Transfer/Bank ledger (cash out)
+        if($transfer_ledger > 0) {
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $transfer_ledger,
+                    'amount' => $payment_amount,
+                    'narration' => 'Advance payment to supplier'
+                )
+            );
+        }
+
+        // Debit: Bank charges (if any)
+        if($bank_charges > 0 && $bank_charges_account > 0) {
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $bank_charges_account,
+                    'amount' => $bank_charges,
+                    'narration' => 'Bank charges'
+                )
+            );
+        }
+
+        // Debit: VAT on bank charges (if any)
+        if($bank_charge_vat > 0 && $bank_charges_account > 0) {
+            $settings = $this->Settings;
+            $vat_ledger = isset($settings->vat_ledger_id) ? $settings->vat_ledger_id : $bank_charges_account;
+            
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $vat_ledger,
+                    'amount' => $bank_charge_vat,
+                    'narration' => 'VAT on Bank Charges (15%)'
+                )
+            );
+        }
+
+        // Credit: Supplier Advance ledger (advance balance increases)
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'C',
+                'ledger_id' => $advance_ledger,
+                'amount' => $total_amount,
+                'narration' => 'Advance payment received from supplier'
+            )
+        );
 
         foreach ($entryitemdata as $row => $itemdata)
         {
@@ -757,7 +850,7 @@ class Suppliers extends MY_Controller
         // ini_set('display_errors', '1');
         // ini_set('display_startup_errors', '1');
         // error_reporting(E_ALL);
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
         $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
         $this->form_validation->set_rules('ledger_account', $this->lang->line('ledger_account'), 'required');
         $this->form_validation->set_rules('bank_charges_account', $this->lang->line('bank_charges_account'), 'required');
@@ -780,6 +873,7 @@ class Suppliers extends MY_Controller
             $vat = $this->input->post('vat');
             $supplier_advance_ledger = $this->input->post('supplier_advance_ledger');
             $settle_with_advance = $this->input->post('settle_with_advance');
+            $payment_mode = $this->input->post('payment_mode'); // Get payment mode
             
             if($childsupplier){
                 $supplier_id = $childsupplier;
@@ -799,6 +893,44 @@ class Suppliers extends MY_Controller
             } else {
                 echo 'Invalid date format!';
                 $date = null; // Handle invalid input as needed
+            }
+            
+            // Handle Advance Only payment mode
+            if ($payment_mode == 'advance_only') {
+                // Validate supplier advance ledger is configured
+                $settings = $this->Settings;
+                $supplier_advance_ledger = isset($settings->supplier_advance_ledger) && !empty($settings->supplier_advance_ledger) 
+                                         ? $settings->supplier_advance_ledger 
+                                         : null;
+                
+                if (!$supplier_advance_ledger) {
+                    $this->session->set_flashdata('error', 'Cannot process advance payment. Supplier Advance Ledger is not configured in system settings.');
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
+                
+                if ($payment_total > 0) {
+                    // Create payment reference using supplier advance ledger
+                    $payment_id = $this->add_supplier_reference($payment_total, $reference_no, $date, $note . ' (Advance Only)', $supplier_id, $bank_charges, $bank_charges_account, $supplier_advance_ledger);
+                    
+                    if (!$payment_id) {
+                        $this->session->set_flashdata('error', 'Failed to create advance payment reference. Please check system configuration.');
+                        redirect($_SERVER['HTTP_REFERER']);
+                    }
+                    
+                    // Make advance payment - do NOT settle any invoices
+                    $this->make_supplier_advance_payment($supplier_id, $payment_total, $reference_no, $date, $note, $payment_id);
+                    
+                    // Create journal entry for advance payment
+                    // We need both: the transfer ledger (cash out) and advance ledger (advance in)
+                    $journal_id = $this->create_supplier_advance_journal_entry($supplier_id, $ledger_account, $supplier_advance_ledger, $bank_charges_account, $payment_total, $bank_charges, $reference_no, $date);
+                    $this->purchases_model->update_payment_reference($payment_id, $journal_id);
+                    
+                    $this->session->set_flashdata('message', lang('Advance payment added successfully!'));
+                    admin_redirect('suppliers/view_payment/'.$payment_id);
+                } else {
+                    $this->session->set_flashdata('error', 'Please enter a payment amount.');
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
             }
             
             if(!$payments_array || sizeOf($payments_array) == 0){
@@ -1386,6 +1518,194 @@ class Suppliers extends MY_Controller
             ->add_column('Actions', "<div class=\"text-center\"><a class=\"tip\" title='" . $this->lang->line('list_products') . "' href='" . admin_url('products?supplier=$1') . "'><i class=\"fa fa-list\"></i></a> <a class=\"tip\" title='" . $this->lang->line('list_users') . "' href='" . admin_url('suppliers/users/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-users\"></i></a> <a class=\"tip\" title='" . $this->lang->line('add_user') . "' href='" . admin_url('suppliers/add_user/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-plus-circle\"></i></a> <a class=\"tip\" title='" . $this->lang->line('edit_supplier') . "' href='" . admin_url('suppliers/edit/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . $this->lang->line('delete_supplier') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('suppliers/delete/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
         //->unset_column('id');
         echo $this->datatables->generate();
+    }
+
+    private function _get_companies_table_fields()
+    {
+        return [
+            'external_id' => 'Customer No',
+            'name' => 'Customer Name',
+            'company' => 'C R Name',
+            'cr' => 'C R Number',
+            'cr_expiration' => 'C R Expiration',
+            'vat_no' => 'VAT No',
+            'gln' => 'GLN No',
+            'sfda_certificate' => 'SFDA Certificate',
+            'short_address' => 'Short Address',
+            'city' => 'City',
+            'unit_number' => 'Unit Number',
+            'building_number' => 'Building Number',
+            'postal_code' => 'Postal Code',
+            'additional_number' => 'Additional Number',
+            'contact_name' => 'Contact Name',
+            'contact_number' => 'Contact Number',
+            'credit_limit' => 'Credit Limit',
+            'payment_term' => 'Credit Period',
+            'cf1' => 'Salesman Name',
+            'promessory_note_amount' => 'Promissory Note Amount',
+            'balance' => 'Customer Balance',
+            'note' => 'Note',
+            'sales_agent' => 'Sales Agent Name',
+            'category' => 'Classification',
+            'email' => 'Email'
+        ];
+    }
+
+    public function process_import()
+    {
+        $mapping  = $this->input->post('mapping');    // mapping array: file column index => db field
+        $filePath = $this->input->post('file_path');  // uploaded Excel file path
+
+        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($filePath);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $imported = 0;
+        $errors   = 0;
+        $i = 0;
+
+        // ✅ Read all rows as an array (handles weird Excel formats properly)
+        $rows = $sheet->toArray(null, true, true, false);
+        //echo '<pre>';print_r($rows);exit;
+        foreach ($rows as $rowIndex => $columns) {
+            $i++;
+
+            // Skip header row (first row)
+            if ($rowIndex == 0) continue;
+
+            // Convert associative row to numeric array
+            $rowData = array_values($columns);
+            //echo '<pre>';print_r($rowData);exit;
+            // Map Excel columns to DB fields
+            $data = [];
+            foreach ($mapping as $index => $field) {
+                if (!empty($field) && isset($rowData[$index])) {
+                    $data[$field] = trim($rowData[$index]);
+                }
+            }
+            //echo '<pre>';print_r($data);exit;
+            // Skip invalid rows
+            if (empty($data['name'])) {
+                continue;
+            }
+
+            // Check if supplier already exists
+            $exists = $this->db->get_where('companies', [
+                'name'       => $data['name'],
+                'group_name' => 'supplier'
+            ])->row();
+
+            if ($exists) {
+                // Update existing record
+                $this->db->where('id', $exists->id)->update('companies', $data);
+            } else {
+                // Generate sequence code like SUP-00001
+                $seq_code = 'SUP-' . str_pad($i, 5, '0', STR_PAD_LEFT);
+
+                // Insert new record with defaults
+                $data['group_id']      = 4;
+                $data['group_name']    = 'supplier';
+                $data['country']       = 'Saudi Arabia';
+                $data['sequence_code'] = $seq_code;
+                $data['level']         = 1;
+
+                $this->db->insert('companies', $data);
+                $supplier_id = $this->db->insert_id();
+
+                // This block is to add child supplier
+                if($this->Settings->site_name == 'Hills Business Medical'){
+
+                    $data['level']               = 2;
+                    $parent_code = $seq_code = 'SUP-' . str_pad($i, 5, '0', STR_PAD_LEFT);
+                    $i++;
+                    $seq_code = 'SUP-' . str_pad($i, 5, '0', STR_PAD_LEFT);
+
+                    $this->db->insert('companies', $data);
+                }
+            }
+
+            if ($this->db->affected_rows() > 0) {
+                $imported++;
+            } else {
+                $errors++;
+            }
+        }
+
+        // Clean up
+        if (file_exists($filePath)) {
+            unlink($filePath);
+        }
+
+        $this->session->set_flashdata('message', "Imported: {$imported}, Errors: {$errors}");
+        redirect(admin_url('suppliers'));
+    }
+
+
+    
+    public function import_excel(){
+        $this->load->helper('security');
+        $this->form_validation->set_rules('excel_file', lang('upload_file'), 'xss_clean');
+
+        if ($this->form_validation->run() == true) {
+
+            $this->load->library('excel');
+            if (isset($_FILES['excel_file']) && $_FILES['excel_file']['size'] > 0) {
+                $this->load->library('upload');
+
+                $config['upload_path']   = 'files/';
+                $config['allowed_types'] = 'xlsx|xls|csv';
+                $config['max_size']      = '10000';
+                $config['overwrite']     = false;
+                $config['encrypt_name']  = true;
+
+                $this->upload->initialize($config);
+                $this->upload->initialize($config);
+
+                if (!$this->upload->do_upload('excel_file')) {
+                    $error = $this->upload->display_errors();
+                    $this->session->set_flashdata('error', $error);
+                    admin_redirect('suppliers');
+                }
+
+                $upload_data = $this->upload->data();
+                $file_path = $upload_data['full_path'];
+
+                $spreadsheet = IOFactory::load($file_path);
+                $sheet = $spreadsheet->getActiveSheet();
+                $rows = $sheet->toArray(null, true, true, true);
+                
+                 // Extract headers (first row)
+                $headers = array_shift($rows);
+               
+                // Filter out empty headers
+                $headers = array_filter($headers, function($value) {
+                    return trim($value) !== '';
+                });
+
+                // Optionally reindex headers numerically
+                $headers = array_values($headers);
+
+                // Pass to view for mapping
+                $this->data['headers']   = $headers;
+                $this->data['rows']      = $rows;
+                $this->data['file_path'] = $file_path;
+                $this->data['db_fields'] = $this->_get_companies_table_fields();
+
+                //$this->load->view($this->theme . 'customers/map_fields', $this->data);
+
+                $this->session->set_userdata('user_csrf', $value);
+                $this->data['csrf'] = $this->session->userdata('user_csrf');
+                $bc = [['link' => base_url(), 'page' => lang('suppliers_mapper')], ['link' => admin_url('suppliers'), 'page' => lang('suppliers_mapper')], ['link' => '#', 'page' => lang('suppliers_mapper')]];
+                $meta = ['page_title' => lang('suppliers_mapper'), 'bc' => $bc];
+                $this->page_construct('suppliers/map_fields', $meta, $this->data);
+                
+            }
+        }else{
+            $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+            $this->data['modal_js'] = $this->site->modal_js();
+            $this->load->view($this->theme . 'suppliers/import_excel', $this->data);
+        }
     }
 
     public function import_csv()

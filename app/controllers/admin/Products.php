@@ -1,7 +1,9 @@
 <?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
-
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
 class Products extends MY_Controller
 {
     public function __construct()
@@ -3639,6 +3641,42 @@ class Products extends MY_Controller
         $units = $this->site->getUnitsByBUID($unit_id);
         $this->sma->send_json($units);
     }
+
+    /*public function import_excel()
+    {
+        $this->load->library('excel');
+
+        $file_path = 'C:\Users\faisa\Downloads\products_credit_dis.xls';
+
+        $spreadsheet = IOFactory::load($file_path);
+        $sheet = $spreadsheet->getActiveSheet();
+        $rows = $sheet->toArray(null, true, true, true);
+        
+            // Extract headers (first row)
+        $headers = array_shift($rows);
+        
+        // Filter out empty headers
+        $headers = array_filter($headers, function($value) {
+            return trim($value) !== '';
+        });
+
+        // Optionally reindex headers numerically
+        $headers = array_values($headers);
+
+        // Pass to view for mapping
+        $this->data['headers']   = $headers;
+        $rows_updated = 0;
+
+        foreach ($rows as $row){
+            $data = array();
+            $data['credit_discount'] = $row['H'];
+            $product = $this->products_model->getProductByID($row['E']);
+            $this->db->update('products', $data, ['id' => $product->id]);
+            $rows_updated++;
+        }
+
+        echo 'Rows Updated : ' . $rows_updated.'<br />';
+    }*/
 
     /* ---------------------------------------------------------------- */
 
