@@ -1734,28 +1734,31 @@ AND im_summary.total_quantity > 0";
                             im.product_id,
                             pr.name as product_name, im.batch_number as batchno, im.expiry_date as expiry,
                             pr.tax_rate, pr.type, pr.unit, pr.code as product_code, im.avz_item_code,
+                            pr.cash_discount, pr.credit_discount,
+                            pu.supplier,
                             (SUM(CASE WHEN im.type = 'customer_return' THEN -1*im.quantity ELSE 0 END) - SUM(CASE WHEN im.type IN ('sale','pos') THEN im.quantity ELSE 0 END) ) AS total_quantity", false);
             $this->db->from('sma_inventory_movements im');
             $this->db->join('sma_products pr', 'pr.id = im.product_id', 'inner');
+            $this->db->join('sma_purchases pu', 'pu.id = im.reference_id AND im.type = "purchase"', 'left');
             $this->db->where('im.location_id', $warehouse_id);
             $this->db->where('im.product_id', $item_id);
-            //$this->db->where('im.customer_id', $customer_id);
             $this->db->group_by(['im.avz_item_code', 'im.batch_number', 'im.expiry_date']);
             $this->db->having('total_quantity !=', 0);
             $query = $this->db->get();
-
             //echo $this->db->last_query();exit;
-
             if ($query->num_rows() <= 0) {
                 $this->db->select("pr.price as net_unit_sale, 
                                 pr.cost as net_unit_cost, 
                                 pr.cost as real_unit_cost,
                                 pr.id as product_id,
+                                pr.cash_discount, pr.credit_discount,
+                                pu.supplier,
                                 pr.name as product_name, im.batch_number as batchno, im.expiry_date as expiry,
                                 SUM(IFNULL(im.quantity, 0)) as total_quantity,
                                 pr.tax_rate, pr.type, pr.unit, pr.code as product_code, im.avz_item_code", false);
                 $this->db->from('sma_products pr');
                 $this->db->join('sma_inventory_movements im', 'im.product_id = pr.id', 'left');
+                $this->db->join('sma_purchases pu', 'pu.id = im.reference_id AND im.type = "purchase"', 'left');
                 $this->db->where('pr.id', $item_id);
                 $this->db->group_by(['im.avz_item_code', 'im.batch_number', 'im.expiry_date']);
                 $query = $this->db->get();
