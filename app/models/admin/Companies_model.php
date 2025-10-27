@@ -9,6 +9,7 @@ class Companies_model extends CI_Model
         parent::__construct();
     }
 
+
     public function addAddress($data)
     {
         if ($this->db->insert('addresses', $data)) {
@@ -344,6 +345,24 @@ class Companies_model extends CI_Model
 
         return false;
     }
+
+
+    public function getAllParentSuppliers()
+{
+    $this->db->select('id, name, company');
+    $this->db->where(['group_name' => 'supplier', 'level' => 1]);
+    $this->db->order_by('name', 'ASC');
+    $q = $this->db->get('companies');
+    
+    if ($q->num_rows() > 0) {
+        $data = [];
+        foreach ($q->result() as $row) {
+            $data[$row->id] = $row->name;
+        }
+        return $data;
+    }
+    return [];
+}
 
     public function getParentSupplierSuggestions($term, $limit = 10)
     {
