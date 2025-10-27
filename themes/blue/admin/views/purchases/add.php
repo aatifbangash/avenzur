@@ -77,6 +77,7 @@ table#poTable td input.form-control {
 if(isset($action) && $action = 'create_invoice' && $inv_items != null)  {
     $readonly = !empty($pr_data) ? 'readonly' : '';
     ?>
+  //localStorage.setItem('posupplier', '<?= $purchase->supplier_id ?>');
   localStorage.setItem('poitems', JSON.stringify(<?= $inv_items; ?>));
  <?php } ?>   
 
@@ -361,6 +362,24 @@ if(isset($action) && $action = 'create_invoice' && $inv_items != null)  {
                         </div>
 
                         <div class="col-md-12">
+
+                         <?php if(isset($action) && $action = 'create_invoice' && $inv_items != null)  { ?> 
+ <div class="col-md-4">
+                                        <div class="form-group">
+                                            
+                                             <?= lang('Supplier', 'Supplier') ?>
+                                               <?php echo $purchase->supplier;?>
+                                               
+                                        </div>
+                                    </div>
+                              <input type="hidden" name="supplier" value="" 
+                                                       class="form-control" style="width:100%;"
+                                                       placeholder="<?= lang('select') . ' ' . lang('supplier') ?>">
+                                                <input type="hidden" name="supplier_id" value="<?php echo $purchase->supplier_id?>" id="supplier_id"
+                                                       class="form-control">
+                        
+                        <?php } else {?>
+
                             <div class="panel panel-warning">
                                 <div
                                     class="panel-heading"><?= lang('please_select_these_before_adding_product') ?></div>
@@ -368,27 +387,15 @@ if(isset($action) && $action = 'create_invoice' && $inv_items != null)  {
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <?= lang('Parent Supplier', 'posupplier'); ?>
-                                            <?php if ($Owner || $Admin || $GP['suppliers-add'] || $GP['suppliers-index']) {
-                                                ?><?php
-                                            } ?>
+                                            
                                                 <input type="hidden" name="supplier" value="" id="posupplier"
                                                        class="form-control" style="width:100%;"
                                                        placeholder="<?= lang('select') . ' ' . lang('supplier') ?>">
                                                 <input type="hidden" name="supplier_id" value="" id="supplier_id"
                                                        class="form-control">
-                                                <?php if ($Owner || $Admin || $GP['suppliers-index']) {
-                                                ?>
-                                                    
-                                                <?php
-                                                } ?>
-                                                <?php if ($Owner || $Admin || $GP['suppliers-add']) {
-                                                ?>
-                                                
-                                                <?php
-                                                } ?>
-                                                <?php if ($Owner || $Admin || $GP['suppliers-add'] || $GP['suppliers-index']) {
-                                                ?><?php
-                                                } ?>
+                                              
+                                               
+                                               
                                         </div>
                                     </div>
 
@@ -406,6 +413,7 @@ if(isset($action) && $action = 'create_invoice' && $inv_items != null)  {
 
                                 </div>
                             </div>
+                            <?php } ?>
                             <div class="clearfix"></div>
                         </div>
 

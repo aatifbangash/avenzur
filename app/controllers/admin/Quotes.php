@@ -20,6 +20,7 @@ class Quotes extends MY_Controller
         $this->load->admin_model('quotes_model');
         $this->load->admin_model('companies_model');
         $this->load->admin_model('sales_model');
+        $this->load->admin_model('products_model');
         $this->digital_upload_path = 'files/';
         $this->digital_file_types  = 'zip|psd|ai|rar|pdf|doc|docx|xls|xlsx|ppt|pptx|gif|jpg|jpeg|png|tif|txt';
         $this->allowed_file_size   = '1024';
@@ -951,6 +952,8 @@ class Quotes extends MY_Controller
                 $row->avz_item_code   = $item->avz_item_code; 
                 $row->net_unit_cost   = $item->net_cost;
                 $row->real_unit_cost  = $item->real_cost;
+                $row->cash_discount   = $item->cash_discount;
+                $row->credit_discount   = $item->credit_discount;
 
                 //Discount calculation----------------------------------
                 // this row is deleted becasue of discount must not be added in sale price 

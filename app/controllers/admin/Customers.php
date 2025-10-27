@@ -325,6 +325,7 @@ class Customers extends MY_Controller
             $payment_total = $this->input->post('payment_total');
             $ledger_account = $this->input->post('ledger_account');
             $due_amount_array = $this->input->post('due_amount');
+            $original_amount_array = $this->input->post('original_amount');
             $note = $this->input->post('note');
             $date_fmt = $this->input->post('date'); 
             $formattedDate = DateTime::createFromFormat('d/m/Y H:i', $date_fmt);
@@ -357,7 +358,7 @@ class Customers extends MY_Controller
                         $this->session->set_flashdata('error', 'Failed to create pure advance payment reference. Please check system configuration.');
                         redirect($_SERVER['HTTP_REFERER']);
                     }
-
+                    
                     $this->make_customer_payment(NULL, $payment_total, $reference_no, $date, $note, $payment_id);
                     $this->sales_model->update_customer_balance($customer_id, $payment_total);
 
@@ -374,6 +375,7 @@ class Customers extends MY_Controller
                 
                 // Calculate total due amount
                 $total_due = array_sum($due_amount_array);
+                $total_original = array_sum($original_amount_array);
                 
                 // Check if payment exceeds total due - this would be advance
                 if($payment_total > $total_due) {
@@ -389,7 +391,7 @@ class Customers extends MY_Controller
                 $advance_settlement_amount = 0;
                 
                 if($settle_with_advance) {
-                    if($customer_advance_ledger) {
+                    if($customer_advance_ledger && $total_original < $payment_total) {
                         // Get current advance balance
                         $current_advance_balance = $this->getCustomerAdvanceBalance($customer_id, $customer_advance_ledger);
                         
@@ -475,16 +477,16 @@ class Customers extends MY_Controller
                         $total_payment_for_invoice = $cash_payment_for_invoice + $advance_for_this_invoice;
                         
                         if($total_payment_for_invoice > 0){
-                            // Update sale with total payment amount
-                            $this->update_sale_order($item_id, $total_payment_for_invoice);
                             
                             // Record cash payment (only if there is cash for this invoice)
                             if ($cash_payment_for_invoice > 0) {
                                 $this->make_customer_payment($item_id, $cash_payment_for_invoice, $reference_no, $date, $note . ' (Cash)', $combined_payment_id);
+                                // Update sale with total payment amount
+                                $this->update_sale_order($item_id, $total_payment_for_invoice);
                             }
                             
                             // Record advance settlement payment (only if advance used for this invoice)
-                            if ($advance_for_this_invoice > 0) {
+                            else if ($advance_for_this_invoice > 0) {
                                 $this->make_customer_payment($item_id, $advance_for_this_invoice, $reference_no . '-ADV', $date, $note . ' (Advance Settlement)', $combined_payment_id);
                             }
                         }
@@ -1573,7 +1575,8 @@ class Customers extends MY_Controller
             'promessory_note_amount' => 'Promissory Note Amount',
             'balance' => 'Customer Balance',
             'note' => 'Note',
-            'sales_agent' => 'Sales Agent Name'
+            'sales_agent' => 'Sales Agent Name',
+            'category' => 'Classification'
         ];
     }
 
@@ -1712,7 +1715,6 @@ class Customers extends MY_Controller
         foreach ($sheet->getRowIterator() as $row) {
             $i++;
             $rowIndex = $row->getRowIndex();
-
             // Skip header row
             if ($rowIndex == 1) continue;
 
@@ -1737,10 +1739,8 @@ class Customers extends MY_Controller
                 if (!empty($field) && isset($rowData[$index])) {
                     $data[$field] = trim($rowData[$index]);
                 }
-
-                //echo '<pre>';print_r($data[$field]);
             }
-
+           
             // Skip row if 'name' is missing
             if (empty($data['name'])) continue;
 
@@ -1752,6 +1752,7 @@ class Customers extends MY_Controller
 
             if ($exists) {
                 // Update existing record
+                //echo '<pre>';print_r($data);exit;
                 $this->db->where('id', $exists->id)->update('companies', $data);
             } else {
                 $seq_code = 'CUS-' . str_pad($i, 5, '0', STR_PAD_LEFT);
