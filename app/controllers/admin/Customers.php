@@ -437,17 +437,15 @@ class Customers extends MY_Controller
                 
                 // Process invoice payments (if there are any invoices OR if settling with advance)
                 if($total_invoice_payment > 0 || $advance_settlement_amount > 0) {
-                    // Calculate total settlement amount (cash + advance adjustment)
-                    $total_settlement_amount = $cash_payment + $advance_settlement_amount;
-                    
                     // Validation: Ensure we have some payment method
-                    if($total_settlement_amount <= 0) {
+                    if($total_invoice_payment <= 0 && $advance_settlement_amount <= 0) {
                         $this->session->set_flashdata('error', 'Total settlement amount must be greater than zero.');
                         redirect($_SERVER['HTTP_REFERER']);
                     }
                     
-                    // Create combined payment reference for the total settlement amount
-                    $combined_payment_id = $this->add_customer_reference($total_settlement_amount, $reference_no, $date, $note, $customer_id, $ledger_account);
+                    // Create payment reference ONLY for the actual cash payment to invoices (not including advance settlement)
+                    // The advance settlement is tracked separately and should not be included in this payment reference
+                    $combined_payment_id = $this->add_customer_reference($total_invoice_payment, $reference_no, $date, $note, $customer_id, $ledger_account);
                     
                     // Verify payment reference was created successfully
                     if (!$combined_payment_id) {
