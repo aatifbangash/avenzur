@@ -772,7 +772,7 @@ class Quotes extends MY_Controller
                     $item_net_unit_sale = $_POST['item_unit_sale'][$r];
                     $item_unit_sale = $_POST['unit_price'][$r];
 
-                    if($quote_status){
+                    if($quote_status == 'approved' || $quote_status == 'converted_to_sale'){
                         $inventoryObj = $this->products_model->check_inventory($warehouse_id, $item_id, $item_batchno, $item_expiry, $item_quantity, $item_avz_code);
                         if(!$inventoryObj){
                             $this->session->set_flashdata('error', 'Quote cannot be approved. The item: '.$item_code.'-'.$item_name.' has no stock in Warehouse');

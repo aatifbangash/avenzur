@@ -40,7 +40,7 @@ $(document).ready(function (e) {
 
 				// Optional: warning if sale price < cost
 				if (new_calc.new_unit_sale < row.net_unit_cost && typeof row.sale_price_warning === 'undefined') {
-					bootbox.alert('You are selling at a price lower than cost price');
+					//bootbox.alert('You are selling at a price lower than cost price');
 					row.sale_price_warning = 0;
 				}
 			}
@@ -1323,7 +1323,7 @@ $(document).ready(function (e) {
 			};
 			const new_calc = calculateInventory(new_item, 'sale');
 			if(new_calc.new_unit_sale < qtitems[item_id].row.net_unit_cost && typeof qtitems[item_id].row.sale_price_warning == 'undefined'){
-				bootbox.alert('Your are selling at sale price lower than cost price');
+				//bootbox.alert('Your are selling at sale price lower than cost price');
 				qtitems[item_id].row.sale_price_warning = 0;
 			}
 
@@ -1364,7 +1364,7 @@ $(document).ready(function (e) {
 			};
 			const new_calc = calculateInventory(new_item, 'sale');
 			if(new_calc.new_unit_sale < qtitems[item_id].row.net_unit_cost && typeof qtitems[item_id].row.sale_price_warning == 'undefined'){
-				bootbox.alert('Your are selling at sale price lower than cost price');
+				//bootbox.alert('Your are selling at sale price lower than cost price');
 				qtitems[item_id].row.sale_price_warning = 0;
 			}
 
@@ -1405,7 +1405,7 @@ $(document).ready(function (e) {
 			};
 			const new_calc = calculateInventory(new_item, 'sale');
 			if(new_calc.new_unit_sale < qtitems[item_id].row.net_unit_cost && typeof qtitems[item_id].row.sale_price_warning == 'undefined'){
-				bootbox.alert('Your are selling at sale price lower than cost price');
+				//bootbox.alert('Your are selling at sale price lower than cost price');
 				qtitems[item_id].row.sale_price_warning = 0;
 			}
 
@@ -1454,7 +1454,7 @@ $(document).ready(function (e) {
 			};
 			const new_calc = calculateInventory(new_item, 'sale');
 			if(new_calc.new_unit_sale < qtitems[item_id].row.net_unit_cost && typeof qtitems[item_id].row.sale_price_warning == 'undefined'){
-				bootbox.alert('Your are selling at sale price lower than cost price');
+				//bootbox.alert('Your are selling at sale price lower than cost price');
 				qtitems[item_id].row.sale_price_warning = 0;
 			}
 
@@ -1497,7 +1497,7 @@ $(document).ready(function (e) {
 			};
 			const new_calc = calculateInventory(new_item, 'sale');
 			if(new_calc.new_unit_sale < qtitems[item_id].row.net_unit_cost && typeof qtitems[item_id].row.sale_price_warning == 'undefined'){
-				bootbox.alert('Your are selling at sale price lower than cost price');
+				//bootbox.alert('Your are selling at sale price lower than cost price');
 				qtitems[item_id].row.sale_price_warning = 0;
 			}
 
