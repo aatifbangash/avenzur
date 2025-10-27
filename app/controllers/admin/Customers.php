@@ -196,6 +196,7 @@ class Customers extends MY_Controller
     }
 
     public function update_sale_order($id, $amount){
+        log_message('error', "DEBUG: update_sale_order called with id={$id}, amount={$amount}");
         $this->sales_model->update_sale_paid_amount($id, $amount);
     }
 
@@ -433,6 +434,12 @@ class Customers extends MY_Controller
                 $total_invoice_payment = array_sum($payments_array); // Actual amount going to invoices
                 $advance_payment = $cash_payment - $total_invoice_payment; // Excess cash amount
                 
+                // DEBUG LOGGING
+                $this->load->library('Log');
+                log_message('error', "DEBUG: payment_total={$payment_total}, cash_payment={$cash_payment}, total_invoice_payment={$total_invoice_payment}, advance_payment={$advance_payment}");
+                log_message('error', "DEBUG: payments_array=" . json_encode($payments_array));
+                log_message('error', "DEBUG: settle_with_advance={$settle_with_advance}, advance_settlement_amount={$advance_settlement_amount}");
+                
                 $main_payment_id = null;
                 
                 // Process invoice payments (if there are any invoices OR if settling with advance)
@@ -461,6 +468,8 @@ class Customers extends MY_Controller
                         $item_id = $item_ids[$i];
                         $due_amount = $due_amount_array[$i];
                         
+                        log_message('error', "DEBUG: Loop iteration i={$i}, cash_payment_for_invoice={$cash_payment_for_invoice}, item_id={$item_id}, due_amount={$due_amount}");
+                        
                         // Calculate shortage for this invoice
                         $invoice_shortage = $due_amount - $cash_payment_for_invoice;
                         
@@ -474,12 +483,16 @@ class Customers extends MY_Controller
                         // Total payment for this invoice (cash + advance)
                         $total_payment_for_invoice = $cash_payment_for_invoice + $advance_for_this_invoice;
                         
+                        log_message('error', "DEBUG: total_payment_for_invoice={$total_payment_for_invoice}, advance_for_this_invoice={$advance_for_this_invoice}");
+                        
                         if($total_payment_for_invoice > 0){
                             
                             // Record cash payment (only if there is cash for this invoice)
                             if ($cash_payment_for_invoice > 0) {
+                                log_message('error', "DEBUG: Calling make_customer_payment for invoice payment, amount={$cash_payment_for_invoice}");
                                 $this->make_customer_payment($item_id, $cash_payment_for_invoice, $reference_no, $date, $note . ' (Cash)', $combined_payment_id);
                                 // Update sale with total payment amount
+                                log_message('error', "DEBUG: Calling update_sale_order with amount={$total_payment_for_invoice}");
                                 $this->update_sale_order($item_id, $total_payment_for_invoice);
                             }
                             
@@ -491,11 +504,13 @@ class Customers extends MY_Controller
                     }
 
                     // Create accounting journal entries
+                    log_message('error', "DEBUG: Creating journal entries. advance_settlement_amount={$advance_settlement_amount}, cash_payment={$cash_payment}");
                     if($advance_settlement_amount > 0) {
                         // If we are settling with advance, create separate journal entries
                         
                         // Create cash payment journal entry (only if cash payment > 0)
                         if($cash_payment > 0) {
+                            log_message('error', "DEBUG: Creating ADVANCE SETTLEMENT scenario - cash_journal_id for amount={$cash_payment}");
                             $cash_journal_id = $this->convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $cash_payment, $reference_no . '-CASH', 'customerpayment');
                         }
                         
@@ -508,6 +523,7 @@ class Customers extends MY_Controller
                     } else {
                         // Regular payment without advance settlement (cash only)
                         if($cash_payment > 0) {
+                            log_message('error', "DEBUG: Creating REGULAR PAYMENT (no advance settlement) - journal_id for amount={$cash_payment}");
                             $journal_id = $this->convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $cash_payment, $reference_no, 'customerpayment');
                             $this->sales_model->update_payment_reference($combined_payment_id, $journal_id);
                         }
@@ -517,7 +533,9 @@ class Customers extends MY_Controller
                 }
                 
                 // Process advance payment separately (if there is any)
+                log_message('error', "DEBUG: Checking advance_payment={$advance_payment}");
                 if($advance_payment > 0) {
+                    log_message('error', "DEBUG: ENTERING ADVANCE PAYMENT BLOCK - creating advance journal for amount={$advance_payment}");
                     if($customer_advance_ledger) {
                         // Create separate payment reference for advance payment
                         $advance_reference_no = $reference_no . '-ADV';
