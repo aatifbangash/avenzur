@@ -509,9 +509,7 @@ class Customers extends MY_Controller
                     } else {
                         // Regular payment without advance settlement (cash only)
                         if($cash_payment > 0) {
-                            log_message('error', "DEBUG: About to create REGULAR PAYMENT journal for amount={$cash_payment}");
                             $journal_id = $this->convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $cash_payment, $reference_no, 'customerpayment');
-                            log_message('error', "DEBUG: Created REGULAR PAYMENT journal with transaction_type='customerpayment', journal_id={$journal_id}");
                             $this->sales_model->update_payment_reference($combined_payment_id, $journal_id);
                         }
                     }
@@ -520,9 +518,9 @@ class Customers extends MY_Controller
                 }
                 
                 // Process advance payment separately (if there is any)
-                log_message('error', "DEBUG: Final check - advance_payment={$advance_payment}");
+                
                 if($advance_payment > 0) {
-                    log_message('error', "DEBUG: ENTERING ADVANCE PAYMENT BLOCK - THIS SHOULD NOT HAPPEN FOR PARTIAL PAYMENTS!");
+                    
                     if($customer_advance_ledger) {
                         // Create separate payment reference for advance payment
                         $advance_reference_no = $reference_no . '-ADV';
