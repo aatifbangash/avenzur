@@ -377,7 +377,7 @@ $(document).ready(function(){
       o.option = a.find(".cart-item-option").children("option:selected").val(),
       update_cart_item(i, o, e, $(this), t.target.type)
   });
-  
+
 
 
   var slider = $("#slider");
@@ -388,7 +388,7 @@ $(document).ready(function(){
       items: 1,
       slideSpeed: 2000,
       nav: false,
-      autoplay: false, 
+      autoplay: false,
       dots: false,
       loop: true,
       responsiveRefreshRate: 200
@@ -405,7 +405,7 @@ $(document).ready(function(){
       item: 4,
       smartSpeed: 200,
       slideSpeed: 500,
-      slideBy: slidesPerPage, 
+      slideBy: slidesPerPage,
     navText: ['<i class="bi bi-arrow-left-square-fill"></i>', '<i class="bi bi-arrow-right-square-fill"></i>'],
       responsiveRefreshRate: 100
   }).on('changed.owl.carousel', syncPosition2);
@@ -455,7 +455,7 @@ $(document).ready(function(){
           { now--;}
           $(".qty").val(now);
       }
-  });      
+  });
 
   $(".qtyplus").on("click",function(){
       var now = $(".qty").val();
@@ -572,7 +572,7 @@ $(document).ready(function(){
   })
 
   $('.special_products').slick({
-   
+
     infinite: false,
     speed: 300,
     slidesToShow: 3,
@@ -611,14 +611,14 @@ $(document).ready(function(){
   })
 
   $('.brands-logo').slick({
-   
+
     infinite: false,
     speed: 300,
     slidesToShow: 4,
     slidesToScroll: 1,
-  
- 
-  
+
+
+
     prevArrow:"<button type='button' class='slick-prev pull-left'><i class='bi bi-arrow-left-square-fill'></i></button>",
     nextArrow:"<button type='button' class='slick-next pull-right'><i class='bi bi-arrow-right-square-fill'></i></button>",
     responsive: [
