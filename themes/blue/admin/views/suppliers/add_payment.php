@@ -323,9 +323,10 @@
 
         function loadInvoices(supplier_id){
             var v = supplier_id;
+            console.log('SupplierId: ', supplier_id);
             var ch = $('#childsupplier').val();
 
-            if(typeof ch != 'undefined' && ch != "" && ch != 0){
+            if(typeof ch != 'undefined' && ch != "" && ch != 0 && ch != null){
                 v = ch;
             }
 
