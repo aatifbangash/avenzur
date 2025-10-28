@@ -64,7 +64,7 @@ class Delivery_model extends CI_Model
      */
     public function get_all_deliveries($filters = array(), $limit = null, $offset = 0)
     {
-        $this->db->select('sd.*, 
+        $this->db->select('sd.id, sd.date_string, sd.driver_name, sd.truck_number, sd.status, sd.assigned_by,
                            COUNT(DISTINCT sdi.invoice_id) as invoice_count,
                            SUM(sdi.quantity_items) as total_items,
                            CONCAT(u.first_name, " ", u.last_name) as assigned_by_name');
@@ -84,15 +84,15 @@ class Delivery_model extends CI_Model
                 $this->db->where('sd.truck_number', $filters['truck_number']);
             }
             if (isset($filters['date_from']) && !empty($filters['date_from'])) {
-                $this->db->where('DATE(sd.created_at) >=', $filters['date_from']);
+                $this->db->where('DATE(sd.date_string) >=', $filters['date_from']);
             }
             if (isset($filters['date_to']) && !empty($filters['date_to'])) {
-                $this->db->where('DATE(sd.created_at) <=', $filters['date_to']);
+                $this->db->where('DATE(sd.date_string) <=', $filters['date_to']);
             }
         }
 
         $this->db->group_by('sd.id');
-        $this->db->order_by('sd.created_at', 'DESC');
+        $this->db->order_by('sd.date_string', 'DESC');
 
         if ($limit) {
             $this->db->limit($limit, $offset);
@@ -110,7 +110,7 @@ class Delivery_model extends CI_Model
      */
     public function get_delivery_by_id($delivery_id)
     {
-        $this->db->select('sd.*, 
+        $this->db->select('sd.id, sd.date_string, sd.driver_name, sd.truck_number, sd.status, sd.assigned_by,
                            CONCAT(u.first_name, " ", u.last_name) as assigned_by_name,
                            COUNT(DISTINCT sdi.invoice_id) as invoice_count,
                            SUM(sdi.quantity_items) as total_items');
@@ -132,11 +132,11 @@ class Delivery_model extends CI_Model
      */
     public function get_delivery_items($delivery_id)
     {
-        $this->db->select('sdi.*, si.reference_no, si.sale_date, si.due_date, si.total_amount, 
-                           CONCAT(sc.first_name, " ", sc.last_name) as customer_name');
+        $this->db->select('sdi.*, s.reference_no, s.date as sale_date, s.grand_total as total_amount, 
+                           c.name as customer_name');
         $this->db->from('sma_delivery_items sdi');
-        $this->db->join('sma_sales_invoices si', 'sdi.invoice_id = si.id', 'left');
-        $this->db->join('sma_sales_customers sc', 'si.customer_id = sc.id', 'left');
+        $this->db->join('sma_sales s', 'sdi.invoice_id = s.id', 'left');
+        $this->db->join('sma_companies c', 's.customer_id = c.id', 'left');
         $this->db->where('sdi.delivery_id', $delivery_id);
         $this->db->order_by('sdi.created_at', 'ASC');
 
@@ -512,4 +512,25 @@ class Delivery_model extends CI_Model
         $query = $this->db->get();
         return $query->result();
     }
+
+    /**
+     * Get assignment status for an invoice
+     * 
+     * @param int $invoice_id
+     * @return array|null - Contains driver_name and delivery_status if assigned, null otherwise
+     */
+    public function get_invoice_assignment_status($invoice_id)
+    {
+        $this->db->select('d.driver_name, d.status as delivery_status');
+        $this->db->from('sma_delivery_items di');
+        $this->db->join('sma_deliveries d', 'di.delivery_id = d.id', 'left');
+        $this->db->where('di.invoice_id', $invoice_id);
+        $this->db->limit(1);
+        
+        $query = $this->db->get();
+        $result = $query->row();
+        
+        return $result ? (array) $result : null;
+    }
+
 }

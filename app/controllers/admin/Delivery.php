@@ -5,7 +5,9 @@ defined('BASEPATH') or exit('No direct script access allowed');
 class Delivery extends MY_Controller
 {
     public function __construct()
+
     {
+      
         parent::__construct();
         $this->load->admin_model('delivery_model');
         $this->load->admin_model('sales_model');
@@ -32,9 +34,8 @@ class Delivery extends MY_Controller
     public function get_deliveries()
     {
         $this->load->library('datatables');
-
         $this->datatables
-            ->select('id, date_string, driver_name, truck_number, status, total_items_in_delivery_package, assigned_by')
+            ->select('id, date_string, driver_name, truck_number')
             ->from('sma_deliveries')
             ->add_column('Actions', 
                 "<div class='text-center'>" .
@@ -43,8 +44,7 @@ class Delivery extends MY_Controller
                 "<a href='" . admin_url('delivery/print/$1') . "' class='tip' title='Print Delivery Note'><i class='fa fa-print'></i></a> " .
                 "<a href='#' class='tip po' title='<b>" . lang('delete_notification') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('delivery/delete/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\" rel='popover'><i class='fa fa-trash-o'></i></a>" .
                 "</div>", 
-                'id')
-            ->unset_column('id');
+                'id');
 
         echo $this->datatables->generate();
     }
@@ -55,7 +55,34 @@ class Delivery extends MY_Controller
     public function add()
     {
         // Get all pending sales invoices
-        $this->data['invoices'] = $this->sales_model->get_pending_invoices();
+        $this->db->select('s.id, s.reference_no, s.date as sale_date, s.grand_total as total_amount, s.total_items, c.name as customer_name');
+        $this->db->from('sma_sales s');
+        $this->db->join('sma_companies c', 's.customer_id = c.id', 'left');
+        $this->db->where_in('s.payment_status', ['pending', 'due', 'partial']);
+        $this->db->order_by('s.date', 'asc');
+        
+        $invoices_query = $this->db->get();
+        if ($invoices_query === false) {
+            $error = $this->db->error();
+            log_message('error', 'Delivery add() DB error: ' . json_encode($error));
+            $this->data['invoices'] = [];
+        } else {
+            $invoices = $invoices_query->result();
+            
+            // Add assignment status for each invoice
+            foreach ($invoices as $invoice) {
+                $assignment = $this->delivery_model->get_invoice_assignment_status($invoice->id);
+                if ($assignment) {
+                    $invoice->current_driver_name = $assignment['driver_name'];
+                    $invoice->delivery_status = $assignment['delivery_status'];
+                } else {
+                    $invoice->current_driver_name = null;
+                    $invoice->delivery_status = null;
+                }
+            }
+            
+            $this->data['invoices'] = $invoices;
+        }
         
         $bc = [
             ['link' => base_url(), 'page' => lang('home')],
@@ -63,6 +90,7 @@ class Delivery extends MY_Controller
             ['link' => '#', 'page' => 'Add Delivery']
         ];
         $meta = ['page_title' => 'Add Delivery', 'bc' => $bc];
+        $this->data['page_title'] = 'Add Delivery';
         $this->page_construct('delivery/add', $meta, $this->data);
     }
 
@@ -86,9 +114,18 @@ class Delivery extends MY_Controller
             'truck_number' => $this->input->post('truck_number'),
             'status' => $this->input->post('status', true) ?: 'pending',
             'date_string' => !empty($this->input->post('date_string')) ? $this->sma->fld($this->input->post('date_string')) : date('Y-m-d H:i:s'),
-            'odometer' => $this->input->post('odometer'),
-            'total_refrigerated_items' => $this->input->post('total_refrigerated_items', true) ?: 0
         ];
+
+        // Add optional fields only if they are provided
+        $odometer = $this->input->post('odometer');
+        if (!empty($odometer)) {
+            $delivery_data['odometer'] = $odometer;
+        }
+
+        $total_refrigerated = $this->input->post('total_refrigerated_items');
+        if (!empty($total_refrigerated)) {
+            $delivery_data['total_refrigerated_items'] = $total_refrigerated;
+        }
 
         // Get selected invoices
         $invoice_ids = $this->input->post('invoice_ids');
@@ -96,7 +133,7 @@ class Delivery extends MY_Controller
 
         if (!empty($invoice_ids)) {
             foreach ($invoice_ids as $invoice_id) {
-                $invoice = $this->sales_model->get_sale_by_id($invoice_id);
+                $invoice = $this->sales_model->getSaleByID($invoice_id);
                 if ($invoice) {
                     $items[] = [
                         'invoice_id' => $invoice_id,
@@ -140,7 +177,21 @@ class Delivery extends MY_Controller
 
         $this->data['delivery'] = $this->delivery_model->get_delivery_by_id($delivery_id);
         $this->data['items'] = $this->delivery_model->get_delivery_items($delivery_id);
-        $this->data['available_invoices'] = $this->sales_model->get_pending_invoices();
+        
+        // Get all pending sales invoices for adding new items, including those already assigned to deliveries
+        $this->db->select('s.id, s.reference_no, s.date as sale_date, s.grand_total as total_amount, s.total_items, c.name as customer_name, 
+                          IF(di.id IS NOT NULL, di.delivery_id, NULL) as assigned_delivery_id, 
+                          IF(di.id IS NOT NULL, d.id, NULL) as current_delivery_id,
+                          IF(di.id IS NOT NULL, d.driver_name, NULL) as current_driver_name,
+                          IF(di.id IS NOT NULL, d.status, NULL) as delivery_status');
+        $this->db->from('sma_sales s');
+        $this->db->join('sma_companies c', 's.customer_id = c.id', 'left');
+        $this->db->join('sma_delivery_items di', 's.id = di.invoice_id', 'left');
+        $this->db->join('sma_deliveries d', 'di.delivery_id = d.id', 'left');
+        $this->db->where_in('s.payment_status', ['pending', 'due', 'partial']);
+        $this->db->order_by('s.date', 'asc');
+        $invoices_query = $this->db->get();
+        $this->data['available_invoices'] = $invoices_query->result();
 
         if (!$this->data['delivery']) {
             $this->session->set_flashdata('error', 'Delivery not found');

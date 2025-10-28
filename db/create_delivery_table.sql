@@ -3,26 +3,54 @@
 -- This table manages delivery packages that contain multiple invoices and track driver assignments
 -- ============================================================================
 
--- Add columns if they don't exist
+-- Add columns to existing table
 ALTER TABLE `sma_deliveries` 
-ADD COLUMN IF NOT EXISTS `date_string` datetime DEFAULT NULL AFTER `id`,
-ADD COLUMN IF NOT EXISTS `driver_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL AFTER `date_string`,
-ADD COLUMN IF NOT EXISTS `truck_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL AFTER `driver_name`,
-ADD COLUMN IF NOT EXISTS `status` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending' AFTER `truck_number`,
-ADD COLUMN IF NOT EXISTS `total_items_in_delivery_package` INT NOT NULL DEFAULT '0' AFTER `status`,
-ADD COLUMN IF NOT EXISTS `out_time` datetime DEFAULT NULL AFTER `total_items_in_delivery_package`,
-ADD COLUMN IF NOT EXISTS `odometer` INT DEFAULT NULL AFTER `out_time`,
-ADD COLUMN IF NOT EXISTS `total_refrigerated_items` INT NOT NULL DEFAULT '0' AFTER `odometer`,
-ADD COLUMN IF NOT EXISTS `assigned_by` INT DEFAULT NULL COMMENT 'User ID who assigned the delivery' AFTER `total_refrigerated_items`,
-ADD COLUMN IF NOT EXISTS `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER `assigned_by`,
-ADD COLUMN IF NOT EXISTS `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `created_at`;
+ADD COLUMN `date_string` datetime DEFAULT NULL AFTER `id`;
 
--- Add indexes if they don't exist
+-- ALTER TABLE `sma_deliveries`
+-- ADD COLUMN `driver_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL AFTER `date_string`;
+
+-- ALTER TABLE `sma_deliveries`
+-- ADD COLUMN `truck_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL AFTER `driver_name`;
+
 ALTER TABLE `sma_deliveries` 
-ADD INDEX IF NOT EXISTS `idx_status` (`status`),
-ADD INDEX IF NOT EXISTS `idx_driver_name` (`driver_name`),
-ADD INDEX IF NOT EXISTS `idx_created_at` (`created_at`),
-ADD INDEX IF NOT EXISTS `idx_assigned_by` (`assigned_by`);
+ADD COLUMN `status` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending' AFTER `truck_number`;
+
+ALTER TABLE `sma_deliveries` 
+ADD COLUMN `total_items_in_delivery_package` int(11) NOT NULL DEFAULT '0' AFTER `status`;
+
+ALTER TABLE `sma_deliveries` 
+ADD COLUMN `out_time` datetime DEFAULT NULL AFTER `total_items_in_delivery_package`;
+
+ALTER TABLE `sma_deliveries` 
+ADD COLUMN `odometer` int(11) DEFAULT NULL AFTER `out_time`;
+
+ALTER TABLE `sma_deliveries` 
+ADD COLUMN `total_refrigerated_items` int(11) NOT NULL DEFAULT '0' AFTER `odometer`;
+
+ALTER TABLE `sma_deliveries`
+  ADD COLUMN `driver_id` INT COLLATE utf8mb4_unicode_ci DEFAULT NULL AFTER `status`;
+
+ALTER TABLE `sma_deliveries` 
+ADD COLUMN `assigned_by` int(11) DEFAULT NULL COMMENT 'User ID who assigned the delivery' AFTER `total_refrigerated_items`;
+
+ALTER TABLE `sma_deliveries` 
+ADD COLUMN `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER `assigned_by`;
+
+ALTER TABLE `sma_deliveries` 
+ADD COLUMN `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER `created_at`;
+
+-- Add indexes to the table
+ALTER TABLE `sma_deliveries` ADD INDEX `idx_status` (`status`);
+
+ALTER TABLE `sma_deliveries` 
+ADD INDEX `idx_driver_name` (`driver_name`);
+
+ALTER TABLE `sma_deliveries` 
+ADD INDEX `idx_created_at` (`created_at`);
+
+ALTER TABLE `sma_deliveries` 
+ADD INDEX `idx_assigned_by` (`assigned_by`);
 
 -- ============================================================================
 -- Create Delivery Items Mapping Table (if not exists)
