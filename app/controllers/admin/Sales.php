@@ -446,7 +446,7 @@ class Sales extends MY_Controller
                 'net_cost'          => $net_cost,
                 'net_unit_price'    => $item_net_price,
                 'unit_price'        => $item_net_price,
-                'quantity'          => $item_quantity + $item_bonus,
+                'quantity'          => $item_quantity,
                 'product_unit_id'   => $quote_items[$r]->product_unit_id,
                 'product_unit_code' => $quote_items[$r]->product_unit_code,
                 'unit_quantity'     => $item_unit_quantity,
@@ -3679,6 +3679,7 @@ class Sales extends MY_Controller
                 <ul class="dropdown-menu pull-right" role="menu">
                     
                     <li>' . $detail_link . '</li>
+                    <li>' . $return_link . '</li>
                     <li>' . $pdf_link . '</li>
                 </ul>
             </div></div>';

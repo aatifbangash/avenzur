@@ -25,6 +25,7 @@ class Purchase_requisition extends MY_Controller {
                 'pr_number' => 'PR-' . time(),
                 'requested_by' => $this->session->userdata('user_id'),
                 'warehouse_id' => $this->input->post('warehouse_id'),
+                
                 'remarks' => $this->input->post('remarks'),
                 'status' => 'submitted'
             ];

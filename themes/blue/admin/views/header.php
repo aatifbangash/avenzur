@@ -529,6 +529,29 @@
                             </li>
                       
 
+                              <li class="mm_purchase_contract_deals">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-star"></i>
+                                    <span class="text"> <?= lang('Purchase Contract Deals'); ?>
+                                    </span> <span class="chevron closed"></span>
+                                </a>
+                                <ul>
+                                    <li id="purchases_index">
+                                        <a class="submenu" href="<?= admin_url('purchase_contract_deals'); ?>">
+                                            <i class="fa fa-star"></i>
+                                            <span class="text"> <?= lang('list_purchases_contract_deals'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="purchases_add">
+                                        <a class="submenu" href="<?= admin_url('purchase_contract_deals/add'); ?>">
+                                            <i class="fa fa-plus-circle"></i>
+                                            <span class="text"> <?= lang('create_purchase_contract_deal'); ?></span>
+                                        </a>
+                                    </li>
+                                </ul>    
+                            </li>
+                        
+
                              <li class="mm_purchase_order">
                                 <a class="dropmenu" href="#">
                                     <i class="fa fa-star"></i>
@@ -543,7 +566,7 @@
                                         </a>
                                     </li>
                                     <li id="purchases_add">
-                                        <a class="submenu" href="<?= admin_url('purchase_order/save'); ?>">
+                                        <a class="submenu" href="<?= admin_url('purchase_order/add'); ?>">
                                             <i class="fa fa-plus-circle"></i>
                                             <span class="text"> <?= lang('create_purchase_order'); ?></span>
                                         </a>
@@ -794,7 +817,10 @@
                                             <i class="fa fa-random"></i><span class="text"> <?= lang('list_returns'); ?></span>
                                         </a>
                                     </li>
-                                    
+                                    <?php } ?>
+                                    <?php 
+                                    if($Admin || $Owner || $this->GP['sales-coordinator']){
+                                    ?>
                                     <li id="returns_add">
                                         <a class="submenu" href="<?= admin_url('returns/add'); ?>">
                                             <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Add_Return_Customer'); ?></span>
@@ -1776,7 +1802,7 @@
                                 <?php
                             } ?>
 
-                            <?php if ($GP['returns-index'] || $GP['returns-add']) {
+                            <?php if ($GP['returns-index']) {
                                 ?>
                             <li class="mm_returns">
                                 <a class="dropmenu" href="#">
@@ -1790,15 +1816,6 @@
                                             <i class="fa fa-random"></i><span class="text"> <?= lang('list_returns'); ?></span>
                                         </a>
                                     </li>
-                                    <?php if ($GP['returns-add']) {
-                                        ?>
-                                    <li id="returns_add">
-                                        <a class="submenu" href="<?= admin_url('returns/add'); ?>">
-                                            <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_return'); ?></span>
-                                        </a>
-                                    </li>
-                                        <?php
-                                    } ?>
                                 </ul>
                             </li>
                                 <?php
