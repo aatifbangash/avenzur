@@ -372,7 +372,7 @@ if(isset($action) && $action = 'create_invoice' && $inv_items != null)  {
                                                
                                         </div>
                                     </div>
-                              <input type="hidden" name="supplier" value="" 
+                              <input type="hidden" name="supplier" value="<?php echo $purchase->supplier_id?>" 
                                                        class="form-control" style="width:100%;"
                                                        placeholder="<?= lang('select') . ' ' . lang('supplier') ?>">
                                                 <input type="hidden" name="supplier_id" value="<?php echo $purchase->supplier_id?>" id="supplier_id"

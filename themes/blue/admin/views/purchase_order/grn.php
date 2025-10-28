@@ -32,6 +32,7 @@
                                         'name' => 'supplier_reference',
                                         'id' => 'supplier_reference',
                                         'class' => 'form-control',
+                                        'value' => $po_info->reference_no,
                                         'placeholder' => 'Enter Supplier Reference Number',
                                         'required' => true
                                     ]); ?>
@@ -90,29 +91,29 @@
                                             <td>
                                                 <input type="number"
                                                     name="items[<?php echo $key; ?>][quantity]"
-                                                    class="form-control" placeholder="" required
+                                                    class="form-control" placeholder="" value="<?php echo $row->quantity; ?>" required
                                                     oninput="validateQuantity(this, <?php echo $row->quantity; ?>)">
                                             </td>
                                              <td>
                                                 <input type="number"
                                                     name="items[<?php echo $key; ?>][bonus]"
-                                                    class="form-control" placeholder="" required
+                                                    class="form-control" placeholder="" value="<?php echo $row->bonus; ?>" required
                                                     oninput="validateBonus(this, <?php echo $row->bonus; ?>)">
                                             </td>
                                              <td>
                                                 <input type="text"
-                                                    name="items[<?php echo $key; ?>][batch_number]"
+                                                    name="items[<?php echo $key; ?>][batch_number]" value="<?php echo $row->batchno; ?>" 
                                                     class="form-control" placeholder="Enter Batch Number" required>
                                             </td>
                                           
                                             <td>
                                                 <input type="date"
-                                                    name="items[<?php echo $key; ?>][expiry_date]"
+                                                    name="items[<?php echo $key; ?>][expiry_date]" value="<?php echo $row->expiry; ?>"
                                                     class="form-control" required>
                                             </td>
                                             <td>
                                                 <input type="text"
-                                                    name="items[<?php echo $key; ?>][remarks]"
+                                                    name="items[<?php echo $key; ?>][remarks]" value="<?php echo $row->grn_comments; ?>"
                                                     class="form-control" placeholder="">
                                             </td>
                                         </tr>
@@ -124,17 +125,6 @@
                                 </tbody>
                             </table>
 
-                            <div class="mb-3">
-                                <?= form_label('Remarks', 'remarks'); ?>
-                                <?= form_textarea([
-                                    'name' => 'remarks',
-                                    'id' => 'remarks',
-                                    'rows' => 3,
-                                    'class' => 'form-control',
-                                    'placeholder' => 'Enter any additional details or notes',
-                                    'value' => set_value('remarks')
-                                ]); ?>
-                            </div>
 
 
                             <div class="text-end">
