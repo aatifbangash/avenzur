@@ -1564,14 +1564,8 @@ function nsCustomer() {
 
 function validate_confirm(e) {
 
-	if(warning_note == 1 && document.getElementById('warning_note').value == ''){
-		/*let warning_text = prompt("Sale price entered is less than purchase price!", "Please write note to proceed");
-		if (warning_text != null) {
-			document.getElementById("warning_note").value = warning_text;
-		}else{
-			return false;
-		}*/
-
+	/*if(warning_note == 1 && document.getElementById('warning_note').value == ''){
+	
 		document.getElementById('warning_note').focus();
 		document.getElementById('warning_message').innerHTML = 'This field is required';
 
@@ -1581,6 +1575,11 @@ function validate_confirm(e) {
 		if (isValid === false) {
 			return isValid;
 		}
+	}*/
+
+	var isValid = window.confirm("Are you sure to proceed?");
+	if (isValid === false) {
+		return isValid;
 	}
 
 	var batchnos = document.getElementsByName("batchno[]");

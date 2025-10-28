@@ -174,12 +174,12 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
     });
 
     function validate_edit(){
-        if(warning_note == 1 && document.getElementById('warning_note').value == ''){
+        /*if(warning_note == 1 && document.getElementById('warning_note').value == ''){
             document.getElementById('warning_note').focus();
             document.getElementById('warning_message').innerHTML = 'This field is required';
 
             return false;
-        }
+        }*/
         return true;
     }
 
