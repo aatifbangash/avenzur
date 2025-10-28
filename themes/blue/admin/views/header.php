@@ -774,6 +774,28 @@
                                 </ul>
                             </li>-->
 
+                            <li class="mm_delivery">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-truck"></i>
+                                    <span class="text"> <?= lang('deliveries'); ?>
+                                    </span> <span class="chevron closed"></span>
+                                </a>
+                                <ul>
+                                    <li id="delivery_index">
+                                        <a class="submenu" href="<?= admin_url('delivery'); ?>">
+                                            <i class="fa fa-list"></i>
+                                            <span class="text"> <?= lang('list_deliveries'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="delivery_add">
+                                        <a class="submenu" href="<?= admin_url('delivery/add'); ?>">
+                                            <i class="fa fa-plus-circle"></i>
+                                            <span class="text"> <?= lang('add_delivery'); ?></span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
                          <li class="mm_transfers">
                                 <a class="dropmenu" href="#">
                                     <i class="fa fa-star-o"></i>
@@ -1721,6 +1743,28 @@
                             </li>
                                 <?php
                             } ?>
+
+                            <li class="mm_delivery">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-truck"></i>
+                                    <span class="text"> <?= lang('deliveries'); ?>
+                                    </span> <span class="chevron closed"></span>
+                                </a>
+                                <ul>
+                                    <li id="delivery_index">
+                                        <a class="submenu" href="<?= admin_url('delivery'); ?>">
+                                            <i class="fa fa-list"></i>
+                                            <span class="text"> <?= lang('list_deliveries'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="delivery_add">
+                                        <a class="submenu" href="<?= admin_url('delivery/add'); ?>">
+                                            <i class="fa fa-plus-circle"></i>
+                                            <span class="text"> <?= lang('add_delivery'); ?></span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
 
                             <?php if ($GP['purchases-index'] || $GP['purchases-add'] || $GP['purchases-expenses']) {
                                 ?>
