@@ -15,24 +15,30 @@ ADD COLUMN `date_string` datetime DEFAULT NULL AFTER `id`;
 
 ALTER TABLE `sma_deliveries` 
 ADD COLUMN `status` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending' AFTER `truck_number`;
-
+-- Checked
 ALTER TABLE `sma_deliveries` 
 ADD COLUMN `total_items_in_delivery_package` int(11) NOT NULL DEFAULT '0' AFTER `status`;
+-- Checked
 
 ALTER TABLE `sma_deliveries` 
 ADD COLUMN `out_time` datetime DEFAULT NULL AFTER `total_items_in_delivery_package`;
+-- Checked
 
 ALTER TABLE `sma_deliveries` 
 ADD COLUMN `odometer` int(11) DEFAULT NULL AFTER `out_time`;
+-- Checked
 
 ALTER TABLE `sma_deliveries` 
 ADD COLUMN `total_refrigerated_items` int(11) NOT NULL DEFAULT '0' AFTER `odometer`;
+-- Checked
 
 ALTER TABLE `sma_deliveries`
   ADD COLUMN `driver_id` INT COLLATE utf8mb4_unicode_ci DEFAULT NULL AFTER `status`;
+-- Checked
 
 ALTER TABLE `sma_deliveries` 
 ADD COLUMN `assigned_by` int(11) DEFAULT NULL COMMENT 'User ID who assigned the delivery' AFTER `total_refrigerated_items`;
+-- Checked
 
 ALTER TABLE `sma_deliveries` 
 ADD COLUMN `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER `assigned_by`;
