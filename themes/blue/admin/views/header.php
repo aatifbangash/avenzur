@@ -809,7 +809,10 @@
                                             <i class="fa fa-random"></i><span class="text"> <?= lang('list_returns'); ?></span>
                                         </a>
                                     </li>
-                                    
+                                    <?php } ?>
+                                    <?php 
+                                    if($Admin || $Owner || $this->GP['sales-coordinator']){
+                                    ?>
                                     <li id="returns_add">
                                         <a class="submenu" href="<?= admin_url('returns/add'); ?>">
                                             <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Add_Return_Customer'); ?></span>
@@ -1782,7 +1785,7 @@
                                 <?php
                             } ?>
 
-                            <?php if ($GP['returns-index'] || $GP['returns-add']) {
+                            <?php if ($GP['returns-index']) {
                                 ?>
                             <li class="mm_returns">
                                 <a class="dropmenu" href="#">
@@ -1796,15 +1799,6 @@
                                             <i class="fa fa-random"></i><span class="text"> <?= lang('list_returns'); ?></span>
                                         </a>
                                     </li>
-                                    <?php if ($GP['returns-add']) {
-                                        ?>
-                                    <li id="returns_add">
-                                        <a class="submenu" href="<?= admin_url('returns/add'); ?>">
-                                            <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_return'); ?></span>
-                                        </a>
-                                    </li>
-                                        <?php
-                                    } ?>
                                 </ul>
                             </li>
                                 <?php

@@ -322,56 +322,31 @@
                                 <?php echo form_input('reference_no', (isset($_POST['reference_no']) ? $_POST['reference_no'] : ''), 'class="form-control input-tip" id="reref"'); ?>
                             </div>
                         </div> -->
-                        <?php if ($Owner || $Admin || !$this->session->userdata('biller_id')) {
-                    ?>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <?= lang('biller', 'rebiller'); ?>
-                                    <?php
-                                    $bl[''] = '';
-                    foreach ($billers as $biller) {
-                        $bl[$biller->id] = $biller->company && $biller->company != '-' ? $biller->company : $biller->name;
-                    }
-                    echo form_dropdown('biller', $bl, (isset($_POST['biller']) ? $_POST['biller'] : $Settings->default_biller), 'id="rebiller" data-placeholder="' . lang('select') . ' ' . lang('biller') . '" required="required" class="form-control input-tip select" style="width:100%;"'); ?>
-                                </div>
+                       
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('biller', 'rebiller'); ?>
+                                <?php
+                                $bl[''] = '';
+                                foreach ($billers as $biller) {
+                                    $bl[$biller->id] = $biller->company && $biller->company != '-' ? $biller->company : $biller->name;
+                                }
+                                echo form_dropdown('biller', $bl, (isset($_POST['biller']) ? $_POST['biller'] : $Settings->default_biller), 'id="rebiller" data-placeholder="' . lang('select') . ' ' . lang('biller') . '" required="required" class="form-control input-tip select" style="width:100%;"'); ?>
                             </div>
-                        <?php
-                } else {
-                    $biller_input = [
-                        'type'  => 'hidden',
-                        'name'  => 'biller',
-                        'id'    => 'rebiller',
-                        'value' => $this->session->userdata('biller_id'),
-                    ];
-
-                    echo form_input($biller_input);
-                } ?>
-
-                        <?php if ($Owner || $Admin || !$this->session->userdata('warehouse_id')) {
-                    ?>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <?= lang('warehouse', 'rewarehouse'); ?>
-                                    <?php
-                                    $wh[''] = '';
-                    foreach ($warehouses as $warehouse) {
-                        $wh[$warehouse->id] = $warehouse->name.' ('.$warehouse->code.')';
-                    }
-                    
-                    echo form_dropdown('warehouse', $wh, (isset($_POST['warehouse']) ? $_POST['warehouse'] : $Settings->default_warehouse), 'id="rewarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" required="required" style="width:100%;" '); ?>
-                                </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('warehouse', 'rewarehouse'); ?>
+                                <?php
+                                $wh[''] = '';
+                                foreach ($warehouses as $warehouse) {
+                                    $wh[$warehouse->id] = $warehouse->name.' ('.$warehouse->code.')';
+                                }
+                                
+                                echo form_dropdown('warehouse', $wh, (isset($_POST['warehouse']) ? $_POST['warehouse'] : $Settings->default_warehouse), 'id="rewarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" required="required" style="width:100%;" '); ?>
                             </div>
-                        <?php
-                } else {
-                    $warehouse_input = [
-                        'type'  => 'hidden',
-                        'name'  => 'warehouse',
-                        'id'    => 'rewarehouse',
-                        'value' => $this->session->userdata('warehouse_id'),
-                    ];
-
-                    echo form_input($warehouse_input);
-                } ?>
+                        </div>
 
                         <div class="col-md-4">
                             <div class="form-group">
@@ -477,16 +452,9 @@
                                             <th class="col-md-1"><?= lang('expiry_date'); ?></th>
                                             <th class="col-md-1"><?= lang('qty'); ?></th>
                                             <th class="col-md-1"><?= lang('Bonus'); ?></th>
-                                            <?php
-                                            if ($Settings->product_discount && ($Owner || $Admin || $this->session->userdata('allow_discount'))) {
-                                                echo '<th class="col-md-1">' . lang('dis 1') . '</th>';
-                                            }
-                                            ?>
-                                              <?php
-                                            if ($Settings->product_discount && ($Owner || $Admin || $this->session->userdata('allow_discount'))) {
-                                                echo '<th class="col-md-1">' . lang('dis 2') . '</th>';
-                                            }
-                                            ?>
+                                            <th class="col-md-1"><?= lang('dis 1'); ?></th>
+                                            <th class="col-md-1"><?= lang('dis 2'); ?></th>
+                                            
                                             <?php
                                             if ($Settings->tax1) {
                                                 echo '<th class="col-md-1">' . lang('vat 15%') . '</th>';
