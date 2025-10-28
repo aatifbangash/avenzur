@@ -436,9 +436,11 @@ class Purchase_order extends MY_Controller
             
 
         } else if($this->input->get('action') == 'create_po') {
+
+
                 $pr_info = $this->getPurchaseRequesitionItems($this->input->get('pr_id'));
 
-                //echo "<pre>";print_r($pr_info);exit;
+                // echo "<pre>";print_r($pr_info);exit;
                 $this->data['purchase_requesition_items'] = json_encode($pr_info);
               
                 //$this->data['pr_data'] = $pr_data;
@@ -450,7 +452,7 @@ class Purchase_order extends MY_Controller
             }
 
             $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
-            $this->data['quote_id'] = $quote_id;
+            // $this->data['quote_id'] = $quote_id;
             $this->data['suppliers'] = $this->site->getAllParentCompanies('supplier');
             $this->data['categories'] = $this->site->getAllCategories();
             $this->data['tax_rates'] = $this->site->getAllTaxRates();
@@ -467,11 +469,11 @@ class Purchase_order extends MY_Controller
     
 
     public function getPurchaseRequesitionItems($pr_id = null) {
-        $pr_id = base64_decode( $this->input->get('id') );
+        // $pr_id = base64_decode( $this->input->get('id') );
 
                 // Check if PR exists
                 $pr_data = $this->purchase_requisition_model->get_requisition($pr_id);
-                //echo "<pre>";print_r($pr);exit;
+                // echo "<pre>";print_r($pr_id);exit;
                 if (!$pr_data) {
                     $this->session->set_flashdata('error', 'Purchase Requisition not found.');
                     admin_redirect('purchase_requisition'); // redirect back
@@ -483,11 +485,11 @@ class Purchase_order extends MY_Controller
                     $row->qty = $row->quantity;
                     $row->name = $row->product_name;
                     $row->code = $row->product_code;
-                    $row->cost = $row->cost ? $row->cost : 0.0;
-                    $row->sale_price = $row->price ? $row->price : 0.0;
+                    $row->cost = $row->cost ? $row->cost : 3.0;
+                    $row->sale_price = $row->price ? $row->price : 4.0;
                     $row->bonus = 0;
-                    $row->dis1 = 0;
-                    $row->dis2 = 0;
+                    $row->dis1 = 9;
+                    $row->dis2 = 33;
 
                     // append missing keys
     $row->alert_quantity = 0.00;

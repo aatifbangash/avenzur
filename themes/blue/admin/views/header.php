@@ -559,6 +559,14 @@
                                             <span class="text"> <?= lang('list_purchases'); ?></span>
                                         </a>
                                     </li>
+
+                                    <!-- Quotation Analyzer -->
+<li id="quotation_analyzer">
+    <a class="submenu" href="<?= admin_url('quotation_analyzer'); ?>">
+        <i class="fa fa-calculator"></i>
+        <span class="text"> <?= lang('Quotation_Analyzer'); ?></span>
+    </a>
+</li>
                                     <li id="purchases_add">
                                         <a class="submenu" href="<?= admin_url('purchases/add'); ?>">
                                             <i class="fa fa-plus-circle"></i>
@@ -1697,11 +1705,20 @@
                                     </span> <span class="chevron closed"></span>
                                 </a>
                                 <ul>
+                                    
                                     <li id="purchases_index">
                                         <a class="submenu" href="<?= admin_url('purchases'); ?>">
                                             <i class="fa fa-star"></i><span class="text"> <?= lang('list_purchases'); ?></span>
                                         </a>
                                     </li>
+
+                                    <!-- Quotation Analyzer -->
+<li id="quotation_analyzer">
+    <a class="submenu" href="<?= admin_url('quotation_analyzer'); ?>">
+        <i class="fa fa-calculator"></i>
+        <span class="text"> <?= lang('Quotation_Analyzer'); ?></span>
+    </a>
+</li>
                                     <?php if ($GP['purchases-add']) {
                                         ?>
                                     <li id="purchases_add">
