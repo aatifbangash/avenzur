@@ -1736,7 +1736,7 @@ AND im_summary.total_quantity > 0";
                             pr.tax_rate, pr.type, pr.unit, pr.code as product_code, im.avz_item_code,
                             pr.cash_discount, pr.credit_discount,
                             pu.supplier,
-                            (SUM(CASE WHEN im.type = 'customer_return' THEN -1*im.quantity ELSE 0 END) - SUM(CASE WHEN im.type IN ('sale','pos') THEN im.quantity ELSE 0 END) ) AS total_quantity", false);
+                            (SUM(im.quantity)) AS total_quantity", false);
             $this->db->from('sma_inventory_movements im');
             $this->db->join('sma_products pr', 'pr.id = im.product_id', 'inner');
             $this->db->join('sma_purchases pu', 'pu.id = im.reference_id AND im.type = "purchase"', 'left');
