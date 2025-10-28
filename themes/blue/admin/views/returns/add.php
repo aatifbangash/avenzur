@@ -14,6 +14,8 @@
         localStorage.setItem('rediscount', '<?= $inv->order_discount_id ?>');
         localStorage.setItem('retax2', '<?= $inv->order_tax_id ?>');
         localStorage.setItem('return_surcharge', '0');
+        localStorage.setItem('recustomer', '<?= $inv->customer_id ?>');
+        localStorage.setItem('rebiller', '<?= $inv->biller_id ?>');
         <?php
     } ?>
 

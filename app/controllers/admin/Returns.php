@@ -551,7 +551,7 @@ class Returns extends MY_Controller
                 }
 
                 $this->convert_return_invoice($return_insert_id);
-                $this->payment_to_customer($returns, $return_insert_id);  
+                //$this->payment_to_customer($returns, $return_insert_id);  
             }
 
             $this->session->set_userdata('remove_rels', 1);
@@ -1212,7 +1212,7 @@ class Returns extends MY_Controller
 
             if($data['status'] == "completed"){
                 $journal_id = $this->convert_return_invoice($id);
-                $this->payment_to_customer($returns, $id, $journal_id);  
+                //$this->payment_to_customer($returns, $id, $journal_id);  
             }
 
             $this->session->set_userdata('remove_rels', 1);
@@ -1229,7 +1229,9 @@ class Returns extends MY_Controller
                     redirect($_SERVER['HTTP_REFERER']);
                 }
             }
+           
             $inv_items = $this->returns_model->getReturnItemsNew($id, $inv->customer_id);
+            //echo '<pre>';print_r($inv_items);exit;
             $c         = rand(100000, 9999999);
             foreach ($inv_items as $item) {
                 //echo '<pre>';print_r($item);exit;
