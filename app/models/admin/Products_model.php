@@ -1945,7 +1945,11 @@ AND im_summary.total_quantity > 0";
                 'id'             => $row->id,
                 'code'           => $row->code,
                 'name'           => $row->name,
+                'price'          => $row->price ?? '',
                 'deal_type'      => $row->deal_type ?? '',
+                'dis1_percentage'=> $row->dis1_percentage ?? '',
+                'dis2_percentage'=> $row->dis2_percentage ?? '',
+                'dis3_percentage'=> $row->dis3_percentage ?? '',
                 'deal_percentage'=> $row->deal_percentage ?? '',
                 'threshold'      => $row->threshold ?? '',
                 'deal_available' => $deal_available

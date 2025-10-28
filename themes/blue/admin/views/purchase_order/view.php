@@ -81,6 +81,7 @@
         <?php
         // Your current status
         echo $currentStatusKey = $inv->status;
+         $currentStatus = $inv->status;
 
         // Define the status flow order
         // $statuses = [
@@ -184,9 +185,13 @@
                 </a>
 
                 <?php
+                 
                 // ✅ PURCHASE MANAGER ACTIONS
-                if($Admin || $Owner || $this->GP['purchase_manager']) { //if ($userRole == 'purchase_manager') {
-
+                if($Admin || $Owner || $this->GP['purchase_manager']) {
+                  if($currentStatus == 'pending') {
+                    $currentStatus = 'created';
+                  }
+                  //if ($userRole == 'purchase_manager') {
                   switch ($currentStatus) {
                     case 'created':
                       echo '<button class="btn btn-outline-primary btn-sm mb-2 text-primary" data-toggle="modal" data-target="#sendToSupplierModal">
