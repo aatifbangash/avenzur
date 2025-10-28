@@ -3679,6 +3679,7 @@ class Sales extends MY_Controller
                 <ul class="dropdown-menu pull-right" role="menu">
                     
                     <li>' . $detail_link . '</li>
+                    <li>' . $return_link . '</li>
                     <li>' . $pdf_link . '</li>
                 </ul>
             </div></div>';

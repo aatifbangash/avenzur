@@ -562,7 +562,7 @@ class Returns extends MY_Controller
             if(isset($_GET['sale']) && !empty($_GET['sale'])){
                 $sale = $this->sales_model->getSaleByID($_GET['sale']);
 
-                if($sale->sale_status != 'completed'){
+                if($sale->sale_status != 'completed' && $sale->sale_status != 'ready' && $sale->sale_status != 'driver_assigned' && $sale->sale_status != 'added_label' && $sale->sale_status != 'label_verifired'){
                     $this->session->set_flashdata('error', lang('Only completed sales can be returned'));
                     admin_redirect('sales');
                     exit;
