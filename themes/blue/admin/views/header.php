@@ -1,0 +1,3104 @@
+<?php defined('BASEPATH') or exit('No direct script access allowed'); ?><!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <base href="<?= site_url() ?>"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= $page_title ?> - <?= $Settings->site_name ?></title>
+    <link rel="shortcut icon" href="<?= $assets ?>images/icon.png"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="<?= $assets ?>styles/theme.css" rel="stylesheet"/>
+    <link href="<?= $assets ?>styles/style.css" rel="stylesheet"/>
+    <!-- CRITICAL: Load in THIS exact order -->
+    <link href="<?= base_url('assets/css/layout-base.css') ?>" rel="stylesheet"/>
+    <link href="<?= base_url('assets/css/sidebar-clean.css') ?>" rel="stylesheet"/>
+    <link href="<?= base_url('assets/css/header-custom.css') ?>" rel="stylesheet"/>
+    <link href="<?= base_url('assets/custom/custom.css') ?>" rel="stylesheet"/>
+    <!-- Modern Admin UI Styling -->
+    <!-- <link href="<?= base_url('assets/styles/modern-admin-ui.css') ?>" rel="stylesheet"/> -->
+    <script type="text/javascript" src="<?= $assets ?>js/jquery-2.0.3.min.js"></script>
+    <script type="text/javascript" src="<?= $assets ?>js/jquery-migrate-1.2.1.min.js"></script>
+
+    <!--[if lt IE 9]>
+    <script src="<?= $assets ?>js/jquery.js"></script>
+    <![endif]-->
+    <noscript><style type="text/css">#loading { display: none; }</style></noscript>
+    <?php if ($Settings->user_rtl) {
+        ?>
+        <link href="<?= $assets ?>styles/helpers/bootstrap-rtl.min.css" rel="stylesheet"/>
+        <link href="<?= $assets ?>styles/style-rtl.css" rel="stylesheet"/>
+        <script type="text/javascript">
+            $(document).ready(function () { $('.pull-right, .pull-left').addClass('flip'); });
+        </script>
+        <?php
+    } ?>
+    <script type="text/javascript">
+        $(window).load(function () {
+            $("#loading").fadeOut("slow");
+        });
+    </script>
+    <!-- Modern Admin UI JavaScript -->
+    <!-- <script type="text/javascript" src="<?= base_url('assets/js/modern-admin-ui.js') ?>"></script> -->
+</head>
+
+<body>
+<noscript>
+    <div class="global-site-notice noscript">
+        <div class="notice-inner">
+            <p><strong>JavaScript seems to be disabled in your browser.</strong><br>You must have JavaScript enabled in
+                your browser to utilize the functionality of this website.</p>
+        </div>
+    </div>
+</noscript>
+<div id="loading"></div>
+<div id="app_wrapper">
+    <!-- ===== Modern Header Start ===== -->
+    <header class="header-container">
+        <div class="header-wrapper">
+            <!-- Left Section -->
+            <div class="header-left">
+                <!-- Mobile Menu Toggle -->
+                <button type="button" class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+
+                <!-- Logo/Brand -->
+                <a href="<?= admin_url() ?>" class="header-brand" style="display: flex; align-items: center; text-decoration: none; color: var(--text-primary); font-weight: 600; font-size: 1.125rem;">
+                    <span><?= $Settings->site_name ?></span>
+                </a>
+            </div>
+
+            <!-- Right Section -->
+            <div class="header-right">
+                <!-- Dark Mode Toggle -->
+                <button type="button" class="header-icon-btn" id="darkModeToggle" aria-label="Toggle dark mode">
+                    <svg id="moonIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                    <svg id="sunIcon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="display: none;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                </button>
+
+                <!-- Alerts Dropdown (Notifications) -->
+                <?php if (($Owner || $Admin || $GP['reports-quantity_alerts'] || $GP['reports-expiry_alerts']) && ($qty_alert_num > 0 || $exp_alert_num > 0 || $shop_sale_alerts)) {
+                    ?>
+                <div class="header-dropdown">
+                    <button type="button" class="header-icon-btn" data-dropdown-toggle="alertsDropdown" aria-label="Alerts">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span class="notification-badge"><?= $qty_alert_num + (($Settings->product_expiry) ? $exp_alert_num : 0) + $shop_sale_alerts + $shop_payment_alerts; ?></span>
+                    </button>
+
+                    <div class="dropdown-menu-custom" id="alertsDropdown">
+                        <div class="dropdown-header-custom">
+                            <h6><?= lang('alerts') ?></h6>
+                        </div>
+                        <div class="dropdown-body-custom">
+                            <?php if ($qty_alert_num > 0) {
+                                ?>
+                            <a href="<?= admin_url('reports/quantity_alerts') ?>" class="dropdown-item-custom">
+                                <div class="dropdown-item-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
+                                </div>
+                                <div class="dropdown-item-content">
+                                    <p class="dropdown-item-title"><?= lang('quantity_alerts') ?></p>
+                                    <p class="dropdown-item-text"><?= $qty_alert_num ?> items low on stock</p>
+                                </div>
+                            </a>
+                            <?php
+                            } ?>
+                            <?php if ($Settings->product_expiry && $exp_alert_num > 0) {
+                                ?>
+                            <a href="<?= admin_url('reports/expiry_alerts') ?>" class="dropdown-item-custom">
+                                <div class="dropdown-item-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div class="dropdown-item-content">
+                                    <p class="dropdown-item-title"><?= lang('expiry_alerts') ?></p>
+                                    <p class="dropdown-item-text"><?= $exp_alert_num ?> products expiring soon</p>
+                                </div>
+                            </a>
+                            <?php
+                            } ?>
+                        </div>
+                        <div class="dropdown-footer-custom">
+                            <a href="<?= admin_url('reports/quantity_alerts') ?>" class="dropdown-footer-link">
+                                <?= lang('view_all') ?>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                    <?php
+                } ?>
+
+                <!-- Calendar Button -->
+                <a href="<?= admin_url('calendar') ?>" class="header-icon-btn" title="<?= lang('calendar') ?>">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                </a>
+
+                <!-- Settings Button -->
+                <?php if ($Owner) {
+                    ?>
+                <a href="<?= admin_url('system_settings') ?>" class="header-icon-btn" title="<?= lang('settings') ?>">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                </a>
+                <?php
+                } ?>
+
+                <!-- User Profile Dropdown -->
+                <div class="header-dropdown">
+                    <button type="button" class="user-profile-btn" data-dropdown-toggle="userDropdown" aria-label="User menu">
+                        <img
+                            src="<?= $this->session->userdata('avatar') ? base_url() . 'assets/uploads/avatars/thumbs/' . $this->session->userdata('avatar') : base_url('assets/images/' . $this->session->userdata('gender') . '.png'); ?>"
+                            alt="<?= $this->session->userdata('username') ?? 'User' ?>"
+                            class="user-avatar"
+                        />
+                        <div class="user-info">
+                            <p class="user-name"><?= $this->session->userdata('username') ?? 'Admin User' ?></p>
+                            <p class="user-role"><?= $Owner ? lang('owner') : lang('staff') ?></p>
+                        </div>
+                        <span class="user-dropdown-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </span>
+                    </button>
+
+                    <!-- User Dropdown Menu -->
+                    <div class="dropdown-menu-custom user-dropdown-menu" id="userDropdown">
+                        <div class="user-dropdown-header">
+                            <img
+                                src="<?= $this->session->userdata('avatar') ? base_url() . 'assets/uploads/avatars/thumbs/' . $this->session->userdata('avatar') : base_url('assets/images/' . $this->session->userdata('gender') . '.png'); ?>"
+                                alt="<?= $this->session->userdata('username') ?? 'User' ?>"
+                                class="user-dropdown-avatar"
+                            />
+                            <p class="user-dropdown-name"><?= $this->session->userdata('username') ?? 'Admin User' ?></p>
+                        </div>
+
+                        <div class="user-dropdown-body">
+                            <a href="<?= admin_url('users/profile/' . $this->session->userdata('user_id')); ?>" class="user-dropdown-item">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                                <?= lang('profile') ?>
+                            </a>
+
+                            <a href="<?= admin_url('users/profile/' . $this->session->userdata('user_id') . '/#cpassword'); ?>" class="user-dropdown-item">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                </svg>
+                                <?= lang('change_password') ?>
+                            </a> 
+
+                            <div class="user-dropdown-divider"></div>
+
+                            <a href="<?= admin_url('logout'); ?>" class="user-dropdown-item">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                </svg>
+                                <?= lang('logout') ?>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- ===== Modern Header End ===== -->
+    <div class="container" id="container">
+        <div class="row" id="main-con">
+            <table class="lt"><tr><td class="sidebar-con">
+                        <div id="sidebar-left" id="sidebar">
+                            <div class="sidebar-nav nav-collapse collapse navbar-collapse" id="sidebar_menu">
+                                <?php
+                                if(isset($Settings->pos_standalone) && $Settings->pos_standalone){
+                                    include 'new_customer_menu.php';
+                                }else{
+                                    ?>
+
+                                    <ul class="nav main-menu">
+                                    <li class="mm_welcome">
+                                        <a href="<?= admin_url() ?>">
+                                            <i class="fa fa-tachometer-alt"></i>
+                                            <span class="text"> <?= lang('dashboard'); ?></span>
+                                        </a>
+                                    </li>
+
+                                    <?php
+                                    // ========================================
+                                    // ROLE-BASED MENU STRUCTURE
+                                    // Roles: Admin, Accounts & Finance, Warehouse, Operations, Sales, Customer Management, Pharmacist
+                                    // ========================================
+
+                                    // WAREHOUSE MANAGEMENT ROLE
+                                    if ($Owner || $Admin || (isset($GP['warehouse_manager']) && $GP['warehouse_manager'])) {
+                                        ?>
+                                        <li class="mm_products">
+                                            <a class="dropmenu" href="#">
+                                                <i class="fa fa-warehouse"></i>
+                                                <span class="text"> <?= lang('Warehouse Management'); ?> </span>
+                                                <span class="menu-arrow"></span>
+                                            </a>
+                                            <ul>
+                                                <!-- Products Section -->
+                                                <li id="products_index">
+                                                    <a class="submenu" href="<?= admin_url('products'); ?>">
+                                                        <i class="fa fa-barcode"></i>
+                                                        <span class="text"> <?= lang('list_products'); ?></span>
+                                                    </a>
+                                                </li>
+                                                <li id="products_add">
+                                                    <a class="submenu" href="<?= admin_url('products/add'); ?>">
+                                                        <i class="fa fa-plus-circle"></i>
+                                                        <span class="text"> <?= lang('add_product'); ?></span>
+                                                    </a>
+                                                </li>
+                                                <li id="products_import_csv">
+                                                    <a class="submenu" href="<?= admin_url('products/import_csv'); ?>">
+                                                        <i class="fa fa-file-text"></i>
+                                                        <span class="text"> <?= lang('import_products'); ?></span>
+                                                    </a>
+                                                </li>
+                                                <li id="products_print_barcodes">
+                                                    <a class="submenu" href="<?= admin_url('products/print_barcodes'); ?>">
+                                                        <i class="fa fa-tags"></i>
+                                                        <span class="text"> <?= lang('print_barcode_label'); ?></span>
+                                                    </a>
+                                                </li>
+                                                <li id="products_quantity_adjustments">
+                                                    <a class="submenu" href="<?= admin_url('products/quantity_adjustments'); ?>">
+                                                        <i class="fa fa-filter"></i>
+                                                        <span class="text"> <?= lang('quantity_adjustments'); ?></span>
+                                                    </a>
+                                                </li>
+                                                <li id="products_add_adjustment">
+                                                    <a class="submenu" href="<?= admin_url('products/add_adjustment'); ?>">
+                                                        <i class="fa fa-filter"></i>
+                                                        <span class="text"> <?= lang('add_adjustment'); ?></span>
+                                                    </a>
+                                                </li>
+
+                                                <!-- Transfers Section -->
+                                                <li id="transfers_index">
+                                                    <a class="submenu" href="<?= admin_url('transfers'); ?>">
+                                                        <i class="fa fa-exchange"></i><span class="text"> <?= lang('list_transfers'); ?></span>
+                                                    </a>
+                                                </li>
+                                                <li id="transfers_add">
+                                                    <a class="submenu" href="<?= admin_url('transfers/add'); ?>">
+                                                        <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_transfer'); ?></span>
+                                                    </a>
+                                                </li>
+
+                                                <!-- Stock Requests -->
+                                                <li id="stock_requests_index">
+                                                    <a class="submenu" href="<?= admin_url('stock_request/inventory_check'); ?>">
+                                                        <i class="fa fa-check-square-o"></i><span class="text"> <?= lang('Inventory Check'); ?></span>
+                                                    </a>
+                                                </li>
+                                                <?php if($Owner || $Admin || (isset($GP['stock_request_view']) && $GP['stock_request_view'])){ ?>
+                                                    <li id="stock_requests_index">
+                                                        <a class="submenu" href="<?= admin_url('stock_request/current_pr'); ?>">
+                                                            <i class="fa fa-folder-open"></i><span class="text"> <?= lang('Opened PR'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                    <li id="stock_requests_index">
+                                                        <a class="submenu" href="<?= admin_url('stock_request/purchase_requests'); ?>">
+                                                            <i class="fa fa-list-alt"></i><span class="text"> <?= lang('List Purchase Requests'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                <?php } ?>
+
+                                                <!-- Warehouse Reports -->
+                                                <li class="divider"></li>
+                                                <li class="mm_submenu_header">
+                                                    <span class="text" style="font-weight:bold; padding-left:10px;"><?= lang('Inventory Reports'); ?></span>
+                                                </li>
+                                                <li id="reports_item_movement_report">
+                                                    <a href="<?= admin_url('reports/item_movement_report') ?>">
+                                                        <i class="fa fa-bar-chart-o"></i><span class="text"> <?= lang('item_movement_report'); ?></span>
+                                                    </a>
+                                                </li>
+                                                <li id="reports_inventory_trial_balance_report">
+                                                    <a href="<?= admin_url('reports/inventory_trial_balance') ?>">
+                                                        <i class="fa fa-bar-chart-o"></i><span class="text"> <?= lang('inventory_trial_balance'); ?></span>
+                                                    </a>
+                                                </li>
+                                                <li id="reports_stocks">
+                                                    <a href="<?= admin_url('reports/stock') ?>">
+                                                        <i class="fa fa-bar-chart-o"></i><span class="text"> <?= lang('Stock_report'); ?></span>
+                                                    </a>
+                                                </li>
+                                                <li id="reports_stocks">
+                                                    <a href="<?= admin_url('reports/supplier_stock') ?>">
+                                                        <i class="fa fa-bar-chart-o"></i><span class="text"> <?= lang('Supplier Stock Report'); ?></span>
+                                                    </a>
+                                                </li>
+                                                <li id="reports_stocks">
+                                                    <a href="<?= admin_url('reports/stock') ?>">
+                                                        <i class="fa fa-bar-chart-o"></i><span class="text"> <?= lang('Inventory Ageing Report'); ?></span>
+                                                    </a>
+                                                </li>
+                                                <li id="reports_items_monthly_transfer">
+                                                    <a href="<?= admin_url('reports/transfer_items_monthly_wise') ?>">
+                                                        <i class="fa fa-bar-chart-o"></i><span class="text"> <?= lang('Transfer Items Report'); ?></span>
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                    <?php } ?>
+
+                                    <?php
+                                    // OPERATIONS ROLE (Purchases, Purchase Requisition, Returns, Suppliers)
+                                    //echo '<pre>';print_r($this->GP);exit;
+                                    if ($Owner || $Admin || $this->GP['purchase_manager'] || $this->GP['sales-coordinator']) {
+
+                                        if($Admin || $Owner || $this->GP['purchase_manager']){
+                                            ?>
+                                            <li class="mm_purchases">
+                                                <a class="dropmenu" href="#">
+                                                    <i class="fa fa-industry"></i>
+                                                    <span class="text"> <?= lang('Operations'); ?> </span>
+                                                    <span class="menu-arrow"></span>
+                                                </a>
+                                                <ul>
+                                                    <!-- Purchase Requisition -->
+                                                    <li id="purchases_index">
+                                                        <a class="submenu" href="<?= admin_url('purchase_requisition'); ?>">
+                                                            <i class="fa fa-list-alt"></i>
+                                                            <span class="text"> <?= lang('list_purchases_requisition'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                    <li id="purchases_add">
+                                                        <a class="submenu" href="<?= admin_url('purchase_requisition/save'); ?>">
+                                                            <i class="fa fa-plus-circle"></i>
+                                                            <span class="text"> <?= lang('create_purchase_requisition'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </li>
+
+
+                                            <li class="mm_purchase_contract_deals">
+                                                <a class="dropmenu" href="#">
+                                                    <i class="fa fa-handshake-o"></i>
+                                                    <span class="text"> <?= lang('Purchase Contract Deals'); ?>
+                                    </span> <span class="menu-arrow"></span>
+                                                </a>
+                                                <ul>
+                                                    <li id="purchases_index">
+                                                        <a class="submenu" href="<?= admin_url('purchase_contract_deals'); ?>">
+                                                            <i class="fa fa-list-alt"></i>
+                                                            <span class="text"> <?= lang('list_purchases_contract_deals'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                    <li id="purchases_add">
+                                                        <a class="submenu" href="<?= admin_url('purchase_contract_deals/add'); ?>">
+                                                            <i class="fa fa-plus-circle"></i>
+                                                            <span class="text"> <?= lang('create_purchase_contract_deal'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </li>
+
+
+                                            <li class="mm_purchase_order">
+                                                <a class="dropmenu" href="#">
+                                                    <i class="fa fa-file-invoice-dollar"></i>
+                                                    <span class="text"> <?= lang('Purchase Order'); ?>
+                                    </span> <span class="menu-arrow"></span>
+                                                </a>
+                                                <ul>
+                                                    <li id="purchases_index">
+                                                        <a class="submenu" href="<?= admin_url('purchase_order'); ?>">
+                                                            <i class="fa fa-star"></i>
+                                                            <span class="text"> <?= lang('list_purchases_order'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                    <li id="purchases_add">
+                                                        <a class="submenu" href="<?= admin_url('purchase_order/add'); ?>">
+                                                            <i class="fa fa-plus-circle"></i>
+                                                            <span class="text"> <?= lang('create_purchase_order'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </li>
+
+
+                                            <!-- Purchases -->
+                                            <li id="purchases_index">
+                                                <a class="submenu" href="<?= admin_url('purchases'); ?>">
+                                                    <i class="fa fa-shopping-cart"></i>
+                                                    <span class="text"> <?= lang('list_purchases'); ?></span>
+                                                </a>
+                                            </li>
+                                            <li id="purchases_add">
+                                                <a class="submenu" href="<?= admin_url('purchases/add'); ?>">
+                                                    <i class="fa fa-plus-circle"></i>
+                                                    <span class="text"> <?= lang('add_purchase'); ?></span>
+                                                </a>
+                                            </li>
+                                            <!-- <li id="purchases_purchase_by_csv">
+                                        <a class="submenu" href="<?= admin_url('purchases/purchase_by_csv'); ?>">
+                                            <i class="fa fa-plus-circle"></i>
+                                            <span class="text"> <?= lang('add_purchase_by_csv'); ?></span>
+                                        </a>
+                                    </li> -->
+                                            <!--<li id="purchase_check_status">
+                                        <a class="submenu" href="<?= admin_url('purchases/check_status'); ?>">
+                                            <i class="fa fa-plus-circle"></i>
+                                            <span class="text"> <?= lang('Purchase_Check_Status'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="purchases_expenses">
+                                        <a class="submenu" href="<?= admin_url('purchases/expenses'); ?>">
+                                            <i class="fa fa-dollar"></i>
+                                            <span class="text"> <?= lang('list_expenses'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="purchases_add_expense">
+                                        <a class="submenu" href="<?= admin_url('purchases/add_expense'); ?>" data-toggle="modal" data-target="#myModal">
+                                            <i class="fa fa-plus-circle"></i>
+                                            <span class="text"> <?= lang('add_expense'); ?></span>
+                                        </a>
+                                    </li>
+
+                                    <li class="mm_purchases_status">
+                                        <a class="dropmenu" href="#">
+                                            <i class="fa fa-star"></i>
+                                            <span class="text"> <?= lang('Status List'); ?>
+                                            </span> <span class="menu-arrow"></span>
+                                        </a>
+                                        <ul>
+                                            <li id="status_pending">
+                                                <a class="submenu" href="<?= admin_url('purchases/status/pending'); ?>">
+                                                    <i class="fa fa-star"></i>
+                                                    <span class="text"> <?= lang('Pending'); ?></span>
+                                                </a>
+                                            </li>
+                                            <li id="status_ordered">
+                                                <a class="submenu" href="<?= admin_url('purchases/status/ordered'); ?>">
+                                                    <i class="fa fa-star"></i>
+                                                    <span class="text"> <?= lang('Ordered'); ?></span>
+                                                </a>
+                                            </li>
+                                            <li id="status_arrived">
+                                                <a class="submenu" href="<?= admin_url('purchases/status/arrived'); ?>">
+                                                    <i class="fa fa-star"></i>
+                                                    <span class="text"> <?= lang('Arrived'); ?></span>
+                                                </a>
+                                            </li>
+                                            <li id="status_received">
+                                                <a class="submenu" href="<?= admin_url('purchases/status/received'); ?>">
+                                                    <i class="fa fa-star"></i>
+                                                    <span class="text"> <?= lang('Received'); ?></span>
+                                                </a>
+                                            </li>
+
+                                        </ul>
+                                    </li>-->
+
+
+
+                                            </li>
+                                            <?php
+
+                                        }
+                                        ?>
+                                        <?php
+
+                                        if($Admin || $Owner || $this->GP['sales-coordinator']){
+                                            ?>
+                                            <li class="mm_sales"
+                                <a class="dropmenu" href="#">
+                                            <i class="fa fa-cash-register"></i>
+                                            <span class="text"> <?= lang('sales'); ?>
+                                    </span> <span class="menu-arrow"></span>
+
+                                            </a>
+                                                <ul>
+                                                    <li id="sales_index">
+                                                        <a class="submenu" href="<?= admin_url('sales'); ?>">
+                                                            <i class="fa fa-list-alt"></i>
+                                                            <span class="text"> <?= lang('list_sales'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                    <?php if (POS && $this->Settings->site_name != 'Hills Business Medical') {
+                                                        ?>
+                                                        <li id="pos_sales">
+                                                            <a class="submenu" href="<?= admin_url('pos/sales'); ?>">
+                                                                <i class="fa fa-th-large"></i>
+                                                                <span class="text"> <?= lang('pos_sales'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <li id="pos_sales_wise">
+                                                            <a class="submenu" href="<?= admin_url('pos/sales_date_wise'); ?>">
+                                                                <i class="fa fa-calendar"></i><span class="text"> <?= lang('POS_Sales_Date_Wise'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    } ?>
+                                                    <?php if (POS && $this->Settings->site_name != 'Hills Business Medical') {
+                                                        ?>
+                                                        <li id="sales_add">
+                                                            <a class="submenu" href="<?= admin_url('sales/add'); ?>">
+                                                                <i class="fa fa-plus-circle"></i>
+                                                                <span class="text"> <?= lang('add_sale'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                    <?php } ?>
+                                                    <!-- <li id="sales_sale_by_csv">
+                                        <a class="submenu" href="<?= admin_url('sales/sale_by_csv'); ?>">
+                                            <i class="fa fa-plus-circle"></i>
+                                            <span class="text"> <?= lang('add_sale_by_csv'); ?></span>
+                                        </a>
+                                    </li> -->
+                                                    <!--<li id="sales_deliveries">
+                                        <a class="submenu" href="<?= admin_url('sales/deliveries'); ?>">
+                                            <i class="fa fa-truck"></i>
+                                            <span class="text"> <?= lang('deliveries'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="sales_gift_cards">
+                                        <a class="submenu" href="<?= admin_url('sales/gift_cards'); ?>">
+                                            <i class="fa fa-gift"></i>
+                                            <span class="text"> <?= lang('list_gift_cards'); ?></span>
+                                        </a>
+                                    </li>
+                                      <li id="list_refund">
+                                        <a class="submenu" href="<?= admin_url('refund'); ?>">
+                                            <i class="fa fa-gift"></i>
+                                            <span class="text"> <?= lang('Refund_Request'); ?></span>
+                                        </a>
+                                    </li>-->
+                                                </ul>
+                                            </li>
+
+                                            <li class="mm_quotes">
+                                                <a class="dropmenu" href="#">
+                                                    <i class="fa fa-file-contract"></i>
+                                                    <span class="text"> <?= lang('quotes'); ?> </span>
+                                                    <span class="menu-arrow"></span>
+                                                </a>
+                                                <ul>
+                                                    <li id="quotes_index">
+                                                        <a class="submenu" href="<?= admin_url('quotes'); ?>">
+                                                            <i class="fa fa-list-alt"></i>
+                                                            <span class="text"> <?= lang('list_quotes'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                    <li id="quotes_add">
+                                                        <a class="submenu" href="<?= admin_url('quotes/add'); ?>">
+                                                            <i class="fa fa-plus-circle"></i>
+                                                            <span class="text"> <?= lang('add_quote'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </li>
+                                            <!--<li class="mm_dealss">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-heart-o"></i>
+                                    <span class="text"> <?= lang('Deals'); ?> </span>
+                                    <span class="menu-arrow"></span>
+                                </a>
+                                <ul>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('deals'); ?>">
+                                            <i class="fa fa-heart-o"></i>
+                                            <span class="text"> <?= lang('List Deals'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_add">
+                                        <a class="submenu" href="<?= admin_url('deals/add'); ?>">
+                                            <i class="fa fa-plus-circle"></i>
+                                            <span class="text"> <?= lang('Add Deals'); ?></span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>-->
+                                            <li class="mm_transfers">
+                                                <a class="dropmenu" href="#">
+                                                    <i class="fa fa-exchange-alt"></i>
+                                                    <span class="text"> <?= lang('transfers'); ?> </span>
+                                                    <span class="menu-arrow"></span>
+                                                </a>
+                                                <ul>
+                                                    <li id="transfers_index">
+                                                        <a class="submenu" href="<?= admin_url('transfers'); ?>">
+                                                            <i class="fa fa-exchange"></i><span class="text"> <?= lang('list_transfers'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                    <li id="transfers_add">
+                                                        <a class="submenu" href="<?= admin_url('transfers/add'); ?>">
+                                                            <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_transfer'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                    <!-- <li id="transfers_purchase_by_csv">
+                                        <a class="submenu" href="<?= admin_url('transfers/transfer_by_csv'); ?>">
+                                            <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_transfer_by_csv'); ?></span>
+                                        </a>
+                                    </li> -->
+
+                                                </ul>
+                                            </li>
+
+
+
+                                            <li class="mm_returns">
+                                                <a class="dropmenu" href="#">
+                                                    <i class="fa fa-undo-alt"></i>
+                                                    <span class="text"> <?= lang('returns'); ?> </span>
+                                                    <span class="menu-arrow"></span>
+                                                </a>
+                                                <ul>
+                                                    <?php
+                                                    if($Admin || $Owner || $this->GP['sales-coordinator']){
+                                                        ?>
+                                                        <li id="returns_index">
+                                                            <a class="submenu" href="<?= admin_url('returns'); ?>">
+                                                                <i class="fa fa-list-alt"></i><span class="text"> <?= lang('list_returns'); ?></span>
+                                                            </a>
+                                                        </li>
+
+                                                        <li id="returns_add">
+                                                            <a class="submenu" href="<?= admin_url('returns/add'); ?>">
+                                                                <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Add_Return_Customer'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                    <?php } ?>
+                                                    <?php
+                                                    if($Admin || $Owner || $this->GP['purchase_manager']){
+                                                        ?>
+
+                                                        <li id="returns_index">
+                                                            <a class="submenu" href="<?= admin_url('returns_supplier'); ?>">
+                                                                <i class="fa fa-list-alt"></i><span class="text"> <?= lang('List_Returns_Suppliers'); ?></span>
+                                                            </a>
+                                                        </li>
+
+                                                        <li id="returns_add">
+                                                            <a class="submenu" href="<?= admin_url('returns_supplier/add'); ?>">
+                                                                <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Add_Return_Supplier'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                    <?php } ?>
+                                                    <!--<li id="returns_add">
+                                        <a class="submenu" href="<?php //echo admin_url('returns/add_return'); ?>">
+                                            <i class="fa fa-plus-circle"></i><span class="text"> <?php //echo lang('Add_Return_Supplier'); ?></span>
+                                        </a>
+                                    </li>-->
+
+
+                                                </ul>
+                                            </li>
+                                            <?php
+                                        }
+                                        ?>
+
+
+                                        <li class="mm_reports">
+                                            <a class="dropmenu" href="#">
+                                                <i class="fa fa-bar-chart-o"></i>
+                                                <span class="text"> <?= lang('reports'); ?> </span>
+                                                <span class="menu-arrow"></span>
+                                            </a>
+                                            <ul>
+                                                <li class="mm_products">
+                                                    <a class="dropmenu" href="#">
+                                                        <i class="fa fa-warehouse"></i>
+                                                        <span class="text"> <?= lang('WMS Reports'); ?> </span>
+                                                        <span class="menu-arrow"></span>
+                                                    </a>
+                                                    <ul>
+
+                                                        <li id="reports_daily_purchase_report">
+                                                            <a href="<?= admin_url('reports/daily_purchase_report') ?>">
+                                                                <i class="fa fa-users"></i><span class="text"> <?= lang('Daily Purchase Report'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <li id="reports_total_income_report">
+                                                            <a href="<?= admin_url('reports/total_income') ?>">
+                                                                <i class="fa fa-users"></i><span class="text"> <?= lang('Total Income Report'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </li>
+
+
+                                                <li class="mm_products">
+                                                    <a class="dropmenu" href="#">
+                                                        <i class="fa fa-warehouse"></i>
+                                                        <span class="text"> <?= lang('Supplier Reports'); ?> </span>
+                                                        <span class="menu-arrow"></span>
+                                                    </a>
+                                                    <ul>
+
+
+                                                        <li id="reports_supplier_statement_report">
+                                                            <a href="<?= admin_url('reports/supplier_statement') ?>">
+                                                                <i class="fa fa-users"></i><span class="text"> <?= lang('supplier_statement_report'); ?></span>
+                                                            </a>
+                                                        </li>
+
+                                                        <li id="reports_supplier_trial_balance_report">
+                                                            <a href="<?= admin_url('reports/suppliers_trial_balance') ?>">
+                                                                <i class="fa fa-users"></i><span class="text"> <?= lang('suppliers_trial_balance_report'); ?></span>
+                                                            </a>
+                                                        </li>
+
+                                                        <li id="reports_vat_purchase_report">
+                                                            <a href="<?= admin_url('reports/vat_purchase') ?>">
+                                                                <i class="fa fa-users"></i><span class="text"> <?= lang('vat_purchase_report').' (Invoice)'; ?></span>
+                                                            </a>
+                                                        </li>
+
+                                                        <!-- <li id="reports_vat_purchase_report">
+                                                <a href="<?= admin_url('reports/vat_purchase_ledger') ?>">
+                                                    <i class="fa fa-users"></i><span class="text"> <?= lang('vat_purchase_report').' (Ledger)'; ?></span>
+                                                </a>
+                                            </li> -->
+
+                                                        <li id="reports_supplier_aging_report">
+                                                            <a href="<?= admin_url('reports/supplier_aging') ?>">
+                                                                <i class="fa fa-users"></i><span class="text"> <?= lang('supplier_aging_report'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </li>
+
+                                                <li class="mm_products">
+                                                    <a class="dropmenu" href="#">
+                                                        <i class="fa fa-warehouse"></i>
+                                                        <span class="text"> <?= lang('Customers Reports'); ?> </span>
+                                                        <span class="menu-arrow"></span>
+                                                    </a>
+                                                    <ul>
+
+                                                        <li id="reports_vat_sale_report">
+                                                            <a href="<?= admin_url('reports/vat_sale') ?>">
+                                                                <i class="fa fa-users"></i><span class="text"> <?= lang('Vat Sale Report').' (Invoice)'; ?></span>
+                                                            </a>
+                                                        </li>
+
+                                                        <li id="reports_customer_trial_balance_report">
+                                                            <a href="<?= admin_url('reports/customers_trial_balance') ?>">
+                                                                <i class="fa fa-users"></i><span class="text"> <?= lang('customers_trial_balance_report'); ?></span>
+                                                            </a>
+                                                        </li>
+
+                                                        <li id="reports_customer_statement_report">
+                                                            <a href="<?= admin_url('reports/customer_statement') ?>">
+                                                                <i class="fa fa-users"></i><span class="text"> <?= lang('customer_statement_report'); ?></span>
+                                                            </a>
+                                                        </li>
+
+                                                        <li id="reports_customer_aging_report">
+                                                            <a href="<?= admin_url('reports/customer_aging') ?>">
+                                                                <i class="fa fa-users"></i><span class="text"> <?= lang('customer_aging_report'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </li>
+
+                                                <li class="mm_products">
+                                                    <a class="dropmenu" href="#">
+                                                        <i class="fa fa-warehouse"></i>
+                                                        <span class="text"> <?= lang('Inventory Reports'); ?> </span>
+                                                        <span class="menu-arrow"></span>
+                                                    </a>
+                                                    <ul>
+                                                        <!-- <li id="reports_inventory_movement_report">
+                                                <a href="<?= admin_url('reports/inventory_movement') ?>">
+                                                    <i class="fa fa-users"></i><span class="text"> <?= lang('inventory_movement_report'); ?></span>
+                                                </a>
+                                            </li> -->
+                                                        <li id="reports_item_movement_report">
+                                                            <a href="<?= admin_url('reports/item_movement_report') ?>">
+                                                                <i class="fa fa-users"></i><span class="text"> <?= lang('item_movement_report'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <li id="reports_inventory_trial_balance_report">
+                                                            <a href="<?= admin_url('reports/inventory_trial_balance') ?>">
+                                                                <i class="fa fa-users"></i><span class="text"> <?= lang('inventory_trial_balance'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <li id="reports_stocks">
+                                                            <a href="<?= admin_url('reports/stock') ?>">
+                                                                <i class="fa fa-money"></i><span class="text"> <?= lang('Stock_report'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <li id="reports_stocks">
+                                                            <a href="<?= admin_url('reports/supplier_stock') ?>">
+                                                                <i class="fa fa-money"></i><span class="text"> <?= lang('Supplier Stock Report'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <li id="reports_stocks">
+                                                            <a href="<?= admin_url('reports/stock') ?>">
+                                                                <i class="fa fa-money"></i><span class="text"> <?= lang('Inventory Ageing Report'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </li>
+
+                                                <li class="mm_products">
+                                                    <a class="dropmenu" href="#">
+                                                        <i class="fa fa-warehouse"></i>
+                                                        <span class="text"> <?= lang('General Reports'); ?> </span>
+                                                        <span class="menu-arrow"></span>
+                                                    </a>
+                                                    <ul>
+                                                        <li id="reports_general_ledger_trial_balance_report">
+                                                            <a href="<?= admin_url('reports/general_ledger_trial_balance') ?>">
+                                                                <i class="fa fa-users"></i><span class="text"> <?= lang('general_ledger_trial_balance_report'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <li id="reports_general_ledger_statement_report">
+                                                            <a href="<?= admin_url('reports/general_ledger_statement') ?>">
+                                                                <i class="fa fa-users"></i><span class="text"> <?= lang('general_ledger_statement_report'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <li id="reports_balance_sheet">
+                                                            <a href="<?= admin_url('reports/balance_sheet') ?>">
+                                                                <i class="fa fa-users"></i><span class="text"> <?= lang('balance_sheet'); ?></span>
+                                                            </a>
+                                                        </li>
+
+                                                        <li id="reports_collections_pharmacy">
+                                                            <a href="<?= admin_url('reports/collections_by_pharmacy') ?>">
+                                                                <i class="fa fa-bars"></i><span class="text"> <?= lang('Pharmacy Collections'); ?></span>
+                                                            </a>
+                                                        </li>
+
+                                                        <li id="reports_sales_by_category">
+                                                            <a href="<?= admin_url('reports/sales_by_category') ?>">
+                                                                <i class="fa fa-bars"></i><span class="text"> <?= lang('Sales By Category'); ?></span>
+                                                            </a>
+                                                        </li>
+
+                                                        <li id="reports_sales_by_item">
+                                                            <a href="<?= admin_url('reports/sales_by_item') ?>">
+                                                                <i class="fa fa-bars"></i><span class="text"> <?= lang('Sales By Items'); ?></span>
+                                                            </a>
+                                                        </li>
+
+                                                        <li id="reports_pharmacist_commission">
+                                                            <a href="<?= admin_url('reports/pharmacist_comission') ?>">
+                                                                <i class="fa fa-bars"></i><span class="text"> <?= lang('Pharmacist Commission'); ?></span>
+                                                            </a>
+                                                        </li>
+
+                                                        <li id="reports_items_monthly_transfer">
+                                                            <a href="<?= admin_url('reports/transfer_items_monthly_wise') ?>">
+                                                                <i class="fa fa-bars"></i><span class="text"> <?= lang('Transfer Items Report'); ?></span>
+                                                            </a>
+                                                        </li>
+
+                                                        <li id="close_register">
+                                                            <a href="<?= admin_url('reports/close_register_details') ?>">
+                                                                <i class="fa fa-bars"></i><span class="text"> <?= lang('Close Register Date Wise'); ?></span>
+                                                            </a>
+                                                        </li>
+
+
+                                                    </ul>
+                                                </li>
+
+                                                <li id="close_register">
+                                                    <a href="<?= admin_url('reports/close_register_details') ?>">
+                                                        <i class="fa fa-bars"></i><span class="text"> <?= lang('Close Register Date Wise'); ?></span>
+                                                    </a>
+                                                </li>
+                                                <!--<li id="reports_index">
+                                        <a href="<?= admin_url('reports') ?>">
+                                            <i class="fa fa-bars"></i><span class="text"> <?= lang('overview_chart'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_warehouse_stock">
+                                        <a href="<?= admin_url('reports/warehouse_stock') ?>">
+                                            <i class="fa fa-building"></i><span class="text"> <?= lang('warehouse_stock'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_best_sellers">
+                                        <a href="<?= admin_url('reports/best_sellers') ?>">
+                                            <i class="fa fa-line-chart"></i><span class="text"> <?= lang('best_sellers'); ?></span>
+                                        </a>
+                                    </li>
+                                    <?php if (POS) {
+                                                    ?>
+                                    <li id="reports_register">
+                                        <a href="<?= admin_url('reports/register') ?>">
+                                            <i class="fa fa-th-large"></i><span class="text"> <?= lang('register_report'); ?></span>
+                                        </a>
+                                    </li>
+                                        <?php
+                                                } ?>
+                                    <li id="reports_quantity_alerts">
+                                        <a href="<?= admin_url('reports/quantity_alerts') ?>">
+                                            <i class="fa fa-bar-chart-o"></i><span class="text"> <?= lang('product_quantity_alerts'); ?></span>
+                                        </a>
+                                    </li>
+                                    <?php if ($Settings->product_expiry) {
+                                                    ?>
+                                    <li id="reports_expiry_alerts">
+                                        <a href="<?= admin_url('reports/expiry_alerts') ?>">
+                                            <i class="fa fa-bar-chart-o"></i><span class="text"> <?= lang('product_expiry_alerts'); ?></span>
+                                        </a>
+                                    </li>
+                                        <?php
+                                                } ?>
+                                    <li id="reports_products">
+                                        <a href="<?= admin_url('reports/products') ?>">
+                                            <i class="fa fa-barcode"></i><span class="text"> <?= lang('products_report'); ?></span>
+                                        </a>
+                                    </li>-->
+                                                <!--<li id="reports_adjustments">
+                                        <a href="<?= admin_url('reports/adjustments') ?>">
+                                            <i class="fa fa-filter"></i><span class="text"> <?= lang('adjustments_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_categories">
+                                        <a href="<?= admin_url('reports/categories') ?>">
+                                            <i class="fa fa-folder-open"></i><span class="text"> <?= lang('categories_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_brands">
+                                        <a href="<?= admin_url('reports/brands') ?>">
+                                            <i class="fa fa-cubes"></i><span class="text"> <?= lang('brands_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_daily_sales">
+                                        <a href="<?= admin_url('reports/daily_sales') ?>">
+                                            <i class="fa fa-calendar"></i><span class="text"> <?= lang('daily_sales'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_monthly_sales">
+                                        <a href="<?= admin_url('reports/monthly_sales') ?>">
+                                            <i class="fa fa-calendar"></i><span class="text"> <?= lang('monthly_sales'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_sales">
+                                        <a href="<?= admin_url('reports/sales') ?>">
+                                            <i class="fa fa-heart"></i><span class="text"> <?= lang('sales_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_payments">
+                                        <a href="<?= admin_url('reports/payments') ?>">
+                                            <i class="fa fa-money"></i><span class="text"> <?= lang('payments_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_pharmacy_stocks">
+                                        <a href="<?= admin_url('reports/pharmacy_stock') ?>">
+                                            <i class="fa fa-money"></i><span class="text"> <?= lang('pharmacy_stock_report'); ?></span>
+                                        </a>
+                                    </li>
+
+                                    <li id="reports_tax">
+                                        <a href="<?= admin_url('reports/tax') ?>">
+                                            <i class="fa fa-area-chart"></i><span class="text"> <?= lang('tax_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_profit_loss">
+                                        <a href="<?= admin_url('reports/profit_loss') ?>">
+                                            <i class="fa fa-money"></i><span class="text"> <?= lang('profit_and_loss'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_daily_purchases">
+                                        <a href="<?= admin_url('reports/daily_purchases') ?>">
+                                            <i class="fa fa-calendar"></i><span class="text"> <?= lang('daily_purchases'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_monthly_purchases">
+                                        <a href="<?= admin_url('reports/monthly_purchases') ?>">
+                                            <i class="fa fa-calendar"></i><span class="text"> <?= lang('monthly_purchases'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_purchases">
+                                        <a href="<?= admin_url('reports/purchases') ?>">
+                                            <i class="fa fa-star"></i><span class="text"> <?= lang('purchases_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_expenses">
+                                        <a href="<?= admin_url('reports/expenses') ?>">
+                                            <i class="fa fa-star"></i><span class="text"> <?= lang('expenses_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_customer_report">
+                                        <a href="<?= admin_url('reports/customers') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('customers_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_supplier_report">
+                                        <a href="<?= admin_url('reports/suppliers') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('suppliers_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_staff_report">
+                                        <a href="<?= admin_url('reports/users') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('staff_report'); ?></span>
+                                        </a>
+                                    </li>
+
+
+                                    <li id="reports_supplier_trial_balance_report">
+                                        <a href="<?= admin_url('reports/suppliers_trial_balance') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('suppliers_trial_balance_report'); ?></span>
+                                        </a>
+                                    </li>
+
+                                    <li id="reports_general_ledger_trial_balance_report">
+                                        <a href="<?= admin_url('reports/general_ledger_trial_balance') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('general_ledger_trial_balance_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_supplier_statement_report">
+                                        <a href="<?= admin_url('reports/supplier_statement') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('supplier_statement_report'); ?></span>
+                                        </a>
+                                    </li>
+
+                                    <li id="reports_general_ledger_statement_report">
+                                        <a href="<?= admin_url('reports/general_ledger_statement') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('general_ledger_statement_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_supplier_aging_report">
+                                        <a href="<?= admin_url('reports/supplier_aging') ?>">
+                                            <i class="fa fa-users"></i><span class="text"> <?= lang('supplier_aging_report'); ?></span>
+                                        </a>
+                                    </li>-->
+
+                                                <!--<li id="reports_incentive_report">
+                                        <a href="<?= admin_url('reports/incentives') ?>">
+                                            <i class="fa fa-users"></i>
+                                            <span class="text"> <?= lang('incentive_report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_incentive_report">
+                                        <a href="<?= admin_url('reports/departmental_incentive') ?>">
+                                            <i class="fa fa-users"></i>
+                                            <span class="text"> <?= lang('departmental_incentive'); ?></span>
+                                        </a>
+                                    </li>-->
+
+                                            </ul>
+                                        </li>
+
+                                        <li class="mm_auth mm_customers mm_suppliers mm_billers">
+                                            <a class="dropmenu" href="#">
+                                                <i class="fa fa-users"></i>
+                                                <span class="text"> <?= lang('people'); ?> </span>
+                                                <span class="menu-arrow"></span>
+                                            </a>
+                                            <ul>
+                                                <?php if ($Owner || $Admin) {
+                                                    ?>
+                                                    <li id="auth_users">
+                                                        <a class="submenu" href="<?= admin_url('users'); ?>">
+                                                            <i class="fa fa-users"></i><span class="text"> <?= lang('list_users'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                    <li id="auth_create_user">
+                                                        <a class="submenu" href="<?= admin_url('users/create_user'); ?>">
+                                                            <i class="fa fa-user-plus"></i><span class="text"> <?= lang('new_user'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                    <li id="billers_index">
+                                                        <a class="submenu" href="<?= admin_url('billers'); ?>">
+                                                            <i class="fa fa-users"></i><span class="text"> <?= lang('list_billers'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                    <li id="billers_index">
+                                                        <a class="submenu" href="<?= admin_url('billers/add'); ?>" data-toggle="modal" data-target="#myModal">
+                                                            <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_biller'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                    <?php
+                                                } ?>
+
+                                                <?php
+                                                if($Admin || $Owner || $this->GP['sales-coordinator']){
+                                                    ?>
+                                                    <li id="customers_index">
+                                                        <a class="submenu" href="<?= admin_url('customers'); ?>">
+                                                            <i class="fa fa-users"></i><span class="text"> <?= lang('list_customers'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                    <li id="customers_index">
+                                                        <a class="submenu" href="<?= admin_url('customers/add'); ?>" data-toggle="modal" data-target="#myModal">
+                                                            <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_customer'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                    <?php
+                                                }
+                                                ?>
+                                                <?php
+                                                if($Admin || $Owner || $this->GP['purchase_manager']){
+                                                    ?>
+                                                    <li id="suppliers_index">
+                                                        <a class="submenu" href="<?= admin_url('suppliers'); ?>">
+                                                            <i class="fa fa-users"></i><span class="text"> <?= lang('list_suppliers'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                    <li id="suppliers_index">
+                                                        <a class="submenu" href="<?= admin_url('suppliers/add'); ?>" data-toggle="modal" data-target="#myModal">
+                                                            <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_supplier'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                    <?php
+                                                }
+                                                ?>
+                                                <?php if($Admin || $Owner || $this->GP['accountant']){ ?>
+                                                    <li class="mm_employees">
+                                                        <a class="dropmenu" href="#">
+                                                            <i class="fa fa-users"></i>
+                                                            <span class="text"> <?= lang('Employees'); ?> </span>
+                                                            <span class="menu-arrow"></span>
+                                                        </a>
+                                                        <ul>
+                                                            <li id="employees_index">
+                                                                <a class="submenu" href="<?= admin_url('employees'); ?>">
+                                                                    <i class="fa fa-users"></i>
+                                                                    <span class="text"> <?= lang('List Employees'); ?></span>
+                                                                </a>
+                                                            </li>
+                                                            <li id="employees_add">
+                                                                <a class="submenu" href="<?= admin_url('employees/add'); ?>">
+                                                                    <i class="fa fa-plus-circle"></i>
+                                                                    <span class="text"> <?= lang('Add Employee'); ?></span>
+                                                                </a>
+                                                            </li>
+                                                        </ul>
+                                                    </li>
+                                                <?php } ?>
+                                            </ul>
+                                        </li>
+
+                                        <?php if ($Owner) {
+                                            ?>
+                                            <li class="mm_system_settings <?= strtolower($this->router->fetch_method()) == 'sales' ? '' : 'mm_pos' ?>">
+                                                <a class="dropmenu" href="#">
+                                                    <i class="fa fa-cog"></i><span class="text"> <?= lang('settings'); ?> </span>
+                                                    <span class="menu-arrow"></span>
+                                                </a>
+                                                <ul>
+                                                    <!--<li id="system_settings_index">
+                                            <a href="<?= admin_url('system_settings') ?>">
+                                                <i class="fa fa-cogs"></i><span class="text"> <?= lang('system_settings'); ?></span>
+                                            </a>
+                                        </li>-->
+                                                    <?php if (POS) {
+                                                        ?>
+                                                        <!--<li id="pos_settings">
+                                            <a href="<?= admin_url('pos/settings') ?>">
+                                                <i class="fa fa-th-large"></i><span class="text"> <?= lang('pos_settings'); ?></span>
+                                            </a>
+                                        </li>-->
+                                                        <!--<li id="promos_index">
+                                            <a href="<?= admin_url('promos') ?>">
+                                                <i class="fa fa-cogs"></i><span class="text"> <?= lang('promos'); ?></span>
+                                            </a>
+                                        </li>
+                                        <li id="pos_printers">
+                                            <a href="<?= admin_url('pos/printers') ?>">
+                                                <i class="fa fa-print"></i><span class="text"> <?= lang('list_printers'); ?></span>
+                                            </a>
+                                        </li>-->
+                                                        <!--<li id="pos_add_printer">
+                                            <a href="<?= admin_url('pos/add_printer') ?>">
+                                                <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_printer'); ?></span>
+                                            </a>
+                                        </li>-->
+                                                        <?php
+                                                    } ?>
+                                                    <!--<li id="system_settings_change_logo">
+                                            <a href="<?= admin_url('system_settings/change_logo') ?>" data-toggle="modal" data-target="#myModal">
+                                                <i class="fa fa-upload"></i><span class="text"> <?= lang('change_logo'); ?></span>
+                                            </a>
+                                        </li>
+                                        <li id="system_settings_currencies">
+                                            <a href="<?= admin_url('system_settings/currencies') ?>">
+                                                <i class="fa fa-money"></i><span class="text"> <?= lang('currencies'); ?></span>
+                                            </a>
+                                        </li>-->
+                                                    <li id="system_settings_warehouses">
+                                                        <a href="<?= admin_url('system_settings/warehouses') ?>">
+                                                            <i class="fa fa-building-o"></i><span class="text"> <?= lang('warehouses'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                    <li class="mm_departments">
+                                                        <a class="dropmenu" href="#">
+                                                            <i class="fa fa-building"></i>
+                                                            <span class="text"> <?= lang('Departments'); ?> </span>
+                                                            <span class="menu-arrow"></span>
+                                                        </a>
+                                                        <ul>
+                                                            <li id="departments_index">
+                                                                <a class="submenu" href="<?= admin_url('departments'); ?>">
+                                                                    <i class="fa fa-building"></i>
+                                                                    <span class="text"> <?= lang('List Departments'); ?></span>
+                                                                </a>
+                                                            </li>
+                                                            <li id="departments_add">
+                                                                <a class="submenu" href="<?= admin_url('departments/add'); ?>">
+                                                                    <i class="fa fa-plus-circle"></i>
+                                                                    <span class="text"> <?= lang('Add Departments'); ?></span>
+                                                                </a>
+                                                            </li>
+                                                        </ul>
+                                                    </li>
+
+                                                    <li id="system_settings_customer_groups">
+                                                        <a href="<?= admin_url('system_settings/customer_groups') ?>">
+                                                            <i class="fa fa-chain"></i><span class="text"> <?= lang('customer_groups'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                    <!--<li id="system_settings_price_groups">
+                                            <a href="<?= admin_url('system_settings/price_groups') ?>">
+                                                <i class="fa fa-dollar"></i><span class="text"> <?= lang('price_groups'); ?></span>
+                                            </a>
+                                        </li>-->
+                                                    <li id="system_settings_categories">
+                                                        <a href="<?= admin_url('system_settings/categories') ?>">
+                                                            <i class="fa fa-folder-open"></i><span class="text"> <?= lang('categories'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                    <!--<li id="system_settings_expense_categories">
+                                            <a href="<?= admin_url('system_settings/expense_categories') ?>">
+                                                <i class="fa fa-folder-open"></i><span class="text"> <?= lang('expense_categories'); ?></span>
+                                            </a>
+                                        </li>-->
+                                                    <!--<li id="system_settings_units">
+                                            <a href="<?= admin_url('system_settings/units') ?>">
+                                                <i class="fa fa-wrench"></i><span class="text"> <?= lang('units'); ?></span>
+                                            </a>
+                                        </li>
+                                        <li id="system_settings_brands">
+                                            <a href="<?= admin_url('system_settings/brands') ?>">
+                                                <i class="fa fa-th-list"></i><span class="text"> <?= lang('brands'); ?></span>
+                                            </a>
+                                        </li>
+                                        <li id="system_settings_variants">
+                                            <a href="<?= admin_url('system_settings/variants') ?>">
+                                                <i class="fa fa-tags"></i><span class="text"> <?= lang('variants'); ?></span>
+                                            </a>
+                                        </li>
+                                        <li id="system_settings_tax_rates">
+                                            <a href="<?= admin_url('system_settings/tax_rates') ?>">
+                                                <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('tax_rates'); ?></span>
+                                            </a>
+                                        </li>-->
+
+                                                    <!--<li id="system_settings_warehouses">
+                                            <a href="<?= admin_url('system_settings/warehousesCountry') ?>">
+                                                <i class="fa fa-building-o"></i><span class="text"> <?= lang('Warehouses with Country'); ?></span>
+                                            </a>
+                                        </li>
+                                        <li class="system_settings_countries">
+                                            <a class="dropmenu" href="#">
+                                                <i class="fa fa-globe"></i><span class="text"> <?= lang('Countries'); ?> </span>
+                                                <span class="menu-arrow"></span>
+                                            </a>-->
+                                                    <!--<ul>
+                                    <li id="shop_settings_pages">
+                                        <a href="<?= admin_url('system_settings/allCountry') ?>">
+                                            <i class="fa fa-file"></i><span class="text"> <?= lang('List Countries'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="shop_settings_pages">
+                                        <a href="<?= admin_url('system_settings/add_country') ?>">
+                                            <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Add Country'); ?></span>
+                                        </a>
+                                    </li>
+
+                                </ul>-->
+                                            </li>
+                                            <li id="system_settings_email_templates">
+                                                <a href="<?= admin_url('system_settings/email_templates') ?>">
+                                                    <i class="fa fa-envelope"></i><span class="text"> <?= lang('email_templates'); ?></span>
+                                                </a>
+                                            </li>
+                                            <li id="system_settings_user_groups">
+                                                <a href="<?= admin_url('system_settings/user_groups') ?>">
+                                                    <i class="fa fa-key"></i><span class="text"> <?= lang('group_permissions'); ?></span>
+                                                </a>
+                                            </li>
+                                            <li id="site_logs_index">
+                                                <a href="<?= admin_url('site_logs') ?>">
+                                                    <i class="fa fa-file-text"></i><span class="text"> <?= lang('site_logs'); ?></span>
+                                                </a>
+                                            </li>
+                                            <!-- <li id="system_settings_backups">
+                                            <a href="<?= admin_url('system_settings/backups') ?>">
+                                                <i class="fa fa-database"></i><span class="text"> <?= lang('backups'); ?></span>
+                                            </a>
+                                        </li>
+                                         <li id="system_settings_updates">
+                                            <a href="<?= admin_url('system_settings/updates') ?>">
+                                                <i class="fa fa-upload"></i><span class="text"> <?= lang('updates'); ?></span>
+                                            </a>
+                                        </li> -->
+                                            </ul>
+                                            </li>
+                                            <?php
+                                        } ?>
+
+                                        <?php if ($Owner && file_exists(APPPATH . 'controllers' . DIRECTORY_SEPARATOR . 'shop' . DIRECTORY_SEPARATOR . 'Shop.php')) {
+                                            ?>
+                                            <!--<li class="mm_shop_settings mm_api_settings">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-shopping-cart"></i><span class="text"> <?= lang('front_end'); ?> </span>
+                                    <span class="menu-arrow"></span>
+                                </a>
+                                <ul>
+                                    <li id="shop_settings_index">
+                                        <a href="<?= admin_url('shop_settings') ?>">
+                                            <i class="fa fa-cog"></i><span class="text"> <?= lang('shop_settings'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="shop_settings_slider">
+                                        <a href="<?= admin_url('shop_settings/slider') ?>">
+                                            <i class="fa fa-file"></i><span class="text"> <?= lang('slider_settings'); ?></span>
+                                        </a>
+                                    </li>
+                                    <?php if ($Settings->apis) {
+                                                ?>
+                                    <li id="api_settings_index">
+                                        <a href="<?= admin_url('api_settings') ?>">
+                                            <i class="fa fa-key"></i><span class="text"> <?= lang('api_keys'); ?></span>
+                                        </a>
+                                    </li>
+                                        <?php
+                                            } ?>
+                                    <li id="shop_settings_pages">
+                                        <a href="<?= admin_url('shop_settings/pages') ?>">
+                                            <i class="fa fa-file"></i><span class="text"> <?= lang('list_pages'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="shop_settings_pages">
+                                        <a href="<?= admin_url('shop_settings/add_page') ?>">
+                                            <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_page'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="shop_settings_sms_settings">
+                                        <a href="<?= admin_url('shop_settings/sms_settings') ?>">
+                                            <i class="fa fa-cogs"></i><span class="text"> <?= lang('sms_settings'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="shop_settings_send_sms">
+                                        <a href="<?= admin_url('shop_settings/send_sms') ?>">
+                                            <i class="fa fa-send"></i><span class="text"> <?= lang('send_sms'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="shop_settings_sms_log">
+                                        <a href="<?= admin_url('shop_settings/sms_log') ?>">
+                                            <i class="fa fa-file-text-o"></i><span class="text"> <?= lang('sms_log'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="shop_settings_abandoned_cart">
+                                        <a href="<?= admin_url('shop_settings/abandoned_cart') ?>">
+                                            <i class="fa fa-file-text-o"></i><span class="text"> <?= lang('abandoned_cart'); ?></span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>-->
+
+                                            <?php
+                                        }
+                                    } else {
+                                        if ($GP['products-index'] || $GP['products-add'] || $GP['products-barcode'] || $GP['products-adjustments'] || $GP['products-stock_count']) {
+                                            ?>
+                                            <li class="mm_products">
+                                                <a class="dropmenu" href="#">
+                                                    <i class="fa fa-warehouse"></i>
+                                                    <span class="text"> <?= lang('products'); ?>
+                                    </span> <span class="menu-arrow"></span>
+                                                </a>
+                                                <ul>
+                                                    <li id="products_index">
+                                                        <a class="submenu" href="<?= admin_url('products'); ?>">
+                                                            <i class="fa fa-warehouse"></i><span class="text"> <?= lang('list_products'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                    <?php if ($GP['products-add']) {
+                                                        ?>
+                                                        <li id="products_add">
+                                                            <a class="submenu" href="<?= admin_url('products/add'); ?>">
+                                                                <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_product'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    } ?>
+                                                    <?php if ($GP['products-barcode']) {
+                                                        ?>
+                                                        <li id="products_sheet">
+                                                            <a class="submenu" href="<?= admin_url('products/print_barcodes'); ?>">
+                                                                <i class="fa fa-tags"></i><span class="text"> <?= lang('print_barcode_label'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    } ?>
+                                                    <?php if ($GP['products-adjustments']) {
+                                                        ?>
+                                                        <li id="products_quantity_adjustments">
+                                                            <a class="submenu" href="<?= admin_url('products/quantity_adjustments'); ?>">
+                                                                <i class="fa fa-filter"></i><span class="text"> <?= lang('quantity_adjustments'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <li id="products_add_adjustment">
+                                                            <a class="submenu" href="<?= admin_url('products/add_adjustment'); ?>">
+                                                                <i class="fa fa-filter"></i>
+                                                                <span class="text"> <?= lang('add_adjustment'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    } ?>
+                                                    <?php if ($GP['products-stock_count']) {
+                                                        ?>
+                                                        <li id="products_stock_counts">
+                                                            <a class="submenu" href="<?= admin_url('products/stock_counts'); ?>">
+                                                                <i class="fa fa-list-ol"></i>
+                                                                <span class="text"> <?= lang('stock_counts'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <li id="products_count_stock">
+                                                            <a class="submenu" href="<?= admin_url('products/count_stock'); ?>">
+                                                                <i class="fa fa-plus-circle"></i>
+                                                                <span class="text"> <?= lang('count_stock'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    } ?>
+                                                </ul>
+                                            </li>
+                                            <?php
+                                        } ?>
+
+                                        <?php if ($GP['sales-index'] || $GP['sales-add'] || $GP['sales-deliveries'] || $GP['sales-gift_cards']) {
+                                            ?>
+                                            <li class="mm_sales <?= strtolower($this->router->fetch_method()) == 'sales' ? 'mm_pos' : '' ?>">
+                                                <a class="dropmenu" href="#">
+                                                    <i class="fa fa-heart"></i>
+                                                    <span class="text"> <?= lang('sales'); ?>
+                                    </span> <span class="menu-arrow"></span>
+                                                </a>
+                                                <ul>
+                                                    <li id="sales_index">
+                                                        <a class="submenu" href="<?= admin_url('sales'); ?>">
+                                                            <i class="fa fa-heart"></i><span class="text"> <?= lang('list_sales'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                    <?php if (POS && $GP['pos-index']) {
+                                                        ?>
+                                                        <li id="pos_sales">
+                                                            <a class="submenu" href="<?= admin_url('pos/sales'); ?>">
+                                                                <i class="fa fa-heart"></i><span class="text"> <?= lang('pos_sales'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <li id="pos_sales_wise">
+                                                            <a class="submenu" href="<?= admin_url('pos/sales_date_wise'); ?>">
+                                                                <i class="fa fa-heart"></i><span class="text"> <?= lang('POS_Sales_Date_Wise'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    } ?>
+                                                    <?php if ($GP['sales-add']) {
+                                                        ?>
+                                                        <li id="sales_add">
+                                                            <a class="submenu" href="<?= admin_url('sales/add'); ?>">
+                                                                <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_sale'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    }
+                                                    if ($GP['sales-deliveries']) {
+                                                        ?>
+                                                        <li id="sales_deliveries">
+                                                            <a class="submenu" href="<?= admin_url('sales/deliveries'); ?>">
+                                                                <i class="fa fa-truck"></i><span class="text"> <?= lang('deliveries'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    }
+                                                    if ($GP['sales-gift_cards']) {
+                                                        ?>
+                                                        <li id="sales_gift_cards">
+                                                            <a class="submenu" href="<?= admin_url('sales/gift_cards'); ?>">
+                                                                <i class="fa fa-gift"></i><span class="text"> <?= lang('gift_cards'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    } ?>
+                                                </ul>
+                                            </li>
+                                            <?php
+                                        } ?>
+
+                                        <?php if ($GP['quotes-index'] || $GP['quotes-add']) {
+                                            ?>
+                                            <li class="mm_quotes">
+                                                <a class="dropmenu" href="#">
+                                                    <i class="fa fa-heart-o"></i>
+                                                    <span class="text"> <?= lang('quotes'); ?> </span>
+                                                    <span class="menu-arrow"></span>
+                                                </a>
+                                                <ul>
+                                                    <li id="sales_index">
+                                                        <a class="submenu" href="<?= admin_url('quotes'); ?>">
+                                                            <i class="fa fa-heart-o"></i><span class="text"> <?= lang('list_quotes'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                    <?php if ($GP['quotes-add']) {
+                                                        ?>
+                                                        <li id="sales_add">
+                                                            <a class="submenu" href="<?= admin_url('quotes/add'); ?>">
+                                                                <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_quote'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    } ?>
+                                                </ul>
+                                            </li>
+                                            <?php
+                                        } ?>
+
+                                        <?php if ($GP['purchases-index'] || $GP['purchases-add'] || $GP['purchases-expenses']) {
+                                            ?>
+                                            <li class="mm_purchases">
+                                                <a class="dropmenu" href="#">
+                                                    <i class="fa fa-star"></i>
+                                                    <span class="text"> <?= lang('purchases'); ?>
+                                    </span> <span class="menu-arrow"></span>
+                                                </a>
+                                                <ul>
+                                                    <li id="purchases_index">
+                                                        <a class="submenu" href="<?= admin_url('purchases'); ?>">
+                                                            <i class="fa fa-star"></i><span class="text"> <?= lang('list_purchases'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                    <?php if ($GP['purchases-add']) {
+                                                        ?>
+                                                        <li id="purchases_add">
+                                                            <a class="submenu" href="<?= admin_url('purchases/add'); ?>">
+                                                                <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_purchase'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    } ?>
+                                                    <?php if ($GP['purchases-expenses']) {
+                                                        ?>
+                                                        <li id="purchases_expenses">
+                                                            <a class="submenu" href="<?= admin_url('purchases/expenses'); ?>">
+                                                                <i class="fa fa-dollar"></i><span class="text"> <?= lang('list_expenses'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <li id="purchases_add_expense">
+                                                            <a class="submenu" href="<?= admin_url('purchases/add_expense'); ?>"
+                                                               data-toggle="modal" data-target="#myModal">
+                                                                <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_expense'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    } ?>
+                                                </ul>
+                                            </li>
+                                            <?php
+                                        } ?>
+
+                                        <?php if ($GP['transfers-index'] || $GP['transfers-add']) {
+                                            ?>
+                                            <li class="mm_transfers">
+                                                <a class="dropmenu" href="#">
+                                                    <i class="fa fa-star-o"></i>
+                                                    <span class="text"> <?= lang('transfers'); ?> </span>
+                                                    <span class="menu-arrow"></span>
+                                                </a>
+                                                <ul>
+                                                    <li id="transfers_index">
+                                                        <a class="submenu" href="<?= admin_url('transfers'); ?>">
+                                                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('list_transfers'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                    <?php if ($GP['transfers-add']) {
+                                                        ?>
+                                                        <li id="transfers_add">
+                                                            <a class="submenu" href="<?= admin_url('transfers/add'); ?>">
+                                                                <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_transfer'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    } ?>
+                                                </ul>
+                                            </li>
+                                            <?php
+                                        } ?>
+
+                                        <?php if ($GP['returns-index'] || $GP['returns-add']) {
+                                            ?>
+                                            <li class="mm_returns">
+                                                <a class="dropmenu" href="#">
+                                                    <i class="fa fa-random"></i>
+                                                    <span class="text"> <?= lang('returns'); ?> </span>
+                                                    <span class="menu-arrow"></span>
+                                                </a>
+                                                <ul>
+                                                    <li id="returns_index">
+                                                        <a class="submenu" href="<?= admin_url('returns'); ?>">
+                                                            <i class="fa fa-random"></i><span class="text"> <?= lang('list_returns'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                    <?php if ($GP['returns-add']) {
+                                                        ?>
+                                                        <li id="returns_add">
+                                                            <a class="submenu" href="<?= admin_url('returns/add'); ?>">
+                                                                <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_return'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    } ?>
+                                                </ul>
+                                            </li>
+                                            <?php
+                                        } ?>
+
+
+                                        <?php if ($GP['customers-index'] || $GP['customers-add'] || $GP['suppliers-index'] || $GP['suppliers-add']) {
+                                            ?>
+                                            <li class="mm_auth mm_customers mm_suppliers mm_billers">
+                                                <a class="dropmenu" href="#">
+                                                    <i class="fa fa-users"></i>
+                                                    <span class="text"> <?= lang('people'); ?> </span>
+                                                    <span class="menu-arrow"></span>
+                                                </a>
+                                                <ul>
+                                                    <?php if ($GP['customers-index']) {
+                                                        ?>
+                                                        <li id="customers_index">
+                                                            <a class="submenu" href="<?= admin_url('customers'); ?>">
+                                                                <i class="fa fa-user-circle"></i><span class="text"> <?= lang('list_customers'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    }
+                                                    if ($GP['customers-add']) {
+                                                        ?>
+                                                        <li id="customers_index">
+                                                            <a class="submenu" href="<?= admin_url('customers/add'); ?>" data-toggle="modal" data-target="#myModal">
+                                                                <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_customer'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    }
+                                                    if ($GP['suppliers-index']) {
+                                                        ?>
+                                                        <li id="suppliers_index">
+                                                            <a class="submenu" href="<?= admin_url('suppliers'); ?>">
+                                                                <i class="fa fa-building"></i><span class="text"> <?= lang('list_suppliers'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    }
+                                                    if ($GP['suppliers-add']) {
+                                                        ?>
+                                                        <li id="suppliers_index">
+                                                            <a class="submenu" href="<?= admin_url('suppliers/add'); ?>" data-toggle="modal" data-target="#myModal">
+                                                                <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('add_supplier'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    } ?>
+                                                </ul>
+                                            </li>
+                                            <?php
+                                        } ?>
+
+                                        <?php if ($GP['reports-quantity_alerts'] || $GP['reports-expiry_alerts'] || $GP['reports-products'] || $GP['reports-monthly_sales'] || $GP['reports-sales'] || $GP['reports-payments'] || $GP['reports-purchases'] || $GP['reports-customers'] || $GP['reports-suppliers'] || $GP['reports-staff'] || $GP['reports-expenses']) {
+                                            ?>
+                                            <li class="mm_reports">
+                                                <a class="dropmenu" href="#">
+                                                    <i class="fa fa-bar-chart-o"></i>
+                                                    <span class="text"> <?= lang('reports'); ?> </span>
+                                                    <span class="menu-arrow"></span>
+                                                </a>
+                                                <ul>
+                                                    <?php if ($GP['reports-quantity_alerts']) {
+                                                        ?>
+                                                        <li id="reports_quantity_alerts">
+                                                            <a href="<?= admin_url('reports/quantity_alerts') ?>">
+                                                                <i class="fa fa-bar-chart-o"></i><span class="text"> <?= lang('product_quantity_alerts'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    }
+                                                    if ($GP['reports-expiry_alerts']) {
+                                                        ?>
+                                                        <?php if ($Settings->product_expiry) {
+                                                            ?>
+                                                            <li id="reports_expiry_alerts">
+                                                                <a href="<?= admin_url('reports/expiry_alerts') ?>">
+                                                                    <i class="fa fa-bar-chart-o"></i><span class="text"> <?= lang('product_expiry_alerts'); ?></span>
+                                                                </a>
+                                                            </li>
+                                                            <?php
+                                                        } ?>
+                                                        <?php
+                                                    }
+                                                    if ($GP['reports-products']) {
+                                                        ?>
+                                                        <li id="reports_products">
+                                                            <a href="<?= admin_url('reports/products') ?>">
+                                                                <i class="fa fa-filter"></i><span class="text"> <?= lang('products_report'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <li id="reports_adjustments">
+                                                            <a href="<?= admin_url('reports/adjustments') ?>">
+                                                                <i class="fa fa-barcode"></i><span class="text"> <?= lang('adjustments_report'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <li id="reports_categories">
+                                                            <a href="<?= admin_url('reports/categories') ?>">
+                                                                <i class="fa fa-folder-open"></i><span class="text"> <?= lang('categories_report'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <li id="reports_brands">
+                                                            <a href="<?= admin_url('reports/brands') ?>">
+                                                                <i class="fa fa-cubes"></i><span class="text"> <?= lang('brands_report'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    }
+                                                    if ($GP['reports-daily_sales']) {
+                                                        ?>
+                                                        <li id="reports_daily_sales">
+                                                            <a href="<?= admin_url('reports/daily_sales') ?>">
+                                                                <i class="fa fa-calendar-o"></i><span class="text"> <?= lang('daily_sales'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    }
+                                                    if ($GP['reports-monthly_sales']) {
+                                                        ?>
+                                                        <li id="reports_monthly_sales">
+                                                            <a href="<?= admin_url('reports/monthly_sales') ?>">
+                                                                <i class="fa fa-calendar-o"></i><span class="text"> <?= lang('monthly_sales'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    }
+                                                    if ($GP['reports-sales']) {
+                                                        ?>
+                                                        <li id="reports_sales">
+                                                            <a href="<?= admin_url('reports/sales') ?>">
+                                                                <i class="fa fa-heart"></i><span class="text"> <?= lang('sales_report'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    }
+                                                    if ($GP['reports-payments']) {
+                                                        ?>
+                                                        <li id="reports_payments">
+                                                            <a href="<?= admin_url('reports/payments') ?>">
+                                                                <i class="fa fa-money"></i><span class="text"> <?= lang('payments_report'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    }
+                                                    if ($GP['reports-tax']) {
+                                                        ?>
+                                                        <li id="reports_tax">
+                                                            <a href="<?= admin_url('reports/tax') ?>">
+                                                                <i class="fa fa-area-chart"></i><span class="text"> <?= lang('tax_report'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    }
+                                                    if ($GP['reports-daily_purchases']) {
+                                                        ?>
+                                                        <li id="reports_daily_purchases">
+                                                            <a href="<?= admin_url('reports/daily_purchases') ?>">
+                                                                <i class="fa fa-calendar-o"></i><span class="text"> <?= lang('daily_purchases'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    }
+                                                    if ($GP['reports-monthly_purchases']) {
+                                                        ?>
+                                                        <li id="reports_monthly_purchases">
+                                                            <a href="<?= admin_url('reports/monthly_purchases') ?>">
+                                                                <i class="fa fa-calendar-o"></i><span class="text"> <?= lang('monthly_purchases'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    }
+                                                    if ($GP['reports-purchases']) {
+                                                        ?>
+                                                        <li id="reports_purchases">
+                                                            <a href="<?= admin_url('reports/purchases') ?>">
+                                                                <i class="fa fa-star"></i><span class="text"> <?= lang('purchases_report'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    }
+                                                    if ($GP['reports-expenses']) {
+                                                        ?>
+                                                        <li id="reports_expenses">
+                                                            <a href="<?= admin_url('reports/expenses') ?>">
+                                                                <i class="fa fa-star"></i><span class="text"> <?= lang('expenses_report'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    }
+                                                    if ($GP['reports-customers']) {
+                                                        ?>
+                                                        <li id="reports_customer_report">
+                                                            <a href="<?= admin_url('reports/customers') ?>">
+                                                                <i class="fa fa-users"></i><span class="text"> <?= lang('customers_report'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    }
+                                                    if ($GP['reports-suppliers']) {
+                                                        ?>
+                                                        <li id="reports_supplier_report">
+                                                            <a href="<?= admin_url('reports/suppliers') ?>">
+                                                                <i class="fa fa-users"></i><span class="text"> <?= lang('suppliers_report'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    }
+                                                    if ($GP['reports-staff']) {
+                                                        ?>
+                                                        <li id="reports_staff_report">
+                                                            <a href="<?= admin_url('reports/users') ?>">
+                                                                <i class="fa fa-users"></i><span class="text"> <?= lang('staff_report'); ?></span>
+                                                            </a>
+                                                        </li>
+                                                        <?php
+                                                    } ?>
+                                                </ul>
+                                            </li>
+
+                                            <?php
+                                        } ?>
+
+                                        <?php
+                                    } ?>
+                                    <?php if ($Owner || $Admin) { ?>
+                                        <!--<li class="mm_shop_settings mm_api_settings">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-shopping-cart"></i><span class="text"> <?= lang('Blog_Module'); ?> </span>
+                                    <span class="menu-arrow"></span>
+                                </a>
+                                <ul>
+                                  <li id="shop_settings_pages">
+                                        <a href="<?= admin_url('Blog/allBlogs') ?>">
+                                            <i class="fa fa-file"></i><span class="text"> <?= lang('List_blog'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="shop_settings_pages">
+                                        <a href="<?= admin_url('Blog/add_blog') ?>">
+                                            <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Add_blog'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="shop_settings_pages">-->
+                                        <!--    <a href="<?= admin_url('Blog/add_bcategory') ?>">-->
+                                        <!--        <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Add Blog Category'); ?></span>-->
+                                        <!--    </a>-->
+                                        <!--</li>
+                                      <li id="shop_settings_pages">
+                                        <a href="<?= admin_url('Blog/show_bcategory') ?>">
+                                            <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Show Blog Category'); ?></span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>-->
+                                    <?php } ?>
+
+                                    <?php
+                                    if (isset($GP) && $GP['accountant'] || ($Owner || $Admin) ) {
+                                        ?>
+                                        <li class="mm_truck">
+                                            <a class="dropmenu" href="#">
+                                                <i class="fa fa-money"></i>
+                                                <span class="text"> <?= lang('Payments'); ?> </span>
+                                                <span class="menu-arrow"></span>
+                                            </a>
+                                            <ul>
+                                                <li id="quotes_index">
+                                                    <a class="submenu" href="<?= admin_url('suppliers/add_payment'); ?>">
+                                                        <i class="fa fa-money"></i>
+                                                        <span class="text"> <?= lang('Add Supplier Payment'); ?></span>
+                                                    </a>
+                                                </li>
+                                                <li id="quotes_index">
+                                                    <a class="submenu" href="<?= admin_url('suppliers/list_payments'); ?>">
+                                                        <i class="fa fa-money"></i>
+                                                        <span class="text"> <?= lang('List Supplier Payment'); ?></span>
+                                                    </a>
+                                                </li>
+                                                <!--<li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('suppliers/debit_memo'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('Add Debit Memo'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('suppliers/list_debit_memo'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('List Debit Memo'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('suppliers/advance_to_supplier'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('Add Supplier Advance'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('suppliers/list_advance_to_supplier'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('List Supplier Advance'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('suppliers/service_invoice'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('Add Supplier Service Invoice'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('suppliers/list_service_invoice'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('List Supplier Service Invoice'); ?></span>
+                                        </a>
+                                    </li>-->
+
+                                                <li id="quotes_index">
+                                                    <a class="submenu" href="<?= admin_url('customers/payment_from_customer'); ?>">
+                                                        <i class="fa fa-money"></i>
+                                                        <span class="text"> <?= lang('Add Customer Payment'); ?></span>
+                                                    </a>
+                                                </li>
+                                                <li id="quotes_index">
+                                                    <a class="submenu" href="<?= admin_url('customers/list_payments'); ?>">
+                                                        <i class="fa fa-money"></i>
+                                                        <span class="text"> <?= lang('List Customer Payment'); ?></span>
+                                                    </a>
+                                                </li>
+                                                <!-- <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('customers/credit_memo'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('Add Credit Memo'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('customers/list_credit_memo'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('List Credit Memo'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('customers/service_invoice'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('Add Service Invoice'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="quotes_index">
+                                        <a class="submenu" href="<?= admin_url('customers/list_service_invoice'); ?>">
+                                            <i class="fa fa-money"></i>
+                                            <span class="text"> <?= lang('List Service Invoice'); ?></span>
+                                        </a>
+                                    </li>-->
+                                            </ul>
+                                        </li>
+                                        <li class="mm_accounts">
+                                            <a class="dropmenu" href="#">
+                                                <i class="fa fa-building"></i>
+                                                <span class="text"> <?= lang('Finance'); ?> </span>
+                                                <span class="menu-arrow"></span>
+                                            </a>
+                                            <ul>
+                                                <li id="accounts_settings">
+                                                    <a href="<?= admin_url('system_settings/add_ledgers') ?>">
+                                                        <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Accounts Settings'); ?></span>
+                                                    </a>
+                                                </li>
+                                                <li id="accounts_index">
+                                                    <a class="submenu" href="<?= admin_url('accounts'); ?>">
+                                                        <i class="fa fa-building"></i><span class="text"> <?= lang('Chart of Accounts'); ?></span>
+                                                    </a>
+                                                </li>
+                                                <li id="accounts_entries">
+                                                    <a class="submenu" href="<?= admin_url('entries'); ?>">
+                                                        <i class="fa fa-plus-square-o"></i><span class="text"> <?= lang('Entries'); ?></span>
+                                                    </a>
+                                                </li>
+                                                <li id="reports_balancesheet_report">
+                                                    <a href="<?= admin_url('areports/balancesheet') ?>">
+                                                        <i class="fa fa-users"></i><span class="text"> <?= lang('Balance Sheet'); ?></span>
+                                                    </a>
+                                                </li>
+                                                <li id="reports_financial_position">
+                                                    <a href="<?= admin_url('reports/financial_position') ?>">
+                                                        <i class="fa fa-users"></i><span class="text"> <?= lang('financial_position'); ?></span>
+                                                    </a>
+                                                </li>
+
+                                                <!--<li id="accounts_pos_entries">
+                                        <a class="submenu" href="<?= admin_url('pos_entries'); ?>">
+                                            <i class="fa fa-plus-square-o"></i><span class="text"> <?= lang('Pos Entries'); ?></span>
+                                        </a>
+                                    </li>
+
+
+                                    <li id="accounts_purchase_invoice">
+                                        <a class="submenu" href="<?= admin_url('invoices'); ?>">
+                                            <i class="fa fa-plus-square-o"></i><span class="text"> <?= lang('Invoices'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="accounts_search">
+                                        <a class="submenu" href="<?= admin_url('search'); ?>">
+                                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('Search'); ?></span>
+                                        </a>
+                                    </li>-->
+                                                <!--<li class="mm_accounts_reports">
+                                        <a class="dropmenu" href="#">
+                                            <i class="fa fa-bar-chart-o"></i>
+                                            <span class="text"> <?= lang('Accounts Reports'); ?> </span>
+                                            <span class="menu-arrow"></span>
+                                        </a>
+
+
+                                    <ul>
+                                        <li id="reports_ledger_statement_report">
+                                            <a href="<?= admin_url('areports/ledgerstatement') ?>">
+                                                <i class="fa fa-users"></i><span class="text"> <?= lang('Ledger Statement'); ?></span>
+                                            </a>
+                                        </li>
+
+                                    </ul>
+
+                                    </li>-->
+
+                                            </ul>
+
+                                        </li>
+                                    <?php } ?>
+
+                                    <?php
+                                    if (($Owner || $Admin) ) {
+                                        ?>
+                                        <li class="mm_calendar">
+                                            <a class="submenu" href="<?= admin_url('calendar'); ?>">
+                                                <i class="fa fa-calendar"></i><span class="text"> <?= lang('calendar'); ?></span>
+                                            </a>
+                                        </li>
+                                        <li class="mm_notifications">
+                                            <a class="dropmenu" href="#">
+                                                <i class="fa fa-info-circle"></i><span class="text"> <?= lang('notifications'); ?> </span>
+                                                <span class="menu-arrow"></span>
+                                            </a>
+                                            <ul>
+                                                <li id="system_notifications_index">
+                                                    <a href="<?= admin_url('notifications') ?>">
+                                                        <i class="fa fa-cog"></i><span class="text"> <?= lang('System Notifications'); ?></span>
+                                                    </a>
+                                                </li>
+                                                <li id="rasd_notifications">
+                                                    <a href="<?= admin_url('notifications/rasd') ?>">
+                                                        <i class="fa fa-file"></i><span class="text"> <?= lang('List Rasd Notifications'); ?></span>
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                    <?php }
+                                    ?>
+
+                                    <?php if ($Owner || $Admin || $this->GP['purchase_manager']) { ?>
+                                        <li class="mm_stock_requests">
+                                            <a class="dropmenu" href="#">
+                                                <i class="fa fa-star-o"></i>
+                                                <span class="text"> <?= lang('Stock Requests'); ?> </span>
+                                                <span class="menu-arrow"></span>
+                                            </a>
+                                            <ul>
+                                                <li id="stock_requests_index">
+                                                    <a class="submenu" href="<?= admin_url('stock_request/inventory_check'); ?>">
+                                                        <i class="fa fa-star-o"></i><span class="text"> <?= lang('Inventory Check'); ?></span>
+                                                    </a>
+                                                </li>
+                                                <?php
+                                                if($GP['stock_pharmacist']){
+                                                    ?>
+                                                    <li id="stock_requests_index">
+                                                        <a class="submenu" href="<?= admin_url('stock_request/stock_order'); ?>">
+                                                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('New Stock Request'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                    <li id="stock_requests_index">
+                                                        <a class="submenu" href="<?= admin_url('stock_request'); ?>">
+                                                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('List Stock Requests'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                <?php } ?>
+                                                <?php
+                                                if($GP['stock_request_view']){
+                                                    ?>
+                                                    <li id="stock_requests_index">
+                                                        <a class="submenu" href="<?= admin_url('stock_request/current_pr'); ?>">
+                                                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('Opened PR'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                    <li id="stock_requests_index">
+                                                        <a class="submenu" href="<?= admin_url('stock_request/purchase_requests'); ?>">
+                                                            <i class="fa fa-star-o"></i><span class="text"> <?= lang('List Purchase Requests'); ?></span>
+                                                        </a>
+                                                    </li>
+                                                <?php } ?>
+                                                <!--<li id="stock_requests_index">
+                                        <a class="submenu" href="<?php //echo admin_url('stock_request'); ?>">
+                                            <i class="fa fa-star-o"></i><span class="text"> <?php // echo lang('Outgoing Stock Requests'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="stock_requests_index">
+                                        <a class="submenu" href="<?php //echo admin_url('stock_request/incoming_requests'); ?>">
+                                            <i class="fa fa-star-o"></i><span class="text"> <?php //echo lang('Incoming Stock Requests'); ?></span>
+                                        </a>
+                                    </li>-->
+                                            </ul>
+                                        </li>
+                                    <?php } ?>
+
+                                    <?php
+                                    if (isset($this->GP) && $GP['truck_registration_view'] || ($Owner || $Admin) ) {
+                                        ?>
+
+                                        <li class="mm_truck">
+                                            <a class="dropmenu" href="#">
+                                                <i class="fa fa-heart-o"></i>
+                                                <span class="text"> <?= lang('Truck Registration'); ?> </span>
+                                                <span class="menu-arrow"></span>
+                                            </a>
+                                            <ul>
+                                                <li id="quotes_index">
+                                                    <a class="submenu" href="<?= admin_url('truck_registration'); ?>">
+                                                        <i class="fa fa-heart-o"></i>
+                                                        <span class="text"> <?= lang('List Truck Registration'); ?></span>
+                                                    </a>
+                                                </li>
+                                                <li id="quotes_add">
+                                                    <a class="submenu" href="<?= admin_url('truck_registration/add'); ?>">
+                                                        <i class="fa fa-plus-circle"></i>
+                                                        <span class="text"> <?= lang('Add Truck Registration'); ?></span>
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </li>
+
+
+                                    <?php } ?>
+
+
+                                    </ul>
+
+                                <?php } ?>
+                            </div>
+                            <a href="#" id="main-menu-act" class="full visible-md visible-lg">
+                                <i class="fa fa-angle-double-left"></i>
+                            </a>
+                        </div>
+                    </td><td class="content-con">
+                        <div id="content">
+                            <div class="row">
+                                <div class="col-sm-12 col-md-12">
+                                    <ul class="breadcrumb">
+                                        <?php
+                                        foreach ($bc as $b) {
+                                            if ($b['link'] === '#') {
+                                                echo '<li class="active">' . $b['page'] . '</li>';
+                                            } else {
+                                                echo '<li><a href="' . $b['link'] . '">' . $b['page'] . '</a></li>';
+                                            }
+                                        }
+                                        ?>
+                                        <li class="right_log hidden-xs">
+                                            <?= lang('your_ip') . ' ' . $ip_address . " <span class='hidden-sm'>( " . lang('last_login_at') . ': ' . date($dateFormats['php_ldate'], $this->session->userdata('old_last_login')) . ' ' . ($this->session->userdata('last_ip') != $ip_address ? lang('ip:') . ' ' . $this->session->userdata('last_ip') : '') . ' )</span>' ?>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <?php if ($message) {
+                                        ?>
+                                        <div class="alert alert-success">
+                                            <button data-dismiss="alert" class="close" type="button">×</button>
+                                            <?= $message; ?>
+                                        </div>
+                                        <?php
+                                    } ?>
+                                    <?php if ($error) {
+                                        ?>
+                                        <div class="alert alert-danger">
+                                            <button data-dismiss="alert" class="close" type="button">×</button>
+                                            <?= $error; ?>
+                                        </div>
+                                        <?php
+                                    } ?>
+                                    <?php if ($warning) {
+                                        ?>
+                                        <div class="alert alert-warning">
+                                            <button data-dismiss="alert" class="close" type="button">×</button>
+                                            <?= $warning; ?>
+                                        </div>
+                                        <?php
+                                    } ?>
+                                    <?php
+                                    if ($info) {
+                                        foreach ($info as $n) {
+                                            if (!$this->session->userdata('hidden' . $n->id)) {
+                                                ?>
+                                                <div class="alert alert-info">
+                                                    <a href="#" id="<?= $n->id ?>" class="close hideComment external"
+                                                       data-dismiss="alert">&times;</a>
+                                                    <?= $n->comment; ?>
+                                                </div>
+                                                <?php
+                                            }
+                                        }
+                                    } ?>
+                                    <div class="alerts-con"></div>
+
+                                    <style>
+                                        /* ============================================
+   COMPLETE MODERN HEADER, SIDEBAR & FOOTER STYLES
+   Copy this entire code to your custom.css file
+   ============================================ */
+
+                                        /* ============================================
+                                           MODERN HEADER STYLES
+                                           ============================================ */
+
+                                        #header {
+                                            background: linear-gradient(180deg, #1a202c 0%, #0d1117 100%) !important;
+                                            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+                                            border-bottom: none !important;
+                                            padding: 0 !important;
+                                            height: 70px !important;
+                                        }
+
+                                        #header .container {
+                                            height: 70px !important;
+                                            display: flex !important;
+                                            align-items: center !important;
+                                        }
+
+                                        /* Logo/Brand */
+                                        .navbar-brand {
+                                            font-size: 24px !important;
+                                            font-weight: 700 !important;
+                                            color: #ffffff !important;
+                                            text-decoration: none !important;
+                                            padding: 0 20px !important;
+                                            display: flex !important;
+                                            align-items: center !important;
+                                        }
+
+                                        .navbar-brand .logo {
+                                            background: rgba(255, 255, 255, 0.2) !important;
+                                            padding: 8px 20px !important;
+                                            border-radius: 12px !important;
+                                            backdrop-filter: blur(10px) !important;
+                                            font-weight: 800 !important;
+                                            letter-spacing: 1px !important;
+                                            transition: all 0.3s ease !important;
+                                        }
+
+                                        .navbar-brand:hover .logo {
+                                            background: rgba(255, 255, 255, 0.3) !important;
+                                            transform: translateY(-2px) !important;
+                                        }
+
+                                        /* Header Navigation */
+                                        .header-nav {
+                                            margin-left: auto !important;
+                                        }
+
+                                        .header-nav .nav.navbar-nav {
+                                            display: flex !important;
+                                            align-items: center !important;
+                                            gap: 8px !important;
+                                        }
+
+                                        /* Header Buttons */
+                                        .header-nav .btn {
+                                            background: rgba(255, 255, 255, 0.15) !important;
+                                            color: #ffffff !important;
+                                            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+                                            border-radius: 10px !important;
+                                            padding: 10px 15px !important;
+                                            transition: all 0.3s ease !important;
+                                            backdrop-filter: blur(10px) !important;
+                                        }
+
+                                        .header-nav .btn:hover {
+                                            background: rgba(255, 255, 255, 0.25) !important;
+                                            transform: translateY(-2px) !important;
+                                            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2) !important;
+                                        }
+
+                                        /* User Account Button */
+                                        .btn.account {
+                                            display: flex !important;
+                                            align-items: center !important;
+                                            gap: 12px !important;
+                                            padding: 8px 16px !important;
+                                            background: rgba(255, 255, 255, 0.2) !important;
+                                        }
+
+                                        .btn.account:hover {
+                                            background: rgba(255, 255, 255, 0.3) !important;
+                                        }
+
+                                        .mini_avatar {
+                                            width: 36px !important;
+                                            height: 36px !important;
+                                            border-radius: 50% !important;
+                                            border: 2px solid rgba(255, 255, 255, 0.5) !important;
+                                            object-fit: cover !important;
+                                        }
+
+                                        .btn.account .user span {
+                                            color: #ffffff !important;
+                                            font-weight: 600 !important;
+                                            font-size: 14px !important;
+                                        }
+
+                                        /* Alert Badge */
+                                        .header-nav .number {
+                                            background: #ff4757 !important;
+                                            color: #ffffff !important;
+                                            border-radius: 12px !important;
+                                            padding: 2px 8px !important;
+                                            font-size: 11px !important;
+                                            font-weight: 700 !important;
+                                            position: absolute !important;
+                                            top: 5px !important;
+                                            right: 5px !important;
+                                            animation: pulse-badge 2s infinite !important;
+                                        }
+
+                                        @keyframes pulse-badge {
+                                            0%, 100% { transform: scale(1); }
+                                            50% { transform: scale(1.1); }
+                                        }
+
+                                        /* Dropdown Menu from Header */
+                                        .header-nav .dropdown-menu {
+                                            background: #ffffff !important;
+                                            border: none !important;
+                                            border-radius: 12px !important;
+                                            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
+                                            margin-top: 10px !important;
+                                            padding: 8px !important;
+                                        }
+
+                                        .header-nav .dropdown-menu li a {
+                                            padding: 10px 16px !important;
+                                            border-radius: 8px !important;
+                                            color: #2d3748 !important;
+                                            transition: all 0.2s ease !important;
+                                        }
+
+                                        .header-nav .dropdown-menu li a:hover {
+                                            background: #f7fafc !important;
+                                            color: #667eea !important;
+                                        }
+
+                                        /* ============================================
+                                           MODERN SIDEBAR STYLES
+                                           ============================================ */
+
+                                        #sidebar-left {
+                                            background: linear-gradient(180deg, #1a202c 0%, #0d1117 100%) !important;
+                                            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1) !important;
+                                            min-height: 100vh !important;
+                                            width: 280px !important;
+                                        }
+
+                                        .sidebar-nav {
+                                            padding: 20px 0 !important;
+                                        }
+
+                                        /* Main Menu */
+                                        .nav.main-menu {
+                                            list-style: none !important;
+                                            padding: 0 10px !important;
+                                            margin: 0 !important;
+                                        }
+
+                                        .nav.main-menu > li {
+                                            margin-bottom: 4px !important;
+                                            position: relative !important;
+                                        }
+
+                                        /* Menu Links */
+                                        .nav.main-menu > li > a,
+                                        .nav.main-menu > li > a.dropmenu {
+                                            display: flex !important;
+                                            align-items: center !important;
+                                            padding: 14px 16px !important;
+                                            color: #ffffff !important;
+                                            text-decoration: none !important;
+                                            font-size: 14px !important;
+                                            font-weight: 500 !important;
+                                            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                                            border-radius: 12px !important;
+                                            position: relative !important;
+                                            background: transparent !important;
+                                            overflow: hidden !important;
+                                        }
+
+                                        /* Glow effect on hover */
+                                        .nav.main-menu > li > a:before {
+                                            content: '' !important;
+                                            position: absolute !important;
+                                            top: 0 !important;
+                                            left: 0 !important;
+                                            width: 100% !important;
+                                            height: 100% !important;
+                                            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%) !important;
+                                            opacity: 0 !important;
+                                            transition: opacity 0.3s ease !important;
+                                        }
+
+                                        .nav.main-menu > li > a:hover:before {
+                                            opacity: 1 !important;
+                                        }
+
+                                        /* Menu Icons - UPDATED WITH MEANINGFUL ICONS */
+                                        .nav.main-menu > li > a > i {
+                                            min-width: 24px !important;
+                                            font-size: 20px !important;
+                                            margin-right: 14px !important;
+                                            color: #94a3b8 !important;
+                                            transition: all 0.3s ease !important;
+                                        }
+
+                                        /* Hover State */
+                                        .nav.main-menu > li > a:hover {
+                                            background: rgba(102, 126, 234, 0.15) !important;
+                                            color: #ffffff !important;
+                                            transform: translateX(4px) !important;
+                                            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2) !important;
+                                        }
+
+                                        .nav.main-menu > li > a:hover > i {
+                                            color: #667eea !important;
+                                            transform: scale(1.15) rotate(5deg) !important;
+                                        }
+
+                                        /* Active State */
+                                        .nav.main-menu > li.active > a,
+                                        .nav.main-menu > li > a.active {
+                                            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%) !important;
+                                            color: #ffffff !important;
+                                            font-weight: 600 !important;
+                                            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3) !important;
+                                        }
+
+                                        .nav.main-menu > li.active > a > i,
+                                        .nav.main-menu > li > a.active > i {
+                                            color: #667eea !important;
+                                        }
+
+                                        /* Dashboard Special Style */
+                                        .nav.main-menu > li.mm_welcome > a {
+                                            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.2) 100%) !important;
+                                            border: 1px solid rgba(16, 185, 129, 0.3) !important;
+                                            margin-bottom: 16px !important;
+                                            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2) !important;
+                                        }
+
+                                        .nav.main-menu > li.mm_welcome > a:hover {
+                                            background: linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(5, 150, 105, 0.3) 100%) !important;
+                                            transform: translateX(6px) !important;
+                                        }
+
+                                        .nav.main-menu > li.mm_welcome > a > i {
+                                            color: #10b981 !important;
+                                        }
+
+                                        /* Menu Text */
+                                        .nav.main-menu > li > a .text {
+                                            flex: 1 !important;
+                                            font-size: 14px !important;
+                                            letter-spacing: 0.3px !important;
+                                            color: #ffffff !important;
+                                        }
+
+                                        /* Chevron Hidden */
+                                        /*//Menu Updated instead of Chevron -> menu-arrow*/
+                                        .nav.main-menu > li > a .menu-arrow {
+                                            margin-left: auto !important;
+                                            font-size: 12px !important;
+                                            color: #64748b !important;
+                                            transition: all 0.3s ease !important;
+                                            font-weight: 700 !important;
+                                            display: inline-block !important;  /* SHOW THE ARROW */
+                                        }
+
+                                        .menu-arrow:before {
+                                            content: "›" !important;
+                                            display: inline-block !important;
+                                            font-size: 18px !important;
+                                            line-height: 1 !important;
+                                        }
+
+                                        .menu-arrow-open:before {
+                                            transform: rotate(90deg) !important;
+                                            color: #667eea !important;
+                                        }
+
+                                        /* ============================================
+                                           SUBMENU STYLES
+                                           ============================================ */
+
+                                        .nav.main-menu > li > ul {
+                                            list-style: none !important;
+                                            padding: 0 !important;
+                                            margin: 8px 0 0 0 !important;
+                                            background: rgba(15, 23, 42, 0.5) !important;
+                                            border-radius: 12px !important;
+                                            max-height: 0 !important;
+                                            overflow: hidden !important;
+                                            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease !important;
+                                            opacity: 0 !important;
+                                            display: block !important;
+                                        }
+
+                                        .nav.main-menu > li > ul.in,
+                                        .nav.main-menu > li > ul.show {
+                                            max-height: 2000px !important;
+                                            opacity: 1 !important;
+                                            padding: 8px !important;
+                                        }
+
+                                        .nav.main-menu > li > ul > li {
+                                            margin: 2px 0 !important;
+                                        }
+
+                                        /* Submenu Links */
+                                        .nav.main-menu > li > ul > li > a,
+                                        .nav.main-menu > li > ul > li > a.submenu {
+                                            display: flex !important;
+                                            align-items: center !important;
+                                            padding: 10px 16px !important;
+                                            color: #e2e8f0 !important;
+                                            text-decoration: none !important;
+                                            font-size: 13px !important;
+                                            font-weight: 400 !important;
+                                            transition: all 0.2s ease !important;
+                                            border-radius: 8px !important;
+                                            position: relative !important;
+                                            background: transparent !important;
+                                            padding-left: 40px !important;
+                                        }
+                                        
+                                        .nav.main-menu > li > ul > li > a .text,
+                                        .nav.main-menu > li > ul > li > a.submenu .text {
+                                            color: #ffffff !important;
+                                        }
+
+                                        /* Submenu Bullet */
+                                        .nav.main-menu > li > ul > li > a:before {
+                                            content: "" !important;
+                                            position: absolute !important;
+                                            left: 20px !important;
+                                            top: 50% !important;
+                                            transform: translateY(-50%) !important;
+                                            width: 6px !important;
+                                            height: 6px !important;
+                                            background: #475569 !important;
+                                            border-radius: 50% !important;
+                                            transition: all 0.2s ease !important;
+                                        }
+
+                                        /* Submenu Icons */
+                                        .nav.main-menu > li > ul > li > a > i {
+                                            margin-right: 10px !important;
+                                            font-size: 14px !important;
+                                            color: #94a3b8 !important;
+                                            min-width: 18px !important;
+                                            transition: all 0.2s ease !important;
+                                        }
+
+                                        /* Submenu Hover */
+                                        .nav.main-menu > li > ul > li > a:hover {
+                                            background: rgba(102, 126, 234, 0.1) !important;
+                                            color: #e2e8f0 !important;
+                                            padding-left: 44px !important;
+                                        }
+
+                                        .nav.main-menu > li > ul > li > a:hover:before {
+                                            background: #667eea !important;
+                                            transform: translateY(-50%) scale(1.5) !important;
+                                            box-shadow: 0 0 8px rgba(102, 126, 234, 0.5) !important;
+                                        }
+
+                                        .nav.main-menu > li > ul > li > a:hover > i {
+                                            color: #667eea !important;
+                                        }
+
+                                        /* Submenu Active */
+                                        .nav.main-menu > li > ul > li.active > a,
+                                        .nav.main-menu > li > ul > li > a.active {
+                                            background: rgba(102, 126, 234, 0.15) !important;
+                                            color: #ffffff !important;
+                                            font-weight: 500 !important;
+                                        }
+
+                                        .nav.main-menu > li > ul > li.active > a:before {
+                                            background: #667eea !important;
+                                            width: 8px !important;
+                                            height: 8px !important;
+                                        }
+
+                                        /* Nested Submenu (3rd level) */
+                                        .nav.main-menu > li > ul > li > ul {
+                                            list-style: none !important;
+                                            padding: 0 !important;
+                                            margin: 4px 0 !important;
+                                            background: rgba(2, 6, 23, 0.5) !important;
+                                            border-radius: 8px !important;
+                                        }
+
+                                        .nav.main-menu > li > ul > li > ul > li > a {
+                                            padding-left: 60px !important;
+                                            font-size: 12px !important;
+                                        }
+
+                                        .nav.main-menu > li > ul > li > ul > li > a:before {
+                                            left: 40px !important;
+                                        }
+
+                                        /* Dividers */
+                                        .nav.main-menu > li.divider,
+                                        .nav.main-menu > li > ul > li.divider {
+                                            height: 1px !important;
+                                            background: rgba(71, 85, 105, 0.3) !important;
+                                            margin: 12px 16px !important;
+                                        }
+
+                                        /* Submenu Headers */
+                                        .nav.main-menu > li.mm_submenu_header,
+                                        .nav.main-menu > li > ul > li.mm_submenu_header {
+                                            padding: 12px 16px 6px 16px !important;
+                                        }
+
+                                        .nav.main-menu > li.mm_submenu_header .text,
+                                        .nav.main-menu > li > ul > li.mm_submenu_header .text {
+                                            color: #64748b !important;
+                                            font-size: 11px !important;
+                                            text-transform: uppercase !important;
+                                            letter-spacing: 1.5px !important;
+                                            font-weight: 700 !important;
+                                        }
+
+                                        /* ============================================
+                                           COLOR-CODED SECTIONS
+                                           ============================================ */
+
+                                        /* Warehouse Management - Blue */
+                                        .nav.main-menu > li.mm_products > a > i {
+                                            color: #60a5fa !important;
+                                        }
+
+                                        .nav.main-menu > li.mm_products > a:hover {
+                                            background: rgba(96, 165, 250, 0.15) !important;
+                                        }
+
+                                        /* Operations - Purple */
+                                        .nav.main-menu > li.mm_purchases > a > i,
+                                        .nav.main-menu > li.mm_purchase_order > a > i {
+                                            color: #a78bfa !important;
+                                        }
+
+                                        .nav.main-menu > li.mm_purchases > a:hover,
+                                        .nav.main-menu > li.mm_purchase_order > a:hover {
+                                            background: rgba(167, 139, 250, 0.15) !important;
+                                        }
+
+                                        /* Sales - Pink */
+                                        .nav.main-menu > li.mm_sales > a > i,
+                                        .nav.main-menu > li.mm_quotes > a > i,
+                                        .nav.main-menu > li.mm_transfers > a > i,
+                                        .nav.main-menu > li.mm_returns > a > i {
+                                            color: #f472b6 !important;
+                                        }
+
+                                        .nav.main-menu > li.mm_sales > a:hover,
+                                        .nav.main-menu > li.mm_quotes > a:hover,
+                                        .nav.main-menu > li.mm_transfers > a:hover,
+                                        .nav.main-menu > li.mm_returns > a:hover {
+                                            background: rgba(244, 114, 182, 0.15) !important;
+                                        }
+
+                                        /* Reports - Orange */
+                                        .nav.main-menu > li.mm_reports > a > i {
+                                            color: #fb923c !important;
+                                        }
+
+                                        .nav.main-menu > li.mm_reports > a:hover {
+                                            background: rgba(251, 146, 60, 0.15) !important;
+                                        }
+
+                                        /* People - Teal */
+                                        .nav.main-menu > li.mm_auth > a > i,
+                                        .nav.main-menu > li.mm_customers > a > i,
+                                        .nav.main-menu > li.mm_suppliers > a > i {
+                                            color: #2dd4bf !important;
+                                        }
+
+                                        .nav.main-menu > li.mm_auth > a:hover,
+                                        .nav.main-menu > li.mm_customers > a:hover,
+                                        .nav.main-menu > li.mm_suppliers > a:hover {
+                                            background: rgba(45, 212, 191, 0.15) !important;
+                                        }
+
+                                        /* Finance/Payments - Green */
+                                        .nav.main-menu > li.mm_accounts > a > i,
+                                        .nav.main-menu > li.mm_truck > a > i {
+                                            color: #34d399 !important;
+                                        }
+
+                                        .nav.main-menu > li.mm_accounts > a:hover,
+                                        .nav.main-menu > li.mm_truck > a:hover {
+                                            background: rgba(52, 211, 153, 0.15) !important;
+                                        }
+
+                                        /* Settings - Gray */
+                                        .nav.main-menu > li.mm_system_settings > a > i {
+                                            color: #9ca3af !important;
+                                        }
+
+                                        .nav.main-menu > li.mm_system_settings > a:hover {
+                                            background: rgba(156, 163, 175, 0.15) !important;
+                                        }
+
+                                        /* Calendar & Notifications - Indigo */
+                                        .nav.main-menu > li.mm_calendar > a > i,
+                                        .nav.main-menu > li.mm_notifications > a > i {
+                                            color: #818cf8 !important;
+                                        }
+
+                                        .nav.main-menu > li.mm_calendar > a:hover,
+                                        .nav.main-menu > li.mm_notifications > a:hover {
+                                            background: rgba(129, 140, 248, 0.15) !important;
+                                        }
+
+                                        /* Stock Requests - Amber */
+                                        .nav.main-menu > li.mm_stock_requests > a > i {
+                                            color: #fbbf24 !important;
+                                        }
+
+                                        .nav.main-menu > li.mm_stock_requests > a:hover {
+                                            background: rgba(251, 191, 36, 0.15) !important;
+                                        }
+
+                                        /* ============================================
+                                           SCROLLBAR
+                                           ============================================ */
+
+                                        #sidebar-left::-webkit-scrollbar {
+                                            width: 6px !important;
+                                        }
+
+                                        #sidebar-left::-webkit-scrollbar-track {
+                                            background: #0f172a !important;
+                                        }
+
+                                        #sidebar-left::-webkit-scrollbar-thumb {
+                                            background: #475569 !important;
+                                            border-radius: 3px !important;
+                                        }
+
+                                        #sidebar-left::-webkit-scrollbar-thumb:hover {
+                                            background: #64748b !important;
+                                        }
+
+                                        /* ============================================
+                                           MODERN FOOTER STYLES
+                                           ============================================ */
+
+                                        footer,
+                                        .footer {
+                                            background: linear-gradient(135deg, #1a202c 0%, #0d1117 100%) !important;
+                                            color: #cbd5e1 !important;
+                                            padding: 30px 0 !important;
+                                            border-top: 1px solid rgba(102, 126, 234, 0.2) !important;
+                                            margin-top: 40px !important;
+                                        }
+
+                                        footer a,
+                                        .footer a {
+                                            color: #667eea !important;
+                                            text-decoration: none !important;
+                                            transition: color 0.3s ease !important;
+                                        }
+
+                                        footer a:hover,
+                                        .footer a:hover {
+                                            color: #764ba2 !important;
+                                            text-decoration: underline !important;
+                                        }
+
+                                        .footer-content {
+                                            display: flex !important;
+                                            justify-content: space-between !important;
+                                            align-items: center !important;
+                                            flex-wrap: wrap !important;
+                                            gap: 20px !important;
+                                        }
+
+                                        .footer-text {
+                                            font-size: 14px !important;
+                                            color: #94a3b8 !important;
+                                        }
+
+                                        /* ============================================
+                                           BREADCRUMB
+                                           ============================================ */
+
+                                        .breadcrumb {
+                                            background: rgba(102, 126, 234, 0.05) !important;
+                                            border-radius: 12px !important;
+                                            padding: 12px 20px !important;
+                                            border: 1px solid rgba(102, 126, 234, 0.1) !important;
+                                        }
+
+                                        .breadcrumb > li {
+                                            color: #64748b !important;
+                                        }
+
+                                        .breadcrumb > li.active {
+                                            color: #667eea !important;
+                                            font-weight: 600 !important;
+                                        }
+
+                                        .breadcrumb > li a {
+                                            color: #94a3b8 !important;
+                                            transition: color 0.3s ease !important;
+                                        }
+
+                                        .breadcrumb > li a:hover {
+                                            color: #667eea !important;
+                                        }
+
+                                        /* ============================================
+                                           CONTENT AREA
+                                           ============================================ */
+
+                                        #content {
+                                            padding: 20px !important;
+                                            background: #f8fafc !important;
+                                            min-height: calc(100vh - 70px) !important;
+                                        }
+
+                                        /* Alert Messages */
+                                        .alert {
+                                            border-radius: 12px !important;
+                                            border: none !important;
+                                            padding: 16px 20px !important;
+                                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+                                        }
+
+                                        .alert-success {
+                                            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%) !important;
+                                            color: #065f46 !important;
+                                        }
+
+                                        .alert-danger {
+                                            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%) !important;
+                                            color: #991b1b !important;
+                                        }
+
+                                        .alert-warning {
+                                            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+                                            color: #92400e !important;
+                                        }
+
+                                        .alert-info {
+                                            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%) !important;
+                                            color: #1e40af !important;
+                                        }
+
+                                        /* ============================================
+                                           RESPONSIVE
+                                           ============================================ */
+
+                                        @media (max-width: 768px) {
+                                            #sidebar-left {
+                                                width: 100% !important;
+                                            }
+
+                                            .nav.main-menu {
+                                                padding: 0 5px !important;
+                                            }
+
+                                            .nav.main-menu > li > a {
+                                                padding: 12px 12px !important;
+                                            }
+
+                                            .nav.main-menu > li > ul > li > a {
+                                                padding: 10px 12px 10px 35px !important;
+                                            }
+
+                                            #header {
+                                                height: 60px !important;
+                                            }
+
+                                            #header .container {
+                                                height: 60px !important;
+                                            }
+                                        }
+
+                                        /* ============================================
+                                           ANIMATIONS
+                                           ============================================ */
+
+                                        @keyframes slideIn {
+                                            from {
+                                                opacity: 0;
+                                                transform: translateX(-20px);
+                                            }
+                                            to {
+                                                opacity: 1;
+                                                transform: translateX(0);
+                                            }
+                                        }
+
+                                        .nav.main-menu > li {
+                                            animation: slideIn 0.3s ease forwards;
+                                        }
+
+                                        .nav.main-menu > li:nth-child(1) { animation-delay: 0.05s; }
+                                        .nav.main-menu > li:nth-child(2) { animation-delay: 0.1s; }
+                                        .nav.main-menu > li:nth-child(3) { animation-delay: 0.15s; }
+                                        .nav.main-menu > li:nth-child(4) { animation-delay: 0.2s; }
+                                        .nav.main-menu > li:nth-child(5) { animation-delay: 0.25s; }
+                                        .nav.main-menu > li:nth-child(6) { animation-delay: 0.3s; }
+                                        .nav.main-menu > li:nth-child(7) { animation-delay: 0.35s; }
+                                        .nav.main-menu > li:nth-child(8) { animation-delay: 0.4s; }
+
+                                        /* ============================================
+                                           LOADING ANIMATION
+                                           ============================================ */
+
+                                        #loading {
+                                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+                                        }
+
+                                        /* ============================================
+                                           FIX FOR EXISTING CONFLICTS
+                                           ============================================ */
+
+                                        .sidebar-nav.nav-collapse {
+                                            background: transparent !important;
+                                        }
+
+                                        .nav.main-menu li ul {
+                                            display: block !important;
+                                        }
+
+                                        .nav.main-menu > li > a,
+                                        .nav.main-menu > li > ul > li > a {
+                                            box-shadow: none !important;
+                                            border-right: none !important;
+                                            border-top: none !important;
+                                            border-bottom: none !important;
+                                        }
+
+                                        .nav.main-menu a:visited,
+                                        .nav.main-menu a:link {
+                                            color: inherit !important;
+                                        }
+
+                                        /* ============================================
+                                               DROPDOWN ARROW INDICATOR
+                                        ============================================ */
+
+                                        .menu-arrow {
+                                            margin-left: auto !important;
+                                            font-size: 12px !important;
+                                            color: #64748b !important;
+                                            transition: all 0.3s ease !important;
+                                            font-weight: 700 !important;
+                                        }
+
+                                        .menu-arrow:before {
+                                            content: "›" !important;
+                                            display: inline-block !important;
+                                            font-size: 18px !important;
+                                            line-height: 1 !important;
+                                        }
+
+                                        .nav.main-menu > li > a.dropmenu:hover .menu-arrow {
+                                            color: #667eea !important;
+                                        }
+                                    </style>
+
+                                    <script>
+                                        $(document).ready(function () {
+                                            console.log("✅ Sidebar Menu Init");
+
+                                            $(".menu-arrow").css("display", "inline-block");
+
+                                            $(".nav.main-menu").on("click", "a.dropmenu", function (e) {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+
+                                                const $link = $(this);
+                                                const $li = $link.closest("li");
+                                                const $submenu = $li.find("> ul").first();
+                                                const $arrow = $link.find(".menu-arrow");
+
+                                                if ($submenu.length === 0) return false;
+
+                                                // Close other open menus
+                                                $li.siblings().find("> ul").removeClass("show in");
+                                                $li.siblings().find("> a .menu-arrow").removeClass("menu-arrow-open");
+
+                                                // Toggle current one - add the 'show' class for CSS animation
+                                                $submenu.toggleClass("show");
+                                                $arrow.toggleClass("menu-arrow-open");
+
+                                                return false;
+                                            });
+
+                                            console.log("🎯 Dropdown ready!");
+                                        });
+                                    </script>
+
+<!-- Bootstrap 5 JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Header JS -->
+<script src="<?= base_url('assets/js/header-functions.js') ?>"></script>
+
+<!-- Sidebar JS -->
+<script src="<?= base_url('assets/js/sidebar-clean.js') ?>"></script>

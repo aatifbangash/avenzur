@@ -1,0 +1,33 @@
+/* ============================================
+   MINIMAL LAYOUT - SHOW SIDEBAR ONLY
+   ============================================ */
+
+/* Force sidebar to be visible - that's all we need */
+.sidebar-con {
+	display: block !important;
+	visibility: visible !important;
+	opacity: 1 !important;
+}
+
+#sidebar-left {
+	display: block !important;
+	visibility: visible !important;
+	opacity: 1 !important;
+}
+
+.sidebar-nav {
+	display: block !important;
+	visibility: visible !important;
+	opacity: 1 !important;
+}
+
+/* Ensure menu structure is visible */
+.sidebar-nav.nav-collapse,
+.sidebar-nav.navbar-collapse,
+.sidebar-nav.collapse {
+	display: block !important;
+	visibility: visible !important;
+	opacity: 1 !important;
+	max-height: none !important;
+	overflow: visible !important;
+}

@@ -1,0 +1,38 @@
+/* ============================================
+   MINIMAL SIDEBAR MENU - NO STYLING
+   ============================================ */
+
+/* Make menu visible - that's all */
+.nav.main-menu {
+	display: block !important;
+	visibility: visible !important;
+	opacity: 1 !important;
+	list-style: none;
+}
+
+.nav.main-menu > li {
+	display: block !important;
+	visibility: visible !important;
+	opacity: 1 !important;
+	list-style: none;
+}
+
+.nav.main-menu > li > a {
+	display: block !important;
+	visibility: visible !important;
+	opacity: 1 !important;
+}
+
+/* Show submenus */
+.nav.main-menu > li > ul {
+	display: block !important;
+	visibility: visible !important;
+	opacity: 1 !important;
+	list-style: none;
+}
+
+.nav.main-menu > li > ul > li {
+	display: block !important;
+	visibility: visible !important;
+	opacity: 1 !important;
+}
