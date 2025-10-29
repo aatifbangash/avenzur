@@ -340,6 +340,7 @@ private function load_form($id, $isEdit)
 
         $requisitionSupplierList = $this->purchase_requisition_model->get_suppliers_for_requisition($id);
 
+        
         $this->data['logs'] = $logs;
         $this->data['id'] = $id;
         $this->data['requisition_suppliers'] = $requisitionSupplierList;
@@ -530,9 +531,9 @@ public function send_to_supplier() {
             // Send email
             if ($this->email->send()) {
                 $success_count++;
-                
-                // Save to pr_supplier table with response token
-                $this->db->insert('pr_supplier', [
+
+                // Save to purchase_requisition_supplier table with response token
+                $this->db->insert('purchase_requisition_supplier', [
                     'pr_id' => $pr_id,
                     'supplier_id' => $supplier_id,
                     'sent_by' => $this->session->userdata('user_id'),
