@@ -1318,50 +1318,6 @@
 
                                 </ul>
                             </li>
-                            
-                            <!-- Loyalty Module -->
-                            <li class="mm_loyalty">
-                                <a class="dropmenu" href="#">
-                                    <i class="fa fa-trophy"></i>
-                                    <span class="text"> Loyalty </span>
-                                    <span class="chevron closed"></span>
-                                </a>
-                                <ul>
-                                    <li id="loyalty_index">
-                                        <a href="<?= admin_url('loyalty') ?>">
-                                            <i class="fa fa-dashboard"></i>
-                                            <span class="text"> Loyalty Dashboard</span>
-                                        </a>
-                                    </li>
-                                    <li id="loyalty_rules">
-                                        <a href="<?= admin_url('loyalty/rules') ?>">
-                                            <i class="fa fa-list-alt"></i>
-                                            <span class="text"> Loyalty Rules</span>
-                                        </a>
-                                    </li>
-                                    <li id="loyalty_budget" class="mm_loyalty_budget">
-                                        <a class="dropmenu" href="#">
-                                            <i class="fa fa-money"></i>
-                                            <span class="text"> Budget</span>
-                                            <span class="chevron closed"></span>
-                                        </a>
-                                        <ul>
-                                            <li id="loyalty_budget_dashboard">
-                                                <a href="<?= admin_url('loyalty/budget') ?>">
-                                                    <i class="fa fa-dashboard"></i>
-                                                    <span class="text"> Budget Dashboard</span>
-                                                </a>
-                                            </li>
-                                            <li id="loyalty_budget_setup">
-                                                <a href="<?= admin_url('loyalty/budget_setup') ?>">
-                                                    <i class="fa fa-cog"></i>
-                                                    <span class="text"> Budget Setup</span>
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </li>
-                                </ul>
-                            </li>
                           
                             <?php if ($Owner && file_exists(APPPATH . 'controllers' . DIRECTORY_SEPARATOR . 'shop' . DIRECTORY_SEPARATOR . 'Shop.php')) {  
                                 ?>
