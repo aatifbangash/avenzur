@@ -446,7 +446,7 @@ class Sales extends MY_Controller
                 'net_cost'          => $net_cost,
                 'net_unit_price'    => $item_net_price,
                 'unit_price'        => $item_net_price,
-                'quantity'          => $item_quantity + $item_bonus,
+                'quantity'          => $item_quantity,
                 'product_unit_id'   => $quote_items[$r]->product_unit_id,
                 'product_unit_code' => $quote_items[$r]->product_unit_code,
                 'unit_quantity'     => $item_unit_quantity,
@@ -494,7 +494,7 @@ class Sales extends MY_Controller
             'warehouse_id'      => $warehouse_id,
             'note'              => $note,
             'staff_note'        => $staff_note,
-            'warning_note'      => $warning_note, 
+            'warning_note'      => $note, 
             'total'             => $grand_total_sale,
             'total_net_sale'    => $grand_total_net_sale,
             'product_discount'  => $product_discount,
@@ -3679,6 +3679,7 @@ class Sales extends MY_Controller
                 <ul class="dropdown-menu pull-right" role="menu">
                     
                     <li>' . $detail_link . '</li>
+                    <li>' . $return_link . '</li>
                     <li>' . $pdf_link . '</li>
                 </ul>
             </div></div>';
@@ -4081,8 +4082,8 @@ class Sales extends MY_Controller
         <div style="float:left; width:55%;">
             <p style="margin:2px 0;"><strong>Date:</strong> ' . $this->sma->hrld($inv->date) . '</p>
             <p style="margin:2px 0;"><strong>Reference:</strong> ' . date("Y") . '/' . $inv->id . '</p>
-            <p style="margin:2px 0;"><strong>Sale Status:</strong> ' . $inv->sale_status . '</p>
-            <p style="margin:2px 0;"><strong>Payment Status:</strong> ' . $inv->payment_status . '</p>
+            <p style="margin:2px 0;"><strong>Salesman:</strong> ' . (($customer->sales_agent != '') ? $customer->sales_agent : '-') . '</p>
+            <p style="margin:2px 0;"><strong>Note:</strong> ' . $inv->warning_note . '</p>
         </div>
 
         <!-- Right: Barcode and QR -->
@@ -4099,7 +4100,7 @@ class Sales extends MY_Controller
     <div style="width:100%; overflow:hidden; margin-top:10px; font-size:11px;">
         <!-- TO -->
         <div style="float:left; width:48%; vertical-align:top;">
-            <p style="margin:2px 0;"><strong>To:</strong> '. $customer->name .'</p>
+            <p style="margin:2px 0;"><strong>To:</strong> ('.$customer->external_id.') '. $customer->name .'</p>
             <p style="margin:2px 0;">Address: '. $customer->address .'</p>
             <p style="margin:2px 0;">City: '. $customer->city .'</p>
             <p style="margin:2px 0;">VAT Number: '. $customer->vat_no .'</p>
@@ -4142,11 +4143,19 @@ if($inv->warning_note != ""){
             </table>
         </div>';
     }else{
-        $footer_note = '<div style="float:left; width:60%; text-align:left; padding-right:10px;">
+        /*$footer_note = '<div style="float:left; width:60%; text-align:left; padding-right:10px;">
             <p style="margin:0 0 5px 0;"><strong>'.$note_text.'</strong></p>
             <p style="margin:0;">
             '.$inv->warning_note.'
             </p>
+        </div>';*/
+        $footer_table = '<div style="width:60%; float:left; text-align:left; margin-bottom:15px;">
+            <table class="table-label" border="1"  cellspacing="0" cellpadding="10" width="100%" style="border-collapse:collapse; font-size: 10px">
+                <tr><td colspan="3" style="text-align: center; vertical-align: middle; background-color: #f2f2f2; font-size: 20px;">'.$inv->id.'</td> <td colspan="3">فريق التحضير</td></tr>
+                <tr><td colspan="3">تحضير بداية</td> <td colspan="3">تحضير نهاية</td></tr>
+                <tr><td colspan="2">بداية تشييك</td> <td colspan="2">اسم المشيك</td> <td colspan="2">كمرا</td></tr>
+                <tr><td colspan="2">عدد كرتون</td> <td colspan="2">ربطة الثلاجة</td> <td colspan="2">خطأ</td></tr>
+            </table>
         </div>';
     }
         
@@ -5201,7 +5210,7 @@ if($inv->warning_note != ""){
              * Zatca Integration B2B Start
              */
             if($this->zatca_enabled){
-                $zatca_payload =  $this->Zetca_model->get_zetca_data_b2b($id); 
+                $zatca_payload =  $this->Zetca_model->get_zetca_data_b2b($sale_id); 
                 $zatca_response = $this->zatca->post('',  $zatca_payload);
                 $is_success = true;
                 $remarks = "";
@@ -5217,7 +5226,7 @@ if($inv->warning_note != ""){
                 $request = json_encode($zatca_payload, true);
                 $response = json_encode($zatca_response, true);
                 $reporting_data = [
-                    "sale_id" => $id,
+                    "sale_id" => $sale_id,
                     "date" => $date,
                     "is_success" => $is_success,
                     "request" => $request,
@@ -5226,59 +5235,6 @@ if($inv->warning_note != ""){
                 ];
 
                 $this->Zetca_model->report_zatca_status($reporting_data);
-            }
-
-            /**RASD Integration Code */
-            $data_for_rasd = [
-                "products" => $products,
-                "source_warehouse_id" => $data['warehouse_id'],
-                "destination_customer_id" => $data['customer_id'],
-                "sale_id" => $id
-            ];
-            $response_model = $this->sales_model->get_rasd_required_fields($data_for_rasd);
-            $body_for_rasd_dispatch = $response_model['payload'];
-
-            $rasd_user = $response_model['user'];
-            $rasd_pass = $response_model['pass'];
-            $resp_sale_status = $response_model['status'];
-            
-            $rasd_success = false;
-            log_message("info", json_encode($body_for_rasd_dispatch));
-            $payload_used =  [
-                    'source_gln' => $response_model['source_gln'],
-                    'destination_gln' => $response_model['destination_gln'],
-                    'warehouse_id' => $data['warehouse_id']
-                ];  
-                
-            if($resp_sale_status == 'completed' && $rasd_user){
-                foreach($body_for_rasd_dispatch as $index => $payload_dispatch){
-                    log_message("info", "RASD AUTH START");
-                    $this->rasd->set_base_url('https://qdttsbe.qtzit.com:10101/api/web');
-                    $auth_response = $this->rasd->authenticate($rasd_user, $rasd_pass);
-                    if(isset($auth_response['token'])){
-                        $auth_token = $auth_response['token'];
-                        log_message("info", 'RASD Authentication Success: DISPATCH_PRODUCT');
-                        $zadca_dispatch_response = $this->rasd->dispatch_product_133($payload_dispatch, $auth_token);
-                        
-                        
-                        if(isset($zadca_dispatch_response['body']['DicOfDic']['MR']['TRID']) && $zadca_dispatch_response['body']['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){                
-                            log_message("info", "Dispatch successful");
-                            $rasd_success = true;                
-
-                            $this->cmt_model->add_rasd_transactions($payload_used,'sale_dispatch_product',true, $zadca_dispatch_response,$payload_dispatch);
-                        
-                        }else{
-                            $rasd_success = false;
-                            log_message("error", "Dispatch Failed");
-                            log_message("error", json_encode($zadca_dispatch_response,true));
-                            $this->cmt_model->add_rasd_transactions($payload_used,'sale_dispatch_product',false, $zadca_dispatch_response,$payload_dispatch);
-                        }
-                        
-                    }else{
-                        log_message("error", 'RASD Authentication FAILED: DISPATCH_PRODUCT');
-                        $this->cmt_model->add_rasd_transactions($payload_used,'sale_dispatch_product',false, $accept_dispatch_result,$body_for_rasd_dispatch);
-                    }
-                }
             }
 
             $this->session->set_flashdata('message', lang('sale_invoiced_successfully'));
@@ -5628,6 +5584,156 @@ if($inv->warning_note != ""){
 
         $fname = 'test_labels_' . str_replace('/', '_', $invoice_no) . '_x' . $num_cartons . '.pdf';
         $mpdf->Output($fname, 'D'); // download
+    }
+
+    public function send_to_rasd($id = null){
+        $this->form_validation->set_rules('sale_id', lang('sale_id'), 'required');
+        if ($this->form_validation->run() == true) {
+            $sale_id = $this->input->post('sale_id');
+            $send_to_rasd = $this->input->post('send_to_rasd');
+            if($send_to_rasd == "1"){
+                $sale = $this->sales_model->getSaleByID($sale_id);
+                $products = $this->sales_model->getAllSaleItems($sale_id);
+                $products = json_decode(json_encode($products), true);
+
+                $this->db->select('id');
+                $this->db->from('sma_returns');
+                $this->db->where('sale_id', $sale_id);
+                $return_records = $this->db->get()->result_array();
+
+                if (!empty($return_records)) {
+                    $return_ids = array_column($return_records, 'id');
+
+                    // Step 2: Get all returned product IDs and quantities
+                    $this->db->select('product_id, quantity');
+                    $this->db->from('sma_return_items');
+                    $this->db->where_in('return_id', $return_ids);
+                    $returned_items = $this->db->get()->result_array();
+
+                    // Step 3: Build a quick lookup map of returned products
+                    $returned_map = [];
+                    foreach ($returned_items as $r) {
+                        if (!isset($returned_map[$r['product_id']])) {
+                            $returned_map[$r['product_id']] = 0;
+                        }
+                        $returned_map[$r['product_id']] += $r['quantity'];
+                    }
+                    
+                    // Step 4: Filter or adjust your $products list
+                    $filtered_products = [];
+
+                    foreach ($products as $p) {
+                        $pid = $p['product_id'];
+                        $qty = $p['quantity'];
+
+                        if (isset($returned_map[$pid])) {
+                            // Reduce quantity if partially returned
+                            $qty -= $returned_map[$pid];
+                            if ($qty > 0) {
+                                $p['quantity'] = $qty;
+                                $filtered_products[] = $p;
+                            }
+                        } else {
+                            // Not returned at all → keep as-is
+                            $filtered_products[] = $p;
+                        }
+                    }
+                    
+                    $products = $filtered_products;
+                }
+
+                if($products){
+                    /**RASD Integration Code */
+                    $data_for_rasd = [
+                        "products" => $products,
+                        "source_warehouse_id" => $sale->warehouse_id,
+                        "destination_customer_id" => $sale->customer_id,
+                        "sale_id" => $sale_id
+                    ];
+                    
+                    $response_model = $this->sales_model->get_rasd_required_fields($data_for_rasd);
+                    $body_for_rasd_dispatch = $response_model['payload'];
+
+                    $rasd_user = $response_model['user'];
+                    $rasd_pass = $response_model['pass'];
+                    $resp_sale_status = $response_model['status'];
+                    
+                    $rasd_success = false;
+                    log_message("info", json_encode($body_for_rasd_dispatch));
+                    $payload_used =  [
+                            'source_gln' => $response_model['source_gln'],
+                            'destination_gln' => $response_model['destination_gln'],
+                            'warehouse_id' => $data['warehouse_id']
+                        ];  
+                    
+                    if($rasd_user){
+                        foreach($body_for_rasd_dispatch as $index => $payload_dispatch){
+                            log_message("info", "RASD AUTH START");
+                            //$this->rasd->set_base_url('https://qdttsbe.qtzit.com:10101/api/web');
+                            $this->rasd->set_base_url('https://qdtts-stg.qtzit.com:10101/api/web');
+                            $auth_response = $this->rasd->authenticate($rasd_user, $rasd_pass);
+                            //echo '<pre>';print_r($auth_response);exit;
+                            if(isset($auth_response['token'])){
+                                $auth_token = $auth_response['token'];
+                                log_message("info", 'RASD Authentication Success: DISPATCH_PRODUCT');
+                                $zadca_dispatch_response = $this->rasd->dispatch_product_133($payload_dispatch, $auth_token);
+                                
+                                
+                                if(isset($zadca_dispatch_response['body']['DicOfDic']['MR']['TRID']) && $zadca_dispatch_response['body']['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){                
+                                    log_message("info", "Dispatch successful");
+                                    $rasd_success = true;                
+
+                                    $this->cmt_model->add_rasd_transactions($payload_used,'sale_dispatch_product',true, $zadca_dispatch_response,$payload_dispatch);
+                                
+                                }else{
+                                    $rasd_success = false;
+                                    log_message("error", "Dispatch Failed");
+                                    log_message("error", json_encode($zadca_dispatch_response,true));
+                                    $this->cmt_model->add_rasd_transactions($payload_used,'sale_dispatch_product',false, $zadca_dispatch_response,$payload_dispatch);
+                                }
+                                
+                            }else{
+                                log_message("error", 'RASD Authentication FAILED: DISPATCH_PRODUCT');
+                                $this->cmt_model->add_rasd_transactions($payload_used,'sale_dispatch_product',false, $accept_dispatch_result,$body_for_rasd_dispatch);
+                                $this->session->set_flashdata('error', lang('rasd_authentication_failed'));
+                                admin_redirect('sales/view/'.$sale_id);
+                                exit;
+                            }
+                        }
+                        
+                        $this->db->update('sales', ['sale_status' => 'sent_to_rasd'], ['id' => $sale_id]);
+
+                        $this->session->set_flashdata('message', lang('sale_sent_to_rasd_successfully'));
+                        admin_redirect('sales/view/'.$sale_id);
+                    }else{
+                        $this->session->set_flashdata('error', lang('rasd_authentication_failed'));
+                        admin_redirect('sales/view/'.$sale_id);
+                    }
+
+                }else{
+                    //$this->db->update('sales', ['sale_status' => 'sent_to_rasd'], ['id' => $sale_id]);
+
+                    $this->session->set_flashdata('error', lang('no_items_found_to_send_to_rasd'));
+                    admin_redirect('sales/view/'.$sale_id);
+                }
+            }else{
+                $this->db->update('sales', ['sale_status' => 'sent_to_rasd'], ['id' => $sale_id]);
+
+                $this->session->set_flashdata('message', lang('rasd_sending_skipped'));
+                admin_redirect('sales/view/'.$sale_id);
+            }
+
+        }else{
+            if ($this->input->get('id')) {
+                $id = $this->input->get('id');
+            }
+            $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+            $inv                 = $this->sales_model->getInvoiceByID($id);
+            
+            $this->data['sale_id'] = $id;
+            
+            $this->load->view($this->theme . 'sales/send_to_rasd', $this->data);
+        }
     }
 
     public function add_label($id = null){

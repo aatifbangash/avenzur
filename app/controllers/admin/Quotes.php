@@ -20,6 +20,7 @@ class Quotes extends MY_Controller
         $this->load->admin_model('quotes_model');
         $this->load->admin_model('companies_model');
         $this->load->admin_model('sales_model');
+        $this->load->admin_model('products_model');
         $this->digital_upload_path = 'files/';
         $this->digital_file_types  = 'zip|psd|ai|rar|pdf|doc|docx|xls|xlsx|ppt|pptx|gif|jpg|jpeg|png|tif|txt';
         $this->allowed_file_size   = '1024';
@@ -771,7 +772,7 @@ class Quotes extends MY_Controller
                     $item_net_unit_sale = $_POST['item_unit_sale'][$r];
                     $item_unit_sale = $_POST['unit_price'][$r];
 
-                    if($quote_status){
+                    if($quote_status == 'approved' || $quote_status == 'converted_to_sale'){
                         $inventoryObj = $this->products_model->check_inventory($warehouse_id, $item_id, $item_batchno, $item_expiry, $item_quantity, $item_avz_code);
                         if(!$inventoryObj){
                             $this->session->set_flashdata('error', 'Quote cannot be approved. The item: '.$item_code.'-'.$item_name.' has no stock in Warehouse');
@@ -951,6 +952,8 @@ class Quotes extends MY_Controller
                 $row->avz_item_code   = $item->avz_item_code; 
                 $row->net_unit_cost   = $item->net_cost;
                 $row->real_unit_cost  = $item->real_cost;
+                $row->cash_discount   = $item->cash_discount;
+                $row->credit_discount   = $item->credit_discount;
 
                 //Discount calculation----------------------------------
                 // this row is deleted becasue of discount must not be added in sale price 

@@ -516,6 +516,25 @@ class Products_model extends CI_Model
         return false;
     }
 
+    public function get_products_by_ids($product_ids)
+{
+    if (empty($product_ids)) {
+        return false;
+    }
+
+    $this->db->select('id, code, name, cost, price, tax_rate, unit');
+    $this->db->from('products');
+    $this->db->where_in('id', $product_ids);
+    $q = $this->db->get();
+
+    if ($q->num_rows() > 0) {
+        return $q->result();
+    }
+    return false;
+}
+
+
+
     public function getAdjustmentItems($adjustment_id)
     {
         $this->db->select('adjustment_items.*, products.code as product_code, products.name as product_name, products.image, products.details as details, product_variants.name as variant')
@@ -1734,28 +1753,31 @@ AND im_summary.total_quantity > 0";
                             im.product_id,
                             pr.name as product_name, im.batch_number as batchno, im.expiry_date as expiry,
                             pr.tax_rate, pr.type, pr.unit, pr.code as product_code, im.avz_item_code,
-                            (SUM(CASE WHEN im.type = 'customer_return' THEN -1*im.quantity ELSE 0 END) - SUM(CASE WHEN im.type IN ('sale','pos') THEN im.quantity ELSE 0 END) ) AS total_quantity", false);
+                            pr.cash_discount, pr.credit_discount,
+                            pu.supplier,
+                            (SUM(im.quantity)) AS total_quantity", false);
             $this->db->from('sma_inventory_movements im');
             $this->db->join('sma_products pr', 'pr.id = im.product_id', 'inner');
+            $this->db->join('sma_purchases pu', 'pu.id = im.reference_id AND im.type = "purchase"', 'left');
             $this->db->where('im.location_id', $warehouse_id);
             $this->db->where('im.product_id', $item_id);
-            //$this->db->where('im.customer_id', $customer_id);
             $this->db->group_by(['im.avz_item_code', 'im.batch_number', 'im.expiry_date']);
             $this->db->having('total_quantity !=', 0);
             $query = $this->db->get();
-
             //echo $this->db->last_query();exit;
-
             if ($query->num_rows() <= 0) {
                 $this->db->select("pr.price as net_unit_sale, 
                                 pr.cost as net_unit_cost, 
                                 pr.cost as real_unit_cost,
                                 pr.id as product_id,
+                                pr.cash_discount, pr.credit_discount,
+                                pu.supplier,
                                 pr.name as product_name, im.batch_number as batchno, im.expiry_date as expiry,
                                 SUM(IFNULL(im.quantity, 0)) as total_quantity,
                                 pr.tax_rate, pr.type, pr.unit, pr.code as product_code, im.avz_item_code", false);
                 $this->db->from('sma_products pr');
                 $this->db->join('sma_inventory_movements im', 'im.product_id = pr.id', 'left');
+                $this->db->join('sma_purchases pu', 'pu.id = im.reference_id AND im.type = "purchase"', 'left');
                 $this->db->where('pr.id', $item_id);
                 $this->db->group_by(['im.avz_item_code', 'im.batch_number', 'im.expiry_date']);
                 $query = $this->db->get();
@@ -1895,6 +1917,9 @@ AND im_summary.total_quantity > 0";
         p.code, 
         p.name, 
         d.deal_type, 
+        d.dis1_percentage,
+        d.dis2_percentage,
+        d.dis3_percentage,
         d.deal_percentage, 
         d.threshold
     ');
@@ -1920,7 +1945,11 @@ AND im_summary.total_quantity > 0";
                 'id'             => $row->id,
                 'code'           => $row->code,
                 'name'           => $row->name,
+                'price'          => $row->price ?? '',
                 'deal_type'      => $row->deal_type ?? '',
+                'dis1_percentage'=> $row->dis1_percentage ?? '',
+                'dis2_percentage'=> $row->dis2_percentage ?? '',
+                'dis3_percentage'=> $row->dis3_percentage ?? '',
                 'deal_percentage'=> $row->deal_percentage ?? '',
                 'threshold'      => $row->threshold ?? '',
                 'deal_available' => $deal_available

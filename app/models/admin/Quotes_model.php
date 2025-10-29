@@ -42,7 +42,7 @@ class Quotes_model extends CI_Model
         $this->db->select('
             quote_items.*, 
             tax_rates.code as tax_code, tax_rates.name as tax_name, tax_rates.rate as tax_rate, 
-            products.image, products.details as details, product_variants.name as variant, products.hsn_code as hsn_code, products.second_name as second_name, products.unit as base_unit_id, 
+            products.image, products.cash_discount, products.credit_discount, products.details as details, product_variants.name as variant, products.hsn_code as hsn_code, products.second_name as second_name, products.unit as base_unit_id, 
             units.code as base_unit_code,
             SUM(IFNULL(CASE WHEN sma_inventory_movements.location_id = ' . $quote->warehouse_id . ' THEN sma_inventory_movements.quantity ELSE 0 END, 0)) as total_quantity')
             ->join('products', 'products.id=quote_items.product_id', 'left')
@@ -64,7 +64,7 @@ class Quotes_model extends CI_Model
         return false;
     }
 
-    public function getProductNamesWithBatches($term, $warehouse_id, $pos = false, $limit = 5)
+    public function getProductNamesWithBatches($term, $warehouse_id, $pos = false, $limit = 20)
     {
          
         // removed from select ->  purchase_items.serial_number
