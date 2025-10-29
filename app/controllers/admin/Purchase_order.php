@@ -455,7 +455,7 @@ class Purchase_order extends MY_Controller
 
     public function getPurchaseRequesitionItems($pr_id = null)
     {
-        $pr_id = base64_decode($this->input->get('id'));
+        // $pr_id = base64_decode($this->input->get('id'));
 
         // Check if PR exists
         $pr_data = $this->purchase_requisition_model->get_requisition($pr_id);
@@ -474,8 +474,10 @@ class Purchase_order extends MY_Controller
             $row->cost = $row->cost ? $row->cost : 0.0;
             $row->sale_price = $row->price ? $row->price : 0.0;
             $row->bonus = 0;
-            $row->dis1 = 0;
-            $row->dis2 = 0;
+            $row->dis1 = 1;
+            $row->dis2 = 2;
+            $row->dis3 = 3;
+            $row->deal = 4;
 
             // append missing keys
             $row->alert_quantity = 0.00;
