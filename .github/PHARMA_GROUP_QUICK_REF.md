@@ -3,6 +3,7 @@
 ## What Was Built
 
 A complete Pharma Group management system under Settings → Organization Setup with:
+
 - ✅ Add new pharmacy groups
 - ✅ Edit existing groups
 - ✅ Delete groups (with cascading deletes)
@@ -13,14 +14,18 @@ A complete Pharma Group management system under Settings → Organization Setup 
 ## File Summary
 
 ### Controllers
+
 **File**: `/app/controllers/admin/Organization_setup.php`
+
 - `add_pharma_group()` - Create pharma group with 3-table insert
 - `get_pharma_group_details()` - Fetch single group details
 - `update_pharma_group()` - Update group across tables
 - `delete_pharma_group()` - Delete with cascade
 
 ### Models
+
 **File**: `/app/models/admin/Loyalty_model.php`
+
 - `insertPharmGroup()` - 3-table transaction insert
 - `getPharmGroup()` - Get single group
 - `getAllPharmGroups()` - Get all groups
@@ -29,7 +34,9 @@ A complete Pharma Group management system under Settings → Organization Setup 
 - `generateUUID()` - UUID v4 generator
 
 ### Views
+
 **File**: `/themes/blue/admin/views/settings/pharmacy_hierarchy.php`
+
 - New "Pharma Groups" tab (first tab)
 - Add Pharma Group modal with form
 - Edit Pharma Group modal with form
@@ -58,6 +65,7 @@ A complete Pharma Group management system under Settings → Organization Setup 
 ## How to Use
 
 ### 1. Create a Pharma Group
+
 ```bash
 POST /admin/organization_setup/add_pharma_group
 Params:
@@ -70,24 +78,28 @@ Params:
 ```
 
 ### 2. View Pharma Groups
+
 ```bash
 GET /admin/organization_setup/get_pharmacy_groups
 Returns array of all pharma groups
 ```
 
 ### 3. Get Group Details
+
 ```bash
 GET /admin/organization_setup/get_pharma_group_details?id=UUID
 Returns single group details with warehouse info
 ```
 
 ### 4. Update Pharma Group
+
 ```bash
 POST /admin/organization_setup/update_pharma_group
 Params: id, code, name, address, phone, email (optional), country
 ```
 
 ### 5. Delete Pharma Group
+
 ```bash
 POST /admin/organization_setup/delete_pharma_group
 Params: id
@@ -97,18 +109,20 @@ Note: Deletes group AND all pharmacies/branches under it
 ## Frontend Usage
 
 ### JavaScript Functions
+
 ```javascript
 // Load all groups into table
-loadPharmaGroups()
+loadPharmaGroups();
 
 // Edit a specific group
-editPharmaGroup(id)
+editPharmaGroup(id);
 
 // Delete with confirmation
-deletePharmaGroup(id, name)
+deletePharmaGroup(id, name);
 ```
 
 ### Form Handling
+
 ```javascript
 // Add form automatically submits via AJAX
 $('#form_add_pharma_group').on('submit', ...)
@@ -130,6 +144,7 @@ $('#form_edit_pharma_group').on('submit', ...)
 ## Validation
 
 ### Server-side Rules
+
 - `code` - required, unique in sma_warehouses
 - `name` - required, unique in loyalty_pharmacy_groups
 - `address` - required
@@ -137,6 +152,7 @@ $('#form_edit_pharma_group').on('submit', ...)
 - `email` - valid email format (if provided)
 
 ### Validation in Model
+
 ```php
 // Check for duplicates before insert
 $existing = $this->db->select('id')
@@ -148,6 +164,7 @@ $existing = $this->db->select('id')
 ## Transaction Handling
 
 All operations wrapped in database transactions:
+
 ```php
 $this->db->trans_start();
 // Step 1: Insert warehouse
@@ -163,41 +180,47 @@ if ($this->db->trans_status() === false) {
 ## Error Responses
 
 ### Success
+
 ```json
 {
-  "success": true,
-  "message": "Pharmacy Group created successfully",
-  "data": {
-    "pharmacy_group_id": "uuid-value",
-    "company_id": "uuid-value",
-    "warehouse_id": 123
-  }
+	"success": true,
+	"message": "Pharmacy Group created successfully",
+	"data": {
+		"pharmacy_group_id": "uuid-value",
+		"company_id": "uuid-value",
+		"warehouse_id": 123
+	}
 }
 ```
 
 ### Error
+
 ```json
 {
-  "success": false,
-  "message": "Pharmacy group code already exists"
+	"success": false,
+	"message": "Pharmacy group code already exists"
 }
 ```
 
 ## Key Implementation Details
 
 1. **Three-Table Pattern**: Warehouse + Company + Group
+
    - Maintains both operational (warehouse) and loyalty (company/group) data
    - Enables future integration with budgeting and loyalty features
 
 2. **UUID Generation**: Custom UUID v4 generator
+
    - Loyalty tables use UUID for distributed IDs
    - Maintains data consistency
 
 3. **Cascade Deletes**: Maintains referential integrity
+
    - Deleting group deletes pharmacies, branches, warehouses
    - All done in single transaction
 
 4. **AJAX-First**: All operations via AJAX
+
    - Page never reloads
    - Real-time updates
    - Better UX
@@ -223,21 +246,25 @@ git diff themes/blue/admin/views/settings/pharmacy_hierarchy.php
 ## Troubleshooting
 
 ### Groups not loading
+
 - Check browser console for AJAX errors
 - Verify `get_pharmacy_groups` endpoint is accessible
 - Check database connection
 
 ### Form validation failing
+
 - Verify all required fields are filled
 - Check for duplicate code/name
 - Review validation errors in response
 
 ### Delete not working
+
 - Confirm group ID is valid
 - Check CSRF token is correct
 - Review server logs for transaction errors
 
 ### Modal not showing
+
 - Verify Bootstrap is loaded
 - Check for JavaScript errors in console
 - Ensure modal IDs match button data-target

@@ -1,11 +1,13 @@
 # Pharma Group Feature Implementation
 
 ## Overview
+
 The Pharma Group feature has been successfully implemented in the Organization Setup module. This feature allows users to create, manage, and delete pharmacy groups (companies) with proper hierarchical relationships.
 
 ## Architecture
 
 ### Database Relationships
+
 The Pharma Group feature spans three tables with proper foreign key relationships:
 
 ```
@@ -154,6 +156,7 @@ The Pharma Group feature spans three tables with proper foreign key relationship
 ### 1. Controller: `/app/controllers/admin/Organization_setup.php`
 
 #### New Methods:
+
 - **`add_pharma_group()`** - AJAX endpoint to create pharma group
 - **`get_pharma_group_details()`** - AJAX endpoint to retrieve single group details
 - **`update_pharma_group()`** - AJAX endpoint to update pharma group
@@ -162,6 +165,7 @@ The Pharma Group feature spans three tables with proper foreign key relationship
 ### 2. Model: `/app/models/admin/Loyalty_model.php`
 
 #### New Methods:
+
 - **`insertPharmGroup($data)`** - Database logic for creating pharma group
 - **`getPharmGroup($id)`** - Retrieve single pharma group details
 - **`getAllPharmGroups()`** - Retrieve all pharma groups
@@ -172,12 +176,14 @@ The Pharma Group feature spans three tables with proper foreign key relationship
 ### 3. View: `/themes/blue/admin/views/settings/pharmacy_hierarchy.php`
 
 #### New UI Components:
+
 - **Pharma Groups Tab** - First tab in the organization setup page
 - **Add Pharma Group Modal** - Form for creating new pharma group
 - **Edit Pharma Group Modal** - Form for editing existing pharma group
 - **Pharma Groups Table** - Lists all pharma groups with edit/delete actions
 
 #### New JavaScript Functions:
+
 - **`loadPharmaGroups()`** - Load and display all pharma groups
 - **`editPharmaGroup(id)`** - Open edit modal with group details
 - **`deletePharmaGroup(id, name)`** - Delete group with confirmation
@@ -186,10 +192,12 @@ The Pharma Group feature spans three tables with proper foreign key relationship
 ## Usage
 
 ### Access the Feature
+
 1. Go to Settings → Setup Organization
 2. Click the "Pharma Groups" tab (first tab)
 
 ### Create a Pharma Group
+
 1. Click "Add Pharma Group" button
 2. Fill in the form:
    - **Pharma Group Code**: Unique identifier (e.g., PG-001)
@@ -201,6 +209,7 @@ The Pharma Group feature spans three tables with proper foreign key relationship
 4. Success message confirms creation
 
 ### Edit a Pharma Group
+
 1. Find group in the table
 2. Click "Edit" button (pencil icon)
 3. Modify any fields
@@ -208,6 +217,7 @@ The Pharma Group feature spans three tables with proper foreign key relationship
 5. Changes are saved
 
 ### Delete a Pharma Group
+
 1. Find group in the table
 2. Click "Delete" button (trash icon)
 3. Confirm deletion in popup
@@ -221,19 +231,21 @@ The Pharma Group feature spans three tables with proper foreign key relationship
 
 ### Form Validation (Client + Server)
 
-| Field | Rules | Notes |
-|-------|-------|-------|
-| code | required, unique | Must not exist in sma_warehouses |
-| name | required, unique | Must not exist in loyalty_pharmacy_groups |
-| address | required | Required field |
-| phone | required | Required field |
-| email | valid_email | Optional, but if provided must be valid |
-| country | numeric | Defaults to 8 (Saudi Arabia) |
+| Field   | Rules            | Notes                                     |
+| ------- | ---------------- | ----------------------------------------- |
+| code    | required, unique | Must not exist in sma_warehouses          |
+| name    | required, unique | Must not exist in loyalty_pharmacy_groups |
+| address | required         | Required field                            |
+| phone   | required         | Required field                            |
+| email   | valid_email      | Optional, but if provided must be valid   |
+| country | numeric          | Defaults to 8 (Saudi Arabia)              |
 
 ## API Endpoints
 
 ### GET Endpoints
+
 - `admin/organization_setup/get_pharma_group_details`
+
   - Query param: `id` (required)
   - Returns: Single pharma group details
 
@@ -241,11 +253,14 @@ The Pharma Group feature spans three tables with proper foreign key relationship
   - Returns: Array of all pharma groups (used for dropdowns)
 
 ### POST Endpoints
+
 - `admin/organization_setup/add_pharma_group`
+
   - Params: code, name, address, phone, email (optional), country (optional)
   - Returns: Created group data
 
 - `admin/organization_setup/update_pharma_group`
+
   - Params: id, code, name, address, phone, email (optional), country (optional)
   - Returns: Success message
 
@@ -268,6 +283,7 @@ All endpoints return JSON:
 ## Database Transactions
 
 All database operations use transactions:
+
 - **ACID Compliance**: All-or-nothing operations
 - **Rollback**: If any step fails, entire transaction rolls back
 - **Consistency**: Data integrity maintained across all 3 tables
@@ -290,6 +306,7 @@ All database operations use transactions:
 ## Cascade Behavior
 
 When deleting a Pharma Group:
+
 1. All related Pharmacies are deleted
 2. All Branches under those Pharmacies are deleted
 3. All warehouse entries (pharmaGroup, pharmacy, branch types) are deleted
@@ -299,6 +316,7 @@ When deleting a Pharma Group:
 ## Performance Considerations
 
 - Indexes on:
+
   - `sma_warehouses.code`
   - `loyalty_companies.code`
   - `loyalty_pharmacy_groups.code`
@@ -340,6 +358,7 @@ When deleting a Pharma Group:
 ## Related Features
 
 This feature integrates with:
+
 - **Pharmacies**: Can be created under a pharma group
 - **Branches**: Can be created under pharmacies in a group
 - **Budget Management**: Can allocate budgets to pharma groups
@@ -349,6 +368,7 @@ This feature integrates with:
 ## Support
 
 For issues or questions about this feature, check:
+
 1. Browser console for JavaScript errors
 2. Server logs for PHP errors
 3. Database logs for transaction issues

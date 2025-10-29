@@ -72,8 +72,9 @@ class Organization_setup extends MY_Controller
         }
 
         // Validation rules
+        // Note: loyalty_pharmacy_groups doesn't have sma_ prefix, so we check manually
         $this->form_validation->set_rules('code', 'Pharmacy Group Code', 'required|is_unique[sma_warehouses.code]');
-        $this->form_validation->set_rules('name', 'Pharmacy Group Name', 'required|is_unique[loyalty_pharmacy_groups.name]');
+        $this->form_validation->set_rules('name', 'Pharmacy Group Name', 'required');
         $this->form_validation->set_rules('address', 'Address', 'required');
         $this->form_validation->set_rules('phone', 'Phone', 'required');
         $this->form_validation->set_rules('email', 'Email', 'valid_email');
@@ -82,6 +83,21 @@ class Organization_setup extends MY_Controller
             $this->sma->send_json([
                 'success' => false,
                 'message' => validation_errors()
+            ]);
+            return;
+        }
+
+        // Additional validation: Check for duplicate name in loyalty_pharmacy_groups (no prefix)
+        $name = $this->input->post('name');
+        $existing_name = $this->db->query(
+            "SELECT id FROM loyalty_pharmacy_groups WHERE name = ? LIMIT 1",
+            [$name]
+        )->row();
+        
+        if ($existing_name) {
+            $this->sma->send_json([
+                'success' => false,
+                'message' => 'Pharmacy Group name already exists'
             ]);
             return;
         }
