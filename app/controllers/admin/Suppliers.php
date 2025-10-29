@@ -1617,10 +1617,11 @@ class Suppliers extends MY_Controller
                 if($this->Settings->site_name == 'Hills Business Medical'){
 
                     $data['level']               = 2;
-                    $parent_code = $seq_code = 'SUP-' . str_pad($i, 5, '0', STR_PAD_LEFT);
+                    $data['parent_code'] = $seq_code;
+                    //$parent_code = $seq_code = 'SUP-' . str_pad($i, 5, '0', STR_PAD_LEFT);
                     $i++;
                     $seq_code = 'SUP-' . str_pad($i, 5, '0', STR_PAD_LEFT);
-
+                    $data['sequence_code'] = $seq_code;
                     $this->db->insert('companies', $data);
                 }
             }

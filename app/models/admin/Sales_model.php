@@ -21,9 +21,9 @@ class Sales_model extends CI_Model
         if($query->num_rows() > 0){
             $status = $query -> row()->sale_status;
         }
-        if($status != "completed"){
+        /*if($status != "completed"){
             return ['payload' => [], 'user' => "", 'pass' => "", 'status' => $status];
-        }
+        }*/
 
         $source_warehouse_id = $data['source_warehouse_id'];
         $desitnation_customer_id = $data['destination_customer_id'];
@@ -146,7 +146,7 @@ class Sales_model extends CI_Model
     }
 
     public function verifyLabel($sale_id){
-        $this->db->update('sales', ['sale_status' => 'label_verifired', 'note' => 'label_verifired'], ['id' => $sale_id]);
+        $this->db->update('sales', ['sale_status' => 'label_verifired'], ['id' => $sale_id]);
 
         return $sale_id;
     }
@@ -164,7 +164,7 @@ class Sales_model extends CI_Model
         $this->db->where('sale_id', $sale_id);
         $this->db->update('sale_labels', $data);
 
-        $this->db->update('sales', ['sale_status' => 'label_verifired', 'note' => 'label_verifired'], ['id' => $sale_id]);
+        $this->db->update('sales', ['sale_status' => 'label_verifired'], ['id' => $sale_id]);
 
         $this->db->trans_complete();
 
@@ -189,7 +189,7 @@ class Sales_model extends CI_Model
         $this->db->insert('sale_labels', $data);
         $label_id = $this->db->insert_id();
 
-        $this->db->update('sales', ['sale_status' => 'added_label', 'note' => 'label added'], ['id' => $sale_id]);
+        $this->db->update('sales', ['sale_status' => 'added_label'], ['id' => $sale_id]);
 
         $this->db->trans_complete();
 
@@ -217,7 +217,7 @@ class Sales_model extends CI_Model
         $this->db->trans_start();
         $this->db->insert('deliveries', $data);
         $delivery_id = $this->db->insert_id();
-        $this->db->update('sales', ['sale_status' => 'driver_assigned', 'note' => 'driver assigned'], ['id' => $sale_id]);
+        $this->db->update('sales', ['sale_status' => 'driver_assigned'], ['id' => $sale_id]);
         
         $this->db->trans_complete();
 
@@ -726,6 +726,7 @@ class Sales_model extends CI_Model
             sale_items.*, 
             tax_rates.code as tax_code, tax_rates.name as tax_name, tax_rates.rate as tax_rate, 
             products.image, products.details as details, product_variants.name as variant, products.hsn_code as hsn_code, products.second_name as second_name, products.unit as base_unit_id, 
+            products.warehouse_shelf,
             units.code as base_unit_code')
             ->join('products', 'products.id=sale_items.product_id', 'left')
             ->join('product_variants', 'product_variants.id=sale_items.option_id', 'left')
@@ -738,6 +739,7 @@ class Sales_model extends CI_Model
             sale_items.*, 
             tax_rates.code as tax_code, tax_rates.name as tax_name, tax_rates.rate as tax_rate, 
             products.image, products.details as details, product_variants.name as variant, products.hsn_code as hsn_code, products.second_name as second_name, products.unit as base_unit_id, 
+            products.warehouse_shelf,
             units.code as base_unit_code,
             SUM(IFNULL(CASE WHEN sma_inventory_movements.location_id = ' . $sale->warehouse_id . ' THEN sma_inventory_movements.quantity ELSE 0 END, 0)) as total_quantity')
             ->join('products', 'products.id=sale_items.product_id', 'left')
