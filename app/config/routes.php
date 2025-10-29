@@ -83,6 +83,9 @@ $route['admin/entries/(:num)']   = 'admin/entries/index/$1';
 
 //custom script
 $route['admin/customscript/(:num)']   = 'admin/customscript/index/$1';
+$route['admin/purchase_requisitions'] = 'admin/purchase_requisitions/index';
+$route['admin/purchase_requisitions/(:num)'] = 'admin/purchase_requisitions/index/$1';
+
 
 //courier call back urls
 $route['courier/stc/callback'] = 'shop/courier/stc_callback';

@@ -1,4 +1,4 @@
-/* Optional Light Navigation 
+/* Optional Light Navigation
 =================================================================== */
 #content, #content:before { border-left: none !important; }
 #content.sidebar-minified {
@@ -58,9 +58,9 @@ a#main-menu-min i:hover {
   color: #6f7880;
 }
 #sidebar-left {
-    background: none; 
+    background: none;
 }
-.lt td.sidebar-con { 
+.lt td.sidebar-con {
     background-color: #e9ebec;
     border-right: 1px solid #dbdee0;
 }

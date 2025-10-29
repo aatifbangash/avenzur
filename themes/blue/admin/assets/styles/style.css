@@ -2661,6 +2661,6 @@ img.calculator-trigger {
 thead th {
     position: sticky;
     top: 0;
-    background-color: #f9f9f9; 
-    z-index: 10; 
+    background-color: #f9f9f9;
+    z-index: 10;
 }

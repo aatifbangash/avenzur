@@ -39,7 +39,7 @@ h2{
 }
 .card {
   height: 100%;
- 
+
 }
 .container-max-width{
   max-width: 1440px ;
@@ -167,7 +167,7 @@ section.heroSlider .carousel-indicators [data-bs-target] {
     border: 2px solid white;
 }
 
-section.heroSlider .carousel-control-next, 
+section.heroSlider .carousel-control-next,
 section.heroSlider .carousel-control-prev{
 opacity: 1 !important;
 }
@@ -179,8 +179,8 @@ section.heroSlider span.carousel-control-next-icon{
 } */
 section.heroSlider span.carousel-control-prev-icon,
 section.heroSlider span.carousel-control-next-icon {
-  
-  background: white; 
+
+  background: white;
   width: 27px;
   height: 27px;
   background: black;
@@ -190,7 +190,7 @@ section.heroSlider span.carousel-control-next-icon {
   justify-content: center;
   font-size: 30px;
 }
-section.heroSlider .carousel-control-next, 
+section.heroSlider .carousel-control-next,
 section.heroSlider .carousel-control-prev{
 width: 6%;
 }
@@ -207,10 +207,10 @@ width: 6%;
   background: #FFF;
   box-shadow: 0px 0px 26px 0px rgba(23, 26, 31, 0.10), 0px 2px 12px 0px rgba(23, 26, 31, 0.10);
   padding: 3px;
-  
+
 }
 .feature-cards .card {
-  
+
   border: none;
 }
 .feature-cards .card-body{
@@ -227,7 +227,7 @@ text-transform: uppercase;
 }
 
 .boom-product-cat {
-  
+
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
@@ -341,7 +341,7 @@ text-transform: uppercase;
 
 .specialOfferP .addtocart {
   padding-block: 4px !important;
-  
+
 }
 .card-body .row {
   width: 100%;
@@ -583,11 +583,11 @@ button.btn.btn-primary.d-lg-none.catsidebarmob {
     content: '\2605';
 }
 .rate > input:checked ~ label {
-    color: #ffc700;    
+    color: #ffc700;
 }
 .rate:not(:checked) > label:hover,
 .rate:not(:checked) > label:hover ~ label {
-    color: #deb217;  
+    color: #deb217;
 }
 .rate > input:checked + label:hover,
 .rate > input:checked + label:hover ~ label,
@@ -613,14 +613,14 @@ button.btn.btn-primary.d-lg-none.catsidebarmob {
 	box-shadow: none;
 }
 .product-count {
-	margin-top: 15px; 
+	margin-top: 15px;
 }
 
 .product-count .qtyminus {
-	border-radius: 3px 0 0 3px; 
+	border-radius: 3px 0 0 3px;
 }
 .product-count .qtyplus {
-	border-radius: 0 3px 3px 0; 
+	border-radius: 0 3px 3px 0;
 }
 .product-count .qty {
 
@@ -633,7 +633,7 @@ button.btn.btn-primary.d-lg-none.catsidebarmob {
     padding: 7px 45px;
     display: inline-block;
     margin-top: 20px;
-    border: solid 2px #212529; 
+    border: solid 2px #212529;
     transition: all 0.5s ease-in-out 0s;
 }
 .round-black-btn:hover,
@@ -644,7 +644,7 @@ button.btn.btn-primary.d-lg-none.catsidebarmob {
 }
 
 .product-info-tabs {
-	margin-top: 25px; 
+	margin-top: 25px;
 }
 .product-info-tabs .nav-tabs {
 	border-bottom: 2px solid #d8d8d8;
@@ -653,17 +653,17 @@ button.btn.btn-primary.d-lg-none.catsidebarmob {
 	margin-bottom: 0;
 }
 .product-info-tabs .nav-tabs .nav-link {
-	border: none; 
+	border: none;
 	border-bottom: 2px solid transparent;
 	color: #323232;
 }
 .product-info-tabs .nav-tabs .nav-item .nav-link:hover {
-	border: none; 
+	border: none;
 }
-.product-info-tabs .nav-tabs .nav-item.show .nav-link, 
-.product-info-tabs .nav-tabs .nav-link.active, 
+.product-info-tabs .nav-tabs .nav-item.show .nav-link,
+.product-info-tabs .nav-tabs .nav-link.active,
 .product-info-tabs .nav-tabs .nav-link.active:hover {
-	border: none; 
+	border: none;
 	border-bottom: 2px solid #d8d8d8;
 	font-weight: bold;
 }
@@ -773,7 +773,7 @@ input.qty.Qnum {
   list-style-type: none;
   cursor: pointer;
   font-size: 16px;
- 
+
 }
 #ui-id-1 {
   width: 200px !important;
@@ -810,10 +810,10 @@ input.qty.Qnum {
   .feature-cards .card-body{
     padding-inline: 0;
   }
- 
+
 }
 @media screen and (min-width:600px) {
-  
+
   .slick-prev {
     left: -35px !important;
   }
@@ -823,7 +823,7 @@ input.qty.Qnum {
 }
 @media screen and (max-width:500px) {
   .myaccountForm.cartform {
-    
+
     left: -9px !important;
   }
   .addtable{
@@ -932,7 +932,7 @@ section.heroSlider .carousel-control-next, section.heroSlider .carousel-control-
   /* box-shadow: 0px 0px 8px #b3b3b3; */
   background: var(--primary-color);
   color: white;
-  
+
 }
 button#menuiconMob{
   margin-left: 10px;
@@ -960,7 +960,7 @@ div#searchbarmob{
   z-index: 2;
 }
 div#searchtogglecros {
-  
+
   padding: 5px 10px;
   font-size: 26px;
   border-radius: 10px;

@@ -2,8 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Calendar extends MY_Controller
-{
+class Calendar extends MY_Controller{
     public function __construct()
     {
         parent::__construct();
@@ -21,8 +20,7 @@ class Calendar extends MY_Controller
         $this->load->admin_model('calendar_model');
     }
 
-    public function add_event()
-    {
+    public function add_event(){
         $this->form_validation->set_rules('title', lang('title'), 'trim|required');
         $this->form_validation->set_rules('start', lang('start'), 'required');
 
@@ -61,8 +59,7 @@ class Calendar extends MY_Controller
         }
     }
 
-    public function get_cal_lang()
-    {
+    public function get_cal_lang(){
         switch ($this->Settings->user_language) {
             case 'arabic':
             $cal_lang = 'ar-ma';

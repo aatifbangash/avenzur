@@ -1,0 +1,44 @@
+services:
+  web:
+    build: .
+    container_name: avenzur_web
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html/avenzur
+    depends_on:
+      - db
+    environment:
+      - APACHE_RUN_USER=www-data
+      - APACHE_RUN_GROUP=www-data
+
+  db:
+    image: mysql:8
+    container_name: avenzur_db
+    restart: always
+    environment:      MYSQL_ROOT_PASSWORD: pass123
+      MYSQL_DATABASE: avenzur
+      MYSQL_USER: avenzur
+      MYSQL_PASSWORD: 123456
+    ports:
+      - "3307:3307"
+    volumes:
+      - ~/.composer/cache:/root/.composer/cache
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: avenzur_phpmyadmin
+    restart: always
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: pass123
+      UPLOAD_LIMIT: 64M
+      MEMORY_LIMIT: 128M
+      MAX_EXECUTION_TIME: 600
+    depends_on:
+      - db
+
+volumes:
+  db_data:
