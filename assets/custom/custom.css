@@ -1,1 +1,40 @@
-/* Custom Styles */
+/* Custom Styles - Minimal Sidebar Display */
+
+/* Force sidebar visibility - minimal CSS only */
+.sidebar-con,
+#sidebar-left,
+.sidebar-nav {
+	display: block !important;
+	visibility: visible !important;
+	opacity: 1 !important;
+}
+
+/* Ensure Bootstrap collapse doesn't hide menu */
+.sidebar-nav.nav-collapse,
+.sidebar-nav.navbar-collapse,
+.sidebar-nav.collapse {
+	display: block !important;
+	visibility: visible !important;
+	opacity: 1 !important;
+	max-height: none !important;
+	overflow: visible !important;
+}
+
+/* Menu visibility */
+.nav.main-menu {
+	display: block !important;
+	visibility: visible !important;
+	opacity: 1 !important;
+}
+
+.nav.main-menu > li,
+.nav.main-menu > li > a,
+.nav.main-menu > li > ul {
+	display: block !important;
+	visibility: visible !important;
+	opacity: 1 !important;
+}
+.sidebar-nav.nav-collapse {
+	position: relative !important;
+	overflow: visible !important;
+}
