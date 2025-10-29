@@ -1492,6 +1492,11 @@
                                         </li> -->
                                     </ul>
                                 </li>
+                                 <li id="organization_setup_pharmacy_hierarchy">
+                                            <a href="<?= admin_url('organization_setup/pharmacy_hierarchy') ?>">
+                                                <i class="fa fa-hospital-o"></i><span class="text"> <?= lang('harmacy_hierarchy_setup'); ?></span>
+                                            </a>
+                                        </li>
                                 <?php
                             } ?>
                           
