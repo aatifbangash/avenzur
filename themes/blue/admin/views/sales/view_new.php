@@ -221,6 +221,7 @@
             $printed_label_status = '';
             $label_verifired_status = '';
             $driver_assigned_status = '';
+            $rasd_status = '';
             $delivered = '';
             $invoiced = '';
 
@@ -229,6 +230,7 @@
                 $printed_label_status = 'active';
                 $label_verifired_status = '';
                 $driver_assigned_status = '';
+                $rasd_status = '';
                 $delivered = '';
                 $invoiced = '';
             }else if($inv->sale_status == 'added_label'){
@@ -236,6 +238,7 @@
                 $printed_label_status = 'completed';
                 $label_verifired_status = 'active';
                 $driver_assigned_status = '';
+                $rasd_status = '';
                 $delivered = '';
                 $invoiced = '';
             }else if($inv->sale_status == 'label_verifired'){
@@ -243,6 +246,7 @@
                 $printed_label_status = 'completed';
                 $label_verifired_status = 'completed';
                 $driver_assigned_status = 'active';
+                $rasd_status = '';
                 $delivered = '';
                 $invoiced = '';
             }else if($inv->sale_status == 'driver_assigned'){
@@ -250,6 +254,15 @@
                 $printed_label_status = 'completed';
                 $label_verifired_status = 'completed';
                 $driver_assigned_status = 'completed';
+                $rasd_status = 'active';
+                $delivered = '';
+                $invoiced = '';
+            }else if($inv->sale_status == 'sent_to_rasd'){
+                $ready_status = 'completed';
+                $printed_label_status = 'completed';
+                $label_verifired_status = 'completed';
+                $driver_assigned_status = 'completed';
+                $rasd_status = 'completed';
                 $delivered = 'active';
                 $invoiced = '';
             }else if($inv->sale_status == 'delivered'){
@@ -257,6 +270,7 @@
                 $printed_label_status = 'completed';
                 $label_verifired_status = 'completed';
                 $driver_assigned_status = 'completed';
+                $rasd_status = 'completed';
                 $delivered = 'completed';
                 $invoiced = 'active';
             } else if($inv->sale_status == 'completed'){
@@ -264,6 +278,7 @@
                 $printed_label_status = 'completed';
                 $label_verifired_status = 'completed';
                 $driver_assigned_status = 'completed';
+                $rasd_status = 'completed';
                 $delivered = 'completed';
                 $invoiced = 'completed';
             } 
@@ -287,12 +302,16 @@
                 <div class="step-circle">4</div>
                 <div class="step-label">Driver Assigned</div>
             </div>
-            <div class="progress-step <?php echo $delivered; ?>">
+            <div class="progress-step <?php echo $rasd_status; ?>">
                 <div class="step-circle">5</div>
+                <div class="step-label">Send To Rasd</div>
+            </div>
+            <div class="progress-step <?php echo $delivered; ?>">
+                <div class="step-circle">6</div>
                 <div class="step-label">Delivered</div>
             </div>
             <div class="progress-step <?php echo $invoiced; ?>">
-                <div class="step-circle">6</div>
+                <div class="step-circle">7</div>
                 <div class="step-label">Sale Invoiced</div>
             </div>
         </div>
@@ -340,6 +359,18 @@
 
                 <?php 
                     if(($this->Admin || $this->Owner || $this->WarehouseSupervisor)  && ($inv->sale_status == 'driver_assigned')){
+                ?>
+                <div class="btn-group">
+                    <a href="<?= admin_url('sales/send_to_rasd/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-primary tip" title="<?= lang('send_to_rasd') ?>">
+                        <i class="fa fa-arrow"></i> <span class="hidden-sm hidden-xs"><?= lang('send_to_rasd') ?></span>
+                    </a>
+                </div>
+                <?php 
+                    }
+                ?>
+
+                <?php 
+                    if(($this->Admin || $this->Owner || $this->WarehouseSupervisor)  && ($inv->sale_status == 'sent_to_rasd')){
                 ?>
                 <div class="btn-group">
                     <a href="<?= admin_url('sales/edit_delivery/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-primary tip" title="<?= lang('add_delivery') ?>">

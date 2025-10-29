@@ -87,8 +87,8 @@
                         <tr>
                             <td style="text-align:center;vertical-align:middle;"><?= $r; ?></td>
                             <td style="vertical-align:middle;">
-                                <?= $row->product_name . ($row->variant ? ' (' . $row->variant . ')' : ''); ?>
-                                
+                                <?= $row->product_name . ($row->product_code ? ' (' . $row->product_code . ')' : ''); ?>
+                                <?= $row->warehouse_shelf ? ' - '.$row->warehouse_shelf : '' ?>
                             </td>
                             <td style="text-align:center; vertical-align:middle;">
                                 <?= $row->batch_no; ?>
