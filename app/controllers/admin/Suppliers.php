@@ -1327,50 +1327,71 @@ class Suppliers extends MY_Controller
 
     public function add()
     {
+        $parent_code = null;
         $this->sma->checkPermissions(false, true);
 
         $this->form_validation->set_rules('email', $this->lang->line('email_address'), 'is_unique[companies.email]');
 
         if ($this->form_validation->run('companies/add') == true) {
-            $data = [
-                'name'        => $this->input->post('name'),
-                'name_ar'        => $this->input->post('name_ar'), 
-                'category'        => $this->input->post('category'),
-                'email'       => $this->input->post('email'),
-                'group_id'    => '4',
-                'group_name'  => 'supplier',
-                'company'     => $this->input->post('company'),
-                'address'     => $this->input->post('address'),
-                'vat_no'      => $this->input->post('vat_no'),
-                'city'        => $this->input->post('city'),
-                'state'       => $this->input->post('state'),
-                'postal_code' => $this->input->post('postal_code'),
-                'country'     => $this->input->post('country'),
-                'phone'       => $this->input->post('phone'),
-                'cf1'         => $this->input->post('cf1'),
-                'cf2'         => $this->input->post('cf2'),
-                'cf3'         => $this->input->post('cf3'),
-                'cf4'         => $this->input->post('cf4'),
-                'cf5'         => $this->input->post('cf5'),
-                'cf6'         => $this->input->post('cf6'),
-                'gst_no'      => $this->input->post('gst_no'),
-                'ledger_account' => $this->input->post('ledger_account'),
-                'payment_term' => $this->input->post('payment_term'),
-                'credit_limit'        => $this->input->post('credit_limit') ? $this->input->post('credit_limit') : '0',
-                'sequence_code'  => $this->sequenceCode->generate('SUP', 5)
-            ];
+              $level = $this->input->post('level');
+            
+
+            // If level is 2 (child), get the parent company's sequence_code
+            if ($level == '2') {
+                $parent_id = $this->input->post('parent_id');
+                if ($parent_id) {
+                    $parent_company = $this->companies_model->getCompanyByID($parent_id);
+                    if ($parent_company) {
+                        $parent_code = $parent_company->sequence_code;
+                    }
+                }
+            }
+
+        $data = [
+            'name'                => $this->input->post('name'),
+            'name_ar'             => $this->input->post('name_ar'), 
+            'category'            => $this->input->post('category'),
+            'email'               => $this->input->post('email'),
+            'group_id'            => '4',
+            'group_name'          => 'supplier',
+            'company'             => $this->input->post('company'),
+            'address'             => $this->input->post('address'),
+            'vat_no'              => $this->input->post('vat_no'),
+            'cr'                  => $this->input->post('cr'),
+            'cr_expiration'       => $this->input->post('cr_expiration'),
+            'gln'                 => $this->input->post('gln'),
+            'short_address'       => $this->input->post('short_address'),
+            'building_number'     => $this->input->post('building_number'),
+            'city'                => $this->input->post('city'),
+            'state'               => $this->input->post('state'),
+            'postal_code'         => $this->input->post('postal_code'),
+            'country'             => $this->input->post('country'),
+            'phone'               => $this->input->post('phone'),
+            'contact_name'        => $this->input->post('contact_name'),
+            'contact_number'      => $this->input->post('contact_number'),
+            'ledger_account'      => $this->input->post('ledger_account'),
+            'payment_term'        => $this->input->post('payment_term'),
+            'credit_limit'        => $this->input->post('credit_limit') ? $this->input->post('credit_limit') : '0',
+            'balance'             => $this->input->post('balance'),
+            'note'                => $this->input->post('note'),
+            'level'               => $level,
+            'parent_code'         => $parent_code,
+            'sequence_code'       => $this->sequenceCode->generate('SUP', 5)
+        ];
         } elseif ($this->input->post('add_supplier')) {
             $this->session->set_flashdata('error', validation_errors());
             admin_redirect('suppliers');
         }
 
-        if ($this->form_validation->run() == true && $sid = $this->companies_model->addCompany($data)) {
+        if ($this->form_validation->run() == true && $sid = $this->companies_model->addCompany($data) && $parent_code) {
             $this->session->set_flashdata('message', $this->lang->line('supplier_added'));
             $ref = isset($_SERVER['HTTP_REFERER']) ? explode('?', $_SERVER['HTTP_REFERER']) : null;
             admin_redirect($ref[0] . '?supplier=' . $sid);
         } else {
             $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
             $this->data['modal_js'] = $this->site->modal_js();
+            $this->data['parent_suppliers'] = $this->companies_model->getAllParentSuppliers();
+        
             $this->load->view($this->theme . 'suppliers/add', $this->data);
         }
     }
@@ -1617,10 +1638,11 @@ class Suppliers extends MY_Controller
                 if($this->Settings->site_name == 'Hills Business Medical'){
 
                     $data['level']               = 2;
-                    $parent_code = $seq_code = 'SUP-' . str_pad($i, 5, '0', STR_PAD_LEFT);
+                    $data['parent_code'] = $seq_code;
+                    //$parent_code = $seq_code = 'SUP-' . str_pad($i, 5, '0', STR_PAD_LEFT);
                     $i++;
                     $seq_code = 'SUP-' . str_pad($i, 5, '0', STR_PAD_LEFT);
-
+                    $data['sequence_code'] = $seq_code;
                     $this->db->insert('companies', $data);
                 }
             }

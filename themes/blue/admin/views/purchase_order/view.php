@@ -9,19 +9,19 @@
     padding: 10px 0;
   }
 
-  .status-step {
+  /* .status-step {
     position: relative;
     flex: 1;
     min-width: 120px;
-  }
+  } */
 
   .circle {
     width: 50px;
     height: 50px;
     margin: 0 auto;
     border-radius: 50%;
-    background-color: #dee2e6;
-    color: #6c757d;
+    /* background-color: #c0dadb; */
+    color: #000;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -33,7 +33,7 @@
     flex: 1;
     height: 3px;
     background-color: #dee2e6;
-    margin: 0 5px;
+    /* margin: 0 5px; */
   }
 
   .step-active {
@@ -53,7 +53,7 @@
 
   .status-label {
     font-size: 14px;
-    color: #495057;
+    color: #0d282c;
     font-weight: 500;
   }
 
@@ -64,9 +64,7 @@
       overflow-x: scroll;
     }
 
-    .status-step {
-      min-width: 150px;
-    }
+
   }
 </style>
 <div class="box">
@@ -82,56 +80,82 @@
 
         <?php
         // Your current status
-        echo $currentStatus = $inv->status;
+        echo $currentStatusKey = $inv->status;
+         $currentStatus = $inv->status;
 
         // Define the status flow order
+        // $statuses = [
+        //   ['key' => 'created', 'label' => 'PO Created', 'icon' => 'fa-file-text-o'],
+        //   ['key' => 'sent_to_supplier', 'label' => 'Sent to Supplier', 'icon' => 'fa-paper-plane-o'],
+        //   ['key' => 'waiting_for_goods', 'label' => 'Waiting for Goods', 'icon' => 'fa-truck'],
+        //   ['key' => 'goods_received', 'label' => 'Goods Received', 'icon' => 'fa-truck'],
+        //    ['key' => 'invoice_pending', 'label' => 'Invoice Pending', 'icon' => 'fa-truck'],
+        //   ['key' => 'invoiced', 'label' => 'Invoiced', 'icon' => 'fa-money']
+        // ];
+
+
         $statuses = [
-          ['key' => 'created', 'label' => 'PO Created', 'icon' => 'fa-file-text-o'],
-          ['key' => 'sent_to_supplier', 'label' => 'Sent to Supplier', 'icon' => 'fa-paper-plane-o'],
-          ['key' => 'goods_received', 'label' => 'Goods Received', 'icon' => 'fa-truck'],
-          ['key' => 'invoiced', 'label' => 'Invoiced', 'icon' => 'fa-money']
+          ['key' => 'created', 'label' => 'Created', 'icon' => 'fa-file-text-o', 'color' => 'primary'],
+          ['key' => 'sent_to_supplier', 'label' => 'Sent to GRN Team', 'icon' => 'fa-paper-plane-o', 'color' => 'info'],
+          ['key' => 'waiting_for_goods', 'label' => 'Awaiting Delivery', 'icon' => 'fa-truck', 'color' => 'warning'],
+          ['key' => 'goods_received', 'label' => 'Goods Received', 'icon' => 'fa-dropbox', 'color' => 'success'],
+          ['key' => 'pending_invoice', 'label' => 'Invoice Pending', 'icon' => 'fa-clock-o', 'color' => 'primary'],
+          ['key' => 'invoiced', 'label' => 'Invoiced', 'icon' => 'fa-briefcase', 'color' => 'primary'],
+
         ];
+
 
         ?>
 
         <div class="container mt-5">
-          <div class="status-flow d-flex justify-content-between align-items-center position-relative">
 
-            <?php foreach ($statuses as $status):
-              // Determine color
-              if ($currentStatus == 'invoiced') {
-                $colorClass = 'text-success text-white';
-                $iconColor = 'text-white';
-              } elseif ($status['key'] == $currentStatus) {
-                $colorClass = 'text-warning text-white';
-                $iconColor = 'text-white';
-              } elseif (array_search($status['key'], array_column($statuses, 'key')) < array_search($currentStatus, array_column($statuses, 'key'))) {
-                $colorClass = 'text-success text-white';
-                $iconColor = 'text-white';
+
+          <?php
+          //$currentStatusKey = 'pending_invoice'; // e.g. current status from DB
+          $lastIndex = count($statuses) - 1;
+          $currentIndex = array_search($currentStatusKey, array_column($statuses, 'key'));
+          ?>
+
+          <div class="status-flow d-flex align-items-center" style="white-space: nowrap;">
+            <?php foreach ($statuses as $index => $status): ?>
+
+              <?php
+              //echo $index; echo $currentIndex;
+              // determine colors based on position relative to current status
+              
+              if ($index <= $currentIndex) {
+                $circleColor = 'bg-success text-white';  // completed
+                $lineColor   = '#198754';                // green
+              } elseif ($index == $currentIndex) {
+                $circleColor = 'bg-warning text-dark';   // current
+                $lineColor   = '#ffc107';                // yellow
               } else {
-                $colorClass = 'bg-secondary text-white';
-                $iconColor = 'text-white';
+                $circleColor = 'bgrey text-white'; // upcoming
+                $lineColor   = '#6c757d';                // grey
               }
-            ?>
-              <div class="status-step text-center">
-                <div class="circle <?= $colorClass ?>">
-                  <i class="fa <?= $status['icon'] ?> <?= $iconColor ?>"></i>
+              ?>
+
+              <div class="status-step text-center" style="display:inline-block; vertical-align:middle;">
+                <div class="circle <?= $circleColor ?>"
+                  style="width:50px; height:50px; line-height:50px; border-radius:50%; margin:0 auto;">
+                  <i class="fa <?= $status['icon'] ?>"></i>
                 </div>
-                <div class="status-label mt-2"><?= $status['label'] ?></div>
-
-
-
-
+                <div class="status-label mt-2" style="margin-top:5px;"><?= $status['label'] ?></div>
               </div>
+
               <!-- Connector line (except last step) -->
-              <?php if ($status !== end($statuses)): ?>
-                <div class="status-line" style="width:100%; background: <?= ($colorClass == 'bg-secondary text-white') ? '#6c757d' : (($colorClass == 'bg-warning text-white') ? '#ffc107' : '#198754') ?>;"></div>
+              <?php if ($index !== $lastIndex): ?>
+                <div class="status-line"
+                  style="display:inline-block; width:80px; height:4px; vertical-align:middle; background: <?= $lineColor ?>;">
+                </div>
               <?php endif; ?>
+
             <?php endforeach; ?>
-
-
-
           </div>
+
+
+
+
         </div>
 
 
@@ -143,15 +167,93 @@
             <div class="d-flex align-items-center mb-2 mb-md-0">
               <div style="float: left; margin-right: 10px;">
                 <h6 class="mb-1 fw-bold text-dark">
-                  Supplier: <span class="text-primary">Al Noor Traders</span>
+                  Supplier: <span class="text-primary"><?php echo $supplier->name; ?></span>
                 </h6>
-                <small class="text-muted d-block">Supplier Code: SUP-1023</small>
+                <small class="text-muted d-block">Supplier Code: <?php echo $supplier->sequence_code; ?></small>
               </div>
+
+
+              <?php
+              $userRole = 'purchase_manager'; //$this->session->userdata('role'); // e.g., 'purchase_manager' or 'warehouse_manager'
+              ?>
 
               <div class="d-flex flex-wrap justify-content-end" style="float: right; margin-left: auto;">
 
+                <!-- Common Action: Download PO -->
+                <a href="<?= admin_url('purchase_order/download/' . $inv->id); ?>" class="btn btn-outline-success btn-sm mb-2 text-primary">
+                  <i class="fa fa-download me-1"></i> Download PO
+                </a>
 
-                <a href="<?php echo admin_url('purchase_order/download/'.$inv->id); ?>" class="btn btn-outline-success btn-sm mb-2 text-primary">
+                <?php
+                 
+                // ✅ PURCHASE MANAGER ACTIONS
+                if($Admin || $Owner || $this->GP['purchase_manager']) {
+                  if($currentStatus == 'pending') {
+                    $currentStatus = 'created';
+                  }
+                  //if ($userRole == 'purchase_manager') {
+                  switch ($currentStatus) {
+                    case 'created':
+                      echo '<button class="btn btn-outline-primary btn-sm mb-2 text-primary" data-toggle="modal" data-target="#sendToSupplierModal">
+                <i class="fa fa-paper-plane-o me-1"></i> Send to GRN Team
+              </button>';
+                      break;
+
+                    case 'goods_received':
+                    case 'pending_invoice':
+                      echo '<a href="' . admin_url("purchases/add?action=create_invoice&po_number=" . base64_encode($inv->id)) . '" 
+                class="btn btn-outline-success btn-sm mb-2 text-primary">
+                <i class="fa fa-money me-1"></i> Create Invoice
+              </a>';
+                      break;
+
+                    case 'invoiced':
+                      echo '<button class="btn btn-outline-secondary btn-sm mb-2 text-primary" disabled>
+                <i class="fa fa-check me-1"></i> Invoiced
+              </button>';
+                      break;
+                  }
+                }
+
+                // ✅ WAREHOUSE MANAGER / PURCHASE COORDINATOR ACTIONS
+                //if (in_array($userRole, ['warehouse_manager', 'purchase_coordinator'])) {
+               if($Admin || $Owner || $this->GP['purchase_manager'] || $this->GP['wh_supervisor'] || $this->GP['sales_coordinator']  ) {   
+
+                  switch ($currentStatus) {
+                    case 'sent_to_supplier':
+                    case 'waiting_for_goods':
+                      echo '<a href="' . admin_url('purchase_order/add_grn/' . $inv->id) . '" 
+                class="btn btn-outline-warning btn-sm mb-2 text-primary">
+                <i class="fa fa-truck me-1"></i> Add GRN
+              </a>';
+                      break;
+
+                    case 'goods_received':
+                      echo '<a href="' . admin_url("purchase_order/send_for_invoice?po_id=" . base64_encode($inv->id)) . '" 
+                class="btn btn-outline-success btn-sm mb-2 text-primary">
+                <i class="fa fa-money me-1"></i> Send for Invoicing
+              </a>';
+                      break;
+
+                    case 'invoiced':
+                      echo '<button class="btn btn-outline-secondary btn-sm mb-2 text-primary" disabled>
+                <i class="fa fa-check me-1"></i> Invoiced
+              </button>';
+                      break;
+                  }
+                }
+                ?>
+              </div>
+
+
+
+
+
+              <!-- 
+              <div class="d-flex flex-wrap justify-content-end" style="float: right; margin-left: auto;">
+
+
+                <a href="<?php echo admin_url('purchase_order/download/' . $inv->id); ?>" class="btn btn-outline-success btn-sm mb-2 text-primary">
                   <i class="fa fa-download me-1"></i> Download PO
                 </a>
 
@@ -159,17 +261,23 @@
                   <button class="btn btn-outline-secondary btn-sm me-2 mb-2 text-primary">
                     <i class="fa fa-info me-1"></i> Already Sent to Supplier
                   </button>
-                  <button class="btn btn-outline-secondary btn-sm me-2 mb-2 text-primary">
-                    <i class="fa fa-download me-1"></i> GRN Created
-                  </button>
+                  <a href="<?= admin_url('purchase_order/add_grn/' . $inv->id); ?>" class="btn btn-outline-secondary btn-sm me-2 mb-2 text-primary">
+                    <i class="fa fa-check me-1"></i> GRN Created
+                  </a>
+
+                  <?php
+                  if ($currentStatus == "goods_received") { ?>
+                    <a href="<?php echo admin_url("purchase_order/send_for_invoice?po_id=" . base64_encode($inv->id)); ?>" class="btn btn-outline-success btn-sm mb-2 text-primary">
+                      <i class="fa fa-money me-1"></i> Send for Invoicing
+                    </a>
+                  <?php  }
+                  ?>
+
                 <?php } else { ?>
                   <button class="btn btn-outline-primary btn-sm me-2 mb-2 text-primary" data-toggle="modal" data-target="#sendToSupplierModal">
-                    <i class="fa fa-paper-plane-o me-1"></i> Send to Supplier
+                    <i class="fa fa-paper-plane-o me-1"></i> Send to GRN Team
                   </button>
 
-                  <!-- <button class="btn btn-outline-warning btn-sm me-2 mb-2 text-primary" data-toggle="modal" data-target="#addGrnModal">
-        <i class="fa fa-truck me-1"></i> Add GRN
-      </button> -->
                   <a href="<?= admin_url('purchase_order/add_grn/' . $inv->id); ?>" class="btn btn-outline-warning btn-sm me-2 mb-2 text-primary">
                     <i class="fa fa-truck me-1"></i> Add GRN
                   </a>
@@ -183,7 +291,7 @@
                     <i class="fa fa-money me-1"></i> Create Invoice
                   </a>
                 <?php } ?>
-              </div>
+              </div> -->
 
             </div>
 
@@ -196,11 +304,7 @@
 
 
 
-        <?php if (!empty($inv->return_purchase_ref) && $inv->return_id) {
-          echo '<div class="alert alert-info no-print"><p>' . lang('purchase_is_returned') . ': ' . $inv->return_purchase_ref;
-          echo ' <a data-target="#myModal2" data-toggle="modal" href="' . admin_url('purchases/modal_view/' . $inv->return_id) . '"><i class="fa fa-external-link no-print"></i></a><br>';
-          echo '</p></div>';
-        } ?>
+
         <div class="clearfix"></div>
         <div class="print-only col-xs-12">
           <img src="<?= base_url() . 'assets/uploads/logos/' . $Settings->logo; ?>"
@@ -530,46 +634,7 @@
     } ?>
 
     <?php include(dirname(__FILE__) . '/../partials/attachments.php'); ?>
-    <?php if (!$Supplier || !$Customer) {
-    ?>
-      <div class="buttons">
-        <div class="btn-group btn-group-justified">
-          <div class="btn-group">
-            <a href="<?= admin_url('purchases/payments/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-primary tip" title="<?= lang('view_payments') ?>">
-              <i class="fa fa-money"></i> <span class="hidden-sm hidden-xs"><?= lang('view_payments') ?></span>
-            </a>
-          </div>
-          <div class="btn-group">
-            <a href="<?= admin_url('purchases/add_payment/' . $inv->id) ?>" class="tip btn btn-primary tip" title="<?= lang('add_payment') ?>" data-target="#myModal" data-toggle="modal">
-              <i class="fa fa-money"></i> <span class="hidden-sm hidden-xs"><?= lang('add_payment') ?></span>
-            </a>
-          </div>
-          <div class="btn-group">
-            <a href="<?= admin_url('purchases/email/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-primary tip" title="<?= lang('email') ?>">
-              <i class="fa fa-envelope-o"></i> <span class="hidden-sm hidden-xs"><?= lang('email') ?></span>
-            </a>
-          </div>
-          <div class="btn-group">
-            <a href="<?= admin_url('purchases/pdf/' . $inv->id) ?>" class="tip btn btn-primary" title="<?= lang('download_pdf') ?>">
-              <i class="fa fa-download"></i> <span class="hidden-sm hidden-xs"><?= lang('pdf') ?></span>
-            </a>
-          </div>
-          <div class="btn-group">
-            <a href="<?= admin_url('purchases/edit/' . $inv->id) ?>" class="tip btn btn-warning tip" title="<?= lang('edit') ?>">
-              <i class="fa fa-edit"></i> <span class="hidden-sm hidden-xs"><?= lang('edit') ?></span>
-            </a>
-          </div>
-          <div class="btn-group">
-            <a href="#" class="tip btn btn-danger bpo" title="<b><?= $this->lang->line('delete_purchase') ?></b>"
-              data-content="<div style='width:150px;'><p><?= lang('r_u_sure') ?></p><a class='btn btn-danger' href='<?= admin_url('purchases/delete/' . $inv->id) ?>'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button></div>"
-              data-html="true" data-placement="top">
-              <i class="fa fa-trash-o"></i> <span class="hidden-sm hidden-xs"><?= lang('delete') ?></span>
-            </a>
-          </div>
-        </div>
-      </div>
-    <?php
-    } ?>
+
   </div>
 </div>
 
@@ -580,11 +645,16 @@
     <div class="modal-content border-0 shadow-lg rounded-4">
       <div class="modal-header bg-primary text-white rounded-top-4">
         <h5 class="modal-title" id="sendToSupplierModalLabel">
-          <i class="fa fa-paper-plane-o me-2"></i> Send to Supplier
+          <i class="fa fa-paper-plane-o me-2"></i> Send to GRN Team
         </h5>
       </div>
 
       <form id="sendToSupplierForm">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="" class="form-label fw-semibold text-info">Note: Make sure, this PO already sent to Supplier and you recieved the Acknowledgment.</label>
+          </div>
+        </div>
         <div class="modal-body">
           <div class="mb-3">
             <label for="sendingNotes" class="form-label fw-semibold text-secondary">Sending Notes</label>
@@ -689,9 +759,10 @@
         notes: notes
       },
       success: function(response) {
+        //console.log(response);
         $('#sendToSupplierModal').modal('hide');
         alert('Purchase Order sent successfully!');
-        location.reload();
+        //location.reload();
       },
       error: function() {
         alert('Something went wrong. Please try again.');

@@ -20,10 +20,10 @@
                             <!-- Supplier Information Section -->
                             <h5 class="mb-3">Supplier Information</h5>
                             <div class="form-group">
-                                <p><strong>Supplier Name:</strong> ABC Suppliers</p>
-                                <p><strong>Supplier Address:</strong> 123 Supplier Street, City, Country</p>
-                                <p><strong>Total PO Items:</strong> 10</p>
-                                <p><strong>Total PO Quantity:</strong> 100</p>
+                                <p><strong>Supplier Name:</strong> <?php echo $po_info->supplier;?></p>
+                                <!-- <p><strong>Supplier Address:</strong> 123 Supplier Street, City, Country</p> -->
+                                <p><strong>Total PO Items:</strong> <?= $po_info->total_items; ?></p>
+                                <p><strong>Total PO Quantity:</strong> <?= $po_info->total_quantity; ?></p>
                             </div>
                             <div class="form-row">
                                 <div class="form-group col-md-6">
@@ -32,6 +32,7 @@
                                         'name' => 'supplier_reference',
                                         'id' => 'supplier_reference',
                                         'class' => 'form-control',
+                                        'value' => $po_info->reference_no,
                                         'placeholder' => 'Enter Supplier Reference Number',
                                         'required' => true
                                     ]); ?>
@@ -56,11 +57,13 @@
                                     <tr>
                                         <th>No</th>
                                         <th style="width:25%">Item Name</th>
-                                        <th style="width:15%">Actual Quantity</th>
-                                        <th style="width:15%">Received Quantity</th>
-                                        <th style="width:15%">Batch Number</th>
-                                        <th style="width:15%">Expiry Date</th>
-                                        <th>Comment</th>
+                                        <th style="width:10%">Actual Quantity</th>
+                                        <th style="width:10%">Actual Bonus</th>
+                                        <th style="width:10%">Received Quantity</th>
+                                        <th style="width:10%">Bonus</th>
+                                        <th style="width:10%">Batch Number</th>
+                                        <th style="width:10%">Expiry Date</th>
+                                        <th style="width: 25%;">Comment</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -80,24 +83,37 @@
                                                     class="form-control" readonly>
                                             </td>
                                             <td>
+                                                <input type="text"
+                                                    name="items[<?php echo $key; ?>][actual_bonus]"
+                                                    value="<?php echo $row->bonus; ?>"
+                                                    class="form-control" readonly>
+                                            </td>
+                                            <td>
                                                 <input type="number"
                                                     name="items[<?php echo $key; ?>][quantity]"
-                                                    class="form-control" placeholder="" required
+                                                    class="form-control" placeholder="" value="<?php echo $row->quantity; ?>" required
                                                     oninput="validateQuantity(this, <?php echo $row->quantity; ?>)">
                                             </td>
-                                            <td>
+                                             <td>
+                                                <input type="number"
+                                                    name="items[<?php echo $key; ?>][bonus]"
+                                                    class="form-control" placeholder="" value="<?php echo $row->bonus; ?>" required
+                                                    oninput="validateBonus(this, <?php echo $row->bonus; ?>)">
+                                            </td>
+                                             <td>
                                                 <input type="text"
-                                                    name="items[<?php echo $key; ?>][batch_number]"
+                                                    name="items[<?php echo $key; ?>][batch_number]" value="<?php echo $row->batchno; ?>" 
                                                     class="form-control" placeholder="Enter Batch Number" required>
                                             </td>
+                                          
                                             <td>
                                                 <input type="date"
-                                                    name="items[<?php echo $key; ?>][expiry_date]"
+                                                    name="items[<?php echo $key; ?>][expiry_date]" value="<?php echo $row->expiry; ?>"
                                                     class="form-control" required>
                                             </td>
                                             <td>
                                                 <input type="text"
-                                                    name="items[<?php echo $key; ?>][remarks]"
+                                                    name="items[<?php echo $key; ?>][remarks]" value="<?php echo $row->grn_comments; ?>"
                                                     class="form-control" placeholder="">
                                             </td>
                                         </tr>
@@ -109,17 +125,6 @@
                                 </tbody>
                             </table>
 
-                            <div class="mb-3">
-                                <?= form_label('Remarks', 'remarks'); ?>
-                                <?= form_textarea([
-                                    'name' => 'remarks',
-                                    'id' => 'remarks',
-                                    'rows' => 3,
-                                    'class' => 'form-control',
-                                    'placeholder' => 'Enter any additional details or notes',
-                                    'value' => set_value('remarks')
-                                ]); ?>
-                            </div>
 
 
                             <div class="text-end">
@@ -142,4 +147,14 @@
             input.value = maxQuantity;
         }
     }
+
+    function validateBonus(input, maxQuantity) {
+        if (parseInt(input.value) > maxQuantity) {
+            alert('Received bonus cannot be more than actual bonus.');
+            input.value = maxQuantity;
+        }
+    }
+    
+
+
 </script>

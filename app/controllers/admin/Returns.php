@@ -517,7 +517,7 @@ class Returns extends MY_Controller
 
             //$this->returns_model->convert_return_invoice($return_insert_id, $products);
             if($data['status'] == "completed"){
-                if($this->zatca_enabled){
+                /*if($this->zatca_enabled){
                     if($data['customer'] == 'WALK-IN CUSTOMER'){
                         $zatca_payload =  $this->Zetca_model->get_zetca_return_b2c($return_insert_id); 
                     }else{
@@ -548,10 +548,10 @@ class Returns extends MY_Controller
                     ];
 
                     $this->Zetca_model->report_zatca_status($reporting_data);
-                }
+                }*/
 
                 $this->convert_return_invoice($return_insert_id);
-                $this->payment_to_customer($returns, $return_insert_id);  
+                //$this->payment_to_customer($returns, $return_insert_id);  
             }
 
             $this->session->set_userdata('remove_rels', 1);
@@ -562,7 +562,7 @@ class Returns extends MY_Controller
             if(isset($_GET['sale']) && !empty($_GET['sale'])){
                 $sale = $this->sales_model->getSaleByID($_GET['sale']);
 
-                if($sale->sale_status != 'completed'){
+                if($sale->sale_status != 'completed' && $sale->sale_status != 'ready' && $sale->sale_status != 'driver_assigned' && $sale->sale_status != 'added_label' && $sale->sale_status != 'label_verifired'){
                     $this->session->set_flashdata('error', lang('Only completed sales can be returned'));
                     admin_redirect('sales');
                     exit;
@@ -1212,7 +1212,7 @@ class Returns extends MY_Controller
 
             if($data['status'] == "completed"){
                 $journal_id = $this->convert_return_invoice($id);
-                $this->payment_to_customer($returns, $id, $journal_id);  
+                //$this->payment_to_customer($returns, $id, $journal_id);  
             }
 
             $this->session->set_userdata('remove_rels', 1);
@@ -1229,7 +1229,9 @@ class Returns extends MY_Controller
                     redirect($_SERVER['HTTP_REFERER']);
                 }
             }
+           
             $inv_items = $this->returns_model->getReturnItemsNew($id, $inv->customer_id);
+            //echo '<pre>';print_r($inv_items);exit;
             $c         = rand(100000, 9999999);
             foreach ($inv_items as $item) {
                 //echo '<pre>';print_r($item);exit;

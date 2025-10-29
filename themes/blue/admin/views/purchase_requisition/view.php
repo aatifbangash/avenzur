@@ -78,6 +78,15 @@
             <tr><th>PR Number</th><td><?= $requisition->pr_number ?? 'N/A'; ?></td></tr>
             <tr><th>Date</th><td><?= $requisition->created_at ?? 'N/A'; ?></td></tr>
             <tr><th>Status</th><td><?= $requisition->status ?? 'Pending'; ?></td></tr>
+            <tr><th>Priority</th><td><?= $requisition->priority ?? 'N/A'; ?></td></tr>
+            <tr><th>Expected Date</th><td><?= $requisition->expected_date ?? 'N/A'; ?></td></tr>
+            <tr><th>PR PDF</th><td>
+                <a href="<?= admin_url('purchase_requisition/download_pdf/' . $id); ?>" 
+                class="btn btn-outline-success">
+                    <i class="fa fa-download"></i> Download PDF
+            </a>
+            </td></tr>
+          
         </table>
     </div>
 
@@ -343,13 +352,13 @@
       <tr>
         <th style="text-align: left">Supplier Name</th>
         <th style="text-align: left">Contact</th>
-        <th style="text-align: left">PR Doc</th>
         <th style="text-align: left">Supplier Docs
         <th style="width:120px;">Action</th>
       </tr>
     </thead>
     <tbody>
     <?php if(!empty( $requisition_suppliers)) {
+      
          foreach($requisition_suppliers as $supplier) { 
             
             //print_r($supplier);?>
@@ -357,9 +366,7 @@
       <tr>
         <td><span class="supplier-name"><?= $supplier->supplier_name; ?></span></td>
         <td><?= $supplier->supplier_email;?> / <?= $supplier->supplier_phone;?></td>
-        <td class="file-list">
-          <a target="_blank" href="<?= base_url().$supplier->pdf_path; ?>"><i class="fa fa-file-pdf-o fa-2x"></i> </a>
-        </td>
+        
 
          <td class="file-list">
 
@@ -490,7 +497,12 @@ $(document).ready(function() {
 
          <input type="hidden" name="pr_id" value="<?= $id; ?>">
             <div class="row mb-3">
-                 <div class="col-md-4">
+              <style>
+                .select2-container {
+    height: auto !important;
+}
+              </style>
+                 <div class="col-md-4" style="height: auto !important; min-height: fit-content;">
                     <?= form_label('Supplier', 'supplier_id'); 
                         $supplier_options = [];
                         foreach ($suppliers as $wh) {

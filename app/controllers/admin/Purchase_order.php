@@ -1,6 +1,7 @@
 <?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
+
 use Mpdf\Mpdf;
 
 class Purchase_order extends MY_Controller
@@ -83,6 +84,7 @@ class Purchase_order extends MY_Controller
     {
         $products = [];
         $total_items = sizeof($_POST['product']);
+        $date = $this->sma->fld(trim($this->input->post('date')));
         //$status = $this->input->post('status');
         $reference = $this->input->post('reference_no') ? $this->input->post('reference_no') : $this->site->getReference('po');
         $status = $this->input->post('status') ?? "pending";
@@ -176,7 +178,7 @@ class Purchase_order extends MY_Controller
                     'option_id' => $item_option,
                     'net_unit_cost' => $_POST['item_unit_cost'][$r], //item_net_cost,
                     'unit_cost' => $_POST['net_cost'][$r], //+ $item_tax),
-                    'quantity' => $item_quantity + $item_bonus,
+                    'quantity' => $item_quantity,
                     'product_unit_id' => $item_unit,
                     'product_unit_code' => $unit->code,
                     'unit_quantity' => $item_unit_quantity,
@@ -453,7 +455,7 @@ class Purchase_order extends MY_Controller
 
     public function getPurchaseRequesitionItems($pr_id = null)
     {
-        $pr_id = base64_decode($this->input->get('id'));
+        // $pr_id = base64_decode($this->input->get('id'));
 
         // Check if PR exists
         $pr_data = $this->purchase_requisition_model->get_requisition($pr_id);
@@ -472,8 +474,10 @@ class Purchase_order extends MY_Controller
             $row->cost = $row->cost ? $row->cost : 0.0;
             $row->sale_price = $row->price ? $row->price : 0.0;
             $row->bonus = 0;
-            $row->dis1 = 0;
-            $row->dis2 = 0;
+            $row->dis1 = 1;
+            $row->dis2 = 2;
+            $row->dis3 = 3;
+            $row->deal = 4;
 
             // append missing keys
             $row->alert_quantity = 0.00;
@@ -1108,7 +1112,7 @@ class Purchase_order extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $inv = $this->purchase_order_model->getPurchaseByID($purchase_id);
         //print_r($inv);exit;
-      
+
         $this->data['barcode']     = "<img src='" . admin_url('products/gen_barcode/' . $inv->reference_no) . "' alt='" . $inv->reference_no . "' class='pull-left' />";
         $supplier    = $this->site->getCompanyByID($inv->supplier_id);
         $this->data['user']        = $this->site->getUser($inv->created_by);
@@ -1153,13 +1157,13 @@ class Purchase_order extends MY_Controller
         }
 
 
-            $mpdf = new Mpdf([
-                'format' => 'A4',
-                'margin_top' => 80,
-                'margin_bottom' => 70,
-            ]);
+        $mpdf = new Mpdf([
+            'format' => 'A4',
+            'margin_top' => 80,
+            'margin_bottom' => 70,
+        ]);
 
-            $mpdf->SetHTMLHeader('
+        $mpdf->SetHTMLHeader('
 <div style="width:100%; font-family: DejaVu Sans, sans-serif; font-size:11px;">
 
     <!-- TOP BAR WITH PAGE NUMBER -->
@@ -1210,12 +1214,12 @@ class Purchase_order extends MY_Controller
 
         <!-- FROM -->
         <div style="float:right; width:48%; vertical-align:top;">
-            <p style="margin:2px 0;"><strong>From:</strong>'.$warehouse->name.'</p>
-            <p style="margin:2px 0;">Address: '.$warehouse->address.'</p>
-            <p style="margin:2px 0;">City: '.$warehouse->city.'</p>
-            <p style="margin:2px 0;">Tel: '.$warehouse->phone.'</p>
-            <p style="margin:2px 0;">Email: '.$warehouse->eamil.'</p>
-            <p style="margin:2px 0;">GLN: '.$warehouse->gln.'</p>
+            <p style="margin:2px 0;"><strong>From:</strong>' . $warehouse->name . '</p>
+            <p style="margin:2px 0;">Address: ' . $warehouse->address . '</p>
+            <p style="margin:2px 0;">City: ' . $warehouse->city . '</p>
+            <p style="margin:2px 0;">Tel: ' . $warehouse->phone . '</p>
+            <p style="margin:2px 0;">Email: ' . $warehouse->eamil . '</p>
+            <p style="margin:2px 0;">GLN: ' . $warehouse->gln . '</p>
         </div>
     </div>
 
@@ -1224,10 +1228,10 @@ class Purchase_order extends MY_Controller
 ');
 
 
-            $footer_table = '';
-            $footer_note = '';
-            if ($this->Settings->site_name != 'Hills Business Medical') {
-                $footer_table = '<div style="width:60%; float:left; text-align:left; margin-bottom:15px;">
+        $footer_table = '';
+        $footer_note = '';
+        if ($this->Settings->site_name != 'Hills Business Medical') {
+            $footer_table = '<div style="width:60%; float:left; text-align:left; margin-bottom:15px;">
             <table class="table-label" border="1"  cellspacing="0" cellpadding="10" width="100%" style="border-collapse:collapse; font-size: 10px">
                 <tr><td colspan="3" style="text-align: center; vertical-align: middle; background-color: #f2f2f2; font-size: 20px;">' . $inv->id . '</td> <td colspan="3">فريق التحضير</td></tr>
                 <tr><td colspan="3">تحضير بداية</td> <td colspan="3">تحضير نهاية</td></tr>
@@ -1235,16 +1239,16 @@ class Purchase_order extends MY_Controller
                 <tr><td colspan="2">عدد كرتون</td> <td colspan="2">ربطة الثلاجة</td> <td colspan="2">خطأ</td></tr>
             </table>
         </div>';
-            } else {
-                $footer_note = '<div style="float:left; width:60%; text-align:left; padding-right:10px;">
+        } else {
+            $footer_note = '<div style="float:left; width:60%; text-align:left; padding-right:10px;">
             
             <p style="margin:0;">
             ' . $inv->note . '
             </p>
         </div>';
-            }
+        }
 
-            $mpdf->SetHTMLFooter('
+        $mpdf->SetHTMLFooter('
     <hr style="margin-bottom:5px;">
 
     <div style="width:100%; font-size:12px; font-family: DejaVu Sans, sans-serif;">
@@ -1295,11 +1299,11 @@ class Purchase_order extends MY_Controller
 
 
 
-            $mpdf->WriteHTML($html);
-            $mpdf->Output("purchaseOrder.pdf", "D");
+        $mpdf->WriteHTML($html);
+        $mpdf->Output("purchaseOrder.pdf", "D");
 
-            //$this->sma->generate_pdf($html, $name, 'I', $this->data['biller']->invoice_footer);
-        
+        //$this->sma->generate_pdf($html, $name, 'I', $this->data['biller']->invoice_footer);
+
     }
 
     /* ----------------------------------------------------------------------------- */
@@ -1806,6 +1810,34 @@ class Purchase_order extends MY_Controller
         $purchase_id = $this->input->post('purchase_order_id');
         $notes = $this->input->post('notes');
 
+        //send email to supplier can be added here
+        //send whatever notification needed
+        $identifier = '540369101'; //phone number or whatsapp number
+
+        //generate OTP
+        $message = "PO recevied from Rawabi";
+
+        //send OTP via SMS or WhatsApp
+
+        //$whatsapp_sent = $this->sma->send_whatsapp_msg($identifier, $message);
+        //$whatsapp_data = json_decode($whatsapp_sent, true);
+
+        // echo json_encode(['success' => $whatsapp_data]);exit;
+
+        /*if ($whatsapp_data && isset($whatsapp_data['messageId'])) {
+                    echo json_encode(['status' => 'success', 'message' => 'OTP sent to whatsapp']);
+                } else {
+                    $sms_sent = $this->sma->send_sms($identifier, $otp);
+                }*/
+
+        //$sms_sent = $this->sma->send_sms($identifier, $otp);
+
+        // uncomment below lines
+        //$message_to_send = 'Your OTP verification code is '.$otp;
+
+        //$sms_sent = $this->sma->send_sms_new($identifier, $message);
+
+
         $data = [
             'status' => 'sent_to_supplier',
             'sending_notes' => $notes,
@@ -1847,7 +1879,9 @@ class Purchase_order extends MY_Controller
                 $quantity = (float) $item['quantity'];
                 $actualQty = (float) $item['actual_quantity'];
                 $batchNumber = $this->db->escape($item['batch_number']);
-                $expiryDate = $item['expiry_date'] ;
+                //$expiryDate = $item['expiry_date'] ;
+                $expiryDate = $item['expiry_date']; //date('YYYY-m-d',strtotime(trim($item['expiry_date'])));
+                //echo $expiryDate;exit;
                 $comment = $this->db->escape($item['remarks']); // safe escape for string
 
                 // Optional: Validation to avoid invalid entries
@@ -1859,7 +1893,7 @@ class Purchase_order extends MY_Controller
                 $actualQtyCase .= " WHEN {$id} THEN {$actualQty}";
                 $commentCase   .= " WHEN {$id} THEN {$comment}";
                 $batchNumberCase .= " WHEN {$id} THEN {$batchNumber}";
-                $expiryDateCase .= " WHEN {$id} THEN {$expiryDate}";
+                $expiryDateCase .= " WHEN {$id} THEN '{$expiryDate}'";
 
                 $ids[] = $id;
             }
@@ -1878,15 +1912,15 @@ class Purchase_order extends MY_Controller
             $idList = implode(',', $ids);
 
             $sql = "
-        UPDATE sma_purchase_order_items
-        SET 
-            quantity = {$quantityCase},
-            actual_quantity = {$actualQtyCase},
-            batchno = {$batchNumberCase},
-            expiry = {$expiryDateCase},
-            grn_comments = {$commentCase}
-        WHERE id IN ({$idList})
-        ";
+                UPDATE sma_purchase_order_items
+                SET 
+                    quantity = {$quantityCase},
+                    actual_quantity = {$actualQtyCase},
+                    batchno = {$batchNumberCase},
+                    expiry = {$expiryDateCase},
+                    grn_comments = {$commentCase}
+                WHERE id IN ({$idList})
+                ";
 
             // Execute query
             $this->db->query($sql);
@@ -1908,6 +1942,8 @@ class Purchase_order extends MY_Controller
             admin_redirect('purchase_order/view/' . $po_id);
         }
 
+        $this->data['po_info'] = $this->purchase_order_model->getPurchaseOrderDetails($po_id);
+        //print_r($this->data['po_info']);exit;
         $this->data['rows'] = $this->purchase_order_model->getAllPurchaseItems($po_id);
         $this->data['po_id'] = $po_id;
 
@@ -1915,56 +1951,21 @@ class Purchase_order extends MY_Controller
         $meta = ['page_title' => lang('add_purchase'), 'bc' => $bc];
         $this->page_construct('purchase_order/grn', $meta, $this->data);
 
-        // $purchase_order_id = $this->input->post('purchase_order_id');
-        // $received_date = $this->input->post('received_date');
-        // $received_by = $this->session->userdata('user_id'); ;
-        // $grn_notes = $this->input->post('grn_notes');
-        // $received_qty = $this->input->post('received_qty'); // array
-        // $total_items = $this->input->post('total_items'); // array
-        // $total_quantity = $this->input->post('total_quantity'); // array
+     
+    }
 
-        // // Handle file upload
-        // $attachment_path = null;
-        // if (!empty($_FILES['grn_attachment']['name'])) {
-        //     $config['upload_path'] = './assets/uploads/grn/';
-        //     $config['allowed_types'] = 'pdf|jpg|png|jpeg';
-        //     $config['max_size'] = 2048;
-        //     $config['encrypt_name'] = TRUE;
+    public function send_for_invoice()
+    {
+        $po_id = base64_decode($this->input->get('po_id'));
+        $data = [
+            'status' => 'pending_invoice',
+            'updated_by' => $this->session->userdata('user_id'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
 
-        //     $this->load->library('upload', $config);
-
-        //     if ($this->upload->do_upload('grn_attachment')) {
-        //         $data = $this->upload->data();
-        //         $attachment_path = 'uploads/grn/' . $data['file_name'];
-        //     } else {
-        //         echo $this->upload->display_errors();
-        //         return;
-        //     }
-        // }
-
-        // // Insert GRN record
-        // $grn_data = [
-        //     'purchase_order_id' => $purchase_order_id,
-        //     'received_date' => $received_date,
-        //     'received_by' => $received_by,
-        //     'notes' => $grn_notes,
-        //     'attachment' => $attachment_path,
-        //     'total_items' => $total_items,
-        //     'total_quantity' => $total_quantity,
-        //     'created_at' => date('Y-m-d H:i:s')
-        // ];
-        // $this->db->insert('purchase_order_grn', $grn_data);
-        // $grn_id = $this->db->insert_id();
-
-        // // Update purchase order status
-        // $this->db->where('id', $purchase_order_id)->update('purchase_orders', [
-        //     'status' => 'goods_received',
-        //     'grn_id' => $grn_id,
-        //     'updated_by' => $this->session->userdata('user_id'),
-        //     'updated_at' => date('Y-m-d H:i:s')
-        // ]);
-
-        // echo json_encode(['success' => true]);
+        $this->db->where('id', $po_id)->update('purchase_orders', $data);
+        $this->session->set_flashdata('message', 'Purchase order sent for invoicing successfully!');
+        admin_redirect('purchase_order/view/' . $po_id);
     }
 
     public function view_return($id = null)
