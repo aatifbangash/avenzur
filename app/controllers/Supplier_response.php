@@ -20,7 +20,7 @@ class Supplier_response extends CI_Controller {
         }
 
         // Check if token exists and is valid (not used)
-        $supplier_request = $this->db->get_where('pr_supplier', [
+        $supplier_request = $this->db->get_where('purchase_requisition_supplier', [
             'response_token' => $token,
             'response_submitted' => 0
         ])->row();
@@ -72,7 +72,7 @@ class Supplier_response extends CI_Controller {
                 if ($this->save_response($response_data)) {
                     // Mark token as used
                     $this->db->where('response_token', $token)
-                            ->update('pr_supplier', ['response_submitted' => 1]);
+                            ->update('purchase_requisition_supplier', ['response_submitted' => 1]);
 
                     $this->data['success'] = 'Your response has been submitted successfully.';
                     $this->load->view('supplier_response/success', $this->data);
