@@ -734,6 +734,60 @@
             </table>
         </div>
     </div>
+
+    <!-- SECTION 1: Company-Level Summary Metrics -->
+    <div style="margin-top: 40px; padding-bottom: 20px;">
+        <h2 style="font-size: 20px; font-weight: 700; color: #111111; margin-bottom: 20px;">
+            <i class="fa fa-bar-chart" style="margin-right: 8px;"></i>
+            Company Performance Summary
+        </h2>
+        <div id="companyMetricsContainer" class="kpi-cards-grid" style="margin-bottom: 20px;">
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+        </div>
+    </div>
+
+    <!-- SECTION 2: Best Moving Products (Top 5) -->
+    <div style="margin-top: 40px;">
+        <h2 style="font-size: 20px; font-weight: 700; color: #111111; margin-bottom: 20px;">
+            <i class="fa fa-fire" style="margin-right: 8px;"></i>
+            Best Moving Products (Top 5)
+        </h2>
+        <div class="table-section">
+            <div class="table-header-bar">
+                <h3 class="table-title">Top 5 Products by Sales Volume</h3>
+                <div class="table-actions">
+                    <span style="font-size: 12px; color: #7a8694;">Period: <?php echo $period ?? date('Y-m'); ?></span>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table class="data-table" id="bestProductsTable">
+                    <thead>
+                        <tr>
+                            <th>Product Code</th>
+                            <th>Product Name</th>
+                            <th>Category</th>
+                            <th onclick="sortProductTable('total_units_sold')">Units Sold <span class="sort-indicator">⇅</span></th>
+                            <th onclick="sortProductTable('total_sales')">Total Sales <span class="sort-indicator">⇅</span></th>
+                            <th onclick="sortProductTable('total_margin')">Total Margin <span class="sort-indicator">⇅</span></th>
+                            <th onclick="sortProductTable('margin_percentage')">Margin % <span class="sort-indicator">⇅</span></th>
+                            <th>Avg Sale/Unit</th>
+                            <th>Customers</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bestProductsTableBody">
+                        <tr>
+                            <td colspan="9" style="text-align: center; padding: 40px;">
+                                <i class="fa fa-spinner fa-spin"></i> Loading top products...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Include ECharts Library -->
@@ -761,6 +815,8 @@ let dashboardData = {
     branches: <?php echo json_encode($branches ?? []); ?>,
     periods: <?php echo json_encode($periods ?? []); ?>,
     margins: <?php echo json_encode($margins ?? ['gross_margin' => 0, 'net_margin' => 0]); ?>,
+    companyMetrics: <?php echo json_encode($company_metrics ?? []); ?>,
+    bestProducts: <?php echo json_encode($best_products ?? []); ?>,
     currentPeriod: '<?php echo $period ?? date('Y-m'); ?>',
 };
 
@@ -769,6 +825,8 @@ let marginDisplayMode = 'net'; // 'gross' or 'net'
 
 let tableData = [...dashboardData.pharmacies];
 let currentSort = { column: 'kpi_total_revenue', direction: 'DESC' };
+let productTableData = [...(dashboardData.bestProducts || [])];
+let productSort = { column: 'total_units_sold', direction: 'DESC' };
 
 // ============================================================================
 // INITIALIZATION
@@ -796,6 +854,12 @@ function initializeDashboard() {
         console.log('Step 3: Rendering KPI cards');
         renderKPICards();
         
+        console.log('Step 3b: Rendering company metrics');
+        renderCompanyMetrics();
+        
+        console.log('Step 3c: Rendering best products table');
+        renderBestProductsTable();
+        
         console.log('Step 4: Rendering charts');
         renderCharts();
         
@@ -818,6 +882,162 @@ function showErrorBanner(message) {
     if (header) {
         header.parentNode.insertBefore(banner, header.nextSibling);
     }
+}
+
+// ============================================================================
+// COMPANY METRICS RENDERING
+// ============================================================================
+
+function renderCompanyMetrics() {
+    const container = document.getElementById('companyMetricsContainer');
+    if (!container || !dashboardData.companyMetrics) {
+        console.warn('Company metrics container not found or no data available');
+        return;
+    }
+    
+    const metrics = dashboardData.companyMetrics;
+    console.log('renderCompanyMetrics - Data:', metrics);
+
+    const cards = [
+        {
+            label: 'Total Sales',
+            value: metrics.total_sales || 0,
+            icon: '💰',
+            color: 'blue',
+            isCurrency: true
+        },
+        {
+            label: 'Total Margin',
+            value: metrics.total_margin || 0,
+            icon: '📈',
+            color: 'green',
+            isCurrency: true
+        },
+        {
+            label: 'Total Customers',
+            value: metrics.total_customers || 0,
+            icon: '👥',
+            color: 'purple',
+            isCount: true
+        },
+        {
+            label: 'Items Sold',
+            value: metrics.total_items_sold || 0,
+            icon: '📦',
+            color: 'red',
+            isCount: true
+        }
+    ];
+
+    try {
+        container.innerHTML = cards.map(card => {
+            let formattedValue = '';
+            if (card.isCurrency) {
+                formattedValue = formatCurrency(card.value, false);
+            } else if (card.isCount) {
+                formattedValue = formatNumber(card.value);
+            } else {
+                formattedValue = card.value.toFixed(2);
+            }
+            
+            return `
+        <div class="metric-card">
+            <div class="metric-card-header">
+                <div style="flex: 1;">
+                    <div class="metric-card-label">${card.label}</div>
+                    <div class="metric-card-value">${formattedValue}</div>
+                </div>
+                <div class="metric-card-icon ${card.color}">${card.icon}</div>
+            </div>
+            <div class="metric-card-trend positive" style="visibility: hidden;">
+                ↑ 0% from last period
+            </div>
+        </div>
+            `;
+        }).join('');
+        
+        console.log('Company metrics rendered successfully');
+    } catch (error) {
+        console.error('Error rendering company metrics:', error);
+        container.innerHTML = `<div style="color: #f34235; padding: 20px;">Error rendering metrics: ${error.message}</div>`;
+    }
+}
+
+// ============================================================================
+// BEST PRODUCTS TABLE RENDERING
+// ============================================================================
+
+function renderBestProductsTable() {
+    const container = document.getElementById('bestProductsTableBody');
+    if (!container) {
+        console.error('Best products table body not found');
+        return;
+    }
+    
+    productTableData = [...(dashboardData.bestProducts || [])];
+    console.log('renderBestProductsTable - Data:', productTableData);
+
+    if (!productTableData || productTableData.length === 0) {
+        container.innerHTML = `
+            <tr>
+                <td colspan="9" style="text-align: center; padding: 40px; color: #7a8694;">
+                    <i class="fa fa-inbox" style="font-size: 32px; margin-bottom: 10px;"></i><br>
+                    No products found for this period
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    try {
+        container.innerHTML = productTableData.map((product, index) => {
+            return `
+            <tr>
+                <td><strong>${product.product_code || 'N/A'}</strong></td>
+                <td>${product.product_name || 'N/A'}</td>
+                <td><span style="background: #e8f0fe; color: #1a73e8; padding: 4px 8px; border-radius: 4px; font-size: 12px;">${product.category_name || 'Uncategorized'}</span></td>
+                <td class="table-currency">${formatNumber(product.total_units_sold || 0)}</td>
+                <td class="table-currency" style="color: #05cd99; font-weight: 600;">${formatCurrency(product.total_sales || 0, false)}</td>
+                <td class="table-currency" style="color: #05cd99;">${formatCurrency(product.total_margin || 0, false)}</td>
+                <td class="table-percentage" style="color: #f59e0b; font-weight: 600;">${(product.margin_percentage || 0).toFixed(2)}%</td>
+                <td class="table-currency">${formatCurrency(product.avg_sale_per_unit || 0, false)}</td>
+                <td style="text-align: center;">${formatNumber(product.customer_count || 0)}</td>
+            </tr>
+            `;
+        }).join('');
+        
+        console.log('Best products table rendered successfully');
+    } catch (error) {
+        console.error('Error rendering best products table:', error);
+        container.innerHTML = `<tr><td colspan="9" style="color: #f34235; padding: 20px;">Error rendering table: ${error.message}</td></tr>`;
+    }
+}
+
+function sortProductTable(column) {
+    productSort.direction = (productSort.column === column && productSort.direction === 'DESC') ? 'ASC' : 'DESC';
+    productSort.column = column;
+    
+    productTableData.sort((a, b) => {
+        let aVal = a[column];
+        let bVal = b[column];
+        
+        // Handle numeric values
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+            return productSort.direction === 'DESC' ? bVal - aVal : aVal - bVal;
+        }
+        
+        // Handle string values
+        aVal = String(aVal).toLowerCase();
+        bVal = String(bVal).toLowerCase();
+        
+        if (productSort.direction === 'DESC') {
+            return bVal.localeCompare(aVal);
+        } else {
+            return aVal.localeCompare(bVal);
+        }
+    });
+    
+    renderBestProductsTable();
 }
 
 // ============================================================================

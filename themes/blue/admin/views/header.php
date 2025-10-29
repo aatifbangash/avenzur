@@ -369,10 +369,25 @@
                     
                     <ul class="nav main-menu">
                         <li class="mm_cost_center">
-                            <a href="<?= admin_url('cost_center/dashboard') ?>">
+                            <a class="dropmenu" href="#">
                                 <i class="fa fa-dashboard"></i>
                                 <span class="text"> <?= lang('Cost Center'); ?></span>
+                                <span class="chevron closed"></span>
                             </a>
+                            <ul>
+                                <li>
+                                    <a href="<?= admin_url('cost_center/dashboard') ?>">
+                                        <i class="fa fa-chart-bar"></i>
+                                        <span class="text">Dashboard</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="<?= admin_url('cost_center/performance') ?>">
+                                        <i class="fa fa-line-chart"></i>
+                                        <span class="text">Performance</span>
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
                         
                         <!-- <li class="mm_quick_search">

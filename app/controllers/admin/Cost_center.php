@@ -91,12 +91,24 @@ class Cost_center extends MY_Controller {
             $periods = $this->cost_center->get_available_periods(24);
             error_log('[COST_CENTER] Periods retrieved: ' . count($periods ?? []) . ' records');
 
+            // Fetch company-level summary metrics using stored procedure
+            error_log('[COST_CENTER] Fetching company-level summary metrics from sp_get_sales_analytics_hierarchical');
+            $company_metrics = $this->cost_center->get_company_summary_metrics('monthly', $period);
+            error_log('[COST_CENTER] Company metrics retrieved: ' . json_encode($company_metrics));
+
+            // Fetch best moving products using stored procedure
+            error_log('[COST_CENTER] Fetching best moving products from stored procedure');
+            $best_products = $this->cost_center->get_best_moving_products('company', null, 'monthly', $period);
+            error_log('[COST_CENTER] Best products retrieved: ' . count($best_products ?? []) . ' records');
+
             // Prepare view data - merge with $this->data for layout/assets
             $view_data = array_merge($this->data, [
                 'page_title' => 'Cost Center Dashboard',
                 'period' => $period,
                 'summary' => $summary,
                 'margins' => $margins,
+                'company_metrics' => $company_metrics,
+                'best_products' => $best_products,
                 'pharmacies' => $pharmacies,
                 'branches' => $branches,
                 'margin_trends_monthly' => $margin_trends_monthly,
@@ -388,5 +400,193 @@ class Cost_center extends MY_Controller {
             ],
             'branches' => []
         ];
+    }
+
+    /**
+     * Performance Dashboard - Company-level metrics and best-moving products
+     * 
+     * GET /admin/cost_center/performance
+     * Query params: period (YYYY-MM, 'today', or 'ytd'), level (company/pharmacy/branch), warehouse_id (for pharmacy/branch)
+     */
+    public function performance() {
+        try {
+            // DEBUG: Start logging
+            error_log('[COST_CENTER_PERFORMANCE] Performance dashboard method started');
+            
+            $period = $this->input->get('period') ?: 'today';
+            $level = $this->input->get('level') ?: 'company';
+            $warehouse_id = $this->input->get('warehouse_id') ?: null;
+            
+            error_log('[COST_CENTER_PERFORMANCE] Period: ' . $period . ', Level: ' . $level . ', Warehouse: ' . $warehouse_id);
+            
+            // Determine period_type and target_month for stored procedure
+            $period_type = 'monthly';  // default
+            $target_month = null;
+            
+            if ($period === 'today') {
+                $period_type = 'today';
+                $target_month = null;
+            } elseif ($period === 'ytd') {
+                $period_type = 'ytd';
+                $target_month = null;
+            } else {
+                // Validate YYYY-MM format
+                if (!$this->_validate_period($period)) {
+                    $period = date('Y-m');
+                    error_log('[COST_CENTER_PERFORMANCE] Period invalid, using current: ' . $period);
+                }
+                $period_type = 'monthly';
+                $target_month = $period;
+            }
+
+            // Validate level
+            $valid_levels = ['company', 'pharmacy', 'branch'];
+            if (!in_array($level, $valid_levels)) {
+                $level = 'company';
+                error_log('[COST_CENTER_PERFORMANCE] Level invalid, using company');
+            }
+
+            // Fetch company-level summary metrics using stored procedure
+            error_log('[COST_CENTER_PERFORMANCE] Fetching summary metrics for period_type: ' . $period_type . ', target_month: ' . ($target_month ?: 'null') . ', level: ' . $level);
+            $summary_metrics = $this->cost_center->get_hierarchical_analytics($period_type, $target_month, $warehouse_id, $level);
+            
+            if (!$summary_metrics['success']) {
+                error_log('[COST_CENTER_PERFORMANCE] Error fetching metrics: ' . $summary_metrics['error']);
+                show_error('Error loading performance data: ' . $summary_metrics['error'], 500);
+                return;
+            }
+
+            $company_metrics = $summary_metrics['summary'];
+            $best_products = $summary_metrics['best_products'] ?? [];
+            
+            error_log('[COST_CENTER_PERFORMANCE] Metrics retrieved: ' . json_encode($company_metrics));
+            error_log('[COST_CENTER_PERFORMANCE] Best products retrieved: ' . count($best_products) . ' records');
+
+            // Get level label for display
+            $level_labels = [
+                'company' => 'Company Performance',
+                'pharmacy' => 'Pharmacy Performance',
+                'branch' => 'Branch Performance'
+            ];
+            $level_label = $level_labels[$level] ?? 'Company Performance';
+
+            // Fetch available periods
+            error_log('[COST_CENTER_PERFORMANCE] Fetching available periods');
+            $periods = $this->cost_center->get_available_periods(24);
+            error_log('[COST_CENTER_PERFORMANCE] Periods retrieved: ' . count($periods ?? []) . ' records');
+
+            // Fetch combined warehouse and pharmacy hierarchy for dropdown
+            error_log('[COST_CENTER_PERFORMANCE] Fetching combined warehouse/pharmacy hierarchy');
+            $warehouse_pharmacy_hierarchy = $this->cost_center->get_warehouse_pharmacy_hierarchy();
+            error_log('[COST_CENTER_PERFORMANCE] Hierarchy retrieved: ' . count($warehouse_pharmacy_hierarchy ?? []) . ' records');
+
+            // Get selection from URL parameter (can be warehouse_id or pharmacy_id)
+            $selected_entity_id = $this->input->get('entity_id') ?: null;
+            $selected_entity_type = null;
+            
+            $branches = [];
+            $branches_with_sales = [];
+            $pharmacy_metrics = null;
+            
+            // STEP 1: Determine entity type and fetch appropriate data
+            if ($selected_entity_id) {
+                error_log('[COST_CENTER_PERFORMANCE] Selected entity ID: ' . $selected_entity_id);
+                
+                // Determine if selected entity is warehouse or pharmacy
+                $this->db->select('warehouse_type, parent_id');
+                $this->db->from('sma_warehouses');
+                $this->db->where('id', $selected_entity_id);
+                $entity_result = $this->db->get();
+                
+                if ($entity_result->num_rows() > 0) {
+                    $entity = $entity_result->row();
+                    $selected_entity_type = $entity->warehouse_type;
+                    error_log('[COST_CENTER_PERFORMANCE] Entity type: ' . $selected_entity_type);
+                    
+                    // If it's a pharmacy, fetch branches and call analytics
+                    if ($selected_entity_type === 'pharmacy') {
+                        error_log('[COST_CENTER_PERFORMANCE] Processing pharmacy selection: ' . $selected_entity_id);
+                        
+                        // Fetch branches under this pharmacy (using parent_id)
+                        $branches = $this->cost_center->get_branches_by_pharmacy($selected_entity_id);
+                        error_log('[COST_CENTER_PERFORMANCE] Branches retrieved: ' . count($branches ?? []) . ' records');
+                        
+                        // Fetch branches with sales data
+                        $period_format = ($period === 'today' ? date('Y-m') : ($period === 'ytd' ? date('Y-m') : $period));
+                        $pharmacy_data = $this->cost_center->get_pharmacy_with_branches($selected_entity_id, $period_format);
+                        $branches_with_sales = $pharmacy_data['branches'] ?? [];
+                        error_log('[COST_CENTER_PERFORMANCE] Branches with sales retrieved: ' . count($branches_with_sales ?? []) . ' records');
+                        
+                        // Call get_hierarchical_analytics with pharmacy level to get pharmacy-specific metrics
+                        error_log('[COST_CENTER_PERFORMANCE] Calling get_hierarchical_analytics for pharmacy level, warehouse_id=' . $selected_entity_id);
+                        $pharmacy_analytics = $this->cost_center->get_hierarchical_analytics(
+                            $period === 'today' ? 'today' : ($period === 'ytd' ? 'ytd' : 'monthly'),
+                            $period_format,
+                            $selected_entity_id,
+                            'pharmacy'
+                        );
+                        
+                        if ($pharmacy_analytics['success']) {
+                            error_log('[COST_CENTER_PERFORMANCE] Pharmacy metrics retrieved successfully');
+                            $company_metrics = $pharmacy_analytics['summary'];
+                            $best_products = $pharmacy_analytics['best_products'];
+                            $pharmacy_metrics = $company_metrics;
+                            error_log('[COST_CENTER_PERFORMANCE] Pharmacy metrics: revenue=' . ($company_metrics->total_gross_sales ?? 'N/A'));
+                        } else {
+                            error_log('[COST_CENTER_PERFORMANCE] Failed to retrieve pharmacy metrics: ' . ($pharmacy_analytics['error'] ?? 'Unknown error'));
+                        }
+                        
+                        // Update level to 'pharmacy'
+                        $level = 'pharmacy';
+                        $level_label = 'Pharmacy Performance';
+                        $warehouse_id = $selected_entity_id;
+                    }
+                    // If warehouse, keep level as company but filter by warehouse
+                    elseif ($selected_entity_type === 'warehouse') {
+                        error_log('[COST_CENTER_PERFORMANCE] Processing warehouse selection: ' . $selected_entity_id);
+                        $level = 'company';
+                        $warehouse_id = $selected_entity_id;
+                    }
+                }
+            }
+
+
+            // Prepare view data - merge with $this->data for layout/assets
+            $view_data = array_merge($this->data, [
+                'page_title' => $level_label,
+                'level' => $level,
+                'warehouse_id' => $warehouse_id,
+                'selected_entity_id' => $selected_entity_id,
+                'selected_entity_type' => $selected_entity_type,
+                'period' => $period,
+                'summary_metrics' => $company_metrics,
+                'best_products' => $best_products,
+                'periods' => $periods,
+                'warehouse_pharmacy_hierarchy' => $warehouse_pharmacy_hierarchy,
+                'branches' => $branches,
+                'branches_with_sales' => $branches_with_sales,
+                'level_label' => $level_label
+            ]);
+
+            error_log('[COST_CENTER_PERFORMANCE] About to render performance view');
+            
+            // Load template header
+            $this->load->view($this->theme . 'header', $view_data);
+            
+            // Load performance dashboard view
+            $this->load->view($this->theme . 'cost_center/performance_dashboard', $view_data);
+            
+            // Load template footer
+            $this->load->view($this->theme . 'footer', $view_data);
+            
+            error_log('[COST_CENTER_PERFORMANCE] Performance dashboard rendered successfully');
+
+        } catch (Exception $e) {
+            $error_msg = 'Performance Dashboard Error: ' . $e->getMessage() . ' (Line: ' . $e->getLine() . ', File: ' . $e->getFile() . ')';
+            error_log('[COST_CENTER_PERFORMANCE] ' . $error_msg);
+            error_log('[COST_CENTER_PERFORMANCE] Stack trace: ' . $e->getTraceAsString());
+            log_message('error', $error_msg);
+            show_error('Error loading performance dashboard: ' . $e->getMessage(), 500);
+        }
     }
 }

@@ -18,6 +18,271 @@ class Cost_center_model extends CI_Model {
         $this->load->database();
     }
 
+
+public function get_hierarchical_analytics($period_type = 'today', $target_month = null, $warehouse_id = null, $level = 'company') {
+        // Validate level
+        $valid_levels = ['company', 'pharmacy', 'branch'];
+        if (!in_array($level, $valid_levels)) {
+            return ['error' => 'Invalid level. Must be: company, pharmacy, or branch'];
+        }
+        
+        // Validate period_type
+        $valid_periods = ['today', 'monthly', 'ytd'];
+        if (!in_array($period_type, $valid_periods)) {
+            return ['error' => 'Invalid period type. Must be: today, monthly, or ytd'];
+        }
+        
+        // Set default target_month if monthly and not provided
+        if ($period_type === 'monthly' && empty($target_month)) {
+            $target_month = date('Y-m');
+        }
+        
+        // Prepare parameters
+        $params = [
+            $period_type,
+            $target_month,
+            $warehouse_id,
+            $level
+        ];
+        
+        try {
+            // Call stored procedure
+            $query = "CALL sp_get_sales_analytics_hierarchical(?, ?, ?, ?)";
+            
+            // Execute procedure and get results
+            $result = $this->db->query($query, $params);
+            
+            // Get summary (first result set)
+            $summary = $result->row();
+            
+            // Get mysqli connection for multi-result handling
+            $mysqli = $this->db->conn_id;
+            $best_products = [];
+            
+            // Fetch next result sets
+            if ($mysqli->more_results()) {
+                $mysqli->next_result();
+                $result_products = $mysqli->store_result();
+                
+                if ($result_products) {
+                    while ($row = $result_products->fetch_object()) {
+                        $best_products[] = $row;
+                    }
+                    $result_products->free();
+                }
+                
+                // Continue consuming remaining result sets to prevent "Commands out of sync" error
+                while ($mysqli->more_results()) {
+                    $mysqli->next_result();
+                    $temp_result = $mysqli->store_result();
+                    if ($temp_result) {
+                        $temp_result->free();
+                    }
+                }
+            }
+            
+            return [
+                'success' => true,
+                'summary' => $summary,
+                'best_products' => $best_products
+            ];
+            
+        } catch (Exception $e) {
+            log_message('error', 'Sales Analytics Error: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+    
+    /**
+     * Get company-wide analytics (all warehouses)
+     * 
+     * @param string $period_type 'today', 'monthly', 'ytd'
+     * @param string|null $target_month 'YYYY-MM' format
+     * @return array
+     */
+    public function get_company_analytics($period_type = 'today', $target_month = null) {
+        return $this->get_hierarchical_analytics($period_type, $target_month, null, 'company');
+    }
+    
+    /**
+     * Get pharmacy-level analytics (aggregate of all branches)
+     * 
+     * @param int $pharmacy_id Pharmacy warehouse ID
+     * @param string $period_type 'today', 'monthly', 'ytd'
+     * @param string|null $target_month 'YYYY-MM' format
+     * @return array
+     */
+    public function get_pharmacy_analytics($pharmacy_id, $period_type = 'today', $target_month = null) {
+        return $this->get_hierarchical_analytics($period_type, $target_month, $pharmacy_id, 'pharmacy');
+    }
+    
+    /**
+     * Get branch-level analytics (single warehouse)
+     * 
+     * @param int $branch_id Branch warehouse ID
+     * @param string $period_type 'today', 'monthly', 'ytd'
+     * @param string|null $target_month 'YYYY-MM' format
+     * @return array
+     */
+    public function get_branch_analytics($branch_id, $period_type = 'today', $target_month = null) {
+        return $this->get_hierarchical_analytics($period_type, $target_month, $branch_id, 'branch');
+    }
+    
+    /**
+     * Get list of all pharmacies (parent warehouses)
+     * 
+     * @return array
+     */
+    public function get_pharmacies() {
+        $this->db->select('id, code, name, warehouse_type');
+        $this->db->from('sma_warehouses');
+        $this->db->where('parent_id IS NULL');
+        $this->db->or_where('parent_id', 0);
+        $query = $this->db->get();
+        
+        return $query->result();
+    }
+    
+    /**
+     * Get list of branches under a pharmacy
+     * 
+     * @param int $pharmacy_id Pharmacy warehouse ID
+     * @return array
+     */
+    public function get_branches($pharmacy_id) {
+        $this->db->select('id, code, name, warehouse_type, parent_id');
+        $this->db->from('sma_warehouses');
+        $this->db->where('parent_id', $pharmacy_id);
+        $query = $this->db->get();
+        
+        return $query->result();
+    }
+
+    /**
+     * Get all warehouse groups (top-level warehouses)
+     * 
+     * @return array
+     */
+    public function get_warehouse_groups() {
+        $this->db->select('id, code, name, warehouse_type');
+        $this->db->from('sma_warehouses');
+        $this->db->where('warehouse_type', 'warehouse');
+        $this->db->where('(parent_id IS NULL OR parent_id = 0)', NULL, FALSE);
+        $this->db->order_by('name', 'ASC');
+        $query = $this->db->get();
+        
+        return $query->result();
+    }
+
+    /**
+     * Get all pharmacies under a warehouse group
+     * 
+     * @param int $warehouse_id Warehouse group ID
+     * @return array
+     */
+    public function get_pharmacies_by_warehouse($warehouse_id) {
+        $this->db->select('id, code, name, warehouse_type, parent_id');
+        $this->db->from('sma_warehouses');
+        $this->db->where('warehouse_type', 'pharmacy');
+        $this->db->where('parent_id', $warehouse_id);
+        $this->db->order_by('name', 'ASC');
+        $query = $this->db->get();
+        
+        return $query->result();
+    }
+
+    /**
+     * Get all pharmacies (warehouse_type = 'pharmacy')
+     * No filtering by parent - returns ALL pharmacies
+     * 
+     * @return array
+     */
+    public function get_all_pharmacies() {
+        $this->db->select('id, code, name, warehouse_type, parent_id');
+        $this->db->from('sma_warehouses');
+        $this->db->where('warehouse_type', 'pharmacy');
+        $this->db->order_by('name', 'ASC');
+        $query = $this->db->get();
+        
+        return $query->result();
+    }
+
+    /**
+     * Get all branches under a pharmacy
+     * Uses parent_id to find branches where parent_id = pharmacy_id
+     * 
+     * @param int $pharmacy_id Pharmacy ID
+     * @return array
+     */
+    public function get_branches_by_pharmacy($pharmacy_id) {
+        $this->db->select('id, code, name, warehouse_type, parent_id');
+        $this->db->from('sma_warehouses');
+        $this->db->where('warehouse_type', 'branch');
+        $this->db->where('parent_id', $pharmacy_id);
+        $this->db->order_by('name', 'ASC');
+        $query = $this->db->get();
+        
+        return $query->result();
+    }
+
+    /**
+     * Get combined warehouse and pharmacy hierarchy for dropdown
+     * Returns structure: warehouses with their child pharmacies
+     * 
+     * Format:
+     * [
+     *   { id: 1, name: 'Warehouse A', warehouse_type: 'warehouse', parent_id: null, children: [...pharmacies] },
+     *   { id: 10, name: 'Pharmacy A', warehouse_type: 'pharmacy', parent_id: null, children: [] },
+     *   ...
+     * ]
+     * 
+     * @return array Hierarchical structure for dropdown rendering
+     */
+    public function get_warehouse_pharmacy_hierarchy() {
+        // Get all warehouses and pharmacies
+        $this->db->select('id, code, name, warehouse_type, parent_id');
+        $this->db->from('sma_warehouses');
+        $this->db->where_in('warehouse_type', ['warehouse', 'pharmacy']);
+        $this->db->order_by('warehouse_type', 'ASC');
+        $this->db->order_by('parent_id', 'ASC');
+        $this->db->order_by('name', 'ASC');
+        $query = $this->db->get();
+        $all_items = $query->result_array();
+        
+        // Build hierarchy structure
+        $hierarchy = [];
+        $pharmacies_by_parent = [];
+        
+        // Group pharmacies by parent_id
+        foreach ($all_items as $item) {
+            if ($item['warehouse_type'] === 'pharmacy') {
+                $parent = $item['parent_id'] ?? 0;
+                if (!isset($pharmacies_by_parent[$parent])) {
+                    $pharmacies_by_parent[$parent] = [];
+                }
+                $pharmacies_by_parent[$parent][] = $item;
+            }
+        }
+        
+        // Build final hierarchy
+        foreach ($all_items as $item) {
+            if ($item['warehouse_type'] === 'warehouse') {
+                // Add warehouse with its children
+                $item['children'] = $pharmacies_by_parent[$item['id']] ?? [];
+                $hierarchy[] = $item;
+            } elseif ($item['warehouse_type'] === 'pharmacy' && ($item['parent_id'] === null || $item['parent_id'] === 0)) {
+                // Add standalone pharmacies (no parent)
+                $item['children'] = [];
+                $hierarchy[] = $item;
+            }
+        }
+        
+        return $hierarchy;
+    }
+
     /**
      * Get all pharmacies with KPIs for a given period
      * 
@@ -272,24 +537,51 @@ class Cost_center_model extends CI_Model {
     }
 
     /**
-     * Get monthly periods available in fact table
+     * Get available periods with special date options
      * 
-     * @param int $limit
-     * @return array
+     * Special periods: 'today', 'ytd' (Year to Date)
+     * Regular periods: 'YYYY-MM' format from database
+     * 
+     * @param int $limit Number of historical months to retrieve
+     * @return array Array with period options
      */
     public function get_available_periods($limit = 24) {
+        // Start with special date options
+        $periods = [
+            [
+                'period' => 'today',
+                'period_year' => date('Y'),
+                'period_month' => date('m'),
+                'label' => 'Today',
+                'is_special' => true
+            ],
+            [
+                'period' => 'ytd',
+                'period_year' => date('Y'),
+                'period_month' => null,
+                'label' => 'Year to Date',
+                'is_special' => true
+            ]
+        ];
+        
+        // Get historical monthly data
         $query = "
             SELECT DISTINCT 
                 CONCAT(period_year, '-', LPAD(period_month, 2, '0')) AS period,
                 period_year,
-                period_month
+                period_month,
+                NULL as label,
+                FALSE as is_special
             FROM sma_fact_cost_center
             ORDER BY period_year DESC, period_month DESC
             LIMIT ?
         ";
 
         $result = $this->db->query($query, [$limit]);
-        return $result->result_array();
+        $monthly_periods = $result->result_array();
+        
+        // Merge special periods with historical data
+        return array_merge($periods, $monthly_periods);
     }
 
     /**
@@ -822,5 +1114,47 @@ class Cost_center_model extends CI_Model {
 
         $result = $this->db->query($query, [$period, $pharmacy_id]);
         return $result->row_array();
+    }
+
+    /**
+     * Get Company-Level Summary Metrics Using Stored Procedure
+     * 
+     * Wrapper for sp_get_sales_analytics_hierarchical at company level.
+     * Returns summary metrics for the entire company.
+     * 
+     * @param string $period_type 'today', 'monthly', 'ytd' (default: 'monthly')
+     * @param string|null $target_month YYYY-MM format (default: current month)
+     * @return array Summary metrics containing: total_sales, total_margin, total_customers, total_items_sold, etc.
+     */
+    public function get_company_summary_metrics($period_type = 'monthly', $target_month = null) {
+        $result = $this->get_hierarchical_analytics($period_type, $target_month, null, 'company');
+        
+        if ($result['success'] && isset($result['summary'])) {
+            return $result['summary'];
+        }
+        
+        return null;
+    }
+
+    /**
+     * Get Best Moving Products Using Stored Procedure
+     * 
+     * Wrapper for sp_get_sales_analytics_hierarchical to get best products.
+     * Returns top products based on sales volume.
+     * 
+     * @param string $level 'company', 'pharmacy', or 'branch'
+     * @param int|null $warehouse_id Warehouse ID (required for pharmacy/branch levels)
+     * @param string $period_type 'today', 'monthly', 'ytd'
+     * @param string|null $target_month YYYY-MM format
+     * @return array Array of best products with sales metrics
+     */
+    public function get_best_moving_products($level = 'company', $warehouse_id = null, $period_type = 'monthly', $target_month = null) {
+        $result = $this->get_hierarchical_analytics($period_type, $target_month, $warehouse_id, $level);
+        
+        if ($result['success'] && isset($result['best_products'])) {
+            return $result['best_products'];
+        }
+        
+        return [];
     }
 }
