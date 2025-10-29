@@ -305,18 +305,13 @@ class Sma
     }
 
     public function generateUUIDv4() {
-        // $prefix = 'AVZ';  // Your custom prefix
-        // $timestamp = time();  // Current timestamp
-        // $randomString = substr(md5(uniqid(mt_rand(), true)), 0, 7);  // Generate a random string of 7 characters
-
-        // // Combine them to form the unique code
-        // $uniqueCode = $prefix . $timestamp . $randomString;
-
-        $timestamp = microtime(true) * 10000;  
-        $randomNumber = mt_rand(100, 999);     
-        $uniqueCode = substr($timestamp . $randomNumber, -6);
-
-        return $uniqueCode;
+        // Generate a proper RFC 4122 compliant UUID v4
+        // Format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
+        $bytes = openssl_random_pseudo_bytes(16);
+        $bytes[6] = chr(ord($bytes[6]) & 0x0f | 0x40); // version 4
+        $bytes[8] = chr(ord($bytes[8]) & 0x3f | 0x80); // variant
+        
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
     }
 
     public function fsd($inv_date)

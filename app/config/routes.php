@@ -88,3 +88,24 @@ $route['admin/customscript/(:num)']   = 'admin/customscript/index/$1';
 $route['courier/stc/callback'] = 'shop/courier/stc_callback';
 $route['api/update_ngrok_url'] = 'api/v1/ngrok/index';
 
+// Budget API routes
+$route['api/v1/budgets/allocate'] = 'api/v1/budgets/allocate';
+$route['api/v1/budgets/allocated'] = 'api/v1/budgets/allocated';
+$route['api/v1/budgets/tracking'] = 'api/v1/budgets/tracking';
+$route['api/v1/budgets/forecast'] = 'api/v1/budgets/forecast';
+$route['api/v1/budgets/alerts'] = 'api/v1/budgets/alerts';
+$route['api/v1/budgets/alerts/configure'] = 'api/v1/budgets/alerts/configure';
+$route['api/v1/budgets/alerts/(:num)/acknowledge'] = 'api/v1/budgets/alerts/$1/acknowledge';
+
+// Cost Center API routes
+$route['api/v1/cost-center/pharmacies'] = 'api/v1/cost_center/pharmacies';
+$route['api/v1/cost-center/pharmacy-detail/(:num)'] = 'api/v1/cost_center/pharmacy_detail/$1';
+$route['api/v1/cost-center/branches'] = 'api/v1/cost_center/branches';
+$route['api/v1/cost-center/summary'] = 'api/v1/cost_center/summary';
+
+// Cost Center Admin routes
+$route['admin/cost_center/pharmacy/(:num)'] = 'admin/cost_center/pharmacy/$1';
+$route['admin/cost_center/branch/(:num)'] = 'admin/cost_center/branch/$1';
+$route['admin/cost_center'] = 'admin/cost_center/dashboard';
+$route['admin/cost_center/dashboard'] = 'admin/cost_center/dashboard';
+

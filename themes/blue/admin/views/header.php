@@ -13,7 +13,6 @@
     <link href="<?= base_url('assets/custom/custom.css') ?>" rel="stylesheet" />
     <script type="text/javascript" src="<?= $assets ?>js/jquery-2.0.3.min.js"></script>
     <script type="text/javascript" src="<?= $assets ?>js/jquery-migrate-1.2.1.min.js"></script>
-
     <!--[if lt IE 9]>
     <script src="<?= $assets ?>js/jquery.js"></script>
     <![endif]-->
@@ -79,8 +78,54 @@
                     <!--<a href="<?= admin_url('calendar') ?>" class="btn">
                     <span class="fa fa-calendar"></span>
                 </a>-->
-                    <a href="<?= admin_url('users/profile/' . $this->session->userdata('user_id')); ?>" class="btn">
-                        <span class="fa fa-user"></span>
+                <a href="<?= admin_url('users/profile/' . $this->session->userdata('user_id')); ?>" class="btn">
+                    <span class="fa fa-user"></span>
+                </a>
+                <a href="<?= admin_url('logout'); ?>" class="btn">
+                    <span class="fa fa-sign-out"></span>
+                </a>
+            </div>
+            <div class="header-nav">
+                <ul class="nav navbar-nav pull-right">
+                    <li class="dropdown">
+                        <a class="btn account dropdown-toggle" data-toggle="dropdown" href="#">
+                            <img alt="" src="<?= $this->session->userdata('avatar') ? base_url() . 'assets/uploads/avatars/thumbs/' . $this->session->userdata('avatar') : base_url('assets/images/' . $this->session->userdata('gender') . '.png'); ?>" class="mini_avatar img-rounded">
+
+                            <div class="user">
+                                <span><?= lang('welcome') ?> <?= $this->session->userdata('username'); ?></span>
+                            </div>
+                        </a>
+                        <ul class="dropdown-menu pull-right">
+                            <li>
+                                <a href="<?= admin_url('users/profile/' . $this->session->userdata('user_id')); ?>">
+                                    <i class="fa fa-user"></i> <?= lang('profile'); ?>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="<?= admin_url('users/profile/' . $this->session->userdata('user_id') . '/#cpassword'); ?>"><i class="fa fa-key"></i> <?= lang('change_password'); ?>
+                                </a>
+                            </li>
+                            <li class="divider"></li>
+                            <li>
+                                <a href="<?= admin_url('logout'); ?>">
+                                    <i class="fa fa-sign-out"></i> <?= lang('logout'); ?>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+                <ul class="nav navbar-nav pull-right">
+                <li class="dropdown hidden-xs"><a class="btn tip" title="<?= lang('Print Barcode') ?>" data-placement="bottom" href="<?= admin_url('products/print_barcodes') ?>"><i class="fa fa-barcode"></i></a></li>
+                    <li class="dropdown hidden-xs"><a class="btn tip" title="<?= lang('Cost Center') ?>" data-placement="bottom" href="<?= admin_url('cost_center/dashboard') ?>"><i class="fa fa-dashboard"></i></a></li>
+                    <?php if (0){//(SHOP) {
+                        ?>
+                    <li class="dropdown hidden-xs"><a class="btn tip" title="<?= lang('shop') ?>" data-placement="bottom" href="<?= base_url() ?>"><i class="fa fa-shopping-cart"></i></a></li>
+                        <?php
+                    } ?>
+                    <?php if (POS) {
+                        ?>
+                    <a href="<?= admin_url('pos') ?>" class="btn">
+                        <span class="fa fa-th-large"></span>
                     </a>
                     <a href="<?= admin_url('logout'); ?>" class="btn">
                         <span class="fa fa-sign-out"></span>
@@ -271,6 +316,155 @@
                         <?php } */ ?>
                         <?php if (($Owner || $Admin || $GP['reports-quantity_alerts'] || $GP['reports-expiry_alerts']) && ($qty_alert_num > 0 || $exp_alert_num > 0 || $shop_sale_alerts)) {
                         ?>
+                        <li class="dropdown hidden-sm">
+                            <a class="btn blightOrange tip" title="<?= lang('alerts') ?>"
+                                data-placement="left" data-toggle="dropdown" href="#">
+                                <i class="fa fa-exclamation-triangle"></i>
+                                <span class="number bred black"><?= $qty_alert_num + (($Settings->product_expiry) ? $exp_alert_num : 0) + $shop_sale_alerts + $shop_payment_alerts; ?></span>
+                            </a>
+                            <ul class="dropdown-menu pull-right">
+                                <?php if ($qty_alert_num > 0) {
+                                    ?>
+                                <li>
+                                    <a href="<?= admin_url('reports/quantity_alerts') ?>" class="">
+                                        <span class="label label-danger pull-right" style="margin-top:3px;"><?= $qty_alert_num; ?></span>
+                                        <span style="padding-right: 35px;"><?= lang('quantity_alerts') ?></span>
+                                    </a>
+                                </li>
+                                    <?php
+                                } ?>
+                                <?php if ($Settings->product_expiry) {
+                                    ?>
+                                <li>
+                                    <a href="<?= admin_url('reports/expiry_alerts') ?>" class="">
+                                        <span class="label label-danger pull-right" style="margin-top:3px;"><?= $exp_alert_num; ?></span>
+                                        <span style="padding-right: 35px;"><?= lang('expiry_alerts') ?></span>
+                                    </a>
+                                </li>
+                                    <?php
+                                } ?>
+                                <?php if ($shop_sale_alerts) {
+                                    ?>
+                                <li>
+                                    <a href="<?= admin_url('sales?shop=yes&delivery=no') ?>" class="">
+                                        <span class="label label-danger pull-right" style="margin-top:3px;"><?= $shop_sale_alerts; ?></span>
+                                        <span style="padding-right: 35px;"><?= lang('sales_x_delivered') ?></span>
+                                    </a>
+                                </li>
+                                    <?php
+                                } ?>
+                                <?php if ($shop_payment_alerts) {
+                                    ?>
+                                <li>
+                                    <a href="<?= admin_url('sales?shop=yes&attachment=yes') ?>" class="">
+                                        <span class="label label-danger pull-right" style="margin-top:3px;"><?= $shop_payment_alerts; ?></span>
+                                        <span style="padding-right: 35px;"><?= lang('manual_payments') ?></span>
+                                    </a>
+                                </li>
+                                    <?php
+                                } ?>
+                            </ul>
+                        </li>
+                        <?php
+                    } ?>
+                    <?php if(0){ //(POS) {
+                        ?>
+                    <li class="dropdown hidden-xs">
+                        <a class="btn bdarkGreen tip" title="<?= lang('pos') ?>" data-placement="bottom" href="<?= admin_url('pos') ?>">
+                            <i class="fa fa-th-large"></i> <span class="padding05"><?= lang('pos') ?></span>
+                        </a>
+                    </li>
+                        <?php
+                    } ?>
+                    <?php if(0){ //($Owner) {
+                        ?>
+                        <li class="dropdown">
+                            <a class="btn bdarkGreen tip" id="today_profit" title="<span><?= lang('today_profit') ?></span>"
+                                data-placement="bottom" data-html="true" href="<?= admin_url('reports/profit') ?>"
+                                data-toggle="modal" data-target="#myModal">
+                                <i class="fa fa-hourglass-2"></i>
+                            </a>
+                        </li>
+                        <?php
+                    } ?>
+                    <?php if(0){ //($Owner || $Admin) {
+                        ?>
+                        <?php if (POS) {
+                            ?>
+                    <li class="dropdown hidden-xs">
+                        <a class="btn bblue tip" title="<?= lang('list_open_registers') ?>" data-placement="bottom" href="<?= admin_url('pos/registers') ?>">
+                            <i class="fa fa-list"></i>
+                        </a>
+                    </li>
+                            <?php
+                        } ?>
+                    <li class="dropdown hidden-xs">
+                        <a class="btn bred tip" title="<?= lang('clear_ls') ?>" data-placement="bottom" id="clearLS" href="#">
+                            <i class="fa fa-eraser"></i>
+                        </a>
+                    </li>
+                        <?php
+                    } ?>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <div class="container" id="container">
+        <div class="row" id="main-con">
+        <table class="lt"><tr><td class="sidebar-con">
+            <div id="sidebar-left">
+                <div class="sidebar-nav nav-collapse collapse navbar-collapse" id="sidebar_menu">
+                    <?php 
+                        if(isset($Settings->pos_standalone) && $Settings->pos_standalone){
+                            include 'new_customer_menu.php';
+                        }else{
+                    ?>
+                    
+                    <ul class="nav main-menu">
+                        <li class="mm_cost_center">
+                            <a class="dropmenu" href="#">
+                                <i class="fa fa-dashboard"></i>
+                                <span class="text"> <?= lang('Cost Center'); ?></span>
+                                <span class="chevron closed"></span>
+                            </a>
+                            <ul>
+                                <li>
+                                    <a href="<?= admin_url('cost_center/dashboard') ?>">
+                                        <i class="fa fa-chart-bar"></i>
+                                        <span class="text">Dashboard</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="<?= admin_url('cost_center/performance') ?>">
+                                        <i class="fa fa-line-chart"></i>
+                                        <span class="text">Performance</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        
+                        <!-- <li class="mm_quick_search">
+                            <a href="<?= admin_url('welcome/quick_search') ?>">
+                                <i class="fa fa-search"></i>
+                                <span class="text"> <?= lang('Quick Search'); ?></span>
+                            </a>
+                        </li> -->
+
+                      <?php  
+                      // ========================================
+                      // ROLE-BASED MENU STRUCTURE
+                      // Roles: Admin, Accounts & Finance, Warehouse, Operations, Sales, Customer Management, Pharmacist
+                      // ========================================
+                      
+                      // WAREHOUSE MANAGEMENT ROLE
+                      if ($Owner || $Admin || (isset($GP['warehouse_manager']) && $GP['warehouse_manager'])) { 
+                      ?>
+                            <li class="mm_products">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-barcode"></i>
+                                    <span class="text"> <?= lang('Warehouse Management'); ?> </span>
+                                    <span class="chevron closed"></span>
                             <li class="dropdown hidden-sm">
                                 <a class="btn blightOrange tip" title="<?= lang('alerts') ?>"
                                     data-placement="left" data-toggle="dropdown" href="#">

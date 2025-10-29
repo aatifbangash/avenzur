@@ -5,7 +5,9 @@ defined('BASEPATH') or exit('No direct script access allowed');
 class Delivery extends MY_Controller
 {
     public function __construct()
+
     {
+      
         parent::__construct();
         $this->load->admin_model('delivery_model');
         $this->load->admin_model('sales_model');
@@ -64,7 +66,6 @@ class Delivery extends MY_Controller
         $this->db->join('sma_companies c', 's.customer_id = c.id', 'left');
         $this->db->where_in('s.payment_status', ['pending', 'due', 'partial']);
         $this->db->order_by('s.date', 'asc');
-
         $invoices_query = $this->db->get();
         if ($invoices_query === false) {
             $error = $this->db->error();
@@ -72,7 +73,6 @@ class Delivery extends MY_Controller
             $this->data['invoices'] = [];
         } else {
             $invoices = $invoices_query->result();
-
             // Add assignment status for each invoice
             foreach ($invoices as $invoice) {
                 $assignment = $this->delivery_model->get_invoice_assignment_status($invoice->id);
@@ -415,7 +415,6 @@ class Delivery extends MY_Controller
         }
 
         $invoice_ids = $this->input->post('invoice_ids');
-
         if (empty($invoice_ids)) {
             $this->sma->send_json(['error' => 1, 'msg' => 'No invoices selected']);
         }
@@ -545,7 +544,6 @@ class Delivery extends MY_Controller
     public function get_statistics()
     {
         $stats = $this->delivery_model->get_delivery_status_count();
-
         $this->sma->send_json(['error' => 0, 'data' => $stats]);
     }
 
@@ -555,7 +553,6 @@ class Delivery extends MY_Controller
     public function search()
     {
         $search_term = $this->input->get('q');
-
         if (empty($search_term)) {
             $this->sma->send_json(['error' => 1, 'msg' => 'Search term required']);
         }
