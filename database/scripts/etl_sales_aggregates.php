@@ -7,7 +7,7 @@
  * 
  * Run: 
  * 1. Manually: php etl_sales_aggregates.php
- * 2. As cron: */15 * * * * /usr/bin/php /path/to/etl_sales_aggregates.php  (every 15 min)
+ * 2. As cron:/15 * * * * /usr/bin/php /path/to/etl_sales_aggregates.php  (every 15 min)
  *             0 2 * * * /usr/bin/php /path/to/etl_sales_aggregates.php backfill (daily at 2am)
  * 
  * Usage:
@@ -24,9 +24,9 @@ $end_date_param = isset($argv[3]) ? $argv[3] : date('Y-m-d');
 // Database configuration
 $db_config = [
     'host' => getenv('DB_HOST') ?: 'localhost',
-    'user' => getenv('DB_USER') ?: 'root',
-    'password' => getenv('DB_PASSWORD') ?: '',
-    'database' => getenv('DB_NAME') ?: 'avenzur_pharmacy',
+    'user' => getenv('DB_USER') ?: 'admin',
+    'password' => getenv('DB_PASSWORD') ?: 'R00tr00t',
+    'database' => getenv('DB_NAME') ?: 'rawabi_jeddah',
 ];
 
 try {
@@ -197,7 +197,7 @@ function execute_etl($mysqli, $aggregate_date) {
         }
 
         $stmt->bind_param(
-            'siiissssssssss',
+            'sisssssssssssssss',
             $aggregate_date, $year, $month,
             $aggregate_date, $aggregate_date,
             $month_start, $aggregate_date,
@@ -284,7 +284,7 @@ function execute_etl($mysqli, $aggregate_date) {
         }
 
         $stmt->bind_param(
-            'siiissssssssss',
+            'sisssssssssssssss',
             $aggregate_date, $year, $month,
             $aggregate_date, $aggregate_date,
             $month_start, $aggregate_date,
@@ -313,30 +313,23 @@ function execute_etl($mysqli, $aggregate_date) {
             SELECT
                 w.id,
                 ? AS aggregate_date,
-                HOUR(s.date) AS aggregate_hour,
-                DATE_FORMAT(s.date, '%Y-%m-%d %H:00:00') AS aggregate_datetime,
+                COALESCE(HOUR(s.date), 0) AS aggregate_hour,
+                COALESCE(DATE_FORMAT(s.date, '%Y-%m-%d %H:00:00'), CONCAT(?, ' 00:00:00')) AS aggregate_datetime,
                 
                 -- Hour Sales
-                COALESCE(SUM(s.grand_total), 0),
-                COALESCE(COUNT(DISTINCT s.id), 0),
+                COALESCE(SUM(s.grand_total), 0) AS hour_sales_amount,
+                COALESCE(COUNT(DISTINCT s.id), 0) AS hour_sales_count,
                 
-                -- Today Running Total
-                COALESCE(SUM(SUM(s.grand_total)) OVER (
-                    PARTITION BY DATE(s.date), w.id 
-                    ORDER BY HOUR(s.date) 
-                    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-                )), 0),
-                COALESCE(SUM(COUNT(DISTINCT s.id)) OVER (
-                    PARTITION BY DATE(s.date), w.id 
-                    ORDER BY HOUR(s.date) 
-                    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-                )), 0)
+                -- Today Running Total (will be calculated in application)
+                0 AS today_sales_amount,
+                0 AS today_sales_count
+                
             FROM sma_warehouses w
             LEFT JOIN sma_sales s ON w.id = s.warehouse_id
                 AND DATE(s.date) = ?
                 AND s.sale_status IN ('completed', 'completed_partial')
-            WHERE w.id IS NOT NULL
-            GROUP BY w.id, DATE(s.date), HOUR(s.date)
+            WHERE w.id IS NOT NULL AND s.id IS NOT NULL
+            GROUP BY w.id, DATE(s.date), HOUR(s.date), DATE_FORMAT(s.date, '%Y-%m-%d %H:00:00')
             
             ON DUPLICATE KEY UPDATE
                 hour_sales_amount = VALUES(hour_sales_amount),

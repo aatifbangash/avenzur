@@ -21,9 +21,9 @@ $end_date_param = isset($argv[3]) ? $argv[3] : date('Y-m-d');
 // Database configuration
 $db_config = [
     'host' => getenv('DB_HOST') ?: 'localhost',
-    'user' => getenv('DB_USER') ?: 'root',
-    'password' => getenv('DB_PASSWORD') ?: '',
-    'database' => getenv('DB_NAME') ?: 'avenzur_pharmacy',
+    'user' => getenv('DB_USER') ?: 'admin',
+    'password' => getenv('DB_PASSWORD') ?: 'R00tr00t',
+    'database' => getenv('DB_NAME') ?: 'rawabi_jeddah',
 ];
 
 try {
