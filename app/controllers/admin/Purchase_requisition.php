@@ -6,10 +6,9 @@ class Purchase_requisition extends MY_Controller {
 
     public function __construct()
     { 
-        error_reporting(E_ALL);        // Report all errors
-        ini_set('display_errors', 1); 
+        //error_reporting(E_ALL);        // Report all errors
+        //ini_set('display_errors', 1); 
         parent::__construct();
-        $this->load->admin_model('users_model');
         $this->load->admin_model('pr_audit_logs_model');
         $this->load->admin_model('purchase_requisition_model');
         $this->load->admin_model('companies_model');
