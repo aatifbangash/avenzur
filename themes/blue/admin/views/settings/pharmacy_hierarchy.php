@@ -18,6 +18,11 @@
                 <!-- Tab Navigation -->
                 <ul class="nav nav-tabs" role="tablist" style="margin-bottom: 20px; border-bottom: 2px solid #f4f4f4;">
                     <li role="presentation" class="active">
+                        <a href="#pharma-group-section" aria-controls="pharma-group-section" role="tab" data-toggle="tab" class="tab-link">
+                            <i class="fa fa-building-o"></i> <?php echo lang('pharma_groups'); ?>
+                        </a>
+                    </li>
+                    <li role="presentation">
                         <a href="#pharmacy-section" aria-controls="pharmacy-section" role="tab" data-toggle="tab" class="tab-link">
                             <i class="fa fa-hospital-o"></i> <?php echo lang('pharmacies'); ?>
                         </a>
@@ -36,8 +41,48 @@
 
                 <!-- Tab Content -->
                 <div class="tab-content">
+                    <!-- PHARMA GROUPS TAB -->
+                    <div role="tabpanel" class="tab-pane fade in active" id="pharma-group-section">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h4 class="section-title">
+                                    <i class="fa fa-building-o"></i> <?php echo lang('manage_pharma_groups'); ?>
+                                </h4>
+                                <p class="text-muted"><?php echo lang('pharma_group_description'); ?></p>
+
+                                <!-- Add Pharma Group Button -->
+                                <div class="row" style="margin-bottom: 20px;">
+                                    <div class="col-md-12">
+                                        <button type="button" class="btn btn-success" id="btn_add_pharma_group" data-toggle="modal" data-target="#modal_add_pharma_group">
+                                            <i class="fa fa-plus"></i> <?php echo lang('add_pharma_group'); ?>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Pharma Groups Table -->
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-bordered table-hover" id="pharma_groups_table">
+                                        <thead>
+                                            <tr>
+                                                <th><?php echo lang('code'); ?></th>
+                                                <th><?php echo lang('name'); ?></th>
+                                                <th><?php echo lang('address'); ?></th>
+                                                <th><?php echo lang('phone'); ?></th>
+                                                <th><?php echo lang('email'); ?></th>
+                                                <th width="15%"><?php echo lang('actions'); ?></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Populated by AJAX -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- PHARMACIES TAB -->
-                    <div role="tabpanel" class="tab-pane fade in active" id="pharmacy-section">
+                    <div role="tabpanel" class="tab-pane fade" id="pharmacy-section">
                         <div class="row">
                             <div class="col-md-12">
                                 <h4 class="section-title">
@@ -163,6 +208,161 @@
 </div>
 
 <!-- ===== MODALS ===== -->
+
+<!-- Add Pharma Group Modal -->
+<div class="modal fade" id="modal_add_pharma_group" tabindex="-1" role="dialog" aria-labelledby="modal_add_pharma_group_label">
+    <div class="modal-dialog modal-lg" role="document" style="width: 95%; max-width: 1200px;">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); border-bottom: none;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white; opacity: 0.8;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="modal_add_pharma_group_label" style="color: white; font-weight: 600;">
+                    <i class="fa fa-plus-circle"></i> <?php echo lang('add_pharma_group'); ?>
+                </h4>
+            </div>
+            <form id="form_add_pharma_group" method="post" role="form">
+                <?php echo form_hidden($this->security->get_csrf_token_name(), $this->security->get_csrf_hash()); ?>
+                <div class="modal-body" style="padding: 30px;">
+                    <!-- Left Column - Pharma Group Info -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 style="color: #10B981; font-weight: 600; margin-bottom: 20px; border-bottom: 2px solid #10B981; padding-bottom: 10px;">
+                                <i class="fa fa-building-o"></i> <?php echo lang('pharma_group_information'); ?>
+                            </h5>
+
+                            <div class="form-group">
+                                <label for="pharma_group_code"><?php echo lang('pharma_group_code'); ?> <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="pharma_group_code" name="code" placeholder="PG-001" required style="border-radius: 4px; border: 1px solid #ddd;">
+                                <small class="text-muted"><i class="fa fa-info-circle"></i> <?php echo lang('unique_code'); ?></small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="pharma_group_name"><?php echo lang('pharma_group_name'); ?> <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="pharma_group_name" name="name" placeholder="<?php echo lang('enter_pharma_group_name'); ?>" required style="border-radius: 4px; border: 1px solid #ddd;">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="pharma_group_phone"><?php echo lang('phone'); ?> <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="pharma_group_phone" name="phone" placeholder="+966 50 0000 0000" required style="border-radius: 4px; border: 1px solid #ddd;">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="pharma_group_email"><?php echo lang('email'); ?></label>
+                                <input type="email" class="form-control" id="pharma_group_email" name="email" placeholder="<?php echo lang('enter_email'); ?>" style="border-radius: 4px; border: 1px solid #ddd;">
+                            </div>
+                        </div>
+
+                        <!-- Right Column - Address -->
+                        <div class="col-md-6">
+                            <h5 style="color: #10B981; font-weight: 600; margin-bottom: 20px; border-bottom: 2px solid #10B981; padding-bottom: 10px;">
+                                <i class="fa fa-map-marker"></i> <?php echo lang('location_details'); ?>
+                            </h5>
+
+                            <div class="form-group">
+                                <label for="pharma_group_address"><?php echo lang('address'); ?> <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="pharma_group_address" name="address" rows="4" placeholder="<?php echo lang('enter_complete_address'); ?>" required style="border-radius: 4px; border: 1px solid #ddd; resize: vertical;"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="pharma_group_country"><?php echo lang('country'); ?></label>
+                                <input type="hidden" id="pharma_group_country" name="country" value="8">
+                                <input type="text" class="form-control" value="Saudi Arabia" disabled style="border-radius: 4px; border: 1px solid #ddd;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer" style="background: #f5f5f5; border-top: 1px solid #ddd; padding: 15px;">
+                    <button type="button" class="btn btn-default" data-dismiss="modal" style="border-radius: 4px;">
+                        <i class="fa fa-times"></i> <?php echo lang('cancel'); ?>
+                    </button>
+                    <button type="submit" class="btn btn-success" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); border: none; border-radius: 4px;">
+                        <i class="fa fa-save"></i> <?php echo lang('add_pharma_group'); ?>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Pharma Group Modal -->
+<div class="modal fade" id="modal_edit_pharma_group" tabindex="-1" role="dialog" aria-labelledby="modal_edit_pharma_group_label">
+    <div class="modal-dialog modal-lg" role="document" style="width: 95%; max-width: 1200px;">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #0EA5E9 0%, #0284C7 100%); border-bottom: none;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white; opacity: 0.8;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="modal_edit_pharma_group_label" style="color: white; font-weight: 600;">
+                    <i class="fa fa-edit"></i> <?php echo lang('edit_pharma_group'); ?>
+                </h4>
+            </div>
+            <form id="form_edit_pharma_group" method="post" role="form">
+                <?php echo form_hidden($this->security->get_csrf_token_name(), $this->security->get_csrf_hash()); ?>
+                <div class="modal-body" style="padding: 30px;">
+                    <input type="hidden" id="pharma_group_id_edit" name="id">
+                    
+                    <!-- Left Column - Pharma Group Info -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 style="color: #0EA5E9; font-weight: 600; margin-bottom: 20px; border-bottom: 2px solid #0EA5E9; padding-bottom: 10px;">
+                                <i class="fa fa-building-o"></i> <?php echo lang('pharma_group_information'); ?>
+                            </h5>
+
+                            <div class="form-group">
+                                <label for="pharma_group_code_edit"><?php echo lang('pharma_group_code'); ?> <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="pharma_group_code_edit" name="code" placeholder="PG-001" required style="border-radius: 4px; border: 1px solid #ddd;">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="pharma_group_name_edit"><?php echo lang('pharma_group_name'); ?> <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="pharma_group_name_edit" name="name" placeholder="<?php echo lang('enter_pharma_group_name'); ?>" required style="border-radius: 4px; border: 1px solid #ddd;">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="pharma_group_phone_edit"><?php echo lang('phone'); ?> <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="pharma_group_phone_edit" name="phone" placeholder="+966 50 0000 0000" required style="border-radius: 4px; border: 1px solid #ddd;">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="pharma_group_email_edit"><?php echo lang('email'); ?></label>
+                                <input type="email" class="form-control" id="pharma_group_email_edit" name="email" placeholder="<?php echo lang('enter_email'); ?>" style="border-radius: 4px; border: 1px solid #ddd;">
+                            </div>
+                        </div>
+
+                        <!-- Right Column - Address -->
+                        <div class="col-md-6">
+                            <h5 style="color: #0EA5E9; font-weight: 600; margin-bottom: 20px; border-bottom: 2px solid #0EA5E9; padding-bottom: 10px;">
+                                <i class="fa fa-map-marker"></i> <?php echo lang('location_details'); ?>
+                            </h5>
+
+                            <div class="form-group">
+                                <label for="pharma_group_address_edit"><?php echo lang('address'); ?> <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="pharma_group_address_edit" name="address" rows="4" placeholder="<?php echo lang('enter_complete_address'); ?>" required style="border-radius: 4px; border: 1px solid #ddd; resize: vertical;"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="pharma_group_country_edit"><?php echo lang('country'); ?></label>
+                                <input type="hidden" id="pharma_group_country_edit" name="country" value="8">
+                                <input type="text" class="form-control" value="Saudi Arabia" disabled style="border-radius: 4px; border: 1px solid #ddd;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer" style="background: #f5f5f5; border-top: 1px solid #ddd; padding: 15px;">
+                    <button type="button" class="btn btn-default" data-dismiss="modal" style="border-radius: 4px;">
+                        <i class="fa fa-times"></i> <?php echo lang('cancel'); ?>
+                    </button>
+                    <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #0EA5E9 0%, #0284C7 100%); border: none; border-radius: 4px;">
+                        <i class="fa fa-save"></i> <?php echo lang('update_pharma_group'); ?>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <!-- Add Pharmacy Modal -->
 <div class="modal fade" id="modal_add_pharmacy" tabindex="-1" role="dialog" aria-labelledby="modal_add_pharmacy_label">
@@ -1159,6 +1359,212 @@
         });
     }
 
+    // ===== PHARMA GROUP FUNCTIONS =====
+    
+    /**
+     * Load all pharma groups into the table
+     */
+    function loadPharmaGroups() {
+        $.ajax({
+            url: '<?php echo admin_url('organization_setup/get_pharmacy_groups'); ?>',
+            type: 'GET',
+            dataType: 'json',
+            success: function(response) {
+                let tbody = $('#pharma_groups_table tbody');
+                tbody.empty();
+                
+                if (response.success && response.data.length > 0) {
+                    response.data.forEach(function(group) {
+                        tbody.append(`
+                            <tr>
+                                <td><strong>${group.code}</strong></td>
+                                <td>${group.name}</td>
+                                <td>${group.address || '-'}</td>
+                                <td>${group.phone || '-'}</td>
+                                <td>${group.email || '-'}</td>
+                                <td>
+                                    <button class="btn btn-xs btn-info" onclick="editPharmaGroup('${group.id}')">
+                                        <i class="fa fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-xs btn-danger" onclick="deletePharmaGroup('${group.id}', '${group.name}')">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `);
+                    });
+                } else {
+                    tbody.append('<tr><td colspan="6" class="text-center text-muted"><i class="fa fa-inbox"></i> No pharma groups found</td></tr>');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading pharma groups:', error);
+                showAnimatedAlert('error', 'Error', 'Failed to load pharma groups');
+            }
+        });
+    }
+
+    /**
+     * Edit pharma group - load data into form
+     */
+    function editPharmaGroup(id) {
+        $.ajax({
+            url: '<?php echo admin_url('organization_setup/get_pharma_group_details'); ?>',
+            type: 'GET',
+            data: { id: id },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    let data = response.data;
+                    $('#pharma_group_id_edit').val(data.id);
+                    $('#pharma_group_code_edit').val(data.code);
+                    $('#pharma_group_name_edit').val(data.name);
+                    $('#pharma_group_phone_edit').val(data.phone);
+                    $('#pharma_group_email_edit').val(data.email);
+                    $('#pharma_group_address_edit').val(data.address);
+                    $('#pharma_group_country_edit').val(data.country || 8);
+                    $('#modal_edit_pharma_group').modal('show');
+                } else {
+                    showAnimatedAlert('error', 'Error', response.message || 'Failed to load pharma group details');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading pharma group details:', error);
+                showAnimatedAlert('error', 'Error', 'Failed to load pharma group details');
+            }
+        });
+    }
+
+    /**
+     * Delete pharma group with confirmation
+     */
+    function deletePharmaGroup(id, name) {
+        if (typeof swal === 'function') {
+            swal({
+                title: 'Delete Pharma Group?',
+                text: `Are you sure you want to delete "${name}" and all associated pharmacies and branches?`,
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Delete',
+                confirmButtonColor: '#EF4444',
+                cancelButtonText: 'Cancel'
+            }, function(isConfirm) {
+                if (isConfirm) {
+                    $.ajax({
+                        url: '<?php echo admin_url('organization_setup/delete_pharma_group'); ?>',
+                        type: 'POST',
+                        data: {
+                            id: id,
+                            <?php echo "'" . $this->security->get_csrf_token_name() . "': '" . $this->security->get_csrf_hash() . "'"; ?>
+                        },
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.success) {
+                                showAnimatedAlert('success', 'Success', response.message || 'Pharma group deleted successfully', function() {
+                                    loadPharmaGroups();
+                                });
+                            } else {
+                                showAnimatedAlert('error', 'Error', response.message || 'Failed to delete pharma group');
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Error deleting pharma group:', error);
+                            showAnimatedAlert('error', 'Error', 'Failed to delete pharma group');
+                        }
+                    });
+                }
+            });
+        } else {
+            if (confirm(`Are you sure you want to delete "${name}"?`)) {
+                $.ajax({
+                    url: '<?php echo admin_url('organization_setup/delete_pharma_group'); ?>',
+                    type: 'POST',
+                    data: {
+                        id: id,
+                        <?php echo "'" . $this->security->get_csrf_token_name() . "': '" . $this->security->get_csrf_hash() . "'"; ?>
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            showAnimatedAlert('success', 'Success', response.message || 'Pharma group deleted successfully', function() {
+                                loadPharmaGroups();
+                            });
+                        } else {
+                            showAnimatedAlert('error', 'Error', response.message || 'Failed to delete pharma group');
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    /**
+     * Form submission for adding pharma group
+     */
+    $('#form_add_pharma_group').on('submit', function(e) {
+        e.preventDefault();
+        
+        $.ajax({
+            url: '<?php echo admin_url('organization_setup/add_pharma_group'); ?>',
+            type: 'POST',
+            data: $(this).serialize(),
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    showAnimatedAlert('success', 'Success', response.message || 'Pharma group created successfully', function() {
+                        $('#form_add_pharma_group')[0].reset();
+                        $('#modal_add_pharma_group').modal('hide');
+                        loadPharmaGroups();
+                    });
+                } else {
+                    showAnimatedAlert('error', 'Error', response.message || 'Failed to create pharma group');
+                }
+            },
+            error: function(xhr, status, error) {
+                let errorMsg = 'Failed to create pharma group';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMsg = xhr.responseJSON.message;
+                }
+                console.error('Error creating pharma group:', error);
+                showAnimatedAlert('error', 'Error', errorMsg);
+            }
+        });
+    });
+
+    /**
+     * Form submission for updating pharma group
+     */
+    $('#form_edit_pharma_group').on('submit', function(e) {
+        e.preventDefault();
+        
+        $.ajax({
+            url: '<?php echo admin_url('organization_setup/update_pharma_group'); ?>',
+            type: 'POST',
+            data: $(this).serialize(),
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    showAnimatedAlert('success', 'Success', response.message || 'Pharma group updated successfully', function() {
+                        $('#modal_edit_pharma_group').modal('hide');
+                        loadPharmaGroups();
+                    });
+                } else {
+                    showAnimatedAlert('error', 'Error', response.message || 'Failed to update pharma group');
+                }
+            },
+            error: function(xhr, status, error) {
+                let errorMsg = 'Failed to update pharma group';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMsg = xhr.responseJSON.message;
+                }
+                console.error('Error updating pharma group:', error);
+                showAnimatedAlert('error', 'Error', errorMsg);
+            }
+        });
+    });
+
+    // ===== END PHARMA GROUP FUNCTIONS =====
+
     function loadPharmacies() {
         let groupId = $('#pharmacy_group_id').val();
         if (!groupId) {
@@ -1856,4 +2262,19 @@
             alert(message);
         }
     }
+
+    // ===== INITIALIZATION =====
+    // Load pharma groups when page loads or modal is shown
+    $(document).ready(function() {
+        console.log('Initializing pharmacy hierarchy page');
+        loadPharmaGroups();
+        loadPharmacyGroups();  // For pharmacy group dropdown
+        loadHierarchyTree();
+    });
+
+    // Reload pharma groups when add modal is shown
+    $('#modal_add_pharma_group').on('show.bs.modal', function() {
+        // Reset form
+        $('#form_add_pharma_group')[0].reset();
+    });
 </script>

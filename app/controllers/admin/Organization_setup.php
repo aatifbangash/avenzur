@@ -50,6 +50,360 @@ class Organization_setup extends MY_Controller
     }
 
     /**
+     * API: Add Pharma Group (Company)
+     * 
+     * Creates a new pharmacy group (company) and inserts into:
+     * 1. sma_warehouses (with warehouse_type = 'pharmaGroup')
+     * 2. loyalty_companies
+     * 3. loyalty_pharmacy_groups (linked to loyalty_companies via foreign key)
+     * 
+     * Request params:
+     * - code: Unique pharmacy group code
+     * - name: Pharmacy group name
+     * - address: Physical address
+     * - phone: Contact phone number
+     * - email: Contact email
+     * - country: Country ID (default: 8 for Saudi Arabia)
+     */
+    public function add_pharma_group()
+    {
+        if (!$this->input->is_ajax_request()) {
+            show_404();
+        }
+
+        // Validation rules
+        $this->form_validation->set_rules('code', 'Pharmacy Group Code', 'required|is_unique[sma_warehouses.code]');
+        $this->form_validation->set_rules('name', 'Pharmacy Group Name', 'required|is_unique[loyalty_pharmacy_groups.name]');
+        $this->form_validation->set_rules('address', 'Address', 'required');
+        $this->form_validation->set_rules('phone', 'Phone', 'required');
+        $this->form_validation->set_rules('email', 'Email', 'valid_email');
+
+        if (!$this->form_validation->run()) {
+            $this->sma->send_json([
+                'success' => false,
+                'message' => validation_errors()
+            ]);
+            return;
+        }
+
+        $this->db->trans_start();
+
+        try {
+            // Prepare data
+            $code = $this->input->post('code');
+            $name = $this->input->post('name');
+            $address = $this->input->post('address');
+            $phone = $this->input->post('phone');
+            $email = $this->input->post('email') ?: '';
+            $country = $this->input->post('country') ?: 8;  // Default to Saudi Arabia
+            
+            // STEP 1: Insert into sma_warehouses with warehouse_type = 'pharmaGroup'
+            $warehouse_data = [
+                'code' => $code,
+                'name' => $name,
+                'address' => $address,
+                'phone' => $phone,
+                'email' => $email,
+                'warehouse_type' => 'pharmaGroup',
+                'country' => $country,
+                'is_main' => 0,
+                'parent_id' => null
+            ];
+
+            $this->db->insert('sma_warehouses', $warehouse_data);
+            $warehouse_id = $this->db->insert_id();
+
+            if (!$warehouse_id) {
+                throw new Exception('Failed to create pharmacy group warehouse');
+            }
+
+            // Generate UUIDs for loyalty tables
+            $company_id = $this->sma->generateUUIDv4();
+            $pharma_group_id = $this->sma->generateUUIDv4();
+            $timestamp = date('Y-m-d H:i:s');
+
+            // STEP 2: Insert into loyalty_companies
+            $this->db->query(
+                "INSERT INTO loyalty_companies (id, code, name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+                [$company_id, $code, $name, $timestamp, $timestamp]
+            );
+
+            // STEP 3: Insert into loyalty_pharmacy_groups linked to loyalty_companies
+            $this->db->query(
+                "INSERT INTO loyalty_pharmacy_groups (id, code, name, company_id, external_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                [$pharma_group_id, $code, $name, $company_id, $warehouse_id, $timestamp, $timestamp]
+            );
+
+            $this->db->trans_complete();
+
+            if ($this->db->trans_status() === false) {
+                $this->sma->send_json([
+                    'success' => false,
+                    'message' => 'Failed to create pharmacy group. Database transaction failed.'
+                ]);
+                return;
+            }
+
+            $this->sma->send_json([
+                'success' => true,
+                'message' => 'Pharmacy Group created successfully',
+                'data' => [
+                    'pharmacy_group_id' => $pharma_group_id,
+                    'company_id' => $company_id,
+                    'warehouse_id' => $warehouse_id,
+                    'code' => $code,
+                    'name' => $name
+                ]
+            ]);
+
+        } catch (Exception $e) {
+            $this->db->trans_rollback();
+            log_message('error', 'Add pharma group error: ' . $e->getMessage());
+            $this->sma->send_json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * API: Get pharmacy group details for editing
+     */
+    public function get_pharma_group_details()
+    {
+        if (!$this->input->is_ajax_request()) {
+            show_404();
+        }
+
+        $id = $this->input->get('id');
+        if (!$id) {
+            $this->sma->send_json(['success' => false, 'message' => 'Pharmacy Group ID required']);
+            return;
+        }
+
+        $query = "SELECT 
+                    lpg.id,
+                    lpg.code,
+                    lpg.name,
+                    lpg.company_id,
+                    lpg.external_id,
+                    COALESCE(sw.address, '') as address,
+                    COALESCE(sw.phone, '') as phone,
+                    COALESCE(sw.email, '') as email,
+                    sw.country
+                  FROM loyalty_pharmacy_groups lpg
+                  LEFT JOIN sma_warehouses sw ON lpg.external_id = sw.id
+                  WHERE lpg.id = ?";
+        
+        $pharma_group = $this->db->query($query, [$id])->row_array();
+
+        if (!$pharma_group) {
+            $this->sma->send_json(['success' => false, 'message' => 'Pharmacy Group not found']);
+            return;
+        }
+
+        $this->sma->send_json([
+            'success' => true,
+            'data' => $pharma_group
+        ]);
+    }
+
+    /**
+     * API: Update pharmacy group
+     * Updates records in: sma_warehouses, loyalty_companies, loyalty_pharmacy_groups
+     */
+    public function update_pharma_group()
+    {
+        if (!$this->input->is_ajax_request()) {
+            show_404();
+        }
+
+        $id = $this->input->post('id');
+        if (!$id) {
+            $this->sma->send_json(['success' => false, 'message' => 'Pharmacy Group ID required']);
+            return;
+        }
+
+        $this->form_validation->set_rules('code', 'Pharmacy Group Code', 'required');
+        $this->form_validation->set_rules('name', 'Pharmacy Group Name', 'required');
+        $this->form_validation->set_rules('address', 'Address', 'required');
+        $this->form_validation->set_rules('phone', 'Phone', 'required');
+        $this->form_validation->set_rules('email', 'Email', 'valid_email');
+
+        if (!$this->form_validation->run()) {
+            $this->sma->send_json([
+                'success' => false,
+                'message' => validation_errors()
+            ]);
+            return;
+        }
+
+        $this->db->trans_start();
+
+        try {
+            // 1. Get existing pharmacy group to find warehouse ID and company ID
+            $query = "SELECT external_id, company_id FROM loyalty_pharmacy_groups WHERE id = ?";
+            $existing = $this->db->query($query, [$id])->row_array();
+            
+            if (!$existing) {
+                throw new Exception('Pharmacy Group not found');
+            }
+
+            $warehouse_id = $existing['external_id'];
+            $company_id = $existing['company_id'];
+
+            // Prepare update data
+            $code = $this->input->post('code');
+            $name = $this->input->post('name');
+            $address = $this->input->post('address');
+            $phone = $this->input->post('phone');
+            $email = $this->input->post('email') ?: '';
+            $timestamp = date('Y-m-d H:i:s');
+
+            // 2. Update sma_warehouses
+            $this->db->query(
+                "UPDATE sma_warehouses SET code = ?, name = ?, address = ?, phone = ?, email = ? WHERE id = ?",
+                [$code, $name, $address, $phone, $email, $warehouse_id]
+            );
+
+            // 3. Update loyalty_companies
+            $this->db->query(
+                "UPDATE loyalty_companies SET code = ?, name = ?, updated_at = ? WHERE id = ?",
+                [$code, $name, $timestamp, $company_id]
+            );
+
+            // 4. Update loyalty_pharmacy_groups
+            $this->db->query(
+                "UPDATE loyalty_pharmacy_groups SET code = ?, name = ?, updated_at = ? WHERE id = ?",
+                [$code, $name, $timestamp, $id]
+            );
+
+            $this->db->trans_complete();
+
+            if ($this->db->trans_status() === false) {
+                $this->sma->send_json([
+                    'success' => false,
+                    'message' => 'Failed to update pharmacy group. Database transaction failed.'
+                ]);
+                return;
+            }
+
+            $this->sma->send_json([
+                'success' => true,
+                'message' => 'Pharmacy Group updated successfully'
+            ]);
+
+        } catch (Exception $e) {
+            $this->db->trans_rollback();
+            log_message('error', 'Update pharma group error: ' . $e->getMessage());
+            $this->sma->send_json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * API: Delete pharmacy group
+     * Deletes records from: loyalty_pharmacy_groups, loyalty_companies, sma_warehouses
+     * Also cascades to delete related pharmacies and branches
+     */
+    public function delete_pharma_group()
+    {
+        if (!$this->input->is_ajax_request()) {
+            show_404();
+        }
+
+        $id = $this->input->post('id');
+        if (!$id) {
+            $this->sma->send_json(['success' => false, 'message' => 'Pharmacy Group ID required']);
+            return;
+        }
+
+        $this->db->trans_start();
+
+        try {
+            // 1. Get pharmacy group details
+            $query = "SELECT external_id, company_id FROM loyalty_pharmacy_groups WHERE id = ?";
+            $pharma_group = $this->db->query($query, [$id])->row_array();
+
+            if (!$pharma_group) {
+                throw new Exception('Pharmacy Group not found');
+            }
+
+            $warehouse_id = $pharma_group['external_id'];
+            $company_id = $pharma_group['company_id'];
+
+            // 2. Get all pharmacies in this group to delete their branches first
+            $pharmacies_query = "SELECT id, external_id FROM loyalty_pharmacies WHERE pharmacy_group_id = ?";
+            $pharmacies = $this->db->query($pharmacies_query, [$id])->result_array();
+
+            foreach ($pharmacies as $pharmacy) {
+                // Delete branches of this pharmacy
+                $this->db->query(
+                    "DELETE FROM loyalty_branches WHERE pharmacy_id = ?",
+                    [$pharmacy['id']]
+                );
+
+                // Delete branch warehouses
+                $this->db->query(
+                    "DELETE FROM sma_warehouses WHERE parent_id = ? AND warehouse_type = 'branch'",
+                    [$pharmacy['external_id']]
+                );
+            }
+
+            // 3. Delete pharmacy records
+            $this->db->query(
+                "DELETE FROM loyalty_pharmacies WHERE pharmacy_group_id = ?",
+                [$id]
+            );
+
+            // 4. Delete pharmacy warehouses
+            $this->db->query(
+                "DELETE FROM sma_warehouses WHERE parent_id = ? AND warehouse_type = 'pharmacy'",
+                [$warehouse_id]
+            );
+
+            // 5. Delete pharmacy group warehouse
+            $this->db->query(
+                "DELETE FROM sma_warehouses WHERE id = ?",
+                [$warehouse_id]
+            );
+
+            // 6. Delete loyalty_pharmacy_groups
+            $this->db->query(
+                "DELETE FROM loyalty_pharmacy_groups WHERE id = ?",
+                [$id]
+            );
+
+            // 7. Delete loyalty_companies
+            $this->db->query(
+                "DELETE FROM loyalty_companies WHERE id = ?",
+                [$company_id]
+            );
+
+            $this->db->trans_complete();
+
+            if ($this->db->trans_status() === false) {
+                throw new Exception('Transaction failed');
+            }
+
+            $this->sma->send_json([
+                'success' => true,
+                'message' => 'Pharmacy Group deleted successfully'
+            ]);
+
+        } catch (Exception $e) {
+            $this->db->trans_rollback();
+            log_message('error', 'Delete pharma group error: ' . $e->getMessage());
+            $this->sma->send_json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * API: Get all pharmacy groups for dropdown selection
      */
     public function get_pharmacy_groups()
