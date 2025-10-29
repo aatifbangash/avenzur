@@ -752,7 +752,7 @@ class Purchases extends MY_Controller
                     $this->session->set_flashdata('error', 'Purchase Order not found or already Invoiced.');
                     admin_redirect('purchase_order'); // redirect back
                 }
-                else if ($pr_data->status != 'goods_received') {
+                else if ($pr_data->status != 'pending_invoice') {
                     $this->session->set_flashdata('error', 'No goods received notes found. Please add grn then make invoice.');
                     admin_redirect('purchase_order'); // redirect back
                 }

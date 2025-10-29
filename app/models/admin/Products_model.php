@@ -516,6 +516,25 @@ class Products_model extends CI_Model
         return false;
     }
 
+    public function get_products_by_ids($product_ids)
+{
+    if (empty($product_ids)) {
+        return false;
+    }
+
+    $this->db->select('id, code, name, cost, price, tax_rate, unit');
+    $this->db->from('products');
+    $this->db->where_in('id', $product_ids);
+    $q = $this->db->get();
+
+    if ($q->num_rows() > 0) {
+        return $q->result();
+    }
+    return false;
+}
+
+
+
     public function getAdjustmentItems($adjustment_id)
     {
         $this->db->select('adjustment_items.*, products.code as product_code, products.name as product_name, products.image, products.details as details, product_variants.name as variant')
@@ -1926,7 +1945,11 @@ AND im_summary.total_quantity > 0";
                 'id'             => $row->id,
                 'code'           => $row->code,
                 'name'           => $row->name,
+                'price'          => $row->price ?? '',
                 'deal_type'      => $row->deal_type ?? '',
+                'dis1_percentage'=> $row->dis1_percentage ?? '',
+                'dis2_percentage'=> $row->dis2_percentage ?? '',
+                'dis3_percentage'=> $row->dis3_percentage ?? '',
                 'deal_percentage'=> $row->deal_percentage ?? '',
                 'threshold'      => $row->threshold ?? '',
                 'deal_available' => $deal_available

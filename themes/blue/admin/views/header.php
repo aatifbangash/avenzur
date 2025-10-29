@@ -582,6 +582,14 @@
                                             <span class="text"> <?= lang('list_purchases'); ?></span>
                                         </a>
                                     </li>
+
+                                    <!-- Quotation Analyzer -->
+<li id="quotation_analyzer">
+    <a class="submenu" href="<?= admin_url('quotation_analyzer'); ?>">
+        <i class="fa fa-calculator"></i>
+        <span class="text"> <?= lang('Quotation_Analyzer'); ?></span>
+    </a>
+</li>
                                     <li id="purchases_add">
                                         <a class="submenu" href="<?= admin_url('purchases/add'); ?>">
                                             <i class="fa fa-plus-circle"></i>
@@ -765,6 +773,28 @@
                                     </li>
                                 </ul>
                             </li>-->
+
+                            <li class="mm_delivery">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-truck"></i>
+                                    <span class="text"> <?= lang('deliveries'); ?>
+                                    </span> <span class="chevron closed"></span>
+                                </a>
+                                <ul>
+                                    <li id="delivery_index">
+                                        <a class="submenu" href="<?= admin_url('delivery'); ?>">
+                                            <i class="fa fa-list"></i>
+                                            <span class="text"> <?= lang('list_deliveries'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="delivery_add">
+                                        <a class="submenu" href="<?= admin_url('delivery/add'); ?>">
+                                            <i class="fa fa-plus-circle"></i>
+                                            <span class="text"> <?= lang('add_delivery'); ?></span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
 
                          <li class="mm_transfers">
                                 <a class="dropmenu" href="#">
@@ -1714,6 +1744,28 @@
                                 <?php
                             } ?>
 
+                            <li class="mm_delivery">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-truck"></i>
+                                    <span class="text"> <?= lang('deliveries'); ?>
+                                    </span> <span class="chevron closed"></span>
+                                </a>
+                                <ul>
+                                    <li id="delivery_index">
+                                        <a class="submenu" href="<?= admin_url('delivery'); ?>">
+                                            <i class="fa fa-list"></i>
+                                            <span class="text"> <?= lang('list_deliveries'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="delivery_add">
+                                        <a class="submenu" href="<?= admin_url('delivery/add'); ?>">
+                                            <i class="fa fa-plus-circle"></i>
+                                            <span class="text"> <?= lang('add_delivery'); ?></span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
                             <?php if ($GP['purchases-index'] || $GP['purchases-add'] || $GP['purchases-expenses']) {
                                 ?>
                             <li class="mm_purchases">
@@ -1723,11 +1775,20 @@
                                     </span> <span class="chevron closed"></span>
                                 </a>
                                 <ul>
+                                    
                                     <li id="purchases_index">
                                         <a class="submenu" href="<?= admin_url('purchases'); ?>">
                                             <i class="fa fa-star"></i><span class="text"> <?= lang('list_purchases'); ?></span>
                                         </a>
                                     </li>
+
+                                    <!-- Quotation Analyzer -->
+<li id="quotation_analyzer">
+    <a class="submenu" href="<?= admin_url('quotation_analyzer'); ?>">
+        <i class="fa fa-calculator"></i>
+        <span class="text"> <?= lang('Quotation_Analyzer'); ?></span>
+    </a>
+</li>
                                     <?php if ($GP['purchases-add']) {
                                         ?>
                                     <li id="purchases_add">
