@@ -25,7 +25,14 @@ class Accounts_dashboard extends MY_Controller {
         $this->data['page_title'] = 'Accounts Dashboard';
         $this->data['report_type'] = 'ytd'; // Default to year-to-date
         
+        // Load template header (includes sidebar)
+        $this->load->view($this->theme . 'header', $this->data);
+        
+        // Load dashboard view
         $this->load->view($this->theme . 'finance/accounts_dashboard', $this->data);
+        
+        // Load template footer
+        $this->load->view($this->theme . 'footer', $this->data);
     }
     
     /**

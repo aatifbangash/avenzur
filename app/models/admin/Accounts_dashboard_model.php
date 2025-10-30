@@ -207,6 +207,8 @@ class Accounts_dashboard_model extends CI_Model {
         return round($change, 2);
     }
     
+    /**
+     * Get all purchase items (expanded view)
      * 
      * @param string $report_type ('ytd', 'monthly', 'today')
      * @param string $reference_date (Y-m-d format)

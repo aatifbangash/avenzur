@@ -18,10 +18,10 @@
  * - Secondary Purple: #6c5ce7
  * 
  * Date: 2025-10-30
+ * 
+ * Note: Header, sidebar, and footer are loaded by the controller.
+ * This view contains only the main dashboard content.
  */
-// Load header and sidebar
-$this->load->view($this->theme . 'header', $this->data);
-$this->load->view($this->theme . 'sidebar', $this->data);
 ?>
 
 <!-- Horizon UI Modern Dashboard -->
@@ -860,35 +860,35 @@ function renderKPICards() {
     const kpiData = [
         {
             label: 'Total Sales',
-            value: formatCurrency(sales_summary.total_sales || 0),
+            value: formatCurrencyShort(sales_summary.total_sales || 0),
             icon: '💰',
             color: 'blue',
             trend: (trends.sales_trend || 0) >= 0 ? `+${trends.sales_trend || 0}%` : `${trends.sales_trend || 0}%`
         },
         {
             label: 'Total Collections',
-            value: formatCurrency(collection_summary.total_collected || 0),
+            value: formatCurrencyShort(collection_summary.total_collected || 0),
             icon: '📈',
             color: 'green',
             trend: (trends.collections_trend || 0) >= 0 ? `+${trends.collections_trend || 0}%` : `${trends.collections_trend || 0}%`
         },
         {
             label: 'Total Purchases',
-            value: formatCurrency(purchase_summary.total_purchase || 0),
+            value: formatCurrencyShort(purchase_summary.total_purchase || 0),
             icon: '🛍️',
             color: 'orange',
             trend: (trends.purchases_trend || 0) >= 0 ? `+${trends.purchases_trend || 0}%` : `${trends.purchases_trend || 0}%`
         },
         {
             label: 'Net Sales',
-            value: formatCurrency(net_sales),
+            value: formatCurrencyShort(net_sales),
             icon: '📊',
             color: 'purple',
             trend: (trends.net_sales_trend || 0) >= 0 ? `+${trends.net_sales_trend || 0}%` : `${trends.net_sales_trend || 0}%`
         },
         {
             label: 'Total Profit',
-            value: formatCurrency(profit),
+            value: formatCurrencyShort(profit),
             icon: '💹',
             color: profit > 0 ? 'green' : 'red',
             trend: (trends.profit_trend || 0) >= 0 ? `+${trends.profit_trend || 0}%` : `${trends.profit_trend || 0}%`

@@ -5,7 +5,7 @@
 -- Parameters:
 --   @p_report_type: 'ytd' (Year to Date), 'monthly' (Current Month), 'today' (Current Day)
 --   @p_reference_date: Reference date for calculations (format: YYYY-MM-DD)
--- 
+--
 -- Returns 7 Result Sets:
 --   1. sales_summary: Sales by period (gross and net)
 --   2. collection_summary: Collections by period (cash, card, cheque)
@@ -207,18 +207,18 @@ BEGIN
          
 END$$
 
-DELIMITER ;
+DELIMITER;
 
 -- ============================================================================
 -- Usage Examples
 -- ============================================================================
--- 
+--
 -- Year to Date Report:
 -- CALL sp_get_accounts_dashboard('ytd', '2025-10-30');
--- 
+--
 -- Monthly Report:
 -- CALL sp_get_accounts_dashboard('monthly', '2025-10-30');
--- 
+--
 -- Daily Report:
 -- CALL sp_get_accounts_dashboard('today', '2025-10-30');
 --

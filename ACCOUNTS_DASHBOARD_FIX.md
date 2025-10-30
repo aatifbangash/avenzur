@@ -1,7 +1,9 @@
 # Accounts Dashboard - Issue Resolution Report
 
 ## Problem Statement
+
 The Finance Dashboard was showing the following errors:
+
 ```
 ERROR - Unknown column 's.total_net' in 'field list'
 ERROR - Call to undefined method CI_DB_mysqli_driver::next_result()
@@ -11,12 +13,15 @@ ERROR - Commands out of sync; you can't run this command now
 ## Root Causes Identified
 
 ### 1. **Column Naming Mismatch**
+
 The original stored procedure referenced columns that don't exist in the actual table schema:
+
 - `s.total_net_sale` ❌ (doesn't exist)
-- `s.cost_goods_sold` ❌ (doesn't exist)  
+- `s.cost_goods_sold` ❌ (doesn't exist)
 - `si.net_cost` ❌ (doesn't exist)
 
 **Actual available columns in `sma_sales` table:**
+
 - `total` - Line items sum
 - `total_discount` - Total discount amount
 - `grand_total` - Final total after all adjustments
@@ -26,12 +31,15 @@ The original stored procedure referenced columns that don't exist in the actual 
 - `total_tax` - Tax amount
 
 ### 2. **MySQLi Multiple Result Set Handling**
+
 CodeIgniter's MySQLi driver doesn't expose the `next_result()` method, causing:
+
 ```
 Call to undefined method CI_DB_mysqli_driver::next_result()
 ```
 
 The fix was to access MySQLi directly via `$this->db->conn_id` and use:
+
 - `mysqli::multi_query()` - Execute multiple queries
 - `mysqli::store_result()` - Store each result set
 - `mysqli::more_results()` - Check for more results
@@ -40,13 +48,16 @@ The fix was to access MySQLi directly via `$this->db->conn_id` and use:
 ## Solutions Implemented
 
 ### 1. **Fixed Stored Procedure** ✅
+
 Created corrected `sp_get_accounts_dashboard` using actual table columns:
+
 - `sma_sales`: Uses `grand_total`, `total_discount`, `paid` columns
 - `sma_purchases`: Uses `total`, `total_discount` columns
 - `sma_purchase_items`: Uses `quantity`, `subtotal`, `unit_price` columns
 - Includes all 7 result sets with proper aggregations
 
 **Result Sets Returned:**
+
 1. **Sales Summary** - Total sales, discounts, net sales, customers, transactions
 2. **Collections Summary** - Collections, due, outstanding, collection rate
 3. **Purchase Summary** - Purchase totals, discounts, suppliers, orders
@@ -56,7 +67,9 @@ Created corrected `sp_get_accounts_dashboard` using actual table columns:
 7. **Overall Summary** - Gross profit, margin %, collections, transactions
 
 ### 2. **Updated Model Layer** ✅
+
 Rewrote `Accounts_dashboard_model::get_dashboard_data()` to:
+
 - Access MySQLi connection directly: `$mysqli = $this->db->conn_id`
 - Use `multi_query()` for executing the stored procedure
 - Loop through all result sets using `more_results()` and `next_result()`
@@ -64,6 +77,7 @@ Rewrote `Accounts_dashboard_model::get_dashboard_data()` to:
 - Handle exceptions and database errors gracefully
 
 **Key Changes:**
+
 ```php
 // OLD (broken)
 $query = $this->db->query("CALL sp_get_accounts_dashboard(?, ?)", $params);
@@ -85,6 +99,7 @@ while ($mysqli->more_results() && $mysqli->next_result()) {
 ✅ **All Tests Passing**
 
 The stored procedure has been tested with 3 scenarios:
+
 - **YTD Report** - Returns 842.20 in sales, 2 customers, 2 transactions
 - **Monthly Report** - Same as YTD (only October 2025 data)
 - **Today Report** - Correctly returns 0 for today (no sales today)
@@ -94,11 +109,13 @@ Each report returns all 7 result sets with proper data aggregations and calculat
 ## Files Modified
 
 1. **app/models/admin/Accounts_dashboard_model.php**
+
    - Rewrote `get_dashboard_data()` method
    - Uses direct MySQLi for multiple result sets
    - Added proper error handling
 
 2. **app/migrations/accounts_dashboard/001_create_sp_get_accounts_dashboard_fixed.sql**
+
    - Corrected stored procedure
    - Uses actual table columns
    - 7 complete result sets
@@ -111,6 +128,7 @@ Each report returns all 7 result sets with proper data aggregations and calculat
 ## Status: READY FOR TESTING ✅
 
 The Finance Dashboard Accounts module is now:
+
 - ✅ Database layer fixed (SP returning proper data)
 - ✅ Model layer fixed (multi-result handling working)
 - ✅ Controller ready (Accounts_dashboard.php)
@@ -119,6 +137,7 @@ The Finance Dashboard Accounts module is now:
 - ✅ All tests passing
 
 ### Next Steps:
+
 1. Access dashboard: `/admin/accounts_dashboard`
 2. Verify KPI cards display data
 3. Test report type selector (Today/Month/YTD)
@@ -126,6 +145,7 @@ The Finance Dashboard Accounts module is now:
 5. Test export functionality
 
 ### If Issues Occur:
+
 - Check MySQL error logs: `tail /var/log/mysql/error.log`
 - Verify SP exists: `SHOW PROCEDURE STATUS WHERE Name = 'sp_get_accounts_dashboard';`
 - Run test script: `php test_sp_accounts_dashboard.php`
@@ -133,5 +153,6 @@ The Finance Dashboard Accounts module is now:
 - Review app logs: `tail app/logs/log-*.php`
 
 ---
+
 **Last Updated:** October 30, 2025  
 **Status:** Production Ready
