@@ -19,6 +19,9 @@
  * 
  * Date: 2025-10-30
  */
+// Load header and sidebar
+$this->load->view($this->theme . 'header', $this->data);
+$this->load->view($this->theme . 'sidebar', $this->data);
 ?>
 
 <!-- Horizon UI Modern Dashboard -->
@@ -807,6 +810,7 @@
 <script>
 // Global state
 let dashboardData = {};
+let dashboardTrends = {};
 let charts = {};
 
 // Initialize dashboard
@@ -825,6 +829,7 @@ function updateDashboard() {
         .then(data => {
             if (data.success) {
                 dashboardData = data.data;
+                dashboardTrends = data.trends || {}; // Store trends for use in renderKPICards
                 renderKPICards();
                 renderCharts();
                 renderTables();
@@ -840,43 +845,53 @@ function updateDashboard() {
 
 // Render KPI Cards
 function renderKPICards() {
-    const summary = dashboardData.overall_summary || {};
+    const sales_summary = dashboardData.sales_summary?.[0] || {};
+    const collection_summary = dashboardData.collection_summary?.[0] || {};
+    const purchase_summary = dashboardData.purchase_summary?.[0] || {};
+    const overall_summary = dashboardData.overall_summary || {};
+    const trends = dashboardTrends || {};
+    
+    // Calculate net sales
+    const net_sales = (sales_summary.total_sales || 0) - (sales_summary.total_discount || 0);
+    
+    // Calculate profit
+    const profit = (overall_summary.total_sales_revenue || 0) - (overall_summary.total_purchase_cost || 0);
     
     const kpiData = [
         {
             label: 'Total Sales',
-            value: formatCurrency(summary.total_gross_sales || 0),
+            value: formatCurrency(sales_summary.total_sales || 0),
             icon: '💰',
             color: 'blue',
-            trend: '+5.2%'
+            trend: (trends.sales_trend || 0) >= 0 ? `+${trends.sales_trend || 0}%` : `${trends.sales_trend || 0}%`
         },
         {
             label: 'Total Collections',
-            value: formatCurrency(summary.total_collection || 0),
+            value: formatCurrency(collection_summary.total_collected || 0),
             icon: '📈',
             color: 'green',
-            trend: '+3.1%'
+            trend: (trends.collections_trend || 0) >= 0 ? `+${trends.collections_trend || 0}%` : `${trends.collections_trend || 0}%`
         },
         {
             label: 'Total Purchases',
-            value: formatCurrency(summary.total_purchase || 0),
+            value: formatCurrency(purchase_summary.total_purchase || 0),
             icon: '🛍️',
             color: 'orange',
-            trend: '+2.4%'
+            trend: (trends.purchases_trend || 0) >= 0 ? `+${trends.purchases_trend || 0}%` : `${trends.purchases_trend || 0}%`
         },
         {
             label: 'Net Sales',
-            value: formatCurrency(summary.total_net_sales || 0),
+            value: formatCurrency(net_sales),
             icon: '📊',
             color: 'purple',
-            trend: '+4.8%'
+            trend: (trends.net_sales_trend || 0) >= 0 ? `+${trends.net_sales_trend || 0}%` : `${trends.net_sales_trend || 0}%`
         },
         {
             label: 'Total Profit',
-            value: formatCurrency((summary.total_net_sales || 0) - (summary.total_purchase || 0)),
+            value: formatCurrency(profit),
             icon: '💹',
-            color: summary.total_net_sales - summary.total_purchase > 0 ? 'green' : 'red',
-            trend: summary.total_net_sales - summary.total_purchase > 0 ? '+8.2%' : '-2.1%'
+            color: profit > 0 ? 'green' : 'red',
+            trend: (trends.profit_trend || 0) >= 0 ? `+${trends.profit_trend || 0}%` : `${trends.profit_trend || 0}%`
         }
     ];
 

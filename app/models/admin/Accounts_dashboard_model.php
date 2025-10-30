@@ -91,7 +91,122 @@ class Accounts_dashboard_model extends CI_Model {
     }
     
     /**
-     * Get all purchase items (expanded view)
+     * Calculate trend percentages by comparing current period with previous period
+     * 
+     * @param string $report_type ('ytd', 'monthly', 'today')
+     * @param string $reference_date Current period date
+     * @return array Trend percentages for each metric
+     */
+    public function calculate_trends($report_type = 'ytd', $reference_date = null) {
+        if (empty($reference_date)) {
+            $reference_date = date('Y-m-d');
+        }
+        
+        try {
+            // Get current period data
+            $current_data = $this->get_dashboard_data($report_type, $reference_date);
+            
+            // Calculate previous period date
+            $previous_date = $this->get_previous_period_date($report_type, $reference_date);
+            
+            // Get previous period data
+            $previous_data = $this->get_dashboard_data($report_type, $previous_date);
+            
+            // Extract summary data
+            $current_summary = $current_data['sales_summary'][0] ?? array();
+            $current_collections = $current_data['collection_summary'][0] ?? array();
+            $current_purchases = $current_data['purchase_summary'][0] ?? array();
+            $current_overall = $current_data['overall_summary'] ?? array();
+            
+            $previous_summary = $previous_data['sales_summary'][0] ?? array();
+            $previous_collections = $previous_data['collection_summary'][0] ?? array();
+            $previous_purchases = $previous_data['purchase_summary'][0] ?? array();
+            $previous_overall = $previous_data['overall_summary'] ?? array();
+            
+            // Calculate trends
+            $trends = array(
+                'sales_trend' => $this->calculate_percentage_change(
+                    $previous_summary['total_sales'] ?? 0,
+                    $current_summary['total_sales'] ?? 0
+                ),
+                'collections_trend' => $this->calculate_percentage_change(
+                    $previous_collections['total_collected'] ?? 0,
+                    $current_collections['total_collected'] ?? 0
+                ),
+                'purchases_trend' => $this->calculate_percentage_change(
+                    $previous_purchases['total_purchase'] ?? 0,
+                    $current_purchases['total_purchase'] ?? 0
+                ),
+                'net_sales_trend' => $this->calculate_percentage_change(
+                    $previous_summary['net_sales'] ?? 0,
+                    $current_summary['net_sales'] ?? 0
+                ),
+                'profit_trend' => $this->calculate_percentage_change(
+                    ($previous_overall['gross_profit'] ?? 0),
+                    ($current_overall['gross_profit'] ?? 0)
+                )
+            );
+            
+            return $trends;
+            
+        } catch (Exception $e) {
+            // On error, return default trends
+            return array(
+                'sales_trend' => 0,
+                'collections_trend' => 0,
+                'purchases_trend' => 0,
+                'net_sales_trend' => 0,
+                'profit_trend' => 0
+            );
+        }
+    }
+    
+    /**
+     * Get the previous period date based on report type
+     * 
+     * @param string $report_type
+     * @param string $reference_date
+     * @return string Previous period date in Y-m-d format
+     */
+    private function get_previous_period_date($report_type, $reference_date) {
+        $date = new DateTime($reference_date);
+        
+        switch ($report_type) {
+            case 'today':
+                // Previous day
+                $date->modify('-1 day');
+                break;
+            case 'monthly':
+                // Previous month, same day
+                $date->modify('first day of this month');
+                $date->modify('-1 day');
+                break;
+            case 'ytd':
+            default:
+                // Previous year same date
+                $date->modify('-1 year');
+                break;
+        }
+        
+        return $date->format('Y-m-d');
+    }
+    
+    /**
+     * Calculate percentage change between two values
+     * 
+     * @param float $previous
+     * @param float $current
+     * @return float Percentage change (e.g., 5.2 for +5.2%)
+     */
+    private function calculate_percentage_change($previous, $current) {
+        if ($previous == 0) {
+            return $current > 0 ? 100 : 0; // 100% increase if previous was 0
+        }
+        
+        $change = (($current - $previous) / abs($previous)) * 100;
+        return round($change, 2);
+    }
+    
      * 
      * @param string $report_type ('ytd', 'monthly', 'today')
      * @param string $reference_date (Y-m-d format)

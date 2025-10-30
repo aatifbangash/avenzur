@@ -60,10 +60,17 @@ class Accounts_dashboard extends MY_Controller {
                 $reference_date
             );
             
+            // Calculate trends
+            $trends = $this->accounts_dashboard_model->calculate_trends(
+                $report_type,
+                $reference_date
+            );
+            
             // Format response
             $response = array(
                 'success' => true,
                 'data' => $dashboard_data,
+                'trends' => $trends,
                 'report_type' => $report_type,
                 'reference_date' => $reference_date
             );
