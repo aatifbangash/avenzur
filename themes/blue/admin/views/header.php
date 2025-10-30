@@ -368,7 +368,7 @@
                     
                     <ul class="nav main-menu">
                         <li class="mm_welcome">
-                            <a href="<?= admin_url() ?>">
+                            <a href="<?= admin_url().'welcome' ?>">
                                 <i class="fa fa-dashboard"></i>
                                 <span class="text"> <?= lang('dashboard'); ?></span>
                             </a>
