@@ -9,6 +9,7 @@ class Accounts_dashboard_model extends CI_Model {
     
     /**
      * Get dashboard data using stored procedure
+     * Uses direct MySQLi to handle multiple result sets
      * 
      * @param string $report_type ('ytd', 'monthly', 'today')
      * @param string $reference_date (Y-m-d format, defaults to today)
@@ -31,11 +32,15 @@ class Accounts_dashboard_model extends CI_Model {
         }
         
         try {
-            // Call stored procedure - it returns 7 result sets
-            $query = $this->db->query(
-                "CALL sp_get_accounts_dashboard(?, ?)",
-                array($report_type, $reference_date)
-            );
+            // Get MySQLi connection directly
+            $mysqli = $this->db->conn_id;
+            
+            // Call stored procedure with proper escaping
+            $sql = "CALL sp_get_accounts_dashboard('" . $mysqli->real_escape_string($report_type) . "', '" . $mysqli->real_escape_string($reference_date) . "')";
+            
+            if (!$mysqli->multi_query($sql)) {
+                throw new Exception("Multi-query failed: " . $mysqli->error);
+            }
             
             $results = array(
                 'sales_summary' => array(),
@@ -47,61 +52,36 @@ class Accounts_dashboard_model extends CI_Model {
                 'overall_summary' => array()
             );
             
-            // First result set - Sales Summary
-            if ($query && $query->num_rows() > 0) {
-                $results['sales_summary'] = $query->result_array();
-            }
+            $result_keys = array('sales_summary', 'collection_summary', 'purchase_summary', 'purchase_per_item', 'expiry_report', 'customer_summary', 'overall_summary');
+            $key_index = 0;
             
-            // Move to next result set - Collection Summary
-            if ($this->db->next_result()) {
-                $query = $this->db->use_query_result();
-                if ($query && $query->num_rows() > 0) {
-                    $results['collection_summary'] = $query->result_array();
+            // Process each result set
+            do {
+                if ($result_index = $mysqli->store_result()) {
+                    $key = $result_keys[$key_index] ?? null;
+                    
+                    if ($key) {
+                        $data = $result_index->fetch_all(MYSQLI_ASSOC);
+                        
+                        // For single summary results, store as object, not array
+                        if ($key === 'overall_summary' && !empty($data)) {
+                            $results[$key] = $data[0]; // Store first row as object
+                        } else {
+                            $results[$key] = $data;
+                        }
+                    }
+                    
+                    $result_index->free();
+                    $key_index++;
+                }
+            } while ($mysqli->more_results() && $mysqli->next_result());
+            
+            // Clear any remaining results
+            while ($mysqli->more_results() && $mysqli->next_result()) {
+                if ($res = $mysqli->store_result()) {
+                    $res->free();
                 }
             }
-            
-            // Move to next result set - Purchase Summary
-            if ($this->db->next_result()) {
-                $query = $this->db->use_query_result();
-                if ($query && $query->num_rows() > 0) {
-                    $results['purchase_summary'] = $query->result_array();
-                }
-            }
-            
-            // Move to next result set - Purchase Per Item
-            if ($this->db->next_result()) {
-                $query = $this->db->use_query_result();
-                if ($query && $query->num_rows() > 0) {
-                    $results['purchase_per_item'] = $query->result_array();
-                }
-            }
-            
-            // Move to next result set - Expiry Report
-            if ($this->db->next_result()) {
-                $query = $this->db->use_query_result();
-                if ($query && $query->num_rows() > 0) {
-                    $results['expiry_report'] = $query->result_array();
-                }
-            }
-            
-            // Move to next result set - Customer Summary
-            if ($this->db->next_result()) {
-                $query = $this->db->use_query_result();
-                if ($query && $query->num_rows() > 0) {
-                    $results['customer_summary'] = $query->result_array();
-                }
-            }
-            
-            // Move to next result set - Overall Summary (single row)
-            if ($this->db->next_result()) {
-                $query = $this->db->use_query_result();
-                if ($query && $query->num_rows() > 0) {
-                    $results['overall_summary'] = $query->row_array();
-                }
-            }
-            
-            // Close the cursor
-            @mysqli_next_result($this->db->conn_id);
             
             return $results;
             

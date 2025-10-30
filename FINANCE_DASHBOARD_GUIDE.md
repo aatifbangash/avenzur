@@ -3,11 +3,13 @@
 ## Quick Start
 
 ### Access the Dashboard
+
 ```
 URL: /admin/accounts_dashboard
 ```
 
 ### Prerequisites
+
 1. ✅ Accounts_dashboard_model created
 2. ✅ Accounts_dashboard controller created
 3. ✅ Modern dashboard view created
@@ -17,9 +19,11 @@ URL: /admin/accounts_dashboard
 ## Component Breakdown
 
 ### 1. Dashboard Controller
+
 **File**: `/app/controllers/admin/Accounts_dashboard.php`
 
 **Key Methods**:
+
 ```php
 - index()                          // Load dashboard view
 - get_data()                       // AJAX: Fetch all dashboard data
@@ -29,9 +33,11 @@ URL: /admin/accounts_dashboard
 ```
 
 ### 2. Dashboard Model
+
 **File**: `/app/models/admin/Accounts_dashboard_model.php`
 
 **Key Methods**:
+
 ```php
 - get_dashboard_data($type, $date)        // Call stored procedure
 - get_purchase_items_expanded($type, ...) // Get purchase items with pagination
@@ -40,9 +46,11 @@ URL: /admin/accounts_dashboard
 ```
 
 ### 3. Dashboard View
+
 **File**: `/themes/blue/admin/views/finance/accounts_dashboard.php`
 
 **Structure**:
+
 - CSS: Horizon UI design system (inline)
 - HTML: Semantic structure with data containers
 - JavaScript: ECharts initialization and data rendering
@@ -50,6 +58,7 @@ URL: /admin/accounts_dashboard
 ## Data Flow
 
 ### Page Load
+
 ```
 1. User accesses /admin/accounts_dashboard
 2. Controller::index() loads view
@@ -59,6 +68,7 @@ URL: /admin/accounts_dashboard
 ```
 
 ### Data Fetch
+
 ```
 1. updateDashboard() triggered by filter change
 2. Fetch GET /admin/accounts_dashboard/get_data
@@ -69,6 +79,7 @@ URL: /admin/accounts_dashboard
 ```
 
 ### Data Sets
+
 ```json
 {
   "success": true,
@@ -91,11 +102,13 @@ URL: /admin/accounts_dashboard
 ### Filter Options
 
 **Report Types**:
+
 - `ytd` - Year to Date (Jan 1 to reference date)
 - `monthly` - Current month only
 - `today` - Current day only
 
 **Date Selection**:
+
 - Default: Today's date
 - Format: YYYY-MM-DD
 - Validation: Client-side format check + server-side strtotime
@@ -103,6 +116,7 @@ URL: /admin/accounts_dashboard
 ### Chart Configuration
 
 #### Sales Trend Chart
+
 ```javascript
 {
   type: 'line',
@@ -113,6 +127,7 @@ URL: /admin/accounts_dashboard
 ```
 
 #### Collection Trend Chart
+
 ```javascript
 {
   type: 'line',
@@ -123,6 +138,7 @@ URL: /admin/accounts_dashboard
 ```
 
 #### Purchase Chart
+
 ```javascript
 {
   type: 'bar',
@@ -132,6 +148,7 @@ URL: /admin/accounts_dashboard
 ```
 
 #### Revenue Distribution Chart
+
 ```javascript
 {
   type: 'pie',
@@ -141,6 +158,7 @@ URL: /admin/accounts_dashboard
 ```
 
 #### Purchase Items Chart
+
 ```javascript
 {
   type: 'barH' (horizontal),
@@ -150,6 +168,7 @@ URL: /admin/accounts_dashboard
 ```
 
 #### Customer Credit Chart
+
 ```javascript
 {
   type: 'bar',
@@ -161,6 +180,7 @@ URL: /admin/accounts_dashboard
 ## Styling Reference
 
 ### Color Scheme
+
 ```css
 Primary:     #1a73e8 (Blue)
 Success:     #05cd99 (Green)
@@ -170,6 +190,7 @@ Secondary:   #6c5ce7 (Purple)
 ```
 
 ### Responsive Breakpoints
+
 ```css
 Mobile:        320px - 767px
 Tablet:        768px - 1023px
@@ -178,6 +199,7 @@ Large Desktop: 1920px+
 ```
 
 ### Z-Index Stack
+
 ```css
 Tooltip:       9999
 Modal:         9900
@@ -191,7 +213,9 @@ Content:       1
 ### Core Functions
 
 #### `updateDashboard()`
+
 Fetch data and render all components
+
 ```javascript
 // Triggers on:
 - Page load
@@ -200,7 +224,9 @@ Fetch data and render all components
 ```
 
 #### `renderKPICards()`
+
 Render metric cards from summary data
+
 ```javascript
 // Creates 5 cards:
 - Total Sales
@@ -211,7 +237,9 @@ Render metric cards from summary data
 ```
 
 #### `renderCharts()`
+
 Initialize all ECharts
+
 ```javascript
 // Creates 6 charts:
 - Sales Trend
@@ -223,7 +251,9 @@ Initialize all ECharts
 ```
 
 #### `renderTables()`
+
 Populate HTML tables with data
+
 ```javascript
 // Tables:
 - Sales Summary
@@ -233,35 +263,44 @@ Populate HTML tables with data
 ### Utility Functions
 
 #### `formatCurrency(value)`
+
 Format number as currency
+
 ```javascript
 Input:  1234567
 Output: $1,234,567 SAR
 ```
 
 #### `formatCurrencyShort(value)`
+
 Format with K/M notation
+
 ```javascript
 Input:  1234567
 Output: 1.2M
 ```
 
 #### `exportData(format)`
+
 Export as JSON or CSV
+
 ```javascript
 // Formats:
-- 'json'
-- 'csv'
+-"json" - "csv";
 ```
 
 #### `sortTable(tableId, columnIndex)`
+
 Sort table column ascending/descending
+
 ```javascript
 // Toggles on multiple clicks
 ```
 
 #### `filterTable(tableId, searchTerm)`
+
 Filter table by search term
+
 ```javascript
 // Real-time filtering
 ```
@@ -269,6 +308,7 @@ Filter table by search term
 ## Error Handling
 
 ### Client-Side Validation
+
 ```javascript
 - Date format check: /^\d{4}-\d{2}-\d{2}$/
 - Report type check: ['ytd', 'monthly', 'today']
@@ -276,6 +316,7 @@ Filter table by search term
 ```
 
 ### Server-Side Validation
+
 ```php
 - Date validation with strtotime()
 - Report type whitelist check
@@ -284,6 +325,7 @@ Filter table by search term
 ```
 
 ### Error Display
+
 ```javascript
 - Console logging: All errors
 - User notification: Alert boxes (upgrade to toast)
@@ -294,6 +336,7 @@ Filter table by search term
 ## Performance Tips
 
 ### Optimization Techniques
+
 1. **Chart Disposal**: Previous charts disposed before new render
 2. **Debounced Resize**: Window resize limited to animation frame
 3. **Lazy Loading**: Charts only render when visible
@@ -301,12 +344,14 @@ Filter table by search term
 5. **Table Pagination**: Show 20 items instead of all
 
 ### Load Time Targets
+
 - Dashboard load: < 2 seconds
 - Data fetch: < 500ms
 - Chart render: < 300ms
 - Table render: < 200ms
 
 ### Bundle Size
+
 - HTML/CSS/JS: ~45KB
 - ECharts: ~100KB
 - Total: ~145KB (typical page)
@@ -316,15 +361,17 @@ Filter table by search term
 ### Changing Colors
 
 **Update CSS Variables**:
+
 ```css
 :root {
-    --horizon-primary: #1a73e8;      /* Change here */
-    --horizon-success: #05cd99;      /* Change here */
-    --horizon-error: #f34235;        /* Change here */
+	--horizon-primary: #1a73e8; /* Change here */
+	--horizon-success: #05cd99; /* Change here */
+	--horizon-error: #f34235; /* Change here */
 }
 ```
 
 **Update Chart Colors**:
+
 ```javascript
 // In each chart render function
 color: ['#1a73e8', '#05cd99'],  // Change these
@@ -333,18 +380,20 @@ color: ['#1a73e8', '#05cd99'],  // Change these
 ### Adding New Metrics
 
 **Add to KPI Cards**:
+
 ```javascript
 // In renderKPICards()
 kpiData.push({
-    label: 'New Metric',
-    value: formatCurrency(summary.new_field || 0),
-    icon: '📊',
-    color: 'blue',
-    trend: '+5.2%'
+	label: "New Metric",
+	value: formatCurrency(summary.new_field || 0),
+	icon: "📊",
+	color: "blue",
+	trend: "+5.2%",
 });
 ```
 
 **Add to Summary**:
+
 ```php
 // In model get_dashboard_data()
 $results['new_summary'] = $query->result_array();
@@ -353,44 +402,52 @@ $results['new_summary'] = $query->result_array();
 ### Adding New Charts
 
 **Create Chart Container**:
+
 ```html
 <div class="chart-container">
-    <div class="chart-header">
-        <h3 class="chart-title">New Chart Title</h3>
-        <p class="chart-subtitle">Subtitle here</p>
-    </div>
-    <div id="newChart" class="chart-content">...</div>
+	<div class="chart-header">
+		<h3 class="chart-title">New Chart Title</h3>
+		<p class="chart-subtitle">Subtitle here</p>
+	</div>
+	<div id="newChart" class="chart-content">...</div>
 </div>
 ```
 
 **Render Chart**:
+
 ```javascript
 function renderNewChart(data) {
-    const chartDom = document.getElementById('newChart');
-    const chart = echarts.init(chartDom);
-    
-    const option = { /* chart config */ };
-    chart.setOption(option);
-    
-    charts.newChart = chart;
+	const chartDom = document.getElementById("newChart");
+	const chart = echarts.init(chartDom);
+
+	const option = {
+		/* chart config */
+	};
+	chart.setOption(option);
+
+	charts.newChart = chart;
 }
 ```
 
 ## Security Considerations
 
 ### CSRF Protection
+
 ✅ CodeIgniter built-in CSRF tokens on forms
 
 ### XSS Prevention
+
 ✅ Proper escaping in JavaScript rendering
 ✅ No direct DOM manipulation with user input
 ✅ Use textContent over innerHTML where possible
 
 ### SQL Injection Prevention
+
 ✅ Prepared statements in model
 ✅ CodeIgniter Query Builder used
 
 ### Input Validation
+
 ✅ Client-side: Format checks
 ✅ Server-side: Type and range validation
 ✅ Whitelist approach: Only allowed values
@@ -398,6 +455,7 @@ function renderNewChart(data) {
 ## Testing Scenarios
 
 ### Functional Tests
+
 ```javascript
 1. Load dashboard - should show skeleton loaders
 2. Change report type - should update all charts
@@ -409,6 +467,7 @@ function renderNewChart(data) {
 ```
 
 ### Responsive Tests
+
 ```javascript
 1. Resize to 320px - should stack cards vertically
 2. Resize to 768px - should show 2-column layout
@@ -418,6 +477,7 @@ function renderNewChart(data) {
 ```
 
 ### Data Tests
+
 ```javascript
 1. Empty data set - should show "No data"
 2. Zero values - should display 0 SAR
@@ -427,6 +487,7 @@ function renderNewChart(data) {
 ```
 
 ### Browser Tests
+
 ```javascript
 1. Chrome - full functionality
 2. Firefox - full functionality
@@ -439,6 +500,7 @@ function renderNewChart(data) {
 ## Troubleshooting
 
 ### Chart Not Rendering
+
 1. Check browser console for errors
 2. Verify ECharts library loaded: `window.echarts` exists
 3. Check chart div exists in DOM
@@ -446,6 +508,7 @@ function renderNewChart(data) {
 5. Clear browser cache and reload
 
 ### Data Not Loading
+
 1. Check Network tab in DevTools
 2. Verify API endpoint: `/admin/accounts_dashboard/get_data`
 3. Check controller loaded admin_model correctly
@@ -453,6 +516,7 @@ function renderNewChart(data) {
 5. Check for PHP errors in response
 
 ### Export Not Working
+
 1. Check export endpoint: `/admin/accounts_dashboard/export`
 2. Verify format parameter: 'csv' or 'json'
 3. Check server PHP memory limit
@@ -460,6 +524,7 @@ function renderNewChart(data) {
 5. Check browser download settings
 
 ### Table Not Sorting
+
 1. Verify table headers have onclick handlers
 2. Check console for JavaScript errors
 3. Verify table rows exist before sort
@@ -467,6 +532,7 @@ function renderNewChart(data) {
 5. Verify data in cells is sortable
 
 ### Performance Issues
+
 1. Check browser Performance tab
 2. Monitor JavaScript execution time
 3. Profile ECharts rendering
@@ -476,6 +542,7 @@ function renderNewChart(data) {
 ## Support & Maintenance
 
 ### Regular Tasks
+
 - Monitor dashboard performance metrics
 - Review user feedback and logs
 - Update ECharts library quarterly
@@ -483,9 +550,11 @@ function renderNewChart(data) {
 - Backup dashboard configurations
 
 ### Known Issues
+
 - None documented yet
 
 ### Future Improvements
+
 1. PDF export capability
 2. Scheduled email reports
 3. Dashboard customization per user
