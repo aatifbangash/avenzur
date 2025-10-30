@@ -230,11 +230,50 @@
             </a>
             <ul class="newmenu-sub">
 
+                <!-- Purchase Contract Deals -->
+                <li class="newmenu-item has-sub">
+                    <a href="#" class="newmenu-link">
+                        <i class="fa fa-shopping-cart"></i>
+                        <span><?= lang('Purchase Contract Deals'); ?></span>
+                        <i class="fa fa-chevron-right newmenu-chevron"></i>
+                    </a>
+                    <ul class="newmenu-sub">
+                        <li><a href="<?= admin_url('purchase_contract_deals/add'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('Add Contract Deals'); ?></a></li>
+                        <li><a href="<?= admin_url('purchase_contract_deals'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('List Contract Deals'); ?></a></li>
+                    </ul>
+                </li>
+
+                <!-- Purchase Requisition -->
+                <li class="newmenu-item has-sub">
+                    <a href="#" class="newmenu-link">
+                        <i class="fa fa-shopping-cart"></i>
+                        <span><?= lang('Purchase Requisition'); ?></span>
+                        <i class="fa fa-chevron-right newmenu-chevron"></i>
+                    </a>
+                    <ul class="newmenu-sub">
+                        <li><a href="<?= admin_url('purchase_requisition/save'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('Create PR'); ?></a></li>
+                        <li><a href="<?= admin_url('purchase_requisition'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('List PR'); ?></a></li>
+                    </ul>
+                </li>
+
+                <!-- Purchase Order -->
+                <li class="newmenu-item has-sub">
+                    <a href="#" class="newmenu-link">
+                        <i class="fa fa-shopping-cart"></i>
+                        <span><?= lang('Purchase Orders'); ?></span>
+                        <i class="fa fa-chevron-right newmenu-chevron"></i>
+                    </a>
+                    <ul class="newmenu-sub">
+                        <li><a href="<?= admin_url('purchase_order/add'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('Create PO'); ?></a></li>
+                        <li><a href="<?= admin_url('purchase_order'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('List PO'); ?></a></li>
+                    </ul>
+                </li>
+
                 <!-- Purchases -->
                 <li class="newmenu-item has-sub">
                     <a href="#" class="newmenu-link">
                         <i class="fa fa-shopping-cart"></i>
-                        <span><?= lang('Purchases'); ?></span>
+                        <span><?= lang('Purchase Invoices'); ?></span>
                         <i class="fa fa-chevron-right newmenu-chevron"></i>
                     </a>
                     <ul class="newmenu-sub">
