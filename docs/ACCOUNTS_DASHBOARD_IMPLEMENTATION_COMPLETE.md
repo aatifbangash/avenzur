@@ -12,23 +12,24 @@ A comprehensive **Accounts Dashboard** that displays YTD financial metrics with 
 
 ### Key Features
 
-| Feature | Status | Details |
-| --- | --- | --- |
-| **5 KPI Cards** | ✅ Complete | Sales, Collections, Purchases, Net Sales, Profit Forecast |
-| **6 Data Charts** | ✅ Complete | Trends, Collections, Purchases, Distribution, Items, Customers |
-| **2 Data Tables** | ✅ Complete | Purchase items, Customer summary with pagination |
-| **Real-time Data** | ✅ Complete | AJAX endpoints for dynamic data fetching |
-| **Responsive Design** | ✅ Complete | Desktop/Tablet/Mobile optimized |
-| **Horizon UI Theme** | ✅ Complete | Professional design system with CSS variables |
-| **Trend Calculations** | ✅ Complete | Dynamic % change vs previous period |
-| **Number Formatting** | ✅ Complete | K/M notation (10.0M instead of 10,000,000) |
-| **Export Functionality** | ✅ Complete | JSON & CSV export with UTF-8 support |
+| Feature                  | Status      | Details                                                        |
+| ------------------------ | ----------- | -------------------------------------------------------------- |
+| **5 KPI Cards**          | ✅ Complete | Sales, Collections, Purchases, Net Sales, Profit Forecast      |
+| **6 Data Charts**        | ✅ Complete | Trends, Collections, Purchases, Distribution, Items, Customers |
+| **2 Data Tables**        | ✅ Complete | Purchase items, Customer summary with pagination               |
+| **Real-time Data**       | ✅ Complete | AJAX endpoints for dynamic data fetching                       |
+| **Responsive Design**    | ✅ Complete | Desktop/Tablet/Mobile optimized                                |
+| **Horizon UI Theme**     | ✅ Complete | Professional design system with CSS variables                  |
+| **Trend Calculations**   | ✅ Complete | Dynamic % change vs previous period                            |
+| **Number Formatting**    | ✅ Complete | K/M notation (10.0M instead of 10,000,000)                     |
+| **Export Functionality** | ✅ Complete | JSON & CSV export with UTF-8 support                           |
 
 ---
 
 ## Files Created/Modified
 
 ### 1. **Controller** (271 lines)
+
 - **File:** `app/controllers/admin/Accounts_dashboard.php`
 - **Methods:**
   - `index()` - Renders dashboard with proper layout (header → view → footer)
@@ -38,6 +39,7 @@ A comprehensive **Accounts Dashboard** that displays YTD financial metrics with 
 - **Features:** Authentication, admin model loading, error handling
 
 ### 2. **Model** (316 lines)
+
 - **File:** `app/models/admin/Accounts_dashboard_model.php`
 - **Methods:**
   - `get_dashboard_data()` - Executes stored procedure via MySQLi multi_query
@@ -48,6 +50,7 @@ A comprehensive **Accounts Dashboard** that displays YTD financial metrics with 
 - **Features:** Direct MySQLi to bypass CodeIgniter limitation, 7 result sets
 
 ### 3. **View** (1477 lines)
+
 - **File:** `themes/blue/admin/views/finance/accounts_dashboard.php`
 - **Sections:**
   - 500+ lines Horizon UI CSS with design tokens
@@ -59,6 +62,7 @@ A comprehensive **Accounts Dashboard** that displays YTD financial metrics with 
 - **Features:** formatCurrency, formatCurrencyShort, updateDashboard, renderCharts
 
 ### 4. **Migration/Stored Procedure** (193 lines)
+
 - **File:** `app/migrations/accounts_dashboard/001_create_sp_get_accounts_dashboard_fixed.sql`
 - **7 Result Sets:**
   1. Sales Summary (transactions, discounts, customers)
@@ -71,6 +75,7 @@ A comprehensive **Accounts Dashboard** that displays YTD financial metrics with 
 - **Features:** Proper date filtering, NULL handling, aggregations
 
 ### 5. **Documentation**
+
 - **Analysis:** `docs/ACCOUNTS_DASHBOARD_NEGATIVE_PROFIT_ANALYSIS.md` (200 lines)
 - **Diagnostic:** `diagnostic_accounts_data.php` (230 lines)
 
@@ -117,19 +122,23 @@ Dashboard displays with actual data ✅
 ## Current Issues & Solutions
 
 ### Issue: Negative Profit Showing
+
 **Status:** ⚠️ UNDER INVESTIGATION (Not a Bug)
 
 **Root Cause:**
+
 - Sales Revenue (YTD): 842.20 SAR (very low)
 - Purchase Cost (YTD): 10,016,150.67 SAR (very high)
 - Profit: -10,015,308.47 SAR (mathematically correct, logically suspicious)
 
 **Why This Happens:**
+
 1. **Legitimate:** Company made large inventory purchase, sales cycle just starting
 2. **Data Quality:** Test/dummy purchase data in database
 3. **Date Mismatch:** Purchases from different period than expected
 
 **Verification:**
+
 ```bash
 # Run diagnostic script
 php diagnostic_accounts_data.php
@@ -141,6 +150,7 @@ SELECT YEAR(date), COUNT(*), SUM(grand_total) FROM sma_sales GROUP BY YEAR(date)
 ```
 
 **Next Steps:**
+
 1. User runs diagnostic script to verify data
 2. If test data found: Clean up database
 3. If data correct: Negative profit is valid business metric
@@ -171,19 +181,20 @@ SELECT YEAR(date), COUNT(*), SUM(grand_total) FROM sma_sales GROUP BY YEAR(date)
 
 ## Performance Metrics
 
-| Metric | Target | Status |
-| --- | --- | --- |
-| Initial Load | < 2s | ✅ Expected (depends on DB size) |
-| Dashboard Render | < 500ms | ✅ Expected |
-| Chart Render | < 300ms | ✅ Uses Recharts optimization |
-| Real-time Update | < 100ms | ✅ AJAX performance |
-| Bundle Size | < 500KB | ✅ Tailwind + Recharts |
+| Metric           | Target  | Status                           |
+| ---------------- | ------- | -------------------------------- |
+| Initial Load     | < 2s    | ✅ Expected (depends on DB size) |
+| Dashboard Render | < 500ms | ✅ Expected                      |
+| Chart Render     | < 300ms | ✅ Uses Recharts optimization    |
+| Real-time Update | < 100ms | ✅ AJAX performance              |
+| Bundle Size      | < 500KB | ✅ Tailwind + Recharts           |
 
 ---
 
 ## Deployment Instructions
 
 ### 1. Database Migration
+
 ```bash
 cd /Users/rajivepai/Projects/Avenzur/V2/avenzur
 php index.php migrate accounts_dashboard
@@ -192,7 +203,9 @@ php index.php migrate accounts_dashboard
 This creates the stored procedure `sp_get_accounts_dashboard`.
 
 ### 2. Menu Integration
+
 Add to Finance section header (already done):
+
 ```php
 // app/core/MY_Controller.php or similar
 'finance' => [
@@ -208,6 +221,7 @@ Add to Finance section header (already done):
 ```
 
 ### 3. Verification
+
 ```bash
 # Navigate to dashboard
 http://localhost/admin/accounts/accounts-dashboard
@@ -233,18 +247,22 @@ php diagnostic_accounts_data.php
 ## Future Enhancements (Post-Launch)
 
 1. **Drill-Down Feature**
+
    - Click profit → see top purchases & sales
    - Identify data anomalies quickly
 
 2. **Opening Balances**
+
    - Track beginning inventory cost
    - More accurate profit for ongoing businesses
 
 3. **Date Range Picker**
+
    - Custom date range selection
    - Flexible period comparison
 
 4. **Profit Alerts**
+
    - Notify if profit drops below threshold
    - Daily summary email
 
@@ -257,23 +275,29 @@ php diagnostic_accounts_data.php
 ## Support & Troubleshooting
 
 ### Dashboard Won't Load
+
 **Symptoms:** Blank page, loading forever
 **Solutions:**
+
 1. Check PHP error logs: `tail -f /var/log/php-errors.log`
 2. Verify MySQL connectivity
 3. Ensure migration ran: `php index.php migrate accounts_dashboard`
 4. Check CodeIgniter debug mode is enabled
 
 ### Data Shows Zeros
+
 **Symptoms:** All KPI cards show 0
 **Solutions:**
+
 1. Verify data exists in database (use diagnostic script)
 2. Check date range - no sales/purchases in period?
 3. Verify SQL status filters (completed, received status)
 
 ### Charts Not Rendering
+
 **Symptoms:** Chart containers empty
 **Solutions:**
+
 1. Check browser console (F12) for JavaScript errors
 2. Verify Recharts library loaded (check Network tab)
 3. Confirm data returned from API (Network → get_data)
@@ -295,6 +319,7 @@ php diagnostic_accounts_data.php
 ## Contact & Questions
 
 **For Issues:**
+
 1. Check `ACCOUNTS_DASHBOARD_NEGATIVE_PROFIT_ANALYSIS.md` first
 2. Run `diagnostic_accounts_data.php` to verify data
 3. Review stored procedure output: `test_sp_accounts_dashboard.php`
@@ -306,4 +331,3 @@ Submit as separate tickets referencing this dashboard module.
 
 **Status:** ✅ READY FOR TESTING  
 **Next Action:** User should verify data quality and confirm dashboard behavior in browser.
-
