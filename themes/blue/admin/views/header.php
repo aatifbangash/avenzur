@@ -2166,6 +2166,11 @@
                                     <span class="chevron closed"></span>
                                 </a>
                                 <ul>
+                                    <li id="accounts_dashboard">
+                                        <a class="submenu" href="<?= admin_url('accounts_dashboard'); ?>">
+                                            <i class="fa fa-dashboard"></i><span class="text"> <?= lang('Accounts Dashboard'); ?></span>
+                                        </a>
+                                    </li>
                                     <li id="accounts_settings">
                                             <a href="<?= admin_url('system_settings/add_ledgers') ?>">
                                                 <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Accounts Settings'); ?></span>
