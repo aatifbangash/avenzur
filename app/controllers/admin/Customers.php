@@ -1,7 +1,9 @@
 <?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
-
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
 class Customers extends MY_Controller
 {
     public function __construct()
@@ -10,7 +12,12 @@ class Customers extends MY_Controller
 
         if (!$this->loggedIn) {
             $this->session->set_userdata('requested_page', $this->uri->uri_string());
-            $this->sma->md('login');
+            $url = "admin/login";
+            if( $this->input->server('QUERY_STRING') ){
+                $url = $url.'?'.$this->input->server('QUERY_STRING').'&redirect='.$this->uri->uri_string();
+            }
+           
+            $this->sma->md($url);
         }
         if ($this->Customer || $this->Supplier) {
             $this->session->set_flashdata('warning', lang('access_denied'));
@@ -48,38 +55,28 @@ class Customers extends MY_Controller
             'dr_total'     => $payment_amount,
             'cr_total'     => $payment_amount,
             'notes'        => 'Payment Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
-            'pid'          =>  ''
+            'sid'          =>  '',
+            'customer_id'  => $customer_id
             );
         $add  = $this->db->insert('sma_accounts_entries', $entry);
         $insert_id = $this->db->insert_id();
 
-        //customer
+        //customer - Credit to reduce receivable
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'C',
+                'ledger_id' => $customer->ledger_account,
+                'amount' => $payment_amount,
+                'narration' => 'Account Receivable'
+            )
+        );
+
+        //payment ledger - Debit to increase cash/bank
         $entryitemdata[] = array(
             'Entryitem' => array(
                 'entry_id' => $insert_id,
                 'dc' => 'D',
-                'ledger_id' => $customer->ledger_account,
-                'amount' => $payment_amount,
-                'narration' => ''
-            )
-        );
-
-        //vat charges
-        /*$entryitemdata[] = array(
-            'Entryitem' => array(
-                'entry_id' => $insert_id,
-                'dc' => 'C',
-                'ledger_id' => $vat_account,
-                'amount' => $va_charges,
-                'narration' => ''
-            )
-        );*/
-
-        //transfer legdger
-        $entryitemdata[] = array(
-            'Entryitem' => array(
-                'entry_id' => $insert_id,
-                'dc' => 'C',
                 'ledger_id' => $ledger_account,
                 'amount' => $payment_amount,
                 'narration' => ''
@@ -90,6 +87,70 @@ class Customers extends MY_Controller
         {
             $this->db->insert('sma_accounts_entryitems' ,$itemdata['Entryitem']);
         }
+
+        return $insert_id;
+    }
+
+    /**
+     * Create accounting entry for customer advance payment
+     * 
+     * @param int $customer_id Customer ID
+     * @param int $payment_ledger Bank/Cash ledger where payment is received
+     * @param int $advance_ledger Customer advance ledger (liability account)
+     * @param float $payment_amount Amount received
+     * @param string $reference_no Payment reference
+     * @param string $type Transaction type
+     * @return int Entry ID
+     */
+    public function convert_customer_payment_advance($customer_id, $payment_ledger, $advance_ledger, $payment_amount, $reference_no, $type){
+        $this->load->admin_model('companies_model');
+        $customer = $this->companies_model->getCompanyByID($customer_id);
+
+        /*Accounts Entries*/
+        $entry = array(
+            'entrytype_id' => 4,
+            'transaction_type' => $type,
+            'number'       => 'ADV-'.$reference_no,
+            'date'         => date('Y-m-d'),
+            'dr_total'     => $payment_amount,
+            'cr_total'     => $payment_amount,
+            'notes'        => 'Customer Advance Payment Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
+            'sid'          =>  '',
+            'customer_id'  => $customer_id
+            );
+        $add  = $this->db->insert('sma_accounts_entries', $entry);
+        $insert_id = $this->db->insert_id();
+
+        $entryitemdata = array();
+
+        // Debit: Bank/Payment account (asset increases - we received money)
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'D',
+                'ledger_id' => $payment_ledger,
+                'amount' => $payment_amount,
+                'narration' => 'Advance received from customer'
+            )
+        );
+
+        // Credit: Customer Advance Ledger (liability increases - we owe customer)
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'C',
+                'ledger_id' => $advance_ledger,
+                'amount' => $payment_amount,
+                'narration' => 'Customer advance liability'
+            )
+        );
+
+        foreach ($entryitemdata as $row => $itemdata)
+        {
+            $this->db->insert('sma_accounts_entryitems' ,$itemdata['Entryitem']);
+        }
+
+        return $insert_id;
     }
 
     public function pending_invoices(){
@@ -103,15 +164,32 @@ class Customers extends MY_Controller
         echo $data;
     }
 
-    public function make_customer_payment($id, $amount, $reference_no, $date){
+    public function add_customer_reference($amount, $reference_no, $date, $note, $customer_id, $ledger_account){
+        $payment_reference = [
+            'customer_id' => $customer_id,
+            'date' => $date,
+            'sequence_code' => $this->sequenceCode->generate('PAY', 5),
+            'note' => $note,
+            'reference_no'  => $reference_no,
+            'amount' => $amount,
+            'transfer_from_ledger' => $ledger_account,
+            'created_by'    => $this->session->userdata('user_id')
+        ];
+
+        $payment_id = $this->sales_model->addPaymentReference($payment_reference);
+        return $payment_id;
+    }
+
+    public function make_customer_payment($id, $amount, $reference_no, $date, $note, $payment_id){
         $payment = [
-            'date'         => $date,
-            'sale_id'  => $id,
-            'reference_no' => $reference_no,
-            'amount'       => $amount,
-            'note'         => 'Multiple invoices payment',
-            'created_by'   => $this->session->userdata('user_id'),
-            'type'         => 'sent',
+            'date'          => $date,
+            'sale_id'   => $id,
+            'reference_no'  => $reference_no,
+            'amount'        => $amount,
+            'note'          => $note,
+            'created_by'    => $this->session->userdata('user_id'),
+            'type'          => 'sent',
+            'payment_id'    => $payment_id
         ];
 
         $this->sales_model->addPayment($payment);
@@ -204,13 +282,35 @@ class Customers extends MY_Controller
         }
     }
 
+    public function view_payment($id = null){
+        $this->sma->checkPermissions(false, true);
+        $this->form_validation->set_rules('id', $this->lang->line('id'), 'required');
+
+        $data = [];
+        $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('View Customer Payments')]];
+        $meta = ['page_title' => lang('View Customer Payments'), 'bc' => $bc];
+
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $this->data['suppliers']  = $this->site->getAllCompanies('customer');
+        $this->data['payment_ref']  = $this->sales_model->getPaymentReferenceByID($id);
+        $this->data['payments']  = $this->sales_model->getPaymentByReferenceID($id);
+        $this->page_construct('customers/view_payment', $meta, $this->data);
+        
+    }
+
     public function list_payments(){
-        $this->data['payments'] = $this->sales_model->getPayments();
+        $data = [];
+        $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Customer Payments')]];
+        $meta = ['page_title' => lang('Customer Payments'), 'bc' => $bc];
+        $this->data['payments'] = $this->sales_model->getPaymentReferences();
         $this->page_construct('customers/list_payments', $meta, $this->data);
     }
 
     public function payment_from_customer(){
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
         $this->form_validation->set_rules('customer', $this->lang->line('customer'), 'required');
 
         $data = [];
@@ -224,58 +324,304 @@ class Customers extends MY_Controller
             $reference_no = $this->input->post('reference_no');
             $payment_total = $this->input->post('payment_total');
             $ledger_account = $this->input->post('ledger_account');
-            //$vat_account = $this->input->post('vat_account');
-            //$vat_charges = $this->input->post('vat_charges');
-            //$date = $this->input->post('date');
             $due_amount_array = $this->input->post('due_amount');
+            $original_amount_array = $this->input->post('original_amount');
+            $note = $this->input->post('note');
+            $date_fmt = $this->input->post('date'); 
+            $formattedDate = DateTime::createFromFormat('d/m/Y H:i', $date_fmt);
 
-            $date_fmt = $this->input->post('date');
-
-            $formattedDate = DateTime::createFromFormat('Y-m-d', $date_fmt);
-            $isDateValid = $formattedDate && $formattedDate->format('Y-m-d') === $date_fmt;
-
-            if($isDateValid){
-                $date = $date_fmt;
-            }else{
-                $formattedDate = DateTime::createFromFormat('d/m/Y', $date_fmt);
+            if ($formattedDate) {
                 $date = $formattedDate->format('Y-m-d');
+            } else {
+                echo 'Invalid date format!';
+                $date = null; // Handle invalid input as needed
             }
 
-            for($i = 0; $i < count($payments_array); $i++){
-                $payment_amount = $payments_array[$i];
-                $item_id = $item_ids[$i];
-                $due_amount = $due_amount_array[$i];
-                if($payment_amount > $due_amount){
-                    $this->session->set_flashdata('error', 'Amount paid cannot be greater than due amount');
+            // Get customer advance ledger from settings
+            $settings = $this->Settings;
+            $customer_advance_ledger = isset($settings->customer_advance_ledger) && !empty($settings->customer_advance_ledger) 
+                                     ? $settings->customer_advance_ledger 
+                                     : null;
+
+            if(!$payments_array || sizeOf($payments_array) == 0){
+                // Pure advance payment scenario (no invoices selected)
+                if (!$customer_advance_ledger && $payment_total > 0) {
+                    $this->session->set_flashdata('error', 'Cannot process advance payment. Customer Advance Ledger is not configured in system settings.');
                     redirect($_SERVER['HTTP_REFERER']);
                 }
-            }
 
-            if(array_sum($payments_array) == $payment_total){
-                for ($i = 0; $i < count($payments_array); $i++) {
-                    $payment_amount = $payments_array[$i];
-                    $item_id = $item_ids[$i];
-                    $due_amount = $due_amount_array[$i];
+                if($payment_total > 0 && $customer_advance_ledger){
+                    // Create payment reference using payment ledger (bank/cash account)
+                    $payment_id = $this->add_customer_reference($payment_total, $reference_no, $date, $note . ' (Pure Advance)', $customer_id, $ledger_account);
+                    
+                    if (!$payment_id) {
+                        $this->session->set_flashdata('error', 'Failed to create pure advance payment reference. Please check system configuration.');
+                        redirect($_SERVER['HTTP_REFERER']);
+                    }
+                    
+                    $this->make_customer_payment(NULL, $payment_total, $reference_no, $date, $note, $payment_id);
+                    $this->sales_model->update_customer_balance($customer_id, $payment_total);
 
-                    if($payment_amount > 0){
-                        $this->update_sale_order($item_id, $payment_amount);
-                        $this->make_customer_payment($item_id, $payment_amount, $reference_no, $date);
+                    // Create journal entry: Pass payment ledger and customer advance ledger
+                    $journal_id = $this->convert_customer_payment_advance($customer_id, $ledger_account, $customer_advance_ledger, $payment_total, $reference_no, 'customeradvance');
+                    $this->sales_model->update_payment_reference($payment_id, $journal_id);
+                    $this->session->set_flashdata('message', lang('Pure advance payment received Successfully!'));
+                    admin_redirect('customers/view_payment/'.$payment_id);
+                }
+            }else{
+                // Invoice payment scenario
+                // Get settle_with_advance checkbox value
+                $settle_with_advance = $this->input->post('settle_with_advance') ? true : false;
+                
+                // Calculate total due amount
+                $total_due = array_sum($due_amount_array);
+                $total_original = array_sum($original_amount_array);
+                
+                // Check if payment exceeds total due - this would be advance
+                if($payment_total > $total_due) {
+                    if(!$customer_advance_ledger) {
+                        $this->session->set_flashdata('error', 'Payment amount exceeds total due amount. Please configure Customer Advance Ledger in settings to allow advance payments.');
+                        redirect($_SERVER['HTTP_REFERER']);
                     }
                 }
 
-                $this->convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $payment_total, $reference_no, 'customerpayment');
-                $this->session->set_flashdata('message', lang('Customer invoice added Successfully!'));
-                admin_redirect($_SERVER['HTTP_REFERER']);
-            }else{
-                $this->session->set_flashdata('error', 'Total Sum Of Amounts do not match');
-                redirect($_SERVER['HTTP_REFERER']);
+                // Handle advance settlement if checkbox is checked
+                // Calculate shortage between total invoice due and payment entered
+                $cash_payment = $payment_total;
+                $advance_settlement_amount = 0;
+                
+                if($settle_with_advance) {
+                    if($customer_advance_ledger && $total_original < $payment_total) {
+                        // Get current advance balance
+                        $current_advance_balance = $this->getCustomerAdvanceBalance($customer_id, $customer_advance_ledger);
+                        
+                        if($current_advance_balance > 0) {
+                            // Calculate shortage (total invoice amount - payment entered)
+                            $shortage_amount = $total_due - $payment_total;
+                            
+                            if($shortage_amount > 0) {
+                                // Use advance to cover the shortage (minimum of shortage or available advance)
+                                $advance_settlement_amount = min($current_advance_balance, $shortage_amount);
+                                // Cash payment remains as entered
+                                $cash_payment = $payment_total;
+                                
+                                // Add note about settlement
+                                $note .= " (Settlement: Cash {$cash_payment}, Advance {$advance_settlement_amount}, Total: " . ($cash_payment + $advance_settlement_amount) . ")";
+                            }
+                        }
+                    }
+                }
+
+                // Validate payment amounts
+                for($i = 0; $i < count($payments_array); $i++){
+                    $payment_amount = $payments_array[$i];
+                    $item_id = $item_ids[$i];
+                    $due_amount = $due_amount_array[$i];
+                    if($payment_amount > $due_amount){
+                        $this->session->set_flashdata('error', 'Amount received cannot be greater than due amount');
+                        redirect($_SERVER['HTTP_REFERER']);
+                    }
+                }
+                
+                // Case 4 Check: Ensure payment_total can cover the selected invoice payments
+                if(array_sum($payments_array) > $payment_total){
+                    $this->session->set_flashdata('error', 'Total payment amount is insufficient to cover selected invoice payments. Required: ' . array_sum($payments_array) . ', Provided: ' . $payment_total);
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
+
+                // Split payment into invoice payment and advance payment
+                $total_invoice_payment = array_sum($payments_array); // Actual amount going to invoices
+                $advance_payment = $cash_payment - $total_invoice_payment; // Excess cash amount
+                
+                $main_payment_id = null;
+                
+                // Process invoice payments (if there are any invoices OR if settling with advance)
+                if($total_invoice_payment > 0 || $advance_settlement_amount > 0) {
+                    // Validation: Ensure we have some payment method
+                    if($total_invoice_payment <= 0 && $advance_settlement_amount <= 0) {
+                        $this->session->set_flashdata('error', 'Total settlement amount must be greater than zero.');
+                        redirect($_SERVER['HTTP_REFERER']);
+                    }
+                    
+                    // Create payment reference ONLY for the actual cash payment to invoices (not including advance settlement)
+                    // The advance settlement is tracked separately and should not be included in this payment reference
+                    $combined_payment_id = $this->add_customer_reference($total_invoice_payment, $reference_no, $date, $note, $customer_id, $ledger_account);
+                    
+                    // Verify payment reference was created successfully
+                    if (!$combined_payment_id) {
+                        $this->session->set_flashdata('error', 'Failed to create payment reference. Please check system configuration.');
+                        redirect($_SERVER['HTTP_REFERER']);
+                    }
+                    
+                    // Distribute payments to invoices (cash + advance settlement)
+                    $remaining_advance = $advance_settlement_amount;
+                    
+                    for ($i = 0; $i < count($payments_array); $i++) {
+                        $cash_payment_for_invoice = $payments_array[$i];
+                        $item_id = $item_ids[$i];
+                        $due_amount = $due_amount_array[$i];
+                        
+                        // Calculate shortage for this invoice
+                        $invoice_shortage = $due_amount - $cash_payment_for_invoice;
+                        
+                        // Determine how much advance to use for this invoice
+                        $advance_for_this_invoice = 0;
+                        if ($remaining_advance > 0 && $invoice_shortage > 0) {
+                            $advance_for_this_invoice = min($remaining_advance, $invoice_shortage);
+                            $remaining_advance -= $advance_for_this_invoice;
+                        }
+                        
+                        // Total payment for this invoice (cash + advance)
+                        $total_payment_for_invoice = $cash_payment_for_invoice + $advance_for_this_invoice;
+                        
+                        if($total_payment_for_invoice > 0){
+                            
+                            // Record cash payment (only if there is cash for this invoice)
+                            if ($cash_payment_for_invoice > 0) {
+                                $this->make_customer_payment($item_id, $cash_payment_for_invoice, $reference_no, $date, $note . ' (Cash)', $combined_payment_id);
+                                // NOTE: update_sale_order() is NOT called here because make_customer_payment() 
+                                // already triggers syncSalePayments() which recalculates the paid amount correctly.
+                                // Calling update_sale_order() would double the payment amount.
+                            }
+                            
+                            // Record advance settlement payment (only if advance used for this invoice)
+                            else if ($advance_for_this_invoice > 0) {
+                                $this->make_customer_payment($item_id, $advance_for_this_invoice, $reference_no . '-ADV', $date, $note . ' (Advance Settlement)', $combined_payment_id);
+                            }
+                        }
+                    }
+
+                    // Create accounting journal entries
+                    if($advance_settlement_amount > 0) {
+                        // If we are settling with advance, create separate journal entries
+                        
+                        // Create cash payment journal entry (only if cash payment > 0)
+                        if($cash_payment > 0) {
+                            $cash_journal_id = $this->convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $cash_payment, $reference_no . '-CASH', 'customerpayment');
+                        }
+                        
+                        // Create advance settlement journal entry (debit advance ledger, credit customer ledger)
+                        // This reduces the advance balance and settles the customer receivable
+                        $advance_journal_id = $this->create_customer_advance_settlement_entry($customer_id, $customer_advance_ledger, $advance_settlement_amount, $reference_no . '-ADV', $date, 'Advance Settlement');
+                        
+                        // Update payment reference with the journal ID (prefer cash journal if exists, otherwise advance journal)
+                        $this->sales_model->update_payment_reference($combined_payment_id, isset($cash_journal_id) ? $cash_journal_id : $advance_journal_id);
+                    } else {
+                        // Regular payment without advance settlement (cash only)
+                        if($cash_payment > 0) {
+                            $journal_id = $this->convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $cash_payment, $reference_no, 'customerpayment');
+                            $this->sales_model->update_payment_reference($combined_payment_id, $journal_id);
+                        }
+                    }
+                    
+                    $main_payment_id = $combined_payment_id;
+                }
+                
+                // Process advance payment separately (if there is any)
+                
+                if($advance_payment > 0) {
+                    
+                    if($customer_advance_ledger) {
+                        // Create separate payment reference for advance payment
+                        $advance_reference_no = $reference_no . '-ADV';
+                        $advance_payment_id = $this->add_customer_reference($advance_payment, $advance_reference_no, $date, $note . ' (Advance)', $customer_id, $ledger_account);
+                        
+                        // Verify payment reference was created successfully
+                        if (!$advance_payment_id) {
+                            $this->session->set_flashdata('error', 'Failed to create advance payment reference. Please check system configuration.');
+                            redirect($_SERVER['HTTP_REFERER']);
+                        }
+                        
+                        // Make advance payment entry  
+                        $this->make_customer_payment(NULL, $advance_payment, $advance_reference_no, $date, $note, $advance_payment_id);
+                        
+                        // Create journal entry for advance payment
+                        $advance_journal_id = $this->convert_customer_payment_advance($customer_id, $ledger_account, $customer_advance_ledger, $advance_payment, $advance_reference_no, 'customeradvance');
+                        $this->sales_model->update_payment_reference($advance_payment_id, $advance_journal_id);
+                        
+                        // Set main payment id to advance if no invoice payment
+                        if(!$main_payment_id) {
+                            $main_payment_id = $advance_payment_id;
+                        }
+                    }
+                }
+
+                $this->session->set_flashdata('message', lang('Payment processed Successfully!'));
+                admin_redirect('customers/view_payment/' . $main_payment_id);
             }
 
         } else {
+            // Check if customer_advance_ledger is configured in settings
+            $settings = $this->Settings;
+           
+            $customer_advance_ledger = isset($settings->customer_advance_ledger) && !empty($settings->customer_advance_ledger) 
+                                     ? $settings->customer_advance_ledger 
+                                     : null;
+            
             $this->data['customers']  = $this->site->getAllCompanies('customer');
             $this->data['warehouses'] = $this->site->getAllWarehouses();
+            $this->data['customer_advance_ledger'] = $customer_advance_ledger;
             $this->page_construct('customers/add_payment', $meta, $this->data);
         }
+    }
+
+    /**
+     * Create accounting entry for customer advance settlement
+     * This is used when customer's existing advance is used to pay invoices
+     * 
+     * @param int $customer_id Customer ID
+     * @param int $customer_advance_ledger Customer advance ledger (asset account)
+     * @param float $advance_amount Amount of advance being used
+     * @param string $reference_no Payment reference
+     * @param string $date Transaction date
+     * @param string $description Transaction description
+     * @return int Entry ID
+     */
+    private function create_customer_advance_settlement_entry($customer_id, $customer_advance_ledger, $advance_amount, $reference_no, $date, $description) {
+        // Get customer details
+        $this->load->admin_model('companies_model');
+        $customer = $this->companies_model->getCompanyByID($customer_id);
+        
+        // Create journal entry for advance settlement
+        $entry = array(
+            'entrytype_id' => 4,
+            'transaction_type' => 'advancesettlement',
+            'number' => $reference_no,
+            'date' => $date,
+            'dr_total' => $advance_amount,
+            'cr_total' => $advance_amount,
+            'notes' => $description . ' for ' . $customer->name,
+            'customer_id' => $customer_id
+        );
+        
+        $add = $this->db->insert('sma_accounts_entries', $entry);
+        $entry_id = $this->db->insert_id();
+        
+        if ($add) {
+            // Debit customer advance ledger (reducing advance balance - liability decreases)
+            $entryitem1 = array(
+                'entry_id' => $entry_id,
+                'ledger_id' => $customer_advance_ledger,
+                'amount' => $advance_amount,
+                'dc' => 'D',
+                'reconciliation_date' => $date
+            );
+            $this->db->insert('sma_accounts_entryitems', $entryitem1);
+            
+            // Credit customer ledger (reducing customer receivable - asset decreases)
+            $entryitem2 = array(
+                'entry_id' => $entry_id,
+                'ledger_id' => $customer->ledger_account,
+                'amount' => $advance_amount,
+                'dc' => 'C',
+                'reconciliation_date' => $date
+            );
+            $this->db->insert('sma_accounts_entryitems', $entryitem2);
+            
+            return $entry_id;
+        }
+        
+        return false;
     }
 
     public function add_credit_memo($memo_id, $customer_id, $reference_no, $description, $payment_amount, $date){
@@ -621,7 +967,12 @@ class Customers extends MY_Controller
 
     public function add()
     {
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
+
+        if (!$this->Owner && !$this->Admin && !$this->GP['customers-add']) {
+            $this->session->set_flashdata('warning', lang('access_denied'));
+            admin_redirect($_SERVER['HTTP_REFERER']);
+        }
 
         $this->form_validation->set_rules('email', lang('email_address'), 'is_unique[companies.email]');
 
@@ -630,6 +981,7 @@ class Customers extends MY_Controller
             $pg   = $this->site->getPriceGroupByID($this->input->post('price_group'));
             $data = [
                 'name'                => $this->input->post('name'),
+                'name_ar'                => $this->input->post('name_ar'),
                 'email'               => $this->input->post('email'),
                 'group_id'            => '3',
                 'group_name'          => 'customer',
@@ -638,6 +990,7 @@ class Customers extends MY_Controller
                 'price_group_id'      => $this->input->post('price_group') ? $this->input->post('price_group') : null,
                 'price_group_name'    => $this->input->post('price_group') ? $pg->name : null,
                 'credit_limit'        => $this->input->post('credit_limit') ? $this->input->post('credit_limit') : '0',
+                'payment_term'        => $this->input->post('payment_term') ? $this->input->post('payment_term') : '0', 
                 'company'             => $this->input->post('company'),
                 'address'             => $this->input->post('address'),
                 'vat_no'              => $this->input->post('vat_no'),
@@ -989,7 +1342,12 @@ class Customers extends MY_Controller
 
     public function edit($id = null)
     {
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
+
+        if (!$this->Owner && !$this->Admin && !$this->GP['customers-edit']) {
+            $this->session->set_flashdata('warning', lang('access_denied'));
+            admin_redirect($_SERVER['HTTP_REFERER']);
+        }
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -1005,6 +1363,7 @@ class Customers extends MY_Controller
             $pg   = $this->site->getPriceGroupByID($this->input->post('price_group'));
             $data = [
                 'name'                => $this->input->post('name'),
+                'name_ar'                => $this->input->post('name_ar'),
                 'email'               => $this->input->post('email'),
                 'group_id'            => '3',
                 'group_name'          => 'customer',
@@ -1013,6 +1372,7 @@ class Customers extends MY_Controller
                 'price_group_id'      => $this->input->post('price_group') ? $this->input->post('price_group') : null,
                 'price_group_name'    => $this->input->post('price_group') ? $pg->name : null,
                 'credit_limit'        => $this->input->post('credit_limit') ? $this->input->post('credit_limit') : '0',
+                'payment_term'        => $this->input->post('payment_term') ? $this->input->post('payment_term') : '0',
                 'company'             => $this->input->post('company'),
                 'address'             => $this->input->post('address'),
                 'vat_no'              => $this->input->post('vat_no'),
@@ -1191,6 +1551,261 @@ class Customers extends MY_Controller
         echo $this->datatables->generate();
     }
 
+    private function _get_companies_table_fields()
+    {
+        return [
+            'external_id' => 'Customer No',
+            'name' => 'Customer Name',
+            'company' => 'C R Name',
+            'cr' => 'C R Number',
+            'cr_expiration' => 'C R Expiration',
+            'vat_no' => 'VAT No',
+            'gln' => 'GLN No',
+            'sfda_certificate' => 'SFDA Certificate',
+            'short_address' => 'Short Address',
+            'city' => 'City',
+            'unit_number' => 'Unit Number',
+            'building_number' => 'Building Number',
+            'postal_code' => 'Postal Code',
+            'additional_number' => 'Additional Number',
+            'contact_name' => 'Contact Name',
+            'contact_number' => 'Contact Number',
+            'credit_limit' => 'Credit Limit',
+            'payment_term' => 'Credit Period',
+            'cf1' => 'Salesman Name',
+            'promessory_note_amount' => 'Promissory Note Amount',
+            'balance' => 'Customer Balance',
+            'note' => 'Note',
+            'sales_agent' => 'Sales Agent Name',
+            'category' => 'Classification'
+        ];
+    }
+
+    public function import_excel()
+    {
+        //$this->sma->checkPermissions('add', true);
+        $this->load->helper('security');
+        $this->form_validation->set_rules('excel_file', lang('upload_file'), 'xss_clean');
+
+        if ($this->form_validation->run() == true) {
+
+            $this->load->library('excel');
+            if (isset($_FILES['excel_file']) && $_FILES['excel_file']['size'] > 0) {
+                $this->load->library('upload');
+
+                $config['upload_path']   = 'files/';
+                $config['allowed_types'] = 'xlsx|xls|csv';
+                $config['max_size']      = '10000';
+                $config['overwrite']     = false;
+                $config['encrypt_name']  = true;
+
+                $this->upload->initialize($config);
+                $this->upload->initialize($config);
+
+                if (!$this->upload->do_upload('excel_file')) {
+                    $error = $this->upload->display_errors();
+                    $this->session->set_flashdata('error', $error);
+                    admin_redirect('customers');
+                }
+
+                $upload_data = $this->upload->data();
+                $file_path = $upload_data['full_path'];
+
+                $spreadsheet = IOFactory::load($file_path);
+                $sheet = $spreadsheet->getActiveSheet();
+                $rows = $sheet->toArray(null, true, true, true);
+                
+                 // Extract headers (first row)
+                $headers = array_shift($rows);
+               
+                // Filter out empty headers
+                $headers = array_filter($headers, function($value) {
+                    return trim($value) !== '';
+                });
+
+                // Optionally reindex headers numerically
+                $headers = array_values($headers);
+
+                // Pass to view for mapping
+                $this->data['headers']   = $headers;
+                $this->data['rows']      = $rows;
+                $this->data['file_path'] = $file_path;
+                $this->data['db_fields'] = $this->_get_companies_table_fields();
+
+                //$this->load->view($this->theme . 'customers/map_fields', $this->data);
+
+                $this->session->set_userdata('user_csrf', $value);
+                $this->data['csrf'] = $this->session->userdata('user_csrf');
+                $bc = [['link' => base_url(), 'page' => lang('customers_mapper')], ['link' => admin_url('customers'), 'page' => lang('customers_mapper')], ['link' => '#', 'page' => lang('customers_mapper')]];
+                $meta = ['page_title' => lang('customers_mapper'), 'bc' => $bc];
+                $this->page_construct('customers/map_fields', $meta, $this->data);
+                
+            }
+        }else{
+             $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+            $this->data['modal_js'] = $this->site->modal_js();
+            $this->load->view($this->theme . 'customers/import_excel', $this->data);
+        }
+    }
+
+    /*public function process_import()
+    {
+        //$this->sma->checkPermissions('add', true);
+        $mapping = $this->input->post('mapping');
+        $filePath = $this->input->post('file_path');
+        $spreadsheet = IOFactory::load($filePath);
+        $rows = $spreadsheet->getActiveSheet()->toArray();
+    
+        array_shift($rows); // remove header row
+
+        $imported = 0;
+        $errors = 0;
+        
+        foreach ($rows as $row) {
+            echo '<pre>';print_r($row);exit;
+            $data = [];
+            foreach ($mapping as $index => $field) {
+                if (!empty($field)) {
+                    $data[$field] = trim($row[$index]);
+                }
+            }
+
+            if (empty($data['name'])) continue; // skip invalid rows
+            
+            $exists = $this->db->get_where('companies', ['name' => $data['name'], 'group_name' => 'customer'])->row();
+
+            if ($exists) {
+                $this->db->where('id', $exists->id)->update('companies', $data);
+            } else {
+                // defaults
+                $data['group_id'] = 3;
+                $data['group_name'] = 'customer';
+                $data['customer_group_id'] = 1;
+                $data['customer_group_name'] = 'default';
+                $data['country'] = 'Saudi Arabia';
+                
+                $this->db->insert('companies', $data);
+            }
+
+            if ($this->db->affected_rows() > 0) {
+                $imported++;
+            } else {
+                $errors++;
+            }
+        }
+
+        unlink($filePath);
+        $this->session->set_flashdata('message', "Imported: {$imported}, Errors: {$errors}");
+        redirect(admin_url('customers'));
+    }*/
+
+    public function process_import()
+    {
+        $mapping  = $this->input->post('mapping');    // mapping array: file column index => db field
+        $filePath = $this->input->post('file_path');  // uploaded Excel file path
+
+        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($filePath);
+        $sheet       = $spreadsheet->getActiveSheet();
+
+        $imported = 0;
+        $errors   = 0;
+        $i = 0;
+
+        foreach ($sheet->getRowIterator() as $row) {
+            $i++;
+            $rowIndex = $row->getRowIndex();
+            // Skip header row
+            if ($rowIndex == 1) continue;
+
+            $cellIterator = $row->getCellIterator();
+            $cellIterator->setIterateOnlyExistingCells(true); // only actual cells
+
+            $rowData = [];
+            foreach ($cellIterator as $cell) {
+                $value = $cell->getValue();
+
+                // Convert very large numbers to string to avoid scientific notation
+                if (is_numeric($value) && strlen((string)$value) > 10) {
+                    $value = (string)$value;
+                }
+
+                $rowData[] = $value;
+            }
+
+            // Apply mapping: map Excel columns to DB fields
+            $data = [];
+            foreach ($mapping as $index => $field) {
+                if (!empty($field) && isset($rowData[$index])) {
+                    $data[$field] = trim($rowData[$index]);
+                }
+            }
+           
+            // Skip row if 'name' is missing
+            if (empty($data['name'])) continue;
+
+            // Check if company already exists
+            $exists = $this->db->get_where('companies', [
+                'name'       => $data['name'],
+                'group_name' => 'customer'
+            ])->row();
+
+            if ($exists) {
+                // Update existing record
+                //echo '<pre>';print_r($data);exit;
+                $this->db->where('id', $exists->id)->update('companies', $data);
+            } else {
+                $seq_code = 'CUS-' . str_pad($i, 5, '0', STR_PAD_LEFT);
+
+                // Insert new record with defaults
+                $data['group_id']            = 3;
+                $data['group_name']          = 'customer';
+                $data['customer_group_id']   = 1;
+                $data['customer_group_name'] = 'default';
+                $data['country']             = 'Saudi Arabia';
+                $data['sequence_code']       = $seq_code;
+                $data['level']               = 1;
+
+                $this->db->insert('companies', $data);
+
+                $customer_id = $this->db->insert_id(); // Get newly created customer ID
+
+                // --- Link salesman if found ---
+                if (!empty($data['sales_agent'])) {
+                    $salesman = $this->db
+                        ->select('id')
+                        ->where('name', trim($data['sales_agent']))
+                        ->get('sma_sales_man')
+                        ->row();
+
+                    if ($salesman) {
+                        $this->db->insert('sma_customer_saleman', [
+                            'customer_id' => $customer_id,
+                            'salesman_id' => $salesman->id
+                        ]);
+                    }
+                }
+            }
+
+            if ($this->db->affected_rows() > 0) {
+                $imported++;
+            } else {
+                $errors++;
+            }
+        }
+
+        // Delete uploaded file
+        if (file_exists($filePath)) {
+            unlink($filePath);
+        }
+
+        // Set flash message
+        $this->session->set_flashdata('message', "Imported: {$imported}, Errors: {$errors}");
+        redirect(admin_url('customers'));
+    }
+
+
     public function import_csv()
     {
         $this->sma->checkPermissions('add', true);
@@ -1240,27 +1855,31 @@ class Customers extends MY_Controller
                     $customer = [
                         'company'             => isset($value[0]) ? trim($value[0]) : '',
                         'name'                => isset($value[1]) ? trim($value[1]) : '',
-                        'email'               => isset($value[2]) ? trim($value[2]) : '',
-                        'phone'               => isset($value[3]) ? trim($value[3]) : '',
-                        'address'             => isset($value[4]) ? trim($value[4]) : '',
-                        'city'                => isset($value[5]) ? trim($value[5]) : '',
-                        'state'               => isset($value[6]) ? trim($value[6]) : '',
-                        'postal_code'         => isset($value[7]) ? trim($value[7]) : '',
-                        'country'             => isset($value[8]) ? trim($value[8]) : '',
-                        'vat_no'              => isset($value[9]) ? trim($value[9]) : '',
-                        'gst_no'              => isset($value[10]) ? trim($value[10]) : '',
-                        'cf1'                 => isset($value[11]) ? trim($value[11]) : '',
-                        'cf2'                 => isset($value[12]) ? trim($value[12]) : '',
-                        'cf3'                 => isset($value[13]) ? trim($value[13]) : '',
-                        'cf4'                 => isset($value[14]) ? trim($value[14]) : '',
-                        'cf5'                 => isset($value[15]) ? trim($value[15]) : '',
-                        'cf6'                 => isset($value[16]) ? trim($value[16]) : '',
+                        'name_ar'             => isset($value[2]) ? trim($value[2]) : '',
+                        'email'               => isset($value[3]) ? trim($value[3]) : '',
+                        'phone'               => isset($value[4]) ? trim($value[4]) : '',
+                        'address'             => isset($value[5]) ? trim($value[5]) : '',
+                        'city'                => isset($value[6]) ? trim($value[6]) : '',
+                        'state'               => isset($value[7]) ? trim($value[7]) : '',
+                        'postal_code'         => isset($value[8]) ? trim($value[8]) : '',
+                        'country'             => isset($value[9]) ? trim($value[9]) : '',
+                        'vat_no'              => isset($value[10]) ? trim($value[10]) : '',
+                        'gst_no'              => isset($value[11]) ? trim($value[11]) : '',
+                        'cf1'                 => isset($value[12]) ? trim($value[12]) : '',
+                        'cf2'                 => isset($value[13]) ? trim($value[13]) : '',
+                        'cf3'                 => isset($value[14]) ? trim($value[14]) : '',
+                        'cf4'                 => isset($value[15]) ? trim($value[15]) : '',
+                        'cf5'                 => isset($value[16]) ? trim($value[16]) : '',
+                        'cf6'                 => isset($value[17]) ? trim($value[17]) : '',
+                        'payment_term'        => isset($value[18]) ? trim($value[18]) : '',
+                        'credit_limit'        => isset($value[19]) ? trim($value[19]) : '', 
                         'group_id'            => 3,
                         'group_name'          => 'customer',
                         'customer_group_id'   => (!empty($customer_group)) ? $customer_group->id : null,
                         'customer_group_name' => (!empty($customer_group)) ? $customer_group->name : null,
                         'price_group_id'      => (!empty($price_group)) ? $price_group->id : null,
                         'price_group_name'    => (!empty($price_group)) ? $price_group->name : null,
+                        'sequence_code'       => $this->sequenceCode->generate('CUS', 5)
                     ];
                     if (empty($customer['company']) || empty($customer['name']) || empty($customer['email'])) {
                         $this->session->set_flashdata('error', lang('company') . ', ' . lang('name') . ', ' . lang('email') . ' ' . lang('are_required') . ' (' . lang('line_no') . ' ' . $rw . ')');
@@ -1312,7 +1931,12 @@ class Customers extends MY_Controller
 
     public function index($action = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
+
+        if (!$this->Owner && !$this->Admin && !$this->GP['customers-index']) {
+            $this->session->set_flashdata('warning', lang('access_denied'));
+            admin_redirect($_SERVER['HTTP_REFERER']);
+        }
 
         $this->data['error']  = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['action'] = $action;
@@ -1362,4 +1986,95 @@ class Customers extends MY_Controller
         $this->data['customer'] = $this->companies_model->getCompanyByID($id);
         $this->load->view($this->theme . 'customers/view', $this->data);
     }
+
+    /**
+     * Get customer advance balance via AJAX
+     * Used by the payment form to show current advance balance
+     */
+    public function get_customer_advance_balance(){
+        try {
+            $customer_id = isset($_GET['customer_id']) ? $_GET['customer_id'] : null;
+            
+            if (!$customer_id) {
+                echo json_encode(array(
+                    'advance_balance' => 0,
+                    'advance_ledger_configured' => false,
+                    'error' => 'No customer ID provided'
+                ));
+                return;
+            }
+            
+            // Get customer advance ledger from settings
+            $settings = $this->Settings;
+            $customer_advance_ledger = isset($settings->customer_advance_ledger) && !empty($settings->customer_advance_ledger) 
+                                     ? $settings->customer_advance_ledger 
+                                     : null;
+            
+            $advance_balance = 0;
+            
+            if($customer_advance_ledger && $customer_id) {
+                $advance_balance = $this->getCustomerAdvanceBalance($customer_id, $customer_advance_ledger);
+            }
+            
+            $data = array(
+                'advance_balance' => $advance_balance,
+                'advance_ledger_configured' => $customer_advance_ledger ? true : false,
+                'customer_id' => $customer_id,
+                'advance_ledger' => $customer_advance_ledger
+            );
+            
+            echo json_encode($data);
+            
+        } catch (Exception $e) {
+            // Log the full error for debugging
+            log_message('error', 'Customer Advance Balance Error: ' . $e->getMessage());
+            log_message('error', 'SQL Error: ' . $this->db->last_query());
+            
+            echo json_encode(array(
+                'advance_balance' => 0,
+                'advance_ledger_configured' => false,
+                'error' => 'Database error: ' . $e->getMessage(),
+                'query' => $this->db->last_query()
+            ));
+        }
+    }
+
+    /**
+     * Get customer advance balance from ledger
+     * 
+     * @param int $customer_id Customer ID
+     * @param int $customer_advance_ledger Ledger ID for customer advance
+     * @return float Advance balance (Credit - Debit)
+     */
+    private function getCustomerAdvanceBalance($customer_id, $customer_advance_ledger) {
+        if(!$customer_advance_ledger || !$customer_id) {
+            return 0;
+        }
+        
+        // Query for advance balance using customer_id field
+        $this->db->select('
+            COALESCE(SUM(CASE WHEN ei.dc = "C" THEN ei.amount ELSE 0 END), 0) as credit_total,
+            COALESCE(SUM(CASE WHEN ei.dc = "D" THEN ei.amount ELSE 0 END), 0) as debit_total
+        ');
+        $this->db->from('sma_accounts_entryitems ei');
+        $this->db->join('sma_accounts_entries e', 'e.id = ei.entry_id', 'inner');
+        $this->db->where('ei.ledger_id', $customer_advance_ledger);
+        $this->db->where('e.customer_id', $customer_id);
+        
+        // Check if deleted column exists before filtering
+        if ($this->db->field_exists('deleted', 'sma_accounts_entries')) {
+            $this->db->where('e.deleted', 0);
+        }
+        
+        $query = $this->db->get();
+        
+        if($query->num_rows() > 0) {
+            $result = $query->row();
+            // For customer advance: Credit means advance received, Debit means advance used
+            return $result->credit_total - $result->debit_total;
+        }
+        
+        return 0;
+    }
 }
+

@@ -25,6 +25,16 @@
                         <?= lang('name', 'name'); ?>
                         <?php echo form_input('name', $supplier->name, 'class="form-control tip" id="name" required="required"'); ?>
                     </div>
+
+                    <div class="form-group  ">
+                        <?= lang('name_arabic', 'name_arabic'); ?>
+                        <?php echo form_input('name_ar',  $supplier->name_ar, 'class="form-control tip" id="name" data-bv-notempty="true"'); ?>
+                    </div> 
+                    <div class="form-group  ">  
+                        <?= lang('category', 'category'); ?>
+                        <?php $catogories_arr = [''=>'Please Select', 'service ' => lang('service'), 'trade' => lang('trade')];
+                        echo form_dropdown('category', $catogories_arr, $supplier->category, 'class="form-control select" id="category" name="category" required="required"'); ?>
+                    </div> 
                     <div class="form-group">
                         <?= lang('vat_no', 'vat_no'); ?>
                         <?php echo form_input('vat_no', $supplier->vat_no, 'class="form-control" id="vat_no"'); ?>
@@ -77,7 +87,14 @@
                         <?= lang('country', 'country'); ?>
                         <?php echo form_input('country', $supplier->country, 'class="form-control" id="country"'); ?>
                     </div>
-
+                    <div class="form-group">
+                        <?= lang('payment_term', 'popayment_term'); ?>
+                        <?php echo form_input('payment_term', $supplier->payment_term, 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('payment_term_tip') . '" id="popayment_term"'); ?>
+                    </div>
+                    <div class="form-group">
+                        <?= lang('Credit_limit', 'credit_limit'); ?>
+                        <?php echo form_input('credit_limit', $supplier->credit_limit, 'class="form-control" id="credit_limit"'); ?>
+                    </div>  
                     <div class="form-group">
                         <?= lang('Ledger Account', 'ledger_account'); ?>
                         <?php 

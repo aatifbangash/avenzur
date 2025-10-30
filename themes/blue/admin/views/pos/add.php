@@ -18,6 +18,7 @@
     <link href="<?= base_url('assets/custom/pos.css') ?>" rel="stylesheet"/>
     <script type="text/javascript" src="<?=$assets?>js/jquery-2.0.3.min.js"></script>
     <script type="text/javascript" src="<?=$assets?>js/jquery-migrate-1.2.1.min.js"></script>
+    <script type="text/javascript" src="<?= $assets ?>js/plugins/decimal/decimal.js"></script>
     <!--[if lt IE 9]>
     <script src="<?=$assets?>js/jquery.js"></script>
     <![endif]-->
@@ -48,6 +49,22 @@
         </div>
     </div>
 </noscript>
+
+<div class="modal fade" id="itemModal" tabindex="-1" role="dialog" aria-labelledby="itemModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="min-width:800px !important;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="itemModalLabel">Select an Item</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- The content will be dynamically generated here -->
+            </div>
+        </div>
+    </div>
+</div>
 
 <div id="wrapper">
     <header id="header" class="navbar">
@@ -208,6 +225,14 @@
                 <div id="pos">
                     <?php $attrib = ['data-toggle' => 'validator', 'role' => 'form', 'id' => 'pos-sale-form'];
                     echo admin_form_open('pos', $attrib);?>
+                    
+                    <input type="hidden" id="grand_total_sale" name="grand_total_sale" value="">
+                    <input type="hidden" id="grand_total_net_sale" name="grand_total_net_sale" value="">
+                    <input type="hidden" id="grand_total_discount" name="grand_total_discount" value="">
+                    <input type="hidden" id="grand_total_vat" name="grand_total_vat" value="">
+                    <input type="hidden" id="grand_total" name="grand_total" value="">	
+                    <input type="hidden" id="cost_goods_sold" name="cost_goods_sold" value="">
+
                     <div id="leftdiv">
                         <div id="printhead">
                             <h4 style="text-transform:uppercase;"><?php echo $Settings->site_name; ?></h4>
@@ -253,7 +278,7 @@
                                         <?php
                                             $wh[''] = '';
                                         foreach ($pharmacies as $warehouse) {
-                                            $wh[$warehouse->id] = $warehouse->name;
+                                            $wh[$warehouse->id] = $warehouse->name.' ('.$warehouse->code.')';
                                         }
                                         echo form_dropdown('warehouse', $wh, ($_POST['warehouse'] ?? $Settings->default_warehouse), 'id="poswarehouse" class="form-control pos-input-tip" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('warehouse') . '" required="required" style="width:100%;" '); ?>
                                     </div>
@@ -298,10 +323,11 @@
                                         <thead>
                                         <tr>
                                             <th width="40%"><?=lang('product');?></th>
-                                            <th width="15%"><?=lang('price');?></th>
+                                            <th width="10%"><?=lang('price');?></th> 
+                                            <th width="10%"><?=lang('VAT');?></th>
                                             <th width="15%"><?=lang('qty');?></th>
-                                            <th width="15%"><?=lang('Nearest Expiry');?></th>
-                                            <th width="20%"><?=lang('subtotal');?></th>
+                                            <th width="18%"><?=lang('Nearest Expiry');?></th>
+                                            <th width="13%"><?=lang('subtotal');?></th>
                                             <th style="width: 5%; text-align: center;">
                                                 <i class="fa fa-trash-o" style="opacity:0.5; filter:alpha(opacity=50);"></i>
                                             </th>
@@ -318,11 +344,11 @@
                                 <table id="totalTable"
                                        style="width:100%; float:right; padding:5px; color:#000; background: #FFF;">
                                     <tr>
-                                        <td style="padding: 5px 10px;border-top: 1px solid #DDD;"><?=lang('items');?></td>
+                                        <td style="padding: 5px 10px;border-top: 1px solid #DDD;"><?=lang('Total');?></td>
                                         <td class="text-right" style="padding: 5px 10px;font-size: 14px; font-weight:bold;border-top: 1px solid #DDD;">
                                             <span id="titems">0</span>
                                         </td>
-                                        <td style="padding: 5px 10px;border-top: 1px solid #DDD;"><?=lang('total');?></td>
+                                        <td style="padding: 5px 10px;border-top: 1px solid #DDD;"><?=lang('Net Total');?></td>
                                         <td class="text-right" style="padding: 5px 10px;font-size: 14px; font-weight:bold;border-top: 1px solid #DDD;">
                                             <span id="total">0.00</span>
                                         </td>
@@ -627,7 +653,7 @@
                                     <div class="row">
                                         <div class="col-sm-5">
                                             <div class="form-group">
-                                                <?=lang('Customer Name', 'customer_name');?>
+                                                <?=lang('Patient Name', 'customer_name');?>
                                                 <input name="customer_name[]" type="text" id="customer_name"
                                                        class="pa form-control customer_name"/>
                                             </div>
@@ -773,7 +799,19 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-block btn-lg btn-primary" id="submit-sale"><?=lang('submit');?></button>
+                <?php if(trim($biller->name) == 'Jarir Alkhair'){?>
+                    <div class="row">
+                        <div class="col-md-6 col-sm-6">
+                            
+                        <button class="btn btn-block btn-lg btn-primary" id="submit-sale"><?=lang('submit');?></button>
+                        </div>
+                <div class="col-md-6 col-sm-6">
+                    <button class="btn btn-block btn-lg btn-warning" id="jarir_print_instructions">Print instructions</button>
+                    </div>
+                    </div>
+                <?php } else { ?>
+                    <button class="btn btn-block btn-lg btn-primary" id="submit-sale"><?=lang('submit');?></button>
+                    <?php }?>    
             </div>
         </div>
     </div>
@@ -1180,14 +1218,17 @@
                 <h4 class="modal-title" id="dsModalLabel"><?=lang('edit_order_discount');?></h4>
             </div>
             <div class="modal-body">
-
-                 <input type="hidden" id="allow_discount_value" value="<?php echo $this->session->userdata('allow_discount_value') ?>">
-                  <center><h3> Max Discount Allowed <?php echo $this->session->userdata('allow_discount_value') ?>%</h3>
+                 <?php 
+                    $allow_discount_value= $this->session->userdata('allow_discount_value');
+                   // $allow_discount_value= 5;   
+                 ?>
+                 <input type="hidden" id="allow_discount_value" value="<?php echo $allow_discount_value;?>">
+                  <center><h3> Max Discount Allowed <?php echo  $allow_discount_value ?>%</h3>
                    <div id="notAllowError"></div>
                  </center>
                 <div class="form-group">
                     <?=lang('order_discount', 'order_discount_input');?>
-                    <?php echo form_input('order_discount_input', '', 'class="form-control kb-pad" onkeyup="allowDiscountValue()" id="order_discount_input"'); ?>
+                    <?php echo form_input('order_discount_input', '%', 'class="form-control" onblur="allowDiscountValue()" type="number" id="order_discount_input"'); ?>
                 </div>
 
             </div>
@@ -1316,7 +1357,7 @@ var lang = {
         KB = <?=$pos_settings->keyboard?>, tax_rates =<?php echo json_encode($tax_rates); ?>;
     var protect_delete = <?= (!$Owner && !$Admin) ? ($pos_settings->pin_code ? '1' : '0') : '0'; ?>, billers = <?= json_encode($posbillers); ?>, biller = <?= json_encode($posbiller); ?>;
     var username = '<?=$this->session->userdata('username');?>', order_data = '', bill_data = '';
-
+    var positems = [];
     function widthFunctions(e) {
         var wh = $(window).height(),
             lth = $('#left-top').height(),
@@ -1574,6 +1615,8 @@ var lang = {
         ?>
 
         $('#payment').click(function () {
+            
+            const postotalpayable = localStorage.getItem('postotalpayable') ;
             <?php if ($sid) {
                 ?>
             suspend = $('<span></span>');
@@ -1587,7 +1630,7 @@ var lang = {
                 bootbox.alert('<?=lang('x_total');?>');
                 return false;
             }
-            gtotal = formatDecimal(twt);
+            gtotal = postotalpayable;//formatDecimal(twt);
             var cart = {grand_total: gtotal};
             document.dispatchEvent(
                 new CustomEvent('rfd.pole.display', {
@@ -1704,12 +1747,17 @@ var lang = {
         });
 
         $(document).on('click', '.addButton', function () {
+            const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(5, Decimal.ROUND_DOWN);
             if (pa <= 5) {
                 var total_added = 0;
                 for (let index = 1; index < 6; index++) {
                     total_added += parseFloat($('#amount_'+index).val() ? $('#amount_'+index).val() : 0);
                 }
-                var bal = parseFloat(parseFloat(grand_total) - parseFloat(total_added));
+                
+                var bal = toTwoDecimals(grand_total).minus(toTwoDecimals(total_added)) ;
+                bal = bal.toNumber();
+                
+                //var bal = toTwoDecimals( toTwoDecimals(grand_total) - toTwoDecimals(total_added) ).toNumber(); //parseFloat(parseFloat(grand_total) - parseFloat(total_added));
                 if (bal > 0) {
                     $('#paid_by_1, #pcc_type_1').select2('destroy');
                     var phtml = $('#payments').html(),
@@ -1774,6 +1822,112 @@ var lang = {
             ?>
         }
 
+        function parseMedicineQRCode(qrCode) {
+            const result = {
+                GTIN: null,
+                SerialNumber: null,
+                BatchNumber: null,
+                ExpiryDate: null,
+                validData: false
+            };
+
+            // Extract GTIN (starts with 01 and is 14 digits long)
+            const gtinMatch = qrCode.match(/01(\d{14})/);
+            let validityCount = 0;
+            if (gtinMatch) {
+                result.GTIN = gtinMatch[1];
+                // Remove GTIN and everything before it from the string
+                qrCode = qrCode.substring(gtinMatch.index + gtinMatch[0].length);
+                validityCount++;
+            }
+
+            // Extract Batch Number (starts with 10 after the GTIN)
+            const batchNumberMatch = qrCode.match(/10([a-zA-Z0-9]+?)(?=17|21|$)/);
+            if (batchNumberMatch) {
+                result.BatchNumber = batchNumberMatch[1];
+                validityCount++;
+            }
+
+            // Extract Expiry Date (starts with 17 and followed by 6 digits)
+            const expiryDateMatch = qrCode.match(/17(\d{6})/);
+            if (expiryDateMatch) {
+                const expiryRaw = expiryDateMatch[1];
+                const year = `20${expiryRaw.substring(0, 2)}`; // Prefix '20' for YY
+                const month = expiryRaw.substring(2, 4); // Extract MM
+                result.ExpiryDate = `${month} ${year}`; // Format as "MM YYYY"
+                validityCount++;
+            }
+
+            // Extract Serial Number (starts with 21 and followed by alphanumeric characters)
+            const serialNumberMatch = qrCode.match(/21([a-zA-Z0-9]+)/);
+            if (serialNumberMatch) {
+                result.SerialNumber = serialNumberMatch[1];
+                validityCount++;
+            }
+
+            if(validityCount == 4){
+                result.validData = true;
+            }
+
+            return result;
+        }
+
+        function extractGs1Data(input) {
+            let data = {
+                GTIN: null,
+                BatchNumber: null,
+                SerialNumber: null,
+                ExpiryDate: null,
+                validData: false
+            };
+
+            let validityCount = 0;
+            // Extract GTIN (14 digits after (01))
+            let gtinMatch = input.match(/\(01\)(\d{14})/);
+            if (gtinMatch) {
+                data.GTIN = gtinMatch[1];
+                validityCount++;
+            }
+
+            // Extract Serial Number (variable length after (21), stops at next AI)
+            let serialMatch = input.match(/\(21\)([^\(]+)/);
+            if (serialMatch) {
+                data.SerialNumber = serialMatch[1];
+                validityCount++;
+            }
+
+            // Extract Batch Number (variable length after (10), stops at next AI)
+            let batchMatch = input.match(/\(10\)([^\(]+)/);
+            if (batchMatch) {
+                data.BatchNumber = batchMatch[1];
+                validityCount++;
+            }
+
+            // Extract Expiry Date (YYMMDD format after (17))
+            let expiryMatch = input.match(/\(17\)(\d{6})/);
+            if (expiryMatch) {
+                let expiryRaw = expiryMatch[1]; // "270228"
+
+                // Convert YYMMDD to YYYY-MM-DD
+                let year = parseInt(expiryRaw.substring(0, 2), 10);
+                let month = expiryRaw.substring(2, 4);
+                let day = expiryRaw.substring(4, 6);
+
+                // Assume year is in 2000s if below 50, otherwise in 1900s
+                year = (year < 50) ? `20${year}` : `19${year}`;
+
+                //data.ExpiryDate = `${day}/${month}/${year}`; // "28/02/2027"
+                data.ExpiryDate = `${month} ${year}`;
+                validityCount++;
+            }
+
+            if(validityCount == 4){
+                data.validData = true;
+            }
+
+            return data;
+        }
+
         $("#add_item").autocomplete({
             source: function (request, response) {
                 if (!$('#poscustomer').val()) {
@@ -1783,20 +1937,188 @@ var lang = {
                     $('#add_item').focus();
                     return false;
                 }
+
+                let parsed = extractGs1Data(request.term);
+                if(parsed.validData == false){
+                    parsed = parseMedicineQRCode(request.term);
+                }
+
                 $.ajax({
                     type: 'get',
-                    url: '<?=admin_url('sales/suggestions/1');?>',
+                    url: '<?=admin_url('products/get_item_by_gtin_batch_expiry');?>',
                     dataType: "json",
                     data: {
-                        term: request.term,
+                        gtin: parsed.GTIN,
+                        batch: parsed.BatchNumber,
+                        expiry: parsed.ExpiryDate,
                         warehouse_id: $("#poswarehouse").val(),
-                        customer_id: $("#poscustomer").val()
+                        customer_id: $("#poscustomer").val(),
+                        module: 'pos'
                     },
                     success: function (data) {
                         $(this).removeClass('ui-autocomplete-loading');
-                        response(data);
+                        if(data){
+                            var avzItemCode = data[0].row.avz_item_code;
+                            var found = false;
+                            var foundKey = '';
+
+                            data[0].row.serial_number = parsed.SerialNumber;
+
+                            Object.keys(positems).forEach(function (key) {
+                                if (positems[key].row && positems[key].row.avz_item_code === avzItemCode) {
+                                    found = true;
+                                    foundKey = key;
+                                }
+                            });
+
+                            if(found == true){
+
+                                var available_qty = parseInt(positems[foundKey].row.quantity);
+                                var new_qty = parseInt(positems[foundKey].row.qty) + 1;
+                                //console.log(available_qty+' -- '+new_qty);
+                                if(parseInt(new_qty) <= parseInt(available_qty)){
+                                    positems[foundKey].row.qty = new_qty;
+
+                                    if(positems[foundKey].row.serial_numbers){
+                                        positems[foundKey].row.serial_numbers.push(parsed.SerialNumber);
+                                    }else{
+                                        positems[foundKey].row.serial_numbers = [parsed.SerialNumber];
+                                    }
+
+                                    localStorage.setItem('positems', JSON.stringify(positems));
+                                    loadItems();
+                                }else{
+                                    bootbox.alert('No more quantity available.');
+                                }
+                                
+                            }else{
+                                
+                                add_invoice_item(data[0]);
+                            }
+                        }else{
+                            $.ajax({
+                                type: 'get',
+                                url: '<?=admin_url('sales/suggestions/1');?>',
+                                dataType: "json",
+                                data: {
+                                    term: request.term,
+                                    warehouse_id: $("#poswarehouse").val(),
+                                    customer_id: $("#poscustomer").val()
+                                },
+                                success: function (data) {
+                                    if(data[0].id != 0){
+                                        $(this).removeClass('ui-autocomplete-loading');
+                                        response(data);
+                                    }else{
+                                        $.ajax({
+                                            type: 'get',
+                                            url: '<?=admin_url('products/get_items_by_avz_code');?>',
+                                            dataType: "json",
+                                            data: {
+                                                term: request.term,
+                                                warehouse_id: $("#poswarehouse").val(),
+                                                customer_id: $("#poscustomer").val(),
+                                                module: 'pos'
+                                            },
+                                            success: function (data) {
+                                                $(this).removeClass('ui-autocomplete-loading');
+                                                if(data){
+                                                    var avzItemCode = data[0].row.avz_item_code;
+                                                    var found = false;
+                                                    var foundKey = '';
+
+                                                    Object.keys(positems).forEach(function (key) {
+                                                        if (positems[key].row && positems[key].row.avz_item_code === avzItemCode) {
+                                                            found = true;
+                                                            foundKey = key;
+                                                        }
+                                                    });
+
+                                                    if(found == true){
+
+                                                        var available_qty = parseInt(positems[foundKey].row.quantity);
+                                                        var new_qty = parseInt(positems[foundKey].row.qty) + 1;
+                                                        //console.log(available_qty+' -- '+new_qty);
+                                                        if(parseInt(new_qty) <= parseInt(available_qty)){
+                                                            positems[foundKey].row.qty = new_qty;
+                                                            localStorage.setItem('positems', JSON.stringify(positems));
+                                                            loadItems();
+                                                        }else{
+                                                            bootbox.alert('No more quantity available.');
+                                                        }
+                                                        
+                                                    }else{
+                                                        add_invoice_item(data[0]);
+                                                    }
+                                                }else{
+                                                    
+                                                    bootbox.alert('No records found for this item code.');
+                                                }
+                                                
+                                            }
+                                        });
+                                    }
+                                    
+                                }
+                            });
+                        }
+
+                        /*if(data[0].id != 0){
+                            $(this).removeClass('ui-autocomplete-loading');
+                            response(data);
+                        }else{
+                            $.ajax({
+                                type: 'get',
+                                url: '<?=admin_url('products/get_items_by_avz_code');?>',
+                                dataType: "json",
+                                data: {
+                                    term: request.term,
+                                    warehouse_id: $("#poswarehouse").val(),
+                                    customer_id: $("#poscustomer").val(),
+                                    module: 'pos'
+                                },
+                                success: function (data) {
+                                    $(this).removeClass('ui-autocomplete-loading');
+                                    if(data){
+                                        var avzItemCode = data[0].row.avz_item_code;
+                                        var found = false;
+                                        var foundKey = '';
+
+                                        Object.keys(positems).forEach(function (key) {
+                                            if (positems[key].row && positems[key].row.avz_item_code === avzItemCode) {
+                                                found = true;
+                                                foundKey = key;
+                                            }
+                                        });
+
+                                        if(found == true){
+
+                                            var available_qty = parseInt(positems[foundKey].row.quantity);
+                                            var new_qty = parseInt(positems[foundKey].row.qty) + 1;
+                                            //console.log(available_qty+' -- '+new_qty);
+                                            if(parseInt(new_qty) <= parseInt(available_qty)){
+                                                positems[foundKey].row.qty = new_qty;
+                                                localStorage.setItem('positems', JSON.stringify(positems));
+                                                loadItems();
+                                            }else{
+                                                bootbox.alert('No more quantity available.');
+                                            }
+                                            
+                                        }else{
+                                            add_invoice_item(data[0]);
+                                        }
+                                    }else{
+                                        
+                                        bootbox.alert('No records found for this item code.');
+                                    }
+                                    
+                                }
+                            });
+                        }*/
+                        
                     }
                 });
+                
             },
             minLength: 1,
             autoFocus: false,
@@ -1823,31 +2145,191 @@ var lang = {
             select: function (event, ui) {
                 event.preventDefault();
                 if (ui.item.id !== 0) {
-                    var row = add_invoice_item(ui.item);
-                    var wh = $("#poswarehouse").val();
-                    $.ajax({
-                        type: "get",
-                        url: "<?=admin_url('pos/getProductPromo');?>",
-                        data: {product_id: ui.item.row.id, warehouse_id: wh},
-                        dataType: "json",
-                        success: function (data) {
-                            if (data) {
-                                data.free = true;
-                                data.parent = ui.item.row.id;
-                                add_invoice_item(data);
-                            }
-                            $("#add_item").removeClass('ui-autocomplete-loading');
-                        }
-                    }).done(function () {
-                        $('#modal-loading').hide();
-                    });
-                    if (row)
-                        $(this).val('');
+
+                    openPopup(ui.item);
+                    $(this).val('');
+                   
                 } else {
                     bootbox.alert('<?=lang('no_match_found')?>');
                 }
             }
         });
+
+
+        function openPopup(selectedItem) {
+            // Assuming selectedItem has avz_item_code as part of its data
+            $.ajax({
+                type: 'get',
+                url: '<?= admin_url('products/get_avz_item_code_details'); ?>', // Adjust the URL as needed
+                dataType: "json",
+                data: {
+                    item_id: selectedItem.item_id, // Send the unique item code
+                    warehouse_id: $('#poswarehouse').val() // Optionally include warehouse ID if needed
+                },
+                success: function (data) {
+                    $(this).removeClass('ui-autocomplete-loading');
+
+                    // Populate the modal with the returned data
+                    if (data && data.length > 0) {
+                        var modalBody = $('#itemModal .modal-body');
+                        modalBody.empty();
+
+                        // Loop through each item and create clickable entries in the modal
+                        var table = `
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Avz Code</th>
+                                        <th>Product</th>
+                                        <th>Batch No</th>
+                                        <th>Expiry</th>
+                                        <th>Quantity</th>
+                                        <th>Locked</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itemTableBody"></tbody>
+                            </table>
+                        `;
+
+                        // Append the table to the modal body
+                        modalBody.append(table);
+                        
+                        // Populate the table body with the data
+                        var count = 0;
+                        var toitemsStorageValue = JSON.parse(localStorage.getItem('positems'));
+                        data.forEach(function (item) {
+                            count++;
+
+                            var avzItemCode = item.row.avz_item_code;
+                            var found = false;
+
+                            Object.keys(positems).forEach(function (key) {
+                                if (positems[key].row && positems[key].row.avz_item_code === avzItemCode) {
+                                    found = true;
+                                }
+                            });
+
+                            var tickOrCross = found ? '✔' : '✖';
+
+                            var row = `
+                                <tr style="cursor:pointer;" class="modal-item" tabindex="0" data-item-id="${item.row.avz_item_code}">
+                                    <td>${count}</td>
+                                    <td data-avzcode="${item.row.avz_item_code}">${item.row.avz_item_code}</td>
+                                    <td data-product="${item.row.name}">${item.row.name}</td>
+                                    <td data-batchno="${item.row.batchno}">${item.row.batchno}</td>
+                                    <td data-expiry="${item.row.expiry}">${item.row.expiry}</td>
+                                    <td data-quantity="${item.total_quantity}">${item.total_quantity}</td>
+                                    <td>${tickOrCross}</td>
+                                </tr>
+                            `;
+                            $('#itemTableBody').append(row);
+                            $('#itemTableBody tr:last-child').data('available', found);
+                        });
+
+                        // Show the modal
+                        $('#itemModal').modal('show');
+                        /*$('#itemTableBody').on('click', 'tr', function () {
+                            
+                            var clickedItemCode = $(this).data('item-id');
+                            var selectedItem = data.find(function (item) {
+                                return item.row.avz_item_code === clickedItemCode;
+                            });
+
+                            if (selectedItem) {
+                                $('#itemModal').modal('hide');
+                                var available = $(this).data('available');
+                                if(!available){
+                                    add_invoice_item(selectedItem);
+                                }else{
+                                    bootbox.alert('Row already added');
+                                }
+                            }else{
+                                console.log('Item not found');
+                            }
+                        });*/
+
+                        $('#itemTableBody').on('click touchstart', 'tr', function (e) {
+                            // Prevent the default action for touch events to avoid double triggers
+                            e.preventDefault();
+
+                            var clickedItemCode = $(this).data('item-id');
+                            var clickedItemExpiry = $(this).find('td[data-expiry]').data('expiry') || $(this).attr('data-expiry');
+                            var selectedItem = data.find(function (item) {
+                                //return item.row.avz_item_code === clickedItemCode;
+                                return String(item.row.avz_item_code).trim() === String(clickedItemCode).trim();
+                            });
+
+                            var previousExpiryAvailable = data.find(function (item) {
+                            
+                                var itemExpiry = new Date(item.row.expiry); // Convert to Date object
+                                var clickedExpiry = new Date(clickedItemExpiry); // Convert clickedItemExpiry to Date object
+                                if(clickedExpiry > itemExpiry){
+                                    return true;
+                                }
+                            });
+
+                            if(previousExpiryAvailable){
+                                bootbox.alert('Previous Expiry available for this item');
+                            }
+
+                            if (selectedItem) {
+                                $('#itemModal').modal('hide');
+                                var available = $(this).data('available');
+                                if (!available) {
+                                    add_invoice_item(selectedItem);
+                                } else {
+                                    bootbox.alert('Row already added');
+                                }
+                            } else {
+                                console.log('Item not found');
+                            }
+                        });
+                        
+                    } else {
+
+                        //var row = add_invoice_item(selectedItem);
+                        console.log(selectedItem);
+                        var wh = $("#poswarehouse").val();
+                        $.ajax({
+                            type: "get",
+                            url: "<?=admin_url('pos/getProductData');?>",
+                            data: {product_id: selectedItem.item_id, warehouse_id: wh},
+                            dataType: "json",
+                            success: function (data) {
+                                if (data) {
+                                    //data.free = true;
+                                    //data.parent = selectedItem.item_id;
+                                    //console.log(data);
+                                    add_invoice_item(data);
+                                }
+                                $("#add_item").removeClass('ui-autocomplete-loading');
+                            }
+                        }).done(function () {
+                            $('#modal-loading').hide();
+                        });
+                        /*if (row)
+                            $(this).val('');
+
+                            bootbox.alert('No records found for this item code.');*/
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('AJAX error:', error);
+                    bootbox.alert('An error occurred while fetching the item details.');
+                }
+            });
+        }
+
+        function onSelectFromPopup(selectedRecord) {
+            $('#itemModal').modal('hide');
+
+            var row = add_invoice_item(selectedRecord);
+            if (row) {
+                // If the row was successfully added, you can do additional actions here
+                
+            }
+        }
 
         <?php if ($pos_settings->tooltips) {
                 echo '$(".pos-tip").tooltip();';
@@ -2103,14 +2585,15 @@ var lang = {
 
         $(document).on('click', '#submit-sale', function () {
             if (total_paid == 0 || total_paid < grand_total) {
-                bootbox.confirm("<?=lang('paid_l_t_payable');?>", function (res) {
+                /*bootbox.confirm("<?=lang('paid_l_t_payable');?>", function (res) {
                     if (res == true) {
                         $('#pos_note').val(localStorage.getItem('posnote'));
                         $('#staff_note').val(localStorage.getItem('staffnote'));
                         $('#submit-sale').text('<?=lang('loading');?>').attr('disabled', true);
                         $('#pos-sale-form').submit();
                     }
-                });
+                });*/
+                bootbox.alert("<?=lang('Paid amount is less than the payable amount. Please press OK to fix the sale.');?>");
                 return false;
             } else {
                 $('#pos_note').val(localStorage.getItem('posnote'));
@@ -2517,7 +3000,7 @@ var wh_count = 1, wh_an = 1, wh_total = 0, toitems = {};
             select: function (event, ui) {
                 event.preventDefault();
                 if (ui.item.id !== 0) {
-                    var row = add_transfer_item(ui.item);
+                    var row = add_invoice_item(ui.item);
                     if (row)
                         $(this).val('');
                 } else {
@@ -2813,12 +3296,12 @@ var wh_count = 1, wh_an = 1, wh_total = 0, toitems = {};
 }
 
 
-function add_transfer_item(item) {
+/*function add_invoice_item(item) {
     
     if (wh_count == 1) {
         toitems = {};
-        if ($('#from_warehouse').val()) {
-            $('#from_warehouse').select2('readonly', true);
+        if ($('#poswarehouse').val()) {
+            $('#poswarehouse').select2('readonly', true);
         } else {
             bootbox.alert(lang.select_above);
             item = null;
@@ -2846,15 +3329,23 @@ function add_transfer_item(item) {
     localStorage.setItem('toitems', JSON.stringify(toitems));
     wh_loadItems();
     return true;
-}
+}*/
 
 
 function allowDiscountValue(){
     $("#notAllowError").html("");
     var  discount           = $('#order_discount_input').val();
-    discount     = discount.replace(/\%/g,'')
-    discount     = Number(discount)
-    var  allowDiscount     = $('#allow_discount_value').val(); 
+    var  total_sale_val           = $('#titems').text();
+
+    if (discount.includes('%')) {
+        discount     = discount.replace(/\%/g,'');
+        discount     = Number(discount);
+        var allowDiscount     = $('#allow_discount_value').val(); 
+        
+    }else{
+        discount     = parseFloat(discount);
+        var  allowDiscount     = (50 * total_sale_val) / 100;
+    }
 
     if(discount <= allowDiscount){
        console.log("allow");
@@ -2875,7 +3366,61 @@ if (isset($print) && !empty($print)) {
     include 'remote_printing.php';
 }
 ?>
+
+
+<script>
+  $('#jarir_print_instructions').on('click', function () {
+    const printerUrl = "https://6f7ddeb37917.ngrok-free.app/print"; // Flask endpoint
+
+    // Construct the ZPL code dynamically, or you can get this from hidden input, or render in JS
+    const zpl_patient_name = $('#customer_name').val();
+    if (!zpl_patient_name) {
+        alert('Please enter patient name');
+        return;
+    }
+    var instructions = [];
+    
+   $('textarea#instructions').each(function () {
+        var medicine_name = $(this).data('medicinename');
+        var instruction_text = $(this).val();
+
+        instructions.push({
+            medicine_name: medicine_name,
+            instruction: instruction_text
+        });
+    });
+
+    let zplCode = '';
+
+    instructions.forEach(function (item) {
+        zplCode += `^XA^FO280,20^ADN,25,10^FDJarir Alkhair Pharmacy^FS`;
+        zplCode += `^FO320,50^ADN,25,10^FD${zpl_patient_name}^FS`;
+        zplCode += `^FO300,80^ADN,25,10^FD${item.medicine_name}^FS`;
+        zplCode += `^FO300,120^ADN,25,10^FD${item.instruction}^FS^XZ\n`;
+    });
+
+
+    // Send the POST request
+    $.ajax({
+      url: printerUrl,
+      type: "POST",
+      data: zplCode,
+      contentType: "application/octet-stream",
+      success: function (res) {
+        alert('Printed Successfully!');
+        console.log(res);
+      },
+      error: function (xhr, status, error) {
+        alert('Error printing: ' + xhr.responseText);
+        console.error(error);
+      }
+    });
+  });
+</script>
+
 <script type="text/javascript" src="<?= base_url('assets/custom/pos.js') ?>"></script>
+<script type="text/javascript" src="<?= base_url('assets/custom/pos.js') ?>"></script>
+<script type="text/javascript" src="<?= $assets ?>js/plugins/decimal/decimal.js"></script>
 <!--<script type="text/javascript" src="<?= base_url('themes/blue/admin/assets/js/transfers.js') ?>"></script>-->
 </body>
 </html>

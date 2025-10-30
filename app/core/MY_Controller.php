@@ -37,16 +37,24 @@ class MY_Controller extends CI_Controller
         $this->loggedIn         = $this->sma->logged_in();
 
         if ($this->loggedIn) {
-            $this->default_currency         = $this->site->getCurrencyByCode($this->Settings->default_currency);
-            $this->data['default_currency'] = $this->default_currency;
-            $this->Owner                    = $this->sma->in_group('owner') ? true : null;
-            $this->data['Owner']            = $this->Owner;
-            $this->Customer                 = $this->sma->in_group('customer') ? true : null;
-            $this->data['Customer']         = $this->Customer;
-            $this->Supplier                 = $this->sma->in_group('supplier') ? true : null;
-            $this->data['Supplier']         = $this->Supplier;
-            $this->Admin                    = $this->sma->in_group('admin') ? true : null;
-            $this->data['Admin']            = $this->Admin;
+            $this->default_currency            = $this->site->getCurrencyByCode($this->Settings->default_currency);
+            $this->data['default_currency']    = $this->default_currency;
+            $this->Owner                       = $this->sma->in_group('owner') ? true : null;
+            $this->data['Owner']               = $this->Owner;
+            $this->Customer                    = $this->sma->in_group('customer') ? true : null;
+            $this->data['Customer']            = $this->Customer;
+            $this->Supplier                    = $this->sma->in_group('supplier') ? true : null;
+            $this->data['Supplier']            = $this->Supplier;
+            $this->Admin                       = $this->sma->in_group('admin') ? true : null;
+            $this->data['Admin']               = $this->Admin;
+            $this->PurchaseManager             = $this->sma->in_group('purchasemanager') ? true : null;
+            $this->data['PurchaseManager']     = $this->PurchaseManager;
+            $this->Accountant                  = $this->sma->in_group('accountant') ? true : null;
+            $this->data['Accountant']          = $this->Accountant;
+            $this->Accountant                  = $this->sma->in_group('accountant') ? true : null;
+            $this->data['Accountant']          = $this->Accountant;
+            $this->WarehouseSupervisor         = $this->sma->in_group('warehousesupervisor') ? true : null;
+            $this->data['WarehouseSupervisor'] = $this->WarehouseSupervisor;
 
             if ($sd = $this->site->getDateFormat($this->Settings->dateformat)) {
                 $dateFormats = [
