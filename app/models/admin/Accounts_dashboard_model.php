@@ -31,7 +31,7 @@ class Accounts_dashboard_model extends CI_Model {
         }
         
         try {
-            // Call stored procedure
+            // Call stored procedure - it returns 7 result sets
             $query = $this->db->query(
                 "CALL sp_get_accounts_dashboard(?, ?)",
                 array($report_type, $reference_date)
@@ -48,60 +48,60 @@ class Accounts_dashboard_model extends CI_Model {
             );
             
             // First result set - Sales Summary
-            if ($query->num_rows() > 0) {
+            if ($query && $query->num_rows() > 0) {
                 $results['sales_summary'] = $query->result_array();
             }
             
-            // Move to next result set
+            // Move to next result set - Collection Summary
             if ($this->db->next_result()) {
                 $query = $this->db->use_query_result();
-                if ($query->num_rows() > 0) {
+                if ($query && $query->num_rows() > 0) {
                     $results['collection_summary'] = $query->result_array();
                 }
             }
             
-            // Purchase Summary
+            // Move to next result set - Purchase Summary
             if ($this->db->next_result()) {
                 $query = $this->db->use_query_result();
-                if ($query->num_rows() > 0) {
+                if ($query && $query->num_rows() > 0) {
                     $results['purchase_summary'] = $query->result_array();
                 }
             }
             
-            // Purchase Per Item
+            // Move to next result set - Purchase Per Item
             if ($this->db->next_result()) {
                 $query = $this->db->use_query_result();
-                if ($query->num_rows() > 0) {
+                if ($query && $query->num_rows() > 0) {
                     $results['purchase_per_item'] = $query->result_array();
                 }
             }
             
-            // Expiry Report
+            // Move to next result set - Expiry Report
             if ($this->db->next_result()) {
                 $query = $this->db->use_query_result();
-                if ($query->num_rows() > 0) {
+                if ($query && $query->num_rows() > 0) {
                     $results['expiry_report'] = $query->result_array();
                 }
             }
             
-            // Customer Summary
+            // Move to next result set - Customer Summary
             if ($this->db->next_result()) {
                 $query = $this->db->use_query_result();
-                if ($query->num_rows() > 0) {
+                if ($query && $query->num_rows() > 0) {
                     $results['customer_summary'] = $query->result_array();
                 }
             }
             
-            // Overall Summary
+            // Move to next result set - Overall Summary (single row)
             if ($this->db->next_result()) {
                 $query = $this->db->use_query_result();
-                if ($query->num_rows() > 0) {
+                if ($query && $query->num_rows() > 0) {
                     $results['overall_summary'] = $query->row_array();
                 }
             }
             
             // Close the cursor
-            mysqli_next_result($this->db->conn_id);
+            @mysqli_next_result($this->db->conn_id);
             
             return $results;
             
