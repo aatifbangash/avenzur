@@ -46,7 +46,7 @@
 <div id="app_wrapper">
     <header id="header" class="navbar">
         <div class="container">
-            <a class="navbar-brand" href="<?= admin_url() ?>"><span class="logo"><?= $Settings->site_name ?></span></a>
+            <a class="navbar-brand" href="<?= admin_url().'welcome' ?>"><span class="logo"><?= $Settings->site_name ?></span></a>
 
             <div class="btn-group visible-xs pull-right btn-visible-sm">
                 <button class="navbar-toggle btn" type="button" data-toggle="collapse" data-target="#sidebar_menu">
@@ -361,7 +361,7 @@
             <div id="sidebar-left">
                 <div class="sidebar-nav nav-collapse collapse navbar-collapse" id="sidebar_menu">
                     <?php 
-                        if(isset($Settings->pos_standalone) && $Settings->pos_standalone){
+                        if((isset($Settings->pos_standalone) && $Settings->pos_standalone) || ($this->Settings->site_name == 'Hills Business Medical')){
                             include 'new_customer_menu.php';
                         }else{
                     ?>
@@ -2166,11 +2166,6 @@
                                     <span class="chevron closed"></span>
                                 </a>
                                 <ul>
-                                    <li id="accounts_dashboard">
-                                        <a class="submenu" href="<?= admin_url('accounts_dashboard'); ?>">
-                                            <i class="fa fa-dashboard"></i><span class="text"> <?= lang('Accounts Dashboard'); ?></span>
-                                        </a>
-                                    </li>
                                     <li id="accounts_settings">
                                             <a href="<?= admin_url('system_settings/add_ledgers') ?>">
                                                 <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Accounts Settings'); ?></span>

@@ -103,8 +103,15 @@ class Welcome extends MY_Controller
             admin_redirect('sync');
         }
 
-        // Redirect to Cost Center Dashboard
-        admin_redirect('cost_center/dashboard');
+        if($this->Admin || $this->Owner || $this->GP['accountant']){
+            // Redirect to Cost Center Dashboard
+            admin_redirect('cost_center/dashboard');
+        }else{
+            //echo 'here';exit;
+            // Redirect to Cost Center Dashboard
+            admin_redirect('welcome/quick_search');
+        }
+        
     }
 
 
