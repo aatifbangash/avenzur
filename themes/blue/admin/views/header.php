@@ -107,7 +107,7 @@
                 </ul>
                 <ul class="nav navbar-nav pull-right">
                 <li class="dropdown hidden-xs"><a class="btn tip" title="<?= lang('Print Barcode') ?>" data-placement="bottom" href="<?= admin_url('products/print_barcodes') ?>"><i class="fa fa-barcode"></i></a></li>
-                    <li class="dropdown hidden-xs"><a class="btn tip" title="<?= lang('dashboard') ?>" data-placement="bottom" href="<?= admin_url('welcome') ?>"><i class="fa fa-dashboard"></i></a></li>
+                    <li class="dropdown hidden-xs"><a class="btn tip" title="<?= lang('Quick Search') ?>" data-placement="bottom" href="<?= admin_url('welcome/quick_search') ?>"><i class="fa fa-dashboard"></i></a></li>
                     <?php if (0){//(SHOP) {
                         ?>
                     <li class="dropdown hidden-xs"><a class="btn tip" title="<?= lang('shop') ?>" data-placement="bottom" href="<?= base_url() ?>"><i class="fa fa-shopping-cart"></i></a></li>
