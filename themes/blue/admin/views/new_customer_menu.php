@@ -121,13 +121,6 @@
 
 <div class="newmenu-wrapper">
     <ul class="newmenu-nav">
-        <li class="newmenu-item">
-            <a href="<?= admin_url('welcome/quick_search'); ?>" class="newmenu-link bluecolor">
-                <i class="fa-dashboard"></i>
-                <span><?= lang('Quick Search'); ?></span>
-                <i class="fa fa-chevron-right newmenu-chevron"></i>
-            </a>
-        </li>
         <?php 
         
         if($Admin || $Owner || $this->GP['sales-coordinator'] || $this->GP['accountant'] || $this->GP['sales-warehouse_supervisor']){
