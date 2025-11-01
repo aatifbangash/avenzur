@@ -2852,7 +2852,7 @@ class Purchases extends MY_Controller
         <div style="float:left; width:55%;">
             <p style="margin:2px 0;"><strong>Purchase Invoice Ref. Number:</strong> PI-' . $inv->id . '</p>
             <p style="margin:2px 0;"><strong>Date:</strong> ' . $this->sma->hrld($inv->date) . '</p>
-            <p style="margin:2px 0;"><strong>Note:</strong> ' . html_entity_decode($inv->note) . '</p>
+            <p style="margin:2px 0;"><strong>Note:</strong> ' . strip_tags($inv->note) . '</p>
         </div>
 
         <!-- Right: Barcode and QR -->
