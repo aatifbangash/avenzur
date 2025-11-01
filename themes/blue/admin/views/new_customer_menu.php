@@ -378,6 +378,9 @@
                 <i class="fa fa-chevron-right newmenu-chevron"></i>
             </a>
             <ul class="newmenu-sub">
+               
+                <li><a href="<?= admin_url('cost_center/dashboard'); ?>" class="newmenu-link"><i class="fa fa-dashboard"></i><?= lang('Cost Center'); ?></a></li>
+
                 <li><a href="<?= admin_url('accounts_dashboard'); ?>" class="newmenu-link"><i class="fa fa-sliders"></i> <?= lang('Accounts Dashboard'); ?></a></li>
                 <li><a href="<?= admin_url('accounts'); ?>" class="newmenu-link"><i class="fa fa-calculator"></i> <?= lang('Charts Of Accounts'); ?></a></li>
                 <li><a href="<?= admin_url('entries'); ?>" class="newmenu-link"><i class="fa fa-pencil-square-o"></i> <?= lang('GL Entry'); ?></a></li>
@@ -386,6 +389,7 @@
         </li>
         <?php } ?>
 
+         
         <?php if($Admin || $Owner || $this->GP['accountant']){ ?>
         <!-- SETTINGS -->
         <li class="newmenu-item has-sub">
@@ -396,12 +400,25 @@
             </a>
             <ul class="newmenu-sub">
                 <?php if($Admin || $Owner){ ?>
-                <li><a href="<?= admin_url('users'); ?>" class="newmenu-link"><i class="fa fa-users"></i> <?= lang('People'); ?></a></li>
+                <li><a href="<?= admin_url('users'); ?>" class="newmenu-link"><i class="fa fa-users"></i>
+                <span class="text"> <?= lang('People'); ?></span>
+               </a></li>
                 <?php } ?>
                 <?php if($Admin || $Owner || $this->GP['accountant']){ ?>
-                <li><a href="<?= admin_url('system_settings/add_ledgers'); ?>" class="newmenu-link"><i class="fa fa-sliders"></i> <?= lang('Account Settings'); ?></a></li>
+               
+                <li><a href="<?= admin_url('system_settings/add_ledgers'); ?>" class="newmenu-link">
+                    <i class="fa fa-sliders"></i> <span class="text"><?= lang('Account Settings'); ?></span></a></li>
                 
                 <?php } ?>
+                <?php if($Admin || $Owner || $this->GP['accountant']){ ?>
+               
+               <li id="organization_setup_pharmacy_hierarchy">
+                    <a href="<?= admin_url('organization_setup/pharmacy_hierarchy') ?>" class="newmenu-link">
+                        <i class="fa fa-hospital-o"></i><span class="text"> <?= lang('Org Setup'); ?></span>
+                    </a>
+                </li>                
+                <?php } ?>
+                 
             </ul>
         </li>
         <?php } ?>
