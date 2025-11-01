@@ -361,7 +361,7 @@
             <div id="sidebar-left">
                 <div class="sidebar-nav nav-collapse collapse navbar-collapse" id="sidebar_menu">
                     <?php 
-                        if((isset($Settings->pos_standalone) && $Settings->pos_standalone) || ($this->Settings->site_name == 'Hills Business Medical')){
+                        if((isset($Settings->pos_standalone) && $Settings->pos_standalone) || ($this->Settings->site_name == 'Hills Business Medical' || $this->Settings->site_name == 'Demo Company')){
                             include 'new_customer_menu.php';
                         }else{
                     ?>
@@ -687,7 +687,7 @@
                                     </li>
                                         <?php
                                     } ?>
-                                    <?php if (POS && $this->Settings->site_name != 'Hills Business Medical') {
+                                    <?php if (POS && $this->Settings->site_name != 'Hills Business Medical' && $this->Settings->site_name != 'Demo Company') {
                                         ?>
                                     <li id="sales_add">
                                         <a class="submenu" href="<?= admin_url('sales/add'); ?>">

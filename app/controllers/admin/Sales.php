@@ -3692,7 +3692,7 @@ class Sales extends MY_Controller
             
                 <li>' . $detail_link . '</li>';
 
-            if($this->Settings->site_name != 'Hills Business Medical'){
+            if($this->Settings->site_name != 'Hills Business Medical' && $this->Settings->site_name != 'Demo Company'){
                 $action .= '<li>' . $edit_link . '</li>';
             }
             
@@ -4133,7 +4133,7 @@ if($inv->warning_note != ""){
 
     $footer_table = '';
     $footer_note = '';
-    if($this->Settings->site_name == 'Hills Business Medical'){
+    if($this->Settings->site_name == 'Hills Business Medical' && $this->Settings->site_name != 'Demo Company'){
         $footer_table = '<div style="width:60%; float:left; text-align:left; margin-bottom:15px;">
             <table class="table-label" border="1"  cellspacing="0" cellpadding="10" width="100%" style="border-collapse:collapse; font-size: 10px">
                 <tr><td colspan="3" style="text-align: center; vertical-align: middle; background-color: #f2f2f2; font-size: 20px;">'.$inv->id.'</td> <td colspan="3">فريق التحضير</td></tr>
