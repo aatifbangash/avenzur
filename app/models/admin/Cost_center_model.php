@@ -51,7 +51,10 @@ public function get_hierarchical_analytics($period_type = 'today', $target_month
             
             // Execute procedure and get results
             $result = $this->db->query($query, $params);
-            
+            if(!$result){
+                error_log('[Cost_center_model] Query failed for period: ' . $period . ' - Error: ' . $this->db->error()['message']);
+                return [];
+            }
             // Get summary (first result set)
             $summary = $result->row();
             
@@ -533,7 +536,19 @@ public function get_hierarchical_analytics($period_type = 'today', $target_month
         ";
 
         $result = $this->db->query($query, [$period]);
-        return $result->row_array();
+        
+        if (!$result) {
+            error_log('[Cost_center_model] Query failed for period: ' . $period . ' - Error: ' . $this->db->error()['message']);
+            return [];
+        }
+        
+        $row = $result->row_array();
+        if (!$row) {
+            error_log('[Cost_center_model] No data found in view_cost_center_summary for period: ' . $period);
+            return [];
+        }
+        
+        return $row;
     }
 
     /**
