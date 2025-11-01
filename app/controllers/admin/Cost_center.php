@@ -36,7 +36,9 @@ class Cost_center extends MY_Controller {
      * Query params: period (YYYY-MM)
      */
     public function dashboard() {
-        
+        ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
         try {
             // DEBUG: Start logging
             error_log('[COST_CENTER] Dashboard method started');
