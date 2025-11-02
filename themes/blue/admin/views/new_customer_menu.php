@@ -217,7 +217,7 @@
 
         <?php } ?>
 
-        <?php if($Admin || $Owner || $this->GP['accountant']){ ?>
+        <?php if($Admin || $Owner || $this->GP['accountant'] || $this->GP['purchase_supervisor']){ ?>
         <!-- ==================== -->
         <!-- ACCOUNT PAYABLE -->
         <!-- ==================== -->

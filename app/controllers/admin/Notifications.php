@@ -335,10 +335,10 @@ class Notifications extends MY_Controller
     }
 
     public function rasd(){
-        if (!$this->Owner && !$this->Admin) {
+        /*if (!$this->Owner && !$this->Admin) {
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect($_SERVER['HTTP_REFERER']);
-        }
+        }*/
       
         $this->data['error'] = validation_errors() ? validation_errors() : $this->session->flashdata('error');
         $bc                  = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Rasd Notifications')]];
