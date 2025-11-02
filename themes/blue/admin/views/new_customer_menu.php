@@ -121,6 +121,36 @@
 
 <div class="newmenu-wrapper">
     <ul class="newmenu-nav">
+        <?php if($Admin || $Owner || $this->GP['accountant'] || $this->GP['purchase_supervisor'] || $this->GP['purchase_manager']){ ?>
+        <!-- ==================== -->
+        <!-- ACCOUNT PAYABLE -->
+        <!-- ==================== -->
+        <li class="newmenu-item has-sub">
+            <a href="#" class="newmenu-link bluecolor">
+                <i class="fa fa-archive"></i>
+                <span><?= lang('Master Data'); ?></span>
+                <i class="fa fa-chevron-right newmenu-chevron"></i>
+            </a>
+            <ul class="newmenu-sub">
+
+                <!-- Products -->
+                <li class="newmenu-item has-sub">
+                    <a href="#" class="newmenu-link">
+                        <i class="fa fa-shopping-cart"></i>
+                        <span><?= lang('Products'); ?></span>
+                        <i class="fa fa-chevron-right newmenu-chevron"></i>
+                    </a>
+                    <ul class="newmenu-sub">
+                        <li><a href="<?= admin_url('products/add'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('Add Product'); ?></a></li>
+                        <li><a href="<?= admin_url('products'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('List Products'); ?></a></li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+
+        <?php } ?>
+
+
         <?php 
         
         if($Admin || $Owner || $this->GP['sales-coordinator'] || $this->GP['accountant'] || $this->GP['sales-warehouse_supervisor']){
