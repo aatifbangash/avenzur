@@ -309,6 +309,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                     itemObj.row.qty = itemObj.row.qty || 0;
                     itemObj.row.dis1 = itemObj.row.dis1 || 0;
                     itemObj.row.dis2 = itemObj.row.dis2 || 0;
+                    itemObj.row.dis3 = itemObj.row.dis3 || 0;
                     itemObj.row.bonus = itemObj.row.bonus || 0;
 
                     add_invoice_item(itemObj);   
@@ -529,6 +530,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                                             <th class="col-md-1">bonus</th>
                                             <th class="col-md-1">dis 1</th>
                                             <th class="col-md-1">dis 2</th>
+                                            <th class="col-md-1">dis 3</th>
                                             <th class="col-md-1">Vat 15%</th>
                                             <!--<th class="col-md-1">Total Purchases</th>-->
                                             <th class="col-md-1">Total Sales</th>
@@ -613,7 +615,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                             <div class="form-group">
                                 <?= lang('payment_term', 'payment_term'); ?>
                                 <?php
-                                $data[''] = '';
+                                $data['0'] = '0';
                                 $data['30'] = '30';
                                 $data['60'] = '60';
                                 $data['90'] = '90';

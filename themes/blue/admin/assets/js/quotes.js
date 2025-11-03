@@ -10,19 +10,28 @@ $(document).ready(function (e) {
 	$paymetType.change(function (e) {
 		let type = $(this).val();
 		let new_dis1 = 0;
+		let new_dis2 = 0;
+		let new_dis3 = 0;
 
 		// Update each row in qtitems
 		for (let item_id in qtitems) {
 			if (qtitems.hasOwnProperty(item_id)) {
 
 				if (type === 'cash') {
-					new_dis1 = qtitems[item_id].row.cash_discount.replace('%',''); // cash discount %
+					new_dis1 = qtitems[item_id].row.cash_discount !== null ? qtitems[item_id].row.cash_discount.replace('%','') : '0'; // cash discount %
+					new_dis2 = qtitems[item_id].row.cash_dis2 !== null ? qtitems[item_id].row.cash_dis2.replace('%','') : '0'; // cash discount %
+					new_dis3 = qtitems[item_id].row.cash_dis3 !== null ? qtitems[item_id].row.cash_dis3.replace('%','') : 0; // cash discount %
 				} else if (type === 'credit') {
-					new_dis1 = qtitems[item_id].row.credit_discount.replace('%',''); // credit discount %
+					new_dis1 = qtitems[item_id].row.credit_discount !== null ? qtitems[item_id].row.credit_discount.replace('%','') : '0'; // credit discount %
+					new_dis2 = qtitems[item_id].row.credit_dis2 !== null ? qtitems[item_id].row.credit_dis2.replace('%','') : '0'; // credit discount %
+					new_dis3 = qtitems[item_id].row.credit_dis3 !== null ? qtitems[item_id].row.credit_dis3.replace('%','') : '0'; // credit discount %
 				}
 
 				qtitems[item_id].row.dis1 = new_dis1;
+				qtitems[item_id].row.dis2 = new_dis2;
+				qtitems[item_id].row.dis3 = new_dis3;
 
+				
 				// Recalculate item prices based on new discount
 				const row = qtitems[item_id].row;
 				const new_item = {
@@ -33,10 +42,11 @@ $(document).ready(function (e) {
 					tax_rate: row.tax_rate,
 					dis1: row.dis1,
 					dis2: row.dis2,
+					dis3: row.dis3,
 					net_unit_cost: row.net_unit_cost
 				};
 
-				const new_calc = calculateInventory(new_item, 'sale');
+				const new_calc = calculateInventory(new_item, 'quote');
 
 				// Optional: warning if sale price < cost
 				if (new_calc.new_unit_sale < row.net_unit_cost && typeof row.sale_price_warning === 'undefined') {
@@ -56,7 +66,16 @@ $(document).ready(function (e) {
 	var $customer = $("#qtcustomer");
 	$customer.change(function (e) {
 		localStorage.setItem("qtcustomer", $(this).val());
-		//$('#qtcustomer').val($(this).val());
+		$.ajax({
+			type: "get",
+			async: false,
+			url: site.base_url + "customers/getCustomer/" + $(this).val(),
+			dataType: "json",
+			success: function (data) {
+				localStorage.setItem("slpayment_term", data[0].payment_term);
+				$("#payment_term").val(data[0].payment_term).trigger("change");
+			},
+		});
 	});
 	if ((qtcustomer = localStorage.getItem("qtcustomer"))) {
 		$customer.val(qtcustomer).select2({
@@ -69,6 +88,9 @@ $(document).ready(function (e) {
 					url: site.base_url + "customers/getCustomer/" + $(element).val(),
 					dataType: "json",
 					success: function (data) {
+						localStorage.setItem("slpayment_term", data[0].payment_term);
+						//$("#slpayment_term").val(data[0].payment_term);
+						$("#payment_term").val(data[0].payment_term).trigger("change");
 						callback(data[0]);
 					},
 				});
@@ -1292,6 +1314,48 @@ $(document).ready(function (e) {
 	/* --------------------------
      * Edit Row Discount2 Method rdis2 rbatchno
      -------------------------- */
+	var old_row_dis3;
+	$(document)
+		.on("focus", ".rdis3", function () {
+			old_row_dis3 = $(this).val();
+		})
+		.on("change", ".rdis3", function () {
+			var row = $(this).closest("tr");
+			if (!is_numeric($(this).val()) || parseFloat($(this).val()) < 0) {
+				$(this).val(old_row_dis3);
+				bootbox.alert(lang.unexpected_value);
+				return;
+			}
+			var new_dis3 = parseFloat($(this).val()),
+				item_id = row.attr("data-item-id");
+			qtitems[item_id].row.dis3 = new_dis3;
+			localStorage.setItem("qtitems", JSON.stringify(qtitems));
+
+			// Code for purchase price and cost price
+			const new_item = {
+				cost : qtitems[item_id].row.cost ?? 0,
+				sale_price : qtitems[item_id].row.net_unit_sale,
+				qty: qtitems[item_id].row.qty,
+				bonus: qtitems[item_id].row.bonus ?? 0,
+				tax_rate: qtitems[item_id].row.tax_rate,
+				dis1: qtitems[item_id].row.dis1,
+				dis2: qtitems[item_id].row.dis2,
+				dis3: qtitems[item_id].row.dis3,
+				net_unit_cost: qtitems[item_id].row.net_unit_cost
+
+			};
+			const new_calc = calculateInventory(new_item, 'quote');
+			if(new_calc.new_unit_sale < qtitems[item_id].row.net_unit_cost && typeof qtitems[item_id].row.sale_price_warning == 'undefined'){
+				//bootbox.alert('Your are selling at sale price lower than cost price');
+				qtitems[item_id].row.sale_price_warning = 0;
+			}
+
+			loadItems();
+		});
+
+	/* --------------------------
+     * Edit Row Discount2 Method rdis2 rbatchno
+     -------------------------- */
 	var old_row_dis2;
 	$(document)
 		.on("focus", ".rdis2", function () {
@@ -1318,10 +1382,11 @@ $(document).ready(function (e) {
 				tax_rate: qtitems[item_id].row.tax_rate,
 				dis1: qtitems[item_id].row.dis1,
 				dis2: qtitems[item_id].row.dis2,
+				dis3: qtitems[item_id].row.dis3,
 				net_unit_cost: qtitems[item_id].row.net_unit_cost
 
 			};
-			const new_calc = calculateInventory(new_item, 'sale');
+			const new_calc = calculateInventory(new_item, 'quote');
 			if(new_calc.new_unit_sale < qtitems[item_id].row.net_unit_cost && typeof qtitems[item_id].row.sale_price_warning == 'undefined'){
 				//bootbox.alert('Your are selling at sale price lower than cost price');
 				qtitems[item_id].row.sale_price_warning = 0;
@@ -1359,10 +1424,11 @@ $(document).ready(function (e) {
 				tax_rate: qtitems[item_id].row.tax_rate,
 				dis1: qtitems[item_id].row.dis1,
 				dis2: qtitems[item_id].row.dis2,
+				dis3: qtitems[item_id].row.dis3,
 				net_unit_cost: qtitems[item_id].row.net_unit_cost
 
 			};
-			const new_calc = calculateInventory(new_item, 'sale');
+			const new_calc = calculateInventory(new_item, 'quote');
 			if(new_calc.new_unit_sale < qtitems[item_id].row.net_unit_cost && typeof qtitems[item_id].row.sale_price_warning == 'undefined'){
 				//bootbox.alert('Your are selling at sale price lower than cost price');
 				qtitems[item_id].row.sale_price_warning = 0;
@@ -1400,10 +1466,11 @@ $(document).ready(function (e) {
 				tax_rate: qtitems[item_id].row.tax_rate,
 				dis1: qtitems[item_id].row.dis1,
 				dis2: qtitems[item_id].row.dis2,
+				dis3: qtitems[item_id].row.dis3,
 				net_unit_cost: qtitems[item_id].row.net_unit_cost
 
 			};
-			const new_calc = calculateInventory(new_item, 'sale');
+			const new_calc = calculateInventory(new_item, 'quote');
 			if(new_calc.new_unit_sale < qtitems[item_id].row.net_unit_cost && typeof qtitems[item_id].row.sale_price_warning == 'undefined'){
 				//bootbox.alert('Your are selling at sale price lower than cost price');
 				qtitems[item_id].row.sale_price_warning = 0;
@@ -1449,10 +1516,11 @@ $(document).ready(function (e) {
 				tax_rate: qtitems[item_id].row.tax_rate,
 				dis1: qtitems[item_id].row.dis1,
 				dis2: qtitems[item_id].row.dis2,
+				dis3: qtitems[item_id].row.dis3,
 				net_unit_cost: qtitems[item_id].row.net_unit_cost
 
 			};
-			const new_calc = calculateInventory(new_item, 'sale');
+			const new_calc = calculateInventory(new_item, 'quote');
 			if(new_calc.new_unit_sale < qtitems[item_id].row.net_unit_cost && typeof qtitems[item_id].row.sale_price_warning == 'undefined'){
 				//bootbox.alert('Your are selling at sale price lower than cost price');
 				qtitems[item_id].row.sale_price_warning = 0;
@@ -1492,10 +1560,11 @@ $(document).ready(function (e) {
 				tax_rate: qtitems[item_id].row.tax_rate,
 				dis1: qtitems[item_id].row.dis1,
 				dis2: qtitems[item_id].row.dis2,
+				dis3: qtitems[item_id].row.dis3,
 				net_unit_cost: qtitems[item_id].row.net_unit_cost
 
 			};
-			const new_calc = calculateInventory(new_item, 'sale');
+			const new_calc = calculateInventory(new_item, 'quote');
 			if(new_calc.new_unit_sale < qtitems[item_id].row.net_unit_cost && typeof qtitems[item_id].row.sale_price_warning == 'undefined'){
 				//bootbox.alert('Your are selling at sale price lower than cost price');
 				qtitems[item_id].row.sale_price_warning = 0;
@@ -1671,11 +1740,12 @@ function loadItems() {
 					tax_rate: item.row.tax_rate,
 					dis1: item.row.dis1,
 					dis2: item.row.dis2,
+					dis3: item.row.dis3,
 					net_unit_cost: item.row.net_unit_cost
 
 			} ;
 			
-			const new_calc = calculateInventory(new_item, 'sale');
+			const new_calc = calculateInventory(new_item, 'quote');
 			
 			/**
 			 * NEW TOTAL CALCULATION ASSIGNMENT
@@ -1737,6 +1807,7 @@ function loadItems() {
 				item_bonus = item.row.bonus,
 				item_dis1 = item.row.dis1,
 				item_dis2 = item.row.dis2,
+				item_dis3 = item.row.dis3,
 				item_batchQuantity = item.row.batchQuantity,
 				item_base_quantity = item.row.base_quantity,
 				// if(item_expiry == 'undefined'){
@@ -1859,6 +1930,8 @@ function loadItems() {
 			total_after_dis1 = total_before_dis_vat - dis1_a;
 			dis2_a = total_after_dis1 * parseFloat(item_dis2 / 100);
 			total_after_dis2 = total_after_dis1 - dis2_a;
+			dis3_a = total_after_dis2 * parseFloat(item_dis3 / 100);
+			total_after_dis3 = total_after_dis2 - dis3_a;
 			vat_15_a = total_after_dis2 * parseFloat(item.tax_rate.rate / 100); //total_after_dis2 * parseFloat(15/100);
 			net_price_a = vat_15_a + total_after_dis2;
 
@@ -1876,8 +1949,10 @@ function loadItems() {
 			
 			total_after_dis2 =
 				(total_sales - total_after_dis1) * parseFloat(item_dis2 / 100);
+			total_after_dis3 =
+				(total_after_dis1 - total_after_dis2) * parseFloat(item_dis3 / 100);
 			//main_net = net_price_a;// + net_price_b;
-			main_net = total_sales - (total_after_dis1 + total_after_dis2);
+			main_net = total_sales - (total_after_dis1 + total_after_dis2 + total_after_dis3);
 			var new_unit_cost =
 				parseFloat(main_net) / parseFloat(parseFloat(item_qty) + parseFloat(item_bonus));
 
@@ -2076,6 +2151,19 @@ function loadItems() {
 				formatDecimal(item_dis2) +
 				'" onClick="this.select();"><span style="position:absolute;font-size:10px;margin-top:5px;">' +
 				new_calc.new_second_discount;
+			("</span></td>");
+
+			tr_html +=
+				'<td><input class="form-control text-center rdis3" name="dis3[]" type="text" data-id="' +
+				row_no +
+				'" data-item="' +
+				item_id +
+				'" id="dis3_' +
+				row_no +
+				'" value="' +
+				formatDecimal(item_dis3) +
+				'" onClick="this.select();"><span style="position:absolute;font-size:10px;margin-top:5px;">' +
+				new_calc.new_third_discount;
 			("</span></td>");
 
 			tr_html +=
@@ -2327,14 +2415,17 @@ function add_invoice_item(item) {
 		qtitems[item_id] = item;
 		qtitems[item_id].row.base_quantity = qtitems[item_id].row.qty;
 		if(payment_type == 'cash'){
-			qtitems[item_id].row.dis1 = item.row.cash_discount.replace('%','');
-			qtitems[item_id].row.dis2 = 0;
+			qtitems[item_id].row.dis1 = item.row.cash_discount !== null ? item.row.cash_discount.replace('%','') : '0';
+			qtitems[item_id].row.dis2 = item.row.cash_dis2 !== null ? item.row.cash_dis2.replace('%','') : '0';
+			qtitems[item_id].row.dis3 = item.row.cash_dis3 !== null ? item.row.cash_dis3.replace('%','') : '0';
 		}else if(payment_type == 'credit'){
-			qtitems[item_id].row.dis1 = item.row.credit_discount.replace('%','');
-			qtitems[item_id].row.dis2 = 0;
+			qtitems[item_id].row.dis1 = item.row.credit_discount !== null ? item.row.credit_discount.replace('%','') : '0';
+			qtitems[item_id].row.dis2 = item.row.credit_dis2 !== null ? item.row.credit_dis2.replace('%','') : '0';
+			qtitems[item_id].row.dis3 = item.row.credit_dis3 !== null ? item.row.credit_dis3.replace('%','') : '0';
 		}else{
 			qtitems[item_id].row.dis1 = 0;
 			qtitems[item_id].row.dis2 = 0;
+			qtitems[item_id].row.dis3 = 0;
 		}
 	}
 

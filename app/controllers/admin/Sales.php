@@ -424,7 +424,9 @@ class Sales extends MY_Controller
             $subtotal2 = $quote_items[$r]->subtotal2;
             $item_dis1 = $quote_items[$r]->discount1;
             $item_dis2 = $quote_items[$r]->discount2;
+            $item_dis3 = $quote_items[$r]->discount3;
             $new_item_second_discount = $quote_items[$r]->second_discount_value;
+            $new_item_third_discount = $quote_items[$r]->third_discount_value;
             $totalbeforevat = $quote_items[$r]->totalbeforevat;
             $main_net = $quote_items[$r]->main_net;
             $real_cost = $quote_items[$r]->real_cost;
@@ -468,7 +470,9 @@ class Sales extends MY_Controller
                 //'bonus'             => 0,
                 'discount1'         => $item_dis1,
                 'discount2'         => $item_dis2,
+                'discount3'         => $item_dis3,
                 'second_discount_value' => $new_item_second_discount,
+                'third_discount_value' => $new_item_third_discount,
                 'totalbeforevat'    => $totalbeforevat,
                 'main_net'          => $main_net,
                 'real_cost'         => $real_cost,

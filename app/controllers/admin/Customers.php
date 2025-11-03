@@ -1535,7 +1535,7 @@ class Customers extends MY_Controller
     {
         // $this->sma->checkPermissions('index');
         $row = $this->companies_model->getCompanyByID($id);
-        $this->sma->send_json([['id' => $row->id, 'text' => ($row->company && $row->company != '-' ? $row->company : $row->name)]]);
+        $this->sma->send_json([['id' => $row->id, 'text' => ($row->company && $row->company != '-' ? $row->company : $row->name), 'payment_term' => $row->payment_term]]);
     }
 
     public function getCustomers()
