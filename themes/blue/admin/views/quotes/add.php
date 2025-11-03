@@ -653,6 +653,7 @@ table#slTable td input.form-control {
                                             <th class="col-md-1">bonus</th>
                                             <th class="col-md-1">dis 1</th>
                                             <th class="col-md-1">dis 2</th>
+                                            <th class="col-md-1">dis 3</th>
                                             <th class="col-md-1">Vat 15%</th>
                                             <!--<th class="col-md-1">Total Purchases</th>-->
                                             <th class="col-md-1">Total Sales</th>
@@ -760,7 +761,7 @@ table#slTable td input.form-control {
                             <div class="form-group">
                                 <?= lang('payment_term', 'payment_term'); ?>
                                 <?php
-                                $data[''] = '';
+                                $data['0'] = '0';
                                 $data['30'] = '30';
                                 $data['60'] = '60';
                                 $data['90'] = '90';

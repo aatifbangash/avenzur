@@ -1753,7 +1753,7 @@ AND im_summary.total_quantity > 0";
                             im.product_id,
                             pr.name as product_name, im.batch_number as batchno, im.expiry_date as expiry,
                             pr.tax_rate, pr.type, pr.unit, pr.code as product_code, im.avz_item_code,
-                            pr.cash_discount, pr.credit_discount,
+                            pr.cash_discount, pr.credit_discount, pr.cash_dis2, pr.cash_dis3, pr.credit_dis2, pr.credit_dis3,
                             pu.supplier,
                             (SUM(im.quantity)) AS total_quantity", false);
             $this->db->from('sma_inventory_movements im');
@@ -1762,6 +1762,7 @@ AND im_summary.total_quantity > 0";
             $this->db->where('im.location_id', $warehouse_id);
             $this->db->where('im.product_id', $item_id);
             $this->db->group_by(['im.avz_item_code', 'im.batch_number', 'im.expiry_date']);
+            $this->db->order_by('im.expiry_date', 'asc');
             $this->db->having('total_quantity !=', 0);
             $query = $this->db->get();
             //echo $this->db->last_query();exit;
@@ -1770,7 +1771,7 @@ AND im_summary.total_quantity > 0";
                                 pr.cost as net_unit_cost, 
                                 pr.cost as real_unit_cost,
                                 pr.id as product_id,
-                                pr.cash_discount, pr.credit_discount,
+                                pr.cash_discount, pr.credit_discount, pr.cash_dis2, pr.cash_dis3, pr.credit_dis2, pr.credit_dis3,
                                 pu.supplier,
                                 pr.name as product_name, im.batch_number as batchno, im.expiry_date as expiry,
                                 SUM(IFNULL(im.quantity, 0)) as total_quantity,
