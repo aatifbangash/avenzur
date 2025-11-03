@@ -55,7 +55,7 @@ class Purchase_contract_deals extends MY_Controller
 
     public function add()
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->form_validation->set_rules('supplier', lang('supplier'), 'required');
 
         if ($this->form_validation->run() == true) {

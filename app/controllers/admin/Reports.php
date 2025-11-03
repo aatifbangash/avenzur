@@ -4835,7 +4835,7 @@ class Reports extends MY_Controller
     public function inventory_trial_balance()
     {
 
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $user = $this->site->getUser();
