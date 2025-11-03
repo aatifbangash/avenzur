@@ -397,6 +397,53 @@
 
          
         <?php if($Admin || $Owner || $this->GP['accountant']){ ?>
+        <!-- ==================== -->
+        <!-- LOYALTY & BUDGET -->
+        <!-- ==================== -->
+        <?php if($Admin || $Owner || $this->GP['accountant']){ ?>
+        <li class="newmenu-item has-sub">
+            <a href="#" class="newmenu-link bluecolor">
+                <i class="fa fa-heart"></i>
+                <span><?= lang('Loyalty & Budget'); ?></span>
+                <i class="fa fa-chevron-right newmenu-chevron"></i>
+            </a>
+            <ul class="newmenu-sub">
+                <!-- Budget Management -->
+                <li class="newmenu-item has-sub">
+                    <a href="#" class="newmenu-link">
+                        <i class="fa fa-money"></i>
+                        <span><?= lang('Budget Management'); ?></span>
+                        <i class="fa fa-chevron-right newmenu-chevron"></i>
+                    </a>
+                    <ul class="newmenu-sub">
+                        <li><a href="<?= admin_url('loyalty/budget_definition'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('Define Budget'); ?></a></li>
+                        <li><a href="<?= admin_url('loyalty/budget_allocation'); ?>" class="newmenu-link"><i class="fa fa-sitemap"></i> <?= lang('Allocate Budget'); ?></a></li>
+                        <li><a href="<?= admin_url('loyalty/burn_rate_dashboard'); ?>" class="newmenu-link"><i class="fa fa-fire"></i> <?= lang('Burn Rate Dashboard'); ?></a></li>
+                        <li><a href="<?= admin_url('loyalty/budget_distribution'); ?>" class="newmenu-link"><i class="fa fa-chart-bar"></i> <?= lang('Budget Tracking'); ?></a></li>
+                    </ul>
+                </li>
+
+                <!-- Loyalty Rules -->
+                <li class="newmenu-item has-sub">
+                    <a href="#" class="newmenu-link">
+                        <i class="fa fa-cogs"></i>
+                        <span><?= lang('Loyalty Rules'); ?></span>
+                        <i class="fa fa-chevron-right newmenu-chevron"></i>
+                    </a>
+                    <ul class="newmenu-sub">
+                        <li><a href="<?= admin_url('loyalty/rules'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('Manage Rules'); ?></a></li>
+                        <li><a href="<?= admin_url('loyalty/rules_management'); ?>" class="newmenu-link"><i class="fa fa-cogs"></i> <?= lang('Advanced Rules'); ?></a></li>
+                        <li><a href="<?= admin_url('loyalty/loyalty_stages'); ?>" class="newmenu-link"><i class="fa fa-star"></i> <?= lang('Loyalty Stages'); ?></a></li>
+                        <li><a href="<?= admin_url('loyalty/promotion_campaigns'); ?>" class="newmenu-link"><i class="fa fa-bullhorn"></i> <?= lang('Campaigns'); ?></a></li>
+                    </ul>
+                </li>
+
+                <!-- Loyalty Dashboard -->
+                <li><a href="<?= admin_url('loyalty/dashboard'); ?>" class="newmenu-link"><i class="fa fa-dashboard"></i> <?= lang('Loyalty Dashboard'); ?></a></li>
+            </ul>
+        </li>
+        <?php } ?>
+
         <!-- SETTINGS -->
         <li class="newmenu-item has-sub">
             <a href="#" class="newmenu-link bluecolor">
