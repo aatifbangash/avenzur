@@ -1810,6 +1810,7 @@ function loadItems() {
 				item_dis3 = item.row.dis3,
 				item_batchQuantity = item.row.batchQuantity,
 				item_base_quantity = item.row.base_quantity,
+				max_bonus = item.row.max_bonus,
 				// if(item_expiry == 'undefined'){
 				//     item_expiry = '';
 				//    }
@@ -2124,7 +2125,9 @@ function loadItems() {
                 '" id="bonus_' +
                 row_no +
                 '" value="'+ formatDecimal(item_bonus)
-                +'"onClick="this.select();"></td>';
+                +'"onClick="this.select();"><span style="position:absolute;font-size:10px;margin-top:5px;" class="batchQuantity">' +
+				max_bonus +
+				'</span></td>';
 
 
 			tr_html +=
@@ -2269,10 +2272,10 @@ function loadItems() {
 			
 			// Thi will override all the above checks
 			if (
-				parseFloat(parseFloat(item_qty) + parseFloat(item_bonus)) > parseFloat(base_quantity)
+				parseFloat(item_bonus) > parseFloat(max_bonus)
 			) {
-				/*$("#row_" + row_no).addClass("danger");
-				if (site.settings.overselling != 1) {
+				$("#row_" + row_no).addClass("danger");
+				/*if (site.settings.overselling != 1) {
 					$("#add_sale, #edit_sale").attr("disabled", true);
 				}*/
 			}
@@ -2430,6 +2433,7 @@ function add_invoice_item(item) {
 	}
 
 	qtitems[item_id].row.bonus = qtitems[item_id].row.bonus ? qtitems[item_id].row.bonus : 0;
+	qtitems[item_id].row.qty = 0;
 	qtitems[item_id].order = new Date().getTime();
 	localStorage.setItem("qtitems", JSON.stringify(qtitems));
 	loadItems();
