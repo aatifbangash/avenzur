@@ -1088,7 +1088,8 @@ class Sales extends MY_Controller
 
             if ($this->form_validation->run() == true && $this->sales_model->addDelivery($dlDetails)) {
                 $this->session->set_flashdata('message', lang('delivery_added'));
-                admin_redirect('sales/deliveries');
+                //admin_redirect('sales/deliveries');
+                admin_redirect('sales/view/'.$sale_id);
             } else {
                 $this->data['error']           = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
                 $this->data['customer']        = $this->site->getCompanyByID($sale->customer_id);
@@ -2140,7 +2141,8 @@ class Sales extends MY_Controller
             $this->sales_model->updateSaleStatus($this->input->post('sale_id'), 'delivered');
 
             $this->session->set_flashdata('message', lang('delivery_updated'));
-            admin_redirect('sales/deliveries');
+            //admin_redirect('sales/deliveries');
+            admin_redirect('sales/view/'.$sale_id);
         } else {
             $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
             $this->data['delivery'] = $this->sales_model->getDeliveryBySaleID($id);
