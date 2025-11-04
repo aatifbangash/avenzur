@@ -1751,6 +1751,7 @@ AND im_summary.total_quantity > 0";
                             im.real_unit_sale,
                             im.customer_id,
                             im.product_id,
+                            (SUM(im.bonus)) AS max_bonus,
                             pr.name as product_name, im.batch_number as batchno, im.expiry_date as expiry,
                             pr.tax_rate, pr.type, pr.unit, pr.code as product_code, im.avz_item_code,
                             pr.cash_discount, pr.credit_discount, pr.cash_dis2, pr.cash_dis3, pr.credit_dis2, pr.credit_dis3,
@@ -1774,6 +1775,7 @@ AND im_summary.total_quantity > 0";
                                 pr.cash_discount, pr.credit_discount, pr.cash_dis2, pr.cash_dis3, pr.credit_dis2, pr.credit_dis3,
                                 pu.supplier,
                                 pr.name as product_name, im.batch_number as batchno, im.expiry_date as expiry,
+                                (SUM(im.bonus)) AS max_bonus,
                                 SUM(IFNULL(im.quantity, 0)) as total_quantity,
                                 pr.tax_rate, pr.type, pr.unit, pr.code as product_code, im.avz_item_code", false);
                 $this->db->from('sma_products pr');
