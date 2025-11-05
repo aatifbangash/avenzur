@@ -1015,7 +1015,7 @@
 
     function loadPharmacies() {
         console.log('loadPharmacies() called');
-        let url = '<?php echo admin_url('organization_setup/get_pharmacies'); ?>';
+        let url = '<?php echo admin_url('organization_setup/get_all_pharmacies'); ?>';
         console.log('Calling URL:', url);
         
         $.ajax({
