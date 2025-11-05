@@ -163,13 +163,19 @@ class Cost_center extends MY_Controller {
             }
 
             // Fetch data
+            error_log('[PHARMACY_DETAIL] Fetching pharmacy data for ID: ' . $pharmacy_id . ', Period: ' . $period);
             $pharmacy_data = $this->cost_center->get_pharmacy_with_branches($pharmacy_id, $period);
+            error_log('[PHARMACY_DETAIL] Pharmacy data returned: ' . json_encode($pharmacy_data));
             $is_empty_data = false;
             
             // If no transaction data exists, initialize empty record
             if (!$pharmacy_data['pharmacy']) {
+                error_log('[PHARMACY_DETAIL] No pharmacy data found, initializing empty record');
                 $pharmacy_data = $this->_init_empty_pharmacy_data($pharmacy_id, $period);
                 $is_empty_data = true;
+            } else {
+                error_log('[PHARMACY_DETAIL] Pharmacy data found: ' . json_encode($pharmacy_data['pharmacy']));
+                error_log('[PHARMACY_DETAIL] Branches count: ' . count($pharmacy_data['branches']));
             }
             
             $periods = $this->cost_center->get_available_periods(24);
