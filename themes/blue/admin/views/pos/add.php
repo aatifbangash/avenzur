@@ -3405,8 +3405,10 @@ if (isset($print) && !empty($print)) {
                             <i class="fa fa-search"></i> Search Prescription
                         </h5>
                         <hr style="border-color: #2196F3; margin-top: 10px; margin-bottom: 15px;">
-                        
-                        <form id="wasfaty-lookup-form">
+                       <?php
+                        $attrib = ['data-toggle' => 'validator', 'role' => 'form' , 'id' => 'wasfaty-form'];
+                        echo admin_form_open_multipart('Wasfaty/fetch_prescription', $attrib); ?>
+                         
                             <div class="form-group">
                                 <label for="patient-phone">Patient Phone Number *</label>
                                 <input type="text" 
@@ -3436,7 +3438,7 @@ if (isset($print) && !empty($print)) {
                                     <i class="fa fa-search"></i> Fetch Prescription
                                 </button>
                             </div>
-                        </form>
+                      <?php echo form_close(); ?>
                         
                         <!-- Error Alert -->
                         <div id="wasfaty-error" class="alert alert-danger" style="display:none; margin-top:15px;"></div>
