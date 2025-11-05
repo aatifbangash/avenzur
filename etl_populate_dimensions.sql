@@ -119,10 +119,11 @@ SELECT '' AS blank;
 
 SELECT 'Pharmacy-Branch Hierarchy:' AS info;
 
-SELECT p.pharmacy_name AS 'Pharmacy', p.warehouse_id AS 'Pharmacy_WH_ID', COUNT(b.branch_id) AS 'Branch_Count', GROUP_CONCAT (
-        b.branch_name
-        ORDER BY b.branch_name SEPARATOR ', '
-    ) AS 'Branches'
+SELECT 
+    p.pharmacy_name AS 'Pharmacy', 
+    p.warehouse_id AS 'Pharmacy_WH_ID', 
+    COUNT(b.branch_id) AS 'Branch_Count', 
+    GROUP_CONCAT(b.branch_name ORDER BY b.branch_name SEPARATOR ', ') AS 'Branches'
 FROM
     sma_dim_pharmacy p
     LEFT JOIN sma_dim_branch b ON p.pharmacy_id = b.pharmacy_id
