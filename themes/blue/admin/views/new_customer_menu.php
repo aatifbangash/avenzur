@@ -184,17 +184,17 @@
                 </li>
 
                 <!-- Delivery -->
-                <!--<li class="newmenu-item has-sub">
+                <li class="newmenu-item has-sub">
                     <a href="#" class="newmenu-link">
                         <i class="fa fa-truck"></i>
                         <span><?= lang('Delivery'); ?></span>
                         <i class="fa fa-chevron-right newmenu-chevron"></i>
                     </a>
                     <ul class="newmenu-sub">
-                        <li><a href="<?= admin_url('deliveries/add'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('Add Delivery'); ?></a></li>
-                        <li><a href="<?= admin_url('deliveries'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('List Deliveries'); ?></a></li>
+                        <li><a href="<?= admin_url('delivery/add'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('Add Delivery'); ?></a></li>
+                        <li><a href="<?= admin_url('delivery'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('List Deliveries'); ?></a></li>
                     </ul>
-                </li>-->
+                </li>
 
                 <?php if($Admin || $Owner || $this->GP['accountant']){ ?>
                 <!-- Collection -->
@@ -235,6 +235,7 @@
                     <ul class="newmenu-sub">
                         <li><a href="<?= admin_url('reports/customers_trial_balance'); ?>" class="newmenu-link"><i class="fa fa-balance-scale"></i> <?= lang('Trial Balance'); ?></a></li>
                         <li><a href="<?= admin_url('reports/customer_statement'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Statement'); ?></a></li>
+                        <li><a href="<?= admin_url('reports/customer_aging'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Aging'); ?></a></li>
                     </ul>
                 </li>
 
@@ -350,8 +351,8 @@
                     <ul class="newmenu-sub">
                         <li><a href="<?= admin_url('reports/suppliers_trial_balance'); ?>" class="newmenu-link"><i class="fa fa-balance-scale"></i> <?= lang('Trial Balance'); ?></a></li>
                         <li><a href="<?= admin_url('reports/supplier_statement'); ?>" class="newmenu-link"><i class="fa fa-balance-scale"></i> <?= lang('Statement'); ?></a></li>
-                        <!--<li><a href="<?= admin_url('reports/purchase_item'); ?>" class="newmenu-link"><i class="fa fa-boxes"></i> <?= lang('Purchase Per Item'); ?></a></li>
-                        <li><a href="<?= admin_url('reports/purchase_deals'); ?>" class="newmenu-link"><i class="fa fa-gift"></i> <?= lang('Purchase Deals & Discounts'); ?></a></li>
+                        <li><a href="<?= admin_url('reports/supplier_aging'); ?>" class="newmenu-link"><i class="fa fa-boxes"></i> <?= lang('Aging'); ?></a></li>
+                        <!--<li><a href="<?= admin_url('reports/purchase_deals'); ?>" class="newmenu-link"><i class="fa fa-gift"></i> <?= lang('Purchase Deals & Discounts'); ?></a></li>
                         <li><a href="<?= admin_url('reports/purchase_status'); ?>" class="newmenu-link"><i class="fa fa-clipboard-check"></i> <?= lang('Purchase Status'); ?></a></li>-->
                     </ul>
                 </li>

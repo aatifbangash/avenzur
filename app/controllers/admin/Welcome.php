@@ -104,9 +104,14 @@ class Welcome extends MY_Controller
         }
 
         if($this->Admin || $this->Owner || $this->GP['accountant']){
-            // Redirect to Cost Center Dashboard
-            admin_redirect('cost_center/dashboard');
-            //admin_redirect('welcome/quick_search');
+            if($this->Settings->site_name == 'Hills Business Medical' || $this->Settings->site_name == 'Demo Company'){
+                // Redirect to Cost Center Dashboard
+                admin_redirect('cost_center/dashboard');
+                //admin_redirect('welcome/quick_search');
+            }else{
+                admin_redirect('welcome/quick_search');
+            }
+            
         }else{
             //echo 'here';exit;
             // Redirect to Cost Center Dashboard

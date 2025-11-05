@@ -424,7 +424,9 @@ class Sales extends MY_Controller
             $subtotal2 = $quote_items[$r]->subtotal2;
             $item_dis1 = $quote_items[$r]->discount1;
             $item_dis2 = $quote_items[$r]->discount2;
+            $item_dis3 = $quote_items[$r]->discount3;
             $new_item_second_discount = $quote_items[$r]->second_discount_value;
+            $new_item_third_discount = $quote_items[$r]->third_discount_value;
             $totalbeforevat = $quote_items[$r]->totalbeforevat;
             $main_net = $quote_items[$r]->main_net;
             $real_cost = $quote_items[$r]->real_cost;
@@ -468,7 +470,9 @@ class Sales extends MY_Controller
                 //'bonus'             => 0,
                 'discount1'         => $item_dis1,
                 'discount2'         => $item_dis2,
+                'discount3'         => $item_dis3,
                 'second_discount_value' => $new_item_second_discount,
+                'third_discount_value' => $new_item_third_discount,
                 'totalbeforevat'    => $totalbeforevat,
                 'main_net'          => $main_net,
                 'real_cost'         => $real_cost,
@@ -1084,7 +1088,8 @@ class Sales extends MY_Controller
 
             if ($this->form_validation->run() == true && $this->sales_model->addDelivery($dlDetails)) {
                 $this->session->set_flashdata('message', lang('delivery_added'));
-                admin_redirect('sales/deliveries');
+                //admin_redirect('sales/deliveries');
+                admin_redirect('sales/view/'.$sale_id);
             } else {
                 $this->data['error']           = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
                 $this->data['customer']        = $this->site->getCompanyByID($sale->customer_id);
@@ -2136,7 +2141,8 @@ class Sales extends MY_Controller
             $this->sales_model->updateSaleStatus($this->input->post('sale_id'), 'delivered');
 
             $this->session->set_flashdata('message', lang('delivery_updated'));
-            admin_redirect('sales/deliveries');
+            //admin_redirect('sales/deliveries');
+            admin_redirect('sales/view/'.$sale_id);
         } else {
             $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
             $this->data['delivery'] = $this->sales_model->getDeliveryBySaleID($id);
@@ -3650,6 +3656,7 @@ class Sales extends MY_Controller
         $email_link        = anchor('admin/sales/email/$1', '<i class="fa fa-envelope"></i> ' . lang('email_sale'), 'data-toggle="modal" data-target="#myModal"');
         $edit_link         = anchor('admin/sales/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_sale'), 'class="sledit"');
         $pdf_link          = anchor('admin/sales/pdf_new/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf'));
+        $sale_order_link   = anchor('admin/sales/pdf_sale_order/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_sale_order'));
         $return_link       = anchor('admin/returns/add/?sale=$1', '<i class="fa fa-angle-double-left"></i> ' . lang('return_sale'));
         //$shipment_link     = anchor('$1', '<i class="fa fa-angle-double-left"></i> ' . lang('Shipping_Slip'));
         $delete_link       = "<a href='#' class='po' title='<b>" . lang('delete_sale') . "</b>' data-content=\"<p>"
@@ -3680,7 +3687,7 @@ class Sales extends MY_Controller
                     
                     <li>' . $detail_link . '</li>
                     <li>' . $return_link . '</li>
-                    <li>' . $pdf_link . '</li>
+                    <li>' . $sale_order_link . '</li>
                 </ul>
             </div></div>';
         }else{
@@ -3979,6 +3986,242 @@ class Sales extends MY_Controller
         } else {
             $this->sma->generate_pdf($html, $name, 'I', $this->data['biller']->invoice_footer);
         }
+    }
+
+    public function pdf_sale_order($id = null, $view = null, $save_bufffer = null)
+    {   
+        //$this->sma->checkPermissions();
+        $this->load->library('inv_qrcode');
+
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $inv                 = $this->sales_model->getInvoiceByID($id);
+        if (!$this->GP['sales-index']) {
+            $this->sma->view_rights($inv->created_by);
+        }
+        $this->data['barcode']     = "<img src='" . admin_url('products/gen_barcode/' . $inv->reference_no) . "' alt='" . $inv->reference_no . "' class='pull-left' />";
+        $this->data['customer']    = $this->site->getCompanyByID($inv->customer_id);
+        $this->data['payments']    = $this->sales_model->getPaymentsForSale($id);
+        $this->data['biller']      = $this->site->getCompanyByID($inv->biller_id);
+        $biller = $this->site->getCompanyByID($inv->biller_id);
+        $customer = $this->data['customer'] ;
+        $this->data['user']        = $this->site->getUser($inv->created_by);
+        $this->data['warehouse']   = $this->site->getWarehouseByID($inv->warehouse_id);
+        $this->data['inv']         = $inv;
+        $this->data['rows']        = $this->sales_model->getAllInvoiceItems($id);
+        $this->data['return_sale'] = $inv->return_id ? $this->sales_model->getInvoiceByID($inv->return_id) : null;
+        $this->data['return_rows'] = $inv->return_id ? $this->sales_model->getAllInvoiceItems($inv->return_id) : null;
+        //echo '<pre>';print_r($this->data);exit;
+        
+        $name = lang('sale') . '_' . str_replace('/', '_', $inv->reference_no) . '.pdf';
+        $html = $this->load->view($this->theme . 'sales/pdf/sales_order_report_new', $this->data, true);
+        
+        if (!$this->Settings->barcode_img) {
+            $html = preg_replace("'\<\?xml(.*)\?\>'", '', $html);
+        }
+
+        // Generate QR code Base64 string
+       if ($this->Settings->ksa_qrcode) {
+            $payload = [
+                'seller' => $biller->company && $biller->company != '-' ? $biller->company : $biller->name,
+                'vat_no' => $biller->vat_no ?: $biller->get_no,
+                'date' => $inv->date,
+                'grand_total' => $return_sale ? ($inv->grand_total + $return_sale->grand_total) : $inv->grand_total,
+                'total_tax_amount' => $return_sale ? ($inv->total_tax + $return_sale->total_tax) : $inv->total_tax,
+            ];
+
+            // Convert to JSON directly
+            $qrtext = json_encode($payload);
+            $qr_code = $this->sma->qrcodepng('text', $qrtext, 2, $level = 'H', $sq = null, $svg = false);
+           //echo $qr_code;exit;
+            $png_base64 = base64_encode($qr_code);
+            
+        } else {
+            $qr_code = $this->sma->qrcode('link', urlencode(site_url('view/sale/' . $inv->hash)), 2);
+        }
+
+        // Now explicitly generate Base64 PNG
+        //$qr_code = $this->inv_qrcode->generate_base64($qrtext, 150); // 150px size
+
+        if($customer->gln != ''){
+            $customer_gln_text = 'GLN: ';
+        }else{
+            $customer_gln_text = '';
+        }
+       
+        $this->load->view($this->theme . 'sales/pdf/sales_invoice_report', $this->data);
+        if ($view) {
+            $this->load->view($this->theme . 'sales/pdf/sales_invoice_report', $this->data);
+        } elseif ($save_bufffer) {
+           // return $this->sma->generate_pdf($html, $name, $save_bufffer, $this->data['biller']->invoice_footer);
+        } else {
+            
+            $mpdf = new Mpdf([
+            'format' => 'A4',
+            'margin_top' => 80,
+            'margin_bottom' => 70,
+            ]);
+
+            $mpdf->SetHTMLHeader('
+<div style="width:100%; font-family: DejaVu Sans, sans-serif; font-size:11px;">
+
+    <!-- TOP BAR WITH PAGE NUMBER -->
+    <div style="width:100%; overflow:hidden; font-size:10px; color:#666; margin-bottom:3px;">
+        <div style="float:right; text-align:right;">
+            Page {PAGENO} of {nbpg}
+        </div>
+    </div>
+
+    <!-- LOGO -->
+    <div style="text-align:center; margin-bottom:5px;">
+        <img src="data:image/png;base64,' . base64_encode(file_get_contents(base_url() . 'assets/uploads/logos/' . $biller->logo)) . '"
+            alt="Avenzur" style="max-width:120px; height:auto;">
+        
+    </div>
+
+    <!-- INVOICE INFO & BARCODE -->
+    <div style="width:100%; background-color:#f6f6f6; padding:5px 8px; margin-bottom:5px; overflow:hidden; font-size:11px;">
+
+        <!-- Left: Invoice Info -->
+        <div style="float:left; width:55%;">
+            <p style="margin:2px 0;"><strong>Date:</strong> ' . $this->sma->hrld($inv->date) . '</p>
+            <p style="margin:2px 0;"><strong>Reference:</strong> ' . date("Y") . '/' . $inv->id . '</p>
+            <p style="margin:2px 0;"><strong>Salesman:</strong> ' . (($customer->sales_agent != '') ? $customer->sales_agent : '-') . '</p>
+            <p style="margin:2px 0;"><strong>Note:</strong> ' . $inv->warning_note . '</p>
+        </div>
+
+        <!-- Right: Barcode and QR -->
+        <div style="float:right; width:40%; text-align:right;">
+            <img src="' . admin_url('misc/barcode/' . $this->sma->base64url_encode($inv->reference_no) . '/code128/74/0/1') . '"
+                alt="' . $inv->reference_no . '" style="height:40px; vertical-align:top; margin-right:5px;"/>
+            
+            <img src="data:image/png;base64,' . $png_base64 . '" width="50" height="50" />
+        </div>
+
+    </div>
+
+    <!-- TO & FROM BLOCK -->
+    <div style="width:100%; overflow:hidden; margin-top:10px; font-size:11px;">
+        <!-- TO -->
+        <div style="float:left; width:48%; vertical-align:top;">
+            <p style="margin:2px 0;"><strong>To:</strong> ('.$customer->external_id.') '. $customer->name .'</p>
+            <p style="margin:2px 0;">Address: '. $customer->address .'</p>
+            <p style="margin:2px 0;">City: '. $customer->city .'</p>
+            <p style="margin:2px 0;">VAT Number: '. $customer->vat_no .'</p>
+            <p style="margin:2px 0;">Tel: '. $customer->phone .'</p>
+            <p style="margin:2px 0;">Email: '. $customer->email .'</p>
+            <p style="margin:2px 0;">'.$customer_gln_text.''. $customer->gln .'</p>
+        </div>
+
+        <!-- FROM -->
+        <div style="float:right; width:48%; vertical-align:top;">
+            <p style="margin:2px 0;"><strong>From:</strong> '.  $biller->name .'</p>
+            <p style="margin:2px 0;">Address: '. $biller->address .'</p>
+            <p style="margin:2px 0;">City: '. $biller->city .'</p>
+            <p style="margin:2px 0;">VAT Number: '. $biller->vat_no .'</p>
+            <p style="margin:2px 0;">Tel: '. $biller->phone .'</p>
+            <p style="margin:2px 0;">Email: '. $biller->email .'</p>
+            <p style="margin:2px 0;">GLN: '. $this->data['warehouse']->gln .'</p>
+        </div>
+    </div>
+
+    <hr style="margin:8px 0 0 0; border-top:1px solid #000;">
+</div>
+');
+
+if($inv->warning_note != ""){
+    $note_text = 'Note:';
+}else{
+    $note_text = '';
+}
+
+    $footer_table = '';
+    $footer_note = '';
+    if($this->Settings->site_name == 'Hills Business Medical' && $this->Settings->site_name != 'Demo Company'){
+        $footer_table = '<div style="width:60%; float:left; text-align:left; margin-bottom:15px;">
+            <table class="table-label" border="1"  cellspacing="0" cellpadding="10" width="100%" style="border-collapse:collapse; font-size: 10px">
+                <tr><td colspan="3" style="text-align: center; vertical-align: middle; background-color: #f2f2f2; font-size: 20px;">'.$inv->id.'</td> <td colspan="3">فريق التحضير</td></tr>
+                <tr><td colspan="3">تحضير بداية</td> <td colspan="3">تحضير نهاية</td></tr>
+                <tr><td colspan="2">بداية تشييك</td> <td colspan="2">اسم المشيك</td> <td colspan="2">كمرا</td></tr>
+                <tr><td colspan="2">عدد كرتون</td> <td colspan="2">ربطة الثلاجة</td> <td colspan="2">خطأ</td></tr>
+            </table>
+        </div>';
+    }else{
+        /*$footer_note = '<div style="float:left; width:60%; text-align:left; padding-right:10px;">
+            <p style="margin:0 0 5px 0;"><strong>'.$note_text.'</strong></p>
+            <p style="margin:0;">
+            '.$inv->warning_note.'
+            </p>
+        </div>';*/
+        $footer_table = '<div style="width:60%; float:left; text-align:left; margin-bottom:15px;">
+            <table class="table-label" border="1"  cellspacing="0" cellpadding="10" width="100%" style="border-collapse:collapse; font-size: 10px">
+                <tr><td colspan="3" style="text-align: center; vertical-align: middle; background-color: #f2f2f2; font-size: 20px;">'.$inv->id.'</td> <td colspan="3">فريق التحضير</td></tr>
+                <tr><td colspan="3">تحضير بداية</td> <td colspan="3">تحضير نهاية</td></tr>
+                <tr><td colspan="2">بداية تشييك</td> <td colspan="2">اسم المشيك</td> <td colspan="2">كمرا</td></tr>
+                <tr><td colspan="2">عدد كرتون</td> <td colspan="2">ربطة الثلاجة</td> <td colspan="2">خطأ</td></tr>
+            </table>
+        </div>';
+    }
+        
+    $mpdf->SetHTMLFooter('
+    <hr style="margin-bottom:5px;">
+
+    <div style="width:100%; font-size:12px; font-family: DejaVu Sans, sans-serif;">
+
+        <!-- Notes Section (Left) -->
+        '.$footer_note.'
+
+        <!-- Totals Table -->
+        <div style="width:35%; float:right; text-align:left; margin-bottom:15px;">
+            <table border="1" cellpadding="4" cellspacing="0" width="100%" style="border-collapse:collapse;">
+                <tr><td>Total</td><td>'.$this->sma->formatNumber($inv->total).'</td></tr>
+                <tr><td>T-DISC</td><td>'.$this->sma->formatNumber($inv->total_discount).'</td></tr>
+                <tr><td>Net Before VAT</td><td>'.$this->sma->formatNumber($inv->total_net_sale).'</td></tr>
+                <tr><td>Total VAT</td><td>'.$this->sma->formatNumber($inv->total_tax).'</td></tr>
+                <tr><td><strong>Total After VAT</strong></td><td><strong>'.$this->sma->formatNumber($inv->grand_total).'</strong></td></tr>
+            </table>
+        </div>
+
+        <!-- Totals Table -->
+        '.$footer_table.'
+
+        <!-- Signature Section -->
+        <div style="width:100%; overflow:hidden; margin-top:50px; font-size:12px;">
+            
+            <div style="float:left; width:24%; text-align:center;">
+                <p>_________________________</p>
+                <p><strong>STORE KEEPER</strong></p>
+            </div>
+
+            <div style="float:right; width:24%; text-align:center;">
+                <p>_________________________</p>
+                <p><strong>SALES MANAGER</strong></p>
+            </div>
+
+            <div style="float:right; width:24%; text-align:center;">
+                <p>_________________________</p>
+                <p><strong>RECEIVED BY</strong></p>
+            </div>
+
+            <div style="float:right; width:24%; text-align:center;">
+                <p>_________________________</p>
+                <p><strong>SIGNATURE</strong></p>
+            </div>
+
+        </div>
+    </div>
+');
+
+
+
+            $mpdf->WriteHTML($html);
+            $mpdf->Output("sale_order.pdf", "D");
+
+                //$this->sma->generate_pdf($html, $name, 'I', $this->data['biller']->invoice_footer);
+            }
     }
 
     public function pdf_new($id = null, $view = null, $save_bufffer = null)

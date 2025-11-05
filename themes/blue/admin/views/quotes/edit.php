@@ -214,6 +214,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                                     <th>Batch No</th>
                                     <th>Expiry</th>
                                     <th>Quantity</th>
+                                    <th>Max.Bonus</th>
                                     <th>Unit Cost</th>
                                     <th>Locked</th>
                                 </tr>
@@ -251,6 +252,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                                 <td data-batchno="${item.row.batchno}">${item.row.batchno}</td>
                                 <td data-expiry="${item.row.expiry}">${item.row.expiry}</td>
                                 <td data-quantity="${item.total_quantity}">${item.total_quantity}</td>
+                                <td data-maxbonus="${item.row.max_bonus}">${item.row.max_bonus}</td>
                                 <td data-netcost="${item.net_unit_cost}">${item.row.net_unit_cost}</td>
                                 <td>${tickOrCross}</td>
                             </tr>
@@ -309,7 +311,9 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                     itemObj.row.qty = itemObj.row.qty || 0;
                     itemObj.row.dis1 = itemObj.row.dis1 || 0;
                     itemObj.row.dis2 = itemObj.row.dis2 || 0;
+                    itemObj.row.dis3 = itemObj.row.dis3 || 0;
                     itemObj.row.bonus = itemObj.row.bonus || 0;
+                    itemObj.row.max_bonus = itemObj.row.max_bonus || 0;
 
                     add_invoice_item(itemObj);   
                 }else {
@@ -529,6 +533,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                                             <th class="col-md-1">bonus</th>
                                             <th class="col-md-1">dis 1</th>
                                             <th class="col-md-1">dis 2</th>
+                                            <th class="col-md-1">dis 3</th>
                                             <th class="col-md-1">Vat 15%</th>
                                             <!--<th class="col-md-1">Total Purchases</th>-->
                                             <th class="col-md-1">Total Sales</th>
@@ -613,7 +618,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                             <div class="form-group">
                                 <?= lang('payment_term', 'payment_term'); ?>
                                 <?php
-                                $data[''] = '';
+                                $data['0'] = '0';
                                 $data['30'] = '30';
                                 $data['60'] = '60';
                                 $data['90'] = '90';
