@@ -619,15 +619,20 @@ public function get_hierarchical_analytics($period_type = 'today', $target_month
 
     /**
      * Validate pharmacy exists and is accessible
+     * Check warehouses table for the ID regardless of type
      * 
      * @param int $pharmacy_id
      * @return boolean
      */
     public function pharmacy_exists($pharmacy_id) {
-        $query = "SELECT 1 FROM sma_dim_pharmacy WHERE warehouse_id = ?";
-        $result = $this->db->query($query, [$pharmacy_id]);
+        // Check if warehouse ID exists in sma_warehouses table
+        // Don't restrict by warehouse_type to allow flexibility
+        $this->db->select('1');
+        $this->db->from('sma_warehouses');
+        $this->db->where('id', $pharmacy_id);
+        $query = $this->db->get();
         
-        return $result->num_rows() > 0;
+        return $query->num_rows() > 0;
     }
 
     /**

@@ -61,6 +61,639 @@ class Loyalty extends MY_Controller
     }
 
     /**
+     * API: Get all loyalty rules
+     */
+    public function get_rules()
+    {
+        // Fetch rules from external API
+        $result = $this->call_loyalty_api('/api/v1/rules', 'GET');
+
+        if ($result['success']) {
+            // Transform API response to frontend format if needed
+            $rules = $this->transform_rules_from_api($result['data']);
+            
+            $this->sma->send_json([
+                'success' => true,
+                'rules' => $rules
+            ]);
+        } else {
+            $this->sma->send_json([
+                'success' => false,
+                'message' => $result['message'] ?? 'Failed to fetch rules',
+                'rules' => []
+            ]);
+        }
+    }
+
+    /**
+     * API: Get single rule by ID
+     */
+    public function get_rule($id)
+    {
+        if (!$id) {
+            $this->sma->send_json([
+                'success' => false,
+                'message' => 'Rule ID is required'
+            ]);
+            return;
+        }
+
+        // Fetch single rule from external API
+        $result = $this->call_loyalty_api('/api/v1/rules/' . $id, 'GET');
+
+        if ($result['success']) {
+            $rule = $this->transform_rule_from_api($result['data']);
+            
+            $this->sma->send_json([
+                'success' => true,
+                'rule' => $rule
+            ]);
+        } else {
+            $this->sma->send_json([
+                'success' => false,
+                'message' => $result['message'] ?? 'Rule not found'
+            ]);
+        }
+    }
+
+    /**
+     * Transform rules array from API format to frontend format
+     */
+    private function transform_rules_from_api($apiRules)
+    {
+        if (empty($apiRules) || !is_array($apiRules)) {
+            return [];
+        }
+
+        $rules = [];
+        foreach ($apiRules as $apiRule) {
+            $rules[] = $this->transform_rule_from_api($apiRule);
+        }
+
+        return $rules;
+    }
+
+    /**
+     * Transform single rule from API format to frontend format
+     */
+    private function transform_rule_from_api($apiRule)
+    {
+        return [
+            'id' => $apiRule['id'] ?? null,
+            'name' => $apiRule['name'] ?? '',
+            'description' => $apiRule['description'] ?? '',
+            'hierarchy_level' => strtolower($apiRule['scope']['level'] ?? 'company'),
+            'hierarchy_node_id' => $apiRule['scope']['scopeId'] ?? '',
+            'action_type' => $apiRule['action']['type'] ?? '',
+            'action_value' => $this->extract_action_value($apiRule['action'] ?? []),
+            'priority' => $apiRule['priority'] ?? 5,
+            'status' => $apiRule['status'] ?? 1,
+            'start_date' => $this->format_date_from_iso($apiRule['validFrom'] ?? null),
+            'end_date' => $this->format_date_from_iso($apiRule['validUntil'] ?? null),
+            'conditions' => $apiRule['conditions'] ?? [],
+            'created_at' => $apiRule['createdAt'] ?? null,
+            'updated_at' => $apiRule['updatedAt'] ?? null
+        ];
+    }
+
+    /**
+     * Extract action value from API action object
+     */
+    private function extract_action_value($action)
+    {
+        if (empty($action['value'])) {
+            return null;
+        }
+
+        $value = $action['value'];
+
+        if (isset($value['percentageValue'])) {
+            return $value['percentageValue'];
+        }
+        if (isset($value['numberValue'])) {
+            return $value['numberValue'];
+        }
+        if (isset($value['stringValue'])) {
+            return is_array($value['stringValue']) ? implode(',', $value['stringValue']) : $value['stringValue'];
+        }
+
+        return null;
+    }
+
+    /**
+     * Format ISO date to standard format
+     */
+    private function format_date_from_iso($isoDate)
+    {
+        if (empty($isoDate)) {
+            return null;
+        }
+
+        try {
+            $dt = new DateTime($isoDate);
+            return $dt->format('Y-m-d');
+        } catch (Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * API: Save rule (Create or Update)
+     */
+    public function save_rule()
+    {
+        // Log the request
+        log_message('debug', 'Loyalty save_rule called');
+        
+        // Get JSON input
+        $input = file_get_contents('php://input');
+        log_message('debug', 'Raw input: ' . $input);
+        
+        $data = json_decode($input, true);
+
+        if (!$data) {
+            log_message('error', 'Invalid JSON data received');
+            $this->sma->send_json([
+                'success' => false,
+                'message' => 'Invalid JSON data'
+            ]);
+            return;
+        }
+
+        // Validate required fields
+        $this->form_validation->set_data($data);
+        $this->form_validation->set_rules('rule_name', 'Rule Name', 'required');
+        $this->form_validation->set_rules('hierarchy_level', 'Hierarchy Level', 'required');
+        $this->form_validation->set_rules('action_type', 'Action Type', 'required');
+
+        if ($this->form_validation->run() == false) {
+            log_message('error', 'Validation failed: ' . validation_errors());
+            $this->sma->send_json([
+                'success' => false,
+                'message' => validation_errors()
+            ]);
+            return;
+        }
+
+        // Transform data to match external API format
+        $apiPayload = $this->transform_to_api_format($data);
+        log_message('debug', 'API Payload: ' . json_encode($apiPayload));
+
+        // Call external Loyalty Rules API
+        $result = $this->call_loyalty_api('/api/v1/rules', 'POST', $apiPayload);
+        log_message('debug', 'API Result: ' . json_encode($result));
+
+        if ($result['success']) {
+            $this->sma->send_json([
+                'success' => true,
+                'message' => 'Rule saved successfully',
+                'rule' => $result['data']
+            ]);
+        } else {
+            $this->sma->send_json([
+                'success' => false,
+                'message' => $result['message'] ?? 'Failed to save rule',
+                'debug' => $result
+            ]);
+        }
+    }
+
+    /**
+     * Transform form data to external API format
+     */
+    private function transform_to_api_format($formData)
+    {
+        // Build scope object
+        $scope = [
+            'level' => strtoupper($formData['hierarchy_level'] ?? 'COMPANY'),
+            'scopeId' => $formData['hierarchy_node_id'] ?? 'company-001'
+        ];
+
+        // Transform conditions array
+        $conditions = [];
+        if (!empty($formData['conditions']) && is_array($formData['conditions'])) {
+            foreach ($formData['conditions'] as $condition) {
+                $transformedCondition = $this->transform_condition($condition);
+                if ($transformedCondition) {
+                    $conditions[] = $transformedCondition;
+                }
+            }
+        }
+
+        // Transform actions array
+        $actions = [];
+        if (!empty($formData['actions']) && is_array($formData['actions'])) {
+            foreach ($formData['actions'] as $action) {
+                $transformedAction = $this->transform_action($action);
+                if ($transformedAction) {
+                    $actions[] = $transformedAction;
+                }
+            }
+        }
+
+        // Infer rule type from first action
+        $ruleType = $this->infer_rule_type($formData);
+
+        // Build final API payload
+        $payload = [
+            'name' => $formData['rule_name'],
+            'description' => $formData['description'] ?? '',
+            'ruleType' => $ruleType,
+            'scope' => $scope,
+            'conditions' => $conditions,
+            'actions' => $actions
+            // Constraints commented out for now
+            // 'constraints' => [
+            //     'usageLimit' => (int)($formData['usage_limit'] ?? 0),
+            //     'perCustomerLimit' => (int)($formData['per_customer_limit'] ?? 0),
+            //     'validFrom' => $this->format_iso_date($formData['start_date'] ?? null),
+            //     'validUntil' => $this->format_iso_date($formData['end_date'] ?? null)
+            // ]
+        ];
+
+        return $payload;
+    }
+
+    /**
+     * Transform condition to API format
+     */
+    private function transform_condition($condition)
+    {
+        if (empty($condition['type']) || empty($condition['value'])) {
+            return null;
+        }
+
+        $transformedCondition = [
+            'type' => $condition['type'],
+            'operator' => $this->get_condition_operator($condition),
+            'value' => $this->transform_condition_value($condition)
+        ];
+
+        return $transformedCondition;
+    }
+
+    /**
+     * Get operator for condition based on type
+     */
+    private function get_condition_operator($condition)
+    {
+        $type = $condition['type'];
+        $operator = $condition['operator'] ?? null;
+
+        // Map specific operators based on condition type
+        switch ($type) {
+            case 'CUSTOMER_TIER':
+            case 'CATEGORY':
+                return 'IN'; // For arrays, use IN operator
+                
+            case 'PURCHASE_AMOUNT':
+            case 'CLV':
+            case 'FREQUENCY':
+                // Use provided operator or default to '>='
+                return $operator ?? '>=';
+                
+            case 'TIME_BASED':
+                return 'EQUALS';
+                
+            default:
+                return $operator ?? 'EQUALS';
+        }
+    }
+
+    /**
+     * Transform condition value based on type
+     */
+    private function transform_condition_value($condition)
+    {
+        $type = $condition['type'];
+        $value = $condition['value'];
+
+        switch ($type) {
+            case 'PURCHASE_AMOUNT':
+            case 'CLV':
+                // Simple number value
+                return ['numberValue' => (float)$value];
+
+            case 'FREQUENCY':
+                // Number value (period can be added to metadata if needed)
+                return ['numberValue' => (int)$value];
+
+            case 'CATEGORY':
+                // String array for categories
+                $categories = is_array($value) ? $value : array_map('trim', explode(',', $value));
+                return ['stringValue' => $categories];
+
+            case 'CUSTOMER_TIER':
+                // String array for tiers (e.g., ["GOLD", "PLATINUM"])
+                $tiers = is_array($value) ? $value : [$value];
+                return ['stringValue' => $tiers];
+
+            case 'TIME_BASED':
+                // String value for time-based conditions
+                return ['stringValue' => $value];
+
+            case 'INVENTORY':
+            case 'WEATHER':
+            case 'CUSTOM':
+                // String or mixed values
+                return ['stringValue' => $value];
+
+            default:
+                // Default to string value
+                return ['stringValue' => is_array($value) ? $value : (string)$value];
+        }
+    }
+
+    /**
+     * Transform action to API format
+     */
+    private function transform_action($action)
+    {
+        if (empty($action['type'])) {
+            return null;
+        }
+
+        $actionType = $action['type'];
+
+        return [
+            'type' => $actionType,
+            'value' => $this->transform_action_value($actionType, $action)
+        ];
+    }
+
+    /**
+     * Transform action value based on type
+     */
+    private function transform_action_value($actionType, $action)
+    {
+        switch ($actionType) {
+            case 'DISCOUNT_PERCENTAGE':
+                return ['percentageValue' => (float)($action['value'] ?? 0)];
+
+            case 'DISCOUNT_FIXED':
+                return ['numberValue' => (float)($action['value'] ?? 0)];
+
+            case 'DISCOUNT_BOGO':
+                return [
+                    'metadata' => [
+                        'buyQty' => (int)($action['buy_quantity'] ?? 1),
+                        'getQty' => (int)($action['get_quantity'] ?? 1)
+                    ]
+                ];
+
+            case 'LOYALTY_POINTS':
+                return ['numberValue' => (int)($action['value'] ?? 0)];
+
+            case 'TIER_UPGRADE':
+            case 'FREE_ITEM':
+            case 'NOTIFICATION':
+                return ['stringValue' => $action['value'] ?? ''];
+
+            case 'CUSTOM_ACTION':
+                $metadata = [];
+                if (!empty($action['custom_metadata'])) {
+                    $metadata = json_decode($action['custom_metadata'], true) ?? [];
+                }
+                return [
+                    'stringValue' => $action['value'] ?? '',
+                    'metadata' => $metadata
+                ];
+
+            default:
+                return ['stringValue' => $action['value'] ?? ''];
+        }
+    }
+
+    /**
+     * Infer rule type from actions
+     */
+    private function infer_rule_type($formData)
+    {
+        // If explicitly provided
+        if (!empty($formData['rule_type'])) {
+            return strtoupper($formData['rule_type']);
+        }
+
+        // Infer from first action
+        if (!empty($formData['actions']) && is_array($formData['actions'])) {
+            $firstAction = $formData['actions'][0];
+            $actionType = $firstAction['type'] ?? '';
+
+            switch ($actionType) {
+                case 'DISCOUNT_PERCENTAGE':
+                case 'DISCOUNT_FIXED':
+                case 'DISCOUNT_BOGO':
+                    return 'DISCOUNT';
+                case 'LOYALTY_POINTS':
+                    return 'LOYALTY';
+                case 'TIER_UPGRADE':
+                    return 'TIER';
+                case 'FREE_ITEM':
+                    return 'PROMOTION';
+                case 'NOTIFICATION':
+                    return 'NOTIFICATION';
+                case 'CUSTOM_ACTION':
+                    return 'CUSTOM';
+                default:
+                    return 'GENERAL';
+            }
+        }
+
+        return 'GENERAL';
+    }
+
+    /**
+     * Get rule type from action type (deprecated - use infer_rule_type)
+     */
+    private function get_rule_type($actionType)
+    {
+        if (strpos($actionType, 'DISCOUNT') !== false) {
+            return 'DISCOUNT';
+        }
+        if ($actionType === 'LOYALTY_POINTS') {
+            return 'POINTS';
+        }
+        if ($actionType === 'TIER_UPGRADE') {
+            return 'TIER';
+        }
+        return 'CUSTOM';
+    }
+
+    /**
+     * Format date to ISO 8601
+     */
+    private function format_iso_date($date)
+    {
+        if (empty($date)) {
+            return null;
+        }
+        
+        try {
+            $dt = new DateTime($date);
+            return $dt->format('Y-m-d\TH:i:s\Z');
+        } catch (Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Call external Loyalty API
+     */
+    private function call_loyalty_api($endpoint, $method = 'GET', $data = null)
+    {
+        $url = LOYALTY_API_URL . $endpoint;
+        
+        $ch = curl_init();
+        
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, LOYALTY_API_TIMEOUT);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Accept: application/json'
+        ]);
+
+        if ($method === 'POST') {
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        } elseif ($method === 'PUT') {
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        } elseif ($method === 'DELETE') {
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+        }
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        
+        curl_close($ch);
+
+        if ($error) {
+            return [
+                'success' => false,
+                'message' => 'API Connection Error: ' . $error
+            ];
+        }
+
+        $responseData = json_decode($response, true);
+
+        if ($httpCode >= 200 && $httpCode < 300) {
+            return [
+                'success' => true,
+                'data' => $responseData
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => $responseData['message'] ?? 'API Error (HTTP ' . $httpCode . ')',
+                'data' => $responseData
+            ];
+        }
+    }
+
+    /**
+     * API: Delete loyalty rule
+     */
+    public function delete_rule($id = null)
+    {
+        if (!$this->input->is_ajax_request() && !$id) {
+            $this->sma->send_json(['success' => false, 'message' => 'Invalid request']);
+            return;
+        }
+
+        if (!$id) {
+            $this->sma->send_json(['success' => false, 'message' => 'Rule ID required']);
+            return;
+        }
+
+        // Call external API to delete rule
+        $result = $this->call_loyalty_api('/api/v1/rules/' . $id, 'DELETE');
+
+        if ($result['success']) {
+            $this->sma->send_json([
+                'success' => true,
+                'message' => 'Rule deleted successfully'
+            ]);
+        } else {
+            $this->sma->send_json([
+                'success' => false,
+                'message' => $result['message'] ?? 'Failed to delete rule'
+            ]);
+        }
+    }
+
+    /**
+     * API: Get hierarchy nodes based on level
+     */
+    public function get_hierarchy_nodes($level)
+    {
+        $nodes = [];
+
+        switch (strtoupper($level)) {
+            case 'PHARMA_GROUP':
+                // Disable prefix for loyalty tables
+                $this->db->dbprefix = '';
+                $nodes = $this->db->select('id, name')
+                    ->from('loyalty_pharmacy_groups')
+                    ->order_by('name', 'ASC')
+                    ->get()
+                    ->result_array();
+                // Restore prefix
+                $this->db->dbprefix = 'sma_';
+                break;
+
+            case 'PHARMACY':
+                // Query from loyalty_pharmacies table joined with warehouses
+                $this->db->dbprefix = '';
+                $nodes = $this->db->select('lp.id, w.name, w.id as warehouse_id')
+                    ->from('loyalty_pharmacies lp')
+                    ->join('sma_warehouses w', 'lp.warehouse_id = w.id', 'left')
+                    ->order_by('w.name', 'ASC')
+                    ->get()
+                    ->result_array();
+                $this->db->dbprefix = 'sma_';
+                
+                // Format to return warehouse_id as id
+                $nodes = array_map(function($node) {
+                    return [
+                        'id' => $node['warehouse_id'],
+                        'name' => $node['name']
+                    ];
+                }, $nodes);
+                break;
+
+            case 'BRANCH':
+                // Query from loyalty_branches table joined with warehouses
+                $this->db->dbprefix = '';
+                $nodes = $this->db->select('lb.id, w.name, w.id as warehouse_id')
+                    ->from('loyalty_branches lb')
+                    ->join('sma_warehouses w', 'lb.warehouse_id = w.id', 'left')
+                    ->order_by('w.name', 'ASC')
+                    ->get()
+                    ->result_array();
+                $this->db->dbprefix = 'sma_';
+                
+                // Format to return warehouse_id as id
+                $nodes = array_map(function($node) {
+                    return [
+                        'id' => $node['warehouse_id'],
+                        'name' => $node['name']
+                    ];
+                }, $nodes);
+                break;
+
+            default:
+                $nodes = [];
+        }
+
+        $this->sma->send_json([
+            'success' => true,
+            'nodes' => $nodes
+        ]);
+    }
+
+    /**
      * Budget Setup (Multi-level: Company/Pharmacy Group/Pharmacy/Branch)
      */
     public function budget_setup()
@@ -700,26 +1333,6 @@ class Loyalty extends MY_Controller
         ];
         $meta = ['page_title' => lang('Rules Management'), 'bc' => $bc];
         $this->page_construct('loyalty/rules_management', $meta, $this->data);
-    }
-
-    /**
-     * Save Loyalty Rule
-     * TODO: Implement proper rule save logic once API is ready
-     */
-    public function save_rule()
-    {
-        $this->session->set_flashdata('info', 'Rule save functionality will be available soon');
-        redirect('admin/loyalty/rules_management');
-    }
-
-    /**
-     * Delete Rule
-     * TODO: Implement proper rule delete logic once API is ready
-     */
-    public function delete_rule($id)
-    {
-        $this->session->set_flashdata('info', 'Rule delete functionality will be available soon');
-        redirect('admin/loyalty/rules_management');
     }
 
     /**
