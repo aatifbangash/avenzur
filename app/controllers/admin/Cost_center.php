@@ -152,7 +152,7 @@ class Cost_center extends MY_Controller {
 
             // Validate pharmacy exists
             if (!$this->cost_center->pharmacy_exists($pharmacy_id)) {
-                show_error('Pharmacy not found', 404);
+                show_error('Pharmacy not found!', 404);
             }
              
             $period = $this->input->get('period') ?: date('Y-m');
