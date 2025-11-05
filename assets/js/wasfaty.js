@@ -35,6 +35,19 @@ var WasfatyModule = (function ($) {
 	function bindEvents() {
 		console.log("=== bindEvents called ===");
 
+		// Prevent modal from closing during operations
+		$("#wasfatyModal").on("hide.bs.modal", function (e) {
+			console.log("⚠️ Modal trying to close - checking if allowed");
+			// Only allow closing if we're not processing
+			if (window.wasfatyProcessing === true) {
+				console.log("❌ BLOCKING modal close - operation in progress");
+				e.preventDefault();
+				e.stopPropagation();
+				return false;
+			}
+			console.log("✅ Allowing modal to close");
+		});
+
 		// Intercept Wasfaty button click to configure modal properly
 		$(document).on("click", "#wasfaty-btn", function (e) {
 			console.log("Wasfaty button clicked");
@@ -54,7 +67,7 @@ var WasfatyModule = (function ($) {
 			e.preventDefault();
 			e.stopPropagation();
 			e.stopImmediatePropagation();
-			
+
 			console.log("Calling fetchPrescription from form submit");
 			fetchPrescription();
 			return false;
@@ -66,7 +79,7 @@ var WasfatyModule = (function ($) {
 			e.preventDefault();
 			e.stopPropagation();
 			e.stopImmediatePropagation();
-			
+
 			console.log("Calling fetchPrescription from button click");
 			fetchPrescription();
 			return false;
@@ -104,10 +117,14 @@ var WasfatyModule = (function ($) {
 	function fetchPrescription() {
 		console.log("=== fetchPrescription called ===");
 
+		// Set processing flag to prevent modal from closing
+		window.wasfatyProcessing = true;
+
 		// Check if site variable exists
 		if (typeof site === "undefined" || !site.url) {
 			console.error("❌ Site URL not defined!");
 			showError("System error: Base URL not configured");
+			window.wasfatyProcessing = false;
 			return;
 		}
 
@@ -120,12 +137,14 @@ var WasfatyModule = (function ($) {
 		if (!validatePhone(patientPhone)) {
 			console.log("Phone validation failed");
 			showError("Invalid phone number. Must be 10 digits starting with 05");
+			window.wasfatyProcessing = false;
 			return;
 		}
 
 		if (!validatePrescriptionCode(prescriptionCode)) {
 			console.log("Prescription code validation failed");
 			showError("Invalid prescription code. Must be 6 digits");
+			window.wasfatyProcessing = false;
 			return;
 		}
 
@@ -153,6 +172,9 @@ var WasfatyModule = (function ($) {
 				console.log("=== AJAX success ===", response);
 				hideLoading();
 
+				// Clear processing flag
+				window.wasfatyProcessing = false;
+
 				if (response.success) {
 					console.log("Response successful - showing prescription details");
 					currentPrescription = response.prescription;
@@ -172,6 +194,9 @@ var WasfatyModule = (function ($) {
 				hideLoading();
 				showError("Network error. Please try again.");
 				showEmptyState();
+
+				// Clear processing flag
+				window.wasfatyProcessing = false;
 			},
 		});
 	}

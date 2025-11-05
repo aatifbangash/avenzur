@@ -232,85 +232,24 @@ $(document).ready(function () {
 
 	// If there is any item in localStorage
 	if (localStorage.getItem("positems")) {
-		loadItems();
-	}
-
-    // If there is any item in localStorage
-    if (localStorage.getItem('positems')) {
-        try {
-            loadItems();
-        } catch (error) {
-            console.error("Error loading items from localStorage:", error);
-            console.warn("Clearing corrupted localStorage data...");
-            // Clear corrupted data
-            localStorage.removeItem('positems');
-            localStorage.removeItem('posdiscount');
-            localStorage.removeItem('posorderdata');
-            // Reload page to start fresh
-            bootbox.alert("Cart data was corrupted and has been cleared. Page will reload.", function() {
-                location.reload();
-            });
-        }
-    }
-
-								$("#modal-loading").show();
-								window.location.href = site.base_url + "pos";
-							} else {
-								bootbox.alert("Wrong Pin Code");
-							}
-						},
-					},
-				},
-			});
-		} else {
-			bootbox.confirm(lang.r_u_sure, function (result) {
-				if (result) {
-					if (localStorage.getItem("positems")) {
-						localStorage.removeItem("positems");
-					}
-					if (localStorage.getItem("posdiscount")) {
-						localStorage.removeItem("posdiscount");
-					}
-					if (localStorage.getItem("postax2")) {
-						localStorage.removeItem("postax2");
-					}
-					if (localStorage.getItem("posshipping")) {
-						localStorage.removeItem("posshipping");
-					}
-					if (localStorage.getItem("posref")) {
-						localStorage.removeItem("posref");
-					}
-					if (localStorage.getItem("poswarehouse")) {
-						localStorage.removeItem("poswarehouse");
-					}
-					if (localStorage.getItem("posnote")) {
-						localStorage.removeItem("posnote");
-					}
-					if (localStorage.getItem("posinnote")) {
-						localStorage.removeItem("posinnote");
-					}
-					if (localStorage.getItem("poscustomer")) {
-						localStorage.removeItem("poscustomer");
-					}
-					if (localStorage.getItem("poscurrency")) {
-						localStorage.removeItem("poscurrency");
-					}
-					if (localStorage.getItem("posdate")) {
-						localStorage.removeItem("posdate");
-					}
-					if (localStorage.getItem("posstatus")) {
-						localStorage.removeItem("posstatus");
-					}
-					if (localStorage.getItem("posbiller")) {
-						localStorage.removeItem("posbiller");
-					}
-
-					$("#modal-loading").show();
-					window.location.href = site.base_url + "pos";
+		try {
+			loadItems();
+		} catch (error) {
+			console.error("Error loading items from localStorage:", error);
+			console.warn("Clearing corrupted localStorage data...");
+			// Clear corrupted data
+			localStorage.removeItem("positems");
+			localStorage.removeItem("posdiscount");
+			localStorage.removeItem("posorderdata");
+			// Reload page to start fresh
+			bootbox.alert(
+				"Cart data was corrupted and has been cleared. Page will reload.",
+				function () {
+					location.reload();
 				}
-			});
+			);
 		}
-	});
+	}
 
 	// save and load the fields in and/or from localStorage
 
@@ -1310,22 +1249,42 @@ function loadItems() {
 		let new_grand_cost_goods_sold = new Decimal(0);
 		let net_sale_calculated = new Decimal(0);
 
-        $.each(sortedItems, function () {
-            var item = this;
-            // Skip invalid items
-            if (!item || !item.row || item.row.price === undefined || item.row.qty === undefined) {
-                console.warn("Skipping invalid item in cart:", item);
-                return true; // continue to next item
-            }
-            const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(2, Decimal.ROUND_DOWN);
-            let sale_price = toTwoDecimals(item.row.price);
-            let total_quantity = new Decimal(item.row.qty);
-            // Update net_sale_calculated with the result of plus()
-            net_sale_calculated = net_sale_calculated.plus(toTwoDecimals(sale_price.times(total_quantity)));
-        });
+		$.each(sortedItems, function () {
+			var item = this;
+			// Skip invalid items
+			if (
+				!item ||
+				!item.row ||
+				item.row.price === undefined ||
+				item.row.qty === undefined
+			) {
+				console.warn("Skipping invalid item in cart:", item);
+				return true; // continue to next item
+			}
+			const toTwoDecimals = (value) =>
+				new Decimal(value).toDecimalPlaces(2, Decimal.ROUND_DOWN);
+			let sale_price = toTwoDecimals(item.row.price);
+			let total_quantity = new Decimal(item.row.qty);
+			// Update net_sale_calculated with the result of plus()
+			net_sale_calculated = net_sale_calculated.plus(
+				toTwoDecimals(sale_price.times(total_quantity))
+			);
+		});
 
 		$.each(sortedItems, function () {
 			var item = this;
+
+			// Skip invalid items - same validation as first loop
+			if (
+				!item ||
+				!item.row ||
+				item.row.price === undefined ||
+				item.row.qty === undefined
+			) {
+				console.warn("Skipping invalid item in main processing:", item);
+				return true; // continue to next item
+			}
+
 			if ((posdiscount = localStorage.getItem("posdiscount"))) {
 				var ds = posdiscount;
 
