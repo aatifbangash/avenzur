@@ -26,7 +26,7 @@ $db_config = [
     'host' => getenv('DB_HOST') ?: 'localhost',
     'user' => getenv('DB_USER') ?: 'admin',
     'password' => getenv('DB_PASSWORD') ?: 'R00tr00t',
-    'database' => getenv('DB_NAME') ?: 'rawabi_jeddah',
+    'database' => getenv('DB_NAME') ?: 'demo',
 ];
 
 try {

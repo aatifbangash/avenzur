@@ -687,8 +687,8 @@
         <!-- Cost Breakdown Chart -->
         <div class="chart-container">
             <div class="chart-header">
-                <h3 class="chart-title">Cost Breakdown by Branch</h3>
-                <p class="chart-subtitle">Cost category distribution</p>
+                <h3 class="chart-title">Cost Breakdown by Pharmacy</h3>
+                <p class="chart-subtitle">Revenue, COGS & Profit comparison</p>
             </div>
             <div id="costBreakdownChart" class="chart-content"></div>
         </div>
@@ -1259,10 +1259,8 @@ function renderKPICards() {
     console.log('renderKPICards - Summary data:', summary);
     console.log('renderKPICards - Margins data:', margins);
 
-    // Use selected margin mode (net or gross)
-    const marginValue = marginDisplayMode === 'net' 
-        ? (margins.net_margin || 0) 
-        : (margins.gross_margin || 0);
+    // Use profit margin from summary data (already calculated correctly)
+    const marginValue = summary.kpi_profit_margin_pct || 0;
     
     // Calculate profit trend - use margin trend if available, otherwise calculate from summary
     const profitTrend = summary.profit_trend_pct || summary.margin_trend_pct || 0;
@@ -1290,7 +1288,7 @@ function renderKPICards() {
             color: 'green'
         },
         {
-            label: marginDisplayMode === 'net' ? 'Net Profit Margin' : 'Gross Profit Margin',
+            label: 'Net Profit Margin',
             value: marginValue,
             trend: summary.margin_trend_pct || 0,
             icon: '📊',
@@ -1526,44 +1524,32 @@ function renderCostBreakdownChart() {
     
     const chart = echarts.init(chartDom);
     const pharmacies = dashboardData.pharmacies || [];
-    const margins = dashboardData.margins || {};
-
-    // Use real cost data from margins if available
-    const hasRealData = margins.cogs && margins.inventory_movement && margins.operational_cost;
     
     let categoryData = [];
+    let revenueData = [];
     let cogsData = [];
-    let movementData = [];
-    let operationalData = [];
+    let profitData = [];
 
-    if (hasRealData && pharmacies.length > 0) {
-        // Use real pharmacy data
-        categoryData = pharmacies.slice(0, 5).map(p => (p.pharmacy_name || 'N/A').substring(0, 15));
+    if (pharmacies && pharmacies.length > 0) {
+        // Use real pharmacy data - top 10 by revenue
+        const topPharmacies = pharmacies
+            .sort((a, b) => (b.kpi_total_revenue || 0) - (a.kpi_total_revenue || 0))
+            .slice(0, 10);
         
-        // Create proportional cost breakdown for each pharmacy
-        pharmacies.slice(0, 5).forEach(p => {
-            const revenue = p.kpi_total_revenue || 0;
-            if (revenue > 0) {
-                // Estimate costs based on margins and revenue
-                const cogs = (margins.cogs / (margins.revenue || 1)) * revenue;
-                const movement = (margins.inventory_movement / (margins.revenue || 1)) * revenue;
-                const operational = (margins.operational_cost / (margins.revenue || 1)) * revenue;
-                
-                cogsData.push(cogs);
-                movementData.push(movement);
-                operationalData.push(operational);
-            } else {
-                cogsData.push(0);
-                movementData.push(0);
-                operationalData.push(0);
-            }
+        categoryData = topPharmacies.map(p => {
+            const name = p.pharmacy_name || 'N/A';
+            return name.length > 20 ? name.substring(0, 20) + '...' : name;
         });
+        
+        revenueData = topPharmacies.map(p => p.kpi_total_revenue || 0);
+        cogsData = topPharmacies.map(p => p.kpi_total_cost || 0); // This is COGS
+        profitData = topPharmacies.map(p => p.kpi_profit_loss || 0);
     } else {
-        // Fallback to sample data
-        categoryData = ['Pharmacy 1', 'Pharmacy 2', 'Pharmacy 3', 'Pharmacy 4', 'Pharmacy 5'];
-        cogsData = [100000, 90000, 80000, 95000, 110000];
-        movementData = [15000, 12000, 14000, 13000, 16000];
-        operationalData = [5000, 6000, 5000, 7000, 8000];
+        // No data available
+        categoryData = ['No data'];
+        revenueData = [0];
+        cogsData = [0];
+        profitData = [0];
     }
 
     const option = {
@@ -1573,21 +1559,29 @@ function renderCostBreakdownChart() {
             formatter: (params) => {
                 if (!params || params.length === 0) return '';
                 let html = `<div style="padding: 8px;"><strong>${params[0].name}</strong><br/>`;
+                let total = 0;
                 params.forEach(param => {
                     html += `${param.seriesName}: <strong>${formatCurrency(param.value, false, 0)}</strong><br/>`;
+                    total += param.value || 0;
                 });
+                html += `<hr style="margin: 4px 0; border-color: #ddd;">`;
+                html += `Total: <strong>${formatCurrency(total, false, 0)}</strong>`;
                 html += '</div>';
                 return html;
             }
         },
         legend: {
-            data: ['COGS', 'Movement', 'Operational'],
+            data: ['Revenue', 'COGS', 'Profit'],
             top: 0
         },
         xAxis: { 
             type: 'category', 
             data: categoryData,
-            axisLabel: { rotate: 45, fontSize: 11 }
+            axisLabel: { 
+                rotate: 45, 
+                fontSize: 10,
+                interval: 0
+            }
         },
         yAxis: { 
             type: 'value',
@@ -1595,28 +1589,28 @@ function renderCostBreakdownChart() {
         },
         series: [
             {
+                name: 'Revenue',
+                data: revenueData,
+                type: 'bar',
+                itemStyle: { color: COLORS.primary },
+                emphasis: { focus: 'series' }
+            },
+            {
                 name: 'COGS',
                 data: cogsData,
                 type: 'bar',
-                stack: 'total',
-                itemStyle: { color: COLORS.error }
+                itemStyle: { color: COLORS.error },
+                emphasis: { focus: 'series' }
             },
             {
-                name: 'Movement',
-                data: movementData,
+                name: 'Profit',
+                data: profitData,
                 type: 'bar',
-                stack: 'total',
-                itemStyle: { color: COLORS.warning }
-            },
-            {
-                name: 'Operational',
-                data: operationalData,
-                type: 'bar',
-                stack: 'total',
-                itemStyle: { color: COLORS.secondary }
+                itemStyle: { color: COLORS.success },
+                emphasis: { focus: 'series' }
             }
         ],
-        grid: { left: 60, right: 20, top: 60, bottom: 80, containLabel: true }
+        grid: { left: 70, right: 20, top: 60, bottom: 100, containLabel: true }
     };
 
     chart.setOption(option);
