@@ -37,6 +37,14 @@ class Loyalty extends MY_Controller
     }
 
     /**
+     * Loyalty Dashboard (Alias to index for menu link compatibility)
+     */
+    public function dashboard()
+    {
+        $this->index();
+    }
+
+    /**
      * Loyalty Rules Management
      */
     public function rules()
@@ -82,6 +90,24 @@ class Loyalty extends MY_Controller
         ];
         $meta = ['page_title' => lang('Budget Management'), 'bc' => $bc];
         $this->page_construct('loyalty/budget', $meta, $this->data);
+    }
+
+    /**
+     * Budget Allocation - Allocate budgets from parent to children hierarchy
+     */
+    public function budget_allocation()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['company_id'] = $this->loyalty_model->getCompanyId();
+
+        $bc = [
+            ['link' => admin_url(), 'page' => lang('home')],
+            ['link' => admin_url('loyalty'), 'page' => lang('Loyalty')],
+            ['link' => admin_url('loyalty/budget_definition'), 'page' => lang('Budget Definition')],
+            ['link' => '#', 'page' => lang('Budget Allocation')]
+        ];
+        $meta = ['page_title' => lang('Budget Allocation'), 'bc' => $bc];
+        $this->page_construct('loyalty/budget_allocation', $meta, $this->data);
     }
 
     /**
@@ -589,5 +615,163 @@ class Loyalty extends MY_Controller
                 'message' => 'Error: ' . $e->getMessage()
             ]);
         }
+    }
+
+    /**
+     * Budget Definition View
+     */
+    public function budget_definition()
+    {
+        $this->data['allocations'] = $this->loyalty_model->getAllBudgetAllocations();
+        $this->data['summary'] = $this->loyalty_model->getBudgetSummary('company', 1);
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['company_id'] = $this->loyalty_model->getCompanyId();
+        $bc = [
+            ['link' => admin_url(), 'page' => lang('home')],
+            ['link' => admin_url('loyalty'), 'page' => lang('Loyalty')],
+            ['link' => '#', 'page' => lang('Budget Definition')]
+        ];
+        $meta = ['page_title' => lang('Budget Definition'), 'bc' => $bc];
+        $this->page_construct('loyalty/budget_definition', $meta, $this->data);
+    }
+
+    /**
+     * Save Budget Allocation
+     * TODO: Implement proper budget allocation save logic once API is ready
+     */
+    public function save_budget()
+    {
+        // For now, just redirect back to budget_definition
+        $this->session->set_flashdata('info', 'Budget save functionality will be available soon');
+        redirect('admin/loyalty/budget_definition');
+    }
+
+    /**
+     * Budget Distribution View
+     */
+    public function budget_distribution($allocationId = null)
+    {
+        // Use sample data from model
+        $this->data['allocations'] = $this->loyalty_model->getAllBudgetAllocations();
+        $this->data['distributions'] = $this->loyalty_model->getPharmacyBreakdown('month');
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        
+                $bc = [
+            ['link' => admin_url(), 'page' => lang('home')],
+            ['link' => admin_url('loyalty'), 'page' => lang('Loyalty')],
+            ['link' => '#', 'page' => lang('Budget Distribution')]
+        ];
+        $meta = ['page_title' => lang('Budget Distribution'), 'bc' => $bc];
+        $this->page_construct('loyalty/budget_distribution', $meta, $this->data);
+    }
+
+    /**
+     * Save Budget Distribution
+     * TODO: Implement proper distribution save logic once API is ready
+     */
+    public function save_distribution()
+    {
+        if (!$this->input->is_ajax_request()) {
+            $this->sma->send_json(['success' => false, 'message' => 'Invalid request']);
+            return;
+        }
+
+        // For now, just return success
+        $this->sma->send_json(['success' => true, 'message' => 'Distribution save functionality will be available soon']);
+    }
+
+    /**
+     * Rules Management View
+     */
+    public function rules_management()
+    {
+        // Display sample rules data
+        $this->data['rules'] = [
+            ['id' => 1, 'rule_name' => 'Loyalty Points 5%', 'rule_code' => 'POINTS_5', 'rule_type' => 'loyalty_points', 'priority' => 1, 'status' => 'active'],
+            ['id' => 2, 'rule_name' => 'Seasonal Discount', 'rule_code' => 'SEASONAL', 'rule_type' => 'promotion_discount', 'priority' => 2, 'status' => 'active'],
+        ];
+        $this->data['warehouses'] = $this->db->get('sma_warehouses')->result_array();
+        $this->data['loyalty_stages'] = [];
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        
+        $bc = [
+            ['link' => admin_url(), 'page' => lang('home')],
+            ['link' => admin_url('loyalty'), 'page' => lang('Loyalty')],
+            ['link' => '#', 'page' => lang('Rules Management')]
+        ];
+        $meta = ['page_title' => lang('Rules Management'), 'bc' => $bc];
+        $this->page_construct('loyalty/rules_management', $meta, $this->data);
+    }
+
+    /**
+     * Save Loyalty Rule
+     * TODO: Implement proper rule save logic once API is ready
+     */
+    public function save_rule()
+    {
+        $this->session->set_flashdata('info', 'Rule save functionality will be available soon');
+        redirect('admin/loyalty/rules_management');
+    }
+
+    /**
+     * Delete Rule
+     * TODO: Implement proper rule delete logic once API is ready
+     */
+    public function delete_rule($id)
+    {
+        $this->session->set_flashdata('info', 'Rule delete functionality will be available soon');
+        redirect('admin/loyalty/rules_management');
+    }
+
+    /**
+     * Burn Rate Dashboard
+     */
+    public function burn_rate()
+    {
+        $period = $this->input->get('period') ?? 'week';
+
+        $this->data['summary'] = $this->loyalty_model->getBurnRateSummary($period);
+        $this->data['daily_burn_data'] = $this->loyalty_model->getDailyBurnTrendData($period);
+        $this->data['burn_rate_trend'] = $this->loyalty_model->getBurnRateTrendData($period);
+        $this->data['pharmacy_breakdown'] = $this->loyalty_model->getPharmacyBreakdown($period);
+        $this->data['forecast_data'] = $this->loyalty_model->getForecastData($period);
+        $this->data['alerts'] = $this->loyalty_model->getActiveAlerts();
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        
+        $bc = [
+            ['link' => admin_url(), 'page' => lang('home')],
+            ['link' => admin_url('loyalty'), 'page' => lang('Loyalty')],
+            ['link' => '#', 'page' => lang('Burn Rate Dashboard')]
+        ];
+        $meta = ['page_title' => lang('Burn Rate Dashboard'), 'bc' => $bc];
+        $this->page_construct('loyalty/burn_rate_dashboard', $meta, $this->data);
+    }
+
+    /**
+     * Pharmacy Detail View
+     */
+    public function pharmacy_detail($pharmacyId = null)
+    {
+        if (!$pharmacyId) {
+            redirect('admin/loyalty/burn_rate');
+        }
+
+        $this->data['pharmacy'] = $this->db->where('id', $pharmacyId)->get('sma_warehouses')->row_array();
+        if (!$this->data['pharmacy']) {
+            $this->session->set_flashdata('error', 'Pharmacy not found');
+            redirect('admin/loyalty/burn_rate');
+        }
+
+        $this->data['spending_history'] = $this->loyalty_model->getPharmacySpendingHistory($pharmacyId);
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        
+        $bc = [
+            ['link' => admin_url(), 'page' => lang('home')],
+            ['link' => admin_url('loyalty'), 'page' => lang('Loyalty')],
+            ['link' => admin_url('loyalty/burn_rate'), 'page' => lang('Burn Rate Dashboard')],
+            ['link' => '#', 'page' => $this->data['pharmacy']['warehouse_name']]
+        ];
+        $meta = ['page_title' => $this->data['pharmacy']['warehouse_name'], 'bc' => $bc];
+        $this->page_construct('loyalty/pharmacy_detail', $meta, $this->data);
     }
 }

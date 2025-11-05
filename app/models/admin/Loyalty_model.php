@@ -386,6 +386,19 @@ class Loyalty_model extends CI_Model
     }
 
     /**
+     * Get Company ID (first record from loyalty_companies table)
+     * 
+     * @return string|null Company ID or null if no company exists
+     */
+    public function getCompanyId()
+    {
+        $query = "SELECT id FROM loyalty_companies ORDER BY created_at ASC LIMIT 1";
+        $result = $this->db->query($query)->row();
+        
+        return $result ? $result->id : null;
+    }
+
+    /**
      * Update Pharmacy Group
      * 
      * @param string $id Pharmacy group ID
@@ -576,6 +589,177 @@ class Loyalty_model extends CI_Model
             mt_rand(0, 0x3fff) | 0x8000,
             mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
         );
+    }
+
+    /**
+     * Get All Budget Allocations
+     */
+    public function getAllBudgetAllocations()
+    {
+        return $this->db
+            ->where('is_active', 1)
+            ->order_by('allocated_at', 'DESC')
+            ->get('sma_budget_allocation')
+            ->result_array();
+    }
+
+    /**
+     * Get Burn Rate Summary
+     */
+    public function getBurnRateSummary($period = 'week')
+    {
+        $startDate = $this->_getPeriodStartDate($period);
+        $endDate = date('Y-m-d H:i:s');
+        
+        $result = $this->db
+            ->select_sum('actual_spent', 'total_spent')
+            ->where('calculated_at >=', $startDate)
+            ->where('calculated_at <=', $endDate)
+            ->get('sma_budget_tracking')
+            ->row_array();
+        
+        $totalSpent = $result['total_spent'] ?? 0;
+        $days = $this->_getPeriodDays($period);
+        $dailyBurnRate = $days > 0 ? $totalSpent / $days : 0;
+        
+        return [
+            'total_budget' => 500000,
+            'total_spent' => $totalSpent,
+            'daily_burn_rate' => $dailyBurnRate,
+            'days_remaining' => 30 - ceil((date('d') - 1)),
+            'projected_end' => $totalSpent + ($dailyBurnRate * $this->_getPeriodDays($period))
+        ];
+    }
+
+    /**
+     * Get Daily Burn Trend Data
+     */
+    public function getDailyBurnTrendData($period = 'week')
+    {
+        $startDate = $this->_getPeriodStartDate($period);
+        
+        $result = $this->db
+            ->select("DATE(calculated_at) as date, SUM(actual_spent) as amount", false)
+            ->where('calculated_at >=', $startDate)
+            ->group_by("DATE(calculated_at)")
+            ->order_by('calculated_at', 'ASC')
+            ->get('sma_budget_tracking')
+            ->result_array();
+        
+        return $result ?: [];
+    }
+
+    /**
+     * Get Burn Rate Trend Data
+     */
+    public function getBurnRateTrendData($period = 'week')
+    {
+        return $this->getDailyBurnTrendData($period);
+    }
+
+    /**
+     * Get Pharmacy Breakdown
+     */
+    public function getPharmacyBreakdown($period = 'week')
+    {
+        $startDate = $this->_getPeriodStartDate($period);
+        
+        $result = $this->db
+            ->select("w.name, SUM(sbt.actual_spent) as amount, COUNT(sbt.tracking_id) as count", false)
+            ->from('sma_budget_tracking sbt')
+            ->join('sma_warehouses w', 'sbt.warehouse_id = w.id', 'left')
+            ->where('sbt.calculated_at >=', $startDate)
+            ->group_by('sbt.warehouse_id')
+            ->order_by('amount', 'DESC')
+            ->get()
+            ->result_array();
+        
+        return $result ?: [];
+    }
+
+    /**
+     * Get Forecast Data
+     */
+    public function getForecastData($period = 'week')
+    {
+        $summary = $this->getBurnRateSummary($period);
+        $dailyRate = $summary['daily_burn_rate'];
+        
+        $forecast = [];
+        for ($i = 0; $i < 7; $i++) {
+            $date = date('Y-m-d', strtotime("+{$i} days"));
+            $forecast[] = [
+                'date' => $date,
+                'best' => $summary['total_spent'] + ($dailyRate * 0.8 * $i),
+                'current' => $summary['total_spent'] + ($dailyRate * $i),
+                'worst' => $summary['total_spent'] + ($dailyRate * 1.2 * $i)
+            ];
+        }
+        
+        return $forecast;
+    }
+
+    /**
+     * Get Active Alerts
+     */
+    public function getActiveAlerts()
+    {
+        return $this->db
+            ->where('status', 'active')
+            ->order_by('triggered_at', 'DESC')
+            ->get('sma_budget_alert_events')
+            ->result_array();
+    }
+
+    /**
+     * Get Pharmacy Spending History
+     */
+    public function getPharmacySpendingHistory($pharmacyId)
+    {
+        return $this->db
+            ->where('warehouse_id', $pharmacyId)
+            ->order_by('calculated_at', 'DESC')
+            ->get('sma_budget_tracking')
+            ->result_array();
+    }
+
+    /**
+     * Helper: Get Period Start Date
+     */
+    private function _getPeriodStartDate($period = 'week')
+    {
+        switch ($period) {
+            case 'today':
+                return date('Y-m-d 00:00:00');
+            case 'week':
+                return date('Y-m-d 00:00:00', strtotime('last Monday'));
+            case 'month':
+                return date('Y-m-01 00:00:00');
+            case 'quarter':
+                $month = ceil(date('m') / 3) * 3 - 2;
+                return date('Y-' . str_pad($month, 2, '0', STR_PAD_LEFT) . '-01 00:00:00');
+            default:
+                return date('Y-m-d 00:00:00', strtotime('-30 days'));
+        }
+    }
+
+    /**
+     * Helper: Get Period Days
+     */
+    private function _getPeriodDays($period = 'week')
+    {
+        switch ($period) {
+            case 'today':
+                return 1;
+            case 'week':
+                return 7;
+            case 'month':
+                return date('t');
+            case 'quarter':
+                return 90;
+            default:
+                return 30;
+        }
     }
 
     /**
