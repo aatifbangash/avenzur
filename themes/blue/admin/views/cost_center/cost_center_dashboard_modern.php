@@ -735,6 +735,38 @@
         </div>
     </div>
 
+    <!-- Branch Data Table -->
+    <div class="table-section" style="margin-top: 30px;">
+        <div class="table-header-bar">
+            <h3 class="table-title">All Branches Performance</h3>
+            <div class="table-actions">
+                <input type="text" id="branchTableSearch" class="horizon-select-group" placeholder="Search branches..." style="margin: 0;">
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table class="data-table" id="branchTable">
+                <thead>
+                    <tr>
+                        <th onclick="sortBranchTable('branch_name')">Branch <span class="sort-indicator">⇅</span></th>
+                        <th onclick="sortBranchTable('pharmacy_name')">Pharmacy <span class="sort-indicator">⇅</span></th>
+                        <th onclick="sortBranchTable('kpi_total_revenue')">Revenue <span class="sort-indicator">⇅</span></th>
+                        <th onclick="sortBranchTable('kpi_total_cost')">Cost <span class="sort-indicator">⇅</span></th>
+                        <th onclick="sortBranchTable('kpi_profit_loss')">Profit <span class="sort-indicator">⇅</span></th>
+                        <th onclick="sortBranchTable('kpi_profit_margin_pct')">Margin % <span class="sort-indicator">⇅</span></th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="branchTableBody">
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px;">
+                            <i class="fa fa-spinner fa-spin"></i> Loading data...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <!-- SECTION 1: Company-Level Summary Metrics -->
     <div style="margin-top: 40px; padding-bottom: 20px;">
         <h2 style="font-size: 20px; font-weight: 700; color: #111111; margin-bottom: 20px;">
@@ -825,6 +857,8 @@ let marginDisplayMode = 'net'; // 'gross' or 'net'
 
 let tableData = [...dashboardData.pharmacies];
 let currentSort = { column: 'kpi_total_revenue', direction: 'DESC' };
+let branchTableData = [...(dashboardData.branches || [])];
+let currentBranchSort = { column: 'kpi_total_revenue', direction: 'DESC' };
 let productTableData = [...(dashboardData.bestProducts || [])];
 let productSort = { column: 'total_units_sold', direction: 'DESC' };
 
@@ -863,14 +897,49 @@ function initializeDashboard() {
         console.log('Step 4: Rendering charts');
         renderCharts();
         
-        console.log('Step 5: Rendering table');
+        console.log('Step 5: Rendering pharmacy table');
         renderTable();
+        
+        console.log('Step 6: Rendering branch table');
+        renderBranchTable();
+        
+        console.log('Step 7: Setting up search handlers');
+        setupSearchHandlers();
         
         console.log('Dashboard initialized successfully');
     } catch (error) {
         console.error('Error in initializeDashboard:', error);
         console.error('Stack:', error.stack);
         throw error;
+    }
+}
+
+function setupSearchHandlers() {
+    // Pharmacy table search
+    const pharmacySearch = document.getElementById('tableSearch');
+    if (pharmacySearch) {
+        pharmacySearch.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredData = dashboardData.pharmacies.filter(p => 
+                p.pharmacy_name.toLowerCase().includes(searchTerm)
+            );
+            tableData = filteredData;
+            renderTable();
+        });
+    }
+    
+    // Branch table search
+    const branchSearch = document.getElementById('branchTableSearch');
+    if (branchSearch) {
+        branchSearch.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredData = (dashboardData.branches || []).filter(b => 
+                b.branch_name.toLowerCase().includes(searchTerm) ||
+                (b.pharmacy_name && b.pharmacy_name.toLowerCase().includes(searchTerm))
+            );
+            branchTableData = filteredData;
+            renderBranchTable();
+        });
     }
 }
 
@@ -1710,11 +1779,101 @@ function exportTableToCSV() {
 }
 
 // ============================================================================
+// BRANCH TABLE RENDERING
+// ============================================================================
+
+function renderBranchTable() {
+    try {
+        console.log('Rendering branch table with data:', branchTableData);
+        const tbody = document.getElementById('branchTableBody');
+        
+        if (!tbody) {
+            console.error('Branch table body not found');
+            return;
+        }
+
+        if (!branchTableData || branchTableData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px;">No branch data available</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = branchTableData.map(branch => {
+            try {
+                const revenue = formatCurrency(branch.kpi_total_revenue);
+                const cost = formatCurrency(branch.kpi_total_cost);
+                const profit = formatCurrency(branch.kpi_profit_loss);
+                const margin = (parseFloat(branch.kpi_profit_margin_pct) || 0).toFixed(2) + '%';
+                
+                // Health status badge
+                const healthColor = branch.health_color || '#999999';
+                const healthStatus = branch.health_status || 'Unknown';
+                const healthBadge = `<span style="display: inline-block; background: ${healthColor}; color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">${healthStatus}</span>`;
+                
+                return `
+        <tr class="clickable" onclick="navigateToBranch(${branch.branch_id}, '${dashboardData.currentPeriod}')">
+            <td>
+                <strong>${branch.branch_name}</strong>
+                <div style="margin-top: 4px;">${healthBadge}</div>
+            </td>
+            <td>${branch.pharmacy_name || 'N/A'}</td>
+            <td class="table-currency">${revenue}</td>
+            <td class="table-currency">${cost}</td>
+            <td class="table-currency">${profit}</td>
+            <td class="table-percentage">${margin}</td>
+            <td>
+                <button class="btn-horizon btn-horizon-secondary" style="font-size: 12px;" 
+                    onclick="navigateToBranch(${branch.branch_id}, '${dashboardData.currentPeriod}'); return false;">
+                    View →
+                </button>
+            </td>
+        </tr>
+                `;
+            } catch (error) {
+                console.error('Error rendering row for branch:', branch, error);
+                return `<tr><td colspan="7" style="color: #f34235;">Error rendering row</td></tr>`;
+            }
+        }).join('');
+        
+        console.log('Branch table rendered successfully');
+    } catch (error) {
+        console.error('Error rendering branch table:', error);
+        const tbody = document.getElementById('branchTableBody');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="7" style="color: #f34235; padding: 20px;">Error rendering table: ${error.message}</td></tr>`;
+        }
+    }
+}
+
+function sortBranchTable(column) {
+    if (currentBranchSort.column === column) {
+        currentBranchSort.direction = currentBranchSort.direction === 'ASC' ? 'DESC' : 'ASC';
+    } else {
+        currentBranchSort.column = column;
+        currentBranchSort.direction = 'DESC';
+    }
+
+    branchTableData.sort((a, b) => {
+        const aVal = a[column] || 0;
+        const bVal = b[column] || 0;
+        const comparison = aVal > bVal ? 1 : -1;
+        return currentBranchSort.direction === 'ASC' ? comparison : -comparison;
+    });
+
+    renderBranchTable();
+}
+
+// ============================================================================
 // NAVIGATION
 // ============================================================================
 
 function navigateToPharmacy(pharmacyId, period) {
     const url = new URL('<?php echo admin_url('cost_center/pharmacy'); ?>' + '/' + pharmacyId);
+    url.searchParams.set('period', period);
+    window.location.href = url.toString();
+}
+
+function navigateToBranch(branchId, period) {
+    const url = new URL('<?php echo admin_url('cost_center/branch'); ?>' + '/' + branchId);
     url.searchParams.set('period', period);
     window.location.href = url.toString();
 }
