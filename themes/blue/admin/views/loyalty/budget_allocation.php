@@ -941,25 +941,52 @@
  */
 
 // Sample hierarchy data (would come from backend)
-const hierarchyData = {
-    company: {
-        id: 1,
-        name: 'Avenzur',
-        level: 'company',
-        budget: 500000,
-        period: 'November 2025',
-        children: [
-            { id: 101, name: 'Group A', spending: 50000, transactions: 250 },
-            { id: 102, name: 'Group B', spending: 75000, transactions: 380 },
-            { id: 103, name: 'Group C', spending: 40000, transactions: 150 }
-        ]
-    }
-};
+// Replaced with live API data
+let budgetData = null;
+let pharmaciesData = [];
 
 let currentAllocation = {
     method: 'equal',
     allocations: []
 };
+
+// API Configuration
+const API_BASE_URL = 'http://localhost:3000/api/v1';
+
+/**
+ * Load budget and hierarchy data on page load
+ */
+async function loadBudgetData() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/discounts/budget/config/level/COMPANY`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        console.log('Budget data loaded:', result);
+        
+        if (result && result.length > 0) {
+            budgetData = result[0]; // Get first company budget
+            pharmaciesData = budgetData.children || [];
+            
+            console.log('Pharmacies loaded:', pharmaciesData.length);
+            console.log('Total budget:', budgetData.monthlyLimit);
+        } else {
+            alert('No budget configuration found for company');
+        }
+        
+    } catch (error) {
+        console.error('Error loading budget data:', error);
+        alert('Error loading budget data: ' + error.message + '\n\nMake sure the API server is running on http://localhost:3000');
+    }
+}
 
 /**
  * Switch distribution method - called from button click
@@ -986,11 +1013,25 @@ function switchMethod(method) {
 /**
  * Initialize allocation page
  */
-function initAllocationPage() {
-    console.log('Page initialized');
+async function initAllocationPage() {
+    console.log('Page initialized - loading budget data...');
     
-    // Initial render
-    updateAllocationMethod();
+    try {
+        // Load budget data from API
+        await loadBudgetData();
+        
+        // Check if data was loaded successfully
+        if (!budgetData) {
+            console.error('Failed to load budget data');
+            return;
+        }
+        
+        // Initial render with equal distribution
+        updateAllocationMethod();
+    } catch (error) {
+        console.error('Error initializing page:', error);
+        alert('Failed to initialize the page. Please check the console for details.');
+    }
 }
 
 /**
@@ -998,6 +1039,11 @@ function initAllocationPage() {
  */
 function updateAllocationMethod() {
     try {
+        if (!budgetData || !pharmaciesData.length) {
+            console.log('No budget data available yet');
+            return;
+        }
+
         const method = currentAllocation.method;
         console.log('Distribution method:', method);
         
@@ -1009,61 +1055,54 @@ function updateAllocationMethod() {
             console.log('Debug display updated to:', method);
         }
         
-        const children = hierarchyData.company.children;
-        const parentBudget = hierarchyData.company.budget;
+        const totalBudget = budgetData.monthlyLimit || 0;
         const allocations = [];
 
-    if (method === 'equal') {
-        const perChild = parentBudget / children.length;
-        children.forEach((child, index) => {
-            allocations.push({
-                id: child.id,
-                name: child.name,
-                amount: perChild,
-                percentage: (perChild / parentBudget) * 100
+        if (method === 'equal') {
+            // Equal split among all pharmacies
+            const perPharmacy = totalBudget / pharmaciesData.length;
+            pharmaciesData.forEach((pharmacy) => {
+                allocations.push({
+                    id: pharmacy.id,
+                    name: pharmacy.name,
+                    code: pharmacy.code,
+                    amount: perPharmacy,
+                    percentage: (perPharmacy / totalBudget) * 100,
+                    branches: pharmacy.children || []
+                });
             });
-        });
-    } else if (method === 'spending') {
-        const totalSpending = children.reduce((sum, c) => sum + c.spending, 0);
-        children.forEach(child => {
-            const ratio = child.spending / totalSpending;
-            const amount = parentBudget * ratio;
-            allocations.push({
-                id: child.id,
-                name: child.name,
-                amount: amount,
-                percentage: ratio * 100
+        } else if (method === 'spending' || method === 'sales') {
+            // For now, fall back to equal (would need spending/sales data from API)
+            const perPharmacy = totalBudget / pharmaciesData.length;
+            pharmaciesData.forEach((pharmacy) => {
+                allocations.push({
+                    id: pharmacy.id,
+                    name: pharmacy.name,
+                    code: pharmacy.code,
+                    amount: perPharmacy,
+                    percentage: (perPharmacy / totalBudget) * 100,
+                    branches: pharmacy.children || []
+                });
             });
-        });
-    } else if (method === 'sales') {
-        const totalTransactions = children.reduce((sum, c) => sum + c.transactions, 0);
-        children.forEach(child => {
-            const ratio = child.transactions / totalTransactions;
-            const amount = parentBudget * ratio;
-            allocations.push({
-                id: child.id,
-                name: child.name,
-                amount: amount,
-                percentage: ratio * 100
+        } else if (method === 'custom') {
+            // Start with equal split that can be customized
+            const perPharmacy = totalBudget / pharmaciesData.length;
+            pharmaciesData.forEach((pharmacy) => {
+                allocations.push({
+                    id: pharmacy.id,
+                    name: pharmacy.name,
+                    code: pharmacy.code,
+                    amount: perPharmacy,
+                    percentage: (perPharmacy / totalBudget) * 100,
+                    branches: pharmacy.children || []
+                });
             });
-        });
-    } else if (method === 'custom') {
-        // Start with equal split that can be customized
-        const perChild = parentBudget / children.length;
-        children.forEach(child => {
-            allocations.push({
-                id: child.id,
-                name: child.name,
-                amount: perChild,
-                percentage: (perChild / parentBudget) * 100
-            });
-        });
-    }
+        }
 
-    currentAllocation.allocations = allocations;
-    console.log('Allocations set, calling renderAllocationItems');
-    renderAllocationItems();
-    updateAllocationVisualization();
+        currentAllocation.allocations = allocations;
+        console.log('Allocations set, calling renderAllocationItems');
+        renderAllocationItems();
+        updateAllocationVisualization();
     } catch (error) {
         console.error('ERROR in updateAllocationMethod:', error);
         alert('ERROR: ' + error.message);
@@ -1085,9 +1124,11 @@ function renderAllocationItems() {
     console.log('Allocations count:', currentAllocation.allocations.length);
     
     if (!currentAllocation.allocations.length) {
-        container.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--horizon-light-text);"><i class="fa fa-inbox" style="font-size: 32px; margin-bottom: 12px; display: block;"></i><p>No children to allocate</p></div>';
+        container.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--horizon-light-text);"><i class="fa fa-inbox" style="font-size: 32px; margin-bottom: 12px; display: block;"></i><p>No pharmacies to allocate</p></div>';
         return;
     }
+
+    const totalBudget = budgetData.monthlyLimit || 0;
 
     container.innerHTML = currentAllocation.allocations.map((alloc, index) => {
         const isCustom = method === 'custom';
@@ -1095,21 +1136,32 @@ function renderAllocationItems() {
         const opacityStyle = isCustom ? '1' : '0.5';
         const cursorStyle = isCustom ? 'pointer' : 'not-allowed';
         
+        // Calculate per-branch amount
+        const branchCount = alloc.branches.length || 0;
+        const perBranch = branchCount > 0 ? alloc.amount / branchCount : 0;
+        
         return `
         <div class="allocation-item">
             <div class="allocation-item-info">
-                <div class="allocation-item-name">${alloc.name}</div>
+                <div class="allocation-item-name">
+                    ${alloc.name}
+                    <span style="color: var(--horizon-light-text); font-size: 12px; margin-left: 8px;">
+                        (Code: ${alloc.code})
+                    </span>
+                </div>
                 <div class="allocation-item-details">
-                    <span>Budget: <strong>${formatCurrency(alloc.amount)}</strong></span>
+                    <span>Pharmacy Budget: <strong>${formatCurrency(alloc.amount)}</strong></span>
                     <span>Percentage: <strong>${alloc.percentage.toFixed(2)}%</strong></span>
+                    <span>Branches: <strong>${branchCount}</strong></span>
+                    ${branchCount > 0 ? `<span>Per Branch: <strong>${formatCurrency(perBranch)}</strong></span>` : ''}
                 </div>
             </div>
             <div class="allocation-item-slider">
-                <input type="range" min="0" max="${hierarchyData.company.budget}" value="${alloc.amount}" 
+                <input type="range" min="0" max="${totalBudget}" value="${alloc.amount}" 
                        oninput="updateAllocationAmount(${index}, this.value)"
                        onchange="updateAllocationAmount(${index}, this.value)"
                        ${disabledAttr}
-                       style="opacity: ${opacityStyle}; cursor: ${cursorStyle};">
+                       style="opacity: ${opacityStyle}; cursor: ${cursorStyle}; --value: ${(alloc.amount / totalBudget * 100)}%;">
                 <input type="number" class="allocation-item-input" value="${alloc.amount.toFixed(0)}" 
                        onchange="updateAllocationAmount(${index}, this.value)"
                        oninput="updateAllocationAmount(${index}, this.value)"
@@ -1138,11 +1190,11 @@ function renderAllocationItems() {
  */
 function updateAllocationAmount(index, value) {
     const amount = parseFloat(value) || 0;
-    const parentBudget = hierarchyData.company.budget;
-    const maxAmount = Math.min(amount, parentBudget);
+    const totalBudget = budgetData.monthlyLimit || 0;
+    const maxAmount = Math.min(amount, totalBudget);
     
     currentAllocation.allocations[index].amount = maxAmount;
-    currentAllocation.allocations[index].percentage = (maxAmount / parentBudget) * 100;
+    currentAllocation.allocations[index].percentage = (maxAmount / totalBudget) * 100;
     
     // Update totals without full re-render for better performance
     updateTotals();
@@ -1150,6 +1202,12 @@ function updateAllocationAmount(index, value) {
     
     // Only re-render the specific item's display (not all items)
     updateAllocationItemDisplay(index);
+    
+    // Update the slider's CSS variable for visual feedback
+    const sliders = document.querySelectorAll('input[type="range"]');
+    if (sliders[index]) {
+        sliders[index].style.setProperty('--value', `${(maxAmount / totalBudget * 100)}%`);
+    }
 }
 
 /**
@@ -1160,12 +1218,18 @@ function updateAllocationItemDisplay(index) {
     const item = document.querySelectorAll('.allocation-item')[index];
     
     if (item) {
+        // Calculate per-branch amount
+        const branchCount = alloc.branches.length || 0;
+        const perBranch = branchCount > 0 ? alloc.amount / branchCount : 0;
+        
         // Update the budget amount display
         const details = item.querySelector('.allocation-item-details');
         if (details) {
             details.innerHTML = `
-                <span>Budget: <strong>${formatCurrency(alloc.amount)}</strong></span>
+                <span>Pharmacy Budget: <strong>${formatCurrency(alloc.amount)}</strong></span>
                 <span>Percentage: <strong>${alloc.percentage.toFixed(2)}%</strong></span>
+                <span>Branches: <strong>${branchCount}</strong></span>
+                ${branchCount > 0 ? `<span>Per Branch: <strong>${formatCurrency(perBranch)}</strong></span>` : ''}
             `;
         }
         
@@ -1185,9 +1249,9 @@ function updateAllocationItemDisplay(index) {
  */
 function updateTotals() {
     const totalAllocated = currentAllocation.allocations.reduce((sum, a) => sum + a.amount, 0);
-    const parentBudget = hierarchyData.company.budget;
-    const remaining = parentBudget - totalAllocated;
-    const percentageUsed = (totalAllocated / parentBudget) * 100;
+    const totalBudget = budgetData.monthlyLimit || 0;
+    const remaining = totalBudget - totalAllocated;
+    const percentageUsed = (totalAllocated / totalBudget) * 100;
 
     document.getElementById('total-allocated').textContent = formatCurrency(totalAllocated);
     document.getElementById('total-remaining').textContent = formatCurrency(remaining);
@@ -1195,10 +1259,10 @@ function updateTotals() {
 
     // Update status message
     const statusDiv = document.getElementById('allocation-status-message');
-    if (totalAllocated > parentBudget) {
+    if (totalAllocated > totalBudget) {
         statusDiv.className = 'allocation-status error';
         statusDiv.style.display = 'flex';
-        document.getElementById('status-text').textContent = `Allocation exceeds budget by ${formatCurrency(totalAllocated - parentBudget)}`;
+        document.getElementById('status-text').textContent = `Allocation exceeds budget by ${formatCurrency(totalAllocated - totalBudget)}`;
     } else if (percentageUsed > 90) {
         statusDiv.className = 'allocation-status warning';
         statusDiv.style.display = 'flex';
@@ -1247,6 +1311,7 @@ function updateAllocationVisualization() {
  */
 function previewAllocation() {
     const totalAllocated = currentAllocation.allocations.reduce((sum, a) => sum + a.amount, 0);
+    const totalBudget = budgetData ? budgetData.monthlyLimit || 0 : 0;
     
     if (totalAllocated === 0) {
         alert('Please allocate at least some budget');
@@ -1262,7 +1327,7 @@ function previewAllocation() {
             </div>
             <div class="budget-summary-row">
                 <span class="budget-summary-label">Total to Allocate:</span>
-                <span class="budget-summary-value">${formatCurrency(hierarchyData.company.budget)}</span>
+                <span class="budget-summary-value">${formatCurrency(totalBudget)}</span>
             </div>
             <div class="budget-summary-row">
                 <span class="budget-summary-label">Total Allocated:</span>
@@ -1307,9 +1372,15 @@ function confirmSaveAllocation() {
 }
 
 /**
- * Save allocation
+ * Save allocation - Generate allocation array and POST to API
  */
-function saveAllocation() {
+async function saveAllocation() {
+    if (!budgetData || !currentAllocation.allocations.length) {
+        alert('No allocations to save');
+        return;
+    }
+
+    const totalBudget = budgetData.monthlyLimit || 0;
     const totalAllocated = currentAllocation.allocations.reduce((sum, a) => sum + a.amount, 0);
     
     if (totalAllocated === 0) {
@@ -1317,24 +1388,94 @@ function saveAllocation() {
         return;
     }
 
-    if (totalAllocated > hierarchyData.company.budget) {
+    if (totalAllocated > totalBudget) {
         alert('Total allocation exceeds parent budget. Please adjust allocations.');
         return;
     }
 
-    // Show success message
-    alert('Budget allocation saved successfully! Total allocated: ' + formatCurrency(totalAllocated));
+    // Get current period (YYYY-MM format)
+    const currentDate = new Date();
+    const currentPeriod = currentDate.toISOString().slice(0, 7); // "2025-11"
     
-    // Here you would typically make an API call to save the allocation
-    // Example:
-    // fetch('/api/v1/budgets/allocate', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify({
-    //         method: currentAllocation.method,
-    //         allocations: currentAllocation.allocations
-    //     })
-    // }).then(response => response.json());
+    // Get user ID from PHP session (fallback to 1 if not available)
+    const userId = <?php echo !empty($this->session->userdata('user_id')) ? $this->session->userdata('user_id') : 1; ?>;
+    const userName = "<?php echo !empty($this->session->userdata('username')) ? $this->session->userdata('username') : 'Admin'; ?>";
+    
+    const allocationArray = [];
+    
+    // Loop through each pharmacy allocation
+    currentAllocation.allocations.forEach(pharmacyAlloc => {
+        const branches = pharmacyAlloc.branches || [];
+        const branchCount = branches.length;
+        
+        // Always create pharmacy-level allocation
+        allocationArray.push({
+            hierarchy_level: 'PHARMACY',
+            parent_hierarchy: budgetData.scopeId, // company ID
+            period: currentPeriod, // REQUIRED: current month
+            allocated_amount: pharmacyAlloc.amount,
+            allocation_method: currentAllocation.method,
+            pharmacy_id: pharmacyAlloc.id,
+            allocated_by_user_id: userId, // REQUIRED: user ID from session
+            allocated_by_user_name: userName
+        });
+        
+        // If pharmacy has branches, also create branch-level allocations
+        if (branchCount > 0) {
+            // Split pharmacy allocation equally among branches
+            const perBranch = pharmacyAlloc.amount / branchCount;
+            
+            branches.forEach(branch => {
+                allocationArray.push({
+                    hierarchy_level: 'BRANCH',
+                    parent_hierarchy: pharmacyAlloc.id, // pharmacy ID
+                    period: currentPeriod, // REQUIRED: current month
+                    allocated_amount: perBranch,
+                    allocation_method: currentAllocation.method,
+                    branch_id: branch.id,
+                    allocated_by_user_id: userId, // REQUIRED: user ID from session
+                    allocated_by_user_name: userName
+                });
+            });
+        }
+    });
+    
+    // POST to API endpoint
+    try {
+        const response = await fetch(`${API_BASE_URL}/discounts/budget/allocations/bulk`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                <?php if (!empty($_SESSION['auth_token'])): ?>
+                'Authorization': 'Bearer <?php echo $_SESSION['auth_token']; ?>',
+                <?php endif; ?>
+            },
+            body: JSON.stringify({allocations: allocationArray})
+        });
+
+        const result = await response.json();
+        
+        if (response.ok) {
+            alert(`✓ Budget allocation saved successfully!
+
+Total Allocated: ${formatCurrency(totalAllocated)}
+Method: ${currentAllocation.method}
+Pharmacies: ${currentAllocation.allocations.length}
+Total Records: ${allocationArray.length}
+
+The allocations have been saved to the system.`);
+            
+            // Optionally reload the page or redirect
+            // window.location.reload();
+        } else {
+            const errorMsg = result.message || 'Failed to save allocations';
+            alert('Error: ' + errorMsg);
+            console.error('Server error:', result);
+        }
+    } catch (error) {
+        alert('Network Error: ' + error.message + '\n\nPlease ensure the API server is running on http://localhost:3000');
+        console.error('Request failed:', error);
+    }
 }
 
 /**
@@ -1342,8 +1483,8 @@ function saveAllocation() {
  */
 function resetAllocation() {
     if (confirm('Are you sure you want to reset all allocations?')) {
-        document.getElementById('method-equal').checked = true;
-        updateAllocationMethod();
+        currentAllocation.method = 'equal';
+        switchMethod('equal');
     }
 }
 

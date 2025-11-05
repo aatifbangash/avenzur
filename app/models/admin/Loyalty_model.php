@@ -386,6 +386,19 @@ class Loyalty_model extends CI_Model
     }
 
     /**
+     * Get Company ID (first record from loyalty_companies table)
+     * 
+     * @return string|null Company ID or null if no company exists
+     */
+    public function getCompanyId()
+    {
+        $query = "SELECT id FROM loyalty_companies ORDER BY created_at ASC LIMIT 1";
+        $result = $this->db->query($query)->row();
+        
+        return $result ? $result->id : null;
+    }
+
+    /**
      * Update Pharmacy Group
      * 
      * @param string $id Pharmacy group ID
