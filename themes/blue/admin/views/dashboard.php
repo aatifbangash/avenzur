@@ -44,7 +44,7 @@ function row_status($x)
             <div class="row">
             <?php
             $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
-            echo admin_form_open_multipart('', $attrib)
+            echo admin_form_open_multipart('welcome/quick_search', $attrib)
             ?>
             <div class="col-lg-12">
                 <div class="row">

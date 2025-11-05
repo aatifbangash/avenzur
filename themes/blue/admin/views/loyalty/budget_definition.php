@@ -403,19 +403,19 @@
             <div class="budget-summary">
                 <div class="budget-summary-row">
                     <span class="budget-summary-label">Total Budget Defined:</span>
-                    <span class="budget-summary-value"><?php echo number_format($summary['data']['total_budget'] ?? 0, 2); ?> SAR</span>
+                    <span class="budget-summary-value" id="summary_total">0.00 SAR</span>
                 </div>
                 <div class="budget-summary-row">
                     <span class="budget-summary-label">Budget Spent:</span>
-                    <span class="budget-summary-value"><?php echo number_format($summary['data']['spent'] ?? 0, 2); ?> SAR</span>
+                    <span class="budget-summary-value" id="summary_spent">0.00 SAR</span>
                 </div>
                 <div class="budget-summary-row">
                     <span class="budget-summary-label">Remaining Budget:</span>
-                    <span class="budget-summary-value"><?php echo number_format($summary['data']['available'] ?? 0, 2); ?> SAR</span>
+                    <span class="budget-summary-value" id="summary_remaining">0.00 SAR</span>
                 </div>
                 <div class="budget-summary-row">
                     <span class="budget-summary-label">Utilization:</span>
-                    <span class="budget-summary-value"><?php echo number_format($summary['data']['percentage_used'] ?? 0, 1); ?>%</span>
+                    <span class="budget-summary-value" id="summary_utilization">0.0%</span>
                 </div>
             </div>
         </div>
@@ -438,60 +438,13 @@
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <?php if (!empty($allocations)): ?>
-                        <?php foreach ($allocations as $alloc): ?>
-                            <tr>
-                                <td>
-                                    <span class="badge badge-info">
-                                        <?php echo ucfirst($alloc['period_type'] ?? 'Monthly'); ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <?php 
-                                    if (!empty($alloc['period_year']) && !empty($alloc['period_month'])) {
-                                        echo date('M Y', strtotime($alloc['period_year'] . '-' . str_pad($alloc['period_month'], 2, '0', STR_PAD_LEFT) . '-01')); 
-                                    } else {
-                                        echo 'N/A';
-                                    }
-                                    ?>
-                                </td>
-                                <td style="font-weight: 600; color: var(--horizon-success);">
-                                    <?php echo number_format($alloc['total_allocated_amount'] ?? 0, 2); ?>
-                                </td>
-                                <td><?php echo number_format($alloc['total_allocated'] ?? 0, 2); ?></td>
-                                <td><?php echo number_format($alloc['total_spent'] ?? 0, 2); ?></td>
-                                <td>
-                                    <?php 
-                                    $status = $alloc['status'] ?? 'active';
-                                    $badgeClass = $status === 'active' ? 'badge-success' : 'badge-warning';
-                                    ?>
-                                    <span class="badge <?php echo $badgeClass; ?>">
-                                        <?php echo ucfirst($status); ?>
-                                    </span>
-                                </td>
-                                <td><?php echo htmlspecialchars($alloc['allocated_by_user_name'] ?? 'System'); ?></td>
-                                <td>
-                                    <button class="action-btn" onclick="editBudget(<?php echo htmlspecialchars(json_encode($alloc)); ?>)" title="Edit">
-                                        <i class="fa fa-edit"></i>
-                                    </button>
-                                    <button class="action-btn" onclick="viewDetails(<?php echo $alloc['allocation_id'] ?? 0; ?>)" title="View Details">
-                                        <i class="fa fa-eye"></i>
-                                    </button>
-                                    <button class="action-btn" onclick="archiveBudget(<?php echo $alloc['allocation_id'] ?? 0; ?>)" title="Archive">
-                                        <i class="fa fa-archive"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="8" style="text-align: center; padding: 40px; color: var(--horizon-light-text);">
-                                <i class="fa fa-inbox" style="font-size: 32px; margin-bottom: 12px; display: block;"></i>
-                                <p>No budget definitions found. Click "Define New Budget" to get started.</p>
-                            </td>
-                        </tr>
-                    <?php endif; ?>
+                <tbody id="budgetTableBody">
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px; color: var(--horizon-light-text);">
+                            <i class="fa fa-spinner fa-spin" style="font-size: 32px; margin-bottom: 12px; display: block;"></i>
+                            <p>Loading budget definitions...</p>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -506,8 +459,9 @@
             <button class="modal-close" onclick="closeBudgetModal()">&times;</button>
         </div>
         <div class="modal-body">
-            <form id="budgetForm" action="<?php echo admin_url('loyalty/save_budget'); ?>" method="POST">
-                <div class="form-group">
+            
+            <form id="budgetForm" onsubmit="event.preventDefault(); saveBudget();">
+        <div class="form-group">
                     <label>Budget Level <span style="color: var(--horizon-error);">*</span></label>
                     <select name="hierarchy_level" id="hierarchy_level" required>
                         <option value="company">Company Level</option>
@@ -555,13 +509,31 @@
                     <input type="number" name="period_year" id="period_year" placeholder="Year (e.g., 2025)" value="<?php echo date('Y'); ?>">
                 </div>
 
+             
+
                 <div class="form-group">
-                    <label>Budget Amount (SAR) <span style="color: var(--horizon-error);">*</span></label>
-                    <input type="number" name="budget_amount" id="budget_amount" placeholder="Enter budget amount" step="0.01" min="0" required>
-                    <small style="color: var(--horizon-light-text); font-size: 11px;">
-                        <i class="fa fa-info-circle"></i> Enter the total budget allocation for the selected period
-                    </small>
-                </div>
+    <label>Budget Amount (SAR) <span style="color: var(--horizon-error);">*</span></label>
+    <input type="number" name="budget_amount" id="budget_amount" placeholder="Enter budget amount" step="0.01" min="0" required oninput="previewLimits()">
+    <small style="color: var(--horizon-light-text); font-size: 11px;">
+        <i class="fa fa-info-circle"></i> Enter the total budget allocation for the selected period
+    </small>
+</div>
+
+<!-- Budget Preview -->
+<div class="budget-summary" id="budgetPreview" style="display: none;">
+    <div class="budget-summary-row">
+        <span class="budget-summary-label">Daily Limit:</span>
+        <span class="budget-summary-value" id="preview_daily">0 SAR</span>
+    </div>
+    <div class="budget-summary-row">
+        <span class="budget-summary-label">Weekly Limit:</span>
+        <span class="budget-summary-value" id="preview_weekly">0 SAR</span>
+    </div>
+    <div class="budget-summary-row">
+        <span class="budget-summary-label">Monthly Limit:</span>
+        <span class="budget-summary-value" id="preview_monthly">0 SAR</span>
+    </div>
+</div>
 
                 <div class="form-group">
                     <label>Description (Optional)</label>
@@ -578,8 +550,185 @@
     </div>
 </div>
 
+
 <script>
-// Period selection
+// API Configuration
+const API_BASE_URL = 'http://localhost:3000/api/v1';
+const COMPANY_ID = '<?php echo isset($company_id) ? $company_id : ''; ?>';
+
+// Load budget data on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadBudgetDefinitions();
+});
+
+// Fetch and display budget definitions
+async function loadBudgetDefinitions() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/discounts/budget/config/level/COMPANY`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                <?php if (!empty($_SESSION['auth_token'])): ?>
+                'Authorization': 'Bearer <?php echo $_SESSION['auth_token']; ?>',
+                <?php endif; ?>
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        console.log('Budget data loaded:', result);
+        
+        // Update summary
+        updateBudgetSummary(result);
+        
+        // Populate table
+        populateBudgetTable(result);
+        
+    } catch (error) {
+        console.error('Error loading budgets:', error);
+        showEmptyState('Error loading budget data: ' + error.message);
+    }
+}
+
+// Update budget summary cards
+function updateBudgetSummary(budget) {
+    if (budget) {
+        const totalBudget = budget.monthlyLimit || 0;
+        const spent = 0; // TODO: Get actual spent amount from API
+        const remaining = totalBudget - spent;
+        const utilization = totalBudget > 0 ? (spent / totalBudget) * 100 : 0;
+        
+        document.getElementById('summary_total').textContent = totalBudget.toLocaleString('en-US', { minimumFractionDigits: 2 }) + ' SAR';
+        document.getElementById('summary_spent').textContent = spent.toLocaleString('en-US', { minimumFractionDigits: 2 }) + ' SAR';
+        document.getElementById('summary_remaining').textContent = remaining.toLocaleString('en-US', { minimumFractionDigits: 2 }) + ' SAR';
+        document.getElementById('summary_utilization').textContent = utilization.toFixed(1) + '%';
+    }
+}
+
+// Populate budget table
+function populateBudgetTable(budget) {
+    budget = budget[0];
+    const tbody = document.getElementById('budgetTableBody');
+    
+    if (!budget) {
+        showEmptyState();
+        return;
+    }
+    
+    // Create table row
+    const row = `
+        <tr>
+            <td>
+                <span class="badge badge-info">
+                    ${formatPeriodType(budget.periodType)}
+                </span>
+            </td>
+            <td>${formatPeriod(budget.periodType, budget.period)}</td>
+            <td style="font-weight: 600; color: var(--horizon-success);">
+                ${(budget.monthlyLimit || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            </td>
+            <td>${(budget.dailyLimit || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+            <td>0.00</td>
+            <td>
+                <span class="badge ${budget.isActive ? 'badge-success' : 'badge-warning'}">
+                    ${budget.isActive ? 'Active' : 'Inactive'}
+                </span>
+            </td>
+            <td>System</td>
+            <td>
+                <button class="action-btn" onclick='editBudget(${JSON.stringify(budget)})' title="Edit">
+                    <i class="fa fa-edit"></i>
+                </button>
+                <button class="action-btn" onclick="viewDetails('${budget.id}')" title="View Details">
+                    <i class="fa fa-eye"></i>
+                </button>
+                <button class="action-btn" onclick="deleteBudget('${budget.id}')" title="Delete">
+                    <i class="fa fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `;
+    
+    tbody.innerHTML = row;
+}
+
+// Format period type for display
+function formatPeriodType(type) {
+    const types = {
+        'monthly': 'Monthly',
+        'quarterly': 'Quarterly',
+        'yearly': 'Yearly'
+    };
+    return types[type] || type;
+}
+
+// Format period value for display
+function formatPeriod(type, value) {
+    if (!value) return 'N/A';
+    
+    if (type === 'monthly') {
+        // Format: YYYY-MM to "Month Year"
+        const [year, month] = value.split('-');
+        const date = new Date(year, parseInt(month) - 1, 1);
+        return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    } else if (type === 'quarterly') {
+        // Format: YYYY-Q1 to "Q1 2025"
+        return value.replace('-', ' ');
+    } else if (type === 'yearly') {
+        return value;
+    }
+    
+    return value;
+}
+
+// Show empty state
+function showEmptyState(message = null) {
+    const tbody = document.getElementById('budgetTableBody');
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="8" style="text-align: center; padding: 40px; color: var(--horizon-light-text);">
+                <i class="fa fa-inbox" style="font-size: 32px; margin-bottom: 12px; display: block;"></i>
+                <p>${message || 'No budget definitions found. Click "Define New Budget" to get started.'}</p>
+            </td>
+        </tr>
+    `;
+}
+
+// Preview limits function
+function previewLimits() {
+    const budgetAmount = parseFloat(document.getElementById('budget_amount').value) || 0;
+    const periodType = document.getElementById('period_type').value;
+    
+    if (budgetAmount > 0) {
+        let dailyLimit, weeklyLimit, monthlyLimit;
+        
+        if (periodType === 'monthly') {
+            monthlyLimit = budgetAmount;
+            weeklyLimit = Math.floor(budgetAmount / 4.33);
+            dailyLimit = Math.floor(budgetAmount / 30);
+        } else if (periodType === 'quarterly') {
+            monthlyLimit = Math.floor(budgetAmount / 3);
+            weeklyLimit = Math.floor(budgetAmount / 13);
+            dailyLimit = Math.floor(budgetAmount / 90);
+        } else if (periodType === 'yearly') {
+            monthlyLimit = Math.floor(budgetAmount / 12);
+            weeklyLimit = Math.floor(budgetAmount / 52);
+            dailyLimit = Math.floor(budgetAmount / 365);
+        }
+        
+        document.getElementById('preview_daily').textContent = dailyLimit.toLocaleString() + ' SAR';
+        document.getElementById('preview_weekly').textContent = weeklyLimit.toLocaleString() + ' SAR';
+        document.getElementById('preview_monthly').textContent = monthlyLimit.toLocaleString() + ' SAR';
+        document.getElementById('budgetPreview').style.display = 'block';
+    } else {
+        document.getElementById('budgetPreview').style.display = 'none';
+    }
+}
+
+// Period selection - UPDATED to trigger preview recalculation
 function selectPeriod(period) {
     // Update button states
     document.querySelectorAll('.period-btn').forEach(btn => {
@@ -594,6 +743,9 @@ function selectPeriod(period) {
     document.getElementById('period_selection_monthly').style.display = period === 'monthly' ? 'block' : 'none';
     document.getElementById('period_selection_quarterly').style.display = period === 'quarterly' ? 'block' : 'none';
     document.getElementById('period_selection_yearly').style.display = period === 'yearly' ? 'block' : 'none';
+    
+    // Recalculate preview limits based on new period type
+    previewLimits();
 }
 
 // Open budget modal
@@ -608,13 +760,95 @@ function closeBudgetModal() {
     document.getElementById('budgetModal').classList.remove('active');
 }
 
-// Save budget
-function saveBudget() {
+// Save budget with JSON payload
+async function saveBudget() {
     const form = document.getElementById('budgetForm');
-    if (form.checkValidity()) {
-        form.submit();
-    } else {
+    if (!form.checkValidity()) {
         alert('Please fill in all required fields');
+        return;
+    }
+
+    const periodType = document.getElementById('period_type').value;
+    const budgetAmount = parseFloat(document.getElementById('budget_amount').value);
+    const hierarchyLevel = document.getElementById('hierarchy_level').value;
+    
+    // Calculate limits based on period type
+    let dailyLimit, weeklyLimit, monthlyLimit;
+    
+    if (periodType === 'monthly') {
+        monthlyLimit = budgetAmount;
+        weeklyLimit = Math.floor(budgetAmount / 4.33); // Average weeks in a month
+        dailyLimit = Math.floor(budgetAmount / 30);
+    } else if (periodType === 'quarterly') {
+        monthlyLimit = Math.floor(budgetAmount / 3);
+        weeklyLimit = Math.floor(budgetAmount / 13); // Approx 13 weeks per quarter
+        dailyLimit = Math.floor(budgetAmount / 90);
+    } else if (periodType === 'yearly') {
+        monthlyLimit = Math.floor(budgetAmount / 12);
+        weeklyLimit = Math.floor(budgetAmount / 52);
+        dailyLimit = Math.floor(budgetAmount / 365);
+    }
+
+    // Get period value based on period type
+    let periodValue = '';
+    if (periodType === 'monthly') {
+        const monthInput = document.getElementById('period_month').value; // Format: YYYY-MM
+        if (monthInput) {
+            const [year, month] = monthInput.split('-');
+            periodValue = `${year}-${month}`; // Keep as YYYY-MM format
+        }
+    } else if (periodType === 'quarterly') {
+        const quarter = document.getElementById('period_quarter').value;
+        const year = document.getElementById('quarter_year').value;
+        periodValue = `${year}-${quarter}`; // e.g., "2025-Q1"
+    } else if (periodType === 'yearly') {
+        periodValue = document.getElementById('period_year').value; // e.g., "2025"
+    }
+
+    // Build JSON payload matching SetBudgetDto
+    const payload = {
+        scopeLevel: hierarchyLevel === 'company' ? 'COMPANY' : 'BRANCH',
+        scopeId: COMPANY_ID,
+        dailyLimit: dailyLimit,
+        weeklyLimit: weeklyLimit,
+        monthlyLimit: monthlyLimit,
+        periodType: periodType,
+        period: periodValue,
+        description: document.getElementById('description').value || null,
+        createdBy: "<?php echo $_SESSION['user_id'] ?? 'user-' . (isset($_SESSION['user_id']) ? $_SESSION['user_id'] : '123'); ?>"
+    };
+
+    console.log('Sending budget configuration:', payload);
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/discounts/budget/configure`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                <?php if (!empty($_SESSION['auth_token'])): ?>
+                'Authorization': 'Bearer <?php echo $_SESSION['auth_token']; ?>',
+                <?php endif; ?>
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        
+        if (response.ok) {
+            alert('✓ Budget configured successfully!\n\n' + 
+                  'Daily Limit: ' + dailyLimit.toLocaleString() + ' SAR\n' +
+                  'Weekly Limit: ' + weeklyLimit.toLocaleString() + ' SAR\n' +
+                  'Monthly Limit: ' + monthlyLimit.toLocaleString() + ' SAR');
+            closeBudgetModal();
+            loadBudgetDefinitions(); // Reload data instead of page refresh
+        } else {
+            const errorMsg = result.message || 'Failed to save budget';
+            alert('Error: ' + errorMsg);
+            console.error('Server error:', result);
+        }
+    } catch (error) {
+        alert('Network Error: ' + error.message + '\n\nPlease ensure the API server is running.');
+        console.error('Request failed:', error);
     }
 }
 
@@ -626,13 +860,36 @@ function editBudget(budget) {
 
 // View details
 function viewDetails(id) {
-    window.location.href = '<?php echo admin_url('loyalty/budget_allocation/'); ?>' + id;
+    alert('Budget ID: ' + id + '\n\nDetailed view will be implemented soon.');
 }
 
-// Archive budget
-function archiveBudget(id) {
-    if (confirm('Are you sure you want to archive this budget definition?')) {
-        window.location.href = '<?php echo admin_url('loyalty/archive_budget/'); ?>' + id;
+// Delete budget
+async function deleteBudget(id) {
+    if (!confirm('Are you sure you want to delete this budget definition?\n\nThis action cannot be undone.')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/discounts/budget/company/${COMPANY_ID}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                <?php if (!empty($_SESSION['auth_token'])): ?>
+                'Authorization': 'Bearer <?php echo $_SESSION['auth_token']; ?>',
+                <?php endif; ?>
+            }
+        });
+
+        if (response.ok) {
+            alert('✓ Budget deleted successfully!');
+            loadBudgetDefinitions(); // Reload data
+        } else {
+            const result = await response.json();
+            alert('Error: ' + (result.message || 'Failed to delete budget'));
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+        console.error('Delete failed:', error);
     }
 }
 

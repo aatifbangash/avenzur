@@ -130,6 +130,7 @@ class Quotes extends MY_Controller
                 $item_bonus = $_POST['bonus'][$r];
                 $item_dis1 = $_POST['dis1'][$r];
                 $item_dis2 = $_POST['dis2'][$r];
+                $item_dis3 = $_POST['dis3'][$r];
                 $totalbeforevat = $_POST['totalbeforevat'][$r];
                 $main_net = $_POST['main_net'][$r];
 
@@ -177,6 +178,7 @@ class Quotes extends MY_Controller
                         }
                     }
 
+                    $pr_item_tax = $new_item_vat_value;
                     $product_tax += $pr_item_tax;
                     $subtotal = $main_net;//(($item_net_price * $item_unit_quantity) + $pr_item_tax);
                     //$subtotal2 = (($item_net_price * $item_unit_quantity) + $product_tax);// + $pr_item_tax);
@@ -188,6 +190,7 @@ class Quotes extends MY_Controller
                      */
                     $new_item_first_discount = $_POST['item_first_discount'][$r];
                     $new_item_second_discount = $_POST['item_second_discount'][$r];
+                    $new_item_third_discount = $_POST['item_third_discount'][$r];
                     $new_item_vat_value = $_POST['item_vat_values'][$r];
                     $new_item_total_sale = $_POST['item_total_sale'][$r];
                     
@@ -222,7 +225,9 @@ class Quotes extends MY_Controller
                         //'bonus'             => 0,
                         'discount1'         => $item_dis1,
                         'discount2'         => $item_dis2,
+                        'discount3'         => $item_dis3,
                         'second_discount_value' => $new_item_second_discount,
+                        'third_discount_value' => $new_item_third_discount,
                         'totalbeforevat'    => $totalbeforevat,
                         'main_net'          => $main_net,
                         'real_cost'         => $real_cost,
@@ -674,6 +679,7 @@ class Quotes extends MY_Controller
                 $item_bonus = $_POST['bonus'][$r];
                 $item_dis1 = $_POST['dis1'][$r];
                 $item_dis2 = $_POST['dis2'][$r];
+                $item_dis3 = $_POST['dis3'][$r];
                 $totalbeforevat = $_POST['totalbeforevat'][$r];
                 $main_net = $_POST['main_net'][$r];
                 
@@ -754,6 +760,8 @@ class Quotes extends MY_Controller
                         }
                     }
 
+                    $pr_item_tax = $new_item_vat_value;
+
                     $product_tax += $pr_item_tax;
                     $subtotal = $main_net;//(($item_net_price * $item_unit_quantity) + $pr_item_tax);
                     //$subtotal2 = (($item_net_price * $item_unit_quantity));
@@ -767,6 +775,7 @@ class Quotes extends MY_Controller
                      */
                     $new_item_first_discount = $_POST['item_first_discount'][$r];
                     $new_item_second_discount = $_POST['item_second_discount'][$r];
+                    $new_item_third_discount = $_POST['item_third_discount'][$r];
                     $new_item_vat_value = $_POST['item_vat_values'][$r];
                     $new_item_total_sale = $_POST['item_total_sale'][$r];
                     $item_net_unit_sale = $_POST['item_unit_sale'][$r];
@@ -794,12 +803,13 @@ class Quotes extends MY_Controller
                         'product_unit_code' => $unit ? $unit->code : null,
                         'unit_quantity'     => $item_unit_quantity,
                         'warehouse_id'      => $warehouse_id,
-                        'item_tax'          => $pr_item_tax,
+                        'item_tax'          => $new_item_vat_value,
                         'tax_rate_id'       => $item_tax_rate,
                         'tax'               => $new_item_vat_value,
                         'discount'          => $item_discount,
                         'item_discount'     => $new_item_first_discount,
                         'second_discount_value' => $new_item_second_discount,
+                        'third_discount_value' => $new_item_third_discount,
                         'subtotal'          => $new_item_total_sale,
                         'serial_no'         => $item_serial,
                         'expiry'            => $item_expiry,
@@ -812,6 +822,7 @@ class Quotes extends MY_Controller
                         //'bonus'             => 0,
                         'discount1'         => $item_dis1,
                         'discount2'         => $item_dis2,
+                        'discount3'         => $item_dis3,
                         'totalbeforevat'    => $totalbeforevat,
                         'main_net'          => $main_net,
                         'avz_item_code'     => $item_avz_code,
@@ -976,8 +987,9 @@ class Quotes extends MY_Controller
                 
                 $row->option          = $item->option_id;
                 $row->bonus            = $item->bonus;
-                $row->dis1             = $item->discount1;
-                $row->dis2            = $item->discount2;
+                $row->dis1             = $item->discount1 == NULL ? 0 : $item->discount1;
+                $row->dis2            = $item->discount2 == NULL ? 0 : $item->discount2;
+                $row->dis3            = $item->discount3 == NULL ? 0 : $item->discount3;
                 $row->totalbeforevat   = $item->totalbeforevat;
                 $row->main_net            = $item->main_net;
                 $options              = $this->sales_model->getProductOptions($row->id, $item->warehouse_id, true);
@@ -1419,7 +1431,7 @@ class Quotes extends MY_Controller
         . lang('actions') . ' <span class="caret"></span></button>
                     <ul class="dropdown-menu pull-right" role="menu">
                         <li>' . $edit_link . '</li>';
-                        if($this->Settings->site_name == 'Hills Business Medical' && $this->Settings->site_name == 'Demo Company'){
+                        if($this->Settings->site_name == 'Hills Business Medical' || $this->Settings->site_name == 'Demo Company'){
                             $action .= '<li>' . $convert_link . '</li>';
                         }
                         $action .= '<li>' . $pdf_link . '</li>

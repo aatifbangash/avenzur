@@ -731,7 +731,8 @@ class Loyalty extends MY_Controller
     public function budget_allocation()
     {
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
-        
+        $this->data['company_id'] = $this->loyalty_model->getCompanyId();
+
         $bc = [
             ['link' => admin_url(), 'page' => lang('home')],
             ['link' => admin_url('loyalty'), 'page' => lang('Loyalty')],
@@ -1257,7 +1258,7 @@ class Loyalty extends MY_Controller
         $this->data['allocations'] = $this->loyalty_model->getAllBudgetAllocations();
         $this->data['summary'] = $this->loyalty_model->getBudgetSummary('company', 1);
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
-        
+        $this->data['company_id'] = $this->loyalty_model->getCompanyId();
         $bc = [
             ['link' => admin_url(), 'page' => lang('home')],
             ['link' => admin_url('loyalty'), 'page' => lang('Loyalty')],
