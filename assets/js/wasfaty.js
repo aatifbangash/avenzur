@@ -264,70 +264,85 @@ var WasfatyModule = (function ($) {
 		var $itemList = $("#item-list");
 		if ($itemList.length) {
 			$itemList.empty(); // Clear existing items
-			
+
 			// Add header
 			$itemList.append(
 				'<div style="padding: 15px; background: #e3f2fd; border-bottom: 3px solid #2196F3;">' +
-				'<h4 style="margin: 0; color: #2196F3;">' +
-				'<i class="fa fa-heartbeat"></i> Wasfaty Prescription Items' +
-				'</h4>' +
-				'<p style="margin: 5px 0 0 0; color: #666;">Click any item to add to cart</p>' +
-				'</div>'
+					'<h4 style="margin: 0; color: #2196F3;">' +
+					'<i class="fa fa-heartbeat"></i> Wasfaty Prescription Items' +
+					"</h4>" +
+					'<p style="margin: 5px 0 0 0; color: #666;">Click any item to add to cart</p>' +
+					"</div>"
 			);
-			
+
 			// Create item cards for each medication
 			$.each(data.items, function (index, item) {
 				var totalQty = item.quantity * item.duration_days;
-				var itemCard = 
+				var itemCard =
 					'<div class="wasfaty-item-card" style="padding: 15px; border-bottom: 1px solid #e0e0e0; cursor: pointer; transition: background 0.2s;" ' +
-					'data-medicine-id="' + item.medicine_id + '" ' +
-					'data-medicine-name="' + item.medicine_name + '" ' +
-					'data-quantity="' + totalQty + '">' +
+					'data-medicine-id="' +
+					item.medicine_id +
+					'" ' +
+					'data-medicine-name="' +
+					item.medicine_name +
+					'" ' +
+					'data-quantity="' +
+					totalQty +
+					'">' +
 					'<div style="margin-bottom: 8px;">' +
-					'<strong style="font-size: 15px; color: #333;">' + item.medicine_name + '</strong>' +
-					'</div>' +
+					'<strong style="font-size: 15px; color: #333;">' +
+					item.medicine_name +
+					"</strong>" +
+					"</div>" +
 					'<div style="color: #666; font-size: 13px;">' +
 					'<span style="display: inline-block; margin-right: 15px;">' +
-					'<i class="fa fa-prescription-bottle"></i> Qty: <strong style="color: #2196F3;">' + totalQty + '</strong>' +
-					'</span>' +
+					'<i class="fa fa-prescription-bottle"></i> Qty: <strong style="color: #2196F3;">' +
+					totalQty +
+					"</strong>" +
+					"</span>" +
 					'<span style="display: inline-block; margin-right: 15px;">' +
-					'<i class="fa fa-clock-o"></i> ' + item.duration_days + ' days' +
-					'</span>' +
-					'</div>' +
+					'<i class="fa fa-clock-o"></i> ' +
+					item.duration_days +
+					" days" +
+					"</span>" +
+					"</div>" +
 					'<div style="margin-top: 8px; color: #888; font-size: 12px;">' +
-					'<i class="fa fa-info-circle"></i> ' + (item.dosage || 'As directed') +
-					'</div>' +
-					'</div>';
-				
+					'<i class="fa fa-info-circle"></i> ' +
+					(item.dosage || "As directed") +
+					"</div>" +
+					"</div>";
+
 				$itemList.append(itemCard);
 			});
-			
+
 			console.log("Added", data.items.length, "items to POS item-list");
-			
+
 			// Add hover effect
-			$(document).on('mouseenter', '.wasfaty-item-card', function() {
-				$(this).css('background', '#f5f5f5');
-			}).on('mouseleave', '.wasfaty-item-card', function() {
-				$(this).css('background', 'white');
-			});
-			
+			$(document)
+				.on("mouseenter", ".wasfaty-item-card", function () {
+					$(this).css("background", "#f5f5f5");
+				})
+				.on("mouseleave", ".wasfaty-item-card", function () {
+					$(this).css("background", "white");
+				});
+
 			// Add click handler to populate search input
-			$(document).on('click', '.wasfaty-item-card', function() {
-				var medicineName = $(this).data('medicine-name');
-				var quantity = $(this).data('quantity');
-				
-				console.log('Wasfaty item clicked:', medicineName, 'Qty:', quantity);
-				
+			$(document).on("click", ".wasfaty-item-card", function () {
+				var medicineName = $(this).data("medicine-name");
+				var quantity = $(this).data("quantity");
+
+				console.log("Wasfaty item clicked:", medicineName, "Qty:", quantity);
+
 				// Populate the search input with medicine name
-				var $addItemInput = $('#add_item');
+				var $addItemInput = $("#add_item");
 				if ($addItemInput.length) {
 					$addItemInput.val(medicineName).focus();
-					console.log('Populated #add_item with:', medicineName);
-					
+					console.log("Populated #add_item with:", medicineName);
+
 					// Trigger search/autocomplete if available
-					$addItemInput.trigger('input').trigger('keyup');
+					$addItemInput.trigger("input").trigger("keyup");
 				} else {
-					console.warn('Could not find #add_item input');
+					console.warn("Could not find #add_item input");
 				}
 			});
 		} else {
