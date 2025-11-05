@@ -223,7 +223,20 @@ $(document).ready(function () {
 
     // If there is any item in localStorage
     if (localStorage.getItem('positems')) {
-        loadItems();
+        try {
+            loadItems();
+        } catch (error) {
+            console.error("Error loading items from localStorage:", error);
+            console.warn("Clearing corrupted localStorage data...");
+            // Clear corrupted data
+            localStorage.removeItem('positems');
+            localStorage.removeItem('posdiscount');
+            localStorage.removeItem('posorderdata');
+            // Reload page to start fresh
+            bootbox.alert("Cart data was corrupted and has been cleared. Page will reload.", function() {
+                location.reload();
+            });
+        }
     }
 
     // clear localStorage and reload
@@ -1242,6 +1255,11 @@ function loadItems() {
 
         $.each(sortedItems, function () {
             var item = this;
+            // Skip invalid items
+            if (!item || !item.row || item.row.price === undefined || item.row.qty === undefined) {
+                console.warn("Skipping invalid item in cart:", item);
+                return true; // continue to next item
+            }
             const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(2, Decimal.ROUND_DOWN);
             let sale_price = toTwoDecimals(item.row.price);
             let total_quantity = new Decimal(item.row.qty);
