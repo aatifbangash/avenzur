@@ -109,3 +109,8 @@ $route['admin/cost_center/branch/(:num)'] = 'admin/cost_center/branch/$1';
 $route['admin/cost_center'] = 'admin/cost_center/dashboard';
 $route['admin/cost_center/dashboard'] = 'admin/cost_center/dashboard';
 
+// Catch-all route for admin modules (must be last)
+$route['admin/(:any)/(:any)/(:any)'] = 'admin/$1/$2/$3';
+$route['admin/(:any)/(:any)'] = 'admin/$1/$2';
+$route['admin/(:any)'] = 'admin/$1/index';
+

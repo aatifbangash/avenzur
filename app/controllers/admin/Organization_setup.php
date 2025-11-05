@@ -446,10 +446,10 @@ class Organization_setup extends MY_Controller
             show_404();
         }
 
-        $group_id = $this->input->get('group_id');
-        
-        if (!$group_id) {
-            $this->sma->send_json(['success' => false, 'message' => 'Pharmacy group ID required']);
+        $company_id = $this->input->get('company_id');
+
+        if (!$company_id) {
+            $this->sma->send_json(['success' => false, 'message' => 'Company ID required']);
             return;
         }
 
@@ -459,14 +459,15 @@ class Organization_setup extends MY_Controller
                     lp.code, 
                     lp.name, 
                     lp.external_id,
+                    lp.company_id,
                     COALESCE(sw.address, '') as address,
                     COALESCE(sw.phone, '') as phone,
                     COALESCE(sw.warehouse_type, 'pharmacy') as warehouse_type
                   FROM loyalty_pharmacies lp
                   LEFT JOIN sma_warehouses sw ON lp.external_id = sw.id
-                  WHERE lp.pharmacy_group_id = ?
+                  WHERE lp.company_id = ?
                   ORDER BY lp.name ASC";
-        $pharmacies = $this->db->query($query, [$group_id])->result_array();
+        $pharmacies = $this->db->query($query, [$company_id])->result_array();
 
         $this->sma->send_json([
             'success' => true,
@@ -548,21 +549,21 @@ class Organization_setup extends MY_Controller
         }
 
         // Get all pharmacy groups with their pharmacies and branches
-        $query_groups = "SELECT id, code, name FROM loyalty_pharmacy_groups ORDER BY name ASC";
-        $groups = $this->db->query($query_groups)->result_array();
+        $query_companies = "SELECT id, code, name FROM loyalty_companies ORDER BY name ASC";
+        $companies = $this->db->query($query_companies)->result_array();
 
         $hierarchy = [];
 
-        foreach ($groups as $group) {
-            $group_data = $group;
+        foreach ($companies as $company) {
+            $company_data = $company;
 
-            // Get pharmacies for this group directly from loyalty_pharmacies
+            // Get pharmacies for this company directly from loyalty_pharmacies
             $query_pharmacies = "SELECT id, code, name FROM loyalty_pharmacies
-                                 WHERE pharmacy_group_id = ?
+                                 WHERE company_id = ?
                                  ORDER BY name ASC";
-            $pharmacies = $this->db->query($query_pharmacies, [$group['id']])->result_array();
+            $pharmacies = $this->db->query($query_pharmacies, [$company['id']])->result_array();
 
-            $group_data['pharmacies'] = [];
+            $company_data['pharmacies'] = [];
 
             foreach ($pharmacies as $pharmacy) {
                 $pharmacy_data = $pharmacy;
@@ -574,10 +575,10 @@ class Organization_setup extends MY_Controller
                 $branches = $this->db->query($query_branches, [$pharmacy['id']])->result_array();
 
                 $pharmacy_data['branches'] = $branches;
-                $group_data['pharmacies'][] = $pharmacy_data;
+                $company_data['pharmacies'][] = $pharmacy_data;
             }
 
-            $hierarchy[] = $group_data;
+            $hierarchy[] = $company_data;
         }
 
         $this->sma->send_json([
@@ -596,7 +597,7 @@ class Organization_setup extends MY_Controller
             show_404();
         }
 
-        $this->form_validation->set_rules('pharmacy_group_id', 'Pharmacy Group', 'required');
+        $this->form_validation->set_rules('company_id', 'Company', 'required');
         $this->form_validation->set_rules('code', 'Pharmacy Code', 'required|is_unique[sma_warehouses.code]');
         $this->form_validation->set_rules('name', 'Pharmacy Name', 'required');
         $this->form_validation->set_rules('address', 'Address', 'required');
@@ -636,7 +637,7 @@ class Organization_setup extends MY_Controller
             // STEP 2: Create loyalty_pharmacies entry using the warehouse ID
             $loyalty_pharmacy_data = [
                 'id' => $this->sma->generateUUIDv4(),
-                'pharmacy_group_id' => $this->input->post('pharmacy_group_id'),
+                'company_id' => $this->input->post('company_id'),
                 'name' => $this->input->post('name'),
                 'code' => $this->input->post('code'),
                 'external_id' => $pharmacy_warehouse_id,  // Link to warehouse
@@ -644,9 +645,9 @@ class Organization_setup extends MY_Controller
                 'updated_at' => date('Y-m-d H:i:s')
             ];
 
-            $this->db->query("INSERT INTO loyalty_pharmacies (id, pharmacy_group_id, name, code, external_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)", [
+            $this->db->query("INSERT INTO loyalty_pharmacies (id, company_id, name, code, external_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)", [
                 $loyalty_pharmacy_data['id'],
-                $loyalty_pharmacy_data['pharmacy_group_id'],
+                $loyalty_pharmacy_data['company_id'],
                 $loyalty_pharmacy_data['name'],
                 $loyalty_pharmacy_data['code'],
                 $loyalty_pharmacy_data['external_id'],
@@ -702,7 +703,7 @@ class Organization_setup extends MY_Controller
                     lp.id, 
                     lp.code, 
                     lp.name,
-                    lp.pharmacy_group_id,
+                    lp.company_id,
                     lp.external_id,
                     COALESCE(sw.address, '') as address,
                     COALESCE(sw.phone, '') as phone,
@@ -741,7 +742,7 @@ class Organization_setup extends MY_Controller
             return;
         }
 
-        $this->form_validation->set_rules('pharmacy_group_id', 'Pharmacy Group', 'required');
+        $this->form_validation->set_rules('company_id', 'Company', 'required');
         $this->form_validation->set_rules('code', 'Pharmacy Code', 'required');
         $this->form_validation->set_rules('name', 'Pharmacy Name', 'required');
         $this->form_validation->set_rules('address', 'Address', 'required');
@@ -782,12 +783,12 @@ class Organization_setup extends MY_Controller
 
             // 3. Update loyalty_pharmacies entry
             $this->db->query("UPDATE loyalty_pharmacies SET 
-                                pharmacy_group_id = ?, 
+                                company_id = ?, 
                                 name = ?, 
                                 code = ?, 
                                 updated_at = ?
                               WHERE id = ?", [
-                $this->input->post('pharmacy_group_id'),
+                $this->input->post('company_id'),
                 $this->input->post('name'),
                 $this->input->post('code'),
                 date('Y-m-d H:i:s'),
