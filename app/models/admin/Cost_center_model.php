@@ -55,39 +55,61 @@ public function get_hierarchical_analytics($period_type = 'today', $target_month
                 error_log('[Cost_center_model] Query failed for period: ' . $period . ' - Error: ' . $this->db->error()['message']);
                 return [];
             }
-            // Get summary (first result set)
-            $summary = $result->row();
+            // Get summary (first result set) as array
+            $summary = $result->row_array();
             
             // Get mysqli connection for multi-result handling
             $mysqli = $this->db->conn_id;
             $best_products = [];
+            $pharmacies = [];
+            $branches = [];
             
             // Fetch next result sets
+            // Result set 2: Best products
             if ($mysqli->more_results()) {
                 $mysqli->next_result();
                 $result_products = $mysqli->store_result();
                 
                 if ($result_products) {
-                    while ($row = $result_products->fetch_object()) {
+                    while ($row = $result_products->fetch_assoc()) {
                         $best_products[] = $row;
                     }
                     $result_products->free();
                 }
+            }
+            
+            // Result set 3: Pharmacies (for company level) or Branches (for pharmacy level)
+            if ($mysqli->more_results()) {
+                $mysqli->next_result();
+                $result_detail = $mysqli->store_result();
                 
-                // Continue consuming remaining result sets to prevent "Commands out of sync" error
-                while ($mysqli->more_results()) {
-                    $mysqli->next_result();
-                    $temp_result = $mysqli->store_result();
-                    if ($temp_result) {
-                        $temp_result->free();
+                if ($result_detail) {
+                    while ($row = $result_detail->fetch_assoc()) {
+                        if ($level === 'company') {
+                            $pharmacies[] = $row;
+                        } else {
+                            $branches[] = $row;
+                        }
                     }
+                    $result_detail->free();
+                }
+            }
+            
+            // Continue consuming remaining result sets to prevent "Commands out of sync" error
+            while ($mysqli->more_results()) {
+                $mysqli->next_result();
+                $temp_result = $mysqli->store_result();
+                if ($temp_result) {
+                    $temp_result->free();
                 }
             }
             
             return [
                 'success' => true,
                 'summary' => $summary,
-                'best_products' => $best_products
+                'best_products' => $best_products,
+                'pharmacies' => $pharmacies,
+                'branches' => $branches
             ];
             
         } catch (Exception $e) {
@@ -351,70 +373,106 @@ public function get_hierarchical_analytics($period_type = 'today', $target_month
             $period = date('Y-m');
         }
 
-        // Get pharmacy header
+        // Build WHERE clause based on period type
+        $where_clause = "";
+        $year = null;
+        $month = null;
+        
+        if ($period === 'today') {
+            $where_clause = "AND DATE(s.date) = CURDATE()";
+        } elseif ($period === 'ytd') {
+            $where_clause = "AND YEAR(s.date) = YEAR(CURDATE()) AND s.date <= CURDATE()";
+        } else {
+            // Monthly: YYYY-MM format
+            list($year, $month) = explode('-', $period);
+            $where_clause = "AND YEAR(s.date) = ? AND MONTH(s.date) = ?";
+        }
+
+        // Get pharmacy data using direct SQL on sales tables
         $pharmacy_query = "
             SELECT 
-                pharmacy_id,
-                warehouse_id,
-                pharmacy_name,
-                pharmacy_code,
-                period,
-                kpi_total_revenue,
-                kpi_total_cost,
-                kpi_profit_loss,
-                kpi_profit_margin_pct,
-                kpi_cost_ratio_pct,
-                branch_count,
-                last_updated
-            FROM view_cost_center_pharmacy
-            WHERE warehouse_id = ? AND period = ?
+                w.id AS pharmacy_id,
+                w.id AS warehouse_id,
+                w.name AS pharmacy_name,
+                w.code AS pharmacy_code,
+                ? AS period,
+                COALESCE(SUM(s.grand_total), 0) AS kpi_total_revenue,
+                COALESCE(SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0) AS kpi_total_cost,
+                COALESCE(SUM(s.grand_total) - SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0) AS kpi_profit_loss,
+                CASE 
+                    WHEN COALESCE(SUM(s.grand_total), 0) = 0 THEN 0
+                    ELSE ROUND(((COALESCE(SUM(s.grand_total), 0) - COALESCE(SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0)) / COALESCE(SUM(s.grand_total), 0)) * 100, 2)
+                END AS kpi_profit_margin_pct,
+                CASE 
+                    WHEN COALESCE(SUM(s.grand_total), 0) = 0 THEN 0
+                    ELSE ROUND((COALESCE(SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0) / COALESCE(SUM(s.grand_total), 0)) * 100, 2)
+                END AS kpi_cost_ratio_pct,
+                COALESCE(COUNT(DISTINCT b.id), 0) AS branch_count,
+                MAX(s.date) AS last_updated
+            FROM sma_warehouses w
+            LEFT JOIN sma_warehouses b ON b.parent_id = w.id AND b.warehouse_type = 'branch'
+            LEFT JOIN sma_sales s ON (s.warehouse_id = w.id OR s.warehouse_id = b.id) 
+                AND s.sale_status = 'completed'
+                {$where_clause}
+            LEFT JOIN sma_sale_items si ON s.id = si.sale_id
+            WHERE w.id = ?
+            GROUP BY w.id, w.name, w.code
         ";
 
-        $pharmacy_result = $this->db->query($pharmacy_query, [$warehouse_id, $period]);
+        // Build params array in correct order: period, [year, month], warehouse_id
+        $params = [$period];
+        if ($year !== null && $month !== null) {
+            $params[] = $year;
+            $params[] = $month;
+        }
+        $params[] = $warehouse_id;
+        
+        $pharmacy_result = $this->db->query($pharmacy_query, $params);
         $pharmacy = $pharmacy_result->row_array();
         
-        // Get branches for this pharmacy using warehouse_id (natural key)
-        // FIXED: Using warehouse_id (parent's warehouse_id) instead of pharmacy_id (surrogate)
-        // This query works with both pre and post-migration database states
-        $period_parts = explode('-', $period);
-        $period_year = $period_parts[0];
-        $period_month = $period_parts[1];
+        // Get branches for this pharmacy using direct SQL
+        $branch_params = [];
+        if ($period === 'today') {
+            $branch_where = "AND DATE(s.date) = CURDATE()";
+        } elseif ($period === 'ytd') {
+            $branch_where = "AND YEAR(s.date) = YEAR(CURDATE()) AND s.date <= CURDATE()";
+        } else {
+            list($year, $month) = explode('-', $period);
+            $branch_where = "AND YEAR(s.date) = ? AND MONTH(s.date) = ?";
+            $branch_params = [$year, $month];
+        }
+        $branch_params[] = $warehouse_id;
         
         $branches_query = "
             SELECT 
-                db.warehouse_id,
-                db.branch_name,
-                db.branch_code,
-                COALESCE(SUM(fcf.total_revenue), 0) AS kpi_total_revenue,
-                COALESCE(SUM(fcf.total_cogs), 0) AS kpi_total_cost,
-                COALESCE(SUM(fcf.total_revenue - fcf.total_cogs), 0) AS kpi_profit_loss,
+                b.id AS branch_id,
+                b.id AS warehouse_id,
+                b.name AS branch_name,
+                b.code AS branch_code,
+                COALESCE(SUM(s.grand_total), 0) AS kpi_total_revenue,
+                COALESCE(SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0) AS kpi_total_cost,
+                COALESCE(SUM(s.grand_total) - SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0) AS kpi_profit_loss,
                 CASE 
-                    WHEN COALESCE(SUM(fcf.total_revenue), 0) = 0 THEN 0
-                    ELSE ROUND(
-                        ((COALESCE(SUM(fcf.total_revenue), 0) - COALESCE(SUM(fcf.total_cogs), 0)) 
-                         / COALESCE(SUM(fcf.total_revenue), 0)) * 100, 2
-                    )
+                    WHEN COALESCE(SUM(s.grand_total), 0) = 0 THEN 0
+                    ELSE ROUND(((COALESCE(SUM(s.grand_total), 0) - COALESCE(SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0)) / COALESCE(SUM(s.grand_total), 0)) * 100, 2)
                 END AS kpi_profit_margin_pct,
                 CASE 
-                    WHEN COALESCE(SUM(fcf.total_revenue), 0) = 0 THEN 0
-                    ELSE ROUND(
-                        (COALESCE(SUM(fcf.total_cogs), 0) / COALESCE(SUM(fcf.total_revenue), 0)) * 100, 2
-                    )
+                    WHEN COALESCE(SUM(s.grand_total), 0) = 0 THEN 0
+                    ELSE ROUND((COALESCE(SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0) / COALESCE(SUM(s.grand_total), 0)) * 100, 2)
                 END AS kpi_cost_ratio_pct,
-                NOW() AS last_updated
-            FROM sma_dim_branch db
-            INNER JOIN sma_warehouses w ON db.warehouse_id = w.id
-            LEFT JOIN sma_fact_cost_center fcf 
-                ON db.warehouse_id = fcf.warehouse_id 
-                AND fcf.period_year = ? 
-                AND fcf.period_month = ?
-            WHERE w.parent_id = ?
-            AND db.is_active = 1
-            GROUP BY db.warehouse_id, db.branch_name, db.branch_code
+                MAX(s.date) AS last_updated
+            FROM sma_warehouses b
+            LEFT JOIN sma_sales s ON s.warehouse_id = b.id 
+                AND s.sale_status = 'completed'
+                {$branch_where}
+            LEFT JOIN sma_sale_items si ON s.id = si.sale_id
+            WHERE b.parent_id = ?
+            AND b.warehouse_type = 'branch'
+            GROUP BY b.id, b.name, b.code
             ORDER BY kpi_total_revenue DESC
         ";
 
-        $branches_result = $this->db->query($branches_query, [$period_year, $period_month, $warehouse_id]);
+        $branches_result = $this->db->query($branches_query, $branch_params);
         $branches = $branches_result->result_array();
 
         return [
@@ -430,34 +488,72 @@ public function get_hierarchical_analytics($period_type = 'today', $target_month
      * @param string $period YYYY-MM format
      * @return array
      */
-    public function get_branch_detail($branch_id, $period = null) {
+    /**
+     * Get branch detail with cost breakdown
+     * Uses direct SQL on sales tables instead of view
+     * 
+     * @param int $warehouse_id Branch warehouse ID
+     * @param string $period YYYY-MM format, 'today', or 'ytd'
+     * @return array
+     */
+    public function get_branch_detail($warehouse_id, $period = null) {
         if (!$period) {
             $period = date('Y-m');
         }
 
+        // Build WHERE clause based on period type
+        $where_clause = "";
+        $params = [];
+        
+        if ($period === 'today') {
+            $where_clause = "AND DATE(s.date) = CURDATE()";
+        } elseif ($period === 'ytd') {
+            $where_clause = "AND YEAR(s.date) = YEAR(CURDATE()) AND s.date <= CURDATE()";
+        } else {
+            // Monthly: YYYY-MM format
+            list($year, $month) = explode('-', $period);
+            $where_clause = "AND YEAR(s.date) = ? AND MONTH(s.date) = ?";
+            $params = [$year, $month];
+        }
+        
+        $params[] = $warehouse_id;
+
         $query = "
             SELECT 
-                branch_id,
-                warehouse_id,
-                branch_name,
-                branch_code,
-                pharmacy_id,
-                pharmacy_name,
-                period,
-                kpi_total_revenue,
-                kpi_cogs,
-                kpi_inventory_movement,
-                kpi_operational,
-                kpi_total_cost,
-                kpi_profit_loss,
-                kpi_profit_margin_pct,
-                kpi_cost_ratio_pct,
-                last_updated
-            FROM view_cost_center_branch
-            WHERE branch_id = ? AND period = ?
+                b.id AS branch_id,
+                b.id AS warehouse_id,
+                b.name AS branch_name,
+                b.code AS branch_code,
+                p.id AS pharmacy_id,
+                p.name AS pharmacy_name,
+                ? AS period,
+                COALESCE(SUM(s.grand_total), 0) AS kpi_total_revenue,
+                COALESCE(SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0) AS kpi_total_cost,
+                COALESCE(SUM(s.grand_total) - SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0) AS kpi_profit_loss,
+                CASE 
+                    WHEN COALESCE(SUM(s.grand_total), 0) = 0 THEN 0
+                    ELSE ROUND(((COALESCE(SUM(s.grand_total), 0) - COALESCE(SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0)) / COALESCE(SUM(s.grand_total), 0)) * 100, 2)
+                END AS kpi_profit_margin_pct,
+                CASE 
+                    WHEN COALESCE(SUM(s.grand_total), 0) = 0 THEN 0
+                    ELSE ROUND((COALESCE(SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0) / COALESCE(SUM(s.grand_total), 0)) * 100, 2)
+                END AS kpi_cost_ratio_pct,
+                MAX(s.date) AS last_updated
+            FROM sma_warehouses b
+            LEFT JOIN sma_warehouses p ON p.id = b.parent_id AND p.warehouse_type = 'pharmacy'
+            LEFT JOIN sma_sales s ON s.warehouse_id = b.id 
+                AND s.sale_status = 'completed'
+                {$where_clause}
+            LEFT JOIN sma_sale_items si ON s.id = si.sale_id
+            WHERE b.id = ?
+            AND b.warehouse_type = 'branch'
+            GROUP BY b.id, b.name, b.code, p.id, p.name
         ";
 
-        $result = $this->db->query($query, [$branch_id, $period]);
+        // Prepend period to params
+        array_unshift($params, $period);
+
+        $result = $this->db->query($query, $params);
         return $result->row_array();
     }
 
@@ -512,7 +608,7 @@ public function get_hierarchical_analytics($period_type = 'today', $target_month
     /**
      * Get summary statistics for dashboard
      * 
-     * @param string $period YYYY-MM format
+     * @param string $period YYYY-MM format, 'today', or 'ytd'
      * @return array
      */
     public function get_summary_stats($period = null) {
@@ -520,35 +616,44 @@ public function get_hierarchical_analytics($period_type = 'today', $target_month
             $period = date('Y-m');
         }
 
-        $query = "
-            SELECT 
-                level,
-                entity_name,
-                period,
-                kpi_total_revenue,
-                kpi_total_cost,
-                kpi_profit_loss,
-                kpi_profit_margin_pct,
-                entity_count,
-                last_updated
-            FROM view_cost_center_summary
-            WHERE period = ?
-        ";
+        // Determine period type
+        $period_type = 'monthly';
+        $target_month = $period;
+        
+        if ($period === 'today') {
+            $period_type = 'today';
+            $target_month = null;
+        } elseif ($period === 'ytd') {
+            $period_type = 'ytd';
+            $target_month = null;
+        }
 
-        $result = $this->db->query($query, [$period]);
+        // Use existing comprehensive stored procedure
+        $result = $this->get_hierarchical_analytics($period_type, $target_month, null, 'company');
         
-        if (!$result) {
-            error_log('[Cost_center_model] Query failed for period: ' . $period . ' - Error: ' . $this->db->error()['message']);
+        if (!$result['success']) {
+            error_log('[Cost_center_model] get_summary_stats failed for period: ' . $period);
             return [];
         }
         
-        $row = $result->row_array();
-        if (!$row) {
-            error_log('[Cost_center_model] No data found in view_cost_center_summary for period: ' . $period);
-            return [];
-        }
+        // Extract and format summary data
+        $summary = $result['summary'];
         
-        return $row;
+        // Calculate profit (revenue - cost)
+        $revenue = floatval($summary['total_gross_sales']);
+        $cost_of_goods = floatval($summary['total_gross_sales']) - floatval($summary['total_margin']);
+        $profit = floatval($summary['total_margin']);
+        
+        return [
+            'kpi_total_revenue' => $revenue,
+            'kpi_total_cost' => $cost_of_goods,
+            'kpi_profit_loss' => $profit,
+            'kpi_profit_margin_pct' => floatval($summary['margin_percentage']),
+            'total_customers' => intval($summary['total_customers']),
+            'total_items_sold' => floatval($summary['total_items_sold']),
+            'avg_transaction' => floatval($summary['average_transaction_value']),
+            'total_transactions' => intval($summary['total_transactions'])
+        ];
     }
 
     /**
@@ -664,53 +769,86 @@ public function get_hierarchical_analytics($period_type = 'today', $target_month
      * @param int $branch_id
      * @return boolean
      */
-    public function branch_exists($branch_id) {
-        $query = "SELECT 1 FROM sma_dim_branch WHERE branch_id = ? AND is_active = 1";
-        $result = $this->db->query($query, [$branch_id]);
+    /**
+     * Validate branch exists and is accessible
+     * Uses warehouse_id (natural key) instead of branch_id (surrogate)
+     * 
+     * @param int $warehouse_id The warehouse ID of the branch
+     * @return boolean
+     */
+    public function branch_exists($warehouse_id) {
+        // Check directly in sma_warehouses table
+        $query = "SELECT 1 FROM sma_warehouses WHERE id = ? AND warehouse_type = 'branch'";
+        $result = $this->db->query($query, [$warehouse_id]);
         return $result->num_rows() > 0;
     }
 
     /**
-     * Get breakdown by category (COGS vs Movement vs Operational)
+     * Get breakdown by category (Revenue vs Cost vs Profit)
+     * Simplified version using actual sales data
      * 
-     * @param int $branch_id
-     * @param string $period YYYY-MM format
+     * @param int $warehouse_id Branch warehouse ID
+     * @param string $period YYYY-MM format, 'today', or 'ytd'
      * @return array
      */
-    public function get_cost_breakdown($branch_id, $period = null) {
+    public function get_cost_breakdown($warehouse_id, $period = null) {
         if (!$period) {
             $period = date('Y-m');
         }
 
+        // Build WHERE clause based on period type
+        $where_clause = "";
+        $params = [];
+        
+        if ($period === 'today') {
+            $where_clause = "AND DATE(s.date) = CURDATE()";
+        } elseif ($period === 'ytd') {
+            $where_clause = "AND YEAR(s.date) = YEAR(CURDATE()) AND s.date <= CURDATE()";
+        } else {
+            // Monthly: YYYY-MM format
+            list($year, $month) = explode('-', $period);
+            $where_clause = "AND YEAR(s.date) = ? AND MONTH(s.date) = ?";
+            $params = [$year, $month];
+        }
+        
+        $params[] = $warehouse_id;
+
         $query = "
             SELECT 
-                'COGS' AS category,
-                SUM(kpi_cogs) AS amount
-            FROM view_cost_center_branch
-            WHERE branch_id = ? AND period = ?
+                'Revenue' AS category,
+                COALESCE(SUM(s.grand_total), 0) AS amount
+            FROM sma_sales s
+            WHERE s.warehouse_id = ?
+                AND s.sale_status = 'completed'
+                {$where_clause}
             
             UNION ALL
             
             SELECT 
-                'Inventory Movement' AS category,
-                SUM(kpi_inventory_movement) AS amount
-            FROM view_cost_center_branch
-            WHERE branch_id = ? AND period = ?
+                'Cost (COGS)' AS category,
+                COALESCE(SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0) AS amount
+            FROM sma_sales s
+            INNER JOIN sma_sale_items si ON s.id = si.sale_id
+            WHERE s.warehouse_id = ?
+                AND s.sale_status = 'completed'
+                {$where_clause}
             
             UNION ALL
             
             SELECT 
-                'Operational' AS category,
-                SUM(kpi_operational) AS amount
-            FROM view_cost_center_branch
-            WHERE branch_id = ? AND period = ?
+                'Profit' AS category,
+                COALESCE(SUM(s.grand_total) - SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0) AS amount
+            FROM sma_sales s
+            INNER JOIN sma_sale_items si ON s.id = si.sale_id
+            WHERE s.warehouse_id = ?
+                AND s.sale_status = 'completed'
+                {$where_clause}
         ";
 
-        $result = $this->db->query($query, [
-            $branch_id, $period,
-            $branch_id, $period,
-            $branch_id, $period
-        ]);
+        // Build params array: warehouse_id for each SELECT
+        $all_params = array_merge($params, $params, $params);
+        
+        $result = $this->db->query($query, $all_params);
         return $result->result_array();
     }
 
@@ -969,9 +1107,9 @@ public function get_hierarchical_analytics($period_type = 'today', $target_month
 
     /**
      * Get all pharmacies with health scores and margins
-     * Uses sma_warehouses table directly (warehouse_type='pharmacy')
+     * Direct SQL query for better compatibility
      * 
-     * @param string $period YYYY-MM format
+     * @param string $period YYYY-MM format, 'today', or 'ytd'
      * @param int $limit
      * @param int $offset
      * @return array
@@ -981,56 +1119,74 @@ public function get_hierarchical_analytics($period_type = 'today', $target_month
             $period = date('Y-m');
         }
 
-        // Query that joins warehouses (pharmacies + central warehouses) with cost center facts
-        // Now includes central warehouses (type='warehouse' with parent_id IS NULL)
+        // Build WHERE clause based on period type
+        $where_clause = "";
+        $params = [];
+        
+        if ($period === 'today') {
+            $where_clause = "AND DATE(s.date) = CURDATE()";
+        } elseif ($period === 'ytd') {
+            $where_clause = "AND YEAR(s.date) = YEAR(CURDATE()) AND s.date <= CURDATE()";
+        } else {
+            // Monthly: YYYY-MM format
+            list($year, $month) = explode('-', $period);
+            $where_clause = "AND YEAR(s.date) = ? AND MONTH(s.date) = ?";
+            $params = [$year, $month];
+        }
+
+        // Query that joins warehouses (pharmacies) with sales data
         $query = "
             SELECT 
                 w.id AS pharmacy_id,
                 w.code AS pharmacy_code,
                 w.name AS pharmacy_name,
                 w.warehouse_type,
-                CONCAT(fcc.period_year, '-', LPAD(fcc.period_month, 2, '0')) AS period,
-                COALESCE(SUM(fcc.total_revenue), 0) AS kpi_total_revenue,
-                COALESCE(SUM(fcc.total_cogs + fcc.inventory_movement_cost + fcc.operational_cost), 0) AS kpi_total_cost,
-                COALESCE(SUM(fcc.total_revenue - (fcc.total_cogs + fcc.inventory_movement_cost + fcc.operational_cost)), 0) AS kpi_profit_loss,
+                ? AS period,
+                COALESCE(SUM(s.grand_total), 0) AS kpi_total_revenue,
+                COALESCE(SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0) AS kpi_total_cost,
+                COALESCE(SUM(s.grand_total) - SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0) AS kpi_profit_loss,
                 CASE 
-                    WHEN COALESCE(SUM(fcc.total_revenue), 0) = 0 THEN 0
-                    ELSE ROUND((SUM(fcc.total_revenue - (fcc.total_cogs + fcc.inventory_movement_cost + fcc.operational_cost)) / SUM(fcc.total_revenue)) * 100, 2)
+                    WHEN COALESCE(SUM(s.grand_total), 0) = 0 THEN 0
+                    ELSE ROUND(((COALESCE(SUM(s.grand_total), 0) - COALESCE(SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0)) / COALESCE(SUM(s.grand_total), 0)) * 100, 2)
                 END AS kpi_profit_margin_pct,
-                CASE 
-                    WHEN COALESCE(SUM(fcc.total_revenue), 0) = 0 THEN 0
-                    ELSE ROUND((SUM(fcc.total_cogs + fcc.inventory_movement_cost + fcc.operational_cost) / SUM(fcc.total_revenue)) * 100, 2)
-                END AS kpi_cost_ratio_pct,
                 COALESCE(COUNT(DISTINCT db.id), 0) AS branch_count,
-                MAX(fcc.updated_at) AS last_updated,
+                MAX(s.date) AS last_updated,
                 CASE 
-                    WHEN COALESCE(SUM(fcc.total_revenue - (fcc.total_cogs + fcc.inventory_movement_cost + fcc.operational_cost)) / SUM(fcc.total_revenue), 0) * 100 >= 30 THEN '✓ Healthy'
-                    WHEN COALESCE(SUM(fcc.total_revenue - (fcc.total_cogs + fcc.inventory_movement_cost + fcc.operational_cost)) / SUM(fcc.total_revenue), 0) * 100 >= 20 THEN '⚠ Monitor'
+                    WHEN COALESCE((COALESCE(SUM(s.grand_total), 0) - COALESCE(SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0)) / NULLIF(COALESCE(SUM(s.grand_total), 0), 0), 0) * 100 >= 30 THEN '✓ Healthy'
+                    WHEN COALESCE((COALESCE(SUM(s.grand_total), 0) - COALESCE(SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0)) / NULLIF(COALESCE(SUM(s.grand_total), 0), 0), 0) * 100 >= 20 THEN '⚠ Monitor'
                     ELSE '✗ Low'
                 END AS health_status,
                 CASE 
-                    WHEN COALESCE(SUM(fcc.total_revenue - (fcc.total_cogs + fcc.inventory_movement_cost + fcc.operational_cost)) / SUM(fcc.total_revenue), 0) * 100 >= 30 THEN '#10B981'
-                    WHEN COALESCE(SUM(fcc.total_revenue - (fcc.total_cogs + fcc.inventory_movement_cost + fcc.operational_cost)) / SUM(fcc.total_revenue), 0) * 100 >= 20 THEN '#F59E0B'
+                    WHEN COALESCE((COALESCE(SUM(s.grand_total), 0) - COALESCE(SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0)) / NULLIF(COALESCE(SUM(s.grand_total), 0), 0), 0) * 100 >= 30 THEN '#10B981'
+                    WHEN COALESCE((COALESCE(SUM(s.grand_total), 0) - COALESCE(SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0)) / NULLIF(COALESCE(SUM(s.grand_total), 0), 0), 0) * 100 >= 20 THEN '#F59E0B'
                     ELSE '#EF4444'
-                END AS health_color
+                END AS health_color,
+                ROUND(COALESCE((COALESCE(SUM(s.grand_total), 0) - COALESCE(SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0)) / NULLIF(COALESCE(SUM(s.grand_total), 0), 0), 0) * 100, 2) AS net_margin_pct
             FROM sma_warehouses w
-            LEFT JOIN sma_fact_cost_center fcc ON w.id = fcc.warehouse_id AND CONCAT(fcc.period_year, '-', LPAD(fcc.period_month, 2, '0')) = ?
             LEFT JOIN sma_warehouses db ON db.warehouse_type = 'branch' AND db.parent_id = w.id
+            LEFT JOIN sma_sales s ON (s.warehouse_id = w.id OR s.warehouse_id = db.id) 
+                AND s.sale_status = 'completed'
+                {$where_clause}
+            LEFT JOIN sma_sale_items si ON s.id = si.sale_id
             WHERE (w.warehouse_type = 'pharmacy') OR (w.warehouse_type = 'warehouse' AND w.parent_id IS NULL)
-            GROUP BY w.id, w.code, w.name, fcc.period_year, fcc.period_month
+            GROUP BY w.id, w.code, w.name
             ORDER BY kpi_total_revenue DESC
             LIMIT ? OFFSET ?
         ";
 
-        $result = $this->db->query($query, [$period, $limit, $offset]);
+        // Prepare parameters
+        array_unshift($params, $period);
+        array_push($params, $limit, $offset);
+
+        $result = $this->db->query($query, $params);
         return $result->result_array();
     }
 
     /**
      * Get all branches with health scores and margins
-     * Uses sma_warehouses table directly (warehouse_type='branch')
+     * Direct SQL query for better compatibility
      * 
-     * @param string $period YYYY-MM format
+     * @param string $period YYYY-MM format, 'today', or 'ytd'
      * @param int $limit
      * @param int $offset
      * @return array
@@ -1040,7 +1196,21 @@ public function get_hierarchical_analytics($period_type = 'today', $target_month
             $period = date('Y-m');
         }
 
-        // Query that joins branches with pharmacies and cost center facts
+        // Build WHERE clause based on period type
+        $where_clause = "";
+        $params = [];
+        
+        if ($period === 'today') {
+            $where_clause = "AND DATE(s.date) = CURDATE()";
+        } elseif ($period === 'ytd') {
+            $where_clause = "AND YEAR(s.date) = YEAR(CURDATE()) AND s.date <= CURDATE()";
+        } else {
+            // Monthly: YYYY-MM format
+            list($year, $month) = explode('-', $period);
+            $where_clause = "AND YEAR(s.date) = ? AND MONTH(s.date) = ?";
+            $params = [$year, $month];
+        }
+
         $query = "
             SELECT 
                 b.id AS branch_id,
@@ -1050,52 +1220,72 @@ public function get_hierarchical_analytics($period_type = 'today', $target_month
                 p.id AS pharmacy_id,
                 p.code AS pharmacy_code,
                 p.name AS pharmacy_name,
-                CONCAT(fcc.period_year, '-', LPAD(fcc.period_month, 2, '0')) AS period,
-                COALESCE(SUM(fcc.total_revenue), 0) AS kpi_total_revenue,
-                COALESCE(SUM(fcc.total_cogs + fcc.inventory_movement_cost + fcc.operational_cost), 0) AS kpi_total_cost,
-                COALESCE(SUM(fcc.total_revenue - (fcc.total_cogs + fcc.inventory_movement_cost + fcc.operational_cost)), 0) AS kpi_profit_loss,
+                ? AS period,
+                COALESCE(SUM(s.grand_total), 0) AS kpi_total_revenue,
+                COALESCE(SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0) AS kpi_total_cost,
+                COALESCE(SUM(s.grand_total) - SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0) AS kpi_profit_loss,
                 CASE 
-                    WHEN COALESCE(SUM(fcc.total_revenue), 0) = 0 THEN 0
-                    ELSE ROUND((SUM(fcc.total_revenue - (fcc.total_cogs + fcc.inventory_movement_cost + fcc.operational_cost)) / SUM(fcc.total_revenue)) * 100, 2)
+                    WHEN COALESCE(SUM(s.grand_total), 0) = 0 THEN 0
+                    ELSE ROUND(((COALESCE(SUM(s.grand_total), 0) - COALESCE(SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0)) / COALESCE(SUM(s.grand_total), 0)) * 100, 2)
                 END AS kpi_profit_margin_pct,
+                MAX(s.date) AS last_updated,
                 CASE 
-                    WHEN COALESCE(SUM(fcc.total_revenue), 0) = 0 THEN 0
-                    ELSE ROUND((SUM(fcc.total_cogs + fcc.inventory_movement_cost + fcc.operational_cost) / SUM(fcc.total_revenue)) * 100, 2)
-                END AS kpi_cost_ratio_pct,
-                MAX(fcc.updated_at) AS last_updated,
-                CASE 
-                    WHEN COALESCE(SUM(fcc.total_revenue - (fcc.total_cogs + fcc.inventory_movement_cost + fcc.operational_cost)) / SUM(fcc.total_revenue), 0) * 100 >= 30 THEN '✓ Healthy'
-                    WHEN COALESCE(SUM(fcc.total_revenue - (fcc.total_cogs + fcc.inventory_movement_cost + fcc.operational_cost)) / SUM(fcc.total_revenue), 0) * 100 >= 20 THEN '⚠ Monitor'
+                    WHEN COALESCE((COALESCE(SUM(s.grand_total), 0) - COALESCE(SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0)) / NULLIF(COALESCE(SUM(s.grand_total), 0), 0), 0) * 100 >= 30 THEN '✓ Healthy'
+                    WHEN COALESCE((COALESCE(SUM(s.grand_total), 0) - COALESCE(SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0)) / NULLIF(COALESCE(SUM(s.grand_total), 0), 0), 0) * 100 >= 20 THEN '⚠ Monitor'
                     ELSE '✗ Low'
                 END AS health_status,
                 CASE 
-                    WHEN COALESCE(SUM(fcc.total_revenue - (fcc.total_cogs + fcc.inventory_movement_cost + fcc.operational_cost)) / SUM(fcc.total_revenue), 0) * 100 >= 30 THEN '#10B981'
-                    WHEN COALESCE(SUM(fcc.total_revenue - (fcc.total_cogs + fcc.inventory_movement_cost + fcc.operational_cost)) / SUM(fcc.total_revenue), 0) * 100 >= 20 THEN '#F59E0B'
+                    WHEN COALESCE((COALESCE(SUM(s.grand_total), 0) - COALESCE(SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0)) / NULLIF(COALESCE(SUM(s.grand_total), 0), 0), 0) * 100 >= 30 THEN '#10B981'
+                    WHEN COALESCE((COALESCE(SUM(s.grand_total), 0) - COALESCE(SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0)) / NULLIF(COALESCE(SUM(s.grand_total), 0), 0), 0) * 100 >= 20 THEN '#F59E0B'
                     ELSE '#EF4444'
-                END AS health_color
+                END AS health_color,
+                ROUND(COALESCE((COALESCE(SUM(s.grand_total), 0) - COALESCE(SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0)) / NULLIF(COALESCE(SUM(s.grand_total), 0), 0), 0) * 100, 2) AS net_margin_pct
             FROM sma_warehouses b
             LEFT JOIN sma_warehouses p ON b.parent_id = p.id AND p.warehouse_type = 'pharmacy'
-            LEFT JOIN sma_fact_cost_center fcc ON b.id = fcc.warehouse_id AND CONCAT(fcc.period_year, '-', LPAD(fcc.period_month, 2, '0')) = ?
+            LEFT JOIN sma_sales s ON s.warehouse_id = b.id 
+                AND s.sale_status = 'completed'
+                {$where_clause}
+            LEFT JOIN sma_sale_items si ON s.id = si.sale_id
             WHERE b.warehouse_type = 'branch'
-            GROUP BY b.id, b.code, b.name, p.id, p.code, p.name, fcc.period_year, fcc.period_month
+            GROUP BY b.id, b.code, b.name, p.id, p.code, p.name
             ORDER BY kpi_total_revenue DESC
             LIMIT ? OFFSET ?
         ";
 
-        $result = $this->db->query($query, [$period, $limit, $offset]);
+        // Prepare parameters
+        array_unshift($params, $period);
+        array_push($params, $limit, $offset);
+
+        $result = $this->db->query($query, $params);
         return $result->result_array();
     }
 
     /**
      * Get specific pharmacy data with KPIs
+     * Direct SQL query for better compatibility
      * 
      * @param int $pharmacy_id Pharmacy warehouse ID
-     * @param string $period YYYY-MM format
+     * @param string $period YYYY-MM format, 'today', or 'ytd'
      * @return array
      */
     public function get_pharmacy_detail($pharmacy_id = null, $period = null) {
         if (!$period) {
             $period = date('Y-m');
+        }
+
+        // Build WHERE clause based on period type
+        $where_clause = "";
+        $params = [];
+        
+        if ($period === 'today') {
+            $where_clause = "AND DATE(s.date) = CURDATE()";
+        } elseif ($period === 'ytd') {
+            $where_clause = "AND YEAR(s.date) = YEAR(CURDATE()) AND s.date <= CURDATE()";
+        } else {
+            // Monthly: YYYY-MM format
+            list($year, $month) = explode('-', $period);
+            $where_clause = "AND YEAR(s.date) = ? AND MONTH(s.date) = ?";
+            $params = [$year, $month];
         }
 
         $query = "
@@ -1104,35 +1294,31 @@ public function get_hierarchical_analytics($period_type = 'today', $target_month
                 w.code AS pharmacy_code,
                 w.name AS pharmacy_name,
                 w.warehouse_type,
-                CONCAT(fcc.period_year, '-', LPAD(fcc.period_month, 2, '0')) AS period,
-                COALESCE(SUM(fcc.total_revenue), 0) AS kpi_total_revenue,
-                COALESCE(SUM(fcc.total_cogs), 0) AS kpi_cogs,
-                COALESCE(SUM(fcc.inventory_movement_cost), 0) AS kpi_inventory_movement,
-                COALESCE(SUM(fcc.operational_cost), 0) AS kpi_operational_cost,
-                COALESCE(SUM(fcc.total_cogs + fcc.inventory_movement_cost + fcc.operational_cost), 0) AS kpi_total_cost,
-                COALESCE(SUM(fcc.total_revenue - (fcc.total_cogs + fcc.inventory_movement_cost + fcc.operational_cost)), 0) AS kpi_profit_loss,
+                ? AS period,
+                COALESCE(SUM(s.grand_total), 0) AS kpi_total_revenue,
+                COALESCE(SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0) AS kpi_total_cost,
+                COALESCE(SUM(s.grand_total) - SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0) AS kpi_profit_loss,
                 CASE 
-                    WHEN COALESCE(SUM(fcc.total_revenue), 0) = 0 THEN 0
-                    ELSE ROUND((SUM(fcc.total_revenue - (fcc.total_cogs + fcc.inventory_movement_cost + fcc.operational_cost)) / SUM(fcc.total_revenue)) * 100, 2)
+                    WHEN COALESCE(SUM(s.grand_total), 0) = 0 THEN 0
+                    ELSE ROUND(((COALESCE(SUM(s.grand_total), 0) - COALESCE(SUM(si.subtotal - (si.subtotal * (si.discount / 100))), 0)) / COALESCE(SUM(s.grand_total), 0)) * 100, 2)
                 END AS kpi_profit_margin_pct,
-                CASE 
-                    WHEN COALESCE(SUM(fcc.total_revenue), 0) = 0 THEN 0
-                    ELSE ROUND((SUM(fcc.total_cogs) / SUM(fcc.total_revenue)) * 100, 2)
-                END AS gross_margin_pct,
-                CASE 
-                    WHEN COALESCE(SUM(fcc.total_revenue), 0) = 0 THEN 0
-                    ELSE ROUND(((SUM(fcc.total_revenue) - SUM(fcc.total_cogs)) / SUM(fcc.total_revenue)) * 100, 2)
-                END AS net_margin_pct,
                 COALESCE(COUNT(DISTINCT db.id), 0) AS branch_count,
-                MAX(fcc.updated_at) AS last_updated
+                MAX(s.date) AS last_updated
             FROM sma_warehouses w
-            LEFT JOIN sma_fact_cost_center fcc ON w.id = fcc.warehouse_id AND CONCAT(fcc.period_year, '-', LPAD(fcc.period_month, 2, '0')) = ?
             LEFT JOIN sma_warehouses db ON db.warehouse_type = 'branch' AND db.parent_id = w.id
+            LEFT JOIN sma_sales s ON (s.warehouse_id = w.id OR s.warehouse_id = db.id) 
+                AND s.sale_status = 'completed'
+                {$where_clause}
+            LEFT JOIN sma_sale_items si ON s.id = si.sale_id
             WHERE w.warehouse_type = 'pharmacy' AND w.id = ?
-            GROUP BY w.id, w.code, w.name, fcc.period_year, fcc.period_month
+            GROUP BY w.id, w.code, w.name
         ";
 
-        $result = $this->db->query($query, [$period, $pharmacy_id]);
+        // Prepare parameters
+        array_unshift($params, $period);
+        array_push($params, $pharmacy_id);
+
+        $result = $this->db->query($query, $params);
         return $result->row_array();
     }
 
