@@ -869,7 +869,7 @@ function loadRulesData() {
         scopeId: COMPANY_ID
     });
     
-    fetch(`http://localhost:3000/api/v1/rules?${params.toString()}`, {
+    fetch(`http://81.208.174.52:4000/api/v1/rules?${params.toString()}`, {
         method: 'GET',
         headers: {
             'Accept': 'application/json',
@@ -1407,8 +1407,8 @@ function saveRule() {
     
     // Determine endpoint based on whether we're creating or editing
     const endpoint = currentRuleId 
-        ? `http://localhost:3000/api/v1/rules/${currentRuleId}`
-        : 'http://localhost:3000/api/v1/rules';
+        ? `http://81.208.174.52:4000/api/v1/rules/${currentRuleId}`
+        : 'http://81.208.174.52:4000/api/v1/rules';
     
     const method = currentRuleId ? 'PATCH' : 'POST';
     
@@ -1749,7 +1749,7 @@ function editRule(id) {
     document.getElementById('drawerTitle').textContent = 'Edit Loyalty Rule';
     
     // Fetch rule data from API
-    fetch(`http://localhost:3000/api/v1/rules/${id}`, {
+    fetch(`http://81.208.174.52:4000/api/v1/rules/${id}`, {
         method: 'GET',
         headers: {
             'Accept': 'application/json',
@@ -1866,7 +1866,7 @@ function populateRuleForm(rule) {
 
 // View rule details
 function viewRule(id) {
-    fetch(`http://localhost:3000/api/v1/rules/${id}`, {
+    fetch(`http://81.208.174.52:4000/api/v1/rules/${id}`, {
         method: 'GET',
         headers: {
             'Accept': 'application/json',
@@ -1890,8 +1890,8 @@ function deleteRule(id) {
     if (!confirm('Are you sure you want to delete this rule?')) {
         return;
     }
-    
-    fetch(`http://localhost:3000/api/v1/rules/${id}`, {
+
+    fetch(`http://81.208.174.52:4000/api/v1/rules/${id}`, {
         method: 'DELETE',
         headers: {
             'Accept': 'application/json',

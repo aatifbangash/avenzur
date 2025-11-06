@@ -553,7 +553,7 @@
 
 <script>
 // API Configuration
-const API_BASE_URL = 'http://localhost:3000/api/v1';
+const API_BASE_URL = 'http://81.208.174.52:4000/api/v1';
 const COMPANY_ID = '<?php echo isset($company_id) ? $company_id : ''; ?>';
 
 // Load budget data on page load

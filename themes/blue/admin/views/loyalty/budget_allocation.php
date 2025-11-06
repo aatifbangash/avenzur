@@ -951,7 +951,7 @@ let currentAllocation = {
 };
 
 // API Configuration
-const API_BASE_URL = 'http://localhost:3000/api/v1';
+const API_BASE_URL = 'http://81.208.174.52:4000/api/v1';
 
 /**
  * Load budget and hierarchy data on page load
@@ -984,7 +984,7 @@ async function loadBudgetData() {
         
     } catch (error) {
         console.error('Error loading budget data:', error);
-        alert('Error loading budget data: ' + error.message + '\n\nMake sure the API server is running on http://localhost:3000');
+        alert('Error loading budget data: ' + error.message + '\n\nMake sure the API server is running on http://81.208.174.52:3000');
     }
 }
 
@@ -1473,7 +1473,7 @@ The allocations have been saved to the system.`);
             console.error('Server error:', result);
         }
     } catch (error) {
-        alert('Network Error: ' + error.message + '\n\nPlease ensure the API server is running on http://localhost:3000');
+        alert('Network Error: ' + error.message + '\n\nPlease ensure the API server is running on http://81.208.174.52:3000');
         console.error('Request failed:', error);
     }
 }
