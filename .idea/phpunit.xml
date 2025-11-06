@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PHPUnit">
+    <option name="directories">
+      <list>
+        <option value="$PROJECT_DIR$/vendor_bk/maennchen/zipstream-php/test" />
+        <option value="$PROJECT_DIR$/vendor_bk/chillerlan/php-qrcode/tests" />
+        <option value="$PROJECT_DIR$/vendor_bk/stripe/stripe-php/tests" />
+        <option value="$PROJECT_DIR$/vendor_bk/chillerlan/php-settings-container/tests" />
+        <option value="$PROJECT_DIR$/vendor_bk/mike42/escpos-php/test/unit" />
+        <option value="$PROJECT_DIR$/vendor_bk/mike42/escpos-php/test/integration" />
+        <option value="$PROJECT_DIR$/vendor_bk/salla/zatca/tests" />
+      </list>
+    </option>
+  </component>
+</project>
