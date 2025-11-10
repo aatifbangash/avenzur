@@ -36,12 +36,12 @@ class Delivery extends MY_Controller
         $this->load->library('datatables');
 
         $this->datatables
-            ->select("d.id, 
-                  DATE_FORMAT(d.date_string, '%Y-%m-%d') as date, 
-                  COALESCE(CONCAT(u.first_name, ' ', u.last_name), d.driver_name, 'N/A') as driver, 
-                  COALESCE(CAST(dd.truck_id AS CHAR), d.truck_number, 'N/A') as truck", FALSE)
-            ->from('sma_deliveries d')
-            ->join('sma_delivery_driver dd', 'd.driver_id = dd.id', 'left')
+            ->select("deliveries.id, 
+                  DATE_FORMAT(sma_deliveries.date_string, '%Y-%m-%d') as date, 
+                  COALESCE(CONCAT(u.first_name, ' ', u.last_name), deliveries.driver_name, 'N/A') as driver, 
+                  COALESCE(CAST(dd.truck_id AS CHAR), deliveries.truck_number, 'N/A') as truck", FALSE)
+            ->from('sma_deliveries')
+            ->join('sma_delivery_driver dd', 'deliveries.driver_id = dd.id', 'left')
             ->join('sma_users u', 'u.id = (SELECT id FROM sma_users WHERE group_id = dd.groupId LIMIT 1)', 'left')
             ->add_column('Actions',
                 "<div class='text-center'>" .
@@ -50,7 +50,7 @@ class Delivery extends MY_Controller
                 "<a href='" . admin_url('delivery/print_delivery/$1') . "' target='_blank' class='tip' title='Print' data-toggle='tooltip'><i class='fa fa-print'></i></a> " .
                 "<a href='#' onclick=\"if(confirm('Are you sure?')) window.location.href='" . admin_url('delivery/delete/$1') . "'\" class='tip' title='Delete' data-toggle='tooltip'><i class='fa fa-trash-o'></i></a>" .
                 "</div>",
-                'd.id');
+                'deliveries.id');
 
         echo $this->datatables->generate();
     }
@@ -64,7 +64,7 @@ class Delivery extends MY_Controller
         $this->db->select('s.id, s.reference_no, s.date as sale_date, s.grand_total as total_amount, s.total_items, c.name as customer_name');
         $this->db->from('sma_sales s');
         $this->db->join('sma_companies c', 's.customer_id = c.id', 'left');
-        $this->db->where_in('s.payment_status', ['pending', 'due', 'partial']);
+        $this->db->where_in('s.sale_status', ['label_verifired']);
         $this->db->order_by('s.date', 'asc');
         $invoices_query = $this->db->get();
         if ($invoices_query === false) {
@@ -127,6 +127,20 @@ class Delivery extends MY_Controller
         $this->db->where('dd.groupId', $driver_group_id);
         $this->db->order_by('u.first_name', 'asc');
 
+        /*
+
+        $this->db->select('dd.id, dd.groupId, dd.truck_id, dd.license_number, u.first_name, u.last_name');
+        $this->db->from('sma_delivery_driver dd');
+        $this->db->join('sma_users u', 'dd.groupId = u.group_id AND u.group_id = ' . $driver_group_id, 'inner');
+        $this->db->where('dd.groupId', $driver_group_id);
+        $this->db->where("dd.id NOT IN (SELECT driver_id FROM sma_deliveries WHERE status IN ('driver_assigned','out_for_delivery'))", NULL, FALSE);
+        $this->db->order_by('u.first_name', 'asc');
+
+        $query = $this->db->get();
+        return $query->result();
+
+        */
+
         $drivers_query = $this->db->get();
 
         if ($drivers_query === false) {
@@ -164,6 +178,9 @@ class Delivery extends MY_Controller
 
         $delivery_data = [
             'driver_id' => $driver_id,
+            'driver_name' => $driver->first_name . ' ' . $driver->last_name,
+            'truck_number' => $driver->truck_id ?: 'N/A',
+            //'license_number' => $driver->license_number ?: 'N/A',
             'status' => $this->input->post('status', true) ?: 'pending',
             'date_string' => !empty($this->input->post('date_string')) ? $this->sma->fld($this->input->post('date_string')) : date('Y-m-d H:i:s'),
             'assigned_by' => $this->session->userdata('user_id')
@@ -175,23 +192,23 @@ class Delivery extends MY_Controller
             $delivery_data['odometer'] = $odometer;
         }
 
-        $total_refrigerated = $this->input->post('total_refrigerated_items');
+        /*$total_refrigerated = $this->input->post('total_refrigerated_items');
         if (!empty($total_refrigerated)) {
             $delivery_data['total_refrigerated_items'] = $total_refrigerated;
-        }
+        }*/
 
         // Get selected invoices
         $invoice_ids = $this->input->post('invoice_ids');
         $items = [];
-
         if (!empty($invoice_ids)) {
             foreach ($invoice_ids as $invoice_id) {
                 $invoice = $this->sales_model->getSaleByID($invoice_id);
+                $sale_label = $this->sales_model->getSaleLabels($invoice_id);
                 if ($invoice) {
                     $items[] = [
                         'invoice_id' => $invoice_id,
                         'quantity_items' => $invoice->total_items ?? 0,
-                        'refrigerated_items' => $this->input->post('refrigerated_items_' . $invoice_id, true) ?: 0
+                        'refrigerated_items' => $sale_label->refrigerated_items ?: 0
                     ];
                 }
             }
@@ -199,14 +216,15 @@ class Delivery extends MY_Controller
 
         $data = [
             'delivery' => $delivery_data,
-            'items' => $items
+            'items' => $items,
+            'invoice_ids' => $invoice_ids
         ];
 
         $delivery_id = $this->delivery_model->add_delivery($data);
 
         if ($delivery_id) {
             $this->session->set_flashdata('message', 'Delivery created successfully');
-            redirect(admin_url('delivery/view/' . $delivery_id));
+            redirect(admin_url('delivery'));
         } else {
             $this->session->set_flashdata('error', 'Failed to create delivery');
             redirect(admin_url('delivery/add'));
@@ -263,11 +281,20 @@ class Delivery extends MY_Controller
         $this->data['delivery'] = $this->delivery_model->get_delivery_by_id($delivery_id);
         $this->data['items'] = $this->delivery_model->get_delivery_items($delivery_id);
 
+        if($this->data['delivery']->status == 'delivered'){
+            $this->session->set_flashdata('error', 'Cannot edit delivery. Delivery is completed.');
+            redirect(admin_url('delivery'));
+            exit;
+
+        }
+        //echo '<pre>';print_r($this->data['delivery']);exit;
+
         // Get registered drivers for dropdown
         $this->data['drivers'] = $this->get_registered_drivers();
 
         // Get all pending sales invoices for adding new items
         $this->db->select('s.id, s.reference_no, s.date as sale_date, s.grand_total as total_amount, s.total_items, c.name as customer_name, 
+                          SUM(sl.refrigerated_items) as assigned_refrigerated_items,
                           IF(di.id IS NOT NULL, di.delivery_id, NULL) as assigned_delivery_id, 
                           IF(di.id IS NOT NULL, d.id, NULL) as current_delivery_id,
                           IF(di.id IS NOT NULL, d.driver_id, NULL) as current_driver_id,
@@ -276,7 +303,9 @@ class Delivery extends MY_Controller
         $this->db->join('sma_companies c', 's.customer_id = c.id', 'left');
         $this->db->join('sma_delivery_items di', 's.id = di.invoice_id', 'left');
         $this->db->join('sma_deliveries d', 'di.delivery_id = d.id', 'left');
-        $this->db->where_in('s.payment_status', ['pending', 'due', 'partial']);
+        $this->db->join('sma_sale_labels sl', 's.id = sl.sale_id', 'left');
+        $this->db->where_in('s.sale_status', ['label_verifired']);
+        $this->db->group_by('sl.sale_id');
         $this->db->order_by('s.date', 'asc');
         $invoices_query = $this->db->get();
         $this->data['available_invoices'] = $invoices_query->result();
@@ -318,9 +347,38 @@ class Delivery extends MY_Controller
             redirect(admin_url('delivery/edit/' . $delivery_id));
             return;
         }
+        
+        $status = $this->input->post('status', true);
+        $odometer = $this->input->post('odometer');
+        $odometer_mileage = $this->input->post('odometer_mileage');
+        $delivery_info = $this->delivery_model->get_delivery_by_id($delivery_id);
+        $delivery_items = $this->delivery_model->get_delivery_items($delivery_id);
+
+        if($status == 'out_for_delivery' && empty($delivery_items)){
+            $this->session->set_flashdata('error', 'No items assigned to this delivery.');
+            redirect(admin_url('delivery/edit/' . $delivery_id));
+            exit;
+        }
+        
+        foreach($delivery_items as $item){
+            $sale_details = $this->sales_model->getSaleByID($item->invoice_id);
+            if($sale_details->sale_status != 'sent_to_rasd' && $status != 'delivered'){
+                $this->session->set_flashdata('error', 'Invoice #'.$item->invoice_id.' not sent to rasd.');
+                redirect(admin_url('delivery/edit/' . $delivery_id));
+                exit;
+            }
+        }
 
         // Verify driver
         $driver_id = $this->input->post('driver_id');
+        //echo '<pre>';print_r($delivery_items);exit;
+        /*$invoice_ids = $this->input->post('invoice_ids');
+         if (empty($invoice_ids)) {
+            $this->session->set_flashdata('error', 'No invoices selected for this delivery.');
+            redirect(admin_url('delivery/edit/' . $delivery_id));
+            return;
+        }*/
+
         $driver = $this->verify_driver($driver_id);
 
         if (!$driver) {
@@ -331,15 +389,17 @@ class Delivery extends MY_Controller
 
         $delivery_data = [
             'driver_id' => $driver_id,
-            'status' => $this->input->post('status', true),
+            'status' => $status,
+            'odometer' => $odometer,
+            'odometer_mileage' => $odometer_mileage,
             'date_string' => $this->sma->fld($this->input->post('date_string')),
             'updated_by' => $this->session->userdata('user_id'),
             'updated_at' => date('Y-m-d H:i:s')
         ];
 
-        if ($this->delivery_model->update_delivery($delivery_id, $delivery_data)) {
+        if ($this->delivery_model->update_delivery($delivery_id, $delivery_data, $delivery_items)) {
             $this->session->set_flashdata('message', 'Delivery updated successfully');
-            redirect(admin_url('delivery/view/' . $delivery_id));
+            redirect(admin_url('delivery'));
         } else {
             $this->session->set_flashdata('error', 'Failed to update delivery');
             redirect(admin_url('delivery/edit/' . $delivery_id));
@@ -436,6 +496,39 @@ class Delivery extends MY_Controller
     }
 
     /**
+     * Add an item to delivery
+     */
+    public function add_item($delivery_id = null)
+    {
+        if (!$delivery_id) {
+            $delivery_id = $this->input->post('delivery_id');
+        }
+
+        $invoice_id = $this->input->post('invoice_id');
+        $total_items = $this->input->post('total_items');
+        $max_refrigerated_items = $this->input->post('max_refrigerated_items');
+
+        if (!$delivery_id || !$invoice_id) {
+            $this->sma->send_json(['error' => 1, 'msg' => 'Invalid parameters']);
+        }
+
+        $sale_details = $this->sales_model->getSaleByID($invoice_id);
+        if (!$sale_details) {
+            $this->sma->send_json(['error' => 1, 'msg' => 'Sale not found']);
+        }else{
+            if($sale_details->sale_status != 'label_verifired'){
+                $this->sma->send_json(['error' => 1, 'msg' => 'Cannot add this item.']);
+            }else{
+                if ($this->delivery_model->add_item_to_delivery($delivery_id, $invoice_id, $total_items, $max_refrigerated_items, $this->session->userdata('user_id'))) {
+                    $this->sma->send_json(['error' => 0, 'msg' => 'Item added successfully']);
+                } else {
+                    $this->sma->send_json(['error' => 1, 'msg' => 'Failed to add item']);
+                }
+            }
+        }
+    }
+
+    /**
      * Remove an item from delivery
      */
     public function remove_item($delivery_id = null)
@@ -450,10 +543,19 @@ class Delivery extends MY_Controller
             $this->sma->send_json(['error' => 1, 'msg' => 'Invalid parameters']);
         }
 
-        if ($this->delivery_model->remove_item_from_delivery($delivery_id, $invoice_id, $this->session->userdata('user_id'))) {
-            $this->sma->send_json(['error' => 0, 'msg' => 'Item removed successfully']);
-        } else {
-            $this->sma->send_json(['error' => 1, 'msg' => 'Failed to remove item']);
+        $sale_details = $this->sales_model->getSaleByID($invoice_id);
+        if (!$sale_details) {
+            $this->sma->send_json(['error' => 1, 'msg' => 'Sale not found']);
+        }else{
+            if($sale_details->sale_status != 'driver_assigned'){
+                $this->sma->send_json(['error' => 1, 'msg' => 'Cannot remove item. Sale is out for delivery.']);
+            }else{
+                if ($this->delivery_model->remove_item_from_delivery($delivery_id, $invoice_id, $this->session->userdata('user_id'))) {
+                    $this->sma->send_json(['error' => 0, 'msg' => 'Item removed successfully']);
+                } else {
+                    $this->sma->send_json(['error' => 1, 'msg' => 'Failed to remove item']);
+                }
+            }
         }
     }
 
@@ -574,7 +676,7 @@ class Delivery extends MY_Controller
             return;
         }
 
-        $this->db->select('odometer, DATE_FORMAT(date_string, "%Y-%m-%d %H:%i") as date', FALSE);
+        $this->db->select('odometer, odometer_mileage, DATE_FORMAT(date_string, "%Y-%m-%d %H:%i") as date', FALSE);
         $this->db->from('sma_deliveries');
         $this->db->where('driver_id', $driver_id);
         $this->db->where('odometer IS NOT NULL');
@@ -589,7 +691,7 @@ class Delivery extends MY_Controller
             echo json_encode([
                 'success' => true,
                 'data' => [
-                    'odometer' => $result['odometer'],
+                    'odometer' => $result['odometer'] + $result['odometer_mileage'],
                     'date' => $result['date']
                 ]
             ]);

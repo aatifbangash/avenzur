@@ -38,7 +38,7 @@
     }
 
     .newmenu-link:hover {
-        background: #374151 !important; /* Hover grey */
+        background: #134dabff !important; /* Hover grey */
         color: #fff !important;
     }
 
@@ -72,10 +72,7 @@
         color: #d1d5db !important;
     }
 
-    .newmenu-sub .newmenu-link:hover {
-        background: #374151 !important;
-        color: #fff !important;
-    }
+    
 
     .newmenu-sub .newmenu-link {
         font-size: 14px !important;
@@ -98,7 +95,7 @@
     }
 
     /* Keep top-level li items open by default */
-    .newmenu-wrapper > .newmenu-nav > .newmenu-item.has-sub {
+    /*.newmenu-wrapper > .newmenu-nav > .newmenu-item.has-sub {
         display: block !important;
     }
 
@@ -107,11 +104,11 @@
     }
 
     .newmenu-wrapper > .newmenu-nav > .newmenu-item.has-sub > .newmenu-link .newmenu-chevron {
-        transform: rotate(90deg); /* keep chevron pointing right for open state */
-    }
+        transform: rotate(90deg); 
+    }*/
 
     .bluecolor {
-        background-color: #428bca !important;
+        background-color: #0b4476 !important;
         color: white !important;
         border-color: #357ebd !important;
         border-top: 1px solid #357ebd !important;
@@ -514,6 +511,20 @@
             <ul class="newmenu-sub">
                 <li><a href="<?= admin_url('notifications/rasd'); ?>" class="newmenu-link"><i class="fa fa-users"></i> <?= lang('Rasd Notifications'); ?></a></li>
             </ul>
+        </li>
+
+        <!-- Warehouse Management -->
+         <li class="newmenu-item has-sub">
+            <a href="#" class="newmenu-link bluecolor">
+                <i class="fa fa-cogs"></i>
+                <span><?= lang('Warehouse Management'); ?></span>
+                <i class="fa fa-chevron-right newmenu-chevron"></i>
+            </a>
+            <ul class="newmenu-sub">
+                <li><a href="<?= admin_url('products/add_adjustment'); ?>" class="newmenu-link"><i class="fa fa-users"></i> <?= lang('Add Adjustment'); ?></a></li>
+                <li><a href="<?= admin_url('products/quantity_adjustments'); ?>" class="newmenu-link"><i class="fa fa-users"></i> <?= lang('List Adjustments'); ?></a></li>
+            </ul>
+        </li>
         <?php } ?>
     </ul>
 </div>

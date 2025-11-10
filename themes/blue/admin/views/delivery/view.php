@@ -87,8 +87,8 @@
             <div class="box-content">
                 <a href="<?=admin_url('delivery/edit/' . $delivery->id)?>" class="btn btn-primary btn-block"><i class="fa fa-edit"></i> <?=lang('edit')?></a>
                 <a href="<?=admin_url('delivery/print/' . $delivery->id)?>" class="btn btn-info btn-block" target="_blank"><i class="fa fa-print"></i> <?=lang('print')?></a>
-                <button onclick="updateStatus(<?=$delivery->id?>, 'out_for_delivery')" class="btn btn-warning btn-block"><i class="fa fa-truck"></i> <?=lang('mark_out_for_delivery')?></button>
-                <button onclick="updateStatus(<?=$delivery->id?>, 'completed')" class="btn btn-success btn-block"><i class="fa fa-check"></i> <?=lang('mark_completed')?></button>
+                <!--<button onclick="updateStatus(<?=$delivery->id?>, 'out_for_delivery')" class="btn btn-warning btn-block"><i class="fa fa-truck"></i> <?=lang('mark_out_for_delivery')?></button>-->
+                <!--<button onclick="updateStatus(<?=$delivery->id?>, 'completed')" class="btn btn-success btn-block"><i class="fa fa-check"></i> <?=lang('mark_completed')?></button>-->
                 <a href="<?=admin_url('delivery')?>" class="btn btn-default btn-block"><i class="fa fa-list"></i> <?=lang('back')?></a>
             </div>
         </div>
@@ -148,7 +148,7 @@
 <?php endif; ?>
 
 <script>
-    function updateStatus(deliveryId, status) {
+    /*function updateStatus(deliveryId, status) {
         $.ajax({
             url: '<?=admin_url('delivery/update_status')?>',
             type: 'POST',
@@ -166,5 +166,5 @@
                 }
             }
         });
-    }
+    }*/
 </script>

@@ -3646,7 +3646,7 @@ class Products extends MY_Controller
     {
         $this->load->library('excel');
 
-        $file_path = 'C:\Users\faisa\Downloads\products_credit_dis.xls';
+        $file_path = 'C:\Users\faisa\Downloads\HumanDrugs (1).xls';
 
         $spreadsheet = IOFactory::load($file_path);
         $sheet = $spreadsheet->getActiveSheet();
@@ -3666,17 +3666,71 @@ class Products extends MY_Controller
         // Pass to view for mapping
         $this->data['headers']   = $headers;
         $rows_updated = 0;
+        $total_found = 0;
 
         foreach ($rows as $row){
             $data = array();
-            $data['credit_discount'] = $row['H'];
-            $product = $this->products_model->getProductByID($row['E']);
-            $this->db->update('products', $data, ['id' => $product->id]);
-            $rows_updated++;
+            //$data['credit_discount'] = $row['H'];
+            //echo '<pre>';print_r($row);exit;
+            $product = $this->products_model->getProductByID($row['D']);
+            if($product){
+                $total_found++;
+                //echo '<pre>';print_r($product);exit;
+            }
+            
+            //$this->db->update('products', $data, ['id' => $product->id]);
+            //$rows_updated++;
         }
 
-        echo 'Rows Updated : ' . $rows_updated.'<br />';
+        echo 'Rows found in database : ' . $total_found.'<br />';
     }*/
+
+    public function import_excel()
+    {
+        $this->load->library('excel');
+
+        $file_path = 'C:\Users\faisa\Downloads\HumanDrugs (1).xls';
+
+        $spreadsheet = IOFactory::load($file_path);
+        $sheet = $spreadsheet->getActiveSheet();
+        $rows = $sheet->toArray(null, true, true, true);
+
+        // Remove header row
+        array_shift($rows);
+
+        $sheet_product_ids = [];
+        $sheet_product_names = [];
+
+        foreach ($rows as $row) {
+
+            // Product ID in column D
+            if (!empty($row['D'])) {
+                $sheet_product_ids[] = trim($row['D']);
+            }
+
+            // Product Name in column E
+            if (!empty($row['E'])) {
+                $sheet_product_names[] = trim($row['E']);
+            }
+        }
+
+        // Remove duplicates
+        $sheet_product_ids = array_unique($sheet_product_ids);
+        $sheet_product_names = array_unique($sheet_product_names);
+
+        // Fetch products missing by BOTH id and name
+        $this->db->where_not_in('id', $sheet_product_ids);
+        $this->db->where_not_in('name', $sheet_product_names);
+        $missing_products = $this->db->get('sma_products')->result();
+
+        echo "Total products missing in sheet: " . count($missing_products) . "<br><br>";
+
+        foreach ($missing_products as $mp) {
+            echo "ID: {$mp->id} | Name: {$mp->name}<br>";
+        }
+    }
+
+
 
     /* ---------------------------------------------------------------- */
 
