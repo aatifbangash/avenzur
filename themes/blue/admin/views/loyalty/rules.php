@@ -428,11 +428,11 @@
 }
 
 .allocation-table thead {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
 }
 
-.allocation-table th {
+.allocation-table thead th {
+    color: black !important;
     padding: 12px;
     text-align: left;
     font-weight: 600;
@@ -541,6 +541,10 @@
     }
 }
 </style>
+<script>
+    const COMPANY_ID = '<?php echo isset($company_id) ? $company_id : ''; ?>';
+
+</script>
 
 <div class="horizon-dashboard">
     <!-- Page Header -->
@@ -607,7 +611,7 @@
                     <tr>
                         <th>Rule Name</th>
                         <th>Level</th>
-                        <th>Tier</th>
+                        <th>Type</th>
                         <th>Action Type</th>
                         <th>Priority</th>
                         <th>Status</th>
@@ -650,33 +654,9 @@
                         <span class="help-text">A descriptive name for this rule</span>
                     </div>
 
-                    <div class="form-group">
-                        <label>Hierarchy Level <span class="required">*</span></label>
-                        <select id="hierarchyLevel" name="hierarchy_level" required onchange="loadHierarchyNodes()">
-                            <option value="">Select Level</option>
-                            <option value="PHARMA_GROUP">Pharmacy Group</option>
-                            <option value="PHARMACY">Pharmacy</option>
-                            <option value="BRANCH">Branch</option>
-                        </select>
-                        <span class="help-text">Where this rule applies</span>
-                    </div>
-
-                    <div class="form-group" id="hierarchyNodeGroup" style="display: none;">
-                        <label>Select <span id="hierarchyNodeLabel">Node</span> <span class="required">*</span></label>
-                        <select id="hierarchyNodeId" name="hierarchy_node_id" required></select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Customer Tier</label>
-                        <div class="tier-selector">
-                            <button type="button" class="tier-btn" data-tier="all" onclick="selectTier('all')">All Tiers</button>
-                            <button type="button" class="tier-btn" data-tier="bronze" onclick="selectTier('bronze')">Bronze</button>
-                            <button type="button" class="tier-btn" data-tier="silver" onclick="selectTier('silver')">Silver</button>
-                            <button type="button" class="tier-btn" data-tier="gold" onclick="selectTier('gold')">Gold</button>
-                            <button type="button" class="tier-btn" data-tier="platinum" onclick="selectTier('platinum')">Platinum</button>
-                        </div>
-                        <input type="hidden" id="customerTier" name="customer_tier" value="all">
-                    </div>
+                    <!-- Hierarchy level is always COMPANY - hidden fields -->
+                    <input type="hidden" id="hierarchyLevel" value="COMPANY">
+                    <input type="hidden" id="hierarchyNodeId" value="">
 
                     <div class="form-row">
                         <div class="form-group">
@@ -883,15 +863,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Load rules data
 function loadRulesData() {
-    fetch('<?php echo admin_url("loyalty/get_rules"); ?>')
-        .then(r => r.json())
-        .then(d => {
-            if (d.success && d.rules) {
-                renderRulesTable(d.rules);
-                updateSummaryCards(d.rules);
+    // Build query parameters with scopeLevel and scopeId
+    const params = new URLSearchParams({
+        scopeLevel: 'COMPANY',
+        scopeId: COMPANY_ID
+    });
+    
+    fetch(`http://81.208.174.52:4000/api/v1/rules?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+        .then(r => {
+            if (!r.ok) {
+                throw new Error(`HTTP error! status: ${r.status}`);
             }
+            return r.json();
         })
-        .catch(e => console.error('Error loading rules:', e));
+        .then(data => {
+            console.log('Loaded rules:', data);
+            // API returns an array of rules directly or wrapped in data property
+            const rules = Array.isArray(data) ? data : (data.data || data.rules || []);
+            renderRulesTable(rules);
+            updateSummaryCards(rules);
+        })
+        .catch(e => {
+            console.error('Error loading rules:', e);
+            // Show empty state on error
+            renderRulesTable([]);
+            updateSummaryCards([]);
+        });
 }
 
 // Render rules table
@@ -906,30 +909,49 @@ function renderRulesTable(rules) {
     }
 
     tbody.innerHTML = rules.map(r => {
-        const statusBadge = r.status ? 
-            '<span class="badge badge-success">Active</span>' : 
-            '<span class="badge badge-error">Inactive</span>';
+        // Map API status to badge
+        let statusBadge = '<span class="badge badge-info">Draft</span>';
+        if (r.status === 'ACTIVE') {
+            statusBadge = '<span class="badge badge-success">Active</span>';
+        } else if (r.status === 'PUBLISHED') {
+            statusBadge = '<span class="badge badge-warning">Published</span>';
+        } else if (r.status === 'INACTIVE') {
+            statusBadge = '<span class="badge badge-error">Inactive</span>';
+        }
         
-        const tierBadge = r.customer_tier ? 
-            `<span class="badge badge-info">${r.customer_tier}</span>` : 
-            '<span class="badge badge-info">All</span>';
+        // Get hierarchy level from scope
+        const hierarchyLevel = r.scope?.level || r.scopeLevel || 'N/A';
+        
+        // Get action type
+        const actionType = r.action?.type || r.actionType || 'N/A';
+        
+        // Format action type for display
+        const actionDisplay = actionType.replace(/_/g, ' ').toLowerCase()
+            .replace(/\b\w/g, l => l.toUpperCase());
+        
+        // Get priority
+        const priority = r.priority || r.metadata?.priority || 3;
+        
+        // Format dates
+        const validFrom = r.validFrom ? new Date(r.validFrom).toLocaleDateString() : 'N/A';
+        const validUntil = r.validUntil ? new Date(r.validUntil).toLocaleDateString() : 'No Expiry';
         
         return `<tr>
             <td><strong>${r.name || 'Unnamed Rule'}</strong></td>
-            <td><span class="badge badge-info">${r.hierarchy_level || 'Company'}</span></td>
-            <td>${tierBadge}</td>
-            <td>${r.action_type || 'N/A'}</td>
-            <td><span class="badge badge-warning">Priority ${r.priority || 3}</span></td>
+            <td><span class="badge badge-info">${hierarchyLevel}</span></td>
+            <td><span class="badge badge-info">${r.ruleType || 'N/A'}</span></td>
+            <td>${actionDisplay}</td>
+            <td><span class="badge badge-warning">Priority ${priority}</span></td>
             <td>${statusBadge}</td>
-            <td style="font-size: 11px;">${r.start_date || 'N/A'} - ${r.end_date || 'No Expiry'}</td>
+            <td style="font-size: 11px;">${validFrom} - ${validUntil}</td>
             <td>
-                <button class="action-btn" onclick="editRule(${r.id})" title="Edit">
+                <button class="action-btn" onclick="editRule('${r.id}')" title="Edit">
                     <i class="fa fa-edit"></i>
                 </button>
-                <button class="action-btn" onclick="viewRule(${r.id})" title="View">
+                <button class="action-btn" onclick="viewRule('${r.id}')" title="View">
                     <i class="fa fa-eye"></i>
                 </button>
-                <button class="action-btn" onclick="deleteRule(${r.id})" title="Delete">
+                <button class="action-btn" onclick="deleteRule('${r.id}')" title="Delete">
                     <i class="fa fa-trash"></i>
                 </button>
             </td>
@@ -940,9 +962,15 @@ function renderRulesTable(rules) {
 // Update summary cards
 function updateSummaryCards(rules) {
     const total = rules.length;
-    const active = rules.filter(r => r.status == 1).length;
-    const scheduled = rules.filter(r => new Date(r.start_date) > new Date()).length;
-    const expired = rules.filter(r => r.end_date && new Date(r.end_date) < new Date()).length;
+    const active = rules.filter(r => r.status === 'ACTIVE').length;
+    const scheduled = rules.filter(r => {
+        if (!r.validFrom) return false;
+        return new Date(r.validFrom) > new Date();
+    }).length;
+    const expired = rules.filter(r => {
+        if (!r.validUntil) return false;
+        return new Date(r.validUntil) < new Date();
+    }).length;
 
     document.getElementById('totalRules').textContent = total;
     document.getElementById('activeRules').textContent = active;
@@ -984,53 +1012,26 @@ document.getElementById('ruleDrawer').addEventListener('click', function(e) {
 
 // Select tier
 function selectTier(tier) {
-    document.querySelectorAll('.tier-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    document.querySelector(`[data-tier="${tier}"]`).classList.add('active');
-    document.getElementById('customerTier').value = tier;
+    const tierButtons = document.querySelectorAll('.tier-btn');
+    const tierButton = document.querySelector(`[data-tier="${tier}"]`);
+    const tierInput = document.getElementById('customerTier');
+    
+    // Only execute if tier elements exist
+    if (tierButtons.length > 0 && tierButton && tierInput) {
+        tierButtons.forEach(btn => {
+            btn.classList.remove('active');
+        });
+        tierButton.classList.add('active');
+        tierInput.value = tier;
+    }
 }
 
 // Load hierarchy nodes based on level
+// Load hierarchy nodes - not needed since we always use COMPANY level
 function loadHierarchyNodes() {
-    const level = document.getElementById('hierarchyLevel').value;
-    const nodeGroup = document.getElementById('hierarchyNodeGroup');
-    const nodeSelect = document.getElementById('hierarchyNodeId');
-    const nodeLabel = document.getElementById('hierarchyNodeLabel');
-    
-    if (!level) {
-        nodeGroup.style.display = 'none';
-        return;
-    }
-    
-    nodeGroup.style.display = 'block';
-    
-    // Update label based on level
-    const labelMap = {
-        'PHARMA_GROUP': 'Pharmacy Group',
-        'PHARMACY': 'Pharmacy',
-        'BRANCH': 'Branch'
-    };
-    nodeLabel.textContent = labelMap[level] || 'Node';
-    
-    // Show loading state
-    nodeSelect.innerHTML = '<option value="">Loading...</option>';
-    
-    // Fetch nodes based on level
-    fetch(`<?php echo admin_url("loyalty/get_hierarchy_nodes/"); ?>${level}`)
-        .then(r => r.json())
-        .then(d => {
-            if (d.success && d.nodes) {
-                nodeSelect.innerHTML = '<option value="">Select ' + nodeLabel.textContent + '</option>' +
-                    d.nodes.map(n => `<option value="${n.id}">${n.name}</option>`).join('');
-            } else {
-                nodeSelect.innerHTML = '<option value="">No ' + nodeLabel.textContent + ' available</option>';
-            }
-        })
-        .catch(e => {
-            console.error('Error loading nodes:', e);
-            nodeSelect.innerHTML = '<option value="">Error loading data</option>';
-        });
+    // No-op: Hierarchy is always COMPANY with COMPANY_ID
+    console.log('Hierarchy level is fixed to COMPANY with ID:', COMPANY_ID);
+    return;
 }
 
 // Add condition
@@ -1394,64 +1395,32 @@ function saveRule() {
         return;
     }
     
-    const formData = new FormData(form);
-    const data = {};
+    // Build the API payload according to CreateRuleDto structure
+    const payload = buildRulePayload();
     
-    // Convert FormData to object
-    for (let [key, value] of formData.entries()) {
-        if (key.includes('[')) {
-            // Handle array/nested fields
-            const matches = key.match(/(\w+)\[(\d+)\]\[(\w+)\]/);
-            if (matches) {
-                const [, name, index, field] = matches;
-                if (!data[name]) data[name] = {};
-                if (!data[name][index]) data[name][index] = {};
-                data[name][index][field] = value;
-            } else if (key.endsWith('[]')) {
-                const name = key.slice(0, -2);
-                if (!data[name]) data[name] = [];
-                data[name].push(value);
-            }
-        } else {
-            data[key] = value;
-        }
+    if (!payload) {
+        alert('Failed to build rule payload. Please check the form.');
+        return;
     }
     
-    // Handle BOGO metadata (buyQty and getQty)
-    const actionType = document.getElementById('actionType').value;
-    if (actionType === 'DISCOUNT_BOGO') {
-        const buyQty = document.getElementById('buyQuantity')?.value;
-        const getQty = document.getElementById('getQuantity')?.value;
-        if (buyQty && getQty) {
-            data.buy_quantity = buyQty;
-            data.get_quantity = getQty;
-        }
-    }
+    console.log('Sending payload to API:', JSON.stringify(payload, null, 2));
     
-    // Handle custom metadata for CUSTOM_ACTION
-    if (actionType === 'CUSTOM_ACTION' && data.custom_metadata) {
-        try {
-            data.metadata = JSON.parse(data.custom_metadata);
-        } catch (e) {
-            console.warn('Invalid JSON metadata, using as string');
-        }
-    }
+    // Determine endpoint based on whether we're creating or editing
+    const endpoint = currentRuleId 
+        ? `http://81.208.174.52:4000/api/v1/rules/${currentRuleId}`
+        : 'http://81.208.174.52:4000/api/v1/rules';
     
-    // Add current rule ID if editing
-    if (currentRuleId) {
-        data.rule_id = currentRuleId;
-    }
-
-    console.log('Sending data to API:', data);
+    const method = currentRuleId ? 'PATCH' : 'POST';
     
-    // Send to server
-    fetch('<?php echo admin_url("loyalty/save_rule"); ?>', {
-        method: 'POST',
+    // Send to NestJS API
+    fetch(endpoint, {
+        method: method,
         headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
             'X-Requested-With': 'XMLHttpRequest'
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(payload)
     })
     .then(response => {
         console.log('Response status:', response.status);
@@ -1460,20 +1429,22 @@ function saveRule() {
         // Check if response is JSON
         const contentType = response.headers.get('content-type');
         if (!contentType || !contentType.includes('application/json')) {
-            throw new Error('Server returned non-JSON response. Check server logs.');
+            return response.text().then(text => {
+                throw new Error(`Server returned non-JSON response: ${text.substring(0, 200)}`);
+            });
         }
         
         return response.json();
     })
-    .then(d => {
-        console.log('Response data:', d);
+    .then(data => {
+        console.log('Response data:', data);
         
-        if (d.success) {
-            alert('Rule saved successfully!');
+        if (data && (data.id || data.ruleId)) {
+            alert(`Rule ${currentRuleId ? 'updated' : 'created'} successfully!`);
             closeRuleDrawer();
             loadRulesData();
         } else {
-            alert('Error saving rule: ' + (d.message || 'Unknown error'));
+            alert('Error saving rule: ' + (data.message || 'Unknown error'));
         }
     })
     .catch(e => {
@@ -1482,80 +1453,436 @@ function saveRule() {
     });
 }
 
+// Build rule payload matching CreateRuleDto structure
+function buildRulePayload() {
+    try {
+        const name = document.getElementById('ruleName').value.trim();
+        const description = document.getElementById('description').value.trim();
+        const actionType = document.getElementById('actionType').value;
+        
+        // Validate required fields
+        if (!name) throw new Error('Rule name is required');
+        if (!actionType) throw new Error('Action type is required');
+        if (!COMPANY_ID) throw new Error('Company ID is not set');
+        
+        // Determine ruleType based on actionType
+        let ruleType = 'DISCOUNT'; // Default
+        if (actionType === 'LOYALTY_POINTS' || actionType === 'TIER_UPGRADE') {
+            ruleType = 'LOYALTY';
+        } else if (actionType.startsWith('DISCOUNT_')) {
+            ruleType = 'DISCOUNT';
+        }
+        
+        // Build scope object - Always use COMPANY level with COMPANY_ID
+        const scope = {
+            level: 'COMPANY',
+            scopeId: COMPANY_ID
+        };
+        
+        console.log('=== Building Rule Payload ===');
+        console.log('Rule Name:', name);
+        console.log('Action Type:', actionType);
+        console.log('Rule Type:', ruleType);
+        console.log('Scope:', scope);
+        
+        // Build conditions array
+        const conditions = buildConditionsArray();
+        if (conditions.length === 0) {
+            // Add a default condition if none specified
+            conditions.push({
+                type: 'PURCHASE_AMOUNT',
+                operator: '>=',  // Use symbol format that backend expects
+                value: {
+                    numericValue: parseFloat(document.getElementById('minPurchaseAmount')?.value || '0')
+                }
+            });
+        }
+        
+        // Build action object
+        const action = buildActionObject(actionType);
+        if (!action) {
+            throw new Error('Failed to build action object');
+        }
+        
+        // Build valid dates
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        
+        // Build metadata
+        const metadata = {
+            priority: parseInt(document.getElementById('priority').value || '3'),
+            maxUsesPerCustomer: parseInt(document.getElementById('maxUsesPerCustomer')?.value || '0') || null,
+            maxTotalUses: parseInt(document.getElementById('maxTotalUses')?.value || '0') || null,
+            allowCombined: document.getElementById('allowCombined')?.checked || false,
+            excludeSaleItems: document.getElementById('excludeSaleItems')?.checked || false,
+            pointsPerSar: parseFloat(document.getElementById('pointsPerSar')?.value || '0') || null
+        };
+        
+        // Build payload
+        const payload = {
+            name: name,
+            description: description || undefined,
+            ruleType: ruleType,
+            scope: scope,
+            conditions: conditions,
+            action: action,
+            validFrom: startDate ? new Date(startDate).toISOString() : undefined,
+            validUntil: endDate ? new Date(endDate).toISOString() : undefined,
+            metadata: metadata
+        };
+        
+        // Log the complete payload before returning
+        console.log('=== COMPLETE PAYLOAD ===');
+        console.log(JSON.stringify(payload, null, 2));
+        console.log('========================');
+        
+        return payload;
+        
+    } catch (error) {
+        console.error('Error building payload:', error);
+        alert('Error building rule data: ' + error.message);
+        return null;
+    }
+}
+
+// Build conditions array from form
+function buildConditionsArray() {
+    const conditions = [];
+    const container = document.getElementById('conditionsContainer');
+    
+    if (!container) return conditions;
+    
+    const conditionItems = container.querySelectorAll('.condition-item');
+    
+    conditionItems.forEach((item, index) => {
+        const typeSelect = item.querySelector(`select[name="conditions[${index + 1}][type]"]`);
+        const valueInput = item.querySelector(`input[name="conditions[${index + 1}][value]"], select[name="conditions[${index + 1}][value]"], textarea[name="conditions[${index + 1}][value]"]`);
+        const operatorSelect = item.querySelector(`select[name="conditions[${index + 1}][operator]"]`);
+        
+        if (!typeSelect || !valueInput) return;
+        
+        const type = typeSelect.value;
+        const rawValue = valueInput.value;
+        
+        if (!type || !rawValue) return;
+        
+        // Operator mapping - Backend expects symbols (>=, <=, ==, !=) or uppercase (IN, NOT_IN, BETWEEN)
+        // The Operator.fromString() method in the backend handles these formats
+        const operatorMap = {
+            '>=': '>=',
+            '>': '>',   // Note: Backend doesn't have plain >, map to >=
+            '=': '==',
+            '==': '==',
+            '<': '<',   // Note: Backend doesn't have plain <, map to <=
+            '<=': '<=',
+            '!=': '!=',
+            'IN': 'IN',
+            'NOT_IN': 'NOT_IN',
+            'BETWEEN': 'BETWEEN',
+            'ANY': 'IN',
+            'ALL': 'IN'
+        };
+        
+        const operator = operatorMap[operatorSelect?.value] || '>=';
+        
+        // Build condition value based on type
+        let conditionValue = {};
+        
+        switch(type) {
+            case 'PURCHASE_AMOUNT':
+            case 'CLV':
+                conditionValue = { numericValue: parseFloat(rawValue) };
+                break;
+            case 'FREQUENCY':
+            case 'PURCHASE_COUNT':
+                conditionValue = { numericValue: parseInt(rawValue) };
+                break;
+            case 'CUSTOMER_TIER':
+                conditionValue = { stringValue: rawValue };
+                break;
+            case 'CATEGORY':
+                conditionValue = { arrayValue: rawValue.split(',').map(v => v.trim()) };
+                break;
+            case 'TIME_BASED':
+                conditionValue = { stringValue: rawValue };
+                break;
+            default:
+                conditionValue = { stringValue: rawValue };
+        }
+        
+        conditions.push({
+            type: type,
+            operator: operator,
+            value: conditionValue
+        });
+    });
+    
+    return conditions;
+}
+
+// Build action object
+function buildActionObject(actionType) {
+    const action = {
+        type: actionType,
+        value: {},
+        constraints: {}
+    };
+    
+    const maxDiscountAmount = document.getElementById('maxDiscountAmount')?.value;
+    const minPurchaseAmount = document.getElementById('minPurchaseAmount')?.value;
+    
+    if (maxDiscountAmount) {
+        action.constraints.maxAmount = parseFloat(maxDiscountAmount);
+    }
+    if (minPurchaseAmount) {
+        action.constraints.minPurchase = parseFloat(minPurchaseAmount);
+    }
+    
+    switch(actionType) {
+        case 'DISCOUNT_PERCENTAGE':
+            const percentValue = parseFloat(document.getElementById('actionValue')?.value || '0');
+            if (percentValue < 5 || percentValue > 50) {
+                alert('Percentage discount must be between 5 and 50');
+                return null;
+            }
+            action.value = { percentageValue: percentValue };
+            break;
+            
+        case 'DISCOUNT_FIXED':
+            const fixedValue = parseFloat(document.getElementById('actionValue')?.value || '0');
+            if (fixedValue < 1 || fixedValue > 1000) {
+                alert('Fixed discount must be between 1 and 1000 SAR');
+                return null;
+            }
+            action.value = { fixedValue: fixedValue };
+            break;
+            
+        case 'DISCOUNT_BOGO':
+            const buyQty = parseInt(document.getElementById('buyQuantity')?.value || '0');
+            const getQty = parseInt(document.getElementById('getQuantity')?.value || '0');
+            if (buyQty < 1 || getQty < 1) {
+                alert('BOGO quantities must be at least 1');
+                return null;
+            }
+            action.value = { 
+                customHandler: 'BOGO',
+                message: `Buy ${buyQty} Get ${getQty} Free`
+            };
+            action.constraints.buyQuantity = buyQty;
+            action.constraints.getQuantity = getQty;
+            break;
+            
+        case 'LOYALTY_POINTS':
+            const points = parseInt(document.getElementById('actionValue')?.value || '0');
+            if (points < 1) {
+                alert('Loyalty points must be at least 1');
+                return null;
+            }
+            action.value = { pointsValue: points };
+            break;
+            
+        case 'TIER_UPGRADE':
+            const tier = document.getElementById('actionValue')?.value;
+            if (!tier) {
+                alert('Please select a target tier');
+                return null;
+            }
+            action.value = { tierValue: tier };
+            break;
+            
+        case 'FREE_ITEM':
+            const productId = document.getElementById('actionValue')?.value?.trim();
+            if (!productId) {
+                alert('Please enter a product ID');
+                return null;
+            }
+            const productName = document.getElementById('productName')?.value?.trim();
+            action.value = { 
+                customHandler: 'FREE_ITEM',
+                message: productName || productId
+            };
+            action.constraints.productId = productId;
+            if (productName) {
+                action.constraints.productName = productName;
+            }
+            break;
+            
+        case 'NOTIFICATION':
+            const message = document.getElementById('actionValue')?.value?.trim();
+            if (!message) {
+                alert('Please enter a notification message');
+                return null;
+            }
+            const channel = document.getElementById('notificationChannel')?.value;
+            action.value = { message: message };
+            action.constraints.channel = channel || 'IN_APP';
+            break;
+            
+        case 'CUSTOM_ACTION':
+            const customValue = document.getElementById('actionValue')?.value?.trim();
+            if (!customValue) {
+                alert('Please enter a custom action value');
+                return null;
+            }
+            const customMetadata = document.getElementById('customMetadata')?.value?.trim();
+            action.value = { customHandler: customValue };
+            if (customMetadata) {
+                try {
+                    action.constraints = JSON.parse(customMetadata);
+                } catch (e) {
+                    action.constraints.rawMetadata = customMetadata;
+                }
+            }
+            break;
+            
+        default:
+            alert('Invalid action type');
+            return null;
+    }
+    
+    return action;
+}
+
 // Edit rule
 function editRule(id) {
     currentRuleId = id;
     document.getElementById('drawerTitle').textContent = 'Edit Loyalty Rule';
     
-    // Fetch rule data
-    fetch(`<?php echo admin_url("loyalty/get_rule/"); ?>${id}`)
-        .then(r => r.json())
-        .then(d => {
-            if (d.success && d.rule) {
-                populateRuleForm(d.rule);
-                document.getElementById('ruleDrawer').classList.add('active');
+    // Fetch rule data from API
+    fetch(`http://81.208.174.52:4000/api/v1/rules/${id}`, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+        .then(r => {
+            if (!r.ok) {
+                throw new Error(`HTTP error! status: ${r.status}`);
             }
+            return r.json();
         })
-        .catch(e => console.error('Error loading rule:', e));
+        .then(data => {
+            console.log('Loaded rule for editing:', data);
+            populateRuleForm(data);
+            document.getElementById('ruleDrawer').classList.add('active');
+        })
+        .catch(e => {
+            console.error('Error loading rule:', e);
+            alert('Error loading rule: ' + e.message);
+        });
 }
 
 // Populate form with rule data
 function populateRuleForm(rule) {
+    // Basic fields
     document.getElementById('ruleName').value = rule.name || '';
-    document.getElementById('hierarchyLevel').value = rule.hierarchy_level || 'company';
-    document.getElementById('startDate').value = rule.start_date || '';
-    document.getElementById('endDate').value = rule.end_date || '';
-    document.getElementById('priority').value = rule.priority || 3;
-    document.getElementById('status').value = rule.status || 1;
     document.getElementById('description').value = rule.description || '';
     
-    if (rule.customer_tier) {
-        selectTier(rule.customer_tier);
+    // Scope - always COMPANY, no need to populate
+    // Hierarchy level and node ID are hidden fields set to COMPANY
+    
+    // Dates
+    if (rule.validFrom) {
+        const dateFrom = new Date(rule.validFrom);
+        document.getElementById('startDate').value = dateFrom.toISOString().split('T')[0];
+    }
+    if (rule.validUntil) {
+        const dateUntil = new Date(rule.validUntil);
+        document.getElementById('endDate').value = dateUntil.toISOString().split('T')[0];
     }
     
-    // Load hierarchy nodes if needed
-    if (rule.hierarchy_level && rule.hierarchy_level !== 'company') {
-        loadHierarchyNodes();
-        setTimeout(() => {
-            document.getElementById('hierarchyNodeId').value = rule.hierarchy_node_id || '';
-        }, 500);
+    // Metadata
+    if (rule.metadata) {
+        if (rule.metadata.priority) {
+            document.getElementById('priority').value = rule.metadata.priority;
+        }
+        if (rule.metadata.maxUsesPerCustomer) {
+            document.getElementById('maxUsesPerCustomer').value = rule.metadata.maxUsesPerCustomer;
+        }
+        if (rule.metadata.maxTotalUses) {
+            document.getElementById('maxTotalUses').value = rule.metadata.maxTotalUses;
+        }
+        if (rule.metadata.pointsPerSar) {
+            document.getElementById('pointsPerSar').value = rule.metadata.pointsPerSar;
+        }
+        document.getElementById('allowCombined').checked = rule.metadata.allowCombined || false;
+        document.getElementById('excludeSaleItems').checked = rule.metadata.excludeSaleItems || false;
     }
     
-    // Populate action type
-    if (rule.action_type) {
-        document.getElementById('actionType').value = rule.action_type;
+    // Action
+    if (rule.action) {
+        document.getElementById('actionType').value = rule.action.type || '';
         updateActionFields();
+        
         setTimeout(() => {
-            if (document.getElementById('actionValue')) {
-                document.getElementById('actionValue').value = rule.action_value || '';
+            const actionValue = document.getElementById('actionValue');
+            if (actionValue && rule.action.value) {
+                if (rule.action.value.percentageValue !== undefined) {
+                    actionValue.value = rule.action.value.percentageValue;
+                } else if (rule.action.value.fixedValue !== undefined) {
+                    actionValue.value = rule.action.value.fixedValue;
+                } else if (rule.action.value.pointsValue !== undefined) {
+                    actionValue.value = rule.action.value.pointsValue;
+                } else if (rule.action.value.tierValue !== undefined) {
+                    actionValue.value = rule.action.value.tierValue;
+                } else if (rule.action.value.message !== undefined) {
+                    actionValue.value = rule.action.value.message;
+                }
+            }
+            
+            // Handle constraints
+            if (rule.action.constraints) {
+                if (rule.action.constraints.maxAmount) {
+                    document.getElementById('maxDiscountAmount').value = rule.action.constraints.maxAmount;
+                }
+                if (rule.action.constraints.minPurchase) {
+                    document.getElementById('minPurchaseAmount').value = rule.action.constraints.minPurchase;
+                }
+                if (rule.action.constraints.buyQuantity) {
+                    document.getElementById('buyQuantity').value = rule.action.constraints.buyQuantity;
+                }
+                if (rule.action.constraints.getQuantity) {
+                    document.getElementById('getQuantity').value = rule.action.constraints.getQuantity;
+                }
             }
         }, 100);
     }
     
-    // Populate constraints
-    if (rule.min_purchase_amount) {
-        document.getElementById('minPurchaseAmount').value = rule.min_purchase_amount;
+    // Conditions (simplified - just show count)
+    const conditionsContainer = document.getElementById('conditionsContainer');
+    conditionsContainer.innerHTML = '';
+    if (rule.conditions && rule.conditions.length > 0) {
+        rule.conditions.forEach((condition, index) => {
+            // Add condition placeholder - full implementation would recreate the condition UI
+            conditionsContainer.innerHTML += `
+                <div class="alert alert-info">
+                    <i class="fa fa-info-circle"></i> Condition ${index + 1}: ${condition.type} ${condition.operator}
+                </div>
+            `;
+        });
     }
-    if (rule.max_discount_amount) {
-        document.getElementById('maxDiscountAmount').value = rule.max_discount_amount;
-    }
-    if (rule.max_uses_per_customer) {
-        document.getElementById('maxUsesPerCustomer').value = rule.max_uses_per_customer;
-    }
-    if (rule.max_total_uses) {
-        document.getElementById('maxTotalUses').value = rule.max_total_uses;
-    }
-    if (rule.points_per_sar) {
-        document.getElementById('pointsPerSar').value = rule.points_per_sar;
-    }
-    
-    document.getElementById('allowCombined').checked = rule.allow_combined == 1;
-    document.getElementById('excludeSaleItems').checked = rule.exclude_sale_items == 1;
 }
 
 // View rule details
 function viewRule(id) {
-    alert('View rule details - Feature coming soon');
+    fetch(`http://81.208.174.52:4000/api/v1/rules/${id}`, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+        .then(r => r.json())
+        .then(data => {
+            console.log('Rule details:', data);
+            alert('Rule: ' + data.name + '\nType: ' + data.ruleType + '\nStatus: ' + data.status);
+            // TODO: Implement proper view modal
+        })
+        .catch(e => {
+            console.error('Error viewing rule:', e);
+            alert('Error loading rule details');
+        });
 }
 
 // Delete rule
@@ -1563,19 +1890,28 @@ function deleteRule(id) {
     if (!confirm('Are you sure you want to delete this rule?')) {
         return;
     }
-    
-    fetch(`<?php echo admin_url("loyalty/delete_rule/"); ?>${id}`, {
-        method: 'POST'
-    })
-    .then(r => r.json())
-    .then(d => {
-        if (d.success) {
-            alert('Rule deleted successfully');
-            loadRulesData();
-        } else {
-            alert('Error deleting rule');
+
+    fetch(`http://81.208.174.52:4000/api/v1/rules/${id}`, {
+        method: 'DELETE',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         }
     })
-    .catch(e => console.error('Error:', e));
+    .then(r => {
+        if (!r.ok) {
+            throw new Error(`HTTP error! status: ${r.status}`);
+        }
+        return r.json();
+    })
+    .then(data => {
+        console.log('Delete response:', data);
+        alert('Rule deleted successfully');
+        loadRulesData();
+    })
+    .catch(e => {
+        console.error('Error deleting rule:', e);
+        alert('Error deleting rule: ' + e.message);
+    });
 }
 </script>

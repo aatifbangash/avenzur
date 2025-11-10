@@ -57,6 +57,8 @@ class Loyalty extends MY_Controller
             ['link' => '#', 'page' => lang('Loyalty Rules')]
         ];
         $meta = ['page_title' => lang('Loyalty Rules'), 'bc' => $bc];
+        $this->data['company_id'] = $this->loyalty_model->getCompanyId();
+
         $this->page_construct('loyalty/rules', $meta, $this->data);
     }
 

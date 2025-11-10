@@ -1340,7 +1340,7 @@
 </div>
 <?php unset($Settings->setting_id, $Settings->smtp_user, $Settings->smtp_pass, $Settings->smtp_port, $Settings->update, $Settings->reg_ver, $Settings->allow_reg, $Settings->default_email, $Settings->mmode, $Settings->timezone, $Settings->restrict_calendar, $Settings->restrict_user, $Settings->auto_reg, $Settings->reg_notification, $Settings->protocol, $Settings->mailpath, $Settings->smtp_crypto, $Settings->corn, $Settings->customer_group, $Settings->envato_username, $Settings->purchase_code);?>
 <script type="text/javascript">
-var site = <?=json_encode(['url' => base_url(), 'base_url' => admin_url(), 'assets' => $assets, 'settings' => $Settings, 'dateFormats' => $dateFormats])?>, pos_settings = <?=json_encode($pos_settings);?>;
+var site = <?=json_encode(['url' => base_url(), 'base_url' => admin_url(), 'assets' => $assets, 'settings' => $Settings, 'dateFormats' => $dateFormats, 'csrf_token' => $this->security->get_csrf_token_name(), 'csrf_token_value' => $this->security->get_csrf_hash()])?>, pos_settings = <?=json_encode($pos_settings);?>;
 var lang = {
     unexpected_value: '<?=lang('unexpected_value');?>',
     select_above: '<?=lang('select_above');?>',

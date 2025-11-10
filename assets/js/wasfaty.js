@@ -159,15 +159,41 @@ var WasfatyModule = (function ($) {
 			site.url + "admin/wasfaty/fetch_prescription"
 		);
 
+		// Prepare data with CSRF token
+		var requestData = {
+			phone: patientPhone,
+			prescription_code: prescriptionCode,
+		};
+
+		// Debug site object
+		console.log("Site object:", site);
+		console.log("site.csrf_token:", site.csrf_token);
+		console.log("site.csrf_token_value:", site.csrf_token_value);
+
+		// Add CSRF token
+		if (typeof site !== "undefined" && site.csrf_token) {
+			requestData[site.csrf_token] = site.csrf_token_value;
+			console.log(
+				"CSRF Token added:",
+				site.csrf_token,
+				"=",
+				site.csrf_token_value
+			);
+		} else {
+			console.warn(
+				"⚠️ CSRF token NOT added - site.csrf_token is:",
+				site.csrf_token
+			);
+		}
+
+		console.log("Request data:", requestData);
+
 		// AJAX request
 		$.ajax({
 			url: site.url + "admin/wasfaty/fetch_prescription",
 			type: "POST",
 			dataType: "json",
-			data: {
-				phone: patientPhone,
-				prescription_code: prescriptionCode,
-			},
+			data: requestData,
 			success: function (response) {
 				console.log("=== AJAX success ===", response);
 				hideLoading();
@@ -471,16 +497,24 @@ var WasfatyModule = (function ($) {
 				requiredQty
 			);
 
+			// Prepare search data with CSRF token
+			var searchData = {
+				term: searchTerm,
+				warehouse_id: $("#poswarehouse").val(),
+				customer_id: $("#poscustomer").val() || null,
+			};
+
+			// Add CSRF token
+			if (typeof site !== "undefined" && site.csrf_token) {
+				searchData[site.csrf_token] = site.csrf_token_value;
+			}
+
 			// Use AJAX to search for product
 			$.ajax({
 				type: "GET",
 				url: site.url + "admin/sales/suggestions/1",
 				dataType: "json",
-				data: {
-					term: searchTerm,
-					warehouse_id: $("#poswarehouse").val(),
-					customer_id: $("#poscustomer").val() || null,
-				},
+				data: searchData,
 				success: function (data) {
 					console.log("Search result for " + searchTerm + ":", data);
 

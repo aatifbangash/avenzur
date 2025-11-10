@@ -94,5 +94,5 @@ define('EXIT__AUTO_MAX', 125); // highest automatically-assigned error code
 | Can be configured via environment variables for different environments
 |
 */
-define('LOYALTY_API_URL', getenv('LOYALTY_API_URL') ?: 'http://localhost:3000');
+define('LOYALTY_API_URL', getenv('LOYALTY_API_URL') ?: 'http://81.208.174.52:4000');
 define('LOYALTY_API_TIMEOUT', 30); // seconds

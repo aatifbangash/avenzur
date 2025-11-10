@@ -304,7 +304,7 @@ class Sma
         return $stringtoreturn;
     }
 
-    public function generateUUIDv4() {
+    public function generateUUIDv4_old() {
         // Generate a proper RFC 4122 compliant UUID v4
         // Format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
         $bytes = openssl_random_pseudo_bytes(16);
@@ -312,6 +312,15 @@ class Sma
         $bytes[8] = chr(ord($bytes[8]) & 0x3f | 0x80); // variant
         
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
+    }
+
+     public function generateUUIDv4() {
+
+        $timestamp = microtime(true) * 10000;  
+        $randomNumber = mt_rand(100, 999);     
+        $uniqueCode = substr($timestamp . $randomNumber, -6);
+
+        return $uniqueCode;
     }
 
     public function fsd($inv_date)
