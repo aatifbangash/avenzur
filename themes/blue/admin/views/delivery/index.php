@@ -32,8 +32,6 @@
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-truck"></i> Deliveries
-            <a data-target="#myModal2" data-toggle="modal"href="<?=admin_url('delivery/add')?>" class="btn btn-primary btn-sm pull-right"><i class="fa fa-plus"></i> <?=lang('add')?> Delivery</a>
-        </h2>
     </div>
     <div class="box-content">
         <div class="table-responsive">

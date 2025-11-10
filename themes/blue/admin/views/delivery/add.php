@@ -58,10 +58,9 @@
                 <div class="form-group">
                     <label for="status"><?=lang('status')?> <span class="required">*</span></label>
                     <select name="status" id="status" class="form-control" required>
-                        <option value="pending">Pending</option>
-                        <option value="assigned">Assigned</option>
-                        <option value="out_for_delivery">Out for Delivery</option>
-                        <option value="completed">Completed</option>
+                        <option value="driver_assigned">Assigned</option>
+                        <!--<option value="out_for_delivery">Out for Delivery</option>
+                        <option value="completed">Completed</option>-->
                     </select>
                 </div>
             </div>

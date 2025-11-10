@@ -40,6 +40,15 @@ class Delivery_model extends CI_Model
             }
         }
 
+        // update sales status
+        if ($delivery_id && isset($data['invoice_ids']) && !empty($data['invoice_ids'])) {
+            // Insert delivery items (invoices)
+            foreach ($data['invoice_ids'] as $invoice_id) {
+                $sale_data = ['sale_status' => 'driver_assigned'];
+                $this->db->update('sma_sales', $sale_data, ['id' => $invoice_id]);
+            }
+        }
+
         // Log the action
         if ($delivery_id && isset($data['assigned_by'])) {
             $this->log_delivery_action($delivery_id, 'created', $data['assigned_by']);
@@ -111,6 +120,8 @@ class Delivery_model extends CI_Model
     public function get_delivery_by_id($delivery_id)
     {
         $this->db->select('sd.id, sd.date_string, sd.driver_name, sd.truck_number, sd.status, sd.assigned_by,
+                           sd.driver_id,
+                           sd.odometer, sd.total_refrigerated_items,
                            CONCAT(u.first_name, " ", u.last_name) as assigned_by_name,
                            COUNT(DISTINCT sdi.invoice_id) as invoice_count,
                            SUM(sdi.quantity_items) as total_items');
@@ -152,13 +163,40 @@ class Delivery_model extends CI_Model
      * @param int $updated_by - User ID performing the update
      * @return bool
      */
-    public function update_delivery($delivery_id, $data, $updated_by = null)
+    public function update_delivery($delivery_id, $data, $delivery_items, $updated_by = null)
     {
         $data['updated_at'] = date('Y-m-d H:i:s');
 
         if ($this->db->update('sma_deliveries', $data, ['id' => $delivery_id])) {
             if ($updated_by) {
                 $this->log_delivery_action($delivery_id, 'updated', $updated_by);
+            }
+
+            // ✅ Update sale statuses only if delivery is going out
+            if (isset($data['status']) && $data['status'] == 'out_for_delivery' && !empty($delivery_items)) {
+                // Extract invoice_ids from objects
+                $sale_ids = array_map(function($item){
+                    return $item->invoice_id;
+                }, $delivery_items);
+
+                // Remove duplicates (just in case)
+                $sale_ids = array_unique($sale_ids);
+
+                // Update all related sales
+                $this->db->where_in('id', $sale_ids);
+                $this->db->update('sma_sales', ['sale_status' => 'out_for_delivery']);
+            }else if(isset($data['status']) && $data['status'] == 'delivered' && !empty($delivery_items)){
+                // Extract invoice_ids from objects
+                $sale_ids = array_map(function($item){
+                    return $item->invoice_id;
+                }, $delivery_items);
+
+                // Remove duplicates (just in case)
+                $sale_ids = array_unique($sale_ids);
+
+                // Update all related sales
+                $this->db->where_in('id', $sale_ids);
+                $this->db->update('sma_sales', ['sale_status' => 'delivered']);
             }
             return true;
         }
@@ -248,6 +286,47 @@ class Delivery_model extends CI_Model
         return true;
     }
 
+    public function add_item_to_delivery($delivery_id, $invoice_id, $total_items, $max_refrigerated_items, $updated_by = null){
+        $this->db->trans_start();
+
+        $delivery_items = array();
+        $delivery_items['delivery_id'] = $delivery_id;
+        $delivery_items['invoice_id'] = $invoice_id;
+        $delivery_items['quantity_items'] = $total_items; // Default to 1 item
+        $delivery_items['refrigerated_items'] = $max_refrigerated_items; // Default to 0
+        if ($this->db->insert('sma_delivery_items', $delivery_items)) {
+            
+            // Update total items count
+            $total_items = $this->db->select('SUM(quantity_items) as total')
+                ->from('sma_delivery_items')
+                ->where('delivery_id', $delivery_id)
+                ->get()
+                ->row()
+                ->total;
+
+            $this->db->update('sma_deliveries', 
+                ['total_items_in_delivery_package' => $total_items ?? 0, 'updated_at' => date('Y-m-d H:i:s')],
+                ['id' => $delivery_id]);
+
+            $sale_data = ['sale_status' => 'driver_assigned'];
+            $this->db->update('sma_sales', $sale_data, ['id' => $invoice_id]);
+
+            $this->db->trans_complete();
+
+            if ($this->db->trans_status() === false) {
+                return false;
+            }
+
+            if ($updated_by) {
+                $this->log_delivery_action($delivery_id, 'item_added', $updated_by);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
     /**
      * Remove an item from delivery
      * 
@@ -274,6 +353,9 @@ class Delivery_model extends CI_Model
             $this->db->update('sma_deliveries', 
                 ['total_items_in_delivery_package' => $total_items ?? 0, 'updated_at' => date('Y-m-d H:i:s')],
                 ['id' => $delivery_id]);
+
+            $sale_data = ['sale_status' => 'label_verifired'];
+            $this->db->update('sma_sales', $sale_data, ['id' => $invoice_id]);
 
             $this->db->trans_complete();
 

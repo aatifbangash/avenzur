@@ -222,6 +222,7 @@
             $label_verifired_status = '';
             $driver_assigned_status = '';
             $rasd_status = '';
+            $out_for_delivery_status = '';
             $delivered = '';
             $invoiced = '';
 
@@ -231,6 +232,7 @@
                 $label_verifired_status = '';
                 $driver_assigned_status = '';
                 $rasd_status = '';
+                $out_for_delivery_status = '';
                 $delivered = '';
                 $invoiced = '';
             }else if($inv->sale_status == 'added_label'){
@@ -239,6 +241,7 @@
                 $label_verifired_status = 'active';
                 $driver_assigned_status = '';
                 $rasd_status = '';
+                $out_for_delivery_status = '';
                 $delivered = '';
                 $invoiced = '';
             }else if($inv->sale_status == 'label_verifired'){
@@ -247,6 +250,7 @@
                 $label_verifired_status = 'completed';
                 $driver_assigned_status = 'active';
                 $rasd_status = '';
+                $out_for_delivery_status = '';
                 $delivered = '';
                 $invoiced = '';
             }else if($inv->sale_status == 'driver_assigned'){
@@ -255,6 +259,7 @@
                 $label_verifired_status = 'completed';
                 $driver_assigned_status = 'completed';
                 $rasd_status = 'active';
+                $out_for_delivery_status = '';
                 $delivered = '';
                 $invoiced = '';
             }else if($inv->sale_status == 'sent_to_rasd'){
@@ -263,6 +268,16 @@
                 $label_verifired_status = 'completed';
                 $driver_assigned_status = 'completed';
                 $rasd_status = 'completed';
+                $out_for_delivery_status = 'active';
+                $delivered = '';
+                $invoiced = '';
+            }else if($inv->sale_status == 'out_for_delivery'){
+                $ready_status = 'completed';
+                $printed_label_status = 'completed';
+                $label_verifired_status = 'completed';
+                $driver_assigned_status = 'completed';
+                $rasd_status = 'completed';
+                $out_for_delivery_status = 'completed';
                 $delivered = 'active';
                 $invoiced = '';
             }else if($inv->sale_status == 'delivered'){
@@ -271,6 +286,7 @@
                 $label_verifired_status = 'completed';
                 $driver_assigned_status = 'completed';
                 $rasd_status = 'completed';
+                $out_for_delivery_status = 'completed';
                 $delivered = 'completed';
                 $invoiced = 'active';
             } else if($inv->sale_status == 'completed'){
@@ -279,6 +295,7 @@
                 $label_verifired_status = 'completed';
                 $driver_assigned_status = 'completed';
                 $rasd_status = 'completed';
+                $out_for_delivery_status = 'completed';
                 $delivered = 'completed';
                 $invoiced = 'completed';
             } 
@@ -306,12 +323,16 @@
                 <div class="step-circle">5</div>
                 <div class="step-label">Send To Rasd</div>
             </div>
-            <div class="progress-step <?php echo $delivered; ?>">
+            <div class="progress-step <?php echo $rasd_status; ?>">
                 <div class="step-circle">6</div>
+                <div class="step-label">Out For Delivery</div>
+            </div>
+            <div class="progress-step <?php echo $delivered; ?>">
+                <div class="step-circle">7</div>
                 <div class="step-label">Delivered</div>
             </div>
             <div class="progress-step <?php echo $invoiced; ?>">
-                <div class="step-circle">7</div>
+                <div class="step-circle">8</div>
                 <div class="step-label">Sale Invoiced</div>
             </div>
         </div>
@@ -348,11 +369,11 @@
                 <?php 
                     if(($this->Admin || $this->Owner || $this->WarehouseSupervisor) && ($inv->sale_status == 'label_verifired')){
                 ?>
-                <div class="btn-group">
+                <!--<div class="btn-group">
                     <a href="<?= admin_url('sales/add_driver/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-primary tip" title="<?= lang('add_driver') ?>">
                         <i class="fa fa-money"></i> <span class="hidden-sm hidden-xs"><?= lang('add_driver') ?></span>
                     </a>
-                </div>
+                </div>-->
                 <?php 
                     }
                 ?>
@@ -370,7 +391,7 @@
                 ?>
 
                 <?php 
-                    if(($this->Admin || $this->Owner || $this->WarehouseSupervisor)  && ($inv->sale_status == 'sent_to_rasd')){
+                    if(($this->Admin || $this->Owner || $this->WarehouseSupervisor)  && ($inv->sale_status == 'out_for_delivery')){
                 ?>
                 <div class="btn-group">
                     <a href="<?= admin_url('sales/edit_delivery/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-primary tip" title="<?= lang('add_delivery') ?>">
