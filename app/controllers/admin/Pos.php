@@ -22,6 +22,7 @@ class Pos extends MY_Controller
         }
         $this->load->admin_model('sales_model');
         $this->load->admin_model('pos_model');
+        $this->load->admin_model('pharmacist_model');
         $this->load->helper('text');
         $this->pos_settings = $this->pos_model->getSetting();
         $this->pos_settings->pin_code = $this->pos_settings->pin_code ? md5($this->pos_settings->pin_code) : null;
@@ -1433,6 +1434,9 @@ class Pos extends MY_Controller
                         }*/
                     }
 
+                    // Process pharmacist incentives if applicable
+                    $this->process_pharmacist_incentives($sale['sale_id'], $data, $products);
+
                     $this->session->set_userdata('remove_posls', 1);
                     $msg = $this->lang->line('sale_added');
                     if (!empty($sale['message'])) {
@@ -2478,6 +2482,144 @@ class Pos extends MY_Controller
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('pos'), 'page' => lang('pos')], ['link' => '#', 'page' => lang('sales_date_wise')]];
         $meta = ['page_title' => lang('sales_date_wise'), 'bc' => $bc];
         $this->page_construct('pos/sales_date_wise', $meta, $this->data);
+    }
+
+    /**
+     * Process pharmacist incentives for a sale
+     * 
+     * @param int $sale_id The sale ID
+     * @param array $sale_data The sale data array
+     * @param array $products The products array from the sale
+     * @return void
+     */
+    private function process_pharmacist_incentives($sale_id, $sale_data, $products)
+    {
+        try {
+           
+    // echo "<pre>INCENTIVE DEBUG:\n";
+    // print_r($sale_id);
+    // print_r($sale_data);
+    // print_r($products);
+    // echo "</pre>";
+    // exit; // Stop here to view
+
+            // Get pharmacist ID from sale data (created_by)
+            $pharmacist_id = isset($sale_data['created_by']) ? $sale_data['created_by'] : null;
+            
+            // Log: Processing started
+            log_message('info', "Incentive Processing Started - Sale ID: {$sale_id}, Pharmacist ID: " . ($pharmacist_id ?: 'NULL'));
+            
+            if (!$pharmacist_id) {
+                log_message('info', 'Incentive Processing Skipped - No pharmacist ID');
+                return; // No pharmacist, skip
+            }
+
+            // Check if pharmacist has an active incentive
+            $incentive = $this->pharmacist_model->get_active_incentive($pharmacist_id);
+            
+            if (!$incentive) {
+                log_message('info', "Incentive Processing Skipped - Pharmacist {$pharmacist_id} has no active incentive");
+                return; // No active incentive, continue normal flow
+            }
+
+            log_message('info', "Active Incentive Found - Incentive ID: {$incentive->id} for Pharmacist {$pharmacist_id}");
+
+            // Prepare product list with batch numbers for matching
+            $product_list = [];
+            foreach ($products as $product) {
+                // Handle both 'batch_no' (from POS) and 'batch_number' field names
+                $batch = isset($product['batch_number']) ? $product['batch_number'] : (isset($product['batch_no']) ? $product['batch_no'] : null);
+                
+                $product_list[] = [
+                    'product_id' => $product['product_id'],
+                    'batch_number' => $batch
+                ];
+                
+                log_message('info', "Product prepared for matching - ID: {$product['product_id']}, Batch: " . ($batch ?: 'NULL'));
+            }
+
+            log_message('info', 'Products in sale: ' . count($product_list));
+
+            // Get matching incentive items
+            $matching_items = $this->pharmacist_model->get_matching_incentive_items($incentive->id, $product_list);
+
+            if (empty($matching_items)) {
+                log_message('info', "No matching incentive items found for Sale {$sale_id}");
+                return; // No matching products with incentives
+            }
+
+            
+            log_message('info', 'Matching incentive items found: ' . count($matching_items));
+
+            // Create a lookup map for quick matching
+            $incentive_map = [];
+            foreach ($matching_items as $item) {
+                $key = $item->product_id . '_' . ($item->batch_number ?: '');
+                $incentive_map[$key] = $item;
+            }
+
+            // Build incentive transactions
+            $transactions = [];
+            $transaction_date = isset($sale_data['date']) ? $sale_data['date'] : date('Y-m-d H:i:s');
+            $branch_id = isset($sale_data['warehouse_id']) ? $sale_data['warehouse_id'] : null;
+
+            foreach ($products as $product) {
+                $product_id = $product['product_id'];
+                // Handle both 'batch_no' (from POS) and 'batch_number' field names
+                $batch_number = isset($product['batch_number']) ? $product['batch_number'] : (isset($product['batch_no']) ? $product['batch_no'] : null);
+                $key = $product_id . '_' . ($batch_number ?: '');
+                
+                log_message('info', "Checking product for incentive - Product ID: {$product_id}, Batch: " . ($batch_number ?: 'NULL') . ", Key: {$key}");
+                
+                // Check if this product has an incentive
+                if (isset($incentive_map[$key])) {
+                    $incentive_item = $incentive_map[$key];
+                    
+                    // Calculate incentive amount
+                    // incentive_amount = sale_price * qty_sold * (incentive_percentage / 100)
+                    $qty_sold = isset($product['quantity']) ? $product['quantity'] : 0;
+                    $sale_price = isset($product['unit_price']) ? $product['unit_price'] : 0;
+                    $incentive_percentage = $incentive_item->incentive_percentage;
+                    
+                    $incentive_amount = ($sale_price * $qty_sold * $incentive_percentage) / 100;
+
+                    log_message('info', "Incentive Calculated - Product: {$product_id}, Batch: {$batch_number}, Qty: {$qty_sold}, Price: {$sale_price}, %: {$incentive_percentage}, Amount: {$incentive_amount}");
+
+                    // Only create transaction if there's an actual incentive amount
+                    if ($incentive_amount > 0) {
+                        $transactions[] = [
+                            'pharmacist_id' => $pharmacist_id,
+                            'sale_id' => $sale_id,
+                            'branch_id' => $branch_id,
+                            'product_id' => $product_id,
+                            'batch_number' => $batch_number,
+                            'qty_sold' => $qty_sold,
+                            'sale_price' => $sale_price,
+                            'incentive_percentage' => $incentive_percentage,
+                            'incentive_amount' => $incentive_amount,
+                            'transaction_date' => $transaction_date
+                        ];
+                    }
+                } else {
+                    log_message('info', "No incentive match for Product ID: {$product_id}, Batch: " . ($batch_number ?: 'NULL'));
+                }
+            }
+
+   
+
+            // Save all incentive transactions
+            if (!empty($transactions)) {
+                $saved = $this->pharmacist_model->save_incentive_transactions($transactions);
+                log_message('info', "Incentive Transactions Saved - Sale {$sale_id}: " . count($transactions) . " transactions, Total: " . array_sum(array_column($transactions, 'incentive_amount')) . " SAR");
+            } else {
+                log_message('info', "No incentive transactions to save for Sale {$sale_id}");
+            }
+
+        } catch (Exception $e) {
+            // Log error but don't interrupt the sale process
+            log_message('error', 'Pharmacist incentive processing error: ' . $e->getMessage());
+            log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+        }
     }
 
 }

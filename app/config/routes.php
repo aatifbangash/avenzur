@@ -109,6 +109,12 @@ $route['admin/cost_center/branch/(:num)'] = 'admin/cost_center/branch/$1';
 $route['admin/cost_center'] = 'admin/cost_center/dashboard';
 $route['admin/cost_center/dashboard'] = 'admin/cost_center/dashboard';
 
+// Pharmacist Management routes
+$route['admin/pharmacist'] = 'admin/pharmacist/index';
+$route['admin/pharmacist/get_pharmacies'] = 'admin/pharmacist/get_pharmacies';
+$route['admin/pharmacist/get_branches_by_pharmacy'] = 'admin/pharmacist/get_branches_by_pharmacy';
+$route['admin/pharmacist/get_pharmacists_by_branch'] = 'admin/pharmacist/get_pharmacists_by_branch';
+
 // Catch-all route for admin modules (must be last)
 $route['admin/(:any)/(:any)/(:any)'] = 'admin/$1/$2/$3';
 $route['admin/(:any)/(:any)'] = 'admin/$1/$2';
