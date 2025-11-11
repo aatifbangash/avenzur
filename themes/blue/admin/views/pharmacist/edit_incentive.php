@@ -228,40 +228,11 @@ jQuery(document).ready(function($) {
     const incentiveId = <?php echo $incentive->id; ?>;
     const pharmacistId = <?php echo $pharmacist->id; ?>;
     const pharmacistWarehouseId = <?php echo $pharmacist->warehouse_id; ?>;
-    let warehouseId = pharmacistWarehouseId; // Will be updated based on warehouse type
+    const warehouseId = pharmacistWarehouseId; // Use branch warehouse directly
     let incentiveItems = [];
     let itemCounter = 0;
 
-    console.log('Initial pharmacist warehouse ID:', pharmacistWarehouseId);
-
-    // Get the correct warehouse ID based on warehouse type
-    $.ajax({
-        url: '<?php echo site_url("admin/pharmacist/get_warehouse_for_search"); ?>',
-        method: 'POST',
-        dataType: 'json',
-        data: { 
-            warehouse_id: pharmacistWarehouseId,
-            '<?= $this->security->get_csrf_token_name(); ?>': '<?= $this->security->get_csrf_hash(); ?>',
-            _ts: new Date().getTime() // Cache buster
-        },
-        async: false, // Make synchronous to ensure warehouseId is set before other operations
-        success: function(response) {
-            console.log('Warehouse lookup response:', response);
-            if (response.success) {
-                warehouseId = response.warehouse_id;
-                console.log('✓ Warehouse ID updated from', pharmacistWarehouseId, 'to', warehouseId);
-                console.log('Warehouse type:', response.warehouse_type);
-            } else {
-                console.error('✗ Failed to get warehouse ID:', response.message);
-            }
-        },
-        error: function(xhr, status, error) {
-            console.error('✗ Error fetching warehouse information:', error);
-            console.error('Response:', xhr.responseText);
-        }
-    });
-    
-    console.log('Final warehouse ID to be used:', warehouseId);
+    console.log('Pharmacist warehouse ID:', pharmacistWarehouseId);
 
     // Pre-populate existing items
     <?php if (!empty($items)): ?>
@@ -338,31 +309,8 @@ jQuery(document).ready(function($) {
                     // Single batch - add directly
                     addIncentiveItem(data[0]);
                 } else {
-                    console.error('No data returned or data is empty');
-                    
-                    // Try without warehouse filter
-                    $.ajax({
-                        type: 'get',
-                        url: '<?= admin_url('products/get_avz_item_code_details'); ?>',
-                        dataType: "json",
-                        data: {
-                            item_id: item.item_id
-                        },
-                        success: function (data2) {
-                            console.log('Retry without warehouse - data:', data2);
-                            
-                            if (data2 && data2.length > 1) {
-                                showBatchModal(data2);
-                            } else if (data2 && data2.length == 1) {
-                                addIncentiveItem(data2[0]);
-                            } else {
-                                bootbox.alert('No records found for this product.');
-                            }
-                        },
-                        error: function (xhr, status, error) {
-                            bootbox.alert('No records found for this product.');
-                        }
-                    });
+                    // No items found in this warehouse
+                    bootbox.alert('No records found for this product in warehouse ' + warehouseId + '.');
                 }
                 
                 $('#product_search').val('');
