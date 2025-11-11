@@ -882,19 +882,20 @@
                 <thead>
                     <tr>
                         <th>Date</th>
+                        <th>Period</th>
                         <th>From Level</th>
                         <th>To Level</th>
                         <th>Total Amount</th>
                         <th>Method</th>
-                        <th>Status</th>
+                        <th>Allocated By</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="allocation-history-tbody">
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 40px; color: var(--horizon-light-text);">
+                        <td colspan="8" style="text-align: center; padding: 40px; color: var(--horizon-light-text);">
                             <i class="fa fa-inbox" style="font-size: 24px; margin-bottom: 8px; display: block;"></i>
-                            No allocation history found
+                            Loading allocation history...
                         </td>
                     </tr>
                 </tbody>
@@ -1019,6 +1020,9 @@ async function initAllocationPage() {
     try {
         // Load budget data from API
         await loadBudgetData();
+        
+        // Load allocation history
+        await loadAllocationHistory();
         
         // Check if data was loaded successfully
         if (!budgetData) {
@@ -1465,6 +1469,9 @@ Total Records: ${allocationArray.length}
 
 The allocations have been saved to the system.`);
             
+            // Reload allocation history to show the new allocation
+            await loadAllocationHistory();
+            
             // Optionally reload the page or redirect
             // window.location.reload();
         } else {
@@ -1502,6 +1509,118 @@ function cancelAllocation() {
  */
 function changeHierarchyLevel(level) {
     alert('Changing to ' + level + ' level - would navigate to appropriate data');
+}
+
+/**
+ * Load allocation history from API
+ */
+async function loadAllocationHistory() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/discounts/budget/allocations`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const allocations = await response.json();
+        console.log('Allocation history loaded:', allocations);
+        
+        renderAllocationHistory(allocations);
+        
+    } catch (error) {
+        console.error('Error loading allocation history:', error);
+        const tbody = document.getElementById('allocation-history-tbody');
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 40px; color: var(--horizon-light-text);">
+                        <i class="fa fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 8px; display: block;"></i>
+                        Error loading allocation history
+                    </td>
+                </tr>
+            `;
+        }
+    }
+}
+
+/**
+ * Render allocation history table
+ */
+function renderAllocationHistory(allocations) {
+    const tbody = document.getElementById('allocation-history-tbody');
+    
+    if (!tbody) {
+        console.error('allocation-history-tbody not found');
+        return;
+    }
+    
+    if (!allocations || allocations.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" style="text-align: center; padding: 40px; color: var(--horizon-light-text);">
+                    <i class="fa fa-inbox" style="font-size: 24px; margin-bottom: 8px; display: block;"></i>
+                    No allocation history found
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    // Group allocations by period and creation date
+    const grouped = {};
+    allocations.forEach(alloc => {
+        const key = `${alloc.period}_${alloc.allocatedAt}_${alloc.allocationMethod}`;
+        if (!grouped[key]) {
+            grouped[key] = {
+                period: alloc.period,
+                createdAt: alloc.allocatedAt, // Use allocatedAt as the timestamp
+                method: alloc.allocationMethod,
+                allocatedBy: alloc.allocatedByUserName || 'Unknown',
+                allocations: []
+            };
+        }
+        grouped[key].allocations.push(alloc);
+    });
+    
+    // Convert to array and sort by date (newest first)
+    const groupedArray = Object.values(grouped).sort((a, b) => 
+        new Date(b.createdAt) - new Date(a.createdAt)
+    );
+    
+    tbody.innerHTML = groupedArray.map(group => {
+        const totalAmount = group.allocations.reduce((sum, a) => sum + parseFloat(a.allocatedAmount || 0), 0);
+        const levels = [...new Set(group.allocations.map(a => a.hierarchyLevel))].join(', ');
+        const count = group.allocations.length;
+        
+        return `
+            <tr>
+                <td>${new Date(group.createdAt).toLocaleString()}</td>
+                <td>${group.period}</td>
+                <td>COMPANY</td>
+                <td>${levels} (${count})</td>
+                <td><strong>${formatCurrency(totalAmount)}</strong></td>
+                <td><span class="badge badge-info">${group.method}</span></td>
+                <td>${group.allocatedBy}</td>
+                <td>
+                    <button class="btn-outline" style="padding: 4px 8px; font-size: 11px;" onclick="viewAllocationDetails('${group.period}', '${group.createdAt}')">
+                        <i class="fa fa-eye"></i> View
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+/**
+ * View allocation details (stub for future implementation)
+ */
+function viewAllocationDetails(period, createdAt) {
+    alert(`View details for allocation:\nPeriod: ${period}\nDate: ${new Date(createdAt).toLocaleString()}`);
 }
 
 /**

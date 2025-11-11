@@ -412,6 +412,11 @@
                 <li><a href="<?= admin_url('accounts'); ?>" class="newmenu-link"><i class="fa fa-calculator"></i> <?= lang('Charts Of Accounts'); ?></a></li>
                 <li><a href="<?= admin_url('entries'); ?>" class="newmenu-link"><i class="fa fa-pencil-square-o"></i> <?= lang('GL Entry'); ?></a></li>
                 
+                <!-- Pharmacist Incentives -->
+                <?php if ($Owner || $Admin || (isset($GP['pharmacist']) && $GP['pharmacist'])) { ?>
+                <li><a href="<?= admin_url('pharmacist'); ?>" class="newmenu-link"><i class="fa fa-user-md"></i> <?= lang('Pharmacist Incentives'); ?></a></li>
+                <?php } ?>
+                
             </ul>
         </li>
         <?php } ?>
