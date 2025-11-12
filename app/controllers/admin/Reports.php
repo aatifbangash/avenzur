@@ -4349,7 +4349,7 @@ class Reports extends MY_Controller
     {
         $this->sma->checkPermissions('suppliers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
-        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+        $this->data['suppliers'] = $this->site->getAllChildCompanies('supplier');
 
         $response_arr = array();
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
