@@ -63,6 +63,20 @@
                         </div>
 
                         <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('Suppliers', 'suppliers'); ?>
+                                <select name="supplier_ids[]" id="supplier_ids" class="form-control select2" multiple="multiple" data-placeholder="<?= lang('Select Suppliers'); ?>" style="width:100%;">
+                                    <?php foreach ($suppliers as $supplier): ?>
+                                        <option value="<?= $supplier->id; ?>" 
+                                            <?= (isset($selected_suppliers) && in_array($supplier->id, $selected_suppliers)) ? 'selected' : ''; ?>>
+                                            <?= $supplier->company ?? $supplier->name; ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
                             <div class="from-group">
                                 <button type="submit" style="margin-top: 28px;" class="btn btn-primary"
                                         id="load_report"><?= lang('Load Report') ?></button>

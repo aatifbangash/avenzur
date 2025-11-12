@@ -1929,7 +1929,7 @@ AND im_summary.total_quantity > 0";
     $this->db->from('products p');
     $this->db->join('purchase_contract_deal_items d', 'd.item_id = p.id', 'left'); // LEFT JOIN to include all products
 
-    $this->db->where('p.supplier1', $supplier_id);
+    //$this->db->where('p.supplier1', $supplier_id);
     $this->db->group_start()
         ->like('p.name', $term)
         ->or_like('p.code', $term)

@@ -1086,7 +1086,7 @@ class Reports_model extends CI_Model
         return $results;
     }
 
-    public function get_suppliers_trial_balance($start_date, $end_date)
+    public function get_suppliers_trial_balance($start_date, $end_date, $supplier_ids)
     {
         // Calculate OB
         // $this->db->select('supplier_id, SUM(dr_total) as total_debit, SUM(cr_total) as total_credit');
@@ -1101,9 +1101,15 @@ class Reports_model extends CI_Model
         $this->db->join('sma_accounts_entryitems', 'sma_accounts_entries.id = sma_accounts_entryitems.entry_id');
         $this->db->join('sma_companies', 'sma_accounts_entries.supplier_id = sma_companies.id');
         $this->db->where('sma_accounts_entries.date <', $start_date);
-        $this->db->where('sma_companies.ledger_account=102');
+        //$this->db->where('sma_companies.ledger_account=102');
         $this->db->where('sma_accounts_entryitems.ledger_id = sma_companies.ledger_account');
         $this->db->where('sma_accounts_entries.supplier_id IS NOT NULL', null, false);
+
+        // ✅ Filter by selected suppliers (if any)
+        if (!empty($supplier_ids)) {
+            $this->db->where_in('sma_companies.id', $supplier_ids);
+        }
+
         $this->db->group_by('sma_accounts_entries.supplier_id, sma_companies.name');
 
         $query_ob = $this->db->get();
@@ -1122,6 +1128,12 @@ class Reports_model extends CI_Model
         $this->db->where('sma_accounts_entries.date <=', $end_date);
         $this->db->where('sma_accounts_entries.supplier_id IS NOT NULL', null, false);
         $this->db->where('sma_accounts_entryitems.ledger_id = sma_companies.ledger_account');
+
+        // ✅ Filter by selected suppliers (if any)
+        if (!empty($supplier_ids)) {
+            $this->db->where_in('sma_companies.id', $supplier_ids);
+        }
+
         $this->db->group_by('sma_accounts_entries.supplier_id, sma_companies.name');
 
         $query_period = $this->db->get();
