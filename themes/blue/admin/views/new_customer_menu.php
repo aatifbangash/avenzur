@@ -389,6 +389,7 @@
                         <!--<li><a href="<?= admin_url('reports/aging'); ?>" class="newmenu-link"><i class="fa fa-hourglass-half"></i> <?= lang('Aging'); ?></a></li>-->
                         <li><a href="<?= admin_url('reports/stock'); ?>" class="newmenu-link"><i class="fa fa-calendar-times-o"></i> <?= lang('Stock'); ?></a></li>
                         <li><a href="<?= admin_url('reports/inventory_trial_balance'); ?>" class="newmenu-link"><i class="fa fa-arrows-alt"></i> <?= lang('Trial Balance'); ?></a></li>
+                        <li><a href="<?= admin_url('reports/revenue_report'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Revenue Report'); ?></a></li>
                     </ul>
                 </li>
 

@@ -1086,6 +1086,76 @@ class Reports_model extends CI_Model
         return $results;
     }
 
+    public function get_revenue_report($filters)
+    {
+        $this->db->select("
+            s.date AS sale_date,
+            wh.name AS pharmacy,
+            s.id AS invoice_no,
+            p.name AS product_name,
+            si.net_unit_price AS sale_price,
+            si.net_cost AS cost_price,
+            (si.net_unit_price - si.net_cost) AS profit_amount,
+            ROUND(
+                CASE 
+                    WHEN si.net_unit_price > 0 
+                    THEN ((si.net_unit_price - si.net_cost) / si.net_unit_price) * 100 
+                    ELSE 0 
+                END, 2
+            ) AS margin_percent,
+            sup.name AS supplier_name,
+            cust.name AS customer_name
+        ");
+
+        $this->db->from('sma_sale_items si');
+        $this->db->join('sma_sales s', 'si.sale_id = s.id', 'left');
+        $this->db->join('sma_products p', 'si.product_id = p.id', 'left');
+        $this->db->join('sma_warehouses wh', '(wh.id = s.warehouse_id OR wh.name = s.warehouse_id)', 'left', FALSE);
+        $this->db->join('sma_companies c', 's.biller_id = c.id', 'left'); // Pharmacy (biller)
+        $this->db->join('sma_companies cust', 's.customer_id = cust.id', 'left'); // Customer
+
+        // ✅ Join purchase items using avz_code to find supplier
+        $this->db->join('sma_purchase_items pi', 'pi.avz_item_code = si.avz_item_code', 'left');
+        $this->db->join('sma_purchases pur', 'pi.purchase_id = pur.id', 'left');
+        $this->db->join('sma_companies sup', 'pur.supplier_id = sup.id', 'left');
+
+        // --- Filters ---
+        $this->db->where('DATE(s.date) >=', $filters['start_date']);
+        $this->db->where('DATE(s.date) <=', $filters['end_date']);
+
+        if (!empty($filters['pharmacy'])) {
+            // pharmacy is expected to be warehouse id (integer)
+            // but if your UI still sends text, handle both:
+            if (is_numeric($filters['pharmacy'])) {
+                $this->db->where('s.warehouse_id', $filters['pharmacy']);
+            } else {
+                $this->db->where('s.warehouse_id', $filters['pharmacy']); // fallback: matching text name stored
+            }
+        }
+
+        if (!empty($filters['invoice_no'])) {
+            $this->db->where('s.id', $filters['invoice_no']);
+        }
+
+        if (!empty($filters['product'])) {
+            $this->db->like('p.name', $filters['product']);
+        }
+
+        if (!empty($filters['supplier_ids'])) {
+            $this->db->where_in('sup.id', $filters['supplier_ids']);
+        }
+
+        if (!empty($filters['customer_id'])) {
+            $this->db->where('s.customer_id', $filters['customer_id']);
+        }
+
+        $this->db->order_by('s.date', 'desc');
+
+        $query = $this->db->get();
+        return $query->result_array();
+    }
+
+
     public function get_suppliers_trial_balance($start_date, $end_date, $supplier_ids)
     {
         // Calculate OB

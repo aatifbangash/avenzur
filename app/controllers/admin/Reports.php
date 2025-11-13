@@ -4345,6 +4345,111 @@ class Reports extends MY_Controller
         }
     }
 
+    public function revenue_report()
+    {
+        //$this->sma->checkPermissions('reports', TRUE);
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+        $this->data['customers'] = $this->site->getAllCompanies('customer');
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        // Collect filters
+        $filters = [
+            'pharmacy'     => $this->input->post('pharmacy') ?: null,
+            'invoice_no'   => $this->input->post('invoice_no') ?: null,
+            'product'      => $this->input->post('product') ?: null,
+            'supplier_ids' => $this->input->post('supplier_ids') ?: [],
+            'customer_id'  => $this->input->post('customer_id') ?: null,
+            'period'       => $this->input->post('period') ?: 'today',
+            'group_by'     => $this->input->post('group_by') ?: 'invoice',
+        ];
+
+        // Derive date range from period
+        switch ($filters['period']) {
+            case 'month':
+                $start_date = date('Y-m-01');
+                $end_date   = date('Y-m-t');
+                break;
+            case 'ytd':
+                $start_date = date('Y-01-01');
+                $end_date   = date('Y-m-d');
+                break;
+            default:
+                $start_date = date('Y-m-d');
+                $end_date   = date('Y-m-d');
+                break;
+        }
+
+        $filters['start_date'] = $start_date;
+        $filters['end_date']   = $end_date;
+        // Get report data
+        $this->data['report_data'] = [];
+        if ($this->input->post('period')) {
+            $this->data['report_data'] = $this->reports_model->get_revenue_report($filters);
+        }
+
+        $this->data['filters'] = $filters;
+
+        // Handle Excel export
+        if ($this->input->post('export_excel')) {
+            $revenues = $this->reports_model->get_revenue_report($filters);
+            $this->load->library('excel');
+            $this->excel->setActiveSheetIndex(0);
+            $this->excel->getActiveSheet()->setTitle('Revenue Report');
+
+            // Header row
+            $this->excel->getActiveSheet()->SetCellValue('A1', lang('Date'));
+            $this->excel->getActiveSheet()->SetCellValue('B1', lang('Pharmacy'));
+            $this->excel->getActiveSheet()->SetCellValue('C1', lang('Invoice #'));
+            $this->excel->getActiveSheet()->SetCellValue('D1', lang('Product'));
+            $this->excel->getActiveSheet()->SetCellValue('E1', lang('Sale Price'));
+            $this->excel->getActiveSheet()->SetCellValue('F1', lang('Cost Price'));
+            $this->excel->getActiveSheet()->SetCellValue('G1', lang('Profit Amt'));
+            $this->excel->getActiveSheet()->SetCellValue('H1', lang('Margin %'));
+            $this->excel->getActiveSheet()->SetCellValue('I1', lang('Supplier'));
+            $this->excel->getActiveSheet()->SetCellValue('J1', lang('Customer'));
+
+            // Start writing data from row 2
+            $row = 2;
+            foreach ($revenues as $r) {
+                $this->excel->getActiveSheet()->SetCellValue('A' . $row, $r['sale_date']);
+                $this->excel->getActiveSheet()->SetCellValue('B' . $row, $r['pharmacy']);
+                $this->excel->getActiveSheet()->SetCellValue('C' . $row, $r['invoice_no']);
+                $this->excel->getActiveSheet()->SetCellValue('D' . $row, $r['product_name']);
+                $this->excel->getActiveSheet()->SetCellValue('E' . $row, $this->sma->formatMoney($r['sale_price'], 'none'));
+                $this->excel->getActiveSheet()->SetCellValue('F' . $row, $this->sma->formatMoney($r['cost_price'], 'none'));
+                $this->excel->getActiveSheet()->SetCellValue('G' . $row, $this->sma->formatMoney($r['profit_amount'], 'none'));
+                $this->excel->getActiveSheet()->SetCellValue('H' . $row, $r['margin_percent']);
+                $this->excel->getActiveSheet()->SetCellValue('I' . $row, $r['supplier_name']);
+                $this->excel->getActiveSheet()->SetCellValue('J' . $row, $r['customer_name']);
+                $row++;
+            }
+
+            // Set column widths
+            $columns = ['A'=>20,'B'=>25,'C'=>20,'D'=>30,'E'=>15,'F'=>15,'G'=>15,'H'=>12,'I'=>25,'J'=>25];
+            foreach ($columns as $col => $width) {
+                $this->excel->getActiveSheet()->getColumnDimension($col)->setWidth($width);
+            }
+
+            // Center vertical alignment
+            $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+
+            // Export file
+            $filename = 'Revenue_Report_' . date('Y-m-d_H_i_s');
+            $this->load->helper('excel');
+            create_excel($this->excel, $filename);
+
+        }
+
+        $bc   = [['link' => base_url(), 'page' => lang('home')],
+                ['link' => admin_url('reports'), 'page' => lang('reports')],
+                ['link' => '#', 'page' => 'Revenue Report']];
+        $meta = ['page_title' => 'Revenue Report', 'bc' => $bc];
+
+        $this->page_construct('reports/revenue_report', $meta, $this->data);
+    }
+
+
     public function suppliers_trial_balance()
     {
         $this->sma->checkPermissions('suppliers');

@@ -874,6 +874,11 @@
                                                     <i class="fa fa-users"></i><span class="text"> <?= lang('Total Income Report'); ?></span>
                                                 </a>
                                             </li>
+                                            <li id="reports_total_revenue_report">
+                                                <a href="<?= admin_url('reports/revenue_report') ?>">
+                                                    <i class="fa fa-users"></i><span class="text"> <?= lang('Total Revenue Report'); ?></span>
+                                                </a>
+                                            </li>
                                         </ul>
                                 </li>
                             
