@@ -412,7 +412,7 @@
                 <li><a href="<?= admin_url('accounts_dashboard'); ?>" class="newmenu-link"><i class="fa fa-sliders"></i> <?= lang('Accounts Dashboard'); ?></a></li>
                 <li><a href="<?= admin_url('accounts'); ?>" class="newmenu-link"><i class="fa fa-calculator"></i> <?= lang('Charts Of Accounts'); ?></a></li>
                 <li><a href="<?= admin_url('entries'); ?>" class="newmenu-link"><i class="fa fa-pencil-square-o"></i> <?= lang('GL Entry'); ?></a></li>
-                
+                <li><a href="<?= admin_url('reports/general_ledger_trial_balance'); ?>"><i class="fa fa-file-text-o"></i><?= lang('Trial Balance'); ?></a></li>
             </ul>
         </li>
         <?php } ?>
