@@ -323,7 +323,7 @@
                 <div class="step-circle">5</div>
                 <div class="step-label">Send To Rasd</div>
             </div>
-            <div class="progress-step <?php echo $rasd_status; ?>">
+            <div class="progress-step <?php echo $out_for_delivery_status; ?>">
                 <div class="step-circle">6</div>
                 <div class="step-label">Out For Delivery</div>
             </div>
@@ -393,11 +393,11 @@
                 <?php 
                     if(($this->Admin || $this->Owner || $this->WarehouseSupervisor)  && ($inv->sale_status == 'out_for_delivery')){
                 ?>
-                <div class="btn-group">
+                <!--<div class="btn-group">
                     <a href="<?= admin_url('sales/edit_delivery/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-primary tip" title="<?= lang('add_delivery') ?>">
                         <i class="fa fa-truck"></i> <span class="hidden-sm hidden-xs"><?= lang('add_delivery_note') ?></span>
                     </a>
-                </div>
+                </div>-->
                 <?php 
                     }
                 ?>

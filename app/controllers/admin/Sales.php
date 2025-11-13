@@ -2553,11 +2553,7 @@ class Sales extends MY_Controller
              
           if ($this->sales_model->saleToInvoice($sid)) {
 
-            # Update Sales to Completed
-            if(isset($this->GP) && $this->GP['accountant']){
-                $this->db->update('sales', ['sale_status' => 'completed'], ['id' => $sid]);
-                //$this->site->syncQuantity($sid);
-            }
+            $this->db->update('sales', ['sale_status' => 'completed'], ['id' => $sid]);
             
             $this->load->admin_model('companies_model');
             $customer = $this->companies_model->getCompanyByID($inv->customer_id);
