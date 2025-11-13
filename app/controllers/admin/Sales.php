@@ -396,6 +396,7 @@ class Sales extends MY_Controller
         $grand_total = $quote->grand_total;
         $grand_total_sale = $quote->total;
         $grand_total_net_sale = $quote->total_net_sale; 
+        $grand_cost_goods_sold = 0;
 
         $i = sizeof($quote_items);
         for ($r = 0; $r < $i; $r++) {
@@ -431,6 +432,8 @@ class Sales extends MY_Controller
             $main_net = $quote_items[$r]->main_net;
             $real_cost = $quote_items[$r]->real_cost;
             $avz_code = $quote_items[$r]->avz_item_code ?? '';
+
+            $cost_of_goods_sold = $net_cost * $item_quantity;
 
             $inventoryObj = $this->products_model->check_inventory($warehouse_id, $item_id, $item_batchno, $item_expiry, $item_quantity, $avz_code);
             
@@ -480,6 +483,7 @@ class Sales extends MY_Controller
             ];
 
             $products[] = ($product);
+            $grand_cost_goods_sold += $cost_of_goods_sold;
         }
 
         if (empty($products)) {
@@ -511,6 +515,7 @@ class Sales extends MY_Controller
             'total_tax'         => $grand_total_vat,
             'shipping'          => 0,
             'grand_total'       => $grand_total,
+            'cost_goods_sold'   => $grand_cost_goods_sold,
             'total_items'       => $total_items,
             'attachment'        => $attachment,
             'sale_id'           => $quote_id,
