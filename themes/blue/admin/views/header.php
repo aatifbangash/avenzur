@@ -879,6 +879,16 @@
                                                     <i class="fa fa-users"></i><span class="text"> <?= lang('Total Revenue Report'); ?></span>
                                                 </a>
                                             </li>
+                                            <li id="reports_total_revenue_report">
+                                                <a href="<?= admin_url('reports/purchase_report') ?>">
+                                                    <i class="fa fa-users"></i><span class="text"> <?= lang('Total Purchase Report'); ?></span>
+                                                </a>
+                                            </li>
+                                            <li id="reports_total_revenue_report">
+                                                <a href="<?= admin_url('reports/transfer_report') ?>">
+                                                    <i class="fa fa-users"></i><span class="text"> <?= lang('Total Transfer Report'); ?></span>
+                                                </a>
+                                            </li>
                                         </ul>
                                 </li>
                             

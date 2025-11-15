@@ -391,6 +391,7 @@
                         <li><a href="<?= admin_url('reports/inventory_trial_balance'); ?>" class="newmenu-link"><i class="fa fa-arrows-alt"></i> <?= lang('Trial Balance'); ?></a></li>
                         <li><a href="<?= admin_url('reports/revenue_report'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Revenue Report'); ?></a></li>
                         <li><a href="<?= admin_url('reports/purchase_report'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Purchase Report'); ?></a></li>
+                        <li><a href="<?= admin_url('reports/transfer_report'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Transfer Report'); ?></a></li>
                     </ul>
                 </li>
 

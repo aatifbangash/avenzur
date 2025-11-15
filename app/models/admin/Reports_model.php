@@ -1157,6 +1157,103 @@ class Reports_model extends CI_Model
         return $result;
     }
 
+    public function get_transfer_report($filters)
+    {
+        // If 'by' == 'invoice' we aggregate per transfer, otherwise we return item rows
+        if ($filters['by'] == 'invoice') {
+            // aggregate per transfer
+            $this->db->select("t.id AS transfer_id, t.date AS date, t.transfer_no AS invoice_no,
+                fw.name AS from_wh_name, tw.name AS to_wh_name,
+                SUM(ti.sale_price * ti.quantity) AS total_sale,
+                SUM(ti.net_unit_cost * ti.quantity) AS total_cost,
+                SUM((ti.sale_price - ti.net_unit_cost) * ti.quantity) AS total_profit", false);
+
+            $this->db->from('sma_transfers t');
+            $this->db->join('sma_purchase_items ti', 'ti.transfer_id = t.id', 'left');
+            $this->db->join('sma_warehouses fw', 't.from_warehouse_id = fw.id', 'left');
+            $this->db->join('sma_warehouses tw', 't.to_warehouse_id = tw.id', 'left');
+
+            // filters
+            if (!empty($filters['from_wh'])) {
+                $this->db->where('t.from_warehouse_id', $filters['from_wh']);
+            }
+            if (!empty($filters['to_wh'])) {
+                $this->db->where('t.to_warehouse_id', $filters['to_wh']);
+            }
+            if (!empty($filters['product_id'])) {
+                $this->db->where('ti.product_id', $filters['product_id']);
+            }
+            if (!empty($filters['invoice_no'])) {
+                $this->db->where('t.transfer_id', $filters['invoice_no']);
+            }
+            if (!empty($filters['start_date'])) {
+                $this->db->where('DATE(t.date) >=', $filters['start_date']);
+            }
+            if (!empty($filters['end_date'])) {
+                $this->db->where('DATE(t.date) <=', $filters['end_date']);
+            }
+
+            $this->db->group_by('t.id');
+            $query = $this->db->get();
+            //echo $this->db->last_query();exit;
+            $rows = $query->result_array();
+
+            // calculate margin % safely
+            foreach ($rows as &$r) {
+                $r['total_profit'] = (float)$r['total_profit'];
+                $r['total_sale'] = (float)$r['total_sale'];
+                $r['total_cost'] = (float)$r['total_cost'];
+                $r['total_margin_percent'] = ($r['total_sale'] > 0) ? round(($r['total_profit'] / $r['total_sale']) * 100, 2) : 0;
+            }
+            return $rows;
+        } else {
+            // by item -> list each transfer_item row with transfer data
+            $this->db->select("t.id as transfer_id, t.date as date, t.transfer_no as invoice_no,
+                ti.product_id, p.name as product_name, ti.quantity, ti.net_unit_cost, ti.sale_price,
+                ((ti.sale_price - ti.net_unit_cost) * ti.quantity) as profit_amt,
+                fw.name as from_wh_name, tw.name as to_wh_name", false);
+
+            $this->db->from('sma_purchase_items ti');
+            $this->db->join('sma_transfers t', 'ti.transfer_id = t.id', 'left');
+            $this->db->join('sma_products p', 'ti.product_id = p.id', 'left');
+            $this->db->join('sma_warehouses fw', 't.from_warehouse_id = fw.id', 'left');
+            $this->db->join('sma_warehouses tw', 't.to_warehouse_id = tw.id', 'left');
+
+            // filters
+            if (!empty($filters['from_wh'])) {
+                $this->db->where('t.from_warehouse_id', $filters['from_wh']);
+            }
+            if (!empty($filters['to_wh'])) {
+                $this->db->where('t.to_warehouse_id', $filters['to_wh']);
+            }
+            if (!empty($filters['product_id'])) {
+                $this->db->where('ti.product_id', $filters['product_id']);
+            }
+            if (!empty($filters['invoice_no'])) {
+                $this->db->where('t.transfer_id', $filters['invoice_no']);
+            }
+            if (!empty($filters['start_date'])) {
+                $this->db->where('DATE(t.date) >=', $filters['start_date']);
+            }
+            if (!empty($filters['end_date'])) {
+                $this->db->where('DATE(t.date) <=', $filters['end_date']);
+            }
+
+            $this->db->order_by('t.date', 'desc');
+            $query = $this->db->get();
+            //echo $this->db->last_query();exit;
+            $rows = $query->result_array();
+
+            // compute margin percent per row
+            foreach ($rows as &$r) {
+                $sale_total = (float)$r['sale_price'] * (float)$r['quantity'];
+                $profit = (float)$r['profit_amt'];
+                $r['margin_percent'] = ($sale_total > 0) ? round(($profit / $sale_total) * 100, 2) : 0;
+            }
+            return $rows;
+        }
+    }
+
 
     public function get_revenue_report($filters)
     {

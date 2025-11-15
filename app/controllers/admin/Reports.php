@@ -135,6 +135,128 @@ class Reports extends MY_Controller
         $this->page_construct('reports/customer_report', $meta, $this->data);
     }
 
+    public function transfer_report()
+    {
+        //$this->sma->checkPermissions('reports');
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        // dropdown lists
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['products'] = $this->products_model->getAllProducts();
+
+        // gather filters
+        $filters = [
+            'from_wh'    => $this->input->post('from_wh') ?: null,
+            'to_wh'      => $this->input->post('to_wh') ?: null,
+            'product_id' => $this->input->post('product_id') ?: null,
+            'invoice_no' => $this->input->post('invoice_no') ?: null,
+            'period'     => $this->input->post('period') ?: 'today', // today/month/ytd
+            'by'         => $this->input->post('by') ?: 'invoice', // invoice or item
+            'start_date' => null,
+            'end_date'   => null
+        ];
+
+        // derive date range from period
+        $today = date('Y-m-d');
+        if ($filters['period'] == 'month') {
+            $filters['start_date'] = date('Y-m-01');
+            $filters['end_date']   = date('Y-m-t');
+        } elseif ($filters['period'] == 'ytd') {
+            $filters['start_date'] = date('Y-01-01');
+            $filters['end_date']   = $today;
+        } else { // default today
+            $filters['start_date'] = $today;
+            $filters['end_date']   = $today;
+        }
+
+        $this->data['filters'] = $filters;
+
+        // get report only when user submits (or you can always load)
+        $this->data['reportData'] = [];
+        if ($this->input->post('period') || $this->input->post('export_excel')) {
+            $this->data['reportData'] = $this->reports_model->get_transfer_report($filters);
+        }
+
+        // Excel export
+        if ($this->input->post('export_excel')) {
+            // Prepare Excel file depending on mode
+            $report = $this->data['reportData'];
+
+            $this->load->library('excel');
+            $sheet = $this->excel->setActiveSheetIndex(0);
+            $sheet->setTitle('Transfer Report');
+
+            if ($filters['by'] == 'invoice') {
+                // Header
+                $sheet->SetCellValue('A1', lang('Date'));
+                $sheet->SetCellValue('B1', lang('Invoice #'));
+                $sheet->SetCellValue('C1', lang('From Warehouse'));
+                $sheet->SetCellValue('D1', lang('To Warehouse'));
+                $sheet->SetCellValue('E1', lang('Total Sale Price'));
+                $sheet->SetCellValue('F1', lang('Total Cost Price'));
+                $sheet->SetCellValue('G1', lang('Profit Amt'));
+                $sheet->SetCellValue('H1', lang('Profit Margin %'));
+
+                $row = 2;
+                foreach ($report as $r) {
+                    $sheet->SetCellValue('A' . $row, $r['date']);
+                    $sheet->SetCellValue('B' . $row, $r['invoice_no']);
+                    $sheet->SetCellValue('C' . $row, $r['from_wh_name']);
+                    $sheet->SetCellValue('D' . $row, $r['to_wh_name']);
+                    $sheet->SetCellValue('E' . $row, $this->sma->formatMoney($r['total_sale'], 'none'));
+                    $sheet->SetCellValue('F' . $row, $this->sma->formatMoney($r['total_cost'], 'none'));
+                    $sheet->SetCellValue('G' . $row, $this->sma->formatMoney($r['total_profit'], 'none'));
+                    $sheet->SetCellValue('H' . $row, $r['total_margin_percent']);
+                    $row++;
+                }
+
+                $cols = ['A'=>20,'B'=>20,'C'=>25,'D'=>25,'E'=>18,'F'=>18,'G'=>18,'H'=>15];
+                foreach ($cols as $c => $w) $sheet->getColumnDimension($c)->setWidth($w);
+            } else {
+                // By item
+                $sheet->SetCellValue('A1', lang('Date'));
+                $sheet->SetCellValue('B1', lang('Invoice #'));
+                $sheet->SetCellValue('C1', lang('Item'));
+                $sheet->SetCellValue('D1', lang('Qty'));
+                $sheet->SetCellValue('E1', lang('Cost Price'));
+                $sheet->SetCellValue('F1', lang('Sale Price'));
+                $sheet->SetCellValue('G1', lang('Profit Amt'));
+                $sheet->SetCellValue('H1', lang('Profit Margin %'));
+                $sheet->SetCellValue('I1', lang('From Warehouse'));
+                $sheet->SetCellValue('J1', lang('To Warehouse'));
+
+                $row = 2;
+                foreach ($report as $r) {
+                    $sheet->SetCellValue("A{$row}", $r['date']);
+                    $sheet->SetCellValue("B{$row}", $r['invoice_no']);
+                    $sheet->SetCellValue("C{$row}", $r['product_name']);
+                    $sheet->SetCellValue("D{$row}", $r['quantity']);
+                    $sheet->SetCellValue("E{$row}", $this->sma->formatMoney($r['cost_price'], 'none'));
+                    $sheet->SetCellValue("F{$row}", $this->sma->formatMoney($r['sale_price'], 'none'));
+                    $sheet->SetCellValue("G{$row}", $this->sma->formatMoney($r['profit_amt'], 'none'));
+                    $sheet->SetCellValue("H{$row}", $r['margin_percent']);
+                    $sheet->SetCellValue("I{$row}", $r['from_wh_name']);
+                    $sheet->SetCellValue("J{$row}", $r['to_wh_name']);
+                    $row++;
+                }
+
+                $cols = ['A'=>20,'B'=>20,'C'=>30,'D'=>8,'E'=>15,'F'=>15,'G'=>18,'H'=>15,'I'=>25,'J'=>25];
+                foreach ($cols as $c => $w) $sheet->getColumnDimension($c)->setWidth($w);
+            }
+
+            $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+            $filename = 'Transfer_Report_' . date('Y-m-d_H_i_s');
+            $this->load->helper('excel');
+            create_excel($this->excel, $filename);
+            return;
+        }
+
+        // normal page render
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('transfer_report')]];
+        $meta = ['page_title' => lang('transfer_report'), 'bc' => $bc];
+        $this->page_construct('reports/transfer_report', $meta, $this->data);
+    }
+
+
     public function purchase_report()
     {
         //$this->sma->checkPermissions('reports');
