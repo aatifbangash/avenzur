@@ -1086,6 +1086,78 @@ class Reports_model extends CI_Model
         return $results;
     }
 
+    public function get_purchase_report($filters)
+    {
+        $this->db->select("si.id as sale_item_id, s.date as date, s.id as invoice_no, p.name as product_name,
+            si.quantity, si.batch_no, si.net_unit_price as sale_price, si.real_cost as purchase_price, si.item_discount as discount, si.net_cost as cost_price,
+            ROUND(((si.net_unit_price - si.net_cost)/si.net_unit_price)*100,2) as margin_percent,
+            sup.name as supplier_name, w.name as pharmacy_name");
+
+        $this->db->from('sma_sale_items si');
+        $this->db->join('sma_sales s', 'si.sale_id = s.id', 'left');
+        $this->db->join('sma_products p', 'si.product_id = p.id', 'left');
+        $this->db->join('sma_warehouses w', 's.warehouse_id = w.id', 'left');
+        
+        // Join to fetch supplier via avz_code
+        $this->db->join('sma_purchase_items pi', 'pi.avz_item_code = si.avz_item_code', 'left');
+        $this->db->join('sma_purchases pur', 'pi.purchase_id = pur.id', 'left');
+        $this->db->join('sma_companies sup', 'pur.supplier_id = sup.id', 'left');
+
+        // Filters
+        if (!empty($filters['supplier_ids'])) {
+            $this->db->where_in('sup.id', $filters['supplier_ids']);
+        }
+        if (!empty($filters['pharmacy_ids'])) {
+            $this->db->where_in('s.warehouse_id', $filters['pharmacy_ids']);
+        }
+        if (!empty($filters['invoice_no'])) {
+            $this->db->where('s.id', $filters['invoice_no']);
+        }
+        if (!empty($filters['product_id'])) {
+            $this->db->where('p.id', $filters['product_id']);
+        }
+        if (!empty($filters['start_date'])) {
+            $this->db->where('DATE(s.date) >=', $filters['start_date']);
+        }
+        if (!empty($filters['end_date'])) {
+            $this->db->where('DATE(s.date) <=', $filters['end_date']);
+        }
+
+        $query = $this->db->get();
+        $result = $query->result_array();
+
+        // Grouping logic for totals if group_by = supplier
+        if ($filters['group_by'] == 'supplier') {
+            $totals = [];
+            foreach ($result as $row) {
+                $sup_id = $row['supplier_name'] ?? 'Unknown';
+                if (!isset($totals[$sup_id])) {
+                    $totals[$sup_id] = [
+                        'date' => $row['date'],
+                        'invoice_no' => $row['invoice_no'],
+                        'total_sale_price' => 0,
+                        'total_purchase' => 0,
+                        'total_discount' => 0,
+                        'total_cost_price' => 0,
+                        'total_margin_amount' => 0,
+                        'total_margin_percent' => 0
+                    ];
+                }
+                $totals[$sup_id]['supplier_name'] = $sup_id;
+                $totals[$sup_id]['total_sale_price'] += $row['sale_price'];
+                $totals[$sup_id]['total_purchase'] += $row['purchase_price'];
+                $totals[$sup_id]['total_discount'] += $row['discount'];
+                $totals[$sup_id]['total_cost_price'] += $row['cost_price'];
+                $totals[$sup_id]['total_margin_amount'] += ($row['sale_price'] - $row['cost_price']);
+                $totals[$sup_id]['total_margin_percent'] = round(($totals[$sup_id]['total_margin_amount']/$totals[$sup_id]['total_sale_price'])*100,2);
+            }
+            //echo '<pre>';print_r(array_values($totals));exit;
+            return array_values($totals);
+        }
+        return $result;
+    }
+
+
     public function get_revenue_report($filters)
     {
         $this->db->select("

@@ -17,6 +17,7 @@ class Reports extends MY_Controller
         $this->load->library('form_validation');
         $this->load->admin_model('reports_model');
         $this->load->admin_model('companies_model');
+        $this->load->admin_model('products_model');
         $this->data['pb'] = [
             'cash' => lang('cash'),
             'CC' => lang('CC'),
@@ -133,6 +134,156 @@ class Reports extends MY_Controller
         $meta = ['page_title' => lang('customers_report'), 'bc' => $bc];
         $this->page_construct('reports/customer_report', $meta, $this->data);
     }
+
+    public function purchase_report()
+    {
+        //$this->sma->checkPermissions('reports');
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        // Fetch dropdown data
+        $this->data['warehouses'] = $this->site->getAllWarehouses(); // Pharmacies
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+        $this->data['products'] = $this->products_model->getAllProducts();
+        
+        $filters = [
+            'supplier_ids' => $this->input->post('supplier_ids') ?: [],
+            'pharmacy_ids' => $this->input->post('pharmacy_ids') ?: [],
+            'invoice_no'   => $this->input->post('invoice_no') ?: '',
+            'product_id'   => $this->input->post('product_id') ?: '',
+            'period'       => $this->input->post('period') ?: 'today',
+            'group_by'     => $this->input->post('group_by') ?: 'item',
+            'start_date'   => null,
+            'end_date'     => null
+        ];
+
+        // Determine dates
+        if ($filters['period'] == 'today') {
+            $filters['start_date'] = $filters['end_date'] = date('Y-m-d');
+        } elseif ($filters['period'] == 'month') {
+            $filters['start_date'] = date('Y-m-01');
+            $filters['end_date'] = date('Y-m-t');
+        } elseif ($filters['period'] == 'ytd') {
+            $filters['start_date'] = date('Y-01-01');
+            $filters['end_date'] = date('Y-m-d');
+        }
+
+        // Get report data
+        $this->data['reportData'] = $this->reports_model->get_purchase_report($filters);
+        $this->data['filters'] = $filters;
+
+        // Handle Excel export
+        if ($this->input->post('export_excel')) {
+
+            $report = $this->reports_model->get_purchase_report($filters);
+
+            $this->load->library('excel');
+            $sheet = $this->excel->setActiveSheetIndex(0);
+            $sheet->setTitle('Purchase Report');
+
+            // =============================
+            // EXPORT FOR GROUP BY ITEM
+            // =============================
+            if ($filters['group_by'] == 'item') {
+
+                // Header row
+                $sheet->SetCellValue('A1', lang('Date'));
+                $sheet->SetCellValue('B1', lang('Invoice #'));
+                $sheet->SetCellValue('C1', lang('Product'));
+                $sheet->SetCellValue('D1', lang('Qty'));
+                $sheet->SetCellValue('E1', lang('Batch #'));
+                $sheet->SetCellValue('F1', lang('Sale Price'));
+                $sheet->SetCellValue('G1', lang('Purchase Price'));
+                $sheet->SetCellValue('H1', lang('Discount'));
+                $sheet->SetCellValue('I1', lang('Cost Price'));
+                $sheet->SetCellValue('J1', lang('Margin %'));
+                $sheet->SetCellValue('K1', lang('Supplier'));
+                $sheet->SetCellValue('L1', lang('Pharmacy'));
+
+                $row = 2;
+
+                foreach ($report as $r) {
+
+                    $sheet->SetCellValue("A{$row}", $r['date']);
+                    $sheet->SetCellValue("B{$row}", $r['invoice_no']);
+                    $sheet->SetCellValue("C{$row}", $r['product_name']);
+                    $sheet->SetCellValue("D{$row}", $r['quantity']);
+                    $sheet->SetCellValue("E{$row}", $r['batch_no']);
+                    $sheet->SetCellValue("F{$row}", $this->sma->formatMoney($r['sale_price'], 'none'));
+                    $sheet->SetCellValue("G{$row}", $this->sma->formatMoney($r['purchase_price'], 'none'));
+                    $sheet->SetCellValue("H{$row}", $this->sma->formatMoney($r['discount'], 'none'));
+                    $sheet->SetCellValue("I{$row}", $this->sma->formatMoney($r['cost_price'], 'none'));
+                    $sheet->SetCellValue("J{$row}", $r['margin_percent']);
+                    $sheet->SetCellValue("K{$row}", $r['supplier_name']);
+                    $sheet->SetCellValue("L{$row}", $r['pharmacy_name']);
+
+                    $row++;
+                }
+
+                // Set column widths
+                $widths = [
+                    'A'=>20,'B'=>15,'C'=>25,'D'=>8,'E'=>15,'F'=>15,'G'=>15,
+                    'H'=>15,'I'=>15,'J'=>12,'K'=>25,'L'=>20
+                ];
+
+                foreach ($widths as $col => $w) {
+                    $sheet->getColumnDimension($col)->setWidth($w);
+                }
+            }
+
+            // =============================
+            // EXPORT FOR GROUP BY SUPPLIER
+            // =============================
+            else {
+
+                // Header row
+                $sheet->SetCellValue('A1', lang('Supplier'));
+                $sheet->SetCellValue('B1', lang('Total Sale Price'));
+                $sheet->SetCellValue('C1', lang('Total Purchase'));
+                $sheet->SetCellValue('D1', lang('Total Discount'));
+                $sheet->SetCellValue('E1', lang('Total Cost Price'));
+                $sheet->SetCellValue('F1', lang('Total Margin %'));
+                $sheet->SetCellValue('G1', lang('Total Margin Amount'));
+
+                $row = 2;
+
+                foreach ($report as $r) {
+
+                    $sheet->SetCellValue("A{$row}", $r['supplier_name']);
+                    $sheet->SetCellValue("B{$row}", $this->sma->formatMoney($r['total_sale_price'], 'none'));
+                    $sheet->SetCellValue("C{$row}", $this->sma->formatMoney($r['total_purchase'], 'none'));
+                    $sheet->SetCellValue("D{$row}", $this->sma->formatMoney($r['total_discount'], 'none'));
+                    $sheet->SetCellValue("E{$row}", $this->sma->formatMoney($r['total_cost_price'], 'none'));
+                    $sheet->SetCellValue("F{$row}", $r['total_margin_percent']);
+                    $sheet->SetCellValue("G{$row}", $this->sma->formatMoney($r['total_margin_amount'], 'none'));
+
+                    $row++;
+                }
+
+                // Column widths
+                $widths = [
+                    'A'=>25,'B'=>18,'C'=>18,'D'=>18,'E'=>18,'F'=>15,'G'=>18
+                ];
+
+                foreach ($widths as $col => $w) {
+                    $sheet->getColumnDimension($col)->setWidth($w);
+                }
+            }
+
+            // Vertical alignment
+            $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+
+            // Export file
+            $filename = 'Purchase_Report_' . date('Y-m-d_H_i_s');
+            $this->load->helper('excel');
+            create_excel($this->excel, $filename);
+        }
+
+
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('purchase_report')]];
+        $meta = ['page_title' => lang('purchase_report'), 'bc' => $bc];
+        $this->page_construct('reports/purchase_report', $meta, $this->data);
+    }
+
 
     public function daily_purchase_report(){
         $this->sma->checkPermissions();
