@@ -31,6 +31,7 @@ class Purchases extends MY_Controller
         $this->load->admin_model('deals_model');
         $this->load->admin_model('purchase_order_model');
         $this->load->admin_model('purchase_contract_deals_model');
+        $this->load->admin_model('Cost_center_model');
         $this->digital_upload_path = 'files/';
         $this->upload_path = 'assets/uploads/';
         $this->thumbs_path = 'assets/uploads/thumbs/';
@@ -312,6 +313,7 @@ class Purchases extends MY_Controller
         $this->form_validation->set_message('is_natural_no_zero', $this->lang->line('no_zero_required'));
         $this->form_validation->set_rules('warehouse', $this->lang->line('warehouse'), 'required|is_natural_no_zero');
         $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
+        $this->form_validation->set_rules('cost_center_id', 'Cost Center', 'required|is_natural_no_zero');
         // $this->form_validation->set_rules('batchno[]', lang('Batch'), 'required');
         $product_id_arr = $this->input->post('product_id');
 
@@ -568,6 +570,7 @@ class Purchases extends MY_Controller
                 'supplier_id' => $supplier_id,
                 'supplier' => $supplier,
                 'warehouse_id' => $warehouse_id,
+                'cost_center_id' => $this->input->post('cost_center_id'),
                 'note' => $note,
                 'total' => $grand_total_purchase,
                 'total_net_purchase' => $grand_total_net_purchase,
@@ -785,6 +788,7 @@ class Purchases extends MY_Controller
             $this->data['tax_rates'] = $this->site->getAllTaxRates();
             $this->data['warehouses'] = $this->site->getAllWarehouses();
             $this->data['ponumber'] = ''; //$this->site->getReference('po');
+            
             $this->load->helper('string');
             $value = random_string('alnum', 20);
             $this->session->set_userdata('user_csrf', $value);
@@ -1164,6 +1168,7 @@ class Purchases extends MY_Controller
         $this->form_validation->set_rules('reference_no', $this->lang->line('ref_no'), 'required');
         $this->form_validation->set_rules('warehouse', $this->lang->line('warehouse'), 'required|is_natural_no_zero');
         $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
+        $this->form_validation->set_rules('cost_center_id', 'Cost Center', 'required|is_natural_no_zero');
 
         $this->session->unset_userdata('csrf_token');
         // echo "<pre>";
@@ -1421,6 +1426,7 @@ class Purchases extends MY_Controller
                 'supplier_id' => $supplier_id,
                 'supplier' => $supplier,
                 'warehouse_id' => $warehouse_id,
+                'cost_center_id' => $this->input->post('cost_center_id'),
                 'note' => $note,
                 'total' => $grand_total_purchase,
                 'total_net_purchase' => $grand_total_net_purchase,
@@ -1590,6 +1596,7 @@ class Purchases extends MY_Controller
             $this->data['tax_rates'] = $this->site->getAllTaxRates();
             $this->data['warehouses'] = $this->site->getAllWarehouses();
             $this->data['shelves'] = $this->site->getAllShelf($inv->warehouse_id);
+            
             $this->load->helper('string');
             $value = random_string('alnum', 20);
             $this->session->set_userdata('user_csrf', $value);
@@ -4083,5 +4090,41 @@ class Purchases extends MY_Controller
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('check_status'), 'page' => lang('Check Status')], ['link' => '#', 'page' => lang('Check Status')]];
         $meta = ['page_title' => lang('Check Status'), 'bc' => $bc];
         $this->page_construct('purchases/check_status_list', $meta, $this->data);
+    }
+
+    // Get cost centers by warehouse (needed for add purchase)
+    public function get_cost_centers_by_warehouse() {
+        // Check if user is logged in
+        if (!$this->loggedIn) {
+            echo json_encode(['success' => false, 'error' => 'Not authenticated']);
+            return;
+        }
+        
+        // Add debugging headers
+        header('Content-Type: application/json');
+        
+        $warehouse_id = $this->input->post('warehouse_id');
+        
+        if (!$warehouse_id) {
+            echo json_encode(['success' => false, 'error' => 'No warehouse_id provided']);
+            return;
+        }
+        
+        try {
+            // Get cost centers for the warehouse
+            $cost_centers = $this->Cost_center_model->get_cost_centers_by_warehouse($warehouse_id);
+            
+            // Format response to match JavaScript expectations
+            $response = [
+                'success' => true,
+                'warehouse_id' => $warehouse_id,
+                'cost_centers' => $cost_centers,
+                'count' => count($cost_centers)
+            ];
+            
+            echo json_encode($response);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'error' => $e->getMessage(), 'warehouse_id' => $warehouse_id]);
+        }
     }
 }

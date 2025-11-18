@@ -78,6 +78,7 @@
             localStorage.setItem('posupplier', '<?= $inv->supplier_id ?>');
             localStorage.setItem('poref', '<?= $inv->reference_no ?>');
             localStorage.setItem('powarehouse', '<?= $inv->warehouse_id ?>');
+            localStorage.setItem('pocost_center', '<?= $inv->cost_center_id ?? '' ?>');
             localStorage.setItem('postatus', '<?= $inv->status ?>');
             localStorage.setItem('ponote', '<?= str_replace(["\r", "\n"], '', $this->sma->decode_html($inv->note)); ?>');
             localStorage.setItem('podiscount', '<?= $inv->order_discount_id ?>');
@@ -252,6 +253,101 @@
             $('form.edit-po-form').submit();
         });
 
+        // Cost Center dropdown functionality - Same as Add Purchase
+        $('#powarehouse').change(function() {
+            var warehouse_id = $(this).val();
+            var cost_center_dropdown = $('#cost_center_id');
+            
+            if (!warehouse_id) {
+                cost_center_dropdown.empty().append('<option value="">Select Cost Center</option>');
+                return;
+            }
+            
+            // Show loading
+            cost_center_dropdown.empty().append('<option value="">Loading cost centers...</option>');
+            
+            $.ajax({
+                url: '<?= admin_url('purchases/get_cost_centers_by_warehouse') ?>',
+                type: 'POST',
+                data: {
+                    warehouse_id: warehouse_id,
+                    csrf_token: '<?= $this->session->userdata('user_csrf') ?>'
+                },
+                dataType: 'json',
+                success: function(response) {
+                    // Clear the dropdown
+                    cost_center_dropdown.empty().append('<option value="">Select Cost Center</option>');
+                    
+                    if (response.success && response.cost_centers && response.cost_centers.length > 0) {
+                        // Add options - display the formatted code-name (Level 2 only)
+                        $.each(response.cost_centers, function(index, costCenter) {
+                            var ccDisplay = costCenter.cost_center_display || (costCenter.cost_center_code + '-' + costCenter.cost_center_name) || 'Unknown';
+                            cost_center_dropdown.append(
+                                '<option value="' + costCenter.cost_center_id + '">' + ccDisplay + '</option>'
+                            );
+                        });
+                    } else {
+                        cost_center_dropdown.append('<option value="">No level 2 cost centers found for this warehouse</option>');
+                    }
+                    
+                    // Refresh select2 if it exists
+                    if (cost_center_dropdown.hasClass('select2')) {
+                        cost_center_dropdown.trigger('change');
+                    }
+                    
+                    // Try to restore saved cost center if it exists in new options
+                    var saved_cost_center = localStorage.getItem('pocost_center') || '<?= $purchase->cost_center_id ?? '' ?>';
+                    if (saved_cost_center && saved_cost_center !== '') {
+                        // Check if the option exists in the dropdown
+                        if (cost_center_dropdown.find('option[value="' + saved_cost_center + '"]').length > 0) {
+                            cost_center_dropdown.val(saved_cost_center);
+                        }
+                        // Trigger change event for select2
+                        if (cost_center_dropdown.hasClass('select2')) {
+                            cost_center_dropdown.trigger('change');
+                        }
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading cost centers:', error);
+                    cost_center_dropdown.empty().append('<option value="">Error loading cost centers</option>');
+                }
+            });
+        });
+
+        // Cost center change handler
+        $('#cost_center_id').change(function() {
+            localStorage.setItem('pocost_center', $(this).val());
+        });
+
+        // Initialize cost center value from purchase record if available
+        if (pocost_center = '<?= $purchase->cost_center_id ?? '' ?>') {
+            localStorage.setItem('pocost_center', pocost_center);
+        } else if (pocost_center = localStorage.getItem('pocost_center')) {
+            // Use localStorage value as fallback
+        }
+
+        // Initialize cost centers on page load if warehouse is already selected
+        if ($('#powarehouse').val()) {
+            $('#powarehouse').trigger('change');
+        }
+
+        // Also try to set cost center value directly if available
+        $(document).ready(function() {
+            var current_cost_center = '<?= $purchase->cost_center_id ?? '' ?>';
+            if (current_cost_center && current_cost_center !== '') {
+                // Set the value directly and try to trigger change
+                setTimeout(function() {
+                    if ($('#cost_center_id').find('option[value="' + current_cost_center + '"]').length > 0) {
+                        $('#cost_center_id').val(current_cost_center);
+                        if ($('#cost_center_id').hasClass('select2')) {
+                            $('#cost_center_id').trigger('change');
+                        }
+                    }
+                }, 500); // Small delay to ensure options are loaded
+            }
+        });
+
     });
 </script>
 
@@ -300,6 +396,17 @@
                                 }     
                                 echo form_dropdown('warehouse', $wh, ($_POST['warehouse'] ?? $purchase->warehouse_id), 'id="powarehouse" class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('warehouse') . '" required="required" style="width:100%;" ');
                                 ?>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="cost_center_id">Cost Center *</label>
+                                <select name="cost_center_id" id="cost_center_id" class="form-control select2" required="required" style="width:100%;" data-placeholder="Select Cost Center">
+                                    <option value="">Select Cost Center</option>
+                                    <?php if (!empty($purchase->cost_center_id)) { ?>
+                                        <option value="<?= $purchase->cost_center_id ?>" selected="selected">Loading current cost center...</option>
+                                    <?php } ?>
+                                </select>
                             </div>
                         </div>
                         <?php if ($Owner || $Admin) {

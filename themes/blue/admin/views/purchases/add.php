@@ -8,6 +8,20 @@ table#poTable td input.form-control {
 .table td {
     height: 70px !important;
 }
+
+.required-field::after {
+    content: " *";
+    color: red;
+    font-weight: bold;
+}
+
+.form-control[required] {
+    border-left: 3px solid #ff6b6b;
+}
+
+.form-control[required]:valid {
+    border-left: 3px solid #51cf66;
+}
 </style>
 <script type="text/javascript">
     localStorage.removeItem('poitems');
@@ -54,6 +68,9 @@ table#poTable td input.form-control {
     }
     if (localStorage.getItem('popayment_term')) {
         localStorage.removeItem('popayment_term');
+    }
+    if (localStorage.getItem('pocost_center')) {
+        localStorage.removeItem('pocost_center');
     }
     <?php $this->sma->unset_data('remove_pols');
 } ?>
@@ -343,6 +360,18 @@ if(isset($action) && $action = 'create_invoice' && $inv_items != null)  {
                     echo form_input($warehouse_status);
 
                 ?>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="required-field"><?= lang('Cost Center', 'cost_center_id'); ?></label>
+                                <?php 
+                                // Initially show placeholder - cost centers will be loaded via AJAX based on warehouse selection
+                                $cost_center_options = ['' => 'Select Warehouse First'];
+                                echo form_dropdown('cost_center_id', $cost_center_options, ($_POST['cost_center_id'] ?? ''), 'id="cost_center_id" class="form-control select2" data-placeholder="Select Cost Center" required style="width:100%;"');
+                                ?>
+                            </div>
+                        </div>
+                        
                         <!-- <div class="col-md-4">
                             <div class="form-group">
                                 <?php //echo lang('status', 'postatus'); ?>
@@ -778,3 +807,142 @@ if(isset($action) && $action = 'create_invoice' && $inv_items != null)  {
         </div>
     </div>
 </div>
+
+<script type="text/javascript">
+    // Initialize Cost Center Select2
+    $(document).ready(function() {
+        $('#cost_center_id').select2({
+            placeholder: 'Select Cost Center',
+            allowClear: false,
+            width: '100%'
+        });
+        
+        // Restore cost center selection from localStorage
+        if (pocost_center = localStorage.getItem('pocost_center')) {
+            $('#cost_center_id').val(pocost_center).trigger('change');
+        }
+        
+        // Save cost center selection to localStorage
+        $('#cost_center_id').on('change', function() {
+            localStorage.setItem('pocost_center', $(this).val());
+        });
+
+        // Handle warehouse change to filter cost centers
+        $('#powarehouse').on('change', function() {
+            var warehouse_id = $(this).val();
+            var cost_center_dropdown = $('#cost_center_id');
+            
+            // Clear current options
+            cost_center_dropdown.empty().append('<option value="">Loading...</option>').trigger('change');
+            
+            if (warehouse_id) {
+                // Make AJAX call to get cost centers for this warehouse
+                $.ajax({
+                    url: '<?= admin_url('purchases/get_cost_centers_by_warehouse') ?>',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        warehouse_id: warehouse_id,
+                        '<?= $this->security->get_csrf_token_name() ?>': '<?= $this->security->get_csrf_hash() ?>'
+                    },
+                    success: function(response) {
+                        console.log('Cost center AJAX response:', response); // Debug log
+                        
+                        // Clear the dropdown
+                        cost_center_dropdown.empty().append('<option value="">Select Cost Center</option>');
+                        
+                        if (response.success && response.cost_centers && response.cost_centers.length > 0) {
+                            // Add options - display the formatted code-name
+                            $.each(response.cost_centers, function(index, costCenter) {
+                                var ccDisplay = costCenter.cost_center_display || (costCenter.cost_center_code + '::' + costCenter.cost_center_name) || 'Unknown';
+                                cost_center_dropdown.append(
+                                    '<option value="' + costCenter.cost_center_id + '">' + ccDisplay + '</option>'
+                                );
+                            });
+                        } else {
+                            cost_center_dropdown.append('<option value="">No cost centers found for this warehouse</option>');
+                        }
+                        
+                        // Refresh select2
+                        cost_center_dropdown.trigger('change');
+                        
+                        // Try to restore saved cost center if it exists in new options
+                        if (pocost_center = localStorage.getItem('pocost_center')) {
+                            if (cost_center_dropdown.find('option[value="' + pocost_center + '"]').length > 0) {
+                                cost_center_dropdown.val(pocost_center).trigger('change');
+                            }
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error loading cost centers:', error);
+                        console.log('XHR response:', xhr.responseText); // Debug log
+                        cost_center_dropdown.empty()
+                            .append('<option value="">Error loading cost centers</option>')
+                            .trigger('change');
+                    }
+                });
+            } else {
+                // No warehouse selected, clear cost centers
+                cost_center_dropdown.empty()
+                    .append('<option value="">Select Warehouse First</option>')
+                    .trigger('change');
+            }
+        });
+
+        // Trigger warehouse change on page load if warehouse is already selected
+        var initial_warehouse = $('#powarehouse').val();
+        // Also check for hidden warehouse field (for non-admin users)
+        if (!initial_warehouse && $('#slwarehouse').length > 0) {
+            initial_warehouse = $('#slwarehouse').val();
+        }
+        
+        if (initial_warehouse) {
+            // For hidden warehouse field, we need to trigger the cost center loading manually
+            if ($('#slwarehouse').length > 0) {
+                var cost_center_dropdown = $('#cost_center_id');
+                cost_center_dropdown.empty().append('<option value="">Loading...</option>').trigger('change');
+                
+                $.ajax({
+                    url: '<?= admin_url('purchases/get_cost_centers_by_warehouse') ?>',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        warehouse_id: initial_warehouse,
+                        '<?= $this->security->get_csrf_token_name() ?>': '<?= $this->security->get_csrf_hash() ?>'
+                    },
+                    success: function(response) {
+                        cost_center_dropdown.empty().append('<option value="">Select Cost Center</option>');
+                        
+                        if (response.status === 'success' && response.data.length > 0) {
+                            $.each(response.data, function(index, item) {
+                                cost_center_dropdown.append(
+                                    '<option value="' + item.id + '">' + item.text + '</option>'
+                                );
+                            });
+                        } else {
+                            cost_center_dropdown.append('<option value="">No cost centers found for this warehouse</option>');
+                        }
+                        
+                        cost_center_dropdown.trigger('change');
+                        
+                        // Try to restore saved cost center
+                        if (pocost_center = localStorage.getItem('pocost_center')) {
+                            if (cost_center_dropdown.find('option[value="' + pocost_center + '"]').length > 0) {
+                                cost_center_dropdown.val(pocost_center).trigger('change');
+                            }
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error loading cost centers:', error);
+                        cost_center_dropdown.empty()
+                            .append('<option value="">Error loading cost centers</option>')
+                            .trigger('change');
+                    }
+                });
+            } else {
+                // For dropdown warehouse field
+                $('#powarehouse').trigger('change');
+            }
+        }
+    });
+</script>

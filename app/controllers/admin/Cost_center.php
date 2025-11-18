@@ -595,4 +595,345 @@ class Cost_center extends MY_Controller {
             show_error('Error loading performance dashboard: ' . $e->getMessage(), 500);
         }
     }
+
+    /**
+     * Cost Center Management - Main management view
+     * 
+     * GET /admin/cost_center/management
+     * Displays interface for managing cost centers for existing pharmacies and branches
+     */
+    public function management() {
+        try {
+            error_log('[COST_CENTER_MANAGEMENT] Management method started');
+            
+            // Fetch all pharmacies and branches for cost center management
+            $pharmacies = $this->cost_center->get_all_pharmacies_for_cost_center();
+            $cost_centers = $this->cost_center->get_all_cost_centers();
+            
+            // Group cost centers by entity
+            $cost_centers_by_entity = [];
+            foreach ($cost_centers as $cc) {
+                $cost_centers_by_entity[$cc['entity_id']][] = $cc;
+            }
+
+            // Prepare view data
+            $view_data = array_merge($this->data, [
+                'page_title' => 'Cost Center Management',
+                'pharmacies' => $pharmacies,
+                'cost_centers' => $cost_centers,
+                'cost_centers_by_entity' => $cost_centers_by_entity,
+            ]);
+
+            error_log('[COST_CENTER_MANAGEMENT] About to render management view');
+            
+            // Load template header
+            $this->load->view($this->theme . 'header', $view_data);
+            
+            // Load cost center management view
+            $this->load->view($this->theme . 'cost_center/cost_center_management', $view_data);
+            
+            // Load template footer
+            $this->load->view($this->theme . 'footer', $view_data);
+            
+            error_log('[COST_CENTER_MANAGEMENT] Management view rendered successfully');
+
+        } catch (Exception $e) {
+            $error_msg = 'Cost Center Management Error: ' . $e->getMessage() . ' (Line: ' . $e->getLine() . ', File: ' . $e->getFile() . ')';
+            error_log('[COST_CENTER_MANAGEMENT] ' . $error_msg);
+            log_message('error', $error_msg);
+            show_error('Error loading cost center management: ' . $e->getMessage(), 500);
+        }
+    }
+
+    /**
+     * Add new cost center
+     * 
+     * POST /admin/cost_center/add_cost_center
+     */
+    public function add_cost_center() {
+        // Debug logging
+        error_log('[COST_CENTER_DEBUG] add_cost_center method called');
+        error_log('[COST_CENTER_DEBUG] Request method: ' . $this->input->server('REQUEST_METHOD'));
+        error_log('[COST_CENTER_DEBUG] Is AJAX: ' . ($this->input->is_ajax_request() ? 'YES' : 'NO'));
+        error_log('[COST_CENTER_DEBUG] POST data: ' . json_encode($this->input->post()));
+        
+        // Temporarily disabled for debugging
+        // if (!$this->input->is_ajax_request()) {
+        //     show_404();
+        // }
+
+        $this->load->library('form_validation');
+        
+        // Validation rules
+        $this->form_validation->set_rules('cost_center_code', 'Cost Center Code', 'required|is_unique[sma_cost_centers.cost_center_code]');
+        $this->form_validation->set_rules('cost_center_name', 'Cost Center Name', 'required');
+        $this->form_validation->set_rules('cost_center_level', 'Cost Center Level', 'required|in_list[1,2]');
+        $this->form_validation->set_rules('entity_id', 'Entity ID', 'required|integer');
+
+        if (!$this->form_validation->run()) {
+            $this->sma->send_json([
+                'success' => false,
+                'message' => validation_errors()
+            ]);
+            return;
+        }
+
+        try {
+            $data = [
+                'cost_center_code' => $this->input->post('cost_center_code'),
+                'cost_center_name' => $this->input->post('cost_center_name'),
+                'cost_center_level' => (int)$this->input->post('cost_center_level'),
+                'entity_id' => (int)$this->input->post('entity_id'),
+                'parent_cost_center_id' => $this->input->post('parent_cost_center_id') ?: null,
+                'description' => $this->input->post('description') ?: '',
+                'is_active' => 1
+            ];
+
+            $cost_center_id = $this->cost_center->add_cost_center($data);
+
+            if ($cost_center_id) {
+                $this->sma->send_json([
+                    'success' => true,
+                    'message' => 'Cost center added successfully',
+                    'cost_center_id' => $cost_center_id
+                ]);
+            } else {
+                throw new Exception('Failed to create cost center');
+            }
+
+        } catch (Exception $e) {
+            error_log('[COST_CENTER] Add cost center error: ' . $e->getMessage());
+            $this->sma->send_json([
+                'success' => false,
+                'message' => 'Error creating cost center: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Update existing cost center
+     * 
+     * POST /admin/cost_center/update_cost_center
+     */
+    public function update_cost_center() {
+        if (!$this->input->is_ajax_request()) {
+            show_404();
+        }
+
+        $this->load->library('form_validation');
+        
+        // Validation rules
+        $this->form_validation->set_rules('cost_center_id', 'Cost Center ID', 'required|integer');
+        $this->form_validation->set_rules('cost_center_code', 'Cost Center Code', 'required');
+        $this->form_validation->set_rules('cost_center_name', 'Cost Center Name', 'required');
+        $this->form_validation->set_rules('cost_center_level', 'Cost Center Level', 'required|in_list[1,2]');
+
+        if (!$this->form_validation->run()) {
+            $this->sma->send_json([
+                'success' => false,
+                'message' => validation_errors()
+            ]);
+            return;
+        }
+
+        try {
+            $cost_center_id = $this->input->post('cost_center_id');
+            $data = [
+                'cost_center_code' => $this->input->post('cost_center_code'),
+                'cost_center_name' => $this->input->post('cost_center_name'),
+                'cost_center_level' => (int)$this->input->post('cost_center_level'),
+                'parent_cost_center_id' => $this->input->post('parent_cost_center_id') ?: null,
+                'description' => $this->input->post('description') ?: '',
+                'is_active' => (int)$this->input->post('is_active')
+            ];
+
+            $result = $this->cost_center->update_cost_center($cost_center_id, $data);
+
+            if ($result) {
+                $this->sma->send_json([
+                    'success' => true,
+                    'message' => 'Cost center updated successfully'
+                ]);
+            } else {
+                throw new Exception('Failed to update cost center');
+            }
+
+        } catch (Exception $e) {
+            error_log('[COST_CENTER] Update cost center error: ' . $e->getMessage());
+            $this->sma->send_json([
+                'success' => false,
+                'message' => 'Error updating cost center: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Delete cost center
+     * 
+     * POST /admin/cost_center/delete_cost_center
+     */
+    public function delete_cost_center() {
+        if (!$this->input->is_ajax_request()) {
+            show_404();
+        }
+
+        $cost_center_id = $this->input->post('cost_center_id');
+
+        if (!$cost_center_id) {
+            $this->sma->send_json([
+                'success' => false,
+                'message' => 'Cost center ID is required'
+            ]);
+            return;
+        }
+
+        try {
+            $result = $this->cost_center->delete_cost_center($cost_center_id);
+
+            if ($result) {
+                $this->sma->send_json([
+                    'success' => true,
+                    'message' => 'Cost center deleted successfully'
+                ]);
+            } else {
+                throw new Exception('Failed to delete cost center');
+            }
+
+        } catch (Exception $e) {
+            error_log('[COST_CENTER] Delete cost center error: ' . $e->getMessage());
+            $this->sma->send_json([
+                'success' => false,
+                'message' => 'Error deleting cost center: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get cost centers for a specific entity (AJAX)
+     * 
+     * GET /admin/cost_center/get_entity_cost_centers/{entity_id}
+     */
+    public function get_entity_cost_centers($entity_id = null) {
+        if (!$this->input->is_ajax_request()) {
+            show_404();
+        }
+
+        if (!$entity_id) {
+            $this->sma->send_json([
+                'success' => false,
+                'message' => 'Entity ID is required'
+            ]);
+            return;
+        }
+
+        try {
+            $cost_centers = $this->cost_center->get_cost_centers_by_entity($entity_id);
+            
+            $this->sma->send_json([
+                'success' => true,
+                'cost_centers' => $cost_centers
+            ]);
+
+        } catch (Exception $e) {
+            error_log('[COST_CENTER] Get entity cost centers error: ' . $e->getMessage());
+            $this->sma->send_json([
+                'success' => false,
+                'message' => 'Error fetching cost centers: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Get cost center by ID (AJAX)
+     * 
+     * GET /admin/cost_center/get_cost_center_by_id/{cost_center_id}
+     */
+    public function get_cost_center_by_id($cost_center_id = null) {
+        if (!$this->input->is_ajax_request()) {
+            show_404();
+        }
+
+        if (!$cost_center_id) {
+            $this->sma->send_json([
+                'success' => false,
+                'message' => 'Cost Center ID is required'
+            ]);
+            return;
+        }
+
+        try {
+            $cost_center = $this->cost_center->get_cost_center_by_id($cost_center_id);
+            
+            if ($cost_center) {
+                $this->sma->send_json([
+                    'success' => true,
+                    'cost_center' => $cost_center
+                ]);
+            } else {
+                $this->sma->send_json([
+                    'success' => false,
+                    'message' => 'Cost center not found'
+                ]);
+            }
+
+        } catch (Exception $e) {
+            error_log('[COST_CENTER] Get cost center by ID error: ' . $e->getMessage());
+            $this->sma->send_json([
+                'success' => false,
+                'message' => 'Error fetching cost center: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Test CSRF token (temporary debug method)
+     */
+    public function test_csrf() {
+        if (!$this->input->is_ajax_request()) {
+            show_error('This endpoint requires AJAX', 404);
+        }
+
+        $this->sma->send_json([
+            'success' => true,
+            'message' => 'CSRF token is working correctly!',
+            'csrf_token_name' => $this->security->get_csrf_token_name(),
+            'csrf_hash' => $this->security->get_csrf_hash(),
+            'post_data' => $this->input->post()
+        ]);
+    }
+
+    /**
+     * Get parent cost centers for an entity (AJAX)
+     * 
+     * GET /admin/cost_center/get_parent_cost_centers/{entity_id}/{level}
+     */
+    public function get_parent_cost_centers($entity_id = null, $level = 1) {
+        if (!$this->input->is_ajax_request()) {
+            show_404();
+        }
+
+        if (!$entity_id) {
+            $this->sma->send_json([
+                'success' => false,
+                'message' => 'Entity ID is required'
+            ]);
+            return;
+        }
+
+        try {
+            $cost_centers = $this->cost_center->get_parent_cost_centers($entity_id, $level);
+            
+            $this->sma->send_json([
+                'success' => true,
+                'cost_centers' => $cost_centers
+            ]);
+
+        } catch (Exception $e) {
+            error_log('[COST_CENTER] Get parent cost centers error: ' . $e->getMessage());
+            $this->sma->send_json([
+                'success' => false,
+                'message' => 'Error fetching parent cost centers: ' . $e->getMessage()
+            ]);
+        }
+    }
 }
