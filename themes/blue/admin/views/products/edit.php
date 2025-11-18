@@ -188,8 +188,38 @@ if (!empty($variants)) {
                     </div>
 
                     <div class="form-group all">
+                        <?= lang('Cash Discount 1', 'Cash Discount 1'); ?>
+                        <?= form_input('cash_discount', set_value('cash_discount', ($product ? $product->cash_discount : '')), 'class="form-control tip" id="cash_discount" required="required"'); ?>
+                    </div>
+
+                    <div class="form-group all">
+                        <?= lang('Credit Discount 1', 'Credit Discount 1'); ?>
+                        <?= form_input('credit_discount', set_value('credit_discount', ($product ? $product->credit_discount : '')), 'class="form-control tip" id="credit_discount" required="required"'); ?>
+                    </div>
+
+                    <div class="form-group all">
+                        <?= lang('Cash Discount 2', 'Cash Discount 2'); ?>
+                        <?= form_input('cash_dis2', set_value('cash_dis2', ($product ? $product->cash_dis2 : '')), 'class="form-control tip" id="cash_dis2" required="required"'); ?>
+                    </div>
+
+                    <div class="form-group all">
+                        <?= lang('Credit Discount 2', 'Credit Discount 2'); ?>
+                        <?= form_input('credit_dis2', set_value('credit_dis2', ($product ? $product->credit_dis2 : '')), 'class="form-control tip" id="credit_dis2" required="required"'); ?>
+                    </div>
+
+                    <div class="form-group all">
+                        <?= lang('Cash Discount 3', 'Cash Discount 3'); ?>
+                        <?= form_input('cash_dis3', set_value('cash_dis3', ($product ? $product->cash_dis3 : '')), 'class="form-control tip" id="cash_dis3" required="required"'); ?>
+                    </div>
+
+                    <div class="form-group all">
+                        <?= lang('Credit Discount 3', 'Credit Discount 3'); ?>
+                        <?= form_input('credit_dis3', set_value('credit_dis3', ($product ? $product->credit_dis3 : '')), 'class="form-control tip" id="credit_dis3" required="required"'); ?>
+                    </div>
+
+                    <div class="form-group all">
                         <?= lang('slug', 'slug'); ?>
-                        <?= form_input('slug', set_value('slug', ($product ? $product->slug : '')), 'class="form-control tip" id="slug" required="required"'); ?>
+                        <?= form_input('slug', set_value('slug', ($product ? $product->slug : '')), 'class="form-control tip" id="slug"'); ?>
                     </div>
 
                     <div class="form-group all">
