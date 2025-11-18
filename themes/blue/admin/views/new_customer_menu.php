@@ -447,7 +447,8 @@
                     </ul>
                 </li>
 
-                <!-- Loyalty Rules -->
+                <!-- Loyalty Rules - HIDDEN -->
+                <?php if (false): ?>
                 <li class="newmenu-item has-sub">
                     <a href="#" class="newmenu-link">
                         <i class="fa fa-cogs"></i>
@@ -461,6 +462,7 @@
                         <li><a href="<?= admin_url('loyalty/promotion_campaigns'); ?>" class="newmenu-link"><i class="fa fa-bullhorn"></i> <?= lang('Campaigns'); ?></a></li>
                     </ul>
                 </li>
+                <?php endif; ?>
 
                 <!-- Loyalty Dashboard -->
                 <li><a href="<?= admin_url('loyalty/dashboard'); ?>" class="newmenu-link"><i class="fa fa-dashboard"></i> <?= lang('Loyalty Dashboard'); ?></a></li>
