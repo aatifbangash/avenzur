@@ -4076,13 +4076,6 @@ class Sales extends MY_Controller
         </div>
     </div>
 
-    <!-- LOGO -->
-    <div style="text-align:center; margin-bottom:5px;">
-        <img src="data:image/png;base64,' . base64_encode(file_get_contents(base_url() . 'assets/uploads/logos/' . $biller->logo)) . '"
-            alt="Avenzur" style="max-width:120px; height:auto;">
-        
-    </div>
-
     <!-- INVOICE INFO & BARCODE -->
     <div style="width:100%; background-color:#f6f6f6; padding:5px 8px; margin-bottom:5px; overflow:hidden; font-size:11px;">
 
