@@ -248,21 +248,21 @@
                 $ready_status = 'completed';
                 $printed_label_status = 'completed';
                 $label_verifired_status = 'completed';
-                $driver_assigned_status = 'active';
-                $rasd_status = '';
-                $out_for_delivery_status = '';
-                $delivered = '';
-                $invoiced = '';
-            }else if($inv->sale_status == 'driver_assigned'){
-                $ready_status = 'completed';
-                $printed_label_status = 'completed';
-                $label_verifired_status = 'completed';
-                $driver_assigned_status = 'completed';
+                $driver_assigned_status = '';
                 $rasd_status = 'active';
                 $out_for_delivery_status = '';
                 $delivered = '';
                 $invoiced = '';
             }else if($inv->sale_status == 'sent_to_rasd'){
+                $ready_status = 'completed';
+                $printed_label_status = 'completed';
+                $label_verifired_status = 'completed';
+                $driver_assigned_status = 'active';
+                $rasd_status = 'completed';
+                $out_for_delivery_status = '';
+                $delivered = '';
+                $invoiced = '';
+            }else if($inv->sale_status == 'driver_assigned'){
                 $ready_status = 'completed';
                 $printed_label_status = 'completed';
                 $label_verifired_status = 'completed';
@@ -315,13 +315,13 @@
                 <div class="step-circle">3</div>
                 <div class="step-label">Label Verified</div>
             </div>
-            <div class="progress-step <?php echo $driver_assigned_status; ?>">
-                <div class="step-circle">4</div>
-                <div class="step-label">Driver Assigned</div>
-            </div>
             <div class="progress-step <?php echo $rasd_status; ?>">
-                <div class="step-circle">5</div>
+                <div class="step-circle">4</div>
                 <div class="step-label">Send To Rasd</div>
+            </div>
+            <div class="progress-step <?php echo $driver_assigned_status; ?>">
+                <div class="step-circle">5</div>
+                <div class="step-label">Driver Assigned</div>
             </div>
             <div class="progress-step <?php echo $out_for_delivery_status; ?>">
                 <div class="step-circle">6</div>
@@ -367,7 +367,7 @@
                 ?>
 
                 <?php 
-                    if(($this->Admin || $this->Owner || $this->WarehouseSupervisor) && ($inv->sale_status == 'label_verifired')){
+                    if(($this->Admin || $this->Owner || $this->WarehouseSupervisor) && ($inv->sale_status == 'sent_to_rasd')){
                 ?>
                 <!--<div class="btn-group">
                     <a href="<?= admin_url('sales/add_driver/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-primary tip" title="<?= lang('add_driver') ?>">
@@ -379,7 +379,7 @@
                 ?>
 
                 <?php 
-                    if(($this->Admin || $this->Owner || $this->WarehouseSupervisor)  && ($inv->sale_status == 'driver_assigned')){
+                    if(($this->Admin || $this->Owner || $this->WarehouseSupervisor)  && ($inv->sale_status == 'label_verifired')){
                 ?>
                 <div class="btn-group">
                     <a href="<?= admin_url('sales/send_to_rasd/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-primary tip" title="<?= lang('send_to_rasd') ?>">

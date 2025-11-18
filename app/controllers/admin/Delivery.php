@@ -64,7 +64,7 @@ class Delivery extends MY_Controller
         $this->db->select('s.id, s.reference_no, s.date as sale_date, s.grand_total as total_amount, s.total_items, c.name as customer_name');
         $this->db->from('sma_sales s');
         $this->db->join('sma_companies c', 's.customer_id = c.id', 'left');
-        $this->db->where_in('s.sale_status', ['label_verifired']);
+        $this->db->where_in('s.sale_status', ['sent_to_rasd']);
         $this->db->order_by('s.date', 'asc');
         $invoices_query = $this->db->get();
         if ($invoices_query === false) {
@@ -304,7 +304,7 @@ class Delivery extends MY_Controller
         $this->db->join('sma_delivery_items di', 's.id = di.invoice_id', 'left');
         $this->db->join('sma_deliveries d', 'di.delivery_id = d.id', 'left');
         $this->db->join('sma_sale_labels sl', 's.id = sl.sale_id', 'left');
-        $this->db->where_in('s.sale_status', ['label_verifired']);
+        $this->db->where_in('s.sale_status', ['sent_to_rasd']);
         $this->db->group_by('sl.sale_id');
         $this->db->order_by('s.date', 'asc');
         $invoices_query = $this->db->get();
@@ -360,14 +360,14 @@ class Delivery extends MY_Controller
             exit;
         }
         
-        foreach($delivery_items as $item){
+        /*foreach($delivery_items as $item){
             $sale_details = $this->sales_model->getSaleByID($item->invoice_id);
             if($sale_details->sale_status != 'sent_to_rasd' && $status != 'delivered'){
                 $this->session->set_flashdata('error', 'Invoice #'.$item->invoice_id.' not sent to rasd.');
                 redirect(admin_url('delivery/edit/' . $delivery_id));
                 exit;
             }
-        }
+        }*/
 
         // Verify driver
         $driver_id = $this->input->post('driver_id');
