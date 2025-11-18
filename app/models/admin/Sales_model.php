@@ -724,7 +724,7 @@ class Sales_model extends CI_Model
         if($sale == null){
             $this->db->select('
             sale_items.*, 
-            tax_rates.code as tax_code, tax_rates.name as tax_name, tax_rates.rate as tax_rate, 
+            tax_rates.code as tax_code, tax_rates.name as tax_name, tax_rates.rate as tax_rate, item_code,
             products.image, products.details as details, product_variants.name as variant, products.hsn_code as hsn_code, products.second_name as second_name, products.unit as base_unit_id, 
             products.warehouse_shelf,
             units.code as base_unit_code')
@@ -737,7 +737,7 @@ class Sales_model extends CI_Model
         }else{
             $this->db->select('
             sale_items.*, 
-            tax_rates.code as tax_code, tax_rates.name as tax_name, tax_rates.rate as tax_rate, 
+            tax_rates.code as tax_code, tax_rates.name as tax_name, tax_rates.rate as tax_rate, item_code,
             products.image, products.details as details, product_variants.name as variant, products.hsn_code as hsn_code, products.second_name as second_name, products.unit as base_unit_id, 
             products.warehouse_shelf,
             units.code as base_unit_code,
