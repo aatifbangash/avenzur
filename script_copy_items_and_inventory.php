@@ -58,27 +58,22 @@ if ($result_products->num_rows > 0) {
             $targetProductId = $existingProduct['id'];
         } else {
             echo "New Product: $code<br>";
-            
             // -------------------- INSERT PRODUCT INTO TARGET --------------------
             $insert = $target_conn->prepare("
                 INSERT INTO sma_products 
-                (code, name, cost, price, alert_quantity, category_id, cf1, quantity, tax_rate, sequence_code, imported, item_code)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (code, name, cost, price, alert_quantity, quantity, tax_rate, item_code)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ");
 
             $insert->bind_param(
-                "ssddiisdisis", // type string: s=string, d=double, i=int
+                "ssddidds",
                 $p['code'],
                 $p['name'],
                 $p['cost'],
                 $p['price'],
                 $p['alert_quantity'],
-                $p['category_id'],
-                'yes', // cf1
                 $p['quantity'],
                 $p['tax_rate'],
-                $p['sequence_code'],
-                3,
                 $p['item_code']
             );
 
