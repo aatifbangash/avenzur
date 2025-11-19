@@ -63,11 +63,11 @@ if ($result_products->num_rows > 0) {
             $insert = $target_conn->prepare("
                 INSERT INTO sma_products 
                 (code, name, cost, price, alert_quantity, category_id, cf1, quantity, tax_rate, sequence_code, imported, item_code)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
 
             $insert->bind_param(
-                "ssddiisddsis",
+                "ssddiidddiss", // type string: s=string, d=double, i=int
                 $p['code'],
                 $p['name'],
                 $p['cost'],
@@ -78,7 +78,7 @@ if ($result_products->num_rows > 0) {
                 $p['quantity'],
                 $p['tax_rate'],
                 $p['sequence_code'],
-                $p['imported'],
+                3,
                 $p['item_code']
             );
 
