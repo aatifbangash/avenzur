@@ -71,7 +71,7 @@
                             <tr class="active">
                                 <th style="min-width:30px; width: 30px; text-align: center;">No</th>
                                 <th><?= lang('date'); ?></th>
-                                <th style="width: 20px"><?= lang('ref_no'); ?></th>
+                                <!-- <th style="width: 20px"><?= lang('ref_no'); ?></th> -->
                                 <!-- <th><?= lang('Sequence Code'); ?></th> -->
                                 <th><?= lang('supplier'); ?></th>
                                 <th style="width: 20px"><?= lang('Status'); ?></th>
@@ -114,7 +114,7 @@
                                     <tr class="purchase_order_link" id="<?=$pid?>">
                                         <td><?= $purchase->id ?></td>
                                         <td><?= $purchase->date ?></td>
-                                        <td><?= $purchase->reference_no ?></td>
+                                        <!-- <td><?= $purchase->reference_no ?></td> -->
                                         <!-- <td><?= $purchase->sequence_code ?></td> -->
                                         <td><?= $purchase->supplier ?></td>
                                         <td><?= $purchase->status ?></td>
@@ -142,7 +142,14 @@
                                                         <li><?= $edit_link ?></li>
                                                         <?php }?>
                                                         <li><?= $detail_link ?></li>
-                                                        
+                                                        <?php if ($Owner || $Admin) { ?>
+                                                        <li class="divider"></li>
+                                                        <li>
+                                                            <a href="#" onclick="deletePO(<?= $pid ?>, '<?= $purchase->reference_no ?>'); return false;">
+                                                                <i class="fa fa-trash-o"></i> <?= lang('delete') ?>
+                                                            </a>
+                                                        </li>
+                                                        <?php } ?>
                                                        
                                                     </ul>
                                                 </div>
@@ -222,7 +229,30 @@
         }
     });
 
-    
+    function deletePO(id, refNo) {
+        if (confirm('Are you sure you want to delete Purchase Order ' + refNo + '?')) {
+            $.ajax({
+                url: site.base_url + 'purchase_order/delete/' + id,
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    <?= $this->security->get_csrf_token_name(); ?>: '<?= $this->security->get_csrf_hash(); ?>'
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        alert(response.message);
+                        location.reload();
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function() {
+                    alert('An error occurred while deleting the purchase order.');
+                }
+            });
+        }
+        return false;
+    }
 
     $(document).ready(function () {
 

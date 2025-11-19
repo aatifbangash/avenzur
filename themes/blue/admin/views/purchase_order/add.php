@@ -308,7 +308,7 @@
             selectedItem.row.dis1 = parseFloat($("input[name='discount1']").val()) || 0;
             selectedItem.row.dis2 = parseFloat($("input[name='discount2']").val()) || 0;
             selectedItem.row.dis3 = parseFloat($("input[name='discount3']").val()) || 0;
-            selectedItem.row.deal = parseFloat($("input[name='deal']").val()) || 0;
+            selectedItem.row.deal_discount = parseFloat($("input[name='deal']").val()) || 0;
             selectedItem.row.cost = parseFloat($("input[name='purchase_price']").val()) || 0;
             selectedItem.row.sale_price = parseFloat($("input[name='sale_price']").val()) || 0;
             selectedItem.row.vat = parseFloat($("input[name='vat']").val()) || 0;

@@ -1174,6 +1174,7 @@ class Purchase_order_model extends CI_Model
     {
         $this->db->select('*')
             ->from('sma_purchase_orders')
+            ->where('active', 1)
             ->order_by('id', 'DESC');
 
         // Apply filters
@@ -1212,7 +1213,8 @@ class Purchase_order_model extends CI_Model
     // For pagination: count total records with filters
     public function count_purchases($filters = [])
     {
-        $this->db->from('sma_purchase_orders');
+        $this->db->from('sma_purchase_orders')
+            ->where('active', 1);
 
         if (!empty($filters)) {
             if (!empty($filters['pid'])) {
@@ -1242,6 +1244,12 @@ class Purchase_order_model extends CI_Model
         }
 
         return $this->db->count_all_results();
+    }
+
+    public function softDeletePurchaseOrder($id, $data)
+    {
+        $this->db->where('id', $id);
+        return $this->db->update('sma_purchase_orders', $data);
     }
 
     public function updatePurchaseForTransfer($purchase_id, $transfer_id, $location_to, $excluded_avz_item_codes, $total_items)

@@ -590,7 +590,8 @@ class Purchase_order extends MY_Controller
             $this->sma->view_rights($inv->created_by);
         }
         $this->form_validation->set_message('is_natural_no_zero', $this->lang->line('no_zero_required'));
-        $this->form_validation->set_rules('reference_no', $this->lang->line('ref_no'), 'required');
+        // Reference number already exists, no need to require it on edit
+        // $this->form_validation->set_rules('reference_no', $this->lang->line('ref_no'), 'required');
         $this->form_validation->set_rules('warehouse', $this->lang->line('warehouse'), 'required|is_natural_no_zero');
         $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
 
@@ -602,15 +603,17 @@ class Purchase_order extends MY_Controller
             //     echo "<pre>";
             // print_r($this->input->post());
             // exit;
-            $reference = $this->input->post('reference_no');
+            // Preserve existing reference_no if not provided in POST
+            $reference = $this->input->post('reference_no') ? $this->input->post('reference_no') : $inv->reference_no;
             if ($this->Owner || $this->Admin) {
-                $date = $this->sma->fld(trim($this->input->post('date')));
+                $date = $this->input->post('date') ? $this->sma->fld(trim($this->input->post('date'))) : $inv->date;
             } else {
                 $date = $inv->date;
             }
             $warehouse_id = $this->input->post('warehouse');
             $supplier_id = $this->input->post('supplier');
-            $status = $this->input->post('status');
+            // Preserve existing status if not provided in POST
+            $status = $this->input->post('status') ? $this->input->post('status') : $inv->status;
             $tempstatus = $this->input->post('tempstatus');
             //$lotnumber       = $this->input->post('lotnumber');
             $lotnumber = '';
@@ -814,6 +817,11 @@ class Purchase_order extends MY_Controller
             $products_info = $this->preparePurchaseItems();
             $products = $products_info['products'];
             $data     = $products_info['data'];
+            
+            // Add date to data array - preserve existing date if not in POST
+            if ($date) {
+                $data['date'] = $date;
+            }
 
             if (empty($products)) {
                 $this->form_validation->set_rules('product', lang('order_items'), 'required');
@@ -891,9 +899,7 @@ class Purchase_order extends MY_Controller
                 $data['payment_status'] = $payment_status;
             }
 
-            if ($date) {
-                $data['date'] = $date;
-            }
+            // Date is already set earlier after preparePurchaseItems()
             if ($this->Settings->indian_gst) {
                 $data['cgst'] = $total_cgst;
                 $data['sgst'] = $total_sgst;
@@ -1861,85 +1867,119 @@ class Purchase_order extends MY_Controller
                 show_error('No items to update.');
             }
 
-            // Initialize CASE expressions for each field
-            $quantityCase       = "CASE id";
-            $actualQtyCase      = "CASE id";
-            $commentCase        = "CASE id";
-            $batchNumberCase    = "CASE id";
-            $expiryDateCase     = "CASE id";
+            $this->db->trans_start(); // Start transaction
 
-            $ids = [];
-
-            foreach ($items as $item) {
-                if ($item['quantity'] <= 0 || $item['quantity'] > $item['actual_quantity']) {
-                    //show_error("Invalid quantity for item ID: " . $item['item_id']);
-                }
-
-                $id = (int) $item['item_id'];
-                $quantity = (float) $item['quantity'];
-                $actualQty = (float) $item['actual_quantity'];
-                $batchNumber = $this->db->escape($item['batch_number']);
-                //$expiryDate = $item['expiry_date'] ;
-                $expiryDate = $item['expiry_date']; //date('YYYY-m-d',strtotime(trim($item['expiry_date'])));
-                //echo $expiryDate;exit;
-                $comment = $this->db->escape($item['remarks']); // safe escape for string
-
-                // Optional: Validation to avoid invalid entries
-                if ($quantity <= 0 || $quantity > $actualQty) {
-                    continue; // skip invalid entries
-                }
-
-                $quantityCase  .= " WHEN {$id} THEN {$quantity}";
-                $actualQtyCase .= " WHEN {$id} THEN {$actualQty}";
-                $commentCase   .= " WHEN {$id} THEN {$comment}";
-                $batchNumberCase .= " WHEN {$id} THEN {$batchNumber}";
-                $expiryDateCase .= " WHEN {$id} THEN '{$expiryDate}'";
-
-                $ids[] = $id;
+            // Group items by their original item_id (purchase_order_items.id) to detect batch splits
+            $itemGroups = [];
+            foreach ($items as $key => $item) {
+                $item_id = (int) $item['item_id']; // This is the purchase_order_items.id
+                $itemGroups[$item_id][] = ['key' => $key, 'data' => $item];
             }
 
-            if (empty($ids)) {
-                show_error('No valid items to update.');
+            // Process each item group
+            foreach ($itemGroups as $originalItemId => $itemGroup) {
+                $isFirstBatch = true;
+
+                // Get the original item data once (we'll need it for both update and insert)
+                $originalItem = $this->db
+                    ->where('id', $originalItemId)
+                    ->get('sma_purchase_order_items')
+                    ->row();
+
+                if (!$originalItem) {
+                    continue; // Skip if original item not found
+                }
+
+                // Convert original item to array for easy copying
+                $originalItemArray = (array) $originalItem;
+
+                foreach ($itemGroup as $itemInfo) {
+                    $item = $itemInfo['data'];
+                    $quantity = (float) $item['quantity'];
+                    $actualQty = (float) $item['actual_quantity'];
+                    $bonus = isset($item['bonus']) ? (float) $item['bonus'] : 0;
+                    $batchNumber = trim($item['batch_number']);
+                    $expiryDate = $item['expiry_date'];
+                    $comment = isset($item['remarks']) ? trim($item['remarks']) : '';
+
+                    // Validation
+                    if ($quantity <= 0) {
+                        continue; // skip invalid entries
+                    }
+
+                    // Calculate proportional values based on new quantity
+                    $unitTax = $originalItem->quantity > 0 ? ($originalItem->item_tax / $originalItem->quantity) : 0;
+                    $unitDiscount = $originalItem->quantity > 0 ? ($originalItem->item_discount / $originalItem->quantity) : 0;
+                    
+                    $newItemTax = $unitTax * $quantity;
+                    $newItemDiscount = $unitDiscount * $quantity;
+                    
+                    // Calculate subtotal: unit_cost * quantity (before tax, after discount in unit cost)
+                    $newSubtotal = $originalItem->unit_cost * $quantity;
+
+                    // First batch of this product - UPDATE the original row
+                    if ($isFirstBatch) {
+                        $updateData = [
+                            'quantity' => $quantity,
+                            'actual_quantity' => $actualQty,
+                            'bonus' => $bonus,
+                            'batchno' => $batchNumber,
+                            'expiry' => $expiryDate,
+                            'grn_comments' => $comment,
+                            'item_tax' => $newItemTax,
+                            'item_discount' => $newItemDiscount,
+                            'subtotal' => $newSubtotal,
+                            'quantity_balance' => $quantity
+                        ];
+                        $this->db->where('id', $originalItemId);
+                        $this->db->update('sma_purchase_order_items', $updateData);
+                        $isFirstBatch = false;
+                    } else {
+                        // Additional batches - INSERT new row (copy everything from original, then override specific fields)
+                        $insertData = $originalItemArray;
+                        
+                        // Remove the ID so a new one is generated
+                        unset($insertData['id']);
+                        
+                        // Override with new batch-specific values
+                        $insertData['quantity'] = $quantity;
+                        $insertData['actual_quantity'] = $actualQty;
+                        $insertData['bonus'] = $bonus;
+                        $insertData['batchno'] = $batchNumber;
+                        $insertData['expiry'] = $expiryDate;
+                        $insertData['grn_comments'] = $comment;
+                        $insertData['item_tax'] = $newItemTax;
+                        $insertData['item_discount'] = $newItemDiscount;
+                        $insertData['subtotal'] = $newSubtotal;
+                        $insertData['quantity_balance'] = $quantity;
+                        $insertData['date'] = date('Y-m-d H:i:s');
+                        
+                        $this->db->insert('sma_purchase_order_items', $insertData);
+                    }
+                }
             }
-
-            // Close CASE statements
-            $quantityCase  .= " END";
-            $actualQtyCase .= " END";
-            $commentCase   .= " END";
-            $batchNumberCase .= " END";
-            $expiryDateCase .= " END";
-
-            $idList = implode(',', $ids);
-
-            $sql = "
-                UPDATE sma_purchase_order_items
-                SET 
-                    quantity = {$quantityCase},
-                    actual_quantity = {$actualQtyCase},
-                    batchno = {$batchNumberCase},
-                    expiry = {$expiryDateCase},
-                    grn_comments = {$commentCase}
-                WHERE id IN ({$idList})
-                ";
-
-            // Execute query
-            $this->db->query($sql);
 
             // Update purchase order status
             $this->db->where('id', $po_id)->update('purchase_orders', [
                 'reference_no' => $this->input->post('supplier_reference'),
                 'status' => 'goods_received',
-                'total_items_received' => sizeof($items),
+                'total_items_received' => count($items),
                 'grn_notes' => $this->input->post('remarks'),
                 'received_by' => $this->session->userdata('user_id'),
                 'updated_by' => $this->session->userdata('user_id'),
                 'updated_at' => date('Y-m-d H:i:s')
             ]);
 
+            $this->db->trans_complete(); // Complete transaction
 
-            // Redirect or show success message
-            $this->session->set_flashdata('message', 'Purchase items updated successfully!');
-            admin_redirect('purchase_order/view/' . $po_id);
+            if ($this->db->trans_status() === FALSE) {
+                $this->session->set_flashdata('error', 'Failed to update GRN. Please try again.');
+                admin_redirect('purchase_order/add_grn/' . $po_id);
+            } else {
+                // Redirect or show success message
+                $this->session->set_flashdata('message', 'Purchase items updated successfully!');
+                admin_redirect('purchase_order/view/' . $po_id);
+            }
         }
 
         $this->data['po_info'] = $this->purchase_order_model->getPurchaseOrderDetails($po_id);
@@ -1966,6 +2006,36 @@ class Purchase_order extends MY_Controller
         $this->db->where('id', $po_id)->update('purchase_orders', $data);
         $this->session->set_flashdata('message', 'Purchase order sent for invoicing successfully!');
         admin_redirect('purchase_order/view/' . $po_id);
+    }
+
+    public function delete($id = null)
+    {
+        $this->sma->checkPermissions('purchases-delete', true);
+        
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+        
+        if (!$id) {
+            $this->session->set_flashdata('error', 'Invalid purchase order ID');
+            echo json_encode(['status' => 'error', 'message' => 'Invalid purchase order ID']);
+            return;
+        }
+        
+        // Soft delete - set active = 0
+        $data = [
+            'active' => 0,
+            'updated_by' => $this->session->userdata('user_id'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+        
+        if ($this->purchase_order_model->softDeletePurchaseOrder($id, $data)) {
+            $this->session->set_flashdata('message', 'Purchase order deleted successfully');
+            echo json_encode(['status' => 'success', 'message' => 'Purchase order deleted successfully']);
+        } else {
+            $this->session->set_flashdata('error', 'Failed to delete purchase order');
+            echo json_encode(['status' => 'error', 'message' => 'Failed to delete purchase order']);
+        }
     }
 
     public function view_return($id = null)

@@ -538,7 +538,16 @@ if(isset($action) && $action = 'create_invoice' && $inv_items != null)  {
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <?= lang('payment_term', 'popayment_term'); ?>
-                                        <?php echo form_input('payment_term', '', 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('payment_term_tip') . '" id="popayment_term"'); ?>
+                                        <?php
+                                        $payment_term_data = [
+                                            '' => '',
+                                            '30' => '30',
+                                            '60' => '60',
+                                            '90' => '90',
+                                            '120' => '120',
+                                            '>120' => '>120'
+                                        ];
+                                        echo form_dropdown('payment_term', $payment_term_data, '', 'id="popayment_term" data-placeholder="' . lang('select') . ' ' . lang('payment_term') . '" class="form-control input-tip select" style="width:100%;"'); ?>
                                     </div>
                                 </div>
                             </div>
