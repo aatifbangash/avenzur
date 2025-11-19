@@ -1085,9 +1085,8 @@ function loadItems() {
 			const new_calc = calculateInventory(item.row, 'purchase');
 			console.log(new_calc);
 			//new_calc.new_third_discount = 0.0;
-			new_calc.deal_discount = 0.0;  
-			 item_dis3 = item.row.dis3 ? item.row.dis3 : 0.0;
-			 item_deal = item.row.deal_discount ? item.row.deal_discount : 0.0;  
+			item_dis3 = item.row.dis3 ? item.row.dis3 : 0.0;
+			item_deal = item.row.deal_discount ? item.row.deal_discount : 0.0;
 
 			/**
 			 * NEW TOTAL CALCULATION ASSIGNMENT
@@ -1111,7 +1110,7 @@ function loadItems() {
 			const calc_grant_total = new Decimal(new_calc.new_grant_total); 
 			new_grant_total = new_grant_total.plus(calc_grant_total);
 
-			const calc_grand_deal_discount = new Decimal(new_calc.new_third_discount);
+			const calc_grand_deal_discount = new Decimal(new_calc.deal_discount || 0);
 			new_grand_deal_discount = new_grand_deal_discount.plus(calc_grand_deal_discount);
 
 
@@ -1336,6 +1335,8 @@ function loadItems() {
 				new_calc.new_unit_cost +
 				'"><input name="item_third_discount[]" type="hidden" class="main_net" value="' +
 				new_calc.new_third_discount +
+				'"><input name="item_deal_discount[]" type="hidden" class="deal_discount_value" value="' +
+				new_calc.deal_discount +
 				'"><input name="warehouse_shelf[]" type="hidden" class="warehouse_shelf" value="' +
 				warehouse_shelf +
 				'"><span class="sname" id="name_' +
@@ -1564,7 +1565,7 @@ function loadItems() {
 				'" value="' +
 				formatDecimal(item_deal) +
 				'" onClick="this.select();"><span style="position:absolute;font-size:10px;margin-top:5px;">' +
-				new_calc.deal_discount;
+				(new_calc.deal_discount || 0).toFixed(3) +
 			("</span></td>");
 
 			tr_html +=

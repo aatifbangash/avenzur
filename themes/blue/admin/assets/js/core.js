@@ -1694,6 +1694,7 @@ function calculatePurchaseInventory(item) {
     const discount1 = toTwoDecimals(item.dis1);
     const discount2 = toTwoDecimals(item.dis2);
     const discount3 = toTwoDecimals(item.dis3 || 0);
+    const deal_discount = toTwoDecimals(item.deal_discount || 0);
 
 
     // Calculations
@@ -1705,19 +1706,12 @@ function calculatePurchaseInventory(item) {
     const first_discount = toTwoDecimals(total_purchase.times(discount1.dividedBy(100)));
     const after_first_discount = toTwoDecimals(total_purchase.minus(first_discount));
     const second_discount = toTwoDecimals(after_first_discount.times(discount2.dividedBy(100)));
-    const total_discount = toTwoDecimals(first_discount.plus(second_discount));
 
 
     let net_purchase = toTwoDecimals(total_purchase.minus(first_discount).minus(second_discount));
     let net_cost = total_quantity.greaterThan(0)
         ? toTwoDecimals(net_purchase.dividedBy(total_quantity))
         : new Decimal(0);
-
-    // VAT Calculation (15% if tax_rate is 5)
-    let total_vat = new Decimal(0);
-    if (tax_rate.equals(5)) {
-        total_vat = toTwoDecimals(net_purchase.times(new Decimal(15).dividedBy(100)));
-    }
 
     // SPECIAL DISCOUNT 3 - RECALCULATE THE NET PURCHASE AND NET COST EXCLUDED VAT
      let third_discount = new Decimal(0);
@@ -1731,6 +1725,26 @@ function calculatePurchaseInventory(item) {
         : new Decimal(0);     
     }
 
+    // VAT Calculation (15% if tax_rate is 5) - AFTER discount 3
+    let total_vat = new Decimal(0);
+    if (tax_rate.equals(5)) {
+        total_vat = toTwoDecimals(net_purchase.times(new Decimal(15).dividedBy(100)));
+    }
+
+    // DEAL DISCOUNT - Applied to amount after other discounts (cascading)
+    let deal_discount_amount = new Decimal(0);
+    if( deal_discount.greaterThan(0) ) {
+        deal_discount_amount = toTwoDecimals(net_purchase.times(deal_discount.dividedBy(100)));
+        console.log('deal_discount_amount', deal_discount_amount.toNumber());
+        net_purchase = toTwoDecimals( net_purchase.minus(deal_discount_amount) );
+
+        net_cost = total_quantity.greaterThan(0)
+            ? toTwoDecimals(net_purchase.dividedBy(total_quantity))
+            : new Decimal(0);     
+    }
+
+    // Calculate total discount (sum of all discounts)
+    const total_discount = toTwoDecimals(first_discount.plus(second_discount).plus(third_discount).plus(deal_discount_amount));
 
    
     // Grant Total
@@ -1750,6 +1764,7 @@ function calculatePurchaseInventory(item) {
         new_unit_cost: net_cost.toNumber(),
         new_grant_total: grant_total.toNumber(),
         new_third_discount: third_discount.toNumber(),
+        deal_discount: deal_discount_amount.toNumber(),
     };
 }
 

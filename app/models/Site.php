@@ -2215,14 +2215,14 @@ public function logVisitor() {
                 $row->cost = $item->unit_cost;
                 $row->tax_rate = $item->tax_rate_id;
                 $row->bonus = $item->bonus;
-                $row->dis1 = $item->discount1;
-                $row->dis2 = $item->discount2;
+                $row->dis1 = isset($item->discount1) ? $item->discount1 : '0';
+                $row->dis2 = isset($item->discount2) ? $item->discount2 : '0';
                 $row->totalbeforevat = $item->totalbeforevat;
                 $row->main_net = $item->main_net;
                 $row->batchno = $item->batchno;
                 $row->avz_item_code = isset($item->avz_item_code) && !empty($item->avz_item_code) ? $item->avz_item_code : '';
                 $row->serial_number = $item->serial_number;
-                $row->get_supplier_discount = $supplier_purchase_discount;
+                $row->get_supplier_discount = isset($item->get_supplier_discount) ? $item->get_supplier_discount : '0';
                 //$row->three_month_sale = $this->purchases_model->getThreeMonthSale($item->product_id, $start_date, $end_date);
                 $row->warehouse_shelf = $item->warehouse_shelf;
                 unset($row->details, $row->product_details, $row->price, $row->file, $row->product_group_id);
@@ -2231,6 +2231,7 @@ public function logVisitor() {
                 $ri = $this->Settings->item_addition ? $row->id : $c;
                 $row->dis3 = $item->discount3;
                 $row->item_third_discount = $item->third_discount_value;
+                $row->deal_discount = isset($item->deal_discount) ? $item->deal_discount : '0';
 
                 $pItems[$ri] = [
                     'id' => $c,

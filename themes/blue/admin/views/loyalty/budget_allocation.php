@@ -37,7 +37,7 @@
     --horizon-bg-light: #f5f5f5;
     --horizon-bg-neutral: #e0e0e0;
     --horizon-border: #e0e0e0;
-    --horizon-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --horizon-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0    05);
     --horizon-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     --horizon-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
@@ -951,7 +951,7 @@ let currentAllocation = {
 };
 
 // API Configuration
-const API_BASE_URL = 'http://81.208.174.52:4000/api/v1';
+const API_BASE_URL = 'http://localhost:3000/api/v1';
 
 /**
  * Load budget and hierarchy data on page load
