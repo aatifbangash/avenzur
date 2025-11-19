@@ -78,7 +78,7 @@ if ($result_products->num_rows > 0) {
                 $p['quantity'],
                 $p['tax_rate'],
                 $p['sequence_code'],
-                $p['imported'],
+                3,
                 $p['item_code']
             );
 
