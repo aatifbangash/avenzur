@@ -57,9 +57,9 @@ if ($result_products->num_rows > 0) {
             echo "Product Exists: $code<br>";
             $targetProductId = $existingProduct['id'];
         } else {
-             echo "New Product: $code<br>";
+            echo "New Product: $code<br>";
             // -------------------- INSERT PRODUCT INTO TARGET --------------------
-            /*$insert = $target_conn->prepare("
+            $insert = $target_conn->prepare("
                 INSERT INTO sma_products 
                 (code, name, cost, price, alert_quantity, quantity, tax_rate, item_code)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -85,7 +85,7 @@ if ($result_products->num_rows > 0) {
                 continue;
             }
 
-            $insert->close();*/
+            $insert->close();
         }
 
         // -------------------- COPY INVENTORY MOVEMENTS --------------------
@@ -96,7 +96,7 @@ if ($result_products->num_rows > 0) {
 
         while ($i = $inv_result->fetch_assoc()) {
 
-            /*$insertInv = $target_conn->prepare("
+            $insertInv = $target_conn->prepare("
                 INSERT INTO sma_inventory_movements
                 (product_id, batch_number, movement_date, type, quantity, location_id,
                  net_unit_cost, expiry_date, net_unit_sale, reference_id, real_unit_cost,
@@ -126,7 +126,7 @@ if ($result_products->num_rows > 0) {
             $insertInv->execute();
             $insertInv->close();
 
-            echo " → Inventory copied for $code<br>";*/
+            echo " → Inventory copied for $code<br>";
         }
 
         $inv_stmt->close();
