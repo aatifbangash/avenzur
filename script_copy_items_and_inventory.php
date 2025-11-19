@@ -10,7 +10,7 @@ $source_db   = "rawabi_jeddah";*/
 $source_host = "81.208.168.52";
 $source_user =  "remote_user";
 $source_pass = 're$Pa1msee$ot_ur';
-$source_db = "abaad_asaha";
+$source_db = "retaj_aldawa";
 
 /*$target_host = "localhost";
 $target_user = "root";
