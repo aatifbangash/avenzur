@@ -3207,10 +3207,10 @@ class system_settings extends MY_Controller
                 'sales-delete_delivery'      => $this->input->post('sales-delete_delivery'),
                 'sales-email_delivery'       => $this->input->post('sales-email_delivery'),
                 'sales-pdf_delivery'         => $this->input->post('sales-pdf_delivery'),
-                'sales-gift_cards'           => $this->input->post('sales-gift_cards'),
-                'sales-edit_gift_card'       => $this->input->post('sales-edit_gift_card'),
-                'sales-add_gift_card'        => $this->input->post('sales-add_gift_card'),
-                'sales-delete_gift_card'     => $this->input->post('sales-delete_gift_card'),
+                //'sales-gift_cards'           => $this->input->post('sales-gift_cards'),
+                //'sales-edit_gift_card'       => $this->input->post('sales-edit_gift_card'),
+                //'sales-add_gift_card'        => $this->input->post('sales-add_gift_card'),
+                //'sales-delete_gift_card'     => $this->input->post('sales-delete_gift_card'),
                 'sales-coordinator'          => $this->input->post('sales-coordinator'),
                 'sales-warehouse_supervisor' => $this->input->post('sales-warehouse_supervisor'),
         'sales-warehouse_supervisor_shipping'=> $this->input->post('sales-warehouse_supervisor_shipping'),
@@ -3220,7 +3220,7 @@ class system_settings extends MY_Controller
                 'quotes-edit'                => $this->input->post('quotes-edit'),
                 'quotes-add'                 => $this->input->post('quotes-add'),
                 'quotes-delete'              => $this->input->post('quotes-delete'),
-                'quotes-email'               => $this->input->post('quotes-email'),
+                //'quotes-email'               => $this->input->post('quotes-email'),
                 'quotes-pdf'                 => $this->input->post('quotes-pdf'),
                 'purchases-index'            => $this->input->post('purchases-index'),
                 'purchases-edit'             => $this->input->post('purchases-edit'),
@@ -3269,7 +3269,7 @@ class system_settings extends MY_Controller
                 'reports-tax'                => $this->input->post('reports-tax'),
                 'stock_request_view'         => $this->input->post('stock_request_view'),
                 'stock_request_approval'     => $this->input->post('stock_request_approval'),
-                'truck_registration_view'    => $this->input->post('truck_registration_view'),
+                //'truck_registration_view'    => $this->input->post('truck_registration_view'),
                 'purchase_manager'           => $this->input->post('purchase_manager'),
                 'purchase_receiving_supervisor' => $this->input->post('purchase_receiving_supervisor'),
                 'purchase_warehouse_supervisor' => $this->input->post('purchase_warehouse_supervisor'),
@@ -3279,9 +3279,9 @@ class system_settings extends MY_Controller
                 'stock_warehouse_supervisor'        => $this->input->post('stock_warehouse_supervisor'),
                 'transfer_pharmacist'        => $this->input->post('transfer_pharmacist'),
                 'transfer_warehouse_supervisor'        => $this->input->post('transfer_warehouse_supervisor'),
-                'blog_view'                  => $this->input->post('blog_view'),
-                'blog_edit'                  => $this->input->post('blog_edit'),
-                'blog_add'                   => $this->input->post('blog_add')
+                //'blog_view'                  => $this->input->post('blog_view'),
+                //'blog_edit'                  => $this->input->post('blog_edit'),
+                //'blog_add'                   => $this->input->post('blog_add')
                 
             ];
 

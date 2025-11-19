@@ -150,7 +150,7 @@
 
         <?php 
         
-        if($Admin || $Owner || $this->GP['sales-coordinator'] || $this->GP['accountant'] || $this->GP['sales-warehouse_supervisor']){
+        if($Admin || $Owner || $GP['sales-index']){
         ?>
         <!-- ==================== -->
         <!-- ACCOUNT RECEIVABLE -->
@@ -172,24 +172,14 @@
                     </a>
                     <ul class="newmenu-sub">
                         <?php 
-                        if($Admin || $Owner || $this->GP['sales-coordinator'] || $this->GP['accountant']){ ?>
+                        if($Admin || $Owner || $GP['quotes-add']){ ?>
                         <li><a href="<?= admin_url('quotes/add'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('Add Quote'); ?></a></li>
+                        <?php } ?>
+                        <?php 
+                        if($Admin || $Owner || $GP['quotes-index']){ ?>
                         <li><a href="<?= admin_url('quotes'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Quotes List'); ?></a></li>
                         <?php } ?>
                         <li><a href="<?= admin_url('sales'); ?>" class="newmenu-link"><i class="fa fa-file"></i> <?= lang('Sale Orders'); ?></a></li>
-                    </ul>
-                </li>
-
-                <!-- Delivery -->
-                <li class="newmenu-item has-sub">
-                    <a href="#" class="newmenu-link">
-                        <i class="fa fa-truck"></i>
-                        <span><?= lang('Delivery'); ?></span>
-                        <i class="fa fa-chevron-right newmenu-chevron"></i>
-                    </a>
-                    <ul class="newmenu-sub">
-                        <li><a href="<?= admin_url('delivery/add'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('Add Delivery'); ?></a></li>
-                        <li><a href="<?= admin_url('delivery'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('List Deliveries'); ?></a></li>
                     </ul>
                 </li>
 
@@ -493,6 +483,11 @@
                     <a href="<?= admin_url('organization_setup/pharmacy_hierarchy') ?>" class="newmenu-link">
                         <i class="fa fa-hospital-o"></i><span class="text"> <?= lang('Org Setup'); ?></span>
                     </a>
+                </li>   
+                <li id="user_groups">
+                    <a href="<?= admin_url('system_settings/user_groups') ?>" class="newmenu-link">
+                        <i class="fa fa-hospital-o"></i><span class="text"> <?= lang('User Groups'); ?></span>
+                    </a>
                 </li>                
                 <?php } ?>
                  
@@ -524,9 +519,46 @@
                 <i class="fa fa-chevron-right newmenu-chevron"></i>
             </a>
             <ul class="newmenu-sub">
-                <li><a href="<?= admin_url('products/add_adjustment'); ?>" class="newmenu-link"><i class="fa fa-users"></i> <?= lang('Add Adjustment'); ?></a></li>
-                <li><a href="<?= admin_url('products/quantity_adjustments'); ?>" class="newmenu-link"><i class="fa fa-users"></i> <?= lang('List Adjustments'); ?></a></li>
+                <!-- Delivery -->
+                <li class="newmenu-item has-sub">
+                    <a href="#" class="newmenu-link">
+                        <i class="fa fa-truck"></i>
+                        <span><?= lang('Delivery'); ?></span>
+                        <i class="fa fa-chevron-right newmenu-chevron"></i>
+                    </a>
+                    <ul class="newmenu-sub">
+                        <li><a href="<?= admin_url('delivery/add'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('Add Delivery'); ?></a></li>
+                        <li><a href="<?= admin_url('delivery'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('List Deliveries'); ?></a></li>
+                    </ul>
+                </li>
+
+                <!-- Truck Registration -->
+                <li class="newmenu-item has-sub">
+                    <a href="#" class="newmenu-link">
+                        <i class="fa fa-truck"></i>
+                        <span><?= lang('Truck Registration'); ?></span>
+                        <i class="fa fa-chevron-right newmenu-chevron"></i>
+                    </a>
+                    <ul class="newmenu-sub">
+                        <li><a href="<?= admin_url('truck_registration/add'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('Add Truck'); ?></a></li>
+                        <li><a href="<?= admin_url('truck_registration'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('List Trucks'); ?></a></li>
+                    </ul>
+                </li>
+
+                <!-- Adjustments -->
+                <li class="newmenu-item has-sub">
+                    <a href="#" class="newmenu-link">
+                        <i class="fa fa-archive"></i>
+                        <span><?= lang('Inventory Adjustment'); ?></span>
+                        <i class="fa fa-chevron-right newmenu-chevron"></i>
+                    </a>
+                    <ul class="newmenu-sub">
+                        <li><a href="<?= admin_url('products/add_adjustment'); ?>" class="newmenu-link"><i class="fa fa-users"></i> <?= lang('Add Adjustment'); ?></a></li>
+                        <li><a href="<?= admin_url('products/quantity_adjustments'); ?>" class="newmenu-link"><i class="fa fa-users"></i> <?= lang('List Adjustments'); ?></a></li>
+                    </ul>
+                </li>
             </ul>
+
         </li>
         <?php } ?>
     </ul>

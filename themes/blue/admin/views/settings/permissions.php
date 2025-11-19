@@ -170,7 +170,7 @@
                                         </span>
                                     </td>
                                 </tr>
-                                <tr>
+                                <!--<tr>
                                     <td><?= lang('gift_cards'); ?></td>
                                     <td class="text-center">
                                         <input type="checkbox" value="1" class="checkbox" name="sales-gift_cards" <?php echo $p->{'sales-gift_cards'} ? 'checked' : ''; ?>>
@@ -187,7 +187,7 @@
                                     <td>
 
                                     </td>
-                                </tr>
+                                </tr>-->
 
                                 <tr>
                                     <td><?= lang('quotes'); ?></td>
@@ -204,10 +204,6 @@
                                         <input type="checkbox" value="1" class="checkbox" name="quotes-delete" <?php echo $p->{'quotes-delete'} ? 'checked' : ''; ?>>
                                     </td>
                                     <td>
-                                        <span style="display:inline-block;">
-                                            <input type="checkbox" value="1" id="quotes-email" class="checkbox" name="quotes-email" <?php echo $p->{'quotes-email'} ? 'checked' : ''; ?>>
-                                            <label for="quotes-email" class="padding05"><?= lang('email') ?></label>
-                                        </span>
                                         <span style="display:inline-block;">
                                             <input type="checkbox" value="1" id="quotes-pdf" class="checkbox" name="quotes-pdf" <?php echo $p->{'quotes-pdf'} ? 'checked' : ''; ?>>
                                             <label for="quotes-pdf" class="padding05"><?= lang('pdf') ?></label>
@@ -458,7 +454,7 @@
                                         </span>
                                     </td>
                                 </tr>
-                                <tr>
+                                <!--<tr>
                                     <td><?= lang('Stock Requests'); ?></td>
                                      <td colspan="5">
                                     <span style="display:inline-block;">
@@ -482,8 +478,8 @@
                                             <label for="stock_warehouse_supervisor" class="padding05"><?= lang('Warehouse Supervisor') ?></label>
                                     </span>
                                      </td>
-                                </tr>
-                                <tr>
+                                </tr>-->
+                                <!--<tr>
                                     <td><?= lang('Truck Registration'); ?></td>
                                      <td colspan="5">
                                     <span style="display:inline-block;">
@@ -492,9 +488,9 @@
                                             <label for="bulk_actions" class="padding05"><?= lang('View') ?></label>
                                     </span>
                                      </td>
-                                </tr>
+                                </tr>-->
 
-                                <tr>
+                                <!--<tr>
                                     <td><?= lang('Accountant'); ?></td>
                                      <td colspan="5">
                                     <span style="display:inline-block;">
@@ -503,7 +499,7 @@
                                             <label for="bulk_actions" class="padding05"><?= lang('Accounts') ?></label>
                                     </span>
                                      </td>
-                                </tr>
+                                </tr>-->
 
                                 </tbody>
                             </table>

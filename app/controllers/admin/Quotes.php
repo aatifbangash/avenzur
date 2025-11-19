@@ -1429,14 +1429,22 @@ class Quotes extends MY_Controller
         $action = '<div class="text-center"><div class="btn-group text-left">'
         . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
         . lang('actions') . ' <span class="caret"></span></button>
-                    <ul class="dropdown-menu pull-right" role="menu">
-                        <li>' . $edit_link . '</li>';
-                        if($this->Settings->site_name == 'Hills Business Medical' || $this->Settings->site_name == 'Demo Company'){
-                            $action .= '<li>' . $convert_link . '</li>';
+                    <ul class="dropdown-menu pull-right" role="menu">';
+                        if($this->Admin || $this->Owner || $this->GP['quotes-edit']){
+                            $action .= '<li>' . $edit_link . '</li>';
                         }
-                        $action .= '<li>' . $pdf_link . '</li>
-                        <li>' . $delete_link . '</li>
-                    </ul>
+                        if($this->Admin || $this->Owner || $this->GP['sales-add']){
+                            if($this->Settings->site_name == 'Hills Business Medical' || $this->Settings->site_name == 'Demo Company'){
+                                $action .= '<li>' . $convert_link . '</li>';
+                            }
+                        } 
+                        if($this->Admin || $this->Owner || $this->GP['quotes-pdf']){ 
+                            $action .= '<li>' . $pdf_link . '</li>';
+                        }
+                        if($this->Admin || $this->Owner || $this->GP['quotes-delete']){ 
+                            $action .= '<li>' . $delete_link . '</li>';
+                        }
+                    $action .= '</ul>
                 </div></div>';
         //$action = '<div class="text-center">' . $detail_link . ' ' . $edit_link . ' ' . $email_link . ' ' . $delete_link . '</div>';
 
