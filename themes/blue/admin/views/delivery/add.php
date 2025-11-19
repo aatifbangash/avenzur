@@ -7,28 +7,54 @@
     <div class="box-content">
         <?php echo admin_form_open('delivery/save', 'id="delivery-form"'); ?>
 
-        <!-- Driver Selection Dropdown -->
-        <div class="form-group">
-            <label for="driver_id"><?=lang('select_driver')?> <span class="required">*</span></label>
-            <select name="driver_id" id="driver_id" class="form-control select2" required style="width:100%">
-                <option value="">-- <?=lang('select_driver')?> --</option>
-                <?php if (!empty($drivers)): ?>
-                    <?php foreach ($drivers as $driver): ?>
-                        <option value="<?=$driver->id?>"
-                                data-truck="<?=$driver->truck_id ? $driver->truck_id : 'N/A'?>"
-                                data-license="<?=$driver->license_number ? $driver->license_number : 'N/A'?>">
-                            <?=$driver->first_name?> <?=$driver->last_name?>
-                            <?php if ($driver->truck_id): ?>
-                                (Truck: <?=$driver->truck_id?>)
-                            <?php endif; ?>
-                        </option>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <option value="" disabled>No registered drivers available</option>
-                <?php endif; ?>
-            </select>
-            <?php echo form_error('driver_id', '<span class="help-block text-danger">', '</span>'); ?>
-            <small class="help-block">Only registered drivers from the system are available for selection.</small>
+        <div class="row">
+            <div class="col-md-6">
+                <!-- Driver Selection Dropdown -->
+                <div class="form-group">
+                    <label for="driver_id"><?=lang('select_driver')?> <span class="required">*</span></label>
+                    <select name="driver_id" id="driver_id" class="form-control select2" required style="width:100%">
+                        <option value="">-- <?=lang('select_driver')?> --</option>
+                        <?php if (!empty($drivers)): ?>
+                            <?php foreach ($drivers as $driver): ?>
+                                <option value="<?=$driver->id?>"
+                                        data-truck="<?=$driver->truck_id ? $driver->truck_id : 'N/A'?>"
+                                        data-license="<?=$driver->license_number ? $driver->license_number : 'N/A'?>">
+                                    <?=$driver->first_name?> <?=$driver->last_name?>
+                                    
+                                </option>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <option value="" disabled>No registered drivers available</option>
+                        <?php endif; ?>
+                    </select>
+                    <?php echo form_error('driver_id', '<span class="help-block text-danger">', '</span>'); ?>
+                    <small class="help-block">Only registered drivers from the system are available for selection.</small>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <!-- Truck Selection Dropdown -->
+                <div class="form-group">
+                    <label for="truck_id"><?=lang('select_truck')?> <span class="required">*</span></label>
+                    <select name="truck_id" id="truck_id" class="form-control select2" required style="width:100%">
+                        <option value="">-- <?=lang('select_truck')?> --</option>
+                        <?php if (!empty($trucks)): ?>
+                            <?php foreach ($trucks as $truck): ?>
+                                <option value="<?=$truck->id?>"
+                                        data-truck="<?=$truck->id ? $truck->truck_id : 'N/A'?>"
+                                        data-license="<?=$truck->truck_no ? $truck->truck_no : 'N/A'?>">
+                                    <?=$truck->truck_no?>
+                                    
+                                </option>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <option value="" disabled>No registered trucks available</option>
+                        <?php endif; ?>
+                    </select>
+                    <?php echo form_error('driver_id', '<span class="help-block text-danger">', '</span>'); ?>
+                    <small class="help-block">Only registered trucks from the system are available for selection.</small>
+                </div>
+            </div>
         </div>
 
         <!-- Driver Information Display (Read-only) -->
@@ -197,20 +223,20 @@
         });
 
         // Show driver information when driver is selected
-        $('#driver_id').on('change', function() {
+        $('#truck_id').on('change', function() {
             var selectedOption = $(this).find('option:selected');
             var truckNumber = selectedOption.data('truck');
             var licenseNumber = selectedOption.data('license');
-            var driverId = $(this).val();
+            var truckId = $(this).val();
 
-            if (driverId) {
+            if (truckId) {
                 $('#display-truck-number').text(truckNumber);
                 $('#display-license-number').text(licenseNumber);
                 $('#driver-info-section').slideDown();
                 $('#odometer-section').slideDown();
 
                 // Fetch last odometer reading for this driver
-                fetchLastOdometer(driverId);
+                fetchLastOdometer(truckId);
             } else {
                 $('#driver-info-section').slideUp();
                 $('#odometer-section').slideUp();
@@ -220,20 +246,20 @@
         });
 
         // Fetch last odometer reading via AJAX
-        function fetchLastOdometer(driverId) {
+        function fetchLastOdometer(truckId) {
             $.ajax({
                 url: '<?=admin_url('delivery/get_last_odometer')?>',
                 type: 'POST',
                 dataType: 'json',
                 data: {
-                    driver_id: driverId,
+                    truck_id: truckId,
                     '<?=$this->security->get_csrf_token_name()?>': '<?=$this->security->get_csrf_hash()?>'
                 },
                 success: function(response) {
                     if (response.success && response.data) {
                         lastOdometerReading = parseInt(response.data.odometer);
                         $('#last-odometer-value').text(lastOdometerReading.toLocaleString());
-                        $('#last-odometer-date').text('Date: ' + response.data.date);
+                        //$('#last-odometer-date').text('Date: ' + response.data.date);
                         $('#last-odometer-display').slideDown();
                     } else {
                         $('#last-odometer-display').hide();
