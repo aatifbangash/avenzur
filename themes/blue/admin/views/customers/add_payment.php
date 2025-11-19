@@ -42,6 +42,162 @@
             updateAdvanceSettlementCalculation();
         });
 
+        // Handle additional discount percentage changes
+        $(document).on('input change', '.additional-discount-pct', function (e) {
+            var $row = $(this).closest('tr');
+            var due_amount = parseFloat($row.find('input[name="due_amount[]"]').val()) || 0;
+            var return_amount = parseFloat($row.find('input[name="return_amount[]"]').val()) || 0;
+            var discount_pct = parseFloat($(this).val()) || 0;
+            
+            // Validate percentage range
+            if (discount_pct < 0) discount_pct = 0;
+            if (discount_pct > 100) discount_pct = 100;
+            $(this).val(discount_pct);
+            
+            // Calculate discount amount based on due amount after returns
+            var amount_after_returns = due_amount - return_amount;
+            var discount_amount = (amount_after_returns * discount_pct) / 100;
+            
+            // Display the calculated discount amount
+            $row.find('.discount-amount-display').text(discount_amount.toFixed(2));
+            
+            // Update payment amount (due amount - returns - discount amount)
+            var payment_amount = amount_after_returns - discount_amount;
+            $row.find('input[name="payment_amount[]"]').val(payment_amount.toFixed(2));
+            
+            // Recalculate and update totals
+            updateTotalsRow();
+            
+            // Trigger payment amount change to update totals
+            $row.find('input[name="payment_amount[]"]').trigger('change');
+        });
+
+        // Function to recalculate and update the totals row
+        function updateTotalsRow() {
+            var total_original = 0;
+            var total_due = 0;
+            var total_returns = 0;
+            var total_discount = 0;
+            var total_payment = 0;
+
+            // Calculate totals from all rows
+            $('#poTable tbody tr').each(function() {
+                if ($(this).find('input[name="original_amount[]"]').length > 0) {
+                    total_original += parseFloat($(this).find('input[name="original_amount[]"]').val()) || 0;
+                    total_due += parseFloat($(this).find('input[name="due_amount[]"]').val()) || 0;
+                    total_returns += parseFloat($(this).find('input[name="return_amount[]"]').val()) || 0;
+                    
+                    var due = parseFloat($(this).find('input[name="due_amount[]"]').val()) || 0;
+                    var returns = parseFloat($(this).find('input[name="return_amount[]"]').val()) || 0;
+                    var discount_pct = parseFloat($(this).find('.additional-discount-pct').val()) || 0;
+                    var discount_amt = ((due - returns) * discount_pct) / 100;
+                    total_discount += discount_amt;
+                    
+                    total_payment += parseFloat($(this).find('input[name="payment_amount[]"]').val()) || 0;
+                }
+            });
+
+            // Update the totals row (find the row with "Totals:" text)
+            $('#poTable tbody tr').each(function() {
+                if ($(this).find('td:first').text().trim() === 'Totals:') {
+                    $(this).find('td').eq(1).html('<b>' + total_original.toFixed(2) + '</b>');
+                    // $(this).find('td').eq(2).html('<b>' + total_due.toFixed(2) + '</b>');
+                    $(this).find('td').eq(3).html('<small style="color:#e65100;">-' + total_returns.toFixed(2) + '</small>');
+                    $(this).find('td').eq(4).html('<small style="color:#d32f2f;">-' + total_discount.toFixed(2) + '</small>');
+                    $(this).find('td').eq(6).html('<b>' + total_payment.toFixed(2) + '</b>');
+                }
+            });
+            
+            // Update customer limit info if it exists
+            updateCustomerLimitDisplay(total_payment);
+            
+            // Update payment summary table
+            updatePaymentSummary(total_due, total_returns, total_discount, total_payment);
+        }
+
+        // Function to update payment summary table
+        function updatePaymentSummary(total_invoice, total_returns, total_discount, total_payable) {
+            var amount_received = parseFloat($('#cspayment').val()) || 0;
+            
+            // Calculate excess payment (advance) if amount received > total payable
+            var excess_payment = 0;
+            var balance_due = 0;
+            
+            if (amount_received > total_payable) {
+                // Excess payment will be parked as advance
+                excess_payment = amount_received - total_payable;
+                balance_due = 0;
+            } else {
+                // Amount received is less than or equal to total payable
+                balance_due = total_payable - amount_received;
+            }
+            
+            $('#summary-total-invoice').text(total_invoice.toFixed(2));
+            $('#summary-total-returns').text(total_returns.toFixed(2));
+            $('#summary-total-discount').text(total_discount.toFixed(2));
+            $('#summary-total-payable').text(total_payable.toFixed(2));
+            $('#summary-amount-received').text(amount_received.toFixed(2));
+            $('#summary-advance-payment').text(excess_payment.toFixed(2));
+            $('#summary-balance-due').text(balance_due.toFixed(2));
+            
+            // Update balance due color based on value
+            if (balance_due === 0) {
+                $('#summary-balance-due').css('color', '#388e3c'); // Green if fully paid
+            } else {
+                $('#summary-balance-due').css('color', '#d32f2f'); // Red if amount due
+            }
+            
+            // Show/hide returns row based on whether there are returns
+            if (total_returns > 0) {
+                $('#summary-returns-row').show();
+            } else {
+                $('#summary-returns-row').hide();
+            }
+            
+            // Show/hide excess advance row based on whether there's excess payment
+            if (excess_payment > 0) {
+                $('#summary-advance-row').show();
+            } else {
+                $('#summary-advance-row').hide();
+            }
+        }
+
+        // Function to update customer limit display with new totals
+        function updateCustomerLimitDisplay(total_payable) {
+            var limitRow = $('#customer-limit-row');
+            if (limitRow.length > 0) {
+                var credit_limit = parseFloat(limitRow.attr('data-credit-limit')) || 0;
+                var existing_balance = parseFloat(limitRow.attr('data-existing-balance')) || 0;
+                
+                // Get amount received from input
+                var amount_received = parseFloat($('#cspayment').val()) || 0;
+                
+                // If amount received equals or exceeds total payable, current balance is 0
+                // Otherwise, current balance = total payable - amount received
+                var current_balance = 0;
+                if (amount_received >= total_payable) {
+                    current_balance = 0;
+                } else {
+                    current_balance = total_payable - amount_received;
+                }
+                
+                var remaining_limit = credit_limit - existing_balance;
+                
+                // Update the display
+                $('#customer-current-balance').text(current_balance.toFixed(2));
+                $('#customer-remaining-limit').text(remaining_limit.toFixed(2));
+                
+                // Update color based on limit status
+                if (remaining_limit < 0) {
+                    $('#customer-remaining-limit').css('color', '#d32f2f'); // Red if over limit
+                } else if (remaining_limit < credit_limit * 0.2) {
+                    $('#customer-remaining-limit').css('color', '#f57c00'); // Orange if less than 20%
+                } else {
+                    $('#customer-remaining-limit').css('color', '#388e3c'); // Green if good
+                }
+            }
+        }
+
         if (!localStorage.getItem('csdate')) {
             $("#csdate").datetimepicker({
                 format: site.dateFormats.js_ldate,
@@ -72,9 +228,11 @@
 
         $(document).on('change', '#cspayment', function (e) {
             localStorage.setItem('cspayment', $(this).val());
-
-            loadInvoices($('#cscustomer').val());
+            // Update calculations without reloading invoices
+            updateAdvanceSettlementCalculation();
+            updateTotalsRow();
         });
+        
         if (cspayment = localStorage.getItem('cspayment')) {
             $('#cspayment').val(cspayment);
 
@@ -86,6 +244,8 @@
 
             loadInvoices($('#cscustomer').val());
             loadCustomerAdvanceBalance($('#cscustomer').val());
+            loadCustomerLimitInfo($('#cscustomer').val());
+            loadCustomerDiscountLedger($('#cscustomer').val());
         });
 
         if (cscustomer = localStorage.getItem('cscustomer')) {
@@ -93,6 +253,8 @@
 
             loadInvoices($('#cscustomer').val());
             loadCustomerAdvanceBalance($('#cscustomer').val());
+            loadCustomerLimitInfo($('#cscustomer').val());
+            loadCustomerDiscountLedger($('#cscustomer').val());
         }
 
         $(document).on('change', '#csledger', function (e) {
@@ -138,7 +300,8 @@
                                 var reference_id = response[i].reference_no;
                                 var total_amount = parseFloat(response[i].grand_total);
                                 var paid_amount = parseFloat(response[i].paid);
-                                var due_amount = parseFloat(response[i].grand_total) - parseFloat(response[i].paid);
+                                var return_amount = parseFloat(response[i].return_total) || 0;
+                                var due_amount = parseFloat(response[i].grand_total) - parseFloat(response[i].paid) - return_amount;
                                 var to_pay = 0;
 
                                 total_due += parseFloat(due_amount);
@@ -157,12 +320,36 @@
 
                                 total_paying += parseFloat(to_pay);
 
+                                // Calculate credit period remaining
+                                var credit_period_html = '';
+                                if (response[i].due_date) {
+                                    var due_date = new Date(response[i].due_date);
+                                    var today = new Date();
+                                    today.setHours(0,0,0,0);
+                                    due_date.setHours(0,0,0,0);
+                                    var days_diff = Math.ceil((due_date - today) / (1000 * 60 * 60 * 24));
+                                    
+                                    if (days_diff < 0) {
+                                        credit_period_html = '<span style="color:red; font-weight:bold;">' + Math.abs(days_diff) + ' days overdue</span>';
+                                    } else if (days_diff === 0) {
+                                        credit_period_html = '<span style="color:orange; font-weight:bold;">Due today</span>';
+                                    } else {
+                                        credit_period_html = '<span style="color:#333;">' + days_diff + ' days remaining</span>';
+                                    }
+                                } else {
+                                    credit_period_html = '<span style="color:#999;">N/A</span>';
+                                }
+
                                 var newTr = $('<tr id="row_' + response[i].id + '" class="row_' + response[i].id + '" data-item-id="' + response[i].id + '"></tr>');
+                                var original_due = parseFloat(response[i].grand_total) - parseFloat(response[i].paid);
                                 tr_html = '<td>'+purchase_date+'</td>';
                                 tr_html += '<td>'+reference_id+'</td>';
                                 tr_html += '<td>'+total_amount.toFixed(2)+'<input name="original_amount[]" data-item-id="' + response[i].id + '" value="'+total_amount.toFixed(2)+'" type="hidden" /></td>';
-                                tr_html += '<td>'+due_amount.toFixed(2)+'<input name="due_amount[]" data-item-id="' + response[i].id + '" value="'+due_amount.toFixed(2)+'" type="hidden" class="rid" /></td>';
-                                tr_html += '<td><input name="payment_amount[]" data-item-id="' + response[i].id + '" type="text" class="rid" value="'+to_pay.toFixed(2)+'" /><input name="item_id[]" type="hidden" value="' + response[i].id + '"></td>';
+                                tr_html += '<td>'+original_due.toFixed(2)+'<input name="due_amount[]" data-item-id="' + response[i].id + '" value="'+original_due.toFixed(2)+'" type="hidden" class="rid" /></td>';
+                                tr_html += '<td style="color:#e65100;">'+return_amount.toFixed(2)+'<input name="return_amount[]" data-item-id="' + response[i].id + '" value="'+return_amount.toFixed(2)+'" type="hidden" /></td>';
+                                tr_html += '<td><div class="input-group" style="width:120px;"><input name="additional_discount[]" data-item-id="' + response[i].id + '" type="number" step="0.01" min="0" max="100" class="form-control input-sm additional-discount-pct" style="width:80px;" value="0" placeholder="0" /><span class="input-group-addon">%</span></div><small class="discount-amount-display" style="color:#666; display:block; margin-top:2px;">0.00</small></td>';
+                                tr_html += '<td>'+credit_period_html+'</td>';
+                                tr_html += '<td><input name="payment_amount[]" data-item-id="' + response[i].id + '" type="text" class="rid" value="'+due_amount.toFixed(2)+'" /><input name="item_id[]" type="hidden" value="' + response[i].id + '"><input name="return_total[]" type="hidden" value="'+return_amount.toFixed(2)+'"></td>';
                                 newTr.html(tr_html);
                                 newTr.appendTo('#poTable');
                             }
@@ -170,13 +357,19 @@
                             // Update global variable for advance settlement calculation
                             total_invoice_amount = total_due;
 
-                            var newTr = $('<tr class="row"></tr>');
-                                tr_html = '<td colspan="1"><b>Totals:</b> </td>';
-                                tr_html += '<td><b>'+total_amt.toFixed(2)+'</b></td>';
-                                tr_html += '<td><b>'+total_due.toFixed(2)+'</b></td>';
-                                tr_html += '<td><b>'+total_paying.toFixed(2)+'</b></td>';
-                                newTr.html(tr_html);
-                                newTr.appendTo('#poTable');
+                            // var newTr = $('<tr class="row"></tr>');
+                            //     tr_html = '<td colspan="2"><b>Totals:</b> </td>';
+                            //     tr_html += '<td><b>'+total_amt.toFixed(2)+'</b></td>';
+                            //     // tr_html += '<td><b>'+total_due.toFixed(2)+'</b></td>';
+                            //     tr_html += '<td><small style="color:#d32f2f;">-0.00</small></td>';
+                            //     tr_html += '<td></td>';
+                            //     tr_html += '<td><b>'+total_due.toFixed(2)+'</b></td>';
+                            //     newTr.html(tr_html);
+                            //     newTr.appendTo('#poTable');
+                            
+                            // Initialize payment summary with no discount
+                            var amount_received = parseFloat($('#cspayment').val()) || 0;
+                            updatePaymentSummary(total_due, 0, total_due);
 
                             // Add advance adjustment row (for settling with existing advance)
                             if (customer_advance_ledger_configured && current_advance_balance > 0) {
@@ -187,6 +380,7 @@
                                 var advanceAdjustTr = $('<tr id="advance-adjustment-row" class="row" style="background-color: #e3f2fd;"></tr>');
                                 var advance_adjust_html = '<td colspan="2"><b>Available Advance to Adjust:</b> <span style="color: #28a745;">' + current_advance_balance.toFixed(2) + '</span></td>';
                                 advance_adjust_html += '<td><label class="checkbox-inline" style="margin-top: 5px;"><input type="checkbox" id="settle-with-advance-table" style="margin-right: 5px;"> Settle with Advance</label></td>';
+                                advance_adjust_html += '<td colspan="2"></td>';
                                 advance_adjust_html += '<td><b id="advance-adjustment-amount">' + adjustable_amount.toFixed(2) + '</b></td>';
                                 advanceAdjustTr.html(advance_adjust_html);
                                 advanceAdjustTr.appendTo('#poTable');
@@ -199,14 +393,17 @@
                             if (customer_advance_ledger_configured && original_payment_amount > total_due) {
                                 var excess_amount = original_payment_amount - total_due;
                                 var excessTr = $('<tr id="excess-advance-row" class="row" style="background-color: #fff3cd;"></tr>');
-                                var excess_html = '<td colspan="3"><b>Excess Payment (Will be parked as Advance):</b></td>';
-                                excess_html += '<td><b id="excess-advance-amount" style="color: #856404;">' + excess_amount.toFixed(2) + '</b></td>';
+                                var excess_html = '<td colspan="5"><b>Excess Payment (Will be parked as Advance):</b></td>';
+                                excess_html += '<td colspan="2"><b id="excess-advance-amount" style="color: #856404;">' + excess_amount.toFixed(2) + '</b></td>';
                                 excessTr.html(excess_html);
                                 excessTr.appendTo('#poTable');
                             }
                             
                             // Update the settlement calculation
                             updateAdvanceSettlementCalculation();
+                            
+                            // Load customer limit information
+                            loadCustomerLimitInfo(customer_id);
                         }
                     }
                 });
@@ -362,6 +559,139 @@
                 advanceRow.find('#advance-adjustment-amount').text(advance_amount.toFixed(2));
             }
         }
+
+        function loadCustomerLimitInfo(customer_id) {
+            console.log('loadCustomerLimitInfo called with customer_id:', customer_id);
+            
+            if (!customer_id) {
+                // Remove limit info rows if no customer selected
+                $('#customer-limit-row').remove();
+                return;
+            }
+
+            $.ajax({
+                url: '<?= admin_url('customers/customer_limit_info?customer_id=') ?>' + customer_id,
+                type: 'GET',
+                dataType: 'json',
+                success: function (response) {
+                    console.log('Customer Limit Info Response:', response);
+                    
+                    // Remove existing limit row
+                    $('#customer-limit-row').remove();
+                    
+                    if (response && response.credit_limit !== undefined) {
+                        var credit_limit = parseFloat(response.credit_limit) || 0;
+                        var existing_balance = parseFloat(response.current_balance) || 0;
+                        
+                        // Calculate total payable from current invoices (after discount)
+                        var total_payable = 0;
+                        $('#poTable tbody tr').each(function() {
+                            if ($(this).find('input[name="payment_amount[]"]').length > 0) {
+                                total_payable += parseFloat($(this).find('input[name="payment_amount[]"]').val()) || 0;
+                            }
+                        });
+                        
+                        // Get amount received from input
+                        var amount_received = parseFloat($('#cspayment').val()) || 0;
+                        
+                        // If amount received equals total payable, current balance is 0
+                        // Otherwise, current balance = total payable - amount received
+                        var current_balance = 0;
+                        if (amount_received >= total_payable) {
+                            current_balance = 0;
+                        } else {
+                            current_balance = total_payable - amount_received;
+                        }
+                        
+                        var remaining_limit = credit_limit - existing_balance;
+                        
+                        // Add customer limit info row after totals row
+                        var limitTr = $('<tr id="customer-limit-row" class="row" style="background-color: #e8f5e9;"></tr>');
+                        var limit_html = '<td colspan="2"><b>Customer Credit Limit:</b></td>';
+                        limit_html += '<td><b style="color: #1976d2;">' + credit_limit.toFixed(2) + '</b></td>';
+                        limit_html += '<td colspan="2"><b>Current Balance:</b> <span style="color: #d32f2f;" id="customer-current-balance">' + current_balance.toFixed(2) + '</span></td>';
+                        limit_html += '<td colspan="2"><b>Remaining Limit:</b> <span style="color: #388e3c;" id="customer-remaining-limit">' + remaining_limit.toFixed(2) + '</span></td>';
+                        limitTr.html(limit_html);
+                        
+                        // Store credit limit and existing balance in data attributes for recalculation
+                        limitTr.attr('data-credit-limit', credit_limit);
+                        limitTr.attr('data-existing-balance', existing_balance);
+                        
+                        // Insert after totals row (before advance adjustment row if exists)
+                        var advanceRow = $('#advance-adjustment-row');
+                        if (advanceRow.length > 0) {
+                            limitTr.insertBefore(advanceRow);
+                        } else {
+                            var excessRow = $('#excess-advance-row');
+                            if (excessRow.length > 0) {
+                                limitTr.insertBefore(excessRow);
+                            } else {
+                                limitTr.appendTo('#poTable');
+                            }
+                        }
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX Error loading customer limit info:', error);
+                    // Silently fail - just don't show the limit info
+                }
+            });
+        }
+
+        function loadCustomerDiscountLedger(customer_id) {
+            console.log('loadCustomerDiscountLedger called with customer_id:', customer_id);
+            
+            if (!customer_id) {
+                $('#discount-ledger-balance').text('Please select a customer');
+                return;
+            }
+
+            $.ajax({
+                url: '<?= admin_url('customers/get_customer_discount_ledger?customer_id=') ?>' + customer_id,
+                type: 'GET',
+                dataType: 'json',
+                success: function (response) {
+                    console.log('Customer Discount Ledger Response:', response);
+                    
+                    if (response.error && !response.discount_ledger_configured) {
+                        console.error('Error loading customer discount ledger:', response.error);
+                        $('#discount-ledger-balance').html('<span style="color: #dc3545;">Not configured</span>');
+                        return;
+                    }
+                    
+                    console.log('Ledger Configured:', response.discount_ledger_configured);
+                    console.log('Ledger Name:', response.ledger_name);
+                    
+                    // Show ledger name if configured
+                    if (response.discount_ledger_configured && response.ledger_name) {
+                        $('#discount-ledger-balance').html('<span style="color: #1976d2; font-weight: bold;">' + response.ledger_name + '</span>');
+                    } else {
+                        console.log('Not showing discount ledger - ledger not configured');
+                        $('#discount-ledger-balance').html('<span style="color: #dc3545;">Not configured</span>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX Error loading customer discount ledger:', error);
+                    console.error('Status:', status);
+                    console.error('XHR:', xhr);
+                    
+                    var errorMsg = 'Error loading discount ledger';
+                    if (xhr.responseText) {
+                        try {
+                            var errorData = JSON.parse(xhr.responseText);
+                            if (errorData.error) {
+                                errorMsg += ': ' + errorData.error;
+                            }
+                        } catch (e) {
+                            // If not JSON, show first 50 characters of response
+                            errorMsg += ': ' + xhr.responseText.substring(0, 50);
+                        }
+                    }
+                    
+                    $('#discount-ledger-balance').html('<span style="color: #dc3545;">' + errorMsg + '</span>');
+                }
+            });
+        }
     });
 
     function resetValues(){
@@ -454,6 +784,16 @@
                             </div>
                         </div>
 
+                        <!-- Customer Discount Ledger Display -->
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label><?= lang('Customer Discount Ledger'); ?></label>
+                                <div id="customer-discount-ledger-info" style="padding: 8px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
+                                    <span id="discount-ledger-balance">Please select a customer</span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('Amount Received', 'cspayment'); ?>
@@ -500,11 +840,57 @@
                                 <th><?php echo $this->lang->line('Reference no') ?></th>
                                 <th><?php echo $this->lang->line('Orig. Amt.') ?></th>
                                 <th><?php echo $this->lang->line('Amt. Due.'); ?></th>
-                                <th><?php echo $this->lang->line('Payment'); ?></th>
+                                <th><?php echo $this->lang->line('Returns'); ?> (-)</th>
+                                <th><?php echo $this->lang->line('Additional Discount'); ?> (%)</th>
+                                <th><?php echo $this->lang->line('Credit Period'); ?></th>
+                                <th><?php echo $this->lang->line('Total Payable'); ?></th>
                             </tr>
                             </thead>
                             <tbody></tbody>
                             <tfoot></tfoot>
+                        </table>
+                    </div>
+
+                    <!-- Payment Summary Table -->
+                    <div class="table-responsive" style="margin-top: 20px;">
+                        <table class="table table-bordered" style="width: 50%; margin-left: auto; background-color: #f8f9fa;">
+                            <thead style="background-color: #e3f2fd;">
+                                <tr>
+                                    <th colspan="2" class="text-center" style="font-size: 14px; font-weight: bold; color: #1976d2;">
+                                        Payment Summary
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="width: 60%; font-weight: 600;">Total Invoice Amount:</td>
+                                    <td class="text-right" style="font-weight: bold;" id="summary-total-invoice">0.00</td>
+                                </tr>
+                                <tr id="summary-returns-row" style="display: none;">
+                                    <td style="font-weight: 600;">Total Returns:</td>
+                                    <td class="text-right" style="color: #e65100; font-weight: bold;" id="summary-total-returns">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: 600;">Total Discount:</td>
+                                    <td class="text-right" style="color: #d32f2f; font-weight: bold;" id="summary-total-discount">0.00</td>
+                                </tr>
+                                <tr style="background-color: #fff3cd;">
+                                    <td style="font-weight: 600;">Total Payable:</td>
+                                    <td class="text-right" style="font-weight: bold; color: #1976d2; font-size: 16px;" id="summary-total-payable">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: 600;">Amount Received:</td>
+                                    <td class="text-right" style="font-weight: bold; color: #388e3c;" id="summary-amount-received">0.00</td>
+                                </tr>
+                                <tr id="summary-advance-row" style="display: none; background-color: #fff3cd;">
+                                    <td style="font-weight: 600;">Excess (Parked as Advance):</td>
+                                    <td class="text-right" style="font-weight: bold; color: #856404;" id="summary-advance-payment">0.00</td>
+                                </tr>
+                                <tr style="background-color: #e8f5e9; border-top: 2px solid #388e3c;">
+                                    <td style="font-weight: 700; font-size: 14px;">Balance Due:</td>
+                                    <td class="text-right" style="font-weight: bold; color: #d32f2f; font-size: 16px;" id="summary-balance-due">0.00</td>
+                                </tr>
+                            </tbody>
                         </table>
                     </div>
                 
