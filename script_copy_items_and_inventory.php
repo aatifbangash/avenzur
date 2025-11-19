@@ -7,8 +7,8 @@ $source_user = "root";
 $source_pass = "";
 $source_db   = "rawabi_jeddah";*/
 
-$source_host = "localhost";
-$source_user =  "directpa_amr";
+$source_host = "81.208.168.52";
+$source_user =  "remote_user";
 $source_pass = 're$Pa1msee$ot_ur';
 $source_db = "rawabi_jeddah";
 
@@ -17,8 +17,8 @@ $target_user = "root";
 $target_pass = "";
 $target_db   = "directpa_pharma";*/
 
-$target_host = "localhost";
-$target_user =  "directpa_amr";
+$target_host = "81.208.168.52";
+$target_user =  "remote_user";
 $target_pass = 're$Pa1msee$ot_ur';
 $target_db = "directpa_pharma";
 
