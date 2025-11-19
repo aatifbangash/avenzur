@@ -912,6 +912,12 @@ class Products extends MY_Controller
                 'main_agent' => $this->input->post('main_agent'),
                 'draft' => $this->input->post('draft'),
                 'special_product' => $this->input->post('special_product'),
+                'cash_discount' => $this->input->post('cash_discount'),
+                'credit_discount' => $this->input->post('credit_discount'),
+                'cash_dis2' => $this->input->post('cash_dis2'),
+                'credit_dis2' => $this->input->post('credit_dis2'),
+                'cash_dis3' => $this->input->post('cash_dis3'),
+                'credit_dis3' => $this->input->post('credit_dis3'),
                 // 'purchase_account'   => $this->input->post('purchase_account'),
                 // 'sale_account'       => $this->input->post('sale_account'),
                 // 'inventory_account'  => $this->input->post('inventory_account'),
@@ -2550,6 +2556,12 @@ class Products extends MY_Controller
                 'draft' => $this->input->post('draft'),
                 'special_product' => $this->input->post('special_product'),
                 'google_merch' => $this->input->post('google_merch'),
+                'cash_discount' => $this->input->post('cash_discount'),
+                'credit_discount' => $this->input->post('credit_discount'),
+                'cash_dis2' => $this->input->post('cash_dis2'),
+                'credit_dis2' => $this->input->post('credit_dis2'),
+                'cash_dis3' => $this->input->post('cash_dis3'),
+                'credit_dis3' => $this->input->post('credit_dis3'),
                 // 'purchase_account'       => $this->input->post('purchase_account'),
                 // 'sale_account'       => $this->input->post('sale_account'),
                 // 'inventory_account'       => $this->input->post('inventory_account'),
@@ -3642,11 +3654,11 @@ class Products extends MY_Controller
         $this->sma->send_json($units);
     }
 
-    /*public function import_excel()
+    public function import_excel()
     {
         $this->load->library('excel');
 
-        $file_path = 'C:\Users\faisa\Downloads\HumanDrugs (1).xls';
+        $file_path = 'C:\Users\faisa\Downloads\discounts-sheet.xls';
 
         $spreadsheet = IOFactory::load($file_path);
         $sheet = $spreadsheet->getActiveSheet();
@@ -3672,63 +3684,110 @@ class Products extends MY_Controller
             $data = array();
             //$data['credit_discount'] = $row['H'];
             //echo '<pre>';print_r($row);exit;
-            $product = $this->products_model->getProductByID($row['D']);
+            $product = $this->products_model->getProductByItemCode($row['A']);
+            //echo '<pre>';print_r($product);exit;
             if($product){
                 $total_found++;
-                //echo '<pre>';print_r($product);exit;
+                $data['credit_discount'] = ($row['H'] * 100).'%';
+                $data['credit_dis2'] = ($row['I'] * 100) .'%';
+                $data['cash_discount'] = ($row['K'] * 100) .'%';
+                $this->db->update('products', $data, ['id' => $product->id]);
+                $rows_updated++;
             }
             
-            //$this->db->update('products', $data, ['id' => $product->id]);
-            //$rows_updated++;
+            
         }
 
         echo 'Rows found in database : ' . $total_found.'<br />';
-    }*/
+    }
 
-    public function import_excel()
+    /*public function import_excel()
     {
         $this->load->library('excel');
 
-        $file_path = 'C:\Users\faisa\Downloads\HumanDrugs (1).xls';
+        $file_path = 'C:\Users\faisa\Downloads\rawabi_jeddah_products.xlsx';
 
         $spreadsheet = IOFactory::load($file_path);
         $sheet = $spreadsheet->getActiveSheet();
         $rows = $sheet->toArray(null, true, true, true);
 
-        // Remove header row
-        array_shift($rows);
-
-        $sheet_product_ids = [];
-        $sheet_product_names = [];
-
+        $count = 0;
+        $rowNumber = 0;
+        
         foreach ($rows as $row) {
+            $rowNumber++;
 
-            // Product ID in column D
-            if (!empty($row['D'])) {
-                $sheet_product_ids[] = trim($row['D']);
-            }
+            // Skip header row
+            if ($rowNumber == 1) continue;
 
-            // Product Name in column E
-            if (!empty($row['E'])) {
-                $sheet_product_names[] = trim($row['E']);
-            }
+            $group_name = trim($row['A']);
+            $external_id = trim($row['B']);
+            $code = trim($row['C']) != '' ? trim($row['C']) : trim($row['B']);
+            $name = trim($row['E']);
+            $name_arabic = trim($row['D']);
+            $scientific_name = trim($row['F']);
+            $corp_name = trim($row['G']);
+            $tax_rate = trim($row['H']) == '15%' ? 5 : 1;
+            $unit = trim($row['I']);
+            $manufacture_country = trim($row['R']);
+            $manufacture_name =  trim($row['S']);
+            $marketing_company = trim($row['T']);
+            $main_agent = trim($row['U']);
+            $agent2 =  trim($row['V']);
+            $authorized_channel =  trim($row['W']);
+            $drug_type = trim($row['X']);
+            $atc_code = trim($row['Y']);
+            $package_types = trim($row['Z']);
+            $legal_status = trim($row['AA']);
+            $store_condition = trim($row['AB']);
+            $adiministration_route = trim($row['AC']);
+            $pharmaceutical_form = trim($row['AD']);
+
+            // ✅ Prepare data for insert
+            $product_data = [
+                'code' => $code,
+                'name' => $name,
+                'name_ar' => $name_arabic,
+                'scientific_name' => $scientific_name,
+                'corp_name' => $corp_name,
+                'manufacture_country' => $manufacture_country,
+                'manufacture_name' => $manufacture_name,
+                'marketing_company' => $marketing_company,
+                'main_agent' => $main_agent,
+                'agent2' => $agent2,
+                'authorized_channel' => $authorized_channel,
+                'atc_code' => $atc_code,
+                'package_types' => $package_types,
+                'legal_status' => $legal_status,
+                'store_condition' => $store_condition,
+                'administration_route' => $administration_route,
+                'pharmaceutical_form' => $pharmaceutical_form,
+                'group_name' => $group_name,
+                'tax_rate' => $tax_rate,
+                'unit' => $unit,
+                'type' => $drug_type, // default product type
+                'track_quantity' => 1,
+                'quantity' => 0,
+                'cost' => 0,
+                'price' => 0,
+                'image' => 'no_image.png',
+                'alert_quantity' => 2,
+                'barcode_symbology' => 'code128',
+                'tax_method' => 1,
+                'item_code' => $external_id,
+                'imported' => 1,
+                'sequence_code' => 'PRD-' . str_pad($count, 5, '0', STR_PAD_LEFT)
+            ];
+
+            // ✅ Insert into DB
+            $this->db->insert('sma_products', $product_data);
+            $count++;
         }
 
-        // Remove duplicates
-        $sheet_product_ids = array_unique($sheet_product_ids);
-        $sheet_product_names = array_unique($sheet_product_names);
-
-        // Fetch products missing by BOTH id and name
-        $this->db->where_not_in('id', $sheet_product_ids);
-        $this->db->where_not_in('name', $sheet_product_names);
-        $missing_products = $this->db->get('sma_products')->result();
-
-        echo "Total products missing in sheet: " . count($missing_products) . "<br><br>";
-
-        foreach ($missing_products as $mp) {
-            echo "ID: {$mp->id} | Name: {$mp->name}<br>";
-        }
-    }
+        echo "<h3>✅ Import Completed</h3>";
+        echo "<p><strong>Total Products Inserted:</strong> $count</p>";
+        exit;
+    }*/
 
 
 
