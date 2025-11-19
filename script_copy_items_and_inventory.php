@@ -67,14 +67,14 @@ if ($result_products->num_rows > 0) {
             ");
 
             $insert->bind_param(
-                "ssddiidddiss", // type string: s=string, d=double, i=int
+                "ssddiisdisis", // type string: s=string, d=double, i=int
                 $p['code'],
                 $p['name'],
                 $p['cost'],
                 $p['price'],
                 $p['alert_quantity'],
                 $p['category_id'],
-                $p['cf1'],
+                'yes', // cf1
                 $p['quantity'],
                 $p['tax_rate'],
                 $p['sequence_code'],
