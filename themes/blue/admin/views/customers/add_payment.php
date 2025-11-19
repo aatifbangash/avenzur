@@ -819,14 +819,8 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4" style="margin-bottom: 20px;">
-                            <div class="from-group">
-                                <!-- Hidden field to pass settle_with_advance to backend -->
-                                <input type="hidden" name="settle_with_advance" id="settle_with_advance_hidden" value="0">
-                                <button type="submit" style="margin-top: 28px;" class="btn btn-primary" id="add_payment"><?= lang('Receive Payments') ?></button>
-                                <button type="button" style="margin-top: 28px;" class="btn btn-danger" id="reset" onclick="resetValues();"><?= lang('reset') ?></button>
-                            </div>
-                        </div>
+                        <!-- Hidden field to pass settle_with_advance to backend -->
+                        <input type="hidden" name="settle_with_advance" id="settle_with_advance_hidden" value="0">
                     </div>
                     
 
@@ -854,9 +848,9 @@
                     <!-- Payment Summary Table -->
                     <div class="table-responsive" style="margin-top: 20px;">
                         <table class="table table-bordered" style="width: 50%; margin-left: auto; background-color: #f8f9fa;">
-                            <thead style="background-color: #e3f2fd;">
+                            <thead style="background-color: #1976d2;">
                                 <tr>
-                                    <th colspan="2" class="text-center" style="font-size: 14px; font-weight: bold; color: #1976d2;">
+                                    <th colspan="2" class="text-center" style="font-size: 14px; font-weight: bold; color: #ffffff;">
                                         Payment Summary
                                     </th>
                                 </tr>
@@ -892,6 +886,12 @@
                                 </tr>
                             </tbody>
                         </table>
+                        
+                        <!-- Buttons moved below Payment Summary -->
+                        <div style="text-align: center; margin-top: 20px;">
+                            <button type="submit" class="btn btn-primary btn-lg" id="add_payment" style="min-width: 180px; margin-right: 10px;"><?= lang('Receive Payments') ?></button>
+                            <button type="button" class="btn btn-danger" id="reset" onclick="resetValues();" style="min-width: 120px;"><?= lang('reset') ?></button>
+                        </div>
                     </div>
                 
             </div>
