@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Test Cost Center Dropdown</title>
+		<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	</head>
+	<body>
+		<h1>Cost Center Dropdown Test</h1>
+
+		<div>
+			<label for="warehouse">Select Warehouse:</label>
+			<select id="warehouse" name="warehouse">
+				<option value="">Select Warehouse</option>
+				<option value="1">Main Pharmacy (ID: 1)</option>
+				<option value="2">Branch 1 (ID: 2)</option>
+				<option value="3">Branch 2 (ID: 3)</option>
+			</select>
+		</div>
+
+		<br />
+
+		<div>
+			<label for="cost_center_id">Cost Center:</label>
+			<select id="cost_center_id" name="cost_center_id">
+				<option value="">Select Cost Center</option>
+			</select>
+		</div>
+
+		<br />
+
+		<div id="response-debug"></div>
+
+		<script>
+			$(document).ready(function () {
+				$("#warehouse").change(function () {
+					var warehouse_id = $(this).val();
+					var cost_center_dropdown = $("#cost_center_id");
+					var debug_div = $("#response-debug");
+
+					if (!warehouse_id) {
+						cost_center_dropdown
+							.empty()
+							.append('<option value="">Select Cost Center</option>');
+						debug_div.html("");
+						return;
+					}
+
+					// Show loading
+					cost_center_dropdown
+						.empty()
+						.append('<option value="">Loading...</option>');
+					debug_div.html(
+						"<p>Making AJAX request to: admin/purchases/get_cost_centers_by_warehouse</p>"
+					);
+
+					$.ajax({
+						url: "admin/purchases/get_cost_centers_by_warehouse",
+						type: "POST",
+						data: {
+							warehouse_id: warehouse_id,
+							csrf_token: "test_token",
+						},
+						dataType: "json",
+						success: function (response) {
+							debug_div.html(
+								"<h3>Response:</h3><pre>" +
+									JSON.stringify(response, null, 2) +
+									"</pre>"
+							);
+
+							// Clear the dropdown
+							cost_center_dropdown
+								.empty()
+								.append('<option value="">Select Cost Center</option>');
+
+							if (
+								response.success &&
+								response.cost_centers &&
+								response.cost_centers.length > 0
+							) {
+								// Add options - display the formatted code-name (Level 2 only)
+								$.each(response.cost_centers, function (index, costCenter) {
+									var ccDisplay =
+										costCenter.cost_center_display ||
+										costCenter.cost_center_code +
+											"-" +
+											costCenter.cost_center_name ||
+										"Unknown";
+									cost_center_dropdown.append(
+										'<option value="' +
+											costCenter.cost_center_id +
+											'">' +
+											ccDisplay +
+											"</option>"
+									);
+								});
+							} else {
+								cost_center_dropdown.append(
+									'<option value="">No level 2 cost centers found for this warehouse</option>'
+								);
+							}
+						},
+						error: function (xhr, status, error) {
+							debug_div.html(
+								"<h3>Error:</h3><p>Status: " +
+									status +
+									"</p><p>Error: " +
+									error +
+									"</p><p>Response: " +
+									xhr.responseText +
+									"</p>"
+							);
+							cost_center_dropdown
+								.empty()
+								.append('<option value="">Error loading cost centers</option>');
+						},
+					});
+				});
+			});
+		</script>
+	</body>
+</html>

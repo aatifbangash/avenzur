@@ -1363,4 +1363,494 @@ public function get_hierarchical_analytics($period_type = 'today', $target_month
         
         return [];
     }
+
+    // ============================================================================
+    // COST CENTER MANAGEMENT METHODS
+    // ============================================================================
+
+    /**
+     * Get all pharmacies and branches for cost center management
+     * 
+     * @return array Array of pharmacies with their branches
+     */
+    public function get_all_pharmacies_for_cost_center() {
+        try {
+            // Enhanced query with better debugging and relationship handling
+            $query = "
+                SELECT 
+                    w.id as warehouse_id,
+                    w.code as warehouse_code,
+                    w.name as warehouse_name,
+                    w.warehouse_type,
+                    w.parent_id,
+                    CASE 
+                        WHEN w.warehouse_type = 'pharmaGroup' THEN 'Pharmacy Group'
+                        WHEN w.warehouse_type = 'pharmacy' THEN 'Pharmacy'
+                        WHEN w.warehouse_type = 'branch' THEN 'Branch'
+                        ELSE w.warehouse_type
+                    END as entity_type,
+                    pw.name as parent_name,
+                    pw.warehouse_type as parent_type
+                FROM sma_warehouses w
+                LEFT JOIN sma_warehouses pw ON w.parent_id = pw.id
+                WHERE w.warehouse_type IN ('pharmacy', 'branch')
+                ORDER BY 
+                    CASE w.warehouse_type 
+                        WHEN 'pharmacy' THEN 1 
+                        WHEN 'branch' THEN 2 
+                        ELSE 3 
+                    END,
+                    COALESCE(w.parent_id, 0) ASC,
+                    w.name ASC
+            ";
+
+            $result = $this->db->query($query);
+            
+            if ($result && $result->num_rows() > 0) {
+                $data = $result->result_array();
+                
+                // Log debug info
+                $pharmacy_count = 0;
+                $branch_count = 0;
+                $branches_with_parents = 0;
+                
+                foreach ($data as $item) {
+                    if ($item['warehouse_type'] === 'pharmacy') {
+                        $pharmacy_count++;
+                    } elseif ($item['warehouse_type'] === 'branch') {
+                        $branch_count++;
+                        if (!empty($item['parent_id'])) {
+                            $branches_with_parents++;
+                        }
+                    }
+                }
+                
+                error_log("[Cost_center_model] Fetched: {$pharmacy_count} pharmacies, {$branch_count} branches ({$branches_with_parents} with parent_id)");
+                
+                return $data;
+            }
+            
+            error_log("[Cost_center_model] No warehouses found in database");
+            return [];
+
+        } catch (Exception $e) {
+            error_log('[Cost_center_model] Error fetching pharmacies for cost center: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Get all cost centers
+     * 
+     * @return array Array of cost centers
+     */
+    public function get_all_cost_centers() {
+        try {
+            $query = "
+                SELECT 
+                    cc.cost_center_id,
+                    cc.cost_center_code,
+                    cc.cost_center_name,
+                    cc.cost_center_level,
+                    cc.entity_id,
+                    cc.parent_cost_center_id,
+                    cc.description,
+                    cc.is_active,
+                    cc.created_date,
+                    cc.modified_date,
+                    w.name as entity_name,
+                    w.warehouse_type as entity_type,
+                    pcc.cost_center_name as parent_cost_center_name
+                FROM sma_cost_centers cc
+                LEFT JOIN sma_warehouses w ON cc.entity_id = w.id
+                LEFT JOIN sma_cost_centers pcc ON cc.parent_cost_center_id = pcc.cost_center_id
+                WHERE cc.is_active = 1
+                ORDER BY cc.cost_center_level ASC, cc.cost_center_name ASC
+            ";
+
+            $result = $this->db->query($query);
+            
+            if ($result && $result->num_rows() > 0) {
+                return $result->result_array();
+            }
+            
+            return [];
+
+        } catch (Exception $e) {
+            error_log('[Cost_center_model] Error fetching cost centers: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Get cost centers by entity ID
+     * 
+     * @param int $entity_id Entity ID (warehouse ID)
+     * @return array Array of cost centers for the entity
+     */
+    public function get_cost_centers_by_entity($entity_id) {
+        try {
+            $query = "
+                SELECT 
+                    cc.cost_center_id,
+                    cc.cost_center_code,
+                    cc.cost_center_name,
+                    cc.cost_center_level,
+                    cc.entity_id,
+                    cc.parent_cost_center_id,
+                    cc.description,
+                    cc.is_active,
+                    cc.created_date,
+                    cc.modified_date,
+                    w.name as entity_name,
+                    w.warehouse_type as entity_type,
+                    pcc.cost_center_name as parent_cost_center_name
+                FROM sma_cost_centers cc
+                LEFT JOIN sma_warehouses w ON cc.entity_id = w.id
+                LEFT JOIN sma_cost_centers pcc ON cc.parent_cost_center_id = pcc.cost_center_id
+                WHERE cc.entity_id = ? AND cc.is_active = 1
+                ORDER BY cc.cost_center_level ASC, cc.cost_center_name ASC
+            ";
+
+            $result = $this->db->query($query, [$entity_id]);
+            
+            if ($result && $result->num_rows() > 0) {
+                return $result->result_array();
+            }
+            
+            return [];
+
+        } catch (Exception $e) {
+            error_log('[Cost_center_model] Error fetching cost centers by entity: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Add new cost center
+     * 
+     * @param array $data Cost center data
+     * @return int|false Cost center ID if successful, false if failed
+     */
+    public function add_cost_center($data) {
+        try {
+            $this->db->trans_start();
+            
+            // Insert cost center
+            $this->db->insert('sma_cost_centers', $data);
+            $cost_center_id = $this->db->insert_id();
+            
+            $this->db->trans_complete();
+            
+            if ($this->db->trans_status() === FALSE || !$cost_center_id) {
+                error_log('[Cost_center_model] Transaction failed when adding cost center');
+                return false;
+            }
+            
+            return $cost_center_id;
+
+        } catch (Exception $e) {
+            error_log('[Cost_center_model] Error adding cost center: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Update existing cost center
+     * 
+     * @param int $cost_center_id Cost center ID
+     * @param array $data Cost center data
+     * @return bool True if successful, false if failed
+     */
+    public function update_cost_center($cost_center_id, $data) {
+        try {
+            $this->db->trans_start();
+            
+            // Add modified timestamp
+            $data['modified_date'] = date('Y-m-d H:i:s');
+            
+            // Update cost center
+            $this->db->where('cost_center_id', $cost_center_id);
+            $this->db->update('sma_cost_centers', $data);
+            
+            $this->db->trans_complete();
+            
+            if ($this->db->trans_status() === FALSE) {
+                error_log('[Cost_center_model] Transaction failed when updating cost center');
+                return false;
+            }
+            
+            return true;
+
+        } catch (Exception $e) {
+            error_log('[Cost_center_model] Error updating cost center: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Delete cost center (soft delete by setting is_active = 0)
+     * 
+     * @param int $cost_center_id Cost center ID
+     * @return bool True if successful, false if failed
+     */
+    public function delete_cost_center($cost_center_id) {
+        try {
+            $this->db->trans_start();
+            
+            // Check if cost center has children
+            $children = $this->db->where('parent_cost_center_id', $cost_center_id)
+                                 ->where('is_active', 1)
+                                 ->get('sma_cost_centers');
+            
+            if ($children->num_rows() > 0) {
+                error_log('[Cost_center_model] Cannot delete cost center with active children');
+                return false;
+            }
+            
+            // Soft delete by setting is_active = 0
+            $this->db->where('cost_center_id', $cost_center_id);
+            $this->db->update('sma_cost_centers', [
+                'is_active' => 0,
+                'modified_date' => date('Y-m-d H:i:s')
+            ]);
+            
+            $this->db->trans_complete();
+            
+            if ($this->db->trans_status() === FALSE) {
+                error_log('[Cost_center_model] Transaction failed when deleting cost center');
+                return false;
+            }
+            
+            return true;
+
+        } catch (Exception $e) {
+            error_log('[Cost_center_model] Error deleting cost center: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Get cost center by ID
+     * 
+     * @param int $cost_center_id Cost center ID
+     * @return array|null Cost center data or null if not found
+     */
+    public function get_cost_center_by_id($cost_center_id) {
+        try {
+            $query = "
+                SELECT 
+                    cc.cost_center_id,
+                    cc.cost_center_code,
+                    cc.cost_center_name,
+                    cc.cost_center_level,
+                    cc.entity_id,
+                    cc.parent_cost_center_id,
+                    cc.description,
+                    cc.is_active,
+                    cc.created_date,
+                    cc.modified_date,
+                    w.name as entity_name,
+                    w.warehouse_type as entity_type,
+                    pcc.cost_center_name as parent_cost_center_name
+                FROM sma_cost_centers cc
+                LEFT JOIN sma_warehouses w ON cc.entity_id = w.id
+                LEFT JOIN sma_cost_centers pcc ON cc.parent_cost_center_id = pcc.cost_center_id
+                WHERE cc.cost_center_id = ?
+            ";
+
+            $result = $this->db->query($query, [$cost_center_id]);
+            
+            if ($result && $result->num_rows() > 0) {
+                return $result->row_array();
+            }
+            
+            return null;
+
+        } catch (Exception $e) {
+            error_log('[Cost_center_model] Error fetching cost center by ID: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Get parent cost centers for a given entity
+     * 
+     * @param int $entity_id Entity ID
+     * @param int $level Level to filter parent cost centers
+     * @return array Array of parent cost centers
+     */
+    public function get_parent_cost_centers($entity_id, $level = 1) {
+        try {
+            $query = "
+                SELECT 
+                    cc.cost_center_id,
+                    cc.cost_center_code,
+                    cc.cost_center_name,
+                    cc.cost_center_level
+                FROM sma_cost_centers cc
+                WHERE cc.entity_id = ? 
+                AND cc.cost_center_level = ? 
+                AND cc.is_active = 1
+                ORDER BY cc.cost_center_name ASC
+            ";
+
+            $result = $this->db->query($query, [$entity_id, $level]);
+            
+            if ($result && $result->num_rows() > 0) {
+                return $result->result_array();
+            }
+            
+            return [];
+
+        } catch (Exception $e) {
+            error_log('[Cost_center_model] Error fetching parent cost centers: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Get cost centers for a specific user based on their warehouse/pharmacy
+     * Filters cost centers by the user's assigned warehouse
+     * If user is admin, returns all cost centers
+     * 
+     * @param int $user_warehouse_id The warehouse ID the user is assigned to
+     * @param bool $is_admin Whether the user is an admin
+     * @return array Array of cost centers available to the user
+     */
+    public function get_cost_centers_for_user($user_warehouse_id = null, $is_admin = false) {
+        try {
+            // If user is admin, return all cost centers
+            if ($is_admin) {
+                $query = "
+                    SELECT 
+                        cc.cost_center_id,
+                        cc.cost_center_code,
+                        cc.cost_center_name,
+                        cc.cost_center_level,
+                        cc.description,
+                        w.name as entity_name,
+                        w.warehouse_type as entity_type
+                    FROM sma_cost_centers cc
+                    INNER JOIN sma_warehouses w ON cc.entity_id = w.id
+                    ORDER BY 
+                        w.warehouse_type ASC,
+                        w.name ASC,
+                        cc.cost_center_level ASC, 
+                        cc.cost_center_name ASC
+                ";
+                
+                $result = $this->db->query($query);
+                
+                if ($result && $result->num_rows() > 0) {
+                    return $result->result_array();
+                }
+                
+                return [];
+            }
+            
+            // If no warehouse ID provided for non-admin, return empty array
+            if (!$user_warehouse_id) {
+                return [];
+            }
+            
+            // For non-admin users, filter by their warehouse
+            $query = "
+                SELECT 
+                    cc.cost_center_id,
+                    cc.cost_center_code,
+                    cc.cost_center_name,
+                    cc.cost_center_level,
+                    cc.description,
+                    w.name as entity_name,
+                    w.warehouse_type as entity_type
+                FROM sma_cost_centers cc
+                INNER JOIN sma_warehouses w ON cc.entity_id = w.id
+                WHERE cc.entity_id = ?
+                   OR (w.warehouse_type = 'pharmacy' AND EXISTS (
+                       SELECT 1 FROM sma_warehouses wb 
+                       WHERE wb.parent_id = w.id 
+                         AND wb.id = ?
+                   ))
+                ORDER BY cc.cost_center_level ASC, cc.cost_center_name ASC
+            ";
+
+            $result = $this->db->query($query, [$user_warehouse_id, $user_warehouse_id]);
+            
+            if ($result && $result->num_rows() > 0) {
+                return $result->result_array();
+            }
+            
+            return [];
+
+        } catch (Exception $e) {
+            error_log('[Cost_center_model] Error fetching cost centers for user: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Get cost centers filtered by specific warehouse
+     * 
+     * @param int $warehouse_id The warehouse ID to filter by
+     * @param bool $is_admin Whether user is admin (shows all if true)
+     * @return array
+     */
+    public function get_cost_centers_by_warehouse($warehouse_id, $is_admin = false) {
+        try {
+            // Sanitize warehouse_id
+            $warehouse_id = (int) $warehouse_id;
+            
+            // Build the WHERE clause based on admin status and warehouse
+            $where_clause = "";
+            if (!$is_admin) {
+                // For regular users, filter by the specific warehouse and its children
+                $where_clause = "WHERE (w.id = {$warehouse_id} OR w.parent_id = {$warehouse_id}) AND cc.cost_center_level = 2";
+            } else {
+                // For admin users, if warehouse is specified, filter by it
+                if ($warehouse_id > 0) {
+                    $where_clause = "WHERE (w.id = {$warehouse_id} OR w.parent_id = {$warehouse_id}) AND cc.cost_center_level = 2";
+                } else {
+                    $where_clause = "WHERE cc.cost_center_level = 2";
+                }
+            }
+
+            $query = "
+                SELECT 
+                    cc.cost_center_id,
+                    cc.cost_center_code,
+                    cc.cost_center_name,
+                    CONCAT(cc.cost_center_code, '-', cc.cost_center_name) as cost_center_display,
+                    cc.cost_center_level,
+                    cc.parent_cost_center_id,
+                    w.id as entity_id,
+                    w.name as entity_name,
+                    w.code as entity_code,
+                    CASE 
+                        WHEN w.warehouse_type = 'warehouse' THEN 'pharmacy'
+                        ELSE w.warehouse_type
+                    END as entity_type,
+                    w.warehouse_type,
+                    w.parent_id
+                FROM sma_cost_centers cc
+                INNER JOIN sma_warehouses w ON cc.entity_id = w.id
+                {$where_clause}
+                ORDER BY 
+                    cc.cost_center_code ASC,
+                    cc.cost_center_name ASC
+            ";
+            
+            $result = $this->db->query($query);
+            
+            if ($result && $result->num_rows() > 0) {
+                return $result->result_array();
+            }
+            
+            return [];
+
+        } catch (Exception $e) {
+            error_log('[Cost_center_model] Error fetching cost centers by warehouse: ' . $e->getMessage());
+            return [];
+        }
+    }
 }

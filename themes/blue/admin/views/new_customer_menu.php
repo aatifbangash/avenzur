@@ -409,7 +409,8 @@
             </a>
             <ul class="newmenu-sub">
                
-                <li><a href="<?= admin_url('cost_center/dashboard'); ?>" class="newmenu-link"><i class="fa fa-dashboard"></i><?= lang('Cost Center'); ?></a></li>
+                <li><a href="<?= admin_url('cost_center/dashboard'); ?>" class="newmenu-link"><i class="fa fa-dashboard"></i><?= lang('Cost Center Dashboard'); ?></a></li>
+                <li><a href="<?= admin_url('cost_center/management'); ?>" class="newmenu-link"><i class="fa fa-cogs"></i><?= lang('Cost Center Management'); ?></a></li>
 
                 <li><a href="<?= admin_url('accounts_dashboard'); ?>" class="newmenu-link"><i class="fa fa-sliders"></i> <?= lang('Accounts Dashboard'); ?></a></li>
                 <li><a href="<?= admin_url('accounts'); ?>" class="newmenu-link"><i class="fa fa-calculator"></i> <?= lang('Charts Of Accounts'); ?></a></li>

@@ -437,7 +437,7 @@ class Suppliers extends MY_Controller
         }
     }
 
-    public function add_supplier_reference($amount, $reference_no, $date, $note, $supplier_id, $bank_charges, $bank_charges_account, $ledger_account){
+    public function add_supplier_reference($amount, $reference_no, $date, $note, $supplier_id, $bank_charges, $bank_charges_account, $ledger_account, $cost_center_id = null){
         // Calculate VAT on bank charges (15%)
         $bank_charge_vat = 0;
         if ($bank_charges > 0) {
@@ -455,6 +455,7 @@ class Suppliers extends MY_Controller
             'bank_charge_vat' => $bank_charge_vat,
             'bank_charges_ledger' => $bank_charges_account,
             'transfer_from_ledger' => $ledger_account,
+            'cost_center_id' => $cost_center_id, // Add cost center
             'created_by'    => $this->session->userdata('user_id')
         ];
 
@@ -854,6 +855,7 @@ class Suppliers extends MY_Controller
         $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
         $this->form_validation->set_rules('ledger_account', $this->lang->line('ledger_account'), 'required');
         $this->form_validation->set_rules('bank_charges_account', $this->lang->line('bank_charges_account'), 'required');
+        $this->form_validation->set_rules('cost_center_id', 'Cost Center', 'required');
 
         $data = [];
         $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('add payment')]];
@@ -874,6 +876,7 @@ class Suppliers extends MY_Controller
             $supplier_advance_ledger = $this->input->post('supplier_advance_ledger');
             $settle_with_advance = $this->input->post('settle_with_advance');
             $payment_mode = $this->input->post('payment_mode'); // Get payment mode
+            $cost_center_id = $this->input->post('cost_center_id'); // Get cost center
             
             if($childsupplier){
                 $supplier_id = $childsupplier;
@@ -910,7 +913,7 @@ class Suppliers extends MY_Controller
                 
                 if ($payment_total > 0) {
                     // Create payment reference using supplier advance ledger
-                    $payment_id = $this->add_supplier_reference($payment_total, $reference_no, $date, $note . ' (Advance Only)', $supplier_id, $bank_charges, $bank_charges_account, $supplier_advance_ledger);
+                    $payment_id = $this->add_supplier_reference($payment_total, $reference_no, $date, $note . ' (Advance Only)', $supplier_id, $bank_charges, $bank_charges_account, $supplier_advance_ledger, $cost_center_id);
                     
                     if (!$payment_id) {
                         $this->session->set_flashdata('error', 'Failed to create advance payment reference. Please check system configuration.');
@@ -948,7 +951,7 @@ class Suppliers extends MY_Controller
                 
                 if($payment_total > 0 && $supplier_advance_ledger){
                     // Create payment reference using supplier advance ledger (NOT regular ledger_account)
-                    $payment_id = $this->add_supplier_reference($payment_total, $reference_no, $date, $note . ' (Pure Advance)', $supplier_id, $bank_charges, $bank_charges_account, $supplier_advance_ledger);
+                    $payment_id = $this->add_supplier_reference($payment_total, $reference_no, $date, $note . ' (Pure Advance)', $supplier_id, $bank_charges, $bank_charges_account, $supplier_advance_ledger, $cost_center_id);
                     
                     // Verify payment reference was created successfully
                     if (!$payment_id) {
@@ -1047,7 +1050,7 @@ class Suppliers extends MY_Controller
                         $total_settlement_amount = $cash_payment + $advance_settlement_amount;
                         
                         // Create combined payment reference for the total settlement amount
-                        $combined_payment_id = $this->add_supplier_reference($total_settlement_amount, $reference_no, $date, $note, $supplier_id, $bank_charges, $bank_charges_account, $ledger_account);
+                        $combined_payment_id = $this->add_supplier_reference($total_settlement_amount, $reference_no, $date, $note, $supplier_id, $bank_charges, $bank_charges_account, $ledger_account, $cost_center_id);
                         
                         // Verify payment reference was created successfully
                         if (!$combined_payment_id) {
@@ -1128,7 +1131,7 @@ class Suppliers extends MY_Controller
                         if($supplier_advance_ledger) {
                             // Create separate payment reference for advance payment
                             $advance_reference_no = $reference_no . '-ADV';
-                            $advance_payment_id = $this->add_supplier_reference($advance_payment, $advance_reference_no, $date, $note . ' (Advance)', $supplier_id, 0, $bank_charges_account, $supplier_advance_ledger);
+                            $advance_payment_id = $this->add_supplier_reference($advance_payment, $advance_reference_no, $date, $note . ' (Advance)', $supplier_id, 0, $bank_charges_account, $supplier_advance_ledger, $cost_center_id);
                             
                             // Verify payment reference was created successfully
                             if (!$advance_payment_id) {
@@ -1165,6 +1168,7 @@ class Suppliers extends MY_Controller
             $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
             $this->data['warehouses'] = $this->site->getAllWarehouses();
             $this->data['supplier_advance_ledger'] = $supplier_advance_ledger;
+            
             $this->page_construct('suppliers/add_payment', $meta, $this->data);
         }
     }
