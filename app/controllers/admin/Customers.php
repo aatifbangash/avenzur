@@ -42,9 +42,15 @@ class Customers extends MY_Controller
         }
     }
 
-    public function convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $payment_amount, $reference_no, $type){
+    public function convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $payment_amount, $reference_no, $type, $total_additional_discount, $customer_discount_ledger){
         $this->load->admin_model('companies_model');
         $customer = $this->companies_model->getCompanyByID($customer_id);
+
+        if($total_additional_discount > 0){
+            $receiveable_amount = $payment_amount + $total_additional_discount;
+        }else{
+            $receiveable_amount = $payment_amount;
+        }
 
         /*Accounts Entries*/
         $entry = array(
@@ -52,8 +58,8 @@ class Customers extends MY_Controller
             'transaction_type' => $type,
             'number'       => 'PMC-'.$reference_no,
             'date'         => date('Y-m-d'),
-            'dr_total'     => $payment_amount,
-            'cr_total'     => $payment_amount,
+            'dr_total'     => $receiveable_amount,
+            'cr_total'     => $receiveable_amount,
             'notes'        => 'Payment Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
             'sid'          =>  '',
             'customer_id'  => $customer_id
@@ -67,7 +73,7 @@ class Customers extends MY_Controller
                 'entry_id' => $insert_id,
                 'dc' => 'C',
                 'ledger_id' => $customer->ledger_account,
-                'amount' => $payment_amount,
+                'amount' => $receiveable_amount,
                 'narration' => 'Account Receivable'
             )
         );
@@ -79,9 +85,22 @@ class Customers extends MY_Controller
                 'dc' => 'D',
                 'ledger_id' => $ledger_account,
                 'amount' => $payment_amount,
-                'narration' => ''
+                'narration' => 'Payment Received'
             )
         );
+
+        if($total_additional_discount > 0){
+            //payment ledger - Debit to increase cash/bank
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $customer_discount_ledger,
+                    'amount' => $total_additional_discount,
+                    'narration' => 'Additional Discount on Payment'
+                )
+            );
+        }
 
         foreach ($entryitemdata as $row => $itemdata)
         {
@@ -153,6 +172,75 @@ class Customers extends MY_Controller
         return $insert_id;
     }
 
+    /**
+     * Create accounting entry for customer discount on invoice
+     * Debit: Customer Discount Ledger (expense increases)
+     * Credit: Customer Receivable (asset decreases - customer owes less)
+     * 
+     * @param int $customer_id Customer ID
+     * @param int $sale_id Sale/Invoice ID
+     * @param int $discount_ledger Customer discount ledger ID
+     * @param float $discount_amount Discount amount
+     * @param float $discount_percentage Discount percentage
+     * @param string $reference_no Invoice reference
+     * @param string $date Transaction date
+     * @return int Entry ID
+     */
+    private function create_customer_discount_entry($customer_id, $sale_id, $discount_ledger, $discount_amount, $discount_percentage, $reference_no, $date) {
+        // Get customer details
+        $this->load->admin_model('companies_model');
+        $customer = $this->companies_model->getCompanyByID($customer_id);
+        
+        if (!$customer || !$customer->ledger_account) {
+            log_message('error', 'Customer ledger account not found for customer ID: ' . $customer_id);
+            return false;
+        }
+        
+        // Create journal entry for discount
+        $entry = array(
+            'entrytype_id' => 4,
+            'transaction_type' => 'customerdiscount',
+            'number' => 'DISC-' . $reference_no,
+            'date' => $date,
+            'dr_total' => $discount_amount,
+            'cr_total' => $discount_amount,
+            'notes' => 'Customer Discount ' . $discount_percentage . '% on invoice ' . $reference_no . ' for ' . $customer->name,
+            'customer_id' => $customer_id,
+            'sid' => $sale_id
+        );
+        
+        $add = $this->db->insert('sma_accounts_entries', $entry);
+        $entry_id = $this->db->insert_id();
+        
+        if ($add) {
+            // Debit customer discount ledger (expense increases)
+            $entryitem1 = array(
+                'entry_id' => $entry_id,
+                'ledger_id' => $discount_ledger,
+                'amount' => $discount_amount,
+                'dc' => 'D',
+                'reconciliation_date' => $date,
+                'narration' => 'Discount ' . $discount_percentage . '% given'
+            );
+            $this->db->insert('sma_accounts_entryitems', $entryitem1);
+            
+            // Credit customer receivable ledger (asset decreases - customer owes less)
+            $entryitem2 = array(
+                'entry_id' => $entry_id,
+                'ledger_id' => $customer->ledger_account,
+                'amount' => $discount_amount,
+                'dc' => 'C',
+                'reconciliation_date' => $date,
+                'narration' => 'Receivable reduced by discount'
+            );
+            $this->db->insert('sma_accounts_entryitems', $entryitem2);
+            
+            return $entry_id;
+        }
+        
+        return false;
+    }
+
     public function pending_invoices(){
         $customer_id = $_GET['customer_id'];
         if ($rows = $this->sales_model->getPendingInvoicesByCustomer($customer_id)) {
@@ -162,6 +250,92 @@ class Customers extends MY_Controller
             $data = json_encode($rows);
         }
         echo $data;
+    }
+
+    public function customer_limit_info(){
+        $customer_id = $_GET['customer_id'];
+        $response = array();
+        
+        if ($customer_id) {
+            // Get customer data including credit limit
+            $customer = $this->companies_model->getCompanyByID($customer_id);
+            
+            if ($customer) {
+                // Get customer's current balance (total outstanding amount)
+                $customer_balance = $this->companies_model->getCustomerBalance($customer_id);
+                
+                $credit_limit = floatval($customer->credit_limit ?? 0);
+                $current_balance = floatval($customer_balance ?? 0);
+                $remaining_limit = max(0, $credit_limit - $current_balance);
+                
+                $response = array(
+                    'credit_limit' => $credit_limit,
+                    'current_balance' => $current_balance,
+                    'remaining_limit' => $remaining_limit,
+                    'customer_name' => $customer->company != '-' ? $customer->company : $customer->name
+                );
+            }
+        }
+        
+        header('Content-Type: application/json');
+        echo json_encode($response);
+    }
+
+    public function get_customer_discount_ledger(){
+        try {
+            $customer_id = isset($_GET['customer_id']) ? $_GET['customer_id'] : null;
+            
+            if (!$customer_id) {
+                echo json_encode(array(
+                    'ledger_name' => '',
+                    'discount_ledger_configured' => false,
+                    'error' => 'No customer ID provided'
+                ));
+                return;
+            }
+            
+            // Get customer discount ledger from settings
+            $settings = $this->Settings;
+            $customer_discount_ledger = isset($settings->customer_discount_ledger) && !empty($settings->customer_discount_ledger) 
+                                      ? $settings->customer_discount_ledger 
+                                      : null;
+            
+            $ledger_name = '';
+            
+            if($customer_discount_ledger) {
+                // Get ledger name
+                $this->db->select('name');
+                $this->db->from('sma_accounts_ledgers');
+                $this->db->where('id', $customer_discount_ledger);
+                $query = $this->db->get();
+                
+                if ($query && $query->num_rows() > 0) {
+                    $ledger = $query->row();
+                    $ledger_name = $ledger->name;
+                }
+            }
+            
+            $data = array(
+                'ledger_name' => $ledger_name,
+                'discount_ledger_configured' => $customer_discount_ledger ? true : false,
+                'customer_id' => $customer_id,
+                'discount_ledger_id' => $customer_discount_ledger
+            );
+            
+            echo json_encode($data);
+            
+        } catch (Exception $e) {
+            // Log the full error for debugging
+            log_message('error', 'Customer Discount Ledger Error: ' . $e->getMessage());
+            log_message('error', 'SQL Error: ' . $this->db->last_query());
+            
+            echo json_encode(array(
+                'ledger_name' => '',
+                'discount_ledger_configured' => false,
+                'error' => 'Database error: ' . $e->getMessage(),
+                'query' => $this->db->last_query()
+            ));
+        }
     }
 
     public function add_customer_reference($amount, $reference_no, $date, $note, $customer_id, $ledger_account){
@@ -180,12 +354,13 @@ class Customers extends MY_Controller
         return $payment_id;
     }
 
-    public function make_customer_payment($id, $amount, $reference_no, $date, $note, $payment_id){
+    public function make_customer_payment($id, $amount, $reference_no, $date, $note, $payment_id, $additional_discount = 0){
         $payment = [
             'date'          => $date,
             'sale_id'   => $id,
             'reference_no'  => $reference_no,
             'amount'        => $amount,
+            'additional_discount' => $additional_discount,
             'note'          => $note,
             'created_by'    => $this->session->userdata('user_id'),
             'type'          => 'sent',
@@ -326,6 +501,8 @@ class Customers extends MY_Controller
             $ledger_account = $this->input->post('ledger_account');
             $due_amount_array = $this->input->post('due_amount');
             $original_amount_array = $this->input->post('original_amount');
+            $additional_discount_array = $this->input->post('additional_discount');
+            $return_total_array = $this->input->post('return_total');
             $note = $this->input->post('note');
             $date_fmt = $this->input->post('date'); 
             $formattedDate = DateTime::createFromFormat('d/m/Y H:i', $date_fmt);
@@ -343,6 +520,14 @@ class Customers extends MY_Controller
                                      ? $settings->customer_advance_ledger 
                                      : null;
 
+            // If user explicitly chose to park entire payment as advance via the checkbox,
+            // force treating this as a pure advance on the backend regardless of any
+            // payment_amount[] inputs present (they may be disabled client-side, but
+            // this is a defensive server-side safeguard).
+            if ($this->input->post('park_as_advance')) {
+                $payments_array = null;
+            }
+
             if(!$payments_array || sizeOf($payments_array) == 0){
                 // Pure advance payment scenario (no invoices selected)
                 if (!$customer_advance_ledger && $payment_total > 0) {
@@ -350,23 +535,28 @@ class Customers extends MY_Controller
                     redirect($_SERVER['HTTP_REFERER']);
                 }
 
-                if($payment_total > 0 && $customer_advance_ledger){
+                if ($payment_total > 0 && $customer_advance_ledger) {
                     // Create payment reference using payment ledger (bank/cash account)
                     $payment_id = $this->add_customer_reference($payment_total, $reference_no, $date, $note . ' (Pure Advance)', $customer_id, $ledger_account);
-                    
+
                     if (!$payment_id) {
                         $this->session->set_flashdata('error', 'Failed to create pure advance payment reference. Please check system configuration.');
                         redirect($_SERVER['HTTP_REFERER']);
                     }
-                    
-                    $this->make_customer_payment(NULL, $payment_total, $reference_no, $date, $note, $payment_id);
+
+                    // NOTE: For pure advances we should NOT create a payments row linked to a sale.
+                    // The payment_reference record + accounting journal represent the advance.
+                    // Update customer balance and create journal entry for the advance.
                     $this->sales_model->update_customer_balance($customer_id, $payment_total);
 
                     // Create journal entry: Pass payment ledger and customer advance ledger
                     $journal_id = $this->convert_customer_payment_advance($customer_id, $ledger_account, $customer_advance_ledger, $payment_total, $reference_no, 'customeradvance');
                     $this->sales_model->update_payment_reference($payment_id, $journal_id);
+                    // Also create a payments row so the advance appears in payment listings
+                    // Use make_customer_payment with NULL sale_id to create an unlinked payment record
+                    $this->make_customer_payment(NULL, $payment_total, $reference_no, $date, $note . ' (Pure Advance)', $payment_id);
                     $this->session->set_flashdata('message', lang('Pure advance payment received Successfully!'));
-                    admin_redirect('customers/view_payment/'.$payment_id);
+                    admin_redirect('customers/view_payment/' . $payment_id);
                 }
             }else{
                 // Invoice payment scenario
@@ -391,7 +581,7 @@ class Customers extends MY_Controller
                 $advance_settlement_amount = 0;
                 
                 if($settle_with_advance) {
-                    if($customer_advance_ledger && $total_original < $payment_total) {
+                    if($customer_advance_ledger) {
                         // Get current advance balance
                         $current_advance_balance = $this->getCustomerAdvanceBalance($customer_id, $customer_advance_ledger);
                         
@@ -404,14 +594,13 @@ class Customers extends MY_Controller
                                 $advance_settlement_amount = min($current_advance_balance, $shortage_amount);
                                 // Cash payment remains as entered
                                 $cash_payment = $payment_total;
-                                
                                 // Add note about settlement
                                 $note .= " (Settlement: Cash {$cash_payment}, Advance {$advance_settlement_amount}, Total: " . ($cash_payment + $advance_settlement_amount) . ")";
                             }
                         }
                     }
                 }
-
+                
                 // Validate payment amounts
                 for($i = 0; $i < count($payments_array); $i++){
                     $payment_amount = $payments_array[$i];
@@ -423,18 +612,19 @@ class Customers extends MY_Controller
                     }
                 }
                 
-                // Case 4 Check: Ensure payment_total can cover the selected invoice payments
-                if(array_sum($payments_array) > $payment_total){
-                    $this->session->set_flashdata('error', 'Total payment amount is insufficient to cover selected invoice payments. Required: ' . array_sum($payments_array) . ', Provided: ' . $payment_total);
+                // Case 4 Check: Ensure payment_total + any advance settlement can cover the selected invoice payments
+                $required_sum = array_sum($payments_array);
+                $available_sum = $payment_total + $advance_settlement_amount;
+                if($required_sum > $available_sum){
+                    $this->session->set_flashdata('error', 'Total payment amount is insufficient to cover selected invoice payments. Required: ' . $required_sum . ', Provided: ' . $available_sum);
                     redirect($_SERVER['HTTP_REFERER']);
                 }
-
                 // Split payment into invoice payment and advance payment
                 $total_invoice_payment = array_sum($payments_array); // Actual amount going to invoices
                 $advance_payment = $cash_payment - $total_invoice_payment; // Excess cash amount
                 
                 $main_payment_id = null;
-                
+
                 // Process invoice payments (if there are any invoices OR if settling with advance)
                 if($total_invoice_payment > 0 || $advance_settlement_amount > 0) {
                     // Validation: Ensure we have some payment method
@@ -453,17 +643,52 @@ class Customers extends MY_Controller
                         redirect($_SERVER['HTTP_REFERER']);
                     }
                     
+                    // Get customer discount ledger from settings
+                    $customer_discount_ledger = isset($settings->customer_discount_ledger) && !empty($settings->customer_discount_ledger) 
+                                              ? $settings->customer_discount_ledger 
+                                              : null;
+                    
                     // Distribute payments to invoices (cash + advance settlement)
                     $remaining_advance = $advance_settlement_amount;
-                    
+                    $total_additional_discount = 0;
+
                     for ($i = 0; $i < count($payments_array); $i++) {
                         $cash_payment_for_invoice = $payments_array[$i];
+                        //echo '<pre>';print_r($cash_payment_for_invoice);exit;
                         $item_id = $item_ids[$i];
                         $due_amount = $due_amount_array[$i];
+                        $original_amount = $original_amount_array[$i];
+                        // Get return amount for this invoice
+                        $return_amount = isset($return_total_array[$i]) ? $return_total_array[$i] : 0;
+                        $outstanding_amount = $due_amount - $return_amount;
+                        // Get discount percentage for this invoice
+                        $discount_percentage = isset($additional_discount_array[$i]) ? $additional_discount_array[$i] : 0;
+                        // Calculate discount amount based on due amount
+                        $discount_amount = 0;
+                        if ($discount_percentage > 0) {
+                            $discount_amount = ($outstanding_amount * $discount_percentage) / 100;
+                        }
+                        $total_additional_discount += $discount_amount;
+                        // Calculate payment amount after discount
+                        $payment_amount_after_discount = $outstanding_amount - $discount_amount;
+                        // Create discount journal entry if discount was given
+                        /*if ($discount_amount > 0 && $customer_discount_ledger) {
+                            $sale_info = $this->sales_model->getSaleByID($item_id);
+                            if ($sale_info) {
+                                $this->create_customer_discount_entry(
+                                    $customer_id, 
+                                    $item_id, 
+                                    $customer_discount_ledger, 
+                                    $discount_amount, 
+                                    $discount_percentage, 
+                                    $sale_info->reference_no, 
+                                    $date
+                                );
+                            }
+                        }*/
                         
-                        // Calculate shortage for this invoice
-                        $invoice_shortage = $due_amount - $cash_payment_for_invoice;
-                        
+                        // Calculate shortage for this invoice (after discount)
+                        $invoice_shortage = $payment_amount_after_discount - $cash_payment_for_invoice;
                         // Determine how much advance to use for this invoice
                         $advance_for_this_invoice = 0;
                         if ($remaining_advance > 0 && $invoice_shortage > 0) {
@@ -474,30 +699,87 @@ class Customers extends MY_Controller
                         // Total payment for this invoice (cash + advance)
                         $total_payment_for_invoice = $cash_payment_for_invoice + $advance_for_this_invoice;
                         
-                        if($total_payment_for_invoice > 0){
-                            
+                        // Always record additional discount and returns on the sale so the outstanding
+                        // amount reflects these deductions even when there's no cash payment.
+                        $update_data = [];
+                        if ($discount_amount > 0) {
+                            $update_data['additional_discount'] = $discount_amount;
+                        }
+                        if ($return_amount > 0) {
+                            $update_data['returns_total_deducted'] = $return_amount;
+                        }
+                        if ($cash_payment_for_invoice > 0) {
+                            $update_data['paid'] = $cash_payment_for_invoice;
+                        }
+                        if (!empty($update_data)) {
+                            $this->db->update('sales', $update_data, ['id' => $item_id]);
+                        }
+
+                        // If there is any cash or advance applied to this invoice, record them
+                        if ($total_payment_for_invoice > 0) {
                             // Record cash payment (only if there is cash for this invoice)
                             if ($cash_payment_for_invoice > 0) {
-                                $this->make_customer_payment($item_id, $cash_payment_for_invoice, $reference_no, $date, $note . ' (Cash)', $combined_payment_id);
-                                // NOTE: update_sale_order() is NOT called here because make_customer_payment() 
-                                // already triggers syncSalePayments() which recalculates the paid amount correctly.
-                                // Calling update_sale_order() would double the payment amount.
+                                $this->make_customer_payment($item_id, $cash_payment_for_invoice, $reference_no, $date, $note . ' (Cash)', $combined_payment_id, $discount_percentage);
+                                // NOTE: addPayment() will update the sale paid amount
                             }
-                            
-                            // Record advance settlement payment (only if advance used for this invoice)
-                            else if ($advance_for_this_invoice > 0) {
-                                $this->make_customer_payment($item_id, $advance_for_this_invoice, $reference_no . '-ADV', $date, $note . ' (Advance Settlement)', $combined_payment_id);
+
+                            // Record advance settlement payment (if advance used for this invoice)
+                            /*if ($advance_for_this_invoice > 0) {
+                                $this->make_customer_payment($item_id, $advance_for_this_invoice, $reference_no . '-ADV', $date, $note . ' (Advance Settlement)', $combined_payment_id, $discount_percentage);
+                            }*/
+                        }
+                        
+                        // After updating discounts/returns and recording any payments, re-fetch sale info
+                        // and determine whether the invoice should be marked as paid
+                        $sale_info = $this->sales_model->getSaleByID($item_id);
+                        if ($sale_info) {
+                            $grand_total = $sale_info->grand_total;
+                            $total_paid = $sale_info->paid;
+                            //$total_paid = $payment_amount_after_discount;
+
+                            // Use deductions stored on the sale (in case they were persisted earlier)
+                            $sale_additional_discount = $total_additional_discount;
+                            $sale_returns = $return_amount;
+                            $total_deductions = $sale_additional_discount + $sale_returns;
+
+                            $amount_due_after_deductions = $grand_total - $total_deductions;
+                            //echo $total_paid.' -- '.$grand_total.' -- '.$sale_returns.' -- '.$sale_additional_discount;exit;
+                            if ($total_paid >= $amount_due_after_deductions) {
+                                $this->db->update('sales', ['payment_status' => 'paid'], ['id' => $item_id]);
                             }
                         }
                     }
+                    
+                    // Normalize payment_status for affected invoices: mark paid/partial appropriately
+                    foreach ($item_ids as $item_id_to_check) {
+                        $sale_check = $this->sales_model->getSaleByID($item_id_to_check);
+                        if (!$sale_check) continue;
 
+                        $grand_total_c = $sale_check->grand_total ?? 0;
+                        $paid_c = $sale_check->paid ?? 0;
+                        $deduction_discount = $sale_check->additional_discount ?? 0;
+                        $deduction_returns = $sale_check->returns_total_deducted ?? 0;
+                        $due_after_deductions = $grand_total_c - ($deduction_discount + $deduction_returns);
+                        
+                        if ($paid_c >= $due_after_deductions) {
+                            $this->db->update('sales', ['payment_status' => 'paid'], ['id' => $item_id_to_check]);
+                        } else if ($paid_c > 0) {
+                            $this->db->update('sales', ['payment_status' => 'partial'], ['id' => $item_id_to_check]);
+                        } else {
+                            // leave as unpaid/default or set to 'due' if you prefer
+                            $this->db->update('sales', ['payment_status' => 'due'], ['id' => $item_id_to_check]);
+                        }
+                    }
+                    
                     // Create accounting journal entries
                     if($advance_settlement_amount > 0) {
                         // If we are settling with advance, create separate journal entries
                         
                         // Create cash payment journal entry (only if cash payment > 0)
                         if($cash_payment > 0) {
-                            $cash_journal_id = $this->convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $cash_payment, $reference_no . '-CASH', 'customerpayment');
+                            // Use the total amount applied to invoices for the cash journal entry
+                            // (previously used $outstanding_amount which was the last invoice's outstanding)
+                            $cash_journal_id = $this->convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $total_invoice_payment, $reference_no . '-CASH', 'customerpayment', $total_additional_discount, $customer_discount_ledger);
                         }
                         
                         // Create advance settlement journal entry (debit advance ledger, credit customer ledger)
@@ -509,7 +791,8 @@ class Customers extends MY_Controller
                     } else {
                         // Regular payment without advance settlement (cash only)
                         if($cash_payment > 0) {
-                            $journal_id = $this->convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $cash_payment, $reference_no, 'customerpayment');
+                            // For regular cash-only payments, use the total applied to invoices
+                            $journal_id = $this->convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $total_invoice_payment, $reference_no, 'customerpayment', $total_additional_discount, $customer_discount_ledger);
                             $this->sales_model->update_payment_reference($combined_payment_id, $journal_id);
                         }
                     }
@@ -517,6 +800,7 @@ class Customers extends MY_Controller
                     $main_payment_id = $combined_payment_id;
                 }
                 
+                //echo 'Advance Settlement Amount: '.$advance_settlement_amount;exit;
                 // Process advance payment separately (if there is any)
                 
                 if($advance_payment > 0) {
@@ -533,7 +817,7 @@ class Customers extends MY_Controller
                         }
                         
                         // Make advance payment entry  
-                        $this->make_customer_payment(NULL, $advance_payment, $advance_reference_no, $date, $note, $advance_payment_id);
+                        //$this->make_customer_payment(NULL, $advance_payment, $advance_reference_no, $date, $note, $advance_payment_id);
                         
                         // Create journal entry for advance payment
                         $advance_journal_id = $this->convert_customer_payment_advance($customer_id, $ledger_account, $customer_advance_ledger, $advance_payment, $advance_reference_no, 'customeradvance');

@@ -87,6 +87,15 @@
                                     ?>
                                 </div>
                             </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="control-label" for="customer_discount_ledger"><?= lang('Customer Discounts'); ?></label>
+                                    <?php 
+                                        echo form_dropdown('customer_discount_ledger', $LO, $settings->customer_discount_ledger, 'id="customer_discount_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                                    ?>
+                                </div>
+                            </div>
                          </fieldset>
 
                     </div>

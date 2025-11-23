@@ -257,11 +257,16 @@ class Sales_model extends CI_Model
     }
 
     public function getPendingInvoicesByCustomer($customer_id) {
-        $this->db->order_by('date', 'asc');
-        $this->db->where('customer_id', $customer_id);
-        $this->db->where('sale_invoice', 1);
-        $this->db->where_in('payment_status', ['pending', 'due', 'partial']);
-        $q = $this->db->get('sales');
+        $this->db->select('s.id, s.date, s.reference_no, s.customer_id, s.customer, s.grand_total, s.paid, s.additional_discount, s.payment_status, s.due_date, 
+                          COALESCE(SUM(r.grand_total), 0) as return_total', false);
+        $this->db->from('sales s');
+        $this->db->join('returns r', 'r.sale_id = s.id', 'left');
+        $this->db->where('s.customer_id', $customer_id);
+        $this->db->where('s.sale_invoice', 1);
+        $this->db->where_in('s.payment_status', ['pending', 'due', 'partial']);
+        $this->db->group_by('s.id');
+        $this->db->order_by('s.date', 'asc');
+        $q = $this->db->get();
     
         if ($q->num_rows() > 0) {
             return $q->result(); // Return the result directly as an array of objects
@@ -392,7 +397,7 @@ class Sales_model extends CI_Model
 
     public function getPaymentByReferenceID($id)
     {
-        $this->db->select('payments.*, companies.company, type, sales.grand_total, sales.reference_no as ref_no, sales.date as sale_date')
+        $this->db->select('payments.*, companies.company, type, sales.grand_total, sales.paid, sales.additional_discount, sales.returns_total_deducted, sales.reference_no as ref_no, sales.date as sale_date')
             ->join('sales', 'sales.id=payments.sale_id', 'left')
             ->join('companies', 'companies.id=sales.customer_id', 'left')
             ->where('payments.payment_id =', $id);
@@ -426,7 +431,7 @@ class Sales_model extends CI_Model
             if ($this->site->getReference('pay') == $data['reference_no']) {
                 $this->site->updateReference('pay');
             }
-            $this->site->syncSalePayments($data['sale_id']);
+            //$this->site->syncSalePayments($data['sale_id']);
             if ($data['paid_by'] == 'gift_card') {
                 $gc = $this->site->getGiftCardByNO($data['cc_no']);
                 $this->db->update('gift_cards', ['balance' => ($gc->balance - $data['amount'])], ['card_no' => $data['cc_no']]);
