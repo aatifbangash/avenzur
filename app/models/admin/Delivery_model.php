@@ -49,6 +49,8 @@ class Delivery_model extends CI_Model
             }
         }
 
+        $this->db->update('sma_truck_registration', ['status' => 'assigned', 'odometer' => $delivery_data['odometer']], ['id' => $delivery_data['truck_number']]);
+
         // Log the action
         if ($delivery_id && isset($data['assigned_by'])) {
             $this->log_delivery_action($delivery_id, 'created', $data['assigned_by']);
@@ -120,12 +122,13 @@ class Delivery_model extends CI_Model
     public function get_delivery_by_id($delivery_id)
     {
         $this->db->select('sd.id, sd.date_string, sd.driver_name, sd.truck_number, sd.status, sd.assigned_by,
-                           sd.driver_id,
+                           sd.driver_id, tr.truck_no,
                            sd.odometer, sd.total_refrigerated_items,
                            CONCAT(u.first_name, " ", u.last_name) as assigned_by_name,
                            COUNT(DISTINCT sdi.invoice_id) as invoice_count,
                            SUM(sdi.quantity_items) as total_items');
         $this->db->from('sma_deliveries sd');
+        $this->db->join('sma_truck_registration tr', 'sd.truck_number = tr.id', 'left');
         $this->db->join('sma_users u', 'sd.assigned_by = u.id', 'left');
         $this->db->join('sma_delivery_items sdi', 'sd.id = sdi.delivery_id', 'left');
         $this->db->where('sd.id', $delivery_id);
@@ -166,6 +169,8 @@ class Delivery_model extends CI_Model
     public function update_delivery($delivery_id, $data, $delivery_items, $updated_by = null)
     {
         $data['updated_at'] = date('Y-m-d H:i:s');
+        $truck_id = $data['truck_id'];
+        unset($data['truck_id']);
 
         if ($this->db->update('sma_deliveries', $data, ['id' => $delivery_id])) {
             if ($updated_by) {
@@ -185,6 +190,8 @@ class Delivery_model extends CI_Model
                 // Update all related sales
                 $this->db->where_in('id', $sale_ids);
                 $this->db->update('sma_sales', ['sale_status' => 'out_for_delivery']);
+
+                $this->db->update('sma_truck_registration', ['status' => 'out_for_delivery'], ['id' => $truck_id]);
             }else if(isset($data['status']) && $data['status'] == 'delivered' && !empty($delivery_items)){
                 // Extract invoice_ids from objects
                 $sale_ids = array_map(function($item){
@@ -197,6 +204,8 @@ class Delivery_model extends CI_Model
                 // Update all related sales
                 $this->db->where_in('id', $sale_ids);
                 $this->db->update('sma_sales', ['sale_status' => 'delivered']);
+
+                $this->db->update('sma_truck_registration', ['status' => 'available', 'odometer' => ($data['odometer'] + $data['odometer_mileage']) ], ['id' => $truck_id]);
             }
             return true;
         }
