@@ -58,7 +58,7 @@ class Returns extends MY_Controller
 
     public function add_return()
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->form_validation->set_message('is_natural_no_zero', lang('no_zero_required'));
         $this->form_validation->set_rules('customer', lang('customer'), 'required');
         $this->form_validation->set_rules('biller', lang('biller'), 'required');

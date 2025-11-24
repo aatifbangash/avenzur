@@ -58,7 +58,7 @@ class Sales extends MY_Controller
     /* ------------------------------------------------------------------ */
 
     public function showUploadSales() {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         $this->data['warehouses'] = $this->site->getAllWarehouses();
         $this->data['customers'] = $this->site->getAllCompanies('customer');
@@ -1029,7 +1029,7 @@ class Sales extends MY_Controller
 
     public function add_delivery($id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -1394,7 +1394,7 @@ class Sales extends MY_Controller
 
     public function delete_gift_card($id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         if ($this->sales_model->deleteGiftCard($id)) {
             $this->sma->send_json(['error' => 0, 'msg' => lang('gift_card_deleted')]);
@@ -3451,7 +3451,7 @@ class Sales extends MY_Controller
 
     public function assign_courier($id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->data['sale_id'] = $id;
         //$this->data['inv']      = $this->purchases_model->getPurchaseByID($id);
 
@@ -3817,7 +3817,7 @@ class Sales extends MY_Controller
 
     public function gift_cards()
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         $this->data['error'] = validation_errors() ? validation_errors() : $this->session->flashdata('error');
 
@@ -3828,7 +3828,7 @@ class Sales extends MY_Controller
 
     public function index($warehouse_id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
@@ -3850,7 +3850,7 @@ class Sales extends MY_Controller
 
     public function ecommerce($warehouse_id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
@@ -3949,7 +3949,7 @@ class Sales extends MY_Controller
 
     public function pdf($id = null, $view = null, $save_bufffer = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->load->library('inv_qrcode');
 
         if ($this->input->get('id')) {
@@ -4456,7 +4456,7 @@ if($inv->warning_note != ""){
 
     public function pdf_delivery($id = null, $view = null, $save_bufffer = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -6107,7 +6107,7 @@ if($inv->warning_note != ""){
 
     public function qty_onhold_requests($id=null){
       
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
        

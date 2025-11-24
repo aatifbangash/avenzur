@@ -823,7 +823,7 @@ class Products extends MY_Controller
     /* ------------------------------------------------------- */
     public function add($id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->load->helper('security');
         $warehouses = $this->site->getAllWarehouses();
         $this->form_validation->set_rules('category', lang('category'), 'required|is_natural_no_zero');
@@ -2445,7 +2445,7 @@ class Products extends MY_Controller
 
     public function edit($id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->load->helper('security');
         if ($this->input->post('id')) {
             $id = $this->input->post('id');
@@ -3997,7 +3997,7 @@ class Products extends MY_Controller
 
     public function hidden($warehouse_id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
@@ -4018,7 +4018,7 @@ class Products extends MY_Controller
 
     public function draft($warehouse_id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
@@ -4039,7 +4039,7 @@ class Products extends MY_Controller
 
     public function shop($warehouse_id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
@@ -4060,7 +4060,7 @@ class Products extends MY_Controller
 
     public function index($warehouse_id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
