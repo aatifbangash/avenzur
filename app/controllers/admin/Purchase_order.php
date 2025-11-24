@@ -574,7 +574,7 @@ class Purchase_order extends MY_Controller
 
     public function edit($id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -1033,7 +1033,7 @@ class Purchase_order extends MY_Controller
         //error_reporting(E_ALL);        // Report all errorsP
         //ini_set('display_errors', 1); 
 
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
             $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -1354,7 +1354,7 @@ class Purchase_order extends MY_Controller
 
     public function pdf($purchase_id = null, $view = null, $save_bufffer = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         if ($this->input->get('id')) {
             $purchase_id = $this->input->get('id');
