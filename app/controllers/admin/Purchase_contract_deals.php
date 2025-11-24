@@ -185,7 +185,7 @@ class Purchase_contract_deals extends MY_Controller
 
     public function edit($id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
         }
@@ -222,7 +222,7 @@ class Purchase_contract_deals extends MY_Controller
 
     public function view($id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
         }
@@ -240,7 +240,7 @@ class Purchase_contract_deals extends MY_Controller
 
     public function delete($id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         if ($this->input->post('id')) {
             $id = $this->input->post('id');
         }

@@ -307,7 +307,7 @@ class Purchases extends MY_Controller
 
     public function add($quote_id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         $this->form_validation->set_message('is_natural_no_zero', $this->lang->line('no_zero_required'));
         $this->form_validation->set_rules('warehouse', $this->lang->line('warehouse'), 'required|is_natural_no_zero');
@@ -1128,7 +1128,7 @@ class Purchases extends MY_Controller
 
     public function edit($id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
