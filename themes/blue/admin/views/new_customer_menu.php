@@ -575,7 +575,7 @@
 
         <?php 
         
-        if($Admin || $Owner || $this->GP['sales-warehouse_supervisor']){
+        if($Admin || $Owner || $this->GP['salescordinatoor'] || $this->GP['whmanager'] || $this->GP['warehouseofficer'] || $this->GP['dispatchcordinator'] || $this->GP['customerservicesuper']){
         ?>
         <!-- Services -->
          <li class="newmenu-item has-sub">
