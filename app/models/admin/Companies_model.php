@@ -441,4 +441,22 @@ class Companies_model extends CI_Model
         }
         return false;
     }
+
+    public function getCustomerBalance($customer_id)
+    {
+        // Get total outstanding balance for customer (grand_total - paid)
+        $this->db->select('COALESCE(SUM(grand_total - paid), 0) as balance', false);
+        $this->db->from('sales');
+        $this->db->where('customer_id', $customer_id);
+        $this->db->where('payment_status !=', 'paid');
+        
+        $query = $this->db->get();
+        
+        if ($query->num_rows() > 0) {
+            $row = $query->row();
+            return $row->balance;
+        }
+        
+        return 0;
+    }
 }

@@ -2891,6 +2891,7 @@ class system_settings extends MY_Controller
         $this->form_validation->set_rules('supplier_advance_ledger', lang('Supplier Advance Ledger'), 'trim|numeric|required');
         $this->form_validation->set_rules('customer_advance_ledger', lang('Customer Advance Ledger'), 'trim|numeric|required');
         $this->form_validation->set_rules('vat_ledger_id', lang('VAT on Bank Charges Ledger'), 'trim|numeric');
+        $this->form_validation->set_rules('customer_discount_ledger', lang('Customer Discounts'), 'trim|numeric|required');
 
         if ($this->form_validation->run() == true) {
             $vat_on_purchase_ledger = $this->input->post('vat_on_purchase_ledger');
@@ -2901,6 +2902,7 @@ class system_settings extends MY_Controller
             $supplier_advance_ledger = $this->input->post('supplier_advance_ledger');
             $customer_advance_ledger = $this->input->post('customer_advance_ledger');
             $vat_ledger_id = $this->input->post('vat_ledger_id');
+            $customer_discount_ledger = $this->input->post('customer_discount_ledger');
 
             $data = [
                 'vat_on_purchase_ledger' => $vat_on_purchase_ledger,
@@ -2911,6 +2913,7 @@ class system_settings extends MY_Controller
                 'supplier_advance_ledger' => $supplier_advance_ledger,
                 'customer_advance_ledger' => $customer_advance_ledger,
                 'vat_ledger_id' => $vat_ledger_id,
+                'customer_discount_ledger' => $customer_discount_ledger,
             ];
         }
 

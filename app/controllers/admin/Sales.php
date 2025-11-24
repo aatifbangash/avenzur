@@ -411,9 +411,9 @@ class Sales extends MY_Controller
             $item_bonus = $quote_items[$r]->bonus;
             $item_unit_quantity = $quote_items[$r]->unit_quantity;
             $warehouse_id = $quote_items[$r]->warehouse_id;
-            $pr_item_tax = $quote_items[$r]->warehouse_id;
+            $pr_item_tax = $quote_items[$r]->item_tax;
             $item_tax_rate = $quote_items[$r]->tax_rate_id;
-            $new_item_vat_value = $quote_items[$r]->warehouse_id;
+            $new_item_vat_value = $quote_items[$r]->tax;
             $item_discount = $quote_items[$r]->item_discount;
             $new_item_first_discount = $quote_items[$r]->item_discount;
             $new_item_total_sale = $quote_items[$r]->subtotal;
