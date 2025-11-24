@@ -2116,9 +2116,7 @@ function loadItems() {
 				"</span></td>";
 
 			tr_html +=
-                '<td><input class="form-control text-center rbonus" name="bonus[]" type="text" tabindex="' +
-                (site.settings.set_focus == 1 ? an : an + 1) +
-                '" data-id="' +
+                '<td><input class="form-control text-center rbonus" name="bonus[]" type="text" data-id="' +
                 row_no +
                 '" data-item="' +
                 item_id +
