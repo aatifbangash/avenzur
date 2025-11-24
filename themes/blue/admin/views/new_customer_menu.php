@@ -467,7 +467,7 @@
             </ul>
         </li>
 
-        <?php if($Admin || $Owner || $this->GP['accountant']){ ?>
+        <?php if($Admin || $Owner || $this->GP['customer-payment-index'] || $this->GP['supplier-payment-index']){ ?>
         <!-- FINANCE -->
         <li class="newmenu-item has-sub">
             <a href="#" class="newmenu-link bluecolor">
