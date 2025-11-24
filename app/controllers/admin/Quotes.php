@@ -331,6 +331,29 @@ class Quotes extends MY_Controller
             //$this->data['currencies'] = $this->sales_model->getAllCurrencies();
             $this->data['slnumber']    = ''; //$this->site->getReference('so');
             $this->data['payment_ref'] = ''; //$this->site->getReference('pay');
+            
+            // Get customer balance and credit limit for display
+            $customer_id = $this->input->post('customer') ? $this->input->post('customer') : null;
+            if ($customer_id) {
+                $customer = $this->companies_model->getCompanyByID($customer_id);
+                if ($customer) {
+                    $customer_balance = $this->companies_model->getCustomerBalance($customer_id);
+                    $credit_limit = floatval($customer->credit_limit ?? 0);
+                    $current_balance = floatval($customer_balance ?? 0);
+                    $remaining_limit = max(0, $credit_limit - $current_balance);
+                    
+                    $this->data['customer_balance'] = $current_balance;
+                    $this->data['credit_limit'] = $credit_limit;
+                    $this->data['remaining_limit'] = $remaining_limit;
+                    $this->data['customer_name'] = $customer->company != '-' ? $customer->company : $customer->name;
+                }
+            } else {
+                $this->data['customer_balance'] = 0;
+                $this->data['credit_limit'] = 0;
+                $this->data['remaining_limit'] = 0;
+                $this->data['customer_name'] = '';
+            }
+            
             $bc                        = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('quotes'), 'page' => lang('quotes')], ['link' => '#', 'page' => lang('add_quote')]];
             $meta                      = ['page_title' => lang('add_quote'), 'bc' => $bc];
             $this->page_construct('quotes/add', $meta, $this->data);
@@ -924,6 +947,29 @@ class Quotes extends MY_Controller
                     redirect($_SERVER['HTTP_REFERER']);
                 }
             }
+            
+            // Get customer balance and credit limit for display
+            $customer_id = $this->data['inv']->customer_id;
+            if ($customer_id) {
+                $customer = $this->companies_model->getCompanyByID($customer_id);
+                if ($customer) {
+                    $customer_balance = $this->companies_model->getCustomerBalance($customer_id);
+                    $credit_limit = floatval($customer->credit_limit ?? 0);
+                    $current_balance = floatval($customer_balance ?? 0);
+                    $remaining_limit = max(0, $credit_limit - $current_balance);
+                    
+                    $this->data['customer_balance'] = $current_balance;
+                    $this->data['credit_limit'] = $credit_limit;
+                    $this->data['remaining_limit'] = $remaining_limit;
+                    $this->data['customer_name'] = $customer->company != '-' ? $customer->company : $customer->name;
+                }
+            } else {
+                $this->data['customer_balance'] = 0;
+                $this->data['credit_limit'] = 0;
+                $this->data['remaining_limit'] = 0;
+                $this->data['customer_name'] = '';
+            }
+            
             $inv_items = $this->quotes_model->getAllQuoteItems($id, $this->data['inv']);
 
             // krsort($inv_items);
@@ -1756,6 +1802,37 @@ class Quotes extends MY_Controller
             $this->sma->send_json($pr);
         } else {
             $this->sma->send_json([['id' => 0, 'label' => lang('no_match_found'), 'value' => $term]]);
+        }
+    }
+
+    public function getCustomerBalanceAndLimit()
+    {
+        if ($this->input->is_ajax_request()) {
+            $customer_id = $this->input->get('customer_id');
+            
+            if ($customer_id) {
+                $customer = $this->companies_model->getCompanyByID($customer_id);
+                
+                if ($customer) {
+                    $customer_balance = $this->companies_model->getCustomerBalance($customer_id);
+                    $credit_limit = floatval($customer->credit_limit ?? 0);
+                    $current_balance = floatval($customer_balance ?? 0);
+                    $remaining_limit = max(0, $credit_limit - $current_balance);
+                    
+                    $response = array(
+                        'success' => true,
+                        'credit_limit' => $credit_limit,
+                        'current_balance' => $current_balance,
+                        'remaining_limit' => $remaining_limit,
+                        'customer_name' => $customer->company != '-' ? $customer->company : $customer->name
+                    );
+                    $this->sma->send_json($response);
+                } else {
+                    $this->sma->send_json(array('success' => false, 'error' => 'Customer not found'));
+                }
+            } else {
+                $this->sma->send_json(array('success' => false, 'error' => 'Customer ID required'));
+            }
         }
     }
 
