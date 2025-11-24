@@ -550,45 +550,75 @@ table#slTable td input.form-control {
                             <div class="panel">
                                
                                 <div class="panel-body" style="padding: 5px;">
-
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <?= lang('Payment_Type', 'payment_type'); ?>
-                                            <select name="payment_type" id="payment_type" class="form-control">
-                                                <option value="cash"><?= lang('Cash'); ?></option>
-                                                <option value="credit"><?= lang('Credit'); ?></option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <?= lang('customer', 'qtcustomer'); ?>
-                                            <div class="input-group">
-                                                <?php
-                                                echo form_input('customer', ($_POST['customer'] ?? ''), 'id="qtcustomer" data-placeholder="' . lang('select') . ' ' . lang('customer') . '" required="required" class="form-control input-tip" style="width:100%;"');
-                                                ?>
-                                                <div class="input-group-addon no-print" style="padding: 2px 8px; border-left: 0;">
-                                                    <a href="#" id="toogle-customer-read-attr" class="external">
-                                                        <i class="fa fa-pencil" id="addIcon" style="font-size: 1.2em;"></i>
-                                                    </a>
-                                                </div>
-                                                <div class="input-group-addon no-print" style="padding: 2px 7px; border-left: 0;">
-                                                    <a href="#" id="view-customer" class="external" data-toggle="modal" data-target="#myModal">
-                                                        <i class="fa fa-eye" id="addIcon" style="font-size: 1.2em;"></i>
-                                                    </a>
-                                                </div>
-                                                <?php if ($Owner || $Admin || $GP['customers-add']) {
-                                                    ?>
-                                                <div class="input-group-addon no-print" style="padding: 2px 8px;">
-                                                    <a href="<?= admin_url('customers/add'); ?>" id="add-customer"class="external" data-toggle="modal" data-target="#myModal">
-                                                        <i class="fa fa-plus-circle" id="addIcon"  style="font-size: 1.2em;"></i>
-                                                    </a>
-                                                </div>
-                                                <?php
-                                                } ?>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <?= lang('Payment_Type', 'payment_type'); ?>
+                                                <select name="payment_type" id="payment_type" class="form-control">
+                                                    <option value="cash"><?= lang('Cash'); ?></option>
+                                                    <option value="credit"><?= lang('Credit'); ?></option>
+                                                </select>
                                             </div>
-                                        </div>  
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <?= lang('customer', 'qtcustomer'); ?>
+                                                <div class="input-group">
+                                                    <?php
+                                                    echo form_input('customer', ($_POST['customer'] ?? ''), 'id="qtcustomer" style="margin-right:-75px !important;" data-placeholder="' . lang('select') . ' ' . lang('customer') . '" required="required" class="form-control input-tip" style="width:100%;"');
+                                                    ?>
+                                                    <div class="input-group-addon no-print" style="padding: 2px 8px; border-left: 0;">
+                                                        <a href="#" id="toogle-customer-read-attr" class="external">
+                                                            <i class="fa fa-pencil" id="addIcon" style="font-size: 1.2em;"></i>
+                                                        </a>
+                                                    </div>
+                                                    <div class="input-group-addon no-print" style="padding: 2px 7px; border-left: 0;">
+                                                        <a href="#" id="view-customer" class="external" data-toggle="modal" data-target="#myModal">
+                                                            <i class="fa fa-eye" id="addIcon" style="font-size: 1.2em;"></i>
+                                                        </a>
+                                                    </div>
+                                                    <?php if ($Owner || $Admin || $GP['customers-add']) {
+                                                        ?>
+                                                    <div class="input-group-addon no-print" style="padding: 2px 8px;">
+                                                        <a href="<?= admin_url('customers/add'); ?>" id="add-customer"class="external" data-toggle="modal" data-target="#myModal">
+                                                            <i class="fa fa-plus-circle" id="addIcon"  style="font-size: 1.2em;"></i>
+                                                        </a>
+                                                    </div>
+                                                    <?php
+                                                    } ?>
+                                                </div>
+                                            </div>  
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label><?= lang('customer_credit_info', 'customer_balance'); ?></label>
+                                                <div id="customer-balance-display" style="padding: 8px; background-color: #f5f5f5; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
+                                                    <div style="margin-bottom: 6px;">
+                                                        <strong><?= lang('balance', 'customer_balance'); ?>:</strong>
+                                                        <span id="customer-balance-value" style="float: right; color: #333;">
+                                                            <?= isset($customer_balance) && $customer_balance !== null ? number_format($customer_balance, 4) : '0.0000'; ?> SAR
+                                                        </span>
+                                                        <div style="clear: both;"></div>
+                                                    </div>
+                                                    <div style="margin-bottom: 6px;">
+                                                        <strong><?= lang('credit_limit', 'credit_limit'); ?>:</strong>
+                                                        <span id="credit-limit-value" style="float: right; color: #333;">
+                                                            <?= isset($credit_limit) && $credit_limit !== null ? number_format($credit_limit, 4) : '0.0000'; ?> SAR
+                                                        </span>
+                                                        <div style="clear: both;"></div>
+                                                    </div>
+                                                    <div style="border-top: 1px solid #ddd; padding-top: 6px;">
+                                                        <strong><?= lang('remaining_credit', 'remaining_limit'); ?>:</strong>
+                                                        <span id="remaining-limit-value" style="float: right; color: #10B981; font-weight: bold;">
+                                                            <?= isset($remaining_limit) && $remaining_limit !== null ? number_format($remaining_limit, 4) : '0.0000'; ?> SAR
+                                                        </span>
+                                                        <div style="clear: both;"></div>
+                                                    </div>
+                                                </div>
+                                            </div>  
+                                        </div>
                                     </div>
                                 </div>
                             </div>

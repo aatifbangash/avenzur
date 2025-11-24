@@ -444,29 +444,60 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                                     class="panel-heading"><?= lang('please_select_these_before_adding_product') ?></div>
                                 <div class="panel-body" style="padding: 5px;">
 
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <?= lang('Payment_Type', 'payment_type'); ?>
-                                            <select name="payment_type" id="payment_type" class="form-control">
-                                                <option value="cash"><?= lang('Cash'); ?></option>
-                                                <option value="credit"><?= lang('Credit'); ?></option>
-                                            </select>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <?= lang('Payment_Type', 'payment_type'); ?>
+                                                <select name="payment_type" id="payment_type" class="form-control">
+                                                    <option value="cash"><?= lang('Cash'); ?></option>
+                                                    <option value="credit"><?= lang('Credit'); ?></option>
+                                                </select>
+                                            </div>
                                         </div>
-                                    </div>
-                                    
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <?= lang('customer', 'qtcustomer'); ?>
-                                            <div class="input-group">
-                                                <?php
-                                                    echo form_input('customer', ($_POST['customer'] ?? ''), 'id="qtcustomer" data-placeholder="' . lang('select') . ' ' . lang('customer') . '" required="required" class="form-control input-tip" style="width:100%;"');
-                                                ?>
-                                                <div class="input-group-addon" style="padding-left: 10px; padding-right: 10px;">
-                                                    <a href="#" id="removeReadonly">
-                                                        <i class="fa fa-unlock" id="unLock"></i>
-                                                    </a>
+                                        
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <?= lang('customer', 'qtcustomer'); ?>
+                                                <div class="input-group">
+                                                    <?php
+                                                        echo form_input('customer', ($_POST['customer'] ?? ''), 'id="qtcustomer" style="margin-right:-45px !important;" data-placeholder="' . lang('select') . ' ' . lang('customer') . '" required="required" class="form-control input-tip" style="width:100%;"');
+                                                    ?>
+                                                    <div class="input-group-addon" style="padding-left: 10px; padding-right: 10px;">
+                                                        <a href="#" id="removeReadonly">
+                                                            <i class="fa fa-unlock" id="unLock"></i>
+                                                        </a>
+                                                    </div>
                                                 </div>
                                             </div>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label><?= lang('customer_credit_info', 'customer_balance'); ?></label>
+                                                <div id="customer-balance-display" style="padding: 8px; background-color: #f5f5f5; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
+                                                    <div style="margin-bottom: 6px;">
+                                                        <strong><?= lang('balance', 'customer_balance'); ?>:</strong>
+                                                        <span id="customer-balance-value" style="float: right; color: #333;">
+                                                            <?= isset($customer_balance) && $customer_balance !== null ? number_format($customer_balance, 4) : '0.0000'; ?> SAR
+                                                        </span>
+                                                        <div style="clear: both;"></div>
+                                                    </div>
+                                                    <div style="margin-bottom: 6px;">
+                                                        <strong><?= lang('credit_limit', 'credit_limit'); ?>:</strong>
+                                                        <span id="credit-limit-value" style="float: right; color: #333;">
+                                                            <?= isset($credit_limit) && $credit_limit !== null ? number_format($credit_limit, 4) : '0.0000'; ?> SAR
+                                                        </span>
+                                                        <div style="clear: both;"></div>
+                                                    </div>
+                                                    <div style="border-top: 1px solid #ddd; padding-top: 6px;">
+                                                        <strong><?= lang('remaining_credit', 'remaining_limit'); ?>:</strong>
+                                                        <span id="remaining-limit-value" style="float: right; color: #10B981; font-weight: bold;">
+                                                            <?= isset($remaining_limit) && $remaining_limit !== null ? number_format($remaining_limit, 4) : '0.0000'; ?> SAR
+                                                        </span>
+                                                        <div style="clear: both;"></div>
+                                                    </div>
+                                                </div>
+                                            </div>  
                                         </div>
                                     </div>
                                 </div>
