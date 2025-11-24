@@ -64,7 +64,7 @@
         <h2 class="blue"><i class="fa-fw fa fa-heart-o"></i><?= lang('quotes') . ' (' . ($warehouse_id ? $warehouse->name : lang('all_warehouses')) . ')'; ?></h2>
         <div class="box-icon">
             <ul class="btn-tasks">
-                <li class="dropdown">
+                <!--<li class="dropdown">
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#"><i class="icon fa fa-tasks tip" data-placement="left" title="<?= lang('actions') ?>"></i></a>
                     <ul class="dropdown-menu pull-right" class="tasks-menus" role="menu" aria-labelledby="dLabel">
                         <li><a href="<?= admin_url('quotes/add') ?>"><i class="fa fa-plus-circle"></i> <?= lang('add_quote') ?></a></li>
@@ -77,7 +77,7 @@
                             <button class='btn bpo-close'><?= lang('no') ?></button>"
                             data-html="true" data-placement="left"><i class="fa fa-trash-o"></i> <?= lang('delete_quotes') ?></a></li>
                     </ul>
-                </li>
+                </li>-->
 
                 <?php if (!empty($warehouses)) { ?>
                 <li class="dropdown">
