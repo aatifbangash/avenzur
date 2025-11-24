@@ -343,7 +343,7 @@
         <div class="buttons">
             <div class="btn-group btn-group-justified">
                 <?php 
-                    if(($this->Admin || $this->Owner || $GP['sales-index']) && ($inv->sale_status == 'ready')){
+                    if(($this->Admin || $this->Owner || $GP['sales-add-label']) && ($inv->sale_status == 'ready')){
                 ?>
                 <div class="btn-group">
                     <a href="<?= admin_url('sales/add_label/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-primary tip" title="<?= lang('add_label') ?>">
@@ -355,7 +355,7 @@
                 ?>
 
                 <?php 
-                    if($this->Admin || $this->Owner || $GP['sales-index']){
+                    if($this->Admin || $this->Owner || $GP['sales-verify-label']){
                 ?>
                 <div class="btn-group">
                     <a href="<?= admin_url('sales/verify_label/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-primary tip" title="<?= lang('verify_label') ?>">
@@ -379,7 +379,7 @@
                 ?>
 
                 <?php 
-                    if(($this->Admin || $this->Owner || $GP['sales-index'])  && ($inv->sale_status == 'label_verifired')){
+                    if(($this->Admin || $this->Owner || $GP['sales-rsd'])  && ($inv->sale_status == 'label_verifired')){
                 ?>
                 <div class="btn-group">
                     <a href="<?= admin_url('sales/send_to_rasd/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-primary tip" title="<?= lang('send_to_rasd') ?>">
@@ -403,7 +403,7 @@
                 ?>
 
                 <?php 
-                    if(($this->Admin || $this->Owner || $this->GP['customer-payment-index']) && ($inv->sale_status == 'delivered')){
+                    if(($this->Admin || $this->Owner || $this->GP['sales-create-invoice']) && ($inv->sale_status == 'delivered')){
                 ?>
                 <div class="btn-group">
                     <a href="<?= admin_url('sales/create_sale_invoice/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-primary" title="<?= lang('sale_invoice') ?>">
