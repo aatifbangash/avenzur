@@ -2224,7 +2224,8 @@ function loadItems() {
 				row_no +
 				'" title="Remove" style="cursor:pointer;"></i></td>';
 			newTr.html(tr_html);
-			newTr.appendTo("#slTable");
+			// Prepend the new row so the latest added item appears at the top
+			$("#slTable tbody").prepend(newTr);
 			total += formatDecimal(main_net, 4);
 			grand_total_vat += formatDecimal(vat_15_a, 4);
 			grand_total_purchases += formatDecimal(total_purchases, 4);
