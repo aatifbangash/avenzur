@@ -1467,13 +1467,17 @@ class Suppliers extends MY_Controller
             $id = $this->input->get('id');
         }
 
+        $this->form_validation->set_rules('name', $this->lang->line('name'), 'required');
+        $this->form_validation->set_rules('name_ar', $this->lang->line('name_ar'), 'required');
+        $this->form_validation->set_rules('address', $this->lang->line('address'), 'required');
+
         $company_details = $this->companies_model->getCompanyByID($id);
         //echo '<pre>';  print_r($company_details); exit;
         if ($this->input->post('email') != $company_details->email) {
-            $this->form_validation->set_rules('code', lang('email_address'), 'is_unique[companies.email]');
+            //$this->form_validation->set_rules('code', lang('email_address'), 'is_unique[companies.email]');
         }
 
-        if ($this->form_validation->run('companies/add') == true) {
+        if ($this->form_validation->run() == true) {
             $data = [
                 'name'        => $this->input->post('name'),
                 'name_ar'        => $this->input->post('name_ar'), 
@@ -1496,6 +1500,11 @@ class Suppliers extends MY_Controller
                 'cf5'         => $this->input->post('cf5'),
                 'cf6'         => $this->input->post('cf6'),
                 'gst_no'      => $this->input->post('gst_no'),
+                'gln'         => $this->input->post('gln'),
+                'cr'          => $this->input->post('cr'),
+                'short_address' => $this->input->post('short_address'),
+                'building_number' => $this->input->post('building_number'),
+                'unit_number' => $this->input->post('unit_number'),
                 'ledger_account'      => $this->input->post('ledger_account'),
                 'payment_term' => $this->input->post('payment_term'),
                 'credit_limit'        => $this->input->post('credit_limit') ? $this->input->post('credit_limit') : '0',
@@ -1528,7 +1537,18 @@ class Suppliers extends MY_Controller
     }
 
     public function getChildSuppliers(){
-        $this->sma->checkPermissions('index');
+        //$this->sma->checkPermissions('index');
+
+        $action = "<div class=\"text-center\">";
+
+        if($this->Owner || $this->Admin || $this->GP['suppliers-edit']){
+            $actions .= "<a class=\"tip\" title='" . $this->lang->line('edit_supplier') . "' href='" . admin_url('suppliers/edit/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-edit\"></i></a>";
+        }
+
+        if($this->Owner || $this->Admin || $this->GP['suppliers-delete']){
+            $actions .= "<a href='#' class='tip po' title='<b>" . $this->lang->line('delete_supplier') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('suppliers/delete/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a>";
+        }
+        $action .= "</div>";
 
         $this->load->library('datatables');
         $this->datatables
@@ -1536,7 +1556,7 @@ class Suppliers extends MY_Controller
             ->from('companies')
             ->where('group_name', 'supplier')
             ->where('level', 2)
-            ->add_column('Actions', "<div class=\"text-center\"><a class=\"tip\" title='" . $this->lang->line('list_products') . "' href='" . admin_url('products?supplier=$1') . "'><i class=\"fa fa-list\"></i></a> <a class=\"tip\" title='" . $this->lang->line('list_users') . "' href='" . admin_url('suppliers/users/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-users\"></i></a> <a class=\"tip\" title='" . $this->lang->line('add_user') . "' href='" . admin_url('suppliers/add_user/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-plus-circle\"></i></a> <a class=\"tip\" title='" . $this->lang->line('edit_supplier') . "' href='" . admin_url('suppliers/edit/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . $this->lang->line('delete_supplier') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('suppliers/delete/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
+            ->add_column('Actions', $actions, 'id');
         //->unset_column('id');
         echo $this->datatables->generate();
     }
