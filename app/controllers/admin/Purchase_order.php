@@ -1310,7 +1310,7 @@ class Purchase_order extends MY_Controller
 
     public function modal_view($purchase_id = null)
     {
-        $this->sma->checkPermissions('index', true);
+        //$this->sma->checkPermissions('index', true);
 
         if ($this->input->get('id')) {
             $purchase_id = $this->input->get('id');
@@ -1480,7 +1480,7 @@ class Purchase_order extends MY_Controller
 
     public function return_purchase($id = null)
     {
-        $this->sma->checkPermissions('return_purchases');
+        //$this->sma->checkPermissions('return_purchases');
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -1779,7 +1779,7 @@ class Purchase_order extends MY_Controller
 
     public function view($purchase_id = null)
     {
-        $this->sma->checkPermissions('index');
+        //$this->sma->checkPermissions('index');
 
         if ($this->input->get('id')) {
             $purchase_id = $this->input->get('id');
@@ -1970,7 +1970,7 @@ class Purchase_order extends MY_Controller
 
     public function view_return($id = null)
     {
-        $this->sma->checkPermissions('return_purchases');
+        //$this->sma->checkPermissions('return_purchases');
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
