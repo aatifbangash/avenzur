@@ -406,7 +406,7 @@ class Purchase_order extends MY_Controller
                     ['id' => $pr_id]
                 );
             }
-            admin_redirect('purchase_order?lastInsertedId=' . $purchase_id);
+            admin_redirect('purchase_order');
             // check for action against pr
 
             //if( $this->input->post->('action') == 'create_po' && $this->input->post('pr_id') ) {
