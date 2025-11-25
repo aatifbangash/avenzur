@@ -1258,9 +1258,15 @@ class Customers extends MY_Controller
             admin_redirect($_SERVER['HTTP_REFERER']);
         }
 
-        $this->form_validation->set_rules('email', lang('email_address'), 'is_unique[companies.email]');
+        $this->form_validation->set_rules('name', $this->lang->line('name'), 'required');
+        $this->form_validation->set_rules('name_ar', $this->lang->line('name_ar'), 'required');
+        $this->form_validation->set_rules('address', $this->lang->line('address'), 'required');
 
-        if ($this->form_validation->run('companies/add') == true) {
+        $company_sales_man = $this->companies_model->getAllSalesMan();
+
+        //$this->form_validation->set_rules('email', lang('email_address'), 'is_unique[companies.email]');
+
+        if ($this->form_validation->run() == true) {
             $cg   = $this->site->getCustomerGroupByID($this->input->post('customer_group'));
             $pg   = $this->site->getPriceGroupByID($this->input->post('price_group'));
             $data = [
@@ -1300,7 +1306,18 @@ class Customers extends MY_Controller
                 'discount_ledger'     => $this->input->post('discount_ledger'),
                 'return_ledger'     => $this->input->post('return_ledger'),
                 //'vat_on_sales_ledger' => $this->input->post('vat_on_sales_ledger'),
-                'sequence_code'       => $this->sequenceCode->generate('CUS', 5)
+                'sequence_code'       => $this->sequenceCode->generate('CUS', 5),
+                'gln'                 => $this->input->post('gln'),
+                'cr'                  => $this->input->post('cr'),
+                'short_address'        => $this->input->post('short_address'),
+                'building_number'   => $this->input->post('building_number'),
+                'unit_number'  => $this->input->post('unit_number'),
+                'additional_number'    => $this->input->post('additional_number'),
+                'promessory_note_amount'    => $this->input->post('promessory_note_amount'),
+                'category'    => $this->input->post('category'),
+                'sales_agent'    => $this->input->post('sales_agent'),
+                'cr_expiration'  => $this->input->post('cr_expiration'),
+                'sfda_certificate' => $this->input->post('sfda_certificate')
             ];
         } elseif ($this->input->post('add_customer')) {
             $this->session->set_flashdata('error', validation_errors());
@@ -1315,6 +1332,7 @@ class Customers extends MY_Controller
             $this->data['error']           = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
             $this->data['modal_js']        = $this->site->modal_js();
             $this->data['customer_groups'] = $this->companies_model->getAllCustomerGroups();
+            $this->data['company_sales_man'] = $company_sales_man;
             $this->data['price_groups']    = $this->companies_model->getAllPriceGroups();
             $this->load->view($this->theme . 'customers/add', $this->data);
         }
@@ -1638,11 +1656,18 @@ class Customers extends MY_Controller
         }
 
         $company_details = $this->companies_model->getCompanyByID($id);
+        $company_sales_man = $this->companies_model->getAllSalesMan();
+        $sales_man = $this->companies_model->getSalesManByName($company_details->sales_agent);
+
+        $this->form_validation->set_rules('name', $this->lang->line('name'), 'required');
+        $this->form_validation->set_rules('name_ar', $this->lang->line('name_ar'), 'required');
+        $this->form_validation->set_rules('address', $this->lang->line('address'), 'required');
+
         if ($this->input->post('email') != $company_details->email) {
-            $this->form_validation->set_rules('code', lang('email_address'), 'is_unique[companies.email]');
+            //$this->form_validation->set_rules('code', lang('email_address'), 'is_unique[companies.email]');
         }
 
-        if ($this->form_validation->run('companies/add') == true) {
+        if ($this->form_validation->run() == true) {
             $cg   = $this->site->getCustomerGroupByID($this->input->post('customer_group'));
             $pg   = $this->site->getPriceGroupByID($this->input->post('price_group'));
             $data = [
@@ -1682,7 +1707,19 @@ class Customers extends MY_Controller
                 //'price_difference_ledger'   => $this->input->post('price_difference_ledger'),
                 'discount_ledger'     => $this->input->post('discount_ledger'),
                 //'vat_on_sales_ledger' => $this->input->post('vat_on_sales_ledger')
-                'return_ledger'     => $this->input->post('return_ledger'),
+                'return_ledger'       => $this->input->post('return_ledger'),
+                'gln'                 => $this->input->post('gln'),
+                'cr'                  => $this->input->post('cr'),
+                'short_address'        => $this->input->post('short_address'),
+                'building_number'   => $this->input->post('building_number'),
+                'unit_number'  => $this->input->post('unit_number'),
+                'additional_number'    => $this->input->post('additional_number'),
+                'promessory_note_amount'    => $this->input->post('promessory_note_amount'),
+                'category'    => $this->input->post('category'),
+                'sales_agent'    => $this->input->post('sales_agent'),
+                'cr_expiration'  => $this->input->post('cr_expiration'),
+                'sfda_certificate' => $this->input->post('sfda_certificate')
+
             ];
         } elseif ($this->input->post('edit_customer')) {
             $this->session->set_flashdata('error', validation_errors());
@@ -1693,6 +1730,9 @@ class Customers extends MY_Controller
             $this->session->set_flashdata('message', lang('customer_updated'));
             redirect($_SERVER['HTTP_REFERER']);
         } else {
+            $this->data['company_sales_man'] = $company_sales_man; 
+            $this->data['sales_man_info'] = $sales_man;
+            //echo '<pre>';print_r($this->data['company_sales_man']);exit;
             $this->data['customer']        = $company_details;
             $this->data['error']           = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
             $this->data['modal_js']        = $this->site->modal_js();
@@ -1824,13 +1864,25 @@ class Customers extends MY_Controller
 
     public function getCustomers()
     {
-        $this->sma->checkPermissions('index');
+
+        $actions = "<div class=\"text-center\">"; 
+        if($this->Owner || $this->Admin || $this->GP['customers-edit']){
+            $actions .= "<a class=\"tip\" title='" . lang('edit_customer') . "' href='" . admin_url('customers/edit/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-edit\"></i></a>";
+        }
+
+        if($this->Owner || $this->Admin || $this->GP['customers-delete']){
+            $actions .= "<a href='#' class='tip po' title='<b>" . lang('delete_customer') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('customers/delete/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a>";
+        }
+        $actions .= "</div>";
+
+        //$this->sma->checkPermissions('index');
         $this->load->library('datatables');
+
         $this->datatables
             ->select('id, sequence_code, name, vat_no, gln, cr, short_address, address, credit_limit, payment_term, category')
             ->from('companies')
             ->where('group_name', 'customer')
-            ->add_column('Actions', "<div class=\"text-center\"><a class=\"tip\" title='" . lang('list_deposits') . "' href='" . admin_url('customers/deposits/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-money\"></i></a> <a class=\"tip\" title='" . lang('add_deposit') . "' href='" . admin_url('customers/add_deposit/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-plus\"></i></a> <a class=\"tip\" title='" . lang('list_addresses') . "' href='" . admin_url('customers/addresses/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-location-arrow\"></i></a> <a class=\"tip\" title='" . lang('list_users') . "' href='" . admin_url('customers/users/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-users\"></i></a> <a class=\"tip\" title='" . lang('add_user') . "' href='" . admin_url('customers/add_user/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-user-plus\"></i></a> <a class=\"tip\" title='" . lang('edit_customer') . "' href='" . admin_url('customers/edit/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . lang('delete_customer') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('customers/delete/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
+            ->add_column('Actions', $actions, 'id');
         //->unset_column('id');
         echo $this->datatables->generate();
     }
