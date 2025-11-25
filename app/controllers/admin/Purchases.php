@@ -766,6 +766,12 @@ class Purchases extends MY_Controller
                 $this->data['pr_data'] = $pr_data;
                 $this->data['module_name'] = 'purchase_order';
                 $this->data['inv_items'] = json_encode($po_info);
+                
+                // Get supplier payment term
+                if (!empty($pr_data->supplier_id)) {
+                    $supplier_data = $this->site->getCompanyByID($pr_data->supplier_id);
+                    $this->data['supplier_payment_term'] = !empty($supplier_data->payment_term) ? $supplier_data->payment_term : '';
+                }
 
                 // $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
                 // $this->data['purchase'] = $this->purchases_model->getPurchaseByID($id);

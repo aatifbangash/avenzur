@@ -301,7 +301,7 @@ if(isset($action) && $action = 'create_invoice' && $inv_items != null)  {
                                 $reference_no = !empty($pr_data->reference_no)
                                                 ? $pr_data->reference_no
                                                 : ($_POST['reference_no'] ?? $ponumber);
-                                echo form_input('reference_no',$reference_no, 'class="form-control input-tip" id="poref" '.$readonly); ?>
+                                echo form_input('reference_no',$reference_no, 'class="form-control input-tip" id="poref"'); ?>
                             </div>
                         </div>
                         <?php if ($Owner || $Admin || !$this->session->userdata('warehouse_id')) {
@@ -547,7 +547,11 @@ if(isset($action) && $action = 'create_invoice' && $inv_items != null)  {
                                             '120' => '120',
                                             '>120' => '>120'
                                         ];
-                                        echo form_dropdown('payment_term', $payment_term_data, '', 'id="popayment_term" data-placeholder="' . lang('select') . ' ' . lang('payment_term') . '" class="form-control input-tip select" style="width:100%;"'); ?>
+                                        $selected_payment_term = '';
+                                        if (isset($supplier_payment_term) && !empty($supplier_payment_term)) {
+                                            $selected_payment_term = $supplier_payment_term;
+                                        }
+                                        echo form_dropdown('payment_term', $payment_term_data, $selected_payment_term, 'id="popayment_term" data-placeholder="' . lang('select') . ' ' . lang('payment_term') . '" class="form-control input-tip select" style="width:100%;"'); ?>
                                     </div>
                                 </div>
                             </div>
