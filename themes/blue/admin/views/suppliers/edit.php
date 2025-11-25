@@ -30,18 +30,18 @@
                         <?= lang('name_arabic', 'name_arabic'); ?>
                         <?php echo form_input('name_ar',  $supplier->name_ar, 'class="form-control tip" id="name" data-bv-notempty="true"'); ?>
                     </div> 
-                    <div class="form-group  ">  
+                    <div class="form-group">
                         <?= lang('category', 'category'); ?>
-                        <?php $catogories_arr = [''=>'Please Select', 'service ' => lang('service'), 'trade' => lang('trade')];
-                        echo form_dropdown('category', $catogories_arr, $supplier->category, 'class="form-control select" id="category" name="category" required="required"'); ?>
-                    </div> 
+                        <?php echo form_input('category', $supplier->category, 'class="form-control" id="category"'); ?>
+
+                    </div>
                     <div class="form-group">
                         <?= lang('vat_no', 'vat_no'); ?>
                         <?php echo form_input('vat_no', $supplier->vat_no, 'class="form-control" id="vat_no"'); ?>
                     </div>
                     <div class="form-group">
-                        <?= lang('gst_no', 'gst_no'); ?>
-                        <?php echo form_input('gst_no', $supplier->gst_no, 'class="form-control" id="gst_no"'); ?>
+                        <?= lang('gln', 'gln'); ?>
+                        <?php echo form_input('gln', $supplier->gln, 'class="form-control" id="gln"'); ?>
                     </div>
                     <!--<div class="form-group company">
                     <?= lang('contact_person', 'contact_person'); ?>
@@ -49,12 +49,12 @@
                 </div> -->
                     <div class="form-group">
                         <?= lang('email_address', 'email_address'); ?>
-                        <input type="email" name="email" class="form-control" required="required" id="email_address"
+                        <input type="email" name="email" class="form-control" id="email_address"
                                value="<?= $supplier->email ?>"/>
                     </div>
                     <div class="form-group">
                         <?= lang('phone', 'phone'); ?>
-                        <input type="tel" name="phone" class="form-control" required="required" id="phone"
+                        <input type="tel" name="phone" class="form-control" id="phone"
                                value="<?= $supplier->phone ?>"/>
                     </div>
                     <div class="form-group">
@@ -65,17 +65,7 @@
                         <?= lang('city', 'city'); ?>
                         <?php echo form_input('city', $supplier->city, 'class="form-control" id="city" required="required"'); ?>
                     </div>
-                    <div class="form-group">
-                        <?= lang('state', 'state'); ?>
-                        <?php
-                        if ($Settings->indian_gst) {
-                            $states = $this->gst->getIndianStates(true);
-                            echo form_dropdown('state', $states, $supplier->state, 'class="form-control select" id="state" required="required"');
-                        } else {
-                            echo form_input('state', $supplier->state, 'class="form-control" id="state"');
-                        }
-                        ?>
-                    </div>
+                    
 
                 </div>
                 <div class="col-md-6">
@@ -104,31 +94,33 @@
                     </div>
                     
                     <div class="form-group">
-                        <?= lang('scf1', 'cf1'); ?>
-                        <?php echo form_input('cf1', $supplier->cf1, 'class="form-control" id="cf1"'); ?>
+                        <?= lang('cr', 'cr'); ?>
+                        <?php echo form_input('cr', $supplier->cr, 'class="form-control" id="cr"'); ?>
                     </div>
                     <div class="form-group">
-                        <?= lang('scf2', 'cf2'); ?>
-                        <?php echo form_input('cf2', $supplier->cf2, 'class="form-control" id="cf2"'); ?>
+                        <?= lang('Short Address', 'short_address'); ?>
+                        <?php echo form_input('short_address', $supplier->short_address, 'class="form-control" id="short_address"'); ?>
 
                     </div>
                     <div class="form-group">
-                        <?= lang('scf3', 'cf3'); ?>
-                        <?php echo form_input('cf3', $supplier->cf3, 'class="form-control" id="cf3"'); ?>
+                        <?= lang('Building Number', 'building_number'); ?>
+                        <?php echo form_input('building_number', $supplier->building_number, 'class="form-control" id="building_number"'); ?>
                     </div>
                     <div class="form-group">
-                        <?= lang('scf4', 'cf4'); ?>
-                        <?php echo form_input('cf4', $supplier->cf4, 'class="form-control" id="cf4"'); ?>
+                        <?= lang('Unit Number', 'unit_number'); ?>
+                        <?php echo form_input('unit_number', $supplier->unit_number, 'class="form-control" id="unit_number"'); ?>
 
                     </div>
                     <div class="form-group">
-                        <?= lang('scf5', 'cf5'); ?>
-                        <?php echo form_input('cf5', $supplier->cf5, 'class="form-control" id="cf5"'); ?>
-
-                    </div>
-                    <div class="form-group">
-                        <?= lang('scf6', 'cf6'); ?>
-                        <?php echo form_input('cf6', $supplier->cf6, 'class="form-control" id="cf6"'); ?>
+                        <?= lang('state', 'state'); ?>
+                        <?php
+                        if ($Settings->indian_gst) {
+                            $states = $this->gst->getIndianStates(true);
+                            echo form_dropdown('state', $states, $supplier->state, 'class="form-control select" id="state" required="required"');
+                        } else {
+                            echo form_input('state', $supplier->state, 'class="form-control" id="state"');
+                        }
+                        ?>
                     </div>
                 </div>
             </div>
