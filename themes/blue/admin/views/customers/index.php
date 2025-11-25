@@ -54,11 +54,15 @@
                         <i class="icon fa fa-tasks tip" data-placement="left" title="<?= lang('actions') ?>"></i>
                     </a>
                     <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
+                        <?php 
+                        if($this->Owner || $this->Admin || $this->GP['customers-add']){
+                        ?>
                         <li>
                             <a href="<?= admin_url('customers/add'); ?>" data-toggle="modal" data-target="#myModal" id="add">
                                 <i class="fa fa-plus-circle"></i> <?= lang('add_customer'); ?>
                             </a>
                         </li>
+                        <?php } ?>
                         <!--<li>
                             <a href="<?= admin_url('customers/import_csv'); ?>" data-toggle="modal" data-target="#myModal">
                                 <i class="fa fa-plus-circle"></i> <?= lang('import_by_csv'); ?>

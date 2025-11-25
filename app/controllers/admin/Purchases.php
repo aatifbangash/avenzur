@@ -2080,7 +2080,7 @@ class Purchases extends MY_Controller
 
     public function getPurchases($warehouse_id = null)
     {
-        $this->sma->checkPermissions('index');
+        //$this->sma->checkPermissions('index');
 
         $pid = $this->input->get('pid');
         $pfromDate = $this->input->get('from');
