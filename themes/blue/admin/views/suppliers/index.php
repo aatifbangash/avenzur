@@ -51,27 +51,39 @@
                         <i class="icon fa fa-tasks tip"  data-placement="left" title="<?= lang('actions') ?>"></i>
                     </a>
                     <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
+                        <?php 
+                        if($this->Owner || $this->Admin || $this->GP['suppliers-add']){
+                        ?>
                         <li>
                             <a href="<?= admin_url('suppliers/add'); ?>" data-toggle="modal" data-target="#myModal" id="add">
                                 <i class="fa fa-plus-circle"></i> <?= lang('add_supplier'); ?>
                             </a>
                         </li>
+                        <?php } ?>
                         <!--<li>
                             <a href="<?= admin_url('suppliers/import_csv'); ?>" data-toggle="modal" data-target="#myModal">
                                 <i class="fa fa-plus-circle"></i> <?= lang('import_by_csv'); ?>
 
                             </a>
                         </li>-->
+                        <?php 
+                        if($this->Owner || $this->Admin || $this->GP['suppliers-add']){
+                        ?>
                         <li>
                             <a href="<?= admin_url('suppliers/import_excel'); ?>" data-toggle="modal" data-target="#myModal">
                                 <i class="fa fa-plus-circle"></i> <?= lang('import_by_excel'); ?>
                             </a>
                         </li>
+                        <?php } ?>
+                        <?php 
+                        if($this->Owner || $this->Admin || $this->GP['suppliers-index']){
+                        ?>
                         <li>
                             <a href="#" id="excel" data-action="export_excel">
                                 <i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?>
                             </a>
                         </li>
+                        <?php } ?>
                         <li class="divider"></li>
                         <!--<li>
                             <a href="#" class="bpo" title="<b><?= $this->lang->line('delete_suppliers') ?></b>"

@@ -68,12 +68,16 @@
                                 <i class="fa fa-plus-circle"></i> <?= lang('import_by_csv'); ?>
                             </a>
                         </li>-->
+                        <?php 
+                        if($this->Owner || $this->Admin || $this->GP['customers-add']){
+                        ?>
                         <li>
                             <a href="<?= admin_url('customers/import_excel'); ?>" data-toggle="modal" data-target="#myModal">
                                 <i class="fa fa-plus-circle"></i> <?= lang('import_by_excel'); ?>
                             </a>
                         </li>
-                        <?php if ($Owner) {
+                        <?php } ?>
+                        <?php if ($Owner || $this->Admin || $this->GP['customers-index']) {
                             ?>
                         <li>
                             <a href="#" id="excel" data-action="export_excel">
