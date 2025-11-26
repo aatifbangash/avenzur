@@ -3884,7 +3884,7 @@ class Purchases extends MY_Controller
                 }
                 $row->option = $option_id;
                 $row->supplier_part_no = '';
-                if ($row->supplier1 == $supplier_id) {
+                if ($supplier_id) {
                     //get contract deals if any - info - dis1 dis2 dis2 and deal discount
                     $supplier_deal = $this->purchase_contract_deals_model->getActiveDealsForSupplierProduct($supplier_id, $row->id);
                     //print_r($supplier_deal);exit;
