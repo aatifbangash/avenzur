@@ -34,7 +34,7 @@ class Reports extends MY_Controller
     }
     public function adjustments($warehouse_id = null)
     {
-        $this->sma->checkPermissions('products');
+        //$this->sma->checkPermissions('products');
 
         $this->data['users'] = $this->reports_model->getStaff();
         $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -47,7 +47,7 @@ class Reports extends MY_Controller
 
     public function best_sellers($warehouse_id = null)
     {
-        $this->sma->checkPermissions('products');
+        //$this->sma->checkPermissions('products');
 
         $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
         $y1 = date('Y', strtotime('-1 month'));
@@ -114,7 +114,7 @@ class Reports extends MY_Controller
 
     public function customer_report($user_id = null)
     {
-        $this->sma->checkPermissions('customers', true);
+        //$this->sma->checkPermissions('customers', true);
         if (!$user_id) {
             $this->session->set_flashdata('error', lang('no_customer_selected'));
             admin_redirect('reports/customers');
@@ -408,7 +408,7 @@ class Reports extends MY_Controller
 
 
     public function daily_purchase_report(){
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
@@ -438,7 +438,7 @@ class Reports extends MY_Controller
     }
 
     public function total_income(){
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
@@ -734,7 +734,7 @@ class Reports extends MY_Controller
 
     public function customers()
     {
-        $this->sma->checkPermissions('customers');
+        //$this->sma->checkPermissions('customers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customers_report')]];
@@ -744,7 +744,7 @@ class Reports extends MY_Controller
 
     public function daily_purchases($warehouse_id = null, $year = null, $month = null, $pdf = null, $user_id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         if (!$this->Owner && !$this->Admin && $this->session->userdata('warehouse_id')) {
             $warehouse_id = $this->session->userdata('warehouse_id');
         }
@@ -821,7 +821,7 @@ class Reports extends MY_Controller
 
     public function daily_sales($warehouse_id = null, $year = null, $month = null, $pdf = null, $user_id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         if (!$this->Owner && !$this->Admin && $this->session->userdata('warehouse_id')) {
             $warehouse_id = $this->session->userdata('warehouse_id');
         }
@@ -898,7 +898,7 @@ class Reports extends MY_Controller
 
     public function expenses($id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['warehouses'] = $this->site->getAllWarehouses();
         $this->data['users'] = $this->reports_model->getStaff();
@@ -910,7 +910,7 @@ class Reports extends MY_Controller
 
     public function expiry_alerts($warehouse_id = null)
     {
-        $this->sma->checkPermissions('expiry_alerts');
+        //$this->sma->checkPermissions('expiry_alerts');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
@@ -931,7 +931,7 @@ class Reports extends MY_Controller
 
     public function get_deposits($company_id = null)
     {
-        $this->sma->checkPermissions('customers', true);
+        //$this->sma->checkPermissions('customers', true);
         $this->load->library('datatables');
         $this->datatables
             ->select("date, amount, paid_by, CONCAT({$this->db->dbprefix('users')}.first_name, ' ', {$this->db->dbprefix('users')}.last_name) as created_by, note", false)
@@ -943,7 +943,7 @@ class Reports extends MY_Controller
 
     public function get_purchase_taxes($pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('tax', true);
+        //$this->sma->checkPermissions('tax', true);
         $supplier = $this->input->get('supplier') ? $this->input->get('supplier') : null;
         $warehouse = $this->input->get('warehouse') ? $this->input->get('warehouse') : null;
         $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : null;
@@ -1064,7 +1064,7 @@ class Reports extends MY_Controller
 
     public function get_sale_taxes($pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('tax', true);
+        //$this->sma->checkPermissions('tax', true);
         $biller = $this->input->get('biller') ? $this->input->get('biller') : null;
         $warehouse = $this->input->get('warehouse') ? $this->input->get('warehouse') : null;
         $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : null;
@@ -1184,7 +1184,7 @@ class Reports extends MY_Controller
 
     public function getAdjustmentReport($pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('products', true);
+        //$this->sma->checkPermissions('products', true);
 
         $product = $this->input->get('product') ? $this->input->get('product') : null;
         $warehouse = $this->input->get('warehouse') ? $this->input->get('warehouse') : null;
@@ -1324,7 +1324,7 @@ class Reports extends MY_Controller
 
     public function getBrandsReport($pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('products', true);
+        //$this->sma->checkPermissions('products', true);
         $warehouse = $this->input->get('warehouse') ? $this->input->get('warehouse') : null;
         $brand = $this->input->get('brand') ? $this->input->get('brand') : null;
         $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : null;
@@ -1462,7 +1462,7 @@ class Reports extends MY_Controller
 
     public function getCategoriesReport($pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('products', true);
+        //$this->sma->checkPermissions('products', true);
         $warehouse = $this->input->get('warehouse') ? $this->input->get('warehouse') : null;
         $category = $this->input->get('category') ? $this->input->get('category') : null;
         $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : null;
@@ -1632,7 +1632,7 @@ class Reports extends MY_Controller
 
     public function getCustomers($pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('customers', true);
+        //$this->sma->checkPermissions('customers', true);
 
         if ($pdf || $xls) {
             $this->db
@@ -1710,7 +1710,7 @@ class Reports extends MY_Controller
 
     public function getExpensesReport($pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('expenses');
+        //$this->sma->checkPermissions('expenses');
 
         $reference_no = $this->input->get('reference_no') ? $this->input->get('reference_no') : null;
         $category = $this->input->get('category') ? $this->input->get('category') : null;
@@ -1846,7 +1846,7 @@ class Reports extends MY_Controller
         $month = $this->input->get('month') ? $this->input->get('month') : null;
 
         $monthNumber = '+' . $month . 'months';
-        $this->sma->checkPermissions('expiry_alerts', true);
+        //$this->sma->checkPermissions('expiry_alerts', true);
         $date = date('Y-m-d', strtotime($monthNumber));
 
         if (!$this->Owner && !$warehouse_id) {
@@ -1884,7 +1884,7 @@ class Reports extends MY_Controller
 
     public function getPaymentsReport($pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('payments', true);
+        //$this->sma->checkPermissions('payments', true);
 
         $user = $this->input->get('user') ? $this->input->get('user') : null;
         $supplier = $this->input->get('supplier') ? $this->input->get('supplier') : null;
@@ -2068,7 +2068,7 @@ class Reports extends MY_Controller
 
     public function getProductsReport($pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('products', true);
+        //$this->sma->checkPermissions('products', true);
 
         $product = $this->input->get('product') ? $this->input->get('product') : null;
         $user = $this->input->get('user') ? $this->input->get('user') : null;
@@ -2283,7 +2283,7 @@ class Reports extends MY_Controller
 
     public function getPurchasesReport($pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('purchases', true);
+        //$this->sma->checkPermissions('purchases', true);
 
         $product = $this->input->get('product') ? $this->input->get('product') : null;
         $user = $this->input->get('user') ? $this->input->get('user') : null;
@@ -2434,7 +2434,7 @@ class Reports extends MY_Controller
 
     public function getQuantityAlerts($warehouse_id = null, $pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('quantity_alerts', true);
+        //$this->sma->checkPermissions('quantity_alerts', true);
         if (!$this->Owner && !$warehouse_id) {
             $user = $this->site->getUser();
             $warehouse_id = $user->warehouse_id;
@@ -2693,7 +2693,7 @@ class Reports extends MY_Controller
 
     public function getRrgisterlogs($pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('register', true);
+        //$this->sma->checkPermissions('register', true);
         if ($this->input->get('user')) {
             $user = $this->input->get('user');
         } else {
@@ -2813,7 +2813,7 @@ class Reports extends MY_Controller
 
     public function getSalesReport($pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('sales', true);
+        //$this->sma->checkPermissions('sales', true);
         $product = $this->input->get('product') ? $this->input->get('product') : null;
         $user = $this->input->get('user') ? $this->input->get('user') : null;
         $customer = $this->input->get('customer') ? $this->input->get('customer') : null;
@@ -2985,7 +2985,7 @@ class Reports extends MY_Controller
 
     public function getSuppliers($pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('suppliers', true);
+        //$this->sma->checkPermissions('suppliers', true);
 
         if ($pdf || $xls) {
             $this->db
@@ -3244,7 +3244,7 @@ class Reports extends MY_Controller
 
     public function index()
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['monthly_sales'] = $this->reports_model->getChartData();
         $this->data['stock'] = $this->reports_model->getStockValue();
@@ -3278,7 +3278,7 @@ class Reports extends MY_Controller
 
     public function monthly_purchases($warehouse_id = null, $year = null, $pdf = null, $user_id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         if (!$this->Owner && !$this->Admin && $this->session->userdata('warehouse_id')) {
             $warehouse_id = $this->session->userdata('warehouse_id');
         }
@@ -3308,7 +3308,7 @@ class Reports extends MY_Controller
 
     public function monthly_sales($warehouse_id = null, $year = null, $pdf = null, $user_id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         if (!$this->Owner && !$this->Admin && $this->session->userdata('warehouse_id')) {
             $warehouse_id = $this->session->userdata('warehouse_id');
         }
@@ -3338,7 +3338,7 @@ class Reports extends MY_Controller
 
     public function payments()
     {
-        $this->sma->checkPermissions('payments');
+        //$this->sma->checkPermissions('payments');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['users'] = $this->reports_model->getStaff();
         $this->data['billers'] = $this->site->getAllCompanies('biller');
@@ -3350,7 +3350,7 @@ class Reports extends MY_Controller
 
     public function products()
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
         $this->data['categories'] = $this->site->getAllCategories();
         $this->data['brands'] = $this->site->getAllBrands();
@@ -3391,7 +3391,7 @@ class Reports extends MY_Controller
 
     public function profit_loss($start_date = null, $end_date = null)
     {
-        $this->sma->checkPermissions('profit_loss');
+        //$this->sma->checkPermissions('profit_loss');
         if (!$start_date) {
             $start = $this->db->escape(date('Y-m') . '-1');
             $start_date = date('Y-m') . '-1';
@@ -3444,7 +3444,7 @@ class Reports extends MY_Controller
 
     public function profit_loss_pdf($start_date = null, $end_date = null)
     {
-        $this->sma->checkPermissions('profit_loss');
+        //$this->sma->checkPermissions('profit_loss');
         if (!$start_date) {
             $start = $this->db->escape(date('Y-m') . '-1');
             $start_date = date('Y-m') . '-1';
@@ -3491,7 +3491,7 @@ class Reports extends MY_Controller
 
     public function purchases()
     {
-        $this->sma->checkPermissions('purchases');
+        //$this->sma->checkPermissions('purchases');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['users'] = $this->reports_model->getStaff();
         $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -3502,7 +3502,7 @@ class Reports extends MY_Controller
 
     public function quantity_alerts($warehouse_id = null)
     {
-        $this->sma->checkPermissions('quantity_alerts');
+        //$this->sma->checkPermissions('quantity_alerts');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
@@ -3523,7 +3523,7 @@ class Reports extends MY_Controller
 
     public function register()
     {
-        $this->sma->checkPermissions('register');
+        //$this->sma->checkPermissions('register');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['users'] = $this->reports_model->getStaff();
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('register_report')]];
@@ -3533,7 +3533,7 @@ class Reports extends MY_Controller
 
     public function out_of_stock_dashboard()
     {
-        $this->sma->checkPermissions(); //'sales'
+        //$this->sma->checkPermissions(); //'sales'
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         // $this->data['users'] = $this->reports_model->getStaff(); 
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('out_of_stock_dashboard')]];
@@ -3543,7 +3543,7 @@ class Reports extends MY_Controller
     public function get_out_of_stock_products($pdf = null, $xls = null)
     {
 
-        $this->sma->checkPermissions('sales', true);
+        //$this->sma->checkPermissions('sales', true);
         // $product = $this->input->get('product') ? $this->input->get('product') : null;  
         if (!$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
             $user = $this->session->userdata('user_id');
@@ -3652,7 +3652,7 @@ class Reports extends MY_Controller
     }
     public function promotion_items_report()
     {
-        $this->sma->checkPermissions(); //'sales'
+        //$this->sma->checkPermissions(); //'sales'
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['users'] = $this->reports_model->getStaff();
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('promotion_items_report')]];
@@ -3662,7 +3662,7 @@ class Reports extends MY_Controller
     public function get_promotion_items($pdf = null, $xls = null)
     {
 
-        $this->sma->checkPermissions('sales', true);
+        //$this->sma->checkPermissions('sales', true);
         // $product = $this->input->get('product') ? $this->input->get('product') : null; 
         $start_date = $this->input->post('start_date') ? $this->input->post('start_date') : null;
         $end_date = $this->input->post('end_date') ? $this->input->post('end_date') : null;
@@ -3802,7 +3802,7 @@ class Reports extends MY_Controller
     }
     public function fast_moving_items()
     {
-        $this->sma->checkPermissions('sales');
+        //$this->sma->checkPermissions('sales');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['users'] = $this->reports_model->getStaff();
         // $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -3814,7 +3814,7 @@ class Reports extends MY_Controller
 
     public function ecommerce_fast_moving_items($pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('sales', true);
+        //$this->sma->checkPermissions('sales', true);
         // $product = $this->input->get('product') ? $this->input->get('product') : null; 
         $start_date = $this->input->post('start_date') ? $this->input->post('start_date') : null;
         $end_date = $this->input->post('end_date') ? $this->input->post('end_date') : null;
@@ -3963,7 +3963,7 @@ class Reports extends MY_Controller
 
     public function sales()
     {
-        $this->sma->checkPermissions('sales');
+        //$this->sma->checkPermissions('sales');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['users'] = $this->reports_model->getStaff();
         $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -3975,7 +3975,7 @@ class Reports extends MY_Controller
 
     public function staff_report($user_id = null, $year = null, $month = null, $pdf = null, $cal = 0)
     {
-        $this->sma->checkPermissions('staff', true);
+        //$this->sma->checkPermissions('staff', true);
         if (!$user_id) {
             $this->session->set_flashdata('error', lang('no_user_selected'));
             admin_redirect('reports/users');
@@ -4074,7 +4074,7 @@ class Reports extends MY_Controller
 
     public function supplier_report($user_id = null)
     {
-        $this->sma->checkPermissions('suppliers', true);
+        //$this->sma->checkPermissions('suppliers', true);
         if (!$user_id) {
             $this->session->set_flashdata('error', lang('no_supplier_selected'));
             admin_redirect('reports/suppliers');
@@ -4095,7 +4095,7 @@ class Reports extends MY_Controller
 
     public function suppliers()
     {
-        $this->sma->checkPermissions('suppliers');
+        //$this->sma->checkPermissions('suppliers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('suppliers_report')]];
@@ -4271,7 +4271,7 @@ class Reports extends MY_Controller
 
     public function customer_statement()
     {
-        $this->sma->checkPermissions('customers');
+        //$this->sma->checkPermissions('customers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
@@ -4399,7 +4399,7 @@ class Reports extends MY_Controller
 
     public function supplier_statement()
     {
-        $this->sma->checkPermissions('suppliers');
+        //$this->sma->checkPermissions('suppliers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
@@ -4465,7 +4465,7 @@ class Reports extends MY_Controller
 
     public function customer_aging()
     {
-        $this->sma->checkPermissions('customers');
+        //$this->sma->checkPermissions('customers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $duration = $this->input->post('duration') ? $this->input->post('duration') : null;
@@ -4508,7 +4508,7 @@ class Reports extends MY_Controller
 
     public function supplier_aging()
     {
-        $this->sma->checkPermissions('suppliers');
+        //$this->sma->checkPermissions('suppliers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $duration = $this->input->post('duration') ? $this->input->post('duration') : null;
@@ -4546,7 +4546,7 @@ class Reports extends MY_Controller
 
     public function daily_sales_with_promo_code_by_order(){
 
-        $this->sma->checkPermissions('suppliers');
+        //$this->sma->checkPermissions('suppliers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
@@ -4583,7 +4583,7 @@ class Reports extends MY_Controller
 
     public function daily_sales_with_promo_code(){
 
-        $this->sma->checkPermissions('suppliers');
+        //$this->sma->checkPermissions('suppliers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
@@ -4725,7 +4725,7 @@ class Reports extends MY_Controller
 
     public function suppliers_trial_balance()
     {
-        $this->sma->checkPermissions('suppliers');
+        //$this->sma->checkPermissions('suppliers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['suppliers'] = $this->site->getAllChildCompanies('supplier');
 
@@ -4886,7 +4886,7 @@ class Reports extends MY_Controller
 
     public function customers_trial_balance()
     {
-        $this->sma->checkPermissions('customers');
+        //$this->sma->checkPermissions('customers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
@@ -5011,7 +5011,7 @@ class Reports extends MY_Controller
     public function item_movement_report_xls($productId, $type, $startDate, $endDate, $xls)
     {
 
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
 
@@ -5317,7 +5317,7 @@ class Reports extends MY_Controller
 
     public function inventory_movement()
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
@@ -5358,7 +5358,7 @@ class Reports extends MY_Controller
 
     public function inventory_movementBK()
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
@@ -5403,7 +5403,7 @@ class Reports extends MY_Controller
 
     public function vat_purchase()
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
 
@@ -5469,7 +5469,7 @@ class Reports extends MY_Controller
 
     public function vat_sale()
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
 
@@ -5529,7 +5529,7 @@ class Reports extends MY_Controller
     }
     public function vat_sale_pdf()
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
 
@@ -5593,7 +5593,7 @@ class Reports extends MY_Controller
 
     public function vat_purchase_ledger()
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
@@ -5629,7 +5629,7 @@ class Reports extends MY_Controller
 
     public function tax()
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $start_date = $this->input->post('start_date') ? $this->input->post('start_date') : null;
         $end_date = $this->input->post('end_date') ? $this->input->post('end_date') : null;
         if ($start_date) {
@@ -5648,7 +5648,7 @@ class Reports extends MY_Controller
 
     public function users()
     {
-        $this->sma->checkPermissions('staff');
+        //$this->sma->checkPermissions('staff');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('staff_report')]];
         $meta = ['page_title' => lang('staff_report'), 'bc' => $bc];
@@ -5672,7 +5672,7 @@ class Reports extends MY_Controller
     {
         $this->data['incentives'] = "incentive-screen";
 
-        $this->sma->checkPermissions('sales');
+        //$this->sma->checkPermissions('sales');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['users'] = $this->reports_model->getStaff();
         $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -5770,7 +5770,7 @@ class Reports extends MY_Controller
 
     public function warehouse_stock($warehouse = null)
     {
-        $this->sma->checkPermissions('index', true);
+        //$this->sma->checkPermissions('index', true);
         $data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->input->get('warehouse')) {
             $warehouse = $this->input->get('warehouse');

@@ -53,6 +53,168 @@
         {column_number: 9, filter_default_label: "[<?=lang('status');?>]", filter_type: "text", data: []},
     ], "footer");
 });
+
+if (localStorage.getItem('remove_slls')) {
+    if (localStorage.getItem('qtitems')) {
+        localStorage.removeItem('qtitems');
+    }
+    if (localStorage.getItem('sldiscount')) {
+        localStorage.removeItem('sldiscount');
+    }
+    if (localStorage.getItem('sltax2')) {
+        localStorage.removeItem('sltax2');
+    }
+    if (localStorage.getItem('slref')) {
+        localStorage.removeItem('slref');
+    }
+    if (localStorage.getItem('slshipping')) {
+        localStorage.removeItem('slshipping');
+    }
+    if (localStorage.getItem('slwarehouse')) {
+        localStorage.removeItem('slwarehouse');
+    }
+    if (localStorage.getItem('slnote')) {
+        localStorage.removeItem('slnote');
+    }
+    if (localStorage.getItem('slinnote')) {
+        localStorage.removeItem('slinnote');
+    }
+    if (localStorage.getItem('qtcustomer')) {
+        localStorage.removeItem('qtcustomer');
+    }
+    if (localStorage.getItem('slbiller')) {
+        localStorage.removeItem('slbiller');
+    }
+    if (localStorage.getItem('slcurrency')) {
+        localStorage.removeItem('slcurrency');
+    }
+    if (localStorage.getItem('sldate')) {
+        localStorage.removeItem('sldate');
+    }
+    if (localStorage.getItem('qtquote_status')) {
+        localStorage.removeItem('qtquote_status');
+    }
+    if (localStorage.getItem('slpayment_status')) {
+        localStorage.removeItem('slpayment_status');
+    }
+    if (localStorage.getItem('paid_by')) {
+        localStorage.removeItem('paid_by');
+    }
+    if (localStorage.getItem('amount_1')) {
+        localStorage.removeItem('amount_1');
+    }
+    if (localStorage.getItem('paid_by_1')) {
+        localStorage.removeItem('paid_by_1');
+    }
+    if (localStorage.getItem('pcc_holder_1')) {
+        localStorage.removeItem('pcc_holder_1');
+    }
+    if (localStorage.getItem('pcc_type_1')) {
+        localStorage.removeItem('pcc_type_1');
+    }
+    if (localStorage.getItem('pcc_month_1')) {
+        localStorage.removeItem('pcc_month_1');
+    }
+    if (localStorage.getItem('pcc_year_1')) {
+        localStorage.removeItem('pcc_year_1');
+    }
+    if (localStorage.getItem('pcc_no_1')) {
+        localStorage.removeItem('pcc_no_1');
+    }
+    if (localStorage.getItem('cheque_no_1')) {
+        localStorage.removeItem('cheque_no_1');
+    }
+    if (localStorage.getItem('payment_note_1')) {
+        localStorage.removeItem('payment_note_1');
+    }
+    if (localStorage.getItem('slpayment_term')) {
+        localStorage.removeItem('slpayment_term');
+    }
+    localStorage.removeItem('remove_slls');
+}
+
+<?php if ($this->session->userdata('remove_slls')) {
+?>
+
+if (localStorage.getItem('qtitems')) {
+    localStorage.removeItem('qtitems');
+}
+if (localStorage.getItem('sldiscount')) {
+    localStorage.removeItem('sldiscount');
+}
+if (localStorage.getItem('sltax2')) {
+    localStorage.removeItem('sltax2');
+}
+if (localStorage.getItem('slref')) {
+    localStorage.removeItem('slref');
+}
+if (localStorage.getItem('slshipping')) {
+    localStorage.removeItem('slshipping');
+}
+if (localStorage.getItem('slwarehouse')) {
+    localStorage.removeItem('slwarehouse');
+}
+if (localStorage.getItem('slnote')) {
+    localStorage.removeItem('slnote');
+}
+if (localStorage.getItem('slinnote')) {
+    localStorage.removeItem('slinnote');
+}
+if (localStorage.getItem('qtcustomer')) {
+    localStorage.removeItem('qtcustomer');
+}
+if (localStorage.getItem('slbiller')) {
+    localStorage.removeItem('slbiller');
+}
+if (localStorage.getItem('slcurrency')) {
+    localStorage.removeItem('slcurrency');
+}
+if (localStorage.getItem('sldate')) {
+    localStorage.removeItem('sldate');
+}
+if (localStorage.getItem('qtquote_status')) {
+    localStorage.removeItem('qtquote_status');
+}
+if (localStorage.getItem('slpayment_status')) {
+    localStorage.removeItem('slpayment_status');
+}
+if (localStorage.getItem('paid_by')) {
+    localStorage.removeItem('paid_by');
+}
+if (localStorage.getItem('amount_1')) {
+    localStorage.removeItem('amount_1');
+}
+if (localStorage.getItem('paid_by_1')) {
+    localStorage.removeItem('paid_by_1');
+}
+if (localStorage.getItem('pcc_holder_1')) {
+    localStorage.removeItem('pcc_holder_1');
+}
+if (localStorage.getItem('pcc_type_1')) {
+    localStorage.removeItem('pcc_type_1');
+}
+if (localStorage.getItem('pcc_month_1')) {
+    localStorage.removeItem('pcc_month_1');
+}
+if (localStorage.getItem('pcc_year_1')) {
+    localStorage.removeItem('pcc_year_1');
+}
+if (localStorage.getItem('pcc_no_1')) {
+    localStorage.removeItem('pcc_no_1');
+}
+if (localStorage.getItem('cheque_no_1')) {
+    localStorage.removeItem('cheque_no_1');
+}
+if (localStorage.getItem('payment_note_1')) {
+    localStorage.removeItem('payment_note_1');
+}
+if (localStorage.getItem('slpayment_term')) {
+    localStorage.removeItem('slpayment_term');
+}
+localStorage.removeItem('remove_slls');
+
+<?php $this->sma->unset_data('remove_slls'); } ?>
+
 </script>
 
 <!-- ✅ Existing HTML below stays same -->
@@ -64,7 +226,7 @@
         <h2 class="blue"><i class="fa-fw fa fa-heart-o"></i><?= lang('quotes') . ' (' . ($warehouse_id ? $warehouse->name : lang('all_warehouses')) . ')'; ?></h2>
         <div class="box-icon">
             <ul class="btn-tasks">
-                <li class="dropdown">
+                <!--<li class="dropdown">
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#"><i class="icon fa fa-tasks tip" data-placement="left" title="<?= lang('actions') ?>"></i></a>
                     <ul class="dropdown-menu pull-right" class="tasks-menus" role="menu" aria-labelledby="dLabel">
                         <li><a href="<?= admin_url('quotes/add') ?>"><i class="fa fa-plus-circle"></i> <?= lang('add_quote') ?></a></li>
@@ -77,7 +239,7 @@
                             <button class='btn bpo-close'><?= lang('no') ?></button>"
                             data-html="true" data-placement="left"><i class="fa fa-trash-o"></i> <?= lang('delete_quotes') ?></a></li>
                     </ul>
-                </li>
+                </li>-->
 
                 <?php if (!empty($warehouses)) { ?>
                 <li class="dropdown">

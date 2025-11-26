@@ -39,9 +39,10 @@ class Delivery extends MY_Controller
             ->select("deliveries.id, 
                   DATE_FORMAT(sma_deliveries.date_string, '%Y-%m-%d') as date, 
                   COALESCE(CONCAT(u.first_name, ' ', u.last_name), deliveries.driver_name, 'N/A') as driver, 
-                  COALESCE(CAST(dd.truck_id AS CHAR), deliveries.truck_number, 'N/A') as truck", FALSE)
+                  tr.truck_no as truck", FALSE)
             ->from('sma_deliveries')
             ->join('sma_delivery_driver dd', 'deliveries.driver_id = dd.id', 'left')
+            ->join('sma_truck_registration tr', 'deliveries.truck_number = tr.id', 'left')
             ->join('sma_users u', 'u.id = (SELECT id FROM sma_users WHERE group_id = dd.groupId LIMIT 1)', 'left')
             ->add_column('Actions',
                 "<div class='text-center'>" .
@@ -64,7 +65,7 @@ class Delivery extends MY_Controller
         $this->db->select('s.id, s.reference_no, s.date as sale_date, s.grand_total as total_amount, s.total_items, c.name as customer_name');
         $this->db->from('sma_sales s');
         $this->db->join('sma_companies c', 's.customer_id = c.id', 'left');
-        $this->db->where_in('s.sale_status', ['label_verifired']);
+        $this->db->where_in('s.sale_status', ['sent_to_rasd']);
         $this->db->order_by('s.date', 'asc');
         $invoices_query = $this->db->get();
         if ($invoices_query === false) {
@@ -90,6 +91,7 @@ class Delivery extends MY_Controller
 
         // Get registered drivers from the driver group
         $this->data['drivers'] = $this->get_registered_drivers();
+        $this->data['trucks'] = $this->get_available_trucks();
 
         $bc = [
             ['link' => base_url(), 'page' => lang('home')],
@@ -99,6 +101,22 @@ class Delivery extends MY_Controller
         $meta = ['page_title' => 'Add Delivery', 'bc' => $bc];
         $this->data['page_title'] = 'Add Delivery';
         $this->page_construct('delivery/add', $meta, $this->data);
+    }
+
+    private function get_available_trucks(){
+
+        $this->db->select('id, truck_no, status');
+        $this->db->from('sma_truck_registration');
+        $this->db->where('status', 'available');
+        // $this->db->where('status !=', 'out_for_delivery');
+        $trucks_query = $this->db->get();
+
+        if ($trucks_query->num_rows() === 0) {
+            log_message('error', 'Trucks not found in sma_truck_registration table');
+            return [];
+        }
+
+        return $trucks_query->result();
     }
 
     /**
@@ -168,6 +186,7 @@ class Delivery extends MY_Controller
 
         // Verify that the selected driver exists and belongs to the driver group
         $driver_id = $this->input->post('driver_id');
+        $truck_id = $this->input->post('truck_id');
         $driver = $this->verify_driver($driver_id);
 
         if (!$driver) {
@@ -179,10 +198,10 @@ class Delivery extends MY_Controller
         $delivery_data = [
             'driver_id' => $driver_id,
             'driver_name' => $driver->first_name . ' ' . $driver->last_name,
-            'truck_number' => $driver->truck_id ?: 'N/A',
+            'truck_number' => $truck_id ?: 'N/A',
             //'license_number' => $driver->license_number ?: 'N/A',
             'status' => $this->input->post('status', true) ?: 'pending',
-            'date_string' => !empty($this->input->post('date_string')) ? $this->sma->fld($this->input->post('date_string')) : date('Y-m-d H:i:s'),
+            'date_string' => !empty($this->input->post('date_string')) ? $this->input->post('date_string') : date('Y-m-d H:i:s'),
             'assigned_by' => $this->session->userdata('user_id')
         ];
 
@@ -219,6 +238,8 @@ class Delivery extends MY_Controller
             'items' => $items,
             'invoice_ids' => $invoice_ids
         ];
+
+        //echo '<pre>'; print_r($data); exit;
 
         $delivery_id = $this->delivery_model->add_delivery($data);
 
@@ -291,6 +312,7 @@ class Delivery extends MY_Controller
 
         // Get registered drivers for dropdown
         $this->data['drivers'] = $this->get_registered_drivers();
+        //$this->data['trucks'] = $this->get_available_trucks();
 
         // Get all pending sales invoices for adding new items
         $this->db->select('s.id, s.reference_no, s.date as sale_date, s.grand_total as total_amount, s.total_items, c.name as customer_name, 
@@ -304,7 +326,7 @@ class Delivery extends MY_Controller
         $this->db->join('sma_delivery_items di', 's.id = di.invoice_id', 'left');
         $this->db->join('sma_deliveries d', 'di.delivery_id = d.id', 'left');
         $this->db->join('sma_sale_labels sl', 's.id = sl.sale_id', 'left');
-        $this->db->where_in('s.sale_status', ['label_verifired']);
+        $this->db->where_in('s.sale_status', ['sent_to_rasd']);
         $this->db->group_by('sl.sale_id');
         $this->db->order_by('s.date', 'asc');
         $invoices_query = $this->db->get();
@@ -360,17 +382,18 @@ class Delivery extends MY_Controller
             exit;
         }
         
-        foreach($delivery_items as $item){
+        /*foreach($delivery_items as $item){
             $sale_details = $this->sales_model->getSaleByID($item->invoice_id);
             if($sale_details->sale_status != 'sent_to_rasd' && $status != 'delivered'){
                 $this->session->set_flashdata('error', 'Invoice #'.$item->invoice_id.' not sent to rasd.');
                 redirect(admin_url('delivery/edit/' . $delivery_id));
                 exit;
             }
-        }
+        }*/
 
         // Verify driver
         $driver_id = $this->input->post('driver_id');
+        $truck_id = $this->input->post('truck_id');
         //echo '<pre>';print_r($delivery_items);exit;
         /*$invoice_ids = $this->input->post('invoice_ids');
          if (empty($invoice_ids)) {
@@ -389,10 +412,11 @@ class Delivery extends MY_Controller
 
         $delivery_data = [
             'driver_id' => $driver_id,
+            'truck_id' => $truck_id,
             'status' => $status,
             'odometer' => $odometer,
             'odometer_mileage' => $odometer_mileage,
-            'date_string' => $this->sma->fld($this->input->post('date_string')),
+            'date_string' => $this->input->post('date_string'),
             'updated_by' => $this->session->userdata('user_id'),
             'updated_at' => date('Y-m-d H:i:s')
         ];
@@ -669,20 +693,20 @@ class Delivery extends MY_Controller
      */
     public function get_last_odometer()
     {
-        $driver_id = $this->input->post('driver_id');
+        $truck_id = $this->input->post('truck_id');
 
-        if (!$driver_id) {
-            echo json_encode(['success' => false, 'message' => 'Driver ID required']);
+        if (!$truck_id) {
+            echo json_encode(['success' => false, 'message' => 'Truck ID required']);
             return;
         }
 
-        $this->db->select('odometer, odometer_mileage, DATE_FORMAT(date_string, "%Y-%m-%d %H:%i") as date', FALSE);
-        $this->db->from('sma_deliveries');
-        $this->db->where('driver_id', $driver_id);
+        $this->db->select('odometer', FALSE);
+        $this->db->from('sma_truck_registration');
+        $this->db->where('id', $truck_id);
         $this->db->where('odometer IS NOT NULL');
         $this->db->where('odometer > 0');
-        $this->db->order_by('date_string', 'DESC');
-        $this->db->limit(1);
+        //$this->db->order_by('date_string', 'DESC');
+        //$this->db->limit(1);
 
         $query = $this->db->get();
 
@@ -691,8 +715,8 @@ class Delivery extends MY_Controller
             echo json_encode([
                 'success' => true,
                 'data' => [
-                    'odometer' => $result['odometer'] + $result['odometer_mileage'],
-                    'date' => $result['date']
+                    'odometer' => $result['odometer'],
+                    //'date' => $result['date']
                 ]
             ]);
         } else {

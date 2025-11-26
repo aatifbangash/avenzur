@@ -248,21 +248,21 @@
                 $ready_status = 'completed';
                 $printed_label_status = 'completed';
                 $label_verifired_status = 'completed';
-                $driver_assigned_status = 'active';
-                $rasd_status = '';
-                $out_for_delivery_status = '';
-                $delivered = '';
-                $invoiced = '';
-            }else if($inv->sale_status == 'driver_assigned'){
-                $ready_status = 'completed';
-                $printed_label_status = 'completed';
-                $label_verifired_status = 'completed';
-                $driver_assigned_status = 'completed';
+                $driver_assigned_status = '';
                 $rasd_status = 'active';
                 $out_for_delivery_status = '';
                 $delivered = '';
                 $invoiced = '';
             }else if($inv->sale_status == 'sent_to_rasd'){
+                $ready_status = 'completed';
+                $printed_label_status = 'completed';
+                $label_verifired_status = 'completed';
+                $driver_assigned_status = 'active';
+                $rasd_status = 'completed';
+                $out_for_delivery_status = '';
+                $delivered = '';
+                $invoiced = '';
+            }else if($inv->sale_status == 'driver_assigned'){
                 $ready_status = 'completed';
                 $printed_label_status = 'completed';
                 $label_verifired_status = 'completed';
@@ -315,13 +315,13 @@
                 <div class="step-circle">3</div>
                 <div class="step-label">Label Verified</div>
             </div>
-            <div class="progress-step <?php echo $driver_assigned_status; ?>">
-                <div class="step-circle">4</div>
-                <div class="step-label">Driver Assigned</div>
-            </div>
             <div class="progress-step <?php echo $rasd_status; ?>">
-                <div class="step-circle">5</div>
+                <div class="step-circle">4</div>
                 <div class="step-label">Send To Rasd</div>
+            </div>
+            <div class="progress-step <?php echo $driver_assigned_status; ?>">
+                <div class="step-circle">5</div>
+                <div class="step-label">Driver Assigned</div>
             </div>
             <div class="progress-step <?php echo $out_for_delivery_status; ?>">
                 <div class="step-circle">6</div>
@@ -343,7 +343,7 @@
         <div class="buttons">
             <div class="btn-group btn-group-justified">
                 <?php 
-                    if(($this->Admin || $this->Owner || $this->WarehouseSupervisor) && ($inv->sale_status == 'ready')){
+                    if(($this->Admin || $this->Owner || $GP['sales-add-label']) && ($inv->sale_status == 'ready')){
                 ?>
                 <div class="btn-group">
                     <a href="<?= admin_url('sales/add_label/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-primary tip" title="<?= lang('add_label') ?>">
@@ -355,7 +355,7 @@
                 ?>
 
                 <?php 
-                    if($this->Admin || $this->Owner || $this->WarehouseSupervisor){
+                    if($this->Admin || $this->Owner || $GP['sales-verify-label']){
                 ?>
                 <div class="btn-group">
                     <a href="<?= admin_url('sales/verify_label/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-primary tip" title="<?= lang('verify_label') ?>">
@@ -367,7 +367,7 @@
                 ?>
 
                 <?php 
-                    if(($this->Admin || $this->Owner || $this->WarehouseSupervisor) && ($inv->sale_status == 'label_verifired')){
+                    if(($this->Admin || $this->Owner || $GP['sales-index']) && ($inv->sale_status == 'sent_to_rasd')){
                 ?>
                 <!--<div class="btn-group">
                     <a href="<?= admin_url('sales/add_driver/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-primary tip" title="<?= lang('add_driver') ?>">
@@ -379,7 +379,7 @@
                 ?>
 
                 <?php 
-                    if(($this->Admin || $this->Owner || $this->WarehouseSupervisor)  && ($inv->sale_status == 'driver_assigned')){
+                    if(($this->Admin || $this->Owner || $GP['sales-rsd'])  && ($inv->sale_status == 'label_verifired')){
                 ?>
                 <div class="btn-group">
                     <a href="<?= admin_url('sales/send_to_rasd/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-primary tip" title="<?= lang('send_to_rasd') ?>">
@@ -391,7 +391,7 @@
                 ?>
 
                 <?php 
-                    if(($this->Admin || $this->Owner || $this->WarehouseSupervisor)  && ($inv->sale_status == 'out_for_delivery')){
+                    if(($this->Admin || $this->Owner || $GP['sales-index'])  && ($inv->sale_status == 'out_for_delivery')){
                 ?>
                 <!--<div class="btn-group">
                     <a href="<?= admin_url('sales/edit_delivery/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-primary tip" title="<?= lang('add_delivery') ?>">
@@ -403,7 +403,7 @@
                 ?>
 
                 <?php 
-                    if(($this->Admin || $this->Owner || $this->Accountant) && ($inv->sale_status == 'delivered')){
+                    if(($this->Admin || $this->Owner || $this->GP['sales-create-invoice']) && ($inv->sale_status == 'delivered')){
                 ?>
                 <div class="btn-group">
                     <a href="<?= admin_url('sales/create_sale_invoice/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-primary" title="<?= lang('sale_invoice') ?>">

@@ -23,9 +23,7 @@
                                         data-license="<?=$driver->license_number ?? 'N/A'?>"
                                         <?= (isset($delivery->driver_id) && $delivery->driver_id == $driver->id) ? 'selected' : '' ?>>
                                     <?=$driver->first_name?> <?=$driver->last_name?>
-                                    <?php if ($driver->truck_id): ?>
-                                        (Truck: <?=$driver->truck_id?>)
-                                    <?php endif; ?>
+                                    
                                 </option>
                             <?php endforeach; ?>
                         <?php else: ?>
@@ -36,12 +34,20 @@
                     <?php echo form_error('driver_id', '<span class="help-block text-danger">', '</span>'); ?>
                 </div>
 
+                <div class="form-group">
+                    <label for="date_string"><?=lang('date')?></label>
+                    <input type="text" name="date_string" id="date_string" class="form-control datepicker" value="<?=!empty($delivery->date_string) ? date('Y-m-d', strtotime($delivery->date_string)) : ''?>" />
+                </div>
+                
+                
+            
+
                 <?php
                     if($delivery->status == 'out_for_delivery'){
                         ?>
                         <div class="form-group<div class="form-group">
                             <label for="odometer"><?=lang('Odometer Start')?></label>
-                            <input type="number" name="odometer_mileage" id="odometer" class="form-control" value="<?=$delivery->odometer?>" readonly />
+                            <input type="number" name="odometer" id="odometer" class="form-control" value="<?=$delivery->odometer?>" readonly />
                         </div>
 
                         <div class="form-group<div class="form-group">
@@ -62,9 +68,12 @@
             </div>
 
             <div class="col-md-6">
+                <!-- Truck Selection Dropdown -->
                 <div class="form-group">
-                    <label for="date_string"><?=lang('date')?></label>
-                    <input type="text" name="date_string" id="date_string" class="form-control datepicker" value="<?=!empty($delivery->date_string) ? date('Y-m-d', strtotime($delivery->date_string)) : ''?>" />
+                    <label for="truck_id"><?=lang('select_truck')?> <span class="required">*</span></label>
+                    <select name="truck_id" id="truck_id" class="form-control select2" required style="width:100%">
+                        <option value="<?= $delivery->truck_number; ?>"> <?=$delivery->truck_no?> </option>
+                    </select>
                 </div>
 
                 <?php

@@ -169,6 +169,18 @@ class Companies_model extends CI_Model
         return false;
     }
 
+    public function getAllSalesMan()
+    {
+        $q = $this->db->get_where('sma_sales_man');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
     public function getBillerSales($id)
     {
         $this->db->where('biller_id', $id)->from('sales');
@@ -239,6 +251,15 @@ class Companies_model extends CI_Model
     public function getCompanyByID($id)
     {
         $q = $this->db->get_where('companies', ['id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getSalesManByName($name)
+    {
+        $q = $this->db->get_where('sales_man', ['name' => $name], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -440,5 +461,23 @@ class Companies_model extends CI_Model
             return true;
         }
         return false;
+    }
+
+    public function getCustomerBalance($customer_id)
+    {
+        // Get total outstanding balance for customer (grand_total - paid)
+        $this->db->select('COALESCE(SUM(grand_total - paid), 0) as balance', false);
+        $this->db->from('sales');
+        $this->db->where('customer_id', $customer_id);
+        $this->db->where('payment_status !=', 'paid');
+        
+        $query = $this->db->get();
+        
+        if ($query->num_rows() > 0) {
+            $row = $query->row();
+            return $row->balance;
+        }
+        
+        return 0;
     }
 }

@@ -22,19 +22,18 @@
             "aoColumns": [{
                 "bSortable": false,
                 "mRender": checkbox
-            }, null, null, null, null, null, null, null, null, null, {"mRender": currencyFormat}, null, {"bSortable": false}]
+            }, null, null, null, null, null, null, null, null, null, null, {"bSortable": false}]
         }).dtFilter([
-            {column_number: 1, filter_default_label: "[<?=lang('company');?>]", filter_type: "text", data: []},
-            {column_number: 2, filter_default_label: "[<?=lang('sequence_code');?>]", filter_type: "text", data: []},
-            {column_number: 3, filter_default_label: "[<?=lang('name');?>]", filter_type: "text", data: []},
-            {column_number: 4, filter_default_label: "[<?=lang('email_address');?>]", filter_type: "text", data: []},
-            {column_number: 5, filter_default_label: "[<?=lang('phone');?>]", filter_type: "text", data: []},
-            {column_number: 6, filter_default_label: "[<?=lang('price_group');?>]", filter_type: "text", data: []},
-            {column_number: 7, filter_default_label: "[<?=lang('customer_group');?>]", filter_type: "text", data: []},
-            {column_number: 8, filter_default_label: "[<?=lang('vat_no');?>]", filter_type: "text", data: []},
-            {column_number: 9, filter_default_label: "[<?=lang('gst_no');?>]", filter_type: "text", data: []},
-            {column_number: 10, filter_default_label: "[<?=lang('deposit');?>]", filter_type: "text", data: []},
-            {column_number: 11, filter_default_label: "[<?=lang('award_points');?>]", filter_type: "text", data: []},
+            {column_number: 1, filter_default_label: "[<?=lang('sequence_code');?>]", filter_type: "text", data: []},
+            {column_number: 2, filter_default_label: "[<?=lang('name');?>]", filter_type: "text", data: []},
+            {column_number: 3, filter_default_label: "[<?=lang('vat_no');?>]", filter_type: "text", data: []},
+            {column_number: 4, filter_default_label: "[<?=lang('gln');?>]", filter_type: "text", data: []},
+            {column_number: 5, filter_default_label: "[<?=lang('cr');?>]", filter_type: "text", data: []},
+            {column_number: 6, filter_default_label: "[<?=lang('short_address');?>]", filter_type: "text", data: []},
+            {column_number: 7, filter_default_label: "[<?=lang('address');?>]", filter_type: "text", data: []},
+            {column_number: 8, filter_default_label: "[<?=lang('credit_limit');?>]", filter_type: "text", data: []},
+            {column_number: 9, filter_default_label: "[<?=lang('payment_term');?>]", filter_type: "text", data: []},
+            {column_number: 10, filter_default_label: "[<?=lang('category');?>]", filter_type: "text", data: []},
         ], "footer");
         $('#myModal').on('hidden.bs.modal', function () {
             cTable.fnDraw( false );
@@ -55,22 +54,30 @@
                         <i class="icon fa fa-tasks tip" data-placement="left" title="<?= lang('actions') ?>"></i>
                     </a>
                     <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
+                        <?php 
+                        if($this->Owner || $this->Admin || $this->GP['customers-add']){
+                        ?>
                         <li>
                             <a href="<?= admin_url('customers/add'); ?>" data-toggle="modal" data-target="#myModal" id="add">
                                 <i class="fa fa-plus-circle"></i> <?= lang('add_customer'); ?>
                             </a>
                         </li>
+                        <?php } ?>
                         <!--<li>
                             <a href="<?= admin_url('customers/import_csv'); ?>" data-toggle="modal" data-target="#myModal">
                                 <i class="fa fa-plus-circle"></i> <?= lang('import_by_csv'); ?>
                             </a>
                         </li>-->
+                        <?php 
+                        if($this->Owner || $this->Admin || $this->GP['customers-add']){
+                        ?>
                         <li>
                             <a href="<?= admin_url('customers/import_excel'); ?>" data-toggle="modal" data-target="#myModal">
                                 <i class="fa fa-plus-circle"></i> <?= lang('import_by_excel'); ?>
                             </a>
                         </li>
-                        <?php if ($Owner) {
+                        <?php } ?>
+                        <?php if ($Owner || $this->Admin || $this->GP['customers-index']) {
                             ?>
                         <li>
                             <a href="#" id="excel" data-action="export_excel">
@@ -105,17 +112,16 @@
                             <th style="min-width:30px; width: 30px; text-align: center;">
                                 <input class="checkbox checkth" type="checkbox" name="check"/>
                             </th>
-                            <th><?= lang('company'); ?></th>
                             <th><?= lang('sequence_code'); ?></th>
                             <th><?= lang('name'); ?></th>
-                            <th><?= lang('email_address'); ?></th>
-                            <th><?= lang('phone'); ?></th>
-                            <th><?= lang('price_group'); ?></th>
-                            <th><?= lang('customer_group'); ?></th>
                             <th><?= lang('vat_no'); ?></th>
-                            <th><?= lang('gst_no'); ?></th>
-                            <th><?= lang('deposit'); ?></th>
-                            <th><?= lang('award_points'); ?></th>
+                            <th><?= lang('gln'); ?></th>
+                            <th><?= lang('cr'); ?></th>
+                            <th><?= lang('short_address'); ?></th>
+                            <th><?= lang('address'); ?></th>
+                            <th><?= lang('credit_limit'); ?></th>
+                            <th><?= lang('payment_term'); ?></th>
+                            <th><?= lang('category'); ?></th>
                             <th style="min-width:135px !important;"><?= lang('actions'); ?></th>
                         </tr>
                         </thead>

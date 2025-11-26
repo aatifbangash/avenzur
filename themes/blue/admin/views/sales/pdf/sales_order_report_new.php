@@ -48,22 +48,13 @@
                     <?php $col = 6; ?>
                     <tr>
                         <th>#</th>
+                        <th><?= lang('Item No.'); ?></th>
+                        <th><?= lang('Old No.'); ?></th>
                         <th><?= lang('Description'); ?></th>
                         <th><?= lang('Warehouse Shelf'); ?></th>
                         <th><?= lang('Batch'); ?></th>
                         <th><?= lang('Expiry'); ?></th>
                         <th><?= lang('Qty'); ?></th>
-                        <th><?= lang('S.Price'); ?></th>
-                        <th><?= lang('S.Total'); ?></th>
-                        <?php
-                        echo '<th>' . lang('Total_without_VAT') . '</th>';
-                        if ($Settings->tax1 && $inv->product_tax > 0) {
-                            $col +=2; 
-                            echo '<th>' . lang('VAT%') . '</th>';
-                            echo '<th>' . lang('VAT') . '</th>';
-                        }
-                        echo '<th>' . lang('Total With VAT') . '</th>';
-                        ?>
                     </tr>
 
                 </thead>
@@ -78,11 +69,19 @@
                         <tr>
                             <td style="text-align:center;vertical-align:middle;"><?= $r; ?></td>
                             <td style="vertical-align:middle;">
-                                <?= $row->product_name . ($row->product_code ? ' (' . $row->product_code . ')' : ''); ?>
+                                <?= $row->product_code ?  $row->product_code : ' - '; ?>
+                                
+                            </td>
+                            <td style="vertical-align:middle;">
+                                <?= $row->item_code ?  $row->item_code : ' - '; ?>
+                                
+                            </td>
+                            <td style="vertical-align:middle;">
+                                <?= $row->product_name; ?>
                                 
                             </td>
                             <td style="text-align:center; vertical-align:middle;">
-                                <?= $row->warehouse_shelf ? ' - '.$row->warehouse_shelf : '-' ?>
+                                <?= $row->warehouse_shelf ? $row->warehouse_shelf : '-' ?>
                             </td>
                             <td style="text-align:center; vertical-align:middle;">
                                 <?= $row->batch_no; ?>
@@ -94,21 +93,21 @@
                                 <?= $this->sma->formatQuantity($row->unit_quantity); ?>
                             </td>
                             
-                            <td style="text-align:right;">
+                            <!--<td style="text-align:right;">
                                 <?= $this->sma->formatNumber($row->real_unit_price); ?>
                             </td>
                             <td style="text-align:right;"><?= $this->sma->formatNumber($row->subtotal); ?></td>
                             
-                            <td style="text-align:right;"><?= $this->sma->formatNumber($row->totalbeforevat, null); ?></td>
+                            <td style="text-align:right;"><?= $this->sma->formatNumber($row->totalbeforevat, null); ?></td>-->
                             <?php
                             $vat_value = 0;
                             if ($Settings->tax1 && $inv->product_tax > 0) {
                                 $vat_value = $this->sma->formatNumber($row->item_tax);
-                                echo '<td style="text-align:right; vertical-align:middle;">' . ($row->item_tax != 0 ?  ($Settings->indian_gst ? $row->tax : $row->tax_code)  : '') . '</td>';
-                                echo '<td>'.$this->sma->formatNumber($row->tax).'</td>';
+                                /*echo '<td style="text-align:right; vertical-align:middle;">' . ($row->item_tax != 0 ?  ($Settings->indian_gst ? $row->tax : $row->tax_code)  : '') . '</td>';
+                                echo '<td>'.$this->sma->formatNumber($row->tax).'</td>';*/
                             }
                             ?>
-                            <td style="text-align:right;"><?= $this->sma->formatNumber($row->main_net); ?></td> 
+                            <!--<td style="text-align:right;"><?= $this->sma->formatNumber($row->main_net); ?></td> -->
                         </tr>
                         <?php
                         $totalAmount += $subTotal;

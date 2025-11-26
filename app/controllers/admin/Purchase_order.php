@@ -406,7 +406,7 @@ class Purchase_order extends MY_Controller
                     ['id' => $pr_id]
                 );
             }
-            admin_redirect('purchase_order?lastInsertedId=' . $purchase_id);
+            admin_redirect('purchase_order');
             // check for action against pr
 
             //if( $this->input->post->('action') == 'create_po' && $this->input->post('pr_id') ) {
@@ -574,7 +574,7 @@ class Purchase_order extends MY_Controller
 
     public function edit($id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -1039,7 +1039,7 @@ class Purchase_order extends MY_Controller
         //error_reporting(E_ALL);        // Report all errorsP
         //ini_set('display_errors', 1); 
 
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
             $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -1316,7 +1316,7 @@ class Purchase_order extends MY_Controller
 
     public function modal_view($purchase_id = null)
     {
-        $this->sma->checkPermissions('index', true);
+        //$this->sma->checkPermissions('index', true);
 
         if ($this->input->get('id')) {
             $purchase_id = $this->input->get('id');
@@ -1360,7 +1360,7 @@ class Purchase_order extends MY_Controller
 
     public function pdf($purchase_id = null, $view = null, $save_bufffer = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         if ($this->input->get('id')) {
             $purchase_id = $this->input->get('id');
@@ -1486,7 +1486,7 @@ class Purchase_order extends MY_Controller
 
     public function return_purchase($id = null)
     {
-        $this->sma->checkPermissions('return_purchases');
+        //$this->sma->checkPermissions('return_purchases');
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -1785,7 +1785,7 @@ class Purchase_order extends MY_Controller
 
     public function view($purchase_id = null)
     {
-        $this->sma->checkPermissions('index');
+        //$this->sma->checkPermissions('index');
 
         if ($this->input->get('id')) {
             $purchase_id = $this->input->get('id');
@@ -2040,7 +2040,7 @@ class Purchase_order extends MY_Controller
 
     public function view_return($id = null)
     {
-        $this->sma->checkPermissions('return_purchases');
+        //$this->sma->checkPermissions('return_purchases');
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');

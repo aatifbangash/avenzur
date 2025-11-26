@@ -181,8 +181,12 @@
                                 <th><?php echo $this->lang->line('Reference no') ?></th>
                                 <th><?php echo $this->lang->line('Type') ?></th>
                                 <th><?php echo $this->lang->line('Orig. Amt.') ?></th>
-                                <th><?php echo $this->lang->line('Amt. Due.'); ?></th>
+                                <th><?php echo $this->lang->line('Return. Amt.') ?></th>
+                                <th><?php echo $this->lang->line('Discount') ?></th>
                                 <th><?php echo $this->lang->line('Payment'); ?></th>
+                                <th><?php echo $this->lang->line('Amt. Due.'); ?></th>
+                                
+                                
                             </tr>
                             </thead>
                             <tbody>
@@ -197,8 +201,11 @@
                                             <td><?= $payment->sale_id != '' ? $payment->ref_no: $payment->reference_no; ?></td>
                                             <td><?= $payment->sale_id != '' ? 'Invoice Payment' : 'Advance Collection'; ?></td>
                                             <td><?= $payment->grand_total > 0 ? number_format($payment->grand_total, 2) : '0.00'; ?></td>
-                                            <td><?= ($payment->grand_total - $payment->amount) > 0 ? number_format(($payment->grand_total - $payment->amount), 2) : '0.00'; ?></td>
+                                            <td><?= $payment->returns_total_deducted > 0 ? number_format($payment->returns_total_deducted, 2) : '0.00'; ?></td>
+                                            <td><?= $payment->additional_discount > 0 ? number_format($payment->additional_discount, 2) : '0.00'; ?></td>
                                             <td><?= number_format($payment->amount, 2); ?></td>
+                                            <td><?= ($payment->grand_total - $payment->amount - $payment->additional_discount - $payment->returns_total_deducted) > 0 ? number_format(($payment->grand_total - $payment->amount - $payment->additional_discount - $payment->returns_total_deducted), 2) : '0.00'; ?></td>
+                                            
                                         </tr>
                                         <?php
                                     }

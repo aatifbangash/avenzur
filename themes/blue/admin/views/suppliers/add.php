@@ -19,46 +19,46 @@
 
             <div class="row">
                 <div class="col-md-6">
-                    <div class="form-group company">
-                        <?= lang('company', 'company'); ?>
-                        <?php echo form_input('company', '', 'class="form-control tip" id="company" data-bv-notempty="true"'); ?>
-                    </div>
                     <div class="form-group person">
                         <?= lang('name', 'name'); ?>
                         <?php echo form_input('name', '', 'class="form-control tip" id="name" data-bv-notempty="true"'); ?>
                     </div>
-
+    
                     <div class="form-group  ">
                         <?= lang('name_arabic', 'name_arabic'); ?>
                         <?php echo form_input('name_ar', '', 'class="form-control tip" id="name" data-bv-notempty="true"'); ?>
                     </div>
 
-                    <div class="form-group  ">
-                        <?= lang('category', 'category'); ?>
-                        <?php $catogories_arr = [''=>'Please Select', 'خدمات ' => lang('خدمات'), 'مستودع' => lang('مستودع'), 'وكيل' => lang('وكيل')];
-                        echo form_dropdown('category', $catogories_arr, '', 'class="form-control select" id="category" name="category" required="required"'); ?>
+                    <div class="form-group">
+                        <?= lang('level', 'level'); ?>
+                        <?php 
+                        $level_options = [
+                            '1' => lang('parent'),
+                            '2' => lang('child')
+                        ];
+                        echo form_dropdown('level', $level_options, '1', 'class="form-control select" id="level"'); 
+                        ?>
                     </div>
 
-
-               
                     <!--<div class="form-group company">
                     <?= lang('contact_person', 'contact_person'); ?>
                     <?php echo form_input('contact_person', '', 'class="form-control" id="contact_person" data-bv-notempty="true"'); ?>
                 </div>-->
                     <div class="form-group">
                         <?= lang('email_address', 'email_address'); ?>
-                        <input type="email" name="email" class="form-control" required="required" id="email_address"/>
+                        <input type="email" name="email" class="form-control" id="email_address"/>
                     </div>
                     <div class="form-group">
-                        <?= lang('phone', 'phone'); ?>
-                        <input type="tel" name="phone" class="form-control" required="required" id="phone"/>
+                        <?= lang('Vat No', 'vat_no'); ?>
+                        <?php echo form_input('vat_no', '', 'class="form-control" id="vat_no"'); ?>
                     </div>
+                    
                     <div class="form-group">
-                        <?= lang('contact_name', 'contact_name'); ?>
+                        <?= lang('Contact_Name', 'contact_name'); ?>
                         <?php echo form_input('contact_name', '', 'class="form-control" id="contact_name"'); ?>
                     </div>
                     <div class="form-group">
-                        <?= lang('contact_number', 'contact_number'); ?>
+                        <?= lang('Contact_Number', 'contact_number'); ?>
                         <?php echo form_input('contact_number', '', 'class="form-control" id="contact_number"'); ?>
                     </div>
                     <div class="form-group">
@@ -66,17 +66,74 @@
                         <?php echo form_input('address', '', 'class="form-control" id="address" required="required"'); ?>
                     </div>
                     <div class="form-group">
-                        <?= lang('short_address', 'short_address'); ?>
-                        <?php echo form_input('short_address', '', 'class="form-control" id="short_address"'); ?>
-                    </div>
-                    <div class="form-group">
-                        <?= lang('building_number', 'building_number'); ?>
-                        <?php echo form_input('building_number', '', 'class="form-control" id="building_number"'); ?>
+                        <?= lang('country', 'country'); ?>
+                        <?php echo form_input('country', '', 'class="form-control" id="country"'); ?>
                     </div>
                     <div class="form-group">
                         <?= lang('city', 'city'); ?>
                         <?php echo form_input('city', '', 'class="form-control" id="city" required="required"'); ?>
+                    </div>    
+                    <div class="form-group">
+                        <?= lang('Payment_Term', 'popayment_term'); ?>
+                        <?php echo form_input('payment_term', '', 'class="form-control tip" data-trigger="focus"   data-placement="top" title="' . lang('payment_term_tip') . '" id="popayment_term"'); ?>
                     </div>
+                    
+                    <div class="form-group">
+                        <?= lang('postal_code', 'postal_code'); ?>
+                        <?php echo form_input('postal_code', '', 'class="form-control" id="postal_code"'); ?>
+                    </div>
+                    
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group company">
+                        <?= lang('company', 'company'); ?>
+                        <?php echo form_input('company', '', 'class="form-control tip" id="company" data-bv-notempty="true"'); ?>
+                    </div>
+                    
+                    <div class="form-group  ">
+                        <?= lang('category', 'category'); ?>
+                        <?php $catogories_arr = [''=>'Please Select', 'خدمات ' => lang('خدمات'), 'مستودع' => lang('مستودع'), 'وكيل' => lang('وكيل')];
+                        echo form_dropdown('category', $catogories_arr, '', 'class="form-control select" id="category" name="category" required="required"'); ?>
+                    </div>
+
+                    <div class="form-group" id="parent_company_group" style="display: none;">
+                        <?= lang('parent_company', 'parent_company'); ?>
+                        <?php 
+                        echo form_dropdown('parent_id', $parent_suppliers, '', 'class="form-control select" id="parent_id"'); 
+                        ?>
+                    </div>
+                    
+                    <div class="form-group">
+                        <?= lang('Ledger Account', 'Ledger Account'); ?>
+                        <?php 
+
+                            echo form_dropdown('ledger_account', $LO,'', 'id="ledger_account" class="ledger-dropdown form-control" required="required"',$DIS);  
+                        ?>
+                    </div>
+                    <!--<div class="form-group">
+                        <?= lang('balance', 'balance'); ?>
+                        <?php echo form_input('balance', '', 'class="form-control" id="balance" step="0.01" type="number"'); ?>
+                    </div>-->
+                    <div class="form-group">
+                        <?= lang('phone', 'phone'); ?>
+                        <input type="tel" name="phone" class="form-control" id="phone"/>
+                    </div>
+                    <div class="form-group">
+                        <?= lang('Cr', 'cr'); ?>
+                        <?php echo form_input('cr', '', 'class="form-control" id="cr"'); ?>
+                    </div>
+                    <div class="form-group">
+                        <?= lang('Cr Expiration', 'cr_expiration'); ?>
+                        <?php echo form_input('cr_expiration', '', 'class="form-control" id="cr_expiration" placeholder="YYYY-MM-DD"'); ?>
+                    </div>
+                    <div class="form-group">
+                        <?= lang('Gln', 'gln'); ?>
+                        <?php echo form_input('gln', '', 'class="form-control" id="gln"'); ?>
+                    </div>    
+                    <div class="form-group">
+                        <?= lang('Short_Address', 'short_address'); ?>
+                        <?php echo form_input('short_address', '', 'class="form-control" id="short_address"'); ?>
+                    </div>  
                     <div class="form-group">
                         <?= lang('state', 'state'); ?>
                         <?php
@@ -89,72 +146,17 @@
                         ?>
                     </div>
                     <div class="form-group">
-                        <?= lang('payment_term', 'popayment_term'); ?>
-                        <?php echo form_input('payment_term', '', 'class="form-control tip" data-trigger="focus"   data-placement="top" title="' . lang('payment_term_tip') . '" id="popayment_term"'); ?>
+                        <?= lang('Building Number', 'building_number'); ?>
+                        <?php echo form_input('building_number', '', 'class="form-control" id="building_number"'); ?>
                     </div>
-
                     <div class="form-group">
                         <?= lang('Credit_limit', 'credit_limit'); ?>
                         <?php echo form_input('credit_limit', '', 'class="form-control" id="credit_limit"'); ?>
                     </div>
-                    
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <?= lang('postal_code', 'postal_code'); ?>
-                        <?php echo form_input('postal_code', '', 'class="form-control" id="postal_code"'); ?>
-                    </div>
-                    <div class="form-group">
-                        <?= lang('country', 'country'); ?>
-                        <?php echo form_input('country', '', 'class="form-control" id="country"'); ?>
-                    </div>
-                    <div class="form-group">
-                        <?= lang('Ledger Account', 'Ledger Account'); ?>
-                        <?php 
-
-                            echo form_dropdown('ledger_account', $LO,'', 'id="ledger_account" class="ledger-dropdown form-control" required="required"',$DIS);  
-                        ?>
-                    </div>
-                    <div class="form-group">
-                        <?= lang('balance', 'balance'); ?>
-                        <?php echo form_input('balance', '', 'class="form-control" id="balance" step="0.01" type="number"'); ?>
-                    </div>
-                         <div class="form-group">
-                        <?= lang('vat_no', 'vat_no'); ?>
-                        <?php echo form_input('vat_no', '', 'class="form-control" id="vat_no"'); ?>
-                    </div>
-                    <div class="form-group">
-                        <?= lang('cr', 'cr'); ?>
-                        <?php echo form_input('cr', '', 'class="form-control" id="cr"'); ?>
-                    </div>
-                    <div class="form-group">
-                        <?= lang('cr_expiration', 'cr_expiration'); ?>
-                        <?php echo form_input('cr_expiration', '', 'class="form-control" id="cr_expiration" placeholder="YYYY-MM-DD"'); ?>
-                    </div>
-                    <div class="form-group">
-                        <?= lang('gln', 'gln'); ?>
-                        <?php echo form_input('gln', '', 'class="form-control" id="gln"'); ?>
-                    </div>      
-                    <div class="form-group">
+                    <!--<div class="form-group">
                         <?= lang('note', 'note'); ?>
                         <?php echo form_textarea('note', '', 'class="form-control" id="note" rows="3"'); ?>
-                    </div>
-                    <div class="form-group">
-                        <?= lang('level', 'level'); ?>
-                        <?php 
-                        $level_options = [
-                            '1' => lang('parent'),
-                            '2' => lang('child')
-                        ];
-                        echo form_dropdown('level', $level_options, '1', 'class="form-control select" id="level"'); 
-                        ?>
-                    </div>
-                    <div class="form-group" id="parent_company_group" style="display: none;">
-                        <?= lang('parent_company', 'parent_company'); ?>
-                        <?php 
-                        echo form_dropdown('parent_id', $parent_suppliers, '', 'class="form-control select" id="parent_id"'); 
-                        ?>
-                    </div>
+                    </div>-->
                    
                 </div>
             </div>

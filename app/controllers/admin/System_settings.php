@@ -2891,6 +2891,7 @@ class system_settings extends MY_Controller
         $this->form_validation->set_rules('supplier_advance_ledger', lang('Supplier Advance Ledger'), 'trim|numeric|required');
         $this->form_validation->set_rules('customer_advance_ledger', lang('Customer Advance Ledger'), 'trim|numeric|required');
         $this->form_validation->set_rules('vat_ledger_id', lang('VAT on Bank Charges Ledger'), 'trim|numeric');
+        $this->form_validation->set_rules('customer_discount_ledger', lang('Customer Discounts'), 'trim|numeric|required');
 
         if ($this->form_validation->run() == true) {
             $vat_on_purchase_ledger = $this->input->post('vat_on_purchase_ledger');
@@ -2901,6 +2902,7 @@ class system_settings extends MY_Controller
             $supplier_advance_ledger = $this->input->post('supplier_advance_ledger');
             $customer_advance_ledger = $this->input->post('customer_advance_ledger');
             $vat_ledger_id = $this->input->post('vat_ledger_id');
+            $customer_discount_ledger = $this->input->post('customer_discount_ledger');
 
             $data = [
                 'vat_on_purchase_ledger' => $vat_on_purchase_ledger,
@@ -2911,6 +2913,7 @@ class system_settings extends MY_Controller
                 'supplier_advance_ledger' => $supplier_advance_ledger,
                 'customer_advance_ledger' => $customer_advance_ledger,
                 'vat_ledger_id' => $vat_ledger_id,
+                'customer_discount_ledger' => $customer_discount_ledger,
             ];
         }
 
@@ -3200,6 +3203,10 @@ class system_settings extends MY_Controller
                 'sales-add'                  => $this->input->post('sales-add'),
                 'sales-delete'               => $this->input->post('sales-delete'),
                 'sales-email'                => $this->input->post('sales-email'),
+                'sales-add-label'            => $this->input->post('sales-add-label'),
+                'sales-verify-label'         => $this->input->post('sales-verify-label'),
+                'sales-rsd'                  => $this->input->post('sales-rsd'),
+                'sales-create-invoice'       => $this->input->post('sales-create-invoice'),
                 'sales-pdf'                  => $this->input->post('sales-pdf'),
                 'sales-deliveries'           => $this->input->post('sales-deliveries'),
                 'sales-edit_delivery'        => $this->input->post('sales-edit_delivery'),
@@ -3207,10 +3214,10 @@ class system_settings extends MY_Controller
                 'sales-delete_delivery'      => $this->input->post('sales-delete_delivery'),
                 'sales-email_delivery'       => $this->input->post('sales-email_delivery'),
                 'sales-pdf_delivery'         => $this->input->post('sales-pdf_delivery'),
-                'sales-gift_cards'           => $this->input->post('sales-gift_cards'),
-                'sales-edit_gift_card'       => $this->input->post('sales-edit_gift_card'),
-                'sales-add_gift_card'        => $this->input->post('sales-add_gift_card'),
-                'sales-delete_gift_card'     => $this->input->post('sales-delete_gift_card'),
+                //'sales-gift_cards'           => $this->input->post('sales-gift_cards'),
+                //'sales-edit_gift_card'       => $this->input->post('sales-edit_gift_card'),
+                //'sales-add_gift_card'        => $this->input->post('sales-add_gift_card'),
+                //'sales-delete_gift_card'     => $this->input->post('sales-delete_gift_card'),
                 'sales-coordinator'          => $this->input->post('sales-coordinator'),
                 'sales-warehouse_supervisor' => $this->input->post('sales-warehouse_supervisor'),
         'sales-warehouse_supervisor_shipping'=> $this->input->post('sales-warehouse_supervisor_shipping'),
@@ -3220,7 +3227,7 @@ class system_settings extends MY_Controller
                 'quotes-edit'                => $this->input->post('quotes-edit'),
                 'quotes-add'                 => $this->input->post('quotes-add'),
                 'quotes-delete'              => $this->input->post('quotes-delete'),
-                'quotes-email'               => $this->input->post('quotes-email'),
+                //'quotes-email'               => $this->input->post('quotes-email'),
                 'quotes-pdf'                 => $this->input->post('quotes-pdf'),
                 'purchases-index'            => $this->input->post('purchases-index'),
                 'purchases-edit'             => $this->input->post('purchases-edit'),
@@ -3228,6 +3235,24 @@ class system_settings extends MY_Controller
                 'purchases-delete'           => $this->input->post('purchases-delete'),
                 'purchases-email'            => $this->input->post('purchases-email'),
                 'purchases-pdf'              => $this->input->post('purchases-pdf'),
+                'po-index'                   => $this->input->post('po-index'),
+                'po-edit'                   => $this->input->post('po-edit'),
+                'po-add'                    => $this->input->post('po-add'),
+                'po-delete'                 => $this->input->post('po-delete'),
+                'po-email'                  => $this->input->post('po-email'),
+                'po-pdf'                    => $this->input->post('po-pdf'),
+                'pr-index'                  => $this->input->post('pr-index'),
+                'pr-edit'                   => $this->input->post('pr-edit'),
+                'pr-add'                    => $this->input->post('pr-add'),
+                'pr-delete'                 => $this->input->post('pr-delete'),
+                'pr-email'                  => $this->input->post('pr-email'),
+                'pr-pdf'                    => $this->input->post('pr-pdf'),
+                'contract-deals-index'      => $this->input->post('contract-deals-index'),
+                'contract-deals-edit'       => $this->input->post('contract-deals-edit'),
+                'contract-deals-add'        => $this->input->post('contract-deals-add'),
+                'contract-deals-delete'     => $this->input->post('contract-deals-delete'),
+                'contract-deals-email'      => $this->input->post('contract-deals-email'),
+                'contract-deals-pdf'        => $this->input->post('contract-deals-pdf'),
                 'transfers-index'            => $this->input->post('transfers-index'),
                 'transfers-edit'             => $this->input->post('transfers-edit'),
                 'transfers-add'              => $this->input->post('transfers-add'),
@@ -3235,17 +3260,29 @@ class system_settings extends MY_Controller
                 'transfers-email'            => $this->input->post('transfers-email'),
                 'transfers-pdf'              => $this->input->post('transfers-pdf'),
                 'sales-return_sales'         => $this->input->post('sales-return_sales'),
-                'reports-quantity_alerts'    => $this->input->post('reports-quantity_alerts'),
-                'reports-expiry_alerts'      => $this->input->post('reports-expiry_alerts'),
-                'reports-products'           => $this->input->post('reports-products'),
-                'reports-daily_sales'        => $this->input->post('reports-daily_sales'),
-                'reports-monthly_sales'      => $this->input->post('reports-monthly_sales'),
-                'reports-payments'           => $this->input->post('reports-payments'),
-                'reports-sales'              => $this->input->post('reports-sales'),
-                'reports-purchases'          => $this->input->post('reports-purchases'),
-                'reports-customers'          => $this->input->post('reports-customers'),
-                'reports-suppliers'          => $this->input->post('reports-suppliers'),
-                'reports-staff'              => $this->input->post('reports-staff'),
+                //'reports-quantity_alerts'    => $this->input->post('reports-quantity_alerts'),
+                //'reports-expiry_alerts'      => $this->input->post('reports-expiry_alerts'),
+                //'reports-products'           => $this->input->post('reports-products'),
+                //'reports-daily_sales'        => $this->input->post('reports-daily_sales'),
+                //'reports-monthly_sales'      => $this->input->post('reports-monthly_sales'),
+                //'reports-payments'           => $this->input->post('reports-payments'),
+                //'reports-sales'              => $this->input->post('reports-sales'),
+                //'reports-purchases'          => $this->input->post('reports-purchases'),
+                //'reports-customers'          => $this->input->post('reports-customers'),
+                //'reports-suppliers'          => $this->input->post('reports-suppliers'),
+                //'reports-staff'              => $this->input->post('reports-staff'),
+                'report-stock'               => $this->input->post('report-stock'),
+                'reports-item-movement'      => $this->input->post('reports-item-movement'),
+                'reports-revenue'            => $this->input->post('reports-revenue'),
+                'reports-purchase'           => $this->input->post('reports-purchase'),
+                'reports-transfer'           => $this->input->post('reports-transfer'),
+                'reports-inventory-tb'       => $this->input->post('reports-inventory-tb'),
+                'reports-customer-tb'        => $this->input->post('reports-customer-tb'),
+                'reports-customer-statement' => $this->input->post('reports-customer-statement'),
+                'reports-customer-aging'     => $this->input->post('reports-customer-aging'),
+                'reports-supplier-tb'        => $this->input->post('reports-supplier-tb'),
+                'reports-supplier-statement' => $this->input->post('reports-supplier-statement'),
+                'reports-supplier-aging'     => $this->input->post('reports-supplier-aging'),
                 'sales-payments'             => $this->input->post('sales-payments'),
                 'purchases-payments'         => $this->input->post('purchases-payments'),
                 'purchases-expenses'         => $this->input->post('purchases-expenses'),
@@ -3260,6 +3297,27 @@ class system_settings extends MY_Controller
                 'reports-monthly_purchases'  => $this->input->post('reports-monthly_purchases'),
                 'products-stock_count'       => $this->input->post('products-stock_count'),
                 'edit_price'                 => $this->input->post('edit_price'),
+                'supplier-returns-index'      => $this->input->post('supplier-returns-index'),
+                'supplier-returns-edit'       => $this->input->post('supplier-returns-edit'),
+                'supplier-returns-add'        => $this->input->post('supplier-returns-add'),
+                'supplier-returns-delete'     => $this->input->post('supplier-returns-delete'),
+                'supplier-returns-email'      => $this->input->post('supplier-returns-email'),
+                'supplier-returns-pdf'        => $this->input->post('supplier-returns-pdf'),
+
+                'supplier-payment-index'      => $this->input->post('supplier-payment-index'),
+                'supplier-payment-edit'       => $this->input->post('supplier-payment-edit'),
+                'supplier-payment-add'        => $this->input->post('supplier-payment-add'),
+                'supplier-payment-delete'     => $this->input->post('supplier-payment-delete'),
+                'supplier-payment-email'      => $this->input->post('supplier-payment-email'),
+                'supplier-payment-pdf'        => $this->input->post('supplier-payment-pdf'),
+
+                'customer-payment-index'      => $this->input->post('customer-payment-index'),
+                'customer-payment-edit'       => $this->input->post('customer-payment-edit'),
+                'customer-payment-add'        => $this->input->post('customer-payment-add'),
+                'customer-payment-delete'     => $this->input->post('customer-payment-delete'),
+                'customer-payment-email'      => $this->input->post('customer-payment-email'),
+                'customer-payment-pdf'        => $this->input->post('customer-payment-pdf'),
+
                 'returns-index'              => $this->input->post('returns-index'),
                 'returns-edit'               => $this->input->post('returns-edit'),
                 'returns-add'                => $this->input->post('returns-add'),
@@ -3279,9 +3337,9 @@ class system_settings extends MY_Controller
                 'stock_warehouse_supervisor'        => $this->input->post('stock_warehouse_supervisor'),
                 'transfer_pharmacist'        => $this->input->post('transfer_pharmacist'),
                 'transfer_warehouse_supervisor'        => $this->input->post('transfer_warehouse_supervisor'),
-                'blog_view'                  => $this->input->post('blog_view'),
-                'blog_edit'                  => $this->input->post('blog_edit'),
-                'blog_add'                   => $this->input->post('blog_add')
+                //'blog_view'                  => $this->input->post('blog_view'),
+                //'blog_edit'                  => $this->input->post('blog_edit'),
+                //'blog_add'                   => $this->input->post('blog_add')
                 
             ];
 

@@ -76,7 +76,61 @@ $(document).ready(function (e) {
 				$("#payment_term").val(data[0].payment_term).trigger("change");
 			},
 		});
+		
+		// Fetch and update customer balance and credit limit
+		fetchCustomerBalanceAndLimit($(this).val());
 	});
+	
+	// Function to fetch and update customer balance and credit limit
+	function fetchCustomerBalanceAndLimit(customerId) {
+		if (!customerId || customerId === '') {
+			// Clear display if no customer selected
+			$("#customer-balance-value").text('0.0000 SAR');
+			$("#credit-limit-value").text('0.0000 SAR');
+			$("#remaining-limit-value").text('0.0000 SAR');
+			return;
+		}
+		
+		$.ajax({
+			type: "get",
+			url: site.base_url + "quotes/getCustomerBalanceAndLimit",
+			data: {customer_id: customerId},
+			dataType: "json",
+			success: function (response) {
+				console.log('Customer balance response:', response);
+				
+				if (response.success) {
+					// Update balance display
+					console.log('Updating display elements...');
+					$("#customer-balance-value").text(formatCurrency(response.current_balance) + ' SAR');
+					$("#credit-limit-value").text(formatCurrency(response.credit_limit) + ' SAR');
+					$("#remaining-limit-value").text(formatCurrency(response.remaining_limit) + ' SAR');
+					
+					// Update color based on remaining limit
+					if (response.remaining_limit > 0) {
+						$("#remaining-limit-value").css('color', '#10B981'); // Green
+					} else {
+						$("#remaining-limit-value").css('color', '#EF4444'); // Red
+					}
+				} else {
+					console.error('Response success is false:', response);
+				}
+			},
+			error: function (xhr, status, error) {
+				console.error('Error fetching customer balance:', error, xhr);
+				// Set default values on error
+				$("#customer-balance-value").text('0.0000 SAR');
+				$("#credit-limit-value").text('0.0000 SAR');
+				$("#remaining-limit-value").text('0.0000 SAR');
+			}
+		});
+	}
+	
+	// Function to format currency with 4 decimals
+	function formatCurrency(value) {
+		if (!value) value = 0;
+		return parseFloat(value).toFixed(4);
+	}
 	if ((qtcustomer = localStorage.getItem("qtcustomer"))) {
 		$customer.val(qtcustomer).select2({
 			minimumInputLength: 1,
@@ -91,6 +145,10 @@ $(document).ready(function (e) {
 						localStorage.setItem("slpayment_term", data[0].payment_term);
 						//$("#slpayment_term").val(data[0].payment_term);
 						$("#payment_term").val(data[0].payment_term).trigger("change");
+						
+						// Fetch customer balance and credit limit on initial load
+						fetchCustomerBalanceAndLimit($(element).val());
+						
 						callback(data[0]);
 					},
 				});
@@ -2116,9 +2174,7 @@ function loadItems() {
 				"</span></td>";
 
 			tr_html +=
-                '<td><input class="form-control text-center rbonus" name="bonus[]" type="text" tabindex="' +
-                (site.settings.set_focus == 1 ? an : an + 1) +
-                '" data-id="' +
+                '<td><input class="form-control text-center rbonus" name="bonus[]" type="text" data-id="' +
                 row_no +
                 '" data-item="' +
                 item_id +
@@ -2226,7 +2282,8 @@ function loadItems() {
 				row_no +
 				'" title="Remove" style="cursor:pointer;"></i></td>';
 			newTr.html(tr_html);
-			newTr.appendTo("#slTable");
+			// Prepend the new row so the latest added item appears at the top
+			$("#slTable tbody").prepend(newTr);
 			total += formatDecimal(main_net, 4);
 			grand_total_vat += formatDecimal(vat_15_a, 4);
 			grand_total_purchases += formatDecimal(total_purchases, 4);

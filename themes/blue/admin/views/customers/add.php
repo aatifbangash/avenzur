@@ -11,7 +11,7 @@
         <div class="modal-body">
             <p><?= lang('enter_info'); ?></p>
 
-            <div class="row">
+            <!--<div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
                     <label class="control-label" for="customer_group"><?php echo $this->lang->line('customer_group'); ?></label>
@@ -35,7 +35,7 @@
                         ?>
                     </div>
                 </div>
-            </div>
+            </div>-->
 
             <div class="row">
                 <div class="col-md-6">
@@ -57,24 +57,24 @@
                     </div>
                     
                     <div class="form-group">
-                        <?= lang('gst_no', 'gst_no'); ?>
-                        <?php echo form_input('gst_no', '', 'class="form-control" id="gst_no"'); ?>
+                        <?= lang('gln', 'gln'); ?>
+                        <?php echo form_input('gln', '', 'class="form-control" id="gln"'); ?>
                     </div>
                     <!--<div class="form-group company">
                     <?= lang('contact_person', 'contact_person'); ?>
                     <?php echo form_input('contact_person', '', 'class="form-control" id="contact_person" data-bv-notempty="true"'); ?>
                 </div>-->
                     <div class="form-group">
-                        <?= lang('email_address', 'email_address'); ?>
-                        <input type="email" name="email" class="form-control" required="required" id="email_address"/>
+                        <?= lang('cr', 'cr'); ?>
+                        <?php echo form_input('cr', '', 'class="form-control" id="cr"'); ?>
                     </div>
                     <div class="form-group">
                         <?= lang('phone', 'phone'); ?>
-                        <input type="tel" name="phone" class="form-control" required="required" id="phone"/>
+                        <input type="tel" name="phone" class="form-control" id="phone"/>
                     </div>
                     <div class="form-group">
-                        <?= lang('address', 'address'); ?>
-                        <?php echo form_input('address', '', 'class="form-control" id="address" required="required"'); ?>
+                        <?= lang('email_address', 'email_address'); ?>
+                        <input type="email" name="email" class="form-control" id="email_address" />
                     </div>
                     <div class="form-group">
                         <?= lang('city', 'city'); ?>
@@ -107,7 +107,10 @@
                         <?= lang('Credit_limit', 'credit_limit'); ?>
                         <?php echo form_input('credit_limit', '', 'class="form-control" id="credit_limit"'); ?>
                     </div>
-
+                    <div class="form-group">
+                        <?= lang('Cr Expiration', 'cr_expiration'); ?>
+                        <?php echo form_input('cr_expiration', '', 'class="form-control" id="cr_expiration"'); ?>
+                    </div> 
                 </div>
                 <div class="col-md-6">
                   
@@ -150,34 +153,59 @@
                             echo form_dropdown('return_ledger', $LO,'', 'id="return_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
                         ?>
                     </div>
+                    <div class="form-group">
+                        <?= lang('Short Address', 'short_address'); ?>
+                        <?php echo form_input('short_address', '', 'class="form-control" id="short_address"'); ?>
+
+                    </div>
+                    <div class="form-group">
+                        <?= lang('address', 'address'); ?>
+                        <?php echo form_input('address', '', 'class="form-control" id="address" required="required"'); ?>
+                    </div>
                     
                     <div class="form-group">
-                        <?= lang('ccf1', 'cf1'); ?>
-                        <?php echo form_input('cf1', '', 'class="form-control" id="cf1"'); ?>
+                        <?= lang('Building Number', 'building_number'); ?>
+                        <?php echo form_input('building_number', '', 'class="form-control" id="building_number"'); ?>
                     </div>
                     <div class="form-group">
-                        <?= lang('ccf2', 'cf2'); ?>
-                        <?php echo form_input('cf2', '', 'class="form-control" id="cf2"'); ?>
+                        <?= lang('Unit Number', 'unit_number'); ?>
+                        <?php echo form_input('unit_number', '', 'class="form-control" id="unit_number"'); ?>
 
                     </div>
                     <div class="form-group">
-                        <?= lang('ccf3', 'cf3'); ?>
-                        <?php echo form_input('cf3', '', 'class="form-control" id="cf3"'); ?>
-                    </div>
-                    <div class="form-group">
-                        <?= lang('ccf4', 'cf4'); ?>
-                        <?php echo form_input('cf4', '', 'class="form-control" id="cf4"'); ?>
+                        <?= lang('Additional Number', 'additional_number'); ?>
+                        <?php echo form_input('additional_number', '', 'class="form-control" id="additional_number"'); ?>
 
                     </div>
                     <div class="form-group">
-                        <?= lang('ccf5', 'cf5'); ?>
-                        <?php echo form_input('cf5', '', 'class="form-control" id="cf5"'); ?>
-
+                        <?= lang('Promessory Note Amount', 'promessory_note_amount'); ?>
+                        <?php echo form_input('promessory_note_amount', '', 'class="form-control" id="promessory_note_amount"'); ?>
                     </div>
+                    <?php
+                        $categories = array('Pharmacy Client' => 'Pharmacy Client', 'Clinic Client' => 'Clinic Client', 'Hospital Client' => 'Hospital Client', 'Rent Client' => 'Rent Client', 'Warehouse Client' => 'Warehouse Client');
+                    ?>
                     <div class="form-group">
-                        <?= lang('ccf6', 'cf6'); ?>
-                        <?php echo form_input('cf6', '', 'class="form-control" id="cf6"'); ?>
+                        <?= lang('Category', 'category'); ?>
+                        <?php echo form_dropdown('category', $categories, '', 'class="form-control select" id="category" required="required"'); ?>
                     </div>
+                    <?php 
+                    $sm[''] = '';
+                    foreach ($company_sales_man as $sales_man) {
+                        $sm[$sales_man->name] = $sales_man->name;
+                    }
+                    ?>
+                    <div class="form-group">
+                        <?= lang('Sales Man', 'sales_man'); ?>
+                        <?php echo form_dropdown('sales_agent', $sm, '', 'class="form-control select" id="sales_agent" required="required"'); ?>
+                    </div> 
+                    <?php
+                        $sfda_certificate = array('yes' => 'yes', 'no' => 'no');
+                    ?>
+                    <div class="form-group">
+                        <?= lang('SFDA Certificate', 'sfda_certificate'); ?>
+                        <?php echo form_dropdown('sfda_certificate', $sfda_certificate, '', 'class="form-control select" id="sfda_certificate" required="required"'); ?>
+                    </div>     
+                    
                 </div>
             </div>
 
