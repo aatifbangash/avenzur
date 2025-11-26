@@ -217,7 +217,7 @@
 
                 // ✅ WAREHOUSE MANAGER / PURCHASE COORDINATOR ACTIONS
                 //if (in_array($userRole, ['warehouse_manager', 'purchase_coordinator'])) {
-               if($Admin || $Owner || $this->GP['purchase_manager'] || $this->GP['wh_supervisor'] || $this->GP['sales_coordinator']  ) {   
+               if($Admin || $Owner || $this->GP['grn-add'] || $this->GP['purchase-invoicing-request']) {   
 
                   switch ($currentStatus) {
                     case 'sent_to_supplier':
@@ -230,9 +230,9 @@
 
                     case 'goods_received':
                       echo '<a href="' . admin_url("purchase_order/send_for_invoice?po_id=" . base64_encode($inv->id)) . '" 
-                class="btn btn-outline-success btn-sm mb-2 text-primary">
-                <i class="fa fa-money me-1"></i> Send for Invoicing
-              </a>';
+                      class="btn btn-outline-success btn-sm mb-2 text-primary">
+                      <i class="fa fa-money me-1"></i> Send for Invoicing
+                    </a>';
                       break;
 
                     case 'invoiced':
