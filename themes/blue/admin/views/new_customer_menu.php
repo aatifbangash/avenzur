@@ -255,7 +255,7 @@
 
         <?php } ?>
 
-        <?php if($Admin || $Owner || $GP['purchases-index']){ ?>
+        <?php if($Admin || $Owner || $GP['purchases-index'] || $GP['po-index']){ ?>
         <!-- ==================== -->
         <!-- ACCOUNT PAYABLE -->
         <!-- ==================== -->
