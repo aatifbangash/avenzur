@@ -543,6 +543,7 @@
 </style>
 <script>
     const COMPANY_ID = '<?php echo isset($company_id) ? $company_id : ''; ?>';
+    const API_BASE_URL = 'http://localhost:3000/api/v1';
 
 </script>
 
@@ -869,7 +870,7 @@ function loadRulesData() {
         scopeId: COMPANY_ID
     });
     
-    fetch(`http://81.208.174.52:4000/api/v1/rules?${params.toString()}`, {
+    fetch(`${API_BASE_URL}/rules?${params.toString()}`, {
         method: 'GET',
         headers: {
             'Accept': 'application/json',
@@ -1407,8 +1408,8 @@ function saveRule() {
     
     // Determine endpoint based on whether we're creating or editing
     const endpoint = currentRuleId 
-        ? `http://81.208.174.52:4000/api/v1/rules/${currentRuleId}`
-        : 'http://81.208.174.52:4000/api/v1/rules';
+        ? `${API_BASE_URL}/rules/${currentRuleId}`
+        : `${API_BASE_URL}/rules`;
     
     const method = currentRuleId ? 'PATCH' : 'POST';
     
@@ -1749,7 +1750,7 @@ function editRule(id) {
     document.getElementById('drawerTitle').textContent = 'Edit Loyalty Rule';
     
     // Fetch rule data from API
-    fetch(`http://81.208.174.52:4000/api/v1/rules/${id}`, {
+    fetch(`${API_BASE_URL}/rules/${id}`, {
         method: 'GET',
         headers: {
             'Accept': 'application/json',
@@ -1866,7 +1867,7 @@ function populateRuleForm(rule) {
 
 // View rule details
 function viewRule(id) {
-    fetch(`http://81.208.174.52:4000/api/v1/rules/${id}`, {
+    fetch(`${API_BASE_URL}/rules/${id}`, {
         method: 'GET',
         headers: {
             'Accept': 'application/json',
@@ -1891,7 +1892,7 @@ function deleteRule(id) {
         return;
     }
 
-    fetch(`http://81.208.174.52:4000/api/v1/rules/${id}`, {
+    fetch(`${API_BASE_URL}/rules/${id}`, {
         method: 'DELETE',
         headers: {
             'Accept': 'application/json',

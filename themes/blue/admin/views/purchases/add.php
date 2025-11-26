@@ -301,7 +301,7 @@ if(isset($action) && $action = 'create_invoice' && $inv_items != null)  {
                                 $reference_no = !empty($pr_data->reference_no)
                                                 ? $pr_data->reference_no
                                                 : ($_POST['reference_no'] ?? $ponumber);
-                                echo form_input('reference_no',$reference_no, 'class="form-control input-tip" id="poref" '.$readonly); ?>
+                                echo form_input('reference_no',$reference_no, 'class="form-control input-tip" id="poref"'); ?>
                             </div>
                         </div>
                         <?php if ($Owner || $Admin || !$this->session->userdata('warehouse_id')) {
@@ -538,7 +538,20 @@ if(isset($action) && $action = 'create_invoice' && $inv_items != null)  {
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <?= lang('payment_term', 'popayment_term'); ?>
-                                        <?php echo form_input('payment_term', '', 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('payment_term_tip') . '" id="popayment_term"'); ?>
+                                        <?php
+                                        $payment_term_data = [
+                                            '' => '',
+                                            '30' => '30',
+                                            '60' => '60',
+                                            '90' => '90',
+                                            '120' => '120',
+                                            '>120' => '>120'
+                                        ];
+                                        $selected_payment_term = '';
+                                        if (isset($supplier_payment_term) && !empty($supplier_payment_term)) {
+                                            $selected_payment_term = $supplier_payment_term;
+                                        }
+                                        echo form_dropdown('payment_term', $payment_term_data, $selected_payment_term, 'id="popayment_term" data-placeholder="' . lang('select') . ' ' . lang('payment_term') . '" class="form-control input-tip select" style="width:100%;"'); ?>
                                     </div>
                                 </div>
                             </div>

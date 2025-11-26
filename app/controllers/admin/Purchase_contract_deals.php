@@ -143,7 +143,9 @@ class Purchase_contract_deals extends MY_Controller
         } else {
             // 🔸 Form validation failed — load add page
             $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+            //$this->data['suppliers'] = $this->site->getAllChildCompanies('supplier');
             $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+            //echo '<pre>';   print_r( $this->data['suppliers']); exit;
             $bc = [
                 ['link' => base_url(), 'page' => lang('home')],
                 ['link' => admin_url('purchase_contract_deals'), 'page' => lang('Contract Deals')],

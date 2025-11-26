@@ -17,9 +17,9 @@
             <div class="col-md-3">
                 <div class="form-group">
                     <label for="supplier">Supplier</label>
-                    <select name="supplier" id="supplier" class="form-control">
+                    <select name="supplier" id="csupplier" class="form-control">
                         <?php foreach ($suppliers as $s) :
-                            if( $s->level != 1) continue;
+                            if( $s->level != 2) continue;
                             ?>
                             <option value="<?= $s->id ?>"><?= $s->name ?></option>
                         <?php endforeach; ?>

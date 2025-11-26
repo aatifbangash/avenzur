@@ -210,7 +210,7 @@ $(document).ready(function () {
 				});
 			},
 			ajax: {
-				url: site.base_url + "suppliers/suggestions",
+				url: site.base_url + "suppliers/childsuggestions",
 				dataType: "json",
 				quietMillis: 15,
 				data: function (term, page) {
@@ -1015,7 +1015,7 @@ function nsSupplier() {
 	$("#posupplier").select2({
 		minimumInputLength: 1,
 		ajax: {
-			url: site.base_url + "suppliers/suggestions",
+			url: site.base_url + "suppliers/childsuggestions",
 			dataType: "json",
 			quietMillis: 15,
 			data: function (term, page) {
