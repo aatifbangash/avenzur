@@ -217,7 +217,7 @@
 
                 // ✅ WAREHOUSE MANAGER / PURCHASE COORDINATOR ACTIONS
                 //if (in_array($userRole, ['warehouse_manager', 'purchase_coordinator'])) {
-               if($Admin || $Owner || $this->GP['purchase_manager'] || $this->GP['wh_supervisor'] || $this->GP['sales_coordinator']  ) {   
+               if($Admin || $Owner || $this->GP['grn-add']) {   
 
                   switch ($currentStatus) {
                     case 'sent_to_supplier':
