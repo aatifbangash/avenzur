@@ -348,10 +348,10 @@ class Sales extends MY_Controller
 
     public function add_from_quote($quote_id = null){
         //$this->sma->checkPermissions();
-        if(!$this->Admin && !$this->Owner && !$this->GP['sales-coordinator']){
+        /*if(!$this->Admin && !$this->Owner && !$this->GP['sales-coordinator']){
             $this->session->set_flashdata('error', lang('You do not have permission for this action.'));
             admin_redirect('quotes');exit;
-        }
+        }*/
 
         if (!$quote_id) {
             $this->session->set_flashdata('error', lang('Quote ID not provided.'));

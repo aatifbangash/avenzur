@@ -600,10 +600,10 @@ class Quotes extends MY_Controller
     public function edit($id = null)
     {
         //$this->sma->checkPermissions();
-        if(!$this->Admin && !$this->Owner && !$this->GP['sales-coordinator']){
+        /*if(!$this->Admin && !$this->Owner && !$this->GP['sales-coordinator']){
             $this->session->set_flashdata('error', lang('You do not have permission for this action.'));
             admin_redirect('quotes');exit;
-        }
+        }*/
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');

@@ -509,14 +509,7 @@ table#slTable td input.form-control {
                             </div>
                         <?php
                 //} else {
-                    $biller_input = [
-                        'type'  => 'hidden',
-                        'name'  => 'biller',
-                        'id'    => 'slbiller',
-                        'value' => $this->session->userdata('biller_id'),
-                    ];
-
-                    echo form_input($biller_input);
+                    
                 //} ?>
 
                 <?php //if ($Owner || $Admin || $GP['sales-coordinator']) {
