@@ -477,7 +477,7 @@ table#slTable td input.form-control {
                 ?>
                 <div class="row">
                     <div class="col-lg-12">
-                        <?php if ($Owner || $Admin || $GP['sales-coordinator']) {
+                        <?php //if ($Owner || $Admin || $GP['sales-coordinator']) {
                     ?>
                             <div class="col-md-4">
                                 <div class="form-group">
@@ -486,7 +486,7 @@ table#slTable td input.form-control {
                                 </div>
                             </div>
                         <?php
-                } ?>
+                //} ?>
 
                         <!--<div class="col-md-4">
                             <div class="form-group">
@@ -494,7 +494,7 @@ table#slTable td input.form-control {
                                 <?php echo form_input('reference_no', ($_POST['reference_no'] ?? $slnumber), 'class="form-control input-tip" id="slref"'); ?>
                             </div>
                         </div>-->
-                        <?php if ($Owner || $Admin || $GP['sales-coordinator']) {
+                        <?php //if ($Owner || $Admin || $GP['sales-coordinator']) {
                     ?>
                             <div class="col-md-4">
                                 <div class="form-group">
@@ -508,7 +508,7 @@ table#slTable td input.form-control {
                                 </div>
                             </div>
                         <?php
-                } else {
+                //} else {
                     $biller_input = [
                         'type'  => 'hidden',
                         'name'  => 'biller',
@@ -517,9 +517,9 @@ table#slTable td input.form-control {
                     ];
 
                     echo form_input($biller_input);
-                } ?>
+                //} ?>
 
-                <?php if ($Owner || $Admin || $GP['sales-coordinator']) {
+                <?php //if ($Owner || $Admin || $GP['sales-coordinator']) {
                     ?>
                                         <div class="col-md-4">
                                             <div class="form-group">
@@ -533,16 +533,7 @@ table#slTable td input.form-control {
                                             </div>
                                         </div>
                                     <?php
-                } else {
-                    $warehouse_input = [
-                        'type'  => 'hidden',
-                        'name'  => 'warehouse',
-                        'id'    => 'slwarehouse',
-                        'value' => $this->session->userdata('warehouse_id'),
-                    ];
-
-                    echo form_input($warehouse_input);
-                } ?>
+                //} ?>
 
                         <div class="clearfix"></div>
                         <div class="col-md-12">
@@ -769,11 +760,11 @@ table#slTable td input.form-control {
                         </div>
 
 
-                             <?php if ($Owner || $Admin || $GP['sales-coordinator']) { ?>
+                             <?php //if ($Owner || $Admin || $GP['sales-coordinator']) { ?>
                                 <?php echo form_input('quote_status', 'open','hidden', 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('quote_status') . '" id="qtquote_status"'); ?>
-                             <?php  } ?>
+                             <?php // } ?>
 
-                           <?php if ($Owner || $Admin || $GP['sales-coordinator']) { ?>
+                           <?php //if ($Owner || $Admin || $GP['sales-coordinator']) { ?>
                             
                              <div class="col-sm-4">
                                 <div class="form-group">
@@ -782,7 +773,7 @@ table#slTable td input.form-control {
                                 echo form_dropdown('quote_status', $sst, '', 'class="form-control input-tip" required="required" id="qtquote_status"'); ?>
                                 </div>
                             </div>
-                            <?php  } ?>
+                            <?php  //} ?>
 
                             <!-- 'completed' => lang('completed') -->
 
