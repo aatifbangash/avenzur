@@ -37,8 +37,8 @@ class Quotes extends MY_Controller
         //$sale_id = $this->input->get('sale_id') ? $this->input->get('sale_id') : null;
 
         if(!$this->Admin && !$this->Owner){
-            $this->session->set_flashdata('error', lang('You do not have permission for this action.'));
-            admin_redirect('quotes');exit;
+            //$this->session->set_flashdata('error', lang('You do not have permission for this action.'));
+            //admin_redirect('quotes');exit;
         }
 
         $this->form_validation->set_message('is_natural_no_zero', lang('no_zero_required'));
