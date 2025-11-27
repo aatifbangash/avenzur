@@ -36,7 +36,7 @@ class Quotes extends MY_Controller
         //$this->sma->checkPermissions();
         //$sale_id = $this->input->get('sale_id') ? $this->input->get('sale_id') : null;
 
-        if(!$this->Admin && !$this->Owner && !$this->GP['sales-coordinator']){
+        if(!$this->Admin && !$this->Owner){
             $this->session->set_flashdata('error', lang('You do not have permission for this action.'));
             admin_redirect('quotes');exit;
         }
