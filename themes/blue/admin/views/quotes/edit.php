@@ -372,7 +372,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
 
                 <div class="row">
                     <div class="col-lg-12">
-                        <?php if ($Owner || $Admin || $GP['sales-coordinator']) {
+                        <?php //if ($Owner || $Admin || $GP['sales-coordinator']) {
                     ?>
                             <div class="col-md-4">
                                 <div class="form-group">
@@ -381,14 +381,14 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                                 </div>
                             </div>
                         <?php
-                } ?>
+                //} ?>
                         <!--<div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('reference_no', 'slref'); ?>
                                 <?php echo form_input('reference_no', ($_POST['reference_no'] ?? ''), 'class="form-control input-tip" id="slref" required="required"'); ?>
                             </div>
                         </div>-->
-                        <?php if ($Owner || $Admin || $GP['sales-coordinator']) {
+                        <?php //if ($Owner || $Admin || $GP['sales-coordinator']) {
                             //echo '<pre>';print_r($billers);exit;
                             ?>
                                     <div class="col-md-4">
@@ -403,17 +403,9 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                                         </div>
                                     </div>
                                 <?php
-                        } else {
-                            $biller_input = [
-                                'type'  => 'hidden',
-                                'name'  => 'biller',
-                                'id'    => 'qtbiller',
-                                'value' => $this->session->userdata('biller_id'),
-                            ];
-                            echo form_input($biller_input);
-                        } ?>
+                        //}  ?>
 
-                        <?php if ($Owner || $Admin || $GP['sales-coordinator']) {
+                        <?php //if ($Owner || $Admin || $GP['sales-coordinator']) {
                     ?>
                                         <div class="col-md-4">
                                             <div class="form-group">
@@ -427,15 +419,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                                             </div>
                                         </div>
                                     <?php
-                } else {
-                    $warehouse_input = [
-                        'type'  => 'hidden',
-                        'name'  => 'warehouse',
-                        'id'    => 'slwarehouse',
-                        'value' => $this->session->userdata('warehouse_id'),
-                    ];
-                    echo form_input($warehouse_input);
-                } ?>
+                //}  ?>
 
                         <div class="clearfix"></div>
                         <div class="col-md-12">
@@ -627,11 +611,11 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
 
 
 
-                        <?php if ($Owner || $Admin || $GP['sales-coordinator'] && $inv->status =="open") { ?>
+                        <?php if ($inv->status =="open") { ?>
                         <?php echo form_input('quote_status', 'open','hidden', 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('quote_status') . '" id="qtquote_status"'); ?>
                         <?php  } ?>
 
-                             <?php if ($Owner || $Admin || $GP['sales-coordinator']) { ?>
+                             <?php //if ($Owner || $Admin || $GP['sales-coordinator']) { ?>
                             <div class="col-sm-4">
                             <div class="form-group">
                             <?= lang('quote_status', 'qtquote_status'); ?>
@@ -641,7 +625,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
 
                             </div>
                             </div>
-                            <?php  } ?>
+                            <?php  //} ?>
 
 
                         <div class="col-sm-4">
