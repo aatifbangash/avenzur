@@ -3637,7 +3637,7 @@ class Sales extends MY_Controller
     {
         $this->sma->checkPermissions('index');
         $sid = $this->input->get('sid');
-        if ((!$this->Owner && !$this->Admin) && !$warehouse_id) {
+        if ((!$this->Owner && !$this->Admin && !$this->GP['sales-index']) && !$warehouse_id) {
             $user         = $this->site->getUser();
             $warehouse_id = $user->warehouse_id;
         }

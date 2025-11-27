@@ -1455,7 +1455,7 @@ class Quotes extends MY_Controller
     {
         //$this->sma->checkPermissions('index');
 
-        if ((!$this->Owner || !$this->Admin) && !$warehouse_id) {
+        if ((!$this->Owner || !$this->Admin) && !$this->GP['quotes-index']) {
             $user         = $this->site->getUser();
             $warehouse_id = $user->warehouse_id;
         }
@@ -1505,7 +1505,7 @@ class Quotes extends MY_Controller
                 ->select('id, date, reference_no, biller, customer, total, total_discount, total_tax, grand_total, status, attachment')
                 ->from('quotes');
         }
-        if (!$this->Owner && !$this->Admin && !$this->GP['sales-coordinator']) {
+        if (!$this->Owner && !$this->Admin && !$this->GP['quotes-index']) {
             $this->datatables->where('created_by', $this->session->userdata('user_id'));
         } elseif ($this->Customer) {
             $this->datatables->where('customer_id', $this->session->userdata('user_id'));
