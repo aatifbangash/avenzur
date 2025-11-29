@@ -126,13 +126,13 @@
                         }
                         if ($Settings->product_discount && $inv->product_discount != 0) {
                             $col +=2; 
-                            echo '<th>' . lang('Disc1 %') . '</th>';
-                            echo '<th>' . lang('Disc1 Val') . '</th>';
+                            echo '<th>' . lang('Dis1 %') . '</th>';
+                            echo '<th>' . lang('Dis1 Val') . '</th>';
                         }
                         if ($Settings->product_discount && $inv->product_discount != 0) {
                             $col +=2; 
-                            echo '<th>' . lang('Disc2 %') . '</th>';
-                            echo '<th>' . lang('Disc2 Val') . '</th>';
+                            echo '<th>' . lang('Dis2 %') . '</th>';
+                            echo '<th>' . lang('Dis2 Val') . '</th>';
                         }
                         ?>
                         <th><?= lang('subtotal'); ?></th>
