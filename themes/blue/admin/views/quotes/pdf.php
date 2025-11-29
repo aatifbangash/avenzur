@@ -200,7 +200,7 @@
                     </tbody>
                     <tfoot>
                     <?php
-                    $col = $Settings->indian_gst ? 10 : 9;
+                    $col = $Settings->indian_gst ? 11 : 10;
                     if ($Settings->product_discount) {
                         $col++;
                     }
