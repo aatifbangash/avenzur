@@ -185,7 +185,7 @@
                             <td style="text-align:right;"><?= $this->sma->formatNumber($row->totalbeforevat, null); ?></td>
                             <?php
                             $vat_value = 0;
-                            if ($Settings->tax1 && $inv->product_tax > 0) {
+                            if ($Settings->tax1 && $row->item_tax > 0) {
                                 $vat_value = $this->sma->formatNumber($row->item_tax);
                                 echo '<td style="text-align:right; vertical-align:middle;">' . ($row->item_tax != 0 ?  ($Settings->indian_gst ? $row->tax : $row->tax_code)  : '') . '</td>';
                                 echo '<td>'.$this->sma->formatNumber($row->tax).'</td>';
