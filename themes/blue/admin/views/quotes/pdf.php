@@ -135,11 +135,11 @@
                             echo '<th>' . lang('Dis2 Val') . '</th>';
                         }
                         echo '<th>' . lang('Total_without_VAT') . '</th>';
-                        if ($Settings->tax1 && $inv->product_tax > 0) {
+                        
                             $col +=2; 
                             echo '<th>' . lang('VAT%') . '</th>';
                             echo '<th>' . lang('VAT') . '</th>';
-                        }
+                        
                         echo '<th>' . lang('Total With VAT') . '</th>';
                         ?>
                     </tr>
