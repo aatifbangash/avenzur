@@ -124,8 +124,15 @@
                         if ($Settings->tax1 && $inv->product_tax > 0) {
                             echo '<th>' . lang('tax') . '</th>';
                         }
-                        if ($Settings->product_discount) {
-                            echo '<th>' . lang('discount') . '</th>';
+                        if ($Settings->product_discount && $inv->product_discount != 0) {
+                            $col +=2; 
+                            echo '<th>' . lang('Disc1 %') . '</th>';
+                            echo '<th>' . lang('Disc1 Val') . '</th>';
+                        }
+                        if ($Settings->product_discount && $inv->product_discount != 0) {
+                            $col +=2; 
+                            echo '<th>' . lang('Disc2 %') . '</th>';
+                            echo '<th>' . lang('Disc2 Val') . '</th>';
                         }
                         ?>
                         <th><?= lang('subtotal'); ?></th>
@@ -153,8 +160,20 @@
                             if ($Settings->tax1 && $inv->product_tax > 0) {
                                 echo '<td style="width: 100px; text-align:right; vertical-align:middle;">' . ($row->item_tax != 0 ? '<small>(' . ($Settings->indian_gst ? $row->tax : $row->tax_code) . ')</small> ' : '') . $this->sma->formatMoney($row->item_tax) . '</td>';
                             }
-                            if ($Settings->product_discount) {
-                                echo '<td style="width: 100px; text-align:right; vertical-align:middle;">' . ($row->discount != 0 ? '<small>(' . $row->discount . ')</small> ' : '') . $this->sma->formatMoney($row->item_discount) . '</td>';
+                            
+                             if ($Settings->product_discount && $inv->product_discount != 0) {
+                                echo '<td style=" text-align:right; vertical-align:middle;">' . ($row->discount1 != 0 ?  $this->sma->formatNumber($row->discount1)  : '') .  '</td>'; 
+                              
+                                $unit_cost=$row->real_unit_price;
+                                $pr_discount      = $this->site->calculateDiscount($row->discount1.'%', $row->real_unit_price);
+                                $amount_after_dis1 = $unit_cost - $pr_discount;
+                                $pr_discount2      = $this->site->calculateDiscount($row->discount2.'%', $amount_after_dis1);  
+                                $pr_item_discount2 = $this->sma->formatDecimal($pr_discount2 * $row->unit_quantity);
+                                $row->discount2= $this->sma->formatNumber($row->discount2,null);
+                                echo '<td style=" text-align:right; vertical-align:middle;">' . $this->sma->formatNumber($row->item_discount) . '</td>';
+                       
+                                echo '<td style="text-align:right; vertical-align:middle;">' . ($row->discount2 != 0 ?  $row->discount2  : '0') . '</td>';
+                                echo '<td style="text-align:right; vertical-align:middle;">' . $this->sma->formatNumber($row->second_discount_value) . '</td>';
                             }
                             ?>
                             <td style="text-align:right; width:100px;"><?= $this->sma->formatMoney($row->subtotal); ?></td>
@@ -166,7 +185,7 @@
                     </tbody>
                     <tfoot>
                     <?php
-                    $col = $Settings->indian_gst ? 5 : 4;
+                    $col = $Settings->indian_gst ? 8 : 7;
                     if ($Settings->product_discount) {
                         $col++;
                     }
