@@ -134,8 +134,14 @@
                             echo '<th>' . lang('Dis2 %') . '</th>';
                             echo '<th>' . lang('Dis2 Val') . '</th>';
                         }
+                        echo '<th>' . lang('Total_without_VAT') . '</th>';
+                        if ($Settings->tax1 && $inv->product_tax > 0) {
+                            $col +=2; 
+                            echo '<th>' . lang('VAT%') . '</th>';
+                            echo '<th>' . lang('VAT') . '</th>';
+                        }
+                        echo '<th>' . lang('Total With VAT') . '</th>';
                         ?>
-                        <th><?= lang('subtotal'); ?></th>
                     </tr>
                     </thead>
                     <tbody>
@@ -176,7 +182,16 @@
                                 echo '<td style="text-align:right; vertical-align:middle;width: 40px;">' . $this->sma->formatNumber($row->second_discount_value) . '</td>';
                             }
                             ?>
-                            <td style="text-align:right; vertical-align:middle;"><?= $this->sma->formatMoney($row->subtotal); ?></td>
+                            <td style="text-align:right;"><?= $this->sma->formatNumber($row->totalbeforevat, null); ?></td>
+                            <?php
+                            $vat_value = 0;
+                            if ($Settings->tax1 && $inv->product_tax > 0) {
+                                $vat_value = $this->sma->formatNumber($row->item_tax);
+                                echo '<td style="text-align:right; vertical-align:middle;">' . ($row->item_tax != 0 ?  ($Settings->indian_gst ? $row->tax : $row->tax_code)  : '') . '</td>';
+                                echo '<td>'.$this->sma->formatNumber($row->tax).'</td>';
+                            }
+                            ?>
+                            <td style="text-align:right; vertical-align:middle;"><?= $this->sma->formatMoney($row->main_net); ?></td>
                         </tr>
                         <?php
                         $r++;
@@ -185,7 +200,7 @@
                     </tbody>
                     <tfoot>
                     <?php
-                    $col = $Settings->indian_gst ? 8 : 7;
+                    $col = $Settings->indian_gst ? 10 : 9;
                     if ($Settings->product_discount) {
                         $col++;
                     }
