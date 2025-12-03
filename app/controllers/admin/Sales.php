@@ -5921,12 +5921,15 @@ if($inv->warning_note != ""){
                                     $rasd_success = true;                
 
                                     $this->cmt_model->add_rasd_transactions($payload_used,'sale_dispatch_product',true, $zadca_dispatch_response,$payload_dispatch);
-                                
+                                    $this->session->set_flashdata('message', lang('dispatch_sent_to_rasd_successfully'));
                                 }else{
                                     $rasd_success = false;
                                     log_message("error", "Dispatch Failed");
                                     log_message("error", json_encode($zadca_dispatch_response,true));
                                     $this->cmt_model->add_rasd_transactions($payload_used,'sale_dispatch_product',false, $zadca_dispatch_response,$payload_dispatch);
+                                    $this->session->set_flashdata('error', lang('error_sending_dispatch_to_rasd'));
+                                    admin_redirect('sales/view/'.$sale_id);
+                                    exit;
                                 }
                                 
                             }else{
@@ -5940,7 +5943,6 @@ if($inv->warning_note != ""){
                         
                         $this->db->update('sales', ['sale_status' => 'sent_to_rasd'], ['id' => $sale_id]);
 
-                        $this->session->set_flashdata('message', lang('sale_sent_to_rasd_successfully'));
                         admin_redirect('sales/view/'.$sale_id);
                     }else{
                         $this->session->set_flashdata('error', lang('rasd_authentication_failed'));
