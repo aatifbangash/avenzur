@@ -1348,32 +1348,32 @@ class Suppliers extends MY_Controller
             }
 
         $data = [
-            'name'                => $this->input->post('name'),
-            'name_ar'             => $this->input->post('name_ar'), 
-            'category'            => $this->input->post('category'),
-            'email'               => $this->input->post('email'),
+            'name'                => $this->input->post('name') ?? '',
+            'name_ar'             => $this->input->post('name_ar') ?? '', 
+            'category'            => $this->input->post('category') ?? '',
+            'email'               => $this->input->post('email') ?? '',
             'group_id'            => '4',
             'group_name'          => 'supplier',
-            'company'             => $this->input->post('company'),
-            'address'             => $this->input->post('address'),
-            'vat_no'              => $this->input->post('vat_no'),
-            'cr'                  => $this->input->post('cr'),
-            'cr_expiration'       => $this->input->post('cr_expiration'),
-            'gln'                 => $this->input->post('gln'),
-            'short_address'       => $this->input->post('short_address'),
-            'building_number'     => $this->input->post('building_number'),
-            'city'                => $this->input->post('city'),
-            'state'               => $this->input->post('state'),
-            'postal_code'         => $this->input->post('postal_code'),
-            'country'             => $this->input->post('country'),
-            'phone'               => $this->input->post('phone'),
-            'contact_name'        => $this->input->post('contact_name'),
-            'contact_number'      => $this->input->post('contact_number'),
-            'ledger_account'      => $this->input->post('ledger_account'),
+            'company'             => $this->input->post('company') ?? '',
+            'address'             => $this->input->post('address') ?? '',
+            'vat_no'              => $this->input->post('vat_no') ?? '',
+            'cr'                  => $this->input->post('cr') ?? '',
+            'cr_expiration'       => $this->input->post('cr_expiration') ?? '',
+            'gln'                 => $this->input->post('gln') ?? '',
+            'short_address'       => $this->input->post('short_address') ?? '',
+            'building_number'     => $this->input->post('building_number') ?? '',
+            'city'                => $this->input->post('city') ?? '',
+            'state'               => $this->input->post('state') ?? '',
+            'postal_code'         => $this->input->post('postal_code') ?? '',
+            'country'             => $this->input->post('country') ?? '',
+            'phone'               => $this->input->post('phone') ?? '',
+            'contact_name'        => $this->input->post('contact_name') ?? '',
+            'contact_number'      => $this->input->post('contact_number') ?? '',
+            'ledger_account'      => $this->input->post('ledger_account') ?? 0,
             'payment_term'        => $this->input->post('payment_term'),
             'credit_limit'        => $this->input->post('credit_limit') ? $this->input->post('credit_limit') : '0',
-            'balance'             => $this->input->post('balance'),
-            'note'                => $this->input->post('note'),
+            'balance'             => $this->input->post('balance') ?? 0,
+            'note'                => $this->input->post('note') ?? '',
             'level'               => $level,
             'parent_code'         => $parent_code,
             'sequence_code'       => $this->sequenceCode->generate('SUP', 5)
@@ -1383,7 +1383,7 @@ class Suppliers extends MY_Controller
             admin_redirect('suppliers');
         }
 
-        if ($this->form_validation->run() == true && $sid = $this->companies_model->addCompany($data) && $parent_code) {
+        if ($this->form_validation->run() == true && $sid = $this->companies_model->addCompany($data)) {
             $this->session->set_flashdata('message', $this->lang->line('supplier_added'));
             $ref = isset($_SERVER['HTTP_REFERER']) ? explode('?', $_SERVER['HTTP_REFERER']) : null;
             admin_redirect($ref[0] . '?supplier=' . $sid);
