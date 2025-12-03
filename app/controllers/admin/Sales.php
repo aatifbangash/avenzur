@@ -5906,8 +5906,8 @@ if($inv->warning_note != ""){
                     if($rasd_user){
                         foreach($body_for_rasd_dispatch as $index => $payload_dispatch){
                             log_message("info", "RASD AUTH START");
-                            //$this->rasd->set_base_url('https://qdttsbe.qtzit.com:10101/api/web');
-                            $this->rasd->set_base_url('https://qdtts-stg.qtzit.com:10101/api/web');
+                            $this->rasd->set_base_url('https://qdttsbe.qtzit.com:10101/api/web');
+                            //$this->rasd->set_base_url('https://qdtts-stg.qtzit.com:10101/api/web');
                             $auth_response = $this->rasd->authenticate($rasd_user, $rasd_pass);
                             //echo '<pre>';print_r($auth_response);exit;
                             if(isset($auth_response['token'])){
