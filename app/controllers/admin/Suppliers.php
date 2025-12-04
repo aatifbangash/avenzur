@@ -1,7 +1,9 @@
 <?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
-
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
 class Suppliers extends MY_Controller
 {
     public function __construct()
@@ -10,7 +12,12 @@ class Suppliers extends MY_Controller
 
         if (!$this->loggedIn) {
             $this->session->set_userdata('requested_page', $this->uri->uri_string());
-            $this->sma->md('login');
+            $url = "admin/login";
+            if( $this->input->server('QUERY_STRING') ){
+                $url = $url.'?'.$this->input->server('QUERY_STRING').'&redirect='.$this->uri->uri_string();
+            }
+           
+            $this->sma->md($url);
         }
         if ($this->Customer || $this->Supplier) {
             $this->session->set_flashdata('warning', lang('access_denied'));
@@ -26,6 +33,47 @@ class Suppliers extends MY_Controller
         $this->sequenceCode = new SequenceCode();
     }
 
+    public function edit_suppliers_script(){
+        $csvFile = 'files/retaj_supplier_list_new_csv.csv';
+
+        // Open the file in read mode
+        if (($handle = fopen($csvFile, 'r')) !== false) {
+            // Read the header row (if needed)
+            $header = fgetcsv($handle);
+
+            // Loop through each row of the file
+            while (($data = fgetcsv($handle, 1000, ',')) !== false) {
+                $ascon_code = $data[0];
+                $arabic_name = $data[1];
+                $english_name = $data[2];
+                $credit_limit = $data[18];
+                $payment_term = $data[25];
+                $parent_code = '';
+                $supplier_level = 1;
+                $phone = $data[7];
+
+                $company_detail = $this->companies_model->getCompanyByNameNew($arabic_name);
+                
+                if($company_detail){
+                    // Update existing Company
+                    echo 'Customer Found: '. $company_detail->name.'<br />';
+                    //$this->companies_model->updateCompanyNames($company_detail->id, ['name_ar' => $english_name, 'sequence_code' => $ascon_code, 'phone' => $phone, 'parent_code' => $parent_code, 'level' => $supplier_level, 'payment_term' => $payment_term, 'credit_limit' => $credit_limit]);
+                }else{
+                    // Insert New Company
+                    echo 'Customer Not Found: '.$arabic_name.'<br />';
+                    //$this->companies_model->addCompany(['group_id' => 3, 'group_name' => 'customer', 'name' => $arabic_name, 'name_ar' => $english_name, 'logo' => 'logo.png', 'ledger_account' => 21, 'cogs_ledger' => 174, 'sales_ledger' => 157, 'discount_ledger' => 173, 'return_ledger' => 165, 'sequence_code' => $ascon_code, 'phone' => $phone, 'parent_code' => $parent_code, 'level' => $supplier_level, 'payment_term' => $payment_term, 'credit_limit' => $credit_limit]);
+                }
+                
+            }
+
+            echo 'Customer script executed successfully...';
+            // Close the file handle
+            fclose($handle);
+        } else {
+            echo "Error opening the file.";
+        }
+    }
+
     public function deleteFromAccounting($memo_id){
         $accouting_entries = $this->purchases_model->getMemoAccountingEntries($memo_id);
         foreach ($accouting_entries as $accouting_entry){
@@ -38,19 +86,31 @@ class Suppliers extends MY_Controller
         $this->load->admin_model('companies_model');
         $supplier = $this->companies_model->getCompanyByID($supplier_id);
 
+        // Calculate VAT on bank charges (15%)
+        $bank_charge_vat = 0;
+        if ($bank_charges > 0) {
+            $bank_charge_vat = $bank_charges * 0.15; // 15% VAT
+        }
+        
+        // Total includes payment, bank charges, and VAT on bank charges
+        $total_amount = $payment_amount + $bank_charges + $bank_charge_vat;
+
         /*Accounts Entries*/
         $entry = array(
             'entrytype_id' => 4,
             'transaction_type' => $type,
             'number'       => 'PM-'.$reference_no,
             'date'         => date('Y-m-d'), 
-            'dr_total'     => $payment_amount + $bank_charges,
-            'cr_total'     => $payment_amount + $bank_charges,
+            'dr_total'     => $total_amount,
+            'cr_total'     => $total_amount,
             'notes'        => 'Payment Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
-            'pid'          =>  ''
+            'pid'          =>  '',
+            'supplier_id'  => $supplier_id
             );
         $add  = $this->db->insert('sma_accounts_entries', $entry);
         $insert_id = $this->db->insert_id();
+
+        $entryitemdata = array(); // Initialize array
 
         //supplier
         $entryitemdata[] = array(
@@ -63,25 +123,137 @@ class Suppliers extends MY_Controller
             )
         );
 
-        //bank charges
-        $entryitemdata[] = array(
-            'Entryitem' => array(
-                'entry_id' => $insert_id,
-                'dc' => 'D',
-                'ledger_id' => $bank_charges_account,
-                'amount' => $bank_charges,
-                'narration' => ''
-            )
-        );
+        //bank charges (only add if bank_charges > 0 and valid ledger account)
+        if($bank_charges > 0 && $bank_charges_account > 0) {
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $bank_charges_account,
+                    'amount' => $bank_charges,
+                    'narration' => ''
+                )
+            );
+        }
 
-        //transfer legdger
+        // VAT on bank charges (only add if bank_charge_vat > 0)
+        if($bank_charge_vat > 0 && $bank_charges_account > 0) {
+            // Get VAT ledger from system settings (you might need to configure this)
+            $settings = $this->Settings;
+            $vat_ledger = isset($settings->vat_ledger_id) ? $settings->vat_ledger_id : $bank_charges_account;
+            
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $vat_ledger,
+                    'amount' => $bank_charge_vat,
+                    'narration' => 'VAT on Bank Charges (15%)'
+                )
+            );
+        }
+
+        //transfer legdger (only add if valid ledger_id)
+        if($ledger_account > 0) {
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'C',
+                    'ledger_id' => $ledger_account,
+                    'amount' => $total_amount,
+                    'narration' => ''
+                )
+            );
+        }
+
+        foreach ($entryitemdata as $row => $itemdata)
+        {
+            $this->db->insert('sma_accounts_entryitems' ,$itemdata['Entryitem']);
+        }
+
+        return $insert_id;
+    }
+
+    public function create_supplier_advance_journal_entry($supplier_id, $transfer_ledger, $advance_ledger, $bank_charges_account, $payment_amount, $bank_charges, $reference_no, $date){
+        $this->load->admin_model('companies_model');
+        $supplier = $this->companies_model->getCompanyByID($supplier_id);
+
+        // Calculate VAT on bank charges (15%)
+        $bank_charge_vat = 0;
+        if ($bank_charges > 0) {
+            $bank_charge_vat = $bank_charges * 0.15; // 15% VAT
+        }
+        
+        // Total includes payment, bank charges, and VAT on bank charges
+        $total_amount = $payment_amount + $bank_charges + $bank_charge_vat;
+
+        /*Accounts Entries*/
+        $entry = array(
+            'entrytype_id' => 4,
+            'transaction_type' => 'supplieradvance',
+            'number'       => 'SPADV-'.$reference_no,
+            'date'         => $date, 
+            'dr_total'     => $total_amount,
+            'cr_total'     => $total_amount,
+            'notes'        => 'Supplier Advance Payment Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
+            'pid'          =>  '',
+            'supplier_id'  => $supplier_id
+            );
+        $add  = $this->db->insert('sma_accounts_entries', $entry);
+        $insert_id = $this->db->insert_id();
+
+        $entryitemdata = array();
+
+        // Debit: Transfer/Bank ledger (cash out)
+        if($transfer_ledger > 0) {
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $transfer_ledger,
+                    'amount' => $payment_amount,
+                    'narration' => 'Advance payment to supplier'
+                )
+            );
+        }
+
+        // Debit: Bank charges (if any)
+        if($bank_charges > 0 && $bank_charges_account > 0) {
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $bank_charges_account,
+                    'amount' => $bank_charges,
+                    'narration' => 'Bank charges'
+                )
+            );
+        }
+
+        // Debit: VAT on bank charges (if any)
+        if($bank_charge_vat > 0 && $bank_charges_account > 0) {
+            $settings = $this->Settings;
+            $vat_ledger = isset($settings->vat_ledger_id) ? $settings->vat_ledger_id : $bank_charges_account;
+            
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $vat_ledger,
+                    'amount' => $bank_charge_vat,
+                    'narration' => 'VAT on Bank Charges (15%)'
+                )
+            );
+        }
+
+        // Credit: Supplier Advance ledger (advance balance increases)
         $entryitemdata[] = array(
             'Entryitem' => array(
                 'entry_id' => $insert_id,
                 'dc' => 'C',
-                'ledger_id' => $ledger_account,
-                'amount' => $payment_amount + $bank_charges,
-                'narration' => ''
+                'ledger_id' => $advance_ledger,
+                'amount' => $total_amount,
+                'narration' => 'Advance payment received from supplier'
             )
         );
 
@@ -89,11 +261,22 @@ class Suppliers extends MY_Controller
         {
             $this->db->insert('sma_accounts_entryitems' ,$itemdata['Entryitem']);
         }
+
+        return $insert_id;
     }
 
     public function convert_supplier_advance_invoice($memo_id, $supplier_id, $ledger_account, $bank_charges_account, $payment_amount, $bank_charges, $reference_no, $type){
         $this->load->admin_model('companies_model');
         $supplier = $this->companies_model->getCompanyByID($supplier_id);
+
+        // Calculate VAT on bank charges (15%)
+        $bank_charge_vat = 0;
+        if ($bank_charges > 0) {
+            $bank_charge_vat = $bank_charges * 0.15; // 15% VAT
+        }
+        
+        // Total includes payment, bank charges, and VAT on bank charges
+        $total_amount = $payment_amount + $bank_charges + $bank_charge_vat;
 
         /*Accounts Entries*/
         $entry = array(
@@ -101,8 +284,8 @@ class Suppliers extends MY_Controller
             'transaction_type' => $type,
             'number'       => 'SPADV-'.$reference_no,
             'date'         => date('Y-m-d'), 
-            'dr_total'     => $payment_amount + $bank_charges,
-            'cr_total'     => $payment_amount + $bank_charges,
+            'dr_total'     => $total_amount,
+            'cr_total'     => $total_amount,
             'notes'        => 'Supplier Advance Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
             'pid'          =>  '',
             'memo_id'      => $memo_id
@@ -122,15 +305,34 @@ class Suppliers extends MY_Controller
         );
 
         //bank charges
-        $entryitemdata[] = array(
-            'Entryitem' => array(
-                'entry_id' => $insert_id,
-                'dc' => 'D',
-                'ledger_id' => $bank_charges_account,
-                'amount' => $bank_charges,
-                'narration' => ''
-            )
-        );
+        if($bank_charges > 0) {
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $bank_charges_account,
+                    'amount' => $bank_charges,
+                    'narration' => ''
+                )
+            );
+        }
+
+        // VAT on bank charges (only add if bank_charge_vat > 0)
+        if($bank_charge_vat > 0 && $bank_charges_account > 0) {
+            // Get VAT ledger from system settings (you might need to configure this)
+            $settings = $this->Settings;
+            $vat_ledger = isset($settings->vat_ledger_id) ? $settings->vat_ledger_id : $bank_charges_account;
+            
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $vat_ledger,
+                    'amount' => $bank_charge_vat,
+                    'narration' => 'VAT on Bank Charges (15%)'
+                )
+            );
+        }
 
         //transfer legdger
         $entryitemdata[] = array(
@@ -138,7 +340,7 @@ class Suppliers extends MY_Controller
                 'entry_id' => $insert_id,
                 'dc' => 'C',
                 'ledger_id' => $ledger_account,
-                'amount' => $payment_amount + $bank_charges,
+                'amount' => $total_amount,
                 'narration' => ''
             )
         );
@@ -153,14 +355,23 @@ class Suppliers extends MY_Controller
         $this->load->admin_model('companies_model');
         $supplier = $this->companies_model->getCompanyByID($supplier_id);
 
+        // Calculate VAT on bank charges (15%)
+        $bank_charge_vat = 0;
+        if ($bank_charges > 0) {
+            $bank_charge_vat = $bank_charges * 0.15; // 15% VAT
+        }
+        
+        // Total includes payment, bank charges, and VAT on bank charges
+        $total_amount = $payment_amount + $bank_charges + $bank_charge_vat;
+
         /*Accounts Entries*/
         $entry = array(
             'entrytype_id' => 4,
             'transaction_type' => $type,
             'number'       => 'DM-'.$reference_no,
             'date'         => date('Y-m-d'), 
-            'dr_total'     => $payment_amount + $bank_charges,
-            'cr_total'     => $payment_amount + $bank_charges,
+            'dr_total'     => $total_amount,
+            'cr_total'     => $total_amount,
             'notes'        => 'Debit Memo Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
             'pid'          =>  '',
             'memo_id'      => $memo_id
@@ -180,15 +391,34 @@ class Suppliers extends MY_Controller
         );
 
         //bank charges
-        $entryitemdata[] = array(
-            'Entryitem' => array(
-                'entry_id' => $insert_id,
-                'dc' => 'D',
-                'ledger_id' => $bank_charges_account,
-                'amount' => $bank_charges,
-                'narration' => ''
-            )
-        );
+        if($bank_charges > 0) {
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $bank_charges_account,
+                    'amount' => $bank_charges,
+                    'narration' => ''
+                )
+            );
+        }
+
+        // VAT on bank charges (only add if bank_charge_vat > 0)
+        if($bank_charge_vat > 0 && $bank_charges_account > 0) {
+            // Get VAT ledger from system settings (you might need to configure this)
+            $settings = $this->Settings;
+            $vat_ledger = isset($settings->vat_ledger_id) ? $settings->vat_ledger_id : $bank_charges_account;
+            
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $vat_ledger,
+                    'amount' => $bank_charge_vat,
+                    'narration' => 'VAT on Bank Charges (15%)'
+                )
+            );
+        }
 
         //transfer legdger
         $entryitemdata[] = array(
@@ -196,7 +426,7 @@ class Suppliers extends MY_Controller
                 'entry_id' => $insert_id,
                 'dc' => 'C',
                 'ledger_id' => $ledger_account,
-                'amount' => $payment_amount + $bank_charges,
+                'amount' => $total_amount,
                 'narration' => ''
             )
         );
@@ -207,15 +437,63 @@ class Suppliers extends MY_Controller
         }
     }
 
-    public function make_supplier_payment($id, $amount, $reference_no, $date){
+    public function add_supplier_reference($amount, $reference_no, $date, $note, $supplier_id, $bank_charges, $bank_charges_account, $ledger_account){
+        // Calculate VAT on bank charges (15%)
+        $bank_charge_vat = 0;
+        if ($bank_charges > 0) {
+            $bank_charge_vat = $bank_charges * 0.15; // 15% VAT
+        }
+        
+        $payment_reference = [
+            'supplier_id' => $supplier_id,
+            'date' => $date,
+            'sequence_code' => $this->sequenceCode->generate('PAY', 5),
+            'note' => $note,
+            'reference_no'  => $reference_no,
+            'amount' => $amount,
+            'bank_charges' => $bank_charges,
+            'bank_charge_vat' => $bank_charge_vat,
+            'bank_charges_ledger' => $bank_charges_account,
+            'transfer_from_ledger' => $ledger_account,
+            'created_by'    => $this->session->userdata('user_id')
+        ];
+
+        $payment_id = $this->purchases_model->addPaymentReference($payment_reference);
+        
+        // Debug: Log if payment reference creation failed
+        if (!$payment_id) {
+            error_log('Failed to create payment reference. Data: ' . json_encode($payment_reference));
+            error_log('Database error: ' . $this->db->last_query());
+        }
+        
+        return $payment_id;
+    }
+
+    public function make_supplier_payment($id, $amount, $reference_no, $date, $note, $payment_id){
         $payment = [
-            'date'         => $date,
-            'purchase_id'  => $id,
-            'reference_no' => $reference_no,
-            'amount'       => $amount,
-            'note'         => 'Multiple invoices payment',
-            'created_by'   => $this->session->userdata('user_id'),
-            'type'         => 'sent',
+            'date'          => $date,
+            'purchase_id'   => $id,
+            'reference_no'  => $reference_no,
+            'amount'        => $amount,
+            'note'          => $note,
+            'created_by'    => $this->session->userdata('user_id'),
+            'type'          => 'sent',
+            'payment_id'    => $payment_id
+        ];
+
+        $this->purchases_model->addPayment($payment);
+    }
+
+    public function make_supplier_advance_payment($supplier_id, $amount, $reference_no, $date, $note, $payment_id){
+        $payment = [
+            'date'          => $date,
+            'purchase_id'   => NULL, // No specific purchase for advance payment
+            'reference_no'  => $reference_no,
+            'amount'        => $amount,
+            'note'          => $note . ' (Advance Payment)',
+            'created_by'    => $this->session->userdata('user_id'),
+            'type'          => 'advance',
+            'payment_id'    => $payment_id
         ];
 
         $this->purchases_model->addPayment($payment);
@@ -278,7 +556,8 @@ class Suppliers extends MY_Controller
         $meta = ['page_title' => lang('Advance To Supplier'), 'bc' => $bc];
         if ($this->form_validation->run() == true) {
             $request_type = $this->input->post('request_type');
-            $supplier_id      = $this->input->post('supplier');
+            $parentsupplier_id      = $this->input->post('supplier');
+            $childsupplier_id = $this->input->post('childsupplier');
             $payments_array      = $this->input->post('payment_amount');
             $descriptions_array      = $this->input->post('description');
             $item_ids = $this->input->post('item_id');
@@ -292,6 +571,12 @@ class Suppliers extends MY_Controller
             $formattedDate = DateTime::createFromFormat('Y-m-d', $date_fmt);
             $isDateValid = $formattedDate && $formattedDate->format('Y-m-d') === $date_fmt;
             
+            if($childsupplier_id){
+                $supplier_id = $childsupplier_id;
+            }else{
+                $supplier_id = $parentsupplier_id;
+            }
+
             if($isDateValid){
                 $date = $date_fmt;
             }else{
@@ -349,6 +634,8 @@ class Suppliers extends MY_Controller
     public function list_advance_to_supplier(){
         $this->data['debit_memo'] = $this->purchases_model->getDebitMemo('supplieradvance');
         $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+        //echo '<pre>';print_r($this->data['debit_memo']);exit;
+        $this->data['company'] = $this->site->getCompanyByID($this->data['debit_memo'][0]->supplier_id);
         $this->page_construct('suppliers/list_advance_to_supplier', $meta, $this->data);
     }
 
@@ -530,22 +817,51 @@ class Suppliers extends MY_Controller
         }
     }
 
+    public function view_payment($id = null){
+        $this->sma->checkPermissions(false, true);
+        $this->form_validation->set_rules('id', $this->lang->line('id'), 'required');
+
+        $data = [];
+        $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('View Supplier Payments')]];
+        $meta = ['page_title' => lang('View Supplier Payments'), 'bc' => $bc];
+
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+        $this->data['payment_ref']  = $this->purchases_model->getPaymentReferenceByID($id);
+        $this->data['payments']  = $this->purchases_model->getPaymentByReferenceID($id);
+        $this->page_construct('suppliers/view_payment', $meta, $this->data);
+        
+    }
+
     public function list_payments(){
-        $this->data['payments'] = $this->purchases_model->getPayments();
+        $data = [];
+        $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Supplier Payments')]];
+        $meta = ['page_title' => lang('Supplier Payments'), 'bc' => $bc];
+
+        $this->data['payments'] = $this->purchases_model->getPaymentReferences();
         $this->page_construct('suppliers/list_payments', $meta, $this->data);
     }
 
     public function add_payment()
     {
-        $this->sma->checkPermissions(false, true);
+        // ini_set('display_errors', '1');
+        // ini_set('display_startup_errors', '1');
+        // error_reporting(E_ALL);
+        //$this->sma->checkPermissions(false, true);
         $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
+        $this->form_validation->set_rules('ledger_account', $this->lang->line('ledger_account'), 'required');
+        $this->form_validation->set_rules('bank_charges_account', $this->lang->line('bank_charges_account'), 'required');
 
         $data = [];
         $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('add payment')]];
         $meta = ['page_title' => lang('Supplier Payments'), 'bc' => $bc];
 
         if ($this->form_validation->run() == true) {
-            $supplier_id      = $this->input->post('supplier');
+            $parentsupplier      = $this->input->post('supplier');
+            $childsupplier    = $this->input->post('childsupplier');
             $payments_array      = $this->input->post('payment_amount');
             $item_ids = $this->input->post('item_id');
             $reference_no = $this->input->post('reference_no');
@@ -553,53 +869,302 @@ class Suppliers extends MY_Controller
             $ledger_account = $this->input->post('ledger_account');
             $bank_charges_account = $this->input->post('bank_charges_account');
             $bank_charges = $this->input->post('bank_charges');
-            //$date = $this->input->post('date');
-            $due_amount_array = $this->input->post('due_amount');
-
-            $date_fmt = $this->input->post('date');
+            $note = $this->input->post('note');
+            $vat = $this->input->post('vat');
+            $supplier_advance_ledger = $this->input->post('supplier_advance_ledger');
+            $settle_with_advance = $this->input->post('settle_with_advance');
+            $payment_mode = $this->input->post('payment_mode'); // Get payment mode
             
-            $formattedDate = DateTime::createFromFormat('Y-m-d', $date_fmt);
-            $isDateValid = $formattedDate && $formattedDate->format('Y-m-d') === $date_fmt;
-            
-            if($isDateValid){
-                $date = $date_fmt;
+            if($childsupplier){
+                $supplier_id = $childsupplier;
             }else{
-                $formattedDate = DateTime::createFromFormat('d/m/Y', $date_fmt);
+                $supplier_id = $parentsupplier;
+            }
+
+            if($bank_charges == '') {
+                $bank_charges = 0;
+            }
+
+            $date_fmt = $this->input->post('date'); 
+            $formattedDate = DateTime::createFromFormat('d/m/Y H:i', $date_fmt);
+
+            if ($formattedDate) {
                 $date = $formattedDate->format('Y-m-d');
+            } else {
+                echo 'Invalid date format!';
+                $date = null; // Handle invalid input as needed
             }
             
-            for($i = 0; $i < count($payments_array); $i++){
-                $payment_amount = $payments_array[$i];
-                $item_id = $item_ids[$i];
-                $due_amount = $due_amount_array[$i];
-                if($payment_amount > $due_amount){
-                    $this->session->set_flashdata('error', 'Amount paid cannot be greater than due amount');
+            // Handle Advance Only payment mode
+            if ($payment_mode == 'advance_only') {
+                // Validate supplier advance ledger is configured
+                $settings = $this->Settings;
+                $supplier_advance_ledger = isset($settings->supplier_advance_ledger) && !empty($settings->supplier_advance_ledger) 
+                                         ? $settings->supplier_advance_ledger 
+                                         : null;
+                
+                if (!$supplier_advance_ledger) {
+                    $this->session->set_flashdata('error', 'Cannot process advance payment. Supplier Advance Ledger is not configured in system settings.');
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
+                
+                if ($payment_total > 0) {
+                    // Create payment reference using supplier advance ledger
+                    $payment_id = $this->add_supplier_reference($payment_total, $reference_no, $date, $note . ' (Advance Only)', $supplier_id, $bank_charges, $bank_charges_account, $supplier_advance_ledger);
+                    
+                    if (!$payment_id) {
+                        $this->session->set_flashdata('error', 'Failed to create advance payment reference. Please check system configuration.');
+                        redirect($_SERVER['HTTP_REFERER']);
+                    }
+                    
+                    // Make advance payment - do NOT settle any invoices
+                    $this->make_supplier_advance_payment($supplier_id, $payment_total, $reference_no, $date, $note, $payment_id);
+                    
+                    // Create journal entry for advance payment
+                    // We need both: the transfer ledger (cash out) and advance ledger (advance in)
+                    $journal_id = $this->create_supplier_advance_journal_entry($supplier_id, $ledger_account, $supplier_advance_ledger, $bank_charges_account, $payment_total, $bank_charges, $reference_no, $date);
+                    $this->purchases_model->update_payment_reference($payment_id, $journal_id);
+                    
+                    $this->session->set_flashdata('message', lang('Advance payment added successfully!'));
+                    admin_redirect('suppliers/view_payment/'.$payment_id);
+                } else {
+                    $this->session->set_flashdata('error', 'Please enter a payment amount.');
                     redirect($_SERVER['HTTP_REFERER']);
                 }
             }
-
-            if(array_sum($payments_array) == $payment_total){
-                for ($i = 0; $i < count($payments_array); $i++) {
+            
+            if(!$payments_array || sizeOf($payments_array) == 0){
+                // Server-side validation for advance payments (no invoices scenario)
+                // Get supplier advance ledger from settings
+                $settings = $this->Settings;
+                $supplier_advance_ledger = isset($settings->supplier_advance_ledger) && !empty($settings->supplier_advance_ledger) 
+                                         ? $settings->supplier_advance_ledger 
+                                         : null;
+                
+                if (!$supplier_advance_ledger && $payment_total > 0) {
+                    $this->session->set_flashdata('error', 'Cannot process advance payment. Supplier Advance Ledger is not configured in system settings.');
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
+                
+                if($payment_total > 0 && $supplier_advance_ledger){
+                    // Create payment reference using supplier advance ledger (NOT regular ledger_account)
+                    $payment_id = $this->add_supplier_reference($payment_total, $reference_no, $date, $note . ' (Pure Advance)', $supplier_id, $bank_charges, $bank_charges_account, $supplier_advance_ledger);
+                    
+                    // Verify payment reference was created successfully
+                    if (!$payment_id) {
+                        $this->session->set_flashdata('error', 'Failed to create pure advance payment reference. Please check system configuration.');
+                        redirect($_SERVER['HTTP_REFERER']);
+                    }
+                    
+                    // Use advance payment method since there are no invoices - this is pure advance
+                    $this->make_supplier_advance_payment($supplier_id, $payment_total, $reference_no, $date, $note, $payment_id);
+                    
+                    // Create journal entry using supplier advance ledger (NOT regular payment ledger)
+                    $journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $supplier_advance_ledger, $bank_charges_account, $payment_total, $bank_charges, $reference_no, 'supplieradvance');
+                    $this->purchases_model->update_payment_reference($payment_id, $journal_id);
+                    $this->session->set_flashdata('message', lang('Pure advance payment added Successfully!'));
+                    admin_redirect('suppliers/view_payment/'.$payment_id);
+                }
+            }else{
+                //$date = $this->input->post('date');
+                $due_amount_array = $this->input->post('due_amount');
+                
+                for($i = 0; $i < count($payments_array); $i++){
                     $payment_amount = $payments_array[$i];
                     $item_id = $item_ids[$i];
                     $due_amount = $due_amount_array[$i];
-                    if($payment_amount > 0){
-                        $this->update_purchase_order($item_id, $payment_amount);
-                        $this->make_supplier_payment($item_id, $payment_amount, $reference_no, $date);
+                    if($payment_amount > $due_amount){
+                        $this->session->set_flashdata('error', 'Amount paid cannot be greater than due amount');
+                        redirect($_SERVER['HTTP_REFERER']);
                     }
                 }
 
-                $this->convert_supplier_payment_multiple_invoice($supplier_id, $ledger_account, $bank_charges_account, $payment_total, $bank_charges, $reference_no, 'supplierpayment');
-                $this->session->set_flashdata('message', lang('Payment invoice added Successfully!'));
-                admin_redirect($_SERVER['HTTP_REFERER']);
-            }else{
-                $this->session->set_flashdata('error', 'Total Sum Of Amounts do not match');
-                redirect($_SERVER['HTTP_REFERER']);
+                // Calculate total due amount
+                $total_due = array_sum($due_amount_array);
+                
+                // Check if payment exceeds total due amount
+                if($payment_total > $total_due) {
+                    // Check if supplier_advance_ledger is configured in settings
+                    $settings = $this->Settings;
+                    $supplier_advance_ledger = isset($settings->supplier_advance_ledger) && !empty($settings->supplier_advance_ledger) 
+                                             ? $settings->supplier_advance_ledger 
+                                             : null;
+                    
+                    if(!$supplier_advance_ledger) {
+                        $this->session->set_flashdata('error', 'Payment amount exceeds total due amount. Please configure Supplier Advance Ledger in settings to allow advance payments.');
+                        redirect($_SERVER['HTTP_REFERER']);
+                    }
+                }
+
+                // Handle advance settlement if checkbox is checked
+                // New logic: Calculate shortage between total invoice due and payment entered
+                $cash_payment = $payment_total;
+                $advance_settlement_amount = 0;
+                
+                if($settle_with_advance) {
+                    // Get supplier advance ledger from settings
+                    $settings = $this->Settings;
+                    $supplier_advance_ledger = isset($settings->supplier_advance_ledger) && !empty($settings->supplier_advance_ledger) 
+                                             ? $settings->supplier_advance_ledger 
+                                             : null;
+                    
+                    if($supplier_advance_ledger) {
+                        // Get current advance balance
+                        $current_advance_balance = $this->getSupplierAdvanceBalance($supplier_id, $supplier_advance_ledger);
+                        
+                        if($current_advance_balance > 0) {
+                            // NEW LOGIC: Calculate shortage (total invoice amount - payment entered)
+                            $shortage_amount = $total_due - $payment_total;
+                            
+                            if($shortage_amount > 0) {
+                                // Use advance to cover the shortage (minimum of shortage or available advance)
+                                $advance_settlement_amount = min($current_advance_balance, $shortage_amount);
+                                // Cash payment remains as entered
+                                $cash_payment = $payment_total;
+                                
+                                // Add note about settlement
+                                $note .= " (Settlement: Cash {$cash_payment}, Advance {$advance_settlement_amount}, Total: " . ($cash_payment + $advance_settlement_amount) . ")";
+                            }
+                        }
+                    }
+                }
+
+                // Case 4 Check: Ensure payment_total can cover the selected invoice payments
+                if(array_sum($payments_array) > $payment_total){
+                    $this->session->set_flashdata('error', 'Total payment amount is insufficient to cover selected invoice payments. Required: ' . array_sum($payments_array) . ', Provided: ' . $payment_total);
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
+
+                // Split payment into invoice payment and advance payment
+                $total_invoice_payment = array_sum($payments_array); // Actual amount going to invoices
+                $advance_payment = $cash_payment - $total_invoice_payment; // Excess cash amount
+                
+                $main_payment_id = null;
+                    
+                    // Process invoice payments (if there are any)
+                    if($total_invoice_payment > 0) {
+                        // Calculate total settlement amount (cash + advance adjustment)
+                        $total_settlement_amount = $cash_payment + $advance_settlement_amount;
+                        
+                        // Create combined payment reference for the total settlement amount
+                        $combined_payment_id = $this->add_supplier_reference($total_settlement_amount, $reference_no, $date, $note, $supplier_id, $bank_charges, $bank_charges_account, $ledger_account);
+                        
+                        // Verify payment reference was created successfully
+                        if (!$combined_payment_id) {
+                            $this->session->set_flashdata('error', 'Failed to create payment reference. Please check system configuration.');
+                            redirect($_SERVER['HTTP_REFERER']);
+                        }
+                        
+                        // Distribute payments to invoices (cash + advance settlement)
+                        $remaining_advance = $advance_settlement_amount;
+                        
+                        for ($i = 0; $i < count($payments_array); $i++) {
+                            $cash_payment_for_invoice = $payments_array[$i];
+                            $item_id = $item_ids[$i];
+                            $due_amount = $due_amount_array[$i];
+                            
+                            // Calculate shortage for this invoice
+                            $invoice_shortage = $due_amount - $cash_payment_for_invoice;
+                            
+                            // Determine how much advance to use for this invoice
+                            $advance_for_this_invoice = 0;
+                            if ($remaining_advance > 0 && $invoice_shortage > 0) {
+                                $advance_for_this_invoice = min($remaining_advance, $invoice_shortage);
+                                $remaining_advance -= $advance_for_this_invoice;
+                            }
+                            
+                            // Total payment for this invoice (cash + advance)
+                            $total_payment_for_invoice = $cash_payment_for_invoice + $advance_for_this_invoice;
+                            
+                            if($total_payment_for_invoice > 0){
+                                // Update purchase with total payment amount
+                                $this->update_purchase_order($item_id, $total_payment_for_invoice);
+                                
+                                // Record cash payment
+                                if ($cash_payment_for_invoice > 0) {
+                                    $this->make_supplier_payment($item_id, $cash_payment_for_invoice, $reference_no, $date, $note . ' (Cash)', $combined_payment_id);
+                                }
+                                
+                                // Record advance settlement payment
+                                if ($advance_for_this_invoice > 0) {
+                                    $this->make_supplier_payment($item_id, $advance_for_this_invoice, $reference_no . '-ADV', $date, $note . ' (Advance Settlement)', $combined_payment_id);
+                                }
+                            }
+                        }
+
+                        // If we are settling with advance, create separate journal entries
+                        if($advance_settlement_amount > 0) {
+                            // Get supplier advance ledger
+                            $settings = $this->Settings;
+                            $supplier_advance_ledger = $settings->supplier_advance_ledger;
+                            
+                            // Create cash payment journal entry (if cash payment > 0)
+                            if($cash_payment > 0) {
+                                $cash_journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $ledger_account, $bank_charges_account, $cash_payment, $bank_charges, $reference_no . '-CASH', 'supplierpayment');
+                            }
+                            
+                            // Create advance settlement journal entry (debit advance ledger, credit supplier ledger)
+                            // This reduces the advance balance and settles the supplier liability
+                            $advance_journal_id = $this->create_advance_settlement_entry($supplier_id, $supplier_advance_ledger, $advance_settlement_amount, $reference_no . '-ADV', $date, 'Advance Settlement');
+                            
+                            $this->purchases_model->update_payment_reference($combined_payment_id, $cash_journal_id ? $cash_journal_id : $advance_journal_id);
+                        } else {
+                            // Regular payment without advance settlement
+                            $journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $ledger_account, $bank_charges_account, $cash_payment, $bank_charges, $reference_no, 'supplierpayment');
+                            $this->purchases_model->update_payment_reference($combined_payment_id, $journal_id);
+                        }
+                        
+                        $main_payment_id = $combined_payment_id;
+                    }
+                    
+                    // Process advance payment separately (if there is any)
+                    if($advance_payment > 0) {
+                        // Get supplier advance ledger from settings
+                        $settings = $this->Settings;
+                        $supplier_advance_ledger = isset($settings->supplier_advance_ledger) && !empty($settings->supplier_advance_ledger) 
+                                                 ? $settings->supplier_advance_ledger 
+                                                 : null;
+                        
+                        if($supplier_advance_ledger) {
+                            // Create separate payment reference for advance payment
+                            $advance_reference_no = $reference_no . '-ADV';
+                            $advance_payment_id = $this->add_supplier_reference($advance_payment, $advance_reference_no, $date, $note . ' (Advance)', $supplier_id, 0, $bank_charges_account, $supplier_advance_ledger);
+                            
+                            // Verify payment reference was created successfully
+                            if (!$advance_payment_id) {
+                                $this->session->set_flashdata('error', 'Failed to create advance payment reference. Please check system configuration.');
+                                redirect($_SERVER['HTTP_REFERER']);
+                            }
+                            
+                            // Make advance payment entry
+                            $this->make_supplier_advance_payment($supplier_id, $advance_payment, $advance_reference_no, $date, $note, $advance_payment_id);
+                            
+                            // Create journal entry for advance payment
+                            $advance_journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $supplier_advance_ledger, $bank_charges_account, $advance_payment, 0, $advance_reference_no, 'supplieradvance');
+                            $this->purchases_model->update_payment_reference($advance_payment_id, $advance_journal_id);
+                            
+                            // Set main payment id to advance if no invoice payment
+                            if(!$main_payment_id) {
+                                $main_payment_id = $advance_payment_id;
+                            }
+                        }
+                    }
+
+                $this->session->set_flashdata('message', lang('Payment processed Successfully!'));
+                admin_redirect('suppliers/view_payment/' . $main_payment_id);
             }
             
         } else {
+            // Check if supplier_advance_ledger is configured in settings
+            $settings = $this->Settings;
+           
+            $supplier_advance_ledger = isset($settings->supplier_advance_ledger) && !empty($settings->supplier_advance_ledger) 
+                                     ? $settings->supplier_advance_ledger 
+                                     : null;
+            
             $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
             $this->data['warehouses'] = $this->site->getAllWarehouses();
+            $this->data['supplier_advance_ledger'] = $supplier_advance_ledger;
             $this->page_construct('suppliers/add_payment', $meta, $this->data);
         }
     }
@@ -614,36 +1179,205 @@ class Suppliers extends MY_Controller
         echo $data;
     }
 
+    public function get_supplier_advance_balance(){
+        try {
+            $supplier_id = isset($_GET['supplier_id']) ? $_GET['supplier_id'] : null;
+            
+            if (!$supplier_id) {
+                echo json_encode(array(
+                    'advance_balance' => 0,
+                    'advance_ledger_configured' => false,
+                    'error' => 'No supplier ID provided'
+                ));
+                return;
+            }
+            
+            // Get supplier advance ledger from settings
+            $settings = $this->Settings;
+            $supplier_advance_ledger = isset($settings->supplier_advance_ledger) && !empty($settings->supplier_advance_ledger) 
+                                     ? $settings->supplier_advance_ledger 
+                                     : null;
+            
+            $advance_balance = 0;
+            
+            if($supplier_advance_ledger && $supplier_id) {
+                // Query for advance balance using supplier_id field
+                $this->db->select('
+                    COALESCE(SUM(CASE WHEN ei.dc = "C" THEN ei.amount ELSE 0 END), 0) as credit_total,
+                    COALESCE(SUM(CASE WHEN ei.dc = "D" THEN ei.amount ELSE 0 END), 0) as debit_total
+                ');
+                $this->db->from('sma_accounts_entryitems ei');
+                $this->db->join('sma_accounts_entries e', 'e.id = ei.entry_id', 'inner');
+                $this->db->where('ei.ledger_id', $supplier_advance_ledger);
+                $this->db->where('e.supplier_id', $supplier_id);
+                
+                // Check if deleted column exists before filtering
+                if ($this->db->field_exists('deleted', 'sma_accounts_entries')) {
+                    $this->db->where('e.deleted', 0);
+                }
+                
+                $query = $this->db->get();
+                
+                if($query->num_rows() > 0) {
+                    $result = $query->row();
+                    // Advance balance = Credits (advances received) - Debits (advances used/settled)
+                    $advance_balance = $result->credit_total - $result->debit_total;
+                }
+            }
+            
+            $data = array(
+                'advance_balance' => $advance_balance,
+                'advance_ledger_configured' => $supplier_advance_ledger ? true : false,
+                'supplier_id' => $supplier_id,
+                'advance_ledger' => $supplier_advance_ledger
+            );
+            
+            echo json_encode($data);
+            
+        } catch (Exception $e) {
+            // Log the full error for debugging
+            log_message('error', 'Advance Balance Error: ' . $e->getMessage());
+            log_message('error', 'SQL Error: ' . $this->db->last_query());
+            
+            echo json_encode(array(
+                'advance_balance' => 0,
+                'advance_ledger_configured' => false,
+                'error' => 'Database error: ' . $e->getMessage(),
+                'query' => $this->db->last_query()
+            ));
+        }
+    }
+
+    private function getSupplierAdvanceBalance($supplier_id, $supplier_advance_ledger) {
+        if(!$supplier_advance_ledger || !$supplier_id) {
+            return 0;
+        }
+        
+        // Query for advance balance using supplier_id field
+        $this->db->select('
+            COALESCE(SUM(CASE WHEN ei.dc = "C" THEN ei.amount ELSE 0 END), 0) as credit_total,
+            COALESCE(SUM(CASE WHEN ei.dc = "D" THEN ei.amount ELSE 0 END), 0) as debit_total
+        ');
+        $this->db->from('sma_accounts_entryitems ei');
+        $this->db->join('sma_accounts_entries e', 'e.id = ei.entry_id', 'inner');
+        $this->db->where('ei.ledger_id', $supplier_advance_ledger);
+        $this->db->where('e.supplier_id', $supplier_id);
+        
+        // Check if deleted column exists before filtering
+        if ($this->db->field_exists('deleted', 'sma_accounts_entries')) {
+            $this->db->where('e.deleted', 0);
+        }
+        
+        $query = $this->db->get();
+        
+        if($query->num_rows() > 0) {
+            $result = $query->row();
+            return $result->credit_total - $result->debit_total;
+        }
+        
+        return 0;
+    }
+
+    private function create_advance_settlement_entry($supplier_id, $supplier_advance_ledger, $advance_amount, $reference_no, $date, $description) {
+        // Get supplier details
+        $this->load->admin_model('companies_model');
+        $supplier = $this->companies_model->getCompanyByID($supplier_id);
+        
+        // Create journal entry for advance settlement
+        $entry = array(
+            'entrytype_id' => 4,
+            'transaction_type' => 'advancesettlement',
+            'number' => $reference_no,
+            'date' => $date,
+            'dr_total' => $advance_amount,
+            'cr_total' => $advance_amount,
+            'notes' => $description . ' for ' . $supplier->name,
+            'supplier_id' => $supplier_id
+        );
+        
+        $add = $this->db->insert('sma_accounts_entries', $entry);
+        $entry_id = $this->db->insert_id();
+        
+        if ($add) {
+            // Debit advance ledger (reducing advance balance)
+            $entryitem1 = array(
+                'entry_id' => $entry_id,
+                'ledger_id' => $supplier_advance_ledger,
+                'amount' => $advance_amount,
+                'dc' => 'D',
+                'reconciliation_date' => $date
+            );
+            $this->db->insert('sma_accounts_entryitems', $entryitem1);
+            
+            // Credit supplier ledger (reducing supplier payable)
+            $entryitem2 = array(
+                'entry_id' => $entry_id,
+                'ledger_id' => $supplier->ledger_account,
+                'amount' => $advance_amount,
+                'dc' => 'C',
+                'reconciliation_date' => $date
+            );
+            $this->db->insert('sma_accounts_entryitems', $entryitem2);
+            
+            return $entry_id;
+        }
+        
+        return false;
+    }
+
     public function add()
     {
+        $parent_code = null;
         $this->sma->checkPermissions(false, true);
 
         $this->form_validation->set_rules('email', $this->lang->line('email_address'), 'is_unique[companies.email]');
 
         if ($this->form_validation->run('companies/add') == true) {
-            $data = [
-                'name'        => $this->input->post('name'),
-                'email'       => $this->input->post('email'),
-                'group_id'    => '4',
-                'group_name'  => 'supplier',
-                'company'     => $this->input->post('company'),
-                'address'     => $this->input->post('address'),
-                'vat_no'      => $this->input->post('vat_no'),
-                'city'        => $this->input->post('city'),
-                'state'       => $this->input->post('state'),
-                'postal_code' => $this->input->post('postal_code'),
-                'country'     => $this->input->post('country'),
-                'phone'       => $this->input->post('phone'),
-                'cf1'         => $this->input->post('cf1'),
-                'cf2'         => $this->input->post('cf2'),
-                'cf3'         => $this->input->post('cf3'),
-                'cf4'         => $this->input->post('cf4'),
-                'cf5'         => $this->input->post('cf5'),
-                'cf6'         => $this->input->post('cf6'),
-                'gst_no'      => $this->input->post('gst_no'),
-                'ledger_account' => $this->input->post('ledger_account'),
-                'sequence_code'  => $this->sequenceCode->generate('SUP', 5)
-            ];
+              $level = $this->input->post('level');
+            
+
+            // If level is 2 (child), get the parent company's sequence_code
+            if ($level == '2') {
+                $parent_id = $this->input->post('parent_id');
+                if ($parent_id) {
+                    $parent_company = $this->companies_model->getCompanyByID($parent_id);
+                    if ($parent_company) {
+                        $parent_code = $parent_company->sequence_code;
+                    }
+                }
+            }
+
+        $data = [
+            'name'                => $this->input->post('name') ?? '',
+            'name_ar'             => $this->input->post('name_ar') ?? '', 
+            'category'            => $this->input->post('category') ?? '',
+            'email'               => $this->input->post('email') ?? '',
+            'group_id'            => '4',
+            'group_name'          => 'supplier',
+            'company'             => $this->input->post('company') ?? '',
+            'address'             => $this->input->post('address') ?? '',
+            'vat_no'              => $this->input->post('vat_no') ?? '',
+            'cr'                  => $this->input->post('cr') ?? '',
+            'cr_expiration'       => $this->input->post('cr_expiration') ?? '',
+            'gln'                 => $this->input->post('gln') ?? '',
+            'short_address'       => $this->input->post('short_address') ?? '',
+            'building_number'     => $this->input->post('building_number') ?? '',
+            'city'                => $this->input->post('city') ?? '',
+            'state'               => $this->input->post('state') ?? '',
+            'postal_code'         => $this->input->post('postal_code') ?? '',
+            'country'             => $this->input->post('country') ?? '',
+            'phone'               => $this->input->post('phone') ?? '',
+            'contact_name'        => $this->input->post('contact_name') ?? '',
+            'contact_number'      => $this->input->post('contact_number') ?? '',
+            'ledger_account'      => $this->input->post('ledger_account') ?? 0,
+            'payment_term'        => $this->input->post('payment_term'),
+            'credit_limit'        => $this->input->post('credit_limit') ? $this->input->post('credit_limit') : '0',
+            'balance'             => $this->input->post('balance') ?? 0,
+            'note'                => $this->input->post('note') ?? '',
+            'level'               => $level,
+            'parent_code'         => $parent_code,
+            'sequence_code'       => $this->sequenceCode->generate('SUP', 5)
+        ];
         } elseif ($this->input->post('add_supplier')) {
             $this->session->set_flashdata('error', validation_errors());
             admin_redirect('suppliers');
@@ -656,6 +1390,8 @@ class Suppliers extends MY_Controller
         } else {
             $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
             $this->data['modal_js'] = $this->site->modal_js();
+            $this->data['parent_suppliers'] = $this->companies_model->getAllParentSuppliers();
+        
             $this->load->view($this->theme . 'suppliers/add', $this->data);
         }
     }
@@ -731,14 +1467,21 @@ class Suppliers extends MY_Controller
             $id = $this->input->get('id');
         }
 
+        $this->form_validation->set_rules('name', $this->lang->line('name'), 'required');
+        $this->form_validation->set_rules('name_ar', $this->lang->line('name_ar'), 'required');
+        $this->form_validation->set_rules('address', $this->lang->line('address'), 'required');
+
         $company_details = $this->companies_model->getCompanyByID($id);
+        //echo '<pre>';  print_r($company_details); exit;
         if ($this->input->post('email') != $company_details->email) {
-            $this->form_validation->set_rules('code', lang('email_address'), 'is_unique[companies.email]');
+            //$this->form_validation->set_rules('code', lang('email_address'), 'is_unique[companies.email]');
         }
 
-        if ($this->form_validation->run('companies/add') == true) {
+        if ($this->form_validation->run() == true) {
             $data = [
                 'name'        => $this->input->post('name'),
+                'name_ar'        => $this->input->post('name_ar'), 
+                'category'        => $this->input->post('category'),
                 'email'       => $this->input->post('email'),
                 'group_id'    => '4',
                 'group_name'  => 'supplier',
@@ -757,8 +1500,19 @@ class Suppliers extends MY_Controller
                 'cf5'         => $this->input->post('cf5'),
                 'cf6'         => $this->input->post('cf6'),
                 'gst_no'      => $this->input->post('gst_no'),
+                'gln'         => $this->input->post('gln'),
+                'cr'          => $this->input->post('cr'),
+                'short_address' => $this->input->post('short_address'),
+                'building_number' => $this->input->post('building_number'),
+                'unit_number' => $this->input->post('unit_number'),
                 'ledger_account'      => $this->input->post('ledger_account'),
+                'payment_term' => $this->input->post('payment_term'),
+                'credit_limit'        => $this->input->post('credit_limit') ? $this->input->post('credit_limit') : '0',
             ];
+            if(empty($company_details->sequence_code)){
+                $data['sequence_code'] =$this->sequenceCode->generate('SUP', 5); 
+            } 
+
         } elseif ($this->input->post('edit_supplier')) {
             $this->session->set_flashdata('error', validation_errors());
             redirect($_SERVER['HTTP_REFERER']);
@@ -779,7 +1533,32 @@ class Suppliers extends MY_Controller
     {
         // $this->sma->checkPermissions('index');
         $row = $this->companies_model->getCompanyByID($id);
-        $this->sma->send_json([['id' => $row->id, 'text' => $row->company]]);
+        $this->sma->send_json([['id' => $row->id, 'text' => $row->name]]);
+    }
+
+    public function getChildSuppliers(){
+        //$this->sma->checkPermissions('index');
+
+        $action = "<div class=\"text-center\">";
+
+        if($this->Owner || $this->Admin || $this->GP['suppliers-edit']){
+            $actions .= "<a class=\"tip\" title='" . $this->lang->line('edit_supplier') . "' href='" . admin_url('suppliers/edit/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-edit\"></i></a>";
+        }
+
+        if($this->Owner || $this->Admin || $this->GP['suppliers-delete']){
+            $actions .= "<a href='#' class='tip po' title='<b>" . $this->lang->line('delete_supplier') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('suppliers/delete/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a>";
+        }
+        $action .= "</div>";
+
+        $this->load->library('datatables');
+        $this->datatables
+            ->select('id, sequence_code, name, vat_no, gln, cr, short_address, address, credit_limit, payment_term, category')
+            ->from('companies')
+            ->where('group_name', 'supplier')
+            ->where('level', 2)
+            ->add_column('Actions', $actions, 'id');
+        //->unset_column('id');
+        echo $this->datatables->generate();
     }
 
     public function getSuppliers()
@@ -794,6 +1573,195 @@ class Suppliers extends MY_Controller
             ->add_column('Actions', "<div class=\"text-center\"><a class=\"tip\" title='" . $this->lang->line('list_products') . "' href='" . admin_url('products?supplier=$1') . "'><i class=\"fa fa-list\"></i></a> <a class=\"tip\" title='" . $this->lang->line('list_users') . "' href='" . admin_url('suppliers/users/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-users\"></i></a> <a class=\"tip\" title='" . $this->lang->line('add_user') . "' href='" . admin_url('suppliers/add_user/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-plus-circle\"></i></a> <a class=\"tip\" title='" . $this->lang->line('edit_supplier') . "' href='" . admin_url('suppliers/edit/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . $this->lang->line('delete_supplier') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('suppliers/delete/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
         //->unset_column('id');
         echo $this->datatables->generate();
+    }
+
+    private function _get_companies_table_fields()
+    {
+        return [
+            'external_id' => 'Customer No',
+            'name' => 'Customer Name',
+            'company' => 'C R Name',
+            'cr' => 'C R Number',
+            'cr_expiration' => 'C R Expiration',
+            'vat_no' => 'VAT No',
+            'gln' => 'GLN No',
+            'sfda_certificate' => 'SFDA Certificate',
+            'short_address' => 'Short Address',
+            'city' => 'City',
+            'unit_number' => 'Unit Number',
+            'building_number' => 'Building Number',
+            'postal_code' => 'Postal Code',
+            'additional_number' => 'Additional Number',
+            'contact_name' => 'Contact Name',
+            'contact_number' => 'Contact Number',
+            'credit_limit' => 'Credit Limit',
+            'payment_term' => 'Credit Period',
+            'cf1' => 'Salesman Name',
+            'promessory_note_amount' => 'Promissory Note Amount',
+            'balance' => 'Customer Balance',
+            'note' => 'Note',
+            'sales_agent' => 'Sales Agent Name',
+            'category' => 'Classification',
+            'email' => 'Email'
+        ];
+    }
+
+    public function process_import()
+    {
+        $mapping  = $this->input->post('mapping');    // mapping array: file column index => db field
+        $filePath = $this->input->post('file_path');  // uploaded Excel file path
+
+        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($filePath);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $imported = 0;
+        $errors   = 0;
+        $i = 0;
+
+        // ✅ Read all rows as an array (handles weird Excel formats properly)
+        $rows = $sheet->toArray(null, true, true, false);
+        //echo '<pre>';print_r($rows);exit;
+        foreach ($rows as $rowIndex => $columns) {
+            $i++;
+
+            // Skip header row (first row)
+            if ($rowIndex == 0) continue;
+
+            // Convert associative row to numeric array
+            $rowData = array_values($columns);
+            //echo '<pre>';print_r($rowData);exit;
+            // Map Excel columns to DB fields
+            $data = [];
+            foreach ($mapping as $index => $field) {
+                if (!empty($field) && isset($rowData[$index])) {
+                    $data[$field] = trim($rowData[$index]);
+                }
+            }
+            //echo '<pre>';print_r($data);exit;
+            // Skip invalid rows
+            if (empty($data['name'])) {
+                continue;
+            }
+
+            // Check if supplier already exists
+            $exists = $this->db->get_where('companies', [
+                'name'       => $data['name'],
+                'group_name' => 'supplier'
+            ])->row();
+
+            if ($exists) {
+                // Update existing record
+                $this->db->where('id', $exists->id)->update('companies', $data);
+            } else {
+                // Generate sequence code like SUP-00001
+                $seq_code = 'SUP-' . str_pad($i, 5, '0', STR_PAD_LEFT);
+
+                // Insert new record with defaults
+                $data['group_id']      = 4;
+                $data['group_name']    = 'supplier';
+                $data['country']       = 'Saudi Arabia';
+                $data['sequence_code'] = $seq_code;
+                $data['level']         = 1;
+
+                $this->db->insert('companies', $data);
+                $supplier_id = $this->db->insert_id();
+
+                // This block is to add child supplier
+                if($this->Settings->site_name == 'Hills Business Medical'){
+
+                    $data['level']               = 2;
+                    $data['parent_code'] = $seq_code;
+                    //$parent_code = $seq_code = 'SUP-' . str_pad($i, 5, '0', STR_PAD_LEFT);
+                    $i++;
+                    $seq_code = 'SUP-' . str_pad($i, 5, '0', STR_PAD_LEFT);
+                    $data['sequence_code'] = $seq_code;
+                    $this->db->insert('companies', $data);
+                }
+            }
+
+            if ($this->db->affected_rows() > 0) {
+                $imported++;
+            } else {
+                $errors++;
+            }
+        }
+
+        // Clean up
+        if (file_exists($filePath)) {
+            unlink($filePath);
+        }
+
+        $this->session->set_flashdata('message', "Imported: {$imported}, Errors: {$errors}");
+        redirect(admin_url('suppliers'));
+    }
+
+
+    
+    public function import_excel(){
+        $this->load->helper('security');
+        $this->form_validation->set_rules('excel_file', lang('upload_file'), 'xss_clean');
+
+        if ($this->form_validation->run() == true) {
+
+            $this->load->library('excel');
+            if (isset($_FILES['excel_file']) && $_FILES['excel_file']['size'] > 0) {
+                $this->load->library('upload');
+
+                $config['upload_path']   = 'files/';
+                $config['allowed_types'] = 'xlsx|xls|csv';
+                $config['max_size']      = '10000';
+                $config['overwrite']     = false;
+                $config['encrypt_name']  = true;
+
+                $this->upload->initialize($config);
+                $this->upload->initialize($config);
+
+                if (!$this->upload->do_upload('excel_file')) {
+                    $error = $this->upload->display_errors();
+                    $this->session->set_flashdata('error', $error);
+                    admin_redirect('suppliers');
+                }
+
+                $upload_data = $this->upload->data();
+                $file_path = $upload_data['full_path'];
+
+                $spreadsheet = IOFactory::load($file_path);
+                $sheet = $spreadsheet->getActiveSheet();
+                $rows = $sheet->toArray(null, true, true, true);
+                
+                 // Extract headers (first row)
+                $headers = array_shift($rows);
+               
+                // Filter out empty headers
+                $headers = array_filter($headers, function($value) {
+                    return trim($value) !== '';
+                });
+
+                // Optionally reindex headers numerically
+                $headers = array_values($headers);
+
+                // Pass to view for mapping
+                $this->data['headers']   = $headers;
+                $this->data['rows']      = $rows;
+                $this->data['file_path'] = $file_path;
+                $this->data['db_fields'] = $this->_get_companies_table_fields();
+
+                //$this->load->view($this->theme . 'customers/map_fields', $this->data);
+
+                $this->session->set_userdata('user_csrf', $value);
+                $this->data['csrf'] = $this->session->userdata('user_csrf');
+                $bc = [['link' => base_url(), 'page' => lang('suppliers_mapper')], ['link' => admin_url('suppliers'), 'page' => lang('suppliers_mapper')], ['link' => '#', 'page' => lang('suppliers_mapper')]];
+                $meta = ['page_title' => lang('suppliers_mapper'), 'bc' => $bc];
+                $this->page_construct('suppliers/map_fields', $meta, $this->data);
+                
+            }
+        }else{
+            $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+            $this->data['modal_js'] = $this->site->modal_js();
+            $this->load->view($this->theme . 'suppliers/import_excel', $this->data);
+        }
     }
 
     public function import_csv()
@@ -843,23 +1811,28 @@ class Suppliers extends MY_Controller
                     $supplier = [
                         'company'     => isset($value[0]) ? trim($value[0]) : '',
                         'name'        => isset($value[1]) ? trim($value[1]) : '',
-                        'email'       => isset($value[2]) ? trim($value[2]) : '',
-                        'phone'       => isset($value[3]) ? trim($value[3]) : '',
-                        'address'     => isset($value[4]) ? trim($value[4]) : '',
-                        'city'        => isset($value[5]) ? trim($value[5]) : '',
-                        'state'       => isset($value[6]) ? trim($value[6]) : '',
-                        'postal_code' => isset($value[7]) ? trim($value[7]) : '',
-                        'country'     => isset($value[8]) ? trim($value[8]) : '',
-                        'vat_no'      => isset($value[9]) ? trim($value[9]) : '',
-                        'gst_no'      => isset($value[10]) ? trim($value[10]) : '',
-                        'cf1'         => isset($value[11]) ? trim($value[11]) : '',
-                        'cf2'         => isset($value[12]) ? trim($value[12]) : '',
-                        'cf3'         => isset($value[13]) ? trim($value[13]) : '',
-                        'cf4'         => isset($value[14]) ? trim($value[14]) : '',
-                        'cf5'         => isset($value[15]) ? trim($value[15]) : '',
-                        'cf6'         => isset($value[16]) ? trim($value[16]) : '',
+                        'name_ar'     => isset($value[2]) ? trim($value[2]) : '',
+                        'category'    => isset($value[3]) ? trim($value[3]) : '',
+                        'email'       => isset($value[4]) ? trim($value[4]) : '',
+                        'phone'       => isset($value[5]) ? trim($value[5]) : '',
+                        'address'     => isset($value[6]) ? trim($value[6]) : '',
+                        'city'        => isset($value[7]) ? trim($value[7]) : '',
+                        'state'       => isset($value[8]) ? trim($value[8]) : '',
+                        'postal_code' => isset($value[9]) ? trim($value[9]) : '',
+                        'country'     => isset($value[10]) ? trim($value[10]) : '',
+                        'vat_no'      => isset($value[11]) ? trim($value[11]) : '',
+                        'gst_no'      => isset($value[12]) ? trim($value[12]) : '',
+                        'cf1'         => isset($value[13]) ? trim($value[13]) : '',
+                        'cf2'         => isset($value[14]) ? trim($value[14]) : '',
+                        'cf3'         => isset($value[15]) ? trim($value[15]) : '',
+                        'cf4'         => isset($value[16]) ? trim($value[16]) : '',
+                        'cf5'         => isset($value[17]) ? trim($value[17]) : '',
+                        'cf6'         => isset($value[18]) ? trim($value[18]) : '',
+                        'payment_term'        => isset($value[19]) ? trim($value[19]) : '',
+                        'credit_limit'        => isset($value[20]) ? trim($value[20]) : '',
                         'group_id'    => 4,
                         'group_name'  => 'supplier',
+                        'sequence_code'  => $this->sequenceCode->generate('SUP', 5)
                     ];
                     if (empty($supplier['company']) || empty($supplier['name']) || empty($supplier['email'])) {
                         $this->session->set_flashdata('error', lang('company') . ', ' . lang('name') . ', ' . lang('email') . ' ' . lang('are_required') . ' (' . lang('line_no') . ' ' . $rw . ')');
@@ -872,6 +1845,9 @@ class Suppliers extends MY_Controller
                         if ($supplier_details = $this->companies_model->getCompanyByEmail($supplier['email'])) {
                             if ($supplier_details->group_id == 4) {
                                 $updated .= '<p>' . lang('supplier_updated') . ' (' . $supplier['email'] . ')</p>';
+                                if(!empty($supplier_details->sequence_code)){
+                                    $supplier['sequence_code']=$supplier_details->sequence_code; 
+                                }
                                 $this->companies_model->updateCompany($supplier_details->id, $supplier);
                             }
                         } else {
@@ -911,7 +1887,7 @@ class Suppliers extends MY_Controller
 
     public function index($action = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         $this->data['error']  = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['action'] = $action;
@@ -929,6 +1905,42 @@ class Suppliers extends MY_Controller
         $term            = addslashes($term);
         $limit           = $this->input->get('limit', true);
         $rows['results'] = $this->companies_model->getSupplierSuggestions($term, $limit);
+        $this->sma->send_json($rows);
+    }
+
+    public function parentsuggestions($term = null, $limit = null)
+    {
+        // $this->sma->checkPermissions('index');
+        if ($this->input->get('term')) {
+            $term = $this->input->get('term', true);
+        }
+        $term            = addslashes($term);
+        $limit           = $this->input->get('limit', true);
+        $rows['results'] = $this->companies_model->getParentSupplierSuggestions($term, $limit);
+        $this->sma->send_json($rows);
+    }
+
+    public function getChildById($term = null, $limit = null, $pid = null){
+        if ($this->input->get('pid')) {
+            $pid = $this->input->get('pid', true);
+            $term = $this->input->get('term', true);
+        }
+        //echo 'Pid: '.$pid.' and term '.$term;exit;
+        $term            = addslashes($term);
+        //$limit           = $this->input->get('limit', true);
+        $rows['results'] = $this->companies_model->getCompaniesByParentId($pid);
+        $this->sma->send_json($rows);  
+    }
+
+    public function childsuggestions($term = null, $limit = null)
+    {
+        // $this->sma->checkPermissions('index');
+        if ($this->input->get('term')) {
+            $term = $this->input->get('term', true);
+        }
+        $term            = addslashes($term);
+        $limit           = $this->input->get('limit', true);
+        $rows['results'] = $this->companies_model->getChildSupplierSuggestions($term, $limit);
         $this->sma->send_json($rows);
     }
 
@@ -966,21 +1978,23 @@ class Suppliers extends MY_Controller
                     $this->excel->getActiveSheet()->SetCellValue('A1', lang('company'));
                     $this->excel->getActiveSheet()->SetCellValue('B1', lang('sequence_code'));
                     $this->excel->getActiveSheet()->SetCellValue('C1', lang('name'));
-                    $this->excel->getActiveSheet()->SetCellValue('D1', lang('email'));
-                    $this->excel->getActiveSheet()->SetCellValue('E1', lang('phone'));
-                    $this->excel->getActiveSheet()->SetCellValue('F1', lang('address'));
-                    $this->excel->getActiveSheet()->SetCellValue('G1', lang('city'));
-                    $this->excel->getActiveSheet()->SetCellValue('H1', lang('state'));
-                    $this->excel->getActiveSheet()->SetCellValue('I1', lang('postal_code'));
-                    $this->excel->getActiveSheet()->SetCellValue('J1', lang('country'));
-                    $this->excel->getActiveSheet()->SetCellValue('K1', lang('vat_no'));
-                    $this->excel->getActiveSheet()->SetCellValue('L1', lang('gst_no'));
-                    $this->excel->getActiveSheet()->SetCellValue('M1', lang('scf1'));
-                    $this->excel->getActiveSheet()->SetCellValue('N1', lang('scf2'));
-                    $this->excel->getActiveSheet()->SetCellValue('O1', lang('scf3'));
-                    $this->excel->getActiveSheet()->SetCellValue('P1', lang('scf4'));
-                    $this->excel->getActiveSheet()->SetCellValue('Q1', lang('scf5'));
-                    $this->excel->getActiveSheet()->SetCellValue('R1', lang('scf6'));
+                    $this->excel->getActiveSheet()->SetCellValue('D1', lang('name_arabic'));
+                    $this->excel->getActiveSheet()->SetCellValue('E1', lang('category'));
+                    $this->excel->getActiveSheet()->SetCellValue('F1', lang('email'));
+                    $this->excel->getActiveSheet()->SetCellValue('G1', lang('phone'));
+                    $this->excel->getActiveSheet()->SetCellValue('H1', lang('address'));
+                    $this->excel->getActiveSheet()->SetCellValue('I1', lang('city'));
+                    $this->excel->getActiveSheet()->SetCellValue('J1', lang('state'));
+                    $this->excel->getActiveSheet()->SetCellValue('K1', lang('postal_code'));
+                    $this->excel->getActiveSheet()->SetCellValue('L1', lang('country'));
+                    $this->excel->getActiveSheet()->SetCellValue('M1', lang('vat_no'));
+                    $this->excel->getActiveSheet()->SetCellValue('N1', lang('gst_no'));
+                    $this->excel->getActiveSheet()->SetCellValue('O1', lang('scf1'));
+                    $this->excel->getActiveSheet()->SetCellValue('P1', lang('scf2'));
+                    $this->excel->getActiveSheet()->SetCellValue('Q1', lang('scf3'));
+                    $this->excel->getActiveSheet()->SetCellValue('R1', lang('scf4'));
+                    $this->excel->getActiveSheet()->SetCellValue('S1', lang('scf5'));
+                    $this->excel->getActiveSheet()->SetCellValue('T1', lang('scf6'));
 
                     $row = 2;
                     foreach ($_POST['val'] as $id) {
@@ -988,21 +2002,24 @@ class Suppliers extends MY_Controller
                         $this->excel->getActiveSheet()->SetCellValue('A' . $row, $customer->company);
                         $this->excel->getActiveSheet()->SetCellValue('B' . $row, $customer->sequence_code);
                         $this->excel->getActiveSheet()->SetCellValue('C' . $row, $customer->name);
-                        $this->excel->getActiveSheet()->SetCellValue('D' . $row, $customer->email);
-                        $this->excel->getActiveSheet()->SetCellValue('E' . $row, $customer->phone);
-                        $this->excel->getActiveSheet()->SetCellValue('F' . $row, $customer->address);
-                        $this->excel->getActiveSheet()->SetCellValue('G' . $row, $customer->city);
-                        $this->excel->getActiveSheet()->SetCellValue('H' . $row, $customer->state);
-                        $this->excel->getActiveSheet()->SetCellValue('I' . $row, $customer->postal_code);
-                        $this->excel->getActiveSheet()->SetCellValue('J' . $row, $customer->country);
-                        $this->excel->getActiveSheet()->SetCellValue('K' . $row, $customer->vat_no);
-                        $this->excel->getActiveSheet()->SetCellValue('L' . $row, $customer->gst_no);
-                        $this->excel->getActiveSheet()->SetCellValue('M' . $row, $customer->cf1);
-                        $this->excel->getActiveSheet()->SetCellValue('N' . $row, $customer->cf2);
-                        $this->excel->getActiveSheet()->SetCellValue('O' . $row, $customer->cf3);
-                        $this->excel->getActiveSheet()->SetCellValue('P' . $row, $customer->cf4);
-                        $this->excel->getActiveSheet()->SetCellValue('Q' . $row, $customer->cf5);
-                        $this->excel->getActiveSheet()->SetCellValue('QR' . $row, $customer->cf6);
+                        $this->excel->getActiveSheet()->SetCellValue('D' . $row, $customer->name_ar);
+                        $this->excel->getActiveSheet()->SetCellValue('E' . $row, $customer->category);
+                        $this->excel->getActiveSheet()->SetCellValue('F' . $row, $customer->email);
+                        $this->excel->getActiveSheet()->SetCellValue('G' . $row, $customer->phone);
+                        $this->excel->getActiveSheet()->SetCellValue('H' . $row, $customer->address);
+                        $this->excel->getActiveSheet()->SetCellValue('I' . $row, $customer->city);
+                        $this->excel->getActiveSheet()->SetCellValue('J' . $row, $customer->state);
+                        $this->excel->getActiveSheet()->SetCellValue('K' . $row, $customer->postal_code);
+                        $this->excel->getActiveSheet()->SetCellValue('L' . $row, $customer->country);
+                        $this->excel->getActiveSheet()->SetCellValue('M' . $row, $customer->vat_no);
+                        $this->excel->getActiveSheet()->SetCellValue('N' . $row, $customer->gst_no);
+                        $this->excel->getActiveSheet()->SetCellValue('O' . $row, $customer->cf1);
+                        $this->excel->getActiveSheet()->SetCellValue('P' . $row, $customer->cf2);
+                        $this->excel->getActiveSheet()->SetCellValue('Q' . $row, $customer->cf3);
+                        $this->excel->getActiveSheet()->SetCellValue('R' . $row, $customer->cf4);
+                        $this->excel->getActiveSheet()->SetCellValue('S' . $row, $customer->cf5);
+                        $this->excel->getActiveSheet()->SetCellValue('T' . $row, $customer->cf6);
+                        //$this->excel->getActiveSheet()->SetCellValue('QR' . $row, $customer->cf6);
                         $row++;
                     }
 

@@ -12,9 +12,9 @@
             <p><?= lang('enter_info'); ?></p>
 
             <div class="well well-small">
-                <a href="<?php echo base_url(); ?>assets/csv/sample.csv" class="btn btn-primary pull-right"><i
+                <a href="<?php echo base_url(); ?>assets/csv/sample_supplier.csv" class="btn btn-primary pull-right"><i
                         class="fa fa-download"></i> Download Sample File</a>
-                <span class="text-warning"><?= lang('csv1'); ?></span><br/><?= lang('csv2'); ?> <span class="text-info">(<?= lang('company') . ', ' . lang('name') . ', ' . lang('email') . ', ' . lang('phone') . ', ' . lang('address') . ', ' . lang('city'); ?>
+                <span class="text-warning"><?= lang('csv1'); ?></span><br/><?= lang('csv2'); ?> <span class="text-info">(<?= lang('company') . ', ' . lang('name') . ', '.lang('name_arabic') . ', '.lang('category'). ', '. lang('email') . ', ' . lang('phone') . ', ' . lang('address') . ', ' . lang('city'); ?>
                     ,  <?= lang('state') . ', ' . lang('postal_code') . ', ' . lang('country') . ', ' . lang('vat_no') . ', ' . lang('gst_no') . ', ' . lang('scf1') . ', ' . lang('scf2') . ', ' . lang('scf3') . ', ' . lang('scf4') . ', ' . lang('scf5') . ', ' . lang('scf6'); ?>
                     )</span> <?= lang('csv3'); ?><br>
                 <p class="text-success"><?= lang('first_6_required'); ?></p>

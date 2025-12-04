@@ -7,6 +7,226 @@ class Sales_model extends CI_Model
     public function __construct()
     {
         parent::__construct();
+        $this->load->admin_model('Inventory_model');
+    }
+
+    public function get_rasd_required_fields($data ){
+        //$notification_id = $data['notification_id'];
+        $sale_id = $data['sale_id'];
+        $this->db->select('sale_status');
+        $this->db->from('sma_sales');
+        $this->db->where("id", $sale_id);
+        $query = $this->db->get();
+        $status = "completed";
+        if($query->num_rows() > 0){
+            $status = $query -> row()->sale_status;
+        }
+        /*if($status != "completed"){
+            return ['payload' => [], 'user' => "", 'pass' => "", 'status' => $status];
+        }*/
+
+        $source_warehouse_id = $data['source_warehouse_id'];
+        $desitnation_customer_id = $data['destination_customer_id'];
+        $products = $data['products'];
+
+        /**Get GLNs */
+        $this->db->select("gln,rasd_user, rasd_pass");
+        $this->db->from("sma_warehouses");
+        $this->db->where('id', $source_warehouse_id);
+        $query = $this->db->get();
+        $source_gln = "";
+        $destination_gln = "";
+        $rasd_user = "";
+        $rasd_pass = "";
+        $rasd_pharmacy_user = "";
+        $rasd_pharmacy_password = "";
+        if($query->num_rows() > 0){
+            $source_gln = $query -> row()->gln;
+            $rasd_user = $query ->row()->rasd_user;
+            $rasd_pass = $query ->row()->rasd_pass;
+        }
+
+         /**Get GLNs */
+        $this->db->select("gln");
+        $this->db->from("sma_companies");
+        $this->db->where('id', $desitnation_customer_id);
+        $query = $this->db->get();
+
+        if($query->num_rows() > 0){
+            $destination_gln = $query -> row()->gln;
+        }
+
+        $c_2762 = [];
+        $c_2760  = [];
+        $to_update = [];
+        $count = 0;
+      
+        $batch_size = 20; // Max size per payload batch
+        $payload_index = 0;
+        $payloads = [];
+        $payloads_accept_dispatch = [];
+        foreach($products as $product){
+            $qty = (int) $product['quantity'];
+            $expiry = $product['expiry'] . " 00:00:00";
+
+            $gtin = $product['product_code'];
+            if (strlen($gtin) < 13) {  
+                $gtin = str_pad($gtin, 13, "0", STR_PAD_LEFT); // Prepend zero if needed
+            }
+
+            $c_2762[] = [
+                "223" => $gtin,
+                "2766" => $product['batch_no'],
+                "220" => $product['expiry'],
+                "224" => (string) $qty
+            ];
+
+            $c_2760[] = [
+                "223" => $gtin,
+                "219" => $product['batch_no'],
+                "220" => $product['expiry'],
+                "224" => (string) $qty
+            ];
+
+            
+            // If c_2762 reaches the batch size, create a payload
+            if (count($c_2762) == $batch_size) {
+                $payloads[$payload_index] = [
+                    "DicOfDic" => [
+                        "2762" => ["215" => $destination_gln, "3008" => "3010"],
+                        "MH" => ["MN" => "2756", "222" => $source_gln]
+                    ],
+                    "DicOfDT" => ["2762" => $c_2762]
+                ];
+                //$payloads_accept_dispatch[$payload_index] =  $this -> get_accept_dispatch_lot_params($destination_gln, $source_gln, $c_2760);
+
+                $c_2762 = []; // Reset for next batch
+                $c_2760 = [];
+                $payload_index++;
+
+            }
+             
+        }
+        
+        //Add Remaining.
+        if (!empty($c_2762)) {
+            
+            $payloads[$payload_index] = [
+                "DicOfDic" => [
+                    "2762" => ["215" => $destination_gln, "3008" => "3010"],
+                    "MH" => ["MN" => "2756", "222" => $source_gln]
+                ],
+                "DicOfDT" => ["2762" => $c_2762]
+            ];
+         
+             //$payloads_accept_dispatch[$payload_index] = $this -> get_accept_dispatch_lot_params($destination_gln, $source_gln, $c_2760);
+        }
+
+        return ['payload' => $payloads, 
+            'user' => $rasd_user,
+            'pass' => $rasd_pass, 
+            'status' => $status, 
+            'source_gln'  =>$source_gln, 
+            'destination_gln' => $destination_gln
+            //'pharmacy_user' => $rasd_pharmacy_user,
+            //'pharmacy_pass' => $rasd_pharmacy_password,
+            //'payload_for_accept_dispatch' =>$payloads_accept_dispatch,
+            //'update_map_table' =>   $to_update 
+        ];
+    }
+
+    public function getSaleLabels($sale_id){
+        $q = $this->db->get_where('sale_labels', ['sale_id' => $sale_id], 1);
+        if ($q->num_rows() > 0) {
+            $row = $q->row();
+            
+            return $row;
+        }
+        return false;
+    }
+
+    public function verifyLabel($sale_id){
+        $this->db->update('sales', ['sale_status' => 'label_verifired'], ['id' => $sale_id]);
+
+        return $sale_id;
+    }
+
+    public function updateSaleLabel($sale_id, $number_of_cartons, $refrigirated_items){
+        $data = array();
+        $data['sale_id'] = $sale_id;
+        $data['number_of_cartons'] = $number_of_cartons;
+        $data['refrigerated_items'] = $refrigirated_items;
+        //$data['created_by'] = $this->session->userdata('user_id');
+        $data['updated_by'] = $this->session->userdata('user_id');
+        //$data['date_created'] = date('Y-m-d H:i:s');
+
+        $this->db->trans_start();
+        $this->db->where('sale_id', $sale_id);
+        $this->db->update('sale_labels', $data);
+
+        $this->db->update('sales', ['sale_status' => 'label_verifired'], ['id' => $sale_id]);
+
+        $this->db->trans_complete();
+
+        if ($this->db->trans_status() === false) {
+            log_message('error', 'An error occurred while updating the label (updateSaleLabel: Sales_model.php)');
+            return false;
+        }
+
+        return true; // Return the inserted label ID
+    }
+
+    public function addSaleLabel($sale_id, $number_of_cartons, $refrigirated_items){
+        $data = array();
+        $data['sale_id'] = $sale_id;
+        $data['number_of_cartons'] = $number_of_cartons;
+        $data['refrigerated_items'] = $refrigirated_items;
+        $data['created_by'] = $this->session->userdata('user_id');
+        $data['updated_by'] = $this->session->userdata('user_id');
+        $data['date_created'] = date('Y-m-d H:i:s');
+
+        $this->db->trans_start();
+        $this->db->insert('sale_labels', $data);
+        $label_id = $this->db->insert_id();
+
+        $this->db->update('sales', ['sale_status' => 'added_label'], ['id' => $sale_id]);
+
+        $this->db->trans_complete();
+
+        if ($this->db->trans_status() === false) {
+            log_message('error', 'An error occurred while adding the label (addSaleLabel: Sales_model.php)');
+            return false;
+        }
+
+        return $label_id; // Return the inserted label ID
+    }
+
+    public function addDriver($sale_id, $driver_id, $address, $customer, $sale_ref_no){
+        $data = array();
+        $data['date'] = date('Y-m-d');
+        $data['sale_id'] = $sale_id;
+        $data['sale_reference_no'] = $sale_ref_no;
+        $data['delivered_by'] = $driver_id;
+        $data['customer'] = $customer;
+        $data['address'] = $address;
+        $data['status'] = 'in_delivery';
+        $data['created_by'] = $this->session->userdata('user_id');
+        $data['updated_by'] = $this->session->userdata('user_id');
+        $data['updated_at'] = date('Y-m-d H:i:s');
+
+        $this->db->trans_start();
+        $this->db->insert('deliveries', $data);
+        $delivery_id = $this->db->insert_id();
+        $this->db->update('sales', ['sale_status' => 'driver_assigned'], ['id' => $sale_id]);
+        
+        $this->db->trans_complete();
+
+        if ($this->db->trans_status() === false) {
+            log_message('error', 'An error occurred while adding the driver (addDriver: Sales_model.php)');
+            return false;
+        }
+
+        return $delivery_id;
     }
 
     public function addDelivery($data = [])
@@ -36,18 +256,51 @@ class Sales_model extends CI_Model
         return false;
     }
 
-    public function getPendingInvoicesByCustomer($customer_id){
-        $this->db->order_by('date', 'asc');
-        $q = $this->db->get_where('sales', ['customer_id' => $customer_id, 'payment_status' => 'pending']);
+    public function getPendingInvoicesByCustomer($customer_id) {
+        $this->db->select('s.id, s.date, s.reference_no, s.customer_id, s.customer, s.grand_total, s.paid, s.additional_discount, s.payment_status, s.due_date, 
+                          COALESCE(SUM(r.grand_total), 0) as return_total', false);
+        $this->db->from('sales s');
+        $this->db->join('returns r', 'r.sale_id = s.id', 'left');
+        $this->db->where('s.customer_id', $customer_id);
+        $this->db->where('s.sale_invoice', 1);
+        $this->db->where_in('s.payment_status', ['pending', 'due', 'partial']);
+        $this->db->group_by('s.id');
+        $this->db->order_by('s.date', 'asc');
+        $q = $this->db->get();
+    
         if ($q->num_rows() > 0) {
-            foreach (($q->result()) as $row) {
-                $data[] = $row;
-            }
-            return $data; 
-        }else{
-            $data = [];
-            return $data;
+            return $q->result(); // Return the result directly as an array of objects
+        } else {
+            return []; // Return an empty array if no results
         }
+    }
+
+    public function update_balance($id, $new_balance)
+    {
+        $data = array(
+            'balance' => $new_balance
+        );
+
+        $this->db->update('companies', $data, array('id' => $id));
+
+        return true;
+    }
+
+    public function update_payment_reference($payment_id, $journal_id){
+        $this->db->update('sma_payment_reference', ['journal_id' => $journal_id], ['id' => $payment_id]);
+    }
+
+    public function get_sale_by_avzcode($avz_code)
+    {
+        $this->db->select('sale_items.*')
+            ->join('sales', 'sales.id=sale_items.sale_id', 'left')
+            ->where('sale_items.avz_item_code =', $avz_code)
+            ->where('sales.pos =', 0);
+        $q = $this->db->get('sale_items');
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
     }
 
     /* ----------------- Gift Cards --------------------- */
@@ -76,13 +329,109 @@ class Sales_model extends CI_Model
         return false;
     }
 
+    public function addPaymentReference($data = [])
+    {
+        $this->db->insert('payment_reference', $data);
+        return $this->db->insert_id();
+    }
+    public function get_unreported_sales($serial_numbers){
+        $this->db->select('sma_serial_numbers.serial_number, sma_serial_numbers.batchno, sma_serial_numbers.gtin, sma_serial_numbers.sale_id as sale_id, sma_warehouses.gln');
+        $this->db->from('sma_serial_numbers');
+        $this->db->join('sma_sales', 'sma_serial_numbers.sale_id = sma_sales.id');
+        $this->db->join('sma_warehouses', 'sma_sales.warehouse_id = sma_warehouses.id');
+        $this->db->where_in('sma_serial_numbers.id',$serial_numbers);
+        $query = $this->db->get();
+        
+        $results = [];
+        foreach ($query->result() as $row) {
+            $results[$row->gln][] = $row;
+        }
+        
+        return $results;
+    }
+    public function get_rasd_credential($warehouse_id){
+        $this->db->select("rasd_user, rasd_pass");
+        $this->db->from("sma_warehouses");
+        $this->db->where("sma_warehouses.id", $warehouse_id);
+        $query = $this->db->get();
+        $rasd_pharmacy_user = "";
+        $rasd_pharmacy_password = "";
+        if($query->num_rows() > 0){
+            $rasd_pharmacy_user = $query ->row()->rasd_user;
+            $rasd_pharmacy_password = $query ->row()->rasd_pass;
+        }
+        $res = [
+            "user" => $rasd_pharmacy_user,
+            "pass" => $rasd_pharmacy_password
+        ];
+        return $res;
+    }
+    public function mark_sales_as_reported($sale_ids){
+       $this->db->where_in('sale_id', $sale_ids);
+       $this->db->update('sma_serial_numbers', ['is_pushed' => 1]);
+    }
+
+    public function getPaymentReferenceByID($id){
+        $this->db->select('payment_reference.*, companies.name, lb.name as transfer_from')
+            ->join('companies', 'companies.id=payment_reference.customer_id', 'left')
+            ->join('accounts_ledgers lb', 'lb.id=payment_reference.transfer_from_ledger', 'left')
+            ->where('payment_reference.id =', $id);
+        $q = $this->db->get('payment_reference');
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function update_customer_balance($customer_id, $amount){
+        $current_balance = $this->db->select('balance')
+                                ->where('id', $customer_id)
+                                ->get('sma_companies')
+                                ->row('balance');
+
+        $current_balance = $current_balance !== null ? $current_balance : 0;
+        $new_balance = $current_balance + $amount;
+
+        $this->db->update('sma_companies', ['balance' => $new_balance], ['id' => $customer_id]);
+    }
+
+    public function getPaymentByReferenceID($id)
+    {
+        $this->db->select('payments.*, companies.company, type, sales.grand_total, sales.paid, sales.additional_discount, sales.returns_total_deducted, sales.reference_no as ref_no, sales.date as sale_date')
+            ->join('sales', 'sales.id=payments.sale_id', 'left')
+            ->join('companies', 'companies.id=sales.customer_id', 'left')
+            ->where('payments.payment_id =', $id);
+        $q = $this->db->get('payments');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
+    public function getPaymentReferences(){
+        $this->db->select('payment_reference.*, companies.name as company')
+                ->join('companies', 'companies.id=payment_reference.customer_id', 'left')
+                ->where('customer_id <>', NULL);
+        $q = $this->db->get('payment_reference');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
     public function addPayment($data = [], $customer_id = null)
     {
         if ($this->db->insert('payments', $data)) {
             if ($this->site->getReference('pay') == $data['reference_no']) {
                 $this->site->updateReference('pay');
             }
-            $this->site->syncSalePayments($data['sale_id']);
+            //$this->site->syncSalePayments($data['sale_id']);
             if ($data['paid_by'] == 'gift_card') {
                 $gc = $this->site->getGiftCardByNO($data['cc_no']);
                 $this->db->update('gift_cards', ['balance' => ($gc->balance - $data['amount'])], ['card_no' => $data['cc_no']]);
@@ -92,6 +441,57 @@ class Sales_model extends CI_Model
             }
             return true;
         }
+        return false;
+    }
+
+    public function addSaleNew($data = [], $items = [], $payment = [], $si_return = [], $attachments = [])
+    {
+        // Sequence-Code
+        $this->load->library('SequenceCode');
+        $this->sequenceCode = new SequenceCode();
+        $data['sequence_code'] = $this->sequenceCode->generate('SL', 5);
+
+        $this->db->trans_start();
+        if ($this->db->insert('sales', $data)) {
+            
+            $sale_id = $this->db->insert_id();
+            if ($this->site->getReference('so') == $data['reference_no']) {
+                $this->site->updateReference('so');
+            }
+
+            foreach ($items as $item) {
+                $item['sale_id'] = $sale_id;
+                $real_cost = $item['real_cost'];
+                //unset($item['real_cost']);
+                $this->db->insert('sale_items', $item);
+
+                $sale_item_id = $this->db->insert_id();
+
+                if ($data['sale_status'] == 'ready'){ //handle inventory movement 
+                    //$this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id']); 
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $sale_id, $item['net_cost'], $item['expiry'], $item['net_unit_price'], $real_cost, $item['avz_item_code'], $item['bonus'], $data['customer_id'], $item['real_unit_price'], $data['date']);
+                } 
+                
+            }
+
+            if (!empty($attachments)) {
+                foreach ($attachments as $attachment) {
+                    $attachment['subject_id']   = $sale_id;
+                    $attachment['subject_type'] = 'sale';
+                    $this->db->insert('attachments', $attachment);
+                }
+            }
+
+            //Check this for loyality later
+            //$this->sma->update_award_points($data['grand_total'], $data['customer_id'], $data['created_by']);
+        }
+        $this->db->trans_complete();
+        if ($this->db->trans_status() === false) {
+            log_message('error', 'An errors has been occurred while adding the sale (Add:Sales_model.php)');
+        } else {
+            return $sale_id;
+        }
+
         return false;
     }
 
@@ -115,6 +515,8 @@ class Sales_model extends CI_Model
             }
             foreach ($items as $item) {
                 $item['sale_id'] = $sale_id;
+                $real_cost = $item['real_cost'];
+                //unset($item['real_cost']);
                 $this->db->insert('sale_items', $item);
 
                 // Code for serials here
@@ -132,7 +534,7 @@ class Sales_model extends CI_Model
                 $this->db->where('sma_invoice_serials.tid', 0);
                 $this->db->where('sma_invoice_serials.pid !=', 0);
                 $this->db->where('sma_purchases.status', 'received');
-                $this->db->limit($serials_quantity);
+                $this->db->limit(abs($serials_quantity));
 
                 $notification_serials = $this->db->get();
                 
@@ -144,7 +546,13 @@ class Sales_model extends CI_Model
                 // Code for serials end here
 
                 $sale_item_id = $this->db->insert_id();
-                if ($data['sale_status'] == 'completed' && empty($si_return)) {
+
+                if ($data['sale_status'] == 'completed'){ //handle inventory movement 
+                    //$this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id']); 
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $sale_id, $item['net_cost'], $item['expiry'], $item['net_unit_price'], $real_cost, $item['avz_item_code'], $item['bonus'], $data['customer_id'], $item['real_unit_price'], $data['date']);
+                } 
+                if ($data['sale_status'] == 'completed' && empty($si_return)) { 
+                      
                     $item_costs = $this->site->item_costing($item);
                     foreach ($item_costs as $item_cost) {
                         if (isset($item_cost['date']) || isset($item_cost['pi_overselling'])) {
@@ -316,15 +724,38 @@ class Sales_model extends CI_Model
         return false;
     }
 
-    public function getAllInvoiceItems($sale_id, $return_id = null)
+    public function getAllInvoiceItems($sale_id, $return_id = null, $sale = null)
     {
-        $this->db->select('sale_items.*, tax_rates.code as tax_code, tax_rates.name as tax_name, tax_rates.rate as tax_rate, products.image, products.details as details, product_variants.name as variant, products.hsn_code as hsn_code, products.second_name as second_name, products.unit as base_unit_id, units.code as base_unit_code')
+        if($sale == null){
+            $this->db->select('
+            sale_items.*, 
+            tax_rates.code as tax_code, tax_rates.name as tax_name, tax_rates.rate as tax_rate, item_code,
+            products.image, products.details as details, product_variants.name as variant, products.hsn_code as hsn_code, products.second_name as second_name, products.unit as base_unit_id, 
+            products.warehouse_shelf,
+            units.code as base_unit_code')
             ->join('products', 'products.id=sale_items.product_id', 'left')
             ->join('product_variants', 'product_variants.id=sale_items.option_id', 'left')
             ->join('tax_rates', 'tax_rates.id=sale_items.tax_rate_id', 'left')
             ->join('units', 'units.id=products.unit', 'left')
             ->group_by('sale_items.id')
-            ->order_by('id', 'asc');
+            ->order_by('sale_items.id', 'desc');
+        }else{
+            $this->db->select('
+            sale_items.*, 
+            tax_rates.code as tax_code, tax_rates.name as tax_name, tax_rates.rate as tax_rate, item_code,
+            products.image, products.details as details, product_variants.name as variant, products.hsn_code as hsn_code, products.second_name as second_name, products.unit as base_unit_id, 
+            products.warehouse_shelf,
+            units.code as base_unit_code,
+            SUM(IFNULL(CASE WHEN sma_inventory_movements.location_id = ' . $sale->warehouse_id . ' THEN sma_inventory_movements.quantity ELSE 0 END, 0)) as total_quantity')
+            ->join('products', 'products.id=sale_items.product_id', 'left')
+            ->join('inventory_movements', 'inventory_movements.avz_item_code=sale_items.avz_item_code', 'left')
+            ->join('product_variants', 'product_variants.id=sale_items.option_id', 'left')
+            ->join('tax_rates', 'tax_rates.id=sale_items.tax_rate_id', 'left')
+            ->join('units', 'units.id=products.unit', 'left')
+            ->group_by('sale_items.id')
+            ->order_by('sale_items.id', 'desc');
+        }
+        
         if ($sale_id && !$return_id) {
             $this->db->where('sale_id', $sale_id);
         } elseif ($return_id) {
@@ -542,6 +973,38 @@ class Sales_model extends CI_Model
 
     public function getProductNamesWithBatches($term, $warehouse_id, $pos = false, $limit = 5)
     {
+         
+        // removed from select ->  purchase_items.serial_number
+       // $this->db->select('products.id, products.price, code, name, SUM(sma_inventory_movements.quantity) as quantity, cost, tax_rate, sma_products.type, unit, purchase_unit, tax_method')
+       $this->db->select('products.*,   SUM(sma_inventory_movements.quantity) as quantity, categories.id as category_id, categories.name as category_name', false)
+       ->join('inventory_movements', 'inventory_movements.product_id=products.id', 'left') 
+       // ->join('purchase_items', 'purchase_items.product_id=products.id and purchase_items.warehouse_id='.$warehouse_id, 'left')
+        ->join('categories', 'categories.id=products.category_id', 'left')
+            ->group_by('products.id');
+            if ($this->Settings->overselling) {
+                $this->db->where("({$this->db->dbprefix('products')}.name LIKE '%" . $term . "%' OR {$this->db->dbprefix('products')}.code LIKE '%" . $term . "%' OR  concat({$this->db->dbprefix('products')}.name, ' (', {$this->db->dbprefix('products')}.code, ')') LIKE '%" . $term . "%')");
+            } else {
+                $this->db->where("(({$this->db->dbprefix('inventory_movements')}.location_id  = '" . $warehouse_id . "') OR {$this->db->dbprefix('products')}.type != 'standard') AND "
+                    . "({$this->db->dbprefix('products')}.name LIKE '%" . $term . "%' OR {$this->db->dbprefix('products')}.code LIKE '%" . $term . "%' OR  concat({$this->db->dbprefix('products')}.name, ' (', {$this->db->dbprefix('products')}.code, ')') LIKE '%" . $term . "%')");
+            }
+        $this->db->having("SUM(sma_inventory_movements.quantity)>0"); 
+        $this->db->limit($limit);
+        if ($pos) {
+            $this->db->where('hide_pos !=', 1);
+        }
+        $q = $this->db->get('products');
+        // echo  $this->db->last_query(); exit; 
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $row->serial_number=''; 
+                $data[] = $row;
+            }
+            return $data;
+        }  
+    }
+
+    public function getProductNamesWithBatches__BK($term, $warehouse_id, $pos = false, $limit = 5)
+    {
         $wp = "( SELECT product_id, warehouse_id, quantity as quantity from {$this->db->dbprefix('warehouses_products')} ) FWP";
 
         $this->db->select('products.*, purchase_items.serial_number, FWP.quantity as quantity, categories.id as category_id, categories.name as category_name', false)
@@ -561,28 +1024,58 @@ class Sales_model extends CI_Model
             $this->db->where('hide_pos !=', 1);
         }
         $this->db->limit($limit);
-        $q = $this->db->get('products');
+        $q = $this->db->get('products'); 
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
-            }
+            } 
             return $data;
         }
     }
 
+    // public function getProductNames($term, $warehouse_id, $pos = false, $limit = 5)
+    // {
+    //     $wp = "( SELECT product_id, warehouse_id, quantity as quantity from {$this->db->dbprefix('warehouses_products')} ) FWP";
+
+    //     $this->db->select('products.*, FWP.quantity as quantity, categories.id as category_id, categories.name as category_name', false)
+    //         ->join($wp, 'FWP.product_id=products.id', 'left')
+    //         // ->join('warehouses_products FWP', 'FWP.product_id=products.id', 'left')
+    //         ->join('categories', 'categories.id=products.category_id', 'left')
+    //         ->group_by('products.id');
+    //     if ($this->Settings->overselling) {
+    //         $this->db->where("({$this->db->dbprefix('products')}.name LIKE '%" . $term . "%' OR {$this->db->dbprefix('products')}.code LIKE '%" . $term . "%' OR  concat({$this->db->dbprefix('products')}.name, ' (', {$this->db->dbprefix('products')}.code, ')') LIKE '%" . $term . "%')");
+    //     } else {
+    //         $this->db->where("((({$this->db->dbprefix('products')}.track_quantity = 0 OR FWP.quantity > 0) AND FWP.warehouse_id = '" . $warehouse_id . "') OR {$this->db->dbprefix('products')}.type != 'standard') AND "
+    //             . "({$this->db->dbprefix('products')}.name LIKE '%" . $term . "%' OR {$this->db->dbprefix('products')}.code LIKE '%" . $term . "%' OR  concat({$this->db->dbprefix('products')}.name, ' (', {$this->db->dbprefix('products')}.code, ')') LIKE '%" . $term . "%')");
+    //     }
+    //     // $this->db->order_by('products.name ASC');
+    //     if ($pos) {
+    //         $this->db->where('hide_pos !=', 1);
+    //     }
+    //     $this->db->limit($limit);
+    //     $q = $this->db->get('products');
+    //     if ($q->num_rows() > 0) {
+    //         foreach (($q->result()) as $row) {
+    //             $data[] = $row;
+    //         }
+    //         return $data;
+    //     }
+    // }
+
     public function getProductNames($term, $warehouse_id, $pos = false, $limit = 5)
     {
-        $wp = "( SELECT product_id, warehouse_id, quantity as quantity from {$this->db->dbprefix('warehouses_products')} ) FWP";
+       //  $wp = "( SELECT product_id, warehouse_id, quantity as quantity from {$this->db->dbprefix('warehouses_products')} ) FWP";
 
-        $this->db->select('products.*, FWP.quantity as quantity, categories.id as category_id, categories.name as category_name', false)
-            ->join($wp, 'FWP.product_id=products.id', 'left')
+        $this->db->select('products.*, SUM(FWP.quantity) as quantity, FWP.expiry_date as expiry,  categories.id as category_id, categories.name as category_name', false)
+        ->join("inventory_movements FWP", "FWP.product_id=products.id", "left")
+        //  ->join($wp, 'FWP.product_id=products.id', 'left')
             // ->join('warehouses_products FWP', 'FWP.product_id=products.id', 'left')
             ->join('categories', 'categories.id=products.category_id', 'left')
             ->group_by('products.id');
         if ($this->Settings->overselling) {
-            $this->db->where("({$this->db->dbprefix('products')}.name LIKE '%" . $term . "%' OR {$this->db->dbprefix('products')}.code LIKE '%" . $term . "%' OR  concat({$this->db->dbprefix('products')}.name, ' (', {$this->db->dbprefix('products')}.code, ')') LIKE '%" . $term . "%')");
-        } else {
-            $this->db->where("((({$this->db->dbprefix('products')}.track_quantity = 0 OR FWP.quantity > 0) AND FWP.warehouse_id = '" . $warehouse_id . "') OR {$this->db->dbprefix('products')}.type != 'standard') AND "
+            $this->db->where("({$this->db->dbprefix('products')}.name LIKE '%" . $term . "%' OR {$this->db->dbprefix('products')}.item_code LIKE '%" . $term . "%' OR {$this->db->dbprefix('products')}.code LIKE '%" . $term . "%' OR  concat({$this->db->dbprefix('products')}.name, ' (', {$this->db->dbprefix('products')}.code, ')') LIKE '%" . $term . "%')");
+        } else { 
+            $this->db->where("(( FWP.location_id = '" . $warehouse_id . "') OR {$this->db->dbprefix('products')}.type != 'standard') AND "
                 . "({$this->db->dbprefix('products')}.name LIKE '%" . $term . "%' OR {$this->db->dbprefix('products')}.code LIKE '%" . $term . "%' OR  concat({$this->db->dbprefix('products')}.name, ' (', {$this->db->dbprefix('products')}.code, ')') LIKE '%" . $term . "%')");
         }
         // $this->db->order_by('products.name ASC');
@@ -591,13 +1084,15 @@ class Sales_model extends CI_Model
         }
         $this->db->limit($limit);
         $q = $this->db->get('products');
+        // $this->output->enable_profiler(TRUE); 
+        //   echo $this->db->last_query();  exit;
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
             }
             return $data;
         }
-    }
+    }   
 
     public function getProductOptionByID($id)
     {
@@ -966,24 +1461,44 @@ class Sales_model extends CI_Model
         return false;
     }
 
-    public function updateSaleWithCourier($id, $courier_id){
-        $this->db->update('sales', ['courier_id' => $courier_id], ['id' => $id]);
+    public function updateSaleWithCourier($id, $courier_id, $tracking_id, $pickup_location=null){
+        $this->db->update('sales', ['courier_id' => $courier_id, 'courier_order_tracking_id' => $tracking_id, 'pickup_location_id' => $pickup_location, 'courier_assignment_time' => date('Y-m-d H:i:s')], ['id' => $id]);
+    }
+
+    public function updateSaleCourierStatus($courier_id, $tracking_id, $tracking_status){
+       if( $this->db->update('sales', ['courier_order_status' => $tracking_status], 
+        ['courier_id' => $courier_id, 'courier_order_tracking_id' =>$tracking_id ]) ){
+            return true;
+        }else{
+            return false;
+        }
+
+    }
+
+    public function updateSaleStatus($id, $status){
+        $data = array();
+        $data['sale_status'] = $status;
+
+        $this->db->update('sales', $data, ['id' => $id]);
     }
 
     public function updateSale($id, $data, $items = [], $attachments = [])
     {
+        // echo 'Items: <pre>'; print_r( $items);   echo 'Data: <pre>'; print_r( $data); exit;  
         $this->db->trans_start();
         $this->resetSaleActions($id, false, true);
         if ($data['sale_status'] == 'completed') {
             $this->Settings->overselling = true;
             $cost                        = $this->site->costing($items, true);
         }
-        // $this->sma->print_arrays($cost);
+         // $this->sma->print_arrays($cost); exit; 
 
         if ($this->db->update('sales', $data, ['id' => $id]) && $this->db->delete('sale_items', ['sale_id' => $id]) && $this->db->delete('costing', ['sale_id' => $id])) {
             $this->db->update('sma_invoice_serials', ['sid' => 0], ['sid' => $id]);
             foreach ($items as $item) {
                 $item['sale_id'] = $id;
+                $real_cost = $item['real_cost'];
+                //unset($item['real_cost']);
                 $this->db->insert('sale_items', $item);
                 $sale_item_id = $this->db->insert_id();
 
@@ -1011,9 +1526,11 @@ class Sales_model extends CI_Model
                         $this->db->update('sma_invoice_serials', ['sid' => $id], ['serial_number' => $row->serial_number, 'batch_no' => $row->batch_no, 'gtin' => $row->gtin]);
                     }
                 }
+                
                 // Code for serials end here
-
                 if ($data['sale_status'] == 'completed' && $this->site->getProductByID($item['product_id'])) {
+                       //handle inventory movement
+                    $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $id,  $item['net_cost'], $item['expiry'], $item['net_unit_price'], $real_cost, $item['avz_item_code'], $item['bonus'], $data['customer_id'], $item['real_unit_price'], $data['date']); 
                     $item_costs = $this->site->item_costing($item);
                     foreach ($item_costs as $item_cost) {
                         if (isset($item_cost['date']) || isset($item_cost['pi_overselling'])) {
@@ -1046,7 +1563,8 @@ class Sales_model extends CI_Model
             }
 
             if ($data['sale_status'] == 'completed') {
-                $this->site->syncPurchaseItems($cost);
+               
+                //$this->site->syncPurchaseItems($cost);
             }
 
             $this->site->syncSalePayments($id);
@@ -1074,6 +1592,39 @@ class Sales_model extends CI_Model
         $q = $this->db->get_where('sales', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
+        }
+        return false;
+    }
+
+    public function getAllReturnInvoiceItems($sale_id, $customer_id)
+    {
+        $this->db->select('
+            sale_items.*, 
+            tax_rates.code as tax_code, 
+            tax_rates.name as tax_name, 
+            tax_rates.rate as tax_rate, 
+            products.unit, 
+            products.details as details, 
+            products.hsn_code as hsn_code, 
+            products.second_name as second_name, 
+            SUM(IFNULL(CASE WHEN sma_inventory_movements.customer_id = ' . $customer_id . ' THEN sma_inventory_movements.quantity ELSE 0 END, 0)) as total_quantity, 
+            SUM(IFNULL(CASE WHEN sma_inventory_movements.customer_id = ' . $customer_id . ' THEN sma_inventory_movements.bonus ELSE 0 END, 0)) as total_bonus
+        ')
+        ->join('products', 'products.id=sale_items.product_id', 'left')
+        ->join('inventory_movements', 'inventory_movements.avz_item_code=sale_items.avz_item_code', 'left')
+        ->join('tax_rates', 'tax_rates.id=sale_items.tax_rate_id', 'left')
+        ->group_by('sale_items.id, sale_items.avz_item_code')
+        ->having('total_quantity <>', 0)
+        ->order_by('sale_items.id', 'asc');  // Make sure to order by the correct field here
+
+        // Fetch the purchase items for the given purchase ID
+        $q = $this->db->get_where('sale_items', ['sale_items.sale_id' => $sale_id]);
+        //echo $this->db->last_query();exit;
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
         }
         return false;
     }
@@ -1106,8 +1657,47 @@ class Sales_model extends CI_Model
                 $totalPurchases[] = $row;
             }
         }
-
         return $totalPurchases;
+    }
+
+    public function getRealAvgCost($item_batchno, $item_id){
+        $avgCostQuery = "SELECT 
+                    SUM(iv.quantity * iv.real_unit_cost) / SUM(iv.quantity) AS real_average_cost
+                 FROM 
+                    sma_inventory_movements iv
+                 WHERE 
+                    iv.product_id = '{$item_id}' 
+                    AND iv.batch_number = '{$item_batchno}' 
+                    AND iv.type IN ('purchase', 'adjustment_increase')";
+        $avgCost = $this->db->query($avgCostQuery);
+        $avgObj = $avgCost->row();
+        if($avgObj){
+            $average_cost = $avgObj->real_average_cost;
+        }else{
+            $average_cost = 0;
+        }
+        
+        return $average_cost;
+    }
+
+    public function getAvgCost($item_batchno, $item_id){
+        $avgCostQuery = "SELECT 
+                    SUM(iv.quantity * iv.net_unit_cost) / SUM(iv.quantity) AS average_cost
+                 FROM 
+                    sma_inventory_movements iv
+                 WHERE 
+                    iv.product_id = '{$item_id}' 
+                    AND iv.batch_number = '{$item_batchno}' 
+                    AND iv.type IN ('purchase', 'adjustment_increase')";
+        $avgCost = $this->db->query($avgCostQuery);
+        $avgObj = $avgCost->row();
+        if($avgObj){
+            $average_cost = $avgObj->average_cost;
+        }else{
+            $average_cost = 0;
+        }
+        
+        return $average_cost;
     }
 
 

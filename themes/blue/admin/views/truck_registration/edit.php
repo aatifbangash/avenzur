@@ -42,43 +42,13 @@
                                 <input type="time" name="truck_time" value="<?php echo $truck->truck_time;?>" class="form-control input-tip" required>
                             </div>
                         </div>
-                       
-
-
-                        
-                        <input type="hidden" name="purchase_id_old" value="<?php echo  $truck->purchase_id;?>" class="form-control input-tip" >
-
-                            <div class="col-md-6">
-                            <div class="form-group">
-                            <?= lang('Reference No', 'posupplier'); ?>
-                                <select id="reference_no" name="reference_no" class="form-control input-tip select" required="required">
-                                <option value="<?php echo  $truck->reference_no;?>@/<?php echo  $truck->purchase_id;?>"><?php echo  $truck->reference_no;?></option>
-                                <?php
-                                $sp[''] = '';
-                                foreach ($purchase as $purchase) {
-                                $purchaseId = $purchase->reference_no.'@/'.$purchase->id;
-                                $reference_no = $purchase->reference_no;
-                                   echo "<option value='$purchaseId'>$reference_no / $purchase->supplier / $purchase->date</option>";
-                              
-                                }
-                                ?>
-                                </select>
-
-                            </div>
-                            </div>
-
-                      
-                        
-                        
-
+                    
                          <div class="col-md-12">
                             <div
                                 class="from-group"><?php echo form_submit('add_truck', $this->lang->line('submit'), 'id="add_deal" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"'); ?>
                                 
                             </div>
-                        </div>
-
-                        
+                        </div>    
                     </div>
                 </div>
                 <?php
