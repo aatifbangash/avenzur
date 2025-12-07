@@ -3657,6 +3657,7 @@ class Sales extends MY_Controller
         $email_link        = anchor('admin/sales/email/$1', '<i class="fa fa-envelope"></i> ' . lang('email_sale'), 'data-toggle="modal" data-target="#myModal"');
         $edit_link         = anchor('admin/sales/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_sale'), 'class="sledit"');
         $pdf_link          = anchor('admin/sales/pdf_new/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf'));
+        $zatka_invoice_link = anchor('admin/sales/pdf_zatka_invoice/$1', '<i class="fa fa-file-text-o"></i> Zatka Invoice', 'target="_blank"');
         $sale_order_link   = anchor('admin/sales/pdf_sale_order/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_sale_order'));
         $return_link       = anchor('admin/returns/add/?sale=$1', '<i class="fa fa-angle-double-left"></i> ' . lang('return_sale'));
         //$shipment_link     = anchor('$1', '<i class="fa fa-angle-double-left"></i> ' . lang('Shipping_Slip'));
@@ -3675,6 +3676,7 @@ class Sales extends MY_Controller
                     
                     <li>' . $detail_link . '</li>
                     <li>' . $pdf_link . '</li>
+                    <li>' . $zatka_invoice_link . '</li>
                     <li>' . $journal_entry_link . '</li>
                 </ul>
             </div></div>';
@@ -3687,6 +3689,7 @@ class Sales extends MY_Controller
                 <ul class="dropdown-menu pull-right" role="menu">
                     
                     <li>' . $detail_link . '</li>
+                    <li>' . $zatka_invoice_link . '</li>
                     <li>' . $return_link . '</li>
                     <li>' . $sale_order_link . '</li>
                 </ul>
@@ -3705,6 +3708,7 @@ class Sales extends MY_Controller
             }
             
             $action .=  '<li>' . $pdf_link . '</li>
+                <li>' . $zatka_invoice_link . '</li>
                 <li>' . $return_link . '</li>';
 
             if(($Admin || $Owner)){
@@ -4452,6 +4456,187 @@ if($inv->warning_note != ""){
 
                 //$this->sma->generate_pdf($html, $name, 'I', $this->data['biller']->invoice_footer);
             }
+    }
+
+    /**
+     * Generate Zatka-compliant invoice PDF
+     * 
+     * This function generates a ZATCA (Zakat, Tax and Customs Authority) compliant
+     * invoice with proper QR code, bilingual text, and required fields
+     * 
+     * @param int $id Invoice ID
+     * @param bool $view Preview in browser
+     * @param bool $save_bufffer Save to buffer
+     * @return void
+     */
+    public function zatka_pdf($id = null, $view = null, $save_bufffer = null)
+    {
+        // Load helper for Zatka-specific functions
+        $this->load->helper('zatka');
+        
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $inv = $this->sales_model->getInvoiceByID($id);
+        
+        if (!$this->GP['sales-index']) {
+            $this->sma->view_rights($inv->created_by);
+        }
+
+        // Get related entities
+        $customer = $this->site->getCompanyByID($inv->customer_id);
+        $biller = $this->site->getCompanyByID($inv->biller_id);
+        $warehouse = $this->site->getWarehouseByID($inv->warehouse_id);
+        $invoice_items = $this->sales_model->getAllInvoiceItems($id);
+
+        // ===== INVOICE HEADER =====
+        $invoice_data = [
+            'invoice_number' => str_pad($inv->id, 4, '0', STR_PAD_LEFT),
+            'invoice_date' => format_zatka_date($inv->date),
+            'invoice_date_hijri' => format_hijri_date($inv->date),
+        ];
+
+        // ===== COMPANY (SELLER) INFORMATION =====
+        $invoice_data['company_name'] = $biller->company && $biller->company != '-' ? $biller->company : $biller->name;
+        $invoice_data['company_name_en'] = $biller->name;
+        $invoice_data['company_name_ar'] = $biller->company && $biller->company != '-' ? $biller->company : $biller->name;
+        
+        $invoice_data['seller_company_name'] = $biller->company && $biller->company != '-' ? $biller->company : $biller->name;
+        $invoice_data['seller_company_name_en'] = $biller->name;
+        $invoice_data['seller_tax_id'] = $biller->vat_no ?: $biller->get_no;
+        $invoice_data['seller_commercial_reg'] = $biller->cf1 ?: ''; // Assuming commercial reg is in cf1
+        $invoice_data['seller_phone'] = format_zatka_phone($biller->phone);
+        $invoice_data['seller_international_id'] = $biller->gln ?: '';
+        $invoice_data['seller_address'] = $biller->address ?: '';
+        $invoice_data['seller_address_city'] = $biller->city ?: '';
+
+        // ===== CUSTOMER INFORMATION =====
+        $invoice_data['customer_name'] = $customer->company && $customer->company != '-' ? $customer->company : $customer->name;
+        $invoice_data['customer_name_en'] = $customer->name;
+        $invoice_data['customer_tax_id'] = $customer->vat_no ?: '';
+        $invoice_data['customer_commercial_reg'] = $customer->cf1 ?: '';
+        $invoice_data['customer_phone'] = format_zatka_phone($customer->phone);
+        $invoice_data['customer_international_id'] = $customer->gln ?: '';
+        $invoice_data['customer_address'] = $customer->address ?: '';
+        $invoice_data['customer_address_city'] = $customer->city ?: '';
+
+        // ===== LINE ITEMS ARRAY =====
+        $items = [];
+        $invoice_total_value = 0;
+        $total_discounts = 0;
+        $subtotal_before_tax = 0;
+        $total_tax = 0;
+
+        foreach ($invoice_items as $item) {
+            // Get product details for lot number and expiry
+            $product = $this->products_model->getProductByID($item->product_id);
+            
+            // Calculate item totals
+            $quantity = $item->quantity;
+            $unit_price = $item->real_unit_price;
+            $total = $quantity * $unit_price;
+            
+            // Calculate discounts
+            $discount_1_percent = $item->discount ? floatval($item->discount) : 0;
+            $discount_2_percent = $item->item_discount ? floatval($item->item_discount) : 0;
+            
+            $discount_calc = calculate_zatka_discount($total, $discount_1_percent, $discount_2_percent);
+            
+            // Calculate tax
+            $tax_rate = $item->tax_rate ?: 15; // Default 15% VAT
+            $tax_amount = calculate_zatka_tax($discount_calc['net_after_discount'], $tax_rate);
+            $line_total = $discount_calc['net_after_discount'] + $tax_amount;
+            
+            $items[] = [
+                'description' => $item->product_name,
+                'description_en' => $item->product_name,
+                'item_code' => $item->product_code,
+                'lot_number' => $product->lot_number ?? '',
+                'expiry_date' => $product->expiry_date ? date('d/m/Y', strtotime($product->expiry_date)) : '',
+                'quantity' => $quantity,
+                'unit_price' => $unit_price,
+                'total' => $total,
+                'discount_1_percent' => $discount_1_percent,
+                'discount_1_amount' => $discount_calc['discount_1_amount'],
+                'discount_2_percent' => $discount_2_percent,
+                'discount_2_amount' => $discount_calc['discount_2_amount'],
+                'total_discount' => $discount_calc['total_discount'],
+                'net_after_discount' => $discount_calc['net_after_discount'],
+                'tax_rate_percent' => $tax_rate,
+                'tax_amount' => $tax_amount,
+                'line_total' => $line_total
+            ];
+            
+            // Accumulate totals
+            $invoice_total_value += $total;
+            $total_discounts += $discount_calc['total_discount'];
+            $subtotal_before_tax += $discount_calc['net_after_discount'];
+            $total_tax += $tax_amount;
+        }
+
+        $invoice_data['items'] = $items;
+
+        // ===== TOTALS SECTION =====
+        $invoice_data['invoice_total_value'] = $invoice_total_value;
+        $invoice_data['total_discounts'] = $total_discounts;
+        $invoice_data['subtotal_before_tax'] = $subtotal_before_tax;
+        $invoice_data['total_tax'] = $total_tax;
+        $invoice_data['total_after_tax'] = $subtotal_before_tax + $total_tax;
+
+        // ===== AGING REPORT DATA =====
+        // For now, all in current period - can be enhanced with actual aging calculation
+        $invoice_data['aging_less_30'] = $invoice_data['total_after_tax'];
+        $invoice_data['aging_30_60'] = 0.00;
+        $invoice_data['aging_60_90'] = 0.00;
+        $invoice_data['aging_90_120'] = 0.00;
+        $invoice_data['aging_more_120'] = 0.00;
+
+        // ===== NOTES & FOOTER =====
+        $invoice_data['invoice_notes'] = generate_zatka_invoice_notes($invoice_data['total_after_tax']);
+
+        // ===== GENERATE ZATKA-COMPLIANT QR CODE =====
+        $qr_data = [
+            'seller_name' => $invoice_data['seller_company_name'],
+            'vat_no' => $invoice_data['seller_tax_id'],
+            'date' => $inv->date,
+            'grand_total' => $invoice_data['total_after_tax'],
+            'total_tax' => $invoice_data['total_tax']
+        ];
+        
+        // Generate Zatka-compliant QR code using TLV format
+        $qr_code_base64_data = generate_zatka_qr_code($qr_data);
+        
+        // Generate QR code PNG image using existing library
+        $qr_code_png = $this->sma->qrcodepng('text', $qr_code_base64_data, 2, $level = 'H', $sq = null, $svg = false);
+        $qr_base64_image = base64_encode($qr_code_png);
+        $invoice_data['qr_code_image'] = '<img src="data:image/png;base64,' . $qr_base64_image . '" width="80" height="80" />';
+
+        // Generate PDF
+        $name = 'Zatka_Invoice_' . str_replace('/', '_', $inv->reference_no) . '.pdf';
+        
+        if ($view) {
+            // Preview in browser
+            $this->load->view($this->theme . 'sales/zatka_invoice_template', $invoice_data);
+        } elseif ($save_bufffer) {
+            $html = $this->load->view($this->theme . 'sales/zatka_invoice_template', $invoice_data, true);
+            return $html;
+        } else {
+            // Generate PDF using mPDF
+            $html = $this->load->view($this->theme . 'sales/zatka_invoice_template', $invoice_data, true);
+            
+            $mpdf = new Mpdf([
+                'format' => 'A4',
+                'margin_top' => 10,
+                'margin_bottom' => 10,
+                'margin_left' => 10,
+                'margin_right' => 10,
+            ]);
+
+            $mpdf->WriteHTML($html);
+            $mpdf->Output($name, "D");
+        }
     }
 
     public function pdf_delivery($id = null, $view = null, $save_bufffer = null)
@@ -5821,6 +6006,71 @@ if($inv->warning_note != ""){
 
         $fname = 'test_labels_' . str_replace('/', '_', $invoice_no) . '_x' . $num_cartons . '.pdf';
         $mpdf->Output($fname, 'D'); // download
+    }
+
+    /**
+     * Generate Zatka-compliant Invoice PDF
+     * Follows zatka_invoice_pure_tables.html structure exactly
+     */
+    public function pdf_zatka_invoice($id = null, $view = null, $save_buffer = null)
+    {
+        if (!$id) {
+            $this->session->set_flashdata('error', lang('invoice_not_found'));
+            admin_redirect('sales');
+        }
+
+        // Get Zatka invoice data from model
+        $data = $this->sales_model->getZatkaInvoiceData($id);
+        
+        if (!$data) {
+            $this->session->set_flashdata('error', lang('invoice_not_found'));
+            admin_redirect('sales');
+        }
+
+        // Generate QR Code for Zatka compliance
+        $qr_payload = [
+            'seller_name' => $data['seller']['name_ar'],
+            'vat_number' => $data['seller']['tax_id'],
+            'invoice_date' => $data['invoice_date'],
+            'invoice_total' => $data['totals']['grand_total'],
+            'tax_amount' => $data['totals']['tax_amount']
+        ];
+        
+        $qr_text = json_encode($qr_payload);
+        $qr_code = $this->sma->qrcodepng('text', $qr_text, 2, 'H', null, false);
+        $qr_base64 = base64_encode($qr_code);
+        $data['qr_code_image'] = '<img src="data:image/png;base64,' . $qr_base64 . '" style="width: 60px; height: 60px;" />';
+
+        // If view parameter is set, display in browser
+        if ($view) {
+            $this->load->view($this->theme . 'sales/zatka_invoice', $data);
+            return;
+        }
+
+        // Generate PDF
+        $html = $this->load->view($this->theme . 'sales/zatka_invoice', $data, true);
+
+        $mpdf = new Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            'orientation' => 'P',
+            'margin_top' => 10,
+            'margin_bottom' => 10,
+            'margin_left' => 6,
+            'margin_right' => 6
+        ]);
+
+        $mpdf->SetTitle('Zatka Invoice - ' . $data['invoice_number']);
+        $mpdf->SetAuthor($data['seller']['name_en']);
+        $mpdf->WriteHTML($html);
+
+        $filename = 'zatka_invoice_' . str_replace('/', '_', $data['invoice_number']) . '.pdf';
+
+        if ($save_buffer) {
+            return $mpdf->Output($filename, 'S'); // return as string
+        } else {
+            $mpdf->Output($filename, 'D'); // download
+        }
     }
 
     public function send_to_rasd($id = null){
