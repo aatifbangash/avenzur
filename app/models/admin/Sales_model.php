@@ -1792,4 +1792,208 @@ class Sales_model extends CI_Model
 
     }
 
+    /**
+     * Get Zatka Invoice Data
+     * Prepares all data needed for Zatka-compliant invoice
+     */
+    public function getZatkaInvoiceData($sale_id)
+    {
+        // Get sale details
+        $sale = $this->getSaleByID($sale_id);
+        if (!$sale) {
+            return false;
+        }
+
+        // Get sale items with calculations
+        $items = $this->getInvoiceItems($sale_id);
+        
+        // Get customer details
+        $customer = $this->site->getCompanyByID($sale->customer_id);
+        
+        // Get seller/biller details
+        $seller = $this->site->getCompanyByID($sale->biller_id);
+        
+        // Get warehouse details
+        $warehouse = $this->site->getWarehouseByID($sale->warehouse_id);
+
+        // Format items for Zatka invoice
+        $formatted_items = [];
+        $invoice_total = 0;
+        $total_discounts = 0;
+        $subtotal = 0;
+        $total_tax = 0;
+
+        if ($items) {
+            foreach ($items as $item) {
+                // Calculate values
+                $quantity = floatval($item->quantity);
+                $unit_price = floatval($item->real_unit_price);
+                $total = $quantity * $unit_price;
+                
+                // Discounts
+                $discount_1_percent = floatval($item->discount ?? 0);
+                $discount_1_amount = $total * ($discount_1_percent / 100);
+                
+                $discount_2_percent = floatval($item->item_discount ?? 0);
+                $remaining_after_d1 = $total - $discount_1_amount;
+                $discount_2_amount = $remaining_after_d1 * ($discount_2_percent / 100);
+                
+                $total_discount = $discount_1_amount + $discount_2_amount;
+                $net_after_discount = $total - $total_discount;
+                
+                // Tax
+                $tax_rate_percent = floatval($item->tax_rate ?? 0);
+                $tax_amount = $net_after_discount * ($tax_rate_percent / 100);
+                
+                // Line total
+                $line_total = $net_after_discount + $tax_amount;
+
+                // Accumulate totals
+                $invoice_total += $total;
+                $total_discounts += $total_discount;
+                $subtotal += $net_after_discount;
+                $total_tax += $tax_amount;
+
+                $formatted_items[] = [
+                    'description_ar' => $item->product_name ?? '',
+                    'description_en' => $item->second_name ?? $item->product_name ?? '',
+                    'item_code' => $item->product_code ?? '',
+                    'lot_number' => $item->batchno ?? '',
+                    'expiry_date' => !empty($item->expiry) ? date('d/m/Y', strtotime($item->expiry)) : '',
+                    'quantity' => $quantity,
+                    'unit_price' => $unit_price,
+                    'total' => $total,
+                    'discount_1_percent' => $discount_1_percent,
+                    'discount_1_amount' => $discount_1_amount,
+                    'discount_2_percent' => $discount_2_percent,
+                    'discount_2_amount' => $discount_2_amount,
+                    'total_discount' => $total_discount,
+                    'net_after_discount' => $net_after_discount,
+                    'tax_rate_percent' => $tax_rate_percent,
+                    'tax_amount' => $tax_amount,
+                    'line_total' => $line_total
+                ];
+            }
+        }
+
+        $grand_total = $subtotal + $total_tax;
+
+        // Prepare aging data (payment terms)
+        $aging = [
+            'less_30' => $grand_total,
+            'thirty_to_sixty' => 0.00,
+            'sixty_to_ninety' => 0.00,
+            'ninety_to_one_twenty' => 0.00,
+            'more_than_one_twenty' => 0.00
+        ];
+
+        // Convert amount to Arabic words
+        $notes = $this->numberToArabicWords($grand_total);
+
+        // Prepare complete data array
+        $data = [
+            // Invoice header
+            'invoice_number' => str_pad($sale->reference_no, 4, '0', STR_PAD_LEFT),
+            'invoice_date' => date('Y/m/d h:i A', strtotime($sale->date)),
+            'invoice_date_hijri' => $this->gregorianToHijri($sale->date),
+            
+            // Seller information
+            'seller' => [
+                'name_en' => $seller->company ?? $seller->name,
+                'name_ar' => $seller->company ?? $seller->name,
+                'tax_id' => $seller->vat_no ?? '',
+                'commercial_reg' => $seller->cf1 ?? '',
+                'phone' => $seller->phone ?? '',
+                'international_id' => $seller->cf2 ?? '',
+                'address' => $seller->address ?? '',
+                'address_city' => $seller->city ?? '',
+                'branch_code' => $warehouse->code ?? '',
+                'branch_name' => $warehouse->name ?? ''
+            ],
+            
+            // Customer information
+            'customer' => [
+                'name_en' => $customer->company ?? $customer->name,
+                'name_ar' => $customer->company ?? $customer->name,
+                'tax_id' => $customer->vat_no ?? '',
+                'commercial_reg' => $customer->cf1 ?? '',
+                'phone' => $customer->phone ?? '',
+                'international_id' => $customer->cf2 ?? '',
+                'address' => $customer->address ?? '',
+                'address_city' => $customer->city ?? '',
+                'branch_code' => '',
+                'branch_name' => ''
+            ],
+            
+            // Items array
+            'items' => $formatted_items,
+            
+            // Totals
+            'totals' => [
+                'invoice_total' => $invoice_total,
+                'total_discounts' => $total_discounts,
+                'subtotal' => $subtotal,
+                'tax_amount' => $total_tax,
+                'grand_total' => $grand_total
+            ],
+            
+            // Aging report
+            'aging' => $aging,
+            
+            // Notes
+            'notes' => $notes,
+            
+            // QR code (will be generated in controller)
+            'qr_code_image' => ''
+        ];
+
+        return $data;
+    }
+
+    /**
+     * Convert Gregorian date to Hijri
+     */
+    private function gregorianToHijri($date)
+    {
+        // Simple conversion (you may want to use a more accurate library)
+        $timestamp = strtotime($date);
+        $hijri_year = date('Y', $timestamp) - 579;
+        $hijri_month = date('m', $timestamp);
+        $hijri_day = date('d', $timestamp);
+        
+        return $hijri_year . '/' . $hijri_month . '/' . $hijri_day;
+    }
+
+    /**
+     * Convert number to Arabic words
+     */
+    private function numberToArabicWords($number)
+    {
+        // Simplified version - returns formatted number
+        // For full Arabic words conversion, use a dedicated library
+        $rounded = number_format($number, 2);
+        return "فقط " . $rounded . " ريال سعودي";
+    }
+
+    /**
+     * Get invoice items for sale
+     */
+    public function getInvoiceItems($sale_id)
+    {
+        $this->db->select('sale_items.*, products.second_name, products.code as product_code, tax_rates.rate as tax_rate')
+                 ->from('sale_items')
+                 ->join('products', 'products.id = sale_items.product_id', 'left')
+                 ->join('tax_rates', 'tax_rates.id = sale_items.tax_rate_id', 'left')
+                 ->where('sale_items.sale_id', $sale_id)
+                 ->order_by('sale_items.id', 'asc');
+        
+        $query = $this->db->get();
+        
+        if ($query->num_rows() > 0) {
+            return $query->result();
+        }
+        
+        return false;
+    }
+
 }
