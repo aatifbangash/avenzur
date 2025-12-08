@@ -107,7 +107,7 @@ class Delivery extends MY_Controller
 
         $this->db->select('id, truck_no, status');
         $this->db->from('sma_truck_registration');
-        $this->db->where('status', 'available');
+        //$this->db->where('status', 'available');
         // $this->db->where('status !=', 'out_for_delivery');
         $trucks_query = $this->db->get();
 
