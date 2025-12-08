@@ -595,6 +595,7 @@ class Delivery extends MY_Controller
             redirect(admin_url('delivery'));
         }
 
+        $this->data['biller'] = $this->site->getAllCompanies('biller')[0];
         $this->data['delivery'] = $this->delivery_model->get_delivery_by_id($delivery_id);
         $this->data['items'] = $this->delivery_model->get_delivery_items($delivery_id);
 
@@ -607,14 +608,14 @@ class Delivery extends MY_Controller
         $print_count = $this->input->post('print_count', true) ?: 1;
         $this->delivery_model->log_delivery_print($delivery_id, $this->session->userdata('user_id'), $print_count);
 
-        // Load print view
-        $this->load->view('delivery/print', $this->data);
+        // Load print view using theme path
+        $this->load->view($this->theme . 'delivery/print', $this->data);
     }
 
     /**
-     * Export delivery to PDF (optional)
+     * Download delivery as PDF
      */
-    public function pdf($delivery_id = null)
+    public function download_pdf($delivery_id = null)
     {
         if (!$delivery_id) {
             $delivery_id = $this->input->get('id');
@@ -636,8 +637,27 @@ class Delivery extends MY_Controller
         // Log the print action
         $this->delivery_model->log_delivery_print($delivery_id, $this->session->userdata('user_id'), 1);
 
-        // Load PDF view
-        $this->load->view('delivery/pdf', $this->data);
+        // Load the HTML view for PDF using theme path
+        $html = $this->load->view($this->theme . 'delivery/print_pdf', $this->data, true);
+
+        // Load mPDF library
+        $this->load->library('tec_mpdf');
+        
+        // Generate PDF filename
+        $filename = 'Delivery_Invoice_' . str_pad($delivery_id, 6, '0', STR_PAD_LEFT) . '_' . date('Y-m-d') . '.pdf';
+        
+        // Generate and download PDF
+        // Parameters: content, filename, output_type (D=download, I=inline), footer, margin_bottom, header, margin_top, orientation
+        $this->tec_mpdf->generate($html, $filename, 'D', null, 15, null, 15, 'P');
+    }
+
+    /**
+     * Export delivery to PDF (backward compatibility)
+     */
+    public function pdf($delivery_id = null)
+    {
+        // Redirect to new download_pdf method
+        $this->download_pdf($delivery_id);
     }
 
     /**
