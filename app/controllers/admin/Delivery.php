@@ -46,10 +46,8 @@ class Delivery extends MY_Controller
             ->join('sma_users u', 'u.id = (SELECT id FROM sma_users WHERE group_id = dd.groupId LIMIT 1)', 'left')
             ->add_column('Actions',
                 "<div class='text-center'>" .
-                "<a href='" . admin_url('delivery/view/$1') . "' class='tip' title='View' data-toggle='tooltip'><i class='fa fa-eye'></i></a> " .
                 "<a href='" . admin_url('delivery/edit/$1') . "' class='tip' title='Edit' data-toggle='tooltip'><i class='fa fa-edit'></i></a> " .
                 "<a href='" . admin_url('delivery/print_delivery/$1') . "' target='_blank' class='tip' title='Print' data-toggle='tooltip'><i class='fa fa-print'></i></a> " .
-                "<a href='#' onclick=\"if(confirm('Are you sure?')) window.location.href='" . admin_url('delivery/delete/$1') . "'\" class='tip' title='Delete' data-toggle='tooltip'><i class='fa fa-trash-o'></i></a>" .
                 "</div>",
                 'deliveries.id');
 
