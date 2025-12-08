@@ -527,6 +527,799 @@ class Products extends MY_Controller
         }
     }
 
+    public function recover_inventory_by_name() {
+
+        $csv_file = $this->upload_path . 'csv/Latest-Uploaded-Inventory.csv';
+
+        if (!file_exists($csv_file)) {
+            exit("CSV file not found: " . $csv_file);
+        }
+
+        if (($handle = fopen($csv_file, "r")) === FALSE) {
+            exit("Unable to open CSV file.");
+        }
+
+        // Skip header row
+        fgetcsv($handle);
+
+        // Load all products once for fast fuzzy search
+        $allProducts = $this->db->select("id, name")->get("sma_products")->result();
+
+        while (($data = fgetcsv($handle)) !== FALSE) {
+
+            $item_no   = trim($data[0]);
+            $item_name = trim($data[1]);
+            $batch_no  = trim($data[2]);
+
+            // --------------------------------------------------------
+            // 1. Find movement using batch number
+            // --------------------------------------------------------
+            $movement = $this->db->get_where("sma_inventory_movements", [
+                "batch_number" => $batch_no
+            ])->row();
+
+            if (!$movement) {
+                echo "⚠ No movement for batch {$batch_no}<br>";
+                continue;
+            }
+
+            // --------------------------------------------------------
+            // 2. Try to find correct product by name similarity
+            // --------------------------------------------------------
+            $bestMatch = null;
+            $bestScore = 0;
+
+            $wordsCSV = explode(" ", mb_strtolower($item_name));
+
+            foreach ($allProducts as $p) {
+                $nameDB = mb_strtolower($p->name);
+                $wordsDB = explode(" ", $nameDB);
+
+                // RULE 1 - Shared words
+                $shared = count(array_intersect($wordsCSV, $wordsDB));
+
+                // RULE 2 - Soundex match
+                $soundexScore = (soundex($item_name) == soundex($p->name)) ? 1 : 0;
+
+                // RULE 3 - Levenshtein match
+                $lev = levenshtein($item_name, $p->name);
+                $levScore = max(0, 20 - $lev); // higher = more similar
+
+                // Total match score
+                $score = ($shared * 3) + ($soundexScore * 2) + $levScore;
+
+                if ($score > $bestScore) {
+                    $bestScore = $score;
+                    $bestMatch = $p;
+                }
+            }
+
+            if (!$bestMatch) {
+                echo "<span style='color:red'>❌ No matching product for {$item_name}</span><br>";
+                continue;
+            }
+
+            // --------------------------------------------------------
+            // 3. If movement already has correct product_id skip
+            // --------------------------------------------------------
+            if ($movement->product_id == $bestMatch->id) {
+                continue;
+            }
+
+            // --------------------------------------------------------
+            // 4. REPORT mismatch
+            // --------------------------------------------------------
+            echo "<b style='color:red'>❌ MISMATCH</b> - Batch {$batch_no}<br>";
+            echo "CSV Name: {$item_name}<br>";
+            echo "Movement Product → {$movement->product_id}<br>";
+            echo "Correct Product → {$bestMatch->id} ({$bestMatch->name})<br>";
+            echo "Score = {$bestScore}<br>";
+            echo "--------------------------------------------<br>";
+
+            // --------------------------------------------------------
+            // 5. ENABLE update AFTER you confirm matches
+            // --------------------------------------------------------
+            
+            $this->db->where("id", $movement->id);
+            $this->db->update("sma_inventory_movements", [
+                "product_id" => $bestMatch->id
+            ]);
+
+            echo "<span style='color:green'>✔ Updated movement ID {$movement->id}</span><br>";
+            
+        }
+
+        fclose($handle);
+    }
+
+
+    public function compare_inventory(){
+        $csv_file = $this->upload_path . 'csv/Latest-Uploaded-Inventory.csv';
+
+        if (!file_exists($csv_file)) {
+            exit("CSV file not found: " . $csv_file);
+        }
+        
+        if (($handle = fopen($csv_file, "r")) === FALSE) {
+            exit("Unable to open CSV file.");
+        }
+        // Skip header row
+        fgetcsv($handle);
+
+        $row = 0;
+
+        while (($data = fgetcsv($handle)) !== FALSE) {
+            if ($row == 0) { $row++; continue; } // Skip header
+
+            $item_no = trim($data[0]);
+            $batch_no = trim($data[2]);
+            $item_name = trim($data[1]);
+
+            $movement = $this->db->get_where("sma_inventory_movements", [
+                "batch_number" => $batch_no
+            ])->row();
+
+            $product = $this->db->get_where("sma_products", [
+                "id" => $movement->product_id
+            ])->row();
+
+            if($product){
+                $product_arr = explode(" ", $product->name);
+                if (strpos($item_name, $product_arr[0]) !== false) {
+                    //echo "MATCHED Product: {$product->name} - Item No: {$item_no} - Batch No: {$batch_no}<br>";
+                }else{
+                    echo "MISMATCHED Product: {$product->name} with {$item_name} - Item No: {$item_no} - Batch No: {$batch_no}<br>";
+                }
+                //echo "Product found: {$product->name} - Item No: {$item_no} - Batch No: {$batch_no}<br>";
+            } else {
+                echo "Product NOT found - Item No: {$item_no} - Batch No: {$batch_no}<br>";
+            }
+        }
+    }
+
+    public function compare_ar_balance(){
+        $csv_file = $this->upload_path . 'csv/outstanding_ar_csv.csv';
+
+        if (!file_exists($csv_file)) {
+            exit("CSV file not found: " . $csv_file);
+        }
+        
+        if (($handle = fopen($csv_file, "r")) === FALSE) {
+            exit("Unable to open CSV file.");
+        }
+        // Skip header row
+        fgetcsv($handle);
+
+        $row = 0;
+        $csv_row_idx = 0;
+        $mismatches = [];
+        $missing_in_db = 0;
+        $missing_in_csv = 0;
+        $tolerance = 0.000001; // adjust if you want (e.g. 2.00 for 2 riyal tolerance)
+
+        // ---- Prepare DB rows (ordered by id so row-by-row mapping is deterministic)
+        $db_rows = $this->db->order_by('id', 'ASC')->get('sma_accounts_entryitems')->result_array();
+        $db_total_rows = count($db_rows);
+        $total_amt = 0;
+
+        while (($data = fgetcsv($handle)) !== FALSE) {
+            if($data[1] == 'SALESMAN_NAME_A'){
+                continue; // Skip header
+            }
+            
+            $amount_raw  = trim($data[6]);
+
+             $csv_amount = 0.0;
+            if ($amount_raw !== null && $amount_raw !== '') {
+                $clean = str_replace([',', ' ' , "\xA0", "﷼"], ['', '', '', ''], $amount_raw); // remove NBSP and common chars
+                // remove any non-numeric except dot and minus
+                $clean = preg_replace('/[^\d\.\-]/u', '', $clean);
+                $csv_amount = ($clean === '' ? 0.0 : (float)$clean);
+            }
+
+            // Get corresponding DB row by index
+            if (!array_key_exists($csv_row_idx, $db_rows)) {
+                // No matching DB row — CSV has extra rows
+                $missing_in_db++;
+                $mismatches[] = [
+                    'row' => $csv_row_idx + 1,
+                    'reason' => 'No DB row (CSV has extra row)',
+                    'csv_amount' => $csv_amount,
+                    'db_amount' => null
+                ];
+                $csv_row_idx++;
+                continue;
+            }
+
+            $db_row = $db_rows[$csv_row_idx];
+
+            // Determine DB amount
+            if ($has_amount_col) {
+                $db_amount = isset($db_row['amount']) ? (float)$db_row['amount'] : 0.0;
+            } else {
+                
+                $db_amount = isset($db_row['amount']) ? (float)$db_row['amount'] : 0.0;
+            }
+
+            // Compare with tolerance
+            $diff = $csv_amount - $db_amount;
+            if (abs($diff) > $tolerance) {
+                $mismatches[] = [
+                    'row' => $csv_row_idx + 1,
+                    'csv_amount' => $csv_amount,
+                    'db_amount' => $db_amount,
+                    'diff' => $diff,
+                    'db_id' => isset($db_row['id']) ? $db_row['id'] : null
+                ];
+            }
+
+            //echo $db_amount. ' -- '. $csv_amount.'<br>';
+            $total_amt += $csv_amount;
+            $csv_row_idx++;
+
+        }
+        
+        // After reading CSV, check if DB has extra rows (i.e., DB longer than CSV)
+        if ($csv_row_idx < $db_total_rows) {
+            $missing_in_csv = $db_total_rows - $csv_row_idx;
+            // include those as mismatches
+            for ($i = $csv_row_idx; $i < $db_total_rows; $i++) {
+                $db_row = $db_rows[$i];
+                $db_amount = (float)$db_row['amount'];
+                $mismatches[] = [
+                    'row' => $i + 1,
+                    'reason' => 'No CSV row (DB has extra)',
+                    'csv_amount' => null,
+                    'db_amount' => $db_amount,
+                    'db_id' => isset($db_row['id']) ? $db_row['id'] : null
+                ];
+            }
+        }
+
+        fclose($handle);
+
+        // Output results
+        echo "<h3>Comparison completed.</h3>";
+        echo "<p>Total DB rows: {$db_total_rows}</p>";
+        echo "<p>Total CSV rows processed: {$csv_row_idx}</p>";
+        echo "<p>Mismatches found: " . count($mismatches) . "</p>";
+        if ($missing_in_db) {
+            echo "<p>CSV rows without DB match: {$missing_in_db}</p>";
+        }
+        if ($missing_in_csv) {
+            echo "<p>DB rows without CSV match: {$missing_in_csv}</p>";
+        }
+
+        if (!empty($mismatches)) {
+            echo "<h4>Details (showing up to 100)</h4><table border='1' cellpadding='4' style='border-collapse:collapse'>";
+            echo "<tr><th>#</th><th>CSV Row</th><th>DB id</th><th>CSV Amount</th><th>DB Amount</th><th>Diff</th><th>Note</th></tr>";
+            $count = 0;
+            foreach ($mismatches as $mm) {
+                $count++;
+                if ($count > 100) break;
+                $note = isset($mm['reason']) ? $mm['reason'] : '';
+                echo "<tr>";
+                echo "<td>{$count}</td>";
+                echo "<td>" . (isset($mm['row']) ? $mm['row'] : '') . "</td>";
+                echo "<td>" . (isset($mm['db_id']) ? $mm['db_id'] : '') . "</td>";
+                echo "<td>" . (isset($mm['csv_amount']) ? number_format($mm['csv_amount'], 2) : '') . "</td>";
+                echo "<td>" . (isset($mm['db_amount']) ? number_format($mm['db_amount'], 2) : '') . "</td>";
+                echo "<td>" . (isset($mm['diff']) ? number_format($mm['diff'], 2) : '') . "</td>";
+                echo "<td>{$note}</td>";
+                echo "</tr>";
+            }
+            echo "</table>";
+        } else {
+            echo "<p>No mismatches found.</p>";
+        }
+    }
+
+    public function upload_ar_invoices(){
+        $csv_file = $this->upload_path . 'csv/outstanding_ar_csv.csv';
+
+        if (!file_exists($csv_file)) {
+            exit("CSV file not found: " . $csv_file);
+        }
+        
+        if (($handle = fopen($csv_file, "r")) === FALSE) {
+            exit("Unable to open CSV file.");
+        }
+        // Skip header row
+        fgetcsv($handle);
+
+        $row = 0;
+
+        while (($data = fgetcsv($handle)) !== FALSE) {
+
+            //if ($row == 0) { $row++; continue; } // Skip header
+            if($data[1] == 'SALESMAN_NAME_A'){
+                continue; // Skip header
+            }
+            $SALESMAN_NAME = trim($data[1]);
+            $CUST_NO     = trim($data[2]);
+            $CUST_NAME_A = trim($data[3]);
+            $INV_NO      = trim($data[4]);
+            $INV_DATE    = trim($data[5]);
+            $AMOUNT_RAW  = trim($data[6]);
+            $AGE         = trim($data[7]);
+
+            // Remove commas from amount
+            $TOTAL_AMOUNT = floatval(str_replace(",", "", $AMOUNT_RAW));
+
+            // Convert date into YYYY-MM-DD
+            $invoice_date = date("Y-m-d", strtotime($INV_DATE));
+
+            // --- FIND CUSTOMER LEDGER ACCOUNT ---
+            $customer = $this->db->get_where("sma_companies", [
+                "external_id" => $CUST_NO
+            ])->row();
+
+            if (!$customer) {
+                $customer = $this->db->get_where("sma_companies", [
+                    "grouped_accounts" => $CUST_NO
+                ])->row();
+
+                if (!$customer) {
+                    echo "Customer not found for CUST_NO: {$CUST_NO}<br>";
+                    continue;
+                }
+            }
+            
+            $customer_ledger = $customer->ledger_account;
+
+            // --- FIND SALES MAN ---
+            $salesman = $this->db->get_where("sma_sales_man", [
+                "name" => $SALESMAN_NAME
+            ])->row();
+
+            if (!$customer) {
+                echo "Customer not found for CUST_NO: {$CUST_NO}<br>";
+                continue;
+            }
+
+            // If ledger account is missing – SKIP
+            if (!$customer_ledger) {
+                echo "Ledger missing for customer {$customer->name} ({$CUST_NO})<br>";
+                continue;
+            }
+
+            // --- INSERT INTO sma_sales ---
+            $sale_data = [
+                "date" => $invoice_date,
+                "reference_no" => $INV_NO,
+                "customer_id" => $customer->id,
+                "customer" => $customer->name,
+                "biller" => 1,
+                "biller" => "Hills Business Medical Company",
+                "grand_total" => $TOTAL_AMOUNT,
+                "warehouse_id" => 32,
+                "note"  => "AP Invoice Upload",
+                "total" => $TOTAL_AMOUNT,
+                "total_net_sale" => $TOTAL_AMOUNT,
+                "paid" => 0,
+                "sale_status" => "completed",
+                "payment_status" => "pending",
+                "salesman_id" => $salesman->id,
+                
+            ];
+            //echo '<pre>';print_r($sale_data);exit;
+            /*$this->db->insert("sma_sales", $sale_data);
+            $sale_id = $this->db->insert_id();
+
+            // --- CREATE GL ENTRY (sma_accounts_entries) ---
+            $entry_data = [
+                "entrytype_id" => 4,
+                "date" => $invoice_date,
+                "number" => $INV_NO,
+                "transaction_type" => "sales_invoice",
+                "notes" => "AR Invoice Upload - {$CUST_NAME_A} - {$INV_NO}",
+                "sid" => $sale_id,
+                "customer_id"   => $customer->id,
+            ];
+            $this->db->insert("sma_accounts_entries", $entry_data);
+            $entry_id = $this->db->insert_id();
+
+            // Cr Supplier Ledger
+            $this->db->insert("sma_accounts_entryitems", [
+                "entry_id" => $entry_id,
+                "ledger_id" => $customer_ledger,
+                "dc" => 'D',
+                "amount" => $TOTAL_AMOUNT,
+                "narration" => "Payable to customer for invoice {$INV_NO}"
+            ]);*/
+
+            echo "Uploaded invoice: {$INV_NO} for customer {$CUST_NO} ({$CUST_NAME_A})<br>";
+        }
+
+        fclose($handle);
+
+        echo "<hr>Import completed.";
+    }
+
+    public function upload_ap_invoices(){
+        $csv_file = $this->upload_path . 'csv/outstanding_AP (2).csv';
+
+        if (!file_exists($csv_file)) {
+            exit("CSV file not found: " . $csv_file);
+        }
+        
+        if (($handle = fopen($csv_file, "r")) === FALSE) {
+            exit("Unable to open CSV file.");
+        }
+        // Skip header row
+        fgetcsv($handle);
+
+        $row = 0;
+
+        while (($data = fgetcsv($handle)) !== FALSE) {
+
+            if ($row == 0) { $row++; continue; } // Skip header
+
+            $CUST_NO     = trim($data[0]);
+            $CUST_NAME_A = trim($data[1]);
+            $INV_NO      = trim($data[2]);
+            $INV_DATE    = trim($data[3]);
+            $AMOUNT_RAW  = trim($data[4]);
+            $AGE         = trim($data[5]);
+            $CRDB_NAME   = trim($data[6]);
+
+            // Remove commas from amount
+            $TOTAL_AMOUNT = floatval(str_replace(",", "", $AMOUNT_RAW));
+
+            // Convert date into YYYY-MM-DD
+            $invoice_date = date("Y-m-d", strtotime($INV_DATE));
+
+            // --- FIND SUPPLIER LEDGER ACCOUNT ---
+            $supplier = $this->db->get_where("sma_companies", [
+                "external_id" => $CUST_NO,
+                "level" => 2
+            ])->row();
+
+            if (!$supplier) {
+                echo "Supplier not found for CUST_NO: {$CUST_NO}<br>";
+                continue;
+            }
+
+            $supplier_ledger = $supplier->ledger_account;
+
+            // If ledger account is missing – SKIP
+            if (!$supplier_ledger) {
+                echo "Ledger missing for supplier {$supplier->name} ({$CUST_NO})<br>";
+                continue;
+            }
+
+            // --- INSERT INTO sma_purchases ---
+            $purchase_data = [
+                "date" => $invoice_date,
+                "reference_no" => $INV_NO,
+                "supplier_id" => $supplier->id,
+                "supplier" => $supplier->name,
+                "grand_total" => $TOTAL_AMOUNT,
+                "warehouse_id" => 32,
+                "note"  => "AP Invoice Upload",
+                "total" => $TOTAL_AMOUNT,
+                "total_net_purchase" => $TOTAL_AMOUNT,
+                "total_sale" => 0,
+                "paid" => 0,
+                "status" => "received",
+                "payment_status" => "due",
+                
+            ];
+            $this->db->insert("sma_purchases", $purchase_data);
+            $purchase_id = $this->db->insert_id();
+
+            // --- CREATE GL ENTRY (sma_accounts_entries) ---
+            $entry_data = [
+                "entrytype_id" => 4,
+                "date" => $invoice_date,
+                "number" => $INV_NO,
+                "transaction_type" => "purchase_invoice",
+                "notes" => "AP Invoice Upload - {$CUST_NAME_A} - {$INV_NO}",
+                "pid" => $purchase_id,
+                "supplier_id"   => $supplier->id,
+            ];
+            $this->db->insert("sma_accounts_entries", $entry_data);
+            $entry_id = $this->db->insert_id();
+
+            // --- ENTRY ITEMS ---
+            // Dr Expense (AP Outstanding)
+            /*$this->db->insert("sma_accounts_entryitems", [
+                "entry_id" => $entry_id,
+                "account_id" => 5000,   // <-- EXPENSE ACCOUNT: CHANGE AS NEEDED
+                "debit" => $TOTAL_AMOUNT,
+                "credit" => 0,
+                "narration" => "Expense for invoice {$INV_NO}"
+            ]);*/
+
+            // Cr Supplier Ledger
+            $this->db->insert("sma_accounts_entryitems", [
+                "entry_id" => $entry_id,
+                "ledger_id" => $supplier_ledger,
+                "dc" => 'C',
+                "amount" => $TOTAL_AMOUNT,
+                "narration" => "Payable to supplier for invoice {$INV_NO}"
+            ]);
+
+            echo "Uploaded invoice: {$INV_NO} for supplier {$CUST_NO} ({$CUST_NAME_A})<br>";
+        }
+
+        fclose($handle);
+
+        echo "<hr>Import completed.";
+    }
+
+    public function update_shopify_product_codes()
+    {
+        $csvFile = $this->upload_path . 'csv/inventory_export_csv.csv';
+
+        if (!file_exists($csvFile)) {
+            echo "CSV file not found.";
+            return;
+        }
+
+        $handle = fopen($csvFile, "r");
+        if (!$handle) {
+            echo "Error opening CSV file.";
+            return;
+        }
+
+        $row = 0;
+        echo "<h3>Starting Import...</h3>";
+
+        while (($data = fgetcsv($handle)) !== false) {
+
+            if ($row == 0) { $row++; continue; } // Skip header
+
+            // CSV fields
+            $product_handle  = trim($data[0]);
+            $product_code  = trim($data[8]);
+            $product_quantity = trim($data[17]);
+
+            $existing = $this->db->get_where('sma_products', ['slug' => $product_handle])->row();
+            if ($existing) {
+                // Update product code
+                //if($product_code != '' && strlen($coproduct_code) > 3){
+                    $this->db->update('sma_products', ['quantity' => $product_quantity], ['id' => $existing->id]);
+                    echo "Updated product quantity → $product_quantity for handle $product_handle<br>";
+                //}
+                
+            } else {
+                echo "Product not found for handle → $product_handle (Skipped)<br>";
+            }
+        }
+    }
+
+    private function get_or_create_category_chain($full_path)
+    {
+        // Example: "Health & Beauty > Personal Care > Oral Care > Toothpaste"
+
+        $parts = array_map('trim', explode('>', $full_path));
+        $parent_id = null;
+        $last_id = null;
+
+        foreach ($parts as $cat_name) {
+
+            // Check existing
+            $this->db->where('name', $cat_name);
+            $this->db->where('parent_id', $parent_id);
+            $existing = $this->db->get('sma_categories')->row();
+
+            if ($existing) {
+                // Already exists
+                $last_id = $existing->id;
+                $parent_id = $existing->id;
+            } else {
+                // Create new
+                $slug = url_title($cat_name, '-', true);
+
+                $this->db->insert('sma_categories', [
+                    'name'      => $cat_name,
+                    'slug'      => $slug,
+                    'parent_id' => $parent_id
+                ]);
+
+                $last_id = $this->db->insert_id();
+                $parent_id = $last_id;
+
+                echo "Created category → $cat_name<br>";
+            }
+        }
+
+        return $last_id; // Return deepest category
+    }
+
+    public function upload_shopify_products()
+{
+    $excelFile = $this->upload_path . 'csv/Avnzor_Final_Product_Updated.xlsx'; // Excel file
+    if (!file_exists($excelFile)) {
+        echo "Excel file not found.";
+        return;
+    }
+
+    $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+    $reader->setReadDataOnly(true);
+    $spreadsheet = $reader->load($excelFile);
+    $sheet = $spreadsheet->getActiveSheet();
+
+    $rows = $sheet->toArray(null, true, true, false);
+
+    echo "<h3>Starting Import...</h3>";
+
+    $row = 0;
+    foreach ($rows as $data) {
+
+        if ($row == 0) { $row++; continue; } // Skip header
+
+        // -------------------------
+        // Read Excel fields
+        // -------------------------
+        $brandName         = trim($data[0]);
+        $product_code      = trim($data[1]);
+        $name              = trim($data[3]);
+        $category          = trim($data[4]);
+        $subcategory       = trim($data[5]);
+        $subsubcategory    = trim($data[6]);
+        $vat               = trim($data[7]);
+        $cost_price        = trim($data[8]);
+        $sale_price        = trim($data[11]);
+        $image_field       = trim($data[15]);
+        $additional_image1 = trim($data[16]);
+        $additional_image2 = trim($data[17]);
+
+        // -------------------------
+        // Process code
+        // -------------------------
+        if (strpos($product_code, 'E+') !== false) {
+            $code = number_format($product_code, 0, '', '');
+        } else {
+            $code = $product_code;
+        }
+
+        // Skip empty or too short codes (<3 digits)
+        if (!$code || strlen($code) < 3) {
+            echo "Skipping row: Invalid code → {$product_code}<br>";
+            $row++;
+            continue;
+        }
+
+        // -------------------------
+        // Check existing product
+        // -------------------------
+        $existing = $this->db->get_where('sma_products', ['code' => $code])->row();
+        if ($existing) {
+            echo "Product already exists → $code (skipped)<br>";
+            $row++;
+            continue;
+        }
+
+        // -------------------------
+        // CATEGORY LOGIC (3 LEVELS)
+        // -------------------------
+        // 1) Main category
+        $mainCat = $this->db->where('name', $category)
+            ->where('parent_id', 0)
+            ->get('sma_categories')->row();
+
+        if (!$mainCat) {
+            $this->db->insert('sma_categories', [
+                'name'      => $category,
+                'slug'      => url_title($category, '-', TRUE),
+                'parent_id' => 0,
+            ]);
+            $mainCatId = $this->db->insert_id();
+        } else {
+            $mainCatId = $mainCat->id;
+        }
+
+        // 2) Subcategory
+        $subCatId = $mainCatId;
+        if (!empty($subcategory)) {
+            $subCat = $this->db
+                ->where('name', $subcategory)
+                ->where('parent_id', $mainCatId)
+                ->get('sma_categories')->row();
+
+            if (!$subCat) {
+                $this->db->insert('sma_categories', [
+                    'name'      => $subcategory,
+                    'slug'      => url_title($subcategory, '-', TRUE),
+                    'parent_id' => $mainCatId,
+                ]);
+                $subCatId = $this->db->insert_id();
+            } else {
+                $subCatId = $subCat->id;
+            }
+        }
+
+        // 3) Sub-subcategory
+        $finalCatId = $subCatId;
+        if (!empty($subsubcategory)) {
+            $subSub = $this->db
+                ->where('name', $subsubcategory)
+                ->where('parent_id', $subCatId)
+                ->get('sma_categories')->row();
+
+            if (!$subSub) {
+                $this->db->insert('sma_categories', [
+                    'name'      => $subsubcategory,
+                    'slug'      => url_title($subsubcategory, '-', TRUE),
+                    'parent_id' => $subCatId,
+                ]);
+                $finalCatId = $this->db->insert_id();
+            } else {
+                $finalCatId = $subSub->id;
+            }
+        }
+
+        // -------------------------
+        // BRAND
+        // -------------------------
+        $brand = $this->db->select('id')->from('sma_brands')->where('name', $brandName)->get()->row();
+        if (!$brand) {
+            $this->db->insert('sma_brands', [
+                'name' => $brandName,
+                'slug' => url_title($brandName, '-', TRUE)
+            ]);
+            $brand_id = $this->db->insert_id();
+        } else {
+            $brand_id = $brand->id;
+        }
+
+        // -------------------------
+        // INSERT PRODUCT
+        // -------------------------
+        $productData = [
+            'code'              => $code,
+            'name'              => $name,
+            'cost'              => $cost_price,
+            'price'             => $sale_price,
+            'slug'              => url_title($name, '-', TRUE),
+            'alert_quantity'    => 10,
+            'image'             => $image_field,
+            'category_id'       => $mainCatId,
+            'subcategory_id'    => $finalCatId,
+            'brand'             => $brand_id,
+            'tax_rate'          => 5,
+            'barcode_symbology' => 'code128',
+            'quantity'          => 0,
+            'sequence_code'     => 'PRD-' . str_pad($row, 5, '0', STR_PAD_LEFT)
+        ];
+
+        $this->db->insert('sma_products', $productData);
+        $product_id = $this->db->insert_id();
+
+        // -------------------------
+        // PROCESS IMAGES
+        // -------------------------
+        $all_images = [$image_field, $additional_image1, $additional_image2];
+
+        foreach ($all_images as $img) {
+            if (!empty($img)) {
+                // Clean Markdown or extra bullets
+                $img = trim($img);
+                $img = ltrim($img, "-* \t"); // remove leading - or *
+                $img = trim($img);
+
+                // Skip if URL is invalid
+                if (filter_var($img, FILTER_VALIDATE_URL)) {
+                    $this->db->insert('sma_product_photos', [
+                        'product_id' => $product_id,
+                        'photo'      => $img
+                    ]);
+                }
+            }
+        }
+
+        echo "Inserted Product → $code ($name)<br>";
+
+        $row++;
+    }
+
+    echo "<h3>Import Completed Successfully.</h3>";
+}
+
+
+
     public function update_product_codes()
     {
         $csvFile = $this->upload_path . 'csv/salla_items_final_products_max.csv';

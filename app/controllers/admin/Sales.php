@@ -1027,6 +1027,40 @@ class Sales extends MY_Controller
         }
     }
 
+    public function manually_send_invoices_to_zatca(){
+        $sale_ids = array(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35);
+        $i = 0;
+        for($i=0;$i<sizeOf($sale_ids);$i++){
+            $sale_id = $sale_ids[$i];
+            //echo 'SaleId: '. $sale_id.'<br />';exit;
+            $zatca_payload =  $this->Zetca_model->get_zetca_data_b2b($sale_id); 
+            $zatca_response = $this->zatca->post('',  $zatca_payload);
+            $is_success = true;
+            $remarks = "";
+            if($zatca_response['status'] >= 400){
+                $is_success = false;
+                if(isset($zatca_response['body']['errors'])){
+                    if(!empty($zatca_response['body']['errors'])){
+                        $remarks = $zatca_response['body']['errors'][0];
+                    }
+                }
+            }
+            $date = date('Y-m-d H:i:s');
+            $request = json_encode($zatca_payload, true);
+            $response = json_encode($zatca_response, true);
+            $reporting_data = [
+                "sale_id" => $sale_id,
+                "date" => $date,
+                "is_success" => $is_success,
+                "request" => $request,
+                "response" => $response,
+                "remarks" => $remarks
+            ];
+
+            $this->Zetca_model->report_zatca_status($reporting_data);
+        }
+    }
+
     public function add_delivery($id = null)
     {
         //$this->sma->checkPermissions();
