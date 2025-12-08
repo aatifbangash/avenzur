@@ -903,7 +903,7 @@ class Products extends MY_Controller
                 
             ];
             //echo '<pre>';print_r($sale_data);exit;
-            /*$this->db->insert("sma_sales", $sale_data);
+            $this->db->insert("sma_sales", $sale_data);
             $sale_id = $this->db->insert_id();
 
             // --- CREATE GL ENTRY (sma_accounts_entries) ---
@@ -926,7 +926,7 @@ class Products extends MY_Controller
                 "dc" => 'D',
                 "amount" => $TOTAL_AMOUNT,
                 "narration" => "Payable to customer for invoice {$INV_NO}"
-            ]);*/
+            ]);
 
             echo "Uploaded invoice: {$INV_NO} for customer {$CUST_NO} ({$CUST_NAME_A})<br>";
         }
