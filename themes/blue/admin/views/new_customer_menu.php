@@ -445,7 +445,7 @@
                         <li><a href="<?= admin_url('reports/item_movement_report'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Inventory Reports'); ?></a></li>
                         <?php } ?>
                         <!--<li><a href="<?= admin_url('reports/aging'); ?>" class="newmenu-link"><i class="fa fa-hourglass-half"></i> <?= lang('Aging'); ?></a></li>-->
-                        <?php if($Admin || $Owner || $this->GP['reports-stock']){ ?>
+                        <?php if($Admin || $Owner || $this->GP['report-stock']){ ?>
                         <li><a href="<?= admin_url('reports/stock'); ?>" class="newmenu-link"><i class="fa fa-calendar-times-o"></i> <?= lang('Stock'); ?></a></li>
                         <?php } ?>
                         <?php if($Admin || $Owner || $this->GP['reports-inventory-tb']){ ?>
