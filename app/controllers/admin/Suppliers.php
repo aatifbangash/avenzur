@@ -530,7 +530,7 @@ class Suppliers extends MY_Controller
     }
 
     public function edit_advance_to_supplier($id=null){
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -548,7 +548,7 @@ class Suppliers extends MY_Controller
     }
 
     public function advance_to_supplier(){
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
         $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
 
         $data = [];
@@ -646,7 +646,7 @@ class Suppliers extends MY_Controller
     }
 
     public function edit_debit_memo($id = null){
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -664,7 +664,7 @@ class Suppliers extends MY_Controller
     }
 
     public function debit_memo(){
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
         $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
 
         $data = [];
@@ -743,7 +743,7 @@ class Suppliers extends MY_Controller
     }
 
     public function edit_payment($id = null){
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
         $this->form_validation->set_rules('payment_id', $this->lang->line('payment_id'), 'required');
         $this->form_validation->set_rules('amount', $this->lang->line('amount'), 'required');
 
@@ -818,7 +818,7 @@ class Suppliers extends MY_Controller
     }
 
     public function view_payment($id = null){
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
         $this->form_validation->set_rules('id', $this->lang->line('id'), 'required');
 
         $data = [];
@@ -1328,7 +1328,7 @@ class Suppliers extends MY_Controller
     public function add()
     {
         $parent_code = null;
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
 
         $this->form_validation->set_rules('email', $this->lang->line('email_address'), 'is_unique[companies.email]');
 
@@ -1398,7 +1398,7 @@ class Suppliers extends MY_Controller
 
     public function add_user($company_id = null)
     {
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
 
         if ($this->input->get('id')) {
             $company_id = $this->input->get('id');
@@ -1443,7 +1443,7 @@ class Suppliers extends MY_Controller
 
     public function delete($id = null)
     {
-        $this->sma->checkPermissions(null, true);
+        //$this->sma->checkPermissions(null, true);
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -1461,7 +1461,7 @@ class Suppliers extends MY_Controller
 
     public function edit($id = null)
     {
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -1563,7 +1563,7 @@ class Suppliers extends MY_Controller
 
     public function getSuppliers()
     {
-        $this->sma->checkPermissions('index');
+        //$this->sma->checkPermissions('index');
 
         $this->load->library('datatables');
         $this->datatables
@@ -1766,7 +1766,7 @@ class Suppliers extends MY_Controller
 
     public function import_csv()
     {
-        $this->sma->checkPermissions('add', true);
+        //$this->sma->checkPermissions('add', true);
         $this->load->helper('security');
         $this->form_validation->set_rules('csv_file', $this->lang->line('upload_file'), 'xss_clean');
 
@@ -1956,7 +1956,7 @@ class Suppliers extends MY_Controller
         if ($this->form_validation->run() == true) {
             if (!empty($_POST['val'])) {
                 if ($this->input->post('form_action') == 'delete') {
-                    $this->sma->checkPermissions('delete');
+                    //$this->sma->checkPermissions('delete');
                     $error = false;
                     foreach ($_POST['val'] as $id) {
                         if (!$this->companies_model->deleteSupplier($id)) {
@@ -2043,7 +2043,7 @@ class Suppliers extends MY_Controller
 
     public function users($company_id = null)
     {
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
 
         if ($this->input->get('id')) {
             $company_id = $this->input->get('id');
@@ -2058,7 +2058,7 @@ class Suppliers extends MY_Controller
 
     public function view($id = null)
     {
-        $this->sma->checkPermissions('index', true);
+        //$this->sma->checkPermissions('index', true);
         $this->data['error']    = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['supplier'] = $this->companies_model->getCompanyByID($id);
         $this->load->view($this->theme . 'suppliers/view', $this->data);
@@ -2071,7 +2071,7 @@ class Suppliers extends MY_Controller
     }
 
     public function edit_service_invoice($id = null){
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -2089,7 +2089,7 @@ class Suppliers extends MY_Controller
     }
 
     public function service_invoice(){
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
         $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
 
         $data = [];
