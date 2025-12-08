@@ -375,7 +375,7 @@ class Customers extends MY_Controller
     }
 
     public function edit_payment($id = null){
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
         $this->form_validation->set_rules('payment_id', $this->lang->line('payment_id'), 'required');
         $this->form_validation->set_rules('amount', $this->lang->line('amount'), 'required');
 
@@ -458,7 +458,7 @@ class Customers extends MY_Controller
     }
 
     public function view_payment($id = null){
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
         $this->form_validation->set_rules('id', $this->lang->line('id'), 'required');
 
         $data = [];
@@ -990,7 +990,7 @@ class Customers extends MY_Controller
     }
 
     public function edit_credit_memo($id = null){
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -1008,7 +1008,7 @@ class Customers extends MY_Controller
     }
 
     public function credit_memo(){
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
         $this->form_validation->set_rules('customer', $this->lang->line('customer'), 'required');
 
         $data = [];
@@ -1163,7 +1163,7 @@ class Customers extends MY_Controller
     }
 
     public function edit_service_invoice($id = null){
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -1181,7 +1181,7 @@ class Customers extends MY_Controller
     }
 
     public function service_invoice(){
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
         $this->form_validation->set_rules('customer', $this->lang->line('customer'), 'required');
 
         $data = [];
@@ -1340,7 +1340,7 @@ class Customers extends MY_Controller
 
     public function add_address($company_id = null)
     {
-        $this->sma->checkPermissions('add', true);
+        //$this->sma->checkPermissions('add', true);
         $company = $this->companies_model->getCompanyByID($company_id);
 
         $this->form_validation->set_rules('line1', lang('line1'), 'required');
@@ -1378,7 +1378,7 @@ class Customers extends MY_Controller
 
     public function add_deposit($company_id = null)
     {
-        $this->sma->checkPermissions('deposits', true);
+        //$this->sma->checkPermissions('deposits', true);
 
         if ($this->input->get('id')) {
             $company_id = $this->input->get('id');
@@ -1426,7 +1426,7 @@ class Customers extends MY_Controller
 
     public function add_user($company_id = null)
     {
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
 
         if ($this->input->get('id')) {
             $company_id = $this->input->get('id');
@@ -1471,7 +1471,7 @@ class Customers extends MY_Controller
 
     public function addresses($company_id = null)
     {
-        $this->sma->checkPermissions('index', true);
+        //$this->sma->checkPermissions('index', true);
         $this->data['modal_js']  = $this->site->modal_js();
         $this->data['company']   = $this->companies_model->getCompanyByID($company_id);
         $this->data['addresses'] = $this->companies_model->getCompanyAddresses($company_id);
@@ -1490,7 +1490,7 @@ class Customers extends MY_Controller
         if ($this->form_validation->run() == true) {
             if (!empty($_POST['val'])) {
                 if ($this->input->post('form_action') == 'delete') {
-                    $this->sma->checkPermissions('delete');
+                    //$this->sma->checkPermissions('delete');
                     $error = false;
                     foreach ($_POST['val'] as $id) {
                         if (!$this->companies_model->deleteCustomer($id)) {
@@ -1574,7 +1574,7 @@ class Customers extends MY_Controller
 
     public function delete($id = null)
     {
-        $this->sma->checkPermissions(null, true);
+        //$this->sma->checkPermissions(null, true);
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -1596,7 +1596,7 @@ class Customers extends MY_Controller
 
     public function delete_address($id)
     {
-        $this->sma->checkPermissions('delete', true);
+        //$this->sma->checkPermissions('delete', true);
         if (!$id) {
             $this->sma->send_json(['error' => 1, 'msg' => lang('id_not_found')]);
         }
@@ -1609,7 +1609,7 @@ class Customers extends MY_Controller
 
     public function delete_deposit($id)
     {
-        $this->sma->checkPermissions(null, true);
+       // $this->sma->checkPermissions(null, true);
         if (!$id) {
             $this->sma->send_json(['error' => 1, 'msg' => lang('id_not_found')]);
         }
@@ -1620,7 +1620,7 @@ class Customers extends MY_Controller
 
     public function deposit_note($id = null)
     {
-        $this->sma->checkPermissions('deposits', true);
+        //$this->sma->checkPermissions('deposits', true);
         $deposit                  = $this->companies_model->getDepositByID($id);
         $this->data['customer']   = $this->companies_model->getCompanyByID($deposit->company_id);
         $this->data['deposit']    = $deposit;
@@ -1630,7 +1630,7 @@ class Customers extends MY_Controller
 
     public function deposits($company_id = null)
     {
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
 
         if ($this->input->get('id')) {
             $company_id = $this->input->get('id');
@@ -1744,7 +1744,7 @@ class Customers extends MY_Controller
 
     public function edit_address($id = null)
     {
-        $this->sma->checkPermissions('edit', true);
+        //$this->sma->checkPermissions('edit', true);
 
         $this->form_validation->set_rules('line1', lang('line1'), 'required');
         $this->form_validation->set_rules('city', lang('city'), 'required');
@@ -1780,7 +1780,7 @@ class Customers extends MY_Controller
 
     public function edit_deposit($id = null)
     {
-        $this->sma->checkPermissions('deposits', true);
+        //$this->sma->checkPermissions('deposits', true);
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -1831,7 +1831,7 @@ class Customers extends MY_Controller
 
     public function get_award_points($id = null)
     {
-        $this->sma->checkPermissions('index');
+        //$this->sma->checkPermissions('index');
         $row = $this->companies_model->getCompanyByID($id);
         $this->sma->send_json(['ca_points' => $row->award_points]);
     }
@@ -1843,7 +1843,7 @@ class Customers extends MY_Controller
 
     public function get_deposits($company_id = null)
     {
-        $this->sma->checkPermissions('deposits');
+        //$this->sma->checkPermissions('deposits');
         $this->load->library('datatables');
         $this->datatables
             ->select("deposits.id as id, date, amount, paid_by, CONCAT({$this->db->dbprefix('users')}.first_name, ' ', {$this->db->dbprefix('users')}.last_name) as created_by", false)
@@ -2144,7 +2144,7 @@ class Customers extends MY_Controller
 
     public function import_csv()
     {
-        $this->sma->checkPermissions('add', true);
+        //$this->sma->checkPermissions('add', true);
         $this->load->helper('security');
         $this->form_validation->set_rules('csv_file', lang('upload_file'), 'xss_clean');
 
@@ -2302,7 +2302,7 @@ class Customers extends MY_Controller
 
     public function users($company_id = null)
     {
-        $this->sma->checkPermissions(false, true);
+        //$this->sma->checkPermissions(false, true);
 
         if ($this->input->get('id')) {
             $company_id = $this->input->get('id');
@@ -2317,7 +2317,7 @@ class Customers extends MY_Controller
 
     public function view($id = null)
     {
-        $this->sma->checkPermissions('index', true);
+        //$this->sma->checkPermissions('index', true);
         $this->data['error']    = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['customer'] = $this->companies_model->getCompanyByID($id);
         $this->load->view($this->theme . 'customers/view', $this->data);
