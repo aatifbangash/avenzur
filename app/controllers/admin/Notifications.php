@@ -13,10 +13,10 @@ class Notifications extends MY_Controller
             $this->session->set_userdata('requested_page', $this->uri->uri_string());
             $this->sma->md('login');
         }
-        if (!$this->Owner && !$this->Admin) {
+        /*if (!$this->Owner && !$this->Admin) {
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect($_SERVER['HTTP_REFERER']);
-        }
+        }*/
         $this->load->library('RASDCore',$params=null, 'rasd');
 
         $this->lang->admin_load('notifications', $this->Settings->user_language);
