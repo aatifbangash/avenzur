@@ -186,9 +186,6 @@
                         <?php if($Admin || $Owner || $this->GP['sales-index']){ ?>
                         <li><a href="<?= admin_url('sales'); ?>" class="newmenu-link"><i class="fa fa-file"></i> <?= lang('Sale Orders'); ?></a></li>
                         <?php } ?>
-                        <?php if($Admin || $Owner || $this->GP['returns-add']){ ?>
-                        <li><a href="<?= admin_url('sales'); ?>" class="newmenu-link"><i class="fa fa-file"></i> <?= lang('Add Return'); ?></a></li>
-                        <?php } ?>
                     </ul>
                 </li>
 
