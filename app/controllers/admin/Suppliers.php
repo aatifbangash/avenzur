@@ -1975,50 +1975,34 @@ class Suppliers extends MY_Controller
                     $this->load->library('excel');
                     $this->excel->setActiveSheetIndex(0);
                     $this->excel->getActiveSheet()->setTitle(lang('customer'));
-                    $this->excel->getActiveSheet()->SetCellValue('A1', lang('company'));
-                    $this->excel->getActiveSheet()->SetCellValue('B1', lang('sequence_code'));
-                    $this->excel->getActiveSheet()->SetCellValue('C1', lang('name'));
-                    $this->excel->getActiveSheet()->SetCellValue('D1', lang('name_arabic'));
-                    $this->excel->getActiveSheet()->SetCellValue('E1', lang('category'));
-                    $this->excel->getActiveSheet()->SetCellValue('F1', lang('email'));
-                    $this->excel->getActiveSheet()->SetCellValue('G1', lang('phone'));
-                    $this->excel->getActiveSheet()->SetCellValue('H1', lang('address'));
-                    $this->excel->getActiveSheet()->SetCellValue('I1', lang('city'));
-                    $this->excel->getActiveSheet()->SetCellValue('J1', lang('state'));
-                    $this->excel->getActiveSheet()->SetCellValue('K1', lang('postal_code'));
-                    $this->excel->getActiveSheet()->SetCellValue('L1', lang('country'));
-                    $this->excel->getActiveSheet()->SetCellValue('M1', lang('vat_no'));
-                    $this->excel->getActiveSheet()->SetCellValue('N1', lang('gst_no'));
-                    $this->excel->getActiveSheet()->SetCellValue('O1', lang('scf1'));
-                    $this->excel->getActiveSheet()->SetCellValue('P1', lang('scf2'));
-                    $this->excel->getActiveSheet()->SetCellValue('Q1', lang('scf3'));
-                    $this->excel->getActiveSheet()->SetCellValue('R1', lang('scf4'));
-                    $this->excel->getActiveSheet()->SetCellValue('S1', lang('scf5'));
-                    $this->excel->getActiveSheet()->SetCellValue('T1', lang('scf6'));
+                    $this->excel->getActiveSheet()->SetCellValue('A1', lang('SEQUENCE CODE'));
+                    $this->excel->getActiveSheet()->SetCellValue('B1', lang('NAME'));
+                    $this->excel->getActiveSheet()->SetCellValue('C1', lang('VAT NUMBER'));
+                    $this->excel->getActiveSheet()->SetCellValue('D1', lang('CR NUMBER'));
+                    $this->excel->getActiveSheet()->SetCellValue('E1', lang('GLN NUMBER'));
+                    $this->excel->getActiveSheet()->SetCellValue('F1', lang('SHORT ADDRESS'));
+                    $this->excel->getActiveSheet()->SetCellValue('G1', lang('ADDRESS'));
+                    $this->excel->getActiveSheet()->SetCellValue('H1', lang('CREDIT LIMIT'));
+                    $this->excel->getActiveSheet()->SetCellValue('I1', lang('PAYMENT TERM'));
+                    $this->excel->getActiveSheet()->SetCellValue('J1', lang('CATEGORY'));
 
                     $row = 2;
                     foreach ($_POST['val'] as $id) {
                         $customer = $this->site->getCompanyByID($id);
-                        $this->excel->getActiveSheet()->SetCellValue('A' . $row, $customer->company);
-                        $this->excel->getActiveSheet()->SetCellValue('B' . $row, $customer->sequence_code);
-                        $this->excel->getActiveSheet()->SetCellValue('C' . $row, $customer->name);
-                        $this->excel->getActiveSheet()->SetCellValue('D' . $row, $customer->name_ar);
-                        $this->excel->getActiveSheet()->SetCellValue('E' . $row, $customer->category);
-                        $this->excel->getActiveSheet()->SetCellValue('F' . $row, $customer->email);
-                        $this->excel->getActiveSheet()->SetCellValue('G' . $row, $customer->phone);
-                        $this->excel->getActiveSheet()->SetCellValue('H' . $row, $customer->address);
-                        $this->excel->getActiveSheet()->SetCellValue('I' . $row, $customer->city);
-                        $this->excel->getActiveSheet()->SetCellValue('J' . $row, $customer->state);
-                        $this->excel->getActiveSheet()->SetCellValue('K' . $row, $customer->postal_code);
-                        $this->excel->getActiveSheet()->SetCellValue('L' . $row, $customer->country);
-                        $this->excel->getActiveSheet()->SetCellValue('M' . $row, $customer->vat_no);
-                        $this->excel->getActiveSheet()->SetCellValue('N' . $row, $customer->gst_no);
-                        $this->excel->getActiveSheet()->SetCellValue('O' . $row, $customer->cf1);
-                        $this->excel->getActiveSheet()->SetCellValue('P' . $row, $customer->cf2);
-                        $this->excel->getActiveSheet()->SetCellValue('Q' . $row, $customer->cf3);
-                        $this->excel->getActiveSheet()->SetCellValue('R' . $row, $customer->cf4);
-                        $this->excel->getActiveSheet()->SetCellValue('S' . $row, $customer->cf5);
-                        $this->excel->getActiveSheet()->SetCellValue('T' . $row, $customer->cf6);
+                        $this->excel->getActiveSheet()->SetCellValue('A' . $row, $customer->sequence_code);
+                        $this->excel->getActiveSheet()->SetCellValue('B' . $row, $customer->name);
+                        
+                        // Set these cells as TEXT to prevent scientific notation and preserve leading zeros
+                        $this->excel->getActiveSheet()->setCellValueExplicit('C' . $row, $customer->vat_no, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                        $this->excel->getActiveSheet()->setCellValueExplicit('D' . $row, $customer->cr, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                        $this->excel->getActiveSheet()->setCellValueExplicit('E' . $row, $customer->gln, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                        
+                        $this->excel->getActiveSheet()->SetCellValue('F' . $row, $customer->short_address);
+                        $this->excel->getActiveSheet()->SetCellValue('G' . $row, $customer->address);
+                        $this->excel->getActiveSheet()->SetCellValue('H' . $row, $customer->credit_limit);
+                        $this->excel->getActiveSheet()->SetCellValue('I' . $row, $customer->payment_term);
+                        $this->excel->getActiveSheet()->SetCellValue('J' . $row, $customer->category);
+                        
                         //$this->excel->getActiveSheet()->SetCellValue('QR' . $row, $customer->cf6);
                         $row++;
                     }
