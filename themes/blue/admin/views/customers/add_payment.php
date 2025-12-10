@@ -11,6 +11,16 @@
     // Global variable to store total invoice amount
     var total_invoice_amount = 0;
 
+    // Utility function to round numbers to 4 decimal places consistently
+    function roundAmount(value) {
+        return Math.round(value * 10000) / 10000;
+    }
+
+    // Utility function to safely parse float and round
+    function parseAmount(value) {
+        return roundAmount(parseFloat(value) || 0);
+    }
+
     $(document).ready(function () {
 
         // Form submission handler - update hidden field with checkbox state
@@ -30,19 +40,19 @@
 
         $(document).on('change input', 'input[name="payment_amount[]"]', function (e) {
             // When a user edits a payment_amount[] manually, treat it as cash allocation
-            var val = parseFloat($(this).val()) || 0;
+            var val = parseAmount($(this).val());
             $(this).attr('data-cash', val.toFixed(4));
 
             // Recalculate totals
             var total_paying = 0;
             $('input[name="payment_amount[]"]').each(function() {
-                total_paying += parseFloat($(this).val()) || 0;
+                total_paying = roundAmount(total_paying + parseAmount($(this).val()));
             });
             
             // Update total invoice amount from due amounts
             total_invoice_amount = 0;
             $('input[name="due_amount[]"]').each(function() {
-                total_invoice_amount += parseFloat($(this).val()) || 0;
+                total_invoice_amount = roundAmount(total_invoice_amount + parseAmount($(this).val()));
             });
             
             // Update calculations including excess advance (this will recompute advance allocations)
@@ -52,9 +62,9 @@
         // Handle additional discount percentage changes
         $(document).on('input change', '.additional-discount-pct', function (e) {
             var $row = $(this).closest('tr');
-            var due_amount = parseFloat($row.find('input[name="due_amount[]"]').val()) || 0;
-            var return_amount = parseFloat($row.find('input[name="return_amount[]"]').val()) || 0;
-            var discount_pct = parseFloat($(this).val()) || 0;
+            var due_amount = parseAmount($row.find('input[name="due_amount[]"]').val());
+            var return_amount = parseAmount($row.find('input[name="return_amount[]"]').val());
+            var discount_pct = parseAmount($(this).val());
             
             // Validate percentage range
             if (discount_pct < 0) discount_pct = 0;
@@ -62,14 +72,14 @@
             $(this).val(discount_pct);
             
             // Calculate discount amount based on due amount after returns
-            var amount_after_returns = due_amount - return_amount;
-            var discount_amount = (amount_after_returns * discount_pct) / 100;
+            var amount_after_returns = roundAmount(due_amount - return_amount);
+            var discount_amount = roundAmount((amount_after_returns * discount_pct) / 100);
             
             // Display the calculated discount amount
             $row.find('.discount-amount-display').text(discount_amount.toFixed(4));
 
             // Update total payable display for this row (due - returns - discount)
-            var payable_after_discount = amount_after_returns - discount_amount;
+            var payable_after_discount = roundAmount(amount_after_returns - discount_amount);
             $row.find('.total-payable').val(payable_after_discount.toFixed(4));
 
             // Re-distribute the entered Amount Received across invoices after discount change
@@ -90,20 +100,20 @@
             // Calculate totals from all rows
             $('#poTable tbody tr').each(function() {
                 if ($(this).find('input[name="original_amount[]"]').length > 0) {
-                    total_original += parseFloat($(this).find('input[name="original_amount[]"]').val()) || 0;
-                    total_due += parseFloat($(this).find('input[name="due_amount[]"]').val()) || 0;
-                    total_returns += parseFloat($(this).find('input[name="return_amount[]"]').val()) || 0;
+                    total_original = roundAmount(total_original + parseAmount($(this).find('input[name="original_amount[]"]').val()));
+                    total_due = roundAmount(total_due + parseAmount($(this).find('input[name="due_amount[]"]').val()));
+                    total_returns = roundAmount(total_returns + parseAmount($(this).find('input[name="return_amount[]"]').val()));
                     
-                    var due = parseFloat($(this).find('input[name="due_amount[]"]').val()) || 0;
-                    var returns = parseFloat($(this).find('input[name="return_amount[]"]').val()) || 0;
-                    var discount_pct = parseFloat($(this).find('.additional-discount-pct').val()) || 0;
-                    var discount_amt = ((due - returns) * discount_pct) / 100;
-                    total_discount += discount_amt;
+                    var due = parseAmount($(this).find('input[name="due_amount[]"]').val());
+                    var returns = parseAmount($(this).find('input[name="return_amount[]"]').val());
+                    var discount_pct = parseAmount($(this).find('.additional-discount-pct').val());
+                    var discount_amt = roundAmount((roundAmount(due - returns) * discount_pct) / 100);
+                    total_discount = roundAmount(total_discount + discount_amt);
 
-                    var payable = (due - returns) - discount_amt;
-                    total_payable += payable;
+                    var payable = roundAmount(roundAmount(due - returns) - discount_amt);
+                    total_payable = roundAmount(total_payable + payable);
 
-                    total_payment += parseFloat($(this).find('input[name="payment_amount[]"]').val()) || 0;
+                    total_payment = roundAmount(total_payment + parseAmount($(this).find('input[name="payment_amount[]"]').val()));
                 }
             });
 
@@ -131,7 +141,7 @@
 
         // Function to update payment summary table
         function updatePaymentSummary(total_invoice, total_returns, total_discount, total_payable) {
-            var amount_received = parseFloat($('#cspayment').val()) || 0;
+            var amount_received = parseAmount($('#cspayment').val());
             // Calculate excess payment (advance) if amount received > total payable
             var excess_payment = 0;
             var balance_due = 0;
@@ -140,8 +150,7 @@
             // Compute advance used by summing per-row data-advance attributes (fallback to 0 if not present)
             var advance_used = 0;
             $('input[name="payment_amount[]"]').each(function() {
-                var adv = parseFloat($(this).attr('data-advance')) || 0;
-                advance_used += adv;
+                advance_used = roundAmount(advance_used + parseAmount($(this).attr('data-advance')));
             });
 
             if ($('#park-as-advance').is(':checked')) {
@@ -150,21 +159,21 @@
                 balance_due = total_payable; // nothing is paid against invoices
             } else if (settle_with_advance_checked && advance_used > 0) {
                 // When settling with advance, total settlement = cash received + advance used
-                var total_settled = amount_received + advance_used;
+                var total_settled = roundAmount(amount_received + advance_used);
                 // If total settled covers payable, balance due = 0, excess is 0 (advance used reduces advance balance separately)
                 if (total_settled >= total_payable) {
                     balance_due = 0;
-                    excess_payment = Math.max(0, total_settled - total_payable);
+                    excess_payment = roundAmount(Math.max(0, total_settled - total_payable));
                 } else {
-                    balance_due = total_payable - total_settled;
+                    balance_due = roundAmount(total_payable - total_settled);
                 }
             } else if (amount_received > total_payable) {
                 // Excess payment will be parked as advance
-                excess_payment = amount_received - total_payable;
+                excess_payment = roundAmount(amount_received - total_payable);
                 balance_due = 0;
             } else {
                 // Amount received is less than or equal to total payable
-                balance_due = total_payable - amount_received;
+                balance_due = roundAmount(total_payable - amount_received);
             }
 
             $('#summary-total-invoice').text(total_invoice.toFixed(4));
@@ -174,7 +183,7 @@
             // Show amount received (cash) and indicate if advance used
             if (settle_with_advance_checked && advance_used > 0) {
                 // Display total settlement (cash + advance) to give a clearer picture
-                var total_settlement_display = amount_received + advance_used;
+                var total_settlement_display = roundAmount(amount_received + advance_used);
                 $('#summary-amount-received').text(total_settlement_display.toFixed(4));
             } else {
                 $('#summary-amount-received').text(amount_received.toFixed(4));
@@ -629,15 +638,15 @@
         }
 
         function updateAdvanceSettlementCalculation() {
-            var payment_amount = parseFloat($('#cspayment').val()) || 0;
+            var payment_amount = parseAmount($('#cspayment').val());
             var use_advance = $('#settle-with-advance-table').is(':checked');
             
             // Calculate the shortage (invoice total - payment entered)
-            var shortage_amount = total_invoice_amount - payment_amount;
+            var shortage_amount = roundAmount(total_invoice_amount - payment_amount);
             
             if (use_advance && current_advance_balance > 0 && shortage_amount > 0) {
                 // Amount to adjust from advance = minimum of shortage or available advance
-                var advance_to_use = Math.min(current_advance_balance, shortage_amount);
+                var advance_to_use = roundAmount(Math.min(current_advance_balance, shortage_amount));
                 var remaining_advance = advance_to_use;
                 var cash_payment = payment_amount;
                 var total_advance_allocated = 0;
@@ -647,30 +656,30 @@
                     var $row = $(this);
                     if ($row.find('input[name="payment_amount[]"]').length === 0) return;
 
-                    var due = parseFloat($row.find('input[name="due_amount[]"]').val()) || 0;
-                    var returns = parseFloat($row.find('input[name="return_amount[]"]').val()) || 0;
-                    var discount_pct = parseFloat($row.find('.additional-discount-pct').val()) || 0;
-                    var payable = (due - returns) - ((due - returns) * discount_pct / 100);
+                    var due = parseAmount($row.find('input[name="due_amount[]"]').val());
+                    var returns = parseAmount($row.find('input[name="return_amount[]"]').val());
+                    var discount_pct = parseAmount($row.find('.additional-discount-pct').val());
+                    var payable = roundAmount(roundAmount(due - returns) - roundAmount((roundAmount(due - returns) * discount_pct) / 100));
 
                     // Cash-only allocation stored in data-cash (set by distributePaymentSequentially or manual edit)
-                    var cash_alloc = parseFloat($row.find('input[name="payment_amount[]"]').attr('data-cash')) || 0;
-                    var shortage = payable - cash_alloc;
+                    var cash_alloc = parseAmount($row.find('input[name="payment_amount[]"]').attr('data-cash'));
+                    var shortage = roundAmount(payable - cash_alloc);
                     var advance_alloc = 0;
                     if (remaining_advance > 0 && shortage > 0) {
-                        advance_alloc = Math.min(remaining_advance, shortage);
-                        remaining_advance -= advance_alloc;
+                        advance_alloc = roundAmount(Math.min(remaining_advance, shortage));
+                        remaining_advance = roundAmount(remaining_advance - advance_alloc);
                     }
 
-                    var total_for_row = cash_alloc + advance_alloc;
+                    var total_for_row = roundAmount(cash_alloc + advance_alloc);
                     // Update the input to reflect cash + advance allocation
                     $row.find('input[name="payment_amount[]"]').val(total_for_row.toFixed(4));
                     // Store advance allocation for debugging/reference
                     $row.find('input[name="payment_amount[]"]').attr('data-advance', advance_alloc.toFixed(4));
 
-                    total_advance_allocated += advance_alloc;
+                    total_advance_allocated = roundAmount(total_advance_allocated + advance_alloc);
                 });
 
-                var total_settlement = cash_payment + total_advance_allocated;
+                var total_settlement = roundAmount(cash_payment + total_advance_allocated);
 
                 // Update settlement display
                 $('#cash-payment-amount').text(cash_payment.toFixed(4));
@@ -685,7 +694,7 @@
                 $('#poTable tbody tr').each(function() {
                     var $row = $(this);
                     if ($row.find('input[name="payment_amount[]"]').length === 0) return;
-                    var cash_only = parseFloat($row.find('input[name="payment_amount[]"]').attr('data-cash')) || 0;
+                    var cash_only = parseAmount($row.find('input[name="payment_amount[]"]').attr('data-cash'));
                     $row.find('input[name="payment_amount[]"]').val(cash_only.toFixed(4));
                     $row.find('input[name="payment_amount[]"]').attr('data-advance', '0.0000');
                 });
@@ -716,33 +725,33 @@
                     if ($row.find('input[name="payment_amount[]"]').length === 0) return;
                     $row.find('.total-payable').each(function() {
                         // ensure total-payable is up to date
-                        var due = parseFloat($row.find('input[name="due_amount[]"]').val()) || 0;
-                        var returns = parseFloat($row.find('input[name="return_amount[]"]').val()) || 0;
-                        var discount_pct = parseFloat($row.find('.additional-discount-pct').val()) || 0;
-                        var payable = (due - returns) - ((due - returns) * discount_pct / 100);
-                            $row.find('.total-payable').val(payable.toFixed(4));
+                        var due = parseAmount($row.find('input[name="due_amount[]"]').val());
+                        var returns = parseAmount($row.find('input[name="return_amount[]"]').val());
+                        var discount_pct = parseAmount($row.find('.additional-discount-pct').val());
+                        var payable = roundAmount(roundAmount(due - returns) - roundAmount((roundAmount(due - returns) * discount_pct) / 100));
+                        $row.find('.total-payable').val(payable.toFixed(4));
                     });
-                        $row.find('input[name="payment_amount[]"]').val('0.0000').attr('data-cash', '0.0000');
+                    $row.find('input[name="payment_amount[]"]').val('0.0000').attr('data-cash', '0.0000');
                 });
                 updateTotalsRow();
                 return;
             }
-            var remaining = parseFloat($('#cspayment').val()) || 0;
+            var remaining = parseAmount($('#cspayment').val());
             // Iterate rows in table order and allocate up to each row's payable amount
             $('#poTable tbody tr').each(function() {
                 var $row = $(this);
                 if ($row.find('input[name="payment_amount[]"]').length === 0) return;
-                var due = parseFloat($row.find('input[name="due_amount[]"]').val()) || 0;
-                var returns = parseFloat($row.find('input[name="return_amount[]"]').val()) || 0;
-                var discount_pct = parseFloat($row.find('.additional-discount-pct').val()) || 0;
-                var payable = (due - returns) - ((due - returns) * discount_pct / 100);
+                var due = parseAmount($row.find('input[name="due_amount[]"]').val());
+                var returns = parseAmount($row.find('input[name="return_amount[]"]').val());
+                var discount_pct = parseAmount($row.find('.additional-discount-pct').val());
+                var payable = roundAmount(roundAmount(due - returns) - roundAmount((roundAmount(due - returns) * discount_pct) / 100));
                 // Update the readonly total-payable display
                 $row.find('.total-payable').val(payable.toFixed(4));
 
                 var alloc = 0;
                 if (remaining > 0) {
-                    alloc = Math.min(payable, remaining);
-                    remaining = remaining - alloc;
+                    alloc = roundAmount(Math.min(payable, remaining));
+                    remaining = roundAmount(remaining - alloc);
                 } else {
                     alloc = 0;
                 }
@@ -755,8 +764,8 @@
         }
 
         function updateExcessAdvanceRow() {
-            var payment_amount = parseFloat($('#cspayment').val()) || 0;
-            var excess_amount = payment_amount - total_invoice_amount;
+            var payment_amount = parseAmount($('#cspayment').val());
+            var excess_amount = roundAmount(payment_amount - total_invoice_amount);
             // If park-as-advance selected, entire payment_amount is parked as advance
             if ($('#park-as-advance').is(':checked')) {
                 excess_amount = payment_amount;

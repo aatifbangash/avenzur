@@ -613,18 +613,23 @@ class Customers extends MY_Controller
                 }
                 
                 // Case 4 Check: Ensure payment_total + any advance settlement can cover the selected invoice payments
-                $required_sum = array_sum($payments_array);
-                $available_sum = $payment_total + $advance_settlement_amount;
-                if($required_sum > $available_sum){
-                    $this->session->set_flashdata('error', 'Total payment amount is insufficient to cover selected invoice payments. Required: ' . $required_sum . ', Provided: ' . $available_sum);
+                // Use round() to avoid floating-point precision issues
+                $required_sum = round(array_sum($payments_array), 4);
+                $available_sum = round($payment_total + $advance_settlement_amount, 4);
+                
+                // Use a small tolerance for floating-point comparison (0.01 = 1 cent tolerance)
+                $tolerance = 0.01;
+                if(($required_sum - $available_sum) > $tolerance){
+                    $this->session->set_flashdata('error', 'Total payment amount is insufficient to cover selected invoice payments. Required: ' . number_format($required_sum, 4) . ', Provided: ' . number_format($available_sum, 4));
                     redirect($_SERVER['HTTP_REFERER']);
                 }
+                
                 // Split payment into invoice payment and advance payment
                 $total_invoice_payment = array_sum($payments_array); // Actual amount going to invoices
                 $advance_payment = $cash_payment - $total_invoice_payment; // Excess cash amount
                 
                 $main_payment_id = null;
-
+                
                 // Process invoice payments (if there are any invoices OR if settling with advance)
                 if($total_invoice_payment > 0 || $advance_settlement_amount > 0) {
                     // Validation: Ensure we have some payment method
