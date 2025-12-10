@@ -64,6 +64,7 @@ class AccountList {
       $this->id = $group['id'];
       $this->name = $group['name'];
       $this->code = $group['code'];
+      $this->old_code = '';
       $this->g_parent_id = $group['parent_id'];
       $this->g_affects_gross = $group['affects_gross'];
     }
@@ -176,6 +177,7 @@ class AccountList {
       $this->children_ledgers[$counter]['id']               = $row['id'];
       $this->children_ledgers[$counter]['name']             = $row['name'];
       $this->children_ledgers[$counter]['code']             = $row['code'];
+      $this->children_ledgers[$counter]['old_code']         = $row['old_code'];
       $this->children_ledgers[$counter]['l_group_id']       = $row['group_id'];
       $this->children_ledgers[$counter]['l_type']           = $row['type'];
       $this->children_ledgers[$counter]['l_reconciliation'] = $row['reconciliation'];

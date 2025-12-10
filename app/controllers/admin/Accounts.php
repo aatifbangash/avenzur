@@ -13,7 +13,7 @@ class Accounts extends MY_Controller
 		$this->load->library('form_validation');
     } 
     
-    	public function index() {
+    public function index() {
 		
 		$this->load->library('AccountList');
 		
