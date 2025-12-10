@@ -115,7 +115,13 @@
                     </div> 
                 </div>
                 <div class="col-md-6">
-
+                    <?php
+                        $categories = array('Pharmacy Client' => 'Pharmacy Client', 'Clinic Client' => 'Clinic Client', 'Hospital Client' => 'Hospital Client', 'Rent Client' => 'Rent Client', 'Warehouse Client' => 'Warehouse Client');
+                    ?>
+                    <div class="form-group">
+                        <?= lang('Category', 'category'); ?>
+                        <?php echo form_dropdown('category', $categories, $customer->category, 'class="form-control select" id="category" required="required"'); ?>
+                    </div>
                     <div class="form-group">
                         <?= lang('Ledger Account', 'ledger_account'); ?>
                         <?php
@@ -184,13 +190,7 @@
                         <?= lang('Promessory Note Amount', 'promessory_note_amount'); ?>
                         <?php echo form_input('promessory_note_amount', $customer->promessory_note_amount, 'class="form-control" id="promessory_note_amount"'); ?>
                     </div>
-                    <?php
-                        $categories = array('Pharmacy Client' => 'Pharmacy Client', 'Clinic Client' => 'Clinic Client', 'Hospital Client' => 'Hospital Client', 'Rent Client' => 'Rent Client', 'Warehouse Client' => 'Warehouse Client');
-                    ?>
-                    <div class="form-group">
-                        <?= lang('Category', 'category'); ?>
-                        <?php echo form_dropdown('category', $categories, $customer->category, 'class="form-control select" id="category" required="required"'); ?>
-                    </div>
+                    
                     <?php 
                     $sm[''] = '';
                     foreach ($company_sales_man as $sales_man) {
@@ -305,6 +305,64 @@
         });
         $('select.ledger-dropdown').select2({
             minimumResultsForSearch: 7
+        });
+
+        // Handle category change to auto-populate ledgers
+        $('#category').on('change', function() {
+            var category = $(this).val();
+            
+            if (!category) {
+                return;
+            }
+
+            // Show loading indicator
+            var ledgerFields = ['ledger_account', 'sales_ledger', 'cogs_ledger', 'discount_ledger', 'return_ledger'];
+            $.each(ledgerFields, function(index, fieldId) {
+                $('#' + fieldId).prop('disabled', true);
+            });
+
+            // AJAX call to get ledgers by category
+            $.ajax({
+                url: '<?= admin_url('customers/get_ledgers_by_category'); ?>',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    category: category,
+                    <?= $this->security->get_csrf_token_name(); ?>: '<?= $this->security->get_csrf_hash(); ?>'
+                },
+                success: function(response) {
+                    // Re-enable fields
+                    $.each(ledgerFields, function(index, fieldId) {
+                        $('#' + fieldId).prop('disabled', false);
+                    });
+
+                    if (response.success && response.ledgers) {
+                        // Populate ledger dropdowns
+                        $.each(response.ledgers, function(ledgerField, ledgerValue) {
+                            if (ledgerValue) {
+                                $('#' + ledgerField).val(ledgerValue).trigger('change');
+                                // Revalidate the field
+                                $('form[data-toggle="validator"]').bootstrapValidator('revalidateField', ledgerField);
+                            }
+                        });
+
+                        // Show success notification
+                        toastr.success('Ledgers auto-populated based on category selection', 'Success');
+                    } else {
+                        // Show info message
+                        toastr.info('No previous customer found with this category. Please select ledgers manually.', 'Info');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    // Re-enable fields
+                    $.each(ledgerFields, function(index, fieldId) {
+                        $('#' + fieldId).prop('disabled', false);
+                    });
+                    
+                    console.error('Error fetching ledgers:', error);
+                    toastr.error('Failed to fetch ledgers. Please select manually.', 'Error');
+                }
+            });
         });
 
         fields = $('.modal-content').find('.form-control');
