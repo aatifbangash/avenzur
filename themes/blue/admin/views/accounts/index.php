@@ -16,15 +16,11 @@
       echo print_space($counter);
       echo $account->code;
       echo '</td>';
-      
       echo '<td class="td-group">';
       echo print_space($counter);
       echo $account->name;
       echo '</td>';
-      echo '<td>';
-      echo print_space($counter);
-      echo $account->old_code;
-      echo '</td>';
+
       echo '<td>'.lang('accounts_index_td_label_group').'</td>';
 
       echo '<td style="text-align:center;">-</td>';
@@ -58,15 +54,10 @@
         echo print_space($counter);
         echo anchor('admin/areports/ledgerstatement/ledgerid/'.$data['id'], $data['code']);
         echo '</td>';
-        
         echo '<td class="td-ledger">';
         echo print_space($counter);
         //to change later
         echo anchor('admin/areports/ledgerstatement/ledgerid/'.$data['id'], $data['name']); 
-        echo '</td>';
-        echo '<td class="td-ledger">';
-        echo print_space($counter);
-        echo $data['old_code'] ?? '-';
         echo '</td>';
         echo '<td>'.lang('accounts_index_td_label_ledger').'</td>';
 
@@ -162,7 +153,6 @@
                 echo '<thead>';
                 echo '<th>' . (lang('accounts_index_account_code')) . '</th>';
                 echo '<th>' . (lang('accounts_index_account_name')) . '</th>';
-                echo '<th>' . (lang('Old Code')) . '</th>';
                 echo '<th>' . (lang('accounts_index_type')) . '</th>';
                 echo '<th>' . (lang('accounts_index_op_balance')) . ' (' .$this->mAccountSettings->currency_symbol. ')' . '</th>';
                 echo '<th>' . (lang('accounts_index_cl_balance')) . ' (' .$this->mAccountSettings->currency_symbol. ')' . '</th>';
