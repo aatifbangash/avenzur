@@ -6048,62 +6048,44 @@ if($inv->warning_note != ""){
      */
     public function pdf_zatka_invoice($id = null, $view = null, $save_buffer = null)
     {
-        if (!$id) {
-            $this->session->set_flashdata('error', lang('invoice_not_found'));
-            admin_redirect('sales');
+        $this->sma->checkPermissions();
+        $this->load->library('inv_qrcode');
+
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
         }
 
-        // Get Zatka invoice data from model
-        $data = $this->sales_model->getZatkaInvoiceData($id);
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $inv                 = $this->sales_model->getInvoiceByID($id);
+        if (!$this->session->userdata('view_right')) {
+            $this->sma->view_rights($inv->created_by);
+        }
+        $this->data['barcode']     = "<img src='" . admin_url('products/gen_barcode/' . $inv->reference_no) . "' alt='" . $inv->reference_no . "' class='pull-left' />";
+        $this->data['customer']    = $this->site->getCompanyByID($inv->customer_id);
+        $this->data['payments']    = $this->sales_model->getPaymentsForSale($id);
+        $this->data['biller']      = $this->site->getCompanyByID($inv->biller_id);
+        $this->data['user']        = $this->site->getUser($inv->created_by);
+        $this->data['warehouse']   = $this->site->getWarehouseByID($inv->warehouse_id);
+        $this->data['inv']         = $inv;
+        $this->data['rows']        = $this->sales_model->getAllInvoiceItems($id);
+        $this->data['return_sale'] = $inv->return_id ? $this->sales_model->getInvoiceByID($inv->return_id) : null;
+        $this->data['return_rows'] = $inv->return_id ? $this->sales_model->getAllInvoiceItems($inv->return_id) : null;
+        //$this->data['paypal'] = $this->sales_model->getPaypalSettings();
+        //$this->data['skrill'] = $this->sales_model->getSkrillSettings();
+
+        $name = lang('sale') . '_' . str_replace('/', '_', $inv->reference_no) . '.pdf';
+        $html = $this->load->view($this->theme . 'sales/zatka_invoice_template', $this->data, true);
         
-        if (!$data) {
-            $this->session->set_flashdata('error', lang('invoice_not_found'));
-            admin_redirect('sales');
+        if (!$this->Settings->barcode_img) {
+            $html = preg_replace("'\<\?xml(.*)\?\>'", '', $html);
         }
 
-        // Generate QR Code for Zatka compliance
-        $qr_payload = [
-            'seller_name' => $data['seller']['name_ar'],
-            'vat_number' => $data['seller']['tax_id'],
-            'invoice_date' => $data['invoice_date'],
-            'invoice_total' => $data['totals']['grand_total'],
-            'tax_amount' => $data['totals']['tax_amount']
-        ];
-        
-        $qr_text = json_encode($qr_payload);
-        $qr_code = $this->sma->qrcodepng('text', $qr_text, 2, 'H', null, false);
-        $qr_base64 = base64_encode($qr_code);
-        $data['qr_code_image'] = '<img src="data:image/png;base64,' . $qr_base64 . '" style="width: 60px; height: 60px;" />';
-
-        // If view parameter is set, display in browser
         if ($view) {
-            $this->load->view($this->theme . 'sales/zatka_invoice', $data);
-            return;
-        }
-
-        // Generate PDF
-        $html = $this->load->view($this->theme . 'sales/zatka_invoice', $data, true);
-
-        $mpdf = new Mpdf([
-            'mode' => 'utf-8',
-            'format' => 'A4',
-            'orientation' => 'P',
-            'margin_top' => 10,
-            'margin_bottom' => 10,
-            'margin_left' => 6,
-            'margin_right' => 6
-        ]);
-
-        $mpdf->SetTitle('Zatka Invoice - ' . $data['invoice_number']);
-        $mpdf->SetAuthor($data['seller']['name_en']);
-        $mpdf->WriteHTML($html);
-
-        $filename = 'zatka_invoice_' . str_replace('/', '_', $data['invoice_number']) . '.pdf';
-
-        if ($save_buffer) {
-            return $mpdf->Output($filename, 'S'); // return as string
+            $this->load->view($this->theme . 'sales/zatka_invoice_template', $this->data);
+        } elseif ($save_bufffer) {
+            return $this->sma->generate_pdf($html, $name, $save_bufffer, $this->data['biller']->invoice_footer);
         } else {
-            $mpdf->Output($filename, 'D'); // download
+            $this->sma->generate_pdf($html, $name, false, $this->data['biller']->invoice_footer);
         }
     }
 
