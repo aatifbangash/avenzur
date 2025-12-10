@@ -2409,5 +2409,50 @@ class Customers extends MY_Controller
         
         return 0;
     }
+
+    /**
+     * Get ledgers by category
+     * Fetch ledgers from existing customers with the same category
+     */
+    public function get_ledgers_by_category()
+    {
+        $category = $this->input->post('category');
+        
+        if (!$category) {
+            echo json_encode(['success' => false, 'message' => 'Category is required']);
+            return;
+        }
+
+        // Get the most recent customer with this category that has ledger data
+        $this->db->select('ledger_account, sales_ledger, cogs_ledger, discount_ledger, return_ledger');
+        $this->db->from('sma_companies');
+        $this->db->where('category', $category);
+        $this->db->where('group_name', 'customer');
+        $this->db->where('ledger_account IS NOT NULL');
+        $this->db->where('ledger_account !=', '');
+        $this->db->order_by('id', 'DESC');
+        $this->db->limit(1);
+        
+        $query = $this->db->get();
+        
+        if ($query->num_rows() > 0) {
+            $result = $query->row();
+            echo json_encode([
+                'success' => true,
+                'ledgers' => [
+                    'ledger_account' => $result->ledger_account,
+                    'sales_ledger' => $result->sales_ledger,
+                    'cogs_ledger' => $result->cogs_ledger,
+                    'discount_ledger' => $result->discount_ledger,
+                    'return_ledger' => $result->return_ledger
+                ]
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No existing customer found with this category'
+            ]);
+        }
+    }
 }
 
