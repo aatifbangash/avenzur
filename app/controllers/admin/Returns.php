@@ -1317,9 +1317,9 @@ class Returns extends MY_Controller
                 ->from('returns');
         }
 
-        if (!$this->Owner && !$this->Admin) {
+        //if (!$this->Owner && !$this->Admin) {
             $this->datatables->where('created_by', $this->session->userdata('user_id'));
-        }
+        //}
        
         $edit_link         = anchor('admin/returns/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_return'), 'class="tip"');
         $delete_link       = "<a href='#' class='po' title='<b>" . lang('delete_return') . "</b>' data-content=\"<p>"
