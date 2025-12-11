@@ -4230,7 +4230,7 @@ if($inv->warning_note != ""){
 
 
             $mpdf->WriteHTML($html);
-            $mpdf->Output("Picker_Invoice.pdf", "I");
+            $mpdf->Output("Picker_Invoice.pdf", "D");
     }
 
     public function pdf_sale_order($id = null, $view = null, $save_bufffer = null)
