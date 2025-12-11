@@ -724,6 +724,103 @@ class Sales_model extends CI_Model
         return false;
     }
 
+    public function getAllPickerItems($sale_id)
+    {
+        // 1. Fetch sale items
+        $this->db->select("
+            sale_items.*,
+            products.image,
+            products.details,
+            products.unit as base_unit_id,
+            units.code as base_unit_code,
+            tax_rates.name AS tax_name,
+            tax_rates.rate AS tax_rate
+        ")
+        ->join('products', 'products.id = sale_items.product_id', 'left')
+        ->join('tax_rates', 'tax_rates.id = sale_items.tax_rate_id', 'left')
+        ->join('units', 'units.id = products.unit', 'left')
+        ->where('sale_id', $sale_id);
+
+        $saleItems = $this->db->get('sale_items')->result();
+
+        if (!$saleItems) return false;
+
+        $final = [];
+
+        foreach ($saleItems as $item) {
+
+            $neededQty = $item->quantity;
+            $allocated  = [];
+
+            // 2. Fetch ALL batches for product (with shelf)
+            $batches = $this->db->select("
+                im.id AS movement_id,
+                im.avz_item_code,
+                im.product_id,
+                im.batch_number,
+                im.expiry_date,
+                im.quantity AS movement_qty,
+                sps.box_number,
+                sps.zone_number,
+                sps.rack_number,
+                im.shelf_id
+            ")
+            ->from("inventory_movements im")
+            ->join("sma_purchase_order_shelving sps", "sps.id = im.shelf_id", "left")
+            ->where("im.product_id", $item->product_id)
+            ->where("im.quantity >", 0)  // only positive stock movements
+            ->order_by("im.expiry_date", "ASC") // nearest expiry
+            ->get()->result();
+
+            // 3. Handle no batches
+            if (!$batches) {
+                $item->picker_batches = [];
+                $final[] = $item;
+                continue;
+            }
+
+            // 4. For each batch, calculate net available stock (= movement qty - sum sold)
+            foreach ($batches as $b) {
+
+                // Calculate sold qty for the same avz_item_code
+                $sold = $this->db->select_sum('quantity')
+                    ->from('sale_items')
+                    ->where('avz_item_code', $b->avz_item_code)
+                    ->get()->row()->quantity;
+
+                $sold = $sold ? $sold : 0;
+
+                $available = $b->movement_qty - $sold;
+
+                if ($available <= 0) continue;
+
+                // 5. Allocate from this batch
+                if ($neededQty > 0) {
+
+                    $pick = min($neededQty, $available);
+
+                    $allocated[] = (object) [
+                        'avz_item_code' => $b->avz_item_code,
+                        'batch_number'      => $b->batch_number,
+                        'expiry_date'        => $b->expiry_date,
+                        'pick_qty'      => $pick,
+                        'box_number'    => $b->box_number,
+                        'zone_number'   => $b->zone_number,
+                        'rack_number'   => $b->rack_number,
+                        'shelf_id'      => $b->shelf_id
+                    ];
+
+                    $neededQty -= $pick;
+                }
+            }
+
+            // 6. Assign the allocated structure to item
+            $item->picker_batches = $allocated;
+            $final[] = $item;
+        }
+        return $final;
+    }
+
     public function getAllInvoiceItems($sale_id, $return_id = null, $sale = null)
     {
         if($sale == null){

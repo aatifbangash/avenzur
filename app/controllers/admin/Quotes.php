@@ -1480,7 +1480,7 @@ class Quotes extends MY_Controller
                             $action .= '<li>' . $edit_link . '</li>';
                         }
                         if($this->Admin || $this->Owner || $this->GP['sales-add']){
-                            if($this->Settings->site_name == 'Hills Business Medical' || $this->Settings->site_name == 'Demo Company'){
+                            if($this->Settings->site_name == 'Hills Business Medical' || $this->Settings->site_name == 'Demo Company' || $this->Settings->site_name == 'Avnzor'){
                                 $action .= '<li>' . $convert_link . '</li>';
                             }
                         } 

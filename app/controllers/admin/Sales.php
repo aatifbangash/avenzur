@@ -3693,6 +3693,7 @@ class Sales extends MY_Controller
         $pdf_link          = anchor('admin/sales/pdf_new/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf'));
         $zatka_invoice_link = anchor('admin/sales/pdf_zatka_invoice/$1', '<i class="fa fa-file-text-o"></i> Zatka Invoice', 'target="_blank"');
         $sale_order_link   = anchor('admin/sales/pdf_sale_order/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_sale_order'));
+        $order_picker_link   = anchor('admin/sales/pdf_order_picker/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('Download_Picking_Pdf'));
         $return_link       = anchor('admin/returns/add/?sale=$1', '<i class="fa fa-angle-double-left"></i> ' . lang('return_sale'));
         //$shipment_link     = anchor('$1', '<i class="fa fa-angle-double-left"></i> ' . lang('Shipping_Slip'));
         $delete_link       = "<a href='#' class='po' title='<b>" . lang('delete_sale') . "</b>' data-content=\"<p>"
@@ -3701,7 +3702,7 @@ class Sales extends MY_Controller
         . lang('delete_sale') . '</a>';
         $journal_entry_link      = anchor('admin/entries/view/journal/?sid=$1', '<i class="fa fa-eye"></i> ' . lang('Journal Entry'));
         
-       if(isset($this->GP) && $this->Accountant)
+        if(isset($this->GP) && $this->Accountant)
         {
             $action = '<div class="text-center"><div class="btn-group text-left">'
                 . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
@@ -3714,7 +3715,7 @@ class Sales extends MY_Controller
                     <li>' . $journal_entry_link . '</li>
                 </ul>
             </div></div>';
-        }if(isset($this->GP) && $this->WarehouseSupervisor)
+        }else if(isset($this->GP) && $this->Settings->site_name == 'Avnzor' && $this->sma->in_group('warehouseofficer'))
         {
 
             $action = '<div class="text-center"><div class="btn-group text-left">'
@@ -3723,7 +3724,19 @@ class Sales extends MY_Controller
                 <ul class="dropdown-menu pull-right" role="menu">
                     
                     <li>' . $detail_link . '</li>
-                    <li>' . $zatka_invoice_link . '</li>
+                    <li>' . $return_link . '</li>
+                    <li>' . $order_picker_link . '</li>
+                </ul>
+            </div></div>';
+        }else if(isset($this->GP) && $this->Settings->site_name == 'Hills Business Medical' && $this->sma->in_group('warehouseofficer'))
+        {
+
+            $action = '<div class="text-center"><div class="btn-group text-left">'
+                . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+                . lang('actions') . ' <span class="caret"></span></button>
+                <ul class="dropdown-menu pull-right" role="menu">
+                    
+                    <li>' . $detail_link . '</li>
                     <li>' . $return_link . '</li>
                     <li>' . $sale_order_link . '</li>
                 </ul>
@@ -4025,6 +4038,199 @@ class Sales extends MY_Controller
         } else {
             $this->sma->generate_pdf($html, $name, 'I', $this->data['biller']->invoice_footer);
         }
+    }
+
+    public function pdf_order_picker($id = null, $view = null, $save_bufffer = null){
+        $this->load->library('inv_qrcode');
+
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $inv                 = $this->sales_model->getInvoiceByID($id);
+        if (!$this->GP['sales-index']) {
+            $this->sma->view_rights($inv->created_by);
+        }
+        $this->data['barcode']     = "<img src='" . admin_url('products/gen_barcode/' . $inv->reference_no) . "' alt='" . $inv->reference_no . "' class='pull-left' />";
+        $this->data['customer']    = $this->site->getCompanyByID($inv->customer_id);
+        $this->data['payments']    = $this->sales_model->getPaymentsForSale($id);
+        $this->data['biller']      = $this->site->getCompanyByID($inv->biller_id);
+        $biller = $this->site->getCompanyByID($inv->biller_id);
+        $customer = $this->data['customer'] ;
+        $this->data['user']        = $this->site->getUser($inv->created_by);
+        $this->data['warehouse']   = $this->site->getWarehouseByID($inv->warehouse_id);
+        $this->data['inv']         = $inv;
+        $this->data['rows']        = $this->sales_model->getAllPickerItems($id);
+        
+        $name = lang('sale') . '_' . str_replace('/', '_', $inv->reference_no) . '.pdf';
+        $html = $this->load->view($this->theme . 'sales/pdf/picker_invoice', $this->data, true);
+        
+        if (!$this->Settings->barcode_img) {
+            $html = preg_replace("'\<\?xml(.*)\?\>'", '', $html);
+        }
+
+        // Generate QR code Base64 string
+       if ($this->Settings->ksa_qrcode) {
+            $payload = [
+                'seller' => $biller->company && $biller->company != '-' ? $biller->company : $biller->name,
+                'vat_no' => $biller->vat_no ?: $biller->get_no,
+                'date' => $inv->date,
+                'grand_total' => $return_sale ? ($inv->grand_total + $return_sale->grand_total) : $inv->grand_total,
+                'total_tax_amount' => $return_sale ? ($inv->total_tax + $return_sale->total_tax) : $inv->total_tax,
+            ];
+
+            // Convert to JSON directly
+            $qrtext = json_encode($payload);
+            $qr_code = $this->sma->qrcodepng('text', $qrtext, 2, $level = 'H', $sq = null, $svg = false);
+           //echo $qr_code;exit;
+            $png_base64 = base64_encode($qr_code);
+            
+        } else {
+            $qr_code = $this->sma->qrcode('link', urlencode(site_url('view/sale/' . $inv->hash)), 2);
+        }
+
+        $mpdf = new Mpdf([
+        'format' => 'A4',
+        'margin_top' => 70,
+        'margin_bottom' => 70,
+        ]);
+
+        $mpdf->SetHTMLHeader('
+<div style="width:100%; font-family: DejaVu Sans, sans-serif; font-size:11px;">
+
+    <!-- TOP BAR WITH PAGE NUMBER -->
+    <div style="width:100%; overflow:hidden; font-size:10px; color:#666; margin-bottom:3px;">
+        <div style="float:right; text-align:right;">
+            Page {PAGENO} of {nbpg}
+        </div>
+    </div>
+
+    <!-- INVOICE INFO & BARCODE -->
+    <div style="width:100%; background-color:#f6f6f6; padding:5px 8px; margin-bottom:5px; overflow:hidden; font-size:11px;">
+
+        <!-- Left: Invoice Info -->
+        <div style="float:left; width:55%;">
+            <p style="margin:2px 0;"><strong>Date:</strong> ' . $this->sma->hrld($inv->date) . '</p>
+            <p style="margin:2px 0;"><strong>Reference:</strong> ' . date("Y") . '/' . $inv->id . '</p>
+        </div>
+
+        <!-- Right: Barcode and QR -->
+        <div style="float:right; width:40%; text-align:right;">
+            <img src="' . admin_url('misc/barcode/' . $this->sma->base64url_encode($inv->reference_no) . '/code128/74/0/1') . '"
+                alt="' . $inv->reference_no . '" style="height:40px; vertical-align:top; margin-right:5px;"/>
+            
+            <img src="data:image/png;base64,' . $png_base64 . '" width="50" height="50" />
+        </div>
+
+    </div>
+
+    <!-- TO & FROM BLOCK -->
+    <div style="width:100%; overflow:hidden; margin-top:10px; font-size:11px;">
+        <!-- TO -->
+        <div style="float:left; width:48%; vertical-align:top;">
+            <p style="margin:2px 0;"><strong>To:</strong> '.$customer->name .'</p>
+            <p style="margin:2px 0;">Address: '. $customer->address .'</p>
+            <p style="margin:2px 0;">City: '. $customer->city .'</p>
+            <p style="margin:2px 0;">Tel: '. $customer->phone .'</p>
+            <p style="margin:2px 0;">Email: '. $customer->email .'</p>
+        </div>
+
+        <!-- FROM -->
+        <div style="float:right; width:48%; vertical-align:top;">
+            <p style="margin:2px 0;"><strong>From:</strong> '.  $biller->name .'</p>
+            <p style="margin:2px 0;">Address: '. $biller->address .'</p>
+            <p style="margin:2px 0;">City: '. $biller->city .'</p>
+            <p style="margin:2px 0;">Tel: '. $biller->phone .'</p>
+            <p style="margin:2px 0;">Email: '. $biller->email .'</p>
+        </div>
+    </div>
+
+    <hr style="margin:8px 0 0 0; border-top:1px solid #000;">
+</div>
+');
+
+if($inv->warning_note != ""){
+    $note_text = 'Note:';
+}else{
+    $note_text = '';
+}
+
+    $footer_table = '';
+    $footer_note = '';
+    if($this->Settings->site_name == 'Hills Business Medical' && $this->Settings->site_name != 'Demo Company'){
+        $footer_table = '<div style="width:60%; float:left; text-align:left; margin-bottom:15px;">
+            <table class="table-label" border="1"  cellspacing="0" cellpadding="10" width="100%" style="border-collapse:collapse; font-size: 10px">
+                <tr><td colspan="3" style="text-align: center; vertical-align: middle; background-color: #f2f2f2; font-size: 20px;">'.$inv->id.'</td> <td colspan="3">فريق التحضير</td></tr>
+                <tr><td colspan="3">تحضير بداية</td> <td colspan="3">تحضير نهاية</td></tr>
+                <tr><td colspan="2">بداية تشييك</td> <td colspan="2">اسم المشيك</td> <td colspan="2">كمرا</td></tr>
+                <tr><td colspan="2">عدد كرتون</td> <td colspan="2">ربطة الثلاجة</td> <td colspan="2">خطأ</td></tr>
+            </table>
+        </div>';
+    }else{
+        $footer_table = '<div style="width:60%; float:left; text-align:left; margin-bottom:15px;">
+            <table class="table-label" border="1"  cellspacing="0" cellpadding="10" width="100%" style="border-collapse:collapse; font-size: 10px">
+                <tr><td colspan="3" style="text-align: center; vertical-align: middle; background-color: #f2f2f2; font-size: 20px;">'.$inv->id.'</td> <td colspan="3">فريق التحضير</td></tr>
+                <tr><td colspan="3">تحضير بداية</td> <td colspan="3">تحضير نهاية</td></tr>
+                <tr><td colspan="2">بداية تشييك</td> <td colspan="2">اسم المشيك</td> <td colspan="2">كمرا</td></tr>
+                <tr><td colspan="2">عدد كرتون</td> <td colspan="2">ربطة الثلاجة</td> <td colspan="2">خطأ</td></tr>
+            </table>
+        </div>';
+    }
+        
+    $mpdf->SetHTMLFooter('
+    <hr style="margin-bottom:5px;">
+
+    <div style="width:100%; font-size:12px; font-family: DejaVu Sans, sans-serif;">
+
+        <!-- Notes Section (Left) -->
+        '.$footer_note.'
+
+        <!-- Totals Table -->
+        <div style="width:35%; float:right; text-align:left; margin-bottom:15px;">
+            <table border="1" cellpadding="4" cellspacing="0" width="100%" style="border-collapse:collapse;">
+                <tr><td>Total</td><td>'.$this->sma->formatNumber($inv->total).'</td></tr>
+                <tr><td>T-DISC</td><td>'.$this->sma->formatNumber($inv->total_discount).'</td></tr>
+                <tr><td>Net Before VAT</td><td>'.$this->sma->formatNumber($inv->total_net_sale).'</td></tr>
+                <tr><td>Total VAT</td><td>'.$this->sma->formatNumber($inv->total_tax).'</td></tr>
+                <tr><td><strong>Total After VAT</strong></td><td><strong>'.$this->sma->formatNumber($inv->grand_total).'</strong></td></tr>
+            </table>
+        </div>
+
+        <!-- Totals Table -->
+        '.$footer_table.'
+
+        <!-- Signature Section -->
+        <div style="width:100%; overflow:hidden; margin-top:50px; font-size:12px;">
+            
+            <div style="float:left; width:24%; text-align:center;">
+                <p>_________________________</p>
+                <p><strong>STORE KEEPER</strong></p>
+            </div>
+
+            <div style="float:right; width:24%; text-align:center;">
+                <p>_________________________</p>
+                <p><strong>SALES MANAGER</strong></p>
+            </div>
+
+            <div style="float:right; width:24%; text-align:center;">
+                <p>_________________________</p>
+                <p><strong>RECEIVED BY</strong></p>
+            </div>
+
+            <div style="float:right; width:24%; text-align:center;">
+                <p>_________________________</p>
+                <p><strong>SIGNATURE</strong></p>
+            </div>
+
+        </div>
+    </div>
+');
+
+
+
+            $mpdf->WriteHTML($html);
+            $mpdf->Output("Picker_Invoice.pdf", "I");
     }
 
     public function pdf_sale_order($id = null, $view = null, $save_bufffer = null)
