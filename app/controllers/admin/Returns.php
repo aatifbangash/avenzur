@@ -1318,7 +1318,7 @@ class Returns extends MY_Controller
         }
 
         //if (!$this->Owner && !$this->Admin) {
-            $this->datatables->where('created_by', $this->session->userdata('user_id'));
+        //    $this->datatables->where('created_by', $this->session->userdata('user_id'));
         //}
        
         $edit_link         = anchor('admin/returns/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_return'), 'class="tip"');
