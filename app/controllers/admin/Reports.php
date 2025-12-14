@@ -599,18 +599,18 @@ class Reports extends MY_Controller
             $total_quantity = $total_sale = $total_purchase = $total_cost = 0;
             foreach ($data as $data_row) {
                 $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->item_code);
-                $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->itm_code);
-                $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->avz_item_code);
-                $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->name);
-                $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->batch_no);
-                $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->expiry);
-                $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data_row->quantity);
-                $this->excel->getActiveSheet()->SetCellValue('G' . $row, ($data_row->sale_price));
-                $this->excel->getActiveSheet()->SetCellValue('H' . $row, ($data_row->sale_price * $data_row->quantity));
-                $this->excel->getActiveSheet()->SetCellValue('I' . $row, ($data_row->purchase_price));
-                $this->excel->getActiveSheet()->SetCellValue('J' . $row, ($data_row->purchase_price * $data_row->quantity));
-                $this->excel->getActiveSheet()->SetCellValue('K' . $row, ($data_row->cost_price));
-                $this->excel->getActiveSheet()->SetCellValue('L' . $row, ($data_row->cost_price * $data_row->quantity));
+                $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->itm_code);
+                $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->avz_item_code);
+                $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->name);
+                $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->batch_no);
+                $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data_row->expiry);
+                $this->excel->getActiveSheet()->SetCellValue('G' . $row, $data_row->quantity);
+                $this->excel->getActiveSheet()->SetCellValue('H' . $row, ($data_row->sale_price));
+                $this->excel->getActiveSheet()->SetCellValue('I' . $row, ($data_row->sale_price * $data_row->quantity));
+                $this->excel->getActiveSheet()->SetCellValue('J' . $row, ($data_row->purchase_price));
+                $this->excel->getActiveSheet()->SetCellValue('K' . $row, ($data_row->purchase_price * $data_row->quantity));
+                $this->excel->getActiveSheet()->SetCellValue('L' . $row, ($data_row->cost_price));
+                $this->excel->getActiveSheet()->SetCellValue('M' . $row, ($data_row->cost_price * $data_row->quantity));
                 
                 $total_quantity += $data_row->quantity;
                 $row++;
