@@ -2188,6 +2188,7 @@ class Reports_model extends CI_Model
 
         $stockQuery = " SELECT p.id,
             p.code item_code, 
+            p.item_code as itm_code,
             p.name as name, 
             inv.avz_item_code,
             inv.batch_number as batch_no,
@@ -2281,6 +2282,7 @@ class Reports_model extends CI_Model
 
         $stockQuery = " SELECT p.id,
             p.code item_code, 
+            p.item_code as itm_code,
             p.name as name, 
             inv.avz_item_code,
             inv.batch_number as batch_no,

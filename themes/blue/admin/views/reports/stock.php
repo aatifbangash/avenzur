@@ -196,6 +196,7 @@
                             <tr>
                                 <th>#</th>
                                 <th><?= lang('Item Code'); ?></th>
+                                <th><?= lang('Old Code'); ?></th>
                                 <th><?= lang('Avz Code'); ?></th>
                                 <th><?= lang('Item Name'); ?></th>
                                 <th><?= lang('Batch No'); ?></th>
@@ -234,6 +235,7 @@
                                     <tr>
                                         <td><?= $offset+ $index + 1 ?></td>
                                         <td><?= $row->item_code ?></td>
+                                        <td><?= $row->itm_code ?></td>
                                         <td><?= $row->avz_item_code ?></td>
                                         <td><?= $row->name ?></td>
                                         <td><?= $row->batch_no ?></td>
