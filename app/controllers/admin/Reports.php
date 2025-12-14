@@ -582,22 +582,24 @@ class Reports extends MY_Controller
             $this->excel->setActiveSheetIndex(0);
             $this->excel->getActiveSheet()->setTitle(lang('stock_report'));
             $this->excel->getActiveSheet()->SetCellValue('A1', lang('Item Code'));
-            $this->excel->getActiveSheet()->SetCellValue('B1', lang('Avz Code'));
-            $this->excel->getActiveSheet()->SetCellValue('C1', lang('Item Name'));
-            $this->excel->getActiveSheet()->SetCellValue('D1', lang('Batch'));
-            $this->excel->getActiveSheet()->SetCellValue('E1', lang('Expiry'));
-            $this->excel->getActiveSheet()->SetCellValue('F1', lang('Quantity'));
-            $this->excel->getActiveSheet()->SetCellValue('G1', lang('Sale Price'));
-            $this->excel->getActiveSheet()->SetCellValue('H1', lang('Total Sale'));
-            $this->excel->getActiveSheet()->SetCellValue('I1', lang('Purchase Price'));
-            $this->excel->getActiveSheet()->SetCellValue('J1', lang('Total Purchase'));
-            $this->excel->getActiveSheet()->SetCellValue('K1', lang('Cost Price'));
-            $this->excel->getActiveSheet()->SetCellValue('L1', lang('Total Cost'));
+            $this->excel->getActiveSheet()->SetCellValue('B1', lang('Old Code'));
+            $this->excel->getActiveSheet()->SetCellValue('C1', lang('Avz Code'));
+            $this->excel->getActiveSheet()->SetCellValue('D1', lang('Item Name'));
+            $this->excel->getActiveSheet()->SetCellValue('E1', lang('Batch'));
+            $this->excel->getActiveSheet()->SetCellValue('F1', lang('Expiry'));
+            $this->excel->getActiveSheet()->SetCellValue('G1', lang('Quantity'));
+            $this->excel->getActiveSheet()->SetCellValue('H1', lang('Sale Price'));
+            $this->excel->getActiveSheet()->SetCellValue('I1', lang('Total Sale'));
+            $this->excel->getActiveSheet()->SetCellValue('J1', lang('Purchase Price'));
+            $this->excel->getActiveSheet()->SetCellValue('K1', lang('Total Purchase'));
+            $this->excel->getActiveSheet()->SetCellValue('L1', lang('Cost Price'));
+            $this->excel->getActiveSheet()->SetCellValue('M1', lang('Total Cost'));
 
             $row = 2;
             $total_quantity = $total_sale = $total_purchase = $total_cost = 0;
             foreach ($data as $data_row) {
                 $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->item_code);
+                $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->itm_code);
                 $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->avz_item_code);
                 $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->name);
                 $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->batch_no);
