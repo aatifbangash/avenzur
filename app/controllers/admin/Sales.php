@@ -6281,7 +6281,7 @@ if($inv->warning_note != ""){
 
         $name = lang('sale') . '_' . str_replace('/', '_', $inv->reference_no) . '.pdf';
         $html = $this->load->view($this->theme . 'sales/zatka_invoice_template', $this->data, true);
-        
+        //echo $html;exit;
         if (!$this->Settings->barcode_img) {
             $html = preg_replace("'\<\?xml(.*)\?\>'", '', $html);
         }
