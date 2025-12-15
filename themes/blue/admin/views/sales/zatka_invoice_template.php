@@ -4,11 +4,12 @@
 <meta charset="UTF-8">
 <style>
 body {
-    font-family: 'XBRiyaz', 'DejaVu Sans', sans-serif;
+    font-family: 'Cairo', 'DejaVu Sans', sans-serif;
     font-size: 9px;
     margin: 0;
     padding: 0;
     line-height: 1.2;
+    letter-spacing: 0.1px;
 }
 
 .page {
@@ -152,18 +153,18 @@ div.box-content span {
     <td width="20%" align="center">
         <div style="height:100px; display:flex; align-items:center; justify-content:center;">
             <?php
-            if ($Settings->ksa_qrcode) {
-                $qrtext = $this->inv_qrcode->base64([
-                    'seller' => $biller->company && $biller->company != '-' ? $biller->company : $biller->name,
-                    'vat_no' => $biller->vat_no ?: $biller->get_no,
-                    'date' => $inv->date,
-                    'grand_total' => $return_sale ? ($inv->grand_total + $return_sale->grand_total) : $inv->grand_total,
-                    'total_tax_amount' => $return_sale ? ($inv->total_tax + $return_sale->total_tax) : $inv->total_tax,
-                ]);
-                echo $this->sma->qrcode('text', $qrtext, 2);
-            } else {
-                echo $this->sma->qrcode('link', urlencode(site_url('view/sale/' . $inv->hash)), 2);
-            }
+            // Custom readable QR code format
+            $company_name = $biller->name_ar && $biller->name_ar != '-' ? $biller->name_ar : $biller->name;
+            $vat_number = $biller->vat_no ?: $biller->get_no;
+            $invoice_no = $inv->reference_no;
+            $invoice_date = date('d/m/Y H:i:s', strtotime($inv->date));
+            $grand_total = $return_sale ? ($inv->grand_total + $return_sale->grand_total) : $inv->grand_total;
+            $total_tax = $return_sale ? ($inv->total_tax + $return_sale->total_tax) : $inv->total_tax;
+            $invoice_id = $inv->id;
+            
+            $qr_data = "#" . $vat_number . "_" . $company_name . "_" . $invoice_no . "_" . $invoice_date . "_" . number_format($grand_total, 2, '.', '') . "_SAR_Tax:" . number_format($total_tax, 2, '.', '') . "#" . $invoice_id . "#";
+            
+            echo $this->sma->qrcode('text', $qr_data, 2);
             ?>
         </div>
     </td>
@@ -177,7 +178,7 @@ div.box-content span {
     </td>
     <td width="20%" height="100">
         <div style="text-align:center; margin-bottom:5px;">
-            <img src="data:image/png;base64,' . base64_encode(file_get_contents(base_url() . 'assets/uploads/logos/' . $biller->logo)) . '"
+            <img src="<?= base_url() . 'assets/uploads/logos/' . $biller->logo ?>"
                 alt="Avenzur" style="max-width:120px; height:auto;">
             
         </div>
@@ -335,7 +336,7 @@ div.box-content span {
 <table class="items-table">
 <thead>
 <tr>
-    <th width="43%">
+    <th width="39%">
         <div class="box">
             <div class="box-content">
                 <span> وصف </span>
@@ -352,7 +353,7 @@ div.box-content span {
             </div>
         </div>
     </th>
-    <th width="13%">
+    <th width="15%">
         <div class="box">
             <div class="box-content"> 
                 <span class="header-line">خصم 1</span>
@@ -370,7 +371,7 @@ div.box-content span {
             </div>
         </div>
     </th>
-    <th width="18%">
+    <th width="20%">
         <div class="box">
             <div class="box-content">
                 <span class="header-line">نسبة الضريبة % | قيمة الضريبة</span>
