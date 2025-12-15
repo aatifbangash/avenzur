@@ -1,289 +1,520 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Invoice Layout</title>
+<meta charset="UTF-8">
 <style>
-  body {
-    font-family: Arial, sans-serif;
+body {
+    font-family: 'XBRiyaz', 'DejaVu Sans', sans-serif;
+    font-size: 9px;
     margin: 0;
-    padding: 20px;
-    background: #f5f5f5;
-  }
-  .page {
-    width: 850px;
-    margin: 0 auto 40px auto;
-    background: #fff;
-    padding: 30px;
-  }
+    padding: 0;
+    line-height: 1.2;
+}
 
-  /* --- HEADER SECTION --- */
-  .top-section {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .qr-box {
-    width: 120px;
-    height: 120px;
-    background: #e0e0e0;
-    border-radius: 10px;
-  }
-  .center-title-box {
-    text-align: center;
-  }
-  .rounded-title {
-    display: inline-block;
-    padding: 10px 25px;
-    border: 2px solid #000;
-    border-radius: 20px;
-    font-size: 22px;
-    font-weight: bold;
-    margin-bottom: 10px;
-  }
-  .invoice-details-box {
-    border: 2px solid #000;
-    border-radius: 15px;
-    padding: 10px 20px;
-    margin-top: 10px;
-    display: inline-block;
-  }
+.page {
+    width: 100%;
+    padding: 2px 10px;
+    margin: 0;
+}
 
-  /* --- SUPPLIER / CUSTOMER SECTION --- */
-  .two-box-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-top: 25px;
-  }
-  .big-rounded-box {
-    border: 1px solid #000;
-    border-radius: 20px;
-    padding: 20px;
-  }
-  .big-title {
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 15px;
-    text-align: center;
-  }
-
-  .inner-field {
-    display: flex;
-    margin-bottom: 10px;
-  }
-  .inner-label {
-    width: 150px;
-    padding: 6px;
-    border: 1px solid #000;
-    border-radius: 10px;
-    font-weight: bold;
-    margin-right: 10px;
-  }
-  .inner-label-description{
-    /* width: 150px; */
-    padding: 6px;
-    border: 1px solid #000;
-    border-radius: 10px;
-    font-weight: bold;
-    padding: 27px;
-    /* margin-right: 10px; */
-  }
-  .inner-value {
-    flex: 1;
-    padding: 6px;
-    border: 1px solid #000;
-    border-radius: 10px;
-  }
-
-  /* TABLE */
-  table {
+/* MAIN TABLES */
+.table-main {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 25px;
-    font-size: 12px;
-  }
-  table th, table td {
-    border: none;
-    /* padding: 4px; */
+    margin-bottom: 5px;
+}
+
+.table-main td {
+    vertical-align: top;
+    padding: 2px;
+    line-height: 1.2;
+}
+
+/* Customer/Supplier detail tables */
+.table-main table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.table-main table td {
+    vertical-align: middle;
+    padding: 1px;
+    line-height: 1.1;
+    height: 18px;
+}
+
+/* TITLE */
+.title {
+    font-size: 18px;
+    font-weight: bold;
     text-align: center;
-  }
+    border: 2px solid #000;
+    border-radius: 10px;
+    padding: 6px 20px;
+    display: inline-block;
+}
+
+/* ITEMS TABLE */
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    table-layout: fixed;
+}
+
+.items-table th, .items-table td {
+    text-align: center;
+    vertical-align: middle;
+    padding: 2px;
+    
+}
+
+.items-table th div{ 
+    padding: 4px 2px;
+    height: 70px;
+    box-sizing: border-box;
+    text-align: center;
+    line-height: 1.3;
+    overflow: hidden;
+}
+
+.items-table td div {
+    padding: 4px 2px;
+    height: 70px;
+    box-sizing: border-box;
+    text-align: center;
+    line-height: 1.3;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.items-table th {
+    font-weight: bold;
+}
+
+.header-line {
+    border-bottom: 1px solid #000;
+    width: 100%;
+    display: block;
+    padding: 2px 0;
+    margin: 0;
+}
+
+div.box {
+    border: 1px solid #000;
+    border-radius: 8px;
+    height: 70px;
+    padding: 4px 2px;
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+div.box-content {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+div.box-content span {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Description column can wrap */
+.items-table td:first-child div.box-content span,
+.items-table th:first-child div.box-content span {
+    white-space: normal;
+    font-size: 10px;
+    line-height: 1.2;
+}
+
+/* Keep the second line (code, lot, expiry) on one line */
+.items-table td:first-child div.box-content span:last-child {
+    white-space: nowrap;
+    font-size: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 </style>
 </head>
-<body>
 
-<!-- PAGE 1 -->
+<body>
 <div class="page">
 
-  <!-- Top Section -->
-  <div class="top-section">
-    <div class="qr-box">QR</div>
+<!-- HEADER -->
+<table class="table-main">
+<tr>
+    <td width="20%" align="center">
+        <div style="height:100px; display:flex; align-items:center; justify-content:center;">
+            <?php
+            if ($Settings->ksa_qrcode) {
+                $qrtext = $this->inv_qrcode->base64([
+                    'seller' => $biller->company && $biller->company != '-' ? $biller->company : $biller->name,
+                    'vat_no' => $biller->vat_no ?: $biller->get_no,
+                    'date' => $inv->date,
+                    'grand_total' => $return_sale ? ($inv->grand_total + $return_sale->grand_total) : $inv->grand_total,
+                    'total_tax_amount' => $return_sale ? ($inv->total_tax + $return_sale->total_tax) : $inv->total_tax,
+                ]);
+                echo $this->sma->qrcode('text', $qrtext, 2);
+            } else {
+                echo $this->sma->qrcode('link', urlencode(site_url('view/sale/' . $inv->hash)), 2);
+            }
+            ?>
+        </div>
+    </td>
+    <td width="60%" align="center" height="100">
+        <div class="title">
+            <span>الفاتورة الضريبية</span><br />
+            <span>Tax Invoice</span>
+        </div><br><br>
+        <strong>Invoice No: <?= $inv->id ?></strong><br>
+        <strong>Date: <?= $this->sma->hrld($inv->date) ?></strong>
+    </td>
+    <td width="20%" height="100">
+        <div style="text-align:center; margin-bottom:5px;">
+            <img src="data:image/png;base64,' . base64_encode(file_get_contents(base_url() . 'assets/uploads/logos/' . $biller->logo)) . '"
+                alt="Avenzur" style="max-width:120px; height:auto;">
+            
+        </div>
+    </td>
+</tr>
+</table>
 
-    <div class="center-title-box">
-      <div class="rounded-title">Tax Invoice</div>
+<!-- SUPPLIER / CUSTOMER -->
+<table class="table-main" style="margin-top:10px;">
+<tr>
 
-      <div >
-        Invoice No: 0001<br>
-        Date: 28/01/2025
-      </div>
+<!-- CUSTOMER -->
+<td width="50%">
+    <div style="border:1px solid #000; border-radius:12px; padding:4px; line-height:1.1;">
+        <div style="text-align:center; font-weight:bold; border-radius:6px; padding:3px; margin-bottom:3px; border:1px solid #000; line-height:1.1; height:14px;">
+            بيانات العميل
+        </div>
+
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate; border-spacing:2px;">
+            <tr>
+                <td colspan="2" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:22px;">
+                    <?= $customer->name ?>
+                </td>
+                <td colspan="2" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:22px;">اسم العميل:</td>
+            </tr>
+
+            <tr>
+                <td width="32.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">
+                    <?= $customer->cr ?>
+                </td>
+                <td width="17.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">السجل التجاري:</td>
+                <td width="32.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">
+                    <?= $customer->vat_no ?>
+                </td>
+                <td width="17.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">الرقم الضريبي:</td>
+            </tr>
+
+            <tr>
+                <td colspan="2" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">
+                    <?= $customer->phone ?>
+                </td>
+                <td colspan="2" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">الهاتف:</td>
+            </tr>
+
+            <tr>
+                <td width="32.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">
+                    <?= $customer->city ?>
+                </td>
+                <td width="17.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">المدينة:</td>
+                <td width="32.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">
+                    <?= $customer->address ?? '' ?>
+                </td>
+                <td width="17.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">الحي :</td>
+            </tr>
+
+            <tr>
+                <td width="32.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">
+                    <?= $customer->building_number ?? '00000' ?>
+                </td>
+                <td width="17.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">رقم المبنى:</td>
+                <td width="32.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">
+                    <?= $customer->additional_number ?? '00000' ?>
+                </td>
+                <td width="17.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">رقم إضافي:</td>
+            </tr>
+
+            <tr>
+                <td width="32.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">
+                    <?= $customer->postal_code ?? '00000' ?>
+                </td>
+                <td width="17.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">الرمز البريدي:</td>
+                <td width="32.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">
+                    <?= $customer->gln ?? '00000' ?>
+                </td>
+                <td width="17.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">الرقم العالمي:</td>
+            </tr>
+        </table>
     </div>
+</td>
 
-    <div style="width:120px"></div>
-  </div>
+<!-- COMPANY -->
+<td width="50%">
+    <div style="border:1px solid #000; border-radius:12px; padding:4px; line-height:1.1;">
+        <div style="text-align:center; font-weight:bold; border-radius:6px; padding:3px; margin-bottom:3px; border:1px solid #000; line-height:1.1; height:14px;">
+            بيانات الشركة
+        </div>
 
-  <!-- Supplier + Customer Boxes -->
-  <div class="two-box-grid">
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate; border-spacing:2px;">
+            <tr>
+                <td colspan="2" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:22px;">
+                    <?= $biller->name ?><br><?= $biller->name_ar ?>
+                </td>
+                <td colspan="2" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:22px;">اسم الشركة:</td>
+            </tr>
 
-    <div class="big-rounded-box">
-      <div class="big-title">Supplier</div>
+            <tr>
+                <td width="32.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">
+                    <?= $biller->cr ?>
+                </td>
+                <td width="17.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">السجل التجاري:</td>
+                <td width="32.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">
+                    <?= $biller->vat_no ?>
+                </td>
+                <td width="17.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">الرقم الضريبي:</td>
+            </tr>
 
-      <div class="inner-field">
-        <div class="inner-label">Name</div>
-        <div class="inner-value">Rawabi Business Medical</div>
-      </div>
+            <tr>
+                <td colspan="2" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">
+                    <?= $biller->phone ?>
+                </td>
+                <td colspan="2" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">الهاتف:</td>
+            </tr>
 
-      <div class="inner-field">
-        <div class="inner-label">CR</div>
-        <div class="inner-value">4030372922</div>
-      </div>
+            <tr>
+                <td width="32.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">
+                    <?= $biller->city ?>
+                </td>
+                <td width="17.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">المدينة:</td>
+                <td width="32.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">
+                    <?= $biller->address ?? '' ?>
+                </td>
+                <td width="17.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;"> الحي:</td>
+            </tr>
 
-      <div class="inner-field">
-        <div class="inner-label">VAT</div>
-        <div class="inner-value">311392835500003</div>
-      </div>
+            <tr>
+                <td width="32.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">
+                    <?= $biller->building_number ?? '00000' ?>
+                </td>
+                <td width="17.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">رقم المبنى:</td>
+                <td width="32.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">
+                    <?= $biller->additional_number ?? '00000' ?>
+                </td>
+                <td width="17.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">رقم إضافي:</td>
+            </tr>
 
-      <div class="inner-field">
-        <div class="inner-label">City</div>
-        <div class="inner-value">Jeddah</div>
-      </div>
+            <tr>
+                <td width="32.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">
+                    <?= $biller->postal_code ?? '00000' ?>
+                </td>
+                <td width="17.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">الرمز البريدي:</td>
+                <td width="32.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">
+                    <?= $biller->gln ?? '00000' ?>
+                </td>
+                <td width="17.5%" align="center" style="border:1px solid #000; border-radius:8px; padding:2px; line-height:1.1; height:16px;">الرقم العالمي:</td>
+            </tr>
+        </table>
     </div>
+</td>
 
-    <div class="big-rounded-box">
-      <div class="big-title">Customer</div>
+</tr>
+</table>
 
-      <div class="inner-field">
-        <div class="inner-label">Name</div>
-        <div class="inner-value">Pharmacy</div>
-      </div>
 
-      <div class="inner-field">
-        <div class="inner-label">CR</div>
-        <div class="inner-value">5906037541</div>
-      </div>
-
-      <div class="inner-field">
-        <div class="inner-label">VAT</div>
-        <div class="inner-value">300732535400003</div>
-      </div>
-
-      <div class="inner-field">
-        <div class="inner-label">City</div>
-        <div class="inner-value">Al-Mazja</div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- ITEMS TABLE -->
-  <table>
-    <thead>
-      <tr>
-        <!-- Description -->
-        <th >
-          <div  class="inner-label-description" style="border-radius:8px; text-align:center;">Description</div>
-        </th>
-
-        <!-- Qty / Price / Total -->
-        <th style="width:15%">
-          <div style="border:1px solid #000; border-radius:10px; overflow:hidden;">
-            <div style="padding:4px; border-bottom:1px solid #000;">Qty</div>
-            <div style="padding:4px; border-bottom:1px solid #000;">Price</div>
-            <div style="padding:4px;">Total</div>
-          </div>
-        </th>
-
-        <!-- DIS1 / DIS2 / Total Discount -->
-        <th style="width:15%">
-          <div style="border:1px solid #000; border-radius:10px; overflow:hidden;">
-            <div style="padding:4px; border-bottom:1px solid #000;">Dis 1</div>
-            <div style="padding:4px; border-bottom:1px solid #000;">Dis 2</div>
-            <div style="padding:4px;">Total Dis</div>
-          </div>
-        </th>
-
-        <!-- Qty / Price After VAT / Total After VAT -->
-        <th style="width:15%">
-          <div style="border:1px solid #000; border-radius:10px; overflow:hidden;">
-            <div style="padding:4px; border-bottom:1px solid #000;">Qty</div>
-            <div style="padding:4px; border-bottom:1px solid #000;">Price After VAT</div>
-            <div style="padding:4px;">Total After VAT</div>
-          </div>
-        </th>
-
-        <!-- VAT% + VAT Value + Total (VAT% + Value horizontal, Total below) -->
-        <th style="width:15%">
-          <div style="border:1px solid #000; border-radius:10px; overflow:hidden;">
-            <div style="display:flex; border-bottom:1px solid #000;">
-              <div style="flex:1; padding:4px; border-right:1px solid #000;">VAT %</div>
-              <div style="flex:1; padding:4px;">VAT Value</div>
+<!-- ITEMS TABLE -->
+<table class="items-table">
+<thead>
+<tr>
+    <th width="43%">
+        <div class="box">
+            <div class="box-content">
+                <span> وصف </span>
+                <span>Description</span>
             </div>
-            <div style="padding:4px;">Total</div>
-          </div>
-        </th>
-      </tr>
-    </thead>
-
-    <tbody>
-      <?php for($i = 1; $i <= 5; $i++ ) {?>
-    <tr>
-        <!-- Description -->
-        <td >
-          <div  class="inner-label-description" style="border-radius:8px; text-align:center;">Nervamine</div>
-        </td>
-
-        <!-- Qty / Price / Total -->
-        <td style="width:15%">
-          <div style="border:1px solid #000; border-radius:10px; overflow:hidden;">
-            <div style="padding:4px; border-bottom:1px solid #000;">100</div>
-            <div style="padding:4px; border-bottom:1px solid #000;">75.00</div>
-            <div style="padding:4px;">7,500.00</div>
-          </div>
-        </td>
-
-        <!-- DIS1 / DIS2 / Total Discount -->
-        <td style="width:15%">
-          <div style="border:1px solid #000; border-radius:10px; overflow:hidden;">
-            <div style="padding:4px; border-bottom:1px solid #000;">5 % | 375.00</div>
-            <div style="padding:4px; border-bottom:1px solid #000;">2 % | 150.00</div>
-            <div style="padding:4px;">7 % | 525.00</div>
-          </div>
-        </td>
-
-        <!-- Qty / Price After VAT / Total After VAT -->
-        <td style="width:15%">
-          <div style="border:1px solid #000; border-radius:10px; overflow:hidden;">
-            <div style="padding:4px; border-bottom:1px solid #000;">100.00</div>
-            <div style="padding:4px; border-bottom:1px solid #000;">69.75</div>
-            <div style="padding:4px;">6,975.00</div>
-          </div>
-        </td>
-
-        <!-- VAT% + VAT Value + Total (VAT% + Value horizontal, Total below) -->
-        <td style="width:15%">
-          <div style="border:1px solid #000; border-radius:10px; overflow:hidden; padding: 10px">
-            <div style="display:flex; border-bottom:1px solid #000;">
-              <div style="flex:1; padding:4px; border-right:1px solid #000;">15 % </div>
-              <div style="flex:1; padding:4px;">1,046.25</div>
+        </div>
+    </th>
+    <th width="10%">
+        <div class="box">
+            <div class="box-content">
+                <span class="header-line">الكمية</span>
+                <span class="header-line">السعر</span>
+                <span>الإجمالي</span>
             </div>
-            <div style="padding:4px;">8,021.25</div>
-          </div>
-        </td>
-      </tr>
-      <?php }?>
-    </tbody>
-  </table>
+        </div>
+    </th>
+    <th width="13%">
+        <div class="box">
+            <div class="box-content"> 
+                <span class="header-line">خصم 1</span>
+                <span class="header-line">خصم 2</span>
+                <span>إجمالي الخصم</span>
+            </div>
+        </div>
+    </th>
+    <th width="16%">
+        <div class="box">
+            <div class="box-content">
+                <span class="header-line">الكمية</span>
+                <span class="header-line">السعر بعد الخصم</span>
+                <span>الإجمالي بعد الخصم</span>
+            </div>
+        </div>
+    </th>
+    <th width="18%">
+        <div class="box">
+            <div class="box-content">
+                <span class="header-line">نسبة الضريبة % | قيمة الضريبة</span>
+                <span>الإجمالي</span>
+            </div>
+        </div>
+    </th>
+</tr>
+</thead>
+
+<tbody>
+<?php foreach ($rows as $row): 
+    ?>
+<tr>
+    <td>
+        <div class="box">
+            <div class="box-content">
+                <span class="header-line" style="padding-top:25px;">
+                    <?= $row->product_name ?>
+                </span>
+                <span style="margin-top:5px;">
+                    <?= $row->product_code ?> | Lot: <?= $row->batch_no ?> | EXP: <?= $row->expiry ?>
+                </span>
+            </div>
+        </div>
+    </td>
+    <td>
+        <div class="box">
+            <div class="box-content">
+                <span class="header-line"><?= $this->sma->formatQuantity($row->unit_quantity) ?></span>
+                <span class="header-line"><?= $this->sma->formatNumber($row->real_unit_price) ?></span>
+                <span><?= $this->sma->formatNumber($row->subtotal) ?></span>
+            </div>
+        </div>
+    </td>
+    <td>
+        <div class="box">
+            <div class="box-content">
+                <span class="header-line">
+                    <?= $this->sma->formatNumber($row->discount1) ?> % | <?= $this->sma->formatNumber($row->item_discount) ?>
+                </span>
+                <span class="header-line">
+                    <?= $this->sma->formatNumber($row->discount2) ?> % | <?= $this->sma->formatNumber($row->second_discount_value) ?>
+                </span>
+                <span>
+                    <?= $this->sma->formatNumber($row->discount1 + $row->discount2) ?> % | <?= $this->sma->formatNumber($row->item_discount + $row->second_discount_value) ?>
+                </span>
+            </div>
+        </div>
+    </td>
+    <td>
+        <div class="box">
+            <div class="box-content">
+                <span class="header-line">
+                <?= $this->sma->formatQuantity($row->unit_quantity) ?>
+                </span>
+                <span class="header-line">
+                <?= $this->sma->formatNumber($row->net_unit_price) ?>
+                </span>
+                <span>
+                <?= $this->sma->formatNumber($row->totalbeforevat) ?>
+                </span>
+            </div>
+        </div>
+    </td>
+    <td>
+        <div class="box">
+            <div class="box-content">
+                <span class="header-line">
+                <?= $row->tax_rate ?> % | <?= $this->sma->formatNumber($row->item_tax) ?>
+                </span>
+                <span>
+                <?= $this->sma->formatNumber($row->totalbeforevat + $row->item_tax) ?>
+                </span>
+            </div>
+        </div>
+    </td>
+</tr>
+<?php endforeach; ?>
+</tbody>
+</table>
+
+<!-- TOTALS SECTION -->
+<table class="table-main" style="margin-top:8px;">
+<tr>
+    <td width="65%"></td>
+    <td width="35%">
+        <div style="border:1px solid #000; border-radius:8px; padding:4px; line-height:1.1;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate; border-spacing:2px;">
+                <tr>
+                    
+                    <td width="40%" align="center" style="border:1px solid #000; border-radius:6px; padding:3px; line-height:1.1; height:16px;">
+                        <?= $this->sma->formatNumber($inv->total) ?>
+                    </td>
+                    <td width="60%" align="right" style="border:1px solid #000; border-radius:6px; padding:3px; line-height:1.1; height:16px; font-weight:bold;">
+                        اجمالي قيمة الفاتورة:
+                    </td>
+                </tr>
+                
+                <tr>
+                    
+                    <td align="center" style="border:1px solid #000; border-radius:6px; padding:3px; line-height:1.1; height:16px;">
+                        <?= $this->sma->formatNumber($inv->total_discount) ?>
+                    </td>
+                    <td align="right" style="border:1px solid #000; border-radius:6px; padding:3px; line-height:1.1; height:16px; font-weight:bold;">
+                       اجمالي الخصومات:
+                    </td>
+                </tr>
+                
+                <tr>
+                    
+                    <td align="center" style="border:1px solid #000; border-radius:6px; padding:3px; line-height:1.1; height:16px;">
+                        <?= $this->sma->formatNumber($inv->total - $inv->total_discount) ?>
+                    </td>
+                    <td align="right" style="border:1px solid #000; border-radius:6px; padding:3px; line-height:1.1; height:16px; font-weight:bold;">
+                        الاجمالي (قبل الضريبة):
+                    </td>
+                </tr>
+                
+                <tr>
+                    
+                    <td align="center" style="border:1px solid #000; border-radius:6px; padding:3px; line-height:1.1; height:16px;">
+                        <?= $this->sma->formatNumber($inv->total_tax) ?>
+                    </td>
+                    <td align="right" style="border:1px solid #000; border-radius:6px; padding:3px; line-height:1.1; height:16px; font-weight:bold;">
+                        الضريبة المضافة:
+                    </td>
+                </tr>
+                
+                <tr>
+                    
+                    <td align="center" style="border:1px solid #000; border-radius:6px; padding:3px; line-height:1.1; height:18px; font-weight:bold; font-size:10px; background-color:#e8f4f8;">
+                        <?= $this->sma->formatNumber($inv->grand_total) ?> SAR
+                    </td>
+                    <td align="right" style="border:1px solid #000; border-radius:6px; padding:3px; line-height:1.1; height:18px; font-weight:bold; font-size:10px; background-color:#e8f4f8;">
+                        الصافي بعد الضريبة:
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </td>
+</tr>
+</table>
+
 </div>
-
 </body>
 </html>
