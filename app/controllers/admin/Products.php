@@ -936,6 +936,148 @@ class Products extends MY_Controller
         echo "<hr>Import completed.";
     }
 
+    public function upload_trial_balance()
+    {
+        $excelFile = $this->upload_path . 'csv/rawabi_trial_balance.xlsx'; // Excel file
+        if (!file_exists($excelFile)) {
+            echo "Excel file not found.";
+            return;
+        }
+
+        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($excelFile);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $rows = $sheet->toArray(null, true, true, false);
+
+        echo "<h3>Starting Import...</h3>";
+        
+        $inventory_net_purchase = 0;
+
+        $result = $this->db
+            ->select('SUM(total_net_purchase) AS total_amount')
+            ->where('note', 'import from excel')
+            ->get('sma_purchases')
+            ->row();
+
+        if ($result && $result->total_amount !== null) {
+            $inventory_net_purchase = (float) $result->total_amount;
+
+            $lg_details = $this->db
+                    ->where('code', '1130100001') // exact match
+                    ->get('sma_accounts_ledgers')
+                    ->row();
+
+            if($lg_details) {
+                $lg_Id = $lg_details->id;
+            }else{
+                echo "Ledger code missing, skipped → {$lg_details->name} <br>";
+            }
+
+            // --- CREATE GL ENTRY (sma_accounts_entries) ---
+            $ent_data = [
+                "entrytype_id" => 4,
+                "date" => "2025-11-30",
+                "number" => 0,
+                "transaction_type" => "trial_balance_import",
+                "notes" => "Trial Balance Upload",
+                "pid" => 0,
+                "supplier_id"   => 0,
+            ];
+            $this->db->insert("sma_accounts_entries", $ent_data);
+            $entry_id = $this->db->insert_id();
+
+            $this->db->insert("sma_accounts_entryitems", [
+                "entry_id" => $entry_id,
+                "ledger_id" => $lg_Id,
+                "dc" => 'D',
+                "amount" => $inventory_net_purchase,
+                "narration" => "Trial Balance Upload"
+            ]);
+        }
+
+        $row = 0;
+        foreach ($rows as $data) {
+
+            if ($row == 0) { $row++; continue; } // Skip header
+
+            // -------------------------
+            // Read Excel fields
+            // -------------------------
+            $ledgerCode         = trim($data[0]);
+            $debtOpening      = trim($data[5]);
+            $creditOpening      = trim($data[6]);
+
+            // --- Accounts to skip ---
+            $skip_accounts = [
+                '1120100002', // Pharmacy Client Account
+                '2210100001', // Agent Suppliers
+                '1130100001', // Inventory In Warehouses
+            ];
+
+            if (in_array($ledgerCode, $skip_accounts)) {
+                echo "Skipping account code: {$ledgerCode}<br>";
+                continue;
+            }
+            
+            $ledger_details = $this->db
+                    ->where('code', $ledgerCode) // exact match
+                    ->get('sma_accounts_ledgers')
+                    ->row();
+
+            if($ledger_details) {
+                $ledgerId = $ledger_details->id;
+            }else{
+                echo "Ledger code missing, skipped → {$ledger_details->name} <br>";
+                continue;
+            }
+
+            if(empty($debtOpening) && empty($creditOpening)) {
+                echo "No opening balance, skipped → {$ledger_details->name} <br>";
+                continue;
+
+            }
+
+            // Determine total amount and debit/credit
+            if (!empty($debtOpening)) {
+                $TOTAL_AMOUNT = floatval(str_replace(",", "", $debtOpening));
+            } else {
+                $TOTAL_AMOUNT = floatval(str_replace(",", "", $creditOpening));
+            }
+
+            $dc = !empty($debtOpening) ? 'D' : 'C'; 
+            echo "debtOpening: {$debtOpening} - creditOpening: {$creditOpening}<br>";
+            echo "Processing Ledger: {$ledger_details->name} - Amount: {$TOTAL_AMOUNT} - Type: {$dc}<br>";
+            //exit;
+
+            // --- CREATE GL ENTRY (sma_accounts_entries) ---
+            $entry_data = [
+                "entrytype_id" => 4,
+                "date" => "2025-11-30",
+                "number" => 0,
+                "transaction_type" => "trial_balance_import",
+                "notes" => "Trial Balance Upload",
+                "pid" => 0,
+                "supplier_id"   => 0,
+            ];
+            $this->db->insert("sma_accounts_entries", $entry_data);
+            $entry_id = $this->db->insert_id();
+
+            // Cr Supplier Ledger
+            $this->db->insert("sma_accounts_entryitems", [
+                "entry_id" => $entry_id,
+                "ledger_id" => $ledgerId,
+                "dc" => $dc,
+                "amount" => $TOTAL_AMOUNT,
+                "narration" => "Trial Balance Upload"
+            ]);
+
+            echo "Uploaded balance for Ledger ID: {$ledgerId}<br>";
+
+        }
+    }
+
     public function upload_ap_invoices(){
         $csv_file = $this->upload_path . 'csv/outstanding_AP (2).csv';
 
@@ -1089,29 +1231,182 @@ class Products extends MY_Controller
         }
     }
 
+    public function import_shopify_products()
+    {
+        $shopify_file_path = $this->upload_path . 'csv/products_export_2.csv';
+
+        if (!file_exists($shopify_file_path)) {
+            echo "CSV file not found.";
+            return;
+        }
+
+        $csv = fopen($shopify_file_path, "r");
+        if (!$csv) {
+            echo "Error opening CSV file.";
+            return;
+        }
+
+        $row = 0;
+        echo "<h3>Starting Import...</h3>";
+
+        while (($data = fgetcsv($csv)) !== false) {
+
+            if ($row === 0) {
+                $row++;
+                continue; // Skip header
+            }
+        
+            // Map columns
+            $product_handle   = trim($data[0]);
+            $description      = $data[2];
+            $vendor           = trim($data[3]);
+            $category_chain   = trim($data[4]);
+            $product_type     = trim($data[5]);
+            $tags             = trim($data[6]);
+            $published        = strtolower(trim($data[7])) === 'true' ? 1 : 0;
+            $option1_name     = trim($data[8]);
+            $option1_value    = trim($data[9]);
+            $option2_value    = trim($data[10]);
+            $option3_value    = trim($data[11]);
+            $variant_price    = (float)$data[12];
+            $variant_barcode  = str_replace("'", '', $data[13]);
+            $image_src        = trim($data[14]);
+            $additional_image_src        = trim($data[15]);
+            $status           = strtolower(trim($data[16])) === 'active' ? 1 : 0;
+            $tax_rate         = 5;
+
+            // ✅ Skip inactive products safely
+            if ($status === 1) {
+                $hide = 0;
+            }else{
+                $hide = 1;
+            }
+
+            if(!empty($data[1])){
+                $original_title = trim($data[1]);
+                $title          = trim($data[1]. ' ' . $option1_value . ' ' . $option2_value . ' ' . $option3_value);
+            }else{
+                $title          = trim($original_title. ' ' . $option1_value . ' ' . $option2_value . ' ' . $option3_value);
+            }
+            
+
+            /*if(empty($title)) {
+                // Check if product with this handle already exists
+                $product_details = $this->db
+                    ->where('slug', $product_handle) // exact match
+                    ->get('sma_products')
+                    ->row();
+
+                if($product_details) {
+                    echo "Product title missing, skipped existing product → {$product_details->name} -> handle {$product_details->slug}<br>";
+                    continue;
+                }
+
+                // If not exists, create a title from options (safely)
+                $title = trim($option1_value . ' ' . $option2_value . ' ' . $option3_value);
+                if(empty($title)) {
+                    $title = "Product_{$product_handle}"; // fallback if all options empty
+                }
+            }*/
+
+            if ($variant_barcode == '') {
+                echo "Emptry Product Code → {$title}<br>";
+                continue;
+            }
+
+            if (stripos($variant_barcode, 'http://') !== false || stripos($variant_barcode, 'https://') !== false) {
+                echo "Skipped (Image URL in code) → {$title}<br>";
+                continue;
+            }
+
+            // --- Brand ---
+            $brand_id = $this->get_or_create_brand($vendor);
+
+            // --- Category ---
+            $category_id = $this->get_or_create_category_chain($category_chain);
+
+            // --- Check existing ---
+            $this->db->where('code', $variant_barcode);
+            if ($this->db->get('sma_products')->row()) {
+                echo "Product exists → {$title}<br>";
+                continue;
+            }
+
+            // --- Insert ---
+            $product_data = [
+                'code'        => $variant_barcode,
+                'name'        => $title,
+                'details'     => $description,
+                'type'        => 'standard',
+                'category_id' => $category_id,
+                'brand'       => $brand_id,
+                'slug'        => $product_handle,
+                'unit'        => 1,
+                'cost'        => 0,
+                'price'       => $variant_price,
+                'alert_quantity' => 0,
+                'tax_rate'    => null,
+                'tax_method'  => 0,
+                'barcode_symbology' => 'code128',
+                'image'       => $image_src,
+                'hide'        => $hide
+            ];
+
+            $this->db->insert('sma_products', $product_data);
+            $product_id = $this->db->insert_id();
+
+            $this->db->insert('sma_product_photos', [
+                'product_id' => $product_id,
+                'photo'      => $additional_image_src
+            ]);
+            echo "Inserted product → {$title}<br>";
+        }
+
+        fclose($csv);
+        echo "<h3>Import finished.</h3>";
+    }
+
+
+    /**
+     * Create or get brand
+     */
+    private function get_or_create_brand($brand_name)
+    {
+        $this->db->where('name', $brand_name);
+        $existing = $this->db->get('sma_brands')->row();
+
+        if ($existing) {
+            return $existing->id;
+        }
+
+        $slug = url_title($brand_name, '-', true);
+        $this->db->insert('sma_brands', [
+            'name' => $brand_name,
+            'slug' => $slug
+        ]);
+
+        return $this->db->insert_id();
+    }
+
+    /**
+     * Your existing category chain function
+     */
     private function get_or_create_category_chain($full_path)
     {
-        // Example: "Health & Beauty > Personal Care > Oral Care > Toothpaste"
-
         $parts = array_map('trim', explode('>', $full_path));
         $parent_id = null;
         $last_id = null;
 
         foreach ($parts as $cat_name) {
-
-            // Check existing
             $this->db->where('name', $cat_name);
             $this->db->where('parent_id', $parent_id);
             $existing = $this->db->get('sma_categories')->row();
 
             if ($existing) {
-                // Already exists
                 $last_id = $existing->id;
                 $parent_id = $existing->id;
             } else {
-                // Create new
                 $slug = url_title($cat_name, '-', true);
-
                 $this->db->insert('sma_categories', [
                     'name'      => $cat_name,
                     'slug'      => $slug,
@@ -1120,205 +1415,203 @@ class Products extends MY_Controller
 
                 $last_id = $this->db->insert_id();
                 $parent_id = $last_id;
-
                 echo "Created category → $cat_name<br>";
             }
         }
 
-        return $last_id; // Return deepest category
+        return $last_id;
     }
+
 
     public function upload_shopify_products()
-{
-    $excelFile = $this->upload_path . 'csv/Avnzor_Final_Product_Updated.xlsx'; // Excel file
-    if (!file_exists($excelFile)) {
-        echo "Excel file not found.";
-        return;
-    }
-
-    $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
-    $reader->setReadDataOnly(true);
-    $spreadsheet = $reader->load($excelFile);
-    $sheet = $spreadsheet->getActiveSheet();
-
-    $rows = $sheet->toArray(null, true, true, false);
-
-    echo "<h3>Starting Import...</h3>";
-
-    $row = 0;
-    foreach ($rows as $data) {
-
-        if ($row == 0) { $row++; continue; } // Skip header
-
-        // -------------------------
-        // Read Excel fields
-        // -------------------------
-        $brandName         = trim($data[0]);
-        $product_code      = trim($data[1]);
-        $name              = trim($data[3]);
-        $category          = trim($data[4]);
-        $subcategory       = trim($data[5]);
-        $subsubcategory    = trim($data[6]);
-        $vat               = trim($data[7]);
-        $cost_price        = trim($data[8]);
-        $sale_price        = trim($data[11]);
-        $image_field       = trim($data[15]);
-        $additional_image1 = trim($data[16]);
-        $additional_image2 = trim($data[17]);
-
-        // -------------------------
-        // Process code
-        // -------------------------
-        if (strpos($product_code, 'E+') !== false) {
-            $code = number_format($product_code, 0, '', '');
-        } else {
-            $code = $product_code;
+    {
+        $excelFile = $this->upload_path . 'csv/Avnzor_Final_Product_Updated.xlsx'; // Excel file
+        if (!file_exists($excelFile)) {
+            echo "Excel file not found.";
+            return;
         }
 
-        // Skip empty or too short codes (<3 digits)
-        if (!$code || strlen($code) < 3) {
-            echo "Skipping row: Invalid code → {$product_code}<br>";
-            $row++;
-            continue;
-        }
+        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($excelFile);
+        $sheet = $spreadsheet->getActiveSheet();
 
-        // -------------------------
-        // Check existing product
-        // -------------------------
-        $existing = $this->db->get_where('sma_products', ['code' => $code])->row();
-        if ($existing) {
-            echo "Product already exists → $code (skipped)<br>";
-            $row++;
-            continue;
-        }
+        $rows = $sheet->toArray(null, true, true, false);
 
-        // -------------------------
-        // CATEGORY LOGIC (3 LEVELS)
-        // -------------------------
-        // 1) Main category
-        $mainCat = $this->db->where('name', $category)
-            ->where('parent_id', 0)
-            ->get('sma_categories')->row();
+        echo "<h3>Starting Import...</h3>";
 
-        if (!$mainCat) {
-            $this->db->insert('sma_categories', [
-                'name'      => $category,
-                'slug'      => url_title($category, '-', TRUE),
-                'parent_id' => 0,
-            ]);
-            $mainCatId = $this->db->insert_id();
-        } else {
-            $mainCatId = $mainCat->id;
-        }
+        $row = 0;
+        foreach ($rows as $data) {
 
-        // 2) Subcategory
-        $subCatId = $mainCatId;
-        if (!empty($subcategory)) {
-            $subCat = $this->db
-                ->where('name', $subcategory)
-                ->where('parent_id', $mainCatId)
+            if ($row == 0) { $row++; continue; } // Skip header
+
+            // -------------------------
+            // Read Excel fields
+            // -------------------------
+            $brandName         = trim($data[0]);
+            $product_code      = trim($data[1]);
+            $name              = trim($data[3]);
+            $category          = trim($data[4]);
+            $subcategory       = trim($data[5]);
+            $subsubcategory    = trim($data[6]);
+            $vat               = trim($data[7]);
+            $cost_price        = trim($data[8]);
+            $sale_price        = trim($data[11]);
+            $image_field       = trim($data[15]);
+            $additional_image1 = trim($data[16]);
+            $additional_image2 = trim($data[17]);
+
+            // -------------------------
+            // Process code
+            // -------------------------
+            if (strpos($product_code, 'E+') !== false) {
+                $code = number_format($product_code, 0, '', '');
+            } else {
+                $code = $product_code;
+            }
+
+            // Skip empty or too short codes (<3 digits)
+            if (!$code || strlen($code) < 3) {
+                echo "Skipping row: Invalid code → {$product_code}<br>";
+                $row++;
+                continue;
+            }
+
+            // -------------------------
+            // Check existing product
+            // -------------------------
+            $existing = $this->db->get_where('sma_products', ['code' => $code])->row();
+            if ($existing) {
+                echo "Product already exists → $code (skipped)<br>";
+                $row++;
+                continue;
+            }
+
+            // -------------------------
+            // CATEGORY LOGIC (3 LEVELS)
+            // -------------------------
+            // 1) Main category
+            $mainCat = $this->db->where('name', $category)
+                ->where('parent_id', 0)
                 ->get('sma_categories')->row();
 
-            if (!$subCat) {
+            if (!$mainCat) {
                 $this->db->insert('sma_categories', [
-                    'name'      => $subcategory,
-                    'slug'      => url_title($subcategory, '-', TRUE),
-                    'parent_id' => $mainCatId,
+                    'name'      => $category,
+                    'slug'      => url_title($category, '-', TRUE),
+                    'parent_id' => 0,
                 ]);
-                $subCatId = $this->db->insert_id();
+                $mainCatId = $this->db->insert_id();
             } else {
-                $subCatId = $subCat->id;
+                $mainCatId = $mainCat->id;
             }
-        }
 
-        // 3) Sub-subcategory
-        $finalCatId = $subCatId;
-        if (!empty($subsubcategory)) {
-            $subSub = $this->db
-                ->where('name', $subsubcategory)
-                ->where('parent_id', $subCatId)
-                ->get('sma_categories')->row();
+            // 2) Subcategory
+            $subCatId = $mainCatId;
+            if (!empty($subcategory)) {
+                $subCat = $this->db
+                    ->where('name', $subcategory)
+                    ->where('parent_id', $mainCatId)
+                    ->get('sma_categories')->row();
 
-            if (!$subSub) {
-                $this->db->insert('sma_categories', [
-                    'name'      => $subsubcategory,
-                    'slug'      => url_title($subsubcategory, '-', TRUE),
-                    'parent_id' => $subCatId,
-                ]);
-                $finalCatId = $this->db->insert_id();
-            } else {
-                $finalCatId = $subSub->id;
-            }
-        }
-
-        // -------------------------
-        // BRAND
-        // -------------------------
-        $brand = $this->db->select('id')->from('sma_brands')->where('name', $brandName)->get()->row();
-        if (!$brand) {
-            $this->db->insert('sma_brands', [
-                'name' => $brandName,
-                'slug' => url_title($brandName, '-', TRUE)
-            ]);
-            $brand_id = $this->db->insert_id();
-        } else {
-            $brand_id = $brand->id;
-        }
-
-        // -------------------------
-        // INSERT PRODUCT
-        // -------------------------
-        $productData = [
-            'code'              => $code,
-            'name'              => $name,
-            'cost'              => $cost_price,
-            'price'             => $sale_price,
-            'slug'              => url_title($name, '-', TRUE),
-            'alert_quantity'    => 10,
-            'image'             => $image_field,
-            'category_id'       => $mainCatId,
-            'subcategory_id'    => $finalCatId,
-            'brand'             => $brand_id,
-            'tax_rate'          => 5,
-            'barcode_symbology' => 'code128',
-            'quantity'          => 0,
-            'sequence_code'     => 'PRD-' . str_pad($row, 5, '0', STR_PAD_LEFT)
-        ];
-
-        $this->db->insert('sma_products', $productData);
-        $product_id = $this->db->insert_id();
-
-        // -------------------------
-        // PROCESS IMAGES
-        // -------------------------
-        $all_images = [$image_field, $additional_image1, $additional_image2];
-
-        foreach ($all_images as $img) {
-            if (!empty($img)) {
-                // Clean Markdown or extra bullets
-                $img = trim($img);
-                $img = ltrim($img, "-* \t"); // remove leading - or *
-                $img = trim($img);
-
-                // Skip if URL is invalid
-                if (filter_var($img, FILTER_VALIDATE_URL)) {
-                    $this->db->insert('sma_product_photos', [
-                        'product_id' => $product_id,
-                        'photo'      => $img
+                if (!$subCat) {
+                    $this->db->insert('sma_categories', [
+                        'name'      => $subcategory,
+                        'slug'      => url_title($subcategory, '-', TRUE),
+                        'parent_id' => $mainCatId,
                     ]);
+                    $subCatId = $this->db->insert_id();
+                } else {
+                    $subCatId = $subCat->id;
                 }
             }
+
+            // 3) Sub-subcategory
+            $finalCatId = $subCatId;
+            if (!empty($subsubcategory)) {
+                $subSub = $this->db
+                    ->where('name', $subsubcategory)
+                    ->where('parent_id', $subCatId)
+                    ->get('sma_categories')->row();
+
+                if (!$subSub) {
+                    $this->db->insert('sma_categories', [
+                        'name'      => $subsubcategory,
+                        'slug'      => url_title($subsubcategory, '-', TRUE),
+                        'parent_id' => $subCatId,
+                    ]);
+                    $finalCatId = $this->db->insert_id();
+                } else {
+                    $finalCatId = $subSub->id;
+                }
+            }
+
+            // -------------------------
+            // BRAND
+            // -------------------------
+            $brand = $this->db->select('id')->from('sma_brands')->where('name', $brandName)->get()->row();
+            if (!$brand) {
+                $this->db->insert('sma_brands', [
+                    'name' => $brandName,
+                    'slug' => url_title($brandName, '-', TRUE)
+                ]);
+                $brand_id = $this->db->insert_id();
+            } else {
+                $brand_id = $brand->id;
+            }
+
+            // -------------------------
+            // INSERT PRODUCT
+            // -------------------------
+            $productData = [
+                'code'              => $code,
+                'name'              => $name,
+                'cost'              => $cost_price,
+                'price'             => $sale_price,
+                'slug'              => url_title($name, '-', TRUE),
+                'alert_quantity'    => 10,
+                'image'             => $image_field,
+                'category_id'       => $mainCatId,
+                'subcategory_id'    => $finalCatId,
+                'brand'             => $brand_id,
+                'tax_rate'          => 5,
+                'barcode_symbology' => 'code128',
+                'quantity'          => 0,
+                'sequence_code'     => 'PRD-' . str_pad($row, 5, '0', STR_PAD_LEFT)
+            ];
+
+            $this->db->insert('sma_products', $productData);
+            $product_id = $this->db->insert_id();
+
+            // -------------------------
+            // PROCESS IMAGES
+            // -------------------------
+            $all_images = [$image_field, $additional_image1, $additional_image2];
+
+            foreach ($all_images as $img) {
+                if (!empty($img)) {
+                    // Clean Markdown or extra bullets
+                    $img = trim($img);
+                    $img = ltrim($img, "-* \t"); // remove leading - or *
+                    $img = trim($img);
+
+                    // Skip if URL is invalid
+                    if (filter_var($img, FILTER_VALIDATE_URL)) {
+                        $this->db->insert('sma_product_photos', [
+                            'product_id' => $product_id,
+                            'photo'      => $img
+                        ]);
+                    }
+                }
+            }
+
+            echo "Inserted Product → $code ($name)<br>";
+
+            $row++;
         }
 
-        echo "Inserted Product → $code ($name)<br>";
-
-        $row++;
+        echo "<h3>Import Completed Successfully.</h3>";
     }
-
-    echo "<h3>Import Completed Successfully.</h3>";
-}
-
-
 
     public function update_product_codes()
     {
