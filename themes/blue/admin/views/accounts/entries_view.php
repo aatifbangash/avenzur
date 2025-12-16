@@ -305,10 +305,10 @@
                                 }
                                 ?>
 
-                                <a href="<?= admin_url('entries/edit/') . $entrytype['label'] . '/' . $entry['id']; ?>"
+                                <!--<a href="<?= admin_url('entries/edit/') . $entrytype['label'] . '/' . $entry['id']; ?>"
                                     class="btn btn-primary"><?= lang('entries_views_views_td_actions_edit_btn'); ?></a>
                                 <a href="<?= admin_url('entries/delete/') . $entrytype['label'] . '/' . $entry['id']; ?>"
-                                    class="btn btn-danger"><?= lang('entries_views_views_td_actions_delete_btn'); ?></a>
+                                    class="btn btn-danger"><?= lang('entries_views_views_td_actions_delete_btn'); ?></a>-->
                                 <a href="<?= admin_url('entries/') ?>"
                                     class="btn btn-default"><?= lang('entries_views_views_td_actions_cancel_btn'); ?></a>
                                 <!-- <a href="<?= admin_url('entries/export/') . $entrytype['label'] . '/' . $entry['id']; ?>/xls" class="btn btn-primary"><?= lang('export_to_xls'); ?>
