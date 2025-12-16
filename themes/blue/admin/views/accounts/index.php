@@ -30,7 +30,8 @@
       if ($account->id <= 4) {
         echo '<td class="td-actions"></td>';
       } else {
-        echo '<td class="td-actions">';
+        echo '<td class="td-actions"></td>';
+        /*echo '<td class="td-actions">';
         echo anchor('admin/groups/edit/'.$account->id, '<i class="fa fa-edit"></i>'.lang('accounts_index_edit_btn'), array('class' => 'no-hover font-normal', 'escape' => false));
         echo "<span class='link-pad'></span>";
 
@@ -40,7 +41,7 @@
                   'confirm' => lang('accounts_index_delete_group_alert'))
         );
 
-        echo '</td>';
+        echo '</td>';*/
       }
       echo '</tr>';
     }
@@ -69,14 +70,14 @@
         echo $CI->functionscore->toCurrency($data['cl_total_dc'], $data['cl_total']);
         echo '</td>';
 
-        echo '<td class="td-actions">';
+        /*echo '<td class="td-actions">';
         echo anchor('admin/ledgers/edit/'.$data['id'], '<i class="fa fa-edit"></i>'.lang('accounts_index_edit_btn'), 
             array('class' => 'no-hover', 'escape' => false)
         );
         echo "<span class='link-pad'></span>";
         echo anchor('admin/ledgers/delete/'.$data['id'], '<i class="fa fa-trash-o"></i>'.lang('accounts_index_delete_btn'), 
             array('class' => 'no-hover', 'escape' => false, 'confirm' => (lang('accounts_index_delete_ledger_alert')))
-        );
+        );*/
         echo '</tr>';
       }
       $counter--;
