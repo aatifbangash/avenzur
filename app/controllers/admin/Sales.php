@@ -6254,7 +6254,7 @@ if($inv->warning_note != ""){
      */
     public function pdf_zatka_invoice($id = null, $view = null, $save_buffer = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->load->library('inv_qrcode');
 
         if ($this->input->get('id')) {
