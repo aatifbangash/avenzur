@@ -2834,9 +2834,11 @@ class Products extends MY_Controller
                 $quantity = $_POST['quantity'][$r];
                 $serial = $_POST['serial'][$r];
                 $expiry = $_POST['expiry'][$r];
-                $batchno = $_POST['batchno'][$r];
+                $batchno = $_POST['batch_no'][$r];
+                $avz_code = $_POST['avz_code'][$r];
                 $sale_price = $_POST['sale_price'][$r];
-                $unit_cost = $_POST['unit_cost'][$r];
+                $unit_cost = $_POST['cost_price'][$r];
+                $purchase_price = $_POST['purchase_price'][$r];
                 $variant = isset($_POST['variant'][$r]) && !empty($_POST['variant'][$r]) ? $_POST['variant'][$r] : null;
 
                 if (!$this->Settings->overselling && $type == 'subtraction' && !$count_id) {
@@ -2851,7 +2853,8 @@ class Products extends MY_Controller
                             redirect($_SERVER['HTTP_REFERER']);
                         }
                     }
-                    if ($wh_qty = $this->products_model->getProductQuantity($product_id, $warehouse_id)) {
+                    
+                    if ($wh_qty = $this->products_model->getProductQuantity($product_id, $warehouse_id, $batchno)) {
 
                         if ($wh_qty['quantity'] < $quantity) {
                             $this->session->set_flashdata('error', lang('warehouse_qty_is_less_than_damage'));
@@ -2869,12 +2872,15 @@ class Products extends MY_Controller
                     'quantity' => $quantity,
                     'expiry' => date('Y-m-d', strtotime($expiry)),
                     'batchno' => $batchno,
+                    'avz_item_code' => $avz_code,
                     'sale_price' => $sale_price,
                     'unit_cost' => $unit_cost,
+                    'purchase_price' => $purchase_price,
                     'warehouse_id' => $warehouse_id,
                     'option_id' => $variant,
-                    'serial_no' => $serial,
+                    'serial_no' => $serial
                 ];
+
             }
 
             if (empty($products)) {
@@ -2911,7 +2917,10 @@ class Products extends MY_Controller
 
             // $this->sma->print_arrays($data, $products);
         }
-        if ($this->form_validation->run() == true && $this->products_model->addAdjustment($data, $products)) {
+        if ($this->form_validation->run() == true && $adjustment_id = $this->products_model->addAdjustment($data, $products)) {
+            // Create accounting entries for the adjustment
+            $this->createAdjustmentAccountingEntry($adjustment_id, $data, $products);
+            
             $this->session->set_userdata('remove_qals', 1);
             $this->session->set_flashdata('message', lang('quantity_adjusted'));
             admin_redirect('products/quantity_adjustments');
@@ -2955,6 +2964,139 @@ class Products extends MY_Controller
             $meta = ['page_title' => lang('add_adjustment'), 'bc' => $bc];
             $this->page_construct('products/add_adjustment', $meta, $this->data);
         }
+    }
+
+    /**
+     * Create accounting entries for stock adjustment
+     * 
+     * Accounting Logic:
+     * - Addition (Stock Increase): Dr Inventory Asset, Cr Inventory Gain
+     * - Subtraction (Stock Decrease): Dr Inventory Loss/Expense, Cr Inventory Asset
+     * 
+     * @param int $adjustment_id - The ID of the adjustment
+     * @param array $data - Adjustment header data
+     * @param array $products - Array of adjustment items
+     */
+    private function createAdjustmentAccountingEntry($adjustment_id, $data, $products)
+    {
+        // Delete existing entry if available first (in case of re-processing)
+        $this->site->deleteAccountingEntry($adjustment_id, 'adjustment');
+
+        // Get warehouse ledgers
+        $warehouse_id = $data['warehouse_id'];
+        $warehouse_ledgers = $this->site->getWarehouseByID($warehouse_id);
+
+        // Check if warehouse has required ledgers configured
+        if (!$warehouse_ledgers || !$warehouse_ledgers->inventory_ledger) {
+            // Log error but don't fail the adjustment
+            log_message('error', 'Warehouse ' . $warehouse_id . ' does not have inventory ledger configured for adjustment accounting');
+            return false;
+        }
+
+        // Calculate totals for additions and subtractions separately
+        $total_addition_value = 0;
+        $total_subtraction_value = 0;
+
+        foreach ($products as $product) {
+            $item_value = $product['quantity'] * $product['unit_cost'];
+            
+            if ($product['type'] == 'addition') {
+                $total_addition_value += $item_value;
+            } else {
+                $total_subtraction_value += $item_value;
+            }
+        }
+
+        $grand_total = $total_addition_value + $total_subtraction_value;
+
+        // Only create entry if there's a value to record
+        if ($grand_total == 0) {
+            return false;
+        }
+
+        // Create main accounting entry
+        $entry = array(
+            'entrytype_id' => 4, // Same as purchase order
+            'transaction_type' => 'adjustment',
+            'number' => 'ADJ-' . $data['reference_no'],
+            'date' => $data['date'],
+            'dr_total' => $grand_total,
+            'cr_total' => $grand_total,
+            'notes' => 'Stock Adjustment Reference: ' . $data['reference_no'] . ' | ' . ($data['note'] ? $data['note'] : 'Inventory Adjustment'),
+            'pid' => $adjustment_id,
+        );
+
+        $this->db->insert('sma_accounts_entries', $entry);
+        $insert_id = $this->db->insert_id();
+
+        $entryitemdata = array();
+
+        // Process additions (Stock Increase / Found Extra Stock)
+        if ($total_addition_value > 0) {
+            // Dr Inventory Asset
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $warehouse_ledgers->inventory_ledger,
+                    'amount' => $total_addition_value,
+                    'narration' => 'Inventory Increase - Stock Addition'
+                )
+            );
+
+            // Cr Inventory Gain / Adjustment Income
+            // Check if warehouse has inventory_gain_ledger, otherwise use a default
+            $inventory_gain_ledger = isset($warehouse_ledgers->inventory_gain_ledger) && $warehouse_ledgers->inventory_gain_ledger 
+                ? $warehouse_ledgers->inventory_gain_ledger 
+                : $warehouse_ledgers->inventory_ledger; // Fallback to inventory ledger
+
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'C',
+                    'ledger_id' => $inventory_gain_ledger,
+                    'amount' => $total_addition_value,
+                    'narration' => 'Inventory Gain - Stock Found'
+                )
+            );
+        }
+
+        // Process subtractions (Stock Decrease / Loss / Damage / Theft)
+        if ($total_subtraction_value > 0) {
+            // Dr Inventory Loss / Adjustment Expense
+            // Check if warehouse has inventory_loss_ledger, otherwise use a default
+            $inventory_loss_ledger = isset($warehouse_ledgers->inventory_loss_ledger) && $warehouse_ledgers->inventory_loss_ledger 
+                ? $warehouse_ledgers->inventory_loss_ledger 
+                : $warehouse_ledgers->inventory_ledger; // Fallback to inventory ledger
+
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $inventory_loss_ledger,
+                    'amount' => $total_subtraction_value,
+                    'narration' => 'Inventory Loss - Stock Reduction (Damage/Loss/Theft)'
+                )
+            );
+
+            // Cr Inventory Asset
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'C',
+                    'ledger_id' => $warehouse_ledgers->inventory_ledger,
+                    'amount' => $total_subtraction_value,
+                    'narration' => 'Inventory Decrease - Stock Subtraction'
+                )
+            );
+        }
+
+        // Insert all entry items
+        foreach ($entryitemdata as $row => $itemdata) {
+            $this->db->insert('sma_accounts_entryitems', $itemdata['Entryitem']);
+        }
+
+        return true;
     }
 
     public function add_adjustment_by_csv()
@@ -4323,10 +4465,6 @@ class Products extends MY_Controller
     {
         $this->sma->checkPermissions('adjustments');
 
-        $delete_link = "<a href='#' class='tip po' title='<b>" . $this->lang->line('delete_adjustment') . "</b>' data-content=\"<p>"
-            . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('products/delete_adjustment/$1') . "'>"
-            . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a>";
-
         $this->load->library('datatables');
         $this->datatables
             ->select("{$this->db->dbprefix('adjustments')}.id as id, date, reference_no, warehouses.name as wh_name, CONCAT({$this->db->dbprefix('users')}.first_name, ' ', {$this->db->dbprefix('users')}.last_name) as created_by, note, attachment")
@@ -4337,7 +4475,6 @@ class Products extends MY_Controller
         if ($warehouse_id) {
             $this->datatables->where('adjustments.warehouse_id', $warehouse_id);
         }
-        $this->datatables->add_column('Actions', "<div class='text-center'><a href='" . admin_url('products/edit_adjustment/$1') . "' class='tip' title='" . lang('edit_adjustment') . "'><i class='fa fa-edit'></i></a> " . $delete_link . '</div>', 'id');
 
         echo $this->datatables->generate();
     }
@@ -6081,6 +6218,39 @@ class Products extends MY_Controller
             $this->sma->send_json($pr);
         } else {
             $this->sma->send_json([['id' => 0, 'label' => lang('no_match_found'), 'value' => $term]]);
+        }
+    }
+
+    /* ----------------------------------------------------------------------------- */
+
+    public function get_product_batches()
+    {
+        $product_id = $this->input->get('product_id');
+        $warehouse_id = $this->input->get('warehouse_id');
+
+        if (!$product_id || !$warehouse_id) {
+            $this->sma->send_json([]);
+            return;
+        }
+
+        $batches = $this->products_model->getProductBatchesForWarehouse($product_id, $warehouse_id);
+        
+        if ($batches) {
+            $batch_list = [];
+            foreach ($batches as $batch) {
+                $batch_list[] = [
+                    'batch_no' => $batch->batch_no,
+                    'expiry' => $batch->expiry,
+                    'quantity' => $batch->quantity,
+                    'purchase_price' => $batch->purchase_price,
+                    'cost_price' => $batch->cost_price,
+                    'sale_price' => $batch->sale_price, 
+                    'avz_item_code' => $batch->avz_item_code
+                ];
+            }
+            $this->sma->send_json($batch_list);
+        } else {
+            $this->sma->send_json([]);
         }
     }
 

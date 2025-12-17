@@ -71,13 +71,18 @@ class Products_model extends CI_Model
             $adjustment_id = $this->db->insert_id();
             foreach ($products as $product) {
                 $product['adjustment_id'] = $adjustment_id;
+                // Keep purchase_price for adjustment_items table
+                $temp_purchase_price = isset($product['purchase_price']) ? $product['purchase_price'] : 0;
+                unset($product['purchase_price']);
                 $this->db->insert('adjustment_items', $product);
+                // Use purchase_price as real_unit_cost for inventory sync
+                $product['real_unit_cost'] = $temp_purchase_price;
                 $this->syncAdjustment($product);
             }
             if ($this->site->getReference('qa') == $data['reference_no']) {
                 $this->site->updateReference('qa');
             }
-            return true;
+            return $adjustment_id; // Return adjustment_id instead of true
         }
         return false;
     }
@@ -843,10 +848,14 @@ class Products_model extends CI_Model
         }
     }
 
-    public function getProductQuantity($product_id, $warehouse_id)
+    public function getProductQuantity($product_id, $warehouse_id, $batch_no = NULL)
     {
         $this->db->select_sum('quantity');
-        $this->db->where(['product_id' => $product_id, 'location_id' => $warehouse_id]);
+        if($batch_no !== NULL){
+            $this->db->where(['product_id' => $product_id, 'location_id' => $warehouse_id, 'batch_number' => $batch_no]);
+        }else{
+            $this->db->where(['product_id' => $product_id, 'location_id' => $warehouse_id]);
+        }
         $q = $this->db->get('sma_inventory_movements');
 
         if ($q->num_rows() > 0) {
@@ -1012,6 +1021,13 @@ class Products_model extends CI_Model
     }
     public function getQASuggestions($term, $limit = 5)
     {
+        // First check if term matches an AVZ code
+        $avz_result = $this->getProductByAVZCode($term);
+        if ($avz_result) {
+            return [$avz_result];
+        }
+        
+        // Otherwise search by product name/code
         $this->db->select('' . $this->db->dbprefix('products') . '.id, code, ' . $this->db->dbprefix('products') . '.name as name')
             ->where("type != 'combo' AND "
                 . '(' . $this->db->dbprefix('products') . ".name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR
@@ -1023,6 +1039,60 @@ class Products_model extends CI_Model
                 $data[] = $row;
             }
             return $data;
+        }
+        return false;
+    }
+    
+    public function getProductByAVZCode($avz_code)
+    {
+        $this->db->select('
+            p.id, 
+            p.code, 
+            p.name,
+            im.batch_number as batch_no,
+            im.expiry_date as expiry,
+            im.real_unit_cost as purchase_price,
+            im.net_unit_cost as cost_price,
+            im.net_unit_sale as sale_price,
+            im.avz_item_code
+        ')
+        ->from('inventory_movements im')
+        ->join('products p', 'p.id = im.product_id', 'left')
+        ->where('im.avz_item_code', $avz_code)
+        ->where('p.type !=', 'combo')
+        ->limit(1);
+        
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getProductBatchesForWarehouse($product_id, $warehouse_id)
+    {
+        $this->db->select('
+            batch_number as batch_no, 
+            avz_item_code,
+            expiry_date as expiry, 
+            SUM(quantity) as quantity,
+            MAX(real_unit_cost) as purchase_price,
+            MAX(net_unit_cost) as cost_price,
+            MAX(net_unit_sale) as sale_price
+        ')
+            ->from('inventory_movements')
+            ->where('product_id', $product_id)
+            ->where('location_id', $warehouse_id)
+            ->where('batch_number IS NOT NULL')
+            ->where('batch_number !=', '')
+            ->group_by(['avz_item_code'])
+            ->having('SUM(quantity) >', 0)
+            ->order_by('expiry_date', 'ASC');
+        
+        $q = $this->db->get();
+        
+        if ($q->num_rows() > 0) {
+            return $q->result();
         }
         return false;
     }
@@ -1311,21 +1381,28 @@ class Products_model extends CI_Model
     public function syncAdjustment($data = [])
     {
         if (!empty($data)) {
-            $avz_item_code = $this->sma->generateUUIDv4();
+            //echo '<pre>';print_r($data);exit;
+            if($data['type'] == 'subtraction' && $data['quantity'] > 0){
+                $avz_item_code = $data['avz_item_code'];
+            }else if($data['type'] == 'addition' && $data['quantity'] > 0 && !empty($data['avz_item_code'])){
+                $avz_item_code = $data['avz_item_code'];
+            }else{
+                $avz_item_code = $this->sma->generateUUIDv4();
+            }
 
             $clause = ['product_id' => $data['product_id'], 'unit_cost' => $data['unit_cost'], 'sale_price' => $data['sale_price'], 'vat' => $data['vat'], 'batchno' => $data['batchno'], 'expiry' => $data['expiry'], 'option_id' => $data['option_id'], 'warehouse_id' => $data['warehouse_id'], 'status' => 'received'];
             $qty = $data['type'] == 'subtraction' ? 0 - $data['quantity'] : 0 + $data['quantity'];
-            $this->site->setAdjustmentPurchaseItem($clause, $qty, $avz_item_code);
+            //$this->site->setAdjustmentPurchaseItem($clause, $qty, $avz_item_code);
 
-            $this->site->syncProductQty($data['product_id'], $data['warehouse_id'], $data['batchno']);
+            /*$this->site->syncProductQty($data['product_id'], $data['warehouse_id'], $data['batchno']);
             if ($data['option_id']) {
                 $this->site->syncVariantQty($data['option_id'], $data['warehouse_id'], $data['product_id']);
-            }
+            }*/
             $movement_type = $data['type'] == 'subtraction' ? 'adjustment_decrease' : 'adjustment_increase';
             $adjustment_id = isset($data['adjustment_id']) ? $data['adjustment_id'] : null;
             //$this->Inventory_model->add_movement($data['product_id'], $data['batchno'], $movement_type, $data['quantity'], $data['warehouse_id'], $adjustment_id, $data['unit_cost'], $data['expiry'], $data['sale_price'], $data['unit_cost'], $avz_item_code);
             //echo 'here in inventory upload....';
-            $this->Inventory_model->add_movement($data['product_id'], $data['batchno'], $movement_type, $data['quantity'], $data['warehouse_id'], $adjustment_id, $data['unit_cost'], $data['expiry'], $data['sale_price'], $data['unit_cost'], $avz_item_code, 0, NULL, $data['sale_price'], date('Y-m-d'));
+            $this->Inventory_model->add_movement($data['product_id'], $data['batchno'], $movement_type, $data['quantity'], $data['warehouse_id'], $adjustment_id, $data['unit_cost'], $data['expiry'], $data['sale_price'], $data['real_unit_cost'], $avz_item_code, 0, NULL, $data['sale_price'], date('Y-m-d H:i:s'));
         }
     }
 
