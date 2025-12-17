@@ -659,7 +659,9 @@ class Reports extends MY_Controller
             "customer_return" => "Return Customer",
             "return_to_supplier" => "Return Supplier",
             "transfer_in" => "Transfer In",
-            "transfer_out" => "Transfer Out"
+            "transfer_out" => "Transfer Out",
+            "adjustment_increase" => "Inventory Increase",
+            "adjustment_decrease" => "Inventory Decrease"
         ];
         $this->data['filterOnTypeArr'] = $filterOnTypeArr;
         $this->data['filterOnType'] = $filterOnType;
