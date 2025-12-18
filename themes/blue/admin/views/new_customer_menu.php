@@ -457,6 +457,9 @@
                         <?php if($Admin || $Owner || $this->GP['reports-purchase']){ ?>
                         <li><a href="<?= admin_url('reports/purchase_report'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Purchase Report'); ?></a></li>
                         <?php } ?>
+                        <?php if($Admin || $Owner || $this->GP['reports-purchase']){ ?>
+                        <li><a href="<?= admin_url('reports/purchase_per_invoice'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Purchase Per Invoice'); ?></a></li>
+                        <?php } ?>
                         <?php if($Admin || $Owner || $this->GP['reports-transfer']){ ?>
                         <li><a href="<?= admin_url('reports/transfer_report'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Transfer Report'); ?></a></li>
                         <?php } ?>

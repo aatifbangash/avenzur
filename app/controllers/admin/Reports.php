@@ -406,6 +406,226 @@ class Reports extends MY_Controller
         $this->page_construct('reports/purchase_report', $meta, $this->data);
     }
 
+    public function purchase_per_invoice()
+    {
+        //$this->sma->checkPermissions('reports');
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        // Fetch dropdown data
+        $this->data['warehouses'] = $this->site->getAllWarehouses(); // Pharmacies
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+
+        // Initialize default values
+        $this->data['period'] = null;
+        $this->data['supplier_id'] = null;
+        $this->data['pharmacy_id'] = null;
+        $this->data['start_date'] = null;
+        $this->data['end_date'] = null;
+        $this->data['invoices'] = null;
+        $this->data['totals'] = [
+            'total_amount' => 0,
+            'total_invoices' => 0,
+            'total_items' => 0,
+            'total_quantity' => 0
+        ];
+
+        // Check if form submitted
+        if ($this->input->post('period')) {
+            // Get filter values from POST
+            $period = $this->input->post('period');
+            $from_date = $this->input->post('from_date');
+            $to_date = $this->input->post('to_date');
+            $supplier_id = $this->input->post('supplier_id');
+            $pharmacy_id = $this->input->post('pharmacy_id');
+
+            // Determine dates based on inputs
+            if ($from_date && $to_date) {
+                // Use date range if provided
+                $start_date = date('Y-m-d', strtotime($from_date));
+                $end_date = date('Y-m-d', strtotime($to_date));
+            } elseif ($period) {
+                // Use period selector
+                if ($period == 'today') {
+                    $start_date = $end_date = date('Y-m-d');
+                } elseif ($period == 'month') {
+                    $start_date = date('Y-m-01');
+                    $end_date = date('Y-m-t');
+                } elseif ($period == 'ytd') {
+                    $start_date = date('Y-01-01');
+                    $end_date = date('Y-m-d');
+                } else {
+                    $start_date = $end_date = date('Y-m-d');
+                }
+            } else {
+                // Default to today
+                $start_date = $end_date = date('Y-m-d');
+            }
+
+            // Pass values to view
+            $this->data['period'] = $period;
+            $this->data['supplier_id'] = $supplier_id;
+            $this->data['pharmacy_id'] = $pharmacy_id;
+            $this->data['start_date'] = $start_date;
+            $this->data['end_date'] = $end_date;
+
+            // Log for debugging
+            log_message('debug', '========== Purchase Per Invoice Form Submitted ==========');
+            log_message('debug', 'Period: ' . $period . ', Start: ' . $start_date . ', End: ' . $end_date);
+            log_message('debug', 'Supplier: ' . var_export($supplier_id, true) . ', Pharmacy: ' . var_export($pharmacy_id, true));
+
+            // Fetch from model - use get_purchase_per_invoice_data to include purchases and payments
+            $invoices_array = $this->reports_model->get_purchase_per_invoice_data($start_date, $end_date, $supplier_id, $pharmacy_id);
+
+            // Log the fetched data count
+            log_message('debug', 'Raw data returned: ' . ($invoices_array ? count($invoices_array) : 0) . ' records');
+
+            // Convert arrays to objects for the view
+            $invoices_data = [];
+            if ($invoices_array && is_array($invoices_array)) {
+                foreach ($invoices_array as $inv) {
+                    $invoices_data[] = (object) $inv;
+                }
+            }
+
+            $this->data['invoices'] = $invoices_data;
+
+            // Calculate totals
+            $total_purchase = 0;
+            $total_vat = 0;
+            $total_payable = 0;
+            $total_payment = 0;
+            $total_return = 0;
+            $total_invoices = 0;
+            $total_items = 0;
+            $total_quantity = 0;
+
+            if ($invoices_data && is_array($invoices_data)) {
+                foreach ($invoices_data as $inv) {
+                    // Sum purchases
+                    $total_purchase += isset($inv->purchase) ? floatval($inv->purchase) : 0;
+                    $total_vat += isset($inv->vat) ? floatval($inv->vat) : 0;
+                    $total_payable += isset($inv->payable) ? floatval($inv->payable) : 0;
+
+                    // Sum payments
+                    $total_payment += isset($inv->payment) ? floatval($inv->payment) : 0;
+
+                    // Sum returns
+                    $total_return += isset($inv->return_amount) ? floatval($inv->return_amount) : 0;
+
+                    // Count invoices (only count purchase type, not payment or return type)
+                    if (isset($inv->type) && $inv->type == 'Purchase') {
+                        $total_invoices++;
+                        $total_items += isset($inv->item_count) ? intval($inv->item_count) : 0;
+                        $total_quantity += isset($inv->total_quantity) ? floatval($inv->total_quantity) : 0;
+                    }
+                }
+            }
+
+            $this->data['totals'] = [
+                'total_purchase' => $total_purchase,
+                'total_vat' => $total_vat,
+                'total_payable' => $total_payable,
+                'total_payment' => $total_payment,
+                'total_return' => $total_return,
+                'total_amount' => $total_payable,
+                'total_invoices' => $total_invoices,
+                'total_items' => $total_items,
+                'total_quantity' => $total_quantity
+            ];
+
+            log_message('debug', 'Totals calculated - Purchase: ' . $total_purchase . ', Payment: ' . $total_payment . ', Return: ' . $total_return . ', Invoices: ' . $total_invoices);
+            log_message('debug', '=========================================================');
+        }
+
+        // Handle Excel export
+        if ($this->input->post('export_excel') && isset($this->data['invoices']) && !empty($this->data['invoices'])) {
+            $report = $this->data['invoices'];
+
+            $this->load->library('excel');
+            $sheet = $this->excel->setActiveSheetIndex(0);
+            $sheet->setTitle('Purchase Per Invoice');
+
+            // Header row
+            $sheet->SetCellValue('A1', 'Type');
+            $sheet->SetCellValue('B1', 'Date');
+            $sheet->SetCellValue('C1', 'Invoice');
+            $sheet->SetCellValue('D1', 'Return Inv#');
+            $sheet->SetCellValue('E1', 'Agent Name');
+            $sheet->SetCellValue('F1', 'Supplier No');
+            $sheet->SetCellValue('G1', 'Supplier Name');
+            $sheet->SetCellValue('H1', 'Purchase');
+            $sheet->SetCellValue('I1', 'Vat');
+            $sheet->SetCellValue('J1', 'Payable');
+            $sheet->SetCellValue('K1', 'Payment');
+            $sheet->SetCellValue('L1', 'Return');
+
+            $row = 2;
+            $total_purchase = 0;
+            $total_vat = 0;
+            $total_payable = 0;
+            $total_payment = 0;
+            $total_return = 0;
+
+            foreach ($report as $r) {
+                $sheet->SetCellValue("A{$row}", isset($r->type) ? $r->type : 'Purchase');
+                $sheet->SetCellValue("B{$row}", isset($r->date) ? $r->date : '');
+                $sheet->SetCellValue("C{$row}", isset($r->invoice) ? $r->invoice : '');
+                $sheet->SetCellValue("D{$row}", isset($r->return_inv) ? $r->return_inv : '');
+                $sheet->SetCellValue("E{$row}", isset($r->agent_name) ? $r->agent_name : '');
+                $sheet->SetCellValue("F{$row}", isset($r->supplier_no) ? $r->supplier_no : '');
+                $sheet->SetCellValue("G{$row}", isset($r->supplier_name) ? $r->supplier_name : '');
+                $sheet->SetCellValue("H{$row}", $this->sma->formatMoney(isset($r->purchase) ? $r->purchase : 0, 'none'));
+                $sheet->SetCellValue("I{$row}", $this->sma->formatMoney(isset($r->vat) ? $r->vat : 0, 'none'));
+                $sheet->SetCellValue("J{$row}", $this->sma->formatMoney(isset($r->payable) ? $r->payable : 0, 'none'));
+                $sheet->SetCellValue("K{$row}", $this->sma->formatMoney(isset($r->payment) ? $r->payment : 0, 'none'));
+                $sheet->SetCellValue("L{$row}", $this->sma->formatMoney(isset($r->return_amount) ? $r->return_amount : 0, 'none'));
+
+                $total_purchase += isset($r->purchase) ? $r->purchase : 0;
+                $total_vat += isset($r->vat) ? $r->vat : 0;
+                $total_payable += isset($r->payable) ? $r->payable : 0;
+                $total_payment += isset($r->payment) ? $r->payment : 0;
+                $total_return += isset($r->return_amount) ? $r->return_amount : 0;
+
+                $row++;
+            }
+
+            // Add totals row
+            $sheet->SetCellValue("A{$row}", 'TOTAL');
+            $sheet->SetCellValue("H{$row}", $this->sma->formatMoney($total_purchase, 'none'));
+            $sheet->SetCellValue("I{$row}", $this->sma->formatMoney($total_vat, 'none'));
+            $sheet->SetCellValue("J{$row}", $this->sma->formatMoney($total_payable, 'none'));
+            $sheet->SetCellValue("K{$row}", $this->sma->formatMoney($total_payment, 'none'));
+            $sheet->SetCellValue("L{$row}", $this->sma->formatMoney($total_return, 'none'));
+
+            // Set column widths
+            $widths = [
+                'A' => 12, 'B' => 15, 'C' => 15, 'D' => 12, 'E' => 20,
+                'F' => 12, 'G' => 25, 'H' => 15, 'I' => 12, 'J' => 15, 'K' => 15, 'L' => 15
+            ];
+
+            foreach ($widths as $col => $w) {
+                $sheet->getColumnDimension($col)->setWidth($w);
+            }
+
+            // Vertical alignment
+            $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+
+
+            // Export file
+            $filename = 'Purchase_Per_Invoice_' . date('Y-m-d_H_i_s');
+            $this->load->helper('excel');
+            create_excel($this->excel, $filename);
+        }
+
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => '#', 'page' => 'Purchase Per Invoice']
+        ];
+        $meta = ['page_title' => 'Purchase Per Invoice', 'bc' => $bc];
+        $this->page_construct('reports/purchase_per_invoice', $meta, $this->data);
+    }
+
 
     public function daily_purchase_report(){
         //$this->sma->checkPermissions();
@@ -6172,8 +6392,4 @@ class Reports extends MY_Controller
 
         echo json_encode($registers[0]);
     }
-
-    
-
-
 }
