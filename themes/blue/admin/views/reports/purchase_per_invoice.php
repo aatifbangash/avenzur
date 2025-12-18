@@ -23,6 +23,14 @@ echo admin_form_open('reports/purchase_per_invoice', $attrib);
         </select>
     </div>
 
+    <!-- Purchase ID -->
+    <div class="col-md-2 mb-3">
+        <label><?= lang('Purchase ID') ?></label>
+        <input type="text" name="purchase_id" class="form-control" id="purchase_id" 
+               value="<?= isset($purchase_id) ? $purchase_id : '' ?>" 
+               placeholder="<?= lang('Enter Purchase ID') ?>">
+    </div>
+
     <!-- Supplier -->
     <div class="col-md-3 mb-3">
         <label><?= lang('supplier') ?></label>
@@ -59,6 +67,7 @@ echo admin_form_open('reports/purchase_per_invoice', $attrib);
     <div class="alert alert-info" style="font-size: 11px;">
         <strong>Debug Info:</strong> Period: <?= $period ?> |
         Dates: <?= isset($start_date) ? $start_date : 'N/A' ?> to <?= isset($end_date) ? $end_date : 'N/A' ?> |
+        Purchase ID: <?= isset($purchase_id) && $purchase_id ? $purchase_id : 'All' ?> |
         Supplier: <?= isset($supplier_id) && $supplier_id ? $supplier_id : 'All' ?> |
         Pharmacy: <?= isset($pharmacy_id) && $pharmacy_id ? $pharmacy_id : 'All' ?> |
         Invoices: <?= isset($invoices) ? (is_array($invoices) ? count($invoices) : 'Not array') : 'Not set' ?>

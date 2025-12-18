@@ -5720,7 +5720,7 @@ class Reports_model extends CI_Model
     /**
      * Get Purchase Per Invoice Report (simplified version for single-select filters)
      */
-    public function get_purchase_per_invoice_data($start_date, $end_date, $supplier_id = '', $pharmacy_id = '')
+    public function get_purchase_per_invoice_data($start_date, $end_date, $supplier_id = '', $pharmacy_id = '', $purchase_id = '')
     {
         $result = [];
 
@@ -5761,6 +5761,9 @@ class Reports_model extends CI_Model
         if (!empty($pharmacy_id)) {
             $this->db->where('p.warehouse_id', $pharmacy_id);
         }
+        if (!empty($purchase_id)) {
+            $this->db->where('p.id', $purchase_id);
+        }
 
         $this->db->order_by('p.date', 'DESC');
         $query = $this->db->get();
@@ -5775,7 +5778,7 @@ class Reports_model extends CI_Model
             'Payment' as type,
             pay.date,
             p.id as invoice,
-            COALESCE(p.reference_no, '') as return_inv,
+            '-' as return_inv,
             COALESCE(agent.name, '') as agent_name,
             COALESCE(s.id, '') as supplier_no,
             COALESCE(s.name, 'Direct Payment') as supplier_name,
@@ -5811,6 +5814,10 @@ class Reports_model extends CI_Model
         if (!empty($pharmacy_id)) {
             $this->db->where('p.warehouse_id', $pharmacy_id);
         }
+        
+        if (!empty($purchase_id)) {
+            $this->db->where('pay.purchase_id', $purchase_id);
+        }
 
         $this->db->order_by('pay.date', 'DESC');
         $query = $this->db->get();
@@ -5825,8 +5832,8 @@ class Reports_model extends CI_Model
             'Return' as type,
             rs.date,
             rs.reference_no as invoice,
-            rs.reference_no as return_inv,
-            COALESCE(agent.name, '') as agent_name,
+            rs.id as return_inv,
+            COALESCE(agent.name, '-') as agent_name,
             COALESCE(s.id, '') as supplier_no,
             COALESCE(s.name, rs.supplier) as supplier_name,
             rs.total_net_purchase as purchase,
@@ -5839,6 +5846,11 @@ class Reports_model extends CI_Model
         $this->db->join('sma_companies s', 'rs.supplier_id = s.id', 'left');
         // Get agent name: supplier -> parent_code -> agent (by sequence_code)
         $this->db->join('sma_companies agent', 'agent.sequence_code = s.parent_code', 'left');
+        
+        // Join with purchases table to filter by purchase_id if needed
+        if (!empty($purchase_id)) {
+            $this->db->join('sma_purchases p', 'rs.reference_no = p.id', 'left');
+        }
 
         // Fix date comparison
         $this->db->where('rs.date >=', $start_date . ' 00:00:00');
@@ -5854,6 +5866,10 @@ class Reports_model extends CI_Model
 
         if (!empty($pharmacy_id)) {
             $this->db->where('rs.warehouse_id', $pharmacy_id);
+        }
+        
+        if (!empty($purchase_id)) {
+            $this->db->where('rs.reference_no', $purchase_id);
         }
 
         $this->db->order_by('rs.date', 'DESC');
@@ -5874,6 +5890,4 @@ class Reports_model extends CI_Model
 
         return $result;
     }
-
-
 }
