@@ -5717,5 +5717,163 @@ class Reports_model extends CI_Model
         return [];
     }
 
+    /**
+     * Get Purchase Per Invoice Report (simplified version for single-select filters)
+     */
+    public function get_purchase_per_invoice_data($start_date, $end_date, $supplier_id = '', $pharmacy_id = '')
+    {
+        $result = [];
+
+        // Get all purchases (excluding imports from excel)
+        $this->db->select("
+            'Purchase' as type,
+            p.date,
+            p.id as invoice,
+            '' as return_inv,
+            COALESCE(agent.name, '') as agent_name,
+            s.id as supplier_no,
+            s.name as supplier_name,
+            (p.total - p.product_discount) as purchase,
+            p.order_tax as vat,
+            p.grand_total as payable,
+            0 as payment,
+            0 as return_amount
+        ");
+        $this->db->from('sma_purchases p');
+        $this->db->join('sma_companies s', 'p.supplier_id = s.id', 'left');
+        // Get agent name: supplier -> parent_code -> agent (by sequence_code)
+        $this->db->join('sma_companies agent', 'agent.sequence_code = s.parent_code', 'left');
+
+        // Fix date comparison - ensure we're comparing dates properly
+        $this->db->where('p.date >=', $start_date . ' 00:00:00');
+        $this->db->where('p.date <=', $end_date . ' 23:59:59');
+
+        // Exclude purchases with note "import from excel"
+        $this->db->where('(p.note IS NULL OR p.note != "import from excel")');
+
+        // Exclude returns (returns have return_purchase_ref)
+        $this->db->where('(p.return_purchase_ref IS NULL OR p.return_purchase_ref = "")');
+
+        // Apply filters
+        if (!empty($supplier_id)) {
+            $this->db->where('p.supplier_id', $supplier_id);
+        }
+        if (!empty($pharmacy_id)) {
+            $this->db->where('p.warehouse_id', $pharmacy_id);
+        }
+
+        $this->db->order_by('p.date', 'DESC');
+        $query = $this->db->get();
+
+        // Log the query for debugging
+        log_message('debug', 'Purchase Query: ' . $this->db->last_query());
+
+        $purchases = $query->result_array();
+
+        // Get all payments for suppliers with proper supplier details
+        $this->db->select("
+            'Payment' as type,
+            pay.date,
+            p.id as invoice,
+            COALESCE(p.reference_no, '') as return_inv,
+            COALESCE(agent.name, '') as agent_name,
+            COALESCE(s.id, '') as supplier_no,
+            COALESCE(s.name, 'Direct Payment') as supplier_name,
+            0 as purchase,
+            0 as vat,
+            0 as payable,
+            pay.amount as payment,
+            0 as return_amount
+        ");
+        $this->db->from('sma_payments pay');
+        $this->db->join('sma_purchases p', 'pay.purchase_id = p.id', 'left');
+        $this->db->join('sma_companies s', 'p.supplier_id = s.id', 'left');
+        // Get agent name: supplier -> parent_code -> agent (by sequence_code)
+        $this->db->join('sma_companies agent', 'agent.sequence_code = s.parent_code', 'left');
+
+        // Only include purchase-related payments (not sale or return payments)
+        $this->db->where('pay.purchase_id IS NOT NULL');
+        $this->db->where('(pay.sale_id IS NULL OR pay.sale_id = 0)');
+        $this->db->where('(pay.return_id IS NULL OR pay.return_id = 0)');
+
+        // Fix date comparison
+        $this->db->where('pay.date >=', $start_date . ' 00:00:00');
+        $this->db->where('pay.date <=', $end_date . ' 23:59:59');
+
+        // Exclude payments related to purchases with note "import from excel" (if linked to purchase)
+        $this->db->where('(p.note IS NULL OR p.note != "import from excel")');
+
+        // Apply filters - only if there's a related purchase
+        if (!empty($supplier_id)) {
+            $this->db->where('p.supplier_id', $supplier_id);
+        }
+
+        if (!empty($pharmacy_id)) {
+            $this->db->where('p.warehouse_id', $pharmacy_id);
+        }
+
+        $this->db->order_by('pay.date', 'DESC');
+        $query = $this->db->get();
+
+        // Log the query for debugging
+        log_message('debug', 'Payment Query: ' . $this->db->last_query());
+
+        $payments = $query->result_array();
+
+        // Get all purchase returns from sma_returns_supplier table
+        $this->db->select("
+            'Return' as type,
+            rs.date,
+            rs.reference_no as invoice,
+            rs.reference_no as return_inv,
+            COALESCE(agent.name, '') as agent_name,
+            COALESCE(s.sequence_code, '') as supplier_no,
+            COALESCE(s.name, rs.supplier) as supplier_name,
+            0 as purchase,
+            0 as vat,
+            0 as payable,
+            0 as payment,
+            COALESCE(rs.grand_total, 0) as return_amount
+        ");
+        $this->db->from('sma_returns_supplier rs');
+        $this->db->join('sma_companies s', 'rs.supplier_id = s.id', 'left');
+        // Get agent name: supplier -> parent_code -> agent (by sequence_code)
+        $this->db->join('sma_companies agent', 'agent.sequence_code = s.parent_code', 'left');
+
+        // Fix date comparison
+        $this->db->where('rs.date >=', $start_date . ' 00:00:00');
+        $this->db->where('rs.date <=', $end_date . ' 23:59:59');
+
+        // Exclude returns with note "import from excel"
+        $this->db->where('(rs.note IS NULL OR rs.note != "import from excel")');
+
+        // Apply filters
+        if (!empty($supplier_id)) {
+            $this->db->where('rs.supplier_id', $supplier_id);
+        }
+
+        if (!empty($pharmacy_id)) {
+            $this->db->where('rs.warehouse_id', $pharmacy_id);
+        }
+
+        $this->db->order_by('rs.date', 'DESC');
+        $query = $this->db->get();
+
+        // Log the query for debugging
+        log_message('debug', 'Return Query: ' . $this->db->last_query());
+
+        $returns = $query->result_array();
+
+        // Merge purchases, payments, and returns
+        $result = array_merge($purchases, $payments, $returns);
+
+        // Sort by date descending
+        usort($result, function($a, $b) {
+            return strtotime($b['date']) - strtotime($a['date']);
+        });
+
+        return $result;
+    }
+
 
 }
