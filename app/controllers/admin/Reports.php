@@ -6321,6 +6321,72 @@ class Reports extends MY_Controller
     }
 
     /**
+     * Sales Per Item Report
+     * Shows detailed sales and returns per item with profitability
+     */
+    public function sales_per_item()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        
+        // Get filter parameters from GET
+        $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : null;
+        $end_date = $this->input->get('end_date') ? $this->input->get('end_date') : null;
+        $invoice_id = $this->input->get('invoice_id') ? $this->input->get('invoice_id') : null;
+        $salesman = $this->input->get('salesman') ? $this->input->get('salesman') : null;
+        $item_code = $this->input->get('item_code') ? $this->input->get('item_code') : null;
+        
+        // Get sales men for dropdown
+        $this->db->select('id, name');
+        $this->db->from('sales_man');
+        $this->db->order_by('name', 'asc');
+        $query = $this->db->get();
+        $this->data['salesmen'] = $query->result();
+        
+        // Set filter values for form persistence (always set these)
+        $this->data['start_date'] = $start_date;
+        $this->data['end_date'] = $end_date;
+        $this->data['invoice_id'] = $invoice_id;
+        $this->data['salesman'] = $salesman;
+        $this->data['item_code'] = $item_code;
+        
+        // If any filter submitted, fetch data
+        if ($start_date || $end_date || $invoice_id || $salesman || $item_code) {
+            
+            // Pre-fetch salesman name if needed
+            $salesman_name = null;
+            if ($salesman) {
+                $sm_query = $this->db->select('name')->from('sales_man')->where('id', $salesman)->get();
+                if ($sm_query->num_rows() > 0) {
+                    $salesman_name = $sm_query->row()->name;
+                }
+            }
+            
+            // Format dates only if provided
+            $formatted_start_date = $start_date ? $this->sma->fld($start_date) : null;
+            $formatted_end_date = $end_date ? $this->sma->fld($end_date) : null;
+            
+            // Fetch data from model
+            $sales_data = $this->reports_model->getSalesPerItem(
+                $formatted_start_date, 
+                $formatted_end_date, 
+                $invoice_id,
+                $salesman_name,
+                $item_code
+            );
+            
+            $this->data['sales_data'] = $sales_data;
+        }
+        
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')], 
+            ['link' => admin_url('reports'), 'page' => lang('reports')], 
+            ['link' => '#', 'page' => lang('Sales Per Item')]
+        ];
+        $meta = ['page_title' => lang('Sales Per Item'), 'bc' => $bc];
+        $this->page_construct('reports/sales_per_item', $meta, $this->data);
+    }
+
+    /**
      * Get Invoice Status Data for DataTables (AJAX)
      * Filters: date range, invoice id, customer name, sales man
      */
