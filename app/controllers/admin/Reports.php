@@ -6636,7 +6636,83 @@ class Reports extends MY_Controller
         }
     }
 
-    
+    public function sales_per_invoice()
+    {
+        // Load necessary data for filters
+        $this->data['customers'] = $this->site->getAllCompanies('customer');
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
 
+        // Check if form is submitted
+        if ($this->input->post('period')) {
+            // Get filter parameters
+            $period = $this->input->post('period');
+            $customer_id = $this->input->post('customer_id');
+            $pharmacy_id = $this->input->post('pharmacy_id');
+
+            // Calculate date range based on period
+            $start_date = null;
+            $end_date = date('Y-m-d 23:59:59');
+
+            switch ($period) {
+                case 'today':
+                    $start_date = date('Y-m-d 00:00:00');
+                    break;
+                case 'month':
+                    $start_date = date('Y-m-01 00:00:00');
+                    break;
+                case 'ytd':
+                    $start_date = date('Y-01-01 00:00:00');
+                    break;
+                default:
+                    $start_date = date('Y-m-d 00:00:00');
+            }
+
+            // Get sales data from model
+            $invoices = $this->reports_model->getSalesPerInvoice($start_date, $end_date, $customer_id, $pharmacy_id);
+
+            // Calculate totals
+            $totals = [
+                'total_sales' => 0,
+                'total_discount' => 0,
+                'total_net_sales' => 0,
+                'total_cogs' => 0,
+                'total_profit' => 0,
+                'total_vat' => 0,
+                'total_receivable' => 0,
+                'total_invoices' => 0,
+                'total_items' => 0
+            ];
+
+            if (!empty($invoices)) {
+                foreach ($invoices as $invoice) {
+                    $totals['total_sales'] += isset($invoice->sales) ? $invoice->sales : 0;
+                    $totals['total_discount'] += isset($invoice->discount) ? $invoice->discount : 0;
+                    $totals['total_net_sales'] += isset($invoice->net_sales) ? $invoice->net_sales : 0;
+                    $totals['total_cogs'] += isset($invoice->cogs) ? $invoice->cogs : 0;
+                    $totals['total_profit'] += isset($invoice->profit) ? $invoice->profit : 0;
+                    $totals['total_vat'] += isset($invoice->vat) ? $invoice->vat : 0;
+                    $totals['total_receivable'] += isset($invoice->receivable) ? $invoice->receivable : 0;
+                    $totals['total_items'] += isset($invoice->total_items) ? $invoice->total_items : 0;
+                }
+                $totals['total_invoices'] = count($invoices);
+            }
+
+            // Pass data to view
+            $this->data['invoices'] = $invoices;
+            $this->data['totals'] = $totals;
+            $this->data['period'] = $period;
+            $this->data['customer_id'] = $customer_id;
+            $this->data['pharmacy_id'] = $pharmacy_id;
+        }
+
+        // Page setup
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => '#', 'page' => lang('sales_per_invoice_report')]
+        ];
+        $meta = ['page_title' => lang('sales_per_invoice_report'), 'bc' => $bc];
+        $this->page_construct('reports/sales_per_invoice', $meta, $this->data);
+    }
 
 }
