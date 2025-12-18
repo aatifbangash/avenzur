@@ -131,7 +131,7 @@ echo admin_form_open('reports/sales_per_invoice', $attrib);
                                         <th class="text-right"><?= $this->sma->formatMoney(isset($totals['total_receivable']) ? $totals['total_receivable'] : 0) ?></th>
                                     </tr>
                                     <tr class="info">
-                                        <th colspan="14" class="text-center">
+                                        <th colspan="15" class="text-center">
                                             <?= lang('total_invoices') ?>: <?= isset($totals['total_invoices']) ? $totals['total_invoices'] : 0 ?> |
                                             <?= lang('total_items') ?>: <?= isset($totals['total_items']) ? $totals['total_items'] : 0 ?>
                                         </th>
