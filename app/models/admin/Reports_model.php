@@ -4732,6 +4732,74 @@ class Reports_model extends CI_Model
         return false;
     }
 
+    public function getCollectionsByLocation($start_date, $end_date, $warehouse)
+    {
+        // Build date filter only if both dates are provided
+        $dateWhere = "";
+        
+        if ($start_date && $end_date) {
+            $dateWhere = " AND DATE(p.date) >= '".trim($start_date)."'
+                AND DATE(p.date) <= '".trim($end_date)."' ";
+        }else if($start_date) {
+            $dateWhere = " AND DATE(p.date) >= '".trim($start_date)."' ";
+        }else if($end_date) {
+            $dateWhere = " AND DATE(p.date) <= '".trim($end_date)."' ";
+        }
+        // Build warehouse filter only if provided
+        $warehouseWhere = "";
+        if ($warehouse) {
+            $warehouseWhere = " AND (s.warehouse_id = " . $warehouse . " OR r.warehouse_id = " . $warehouse . ")";
+        }
+
+         $sql = "SELECT 
+                    p.id as payment_id,
+                    DATE(p.date) AS collection_date,
+                    cm.id AS customer_id,
+                    cm.name AS customer_name,
+                    cm.sales_agent,
+                    p.amount,
+                    p.paid_by,
+                    p.return_id,
+                    s.date AS sale_date,
+                    s.id as sale_id,
+                    s.grand_total,
+                    cm.city as area,
+                    pr.transfer_from_ledger,
+                    lg.name as ledger_name
+
+                FROM sma_payments p
+                LEFT JOIN sma_sales s 
+                    ON s.id = p.sale_id
+
+                LEFT JOIN sma_returns r 
+                    ON r.id = p.return_id
+
+                LEFT JOIN sma_companies cm 
+                    ON cm.id = s.customer_id
+
+                LEFT JOIN sma_payment_reference pr 
+                    ON pr.id = p.payment_id
+
+                LEFT JOIN sma_accounts_ledgers lg
+                    ON lg.id = pr.transfer_from_ledger
+                WHERE 1=1
+                 ".$dateWhere."
+                 ".$warehouseWhere."
+                    ORDER BY 
+                    DATE(p.date)
+        ";
+        $q = $this->db->query($sql);
+        $data = array();
+        //echo $this->db->last_query();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        }
+
+        return $data;
+    }
+
     public function getCollectionsByPharmacy($start_date, $end_date, $warehouse)
     {
         // error_reporting(-1);
