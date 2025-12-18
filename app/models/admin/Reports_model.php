@@ -5317,6 +5317,156 @@ class Reports_model extends CI_Model
 
         return $data;
     }
-    
+
+    /**
+     * Get Sales Per Item Report Data
+     * Shows sales and returns with item details, profitability
+     * 
+     * @param string $start_date - Start date (formatted)
+     * @param string $end_date - End date (formatted)
+     * @param string $invoice_id - Invoice ID or reference number
+     * @param string $salesman_name - Sales agent name
+     * @param string $item_code - Item code to filter
+     * @return array - Sales per item data
+     */
+    public function getSalesPerItem($start_date, $end_date, $invoice_id, $salesman_name, $item_code)
+    {
+        // Build WHERE clauses conditionally
+        $where_clauses = [];
+        
+        // Date filter (optional - works with both dates or none)
+        if ($start_date && $end_date) {
+            $where_clauses[] = "DATE(s.date) BETWEEN '{$start_date}' AND '{$end_date}'";
+        }
+        
+        // Invoice filter
+        if ($invoice_id) {
+            if (is_numeric($invoice_id)) {
+                $where_clauses[] = "s.id = {$invoice_id}";
+            } else {
+                $where_clauses[] = "s.reference_no LIKE '{$invoice_id}%'";
+            }
+        }
+        
+        // Salesman filter
+        if ($salesman_name) {
+            $where_clauses[] = "c.sales_agent = '{$salesman_name}'";
+        }
+        
+        // Item code filter
+        if ($item_code) {
+            $where_clauses[] = "(p.code LIKE '%{$item_code}%' OR p.name LIKE '%{$item_code}%')";
+        }
+        
+        $where_sql = !empty($where_clauses) ? 'AND ' . implode(' AND ', $where_clauses) : '';
+        
+        // Query for SALES
+        $sales_sql = "
+            SELECT 
+                'Sales' AS type,
+                DATE_FORMAT(s.date, '%d-%b-%y') AS date,
+                s.id AS invoice,
+                '0' AS return_inv,
+                c.city AS area,
+                c.sales_agent AS sales_man,
+                c.id AS customer_no,
+                c.name AS customer_name,
+                p.code AS item_no,
+                p.name AS item_name,
+                si.quantity AS qty,
+                si.bonus AS bonus,
+                si.net_cost AS unit_cost,
+                si.net_unit_price AS unit_price,
+                si.subtotal AS sales,
+                (si.item_discount + COALESCE(si.second_discount_value, 0)) AS discount,
+                si.totalbeforevat AS net_sales,
+                si.tax AS vat,
+                (si.totalbeforevat + si.tax) AS receivable,
+                (si.net_cost * si.quantity) AS cogs,
+                (si.totalbeforevat - (si.net_cost * si.quantity)) AS profit
+            FROM {$this->db->dbprefix('sale_items')} si
+            LEFT JOIN {$this->db->dbprefix('sales')} s ON s.id = si.sale_id
+            LEFT JOIN {$this->db->dbprefix('companies')} c ON c.id = s.customer_id
+            LEFT JOIN {$this->db->dbprefix('products')} p ON p.id = si.product_id
+            WHERE 1=1
+            {$where_sql}
+        ";
+        //echo $sales_sql;exit;
+        
+        // Build WHERE clauses for returns
+        $return_where_clauses = [];
+        
+        if ($start_date && $end_date) {
+            $return_where_clauses[] = "DATE(r.date) BETWEEN '{$start_date}' AND '{$end_date}'";
+        }
+        
+        if ($invoice_id) {
+            if (is_numeric($invoice_id)) {
+                $return_where_clauses[] = "s.id = {$invoice_id}";
+            } else {
+                $return_where_clauses[] = "s.reference_no LIKE '{$invoice_id}%'";
+            }
+        }
+        
+        if ($salesman_name) {
+            $return_where_clauses[] = "c.sales_agent = '{$salesman_name}'";
+        }
+        
+        if ($item_code) {
+            $return_where_clauses[] = "(p.code LIKE '%{$item_code}%' OR p.name LIKE '%{$item_code}%')";
+        }
+        
+        $return_where_sql = !empty($return_where_clauses) ? 'AND ' . implode(' AND ', $return_where_clauses) : '';
+        
+        // Query for RETURNS
+        $returns_sql = "
+            SELECT 
+                'Return' AS type,
+                DATE_FORMAT(r.date, '%d-%b-%y') AS date,
+                s.id AS invoice,
+                r.id AS return_inv,
+                c.city AS area,
+                c.sales_agent AS sales_man,
+                c.id AS customer_no,
+                c.name AS customer_name,
+                p.code AS item_no,
+                p.name AS item_name,
+                -ri.quantity AS qty,
+                0 AS bonus,
+                ri.net_cost AS unit_cost,
+                ri.real_unit_price AS unit_price,
+                -(ri.real_unit_price * ri.quantity) AS sales,
+                -ri.item_discount AS discount,
+                -ri.totalbeforevat AS net_sales,
+                -ri.tax AS vat,
+                -(ri.totalbeforevat + ri.tax) AS receivable,
+                -(ri.net_cost * ri.quantity) AS cogs,
+                -(ri.totalbeforevat - (ri.net_cost * ri.quantity)) AS profit
+            FROM {$this->db->dbprefix('return_items')} ri
+            LEFT JOIN {$this->db->dbprefix('returns')} r ON r.id = ri.return_id
+            LEFT JOIN {$this->db->dbprefix('sales')} s ON s.id = r.sale_id
+            LEFT JOIN {$this->db->dbprefix('companies')} c ON c.id = s.customer_id
+            LEFT JOIN {$this->db->dbprefix('products')} p ON p.id = ri.product_id
+            WHERE 1=1
+            {$return_where_sql}
+        ";
+        
+        // Combine both queries
+        $sql = "
+            {$sales_sql}
+            UNION ALL
+            {$returns_sql}
+            ORDER BY date DESC, invoice
+        ";
+        
+        $query = $this->db->query($sql);
+        
+        if ($query->num_rows() > 0) {
+            return $query->result();
+        }
+        
+        return [];
+    }
+
 
 }
