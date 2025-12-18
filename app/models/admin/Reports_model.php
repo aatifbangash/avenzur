@@ -5468,6 +5468,122 @@ class Reports_model extends CI_Model
         return [];
     }
 
+    public function getSalesPerInvoice($start_date, $end_date, $customer_id = null, $pharmacy_id = null)
+    {
+        // Build WHERE conditions for filtering
+        $date_condition = "";
+        $customer_condition = "";
+        $warehouse_condition = "";
+
+        if ($start_date) {
+            $date_condition .= " AND s.date >= '{$start_date}'";
+        }
+        if ($end_date) {
+            $date_condition .= " AND s.date <= '{$end_date}'";
+        }
+        if (!empty($customer_id) && $customer_id !== '' && $customer_id !== '0') {
+            $customer_condition = " AND s.customer_id = {$customer_id}";
+        }
+        if (!empty($pharmacy_id) && $pharmacy_id !== '' && $pharmacy_id !== '0') {
+            $warehouse_condition = " AND s.warehouse_id = {$pharmacy_id}";
+        }
+
+        // Build the UNION query for Sales + Returns
+        $sql = "
+            (SELECT 
+                'Sale' as type,
+                s.date,
+                s.id as sale_invoice_no,
+                '0' as return_inv_no,
+                COALESCE(c.city, '') as area,
+                s.customer_id as customer_no,
+                s.customer as customer_name,
+                c.sales_agent as sales_man,
+                COALESCE(s.total_tax, 0) as vat,
+                COALESCE(s.total_discount, 0) as discount,
+                COALESCE(s.total, 0) as sales,
+                (COALESCE(s.grand_total, 0)) as net_sales,
+                COALESCE(s.cost_goods_sold, 0) as cogs,
+                ((COALESCE(s.grand_total, 0)) - COALESCE(s.cost_goods_sold, 0)) as profit,
+                COALESCE(s.total_items, 0) as total_items
+            FROM sma_sales s
+            LEFT JOIN sma_companies c ON c.id = s.customer_id
+            LEFT JOIN sma_users u ON u.id = s.created_by
+            LEFT JOIN (
+                SELECT sale_id, SUM(COALESCE(real_unit_price, 0) * COALESCE(quantity, 0)) as total_cogs 
+                FROM sma_sale_items 
+                GROUP BY sale_id
+            ) as sale_items_cogs ON sale_items_cogs.sale_id = s.id
+            WHERE s.sale_status = 'completed' 
+            {$date_condition}
+            {$customer_condition}
+            {$warehouse_condition})
+            
+            UNION ALL
+            
+            (SELECT 
+                'Return' as type,
+                r.date,
+                r.sale_id as sale_invoice_no,
+                r.id as return_inv_no,
+                COALESCE(c.city, '') as area,
+                r.customer_id as customer_no,
+                r.customer as customer_name,
+                c.sales_agent as sales_man,
+                -COALESCE(r.total_tax, 0) as vat,
+                -COALESCE(r.total_discount, 0) as discount,
+                -COALESCE(r.total, 0) as sales,
+                -(COALESCE(r.grand_total, 0)) as net_sales,
+                -COALESCE(r.cost_goods_sold, 0) as cogs,
+                -((COALESCE(r.grand_total, 0)) - COALESCE(r.cost_goods_sold, 0)) as profit,
+                COALESCE(r.total_items, 0) as total_items
+            FROM sma_returns r
+            LEFT JOIN sma_companies c ON c.id = r.customer_id
+            LEFT JOIN sma_users u ON u.id = r.created_by
+            LEFT JOIN (
+                SELECT return_id, SUM(COALESCE(real_unit_price, 0) * COALESCE(quantity, 0)) as total_cogs 
+                FROM sma_return_items 
+                GROUP BY return_id
+            ) as return_items_cogs ON return_items_cogs.return_id = r.id
+            WHERE 1=1
+        ";
+
+        // Add date filter for returns
+        if ($start_date) {
+            $sql .= " AND r.date >= '{$start_date}'";
+        }
+        if ($end_date) {
+            $sql .= " AND r.date <= '{$end_date}'";
+        }
+
+        // Add customer filter for returns
+        if (!empty($customer_id) && $customer_id !== '' && $customer_id !== '0') {
+            $sql .= " AND r.customer_id = {$customer_id}";
+        }
+
+        // Add warehouse filter for returns
+        if (!empty($pharmacy_id) && $pharmacy_id !== '' && $pharmacy_id !== '0') {
+            $sql .= " AND r.warehouse_id = {$pharmacy_id}";
+        }
+
+        $sql .= ")
+            ORDER BY date DESC
+        ";
+
+        $query = $this->db->query($sql);
+
+        // Enhanced logging for debugging
+        log_message('debug', '========== getSalesPerInvoice Debug ==========');
+        log_message('debug', 'Parameters - Start: ' . $start_date . ', End: ' . $end_date);
+        log_message('debug', 'Customer ID: ' . var_export($customer_id, true) . ' (type: ' . gettype($customer_id) . ')');
+        log_message('debug', 'Pharmacy ID: ' . var_export($pharmacy_id, true) . ' (type: ' . gettype($pharmacy_id) . ')');
+        log_message('debug', 'SQL: ' . $sql);
+        log_message('debug', 'Result count: ' . $query->num_rows());
+        log_message('debug', '================================================');
+
+        return $query->result();
+    }
+
     /**
      * Get Purchase Per Item Report Data
      * Shows purchases and purchase returns with item details
