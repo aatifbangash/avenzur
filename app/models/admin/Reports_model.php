@@ -5609,7 +5609,7 @@ class Reports_model extends CI_Model
         
         // Purchase reference filter
         if ($purchase_ref) {
-            $where_clauses[] = "p.reference_no LIKE '{$purchase_ref}%'";
+            $where_clauses[] = "p.id LIKE '{$purchase_ref}%'";
         }
         
         // Supplier filter
@@ -5659,7 +5659,7 @@ class Reports_model extends CI_Model
         }
         
         if ($purchase_ref) {
-            $return_where_clauses[] = "p.reference_no LIKE '{$purchase_ref}%'";
+            $return_where_clauses[] = "p.id LIKE '{$purchase_ref}%'";
         }
         
         if ($supplier_id) {
@@ -5733,7 +5733,7 @@ class Reports_model extends CI_Model
             COALESCE(agent.name, '') as agent_name,
             s.id as supplier_no,
             s.name as supplier_name,
-            (p.ttotal_net_purchase) as purchase,
+            (p.total_net_purchase) as purchase,
             p.total_tax as vat,
             p.grand_total as payable,
             0 as payment,
