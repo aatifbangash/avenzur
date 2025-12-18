@@ -403,6 +403,7 @@
                         <?php if($Admin || $Owner || $this->GP['reports-supplier-aging']){ ?>
                         <li><a href="<?= admin_url('reports/supplier_aging'); ?>" class="newmenu-link"><i class="fa fa-boxes"></i> <?= lang('Aging'); ?></a></li>
                         <?php } ?>
+                        <li><a href="<?= admin_url('reports/purchase_per_item'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Purchase Per Item'); ?></a></li>
                         <!--<li><a href="<?= admin_url('reports/purchase_deals'); ?>" class="newmenu-link"><i class="fa fa-gift"></i> <?= lang('Purchase Deals & Discounts'); ?></a></li>
                         <li><a href="<?= admin_url('reports/purchase_status'); ?>" class="newmenu-link"><i class="fa fa-clipboard-check"></i> <?= lang('Purchase Status'); ?></a></li>-->
                     </ul>

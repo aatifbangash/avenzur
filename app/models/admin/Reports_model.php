@@ -5468,5 +5468,136 @@ class Reports_model extends CI_Model
         return [];
     }
 
+    /**
+     * Get Purchase Per Item Report Data
+     * Shows purchases and purchase returns with item details
+     * 
+     * @param string $start_date - Start date (formatted)
+     * @param string $end_date - End date (formatted)
+     * @param string $purchase_ref - Purchase reference number
+     * @param string $supplier_id - Supplier ID
+     * @param string $item_code - Item code to filter
+     * @return array - Purchase per item data
+     */
+    public function getPurchasePerItem($start_date, $end_date, $purchase_ref, $supplier_id, $item_code)
+    {
+        // Build WHERE clauses conditionally for purchases
+        $where_clauses = [];
+        
+        // Date filter (optional - works with both dates or none)
+        if ($start_date && $end_date) {
+            $where_clauses[] = "DATE(p.date) BETWEEN '{$start_date}' AND '{$end_date}'";
+        }
+        
+        // Purchase reference filter
+        if ($purchase_ref) {
+            $where_clauses[] = "p.reference_no LIKE '{$purchase_ref}%'";
+        }
+        
+        // Supplier filter
+        if ($supplier_id) {
+            $where_clauses[] = "p.supplier_id = {$supplier_id}";
+        }
+        
+        // Item code filter
+        if ($item_code) {
+            $where_clauses[] = "(prod.code LIKE '%{$item_code}%' OR prod.name LIKE '%{$item_code}%')";
+        }
+        
+        $where_sql = !empty($where_clauses) ? 'AND ' . implode(' AND ', $where_clauses) : '';
+        
+        // Query for PURCHASES
+        $purchase_sql = "
+            SELECT 
+                'Purchase' AS type,
+                DATE_FORMAT(p.date, '%d-%b-%y') AS date,
+                p.reference_no AS purchase_ref,
+                '0' AS return_ref,
+                c.id AS supplier_no,
+                c.name AS supplier_name,
+                prod.code AS item_no,
+                prod.name AS item_name,
+                pi.quantity AS qty,
+                pi.bonus AS bonus,
+                pi.net_unit_cost AS unit_cost,
+                pi.sale_price AS public_price,
+                pi.subtotal AS purchase,
+                pi.item_tax AS vat,
+                (pi.subtotal + pi.item_tax) AS payable,
+                0 AS payment
+            FROM {$this->db->dbprefix('purchase_items')} pi
+            LEFT JOIN {$this->db->dbprefix('purchases')} p ON p.id = pi.purchase_id
+            LEFT JOIN {$this->db->dbprefix('companies')} c ON c.id = p.supplier_id
+            LEFT JOIN {$this->db->dbprefix('products')} prod ON prod.id = pi.product_id
+            WHERE p.note <> 'import from excel'
+            {$where_sql}
+        ";
+        
+        // Build WHERE clauses for purchase returns
+        $return_where_clauses = [];
+        
+        if ($start_date && $end_date) {
+            $return_where_clauses[] = "DATE(pr.date) BETWEEN '{$start_date}' AND '{$end_date}'";
+        }
+        
+        if ($purchase_ref) {
+            $return_where_clauses[] = "p.reference_no LIKE '{$purchase_ref}%'";
+        }
+        
+        if ($supplier_id) {
+            $return_where_clauses[] = "p.supplier_id = {$supplier_id}";
+        }
+        
+        if ($item_code) {
+            $return_where_clauses[] = "(prod.code LIKE '%{$item_code}%' OR prod.name LIKE '%{$item_code}%')";
+        }
+        
+        $return_where_sql = !empty($return_where_clauses) ? 'AND ' . implode(' AND ', $return_where_clauses) : '';
+        
+        // Query for PURCHASE RETURNS
+        $return_sql = "
+            SELECT 
+                'Return' AS type,
+                DATE_FORMAT(pr.date, '%d-%b-%y') AS date,
+                p.reference_no AS purchase_ref,
+                pr.id AS return_ref,
+                c.id AS supplier_no,
+                c.name AS supplier_name,
+                prod.code AS item_no,
+                prod.name AS item_name,
+                -pri.quantity AS qty,
+                0 AS bonus,
+                pri.net_cost AS unit_cost,
+                pri.net_unit_price AS public_price,
+                -pri.subtotal AS purchase,
+                -pri.item_tax AS vat,
+                -(pri.subtotal + pri.item_tax) AS payable,
+                0 AS payment
+            FROM {$this->db->dbprefix('return_supplier_items')} pri
+            LEFT JOIN {$this->db->dbprefix('returns_supplier')} pr ON pr.id = pri.return_id
+            LEFT JOIN {$this->db->dbprefix('purchases')} p ON p.id = pr.reference_no
+            LEFT JOIN {$this->db->dbprefix('companies')} c ON c.id = p.supplier_id
+            LEFT JOIN {$this->db->dbprefix('products')} prod ON prod.id = pri.product_id
+            WHERE 1=1
+            {$return_where_sql}
+        ";
+        
+        // Combine both queries
+        $sql = "
+            {$purchase_sql}
+            UNION ALL
+            {$return_sql}
+            ORDER BY date DESC, purchase_ref
+        ";
+        
+        $query = $this->db->query($sql);
+        
+        if ($query->num_rows() > 0) {
+            return $query->result();
+        }
+        
+        return [];
+    }
+
 
 }
