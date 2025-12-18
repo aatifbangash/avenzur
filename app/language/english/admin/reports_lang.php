@@ -107,3 +107,5 @@ $lang['total_product_tax']        = 'Product Tax Amount';
 $lang['total_order_tax']          = 'Order Tax Amount';
 $lang['refund']                   = 'Refund';
 $lang['net_returns']              = 'Net Returns';
+$lang['Purchase ID']              = 'Purchase ID';
+$lang['Enter Purchase ID']        = 'Enter Purchase ID';

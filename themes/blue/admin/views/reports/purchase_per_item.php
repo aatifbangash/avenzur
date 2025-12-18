@@ -110,7 +110,7 @@
                                         <th><?= lang('Purchase'); ?></th>
                                         <th><?= lang('Vat'); ?></th>
                                         <th><?= lang('Payable'); ?></th>
-                                        <th><?= lang('Payment'); ?></th>
+                                        <!--<th><?= lang('Payment'); ?></th>-->
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -136,7 +136,7 @@
                                             $grand_totals['purchase'] += $data->purchase;
                                             $grand_totals['vat'] += $data->vat;
                                             $grand_totals['payable'] += $data->payable;
-                                            $grand_totals['payment'] += $data->payment;
+                                            //$grand_totals['payment'] += $data->payment;
                                             
                                             // Determine row class for returns (red)
                                             $row_class = ($data->type == 'Return') ? 'style="background-color: #ffe6e6;"' : '';
@@ -158,28 +158,19 @@
                                                 <td class="text-right"><?= $this->sma->formatMoney($data->purchase) ?></td>
                                                 <td class="text-right"><?= $this->sma->formatMoney($data->vat) ?></td>
                                                 <td class="text-right"><?= $this->sma->formatMoney($data->payable) ?></td>
-                                                <td class="text-right"><?= $this->sma->formatMoney($data->payment) ?></td>
+                                                <!--<td class="text-right"><?= $this->sma->formatMoney($data->payment) ?></td>-->
                                             </tr>
                                         <?php
                                         }
 
                                         // Display grand totals row
                                         ?>
-                                        <tr style="background-color: #f0f0f0; font-weight: bold;">
-                                            <td colspan="9" class="text-right"><strong><?= lang('Grand Total'); ?>:</strong></td>
-                                            <td class="text-right"><strong><?= $this->sma->formatQuantity($grand_totals['qty']) ?></strong></td>
-                                            <td class="text-right"><strong><?= $grand_totals['bonus'] ?></strong></td>
-                                            <td colspan="2"></td>
-                                            <td class="text-right"><strong><?= $this->sma->formatMoney($grand_totals['purchase']) ?></strong></td>
-                                            <td class="text-right"><strong><?= $this->sma->formatMoney($grand_totals['vat']) ?></strong></td>
-                                            <td class="text-right"><strong><?= $this->sma->formatMoney($grand_totals['payable']) ?></strong></td>
-                                            <td class="text-right"><strong><?= $this->sma->formatMoney($grand_totals['payment']) ?></strong></td>
-                                        </tr>
+                                        
                                     <?php
                                     } else {
                                         ?>
                                         <tr>
-                                            <td colspan="17" class="text-center"><?= lang('No records found. Please select filters and click Load Report.'); ?></td>
+                                            <td colspan="16" class="text-center"><?= lang('No records found. Please select filters and click Load Report.'); ?></td>
                                         </tr>
                                     <?php
                                     }
