@@ -5502,10 +5502,11 @@ class Reports_model extends CI_Model
                 COALESCE(s.total_tax, 0) as vat,
                 COALESCE(s.total_discount, 0) as discount,
                 COALESCE(s.total, 0) as sales,
-                (COALESCE(s.grand_total, 0)) as net_sales,
+                (COALESCE(s.total_net_sale, 0)) as net_sales,
                 COALESCE(s.cost_goods_sold, 0) as cogs,
-                ((COALESCE(s.grand_total, 0)) - COALESCE(s.cost_goods_sold, 0)) as profit,
-                COALESCE(s.total_items, 0) as total_items
+                ((COALESCE(s.total_net_sale, 0)) - COALESCE(s.cost_goods_sold, 0)) as profit,
+                COALESCE(s.total_items, 0) as total_items,
+                COALESCE(s.grand_total, 0) as receivable
             FROM sma_sales s
             LEFT JOIN sma_companies c ON c.id = s.customer_id
             LEFT JOIN sma_users u ON u.id = s.created_by
@@ -5533,10 +5534,11 @@ class Reports_model extends CI_Model
                 -COALESCE(r.total_tax, 0) as vat,
                 -COALESCE(r.total_discount, 0) as discount,
                 -COALESCE(r.total, 0) as sales,
-                -(COALESCE(r.grand_total, 0)) as net_sales,
+                -(COALESCE(r.total_net_return, 0)) as net_sales,
                 -COALESCE(r.cost_goods_sold, 0) as cogs,
-                -((COALESCE(r.grand_total, 0)) - COALESCE(r.cost_goods_sold, 0)) as profit,
-                COALESCE(r.total_items, 0) as total_items
+                -((COALESCE(r.total_net_return, 0)) - COALESCE(r.cost_goods_sold, 0)) as profit,
+                COALESCE(r.total_items, 0) as total_items,
+                -COALESCE(r.grand_total, 0) as receivable
             FROM sma_returns r
             LEFT JOIN sma_companies c ON c.id = r.customer_id
             LEFT JOIN sma_users u ON u.id = r.created_by
