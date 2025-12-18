@@ -244,6 +244,9 @@
                         <?php if($Admin || $Owner || $this->GP['reports-customer-aging']){ ?>
                             <li><a href="<?= admin_url('reports/customer_aging'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Aging'); ?></a></li>
                         <?php } ?>
+                        
+                        <li><a href="<?= admin_url('reports/collections_by_location'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Collection Report'); ?></a></li>
+                        <li><a href="<?= admin_url('reports/invoice_status'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Invoice Status'); ?></a></li>
                     </ul>
                 </li>
 

@@ -5790,6 +5790,49 @@ class Reports extends MY_Controller
         $this->page_construct('reports/warehouse_stock', $meta, $this->data);
     }
 
+    public function collections_by_location(){
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $viewtype = $this->input->get('viewtype') ? $this->input->get('viewtype') : null;
+        $from_date = $this->input->get('from_date') ? $this->input->get('from_date') : null;
+        $to_date = $this->input->get('to_date') ? $this->input->get('to_date') : null;
+        $warehouse = $this->input->get('pharmacy') ? $this->input->get('pharmacy') : null;
+        //print_r($this->input->get());
+    
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        
+        // Set filter values for form persistence (always set these)
+        $this->data['start_date'] = $from_date;
+        $this->data['end_date'] = $to_date;
+        $this->data['warehouse'] = $warehouse;
+        
+        // If any filter submitted, fetch data
+        if ($from_date || $to_date || $warehouse) {
+            // Format dates only if provided
+            $start_date = $from_date ? $this->sma->fld($from_date) : null;
+            $end_date = $to_date ? $this->sma->fld($to_date) : null;
+            
+            $collections_data = $this->reports_model->getCollectionsByLocation($start_date, $end_date, $warehouse);
+
+            $this->data['collections_data'] = $collections_data;
+            
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('collection_location')]];
+            $meta = ['page_title' => lang('collection_location'), 'bc' => $bc];
+
+          
+            $this->page_construct('reports/collection_location', $meta, $this->data);
+         
+        } else {
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('reports')]];
+           $meta = ['page_title' => lang('reports'), 'bc' => $bc];
+           $this->page_construct('reports/collection_location', $meta, $this->data);
+
+
+        }
+    }
+
     public function collections_by_pharmacy(){
       
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
@@ -6171,6 +6214,302 @@ class Reports extends MY_Controller
         $registers = $this->pos_model->get_register_id_dates($register_id);
 
         echo json_encode($registers[0]);
+    }
+
+    /**
+     * Invoice Status Report
+     * Shows invoice details with returns, discounts, payments and outstanding amounts
+     */
+    public function invoice_status()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        
+        // Get filter parameters from GET (changed from POST to match stock report pattern)
+        $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : null;
+        $end_date = $this->input->get('end_date') ? $this->input->get('end_date') : null;
+        $invoice_id = $this->input->get('invoice_id') ? $this->input->get('invoice_id') : null;
+        $customer = $this->input->get('customer') ? $this->input->get('customer') : null;
+        $salesman = $this->input->get('salesman') ? $this->input->get('salesman') : null;
+        $warehouse = $this->input->get('warehouse') ? $this->input->get('warehouse') : null;
+        
+        // Get sales men and warehouses for dropdowns
+        $this->db->select('id, name');
+        $this->db->from('sales_man');
+        $this->db->order_by('name', 'asc');
+        $query = $this->db->get();
+        $this->data['salesmen'] = $query->result();
+        
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        
+        // Set filter values for form persistence (always set these)
+        $this->data['start_date'] = $start_date;
+        $this->data['end_date'] = $end_date;
+        $this->data['invoice_id'] = $invoice_id;
+        $this->data['customer'] = $customer;
+        $this->data['salesman'] = $salesman;
+        $this->data['warehouse'] = $warehouse;
+        
+        // If form submitted, fetch data
+        if ($start_date || $end_date || $invoice_id || $customer || $salesman || $warehouse) {
+            
+            // Pre-fetch salesman name if needed
+            $salesman_name = null;
+            if ($salesman) {
+                $sm_query = $this->db->select('name')->from('sales_man')->where('id', $salesman)->get();
+                if ($sm_query->num_rows() > 0) {
+                    $salesman_name = $sm_query->row()->name;
+                }
+            }
+            
+            // Build query
+            $this->db->select("DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%d-%b-%y') as date,
+                {$this->db->dbprefix('sales')}.reference_no as invoice,
+                {$this->db->dbprefix('companies')}.city as area,
+                COALESCE({$this->db->dbprefix('companies')}.sales_agent, '') as sales_man,
+                {$this->db->dbprefix('companies')}.company as customer_no,
+                {$this->db->dbprefix('companies')}.name as customer_name,
+                {$this->db->dbprefix('sales')}.total as invoice_total,
+                COALESCE((SELECT SUM(grand_total) FROM {$this->db->dbprefix('returns')} WHERE sale_id = {$this->db->dbprefix('sales')}.id), 0) as return_amount,
+                {$this->db->dbprefix('sales')}.total_discount as discount,
+                ({$this->db->dbprefix('sales')}.paid) as paid,
+                (({$this->db->dbprefix('sales')}.total - {$this->db->dbprefix('sales')}.total_discount) - {$this->db->dbprefix('sales')}.paid) as outstanding", false)
+                ->from('sales')
+                ->join('companies', 'companies.id = sales.customer_id', 'left')
+                ->order_by('sales.date', 'desc');
+            
+            // Apply date filter (only if provided)
+            if ($start_date && $end_date) {
+                $formatted_start_date = $this->sma->fld($start_date);
+                $formatted_end_date = $this->sma->fld($end_date);
+                $this->db->where("{$this->db->dbprefix('sales')}.date BETWEEN '{$formatted_start_date}' AND '{$formatted_end_date}'");
+            }
+            
+            // Apply filters
+            if ($invoice_id) {
+                // Search by sales.id (exact match for numeric ID)
+                if (is_numeric($invoice_id)) {
+                    $this->db->where('sales.id', $invoice_id);
+                } else {
+                    // If not numeric, search in reference_no
+                    $this->db->like('sales.reference_no', $invoice_id, 'after');
+                }
+            }
+            if ($customer) {
+                $this->db->group_start();
+                $this->db->like("{$this->db->dbprefix('companies')}.id", $customer, 'both');
+                $this->db->group_end();
+            }
+            if ($salesman_name) {
+                $this->db->where('companies.sales_agent', $salesman_name);
+            }
+            if ($warehouse) {
+                $this->db->where('sales.warehouse_id', $warehouse);
+            }
+            
+            $invoice_data = $this->db->get()->result();
+            
+            $this->data['invoice_data'] = $invoice_data;
+        }
+        
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')], 
+            ['link' => admin_url('reports'), 'page' => lang('reports')], 
+            ['link' => '#', 'page' => lang('invoice_status_report')]
+        ];
+        $meta = ['page_title' => lang('invoice_status_report'), 'bc' => $bc];
+        $this->page_construct('reports/invoice_status', $meta, $this->data);
+    }
+
+    /**
+     * Get Invoice Status Data for DataTables (AJAX)
+     * Filters: date range, invoice id, customer name, sales man
+     */
+    public function getInvoiceStatusReport($pdf = null, $xls = null)
+    {
+        // Get filter parameters - POST has priority for DataTables AJAX
+        $start_date = $this->input->post('start_date') ? $this->input->post('start_date') : $this->input->get('start_date');
+        $end_date = $this->input->post('end_date') ? $this->input->post('end_date') : $this->input->get('end_date');
+        $invoice_id = $this->input->post('invoice_id') ? $this->input->post('invoice_id') : $this->input->get('invoice_id');
+        $customer = $this->input->post('customer') ? $this->input->post('customer') : $this->input->get('customer');
+        $salesman = $this->input->post('salesman') ? $this->input->post('salesman') : $this->input->get('salesman');
+        $warehouse = $this->input->post('warehouse') ? $this->input->post('warehouse') : $this->input->get('warehouse');
+
+        if ($start_date) {
+            $start_date = $this->sma->fld($start_date);
+            $end_date = $this->sma->fld($end_date);
+        }
+
+        // Pre-fetch salesman name to avoid query interference
+        $salesman_name = null;
+        if ($salesman) {
+            $sm_query = $this->db->select('name')->from('sales_man')->where('id', $salesman)->get();
+            if ($sm_query->num_rows() > 0) {
+                $salesman_name = $sm_query->row()->name;
+            }
+        }
+
+        if ($pdf || $xls) {
+            // Export to Excel/PDF
+            $this->db
+                ->select("DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%d-%b-%y') as date,
+                    {$this->db->dbprefix('sales')}.reference_no as invoice,
+                    {$this->db->dbprefix('companies')}.city as area,
+                    COALESCE({$this->db->dbprefix('companies')}.sales_agent, '') as sales_man,
+                    {$this->db->dbprefix('companies')}.company as customer_no,
+                    {$this->db->dbprefix('companies')}.name as customer_name,
+                    {$this->db->dbprefix('sales')}.total as invoice_total,
+                    COALESCE((SELECT SUM(grand_total) FROM {$this->db->dbprefix('returns')} WHERE sale_id = {$this->db->dbprefix('sales')}.id), 0) as return_amount,
+                    {$this->db->dbprefix('sales')}.total_discount as discount,
+                    ({$this->db->dbprefix('sales')}.paid) as paid,
+                    (({$this->db->dbprefix('sales')}.total - {$this->db->dbprefix('sales')}.total_discount) - {$this->db->dbprefix('sales')}.paid) as outstanding", false)
+                ->from('sales')
+                ->join('companies', 'companies.id = sales.customer_id', 'left')
+                ->order_by('sales.date', 'desc');
+
+            if ($start_date) {
+                $this->db->where("{$this->db->dbprefix('sales')}.date BETWEEN '{$start_date}' AND '{$end_date}'");
+            }
+            if ($invoice_id) {
+                $this->db->like('sales.reference_no', $invoice_id, 'both');
+            }
+            if ($customer) {
+                $this->db->group_start();
+                $this->db->like('companies.id', $customer, 'both');
+                $this->db->group_end();
+            }
+            if ($salesman_name) {
+                $this->db->where('companies.sales_agent', $salesman_name);
+            }
+            if ($warehouse) {
+                $this->db->where('sales.warehouse_id', $warehouse);
+            }
+
+            $q = $this->db->get();
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $data[] = $row;
+                }
+            } else {
+                $data = null;
+            }
+
+            if (!empty($data)) {
+                $this->load->library('excel');
+                $this->excel->setActiveSheetIndex(0);
+                $this->excel->getActiveSheet()->setTitle(lang('invoice_status_report'));
+                
+                // Set headers
+                $this->excel->getActiveSheet()->SetCellValue('A1', lang('date'));
+                $this->excel->getActiveSheet()->SetCellValue('B1', lang('invoice'));
+                $this->excel->getActiveSheet()->SetCellValue('C1', lang('area'));
+                $this->excel->getActiveSheet()->SetCellValue('D1', lang('sales_man'));
+                $this->excel->getActiveSheet()->SetCellValue('E1', lang('customer_no'));
+                $this->excel->getActiveSheet()->SetCellValue('F1', lang('customer_name'));
+                $this->excel->getActiveSheet()->SetCellValue('G1', lang('invoice'));
+                $this->excel->getActiveSheet()->SetCellValue('H1', lang('return'));
+                $this->excel->getActiveSheet()->SetCellValue('I1', lang('discount'));
+                $this->excel->getActiveSheet()->SetCellValue('J1', lang('paid'));
+                $this->excel->getActiveSheet()->SetCellValue('K1', lang('outstanding'));
+
+                $row = 2;
+                $total_invoice = 0;
+                $total_return = 0;
+                $total_discount = 0;
+                $total_paid = 0;
+                $total_outstanding = 0;
+
+                foreach ($data as $data_row) {
+                    $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->date);
+                    $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->invoice);
+                    $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->area);
+                    $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->sales_man);
+                    $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->customer_no);
+                    $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data_row->customer_name);
+                    $this->excel->getActiveSheet()->SetCellValue('G' . $row, $this->sma->formatMoney($data_row->invoice_total));
+                    $this->excel->getActiveSheet()->SetCellValue('H' . $row, $this->sma->formatMoney($data_row->return_amount));
+                    $this->excel->getActiveSheet()->SetCellValue('I' . $row, $this->sma->formatMoney($data_row->discount));
+                    $this->excel->getActiveSheet()->SetCellValue('J' . $row, $this->sma->formatMoney($data_row->paid));
+                    $this->excel->getActiveSheet()->SetCellValue('K' . $row, $this->sma->formatMoney($data_row->outstanding));
+
+                    $total_invoice += $data_row->invoice_total;
+                    $total_return += $data_row->return_amount;
+                    $total_discount += $data_row->discount;
+                    $total_paid += $data_row->paid;
+                    $total_outstanding += $data_row->outstanding;
+                    $row++;
+                }
+
+                // Add totals row
+                $this->excel->getActiveSheet()->SetCellValue('F' . $row, lang('total'));
+                $this->excel->getActiveSheet()->SetCellValue('G' . $row, $this->sma->formatMoney($total_invoice));
+                $this->excel->getActiveSheet()->SetCellValue('H' . $row, $this->sma->formatMoney($total_return));
+                $this->excel->getActiveSheet()->SetCellValue('I' . $row, $this->sma->formatMoney($total_discount));
+                $this->excel->getActiveSheet()->SetCellValue('J' . $row, $this->sma->formatMoney($total_paid));
+                $this->excel->getActiveSheet()->SetCellValue('K' . $row, $this->sma->formatMoney($total_outstanding));
+
+                // Set column widths
+                $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(15);
+                $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
+                $this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(30);
+                $this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(15);
+                $this->excel->getActiveSheet()->getColumnDimension('H')->setWidth(15);
+                $this->excel->getActiveSheet()->getColumnDimension('I')->setWidth(15);
+                $this->excel->getActiveSheet()->getColumnDimension('J')->setWidth(15);
+                $this->excel->getActiveSheet()->getColumnDimension('K')->setWidth(15);
+
+                $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+                
+                // Bold the header and totals
+                $this->excel->getActiveSheet()->getStyle('A1:K1')->getFont()->setBold(true);
+                $this->excel->getActiveSheet()->getStyle('F' . $row . ':K' . $row)->getFont()->setBold(true);
+
+                $filename = 'invoice_status_report';
+                $this->load->helper('excel');
+                create_excel($this->excel, $filename);
+            }
+            $this->session->set_flashdata('error', lang('nothing_found'));
+            redirect($_SERVER['HTTP_REFERER']);
+        } else {
+            // DataTables AJAX response
+            $this->load->library('datatables');
+            $this->datatables
+                ->select("DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%d-%b-%y') as date,
+                    {$this->db->dbprefix('sales')}.reference_no as invoice,
+                    {$this->db->dbprefix('companies')}.city as area,
+                    COALESCE({$this->db->dbprefix('companies')}.sales_agent, '') as sales_man,
+                    {$this->db->dbprefix('companies')}.company as customer_no,
+                    {$this->db->dbprefix('companies')}.name as customer_name,
+                    {$this->db->dbprefix('sales')}.total as invoice_total,
+                    COALESCE((SELECT SUM(grand_total) FROM {$this->db->dbprefix('returns')} WHERE sale_id = {$this->db->dbprefix('sales')}.id), 0) as return_amount,
+                    {$this->db->dbprefix('sales')}.total_discount as discount,
+                    ({$this->db->dbprefix('sales')}.paid) as paid,
+                    (({$this->db->dbprefix('sales')}.total - {$this->db->dbprefix('sales')}.total_discount) - {$this->db->dbprefix('sales')}.paid) as outstanding", false)
+                ->from('sales')
+                ->join('companies', 'companies.id = sales.customer_id', 'left');
+
+            if ($start_date) {
+                $this->datatables->where("{$this->db->dbprefix('sales')}.date BETWEEN '{$start_date}' AND '{$end_date}'");
+            }
+            if ($invoice_id) {
+                $this->datatables->like('sales.reference_no', $invoice_id, 'both');
+            }
+            if ($customer) {
+                $this->datatables->group_start();
+                $this->datatables->like('companies.id', $customer, 'both');
+                $this->datatables->group_end();
+            }
+            if ($salesman_name) {
+                $this->datatables->where('companies.sales_agent', $salesman_name);
+            }
+            if ($warehouse) {
+                $this->datatables->where('sales.warehouse_id', $warehouse);
+            }
+
+            echo $this->datatables->generate();
+        }
     }
 
     
