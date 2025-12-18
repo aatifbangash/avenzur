@@ -5576,7 +5576,7 @@ class Reports_model extends CI_Model
             FROM {$this->db->dbprefix('return_supplier_items')} pri
             LEFT JOIN {$this->db->dbprefix('returns_supplier')} pr ON pr.id = pri.return_id
             LEFT JOIN {$this->db->dbprefix('purchases')} p ON p.id = pr.reference_no
-            LEFT JOIN {$this->db->dbprefix('companies')} c ON c.id = p.supplier_id
+            LEFT JOIN {$this->db->dbprefix('companies')} c ON c.id = pr.supplier_id
             LEFT JOIN {$this->db->dbprefix('products')} prod ON prod.id = pri.product_id
             WHERE 1=1
             {$return_where_sql}
