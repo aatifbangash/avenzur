@@ -5521,9 +5521,9 @@ class Reports_model extends CI_Model
                 pi.bonus AS bonus,
                 pi.net_unit_cost AS unit_cost,
                 pi.sale_price AS public_price,
-                pi.subtotal AS purchase,
+                pi.totalbeforevat AS purchase,
                 pi.item_tax AS vat,
-                (pi.subtotal + pi.item_tax) AS payable,
+                (pi.totalbeforevat + pi.item_tax) AS payable,
                 0 AS payment
             FROM {$this->db->dbprefix('purchase_items')} pi
             LEFT JOIN {$this->db->dbprefix('purchases')} p ON p.id = pi.purchase_id
@@ -5569,9 +5569,9 @@ class Reports_model extends CI_Model
                 0 AS bonus,
                 pri.net_cost AS unit_cost,
                 pri.net_unit_price AS public_price,
-                -pri.subtotal AS purchase,
+                -pri.totalbeforevat AS purchase,
                 -pri.item_tax AS vat,
-                -(pri.subtotal + pri.item_tax) AS payable,
+                -(pri.totalbeforevat + pri.item_tax) AS payable,
                 0 AS payment
             FROM {$this->db->dbprefix('return_supplier_items')} pri
             LEFT JOIN {$this->db->dbprefix('returns_supplier')} pr ON pr.id = pri.return_id
