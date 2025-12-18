@@ -6728,6 +6728,7 @@ class Reports extends MY_Controller
         $this->data['period'] = null;
         $this->data['supplier_id'] = null;
         $this->data['pharmacy_id'] = null;
+        $this->data['purchase_id'] = null;
         $this->data['start_date'] = null;
         $this->data['end_date'] = null;
         $this->data['invoices'] = null;
@@ -6746,6 +6747,7 @@ class Reports extends MY_Controller
             $to_date = $this->input->post('to_date');
             $supplier_id = $this->input->post('supplier_id');
             $pharmacy_id = $this->input->post('pharmacy_id');
+            $purchase_id = $this->input->post('purchase_id');
 
             // Determine dates based on inputs
             if ($from_date && $to_date) {
@@ -6774,6 +6776,7 @@ class Reports extends MY_Controller
             $this->data['period'] = $period;
             $this->data['supplier_id'] = $supplier_id;
             $this->data['pharmacy_id'] = $pharmacy_id;
+            $this->data['purchase_id'] = $purchase_id;
             $this->data['start_date'] = $start_date;
             $this->data['end_date'] = $end_date;
 
@@ -6781,9 +6784,10 @@ class Reports extends MY_Controller
             log_message('debug', '========== Purchase Per Invoice Form Submitted ==========');
             log_message('debug', 'Period: ' . $period . ', Start: ' . $start_date . ', End: ' . $end_date);
             log_message('debug', 'Supplier: ' . var_export($supplier_id, true) . ', Pharmacy: ' . var_export($pharmacy_id, true));
+            log_message('debug', 'Purchase ID: ' . var_export($purchase_id, true));
 
             // Fetch from model - use get_purchase_per_invoice_data to include purchases and payments
-            $invoices_array = $this->reports_model->get_purchase_per_invoice_data($start_date, $end_date, $supplier_id, $pharmacy_id);
+            $invoices_array = $this->reports_model->get_purchase_per_invoice_data($start_date, $end_date, $supplier_id, $pharmacy_id, $purchase_id);
 
             // Log the fetched data count
             log_message('debug', 'Raw data returned: ' . ($invoices_array ? count($invoices_array) : 0) . ' records');
