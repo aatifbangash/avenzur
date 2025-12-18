@@ -6387,6 +6387,64 @@ class Reports extends MY_Controller
     }
 
     /**
+     * Purchase Per Item Report
+     * Shows detailed purchase and purchase returns per item
+     */
+    public function purchase_per_item()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        
+        // Get filter parameters from GET
+        $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : null;
+        $end_date = $this->input->get('end_date') ? $this->input->get('end_date') : null;
+        $purchase_ref = $this->input->get('purchase_ref') ? $this->input->get('purchase_ref') : null;
+        $supplier = $this->input->get('supplier') ? $this->input->get('supplier') : null;
+        $item_code = $this->input->get('item_code') ? $this->input->get('item_code') : null;
+        
+        // Get suppliers for dropdown
+        $this->db->select('id, name');
+        $this->db->from('companies');
+        $this->db->where('group_name', 'supplier');
+        $this->db->order_by('name', 'asc');
+        $query = $this->db->get();
+        $this->data['suppliers'] = $query->result();
+        
+        // Set filter values for form persistence (always set these)
+        $this->data['start_date'] = $start_date;
+        $this->data['end_date'] = $end_date;
+        $this->data['purchase_ref'] = $purchase_ref;
+        $this->data['supplier'] = $supplier;
+        $this->data['item_code'] = $item_code;
+        
+        // If any filter submitted, fetch data
+        if ($start_date || $end_date || $purchase_ref || $supplier || $item_code) {
+            
+            // Format dates only if provided
+            $formatted_start_date = $start_date ? $this->sma->fld($start_date) : null;
+            $formatted_end_date = $end_date ? $this->sma->fld($end_date) : null;
+            
+            // Fetch data from model
+            $purchase_data = $this->reports_model->getPurchasePerItem(
+                $formatted_start_date, 
+                $formatted_end_date, 
+                $purchase_ref,
+                $supplier,
+                $item_code
+            );
+            
+            $this->data['purchase_data'] = $purchase_data;
+        }
+        
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')], 
+            ['link' => admin_url('reports'), 'page' => lang('reports')], 
+            ['link' => '#', 'page' => lang('Purchase Per Item')]
+        ];
+        $meta = ['page_title' => lang('Purchase Per Item'), 'bc' => $bc];
+        $this->page_construct('reports/purchase_per_item', $meta, $this->data);
+    }
+
+    /**
      * Get Invoice Status Data for DataTables (AJAX)
      * Filters: date range, invoice id, customer name, sales man
      */
