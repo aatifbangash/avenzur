@@ -142,7 +142,13 @@
                                                 <td><?= $data->payment_id; ?></td>
                                                 <td><?= $data->amount; ?></td>
                                                 <td><?= $data->collection_date; ?></td>
-                                                <td><?= $data->amount; ?></td>
+                                                <td><?php 
+                                                    // Calculate collection days (difference between collection_date and sale_date)
+                                                    $sale_date = new DateTime($data->sale_date);
+                                                    $collection_date = new DateTime($data->collection_date);
+                                                    $diff = $collection_date->diff($sale_date);
+                                                    echo $diff->days;
+                                                ?></td>
                                                 <td><?= $data->ledger_name; ?></td>
                                                
                                             </tr>

@@ -4782,7 +4782,7 @@ class Reports_model extends CI_Model
 
                 LEFT JOIN sma_accounts_ledgers lg
                     ON lg.id = pr.transfer_from_ledger
-                WHERE 1=1
+                WHERE cm.group_name = 'customer'
                  ".$dateWhere."
                  ".$warehouseWhere."
                     ORDER BY 
