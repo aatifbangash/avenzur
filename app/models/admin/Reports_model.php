@@ -4754,6 +4754,8 @@ class Reports_model extends CI_Model
          $sql = "SELECT 
                     p.id as payment_id,
                     DATE(p.date) AS collection_date,
+                    cm.external_id AS external_id,
+                    cm.sequence_code AS sequence_code,
                     cm.id AS customer_id,
                     cm.name AS customer_name,
                     cm.sales_agent,

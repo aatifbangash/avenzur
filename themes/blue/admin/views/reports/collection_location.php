@@ -134,7 +134,7 @@
                                                 <td>Collection</td>
                                                 <td><?= $data->area; ?></td>
                                                 <td><?= $data->sales_agent; ?></td>
-                                                <td><?= $data->customer_id; ?></td>
+                                                <td><?= $data->sequence_code ?? $data->customer_id; ?></td>
                                                 <td><?= $data->customer_name; ?></td>
                                                 <td><?= $data->sale_id; ?></td>
                                                 <td><?= $data->sale_date; ?></td>
