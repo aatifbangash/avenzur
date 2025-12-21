@@ -41,6 +41,25 @@ function logActivity($message, $level = 'INFO') {
 }
 
 /**
+ * Save payload to file
+ */
+function savePayload($payload) {
+    $payloadDir = __DIR__ . '/storage/payloads';
+    
+    if (!file_exists($payloadDir)) {
+        mkdir($payloadDir, 0777, true);
+    }
+    
+    $timestamp = date('Y-m-d_H-i-s');
+    $filename = "payload_$timestamp.txt";
+    $filepath = $payloadDir . '/' . $filename;
+    
+    file_put_contents($filepath, $payload);
+    
+    return $filename;
+}
+
+/**
  * Send JSON response
  */
 function sendResponse($data, $statusCode = 200) {
@@ -69,6 +88,10 @@ try {
         ], 400);
     }
     
+    // Save payload to file
+    $payloadFilename = savePayload($payload);
+    logActivity("Payload saved to: $payloadFilename");
+    
     // Log the incoming request
     logActivity("Order processing request received");
     
@@ -86,6 +109,7 @@ try {
     // Check if order already exists
     $db = new DatabaseService();
     $orderId = $orderData['id'] ?? null;
+    logActivity("Order ID: " . $orderId, 'INFO');
     
     if ($orderId && $db->orderExists($orderId)) {
         logActivity("Order already exists: $orderId", 'WARNING');
