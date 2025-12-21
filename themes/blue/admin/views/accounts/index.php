@@ -31,7 +31,7 @@
         echo '<td class="td-actions"></td>';
       } else {
         echo '<td class="td-actions"></td>';
-        /*echo '<td class="td-actions">';
+        echo '<td class="td-actions">';
         echo anchor('admin/groups/edit/'.$account->id, '<i class="fa fa-edit"></i>'.lang('accounts_index_edit_btn'), array('class' => 'no-hover font-normal', 'escape' => false));
         echo "<span class='link-pad'></span>";
 
@@ -41,7 +41,7 @@
                   'confirm' => lang('accounts_index_delete_group_alert'))
         );
 
-        echo '</td>';*/
+        echo '</td>';
       }
       echo '</tr>';
     }
