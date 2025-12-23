@@ -2979,8 +2979,11 @@ class Products extends MY_Controller
      */
     private function createAdjustmentAccountingEntry($adjustment_id, $data, $products)
     {
+        ini_set('display_errors', '1');
+        ini_set('display_startup_errors', '1');
+        error_reporting(E_ALL);
         // Delete existing entry if available first (in case of re-processing)
-        $this->site->deleteAccountingEntry($adjustment_id, 'adjustment');
+        //$this->site->deleteAccountingEntry($adjustment_id, 'adjustment');
 
         // Get warehouse ledgers
         $warehouse_id = $data['warehouse_id'];
