@@ -1994,6 +1994,137 @@ class Purchase_order extends MY_Controller
      
     }
 
+    public function add_grn_new($po_id)
+    {
+
+        if ($this->input->post()) {
+            $items = $this->input->post('items', true);
+
+            if (empty($items)) {
+                show_error('No items to update.');
+            }
+
+            $this->db->trans_start(); // Start transaction
+
+            // Group items by their original item_id (purchase_order_items.id) to detect batch splits
+            $itemGroups = [];
+            foreach ($items as $key => $item) {
+                $item_id = (int) $item['item_id']; // This is the purchase_order_items.id
+                $itemGroups[$item_id][] = ['key' => $key, 'data' => $item];
+            }
+
+            // Process each item group
+            foreach ($itemGroups as $originalItemId => $itemGroup) {
+                $isFirstBatch = true;
+
+                // Get the original item data once (we'll need it for both update and insert)
+                $originalItem = $this->db
+                    ->where('id', $originalItemId)
+                    ->get('sma_purchase_order_items')
+                    ->row();
+
+                if (!$originalItem) {
+                    continue; // Skip if original item not found
+                }
+
+                // Convert original item to array for easy copying
+                $originalItemArray = (array) $originalItem;
+
+                foreach ($itemGroup as $itemInfo) {
+                    $item = $itemInfo['data'];
+                    $quantity = (float) $item['quantity'];
+                    $actualQty = (float) $item['actual_quantity'];
+                    $batchNumber = trim($item['batch_number']);
+                    $expiryDate = $item['expiry_date'];
+                    $comment = isset($item['remarks']) ? trim($item['remarks']) : '';
+
+                    // Validation
+                    if ($quantity <= 0) {
+                        continue; // skip invalid entries
+                    }
+
+                    // Calculate proportional values based on new quantity
+                    $unitTax = $originalItem->quantity > 0 ? ($originalItem->item_tax / $originalItem->quantity) : 0;
+                    $unitDiscount = $originalItem->quantity > 0 ? ($originalItem->item_discount / $originalItem->quantity) : 0;
+                    
+                    $newItemTax = $unitTax * $quantity;
+                    $newItemDiscount = $unitDiscount * $quantity;
+                    
+                    // Calculate subtotal: unit_cost * quantity (before tax, after discount in unit cost)
+                    $newSubtotal = $originalItem->unit_cost * $quantity;
+
+                    // First batch of this product - UPDATE the original row
+                    if ($isFirstBatch) {
+                        $updateData = [
+                            'quantity' => $quantity,
+                            'actual_quantity' => $actualQty,
+                            'batchno' => $batchNumber,
+                            'expiry' => $expiryDate,
+                            'grn_comments' => $comment,
+                            'item_tax' => $newItemTax,
+                            'item_discount' => $newItemDiscount,
+                            'subtotal' => $newSubtotal,
+                            'quantity_balance' => $quantity
+                        ];
+                        $this->db->where('id', $originalItemId);
+                        $this->db->update('sma_purchase_order_items', $updateData);
+                        $isFirstBatch = false;
+                    } else {
+                        // Additional batches - INSERT new row (copy everything from original, then override specific fields)
+                        $insertData = $originalItemArray;
+                        
+                        // Remove the ID so a new one is generated
+                        unset($insertData['id']);
+                        
+                        // Override with new batch-specific values
+                        $insertData['quantity'] = $quantity;
+                        $insertData['actual_quantity'] = $actualQty;
+                        $insertData['batchno'] = $batchNumber;
+                        $insertData['expiry'] = $expiryDate;
+                        $insertData['grn_comments'] = $comment;
+                        $insertData['item_tax'] = $newItemTax;
+                        $insertData['item_discount'] = $newItemDiscount;
+                        $insertData['subtotal'] = $newSubtotal;
+                        $insertData['quantity_balance'] = $quantity;
+                        $insertData['date'] = date('Y-m-d H:i:s');
+                        
+                        $this->db->insert('sma_purchase_order_items', $insertData);
+                    }
+                }
+            }
+
+            // Update purchase order status
+            $this->db->where('id', $po_id)->update('purchase_orders', [
+                'reference_no' => $this->input->post('supplier_reference'),
+                'status' => 'quality_checked',
+                'total_items_received' => count($items),
+                'grn_notes' => $this->input->post('remarks'),
+                'received_by' => $this->session->userdata('user_id'),
+                'updated_by' => $this->session->userdata('user_id'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ]);
+
+            $this->db->trans_complete(); // Complete transaction
+
+            if ($this->db->trans_status() === FALSE) {
+                $this->session->set_flashdata('error', 'Failed to update GRN. Please try again.');
+                admin_redirect('purchase_order/add_grn_new/' . $po_id);
+            } else {
+                // Redirect or show success message
+                $this->session->set_flashdata('message', 'Purchase items updated successfully!');
+                admin_redirect('purchase_order/view/' . $po_id);
+            }
+        }
+
+        $this->data['po_info'] = $this->purchase_order_model->getPurchaseOrderDetails($po_id);
+        $this->data['rows'] = $this->purchase_order_model->getAllPurchaseItems($po_id);
+        $this->data['po_id'] = $po_id;
+
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('purchases'), 'page' => lang('purchases')], ['link' => '#', 'page' => lang('add_purchase')]];
+        $meta = ['page_title' => lang('add_purchase'), 'bc' => $bc];
+        $this->page_construct('purchase_order/grn_new', $meta, $this->data);
+    }
+
     public function send_for_invoice()
     {
         $po_id = base64_decode($this->input->get('po_id'));
