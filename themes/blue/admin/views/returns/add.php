@@ -313,14 +313,14 @@
                             </div>
                         </div>
                         
-                      <input type="hidden" name="reference_no" value="<?= $reference; ?>">
+                        <input type="hidden" name="reference_no" value="<?= $reference; ?>">
 
-                        <!-- <div class="col-md-4">
+                        <div class="col-md-4">
                             <div class="form-group">
-                                <?= lang('reference_no', 'reref'); ?>
-                                <?php echo form_input('reference_no', (isset($_POST['reference_no']) ? $_POST['reference_no'] : ''), 'class="form-control input-tip" id="reref"'); ?>
+                                <?= lang('sale_reference_no', 'reref'); ?>
+                                <?php echo form_input('sale_reference_no', (isset($_POST['sale_reference_no']) ? $_POST['sale_reference_no'] : ''), 'class="form-control input-tip" id="reref"'); ?>
                             </div>
-                        </div> -->
+                        </div>
                        
                         <div class="col-md-4">
                             <div class="form-group">
