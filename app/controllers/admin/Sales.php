@@ -3784,7 +3784,11 @@ class Sales extends MY_Controller
                 ->where('shop', 0); 
         } 
         if(is_numeric($sid)) {
-            $this->datatables->where('id', $sid);
+            //$this->datatables->where('id', $sid);
+            $this->datatables->group_start()
+                ->where('id', $sid)
+                ->or_where('reference_no', $sid)
+            ->group_end();
         }
         // $this->datatables->join("{$this->db->dbprefix('aramex_shipment')}", 'sales.id');
         if ($this->input->get('shop') == 'yes') {
