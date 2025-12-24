@@ -262,7 +262,7 @@ class Returns extends MY_Controller
 
             $date             = ($this->Owner || $this->Admin) ? $this->sma->fld(trim($this->input->post('date'))) : date('Y-m-d H:i:s');
             $reference        = $this->input->post('reference_no') ? $this->input->post('reference_no') : $this->site->getReference('reference');
-            //$reference        = $this->input->post('sale_id') ? $this->input->post('sale_id') : '0';
+            $sale_reference_no = $this->input->post('sale_reference_no') ? $this->input->post('sale_reference_no') : '0';
             $warehouse_id     = $this->input->post('warehouse');
             $customer_id      = $this->input->post('customer');
             $biller_id        = $this->input->post('biller');
@@ -460,7 +460,7 @@ class Returns extends MY_Controller
 
             $data           = [
                 'date'              => $date,
-                'reference_no'      => $reference,
+                'reference_no'      => !empty($reference) ? $reference : $sale_reference_no,
                 'customer_id'       => $customer_id,
                 'customer'          => $customer,
                 'biller_id'         => $biller_id,
@@ -485,8 +485,9 @@ class Returns extends MY_Controller
                 'created_by'        => $this->session->userdata('user_id'),
                 'hash'              => hash('sha256', microtime() . mt_rand()),
                 'status'            => $status,
-                'sale_id'           => $reference
+                'sale_id'           => !empty($reference) ? $reference : $sale_reference_no
             ];
+            
             if ($this->Settings->indian_gst) {
                 $data['cgst'] = $total_cgst;
                 $data['sgst'] = $total_sgst;
@@ -1156,7 +1157,7 @@ class Returns extends MY_Controller
             
              $data           = [
                 'date'              => $date,
-                'reference_no'      => $reference,
+                //'reference_no'      => $reference,
                 'customer_id'       => $customer_id,
                 'customer'          => $customer,
                 'biller_id'         => $biller_id,
