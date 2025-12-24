@@ -2813,7 +2813,10 @@ class Products extends MY_Controller
     }
     public function add_adjustment($count_id = null)
     {
-        $this->sma->checkPermissions('adjustments', true);
+        ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
+        //$this->sma->checkPermissions('adjustments', true);
         $this->form_validation->set_rules('warehouse', lang('warehouse'), 'required');
 
         if ($this->form_validation->run() == true) {
