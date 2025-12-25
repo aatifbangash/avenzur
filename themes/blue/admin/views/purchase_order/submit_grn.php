@@ -221,13 +221,14 @@ $(document).ready(function() {
 
         const itemId = item.id;
 
-        // First scan: add with qty=1, subsequent scans: increment
+        // First scan: add with qty starting from scanned_quantity or 1
         if (!scannedItems[itemId]) {
+            const initialQty = (item.scanned_quantity && item.scanned_quantity > 0) ? parseInt(item.scanned_quantity) + 1 : 1;
             scannedItems[itemId] = {
                 item: item,
-                qty: 1
+                qty: initialQty
             };
-            showFeedback('success', 'Added: ' + item.product_name + ' (Qty: 1)');
+            showFeedback('success', 'Added: ' + item.product_name + ' (Qty: ' + initialQty + ')');
         } else {
             scannedItems[itemId].qty++;
             showFeedback('info', 'Updated: ' + item.product_name + ' (Qty: ' + scannedItems[itemId].qty + ')');
@@ -394,10 +395,10 @@ $(document).ready(function() {
                 // Handle success - API returns message property
                 if (response.message && response.message.toLowerCase().includes('successfully')) {
                     alert('GRN submitted successfully!');
-                    window.location.href = '<?= admin_url('purchase_order'); ?>';
+                    location.reload();
                 } else if (response.success || response.success === true) {
                     alert('GRN submitted successfully!');
-                    window.location.href = '<?= admin_url('purchase_order'); ?>';
+                    location.reload();
                 } else {
                     alert('Error: ' + (response.message || 'Unknown error'));
                     $('#submit-grn-btn').prop('disabled', false).html('<i class="fa fa-check"></i> Submit GRN');
@@ -411,7 +412,7 @@ $(document).ready(function() {
                     const response = JSON.parse(xhr.responseText);
                     if (response.message && response.message.toLowerCase().includes('successfully')) {
                         alert('GRN submitted successfully!');
-                        window.location.href = '<?= admin_url('purchase_order'); ?>';
+                        location.reload();
                         return;
                     }
                 } catch(e) {}
