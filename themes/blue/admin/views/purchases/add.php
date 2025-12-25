@@ -10,6 +10,10 @@ table#poTable td input.form-control {
 }
 </style>
 <script type="text/javascript">
+    localStorage.removeItem('poitems');
+     if (localStorage.getItem('poitems')) {
+        localStorage.removeItem('poitems');
+    }
     <?php if ($this->session->userdata('remove_pols')) {
     ?>
     if (localStorage.getItem('poitems')) {
@@ -68,6 +72,14 @@ table#poTable td input.form-control {
     localStorage.setItem('poitems', JSON.stringify(<?= $quote_items; ?>));
     <?php
 } ?>
+
+<?php
+if(isset($action) && $action = 'create_invoice' && $inv_items != null)  {
+    $readonly = !empty($pr_data) ? 'readonly' : '';
+    ?>
+  //localStorage.setItem('posupplier', '<?= $purchase->supplier_id ?>');
+  localStorage.setItem('poitems', JSON.stringify(<?= $inv_items; ?>));
+ <?php } ?>   
 
     var count = 1, an = 1, po_edit = false, product_variant = 0, DT = <?= $Settings->default_tax_rate ?>, DC = '<?= $default_currency->code ?>', shipping = 0,
         product_tax = 0, invoice_tax = 0, total_discount = 0, total = 0,
@@ -133,9 +145,9 @@ table#poTable td input.form-control {
             response: function (event, ui) {
                 if ($(this).val().length >= 16 && ui.content[0].id == 0) {
                     //audio_error.play();
-                    bootbox.alert('<?= lang('no_match_found') ?>', function () {
-                        $('#add_item').focus();
-                    });
+                    // bootbox.alert('<?= lang('no_match_found') ?>', function () {
+                    //     $('#add_item').focus();
+                    // });
                     $(this).removeClass('ui-autocomplete-loading');
                     $(this).val('');
                 }
@@ -147,9 +159,9 @@ table#poTable td input.form-control {
                 }
                 else if (ui.content.length == 1 && ui.content[0].id == 0) {
                     //audio_error.play();
-                    bootbox.alert('<?= lang('no_match_found') ?>', function () {
-                        $('#add_item').focus();
-                    });
+                    // bootbox.alert('<?= lang('no_match_found') ?>', function () {
+                    //     $('#add_item').focus();
+                    // });
                     $(this).removeClass('ui-autocomplete-loading');
                     $(this).val('');
                 }
@@ -162,7 +174,7 @@ table#poTable td input.form-control {
                         $(this).val('');
                 } else {
                     //audio_error.play();
-                    bootbox.alert('<?= lang('no_match_found') ?>');
+                    //bootbox.alert('<?= lang('no_match_found') ?>');
                 }
             }
         });
@@ -241,6 +253,15 @@ table#poTable td input.form-control {
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-plus"></i><?= lang('add_purchase'); ?></h2>
+
+        <!-- CSV upload icon -->
+        <div class="box-icon">
+            <ul class="btn-tasks">
+                <li class="dropdown">
+                    <a href="<?= admin_url('purchases/showUploadPurchases'); ?>" data-toggle="modal"
+                                        data-target="#myModal"><i class="icon fa fa-upload"></i></a></li>
+            </ul>
+        </div>
     </div>
     <div class="box-content">
         <div class="row">
@@ -249,9 +270,16 @@ table#poTable td input.form-control {
                 <p class="introtext"><?php echo lang('enter_info'); ?></p>
                 <?php
                 $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
-                echo admin_form_open_multipart('purchases/add', $attrib)
+                echo admin_form_open_multipart('purchases/add', $attrib);
+                $status = 'pending';
+                if($action == "create_invoice"  && $po_id != ''){
+                    echo form_hidden('po_id', $pr_data->id);
+                    echo form_hidden('action', 'create_invoice');
+                    $status = 'received';
+                }
                 ?>
-
+               
+               
 
                 <div class="row">
                     <div class="col-lg-12">
@@ -268,8 +296,12 @@ table#poTable td input.form-control {
                 } ?>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <?= lang('reference_no', 'poref'); ?>
-                                <?php echo form_input('reference_no', ($_POST['reference_no'] ?? $ponumber), 'class="form-control input-tip" id="poref"'); ?>
+                                <?= lang('Supplier Reference Number', 'poref'); ?>
+                                <?php 
+                                $reference_no = !empty($pr_data->reference_no)
+                                                ? $pr_data->reference_no
+                                                : ($_POST['reference_no'] ?? $ponumber);
+                                echo form_input('reference_no',$reference_no, 'class="form-control input-tip" id="poref"'); ?>
                             </div>
                         </div>
                         <?php if ($Owner || $Admin || !$this->session->userdata('warehouse_id')) {
@@ -280,9 +312,13 @@ table#poTable td input.form-control {
                                     <?php
                                     $wh[''] = '';
                     foreach ($warehouses as $warehouse) {
-                        $wh[$warehouse->id] = $warehouse->name;
+                        $wh[$warehouse->id] = $warehouse->name.' ('.$warehouse->code.')';
                     }
-                    echo form_dropdown('warehouse', $wh, ($_POST['warehouse'] ?? $Settings->default_warehouse), 'id="powarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" required="required" style="width:100%;" '); ?>
+                     $parent_warehouse_id = !empty($pr_data->warehouse_id)
+                                                ? $pr_data->warehouse_id
+                                                : ($_POST['warehouse'] ?? $Settings->default_warehouse);
+
+                    echo form_dropdown('warehouse', $wh, $parent_warehouse_id, 'id="powarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" required="required" style="width:100%;" '); ?>
                                 </div>
                             </div>
                         <?php
@@ -301,7 +337,7 @@ table#poTable td input.form-control {
                         'type'  => 'hidden',
                         'name'  => 'status',
                         'id'    => 'postatus',
-                        'value' => 'pending',
+                        'value' => $status,
                     ];
 
                     echo form_input($warehouse_status);
@@ -321,52 +357,63 @@ table#poTable td input.form-control {
                         <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('attachments', 'document') ?>
-                                <input id="document" type="file" data-browse-label="<?= lang('browse'); ?>" name="attachments[]" multiple data-show-upload="false" data-show-preview="false" class="form-control file">
+                                <input id="document" type="file" data-browse-label="<?= lang('browse'); ?>" name="attachment" multiple data-show-upload="false" data-show-preview="false" class="form-control file">
                             </div>
                         </div>
 
                         <div class="col-md-12">
+
+                         <?php if(isset($action) && $action = 'create_invoice' && $inv_items != null)  { ?> 
+ <div class="col-md-4">
+                                        <div class="form-group">
+                                            
+                                             <?= lang('Supplier', 'Supplier') ?>
+                                               <?php echo $purchase->supplier;?>
+                                               
+                                        </div>
+                                    </div>
+                              <input type="hidden" name="supplier" value="<?php echo $purchase->supplier_id?>" 
+                                                       class="form-control" style="width:100%;"
+                                                       placeholder="<?= lang('select') . ' ' . lang('supplier') ?>">
+                                                <input type="hidden" name="supplier_id" value="<?php echo $purchase->supplier_id?>" id="supplier_id"
+                                                       class="form-control">
+                        
+                        <?php } else {?>
+
                             <div class="panel panel-warning">
                                 <div
                                     class="panel-heading"><?= lang('please_select_these_before_adding_product') ?></div>
                                 <div class="panel-body" style="padding: 5px;">
                                     <div class="col-md-4">
                                         <div class="form-group">
-                                            <?= lang('supplier', 'posupplier'); ?>
-                                            <?php if ($Owner || $Admin || $GP['suppliers-add'] || $GP['suppliers-index']) {
-                                    ?><div class="input-group"><?php
-                                } ?>
+                                            <?= lang('Parent Supplier', 'posupplier'); ?>
+                                            
                                                 <input type="hidden" name="supplier" value="" id="posupplier"
                                                        class="form-control" style="width:100%;"
                                                        placeholder="<?= lang('select') . ' ' . lang('supplier') ?>">
                                                 <input type="hidden" name="supplier_id" value="" id="supplier_id"
                                                        class="form-control">
-                                                <?php if ($Owner || $Admin || $GP['suppliers-index']) {
-                                    ?>
-                                                    <div class="input-group-addon no-print" style="padding: 2px 5px; border-left: 0;">
-                                                        <a href="#" id="view-supplier" class="external" data-toggle="modal" data-target="#myModal">
-                                                            <i class="fa fa-2x fa-user" id="addIcon"></i>
-                                                        </a>
-                                                    </div>
-                                                <?php
-                                } ?>
-                                                <?php if ($Owner || $Admin || $GP['suppliers-add']) {
-                                    ?>
-                                                <div class="input-group-addon no-print" style="padding: 2px 5px;">
-                                                    <a href="<?= admin_url('suppliers/add'); ?>" id="add-supplier" class="external" data-toggle="modal" data-target="#myModal">
-                                                        <i class="fa fa-2x fa-plus-circle" id="addIcon"></i>
-                                                    </a>
-                                                </div>
+                                              
+                                               
+                                               
+                                        </div>
+                                    </div>
+
+                                    <!-- Child Suppliers -->
+
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <?= lang('Child Supplier', 'posupplier'); ?>
                                             <?php
-                                } ?>
-                                            <?php if ($Owner || $Admin || $GP['suppliers-add'] || $GP['suppliers-index']) {
-                                    ?></div><?php
-                                } ?>
+                                            $childSupArr[''] = '';
+                                            
+                                            echo form_dropdown('childsupplier', $childSupArr, $_POST['childsupplier'], 'id="childsupplier" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('child supplier') . '" required="required" style="width:100%;" '); ?>
                                         </div>
                                     </div>
 
                                 </div>
                             </div>
+                            <?php } ?>
                             <div class="clearfix"></div>
                         </div>
 
@@ -400,10 +447,12 @@ table#poTable td input.form-control {
                                            class="table items table-striped table-bordered table-condensed table-hover sortable_table">
                                         <thead>
                                         <tr>
+                                            <th class="col-md-1" style="width: 3%">#</th>
                                             <th class="col-md-2">item name</th>
+                                            <th class="col-md-1">avz code</th>
                                             <th class="col-md-1">sale price</th>
                                             <th class="col-md-1">purchase price</th>
-                                            <th class="col-md-1">Serial No.</th>
+                                            <!--<th class="col-md-1">Serial No.</th>-->
                                             <th class="col-md-1">Batch</th>
                                             <?php
                                             if ($Settings->product_expiry) {
@@ -412,11 +461,13 @@ table#poTable td input.form-control {
                                             ?>
                                             
                                             
-                                            <th class="col-md-1">qty</th>
-                                            <!--<th class="col-md-1">bonus</th>-->
-                                            <th class="col-md-1">dis 1</th>
-                                            <th class="col-md-1">dis 2</th>
-                                            <th class="col-md-1">Vat 15%</th>
+                                           <th class="col-md-1" style="width: 5%">qty</th>
+                                            <th class="col-md-1" style="width: 5%">bonus</th>
+                                            <th class="col-md-1" style="width: 5%">dis 1%</th>
+                                            <th class="col-md-1" style="width: 5%">dis 2%</th>
+                                            <th class="col-md-1" style="width: 5%">Vat 15%</th>
+                                            <th class="col-md-1" style="width: 5%">dis 3%</th>
+                                            <th class="col-md-1" style="width: 5%">deal%</th>
                                             <?php
                                             /*if ($Settings->product_discount) {
                                                 echo '<th class="col-md-1">' . $this->lang->line('discount') . '</th>';
@@ -456,7 +507,7 @@ table#poTable td input.form-control {
                             <div class="row" id="extras-con" style="display: none;">
                                 <?php if ($Settings->tax2) {
                                                 ?>
-                                    <div class="col-md-4">
+                                    <!-- <div class="col-md-4">
                                         <div class="form-group">
                                             <?= lang('order_tax', 'potax2') ?>
                                             <?php
@@ -466,11 +517,11 @@ table#poTable td input.form-control {
                                                 }
                                                 echo form_dropdown('order_tax', $tr, '', 'id="potax2" class="form-control input-tip select" style="width:100%;"'); ?>
                                         </div>
-                                    </div>
+                                    </div> -->
                                 <?php
                                             } ?>
 
-                                <div class="col-md-4">
+                                <!--<div class="col-md-4">
                                     <div class="form-group">
                                         <?= lang('discount_label', 'podiscount'); ?>
                                         <?php echo form_input('discount', '', 'class="form-control input-tip" id="podiscount"'); ?>
@@ -482,12 +533,25 @@ table#poTable td input.form-control {
                                         <?= lang('shipping', 'poshipping'); ?>
                                         <?php echo form_input('shipping', '', 'class="form-control input-tip" id="poshipping"'); ?>
                                     </div>
-                                </div>
+                                </div>-->
 
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <?= lang('payment_term', 'popayment_term'); ?>
-                                        <?php echo form_input('payment_term', '', 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('payment_term_tip') . '" id="popayment_term"'); ?>
+                                        <?php
+                                        $payment_term_data = [
+                                            '' => '',
+                                            '30' => '30',
+                                            '60' => '60',
+                                            '90' => '90',
+                                            '120' => '120',
+                                            '>120' => '>120'
+                                        ];
+                                        $selected_payment_term = '';
+                                        if (isset($supplier_payment_term) && !empty($supplier_payment_term)) {
+                                            $selected_payment_term = $supplier_payment_term;
+                                        }
+                                        echo form_dropdown('payment_term', $payment_term_data, $selected_payment_term, 'id="popayment_term" data-placeholder="' . lang('select') . ' ' . lang('payment_term') . '" class="form-control input-tip select" style="width:100%;"'); ?>
                                     </div>
                                 </div>
                             </div>
@@ -520,8 +584,9 @@ table#poTable td input.form-control {
                             <td><?= lang('order_discount') ?> <span class="totals_val pull-right" id="tds">0.00</span></td>
                             <?php if ($Settings->tax2) {
                                                 ?>
-                                <td><?= lang('order_tax') ?> <span class="totals_val pull-right" id="ttax2">0.00</span></td>
-                            <?php
+                                <!-- <td><?= lang('order_tax') ?> <span class="totals_val pull-right" id="ttax2">0.00</span></td> -->
+                                <td><?= lang('VAT') ?> <span class="totals_val pull-right" id="grand_vat">0.00</span></td>
+                           <?php
                                             } ?>
                             <td><?= lang('shipping') ?> <span class="totals_val pull-right" id="tship">0.00</span></td>
                             <td><?= lang('grand_total') ?> <span class="totals_val pull-right" id="gtotal">0.00</span></td>
