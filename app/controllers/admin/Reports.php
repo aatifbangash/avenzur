@@ -6720,7 +6720,6 @@ class Reports extends MY_Controller
         $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
 
         // Initialize default values
-        $this->data['period'] = null;
         $this->data['supplier_id'] = null;
         $this->data['pharmacy_id'] = null;
         $this->data['purchase_id'] = null;
@@ -6735,57 +6734,28 @@ class Reports extends MY_Controller
         ];
 
         // Check if form submitted
-        if ($this->input->post('period')) {
+        $from_date = $this->input->post('from_date');
+        $to_date = $this->input->post('to_date');
+
+        if ($from_date) {
             // Get filter values from POST
-            $period = $this->input->post('period');
-            $from_date = $this->input->post('from_date');
-            $to_date = $this->input->post('to_date');
             $supplier_id = $this->input->post('supplier_id');
             $pharmacy_id = $this->input->post('pharmacy_id');
             $purchase_id = $this->input->post('purchase_id');
 
-            // Determine dates based on inputs
-            if ($from_date && $to_date) {
-                // Use date range if provided
-                $start_date = date('Y-m-d', strtotime($from_date));
-                $end_date = date('Y-m-d', strtotime($to_date));
-            } elseif ($period) {
-                // Use period selector
-                if ($period == 'today') {
-                    $start_date = $end_date = date('Y-m-d');
-                } elseif ($period == 'month') {
-                    $start_date = date('Y-m-01');
-                    $end_date = date('Y-m-t');
-                } elseif ($period == 'ytd') {
-                    $start_date = date('Y-01-01');
-                    $end_date = date('Y-m-d');
-                } else {
-                    $start_date = $end_date = date('Y-m-d');
-                }
-            } else {
-                // Default to today
-                $start_date = $end_date = date('Y-m-d');
-            }
+            // Convert dates using sma->fld() like supplier_statement
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
 
             // Pass values to view
-            $this->data['period'] = $period;
             $this->data['supplier_id'] = $supplier_id;
             $this->data['pharmacy_id'] = $pharmacy_id;
             $this->data['purchase_id'] = $purchase_id;
-            $this->data['start_date'] = $start_date;
-            $this->data['end_date'] = $end_date;
-
-            // Log for debugging
-            log_message('debug', '========== Purchase Per Invoice Form Submitted ==========');
-            log_message('debug', 'Period: ' . $period . ', Start: ' . $start_date . ', End: ' . $end_date);
-            log_message('debug', 'Supplier: ' . var_export($supplier_id, true) . ', Pharmacy: ' . var_export($pharmacy_id, true));
-            log_message('debug', 'Purchase ID: ' . var_export($purchase_id, true));
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
 
             // Fetch from model - use get_purchase_per_invoice_data to include purchases and payments
             $invoices_array = $this->reports_model->get_purchase_per_invoice_data($start_date, $end_date, $supplier_id, $pharmacy_id, $purchase_id);
-
-            // Log the fetched data count
-            log_message('debug', 'Raw data returned: ' . ($invoices_array ? count($invoices_array) : 0) . ' records');
 
             // Convert arrays to objects for the view
             $invoices_data = [];
