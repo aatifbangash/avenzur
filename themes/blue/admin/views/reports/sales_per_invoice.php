@@ -13,44 +13,54 @@ echo admin_form_open('reports/sales_per_invoice', $attrib);
 ?>
 
 <div class="row">
-    <!-- Period -->
-    <div class="col-md-2 mb-3">
-        <label><?= lang('Period') ?></label>
-        <select name="period" class="form-control" id="period">
-            <option value="today" <?= (isset($period) && $period=='today') ? 'selected' : '' ?>>Today</option>
-            <option value="month" <?= (isset($period) && $period=='month') ? 'selected' : '' ?>>This Month</option>
-            <option value="ytd" <?= (isset($period) && $period=='ytd') ? 'selected' : '' ?>>This Year</option>
-        </select>
+    <!-- From Date -->
+    <div class="col-md-3 mb-3">
+        <div class="form-group">
+            <?= lang('from_date', 'from_date'); ?>
+            <?php echo form_input('from_date', ($start_date ?? ''), 'class="form-control input-tip date" id="from_date"'); ?>
+        </div>
+    </div>
+
+    <!-- To Date -->
+    <div class="col-md-3 mb-3">
+        <div class="form-group">
+            <?= lang('to_date', 'to_date'); ?>
+            <?php echo form_input('to_date', ($end_date ?? ''), 'class="form-control input-tip date" id="to_date"'); ?>
+        </div>
     </div>
 
     <!-- Customer -->
     <div class="col-md-3 mb-3">
-        <label><?= lang('customer') ?></label>
-        <select name="customer_id" class="form-control select2" id="customer_id">
-            <option value=""><?= lang('all') ?></option>
-            <?php if (isset($customers) && is_array($customers)): ?>
-                <?php foreach ($customers as $customer): ?>
-                    <option value="<?= $customer->id ?>" <?= (isset($customer_id) && $customer_id == $customer->id) ? 'selected' : '' ?>>
-                        <?= $customer->name ?>
-                    </option>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </select>
+        <div class="form-group">
+            <?= lang('customer', 'customer_id'); ?>
+            <select name="customer_id" class="form-control select2" id="customer_id" data-placeholder="<?= lang('select') . ' ' . lang('customer') ?>">
+                <option value=""><?= lang('all') ?></option>
+                <?php if (isset($customers) && is_array($customers)): ?>
+                    <?php foreach ($customers as $customer): ?>
+                        <option value="<?= $customer->id ?>" <?= (isset($customer_id) && $customer_id == $customer->id) ? 'selected' : '' ?>>
+                            <?= $customer->name ?>
+                        </option>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </select>
+        </div>
     </div>
 
     <!-- Pharmacy -->
     <div class="col-md-3 mb-3">
-        <label><?= lang('warehouse') ?></label>
-        <select name="pharmacy_id" class="form-control select2" id="pharmacy_id">
-            <option value=""><?= lang('all') ?></option>
-            <?php if (isset($warehouses) && is_array($warehouses)): ?>
-                <?php foreach ($warehouses as $warehouse): ?>
-                    <option value="<?= $warehouse->id ?>" <?= (isset($pharmacy_id) && $pharmacy_id == $warehouse->id) ? 'selected' : '' ?>>
-                        <?= $warehouse->name ?>
-                    </option>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </select>
+        <div class="form-group">
+            <?= lang('warehouse', 'pharmacy_id'); ?>
+            <select name="pharmacy_id" class="form-control select2" id="pharmacy_id" data-placeholder="<?= lang('select') . ' ' . lang('warehouse') ?>">
+                <option value=""><?= lang('all') ?></option>
+                <?php if (isset($warehouses) && is_array($warehouses)): ?>
+                    <?php foreach ($warehouses as $warehouse): ?>
+                        <option value="<?= $warehouse->id ?>" <?= (isset($pharmacy_id) && $pharmacy_id == $warehouse->id) ? 'selected' : '' ?>>
+                            <?= $warehouse->name ?>
+                        </option>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </select>
+        </div>
     </div>
 </div>
 
@@ -109,26 +119,26 @@ echo admin_form_open('reports/sales_per_invoice', $attrib);
                                             <td><?= isset($invoice->sales_man) ? $invoice->sales_man : '' ?></td>
                                             <td><?= isset($invoice->customer_no) ? $invoice->customer_no : '' ?></td>
                                             <td><?= isset($invoice->customer_name) ? $invoice->customer_name : '' ?></td>
-                                            <td class="text-right"><?= $this->sma->formatMoney(isset($invoice->sales) ? $invoice->sales : 0) ?></td>
-                                            <td class="text-right"><?= $this->sma->formatMoney(isset($invoice->discount) ? $invoice->discount : 0) ?></td>
-                                            <td class="text-right"><?= $this->sma->formatMoney(isset($invoice->net_sales) ? $invoice->net_sales : 0) ?></td>
-                                            <td class="text-right"><?= $this->sma->formatMoney(isset($invoice->cogs) ? $invoice->cogs : 0) ?></td>
-                                            <td class="text-right"><?= $this->sma->formatMoney(isset($invoice->profit) ? $invoice->profit : 0) ?></td>
-                                            <td class="text-right"><?= $this->sma->formatMoney(isset($invoice->vat) ? $invoice->vat : 0) ?></td>
-                                            <td class="text-right"><?= $this->sma->formatMoney(isset($invoice->receivable) ? $invoice->receivable : 0) ?></td>
+                                            <td class="text-right"><?= number_format(isset($invoice->sales) ? $invoice->sales : 0, 2) ?></td>
+                                            <td class="text-right"><?= number_format(isset($invoice->discount) ? $invoice->discount : 0, 2) ?></td>
+                                            <td class="text-right"><?= number_format(isset($invoice->net_sales) ? $invoice->net_sales : 0, 2) ?></td>
+                                            <td class="text-right"><?= number_format(isset($invoice->cogs) ? $invoice->cogs : 0, 2) ?></td>
+                                            <td class="text-right"><?= number_format(isset($invoice->profit) ? $invoice->profit : 0, 2) ?></td>
+                                            <td class="text-right"><?= number_format(isset($invoice->vat) ? $invoice->vat : 0, 2) ?></td>
+                                            <td class="text-right"><?= number_format(isset($invoice->receivable) ? $invoice->receivable : 0, 2) ?></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
                                 <tfoot>
                                     <tr class="active">
                                         <th colspan="8" class="text-right"><?= lang('total') ?>:</th>
-                                        <th class="text-right"><?= $this->sma->formatMoney(isset($totals['total_sales']) ? $totals['total_sales'] : 0) ?></th>
-                                        <th class="text-right"><?= $this->sma->formatMoney(isset($totals['total_discount']) ? $totals['total_discount'] : 0) ?></th>
-                                        <th class="text-right"><?= $this->sma->formatMoney(isset($totals['total_net_sales']) ? $totals['total_net_sales'] : 0) ?></th>
-                                        <th class="text-right"><?= $this->sma->formatMoney(isset($totals['total_cogs']) ? $totals['total_cogs'] : 0) ?></th>
-                                        <th class="text-right"><?= $this->sma->formatMoney(isset($totals['total_profit']) ? $totals['total_profit'] : 0) ?></th>
-                                        <th class="text-right"><?= $this->sma->formatMoney(isset($totals['total_vat']) ? $totals['total_vat'] : 0) ?></th>
-                                        <th class="text-right"><?= $this->sma->formatMoney(isset($totals['total_receivable']) ? $totals['total_receivable'] : 0) ?></th>
+                                        <th class="text-right"><?= number_format(isset($totals['total_sales']) ? $totals['total_sales'] : 0, 2) ?></th>
+                                        <th class="text-right"><?= number_format(isset($totals['total_discount']) ? $totals['total_discount'] : 0, 2) ?></th>
+                                        <th class="text-right"><?= number_format(isset($totals['total_net_sales']) ? $totals['total_net_sales'] : 0, 2) ?></th>
+                                        <th class="text-right"><?= number_format(isset($totals['total_cogs']) ? $totals['total_cogs'] : 0, 2) ?></th>
+                                        <th class="text-right"><?= number_format(isset($totals['total_profit']) ? $totals['total_profit'] : 0, 2) ?></th>
+                                        <th class="text-right"><?= number_format(isset($totals['total_vat']) ? $totals['total_vat'] : 0, 2) ?></th>
+                                        <th class="text-right"><?= number_format(isset($totals['total_receivable']) ? $totals['total_receivable'] : 0, 2) ?></th>
                                     </tr>
                                     <tr class="info">
                                         <th colspan="15" class="text-center">
@@ -156,12 +166,6 @@ echo admin_form_open('reports/sales_per_invoice', $attrib);
 
 <script type="text/javascript">
 $(document).ready(function() {
-    // Initialize date picker
-    $('.date').datetimepicker({
-        format: 'DD-MM-YYYY',
-        fontAwesome: true
-    });
-
     // Initialize select2
     $('.select2').select2({
         placeholder: '<?= lang('select') ?>',
@@ -169,7 +173,7 @@ $(document).ready(function() {
     });
 });
 
-// Export to Excel function
+// Export to Excel function with proper UTF-8 encoding for Arabic
 function exportToExcel() {
     var table = document.getElementById('invoiceTable');
     if (!table) {
@@ -177,12 +181,31 @@ function exportToExcel() {
         return;
     }
 
-    var html = table.outerHTML;
-    var url = 'data:application/vnd.ms-excel,' + escape(html);
+    // Clone the table and format for export
+    var tableClone = table.cloneNode(true);
+    
+    // Get HTML content
+    var html = tableClone.outerHTML;
+    
+    // Create proper Excel format with UTF-8 BOM for Arabic support
+    var excelContent = '\uFEFF' + html; // UTF-8 BOM
+    
+    // Create blob with proper encoding
+    var blob = new Blob([excelContent], {
+        type: 'application/vnd.ms-excel;charset=utf-8;'
+    });
+    
+    // Create download link
     var link = document.createElement('a');
-    link.href = url;
-    link.download = 'sales_per_invoice_' + new Date().getTime() + '.xls';
-    link.click();
+    if (link.download !== undefined) {
+        var url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'sales_per_invoice_' + new Date().getTime() + '.xls');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
 }
 </script>
 

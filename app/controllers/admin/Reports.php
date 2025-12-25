@@ -6642,30 +6642,24 @@ class Reports extends MY_Controller
         $this->data['customers'] = $this->site->getAllCompanies('customer');
         $this->data['warehouses'] = $this->site->getAllWarehouses();
 
+        // Initialize default values
+        $this->data['customer_id'] = null;
+        $this->data['pharmacy_id'] = null;
+        $this->data['start_date'] = null;
+        $this->data['end_date'] = null;
+
         // Check if form is submitted
-        if ($this->input->post('period')) {
+        $from_date = $this->input->post('from_date');
+        $to_date = $this->input->post('to_date');
+
+        if ($from_date) {
             // Get filter parameters
-            $period = $this->input->post('period');
             $customer_id = $this->input->post('customer_id');
             $pharmacy_id = $this->input->post('pharmacy_id');
 
-            // Calculate date range based on period
-            $start_date = null;
-            $end_date = date('Y-m-d 23:59:59');
-
-            switch ($period) {
-                case 'today':
-                    $start_date = date('Y-m-d 00:00:00');
-                    break;
-                case 'month':
-                    $start_date = date('Y-m-01 00:00:00');
-                    break;
-                case 'ytd':
-                    $start_date = date('Y-01-01 00:00:00');
-                    break;
-                default:
-                    $start_date = date('Y-m-d 00:00:00');
-            }
+            // Convert dates using sma->fld() like supplier_statement
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
 
             // Get sales data from model
             $invoices = $this->reports_model->getSalesPerInvoice($start_date, $end_date, $customer_id, $pharmacy_id);
@@ -6700,9 +6694,10 @@ class Reports extends MY_Controller
             // Pass data to view
             $this->data['invoices'] = $invoices;
             $this->data['totals'] = $totals;
-            $this->data['period'] = $period;
             $this->data['customer_id'] = $customer_id;
             $this->data['pharmacy_id'] = $pharmacy_id;
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
         }
 
         // Page setup
