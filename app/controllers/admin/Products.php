@@ -1090,7 +1090,7 @@ class Products extends MY_Controller
             // FIND PRODUCT
             // -----------------------------------------
             $product = $this->db
-                ->where('item_code', $item_code)
+                ->where('code', $item_code)
                 ->get('sma_products')
                 ->row();
 
