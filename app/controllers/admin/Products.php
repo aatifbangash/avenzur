@@ -936,6 +936,406 @@ class Products extends MY_Controller
         echo "<hr>Import completed.";
     }
 
+    public function upload_customer_returns(){
+        $excelFile = $this->upload_path . 'csv/opening_return_invoice_open_mind.xlsx'; // Excel file
+        if (!file_exists($excelFile)) {
+            echo "Excel file not found.";
+            return;
+        }
+
+        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($excelFile);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $rows = $sheet->toArray(null, true, true, false);
+
+        echo "<h3>Starting Import...</h3>";
+
+        $row = 0;
+        $groupedReturns = [];
+        foreach ($rows as $i => $row) {
+            if ($i == 0) continue; // Skip header
+
+            $returnInvoiceNo = trim($row[0]);
+            if (!$returnInvoiceNo) continue;
+
+            $groupedReturns[$returnInvoiceNo][] = $row;
+        }
+
+        // --------------------------------------------------
+    // 2. PROCESS EACH RETURN INVOICE
+    // --------------------------------------------------
+    foreach ($groupedReturns as $returnInvoiceNo => $items) {
+
+        echo "<hr><b>Processing Return Invoice: {$returnInvoiceNo}</b><br>";
+
+        // Reset variables for each invoice
+        $products = [];
+        $total = 0;
+        $total_net_return = 0;
+        $total_discount = 0;
+        $total_tax = 0;
+        $cost_goods_sold = 0;
+        $grand_total = 0;
+
+        $firstRow = $items[0];
+
+        // Convert Excel serial date to PHP DateTime
+        try {
+            if (is_numeric($firstRow[1])) {
+                $returnDate = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($firstRow[1])->format('Y-m-d H:i:s');
+            } else {
+                $returnDate = date('Y-m-d H:i:s', strtotime($firstRow[1]));
+            }
+        } catch (Exception $e) {
+            $returnDate = date('Y-m-d H:i:s');
+        }
+        
+        $customerNo = trim($firstRow[4]);
+        $saleInvoiceNo = trim($firstRow[14]);
+        $avz_item_code = $this->sma->generateUUIDv4();
+
+        $customer_details = $this->db
+                ->where('external_id', $customerNo) // exact match
+                ->get('sma_companies')
+                ->row();
+
+        if($customer_details) {
+            $customer_id = $customer_details->id;
+        }else{
+            echo "Customer not found <br>";
+            continue;
+        }
+
+        // ---------------------------------------------
+        // 3. FIND ORIGINAL SALE (IF EXISTS)
+        // ---------------------------------------------
+        $sale = $this->db
+            ->where('reference_no', $saleInvoiceNo)
+            ->or_where('id', $saleInvoiceNo)
+            ->get('sma_sales')
+            ->row();
+
+        $sale_id = $sale ? $sale->id : 0;
+
+        // ---------------------------------------------
+        // 4. CREATE RETURN HEADER (sma_returns)
+        // ---------------------------------------------
+        $returnData = [
+            'date'         => $returnDate,
+            'customer_id'  => $customer_id,
+            'customer'     => $customer_details->name,
+            'biller_id'    => 1,
+            'biller'       => 'Hills Business Medical Company',
+            'warehouse_id' => 32,
+            'total'        => 0,
+            'total_net_return' => 0,
+            'total_discount' => 0,
+            'total_tax'   => 0,
+            'grand_total'  => 0,
+            'cost_goods_sold' => 0,
+            'status' => 'completed',
+            'sale_id'      => 0,
+            'reference_no' => $returnInvoiceNo ? $returnInvoiceNo : 0,
+            'created_by'   => 1,
+            'note'         => 'Opening Customer Return Import',
+        ];
+
+        // ---------------------------------------------
+        // 5. PROCESS ITEMS
+        // ---------------------------------------------
+        foreach ($items as $row) {
+
+            $item_code       = trim($row[5]);
+            $qty             = (float)$row[8];
+            $sale_price      = (float)$row[6];
+            $total_amount    = $sale_price * $qty;
+            $net_amount      = (float)str_replace(',', '', $row[12]);
+            $vat_amount      = (float)$row[16];
+            $purchase_price  = (float)$row[18];
+            // Convert Excel serial date to PHP DateTime
+            try {
+                if (is_numeric($row[19]) && $row[19] > 0) {
+                    $expiry = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row[19])->format('Y-m-d H:i:s');
+                } else {
+                    $expiry = date('Y-m-d H:i:s', strtotime($row[19]));
+                }
+            } catch (Exception $e) {
+                $expiry = null;
+            }
+            $item_name       = trim($row[13]);
+            $batch_number =    trim($row[17]);
+            $cost_price =    trim($row[18]);
+            $dis1_precent =   $row[9] * 100;
+            $dis2_precent =   $row[10] * 100;
+            $dis3_precent =   $row[11] * 100;
+
+            $dis1_value = ($total_amount * $dis1_precent) / 100;
+            $dis2_value = (($total_amount - $dis1_value) * $dis2_precent) / 100;
+            $dis3_value = (($total_amount - $dis1_value - $dis2_value) * $dis3_precent) / 100;
+
+            $totalbeforevat = $total_amount - $dis1_value - $dis2_value - $dis3_value;
+
+            $unit_price = $totalbeforevat / $qty;
+
+            $tax_rate_id = 1;
+            $tax_value = 0;
+            if($vat_amount != '' && $vat_amount != '-'){
+                $tax_rate_id = 5;
+                $tax_value = $vat_amount;
+            }
+
+            // -----------------------------------------
+            // FIND PRODUCT
+            // -----------------------------------------
+            $product = $this->db
+                ->where('item_code', $item_code)
+                ->get('sma_products')
+                ->row();
+
+            if (!$product) {
+                echo "❌ Product not found: {$item_code}<br>";exit;
+                continue;
+            }
+
+            // -----------------------------------------
+            // INSERT RETURN ITEM
+            // -----------------------------------------
+            $returnItem = [
+                'return_id'   => $return_id,
+                'product_id'  => $product->id,
+                'product_code' => $product->code,
+                'product_name' => $product->name,
+                'product_type' => 'standard',
+                'quantity'    => $qty,
+                'net_cost'  => $cost_price,
+                'real_cost' => $purchase_price,
+                'unit_price'  => $unit_price,
+                'net_unit_price' => $unit_price,
+                'warehouse_id' => 32,
+                'tax_rate_id'  => $tax_rate_id,
+                'tax'         => $tax_value,
+                'item_tax'   => $tax_value,
+                'item_discount' => $dis1_value,
+                'subtotal'    => $total_amount,
+                'batch_no'    => $batch_number,
+                'expiry'      => $expiry,
+                'real_unit_price'  => $sale_price,
+                'avz_item_code' => $avz_item_code,
+                'unit_quantity' => 1,
+                'discount1' => $dis1_precent,
+                'discount2' => $dis2_precent,
+                'bonus'       => 0,
+                'second_discount_value' => $dis2_value,
+                'totalbeforevat' => $totalbeforevat,
+                'main_net'   => $net_amount,
+            ];
+            //echo '<pre>';
+            //print_r($returnItem);exit;
+
+            $products[] = ($returnItem);
+            $total += $total_amount;
+            $total_net_return += $totalbeforevat;
+            $total_discount += ($dis1_value + $dis2_value + $dis3_value);
+            $total_tax += $tax_value;
+            $grand_total += $net_amount;
+            $cost_goods_sold += ($cost_price * $qty);
+        }
+
+        $returnData['total'] = $total;
+        $returnData['total_net_return'] = $total_net_return;
+        $returnData['total_discount'] = $total_discount;
+        $returnData['total_tax'] = $total_tax;
+        $returnData['grand_total'] = $grand_total;
+        $returnData['cost_goods_sold'] = $cost_goods_sold;
+
+        $this->db->insert('sma_returns', $returnData);
+        $return_id = $this->db->insert_id();
+
+        krsort($products);
+
+        foreach ($products as $item) {
+            $item['return_id'] = $return_id;
+            
+            $this->db->insert('sma_return_items', $item);
+
+            // -----------------------------------------
+            // INVENTORY MOVEMENT (STOCK IN)
+            // -----------------------------------------
+            $inventoryMovement = [
+                'product_id'   => $item['product_id'],
+                'batch_number' => $item['batch_no'],
+                'movement_date' => $returnDate,
+                'type'         => 'customer_return',
+                'quantity'     => $item['quantity'],
+                'location_id'  => 32, // Default warehouse
+                'net_unit_cost'  => $item['net_cost'],
+                'reference_id' => $return_id,
+                'expiry_date'  => $item['expiry'] ? date('Y-m-d H:i:s', strtotime($item['expiry'])) : null,
+                'net_unit_sale' => $item['unit_price'],
+                'real_unit_cost' => $item['real_cost'],
+                'real_unit_sale' => $item['real_unit_price'],
+                'avz_item_code' => $item['avz_item_code'],
+                'bonus'       => 0,
+                'customer_id' => $customer_id,
+                
+            ];
+
+            $this->db->insert('sma_inventory_movements', $inventoryMovement);
+        }
+
+        // -----------------------------------------
+        // ACCOUNTING ENTRY
+        // -----------------------------------------
+        $this->load->admin_model('companies_model');
+        $customer = $this->companies_model->getCompanyByID($customer_id);
+        $warehouse_id = 32;
+        $warehouse_ledgers = $this->site->getWarehouseByID($warehouse_id);
+
+        // Create main accounting entry
+        $accountEntry = [
+            'entrytype_id' => 4,
+            'number'       => 'RCO-' . $return_id,
+            'date'         => date('Y-m-d', strtotime($returnDate)),
+            'dr_total'     => $grand_total,
+            'cr_total'     => $grand_total,
+            'notes'        => 'RCO Reference: ' . $returnInvoiceNo . ' Date: ' . $returnDate,
+            'rid'          => $return_id,
+            'transaction_type' => 'returncustomerorder',
+            'customer_id'  => $customer_id
+        ];
+
+        $this->db->insert('sma_accounts_entries', $accountEntry);
+        $entry_id = $this->db->insert_id();
+
+        $entryitemdata = [];
+
+        // 1. Cost of Goods Sold (Credit)
+        if ($warehouse_ledgers->warehouse_type == 'pharmacy') {
+            $entryitemdata[] = [
+                'entry_id' => $entry_id,
+                'dc' => 'C',
+                'ledger_id' => $warehouse_ledgers->cogs_ledger,
+                'amount' => $cost_goods_sold,
+                'narration' => 'Cost of goods sold'
+            ];
+        } else {
+            $entryitemdata[] = [
+                'entry_id' => $entry_id,
+                'dc' => 'C',
+                'ledger_id' => $customer->cogs_ledger,
+                'amount' => $cost_goods_sold,
+                'narration' => 'Cost of goods sold'
+            ];
+        }
+
+        // 2. Inventory (Debit)
+        $entryitemdata[] = [
+            'entry_id' => $entry_id,
+            'dc' => 'D',
+            'ledger_id' => $warehouse_ledgers->inventory_ledger,
+            'amount' => $cost_goods_sold,
+            'narration' => 'Inventory'
+        ];
+
+        // 3. Discount (Credit)
+        if ($warehouse_ledgers->warehouse_type == 'pharmacy') {
+            $entryitemdata[] = [
+                'entry_id' => $entry_id,
+                'dc' => 'C',
+                'ledger_id' => $warehouse_ledgers->discount_ledger,
+                'amount' => $total_discount,
+                'narration' => 'Discount'
+            ];
+        } else {
+            $entryitemdata[] = [
+                'entry_id' => $entry_id,
+                'dc' => 'C',
+                'ledger_id' => $customer->discount_ledger,
+                'amount' => $total_discount,
+                'narration' => 'Discount'
+            ];
+        }
+
+        // 4. Customer / Cash (Credit)
+        if ($warehouse_ledgers->warehouse_type == 'pharmacy') {
+            $entryitemdata[] = [
+                'entry_id' => $entry_id,
+                'dc' => 'C',
+                'ledger_id' => $warehouse_ledgers->fund_books_ledger,
+                'amount' => $grand_total,
+                'narration' => 'Customer'
+            ];
+        } else {
+            $entryitemdata[] = [
+                'entry_id' => $entry_id,
+                'dc' => 'C',
+                'ledger_id' => $customer->ledger_account,
+                'amount' => $grand_total,
+                'narration' => 'Customer'
+            ];
+        }
+
+        // 5. Sales Account (Debit)
+        if ($warehouse_ledgers->warehouse_type == 'pharmacy') {
+            $entryitemdata[] = [
+                'entry_id' => $entry_id,
+                'dc' => 'D',
+                'ledger_id' => $warehouse_ledgers->sales_ledger,
+                'amount' => $total,
+                'narration' => 'Sales account'
+            ];
+        } else {
+            $entryitemdata[] = [
+                'entry_id' => $entry_id,
+                'dc' => 'D',
+                'ledger_id' => $customer->sales_ledger,
+                'amount' => $total,
+                'narration' => 'Sales account'
+            ];
+        }
+
+        // 6. VAT on Sales (Debit)
+        if ($warehouse_ledgers->warehouse_type == 'pharmacy') {
+            $entryitemdata[] = [
+                'entry_id' => $entry_id,
+                'dc' => 'D',
+                'ledger_id' => $warehouse_ledgers->vat_on_sales_ledger,
+                'amount' => $total_tax,
+                'narration' => 'VAT on sales'
+            ];
+        } else {
+            // Need to define vat_on_sale ledger for non-pharmacy
+            $vat_on_sale = $this->Settings->vat_on_sale_ledger; // Default VAT on sales ledger - adjust as needed
+            $entryitemdata[] = [
+                'entry_id' => $entry_id,
+                'dc' => 'D',
+                'ledger_id' => $vat_on_sale,
+                'amount' => $total_tax,
+                'narration' => 'VAT on sales'
+            ];
+        }
+
+        // Calculate total for entry
+        $total_invoice_entry = $total_tax + $total + $cost_goods_sold;
+
+        // Update entry totals
+        $this->db->update('sma_accounts_entries', [
+            'dr_total' => $total_invoice_entry,
+            'cr_total' => $total_invoice_entry
+        ], ['id' => $entry_id]);
+
+        // Insert all entry items
+        foreach ($entryitemdata as $itemdata) {
+            $this->db->insert('sma_accounts_entryitems', $itemdata);
+        }
+
+        echo "✅ Return Invoice {$returnInvoiceNo} completed (Entry ID: {$entry_id})<br>";
+
+        }
+    }
+
     public function upload_trial_balance()
     {
         $excelFile = $this->upload_path . 'csv/rawabi_trial_balance.xlsx'; // Excel file
