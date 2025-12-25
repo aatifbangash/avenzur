@@ -119,7 +119,7 @@ echo admin_form_open('reports/purchase_per_invoice', $attrib);
                                     <?php foreach ($invoices as $invoice): ?>
                                         <tr>
                                             <td><?= isset($invoice->type) ? $invoice->type : 'Purchase' ?></td>
-                                            <td><?= $this->sma->hrld($invoice->date) ?></td>
+                                            <td><?= date('d M y', strtotime($invoice->date)) ?></td>
                                             <td><?= isset($invoice->invoice) ? $invoice->invoice : '' ?></td>
                                             <td><?= isset($invoice->return_inv) ? $invoice->return_inv : '0' ?></td>
                                             <td><?= isset($invoice->agent_name) ? $invoice->agent_name : '' ?></td>
