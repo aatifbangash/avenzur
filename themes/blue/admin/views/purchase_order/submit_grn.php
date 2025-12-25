@@ -64,10 +64,12 @@
                                     <thead>
                                         <tr>
                                             <th width="5%">#</th>
-                                            <th width="20%">Product Code</th>
-                                            <th width="40%">Product Name</th>
-                                            <th width="20%">Quantity</th>
-                                            <th width="15%">Action</th>
+                                            <th width="15%">Product Code</th>
+                                            <th width="30%">Product Name</th>
+                                            <th width="10%">Ordered</th>
+                                            <th width="15%">Quantity</th>
+                                            <th width="15%">Progress</th>
+                                            <th width="10%">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody id="scanned-items-body">
@@ -125,6 +127,15 @@
         height: 36px;
         padding: 0;
         font-size: 18px;
+    }
+    .progress {
+        height: 24px;
+        margin-bottom: 0;
+    }
+    .progress-bar {
+        line-height: 24px;
+        font-size: 12px;
+        font-weight: bold;
     }
 </style>
 
@@ -245,12 +256,26 @@ $(document).ready(function() {
             for (const itemId in scannedItems) {
                 const scanned = scannedItems[itemId];
                 const item = scanned.item;
+                
+                // Calculate progress
+                const orderedQty = parseFloat(item.quantity || 0);
+                const receivedQty = scanned.qty;
+                const progressPercent = orderedQty > 0 ? Math.min(100, Math.round((receivedQty / orderedQty) * 100)) : 0;
+                
+                // Determine progress bar color
+                let progressClass = 'progress-bar-success';
+                if (progressPercent < 100) {
+                    progressClass = 'progress-bar-warning';
+                } else if (receivedQty > orderedQty) {
+                    progressClass = 'progress-bar-danger';
+                }
 
                 const row = $(`
                     <tr>
                         <td>${index}</td>
                         <td>${item.product_code || ''}</td>
                         <td><strong>${item.product_name || ''}</strong></td>
+                        <td><span class="badge badge-info">${orderedQty.toFixed(2)}</span></td>
                         <td>
                             <div class="qty-control">
                                 <button type="button" class="btn btn-default qty-minus" data-item-id="${itemId}">
@@ -264,6 +289,17 @@ $(document).ready(function() {
                                 <button type="button" class="btn btn-default qty-plus" data-item-id="${itemId}">
                                     <i class="fa fa-plus"></i>
                                 </button>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="progress">
+                                <div class="progress-bar ${progressClass}" role="progressbar" 
+                                     style="width: ${progressPercent}%"
+                                     aria-valuenow="${progressPercent}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    ${progressPercent}%
+                                </div>
                             </div>
                         </td>
                         <td>
