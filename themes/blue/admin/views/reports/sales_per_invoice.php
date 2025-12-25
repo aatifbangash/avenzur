@@ -112,7 +112,7 @@ echo admin_form_open('reports/sales_per_invoice', $attrib);
                                     <?php foreach ($invoices as $invoice): ?>
                                         <tr class="<?= (isset($invoice->type) && $invoice->type == 'Return') ? 'return-row' : '' ?>">
                                             <td><?= isset($invoice->type) ? $invoice->type : 'Sale' ?></td>
-                                            <td><?= isset($invoice->date) ? $this->sma->hrld($invoice->date) : '' ?></td>
+                                            <td><?= isset($invoice->date) ? date('d M y', strtotime($invoice->date)) : '' ?></td>
                                             <td><?= isset($invoice->sale_invoice_no) ? $invoice->sale_invoice_no : '' ?></td>
                                             <td><?= isset($invoice->return_inv_no) ? $invoice->return_inv_no : '' ?></td>
                                             <td><?= isset($invoice->area) ? $invoice->area : '' ?></td>
