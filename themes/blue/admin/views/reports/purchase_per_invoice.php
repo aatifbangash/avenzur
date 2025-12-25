@@ -13,66 +13,66 @@ echo admin_form_open('reports/purchase_per_invoice', $attrib);
 ?>
 
 <div class="row">
-    <!-- Period -->
-    <div class="col-md-2 mb-3">
-        <label><?= lang('Period') ?></label>
-        <select name="period" class="form-control" id="period">
-            <option value="today" <?= (isset($period) && $period=='today') ? 'selected' : '' ?>>Today</option>
-            <option value="month" <?= (isset($period) && $period=='month') ? 'selected' : '' ?>>This Month</option>
-            <option value="ytd" <?= (isset($period) && $period=='ytd') ? 'selected' : '' ?>>This Year</option>
-        </select>
+    <!-- From Date -->
+    <div class="col-md-3 mb-3">
+        <div class="form-group">
+            <?= lang('from_date', 'from_date'); ?>
+            <?php echo form_input('from_date', ($start_date ?? ''), 'class="form-control input-tip date" id="from_date"'); ?>
+        </div>
+    </div>
+
+    <!-- To Date -->
+    <div class="col-md-3 mb-3">
+        <div class="form-group">
+            <?= lang('to_date', 'to_date'); ?>
+            <?php echo form_input('to_date', ($end_date ?? ''), 'class="form-control input-tip date" id="to_date"'); ?>
+        </div>
     </div>
 
     <!-- Purchase ID -->
     <div class="col-md-2 mb-3">
-        <label><?= lang('Purchase ID') ?></label>
-        <input type="text" name="purchase_id" class="form-control" id="purchase_id" 
-               value="<?= isset($purchase_id) ? $purchase_id : '' ?>" 
-               placeholder="<?= lang('Enter Purchase ID') ?>">
+        <div class="form-group">
+            <label><?= lang('Purchase ID') ?></label>
+            <input type="text" name="purchase_id" class="form-control" id="purchase_id" 
+                   value="<?= isset($purchase_id) ? $purchase_id : '' ?>" 
+                   placeholder="<?= lang('Enter Purchase ID') ?>">
+        </div>
     </div>
 
     <!-- Supplier -->
-    <div class="col-md-3 mb-3">
-        <label><?= lang('supplier') ?></label>
-        <select name="supplier_id" class="form-control select2" id="supplier_id">
-            <option value=""><?= lang('all') ?></option>
-            <?php if (isset($suppliers) && is_array($suppliers)): ?>
-                <?php foreach ($suppliers as $supplier): ?>
-                    <option value="<?= $supplier->id ?>" <?= (isset($supplier_id) && $supplier_id == $supplier->id) ? 'selected' : '' ?>>
-                        <?= $supplier->name ?>
-                    </option>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </select>
+    <div class="col-md-2 mb-3">
+        <div class="form-group">
+            <?= lang('supplier', 'supplier_id'); ?>
+            <select name="supplier_id" class="form-control select2" id="supplier_id" data-placeholder="<?= lang('select') . ' ' . lang('supplier') ?>">
+                <option value=""><?= lang('all') ?></option>
+                <?php if (isset($suppliers) && is_array($suppliers)): ?>
+                    <?php foreach ($suppliers as $supplier): ?>
+                        <option value="<?= $supplier->id ?>" <?= (isset($supplier_id) && $supplier_id == $supplier->id) ? 'selected' : '' ?>>
+                            <?= $supplier->name ?>
+                        </option>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </select>
+        </div>
     </div>
 
     <!-- Pharmacy -->
-    <div class="col-md-3 mb-3">
-        <label><?= lang('warehouse') ?></label>
-        <select name="pharmacy_id" class="form-control select2" id="pharmacy_id">
-            <option value=""><?= lang('all') ?></option>
-            <?php if (isset($warehouses) && is_array($warehouses)): ?>
-                <?php foreach ($warehouses as $warehouse): ?>
-                    <option value="<?= $warehouse->id ?>" <?= (isset($pharmacy_id) && $pharmacy_id == $warehouse->id) ? 'selected' : '' ?>>
-                        <?= $warehouse->name ?>
-                    </option>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </select>
+    <div class="col-md-2 mb-3">
+        <div class="form-group">
+            <?= lang('warehouse', 'pharmacy_id'); ?>
+            <select name="pharmacy_id" class="form-control select2" id="pharmacy_id" data-placeholder="<?= lang('select') . ' ' . lang('warehouse') ?>">
+                <option value=""><?= lang('all') ?></option>
+                <?php if (isset($warehouses) && is_array($warehouses)): ?>
+                    <?php foreach ($warehouses as $warehouse): ?>
+                        <option value="<?= $warehouse->id ?>" <?= (isset($pharmacy_id) && $pharmacy_id == $warehouse->id) ? 'selected' : '' ?>>
+                            <?= $warehouse->name ?>
+                        </option>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </select>
+        </div>
     </div>
 </div>
-
-<?php if (isset($period)): ?>
-    <!-- Debug Info (remove after testing) -->
-    <div class="alert alert-info" style="font-size: 11px;">
-        <strong>Debug Info:</strong> Period: <?= $period ?> |
-        Dates: <?= isset($start_date) ? $start_date : 'N/A' ?> to <?= isset($end_date) ? $end_date : 'N/A' ?> |
-        Purchase ID: <?= isset($purchase_id) && $purchase_id ? $purchase_id : 'All' ?> |
-        Supplier: <?= isset($supplier_id) && $supplier_id ? $supplier_id : 'All' ?> |
-        Pharmacy: <?= isset($pharmacy_id) && $pharmacy_id ? $pharmacy_id : 'All' ?> |
-        Invoices: <?= isset($invoices) ? (is_array($invoices) ? count($invoices) : 'Not array') : 'Not set' ?>
-    </div>
-<?php endif; ?>
 
 <hr>
 
@@ -125,22 +125,22 @@ echo admin_form_open('reports/purchase_per_invoice', $attrib);
                                             <td><?= isset($invoice->agent_name) ? $invoice->agent_name : '' ?></td>
                                             <td><?= isset($invoice->supplier_no) ? $invoice->supplier_no : '' ?></td>
                                             <td><?= isset($invoice->supplier_name) ? $invoice->supplier_name : '' ?></td>
-                                            <td class="text-right"><?= $this->sma->formatMoney(isset($invoice->purchase) ? $invoice->purchase : 0) ?></td>
-                                            <td class="text-right"><?= $this->sma->formatMoney(isset($invoice->vat) ? $invoice->vat : 0) ?></td>
-                                            <td class="text-right"><?= $this->sma->formatMoney(isset($invoice->payable) ? $invoice->payable : 0) ?></td>
-                                            <td class="text-right"><?= $this->sma->formatMoney(isset($invoice->payment) ? $invoice->payment : 0) ?></td>
-                                            <td class="text-right"><?= $this->sma->formatMoney(isset($invoice->return_amount) ? $invoice->return_amount : 0) ?></td>
+                                            <td class="text-right"><?= number_format(isset($invoice->purchase) ? $invoice->purchase : 0, 2) ?></td>
+                                            <td class="text-right"><?= number_format(isset($invoice->vat) ? $invoice->vat : 0, 2) ?></td>
+                                            <td class="text-right"><?= number_format(isset($invoice->payable) ? $invoice->payable : 0, 2) ?></td>
+                                            <td class="text-right"><?= number_format(isset($invoice->payment) ? $invoice->payment : 0, 2) ?></td>
+                                            <td class="text-right"><?= number_format(isset($invoice->return_amount) ? $invoice->return_amount : 0, 2) ?></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
                                 <tfoot>
                                     <tr class="active">
                                         <th colspan="7" class="text-right"><?= lang('total') ?>:</th>
-                                        <th class="text-right"><?= $this->sma->formatMoney(isset($totals['total_purchase']) ? $totals['total_purchase'] : 0) ?></th>
-                                        <th class="text-right"><?= $this->sma->formatMoney(isset($totals['total_vat']) ? $totals['total_vat'] : 0) ?></th>
-                                        <th class="text-right"><?= $this->sma->formatMoney(isset($totals['total_payable']) ? $totals['total_payable'] : 0) ?></th>
-                                        <th class="text-right"><?= $this->sma->formatMoney(isset($totals['total_payment']) ? $totals['total_payment'] : 0) ?></th>
-                                        <th class="text-right"><?= $this->sma->formatMoney(isset($totals['total_return']) ? $totals['total_return'] : 0) ?></th>
+                                        <th class="text-right"><?= number_format(isset($totals['total_purchase']) ? $totals['total_purchase'] : 0, 2) ?></th>
+                                        <th class="text-right"><?= number_format(isset($totals['total_vat']) ? $totals['total_vat'] : 0, 2) ?></th>
+                                        <th class="text-right"><?= number_format(isset($totals['total_payable']) ? $totals['total_payable'] : 0, 2) ?></th>
+                                        <th class="text-right"><?= number_format(isset($totals['total_payment']) ? $totals['total_payment'] : 0, 2) ?></th>
+                                        <th class="text-right"><?= number_format(isset($totals['total_return']) ? $totals['total_return'] : 0, 2) ?></th>
                                     </tr>
                                     <tr class="info">
                                         <th colspan="12">
@@ -169,12 +169,6 @@ echo admin_form_open('reports/purchase_per_invoice', $attrib);
 
 <script type="text/javascript">
 $(document).ready(function() {
-    // Initialize date picker
-    $('.date').datetimepicker({
-        format: 'DD-MM-YYYY',
-        fontAwesome: true
-    });
-
     // Initialize select2
     $('.select2').select2({
         placeholder: '<?= lang('select') ?>',
@@ -182,7 +176,7 @@ $(document).ready(function() {
     });
 });
 
-// Export to Excel function
+// Export to Excel function with proper UTF-8 encoding for Arabic
 function exportToExcel() {
     var table = document.getElementById('invoiceTable');
     if (!table) {
@@ -190,12 +184,31 @@ function exportToExcel() {
         return;
     }
 
-    var html = table.outerHTML;
-    var url = 'data:application/vnd.ms-excel,' + escape(html);
+    // Clone the table and format for export
+    var tableClone = table.cloneNode(true);
+    
+    // Get HTML content
+    var html = tableClone.outerHTML;
+    
+    // Create proper Excel format with UTF-8 BOM for Arabic support
+    var excelContent = '\uFEFF' + html; // UTF-8 BOM
+    
+    // Create blob with proper encoding
+    var blob = new Blob([excelContent], {
+        type: 'application/vnd.ms-excel;charset=utf-8;'
+    });
+    
+    // Create download link
     var link = document.createElement('a');
-    link.href = url;
-    link.download = 'purchase_per_invoice_' + new Date().getTime() + '.xls';
-    link.click();
+    if (link.download !== undefined) {
+        var url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'purchase_per_invoice_' + new Date().getTime() + '.xls');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
 }
 </script>
 
