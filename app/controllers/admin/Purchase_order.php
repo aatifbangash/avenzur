@@ -2212,7 +2212,7 @@ class Purchase_order extends MY_Controller
         }
 
         $this->data['po_id'] = $po_id;
-        $this->data['api_base_url'] = 'http://testing.avenzur.com/internal/api';
+        $this->data['api_base_url'] = 'https://testing.avenzur.com/internal/api';
 
         $bc = [
             ['link' => base_url(), 'page' => lang('home')], 
