@@ -2199,4 +2199,27 @@ class Purchase_order extends MY_Controller
         $meta = ['page_title' => lang('Check Status'), 'bc' => $bc];
         $this->page_construct('purchases/check_status', $meta, $this->data);
     }
+
+    /**
+     * Submit GRN - Barcode scanning interface
+     * Calls external API to fetch PO and submit received quantities
+     */
+    public function submit_grn($po_id = null)
+    {
+        if (!$po_id) {
+            $this->session->set_flashdata('error', 'Purchase Order ID is required');
+            admin_redirect('purchase_order');
+        }
+
+        $this->data['po_id'] = $po_id;
+        $this->data['api_base_url'] = 'http://testing.avenzur.com/internal/api';
+
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')], 
+            ['link' => admin_url('purchase_order'), 'page' => lang('purchase_orders')], 
+            ['link' => '#', 'page' => 'Submit GRN']
+        ];
+        $meta = ['page_title' => 'Submit GRN - Barcode Scanning', 'bc' => $bc];
+        $this->page_construct('purchase_order/submit_grn', $meta, $this->data);
+    }
 }
