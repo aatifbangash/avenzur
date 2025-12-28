@@ -1633,7 +1633,7 @@ class Products extends MY_Controller
 
     public function import_shopify_products()
     {
-        $shopify_file_path = $this->upload_path . 'csv/products_export_2.csv';
+        $shopify_file_path = $this->upload_path . 'csv/products_export_1.csv';
 
         if (!file_exists($shopify_file_path)) {
             echo "CSV file not found.";
@@ -1668,6 +1668,7 @@ class Products extends MY_Controller
             $option1_value    = trim($data[9]);
             $option2_value    = trim($data[10]);
             $option3_value    = trim($data[11]);
+            //$variant_sku      = str_replace("'", '', $data[12]);
             $variant_price    = (float)$data[12];
             $variant_barcode  = str_replace("'", '', $data[13]);
             $image_src        = trim($data[14]);
@@ -1688,27 +1689,7 @@ class Products extends MY_Controller
             }else{
                 $title          = trim($original_title. ' ' . $option1_value . ' ' . $option2_value . ' ' . $option3_value);
             }
-            
-
-            /*if(empty($title)) {
-                // Check if product with this handle already exists
-                $product_details = $this->db
-                    ->where('slug', $product_handle) // exact match
-                    ->get('sma_products')
-                    ->row();
-
-                if($product_details) {
-                    echo "Product title missing, skipped existing product → {$product_details->name} -> handle {$product_details->slug}<br>";
-                    continue;
-                }
-
-                // If not exists, create a title from options (safely)
-                $title = trim($option1_value . ' ' . $option2_value . ' ' . $option3_value);
-                if(empty($title)) {
-                    $title = "Product_{$product_handle}"; // fallback if all options empty
-                }
-            }*/
-
+        
             if ($variant_barcode == '') {
                 echo "Emptry Product Code → {$title}<br>";
                 continue;
@@ -1720,46 +1701,54 @@ class Products extends MY_Controller
             }
 
             // --- Brand ---
-            $brand_id = $this->get_or_create_brand($vendor);
+            //$brand_id = $this->get_or_create_brand($vendor);
 
             // --- Category ---
-            $category_id = $this->get_or_create_category_chain($category_chain);
+            //$category_id = $this->get_or_create_category_chain($category_chain);
 
             // --- Check existing ---
             $this->db->where('code', $variant_barcode);
             if ($this->db->get('sma_products')->row()) {
-                echo "Product exists → {$title}<br>";
+                
+                $product_data = [
+                    'tags'      => $tags,
+                ];
+                //echo 'Barcode: '.$variant_barcode.' -- Tags: '.$tags.'<br>';
+                $this->db->where('code', $variant_barcode);
+                $this->db->update('sma_products', $product_data);
+
                 continue;
+            }else{
+                // --- Insert ---
+                /*$product_data = [
+                    'code'        => $variant_barcode,
+                    'name'        => $title,
+                    'details'     => $description,
+                    'type'        => 'standard',
+                    'category_id' => $category_id,
+                    'brand'       => $brand_id,
+                    'slug'        => $product_handle,
+                    'unit'        => 1,
+                    'cost'        => 0,
+                    'price'       => $variant_price,
+                    'alert_quantity' => 0,
+                    'tax_rate'    => null,
+                    'tax_method'  => 0,
+                    'barcode_symbology' => 'code128',
+                    'image'       => $image_src,
+                    'hide'        => $hide
+                ];
+
+                $this->db->insert('sma_products', $product_data);
+                $product_id = $this->db->insert_id();
+
+                $this->db->insert('sma_product_photos', [
+                    'product_id' => $product_id,
+                    'photo'      => $additional_image_src
+                ]);
+                echo "Inserted product → {$title}<br>";*/
             }
 
-            // --- Insert ---
-            $product_data = [
-                'code'        => $variant_barcode,
-                'name'        => $title,
-                'details'     => $description,
-                'type'        => 'standard',
-                'category_id' => $category_id,
-                'brand'       => $brand_id,
-                'slug'        => $product_handle,
-                'unit'        => 1,
-                'cost'        => 0,
-                'price'       => $variant_price,
-                'alert_quantity' => 0,
-                'tax_rate'    => null,
-                'tax_method'  => 0,
-                'barcode_symbology' => 'code128',
-                'image'       => $image_src,
-                'hide'        => $hide
-            ];
-
-            $this->db->insert('sma_products', $product_data);
-            $product_id = $this->db->insert_id();
-
-            $this->db->insert('sma_product_photos', [
-                'product_id' => $product_id,
-                'photo'      => $additional_image_src
-            ]);
-            echo "Inserted product → {$title}<br>";
         }
 
         fclose($csv);
