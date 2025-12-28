@@ -200,22 +200,24 @@
                                                         <!--<li><?= $detail_link ?> </li>
                                                         <li><?= $payments_link ?></li>
                                                         <li><?= $add_payment_link ?></li>-->
-                                                        <?php if($purchase->status != "received") {?>
+                                                        <?php if(($this->Owner || $this->Admin || $this->GP['purchases-edit']) && $purchase->status != "received") {?>
                                                         <li><?= $edit_link ?></li>
                                                         <?php }?>
                                                         <li><?= $pdf_link ?></li>
                                                         <!--<li><?= $email_link ?></li> -->
+                                                        <?php if(($this->Owner || $this->Admin)){ ?>
                                                         <li><?= $print_barcode ?></li>
-                                                        <?php if($purchase->status == 'received') {?>
+                                                        <?php } ?>
+                                                        <?php if(($this->Owner || $this->Admin || $this->GP['supplier-returns-add']) && $purchase->status == 'received') {?>
                                                         <li><?= $return_link ?></li>
                                                         <?php } ?>
-                                                        <?php if($purchase->status == 'pending') {?>
+                                                        <?php if(($this->Owner || $this->Admin || $this->GP['purchases-deleted']) && $purchase->status == 'pending') {?>
                                                         <li><?= $delete_link ?></li>
                                                         <?php }?>
-                                                        <?php if($purchase->is_transfer !=1 && $purchase->status == 'received') {?>
+                                                        <?php if(($this->Owner || $this->Admin || $this->GP['transfers-add']) && ($purchase->is_transfer !=1 && $purchase->status == 'received')) {?>
                                                             <li><?= $transfer_link ?></li>
                                                         <?php }?>
-                                                        <?php if($purchase->status == 'received') {?>
+                                                        <?php if(($this->Owner || $this->Admin || $this->Accountant) &&$purchase->status == 'received') {?>
                                                         <li><?= $journal_entry_link ?></li>
                                                         <?php } ?>
                                                     </ul>
