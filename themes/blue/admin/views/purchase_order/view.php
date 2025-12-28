@@ -187,33 +187,37 @@
                 <?php
                  
                 // ✅ PURCHASE MANAGER ACTIONS
-                if($Admin || $Owner || $this->GP['purchase_manager']) {
+                //if($Admin || $Owner || $this->GP['purchase_manager']) {
                   if($currentStatus == 'pending') {
                     $currentStatus = 'created';
                   }
                   //if ($userRole == 'purchase_manager') {
                   switch ($currentStatus) {
                     case 'created':
+                      if ($Admin || $Owner || $this->GP['po-approve']) {
                       echo '<button class="btn btn-outline-primary btn-sm mb-2 text-primary" data-toggle="modal" data-target="#sendToSupplierModal">
-                <i class="fa fa-paper-plane-o me-1"></i> Send to GRN Team
-              </button>';
+                              <i class="fa fa-paper-plane-o me-1"></i> Send to GRN Team
+                            </button>';
+                      }
                       break;
 
                     case 'goods_received':
                     case 'pending_invoice':
+                      if ($Admin || $Owner || $this->GP['po-create-invoice']) {
                       echo '<a href="' . admin_url("purchases/add?action=create_invoice&po_number=" . base64_encode($inv->id)) . '" 
-                class="btn btn-outline-success btn-sm mb-2 text-primary">
-                <i class="fa fa-money me-1"></i> Create Invoice
-              </a>';
+                              class="btn btn-outline-success btn-sm mb-2 text-primary">
+                              <i class="fa fa-money me-1"></i> Create Invoice
+                            </a>';
+                      }
                       break;
 
                     case 'invoiced':
                       echo '<button class="btn btn-outline-secondary btn-sm mb-2 text-primary" disabled>
-                <i class="fa fa-check me-1"></i> Invoiced
-              </button>';
+                              <i class="fa fa-check me-1"></i> Invoiced
+                            </button>';
                       break;
                   }
-                }
+                //}
 
                 // ✅ WAREHOUSE MANAGER / PURCHASE COORDINATOR ACTIONS
                 //if (in_array($userRole, ['warehouse_manager', 'purchase_coordinator'])) {
