@@ -2222,4 +2222,27 @@ class Purchase_order extends MY_Controller
         $meta = ['page_title' => 'Submit GRN - Barcode Scanning', 'bc' => $bc];
         $this->page_construct('purchase_order/submit_grn', $meta, $this->data);
     }
+
+    /**
+     * Shelving - Barcode scanning interface for shelving products
+     * Allows scanning of rack, box, and products to assign storage locations
+     */
+    public function shelving($po_id = null)
+    {
+        if (!$po_id) {
+            $this->session->set_flashdata('error', 'Purchase Order ID is required');
+            admin_redirect('purchase_order');
+        }
+
+        $this->data['po_id'] = $po_id;
+        $this->data['api_base_url'] = 'https://testing.avenzur.com/internal/api';
+
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')], 
+            ['link' => admin_url('purchase_order'), 'page' => lang('purchase_orders')], 
+            ['link' => '#', 'page' => 'Shelving']
+        ];
+        $meta = ['page_title' => 'Shelving - Product Location Assignment', 'bc' => $bc];
+        $this->page_construct('purchase_order/shelving', $meta, $this->data);
+    }
 }
