@@ -2149,13 +2149,23 @@ class Purchases extends MY_Controller
                 <li>' . $add_payment_link . '</li>
                 <li>' . $edit_link . '</li>
                 <li>' . $pdf_link . '</li>
-                <li>' . $email_link . '</li>
-                <li>' . $print_barcode . '</li>
-                <li>' . $return_link . '</li>
-                <li>' . $delete_link . '</li>
-                <li>' . $transfer_link . '</li>
-               <li>' . $journal_entry_link . '</li>
-            </ul>
+                <li>' . $email_link . '</li>';
+            if($this->Owner || $this->Admin){
+                $action .= '<li>' . $print_barcode . '</li>';
+            }
+            if($this->Owner || $this->Admin || $this->GP['supplier-returns-add']){
+                $action .= '<li>' . $return_link . '</li>';
+            }
+            if($this->Owner || $this->Admin || $this->GP['purchases-deleted']){
+                $action .= '<li>' . $delete_link . '</li>';
+            }
+            if($this->Owner || $this->Admin || $this->GP['transfers-add']){
+                $action .= '<li>' . $transfer_link . '</li>';
+            }
+            if($this->Owner || $this->Admin || $this->Accountant){
+               $action .= '<li>' . $journal_entry_link . '</li>';
+            }
+            $action .= '</ul>
             </div></div>';
 
 

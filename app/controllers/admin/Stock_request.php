@@ -479,7 +479,12 @@ class stock_request extends MY_Controller
         $inventory_check_request_details = $this->stock_request_model->getInventoryCheckRequestById($inventory_check_request_id );
         $warehouse_detail = $this->site->getWarehouseByID($inventory_check_request_details[0]->location_id);
 
-        $inventory_check_array = $this->stock_request_model->getInventoryCheck($inventory_check_request_id, $inventory_check_request_details[0]->location_id);
+        if($this->Settings->site_name == 'Hills Business Medical'){
+            $inventory_check_array = $this->stock_request_model->getInventoryCheckByBatch($inventory_check_request_id, $inventory_check_request_details[0]->location_id);
+        }else{
+            $inventory_check_array = $this->stock_request_model->getInventoryCheck($inventory_check_request_id, $inventory_check_request_details[0]->location_id);
+        }
+        
         //echo '<pre>';print_r($inventory_check_array);exit;
         $this->data['warehouse_detail'] = $warehouse_detail;
         $this->data['inventory_check_request_details'] = $inventory_check_request_details[0];
@@ -546,19 +551,64 @@ class stock_request extends MY_Controller
                     $this->db->insert('sma_inventory_check_requests', $insert_inv_req);
 					$inv_check_id = $this->db->insert_id();
 
+                    $count = 0;
                     foreach ($parsed as $row) {
                         // Now extract the transaction row
-                        $record = [
-                            'inv_check_id'    => $inv_check_id,
-                            'avz_code'        => $row[0] ?? '',
-                            'quantity'        => $row[1] ?? '',
-                        ];
-                        
+                        if($this->Settings->site_name == 'Hills Business Medical'){
+                            if ($count == 0) { $count++; continue; } // Skip header
+                            $product_code = $row[0] ?? '';
+                            $item_batchno = $row[1] ?? '';
+                            $item_expiry = $row[2] ?? '';
+                            $item_quantity = $row[3] ?? '';
+
+                            $product_details = $this->db
+                                    ->where('item_code', $product_code) // exact match
+                                    ->get('sma_products')
+                                    ->row();
+
+                            if($product_details) {
+                                $product_id = $product_details->id;
+                            }else{
+                                $product_details = $this->db
+                                    ->where('code', $product_code) // exact match
+                                    ->get('sma_products')
+                                    ->row();
+                            }
+                            
+                            // -----------------------------
+                            // FIND MATCHING (AVZ CODE)
+                            // -----------------------------
+                            $this->db->select('avz_item_code', false);
+                            $this->db->from('sma_inventory_movements');
+                            $this->db->where('product_id', $product_details->id);
+                            $this->db->where('batch_number', $item_batchno);
+                            $this->db->where('location_id', $warehouse);
+                            $this->db->where('expiry_date', date('Y-m-d', strtotime($item_expiry)));
+                            $this->db->group_by('avz_item_code');
+                            //$this->db->having('qty >=', $quantity);
+
+                            $inventory_details = $this->db->get()->row();
+                            
+                            $record = [
+                                'inv_check_id'    => $inv_check_id,
+                                'avz_code'        => $inventory_details->avz_item_code ?? '',
+                                'product_id'     => $product_details->id ?? '',
+                                'batch_number'   => $item_batchno,
+                                'expiry_date'    => date('Y-m-d', strtotime($item_expiry)),
+                                'quantity'        => $item_quantity ?? '',
+                            ];                        
+                        }else{
+                            $record = [
+                                'inv_check_id'    => $inv_check_id,
+                                'avz_code'        => $row[0] ?? '',
+                                'quantity'        => $row[1] ?? '',
+                            ];
+                        }
+            
                         $inv_item_id = $this->db->insert('sma_inventory_check_items', $record);
                     }
                 }
 				
-
 				admin_redirect('stock_request/inventory_check');
 				
 			}
