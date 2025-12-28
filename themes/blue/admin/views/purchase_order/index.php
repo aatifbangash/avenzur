@@ -138,7 +138,7 @@
                                                         data-toggle="dropdown">Action<span class="caret"></span></button>
                                                     <ul class="dropdown-menu pull-right" role="menu">
                                                         
-                                                        <?php if($purchase->status == "sent_to_supplier" && ($Admin || $Owner || $this->GP['po-add'])) {?>
+                                                        <?php if($purchase->status == "pending" && ($Admin || $Owner || $this->GP['po-add'])) {?>
                                                         <li><?= $edit_link ?></li>
                                                         <?php }?>
                                                         <li><?= $detail_link ?></li>
