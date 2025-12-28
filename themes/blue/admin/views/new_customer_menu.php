@@ -607,6 +607,7 @@
                 <i class="fa fa-chevron-right newmenu-chevron"></i>
             </a>
             <ul class="newmenu-sub">
+                <li><a href="<?= admin_url('stock_request/inventory_check'); ?>" class="newmenu-link"><i class="fa fa-check-circle"></i> <?= lang('Inventory Check'); ?></a></li>
                 <?php if($Admin || $Owner || $this->GP['sales-deliveries']){ ?>
                 <!-- Delivery -->
                 <li class="newmenu-item has-sub">
