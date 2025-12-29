@@ -1336,6 +1336,78 @@ class Products extends MY_Controller
         }
     }
 
+    public function update_rawabi_shelf()
+    {
+        $this->load->library('excel');
+
+        $excelFile = $this->upload_path . 'csv/Latest-Uploaded-Inventory.xls'; // Excel file
+
+        $spreadsheet = IOFactory::load($excelFile);
+        $sheet = $spreadsheet->getActiveSheet();
+        $rows = $sheet->toArray(null, true, true, true);
+        
+            // Extract headers (first row)
+        $headers = array_shift($rows);
+        
+        // Filter out empty headers
+        $headers = array_filter($headers, function($value) {
+            return trim($value) !== '';
+        });
+
+        // Optionally reindex headers numerically
+        $headers = array_values($headers);
+
+        // Pass to view for mapping
+        $this->data['headers']   = $headers;
+        $rows_updated = 0;
+        $total_found = 0;
+
+        echo "<h3>Starting Update...</h3>";
+
+        $row = 0;
+        foreach ($rows as $data) {
+            if ($data == 0) { $data++; continue; } // Skip header
+            //echo '<pre>';  print_r($data); exit;
+            $item_code         = trim($data['A']);
+            $shelf             = trim($data['L']);
+            $item_name         = trim($data['B']);
+            $item_batch        = trim($data['C']);
+            $expiry_date       = trim($data['D']);
+
+            $product_details = $this->db
+                    ->where('item_code', $item_code) // exact match
+                    ->get('sma_products')
+                    ->row();
+
+            if($product_details) {
+                $product_id = $product_details->id;
+            }else{
+                $product_details = $this->db
+                    ->where('code', $item_code) // exact match
+                    ->get('sma_products')
+                    ->row();
+                if($product_details) {
+                    $product_id = $product_details->id;
+                }else{
+                    echo "Product details missing, skipped → {$item_code} <br>";
+                }
+            }
+
+            if($product_details->warehouse_shelf == '' || $product_details->warehouse_shelf == null){
+                // --- UPDATE SHELF ---
+                $this->db->where('id', $product_id);
+                $this->db->update('sma_products', [
+                    'warehouse_shelf' => $shelf
+                ]);
+                $rows_updated++;
+
+                echo "Processing Item Code: {$item_code} - Shelf: {$shelf} - Product Shelf: {$product_details->warehouse_shelf}<br>";
+            }
+        }
+
+        echo "<hr>Total Rows Updated: {$rows_updated}<br>";
+    }
+
     public function upload_trial_balance()
     {
         $excelFile = $this->upload_path . 'csv/rawabi_trial_balance.xlsx'; // Excel file
