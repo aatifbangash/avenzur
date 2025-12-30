@@ -742,7 +742,6 @@ class Sales_model extends CI_Model
         ->where('sale_id', $sale_id);
 
         $saleItems = $this->db->get('sale_items')->result();
-
         if (!$saleItems) return false;
 
         $final = [];
@@ -771,7 +770,7 @@ class Sales_model extends CI_Model
             ->where("im.quantity >", 0)  // only positive stock movements
             ->order_by("im.expiry_date", "ASC") // nearest expiry
             ->get()->result();
-
+            
             // 3. Handle no batches
             if (!$batches) {
                 $item->picker_batches = [];
@@ -785,10 +784,11 @@ class Sales_model extends CI_Model
                 // Calculate sold qty for the same avz_item_code
                 $sold = $this->db->select_sum('quantity')
                     ->from('sale_items')
-                    ->where('avz_item_code', $b->avz_item_code)
+                    ->where('product_id', $b->product_id)
                     ->get()->row()->quantity;
 
                 $sold = $sold ? $sold : 0;
+                //echo '<pre>';   print_r($sold);  exit;
 
                 $available = $b->movement_qty - $sold;
 
@@ -818,6 +818,7 @@ class Sales_model extends CI_Model
             $item->picker_batches = $allocated;
             $final[] = $item;
         }
+        // /echo '<pre>';   print_r($final);  exit;
         return $final;
     }
 

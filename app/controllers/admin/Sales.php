@@ -3747,7 +3747,7 @@ class Sales extends MY_Controller
             . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
             . lang('actions') . ' <span class="caret"></span></button>
             <ul class="dropdown-menu pull-right" role="menu">
-            
+                <li>' . $order_picker_link . '</li>
                 <li>' . $detail_link . '</li>';
 
             if($this->Settings->site_name != 'Hills Business Medical' && $this->Settings->site_name != 'Demo Company'){
@@ -4063,6 +4063,23 @@ class Sales extends MY_Controller
         $this->data['customer']    = $this->site->getCompanyByID($inv->customer_id);
         $this->data['payments']    = $this->sales_model->getPaymentsForSale($id);
         $this->data['biller']      = $this->site->getCompanyByID($inv->biller_id);
+
+        if($inv->address_id){
+            $address_info = $this->site->getAddressByID($inv->address_id);
+            $ship_to = $address_info ? $address_info->first_name. ' '. $address_info->last_name : '-';
+            $ship_address = $address_info ? $address_info->line1.' '. $address_info->line2 : '-';
+            $ship_city = $address_info ? $address_info->city : '-';
+            $ship_phone = $address_info ? $address_info->phone : '-';
+            $ship_email = $address_info ? $address_info->email : '-';
+        }else{
+            $customer = $this->data['customer'] ;
+            $ship_to = $customer->name;
+            $ship_address = $customer->address;
+            $ship_city = $customer->city;
+            $ship_phone = $customer->phone;
+            $ship_email = $customer->email;
+        }
+
         $biller = $this->site->getCompanyByID($inv->biller_id);
         $customer = $this->data['customer'] ;
         $this->data['user']        = $this->site->getUser($inv->created_by);
@@ -4072,7 +4089,6 @@ class Sales extends MY_Controller
         
         $name = lang('sale') . '_' . str_replace('/', '_', $inv->reference_no) . '.pdf';
         $html = $this->load->view($this->theme . 'sales/pdf/picker_invoice', $this->data, true);
-        
         if (!$this->Settings->barcode_img) {
             $html = preg_replace("'\<\?xml(.*)\?\>'", '', $html);
         }
@@ -4119,7 +4135,7 @@ class Sales extends MY_Controller
         <!-- Left: Invoice Info -->
         <div style="float:left; width:55%;">
             <p style="margin:2px 0;"><strong>Date:</strong> ' . $this->sma->hrld($inv->date) . '</p>
-            <p style="margin:2px 0;"><strong>Reference:</strong> ' . date("Y") . '/' . $inv->id . '</p>
+            <p style="margin:2px 0;"><strong>Order#</strong> ' . $inv->id . '</p>
         </div>
 
         <!-- Right: Barcode and QR -->
@@ -4134,23 +4150,24 @@ class Sales extends MY_Controller
 
     <!-- TO & FROM BLOCK -->
     <div style="width:100%; overflow:hidden; margin-top:10px; font-size:11px;">
-        <!-- TO -->
+        <!-- SHIP TO -->
         <div style="float:left; width:48%; vertical-align:top;">
-            <p style="margin:2px 0;"><strong>To:</strong> '.$customer->name .'</p>
+            <p style="margin:2px 0;"><strong>BILL TO:</strong> '.$customer->name .'</p>
             <p style="margin:2px 0;">Address: '. $customer->address .'</p>
             <p style="margin:2px 0;">City: '. $customer->city .'</p>
             <p style="margin:2px 0;">Tel: '. $customer->phone .'</p>
             <p style="margin:2px 0;">Email: '. $customer->email .'</p>
         </div>
 
-        <!-- FROM -->
+        <!-- BILL TO -->
         <div style="float:right; width:48%; vertical-align:top;">
-            <p style="margin:2px 0;"><strong>From:</strong> '.  $biller->name .'</p>
-            <p style="margin:2px 0;">Address: '. $biller->address .'</p>
-            <p style="margin:2px 0;">City: '. $biller->city .'</p>
-            <p style="margin:2px 0;">Tel: '. $biller->phone .'</p>
-            <p style="margin:2px 0;">Email: '. $biller->email .'</p>
+            <p style="margin:2px 0;"><strong>SHIP TO:</strong> '.  $ship_to .'</p>
+            <p style="margin:2px 0;">Address: '. $ship_address .'</p>
+            <p style="margin:2px 0;">City: '. $ship_city .'</p>
+            <p style="margin:2px 0;">Tel: '. $ship_phone .'</p>
+            <p style="margin:2px 0;">Email: '. $ship_email .'</p>
         </div>
+        
     </div>
 
     <hr style="margin:8px 0 0 0; border-top:1px solid #000;">
@@ -4163,74 +4180,20 @@ if($inv->warning_note != ""){
     $note_text = '';
 }
 
-    $footer_table = '';
-    $footer_note = '';
-    if($this->Settings->site_name == 'Hills Business Medical' && $this->Settings->site_name != 'Demo Company'){
-        $footer_table = '<div style="width:60%; float:left; text-align:left; margin-bottom:15px;">
-            <table class="table-label" border="1"  cellspacing="0" cellpadding="10" width="100%" style="border-collapse:collapse; font-size: 10px">
-                <tr><td colspan="3" style="text-align: center; vertical-align: middle; background-color: #f2f2f2; font-size: 20px;">'.$inv->id.'</td> <td colspan="3">فريق التحضير</td></tr>
-                <tr><td colspan="3">تحضير بداية</td> <td colspan="3">تحضير نهاية</td></tr>
-                <tr><td colspan="2">بداية تشييك</td> <td colspan="2">اسم المشيك</td> <td colspan="2">كمرا</td></tr>
-                <tr><td colspan="2">عدد كرتون</td> <td colspan="2">ربطة الثلاجة</td> <td colspan="2">خطأ</td></tr>
-            </table>
-        </div>';
-    }else{
-        $footer_table = '<div style="width:60%; float:left; text-align:left; margin-bottom:15px;">
-            <table class="table-label" border="1"  cellspacing="0" cellpadding="10" width="100%" style="border-collapse:collapse; font-size: 10px">
-                <tr><td colspan="3" style="text-align: center; vertical-align: middle; background-color: #f2f2f2; font-size: 20px;">'.$inv->id.'</td> <td colspan="3">فريق التحضير</td></tr>
-                <tr><td colspan="3">تحضير بداية</td> <td colspan="3">تحضير نهاية</td></tr>
-                <tr><td colspan="2">بداية تشييك</td> <td colspan="2">اسم المشيك</td> <td colspan="2">كمرا</td></tr>
-                <tr><td colspan="2">عدد كرتون</td> <td colspan="2">ربطة الثلاجة</td> <td colspan="2">خطأ</td></tr>
-            </table>
-        </div>';
-    }
+    $footer_table = '<div style="margin-top:40px; text-align:center; font-size:14px;">
+                    <strong>Thank you for shopping with us!</strong><br>
+                    Avnzor<br>
+                    Al Mashael, Al Mashael, Riyadh 14328, Saudi Arabia<br>
+                    <a href="mailto:support@avnzor.com" style="color:#333; text-decoration:none;">support@avnzor.com</a>
+                    </div>';
         
     $mpdf->SetHTMLFooter('
     <hr style="margin-bottom:5px;">
 
     <div style="width:100%; font-size:12px; font-family: DejaVu Sans, sans-serif;">
-
-        <!-- Notes Section (Left) -->
-        '.$footer_note.'
-
-        <!-- Totals Table -->
-        <div style="width:35%; float:right; text-align:left; margin-bottom:15px;">
-            <table border="1" cellpadding="4" cellspacing="0" width="100%" style="border-collapse:collapse;">
-                <tr><td>Total</td><td>'.$this->sma->formatNumber($inv->total).'</td></tr>
-                <tr><td>T-DISC</td><td>'.$this->sma->formatNumber($inv->total_discount).'</td></tr>
-                <tr><td>Net Before VAT</td><td>'.$this->sma->formatNumber($inv->total_net_sale).'</td></tr>
-                <tr><td>Total VAT</td><td>'.$this->sma->formatNumber($inv->total_tax).'</td></tr>
-                <tr><td><strong>Total After VAT</strong></td><td><strong>'.$this->sma->formatNumber($inv->grand_total).'</strong></td></tr>
-            </table>
-        </div>
-
         <!-- Totals Table -->
         '.$footer_table.'
 
-        <!-- Signature Section -->
-        <div style="width:100%; overflow:hidden; margin-top:50px; font-size:12px;">
-            
-            <div style="float:left; width:24%; text-align:center;">
-                <p>_________________________</p>
-                <p><strong>STORE KEEPER</strong></p>
-            </div>
-
-            <div style="float:right; width:24%; text-align:center;">
-                <p>_________________________</p>
-                <p><strong>SALES MANAGER</strong></p>
-            </div>
-
-            <div style="float:right; width:24%; text-align:center;">
-                <p>_________________________</p>
-                <p><strong>RECEIVED BY</strong></p>
-            </div>
-
-            <div style="float:right; width:24%; text-align:center;">
-                <p>_________________________</p>
-                <p><strong>SIGNATURE</strong></p>
-            </div>
-
-        </div>
     </div>
 ');
 
