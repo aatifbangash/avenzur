@@ -937,7 +937,7 @@ class Products extends MY_Controller
     }
 
     public function upload_customer_returns(){
-        $excelFile = $this->upload_path . 'csv/opening_return_invoice_open_mind_new.xlsx'; // Excel file
+        $excelFile = $this->upload_path . 'csv/Return-old-invioce-new.xlsx'; // Excel file
         if (!file_exists($excelFile)) {
             echo "Excel file not found.";
             return;
@@ -1090,7 +1090,7 @@ class Products extends MY_Controller
             // FIND PRODUCT
             // -----------------------------------------
             $product = $this->db
-                ->where('code', $item_code)
+                ->where('item_code', $item_code)
                 ->get('sma_products')
                 ->row();
 

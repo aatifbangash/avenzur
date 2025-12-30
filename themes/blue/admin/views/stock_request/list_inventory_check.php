@@ -8,11 +8,14 @@
         <h2 class="blue"><i class="fa-fw fa fa-star-o"></i><?= lang('Inventory Check Requests'); ?></h2>
         <div class="box-icon">
             <ul class="btn-tasks">
-                <li class="dropdown">
-                    <a href="<?= admin_url('stock_request/upload_csv_inventory'); ?>" data-toggle="modal" data-target="#myModal">
-                        <i class="icon fa fa-upload"></i>
-                    </a>
-                </li>
+                <?php
+                    if($this->Settings->site_name != 'Hills Business Medical'){ ?>
+                    <li class="dropdown">
+                        <a href="<?= admin_url('stock_request/upload_csv_inventory'); ?>" data-toggle="modal" data-target="#myModal">
+                            <i class="icon fa fa-upload"></i>
+                        </a>
+                    </li>
+                <?php } ?>
             </ul>
         </div>
     </div>

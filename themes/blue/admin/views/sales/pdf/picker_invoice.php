@@ -44,8 +44,9 @@
     <thead>
         <tr>
             <th>#</th>
-            <th><?= lang('Product Code'); ?></th>
-            <th><?= lang('Description'); ?></th>
+            <th><?= lang('Image'); ?></th>
+            <th><?= lang('Product'); ?></th>
+            <th><?= lang('Barcode'); ?></th>
             <th><?= lang('Warehouse Shelf'); ?></th>
             <th><?= lang('Batch'); ?></th>
             <th><?= lang('Expiry'); ?></th>
@@ -66,11 +67,17 @@
                     <td style="text-align:center;vertical-align:middle;"><?= $r; ?></td>
 
                     <td style="vertical-align:middle;">
-                        <?= $item->product_code ?: ' - '; ?>
+                        <img src="<?= $item->image; ?>" alt="<?= $item->product_name; ?>" style="max-width: 60px; max-height: 60px;">
                     </td>
 
+
                     <td style="vertical-align:middle;">
-                        <?= $item->product_name; ?>
+                      <?= $item->product_name.'<br />'.$item->product_code; ?>
+                    </td>
+
+                    <td style="text-align:center; vertical-align:middle;">
+                      <img src="<?= admin_url('misc/barcode/' . $this->sma->base64url_encode($item->product_code) . '/code128/74/0/1'); ?>"
+                         alt="<?= $item->product_code; ?>" style="height:40px; max-width:120px;" />
                     </td>
 
                     <td style="text-align:center; vertical-align:middle;">
