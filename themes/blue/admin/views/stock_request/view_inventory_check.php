@@ -52,6 +52,22 @@
                             echo form_submit($data, $this->lang->line('Adjust Inventory'), 'id="adjust_inv" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"'); 
                             
                         }
+                    }else{
+                       ?>
+                        <?php $attrib = ['role' => 'form'];
+                            echo admin_form_open_multipart('stock_request/hills_adjust_inventory', $attrib);  
+                        ?>
+                        <input type="hidden" name="inventory_check_request_id" value="<?= $inventory_check_request_details->id; ?>" />
+                        <input type="hidden" name="location_id" value="<?= $inventory_check_request_details->location_id; ?>" />
+                        <?php 
+                        if($inventory_check_request_details->status == 'pending'){
+                            $data = array(
+                                'name' => 'adjust_inv',
+                                'onclick'=>"return confirm('Are you sure to proceed?')"
+                            );
+                            echo form_submit($data, $this->lang->line('Adjust Inventory'), 'id="adjust_inv" class="btn btn-primary" style="padding: 6px 15px; margin:15px 0;"'); 
+                            
+                        } 
                     }
                     ?>
                     <?php echo form_close(); ?>

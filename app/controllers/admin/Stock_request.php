@@ -280,6 +280,252 @@ class stock_request extends MY_Controller
         admin_redirect('stock_request/inventory_check');
     }
 
+    public function hills_adjust_inventory(){
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $this->form_validation->set_rules('inventory_check_request_id', $this->lang->line('inventory_check_request_id'), 'required');
+
+		if ($this->form_validation->run() == true) {
+            $inventory_check_request_id = $this->input->post('inventory_check_request_id');
+            // Use getInventoryCheckByBatch to only get items that were manually entered for Hills Business
+            $inventory_check_array = $this->stock_request_model->getInventoryCheckByBatch($inventory_check_request_id, $this->input->post('location_id'));
+            //echo '<pre>';print_r($inventory_check_array);exit;
+            $adj_warehouse = $this->site->getAdjustmentStore();
+            
+            $i = sizeof($inventory_check_array);
+            
+            $products = [];
+            $product_tax = 0;
+            $total = 0;
+            $grand_total_cost_price = 0;
+            for ($r = 0; $r < $i; $r++) {
+                $system_quantity    = $inventory_check_array[$r]->system_quantity ? $inventory_check_array[$r]->system_quantity : 0; 
+                $actual_quantity    = $inventory_check_array[$r]->quantity ? $inventory_check_array[$r]->quantity : 0; 
+
+                if($system_quantity  == $actual_quantity){
+                    continue;
+                }else if($system_quantity > $actual_quantity){
+                    $to_warehouse           = $adj_warehouse->id;
+                    $from_warehouse         = $this->input->post('location_id');
+                    $item_unit_quantity     = $system_quantity - $actual_quantity;
+                    $item_quantity          = $item_unit_quantity;
+                }else if($system_quantity < $actual_quantity){
+                    $to_warehouse           = $this->input->post('location_id');
+                    $from_warehouse         = $adj_warehouse->id;
+                    $item_unit_quantity     = $actual_quantity - $system_quantity;
+                    $item_quantity          = $item_unit_quantity;
+                }
+
+                $note                   = 'Inventory Check Adjustment';
+                $shipping               =  0;
+                $status                 = 'completed';
+                $from_warehouse_details = $this->site->getWarehouseByID($from_warehouse);
+                $from_warehouse_code    = $from_warehouse_details->code;
+                $from_warehouse_name    = $from_warehouse_details->name;
+                $to_warehouse_details   = $this->site->getWarehouseByID($to_warehouse);
+                $to_warehouse_code      = $to_warehouse_details->code;
+                $to_warehouse_name      = $to_warehouse_details->name;
+
+                $pr_id              = $inventory_check_array[$r]->product_id; 
+                $item_code          = $inventory_check_array[$r]->product_code;
+                $avz_code           = $inventory_check_array[$r]->avz_code;
+                $item_net_cost      = $inventory_check_array[$r]->net_unit_cost;
+                $unit_cost          = $inventory_check_array[$r]->net_unit_cost;
+                $real_unit_cost     = $inventory_check_array[$r]->real_unit_cost;
+                $net_unit_cost      = $inventory_check_array[$r]->net_unit_cost;
+                $net_unit_sale      = $inventory_check_array[$r]->net_unit_sale;
+                
+                $item_tax_rate      = $inventory_check_array[$r]->tax_rate;
+                $item_batchno       = $inventory_check_array[$r]->batch_number;
+                $item_expiry        = $inventory_check_array[$r]->expiry_date;
+                $item_unit          = $inventory_check_array[$r]->unit;
+                $unit_cost          = $item_net_cost;
+
+                $product_details    = $this->transfers_model->getProductById($pr_id);
+                $net_cost = $net_unit_cost;
+                $real_cost = $real_unit_cost;
+                
+                if (isset($item_code) && isset($item_quantity)) {
+
+                    if (isset($item_tax_rate) && $item_tax_rate != 0) {
+                        $tax_details = $this->site->getTaxRateByID($item_tax_rate);
+                        $ctax        = $this->site->calculateTax($product_details, $tax_details, $unit_cost);
+                        $item_tax    = $ctax['amount'];
+                        $tax         = $ctax['tax'];
+
+                        if (!empty($product_details) && $product_details->tax_method != 1) {
+                            $item_net_cost = $unit_cost - $item_tax;
+                        }
+
+                        $pr_item_tax = $this->sma->formatDecimal(($item_tax * $item_unit_quantity), 4);
+                    }
+
+                    $product_tax += $pr_item_tax;
+                    $subtotal = $this->sma->formatDecimal((($item_net_cost * $item_unit_quantity) + $pr_item_tax), 4);
+                    $unit     = $this->site->getUnitByID($item_unit); 
+
+                    $product = [
+                        'product_id'        => $product_details->id,
+                        'product_code'      => $item_code,
+                        'product_name'      => $product_details->name,
+                        'net_unit_cost'     => $net_cost,
+                        //'net_unit_cost1'          => $net_unit_cost,
+                        'unit_cost'         => $this->sma->formatDecimal($item_net_cost + $item_tax, 4),  
+                        'quantity'          => $item_quantity,
+                        'product_unit_id'   => $item_unit,
+                        'product_unit_code' => $unit->code,
+                        'unit_quantity'     => $item_unit_quantity,
+                        'quantity_balance'  => $item_quantity,
+                        'warehouse_id'      => $to_warehouse,
+                        'item_tax'          => $pr_item_tax,
+                        'tax_rate_id'       => $item_tax_rate,
+                        'tax'               => $tax,
+                        'subtotal'          => $this->sma->formatDecimal($subtotal),
+                        'expiry'            => $item_expiry,
+                        'real_unit_cost'    => $real_unit_cost,
+                        'sale_price'        => $net_unit_sale, //$this->sma->formatDecimal($item_net_cost, 4),
+                        'date'              => date('Y-m-d'),
+                        'batchno'           => $item_batchno,
+                        'real_cost'         => $real_cost,
+                        'avz_item_code'     => $avz_code
+                    ];
+
+                    $products[] = ($product);
+                    $total += $this->sma->formatDecimal(($item_net_cost * $item_unit_quantity), 4);
+                    $grand_total_cost_price +=  ($net_cost* $item_unit_quantity);  
+                    $grand_total = $this->sma->formatDecimal(($total + $shipping + $product_tax), 4);
+
+                }
+            }
+
+            // Build separate transfers for OUT (from checked location -> adjustment store) and IN (from adjustment store -> checked location)
+            $location_id = $this->input->post('location_id');
+            $adj_wh = $this->site->getAdjustmentStore();
+            $location_details = $this->site->getWarehouseByID($location_id);
+            $adj_details = $this->site->getWarehouseByID($adj_wh->id);
+
+            $products_out = [];
+            $products_in = [];
+            $product_tax_out = $product_tax_in = 0;
+            $total_out = $total_in = 0;
+            $grand_total_cost_price_out = $grand_total_cost_price_in = 0;
+
+            // Distribute products into out/in buckets
+            foreach (isset($products) ? $products : [] as $prod) {
+                // Products were prepared with warehouse_id => destination warehouse
+                if ($prod['warehouse_id'] == $adj_wh->id) {
+                    // moving TO adjustment store (out from location)
+                    $products_out[] = $prod;
+                    $product_tax_out += isset($prod['item_tax']) ? $prod['item_tax'] : 0;
+                    $total_out += isset($prod['net_unit_cost']) ? $prod['net_unit_cost'] * $prod['unit_quantity'] : 0;
+                    $grand_total_cost_price_out += isset($prod['real_unit_cost']) ? $prod['real_unit_cost'] * $prod['unit_quantity'] : 0;
+                } else if ($prod['warehouse_id'] == $location_id) {
+                    // moving FROM adjustment store INTO location (in)
+                    $products_in[] = $prod;
+                    $product_tax_in += isset($prod['item_tax']) ? $prod['item_tax'] : 0;
+                    $total_in += isset($prod['net_unit_cost']) ? $prod['net_unit_cost'] * $prod['unit_quantity'] : 0;
+                    $grand_total_cost_price_in += isset($prod['real_unit_cost']) ? $prod['real_unit_cost'] * $prod['unit_quantity'] : 0;
+                }
+            }
+
+            $created_any = false;
+            // Create OUT transfer if any
+            if (!empty($products_out)) {
+                $grand_total_out = $this->sma->formatDecimal(($total_out + $shipping + $product_tax_out), 4);
+                $data_out = [
+                    'transfer_no' => 'inv_check_adjustment_out',
+                    'date'                    => date('Y-m-d H:i:s'),
+                    'from_warehouse_id'       => $location_id,
+                    'from_warehouse_code'     => $location_details->code,
+                    'from_warehouse_name'     => $location_details->name,
+                    'to_warehouse_id'         => $adj_wh->id,
+                    'to_warehouse_code'       => $adj_details->code,
+                    'to_warehouse_name'       => $adj_details->name,
+                    'note'                    => $note,
+                    'total_tax'               => $product_tax_out,
+                    'total'                   => $total_out,
+                    'total_cost'              => $grand_total_cost_price_out,
+                    'grand_total'             => $grand_total_out,
+                    'created_by'              => $this->session->userdata('user_id'),
+                    'status'                  => $status,
+                    'shipping'                => $shipping,
+                    'type'                    => 'transfer',
+                    'sequence_code'           => $this->sequenceCode->generate('TR', 5)
+                ];
+
+                if ($transfer_out_id = $this->transfers_model->addTransfer($data_out, $products_out, [])) {
+                    $created_any = true;
+                }
+            }
+
+            // Create IN transfer if any
+            if (!empty($products_in)) {
+                $grand_total_in = $this->sma->formatDecimal(($total_in + $shipping + $product_tax_in), 4);
+                $data_in = [
+                    'transfer_no' => 'inv_check_adjustment_in',
+                    'date'                    => date('Y-m-d H:i:s'),
+                    'from_warehouse_id'       => $adj_wh->id,
+                    'from_warehouse_code'     => $adj_details->code,
+                    'from_warehouse_name'     => $adj_details->name,
+                    'to_warehouse_id'         => $location_id,
+                    'to_warehouse_code'       => $location_details->code,
+                    'to_warehouse_name'       => $location_details->name,
+                    'note'                    => $note,
+                    'total_tax'               => $product_tax_in,
+                    'total'                   => $total_in,
+                    'total_cost'              => $grand_total_cost_price_in,
+                    'grand_total'             => $grand_total_in,
+                    'created_by'              => $this->session->userdata('user_id'),
+                    'status'                  => $status,
+                    'shipping'                => $shipping,
+                    'type'                    => 'transfer',
+                    'sequence_code'           => $this->sequenceCode->generate('TR', 5)
+                ];
+
+                if ($transfer_in_id = $this->transfers_model->addTransfer($data_in, $products_in, [])) {
+                    $created_any = true;
+                }
+            }
+
+            // If at least one transfer created, update request status and create report
+            if ($created_any) {
+                $this->stock_request_model->updateAdjustmentStatus($inventory_check_request_id);
+
+                $inventory_check_report_data = [];
+                for ($r = 0; $r < $i; $r++) {
+
+                    $inventory_check_report_record = [
+                        'inv_check_id'        => $inventory_check_request_id,
+                        'avz_code'            => $inventory_check_array[$r]->avz_code,
+                        'old_qty'             => $inventory_check_array[$r]->system_quantity,
+                        'new_qty'             => $inventory_check_array[$r]->quantity,
+                        'item_code'           => $inventory_check_array[$r]->product_code,
+                        'item_name'           => $inventory_check_array[$r]->product_name,
+                        'variance'            => ($inventory_check_array[$r]->quantity - $inventory_check_array[$r]->system_quantity),
+                        'old_cost_price'      => ($inventory_check_array[$r]->net_unit_cost * $inventory_check_array[$r]->system_quantity),
+                        'new_cost_price'      => ($inventory_check_array[$r]->net_unit_cost * $inventory_check_array[$r]->quantity),
+                        'sales_price'         => $inventory_check_array[$r]->net_unit_sale,
+                        'short'               => $inventory_check_array[$r]->net_unit_sale * ($inventory_check_array[$r]->quantity - $inventory_check_array[$r]->system_quantity),
+                        'batch_no'            => $inventory_check_array[$r]->batch_number
+                    ];
+
+                    $inventory_check_report_data[] = ($inventory_check_report_record);
+                }
+
+                $this->stock_request_model->createInventoryCheckReport($inventory_check_report_data);
+            } else {
+                $this->session->set_flashdata('error', lang('inventory_adjustment_failed'));
+            }
+
+            admin_redirect('stock_request/inventory_check');
+            
+        } else {
+            $data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+
+            admin_redirect('stock_request/inventory_check');
+        }
+    }
+
     public function adjust_inventory(){
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
@@ -1197,7 +1443,392 @@ class stock_request extends MY_Controller
             $meta = ['page_title' => lang('transfer_quantity'), 'bc' => $bc];
           //  $this->page_construct('transfers/add', $meta, $this->data);
         }
-    } 
+    }
+
+    // =====================================================
+    // HILLS BUSINESS INVENTORY CHECK (MANUAL ENTRY)
+    // =====================================================
+
+    /**
+     * Main page for Hills Business inventory check
+     * Shows warehouse and shelf filters, then products table
+     */
+    public function hills_inventory_check(){
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        
+        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Hills Inventory Check')]];
+        $meta = ['page_title' => lang('Hills Inventory Check'), 'bc' => $bc];
+        $this->page_construct('stock_request/hills_inventory_check', $meta, $this->data);
+    }
+
+    /**
+     * AJAX: Get all shelves for selected warehouse
+     */
+    public function get_warehouse_shelves(){
+        $warehouse_id = $this->input->post('warehouse_id');
+        
+        if(!$warehouse_id){
+            $this->sma->send_json(['error' => 1, 'msg' => 'Warehouse ID required']);
+        }
+
+        // Get distinct shelves from products that have inventory in this warehouse
+        $this->db->select('DISTINCT(p.warehouse_shelf) as shelf');
+        $this->db->from('sma_products p');
+        $this->db->join('sma_inventory_movements im', 'im.product_id = p.id', 'inner');
+        $this->db->where('im.location_id', $warehouse_id);
+        $this->db->where('p.warehouse_shelf IS NOT NULL');
+        $this->db->where('p.warehouse_shelf !=', '');
+        $this->db->group_by('p.warehouse_shelf');
+        $this->db->order_by('p.warehouse_shelf', 'ASC');
+        
+        $query = $this->db->get();
+        $shelves = $query->result();
+
+        $response = [
+            $this->security->get_csrf_token_name() => $this->security->get_csrf_hash()
+        ];
+
+        if($shelves){
+            $response['error'] = 0;
+            $response['shelves'] = $shelves;
+            $this->sma->send_json($response);
+        } else {
+            $response['error'] = 1;
+            $response['msg'] = 'No shelves found for this warehouse';
+            $this->sma->send_json($response);
+        }
+    }
+
+    /**
+     * AJAX: Get products list for dropdown (distinct products only)
+     */
+    public function get_shelf_products_dropdown(){
+        $warehouse_id = $this->input->post('warehouse_id');
+        $shelf = $this->input->post('shelf');
+        
+        if(!$warehouse_id || !$shelf){
+            $this->sma->send_json(['error' => 1, 'msg' => 'Warehouse ID and Shelf required']);
+        }
+
+        // Get distinct products for dropdown
+        $this->db->select('DISTINCT(p.id) as product_id, p.code as product_code, p.item_code, p.name as product_name');
+        $this->db->from('sma_products p');
+        $this->db->join('sma_inventory_movements im', 'im.product_id = p.id', 'inner');
+        $this->db->where('p.warehouse_shelf', $shelf);
+        $this->db->where('im.location_id', $warehouse_id);
+        $this->db->order_by('p.name', 'ASC');
+        
+        $query = $this->db->get();
+        $products = $query->result();
+
+        $response = [
+            $this->security->get_csrf_token_name() => $this->security->get_csrf_hash()
+        ];
+
+        if($products){
+            $response['error'] = 0;
+            $response['products'] = $products;
+            $this->sma->send_json($response);
+        } else {
+            $response['error'] = 1;
+            $response['msg'] = 'No products found for this shelf';
+            $this->sma->send_json($response);
+        }
+    }
+
+    /**
+     * AJAX: Get all products with batch/expiry for selected shelf
+     * Optionally filter by specific product_id
+     * Also returns saved quantities from current pending request
+     */
+    public function get_shelf_products(){
+        $warehouse_id = $this->input->post('warehouse_id');
+        $shelf = $this->input->post('shelf');
+        $product_id = $this->input->post('product_id'); // Optional filter
+        
+        if(!$warehouse_id || !$shelf){
+            $this->sma->send_json(['error' => 1, 'msg' => 'Warehouse ID and Shelf required']);
+        }
+
+        // Get current pending inventory check request for this warehouse
+        $this->db->select('id');
+        $this->db->from('sma_inventory_check_requests');
+        $this->db->where('location_id', $warehouse_id);
+        $this->db->where('status', 'pending');
+        $this->db->order_by('id', 'DESC');
+        $this->db->limit(1);
+        $request_query = $this->db->get();
+        $current_request = $request_query->row();
+        $current_request_id = $current_request ? $current_request->id : null;
+
+        // Get products with batch and expiry information
+        $this->db->select('p.id as product_id, p.code as product_code, p.item_code, p.name as product_name, 
+                          im.batch_number, im.expiry_date, im.avz_item_code,
+                          SUM(im.quantity) as system_quantity', FALSE);
+        $this->db->from('sma_products p');
+        $this->db->join('sma_inventory_movements im', 'im.product_id = p.id', 'inner');
+        $this->db->where('p.warehouse_shelf', $shelf);
+        $this->db->where('im.location_id', $warehouse_id);
+        
+        // If specific product is selected, filter by it
+        if($product_id && $product_id != ''){
+            $this->db->where('p.id', $product_id);
+        }
+        
+        $this->db->group_by('p.id, im.batch_number, im.expiry_date, im.avz_item_code');
+        $this->db->order_by('p.name', 'ASC');
+        
+        $query = $this->db->get();
+        $products = $query->result();
+        
+        // If there's a pending request, get saved quantities separately
+        if($current_request_id && $products){
+            $this->db->select('product_id, batch_number, quantity');
+            $this->db->from('sma_inventory_check_items');
+            $this->db->where('inv_check_id', $current_request_id);
+            $saved_query = $this->db->get();
+            $saved_items = $saved_query->result();
+            
+            // Create lookup array for saved quantities
+            $saved_lookup = [];
+            foreach($saved_items as $saved){
+                $key = $saved->product_id . '_' . $saved->batch_number;
+                $saved_lookup[$key] = $saved->quantity;
+            }
+            
+            // Add saved quantities to products
+            foreach($products as $product){
+                $key = $product->product_id . '_' . $product->batch_number;
+                $product->saved_quantity = isset($saved_lookup[$key]) ? $saved_lookup[$key] : null;
+            }
+        }
+
+        $response = [
+            $this->security->get_csrf_token_name() => $this->security->get_csrf_hash()
+        ];
+
+        if($products){
+            $response['error'] = 0;
+            $response['products'] = $products;
+            $response['request_id'] = $current_request_id;
+            $response['is_existing_request'] = $current_request_id ? true : false;
+            $this->sma->send_json($response);
+        } else {
+            $response['error'] = 1;
+            $response['msg'] = 'No products found for this shelf';
+            $this->sma->send_json($response);
+        }
+    }
+
+    /**
+     * Save Hills Business inventory check entries
+     * Reuses existing pending request if available
+     */
+    public function save_hills_inventory_check(){
+        $this->form_validation->set_rules('warehouse_id', 'Warehouse', 'required');
+        $this->form_validation->set_rules('shelf', 'Shelf', 'required');
+
+        if ($this->form_validation->run() == true) {
+            $warehouse_id = $this->input->post('warehouse_id');
+            
+            // Check if there's an existing pending request for this warehouse
+            $this->db->select('id');
+            $this->db->from('sma_inventory_check_requests');
+            $this->db->where('location_id', $warehouse_id);
+            $this->db->where('status', 'pending');
+            $this->db->order_by('id', 'DESC');
+            $this->db->limit(1);
+            $existing_request = $this->db->get()->row();
+            
+            if($existing_request){
+                // Reuse existing pending request
+                $inv_check_id = $existing_request->id;
+            } else {
+                // Create new inventory check request record
+                $insert_inv_req = [
+                    'location_id' => $warehouse_id,
+                    'status' => 'pending',
+                    'date' => date('Y-m-d'),
+                ];
+                $this->db->insert('sma_inventory_check_requests', $insert_inv_req);
+                $inv_check_id = $this->db->insert_id();
+            }
+
+            // Get posted product data
+            $product_ids = $this->input->post('product_id');
+            $batch_numbers = $this->input->post('batch_number');
+            $expiry_dates = $this->input->post('expiry_date');
+            $quantities = $this->input->post('quantity');
+            $avz_codes = $this->input->post('avz_code');
+
+            if($product_ids && is_array($product_ids)){
+                $count = 0;
+                foreach($product_ids as $index => $product_id){
+                    $quantity = $quantities[$index] ?? '';
+                    $batch_number = $batch_numbers[$index] ?? '';
+                    
+                    // Only save if quantity is entered
+                    if($quantity !== '' && $quantity !== null){
+                        // Delete existing record for this product/batch combination if exists
+                        $this->db->where('inv_check_id', $inv_check_id);
+                        $this->db->where('product_id', $product_id);
+                        $this->db->where('batch_number', $batch_number);
+                        $this->db->delete('sma_inventory_check_items');
+                        
+                        // Insert new/updated record
+                        $record = [
+                            'inv_check_id'    => $inv_check_id,
+                            'avz_code'        => $avz_codes[$index] ?? '',
+                            'product_id'      => $product_id,
+                            'batch_number'    => $batch_number,
+                            'expiry_date'     => $expiry_dates[$index] ?? null,
+                            'quantity'        => $quantity,
+                        ];
+                        
+                        $this->db->insert('sma_inventory_check_items', $record);
+                        $count++;
+                    }
+                }
+
+                if($count > 0){
+                    $message = $count . ' item(s) saved successfully for inventory check.';
+                    if($existing_request){
+                        $message .= ' (Updated Request #' . $inv_check_id . ')';
+                    } else {
+                        $message .= ' (New Request #' . $inv_check_id . ')';
+                    }
+                    $this->session->set_flashdata('message', $message);
+                } else {
+                    $this->session->set_flashdata('warning', 'No quantities were entered.');
+                }
+            } else {
+                $this->session->set_flashdata('error', 'No products found to save.');
+            }
+
+            admin_redirect('stock_request/inventory_check');
+        } else {
+            $this->session->set_flashdata('error', validation_errors());
+            admin_redirect('stock_request/hills_inventory_check');
+        }
+    }
     
-    
+    /**
+     * AJAX: Search products globally for adding/moving to a shelf (select2)
+     */
+    public function search_products(){
+        // Accept term via GET or POST (Select2 may send either)
+        $term = $this->input->get_post('term', true);
+        $term = trim($term);
+
+        if(!$term){
+            $this->sma->send_json([ $this->security->get_csrf_token_name() => $this->security->get_csrf_hash(), 'results' => [] ]);
+        }
+
+        $this->db->select('p.id, p.code as product_code, p.item_code, p.name as product_name, p.warehouse_shelf');
+        $this->db->from('sma_products p');
+        $this->db->group_start();
+        $this->db->like('p.name', $term);
+
+
+        $this->db->or_like('p.code', $term);
+        $this->db->or_like('p.item_code', $term);
+        $this->db->group_end();
+        $this->db->order_by('p.name', 'ASC');
+        $this->db->limit(50);
+        $query = $this->db->get();
+        $products = $query->result();
+
+        $results = [];
+        foreach($products as $p){
+            $text = ($p->product_code ? $p->product_code . ' - ' : '') . $p->product_name;
+            if($p->warehouse_shelf){
+                $text .= ' (Shelf: ' . $p->warehouse_shelf . ')';
+            }
+            $results[] = [
+                'id' => $p->id,
+                'text' => $text,
+                'warehouse_shelf' => $p->warehouse_shelf,
+                'product_code' => $p->product_code,
+                'item_code' => $p->item_code,
+                'product_name' => $p->product_name
+            ];
+        }
+
+        $this->sma->send_json([ $this->security->get_csrf_token_name() => $this->security->get_csrf_hash(), 'results' => $results ]);
+    }
+
+    /**
+     * AJAX: Get all products available in a warehouse (no search)
+     */
+    public function get_products_for_warehouse(){
+        $warehouse_id = $this->input->post('warehouse_id');
+        if(!$warehouse_id){
+            $this->sma->send_json([ $this->security->get_csrf_token_name() => $this->security->get_csrf_hash(), 'error' => 1, 'msg' => 'Warehouse ID required' ]);
+        }
+
+        $this->db->select('DISTINCT(p.id) as product_id, p.code as product_code, p.item_code, p.name as product_name, p.warehouse_shelf');
+        $this->db->from('sma_products p');
+        $this->db->join('sma_inventory_movements im', 'im.product_id = p.id', 'inner');
+        $this->db->where('im.location_id', $warehouse_id);
+        $this->db->order_by('p.name', 'ASC');
+        $query = $this->db->get();
+        $products = $query->result();
+
+        $response = [ $this->security->get_csrf_token_name() => $this->security->get_csrf_hash() ];
+        if($products){
+            $response['error'] = 0;
+            $response['products'] = $products;
+            $this->sma->send_json($response);
+        } else {
+            $response['error'] = 1;
+            $response['msg'] = 'No products found for this warehouse';
+            $this->sma->send_json($response);
+        }
+    }
+
+    /**
+     * AJAX: Add or move a product to selected shelf and optionally create a pending inventory check item
+     */
+    public function add_move_product_to_shelf(){
+        $product_id = $this->input->post('product_id');
+        $warehouse_id = $this->input->post('warehouse_id');
+        $shelf = $this->input->post('shelf');
+        $batch_number = $this->input->post('batch_number');
+        $expiry_date = $this->input->post('expiry_date');
+        $quantity = $this->input->post('quantity');
+
+        if(!$product_id || !$warehouse_id || !$shelf){
+            $this->sma->send_json([ $this->security->get_csrf_token_name() => $this->security->get_csrf_hash(), 'error' => 1, 'msg' => 'Product, Warehouse and Shelf are required' ]);
+        }
+
+        // Get previous shelf to report change
+        $this->db->select('warehouse_shelf');
+        $this->db->from('sma_products');
+        $this->db->where('id', $product_id);
+        $old = $this->db->get()->row();
+        $previous_shelf = $old ? $old->warehouse_shelf : null;
+
+        // Update product shelf
+        $this->db->where('id', $product_id);
+        $this->db->update('sma_products', ['warehouse_shelf' => $shelf]);
+
+        // Fetch product details to return
+        $this->db->select('p.id as product_id, p.code as product_code, p.item_code, p.name as product_name');
+        $this->db->from('sma_products p');
+        $this->db->where('p.id', $product_id);
+        $product = $this->db->get()->row();
+
+        $response = [
+            $this->security->get_csrf_token_name() => $this->security->get_csrf_hash(),
+            'error' => 0,
+            'product' => $product,
+            'batch_number' => $batch_number ?? '',
+            'expiry_date' => $expiry_date ?? '',
+            'previous_shelf' => $previous_shelf,
+        ];
+
+        $this->sma->send_json($response);
+    }
+
 }
