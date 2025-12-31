@@ -52,7 +52,7 @@
                                                 <td class="dataTables_empty" style="text-align: center;">
                                                     
                                                     <?php 
-                                                        if($inventory_check_requests->status != 'adjusted'){
+                                                        if($inventory_check_requests->status != 'adjusted' && ($Admin || $Owner)){
                                                             ?>
                                                                 <a href="<?php echo admin_url('stock_request/view_inventory_check/' . $inventory_check_requests->id); ?>" class="tip" title="" data-original-title="View Request"><i class="fa fa-file-text-o"></i></a>
                                                                 <a href="<?php echo admin_url('stock_request/delete_inventory_check/' . $inventory_check_requests->id); ?>" class="tip" title="" data-original-title="Delete Request"><i class="fa fa-trash-o"></i></a>
