@@ -255,18 +255,20 @@ class Stock_request_model extends CI_Model
     
     public function getInventoryCheckByBatch($req_id, $location_id)
     {
-        $data_res = [];
-
         $sql = "
         SELECT
             COALESCE(sys.product_id, chk.product_id) AS product_id,
-            COALESCE(sys.batch_number, chk.batch_number) AS batch_number,
-            COALESCE(sys.expiry_date, chk.expiry_date) AS expiry_date,
+
+            sys.batch_number AS batch_number,
+            chk.batch_number AS actual_batch,
+
+            sys.expiry_date AS expiry_date,
+            chk.expiry_date AS actual_expiry,
 
             IFNULL(chk.excel_quantity, 0) AS quantity,
             IFNULL(sys.system_quantity, 0) AS system_quantity,
 
-            sys.avz_code,
+            COALESCE(sys.avz_code, chk.avz_code) AS avz_code,
             sys.net_unit_cost,
             sys.net_unit_sale,
             sys.real_unit_cost,
@@ -276,7 +278,10 @@ class Stock_request_model extends CI_Model
             p.name AS product_name,
             p.code AS product_code,
             p.item_code,
-            p.unit
+            p.unit,
+            p.warehouse_shelf AS shelf,
+
+            u.inventory_group
 
         FROM
         (
@@ -284,10 +289,17 @@ class Stock_request_model extends CI_Model
                 product_id,
                 batch_number,
                 expiry_date,
+                avz_code,
+                user_id,
                 SUM(quantity) AS excel_quantity
             FROM sma_inventory_check_items
             WHERE inv_check_id = ?
-            GROUP BY product_id, batch_number, expiry_date
+            GROUP BY
+                avz_code,
+                product_id,
+                batch_number,
+                expiry_date,
+                user_id
         ) chk
 
         LEFT JOIN
@@ -297,33 +309,40 @@ class Stock_request_model extends CI_Model
                 batch_number,
                 expiry_date,
                 SUM(quantity) AS system_quantity,
-                MAX(avz_item_code) AS avz_code,
+                avz_item_code AS avz_code,
                 MAX(net_unit_cost) AS net_unit_cost,
                 MAX(net_unit_sale) AS net_unit_sale,
                 MAX(real_unit_cost) AS real_unit_cost,
                 MAX(real_unit_sale) AS real_unit_sale
             FROM sma_inventory_movements
             WHERE location_id = ?
-            GROUP BY product_id, batch_number, expiry_date
+            GROUP BY
+                avz_item_code,
+                product_id,
+                batch_number,
+                expiry_date
         ) sys
-        ON chk.product_id = sys.product_id
-        AND chk.batch_number = sys.batch_number
-        AND (
-                (chk.expiry_date IS NULL AND sys.expiry_date IS NULL)
-                OR chk.expiry_date = sys.expiry_date
-            )
+            ON chk.avz_code = sys.avz_code
+            AND chk.product_id = sys.product_id
 
         LEFT JOIN sma_products p
             ON p.id = COALESCE(sys.product_id, chk.product_id)
 
-        HAVING (quantity <> 0 OR system_quantity <> 0)
-        ORDER BY product_name ASC, batch_number ASC
+        LEFT JOIN sma_users u
+            ON u.id = chk.user_id
+
+        HAVING
+            quantity <> 0
+            OR system_quantity <> 0
+
+        ORDER BY
+            product_name ASC,
+            sys.batch_number ASC,
+            sys.expiry_date ASC
         ";
 
         $query = $this->db->query($sql, [$req_id, $location_id]);
-        $result = $query->result();
-
-        return $result;
+        return $query->result();
     }
 
     public function getInventoryCheck($req_id, $location_id){

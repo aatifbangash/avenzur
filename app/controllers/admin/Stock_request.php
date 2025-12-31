@@ -699,6 +699,41 @@ class stock_request extends MY_Controller
         }
     }
 
+    /**
+     * AJAX: Get closed shelves for a warehouse/request
+     */
+    public function get_closed_shelves() {
+        $warehouse_id = $this->input->post('warehouse_id');
+        $closed_shelves = [];
+        if ($warehouse_id) {
+            // Get current pending inventory check request for this warehouse
+            $this->db->select('id');
+            $this->db->from('sma_inventory_check_requests');
+            $this->db->where('location_id', $warehouse_id);
+            $this->db->where('status', 'pending');
+            $this->db->order_by('id', 'DESC');
+            $this->db->limit(1);
+            $request_query = $this->db->get();
+            $current_request = $request_query->row();
+            $current_request_id = $current_request ? $current_request->id : null;
+
+            if ($current_request_id) {
+                $this->db->select('shelf');
+                $this->db->from('sma_inventory_check_closed_shelves');
+                $this->db->where('inv_check_id', $current_request_id);
+                $query = $this->db->get();
+                foreach ($query->result() as $row) {
+                    $closed_shelves[] = $row->shelf;
+                }
+            }
+        }
+        $response = [
+            $this->security->get_csrf_token_name() => $this->security->get_csrf_hash(),
+            'closed_shelves' => $closed_shelves
+        ];
+        $this->sma->send_json($response);
+    }
+
     public function view_inventory_check_report(){
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
@@ -780,6 +815,7 @@ class stock_request extends MY_Controller
                 }
                 $arr_length = count($arrResult);
                 if ($arr_length > 5000000) {
+            
                     $this->session->set_flashdata('error', lang('too_many_records'));
                     redirect($_SERVER['HTTP_REFERER']);
                     exit();
@@ -1576,31 +1612,37 @@ class stock_request extends MY_Controller
             $this->db->where('p.id', $product_id);
         }
         
-        $this->db->group_by('p.id, im.batch_number, im.expiry_date, im.avz_item_code');
+        $this->db->group_by('p.id, im.avz_item_code');
         $this->db->order_by('p.name', 'ASC');
         
         $query = $this->db->get();
         $products = $query->result();
         
-        // If there's a pending request, get saved quantities separately
+        // If there's a pending request, get saved quantities and actual batch/expiry separately
         if($current_request_id && $products){
-            $this->db->select('product_id, batch_number, quantity');
+            $this->db->select('product_id, batch_number as actual_batch, quantity, expiry_date as actual_expiry, avz_code');
             $this->db->from('sma_inventory_check_items');
             $this->db->where('inv_check_id', $current_request_id);
             $saved_query = $this->db->get();
             $saved_items = $saved_query->result();
-            
-            // Create lookup array for saved quantities
+
+            // Create lookup array for saved values
             $saved_lookup = [];
             foreach($saved_items as $saved){
-                $key = $saved->product_id . '_' . $saved->batch_number;
-                $saved_lookup[$key] = $saved->quantity;
+                $key = $saved->product_id . '_' . $saved->avz_code;
+                $saved_lookup[$key] = [
+                    'quantity' => $saved->quantity,
+                    'actual_batch' => isset($saved->actual_batch) ? $saved->actual_batch : '',
+                    'actual_expiry' => isset($saved->actual_expiry) ? $saved->actual_expiry : ''
+                ];
             }
             
-            // Add saved quantities to products
+            // Add saved values to products
             foreach($products as $product){
-                $key = $product->product_id . '_' . $product->batch_number;
-                $product->saved_quantity = isset($saved_lookup[$key]) ? $saved_lookup[$key] : null;
+                $key = $product->product_id . '_' . $product->avz_item_code;
+                $product->saved_quantity = isset($saved_lookup[$key]['quantity']) ? $saved_lookup[$key]['quantity'] : null;
+                $product->actual_batch = isset($saved_lookup[$key]['actual_batch']) ? $saved_lookup[$key]['actual_batch'] : '';
+                $product->actual_expiry = isset($saved_lookup[$key]['actual_expiry']) ? $saved_lookup[$key]['actual_expiry'] : '';
             }
         }
 
@@ -1661,29 +1703,58 @@ class stock_request extends MY_Controller
             $expiry_dates = $this->input->post('expiry_date');
             $quantities = $this->input->post('quantity');
             $avz_codes = $this->input->post('avz_code');
+            $actual_batches = $this->input->post('actual_batch');
+            $actual_expirys = $this->input->post('actual_expiry');
 
             if($product_ids && is_array($product_ids)){
                 $count = 0;
                 foreach($product_ids as $index => $product_id){
                     $quantity = $quantities[$index] ?? '';
                     $batch_number = $batch_numbers[$index] ?? '';
+                    $actual_batch = $actual_batches[$index] ?? '';
+                    $actual_expiry = $actual_expirys[$index] ?? '';
+                    $avz_code = $avz_codes[$index] ?? '';
                     
                     // Only save if quantity is entered
                     if($quantity !== '' && $quantity !== null){
-                        // Delete existing record for this product/batch combination if exists
+                        // Delete existing record for this product/avz_code combination if exists
+                        // Use avz_code for matching since batch may have changed
                         $this->db->where('inv_check_id', $inv_check_id);
                         $this->db->where('product_id', $product_id);
-                        $this->db->where('batch_number', $batch_number);
+                        $this->db->where('avz_code', $avz_code);
                         $this->db->delete('sma_inventory_check_items');
+                        
+                        // Determine the expiry date to save
+                        $expiry_to_save = null;
+                        
+                        // First, try actual_expiry if provided
+                        if(!empty($actual_expiry) && $actual_expiry !== 'N/A'){
+                            $timestamp = strtotime($actual_expiry);
+                            if($timestamp !== false && $timestamp > 0){
+                                $expiry_to_save = date('Y-m-d', $timestamp);
+                            }
+                        }
+                        
+                        // If no actual_expiry, try original expiry_date
+                        if(!$expiry_to_save && isset($expiry_dates[$index])){
+                            $original_expiry = $expiry_dates[$index];
+                            if(!empty($original_expiry) && $original_expiry !== 'N/A'){
+                                $timestamp = strtotime($original_expiry);
+                                if($timestamp !== false && $timestamp > 0){
+                                    $expiry_to_save = date('Y-m-d', $timestamp);
+                                }
+                            }
+                        }
                         
                         // Insert new/updated record
                         $record = [
                             'inv_check_id'    => $inv_check_id,
                             'avz_code'        => $avz_codes[$index] ?? '',
                             'product_id'      => $product_id,
-                            'batch_number'    => $batch_number,
-                            'expiry_date'     => $expiry_dates[$index] ?? null,
+                            'batch_number'    => $actual_batch ? $actual_batch : $batch_number,
+                            'expiry_date'     => $expiry_to_save,
                             'quantity'        => $quantity,
+                            'user_id'        => $this->session->userdata('user_id')
                         ];
                         
                         $this->db->insert('sma_inventory_check_items', $record);
@@ -1706,11 +1777,96 @@ class stock_request extends MY_Controller
                 $this->session->set_flashdata('error', 'No products found to save.');
             }
 
+            // If close_shelf flag is set, mark shelf as closed
+            if ($this->input->post('close_shelf') == '1' && isset($inv_check_id)) {
+                $shelf = $this->input->post('shelf');
+                $user_id = $this->session->userdata('user_id');
+                // Check if already closed for this request/shelf
+                $exists = $this->db->get_where('sma_inventory_check_closed_shelves', [
+                    'inv_check_id' => $inv_check_id,
+                    'shelf' => $shelf
+                ])->row();
+                if (!$exists) {
+                    $this->db->insert('sma_inventory_check_closed_shelves', [
+                        'inv_check_id' => $inv_check_id,
+                        'shelf' => $shelf,
+                        'user_id' => $user_id
+                    ]);
+                    $this->session->set_flashdata('message', 'Shelf "' . $shelf . '" closed for this inventory check.');
+                } else {
+                    $this->session->set_flashdata('warning', 'Shelf already closed for this inventory check.');
+                }
+            }
             admin_redirect('stock_request/inventory_check');
         } else {
             $this->session->set_flashdata('error', validation_errors());
             admin_redirect('stock_request/hills_inventory_check');
         }
+    }
+    
+    /**
+     * Close shelf without saving inventory data
+     */
+    public function close_shelf_only(){
+        $warehouse_id = $this->input->post('warehouse_id');
+        $shelf = $this->input->post('shelf');
+        
+        if(!$warehouse_id || !$shelf){
+            $this->sma->send_json([
+                'error' => 1,
+                'msg' => 'Warehouse and shelf are required'
+            ]);
+            return;
+        }
+        
+        // Get or create pending inventory check request for this warehouse
+        $this->db->select('id');
+        $this->db->from('sma_inventory_check_requests');
+        $this->db->where('location_id', $warehouse_id);
+        $this->db->where('status', 'pending');
+        $this->db->order_by('id', 'DESC');
+        $this->db->limit(1);
+        $existing_request = $this->db->get()->row();
+        
+        if($existing_request){
+            $inv_check_id = $existing_request->id;
+        } else {
+            // Create new inventory check request record
+            $insert_inv_req = [
+                'location_id' => $warehouse_id,
+                'status' => 'pending',
+                'date' => date('Y-m-d'),
+            ];
+            $this->db->insert('sma_inventory_check_requests', $insert_inv_req);
+            $inv_check_id = $this->db->insert_id();
+        }
+        
+        $user_id = $this->session->userdata('user_id');
+        
+        // Check if already closed for this request/shelf
+        $exists = $this->db->get_where('sma_inventory_check_closed_shelves', [
+            'inv_check_id' => $inv_check_id,
+            'shelf' => $shelf
+        ])->row();
+        
+        $response = [
+            $this->security->get_csrf_token_name() => $this->security->get_csrf_hash()
+        ];
+        
+        if (!$exists) {
+            $this->db->insert('sma_inventory_check_closed_shelves', [
+                'inv_check_id' => $inv_check_id,
+                'shelf' => $shelf,
+                'user_id' => $user_id
+            ]);
+            $response['error'] = 0;
+            $response['msg'] = 'Shelf "' . $shelf . '" closed successfully.';
+        } else {
+            $response['error'] = 1;
+            $response['msg'] = 'Shelf already closed for this inventory check.';
+        }
+        
+        $this->sma->send_json($response);
     }
     
     /**
