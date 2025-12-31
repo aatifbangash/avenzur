@@ -585,8 +585,12 @@
 
         <?php 
         
-        if($Admin || $Owner || $this->GP['sales-deliveries'] || $this->GP['truck_registration_view'] ||  $this->GP['products-adjustments'] || $this->GP['inventory-check']){
+        if($Admin || $Owner || $this->GP['sales-deliveries'] || $this->GP['truck_registration_view'] ||  $this->GP['products-adjustments'] || $this->GP['inventory-check'] || $this->GP['rasd-notifications']){
+            
+        if($this->GP['rasd-notifications']){
+            
         ?>
+        
         <!-- Services -->
          <li class="newmenu-item has-sub">
             <a href="#" class="newmenu-link bluecolor">
@@ -598,6 +602,7 @@
                 <li><a href="<?= admin_url('notifications/rasd'); ?>" class="newmenu-link"><i class="fa fa-users"></i> <?= lang('Rasd Notifications'); ?></a></li>
             </ul>
         </li>
+        <?php } ?>
 
         <!-- Warehouse Management -->
          <li class="newmenu-item has-sub">

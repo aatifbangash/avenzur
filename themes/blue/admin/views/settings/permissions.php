@@ -661,8 +661,6 @@
                                                 name="inventory-check" <?php echo $p->{'inventory-check'} ? 'checked' : ''; ?>>
                                                 <label for="bulk_actions" class="padding05"><?= lang('Inventory Check') ?></label>
                                         </span>
-                                     </td>
-                                     <td colspan="5">
                                         <span style="display:inline-block;">
                                             <input type="checkbox" value="1" class="checkbox" id="bulk_actions"
                                                 name="inventory-requests" <?php echo $p->{'inventory-requests'} ? 'checked' : ''; ?>>
