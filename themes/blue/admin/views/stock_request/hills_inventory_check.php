@@ -25,6 +25,7 @@
                         <select name="shelf" id="shelf_select" class="form-control select2" required style="width:100%;" disabled>
                             <option value=""><?= lang('select_warehouse_first'); ?></option>
                         </select>
+                        <span id="closed_shelf_warning" style="display:none;color:red;font-weight:bold;"></span>
                     </div>
 
                     <div class="form-group col-md-3">
@@ -43,7 +44,7 @@
 
                     <div class="form-group col-md-3">
                         <label>&nbsp;</label><br>
-                        <button type="button" id="add_move_product_btn" class="btn btn-warning">
+                        <button type="button" id="add_move_product_btn" class="btn btn-warning" disabled>
                             <i class="fa fa-plus"></i> <?= lang('Add/Move Product to Shelf'); ?>
                         </button>
                     </div>
@@ -61,26 +62,20 @@
                             </div>
                             <div class="modal-body">
                                 <form id="move_product_form">
-                                    <div class="form-group">
-                                        <label><?= lang('Warehouse'); ?></label>
-                                        <select id="modal_warehouse_select" class="form-control">
-                                            <option value=""><?= lang('Select') . ' ' . lang('warehouse'); ?></option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label><?= lang('Product'); ?></label>
-                                        <select id="modal_product_select" class="form-control">
-                                            <option value=""><?= lang('Select') . ' ' . lang('product'); ?></option>
-                                        </select>
-                                        <input type="hidden" id="modal_selected_product_id" name="modal_selected_product_id" value="">
+                                    <div class="alert alert-info">
+                                        <strong>Warehouse:</strong> <span id="modal_warehouse_name"></span><br>
+                                        <strong>Shelf:</strong> <span id="modal_shelf_name"></span>
                                     </div>
                                     
                                     <div class="form-group">
-                                        <label><?= lang('Target Shelf'); ?></label>
-                                        <select id="modal_target_shelf" class="form-control">
-                                            <option value=""><?= lang('Select') . ' ' . lang('shelf'); ?></option>
+                                        <label><?= lang('Product'); ?> *</label>
+                                        <select id="modal_product_select" class="form-control select2-modal" style="width:100%;">
+                                            <option value=""><?= lang('Select') . ' ' . lang('product'); ?></option>
                                         </select>
                                     </div>
+                                    
+                                    <input type="hidden" id="modal_warehouse_id" name="modal_warehouse_id" value="">
+                                    <input type="hidden" id="modal_shelf" name="modal_shelf" value="">
                                 </form>
                             </div>
                             <div class="modal-footer">
@@ -113,14 +108,16 @@
                                     <th style="width: 11%;"><?= lang('AVZ Code'); ?></th>
                                     <th style="width: 11%;"><?= lang('Old Code'); ?></th>
                                     <th style="width: 25%;"><?= lang('Product Name'); ?></th>
-                                    <th style="width: 13%;"><?= lang('Batch Number'); ?></th>
-                                    <th style="width: 12%;"><?= lang('Expiry Date'); ?></th>
+                                    <th style="width: 10%;"><?= lang('Expiry Date'); ?></th>
+                                    <th style="width: 10%;">Actual Expiry</th>
+                                    <th style="width: 10%;"><?= lang('Batch Number'); ?></th>
+                                    <th style="width: 10%;">Actual Batch</th>
                                     <th style="width: 12%;"><?= lang('Actual Quantity'); ?> *</th>
                                 </tr>
                             </thead>
                             <tbody id="products_tbody">
                                 <tr>
-                                    <td colspan="8" class="text-center">
+                                    <td colspan="10" class="text-center">
                                         <em><?= lang('No products loaded'); ?></em>
                                     </td>
                                 </tr>
@@ -131,6 +128,9 @@
                     <div class="form-group text-center" style="margin-top: 20px;">
                         <button type="submit" class="btn btn-success btn-lg" id="submit_btn" disabled>
                             <i class="fa fa-save"></i> <?= lang('Save Inventory Check'); ?>
+                        </button>
+                        <button type="button" class="btn btn-danger btn-lg" id="close_shelf_btn" style="margin-left:10px;" disabled>
+                            <i class="fa fa-lock"></i> Close Shelf
                         </button>
                         <a href="<?= admin_url('stock_request/inventory_check'); ?>" class="btn btn-default btn-lg">
                             <i class="fa fa-arrow-left"></i> <?= lang('Back to List'); ?>
@@ -158,15 +158,15 @@ $(document).ready(function() {
     // When warehouse is selected, load shelves
     $('#warehouse_select').change(function() {
         var warehouse_id = $(this).val();
-        
         if(warehouse_id) {
             // Reset shelf and product dropdowns
             $('#shelf_select').html('<option value="">Loading shelves...</option>').prop('disabled', true);
             $('#product_select').html('<option value="">Select shelf first</option>').prop('disabled', true);
             $('#load_products_btn').prop('disabled', true);
             $('#products_section').hide();
+            $('#closed_shelf_warning').hide();
 
-            // AJAX call to get shelves
+            // AJAX call to get shelves and closed shelves
             $.ajax({
                 url: '<?= admin_url("stock_request/get_warehouse_shelves"); ?>',
                 type: 'POST',
@@ -177,17 +177,32 @@ $(document).ready(function() {
                     if(response.<?= $this->security->get_csrf_token_name(); ?>) {
                         csrfData['<?= $this->security->get_csrf_token_name(); ?>'] = response.<?= $this->security->get_csrf_token_name(); ?>;
                     }
-                    
-                    if(response.error == 0 && response.shelves) {
-                        var options = '<option value="">Select Shelf</option>';
-                        $.each(response.shelves, function(index, shelf) {
-                            options += '<option value="' + shelf.shelf + '">' + shelf.shelf + '</option>';
-                        });
-                        $('#shelf_select').html(options).prop('disabled', false);
-                    } else {
-                        $('#shelf_select').html('<option value="">No shelves found</option>');
-                        bootbox.alert(response.msg || 'No shelves found for this warehouse');
-                    }
+                    // Get closed shelves for this warehouse/request
+                    $.ajax({
+                        url: '<?= admin_url("stock_request/get_closed_shelves"); ?>',
+                        type: 'POST',
+                        dataType: 'json',
+                        data: $.extend({}, csrfData, {warehouse_id: warehouse_id}),
+                        success: function(closedResp) {
+                            var closedShelves = closedResp.closed_shelves || [];
+                            var options = '<option value="">Select Shelf</option>';
+                            var anyClosed = false;
+                            $.each(response.shelves, function(index, shelf) {
+                                if(closedShelves.indexOf(shelf.shelf) === -1) {
+                                    options += '<option value="' + shelf.shelf + '">' + shelf.shelf + '</option>';
+                                } else {
+                                    anyClosed = true;
+                                }
+                            });
+                            $('#shelf_select').html(options).prop('disabled', false);
+                            if(anyClosed) {
+                                $('#closed_shelf_warning').text('Some shelves are closed and cannot be selected.').show();
+                            }
+                        },
+                        error: function() {
+                            $('#shelf_select').html('<option value="">Error loading shelves</option>');
+                        }
+                    });
                 },
                 error: function() {
                     $('#shelf_select').html('<option value="">Error loading shelves</option>');
@@ -199,6 +214,7 @@ $(document).ready(function() {
             $('#product_select').html('<option value="">Select shelf first</option>').prop('disabled', true);
             $('#load_products_btn').prop('disabled', true);
             $('#products_section').hide();
+            $('#closed_shelf_warning').hide();
         }
     });
 
@@ -211,6 +227,7 @@ $(document).ready(function() {
             // Reset product dropdown
             $('#product_select').html('<option value="">Loading products...</option>').prop('disabled', true);
             $('#load_products_btn').prop('disabled', false);
+            $('#add_move_product_btn').prop('disabled', false); // Enable Add/Move Product button
             $('#products_section').hide();
 
             // AJAX call to get products for dropdown
@@ -250,6 +267,7 @@ $(document).ready(function() {
         } else {
             $('#product_select').html('<option value="">Select shelf first</option>').prop('disabled', true);
             $('#load_products_btn').prop('disabled', true);
+            $('#add_move_product_btn').prop('disabled', true); // Disable Add/Move Product button
             $('#products_section').hide();
         }
     });
@@ -267,7 +285,7 @@ $(document).ready(function() {
         }
 
         // Show loading
-        $('#products_tbody').html('<tr><td colspan="8" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading products...</td></tr>');
+        $('#products_tbody').html('<tr><td colspan="10" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading products...</td></tr>');
         $('#products_section').show();
         $('#submit_btn').prop('disabled', true);
 
@@ -301,7 +319,23 @@ $(document).ready(function() {
                         var avzCode = product.avz_item_code || 'N/A';
                         var itemCode = product.item_code || 'N/A';
                         var expiryDate = product.expiry_date ? product.expiry_date : 'N/A';
-                        var savedQuantity = product.saved_quantity || '';
+                        var batchNumber = product.batch_number || 'N/A';
+                        var actualBatch = product.actual_batch || '';
+                        var actualExpiry = product.actual_expiry || '';
+                        
+                        // Convert yyyy-mm-dd to dd/mm/yyyy for display
+                        var displayExpiry = '';
+                        if(actualExpiry && actualExpiry !== 'N/A'){
+                            var dateParts = actualExpiry.split('-');
+                            if(dateParts.length === 3){
+                                displayExpiry = dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
+                            } else {
+                                displayExpiry = actualExpiry;
+                            }
+                        }
+                        
+                        // Ensure quantity is integer (no decimals)
+                        var savedQuantity = product.saved_quantity ? parseInt(product.saved_quantity) : '';
                         
                         html += '<tr>';
                         html += '<td>' + rowNum + '</td>';
@@ -309,21 +343,30 @@ $(document).ready(function() {
                         html += '<td>' + avzCode + '</td>';
                         html += '<td>' + itemCode + '</td>';
                         html += '<td>' + product.product_name + '</td>';
-                        html += '<td>' + (product.batch_number || 'N/A') + '</td>';
                         html += '<td>' + expiryDate + '</td>';
                         html += '<td>';
-                        html += '<input type="hidden" name="product_id[]" value="' + product.product_id + '">';
-                        html += '<input type="hidden" name="batch_number[]" value="' + (product.batch_number || '') + '">';
-                        html += '<input type="hidden" name="expiry_date[]" value="' + (product.expiry_date || '') + '">';
-                        html += '<input type="hidden" name="avz_code[]" value="' + (product.avz_item_code || '') + '">';
-                        html += '<input type="number" name="quantity[]" class="form-control input-sm text-right quantity_input" ';
-                        html += 'placeholder="Enter quantity" step="0.01" min="0" value="' + savedQuantity + '">';
+                        html += '<input type="text" name="actual_expiry[]" class="form-control input-sm date" placeholder="Actual Expiry (DD/MM/YYYY)" value="' + displayExpiry + '">';
                         html += '</td>';
+                        html += '<td>' + batchNumber + '</td>';
+                        html += '<td>';
+                        html += '<input type="text" name="actual_batch[]" class="form-control input-sm" placeholder="Actual Batch" value="' + actualBatch + '">';
+                        html += '</td>';
+                        html += '<td>';
+                        html += '<input type="text" name="quantity[]" class="form-control input-sm text-right quantity_input" placeholder="Actual Quantity" pattern="[0-9]*" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, \'\');" value="' + savedQuantity + '">';
+                        html += '</td>';
+                        // Hidden fields to submit product data
+                        html += '<input type="hidden" name="product_id[]" value="' + product.product_id + '">';
+                        html += '<input type="hidden" name="batch_number[]" value="' + batchNumber + '">';
+                        html += '<input type="hidden" name="expiry_date[]" value="' + expiryDate + '">';
+                        html += '<input type="hidden" name="avz_code[]" value="' + avzCode + '">';
                         html += '</tr>';
                     });
                     
                     $('#products_tbody').html(html);
                     $('#submit_btn').prop('disabled', false);
+                    $('#close_shelf_btn').prop('disabled', false);
+                    // Initialize datepicker for actual_expiry fields with dd/mm/yyyy format
+                    if ($.fn.datepicker) { $(".date").datepicker({ autoclose: true, format: 'dd/mm/yyyy' }); }
                     
                     // Show request status
                     if(response.is_existing_request) {
@@ -342,13 +385,13 @@ $(document).ready(function() {
                     }, 100);
                     
                 } else {
-                    $('#products_tbody').html('<tr><td colspan="8" class="text-center"><em>No products found for this shelf</em></td></tr>');
+                    $('#products_tbody').html('<tr><td colspan="10" class="text-center"><em>No products found for this shelf</em></td></tr>');
                     $('#submit_btn').prop('disabled', true);
                     bootbox.alert(response.msg || 'No products found for this shelf');
                 }
             },
             error: function() {
-                $('#products_tbody').html('<tr><td colspan="8" class="text-center text-danger">Error loading products</td></tr>');
+                $('#products_tbody').html('<tr><td colspan="10" class="text-center text-danger">Error loading products</td></tr>');
                 $('#submit_btn').prop('disabled', true);
                 bootbox.alert('Error loading products. Please try again.');
             }
@@ -356,6 +399,8 @@ $(document).ready(function() {
     });
 
     // Form validation before submit
+
+    // Save Inventory Check (default submit)
     $('#inventory_form').submit(function(e) {
         var hasQuantity = false;
         $('.quantity_input').each(function() {
@@ -364,19 +409,73 @@ $(document).ready(function() {
                 return false; // break loop
             }
         });
-
         if(!hasQuantity) {
             e.preventDefault();
             bootbox.alert('Please enter at least one quantity before submitting.');
             return false;
         }
-
+        
+        // Convert date format from dd/mm/yyyy to yyyy-mm-dd before submission
+        $('input[name="actual_expiry[]"]').each(function() {
+            var dateValue = $(this).val();
+            if(dateValue && dateValue.indexOf('/') > -1) {
+                var parts = dateValue.split('/');
+                if(parts.length === 3) {
+                    // Convert dd/mm/yyyy to yyyy-mm-dd
+                    $(this).val(parts[2] + '-' + parts[1] + '-' + parts[0]);
+                }
+            }
+        });
+        
         // Confirm submission
         e.preventDefault();
         var form = this;
         bootbox.confirm('Are you sure you want to save this inventory check?', function(result) {
             if(result) {
                 form.submit();
+            }
+        });
+    });
+
+    // Save & Close Shelf button logic - Only closes shelf without saving inventory
+    $('#close_shelf_btn').click(function() {
+        var warehouse_id = $('#warehouse_select').val();
+        var shelf = $('#shelf_select').val();
+        
+        if(!warehouse_id || !shelf) {
+            bootbox.alert('Please select warehouse and shelf first.');
+            return false;
+        }
+        
+        bootbox.confirm('Are you sure you want to close this shelf? It will no longer be available for selection. This cannot be undone.', function(result) {
+            if(result) {
+                $.ajax({
+                    url: '<?= admin_url("stock_request/close_shelf_only"); ?>',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: $.extend({}, csrfData, {
+                        warehouse_id: warehouse_id,
+                        shelf: shelf
+                    }),
+                    success: function(response) {
+                        // Update CSRF token
+                        if(response.<?= $this->security->get_csrf_token_name(); ?>) {
+                            csrfData['<?= $this->security->get_csrf_token_name(); ?>'] = response.<?= $this->security->get_csrf_token_name(); ?>;
+                        }
+                        
+                        if(response.error == 0) {
+                            bootbox.alert(response.msg, function(){
+                                // Reload the page to update closed shelves list
+                                location.reload();
+                            });
+                        } else {
+                            bootbox.alert(response.msg);
+                        }
+                    },
+                    error: function() {
+                        bootbox.alert('Error closing shelf. Please try again.');
+                    }
+                });
             }
         });
     });
@@ -449,95 +548,43 @@ $(document).ready(function() {
 
     // Open modal to add/move product (delegated binding to ensure handler exists even if button is re-rendered)
     $(document).on('click', '#add_move_product_btn', function(e) {
-        console.log('Add/Move Product button clicked');
-        var pageShelf = $('#shelf_select').val() || '';
-        var pageWarehouse = $('#warehouse_select').val() || '';
-
+        var warehouse_id = $('#warehouse_select').val();
+        var warehouse_name = $('#warehouse_select option:selected').text();
+        var shelf = $('#shelf_select').val();
+        
+        if(!warehouse_id || !shelf) {
+            bootbox.alert('Please select both warehouse and shelf first.');
+            return;
+        }
+        
         // Reset modal fields
         $('#modal_product_select').val('').trigger('change');
-        $('#modal_selected_product_id').val('');
-
-        // Populate modal warehouse dropdown from page warehouse select (so user can pick warehouse there)
-        var whOptions = $('#warehouse_select').html() || '';
-        if(whOptions) {
-            $('#modal_warehouse_select').html('<option value=""><?= lang('Select') . " " . lang('warehouse'); ?></option>' + whOptions);
-            if(pageWarehouse) {
-                $('#modal_warehouse_select').val(pageWarehouse);
-            }
-        } else {
-            $('#modal_warehouse_select').html('<option value="">No warehouses available</option>');
-        }
-
-        // If pageShelf and pageWarehouse present, ensure shelves and products for that warehouse are loaded and default selected when modal opens
-        if(pageWarehouse) {
-            $('#modal_warehouse_select').trigger('change');
-            // populate products for the warehouse
-            populateModalProducts(pageWarehouse);
-            // set a small timeout to allow shelf options to populate then set selected
-            setTimeout(function(){ if(pageShelf) { $('#modal_target_shelf').val(pageShelf); } }, 250);
-        }
-
+        
+        // Populate modal with warehouse and shelf info
+        $('#modal_warehouse_id').val(warehouse_id);
+        $('#modal_shelf').val(shelf);
+        $('#modal_warehouse_name').text(warehouse_name);
+        $('#modal_shelf_name').text(shelf);
+        
+        // Load products for this warehouse
+        populateModalProducts(warehouse_id);
+        
         $('#moveProductModal').modal('show');
     });
 
-// When modal warehouse changes, load shelves for that warehouse into target dropdown and products for that warehouse
-    $(document).on('change', '#modal_warehouse_select', function(){
-        var wh = $(this).val();
-        $('#modal_target_shelf').html('<option>Loading ...</option>');
-        if(!wh){
-            $('#modal_target_shelf').html('<option value="">Select warehouse first</option>');
-            $('#modal_product_select').html('<option value="">Select warehouse first</option>');
-            return;
-        }
-        // load shelves
-        $.ajax({
-            url: '<?= admin_url("stock_request/get_warehouse_shelves"); ?>',
-            type: 'POST',
-            dataType: 'json',
-            data: $.extend({}, csrfData, { warehouse_id: wh }),
-            success: function(resp) {
-                if(resp.<?= $this->security->get_csrf_token_name(); ?>) {
-                    csrfData['<?= $this->security->get_csrf_token_name(); ?>'] = resp.<?= $this->security->get_csrf_token_name(); ?>;
-                }
-                if(resp.error == 0 && resp.shelves) {
-                    var opts = '<option value=""><?= lang('Select') . " " . lang('shelf'); ?></option>';
-                    $.each(resp.shelves, function(i, s) {
-                        opts += '<option value="' + s.shelf + '">' + s.shelf + '</option>';
-                    });
-                    $('#modal_target_shelf').html(opts);
-                } else {
-                    $('#modal_target_shelf').html('<option value="">No shelves found</option>');
-                }
-            },
-            error: function() {
-                $('#modal_target_shelf').html('<option value="">Error loading shelves</option>');
-            }
-        });
-        // populate products for this warehouse
-        populateModalProducts(wh);
-    });
 
 
 
     // Confirm add/move product (use modal selects, not old Search2)
     $('#confirm_move_product_btn').click(function() {
-        var productId = $('#modal_product_select').val() || $('#modal_selected_product_id').val();
+        var productId = $('#modal_product_select').val();
         if(!productId){
             bootbox.alert('Please select a product');
             return;
         }
-        var warehouse_id = $('#modal_warehouse_select').val();
-        if(!warehouse_id){
-            bootbox.alert('Please select a warehouse');
-            return;
-        }
-        var target_shelf = $('#modal_target_shelf').val();
-        if(!target_shelf){
-            bootbox.alert('Please select target shelf');
-            return;
-        }
+        var warehouse_id = $('#modal_warehouse_id').val();
+        var target_shelf = $('#modal_shelf').val();
 
-        console.log('Moving product', productId, 'to shelf', target_shelf, 'in warehouse', warehouse_id);
         $.ajax({
             url: '<?= admin_url("stock_request/add_move_product_to_shelf"); ?>',
             type: 'POST',
@@ -578,7 +625,15 @@ $(document).ready(function() {
                     html += '<input type="hidden" name="avz_code[]" value="' + (p.avz_item_code || '') + '">';
                     html += '<input type="number" name="quantity[]" class="form-control input-sm text-right quantity_input" placeholder="Enter quantity" step="0.01" min="0" value="' + savedQuantity + '">';
                     html += '</td>';
+                    html += '<td>';
+                    html += '<input type="text" name="actual_batch[]" class="form-control input-sm" placeholder="Actual Batch" value="' + (p.actual_batch ? p.actual_batch : '') + '">';
+                    html += '</td>';
+                    html += '<td>';
+                    html += '<input type="text" name="actual_expiry[]" class="form-control input-sm date" placeholder="Actual Expiry (YYYY-MM-DD)" value="' + (p.actual_expiry ? p.actual_expiry : '') + '">';
+                    html += '</td>';
                     html += '</tr>';
+                    // After appending, initialize datepicker for new actual_expiry field
+                    setTimeout(function(){ if ($.fn.datepicker) { $(".date").datepicker({ autoclose: true, format: 'yyyy-mm-dd' }); } }, 100);
 
                     // Check for existing product+batch row and update it to avoid duplicates
                     var existingInput = $('#products_tbody').find('input[name="product_id[]"][value="' + p.product_id + '"]');

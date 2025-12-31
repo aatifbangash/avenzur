@@ -82,9 +82,13 @@
                             <?php 
                                 if($this->Settings->site_name == 'Hills Business Medical'){
                             ?>
+                            <th><?= lang('Shelf'); ?></th>
+                            <th><?= lang('Group'); ?></th>
                             <th><?= lang('Old Code'); ?></th>
                             <th><?= lang('Batch Number'); ?></th>
-                            <th><?= lang('Expiry Date'); ?></th>    
+                            <th><?= lang('Actual Batch'); ?></th>
+                            <th><?= lang('Expiry Date'); ?></th>   
+                            <th><?= lang('Actual ExpiryDate'); ?></th>    
                             <?php } ?>
                             <th><?= lang('Actual Quantity'); ?></th>
                             <th><?= lang('System Quantity'); ?></th>
@@ -104,9 +108,13 @@
                                                 <?php 
                                                     if($this->Settings->site_name == 'Hills Business Medical'){
                                                 ?>
+                                                <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->shelf; ?></td>
+                                                <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->inventory_group; ?></td>
                                                 <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->item_code ? $inventory_check->item_code : '-'; ?></td>
                                                 <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->batch_number; ?></td>
+                                                <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->actual_batch; ?></td>
                                                 <td class="dataTables_empty" style="text-align: center;"><?= date('d M y', strtotime($inventory_check->expiry_date)); ?></td>
+                                                <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->actual_expiry ? date('d M y', strtotime($inventory_check->actual_expiry)) : '-'; ?></td>
                                                 <?php } ?>
                                                 <td class="dataTables_empty" style="text-align: center;"> <?= $inventory_check->quantity; ?></td>
                                                 <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->system_quantity ? $inventory_check->system_quantity : '0.00'; ?></td>
