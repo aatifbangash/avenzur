@@ -585,7 +585,7 @@
 
         <?php 
         
-        if($Admin || $Owner || $this->GP['sales-deliveries'] || $this->GP['truck_registration_view'] ||  $this->GP['products-adjustments']){
+        if($Admin || $Owner || $this->GP['sales-deliveries'] || $this->GP['truck_registration_view'] ||  $this->GP['products-adjustments'] || $this->GP['inventory-check']){
         ?>
         <!-- Services -->
          <li class="newmenu-item has-sub">
