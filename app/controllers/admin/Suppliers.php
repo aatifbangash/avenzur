@@ -351,18 +351,17 @@ class Suppliers extends MY_Controller
         }
     }
 
-    public function convert_debit_memo_invoice($memo_id, $supplier_id, $ledger_account, $bank_charges_account, $payment_amount, $bank_charges, $reference_no, $type){
+    public function convert_debit_memo_invoice($memo_id, $supplier_id, $ledger_account, $payment_amount, $reference_no, $type, $supplier_entry_type = 'D'){
         $this->load->admin_model('companies_model');
         $supplier = $this->companies_model->getCompanyByID($supplier_id);
 
-        // Calculate VAT on bank charges (15%)
-        $bank_charge_vat = 0;
-        if ($bank_charges > 0) {
-            $bank_charge_vat = $bank_charges * 0.15; // 15% VAT
-        }
-        
-        // Total includes payment, bank charges, and VAT on bank charges
-        $total_amount = $payment_amount + $bank_charges + $bank_charge_vat;
+        // Calculate VAT automatically (15% of payment amount)
+        $vat_amount = $payment_amount * 0.15;
+        $total_amount = $payment_amount + $vat_amount;
+
+        // Get VAT ledger account from settings (you may need to configure this in your settings)
+        // For now, using a default VAT ledger ID - adjust this based on your chart of accounts
+        $vat_ledger_id = isset($this->Settings->vat_output_ledger) ? $this->Settings->vat_output_ledger : 69; // Default VAT ledger
 
         /*Accounts Entries*/
         $entry = array(
@@ -374,57 +373,44 @@ class Suppliers extends MY_Controller
             'cr_total'     => $total_amount,
             'notes'        => 'Debit Memo Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
             'pid'          =>  '',
-            'memo_id'      => $memo_id
+            'memo_id'      => $memo_id,
+            'supplier_id'  => $supplier_id
             );
         $add  = $this->db->insert('sma_accounts_entries', $entry);
         $insert_id = $this->db->insert_id();
 
-        //supplier
+        // Determine entry direction: Normal (D) or Reversed (C)
+        // If supplier is credited (C), reverse all other entries
+        $vat_dc = ($supplier_entry_type == 'D') ? 'D' : 'C';
+        $ledger_dc = ($supplier_entry_type == 'D') ? 'C' : 'D';
+
+        //supplier - debit or credit based on selection
         $entryitemdata[] = array(
             'Entryitem' => array(
                 'entry_id' => $insert_id,
-                'dc' => 'D',
+                'dc' => $supplier_entry_type, // D or C based on user selection
                 'ledger_id' => $supplier->ledger_account,
                 'amount' => $payment_amount,
                 'narration' => ''
             )
         );
 
-        //bank charges
-        if($bank_charges > 0) {
-            $entryitemdata[] = array(
-                'Entryitem' => array(
-                    'entry_id' => $insert_id,
-                    'dc' => 'D',
-                    'ledger_id' => $bank_charges_account,
-                    'amount' => $bank_charges,
-                    'narration' => ''
-                )
-            );
-        }
-
-        // VAT on bank charges (only add if bank_charge_vat > 0)
-        if($bank_charge_vat > 0 && $bank_charges_account > 0) {
-            // Get VAT ledger from system settings (you might need to configure this)
-            $settings = $this->Settings;
-            $vat_ledger = isset($settings->vat_ledger_id) ? $settings->vat_ledger_id : $bank_charges_account;
-            
-            $entryitemdata[] = array(
-                'Entryitem' => array(
-                    'entry_id' => $insert_id,
-                    'dc' => 'D',
-                    'ledger_id' => $vat_ledger,
-                    'amount' => $bank_charge_vat,
-                    'narration' => 'VAT on Bank Charges (15%)'
-                )
-            );
-        }
-
-        //transfer legdger
+        //VAT - debit when normal, credit when reversed
         $entryitemdata[] = array(
             'Entryitem' => array(
                 'entry_id' => $insert_id,
-                'dc' => 'C',
+                'dc' => $vat_dc,
+                'ledger_id' => $vat_ledger_id,
+                'amount' => $vat_amount,
+                'narration' => 'VAT @ 15%'
+            )
+        );
+
+        //transfer ledger - credit when normal, debit when reversed
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => $ledger_dc,
                 'ledger_id' => $ledger_account,
                 'amount' => $total_amount,
                 'narration' => ''
@@ -679,8 +665,7 @@ class Suppliers extends MY_Controller
             $reference_no = $this->input->post('reference_no');
             $payment_total = $this->input->post('payment_total');
             $ledger_account = $this->input->post('ledger_account');
-            $bank_charges_account = $this->input->post('bank_charges_account');
-            $bank_charges = $this->input->post('bank_charges');
+            $supplier_entry_type = $this->input->post('supplier_entry_type') ?: 'D';
             $date_fmt = $this->input->post('date');
 
             //$date_fmt = '2023-06-27';
@@ -710,9 +695,10 @@ class Suppliers extends MY_Controller
                     'customer_id' => 0,
                     'reference_no' => $reference_no,
                     'payment_amount' => $payment_total,
-                    'bank_charges' => $bank_charges,
+                    'bank_charges' => 0,
                     'ledger_account' => $ledger_account,
-                    'bank_charges_account' => $bank_charges_account,
+                    'bank_charges_account' => 0,
+                    'supplier_entry_type' => $supplier_entry_type,
                     'type' => 'memo',
                     'date' => $date
                 );
@@ -728,10 +714,11 @@ class Suppliers extends MY_Controller
                     }
                 }
 
-                $this->convert_debit_memo_invoice($memo_id, $supplier_id, $ledger_account, $bank_charges_account, $payment_total, $bank_charges, $reference_no, 'debitmemo');
+                $this->convert_debit_memo_invoice($memo_id, $supplier_id, $ledger_account, $payment_total, $reference_no, 'debitmemo', $supplier_entry_type);
                 $this->session->set_flashdata('message', lang('Debit Memo invoice added Successfully!'));
                 admin_redirect('suppliers/list_debit_memo');
             }else{
+                
                 $this->session->set_flashdata('error', 'Total Sum Of Amounts do not match');
                 redirect($_SERVER['HTTP_REFERER']);
             }

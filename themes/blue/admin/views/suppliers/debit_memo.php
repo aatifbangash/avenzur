@@ -81,27 +81,23 @@
 
                         <div class="col-md-4">
                             <div class="form-group">
-                            <?= lang('Bank Charges', 'posupplier'); ?>
+                            <?= lang('Supplier Entry Type', 'entry_type'); ?>
                             <?php 
-
-                                echo form_dropdown('bank_charges_account', $LO, ($memo_data->bank_charges_account ?? $memo_data->bank_charges_account), 'id="bank_charges_account" class="ledger-dropdown form-control" required="required"',$DIS);  
-
+                                $entry_types = array(
+                                    'D' => 'Debit Supplier (Default)',
+                                    'C' => 'Credit Supplier'
+                                );
+                                echo form_dropdown('supplier_entry_type', $entry_types, ($memo_data->supplier_entry_type ?? 'D'), 'id="supplier_entry_type" class="form-control" required="required"');  
                             ?>
                             </div>
                         </div>
 
                         <div class="col-md-4">
-                            <div class="form-group">
-                                <?= lang('Bank Charges Amount', 'poref'); ?>
-                                <?php echo form_input('bank_charges', ($memo_data->bank_charges ?? $memo_data->bank_charges), 'class="form-control input-tip" id="bank_charges"'); ?>
-                            </div>
-                        </div>
-
-                        <div class="col-md-4">
                             <div class="from-group">
-                                <button type="submit" style="margin-top: 28px;" class="btn btn-primary" id="add_payment"><?= lang('Add Payments') ?></button>
+                                <button type="submit" style="margin-top: 18px;margin-bottom: 28px;" class="btn btn-primary" id="add_payment"><?= lang('Add Payments') ?></button>
                             </div>
                         </div>
+                        
                     </div>
 
 

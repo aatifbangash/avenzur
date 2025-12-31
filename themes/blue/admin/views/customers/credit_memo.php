@@ -97,8 +97,19 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4">
-                            <div class="from-group">
+                        <div class="col-md-4">                            <div class="form-group">
+                            <?= lang('Customer Entry Type', 'entry_type'); ?>
+                            <?php 
+                                $entry_types = array(
+                                    'C' => 'Credit Customer (Default)',
+                                    'D' => 'Debit Customer'
+                                );
+                                echo form_dropdown('customer_entry_type', $entry_types, ($memo_data->customer_entry_type ?? 'C'), 'id="customer_entry_type" class="form-control" required="required"');  
+                            ?>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">                            <div class="from-group">
                                 <button type="submit" style="margin-top: 28px;" class="btn btn-primary" id="add_payment"><?= lang('Add Payments') ?></button>
                             </div>
                         </div>

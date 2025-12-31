@@ -927,7 +927,7 @@ class Customers extends MY_Controller
         $this->db->insert('sma_memo_entries' ,$memoData);
     }
 
-    public function convert_credit_memo_invoice($memo_id, $customer_id, $ledger_account, $vat_account, $payment_amount, $vat_charges, $reference_no, $type){
+    public function convert_credit_memo_invoice($memo_id, $customer_id, $ledger_account, $vat_account, $payment_amount, $vat_charges, $reference_no, $type, $customer_entry_type = 'C'){
         $this->load->admin_model('companies_model');
         $customer = $this->companies_model->getCompanyByID($customer_id);
 
@@ -942,40 +942,46 @@ class Customers extends MY_Controller
             'cr_total'     => $payment_amount + $vat_charges,
             'notes'        => 'Credit Memo Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
             'pid'          =>  '',
-            'memo_id'      => $memo_id
+            'memo_id'      => $memo_id,
+            'customer_id'  => $customer_id
             );
 
 
         $add  = $this->db->insert('sma_accounts_entries', $entry);
         $insert_id = $this->db->insert_id();
 
-        //customer
+        // Determine entry direction: Normal (C) or Reversed (D)
+        // If customer is debited (D), reverse all other entries
+        $vat_dc = ($customer_entry_type == 'C') ? 'D' : 'C';
+        $ledger_dc = ($customer_entry_type == 'C') ? 'D' : 'C';
+
+        //customer - credit or debit based on selection
         $entryitemdata[] = array(
             'Entryitem' => array(
                 'entry_id' => $insert_id,
-                'dc' => 'C',
+                'dc' => $customer_entry_type, // C or D based on user selection
                 'ledger_id' => $customer->ledger_account,
                 'amount' => $payment_amount + $vat_charges,
                 'narration' => ''
             )
         );
 
-        //vat charges
+        //vat charges - debit when normal, credit when reversed
         $entryitemdata[] = array(
             'Entryitem' => array(
                 'entry_id' => $insert_id,
-                'dc' => 'D',
+                'dc' => $vat_dc,
                 'ledger_id' => $vat_account,
                 'amount' => $vat_charges,
                 'narration' => ''
             )
         );
 
-        //transfer legdger
+        //transfer ledger - debit when normal, credit when reversed
         $entryitemdata[] = array(
             'Entryitem' => array(
                 'entry_id' => $insert_id,
-                'dc' => 'D',
+                'dc' => $ledger_dc,
                 'ledger_id' => $ledger_account,
                 'amount' => $payment_amount,
                 'narration' => ''
@@ -1030,6 +1036,7 @@ class Customers extends MY_Controller
             $ledger_account = $this->input->post('ledger_account');
             $vat_account = $this->input->post('vat_account');
             $vat_charges = $this->input->post('vat_charges');
+            $customer_entry_type = $this->input->post('customer_entry_type') ?: 'C';
             $date_fmt = $this->input->post('date');
 
             $formattedDate = DateTime::createFromFormat('Y-m-d', $date_fmt);
@@ -1060,6 +1067,7 @@ class Customers extends MY_Controller
                     'bank_charges' => $vat_charges,
                     'ledger_account' => $ledger_account,
                     'bank_charges_account' => $vat_account,
+                    'customer_entry_type' => $customer_entry_type,
                     'type' => 'creditmemo',
                     'date' => $date
                 );
@@ -1075,7 +1083,7 @@ class Customers extends MY_Controller
                     }
                 }
 
-                $this->convert_credit_memo_invoice($memo_id, $customer_id, $ledger_account, $vat_account, $payment_total, $vat_charges, $reference_no, 'creditmemo');
+                $this->convert_credit_memo_invoice($memo_id, $customer_id, $ledger_account, $vat_account, $payment_total, $vat_charges, $reference_no, 'creditmemo', $customer_entry_type);
                 $this->session->set_flashdata('message', lang('Credit Memo invoice added Successfully!'));
                 admin_redirect('customers/list_credit_memo');
                 //admin_redirect($_SERVER['HTTP_REFERER']);
