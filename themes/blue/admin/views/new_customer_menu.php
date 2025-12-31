@@ -614,11 +614,12 @@
                         <i class="fa fa-chevron-right newmenu-chevron"></i>
                     </a>
                     <ul class="newmenu-sub">
-                        <?php
-                        if($this->Settings->site_name == 'Hills Business Medical'){ ?>
+                        <?php if($Admin || $Owner || $this->GP['inventory-check']){ ?>
                             <li><a href="<?= admin_url('stock_request/hills_inventory_check'); ?>" class="newmenu-link"><i class="fa fa-check-circle"></i> <?= lang('Inventory Check'); ?></a></li>
                         <?php } ?>
-                        <li><a href="<?= admin_url('stock_request/inventory_check'); ?>" class="newmenu-link"><i class="fa fa-check-circle"></i> <?= lang('Inventory Requests'); ?></a></li>
+                        <?php if($Admin || $Owner || $this->GP['inventory-requests']){ ?>
+                            <li><a href="<?= admin_url('stock_request/inventory_check'); ?>" class="newmenu-link"><i class="fa fa-check-circle"></i> <?= lang('Inventory Requests'); ?></a></li>
+                        <?php } ?>
                     </ul>
                 </li>
                 <?php if($Admin || $Owner || $this->GP['sales-deliveries']){ ?>
