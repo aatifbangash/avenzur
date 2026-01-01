@@ -78,20 +78,24 @@
                         <tr class="active">
                             <th style="width:2%;">#</th>
                             <th colspan="3"><?= lang('Product Name'); ?></th>
-                            <th><?= lang('Avz Code'); ?></th>
                             <?php 
                                 if($this->Settings->site_name == 'Hills Business Medical'){
                             ?>
+                            <th><?= lang('AVZ Codes'); ?></th>
                             <th><?= lang('Shelf'); ?></th>
+                            <th><?= lang('Actual Shelf'); ?></th>
                             <th><?= lang('Group'); ?></th>
                             <th><?= lang('Old Code'); ?></th>
-                            <th><?= lang('Batch Number'); ?></th>
+                            <th><?= lang('System Batch'); ?></th>
                             <th><?= lang('Actual Batch'); ?></th>
-                            <th><?= lang('Expiry Date'); ?></th>   
-                            <th><?= lang('Actual ExpiryDate'); ?></th>    
+                            <th><?= lang('System Expiry'); ?></th>
+                            <th><?= lang('Actual Expiry'); ?></th>
+                            <?php } else { ?>
+                            <th><?= lang('Avz Code'); ?></th>
                             <?php } ?>
                             <th><?= lang('Actual Quantity'); ?></th>
                             <th><?= lang('System Quantity'); ?></th>
+                            <th><?= lang('Variance'); ?></th>
                         </tr>
                         </thead>
                         <tbody>
@@ -100,30 +104,71 @@
                                     $count = 0;
                                     foreach($inventory_check_array as $inventory_check){
                                         $count++;
+                                        $variance = $inventory_check->quantity - $inventory_check->system_quantity;
+                                        $variance_class = ($variance != 0) ? 'difference-row' : '';
                                         ?>
-                                            <tr class="<?= ($inventory_check->system_quantity != $inventory_check->quantity) ? 'difference-row' : '' ?>">
+                                            <tr class="<?= $variance_class ?>">
                                                 <td class="dataTables_empty"><?= $count; ?></td>
                                                 <td class="dataTables_empty" style="text-align: center;" colspan="3"><?= $inventory_check->product_name ? $inventory_check->product_name : '-'; ?></td>
-                                                <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->avz_code; ?></td>
                                                 <?php 
                                                     if($this->Settings->site_name == 'Hills Business Medical'){
                                                 ?>
-                                                <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->shelf; ?></td>
-                                                <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->inventory_group; ?></td>
-                                                <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->item_code ? $inventory_check->item_code : '-'; ?></td>
-                                                <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->batch_number; ?></td>
-                                                <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->actual_batch; ?></td>
-                                                <td class="dataTables_empty" style="text-align: center;"><?= date('d M y', strtotime($inventory_check->expiry_date)); ?></td>
-                                                <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->actual_expiry ? date('d M y', strtotime($inventory_check->actual_expiry)) : '-'; ?></td>
+                                                <td class="dataTables_empty" style="text-align: center;" title="<?= $inventory_check->avz_codes ?? '-' ?>">
+                                                    <span class="badge badge-info"><?= $inventory_check->avz_code_count ?? 0 ?> codes</span>
+                                                </td>
+                                                <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->shelf ?? '-'; ?></td>
+                                                <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->actual_shelf ?? '-'; ?></td>
+                                                <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->inventory_group ?? '-'; ?></td>
+                                                <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->item_code ?? '-'; ?></td>
+                                                
+                                                <?php 
+                                                    // Check if batch or expiry was changed
+                                                    $batch_changed = ($inventory_check->system_batch && $inventory_check->actual_batch && 
+                                                                     $inventory_check->system_batch != $inventory_check->actual_batch);
+                                                    $expiry_changed = ($inventory_check->system_expiry && $inventory_check->actual_expiry && 
+                                                                      $inventory_check->system_expiry != $inventory_check->actual_expiry);
+                                                ?>
+                                                
+                                                <!-- System Batch -->
+                                                <td class="dataTables_empty" style="text-align: center; <?= $batch_changed ? 'text-decoration: line-through; color: #999;' : '' ?>">
+                                                    <?= $inventory_check->system_batch ?? '-'; ?>
+                                                </td>
+                                                
+                                                <!-- Actual Batch -->
+                                                <td class="dataTables_empty" style="text-align: center; <?= $batch_changed ? 'background-color: #fff3cd; font-weight: bold;' : '' ?>">
+                                                    <?= $inventory_check->actual_batch ?? '-'; ?>
+                                                    <?php if($batch_changed) { ?>
+                                                        <span class="label label-warning">Changed</span>
+                                                    <?php } ?>
+                                                </td>
+                                                
+                                                <!-- System Expiry -->
+                                                <td class="dataTables_empty" style="text-align: center; <?= $expiry_changed ? 'text-decoration: line-through; color: #999;' : '' ?>">
+                                                    <?= $inventory_check->system_expiry ? date('d M y', strtotime($inventory_check->system_expiry)) : '-'; ?>
+                                                </td>
+                                                
+                                                <!-- Actual Expiry -->
+                                                <td class="dataTables_empty" style="text-align: center; <?= $expiry_changed ? 'background-color: #fff3cd; font-weight: bold;' : '' ?>">
+                                                    <?= $inventory_check->actual_expiry ? date('d M y', strtotime($inventory_check->actual_expiry)) : '-'; ?>
+                                                    <?php if($expiry_changed) { ?>
+                                                        <span class="label label-warning">Changed</span>
+                                                    <?php } ?>
+                                                </td>
+                                                
+                                                <?php } else { ?>
+                                                <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->avz_code ?? '-'; ?></td>
                                                 <?php } ?>
-                                                <td class="dataTables_empty" style="text-align: center;"> <?= $inventory_check->quantity; ?></td>
-                                                <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->system_quantity ? $inventory_check->system_quantity : '0.00'; ?></td>
+                                                <td class="dataTables_empty" style="text-align: center; font-weight: bold;"> <?= number_format($inventory_check->quantity, 2); ?></td>
+                                                <td class="dataTables_empty" style="text-align: center;"><?= number_format($inventory_check->system_quantity, 2); ?></td>
+                                                <td class="dataTables_empty" style="text-align: center; <?= $variance > 0 ? 'color: green;' : ($variance < 0 ? 'color: red;' : '') ?> font-weight: bold;">
+                                                    <?= $variance > 0 ? '+' : '' ?><?= number_format($variance, 2) ?>
+                                                </td>
                                             </tr>
                                             <?php
                                     }
                                 }else{
                             ?>
-                                <tr><td colspan="11" class="dataTables_empty"><?= lang('Could not load data'); ?></td></tr>
+                                <tr><td colspan="16" class="dataTables_empty"><?= lang('Could not load data'); ?></td></tr>
                             <?php
                                 }
                             ?>

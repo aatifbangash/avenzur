@@ -74,6 +74,21 @@
                                         </select>
                                     </div>
                                     
+                                    <div class="form-group">
+                                        <label><?= lang('Batch Number'); ?></label>
+                                        <input type="text" id="modal_batch_number" class="form-control" placeholder="Enter batch number" />
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label><?= lang('Expiry Date'); ?></label>
+                                        <input type="text" id="modal_expiry_date" class="form-control date" placeholder="YYYY-MM-DD" />
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label><?= lang('Actual Quantity'); ?> *</label>
+                                        <input type="number" id="modal_quantity" class="form-control" placeholder="Enter quantity found" step="0.01" min="0" />
+                                    </div>
+                                    
                                     <input type="hidden" id="modal_warehouse_id" name="modal_warehouse_id" value="">
                                     <input type="hidden" id="modal_shelf" name="modal_shelf" value="">
                                 </form>
@@ -104,20 +119,19 @@
                             <thead>
                                 <tr>
                                     <th style="width: 3%;">#</th>
-                                    <th style="width: 13%;"><?= lang('Product Code'); ?></th>
-                                    <th style="width: 11%;"><?= lang('AVZ Code'); ?></th>
-                                    <th style="width: 11%;"><?= lang('Old Code'); ?></th>
-                                    <th style="width: 25%;"><?= lang('Product Name'); ?></th>
-                                    <th style="width: 10%;"><?= lang('Expiry Date'); ?></th>
-                                    <th style="width: 10%;">Actual Expiry</th>
+                                    <th style="width: 15%;"><?= lang('Product Code'); ?></th>
+                                    <th style="width: 12%;"><?= lang('Old Code'); ?></th>
+                                    <th style="width: 28%;"><?= lang('Product Name'); ?></th>
                                     <th style="width: 10%;"><?= lang('Batch Number'); ?></th>
                                     <th style="width: 10%;">Actual Batch</th>
+                                    <th style="width: 10%;"><?= lang('Expiry Date'); ?></th>
+                                    <th style="width: 10%;">Actual Expiry</th>
                                     <th style="width: 12%;"><?= lang('Actual Quantity'); ?> *</th>
                                 </tr>
                             </thead>
                             <tbody id="products_tbody">
                                 <tr>
-                                    <td colspan="10" class="text-center">
+                                    <td colspan="9" class="text-center">
                                         <em><?= lang('No products loaded'); ?></em>
                                     </td>
                                 </tr>
@@ -340,16 +354,15 @@ $(document).ready(function() {
                         html += '<tr>';
                         html += '<td>' + rowNum + '</td>';
                         html += '<td>' + productCode + '</td>';
-                        html += '<td>' + avzCode + '</td>';
                         html += '<td>' + itemCode + '</td>';
                         html += '<td>' + product.product_name + '</td>';
-                        html += '<td>' + expiryDate + '</td>';
-                        html += '<td>';
-                        html += '<input type="text" name="actual_expiry[]" class="form-control input-sm date" placeholder="Actual Expiry (DD/MM/YYYY)" value="' + displayExpiry + '">';
-                        html += '</td>';
                         html += '<td>' + batchNumber + '</td>';
                         html += '<td>';
                         html += '<input type="text" name="actual_batch[]" class="form-control input-sm" placeholder="Actual Batch" value="' + actualBatch + '">';
+                        html += '</td>';
+                        html += '<td>' + expiryDate + '</td>';
+                        html += '<td>';
+                        html += '<input type="text" name="actual_expiry[]" class="form-control input-sm date" placeholder="Actual Expiry (DD/MM/YYYY)" value="' + displayExpiry + '">';
                         html += '</td>';
                         html += '<td>';
                         html += '<input type="text" name="quantity[]" class="form-control input-sm text-right quantity_input" placeholder="Actual Quantity" pattern="[0-9]*" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, \'\');" value="' + savedQuantity + '">';
@@ -358,7 +371,6 @@ $(document).ready(function() {
                         html += '<input type="hidden" name="product_id[]" value="' + product.product_id + '">';
                         html += '<input type="hidden" name="batch_number[]" value="' + batchNumber + '">';
                         html += '<input type="hidden" name="expiry_date[]" value="' + expiryDate + '">';
-                        html += '<input type="hidden" name="avz_code[]" value="' + avzCode + '">';
                         html += '</tr>';
                     });
                     
@@ -559,6 +571,9 @@ $(document).ready(function() {
         
         // Reset modal fields
         $('#modal_product_select').val('').trigger('change');
+        $('#modal_batch_number').val('');
+        $('#modal_expiry_date').val('');
+        $('#modal_quantity').val('');
         
         // Populate modal with warehouse and shelf info
         $('#modal_warehouse_id').val(warehouse_id);
@@ -569,6 +584,15 @@ $(document).ready(function() {
         // Load products for this warehouse
         populateModalProducts(warehouse_id);
         
+        // Initialize datepicker for expiry date field
+        if ($.fn.datepicker) {
+            $('#modal_expiry_date').datepicker({
+                autoclose: true,
+                format: 'yyyy-mm-dd',
+                startDate: new Date()
+            });
+        }
+        
         $('#moveProductModal').modal('show');
     });
 
@@ -578,10 +602,20 @@ $(document).ready(function() {
     // Confirm add/move product (use modal selects, not old Search2)
     $('#confirm_move_product_btn').click(function() {
         var productId = $('#modal_product_select').val();
+        var batchNumber = $('#modal_batch_number').val();
+        var expiryDate = $('#modal_expiry_date').val();
+        var quantity = $('#modal_quantity').val();
+        
         if(!productId){
             bootbox.alert('Please select a product');
             return;
         }
+        
+        if(quantity === '' || quantity === null){
+            bootbox.alert('Please enter quantity');
+            return;
+        }
+        
         var warehouse_id = $('#modal_warehouse_id').val();
         var target_shelf = $('#modal_shelf').val();
 
@@ -592,7 +626,10 @@ $(document).ready(function() {
             data: $.extend({}, csrfData, {
                 product_id: productId,
                 warehouse_id: warehouse_id,
-                shelf: target_shelf
+                shelf: target_shelf,
+                batch_number: batchNumber,
+                expiry_date: expiryDate,
+                quantity: quantity
             }),
             success: function(response) {
                 // Update CSRF token
@@ -605,32 +642,31 @@ $(document).ready(function() {
                     var rowNum = $('#products_tbody tr').length + 1;
                     var p = response.product;
                     var productCode = p.product_code || '';
-                    var avzCode = p.avz_item_code || 'N/A';
                     var itemCode = p.item_code || 'N/A';
-                    var expiryDate = response.expiry_date || 'N/A';
-                    var savedQuantity = response.saved_quantity || '';
+                    var expiryDate = response.expiry_date || '';
+                    var batchNumber = response.batch_number || '';
+                    var quantity = response.quantity || '';
 
                     var html = '<tr>';
                     html += '<td>' + rowNum + '</td>';
                     html += '<td>' + productCode + '</td>';
-                    html += '<td>' + avzCode + '</td>';
                     html += '<td>' + itemCode + '</td>';
                     html += '<td>' + p.product_name + '</td>';
-                    html += '<td>' + (response.batch_number || 'N/A') + '</td>';
+                    html += '<td>' + batchNumber + '</td>';
+                    html += '<td>';
+                    html += '<input type="text" name="actual_batch[]" class="form-control input-sm" placeholder="Actual Batch" value="' + batchNumber + '">';
+                    html += '</td>';
                     html += '<td>' + expiryDate + '</td>';
                     html += '<td>';
+                    html += '<input type="text" name="actual_expiry[]" class="form-control input-sm date" placeholder="Actual Expiry" value="' + expiryDate + '">';
+                    html += '</td>';
+                    html += '<td>';
+                    html += '<input type="number" name="quantity[]" class="form-control input-sm text-right quantity_input" placeholder="Enter quantity" step="0.01" min="0" value="' + quantity + '">';
+                    html += '</td>';
+                    // Hidden fields to submit product data
                     html += '<input type="hidden" name="product_id[]" value="' + p.product_id + '">';
-                    html += '<input type="hidden" name="batch_number[]" value="' + (response.batch_number || '') + '">';
-                    html += '<input type="hidden" name="expiry_date[]" value="' + (response.expiry_date || '') + '">';
-                    html += '<input type="hidden" name="avz_code[]" value="' + (p.avz_item_code || '') + '">';
-                    html += '<input type="number" name="quantity[]" class="form-control input-sm text-right quantity_input" placeholder="Enter quantity" step="0.01" min="0" value="' + savedQuantity + '">';
-                    html += '</td>';
-                    html += '<td>';
-                    html += '<input type="text" name="actual_batch[]" class="form-control input-sm" placeholder="Actual Batch" value="' + (p.actual_batch ? p.actual_batch : '') + '">';
-                    html += '</td>';
-                    html += '<td>';
-                    html += '<input type="text" name="actual_expiry[]" class="form-control input-sm date" placeholder="Actual Expiry (YYYY-MM-DD)" value="' + (p.actual_expiry ? p.actual_expiry : '') + '">';
-                    html += '</td>';
+                    html += '<input type="hidden" name="batch_number[]" value="' + batchNumber + '">';
+                    html += '<input type="hidden" name="expiry_date[]" value="' + expiryDate + '">';
                     html += '</tr>';
                     // After appending, initialize datepicker for new actual_expiry field
                     setTimeout(function(){ if ($.fn.datepicker) { $(".date").datepicker({ autoclose: true, format: 'yyyy-mm-dd' }); } }, 100);
@@ -641,9 +677,11 @@ $(document).ready(function() {
                     existingInput.each(function() {
                         var row = $(this).closest('tr');
                         var existingBatch = row.find('input[name="batch_number[]"]').val() || '';
-                        if(existingBatch === (response.batch_number || '')){
+                        if(existingBatch === batchNumber){
                             // Update quantity input
-                            row.find('input[name="quantity[]"]').val(savedQuantity);
+                            row.find('input[name="quantity[]"]').val(quantity);
+                            row.find('input[name="actual_batch[]"]').val(batchNumber);
+                            row.find('input[name="actual_expiry[]"]').val(expiryDate);
                             updated = true;
                             return false; // break loop
                         }
@@ -661,13 +699,8 @@ $(document).ready(function() {
 
                     $('#submit_btn').prop('disabled', false);
                     $('#moveProductModal').modal('hide');
-                    var msg = 'Product shelf updated successfully';
-                    if(response.previous_shelf && response.previous_shelf !== '' && response.previous_shelf !== target_shelf){
-                        msg = 'Product moved from ' + response.previous_shelf + ' to ' + target_shelf + ' successfully';
-                    } else {
-                        msg += ' to ' + target_shelf;
-                    }
-                    bootbox.alert(msg);
+                    
+                    bootbox.alert(response.msg || 'Product added to inventory check successfully');
                 } else {
                     bootbox.alert(response.msg || 'Error adding/moving product');
                 }
