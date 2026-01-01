@@ -54,7 +54,7 @@
                                             <tr>
                                                 <td class="dataTables_empty"><?= $count; ?></td>
                                                 <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->item_code; ?></td>
-                                                <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->avz_code; ?></td>
+                                                <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->batch_no; ?></td>
                                                 <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->item_name ? $inventory_check->item_name : '-'; ?></td>
                                                 <td class="dataTables_empty" style="text-align: center;"> <?= $inventory_check->old_qty ? $inventory_check->old_qty : '0.00'; ?></td>
                                                 <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->new_qty ? $inventory_check->new_qty : '0.00'; ?></td>

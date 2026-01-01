@@ -214,16 +214,16 @@
                 <li class="newmenu-item has-sub">
                     <a href="#" class="newmenu-link">
                         <i class="fa fa-money"></i>
-                        <span><?= lang('Credit Notes'); ?></span>
+                        <span><?= lang('Customer Memo'); ?></span>
                         <i class="fa fa-chevron-right newmenu-chevron"></i>
                     </a>
                     <ul class="newmenu-sub">
                        
                         <?php if($Admin || $Owner || $this->GP['customer-payment-add']){ ?>
-                        <li><a href="<?= admin_url('customers/credit_memo'); ?>" class="newmenu-link"><i class="fa fa-hand-o-up"></i> <?= lang('Add Credit Note'); ?></a></li>
+                        <li><a href="<?= admin_url('customers/credit_memo'); ?>" class="newmenu-link"><i class="fa fa-hand-o-up"></i> <?= lang('Add Customer Memo'); ?></a></li>
                         <?php } ?>
                         <?php if($Admin || $Owner || $this->GP['customer-payment-index']){ ?>
-                        <li><a href="<?= admin_url('customers/list_credit_memo'); ?>" class="newmenu-link"><i class="fa fa-hand-o-up"></i> <?= lang('List Credit Notes'); ?></a></li>
+                        <li><a href="<?= admin_url('customers/list_credit_memo'); ?>" class="newmenu-link"><i class="fa fa-hand-o-up"></i> <?= lang('List Customer Memos'); ?></a></li>
                         <?php } ?>
                     </ul>
                 </li>
@@ -415,17 +415,17 @@
                 <li class="newmenu-item has-sub">
                     <a href="#" class="newmenu-link">
                         <i class="fa fa-credit-card"></i>
-                        <span><?= lang('Debit Notes'); ?></span>
+                        <span><?= lang('Supplier Memo'); ?></span>
                         <i class="fa fa-chevron-right newmenu-chevron"></i>
                     </a>
                     <ul class="newmenu-sub">
                         
                         <?php if($Admin || $Owner || $this->GP['supplier-payment-add']){ ?>
-                        <li><a href="<?= admin_url('suppliers/debit_memo'); ?>" class="newmenu-link"><i class="fa fa-hand-o-up"></i> <?= lang('Add Debit Note'); ?></a></li>
+                        <li><a href="<?= admin_url('suppliers/debit_memo'); ?>" class="newmenu-link"><i class="fa fa-hand-o-up"></i> <?= lang('Add Supplier Memo'); ?></a></li>
                         <?php } ?>
 
                         <?php if($Admin || $Owner || $this->GP['supplier-payment-index']){ ?>
-                        <li><a href="<?= admin_url('suppliers/list_debit_memo'); ?>" class="newmenu-link"><i class="fa fa-hand-o-up"></i> <?= lang('List Debit Notes'); ?></a></li>
+                        <li><a href="<?= admin_url('suppliers/list_debit_memo'); ?>" class="newmenu-link"><i class="fa fa-hand-o-up"></i> <?= lang('List Supplier Memos'); ?></a></li>
                         <?php } ?>
                     </ul>
                 </li>

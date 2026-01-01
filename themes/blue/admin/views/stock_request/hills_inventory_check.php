@@ -119,19 +119,17 @@
                             <thead>
                                 <tr>
                                     <th style="width: 3%;">#</th>
-                                    <th style="width: 15%;"><?= lang('Product Code'); ?></th>
-                                    <th style="width: 12%;"><?= lang('Old Code'); ?></th>
-                                    <th style="width: 28%;"><?= lang('Product Name'); ?></th>
-                                    <th style="width: 10%;"><?= lang('Batch Number'); ?></th>
-                                    <th style="width: 10%;">Actual Batch</th>
-                                    <th style="width: 10%;"><?= lang('Expiry Date'); ?></th>
-                                    <th style="width: 10%;">Actual Expiry</th>
-                                    <th style="width: 12%;"><?= lang('Actual Quantity'); ?> *</th>
+                                    <th style="width: 18%;"><?= lang('Product Code'); ?></th>
+                                    <th style="width: 15%;"><?= lang('Old Code'); ?></th>
+                                    <th style="width: 35%;"><?= lang('Product Name'); ?></th>
+                                    <th style="width: 12%;"><?= lang('Batch Number'); ?></th>
+                                    <th style="width: 12%;"><?= lang('Expiry Date'); ?></th>
+                                    <th style="width: 15%;"><?= lang('Actual Quantity'); ?> *</th>
                                 </tr>
                             </thead>
                             <tbody id="products_tbody">
                                 <tr>
-                                    <td colspan="9" class="text-center">
+                                    <td colspan="7" class="text-center">
                                         <em><?= lang('No products loaded'); ?></em>
                                     </td>
                                 </tr>
@@ -299,7 +297,7 @@ $(document).ready(function() {
         }
 
         // Show loading
-        $('#products_tbody').html('<tr><td colspan="10" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading products...</td></tr>');
+        $('#products_tbody').html('<tr><td colspan="7" class="text-center"><i class="fa fa-spinner fa-spin"></i> Loading products...</td></tr>');
         $('#products_section').show();
         $('#submit_btn').prop('disabled', true);
 
@@ -330,23 +328,9 @@ $(document).ready(function() {
                     $.each(response.products, function(index, product) {
                         var rowNum = index + 1;
                         var productCode = product.product_code || '';
-                        var avzCode = product.avz_item_code || 'N/A';
                         var itemCode = product.item_code || 'N/A';
                         var expiryDate = product.expiry_date ? product.expiry_date : 'N/A';
                         var batchNumber = product.batch_number || 'N/A';
-                        var actualBatch = product.actual_batch || '';
-                        var actualExpiry = product.actual_expiry || '';
-                        
-                        // Convert yyyy-mm-dd to dd/mm/yyyy for display
-                        var displayExpiry = '';
-                        if(actualExpiry && actualExpiry !== 'N/A'){
-                            var dateParts = actualExpiry.split('-');
-                            if(dateParts.length === 3){
-                                displayExpiry = dateParts[2] + '/' + dateParts[1] + '/' + dateParts[0];
-                            } else {
-                                displayExpiry = actualExpiry;
-                            }
-                        }
                         
                         // Ensure quantity is integer (no decimals)
                         var savedQuantity = product.saved_quantity ? parseInt(product.saved_quantity) : '';
@@ -357,13 +341,7 @@ $(document).ready(function() {
                         html += '<td>' + itemCode + '</td>';
                         html += '<td>' + product.product_name + '</td>';
                         html += '<td>' + batchNumber + '</td>';
-                        html += '<td>';
-                        html += '<input type="text" name="actual_batch[]" class="form-control input-sm" placeholder="Actual Batch" value="' + actualBatch + '">';
-                        html += '</td>';
                         html += '<td>' + expiryDate + '</td>';
-                        html += '<td>';
-                        html += '<input type="text" name="actual_expiry[]" class="form-control input-sm date" placeholder="Actual Expiry (DD/MM/YYYY)" value="' + displayExpiry + '">';
-                        html += '</td>';
                         html += '<td>';
                         html += '<input type="text" name="quantity[]" class="form-control input-sm text-right quantity_input" placeholder="Actual Quantity" pattern="[0-9]*" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, \'\');" value="' + savedQuantity + '">';
                         html += '</td>';
@@ -377,8 +355,6 @@ $(document).ready(function() {
                     $('#products_tbody').html(html);
                     $('#submit_btn').prop('disabled', false);
                     $('#close_shelf_btn').prop('disabled', false);
-                    // Initialize datepicker for actual_expiry fields with dd/mm/yyyy format
-                    if ($.fn.datepicker) { $(".date").datepicker({ autoclose: true, format: 'dd/mm/yyyy' }); }
                     
                     // Show request status
                     if(response.is_existing_request) {
@@ -397,7 +373,7 @@ $(document).ready(function() {
                     }, 100);
                     
                 } else {
-                    $('#products_tbody').html('<tr><td colspan="10" class="text-center"><em>No products found for this shelf</em></td></tr>');
+                    $('#products_tbody').html('<tr><td colspan="7" class="text-center"><em>No products found for this shelf</em></td></tr>');
                     $('#submit_btn').prop('disabled', true);
                     bootbox.alert(response.msg || 'No products found for this shelf');
                 }
@@ -653,13 +629,7 @@ $(document).ready(function() {
                     html += '<td>' + itemCode + '</td>';
                     html += '<td>' + p.product_name + '</td>';
                     html += '<td>' + batchNumber + '</td>';
-                    html += '<td>';
-                    html += '<input type="text" name="actual_batch[]" class="form-control input-sm" placeholder="Actual Batch" value="' + batchNumber + '">';
-                    html += '</td>';
                     html += '<td>' + expiryDate + '</td>';
-                    html += '<td>';
-                    html += '<input type="text" name="actual_expiry[]" class="form-control input-sm date" placeholder="Actual Expiry" value="' + expiryDate + '">';
-                    html += '</td>';
                     html += '<td>';
                     html += '<input type="number" name="quantity[]" class="form-control input-sm text-right quantity_input" placeholder="Enter quantity" step="0.01" min="0" value="' + quantity + '">';
                     html += '</td>';
@@ -668,8 +638,6 @@ $(document).ready(function() {
                     html += '<input type="hidden" name="batch_number[]" value="' + batchNumber + '">';
                     html += '<input type="hidden" name="expiry_date[]" value="' + expiryDate + '">';
                     html += '</tr>';
-                    // After appending, initialize datepicker for new actual_expiry field
-                    setTimeout(function(){ if ($.fn.datepicker) { $(".date").datepicker({ autoclose: true, format: 'yyyy-mm-dd' }); } }, 100);
 
                     // Check for existing product+batch row and update it to avoid duplicates
                     var existingInput = $('#products_tbody').find('input[name="product_id[]"][value="' + p.product_id + '"]');
@@ -680,8 +648,6 @@ $(document).ready(function() {
                         if(existingBatch === batchNumber){
                             // Update quantity input
                             row.find('input[name="quantity[]"]').val(quantity);
-                            row.find('input[name="actual_batch[]"]').val(batchNumber);
-                            row.find('input[name="actual_expiry[]"]').val(expiryDate);
                             updated = true;
                             return false; // break loop
                         }
