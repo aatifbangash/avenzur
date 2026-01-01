@@ -257,18 +257,17 @@ class Stock_request_model extends CI_Model
     {
         $sql = "
         SELECT
-            COALESCE(sys.product_id, chk.product_id) AS product_id,
-
-            sys.batch_number AS batch_number,
+            chk.product_id,
             chk.batch_number AS actual_batch,
-
-            sys.expiry_date AS expiry_date,
             chk.expiry_date AS actual_expiry,
+            chk.excel_quantity AS quantity,
+            chk.shelf AS actual_shelf,
+            chk.system_batch_number AS system_batch,
+            chk.system_expiry_date AS system_expiry,
 
-            IFNULL(chk.excel_quantity, 0) AS quantity,
-            IFNULL(sys.system_quantity, 0) AS system_quantity,
-
-            COALESCE(sys.avz_code, chk.avz_code) AS avz_code,
+            sys.system_quantity,
+            sys.avz_code_count,
+            sys.avz_codes,
             sys.net_unit_cost,
             sys.net_unit_sale,
             sys.real_unit_cost,
@@ -289,17 +288,17 @@ class Stock_request_model extends CI_Model
                 product_id,
                 batch_number,
                 expiry_date,
-                avz_code,
-                user_id,
+                system_batch_number,
+                system_expiry_date,
+                shelf,
+                MAX(user_id) AS user_id,
                 SUM(quantity) AS excel_quantity
             FROM sma_inventory_check_items
             WHERE inv_check_id = ?
             GROUP BY
-                avz_code,
                 product_id,
                 batch_number,
-                expiry_date,
-                user_id
+                expiry_date
         ) chk
 
         LEFT JOIN
@@ -309,7 +308,8 @@ class Stock_request_model extends CI_Model
                 batch_number,
                 expiry_date,
                 SUM(quantity) AS system_quantity,
-                avz_item_code AS avz_code,
+                COUNT(DISTINCT avz_item_code) AS avz_code_count,
+                GROUP_CONCAT(DISTINCT avz_item_code SEPARATOR ', ') AS avz_codes,
                 MAX(net_unit_cost) AS net_unit_cost,
                 MAX(net_unit_sale) AS net_unit_sale,
                 MAX(real_unit_cost) AS real_unit_cost,
@@ -317,28 +317,27 @@ class Stock_request_model extends CI_Model
             FROM sma_inventory_movements
             WHERE location_id = ?
             GROUP BY
-                avz_item_code,
                 product_id,
                 batch_number,
                 expiry_date
         ) sys
-            ON chk.avz_code = sys.avz_code
-            AND chk.product_id = sys.product_id
+            ON chk.product_id = sys.product_id
+            AND COALESCE(chk.system_batch_number, chk.batch_number) = sys.batch_number
+            AND (COALESCE(chk.system_expiry_date, chk.expiry_date) = sys.expiry_date 
+                 OR (COALESCE(chk.system_expiry_date, chk.expiry_date) IS NULL AND sys.expiry_date IS NULL))
 
         LEFT JOIN sma_products p
-            ON p.id = COALESCE(sys.product_id, chk.product_id)
+            ON p.id = chk.product_id
 
         LEFT JOIN sma_users u
             ON u.id = chk.user_id
 
-        HAVING
-            quantity <> 0
-            OR system_quantity <> 0
+        WHERE chk.excel_quantity IS NOT NULL
 
         ORDER BY
             product_name ASC,
-            sys.batch_number ASC,
-            sys.expiry_date ASC
+            chk.batch_number ASC,
+            chk.expiry_date ASC
         ";
 
         $query = $this->db->query($sql, [$req_id, $location_id]);
