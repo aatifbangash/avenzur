@@ -321,12 +321,11 @@ class stock_request extends MY_Controller
                 // Get ALL avz_codes for this batch+expiry from inventory_movements
                 $this->db->select('im.avz_item_code, im.quantity, im.batch_number, im.expiry_date,
                                  p.code as product_code, p.name as product_name, p.unit as product_unit,
-                                 COALESCE(pm.cost, p.cost) as net_unit_cost,
-                                 COALESCE(pm.price, p.price) as net_unit_sale,
+                                 im.net_unit_cost,
+                                 im.net_unit_sale,
                                  p.tax_rate');
                 $this->db->from('sma_inventory_movements im');
                 $this->db->join('sma_products p', 'p.id = im.product_id', 'left');
-                $this->db->join('sma_product_prices pm', 'pm.product_id = im.product_id AND pm.warehouse_id = im.location_id', 'left');
                 $this->db->where('im.product_id', $product_id);
                 $this->db->where('im.batch_number', $batch_number);
                 $this->db->where('im.location_id', $location_id);
@@ -337,8 +336,94 @@ class stock_request extends MY_Controller
                 
                 $avz_entries = $this->db->get()->result();
                 
+                // Handle products found on shelf but not in system (surplus items)
                 if(empty($avz_entries)){
-                    continue; // Skip if no system records found
+                    // This product was found but not in system - treat as surplus (system_quantity = 0)
+                    $product_details = $this->transfers_model->getProductById($product_id);
+                    
+                    if(!$product_details){
+                        continue; // Skip if product not found
+                    }
+                    
+                    // Use default cost from product master or 0
+                    $net_cost = $product_details->cost ?? 0;
+                    $unit_cost = $net_cost;
+                    $item_net_cost = $net_cost;
+                    $pr_item_tax = 0;
+                    $tax = 0;
+                    
+                    // Calculate tax if applicable
+                    if($product_details->tax_rate && $product_details->tax_rate != 0){
+                        $tax_details = $this->site->getTaxRateByID($product_details->tax_rate);
+                        if($tax_details){
+                            $ctax = $this->site->calculateTax($product_details, $tax_details, $unit_cost);
+                            $item_tax = $ctax['amount'];
+                            $tax = $ctax['tax'];
+                            
+                            if($product_details->tax_method != 1){
+                                $item_net_cost = $unit_cost - $item_tax;
+                            }
+                            
+                            $pr_item_tax = $this->sma->formatDecimal(($item_tax * $actual_quantity), 4);
+                        }
+                    }
+                    
+                    $subtotal = $this->sma->formatDecimal((($item_net_cost * $actual_quantity) + $pr_item_tax), 4);
+                    $unit = $this->site->getUnitByID($product_details->unit);
+                    
+                    // Generate unique AVZ code for new entry
+                    //$avz_code = 'AVZ-NEW-' . $product_id . '-' . time();
+                    $avz_code = $this->sma->generateUUIDv4();
+                    
+                    // Create product entry for transfer IN from adjustment store
+                    $product = [
+                        'product_id'        => $product_id,
+                        'product_code'      => $product_details->code,
+                        'product_name'      => $product_details->name,
+                        'net_unit_cost'     => $net_cost,
+                        'unit_cost'         => $this->sma->formatDecimal($item_net_cost + ($item_tax ?? 0), 4),
+                        'quantity'          => $actual_quantity,
+                        'product_unit_id'   => $product_details->unit,
+                        'product_unit_code' => $unit ? $unit->code : '',
+                        'unit_quantity'     => $actual_quantity,
+                        'quantity_balance'  => $actual_quantity,
+                        'warehouse_id'      => $location_id,
+                        'item_tax'          => $pr_item_tax,
+                        'tax_rate_id'       => $product_details->tax_rate,
+                        'tax'               => $tax,
+                        'subtotal'          => $subtotal,
+                        'expiry'            => $expiry_date,
+                        'real_unit_cost'    => $net_cost,
+                        'sale_price'        => $product_details->price ?? 0,
+                        'date'              => date('Y-m-d'),
+                        'batchno'           => $batch_number,
+                        'real_cost'         => $net_cost,
+                        'avz_item_code'     => $avz_code
+                    ];
+                    
+                    // Add to IN bucket (surplus found)
+                    $products_in[] = $product;
+                    $product_tax_in += $pr_item_tax;
+                    $total_in += $this->sma->formatDecimal(($item_net_cost * $actual_quantity), 4);
+                    $grand_total_cost_price_in += ($net_cost * $actual_quantity);
+                    
+                    // Add to report data
+                    $inventory_check_report_data[] = [
+                        'inv_check_id'   => $inventory_check_request_id,
+                        'avz_code'       => $avz_code,
+                        'old_qty'        => 0,
+                        'new_qty'        => $actual_quantity,
+                        'item_code'      => $product_details->code,
+                        'item_name'      => $product_details->name,
+                        'variance'       => $actual_quantity,
+                        'old_cost_price' => 0,
+                        'new_cost_price' => ($net_cost * $actual_quantity),
+                        'sales_price'    => $product_details->price ?? 0,
+                        'short'          => ($product_details->price ?? 0) * $actual_quantity,
+                        'batch_no'       => $batch_number
+                    ];
+                    
+                    continue; // Move to next item
                 }
                 
                 // Calculate system total quantity across all avz_codes
@@ -354,48 +439,13 @@ class stock_request extends MY_Controller
                     continue; // No adjustment needed
                 }
                 
-                // Proportional distribution of variance across all avz_codes
-                $remaining_variance = $variance; // Track rounding remainder
-                $avz_count = count($avz_entries);
-                
-                foreach($avz_entries as $index => $entry){
+                // Determine direction first
+                if($variance > 0){
+                    // SURPLUS (Transfer IN): Use FIRST avz_code only - simple case
+                    $entry = $avz_entries[0];
                     $avz_code = $entry->avz_item_code;
-                    $avz_quantity = $entry->quantity;
+                    $adjusted_quantity = abs($variance);
                     
-                    // Calculate proportional adjustment
-                    if($system_quantity > 0){
-                        $proportion = $avz_quantity / $system_quantity;
-                        $avz_adjustment = round($variance * $proportion, 2);
-                    } else {
-                        // If system quantity is 0, distribute evenly
-                        $avz_adjustment = round($variance / $avz_count, 2);
-                    }
-                    
-                    // On last item, apply remaining variance to avoid rounding errors
-                    if($index == $avz_count - 1){
-                        $avz_adjustment = $remaining_variance;
-                    } else {
-                        $remaining_variance -= $avz_adjustment;
-                    }
-                    
-                    $adjusted_quantity = abs($avz_adjustment);
-                    
-                    if($adjusted_quantity == 0){
-                        continue; // Skip if no adjustment for this avz_code
-                    }
-                    
-                    // Determine direction (shortage or excess)
-                    if($avz_adjustment < 0){
-                        // Shortage: Transfer OUT to adjustment store
-                        $from_warehouse = $location_id;
-                        $to_warehouse = $adj_warehouse->id;
-                    } else {
-                        // Excess: Transfer IN from adjustment store
-                        $from_warehouse = $adj_warehouse->id;
-                        $to_warehouse = $location_id;
-                    }
-                    
-                    // Prepare product data for transfer
                     $product_details = $this->transfers_model->getProductById($product_id);
                     $net_cost = $entry->net_unit_cost;
                     $unit_cost = $net_cost;
@@ -433,7 +483,7 @@ class stock_request extends MY_Controller
                         'product_unit_code' => $unit ? $unit->code : '',
                         'unit_quantity'     => $adjusted_quantity,
                         'quantity_balance'  => $adjusted_quantity,
-                        'warehouse_id'      => $to_warehouse,
+                        'warehouse_id'      => $location_id,
                         'item_tax'          => $pr_item_tax,
                         'tax_rate_id'       => $entry->tax_rate,
                         'tax'               => $tax,
@@ -447,33 +497,128 @@ class stock_request extends MY_Controller
                         'avz_item_code'     => $avz_code
                     ];
                     
-                    // Add to appropriate bucket
-                    if($to_warehouse == $adj_warehouse->id){
-                        $products_out[] = $product;
-                        $product_tax_out += $pr_item_tax;
-                        $total_out += $this->sma->formatDecimal(($item_net_cost * $adjusted_quantity), 4);
-                        $grand_total_cost_price_out += ($net_cost * $adjusted_quantity);
-                    } else {
-                        $products_in[] = $product;
-                        $product_tax_in += $pr_item_tax;
-                        $total_in += $this->sma->formatDecimal(($item_net_cost * $adjusted_quantity), 4);
-                        $grand_total_cost_price_in += ($net_cost * $adjusted_quantity);
-                    }
+                    $products_in[] = $product;
+                    $product_tax_in += $pr_item_tax;
+                    $total_in += $this->sma->formatDecimal(($item_net_cost * $adjusted_quantity), 4);
+                    $grand_total_cost_price_in += ($net_cost * $adjusted_quantity);
                     
                     // Add to report data
                     $inventory_check_report_data[] = [
                         'inv_check_id'   => $inventory_check_request_id,
                         'avz_code'       => $avz_code,
-                        'old_qty'        => $avz_quantity,
-                        'new_qty'        => $avz_quantity + $avz_adjustment,
+                        'old_qty'        => $system_quantity,
+                        'new_qty'        => $actual_quantity,
                         'item_code'      => $entry->product_code,
                         'item_name'      => $entry->product_name,
-                        'variance'       => $avz_adjustment,
-                        'old_cost_price' => ($net_cost * $avz_quantity),
-                        'new_cost_price' => ($net_cost * ($avz_quantity + $avz_adjustment)),
+                        'variance'       => $variance,
+                        'old_cost_price' => ($net_cost * $system_quantity),
+                        'new_cost_price' => ($net_cost * $actual_quantity),
                         'sales_price'    => $entry->net_unit_sale,
-                        'short'          => $entry->net_unit_sale * $avz_adjustment,
-                        'batch_no'       => $entry->batch_number
+                        'short'          => $entry->net_unit_sale * $variance,
+                        'batch_no'       => $batch_number  // Use batch from check_item, not system
+                    ];
+                    
+                } else {
+                    // SHORTAGE (Transfer OUT): May need MULTIPLE avz_codes to fulfill
+                    $shortage_remaining = abs($variance);
+                    
+                    // Store first entry data for report (use first AVZ details but total system quantity)
+                    $first_entry = $avz_entries[0];
+                    $report_avz_code = $first_entry->avz_item_code;
+                    $report_net_cost = $first_entry->net_unit_cost;
+                    $report_product_code = $first_entry->product_code;
+                    $report_product_name = $first_entry->product_name;
+                    $report_net_unit_sale = $first_entry->net_unit_sale;
+                    $report_batch_number = $first_entry->batch_number;
+                    
+                    foreach($avz_entries as $entry){
+                        if($shortage_remaining <= 0){
+                            break; // Shortage fully covered
+                        }
+                        
+                        $avz_code = $entry->avz_item_code;
+                        $avz_quantity = $entry->quantity;
+                        
+                        // Take what we can from this AVZ (min of shortage_remaining or avz_quantity)
+                        $adjusted_quantity = min($shortage_remaining, $avz_quantity);
+                        
+                        if($adjusted_quantity <= 0){
+                            continue; // Nothing to take from this AVZ
+                        }
+                        
+                        $product_details = $this->transfers_model->getProductById($product_id);
+                        $net_cost = $entry->net_unit_cost;
+                        $unit_cost = $net_cost;
+                        $item_net_cost = $net_cost;
+                        $pr_item_tax = 0;
+                        $tax = 0;
+                        
+                        // Calculate tax if applicable
+                        if($entry->tax_rate && $entry->tax_rate != 0){
+                            $tax_details = $this->site->getTaxRateByID($entry->tax_rate);
+                            if($tax_details){
+                                $ctax = $this->site->calculateTax($product_details, $tax_details, $unit_cost);
+                                $item_tax = $ctax['amount'];
+                                $tax = $ctax['tax'];
+                                
+                                if($product_details && $product_details->tax_method != 1){
+                                    $item_net_cost = $unit_cost - $item_tax;
+                                }
+                                
+                                $pr_item_tax = $this->sma->formatDecimal(($item_tax * $adjusted_quantity), 4);
+                            }
+                        }
+                        
+                        $subtotal = $this->sma->formatDecimal((($item_net_cost * $adjusted_quantity) + $pr_item_tax), 4);
+                        $unit = $this->site->getUnitByID($entry->product_unit);
+                        
+                        $product = [
+                            'product_id'        => $product_id,
+                            'product_code'      => $entry->product_code,
+                            'product_name'      => $entry->product_name,
+                            'net_unit_cost'     => $net_cost,
+                            'unit_cost'         => $this->sma->formatDecimal($item_net_cost + ($item_tax ?? 0), 4),
+                            'quantity'          => $adjusted_quantity,
+                            'product_unit_id'   => $entry->product_unit,
+                            'product_unit_code' => $unit ? $unit->code : '',
+                            'unit_quantity'     => $adjusted_quantity,
+                            'quantity_balance'  => $adjusted_quantity,
+                            'warehouse_id'      => $adj_warehouse->id,
+                            'item_tax'          => $pr_item_tax,
+                            'tax_rate_id'       => $entry->tax_rate,
+                            'tax'               => $tax,
+                            'subtotal'          => $subtotal,
+                            'expiry'            => $entry->expiry_date,
+                            'real_unit_cost'    => $net_cost,
+                            'sale_price'        => $entry->net_unit_sale,
+                            'date'              => date('Y-m-d'),
+                            'batchno'           => $entry->batch_number,
+                            'real_cost'         => $net_cost,
+                            'avz_item_code'     => $avz_code
+                        ];
+                        
+                        $products_out[] = $product;
+                        $product_tax_out += $pr_item_tax;
+                        $total_out += $this->sma->formatDecimal(($item_net_cost * $adjusted_quantity), 4);
+                        $grand_total_cost_price_out += ($net_cost * $adjusted_quantity);
+                        
+                        $shortage_remaining -= $adjusted_quantity;
+                    }
+                    
+                    // Add SINGLE report entry for this batch+expiry with TOTAL system quantity
+                    $inventory_check_report_data[] = [
+                        'inv_check_id'   => $inventory_check_request_id,
+                        'avz_code'       => $report_avz_code,
+                        'old_qty'        => $system_quantity,  // Use total system quantity (correct!)
+                        'new_qty'        => $actual_quantity,
+                        'item_code'      => $report_product_code,
+                        'item_name'      => $report_product_name,
+                        'variance'       => $variance,  // Total variance (negative)
+                        'old_cost_price' => ($report_net_cost * $system_quantity),
+                        'new_cost_price' => ($report_net_cost * $actual_quantity),
+                        'sales_price'    => $report_net_unit_sale,
+                        'short'          => $report_net_unit_sale * $variance,
+                        'batch_no'       => $batch_number  // Use batch from check_item, not system
                     ];
                 }
             }
@@ -1659,7 +1804,7 @@ class stock_request extends MY_Controller
         
         // If there's a pending request, get saved quantities by batch+expiry
         if($current_request_id && $products){
-            $this->db->select('product_id, batch_number, expiry_date, system_batch_number, system_expiry_date, shelf, SUM(quantity) as quantity', FALSE);
+            $this->db->select('product_id, batch_number, expiry_date, shelf, SUM(quantity) as quantity', FALSE);
             $this->db->from('sma_inventory_check_items');
             $this->db->where('inv_check_id', $current_request_id);
             $this->db->where('shelf', $shelf);
@@ -1668,20 +1813,11 @@ class stock_request extends MY_Controller
             $saved_items = $saved_query->result();
 
             // Create lookup array for saved values
-            // Try to match by SYSTEM batch first (handles changed batches), then by actual batch
             $saved_lookup = [];
             foreach($saved_items as $saved){
-                // Create key using system batch if available (for changed batches)
-                if($saved->system_batch_number){
-                    $key = $saved->product_id . '_' . $saved->system_batch_number . '_' . $saved->system_expiry_date;
-                } else {
-                    // Fallback to actual batch (for unchanged batches)
-                    $key = $saved->product_id . '_' . $saved->batch_number . '_' . $saved->expiry_date;
-                }
+                $key = $saved->product_id . '_' . $saved->batch_number . '_' . $saved->expiry_date;
                 $saved_lookup[$key] = [
-                    'quantity' => $saved->quantity,
-                    'actual_batch' => $saved->batch_number,
-                    'actual_expiry' => $saved->expiry_date
+                    'quantity' => $saved->quantity
                 ];
             }
             
@@ -1690,12 +1826,8 @@ class stock_request extends MY_Controller
                 $key = $product->product_id . '_' . $product->batch_number . '_' . $product->expiry_date;
                 if(isset($saved_lookup[$key])){
                     $product->saved_quantity = $saved_lookup[$key]['quantity'];
-                    $product->actual_batch = $saved_lookup[$key]['actual_batch'];
-                    $product->actual_expiry = $saved_lookup[$key]['actual_expiry'];
                 } else {
                     $product->saved_quantity = null;
-                    $product->actual_batch = null;
-                    $product->actual_expiry = null;
                 }
             }
         }
@@ -1754,10 +1886,8 @@ class stock_request extends MY_Controller
             // Get posted product data
             $shelf = $this->input->post('shelf');
             $product_ids = $this->input->post('product_id');
-            $system_batch_numbers = $this->input->post('batch_number');
-            $system_expiry_dates = $this->input->post('expiry_date');
-            $actual_batch_numbers = $this->input->post('actual_batch');
-            $actual_expiry_dates = $this->input->post('actual_expiry');
+            $batch_numbers = $this->input->post('batch_number');
+            $expiry_dates = $this->input->post('expiry_date');
             $quantities = $this->input->post('quantity');
 
             if($product_ids && is_array($product_ids)){
@@ -1765,24 +1895,21 @@ class stock_request extends MY_Controller
                 foreach($product_ids as $index => $product_id){
                     $quantity = $quantities[$index] ?? '';
                     
-                    // Get both system and actual values
-                    $actual_batch = $actual_batch_numbers[$index] ?? '';
-                    $system_batch = $system_batch_numbers[$index] ?? '';
-                    $actual_expiry = $actual_expiry_dates[$index] ?? '';
-                    $system_expiry = $system_expiry_dates[$index] ?? '';
+                    // Get batch and expiry (no more separate actual/system)
+                    $batch_number = $batch_numbers[$index] ?? '';
+                    $expiry_date = $expiry_dates[$index] ?? '';
                     
-                    // Determine what to save (use actual if provided, otherwise system)
-                    $batch_to_save = !empty($actual_batch) ? $actual_batch : $system_batch;
-                    $expiry_to_save_raw = !empty($actual_expiry) ? $actual_expiry : $system_expiry;
+                    // Use same values for both batch_number and system_batch_number
+                    $batch_to_save = $batch_number;
+                    $expiry_to_save_raw = $expiry_date;
                     
                     // Only save if quantity is entered (including 0 for "not found on shelf")
                     // Empty string means user didn't enter anything, so skip it
                     if($quantity !== '' && $quantity !== null){
-                        // Delete existing record based on SYSTEM batch/expiry (the old values)
-                        // This ensures we delete the right record even if batch/expiry was changed
+                        // Delete existing record based on batch/expiry (the old values)
                         $this->db->where('inv_check_id', $inv_check_id);
                         $this->db->where('product_id', $product_id);
-                        $this->db->where('batch_number', $system_batch);
+                        $this->db->where('batch_number', $batch_number);
                         $this->db->where('shelf', $shelf);
                         $this->db->delete('sma_inventory_check_items');
                         
@@ -1795,23 +1922,14 @@ class stock_request extends MY_Controller
                             }
                         }
                         
-                        // Determine the system expiry date
-                        $system_expiry_to_save = null;
-                        if(!empty($system_expiry) && $system_expiry !== 'N/A'){
-                            $timestamp = strtotime($system_expiry);
-                            if($timestamp !== false && $timestamp > 0){
-                                $system_expiry_to_save = date('Y-m-d', $timestamp);
-                            }
-                        }
-                        
-                        // Insert new/updated record with both actual and system values
+                        // Insert new/updated record (batch and system_batch are the same now)
                         $record = [
                             'inv_check_id'        => $inv_check_id,
                             'product_id'          => $product_id,
                             'batch_number'        => $batch_to_save,
                             'expiry_date'         => $expiry_to_save,
-                            'system_batch_number' => $system_batch,
-                            'system_expiry_date'  => $system_expiry_to_save,
+                            'system_batch_number' => $batch_to_save,  // Same as batch_number
+                            'system_expiry_date'  => $expiry_to_save, // Same as expiry_date
                             'quantity'            => $quantity,
                             'shelf'               => $shelf,
                             'user_id'             => $this->session->userdata('user_id')

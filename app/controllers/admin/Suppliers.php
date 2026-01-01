@@ -351,17 +351,17 @@ class Suppliers extends MY_Controller
         }
     }
 
-    public function convert_debit_memo_invoice($memo_id, $supplier_id, $ledger_account, $payment_amount, $reference_no, $type, $supplier_entry_type = 'D'){
+    public function convert_debit_memo_invoice($memo_id, $supplier_id, $ledger_account, $payment_amount, $reference_no, $type, $supplier_entry_type = 'D', $vat_account = null, $vat_percent = '0'){
         $this->load->admin_model('companies_model');
         $supplier = $this->companies_model->getCompanyByID($supplier_id);
 
-        // Calculate VAT automatically (15% of payment amount)
-        $vat_amount = $payment_amount * 0.15;
+        // Calculate VAT based on user-selected percentage
+        $vat_decimal = floatval($vat_percent) / 100;
+        $vat_amount = $payment_amount * $vat_decimal;
         $total_amount = $payment_amount + $vat_amount;
 
-        // Get VAT ledger account from settings (you may need to configure this in your settings)
-        // For now, using a default VAT ledger ID - adjust this based on your chart of accounts
-        $vat_ledger_id = isset($this->Settings->vat_output_ledger) ? $this->Settings->vat_output_ledger : 69; // Default VAT ledger
+        // Use user-selected VAT account, or default if not provided
+        $vat_ledger_id = $vat_account ?: (isset($this->Settings->vat_output_ledger) ? $this->Settings->vat_output_ledger : 69);
 
         /*Accounts Entries*/
         $entry = array(
@@ -395,16 +395,18 @@ class Suppliers extends MY_Controller
             )
         );
 
-        //VAT - debit when normal, credit when reversed
-        $entryitemdata[] = array(
-            'Entryitem' => array(
-                'entry_id' => $insert_id,
-                'dc' => $vat_dc,
-                'ledger_id' => $vat_ledger_id,
-                'amount' => $vat_amount,
-                'narration' => 'VAT @ 15%'
-            )
-        );
+        //VAT - only add if VAT amount > 0
+        if($vat_amount > 0){
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => $vat_dc,
+                    'ledger_id' => $vat_ledger_id,
+                    'amount' => $vat_amount,
+                    'narration' => 'VAT @ ' . $vat_percent . '%'
+                )
+            );
+        }
 
         //transfer ledger - credit when normal, debit when reversed
         $entryitemdata[] = array(
@@ -631,6 +633,57 @@ class Suppliers extends MY_Controller
         $this->page_construct('suppliers/list_debit_memo', $meta, $this->data);
     }
 
+    public function delete_debit_memo($id = null){
+        //$this->sma->checkPermissions('delete');
+
+        if ($id) {
+            // Delete in correct order to avoid foreign key constraints
+            // 1. Delete memo entries
+            $this->db->where('memo_id', $id);
+            $this->db->delete('sma_memo_entries');
+            
+            // 2. Delete accounting entries
+            $this->deleteFromAccounting($id);
+            
+            // 3. Delete memo record
+            $this->db->where('id', $id);
+            $this->db->delete('sma_memo');
+            
+            $this->session->set_flashdata('message', lang('Debit Memo deleted successfully!'));
+        } else {
+            $this->session->set_flashdata('error', lang('No memo ID provided'));
+        }
+        
+        admin_redirect('suppliers/list_debit_memo');
+    }
+
+    public function view_debit_memo($id = null){
+        //$this->sma->checkPermissions();
+
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $debit_memo_data = $this->purchases_model->getDebitMemoData($id);
+        $debit_memo_entries_data = $this->purchases_model->getDebitMemoEntriesData($id);
+        
+        // Get ledger data
+        $ledgers = $this->site->getCompanyLedgers();
+        $ledger_options = [];
+        foreach($ledgers as $ledger){
+            $ledger_options[$ledger->id] = $ledger->name;
+        }
+        
+        $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('suppliers/list_debit_memo'), 'page' => lang('Debit Memo List')], ['link' => '#', 'page' => lang('View Supplier Memo')]];
+        $meta = ['page_title' => lang('View Supplier Memo'), 'bc' => $bc];
+        
+        $this->data['memo_data'] = $debit_memo_data;
+        $this->data['memo_entries_data'] = $debit_memo_entries_data;
+        $this->data['ledger_options'] = $ledger_options;
+        
+        $this->page_construct('suppliers/view_debit_memo', $meta, $this->data);
+    }
+
     public function edit_debit_memo($id = null){
         //$this->sma->checkPermissions(false, true);
 
@@ -641,7 +694,9 @@ class Suppliers extends MY_Controller
         $debit_memo_data = $this->purchases_model->getDebitMemoData($id);
         $debit_memo_entries_data = $this->purchases_model->getDebitMemoEntriesData($id);
         
-        $data = [];
+        $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('suppliers/list_debit_memo'), 'page' => lang('Debit Memo List')], ['link' => '#', 'page' => lang('Edit Debit Memo')]];
+        $meta = ['page_title' => lang('Edit Debit Memo'), 'bc' => $bc];
+        
         $this->data['memo_data'] = $debit_memo_data;
         
         $this->data['memo_entries_data'] = $debit_memo_entries_data;
@@ -665,6 +720,8 @@ class Suppliers extends MY_Controller
             $reference_no = $this->input->post('reference_no');
             $payment_total = $this->input->post('payment_total');
             $ledger_account = $this->input->post('ledger_account');
+            $vat_account = $this->input->post('vat_account');
+            $vat_percent = $this->input->post('vat_percent') ?: '0';
             $supplier_entry_type = $this->input->post('supplier_entry_type') ?: 'D';
             $date_fmt = $this->input->post('date');
 
@@ -679,49 +736,56 @@ class Suppliers extends MY_Controller
                 $date = $formattedDate->format('Y-m-d');
             }
             
-            if(array_sum($payments_array) == $payment_total){
-
-                if($request_type == 'update'){
-                    $memo_id2 = $this->input->post('memo_id');
-                   
-                    // Delete older data
-                    $this->db->delete('sma_memo_entries', ['memo_id' => $memo_id2]);
-                    $this->db->delete('sma_memo', ['id' => $memo_id2]);
-                    $this->deleteFromAccounting($memo_id2);
-                }
-
-                $memoData = array(
-                    'supplier_id' => $supplier_id,
-                    'customer_id' => 0,
-                    'reference_no' => $reference_no,
-                    'payment_amount' => $payment_total,
-                    'bank_charges' => 0,
-                    'ledger_account' => $ledger_account,
-                    'bank_charges_account' => 0,
-                    'supplier_entry_type' => $supplier_entry_type,
-                    'type' => 'memo',
-                    'date' => $date
-                );
+            // Remove breakdown matching validation - not required
+            if($request_type == 'update'){
+                $old_memo_id = $this->input->post('memo_id');
                
-                $this->db->insert('sma_memo' ,$memoData);
-                $memo_id = $this->db->insert_id();
-               
-                for ($i = 0; $i < count($payments_array); $i++) {
-                    $payment_amount = $payments_array[$i];
-                    $description = $descriptions_array[$i];
-                    if($payment_amount > 0){
-                        $this->add_debit_memo($memo_id, $supplier_id, $reference_no, $description, $payment_amount, $date);
-                    }
-                }
-
-                $this->convert_debit_memo_invoice($memo_id, $supplier_id, $ledger_account, $payment_total, $reference_no, 'debitmemo', $supplier_entry_type);
-                $this->session->set_flashdata('message', lang('Debit Memo invoice added Successfully!'));
-                admin_redirect('suppliers/list_debit_memo');
-            }else{
+                // Delete all older data completely in correct order
+                // 1. First delete memo entries
+                $this->db->where('memo_id', $old_memo_id);
+                $this->db->delete('sma_memo_entries');
                 
-                $this->session->set_flashdata('error', 'Total Sum Of Amounts do not match');
-                redirect($_SERVER['HTTP_REFERER']);
+                // 2. Then delete accounting entries
+                $this->deleteFromAccounting($old_memo_id);
+                
+                // 3. Finally delete the memo record itself
+                $this->db->where('id', $old_memo_id);
+                $this->db->delete('sma_memo');
             }
+            
+            // Always insert fresh memo record (new or after delete)
+            $memoData = array(
+                'supplier_id' => $supplier_id,
+                'customer_id' => 0,
+                'reference_no' => $reference_no,
+                'payment_amount' => $payment_total,
+                'bank_charges' => 0,
+                'ledger_account' => $ledger_account,
+                'bank_charges_account' => 0,
+                'vat_account' => $vat_account,
+                'vat_percent' => $vat_percent,
+                'supplier_entry_type' => $supplier_entry_type,
+                'type' => 'memo',
+                'date' => $date
+            );
+           
+            $this->db->insert('sma_memo', $memoData);
+            $memo_id = $this->db->insert_id();
+           
+            // Insert memo entries only if valid
+            for ($i = 0; $i < count($payments_array); $i++) {
+                $payment_amount = isset($payments_array[$i]) ? trim($payments_array[$i]) : '';
+                $description = isset($descriptions_array[$i]) ? trim($descriptions_array[$i]) : '';
+                
+                // Only insert if both description and amount are not empty
+                if($payment_amount !== '' && $payment_amount > 0 && $description !== ''){
+                    $this->add_debit_memo($memo_id, $supplier_id, $reference_no, $description, $payment_amount, $date);
+                }
+            }
+
+            $this->convert_debit_memo_invoice($memo_id, $supplier_id, $ledger_account, $payment_total, $reference_no, 'debitmemo', $supplier_entry_type, $vat_account, $vat_percent);
+            $this->session->set_flashdata('message', lang('Debit Memo invoice added Successfully!'));
+            admin_redirect('suppliers/list_debit_memo');
         } else {
             $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
             $this->data['warehouses'] = $this->site->getAllWarehouses();

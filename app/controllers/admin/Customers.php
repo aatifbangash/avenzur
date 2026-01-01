@@ -927,19 +927,22 @@ class Customers extends MY_Controller
         $this->db->insert('sma_memo_entries' ,$memoData);
     }
 
-    public function convert_credit_memo_invoice($memo_id, $customer_id, $ledger_account, $vat_account, $payment_amount, $vat_charges, $reference_no, $type, $customer_entry_type = 'C'){
+    public function convert_credit_memo_invoice($memo_id, $customer_id, $ledger_account, $vat_account, $payment_amount, $vat_percent, $reference_no, $type, $customer_entry_type = 'C'){
         $this->load->admin_model('companies_model');
         $customer = $this->companies_model->getCompanyByID($customer_id);
 
-        $vat_charges = (float)$vat_charges;
+        // Calculate VAT amount based on percentage
+        $vat_percent = (float)$vat_percent;
+        $vat_amount = ($payment_amount * $vat_percent) / 100;
+        
         /*Accounts Entries*/
         $entry = array(
             'entrytype_id' => 4,
             'transaction_type' => $type,
             'number'       => 'CM-'.$reference_no,
             'date'         => date('Y-m-d'),
-            'dr_total'     => $payment_amount + $vat_charges,
-            'cr_total'     => $payment_amount + $vat_charges,
+            'dr_total'     => $payment_amount + $vat_amount,
+            'cr_total'     => $payment_amount + $vat_amount,
             'notes'        => 'Credit Memo Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
             'pid'          =>  '',
             'memo_id'      => $memo_id,
@@ -961,21 +964,24 @@ class Customers extends MY_Controller
                 'entry_id' => $insert_id,
                 'dc' => $customer_entry_type, // C or D based on user selection
                 'ledger_id' => $customer->ledger_account,
-                'amount' => $payment_amount + $vat_charges,
+                'amount' => $payment_amount + $vat_amount,
                 'narration' => ''
             )
         );
 
-        //vat charges - debit when normal, credit when reversed
-        $entryitemdata[] = array(
-            'Entryitem' => array(
-                'entry_id' => $insert_id,
-                'dc' => $vat_dc,
-                'ledger_id' => $vat_account,
-                'amount' => $vat_charges,
-                'narration' => ''
-            )
-        );
+        // Only create VAT entry if VAT amount > 0
+        if($vat_amount > 0){
+            //vat charges - debit when normal, credit when reversed
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => $vat_dc,
+                    'ledger_id' => $vat_account,
+                    'amount' => $vat_amount,
+                    'narration' => ''
+                )
+            );
+        }
 
         //transfer ledger - debit when normal, credit when reversed
         $entryitemdata[] = array(
@@ -1000,6 +1006,57 @@ class Customers extends MY_Controller
         $this->page_construct('customers/list_credit_memo', $meta, $this->data);
     }
 
+    public function delete_credit_memo($id = null){
+        //$this->sma->checkPermissions('delete');
+
+        if ($id) {
+            // Delete in correct order to avoid foreign key constraints
+            // 1. Delete memo entries
+            $this->db->where('memo_id', $id);
+            $this->db->delete('sma_memo_entries');
+            
+            // 2. Delete accounting entries
+            $this->deleteFromAccounting($id);
+            
+            // 3. Delete memo record
+            $this->db->where('id', $id);
+            $this->db->delete('sma_memo');
+            
+            $this->session->set_flashdata('message', lang('Credit Memo deleted successfully!'));
+        } else {
+            $this->session->set_flashdata('error', lang('No memo ID provided'));
+        }
+        
+        admin_redirect('customers/list_credit_memo');
+    }
+
+    public function view_credit_memo($id = null){
+        //$this->sma->checkPermissions();
+
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $credit_memo_data = $this->purchases_model->getDebitMemoData($id);
+        $credit_memo_entries_data = $this->purchases_model->getDebitMemoEntriesData($id);
+
+        // Get ledger data
+        $ledgers = $this->site->getCompanyLedgers();
+        $ledger_options = [];
+        foreach($ledgers as $ledger){
+            $ledger_options[$ledger->id] = $ledger->name;
+        }
+
+        $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('customers/list_credit_memo'), 'page' => lang('Credit Memo List')], ['link' => '#', 'page' => lang('View Customer Memo')]];
+        $meta = ['page_title' => lang('View Customer Memo'), 'bc' => $bc];
+        
+        $this->data['memo_data'] = $credit_memo_data;
+        $this->data['memo_entries_data'] = $credit_memo_entries_data;
+        $this->data['ledger_options'] = $ledger_options;
+        
+        $this->page_construct('customers/view_credit_memo', $meta, $this->data);
+    }
+
     public function edit_credit_memo($id = null){
         //$this->sma->checkPermissions(false, true);
 
@@ -1010,7 +1067,9 @@ class Customers extends MY_Controller
         $credit_memo_data = $this->purchases_model->getDebitMemoData($id);
         $credit_memo_entries_data = $this->purchases_model->getDebitMemoEntriesData($id);
 
-        $data = [];
+        $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('customers/list_credit_memo'), 'page' => lang('Credit Memo List')], ['link' => '#', 'page' => lang('Edit Credit Memo')]];
+        $meta = ['page_title' => lang('Edit Credit Memo'), 'bc' => $bc];
+
         $this->data['memo_data'] = $credit_memo_data;
 
         $this->data['memo_entries_data'] = $credit_memo_entries_data;
@@ -1035,7 +1094,7 @@ class Customers extends MY_Controller
             $payment_total = $this->input->post('payment_total');
             $ledger_account = $this->input->post('ledger_account');
             $vat_account = $this->input->post('vat_account');
-            $vat_charges = $this->input->post('vat_charges');
+            $vat_percent = $this->input->post('vat_percent');
             $customer_entry_type = $this->input->post('customer_entry_type') ?: 'C';
             $date_fmt = $this->input->post('date');
 
@@ -1049,48 +1108,54 @@ class Customers extends MY_Controller
                 $date = $formattedDate->format('Y-m-d');
             }
 
-            if(array_sum($payments_array) == $payment_total){
-                if($request_type == 'update'){
-                    $memo_id2 = $this->input->post('memo_id');
+            // Remove breakdown matching validation - not required
+            if($request_type == 'update'){
+                $old_memo_id = $this->input->post('memo_id');
 
-                    // Delete older data
-                    $this->db->delete('sma_memo_entries', ['memo_id' => $memo_id2]);
-                    $this->db->delete('sma_memo', ['id' => $memo_id2]);
-                    $this->deleteFromAccounting($memo_id2);
-                }
-
-                $memoData = array(
-                    'supplier_id' => 0,
-                    'customer_id' => $customer_id,
-                    'reference_no' => $reference_no,
-                    'payment_amount' => $payment_total,
-                    'bank_charges' => $vat_charges,
-                    'ledger_account' => $ledger_account,
-                    'bank_charges_account' => $vat_account,
-                    'customer_entry_type' => $customer_entry_type,
-                    'type' => 'creditmemo',
-                    'date' => $date
-                );
-
-                $this->db->insert('sma_memo' ,$memoData);
-                $memo_id = $this->db->insert_id();
-
-                for ($i = 0; $i < count($payments_array); $i++) {
-                    $payment_amount = $payments_array[$i];
-                    $description = $descriptions_array[$i];
-                    if($payment_amount > 0){
-                        $this->add_credit_memo($memo_id, $customer_id, $reference_no, $description, $payment_amount, $date);
-                    }
-                }
-
-                $this->convert_credit_memo_invoice($memo_id, $customer_id, $ledger_account, $vat_account, $payment_total, $vat_charges, $reference_no, 'creditmemo', $customer_entry_type);
-                $this->session->set_flashdata('message', lang('Credit Memo invoice added Successfully!'));
-                admin_redirect('customers/list_credit_memo');
-                //admin_redirect($_SERVER['HTTP_REFERER']);
-            }else{
-                $this->session->set_flashdata('error', 'Total Sum Of Amounts do not match');
-                redirect($_SERVER['HTTP_REFERER']);
+                // Delete all older data completely in correct order
+                // 1. First delete memo entries
+                $this->db->where('memo_id', $old_memo_id);
+                $this->db->delete('sma_memo_entries');
+                
+                // 2. Then delete accounting entries
+                $this->deleteFromAccounting($old_memo_id);
+                
+                // 3. Finally delete the memo record itself
+                $this->db->where('id', $old_memo_id);
+                $this->db->delete('sma_memo');
             }
+            
+            // Always insert fresh memo record (new or after delete)
+            $memoData = array(
+                'supplier_id' => 0,
+                'customer_id' => $customer_id,
+                'reference_no' => $reference_no,
+                'payment_amount' => $payment_total,
+                'vat_percent' => $vat_percent,
+                'ledger_account' => $ledger_account,
+                'vat_account' => $vat_account,
+                'customer_entry_type' => $customer_entry_type,
+                'type' => 'creditmemo',
+                'date' => $date
+            );
+
+            $this->db->insert('sma_memo', $memoData);
+            $memo_id = $this->db->insert_id();
+
+            // Insert memo entries only if valid
+            for ($i = 0; $i < count($payments_array); $i++) {
+                $payment_amount = isset($payments_array[$i]) ? trim($payments_array[$i]) : '';
+                $description = isset($descriptions_array[$i]) ? trim($descriptions_array[$i]) : '';
+                
+                // Only insert if both description and amount are not empty
+                if($payment_amount !== '' && $payment_amount > 0 && $description !== ''){
+                    $this->add_credit_memo($memo_id, $customer_id, $reference_no, $description, $payment_amount, $date);
+                }
+            }
+
+            $this->convert_credit_memo_invoice($memo_id, $customer_id, $ledger_account, $vat_account, $payment_total, $vat_percent, $reference_no, 'creditmemo', $customer_entry_type);
+            $this->session->set_flashdata('message', lang('Credit Memo invoice added Successfully!'));
+            admin_redirect('customers/list_credit_memo');
         } else {
             $this->data['customers']  = $this->site->getAllCompanies('customer');
             $this->data['warehouses'] = $this->site->getAllWarehouses();

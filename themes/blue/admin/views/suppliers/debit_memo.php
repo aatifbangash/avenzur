@@ -13,7 +13,7 @@
 
 <div class="box">
     <div class="box-header">
-        <h2 class="blue"><i class="fa-fw fa fa-info-circle"></i><?= lang('debit_memo'); ?></h2>
+        <h2 class="blue"><i class="fa-fw fa fa-info-circle"></i><?= lang('Supplier Memo'); ?></h2>
 
         <div class="box-icon">
             <ul class="btn-tasks">
@@ -81,11 +81,35 @@
 
                         <div class="col-md-4">
                             <div class="form-group">
-                            <?= lang('Supplier Entry Type', 'entry_type'); ?>
+                            <?= lang('Vat Account', 'posupplier'); ?>
+                            <?php 
+
+                                echo form_dropdown('vat_account', $LO, ($memo_data->vat_account ?? $memo_data->vat_account), 'id="vat_account" class="ledger-dropdown form-control" required="required"',$DIS);  
+
+                            ?>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('VAT %', 'vat_percent'); ?>
+                                <?php 
+                                $vat_options = array(
+                                    '0' => '0%',
+                                    '15' => '15%'
+                                );
+                                echo form_dropdown('vat_percent', $vat_options, ($memo_data->vat_percent ?? '0'), 'id="vat_percent" class="form-control" required="required"');
+                                ?>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                            <?= lang('Voucher Type', 'entry_type'); ?>
                             <?php 
                                 $entry_types = array(
-                                    'D' => 'Debit Supplier (Default)',
-                                    'C' => 'Credit Supplier'
+                                    'D' => 'Debit (Default)',
+                                    'C' => 'Credit'
                                 );
                                 echo form_dropdown('supplier_entry_type', $entry_types, ($memo_data->supplier_entry_type ?? 'D'), 'id="supplier_entry_type" class="form-control" required="required"');  
                             ?>
