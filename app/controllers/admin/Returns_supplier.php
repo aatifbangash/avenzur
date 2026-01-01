@@ -1328,7 +1328,8 @@ class Returns_supplier extends MY_Controller
                     redirect($_SERVER['HTTP_REFERER']);
                 }
             }
-            $inv_items = $this->returns_supplier_model->getReturnItems($id);
+            $inv_items = $this->returns_supplier_model->getReturnItems($id, $inv->warehouse_id);
+            //echo '<pre>';   print_r( $inv_items );exit;
             $c = rand(100000, 9999999);
             foreach ($inv_items as $item) {
                 $row = $this->site->getProductByID($item->product_id);

@@ -294,9 +294,10 @@ class Returns_supplier_model extends CI_Model
         return false;
     }
 
-    public function getReturnItems($return_id)
+    public function getReturnItems($return_id, $warehouse_id = 32)
     {
-        $warehouse_id = 32;  // Define your main warehouse ID here
+        //$warehouse_id = 32;  // Define your main warehouse ID here
+        
         $this->db->select('
                 return_supplier_items.*, 
                 tax_rates.code as tax_code, 
