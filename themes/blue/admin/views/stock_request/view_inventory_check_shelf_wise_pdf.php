@@ -161,10 +161,8 @@
                 $count = 0;
                 foreach($inventory_check_array as $inventory_check){
                     $count++;
-                    $variance = $inventory_check->quantity - ($inventory_check->system_quantity ?? 0);
-                    $variance_class = ($variance != 0) ? 'difference-row' : '';
         ?>
-            <tr class="<?= $variance_class ?>">
+            <tr>
                 <td style="text-align: center;"><?= $count; ?></td>
                 <td><?= $inventory_check->product_name ? $inventory_check->product_name : '-'; ?></td>
                 <?php if($this->Settings->site_name == 'Hills Business Medical'){ ?>
