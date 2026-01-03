@@ -2125,6 +2125,9 @@ class stock_request extends MY_Controller
      * AJAX: Add or move a product to selected shelf and optionally create a pending inventory check item
      */
     public function add_move_product_to_shelf(){
+        ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
         $product_id = $this->input->post('product_id');
         $warehouse_id = $this->input->post('warehouse_id');
         $shelf = $this->input->post('shelf');
