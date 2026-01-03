@@ -2125,9 +2125,6 @@ class stock_request extends MY_Controller
      * AJAX: Add or move a product to selected shelf and optionally create a pending inventory check item
      */
     public function add_move_product_to_shelf(){
-        ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-error_reporting(E_ALL);
         $product_id = $this->input->post('product_id');
         $warehouse_id = $this->input->post('warehouse_id');
         $shelf = $this->input->post('shelf');
@@ -2168,7 +2165,7 @@ error_reporting(E_ALL);
 
         // Check if product exists in inventory_movements for this warehouse/batch/expiry
         // to get system batch/expiry info
-        $this->db->select('batch_number, expiry_date, SUM(quantity) as system_qty');
+        /*$this->db->select('batch_number, expiry_date, SUM(quantity) as system_qty');
         $this->db->from('sma_inventory_movements');
         $this->db->where('product_id', $product_id);
         $this->db->where('location_id', $warehouse_id);
@@ -2179,7 +2176,28 @@ error_reporting(E_ALL);
             $this->db->where('expiry_date', $expiry_date);
         }
         $this->db->group_by('batch_number, expiry_date');
-        $system_record = $this->db->get()->row();
+        $system_record = $this->db->get()->row();*/
+
+        $this->db->select('batch_number, expiry_date, SUM(quantity) AS system_qty', false);
+        $this->db->from('sma_inventory_movements');
+        $this->db->where('product_id', $product_id);
+        $this->db->where('location_id', $warehouse_id);
+
+        if (!empty($batch_number)) {
+            $this->db->where('batch_number', $batch_number);
+        }
+
+        if (!empty($expiry_date)) {
+            $this->db->where('expiry_date', $expiry_date);
+        }
+
+        $this->db->group_by(['batch_number', 'expiry_date']);
+
+        $query = $this->db->get();
+
+        $system_record = ($query && $query->num_rows() > 0)
+            ? $query->row()
+            : null;
 
         // Determine batch/expiry to save
         $batch_to_save = $batch_number ?: ($system_record ? $system_record->batch_number : '');
