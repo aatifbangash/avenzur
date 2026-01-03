@@ -935,6 +935,84 @@ class stock_request extends MY_Controller
         $this->page_construct('stock_request/view_inventory_check_report', $meta, $this->data);
     }
 
+    public function view_inventory_check_shelfwise(){
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $inventory_check_request_id = $this->uri->segment(4);
+        $shelf = $this->input->get('shelf');
+        $pdf = $this->input->get('pdf'); // Check if PDF download requested
+
+        $inventory_check_request_details = $this->stock_request_model->getInventoryCheckRequestById($inventory_check_request_id );
+        $warehouse_detail = $this->site->getWarehouseByID($inventory_check_request_details[0]->location_id);
+
+        // Query from sma_inventory_check_items as PRIMARY source to not miss any manually added items
+        $this->db->select('ici.id, ici.product_id, 
+                          ici.batch_number as actual_batch, 
+                          ici.expiry_date as actual_expiry, 
+                          ici.shelf, ici.shelf as actual_shelf,
+                          ici.quantity as quantity, ici.quantity as actual_quantity,
+                          p.code as product_code, p.code as item_code,
+                          p.name as product_name,
+                          COALESCE(SUM(im.quantity), 0) as system_quantity,
+                          MAX(im.batch_number) as system_batch,
+                          MAX(im.expiry_date) as system_expiry');
+        $this->db->from('sma_inventory_check_items ici');
+        $this->db->join('sma_products p', 'p.id = ici.product_id', 'left');
+        $this->db->join('sma_inventory_movements im', 
+                       'im.product_id = ici.product_id 
+                        AND im.batch_number = ici.batch_number 
+                        AND im.location_id = ' . $this->db->escape($inventory_check_request_details[0]->location_id) . '
+                        AND (im.expiry_date = ici.expiry_date OR (im.expiry_date IS NULL AND ici.expiry_date IS NULL))', 
+                       'left');
+        $this->db->where('ici.inv_check_id', $inventory_check_request_id);
+        
+        // Apply shelf filter at SQL level for efficiency
+        if($shelf && $shelf != ''){
+            $this->db->where('ici.shelf', $shelf);
+        }
+        
+        $this->db->group_by('ici.id, ici.product_id, ici.batch_number, ici.expiry_date, ici.shelf, ici.quantity, p.code, p.name');
+        $this->db->order_by('ici.shelf ASC, p.name ASC');
+        
+        $inventory_check_array = $this->db->get()->result();
+        
+        // Get distinct shelves for filter dropdown
+        $this->db->select('DISTINCT(shelf) as shelf');
+        $this->db->from('sma_inventory_check_items');
+        $this->db->where('inv_check_id', $inventory_check_request_id);
+        $this->db->where('shelf IS NOT NULL');
+        $this->db->where('shelf !=', '');
+        $this->db->order_by('shelf', 'ASC');
+        $shelves = $this->db->get()->result();
+        
+        $this->data['warehouse_detail'] = $warehouse_detail;
+        $this->data['inventory_check_request_details'] = $inventory_check_request_details[0];
+        $this->data['inventory_check_array'] = $inventory_check_array;
+        $this->data['shelves'] = $shelves;
+        $this->data['selected_shelf'] = $shelf;
+        
+        // If PDF requested, generate PDF
+        if($pdf == '1'){
+            $this->load->library('tec_mpdf');
+            
+            $html = $this->load->view($this->theme . 'stock_request/view_inventory_check_shelf_wise_pdf', $this->data, true);
+            
+            $filename = 'Inventory_Check_' . $inventory_check_request_id;
+            if($shelf){
+                $filename .= '_Shelf_' . $shelf;
+            }
+            $filename .= '_' . date('Y-m-d') . '.pdf';
+            
+            // Generate PDF (D = download)
+            $this->tec_mpdf->generate($html, $filename, 'D', null, 15, null, 15, 'P');
+        } else {
+            // Regular view
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Inventory Check Requests')]];
+            $meta = ['page_title' => lang('Inventory Check Requests'), 'bc' => $bc];
+            $this->page_construct('stock_request/view_inventory_check_shelf_wise', $meta, $this->data);
+        }
+    }
+
     public function view_inventory_check(){
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
@@ -1781,8 +1859,7 @@ class stock_request extends MY_Controller
         $current_request = $request_query->row();
         $current_request_id = $current_request ? $current_request->id : null;
 
-        // Get products grouped by batch and expiry (not avz_code)
-        // This shows user-friendly view: one row per batch/expiry combination
+        // Get products from inventory movements (existing items in system)
         $this->db->select('p.id as product_id, p.code as product_code, p.item_code, p.name as product_name, 
                           im.batch_number, im.expiry_date,
                           SUM(im.quantity) as system_quantity', FALSE);
@@ -1800,7 +1877,50 @@ class stock_request extends MY_Controller
         $this->db->order_by('p.name', 'ASC');
         
         $query = $this->db->get();
-        $products = $query->result();
+        $products_from_inventory = $query->result();
+        
+        // Get additional products from current inventory check items (manually added items)
+        $products_from_check = [];
+        if($current_request_id){
+            $this->db->select('p.id as product_id, p.code as product_code, p.item_code, p.name as product_name, 
+                              ici.batch_number, ici.expiry_date,
+                              0 as system_quantity', FALSE);
+            $this->db->from('sma_inventory_check_items ici');
+            $this->db->join('sma_products p', 'p.id = ici.product_id', 'inner');
+            $this->db->where('ici.inv_check_id', $current_request_id);
+            $this->db->where('ici.shelf', $shelf);
+            
+            // If specific product is selected, filter by it
+            if($product_id && $product_id != ''){
+                $this->db->where('p.id', $product_id);
+            }
+            
+            $this->db->group_by('p.id, ici.batch_number, ici.expiry_date');
+            $this->db->order_by('p.name', 'ASC');
+            
+            $check_query = $this->db->get();
+            $products_from_check = $check_query->result();
+        }
+        
+        // Merge both arrays and remove duplicates
+        $products_map = [];
+        
+        // Add inventory movement products first
+        foreach($products_from_inventory as $product){
+            $key = $product->product_id . '_' . $product->batch_number . '_' . $product->expiry_date;
+            $products_map[$key] = $product;
+        }
+        
+        // Add manually added products (only if they don't already exist)
+        foreach($products_from_check as $product){
+            $key = $product->product_id . '_' . $product->batch_number . '_' . $product->expiry_date;
+            if(!isset($products_map[$key])){
+                $products_map[$key] = $product;
+            }
+        }
+        
+        // Convert back to array
+        $products = array_values($products_map);
         
         // If there's a pending request, get saved quantities by batch+expiry
         if($current_request_id && $products){
