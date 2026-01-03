@@ -125,10 +125,8 @@
                                     $count = 0;
                                     foreach($inventory_check_array as $inventory_check){
                                         $count++;
-                                        $variance = $inventory_check->quantity - $inventory_check->system_quantity;
-                                        $variance_class = ($variance != 0) ? 'difference-row' : '';
                                         ?>
-                                            <tr class="<?= $variance_class ?>">
+                                            <tr>
                                                 <td class="dataTables_empty"><?= $count; ?></td>
                                                 <td class="dataTables_empty" style="text-align: center;" colspan="3"><?= $inventory_check->product_name ? $inventory_check->product_name : '-'; ?></td>
                                                 <?php 
