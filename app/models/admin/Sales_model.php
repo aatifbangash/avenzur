@@ -1630,7 +1630,7 @@ class Sales_model extends CI_Model
                        //handle inventory movement
                     $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'sale', $item['quantity'], $item['warehouse_id'], $id,  $item['net_cost'], $item['expiry'], $item['net_unit_price'], $real_cost, $item['avz_item_code'], $item['bonus'], $data['customer_id'], $item['real_unit_price'], $data['date']); 
                     $item_costs = $this->site->item_costing($item);
-                    foreach ($item_costs as $item_cost) {
+                    /*foreach ($item_costs as $item_cost) {
                         if (isset($item_cost['date']) || isset($item_cost['pi_overselling'])) {
                             $item_cost['sale_item_id'] = $sale_item_id;
                             $item_cost['sale_id']      = $id;
@@ -1648,7 +1648,7 @@ class Sales_model extends CI_Model
                                 }
                             }
                         }
-                    }
+                    }*/
                 }
             }
 
