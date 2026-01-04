@@ -2065,7 +2065,7 @@ class stock_request extends MY_Controller
                             'shelf'               => $shelf,
                             'user_id'             => $this->session->userdata('user_id')
                         ];
-                        
+                        //echo '<pre>';   print_r($record); echo '</pre>';
                         $this->db->insert('sma_inventory_check_items', $record);
                         $count++;
                     }
