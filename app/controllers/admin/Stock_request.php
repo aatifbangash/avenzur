@@ -2350,15 +2350,20 @@ class stock_request extends MY_Controller
         $batch_to_save = $batch_number ?: ($system_record ? $system_record->batch_number : '');
         $expiry_to_save = null;
         if($expiry_date && $expiry_date !== 'N/A'){
-            // Parse date as DD/MM/YYYY format (European format)
-            $date_obj = DateTime::createFromFormat('d/m/Y', $expiry_date);
-            if($date_obj !== false){
-                $expiry_to_save = $date_obj->format('Y-m-d');
+            // Check if already in Y-m-d format (from database)
+            if(preg_match('/^\d{4}-\d{2}-\d{2}$/', $expiry_date)){
+                $expiry_to_save = $expiry_date;
             } else {
-                // Fallback: try other common formats
-                $timestamp = strtotime($expiry_date);
-                if($timestamp !== false && $timestamp > 0){
-                    $expiry_to_save = date('Y-m-d', $timestamp);
+                // Parse date as DD/MM/YYYY format (European format)
+                $date_obj = DateTime::createFromFormat('d/m/Y', $expiry_date);
+                if($date_obj !== false){
+                    $expiry_to_save = $date_obj->format('Y-m-d');
+                } else {
+                    // Fallback: try other common formats
+                    $timestamp = strtotime($expiry_date);
+                    if($timestamp !== false && $timestamp > 0){
+                        $expiry_to_save = date('Y-m-d', $timestamp);
+                    }
                 }
             }
         } elseif($system_record && $system_record->expiry_date){
@@ -2370,11 +2375,17 @@ class stock_request extends MY_Controller
         $system_batch = $system_record ? $system_record->batch_number : null;
         $system_expiry = $system_record ? $system_record->expiry_date : null;
 
-        // Delete existing entry if any (for re-adding)
+        // Delete existing entry if any (for re-adding) - MUST include expiry to avoid deleting other expiry dates
         $this->db->where('inv_check_id', $inv_check_id);
         $this->db->where('product_id', $product_id);
         $this->db->where('batch_number', $batch_to_save);
         $this->db->where('shelf', $shelf);
+        // Include expiry in WHERE clause to differentiate records with same batch but different expiry
+        if($expiry_to_save !== null){
+            $this->db->where('expiry_date', $expiry_to_save);
+        } else {
+            $this->db->where('(expiry_date IS NULL OR expiry_date = "")');
+        }
         $this->db->delete('sma_inventory_check_items');
 
         // Insert new inventory check item
@@ -2404,7 +2415,7 @@ class stock_request extends MY_Controller
             'error' => 0,
             'product' => $product,
             'batch_number' => $batch_to_save,
-            'expiry_date' => $expiry_date ?? '',
+            'expiry_date' => $expiry_to_save ?? '', // Always return Y-m-d format
             'quantity' => $quantity,
             'system_quantity' => $system_record ? $system_record->system_qty : 0,
             'inv_check_id' => $inv_check_id,
