@@ -2031,12 +2031,19 @@ class stock_request extends MY_Controller
                     // Only save if quantity is entered (including 0 for "not found on shelf")
                     // Empty string means user didn't enter anything, so skip it
                     if($quantity !== '' && $quantity !== null){
-                        // Determine the expiry date to save first
+                        // Determine the expiry date to save first (using DD/MM/YYYY format)
                         $expiry_to_save = null;
                         if(!empty($expiry_to_save_raw) && $expiry_to_save_raw !== 'N/A'){
-                            $timestamp = strtotime($expiry_to_save_raw);
-                            if($timestamp !== false && $timestamp > 0){
-                                $expiry_to_save = date('Y-m-d', $timestamp);
+                            // Try DD/MM/YYYY format first (European format)
+                            $date_obj = DateTime::createFromFormat('d/m/Y', $expiry_to_save_raw);
+                            if($date_obj !== false){
+                                $expiry_to_save = $date_obj->format('Y-m-d');
+                            } else {
+                                // Fallback: try standard formats
+                                $timestamp = strtotime($expiry_to_save_raw);
+                                if($timestamp !== false && $timestamp > 0){
+                                    $expiry_to_save = date('Y-m-d', $timestamp);
+                                }
                             }
                         }
                         
@@ -2376,8 +2383,8 @@ class stock_request extends MY_Controller
             'product_id'          => $product_id,
             'batch_number'        => $batch_to_save,
             'expiry_date'         => $expiry_to_save,
-            'system_batch_number' => $system_batch,
-            'system_expiry_date'  => $system_expiry,
+            'system_batch_number' => $batch_to_save,
+            'system_expiry_date'  => $expiry_to_save,
             'quantity'            => $quantity,
             'shelf'               => $shelf,
             'user_id'             => $this->session->userdata('user_id')
