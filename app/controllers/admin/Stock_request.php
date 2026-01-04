@@ -1769,15 +1769,16 @@ class stock_request extends MY_Controller
             $this->sma->send_json(['error' => 1, 'msg' => 'Warehouse ID required']);
         }
 
-        // Get distinct shelves from products that have inventory in this warehouse
-        $this->db->select('DISTINCT(p.warehouse_shelf) as shelf');
-        $this->db->from('sma_products p');
-        $this->db->join('sma_inventory_movements im', 'im.product_id = p.id', 'inner');
+        // Get distinct shelves from sma_product_shelves for this warehouse
+        $this->db->select('DISTINCT(ps.shelf) as shelf');
+        $this->db->from('sma_product_shelves ps');
+        $this->db->join('sma_inventory_movements im', 'im.product_id = ps.product_id', 'inner');
+        $this->db->where('ps.warehouse_id', $warehouse_id);
         $this->db->where('im.location_id', $warehouse_id);
-        $this->db->where('p.warehouse_shelf IS NOT NULL');
-        $this->db->where('p.warehouse_shelf !=', '');
-        $this->db->group_by('p.warehouse_shelf');
-        $this->db->order_by('p.warehouse_shelf', 'ASC');
+        $this->db->where('ps.shelf IS NOT NULL');
+        $this->db->where('ps.shelf !=', '');
+        $this->db->group_by('ps.shelf');
+        $this->db->order_by('ps.shelf', 'ASC');
         
         $query = $this->db->get();
         $shelves = $query->result();
@@ -1811,8 +1812,10 @@ class stock_request extends MY_Controller
         // Get distinct products for dropdown
         $this->db->select('DISTINCT(p.id) as product_id, p.code as product_code, p.item_code, p.name as product_name');
         $this->db->from('sma_products p');
+        $this->db->join('sma_product_shelves ps', 'ps.product_id = p.id', 'inner');
         $this->db->join('sma_inventory_movements im', 'im.product_id = p.id', 'inner');
-        $this->db->where('p.warehouse_shelf', $shelf);
+        $this->db->where('ps.warehouse_id', $warehouse_id);
+        $this->db->where('ps.shelf', $shelf);
         $this->db->where('im.location_id', $warehouse_id);
         $this->db->order_by('p.name', 'ASC');
         
@@ -1864,8 +1867,10 @@ class stock_request extends MY_Controller
                           im.batch_number, im.expiry_date,
                           SUM(im.quantity) as system_quantity', FALSE);
         $this->db->from('sma_products p');
+        $this->db->join('sma_product_shelves ps', 'ps.product_id = p.id', 'inner');
         $this->db->join('sma_inventory_movements im', 'im.product_id = p.id', 'inner');
-        $this->db->where('p.warehouse_shelf', $shelf);
+        $this->db->where('ps.warehouse_id', $warehouse_id);
+        $this->db->where('ps.shelf', $shelf);
         $this->db->where('im.location_id', $warehouse_id);
         
         // If specific product is selected, filter by it
@@ -2026,14 +2031,7 @@ class stock_request extends MY_Controller
                     // Only save if quantity is entered (including 0 for "not found on shelf")
                     // Empty string means user didn't enter anything, so skip it
                     if($quantity !== '' && $quantity !== null){
-                        // Delete existing record based on batch/expiry (the old values)
-                        $this->db->where('inv_check_id', $inv_check_id);
-                        $this->db->where('product_id', $product_id);
-                        $this->db->where('batch_number', $batch_number);
-                        $this->db->where('shelf', $shelf);
-                        $this->db->delete('sma_inventory_check_items');
-                        
-                        // Determine the expiry date to save
+                        // Determine the expiry date to save first
                         $expiry_to_save = null;
                         if(!empty($expiry_to_save_raw) && $expiry_to_save_raw !== 'N/A'){
                             $timestamp = strtotime($expiry_to_save_raw);
@@ -2041,6 +2039,19 @@ class stock_request extends MY_Controller
                                 $expiry_to_save = date('Y-m-d', $timestamp);
                             }
                         }
+                        
+                        // Delete existing record based on batch AND expiry (critical for uniqueness)
+                        $this->db->where('inv_check_id', $inv_check_id);
+                        $this->db->where('product_id', $product_id);
+                        $this->db->where('batch_number', $batch_number);
+                        $this->db->where('shelf', $shelf);
+                        // Include expiry in the WHERE clause to differentiate records with same batch
+                        if($expiry_to_save !== null){
+                            $this->db->where('expiry_date', $expiry_to_save);
+                        } else {
+                            $this->db->where('(expiry_date IS NULL OR expiry_date = "")');
+                        }
+                        $this->db->delete('sma_inventory_check_items');
                         
                         // Insert new/updated record (batch and system_batch are the same now)
                         $record = [
@@ -2179,12 +2190,20 @@ class stock_request extends MY_Controller
             $this->sma->send_json([ $this->security->get_csrf_token_name() => $this->security->get_csrf_hash(), 'results' => [] ]);
         }
 
-        $this->db->select('p.id, p.code as product_code, p.item_code, p.name as product_name, p.warehouse_shelf');
-        $this->db->from('sma_products p');
+        // Get warehouse_id if provided (for warehouse-specific shelf lookup)
+        $warehouse_id = $this->input->get_post('warehouse_id');
+        
+        if($warehouse_id){
+            $this->db->select('p.id, p.code as product_code, p.item_code, p.name as product_name, ps.shelf as warehouse_shelf');
+            $this->db->from('sma_products p');
+            $this->db->join('sma_product_shelves ps', 'ps.product_id = p.id AND ps.warehouse_id = ' . $this->db->escape($warehouse_id), 'left');
+        } else {
+            $this->db->select('p.id, p.code as product_code, p.item_code, p.name as product_name, "" as warehouse_shelf');
+            $this->db->from('sma_products p');
+        }
+        
         $this->db->group_start();
         $this->db->like('p.name', $term);
-
-
         $this->db->or_like('p.code', $term);
         $this->db->or_like('p.item_code', $term);
         $this->db->group_end();
@@ -2221,9 +2240,10 @@ class stock_request extends MY_Controller
             $this->sma->send_json([ $this->security->get_csrf_token_name() => $this->security->get_csrf_hash(), 'error' => 1, 'msg' => 'Warehouse ID required' ]);
         }
 
-        $this->db->select('DISTINCT(p.id) as product_id, p.code as product_code, p.item_code, p.name as product_name, p.warehouse_shelf');
+        $this->db->select('DISTINCT(p.id) as product_id, p.code as product_code, p.item_code, p.name as product_name, ps.shelf as warehouse_shelf');
         $this->db->from('sma_products p');
         $this->db->join('sma_inventory_movements im', 'im.product_id = p.id', 'inner');
+        $this->db->join('sma_product_shelves ps', 'ps.product_id = p.id AND ps.warehouse_id = ' . $this->db->escape($warehouse_id), 'left');
         $this->db->where('im.location_id', $warehouse_id);
         $this->db->order_by('p.name', 'ASC');
         $query = $this->db->get();
@@ -2323,14 +2343,22 @@ class stock_request extends MY_Controller
         $batch_to_save = $batch_number ?: ($system_record ? $system_record->batch_number : '');
         $expiry_to_save = null;
         if($expiry_date && $expiry_date !== 'N/A'){
-            $timestamp = strtotime($expiry_date);
-            if($timestamp !== false && $timestamp > 0){
-                $expiry_to_save = date('Y-m-d', $timestamp);
+            // Parse date as DD/MM/YYYY format (European format)
+            $date_obj = DateTime::createFromFormat('d/m/Y', $expiry_date);
+            if($date_obj !== false){
+                $expiry_to_save = $date_obj->format('Y-m-d');
+            } else {
+                // Fallback: try other common formats
+                $timestamp = strtotime($expiry_date);
+                if($timestamp !== false && $timestamp > 0){
+                    $expiry_to_save = date('Y-m-d', $timestamp);
+                }
             }
         } elseif($system_record && $system_record->expiry_date){
             $expiry_to_save = $system_record->expiry_date;
         }
-
+        //echo 'Expiry To Save: '.$expiry_to_save;exit;
+        
         // System batch/expiry (null if product doesn't exist in system for this shelf)
         $system_batch = $system_record ? $system_record->batch_number : null;
         $system_expiry = $system_record ? $system_record->expiry_date : null;
@@ -2358,8 +2386,9 @@ class stock_request extends MY_Controller
         $this->db->insert('sma_inventory_check_items', $record);
 
         // Fetch product details to return
-        $this->db->select('p.id as product_id, p.code as product_code, p.item_code, p.name as product_name, p.warehouse_shelf');
+        $this->db->select('p.id as product_id, p.code as product_code, p.item_code, p.name as product_name, ps.shelf as warehouse_shelf');
         $this->db->from('sma_products p');
+        $this->db->join('sma_product_shelves ps', 'ps.product_id = p.id AND ps.warehouse_id = ' . $this->db->escape($warehouse_id), 'left');
         $this->db->where('p.id', $product_id);
         $product = $this->db->get()->row();
 
