@@ -3816,7 +3816,155 @@ class Sales extends MY_Controller
         $this->datatables->add_column('Actions', $action, 'id');
         echo $this->datatables->generate();
     }
+        public function getShopSales($warehouse_id = null)
+        {
+            $this->sma->checkPermissions('index');
+            $sid = $this->input->get('sid');
+            if ((!$this->Owner && !$this->Admin && !$this->GP['sales-index']) && !$warehouse_id) {
+                $user         = $this->site->getUser();
+                $warehouse_id = $user->warehouse_id;
+            }
+            $detail_link       = anchor('admin/sales/view/$1', '<i class="fa fa-file-text-o"></i> ' . lang('sale_details'));
+            $duplicate_link    = anchor('admin/sales/add?sale_id=$1', '<i class="fa fa-plus-circle"></i> ' . lang('duplicate_sale'));
+            $payments_link     = anchor('admin/sales/payments/$1', '<i class="fa fa-money"></i> ' . lang('view_payments'), 'data-toggle="modal" data-target="#myModal"');
+            
+            if(isset($this->GP) && $this->GP['accountant'])
+            {
+                $convert_sale_invoice = anchor('admin/sales/convert_sale_invoice/$1', '<i class="fa fa-money"></i> ' . lang('Convert to Invoice'));
+            }
+            
+            $convert_sale_invoice = anchor('admin/sales/convert_sale_invoice/$1', '<i class="fa fa-money"></i> ' . lang('Convert to Invoice'));
+            $add_payment_link  = anchor('admin/sales/add_payment/$1', '<i class="fa fa-money"></i> ' . lang('add_payment'), 'data-toggle="modal" data-target="#myModal"');
+            $packagink_link    = anchor('admin/sales/packaging/$1', '<i class="fa fa-archive"></i> ' . lang('packaging'), 'data-toggle="modal" data-target="#myModal"');
+            $add_delivery_link = anchor('admin/sales/add_delivery/$1', '<i class="fa fa-truck"></i> ' . lang('add_delivery'), 'data-toggle="modal" data-target="#myModal"');
+            $email_link        = anchor('admin/sales/email/$1', '<i class="fa fa-envelope"></i> ' . lang('email_sale'), 'data-toggle="modal" data-target="#myModal"');
+            $edit_link         = anchor('admin/sales/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_sale'), 'class="sledit"');
+            $pdf_link          = anchor('admin/sales/pdf_new/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf'));
+            $zatka_invoice_link = anchor('admin/sales/pdf_zatka_invoice/$1', '<i class="fa fa-file-text-o"></i> Zatka Invoice', 'target="_blank"');
+            $sale_order_link   = anchor('admin/sales/pdf_sale_order/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_sale_order'));
+            $order_picker_link   = anchor('admin/sales/pdf_order_picker/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('Download_Picking_Pdf'));
+            $return_link       = anchor('admin/returns/add/?sale=$1', '<i class="fa fa-angle-double-left"></i> ' . lang('return_sale'));
+            //$shipment_link     = anchor('$1', '<i class="fa fa-angle-double-left"></i> ' . lang('Shipping_Slip'));
+            $delete_link       = "<a href='#' class='po' title='<b>" . lang('delete_sale') . "</b>' data-content=\"<p>"
+            . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('sales/delete/$1') . "'>"
+            . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i> "
+            . lang('delete_sale') . '</a>';
+            $journal_entry_link      = anchor('admin/entries/view/journal/?sid=$1', '<i class="fa fa-eye"></i> ' . lang('Journal Entry'));
+            
+            if(isset($this->GP) && $this->Accountant)
+            {
+                $action = '<div class="text-center"><div class="btn-group text-left">'
+                    . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+                    . lang('actions') . ' <span class="caret"></span></button>
+                    <ul class="dropdown-menu pull-right" role="menu">
+                        
+                        <li>' . $detail_link . '</li>
+                        <li>' . $pdf_link . '</li>
+                        <li>' . $zatka_invoice_link . '</li>
+                        <li>' . $journal_entry_link . '</li>
+                    </ul>
+                </div></div>';
+            }else if(isset($this->GP) && $this->Settings->site_name == 'Avnzor' && $this->sma->in_group('warehouseofficer'))
+            {
 
+                $action = '<div class="text-center"><div class="btn-group text-left">'
+                    . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+                    . lang('actions') . ' <span class="caret"></span></button>
+                    <ul class="dropdown-menu pull-right" role="menu">
+                        
+                        <li>' . $detail_link . '</li>
+                        <li>' . $return_link . '</li>
+                        <li>' . $order_picker_link . '</li>
+                    </ul>
+                </div></div>';
+            }else if(isset($this->GP) && $this->Settings->site_name == 'Hills Business Medical' && $this->sma->in_group('warehouseofficer'))
+            {
+
+                $action = '<div class="text-center"><div class="btn-group text-left">'
+                    . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+                    . lang('actions') . ' <span class="caret"></span></button>
+                    <ul class="dropdown-menu pull-right" role="menu">
+                        
+                        <li>' . $detail_link . '</li>
+                        <li>' . $return_link . '</li>
+                        <li>' . $sale_order_link . '</li>
+                    </ul>
+                </div></div>';
+            }else{
+
+                $action = '<div class="text-center"><div class="btn-group text-left">'
+                . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+                . lang('actions') . ' <span class="caret"></span></button>
+                <ul class="dropdown-menu pull-right" role="menu">
+                    <li>' . $order_picker_link . '</li>
+                    <li>' . $detail_link . '</li>';
+
+                if($this->Settings->site_name != 'Hills Business Medical' && $this->Settings->site_name != 'Demo Company'){
+                    $action .= '<li>' . $edit_link . '</li>';
+                }
+                
+                $action .=  '<li>' . $pdf_link . '</li>
+                    <li>' . $zatka_invoice_link . '</li>';
+
+                if($Admin || $Owner || $this->GP['returns-add']){
+                    $action .=  '<li>' . $return_link . '</li>';
+                }
+
+                if(($Admin || $Owner)){
+                    $action .=  '<li>' . $delete_link . '</li>';
+                }
+                if(($Admin || $Owner || $this->Accountant)){
+                    $action .=  '<li>' . $journal_entry_link . '</li>';
+                }
+                $action .=  '</ul>
+            </div></div>';
+            }
+            //$action = '<div class="text-center">' . $detail_link . ' ' . $edit_link . ' ' . $email_link . ' ' . $delete_link . '</div>';
+
+            $this->load->library('datatables');
+            if ($warehouse_id) {
+                $this->datatables
+                    ->select("{$this->db->dbprefix('sales')}.id as id, {$this->db->dbprefix('sales')}.id as number,DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, CONCAT('SL-', {$this->db->dbprefix('sales')}.id) as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, CONCAT('files/', {$this->db->dbprefix('sales')}.attachment) as attachment, return_id")
+                    ->from('sales')
+                    ->where('warehouse_id', $warehouse_id)
+                    ->where('shop', 1);
+                    //->join('aramex_shipment', 'aramex_shipment.salesid=sales.id');
+            } else {
+                $this->datatables
+                    ->select("{$this->db->dbprefix('sales')}.id as id, {$this->db->dbprefix('sales')}.id as number, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, CONCAT('SL-', {$this->db->dbprefix('sales')}.id) as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, CONCAT('files/', {$this->db->dbprefix('sales')}.attachment) as attachment, return_id")
+                    ->from('sales')
+                    ->where('shop', 1); 
+            } 
+            if(is_numeric($sid)) {
+                //$this->datatables->where('id', $sid);
+                $this->datatables->group_start()
+                    ->where('id', $sid)
+                    ->or_where('reference_no', $sid)
+                ->group_end();
+            }
+            // $this->datatables->join("{$this->db->dbprefix('aramex_shipment')}", 'sales.id');
+            if ($this->input->get('shop') == 'yes') {
+                $this->datatables->where('shop', 1);
+            } elseif ($this->input->get('shop') == 'no') {
+                $this->datatables->where('shop !=', 1);
+            }
+            if ($this->input->get('delivery') == 'no') {
+                $this->datatables->join('deliveries', 'deliveries.sale_id=sales.id', 'left')
+                ->where('sales.sale_status', 'completed')->where('sales.payment_status', 'paid')
+                ->where("({$this->db->dbprefix('deliveries')}.status != 'delivered' OR {$this->db->dbprefix('deliveries')}.status IS NULL)", null);
+            }
+            if ($this->input->get('attachment') == 'yes') {
+                $this->datatables->where('payment_status !=', 'paid')->where('attachment !=', null);
+            }
+            $this->datatables->where('pos !=', 1); // ->where('sale_status !=', 'returned');
+            if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->Admin && !$this->GP['sales-index']) {
+                $this->datatables->where('created_by', $this->session->userdata('user_id'));
+            } elseif ($this->Customer) {
+                $this->datatables->where('customer_id', $this->session->userdata('user_id'));
+            }
+            $this->datatables->add_column('Actions', $action, 'id');
+            echo $this->datatables->generate();
+        }
     public function gift_card_actions()
     {
         if (!$this->Owner && !$this->GP['bulk_actions']) {
@@ -3902,6 +4050,29 @@ class Sales extends MY_Controller
         $this->data['lastInsertedId'] =  $this->input->get('lastInsertedId') ;
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('sales')]];
         $meta = ['page_title' => lang('sales'), 'bc' => $bc];
+        $this->data['sid'] = $this->input->get('sid');
+        $this->page_construct('sales/index', $meta, $this->data);
+    }
+
+    public function shop_sales($warehouse_id = null)
+    {
+        //$this->sma->checkPermissions();
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
+            $this->data['warehouses']   = $this->site->getAllWarehouses();
+            $this->data['warehouse_id'] = $warehouse_id;
+            $this->data['warehouse']    = $warehouse_id ? $this->site->getWarehouseByID($warehouse_id) : null;
+        } else {
+            $this->data['warehouses']   = null;
+            $this->data['warehouse_id'] = $this->session->userdata('warehouse_id');
+            $this->data['warehouse']    = $this->session->userdata('warehouse_id') ? $this->site->getWarehouseByID($this->session->userdata('warehouse_id')) : null;
+        }
+
+        $this->data['lastInsertedId'] =  $this->input->get('lastInsertedId') ;
+        $this->data['is_shop_sales'] = true; // Flag to identify shop sales view
+        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('sales'), 'page' => lang('sales')], ['link' => '#', 'page' => 'Shop Sales']];
+        $meta = ['page_title' => 'Shop Sales', 'bc' => $bc];
         $this->data['sid'] = $this->input->get('sid');
         $this->page_construct('sales/index', $meta, $this->data);
     }
