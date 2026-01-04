@@ -329,7 +329,8 @@ $(document).ready(function() {
                         var rowNum = index + 1;
                         var productCode = product.product_code || '';
                         var itemCode = product.item_code || 'N/A';
-                        var expiryDate = product.expiry_date ? product.expiry_date : 'N/A';
+                        var expiryDate = product.expiry_date || '';
+                        var expiryDisplay = expiryDate || 'N/A'; // Display value
                         var batchNumber = product.batch_number || 'N/A';
                         
                         // Ensure quantity is integer (no decimals)
@@ -341,14 +342,14 @@ $(document).ready(function() {
                         html += '<td>' + itemCode + '</td>';
                         html += '<td>' + product.product_name + '</td>';
                         html += '<td>' + batchNumber + '</td>';
-                        html += '<td>' + expiryDate + '</td>';
+                        html += '<td>' + expiryDisplay + '</td>';
                         html += '<td>';
                         html += '<input type="text" name="quantity[]" class="form-control input-sm text-right quantity_input" placeholder="Actual Quantity" pattern="[0-9]*" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, \'\');" value="' + savedQuantity + '">';
                         html += '</td>';
                         // Hidden fields to submit product data
                         html += '<input type="hidden" name="product_id[]" value="' + product.product_id + '">';
                         html += '<input type="hidden" name="batch_number[]" value="' + batchNumber + '">';
-                        html += '<input type="hidden" name="expiry_date[]" value="' + expiryDate + '">';
+                        html += '<input type="hidden" name="expiry_date[]" value="' + expiryDate + '">'; // Y-m-d format
                         html += '</tr>';
                     });
                     
@@ -614,59 +615,14 @@ $(document).ready(function() {
                 }
 
                 if(response.error == 0 && response.product){
-                    // Add a new row to products table
-                    var rowNum = $('#products_tbody tr').length + 1;
-                    var p = response.product;
-                    var productCode = p.product_code || '';
-                    var itemCode = p.item_code || 'N/A';
-                    var expiryDate = response.expiry_date || '';
-                    var batchNumber = response.batch_number || '';
-                    var quantity = response.quantity || '';
-
-                    var html = '<tr>';
-                    html += '<td>' + rowNum + '</td>';
-                    html += '<td>' + productCode + '</td>';
-                    html += '<td>' + itemCode + '</td>';
-                    html += '<td>' + p.product_name + '</td>';
-                    html += '<td>' + batchNumber + '</td>';
-                    html += '<td>' + expiryDate + '</td>';
-                    html += '<td>';
-                    html += '<input type="number" name="quantity[]" class="form-control input-sm text-right quantity_input" placeholder="Enter quantity" step="0.01" min="0" value="' + quantity + '">';
-                    html += '</td>';
-                    // Hidden fields to submit product data
-                    html += '<input type="hidden" name="product_id[]" value="' + p.product_id + '">';
-                    html += '<input type="hidden" name="batch_number[]" value="' + batchNumber + '">';
-                    html += '<input type="hidden" name="expiry_date[]" value="' + expiryDate + '">';
-                    html += '</tr>';
-
-                    // Check for existing product+batch row and update it to avoid duplicates
-                    var existingInput = $('#products_tbody').find('input[name="product_id[]"][value="' + p.product_id + '"]');
-                    var updated = false;
-                    existingInput.each(function() {
-                        var row = $(this).closest('tr');
-                        var existingBatch = row.find('input[name="batch_number[]"]').val() || '';
-                        if(existingBatch === batchNumber){
-                            // Update quantity input
-                            row.find('input[name="quantity[]"]').val(quantity);
-                            updated = true;
-                            return false; // break loop
-                        }
-                    });
-
-                    if(!updated){
-                        // If table has 'No products loaded' row, replace it
-                        var firstRow = $('#products_tbody tr').first();
-                        if(firstRow.find('em').length > 0) {
-                            $('#products_tbody').html(html);
-                        } else {
-                            $('#products_tbody').append(html);
-                        }
-                    }
-
-                    $('#submit_btn').prop('disabled', false);
+                    // Close modal first
                     $('#moveProductModal').modal('hide');
                     
-                    bootbox.alert(response.msg || 'Product added to inventory check successfully');
+                    // Show success message
+                    bootbox.alert(response.msg || 'Product added successfully. Reloading products...', function(){
+                        // Reload the products grid to ensure consistent data format
+                        $('#load_products_btn').trigger('click');
+                    });
                 } else {
                     bootbox.alert(response.msg || 'Error adding/moving product');
                 }
