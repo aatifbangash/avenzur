@@ -2247,11 +2247,10 @@ class stock_request extends MY_Controller
             $this->sma->send_json([ $this->security->get_csrf_token_name() => $this->security->get_csrf_hash(), 'error' => 1, 'msg' => 'Warehouse ID required' ]);
         }
 
-        $this->db->select('DISTINCT(p.id) as product_id, p.code as product_code, p.item_code, p.name as product_name, ps.shelf as warehouse_shelf');
+        // Get ALL products, not just those with inventory records
+        $this->db->select('p.id as product_id, p.code as product_code, p.item_code, p.name as product_name, ps.shelf as warehouse_shelf');
         $this->db->from('sma_products p');
-        $this->db->join('sma_inventory_movements im', 'im.product_id = p.id', 'inner');
         $this->db->join('sma_product_shelves ps', 'ps.product_id = p.id AND ps.warehouse_id = ' . $this->db->escape($warehouse_id), 'left');
-        $this->db->where('im.location_id', $warehouse_id);
         $this->db->order_by('p.name', 'ASC');
         $query = $this->db->get();
         $products = $query->result();
