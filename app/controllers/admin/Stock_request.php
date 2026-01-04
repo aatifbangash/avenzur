@@ -2026,14 +2026,7 @@ class stock_request extends MY_Controller
                     // Only save if quantity is entered (including 0 for "not found on shelf")
                     // Empty string means user didn't enter anything, so skip it
                     if($quantity !== '' && $quantity !== null){
-                        // Delete existing record based on batch/expiry (the old values)
-                        $this->db->where('inv_check_id', $inv_check_id);
-                        $this->db->where('product_id', $product_id);
-                        $this->db->where('batch_number', $batch_number);
-                        $this->db->where('shelf', $shelf);
-                        $this->db->delete('sma_inventory_check_items');
-                        
-                        // Determine the expiry date to save
+                        // Determine the expiry date to save first
                         $expiry_to_save = null;
                         if(!empty($expiry_to_save_raw) && $expiry_to_save_raw !== 'N/A'){
                             $timestamp = strtotime($expiry_to_save_raw);
@@ -2041,6 +2034,19 @@ class stock_request extends MY_Controller
                                 $expiry_to_save = date('Y-m-d', $timestamp);
                             }
                         }
+                        
+                        // Delete existing record based on batch AND expiry (critical for uniqueness)
+                        $this->db->where('inv_check_id', $inv_check_id);
+                        $this->db->where('product_id', $product_id);
+                        $this->db->where('batch_number', $batch_number);
+                        $this->db->where('shelf', $shelf);
+                        // Include expiry in the WHERE clause to differentiate records with same batch
+                        if($expiry_to_save !== null){
+                            $this->db->where('expiry_date', $expiry_to_save);
+                        } else {
+                            $this->db->where('(expiry_date IS NULL OR expiry_date = "")');
+                        }
+                        $this->db->delete('sma_inventory_check_items');
                         
                         // Insert new/updated record (batch and system_batch are the same now)
                         $record = [
