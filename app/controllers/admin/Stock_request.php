@@ -874,6 +874,24 @@ class stock_request extends MY_Controller
                                         if ($same_batch_price && $same_batch_price->net_unit_sale > 0) {
                                             $sale_price = $same_batch_price->net_unit_sale;
                                             $batch_number = $batch_with_triple_zeros; // Update batch to matched value
+                                        } else {
+                                            // If still not found, try with 4 leading zeros
+                                            $batch_with_quad_zeros = '0000' . $batch_number;
+                                            $same_batch_price = $this->db
+                                                ->select('net_unit_sale')
+                                                ->from('sma_inventory_movements')
+                                                ->where('product_id', $row[0])
+                                                ->where('batch_number', $batch_with_quad_zeros)
+                                                ->where('net_unit_sale >', 0)
+                                                ->order_by('id', 'DESC')
+                                                ->limit(1)
+                                                ->get()
+                                                ->row();
+                                            
+                                            if ($same_batch_price && $same_batch_price->net_unit_sale > 0) {
+                                                $sale_price = $same_batch_price->net_unit_sale;
+                                                $batch_number = $batch_with_quad_zeros; // Update batch to matched value
+                                            }
                                         }
                                     }
                                 }
@@ -906,7 +924,8 @@ class stock_request extends MY_Controller
                         'price' => $cost_info->cost,
                         'product_code' => $row[$header_map['product_code']] ?? '',
                         'product_name' => $row[$header_map['product_name']] ?? '',
-                        'shelf' => $row[$header_map['actual_shelf']] ?? ''
+                        'shelf' => $row[$header_map['actual_shelf']] ?? '',
+                        'sale_price' => $sale_price
                     ];
                     
                     // Skip rows with no variance
@@ -969,6 +988,7 @@ class stock_request extends MY_Controller
                 $system_quantity = $check_item['system_quantity'];
                 $csv_cost = $check_item['cost']; // From CSV (0 if empty)
                 $csv_price = $check_item['cost']; // From CSV (0 if empty)
+                $csv_sale_price = $check_item['sale_price']; // From CSV
 
                 // Calculate variance
                 $variance = $actual_quantity - $system_quantity;
@@ -1064,6 +1084,28 @@ class stock_request extends MY_Controller
                     }
                 }
 
+                // If still no entries, try with 4 leading zeros
+                if (empty($avz_entries) && !empty($batch_number) && substr($batch_number, 0, 1) !== '0') {
+                    $batch_with_quad_zeros = '0000' . $batch_number;
+                    $this->db->select('im.avz_item_code, im.quantity, im.batch_number, im.expiry_date,
+                                     im.net_unit_cost, im.net_unit_sale, p.unit as product_unit, p.tax_rate');
+                    $this->db->from('sma_inventory_movements im');
+                    $this->db->join('sma_products p', 'p.id = im.product_id', 'left');
+                    $this->db->where('im.product_id', $product_id);
+                    $this->db->where('im.batch_number', $batch_with_quad_zeros);
+                    $this->db->where('im.location_id', $location_id);
+                    if ($expiry_date && $expiry_date != 'N/A') {
+                        $this->db->where('im.expiry_date', $expiry_date);
+                    }
+                    $avz_entries = $this->db->get()->result();
+                    
+                    if (!empty($avz_entries)) {
+                        // Update batch_number to match what was found
+                        $batch_number = $batch_with_quad_zeros;
+                        echo '<span style="color:orange;">Batch matched with 4 leading zeros: ' . $batch_with_quad_zeros . ' for product ' . $product_id . '</span><br>';
+                    }
+                }
+
                 // CASE 1: SURPLUS (Actual > System)
                 if ($variance > 0) {
                     $adjusted_quantity = abs($variance);
@@ -1110,7 +1152,8 @@ class stock_request extends MY_Controller
                         'date'              => date('Y-m-d'),
                         'batchno'           => $batch_number,
                         'real_cost'         => $net_cost,
-                        'avz_item_code'     => $avz_code
+                        'avz_item_code'     => $avz_code,
+                        'csv_sale_price'    => $csv_sale_price
                     ];
 
                     $products_in[] = $product;
@@ -1198,7 +1241,8 @@ class stock_request extends MY_Controller
                             'date'              => date('Y-m-d'),
                             'batchno'           => $entry->batch_number,
                             'real_cost'         => $net_cost,
-                            'avz_item_code'     => $avz_code
+                            'avz_item_code'     => $avz_code,
+                            'csv_sale_price'    => $csv_sale_price
                         ];
 
                         $products_out[] = $product;
