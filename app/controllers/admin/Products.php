@@ -936,6 +936,168 @@ class Products extends MY_Controller
         echo "<hr>Import completed.";
     }
 
+    public function upload_rawabi_expiry_inventory_check(){
+        $excelFile = $this->upload_path . 'csv/Expiry-Physical-Count.xlsx'; // Excel file
+        if (!file_exists($excelFile)) {
+            echo "Excel file not found.";
+            return;
+        }
+
+        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($excelFile);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $rows = $sheet->toArray(null, true, true, false);
+
+        echo "<h3>Starting Import...</h3>";
+
+        $warehouse_id = 48; // Expiry Warehouse ID
+        foreach ($rows as $row) {
+            $shelf = trim($row[5]);
+            $item_code = trim($row[7]);
+            $batch_number = trim($row[9]);
+            $expiry_date_raw = $row[11]; // Keep raw value for processing
+            $quantity = (int)$row[12];
+            $cost = (float)$row[13];
+            $total_cost = (float)$row[14];
+            $group_name = trim($row[6]);
+            $item_name = trim($row[2]);
+
+            $product = $this->db
+                ->where('item_code', $item_code)
+                ->get('sma_products')
+                ->row();
+            if ($product) { 
+                $product_id = $product->id; 
+
+                // Parse expiry date from format like "October-25" or "November-13" or Excel serial date
+                $formatted_expiry = null;
+                $expiry_month = null;
+                $expiry_year = null;
+                
+                if ($expiry_date_raw && $expiry_date_raw !== 'N/A' && trim($expiry_date_raw) !== '') {
+                    // Check if it's an Excel serial date number (numeric)
+                    if (is_numeric($expiry_date_raw)) {
+                        try {
+                            // Convert Excel serial date to DateTime object
+                            $dateObj = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($expiry_date_raw);
+                            $formatted_expiry = $dateObj->format('Y-m-d');
+                            $expiry_month = $dateObj->format('m');
+                            $expiry_year = $dateObj->format('Y');
+                        } catch (Exception $e) {
+                            echo "Error converting date for Item Code: {$item_code}<br>";
+                            continue;
+                        }
+                    } else {
+                        // Handle text format like "October-25" or "November-13"
+                        $expiry_date = trim($expiry_date_raw);
+                        $expiry_parts = explode('-', $expiry_date);
+                        
+                        if (count($expiry_parts) === 2) {
+                            $month_name = trim($expiry_parts[0]);
+                            $year_short = trim($expiry_parts[1]);
+                            
+                            // Convert 2-digit year to 4-digit (25 -> 2025, 13 -> 2013)
+                            $expiry_year = (int)$year_short < 50 ? '20' . $year_short : '19' . $year_short;
+                            
+                            // Convert month name to month number
+                            $expiry_month = date('m', strtotime($month_name . ' 1'));
+                            
+                            // Format as Y-m-d (using first day of month)
+                            $formatted_expiry = $expiry_year . '-' . $expiry_month . '-01';
+                        }
+                    }
+                }
+
+                $this->db->insert('sma_inventory_movements', [
+                    'product_id' => $product_id,
+                    'batch_number' => $batch_number,
+                    'movement_date' => '2025-12-31 00:00:00',
+                    'type' => 'transfer_in',
+                    'quantity' => $quantity,
+                    'location_id' => $warehouse_id,
+                    'net_unit_cost' => $cost,
+                    'expiry_date' => $formatted_expiry,
+                    'net_unit_sale' => $product->price,
+                    'reference_id' => 0,
+                    'real_unit_cost' => $cost,
+                    'real_unit_sale' => $product->price,
+                    'avz_item_code' => $this->sma->generateUUIDv4(),
+                    'bonus' => 0,
+                    'customer_id' => null,
+                ]);
+
+                $system_quantity = $quantity;
+
+                $this->db->insert('sma_inventory_check_items', [
+                    'inv_check_id' => 2, // Rawabi Inventory Check ID
+                    'product_id' => $product_id,
+                    'batch_number' => $batch_number,
+                    'system_batch_number' => $batch_number,
+                    'expiry_date' => $formatted_expiry,
+                    'quantity' => $quantity,
+                    'system_expiry_date' => $formatted_expiry,
+                    'user_id' => $this->session->userdata('user_id'),
+                    'shelf' => $shelf,
+                    'system_quantity' => $system_quantity,
+                ]);
+
+                echo "Mapping Shelf: {$shelf} to Product ID: {$product_id} (Item Code: {$item_code}) - Expiry: {$expiry_date} -> {$formatted_expiry} - System Qty: {$system_quantity}<br>";
+            }else{ 
+                echo "Product not found for Item Code: {$item_code} - Item Name : {$row[2]}<br>";
+                continue;
+            }
+        }
+
+    }
+
+    public function upload_rawabi_average_cost(){
+        $excelFile = $this->upload_path . 'csv/Inventory.xlsx'; // Excel file
+        if (!file_exists($excelFile)) {
+            echo "Excel file not found.";
+            return;
+        }
+
+        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($excelFile);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $rows = $sheet->toArray(null, true, true, false);
+
+        echo "<h3>Starting Import...</h3>";
+
+        foreach ($rows as $row) {
+            $item_code = trim($row[0]); 
+            $cost = (float)$row[3];
+            $name = trim($row[4]);
+
+            $product = $this->db
+                ->where('item_code', $item_code)
+                ->get('sma_products')
+                ->row();
+
+            if ($product) { 
+                $product_id = $product->id;
+
+                $this->db->insert('sma_rawabi_product_price', [
+                    'item_id' => $item_code,
+                    'product_id' => $product_id,
+                    'name' => $name,
+                    'cost' => $cost,
+                ]);
+
+                $product_price_id = $this->db->insert_id();
+                //echo '<pre>';print_r($product);echo '</pre>';
+            }else{
+                echo "Product not found for Item Code: {$item_code} - Name: {$name}<br>";
+                continue;
+            }
+        }
+
+    }
+
     public function upload_customer_returns(){
         $excelFile = $this->upload_path . 'csv/open-mind-returns.xlsx'; // Excel file
         if (!file_exists($excelFile)) {
