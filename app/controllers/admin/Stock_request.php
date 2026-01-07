@@ -1656,7 +1656,7 @@ class stock_request extends MY_Controller
                 $rawabi = $this->db->where('product_id', $ic->product_id)->get('sma_rawabi_product_price')->row();
                 $ic->cost = $rawabi && isset($rawabi->cost) ? floatval($rawabi->cost) : 0.00;
                 $variance = isset($ic->quantity) && isset($ic->system_quantity) ? ($ic->quantity - $ic->system_quantity) : 0;
-                $ic->total_cost = $ic->cost * $variance;
+                $ic->total_cost = $ic->cost * ($ic->quantity - $ic->system_quantity);
             }
             unset($ic);
         }
