@@ -348,9 +348,7 @@ class Transfers_model extends CI_Model
             foreach ($items as $item) {
                 $item['transfer_id'] = $transfer_id;
                 $real_cost = $item['real_cost'];
-                $csv_sale_price = $item['csv_sale_price'];
                 unset($item['real_cost']);
-                unset($item['csv_sale_price']);
                 $item['option_id'] = !empty($item['option_id']) && is_numeric($item['option_id']) ? $item['option_id'] : null;
                 if ($status == 'completed') {
                     $item['date'] = date('Y-m-d');
@@ -377,14 +375,14 @@ class Transfers_model extends CI_Model
                 if ($status == 'sent' || $status == 'completed') {
                     if ($status == 'sent') {
                         ////Inventory Movement - Transfer Out
-                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $transfer_id, $item['net_unit_cost'], $item['expiry'], $csv_sale_price, $real_cost, $item['avz_item_code'], NULL, NULL, $csv_sale_price, $data['date']);
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $transfer_id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['sale_price'], $data['date']);
                     }
 
                     if ($status == 'completed') {
                         //Inventory Movement - Transfer IN
-                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_in', $item['quantity'], $data['to_warehouse_id'], $transfer_id, $item['net_unit_cost'], $item['expiry'], $csv_sale_price, $real_cost, $item['avz_item_code'], NULL, NULL, $csv_sale_price, $data['date']);
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_in', $item['quantity'], $data['to_warehouse_id'], $transfer_id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['sale_price'], $data['date']);
                         ////Inventory Movement - Transfer Out
-                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $transfer_id, $item['net_unit_cost'], $item['expiry'], $csv_sale_price, $real_cost, $item['avz_item_code'], NULL, NULL, $csv_sale_price, $data['date']);
+                        $this->Inventory_model->add_movement($item['product_id'], $item['batchno'], 'transfer_out', $item['quantity'], $data['from_warehouse_id'], $transfer_id, $item['net_unit_cost'], $item['expiry'], $item['sale_price'], $real_cost, $item['avz_item_code'], NULL, NULL, $item['sale_price'], $data['date']);
                     }
 
                     // This is commented on 2025-02-18 for no valid use case
