@@ -264,6 +264,7 @@ class Stock_request_model extends CI_Model
             chk.shelf AS actual_shelf,
             chk.system_batch_number AS system_batch,
             chk.system_expiry_date AS system_expiry,
+            chk.group_name,
 
             COALESCE(chk.saved_system_quantity, sys.system_quantity) AS system_quantity,
             sys.avz_code_count,
@@ -290,6 +291,7 @@ class Stock_request_model extends CI_Model
                 expiry_date,
                 system_batch_number,
                 system_expiry_date,
+                group_name,
                 shelf,
                 MAX(user_id) AS user_id,
                 SUM(quantity) AS excel_quantity,

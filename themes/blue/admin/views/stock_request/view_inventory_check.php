@@ -123,7 +123,7 @@
                                                 </td>
                                                 <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->shelf ?? '-'; ?></td>
                                                 <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->actual_shelf ?? '-'; ?></td>
-                                                <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->inventory_group ?? '-'; ?></td>
+                                                <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->inventory_group ?? $inventory_check->group_name; ?></td>
                                                 <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->item_code ?? '-'; ?></td>
                                                 
                                                 <?php 

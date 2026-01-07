@@ -972,11 +972,11 @@ class Products extends MY_Controller
                 $product_id = $product->id; 
 
                 // Parse expiry date from format like "October-25" or "November-13" or Excel serial date
-                $formatted_expiry = null;
+                /*$formatted_expiry = null;
                 $expiry_month = null;
-                $expiry_year = null;
+                $expiry_year = null;*/
                 
-                if ($expiry_date_raw && $expiry_date_raw !== 'N/A' && trim($expiry_date_raw) !== '') {
+                /*if ($expiry_date_raw && $expiry_date_raw !== 'N/A' && trim($expiry_date_raw) !== '') {
                     // Check if it's an Excel serial date number (numeric)
                     if (is_numeric($expiry_date_raw)) {
                         try {
@@ -1008,9 +1008,13 @@ class Products extends MY_Controller
                             $formatted_expiry = $expiry_year . '-' . $expiry_month . '-01';
                         }
                     }
-                }
+                }*/
 
-                $this->db->insert('sma_inventory_movements', [
+                $this->db->update('sma_inventory_check_items', [
+                    'group_name' => $group_name
+                ], ['inv_check_id' => 2, 'product_id' => $product_id, 'batch_number' => $batch_number, 'shelf' => $shelf]);
+
+                /*$this->db->insert('sma_inventory_movements', [
                     'product_id' => $product_id,
                     'batch_number' => $batch_number,
                     'movement_date' => '2025-12-31 00:00:00',
@@ -1041,9 +1045,11 @@ class Products extends MY_Controller
                     'user_id' => $this->session->userdata('user_id'),
                     'shelf' => $shelf,
                     'system_quantity' => $system_quantity,
-                ]);
+                ]);*/
 
-                echo "Mapping Shelf: {$shelf} to Product ID: {$product_id} (Item Code: {$item_code}) - Expiry: {$expiry_date} -> {$formatted_expiry} - System Qty: {$system_quantity}<br>";
+                echo "Group Name: {$group_name} - updated for Item Code: {$item_code} - Item Name : {$row[2]}<br>";
+
+                //echo "Mapping Shelf: {$shelf} to Product ID: {$product_id} (Item Code: {$item_code}) - Expiry: {$expiry_date} -> {$formatted_expiry} - System Qty: {$system_quantity}<br>";
             }else{ 
                 echo "Product not found for Item Code: {$item_code} - Item Name : {$row[2]}<br>";
                 continue;
