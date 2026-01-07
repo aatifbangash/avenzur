@@ -107,6 +107,9 @@
                                     foreach($inventory_check_array as $inventory_check){
                                         $count++;
                                         $variance = $inventory_check->quantity - $inventory_check->system_quantity;
+                                        if($inventory_check_request_details->location_id == 48){
+                                            $variance = 0;
+                                        }
                                         $variance_class = ($variance != 0) ? 'difference-row' : '';
                                         ?>
                                             <tr class="<?= $variance_class ?>">
@@ -161,14 +164,28 @@
                                                 <td class="dataTables_empty" style="text-align: center;"><?= $inventory_check->avz_code ?? '-'; ?></td>
                                                 <?php } ?>
                                                 <td class="dataTables_empty" style="text-align: center; font-weight: bold;"> <?= number_format($inventory_check->quantity, 2); ?></td>
-                                                <td class="dataTables_empty" style="text-align: center;"><?= number_format($inventory_check->system_quantity, 2); ?></td>
-                                                <td class="dataTables_empty" style="text-align: center; <?= $variance > 0 ? 'color: green;' : ($variance < 0 ? 'color: red;' : '') ?> font-weight: bold;">
+                                                <?php if($inventory_check_request_details->location_id == 48){ ?>
+                                                    <td class="dataTables_empty" style="text-align: center;"><?= number_format($inventory_check->quantity, 2); ?></td>
+                                                    <?php $variance = 0; ?>
+                                                    <td class="dataTables_empty" style="text-align: center; <?= $variance > 0 ? 'color: green;' : ($variance < 0 ? 'color: red;' : '') ?> font-weight: bold;">
                                                     <?= $variance > 0 ? '+' : '' ?><?= number_format($variance, 2) ?>
-                                                </td>
-                                                <td class="dataTables_empty" style="text-align: center;"> <?= number_format($inventory_check->cost ?? 0, 2); ?></td>
-                                                <td class="dataTables_empty" style="text-align: center; <?= ($inventory_check->total_cost ?? 0) > 0 ? 'color: green;' : ((($inventory_check->total_cost ?? 0) < 0) ? 'color: red;' : '') ?> font-weight: bold;">
-                                                    <?= ($inventory_check->total_cost ?? 0) > 0 ? '+' : '' ?><?= number_format($inventory_check->total_cost ?? 0, 2); ?>
-                                                </td>
+                                                    </td>
+                                                    <td class="dataTables_empty" style="text-align: center;"> <?= number_format($inventory_check->cost ?? 0, 2); ?></td>
+                                                    <td class="dataTables_empty" style="text-align: center; font-weight: bold;">
+                                                        <?= number_format(($inventory_check->cost * $inventory_check->quantity), 2); ?>
+                                                    </td>
+                                                <?php } else { ?>
+                                                    <td class="dataTables_empty" style="text-align: center;"><?= number_format($inventory_check->system_quantity, 2); ?></td>
+                                                    <td class="dataTables_empty" style="text-align: center; <?= $variance > 0 ? 'color: green;' : ($variance < 0 ? 'color: red;' : '') ?> font-weight: bold;">
+                                                    <?= $variance > 0 ? '+' : '' ?><?= number_format($variance, 2) ?>
+                                                    </td>
+                                                    <td class="dataTables_empty" style="text-align: center;"> <?= number_format($inventory_check->cost ?? 0, 2); ?></td>
+                                                    <td class="dataTables_empty" style="text-align: center; <?= ($inventory_check->total_cost ?? 0) > 0 ? 'color: green;' : ((($inventory_check->total_cost ?? 0) < 0) ? 'color: red;' : '') ?> font-weight: bold;">
+                                                        <?= ($inventory_check->total_cost ?? 0) > 0 ? '+' : '' ?><?= number_format($inventory_check->total_cost ?? 0, 2); ?>
+                                                    </td>
+                                                <?php } ?>
+                                                
+                                                
                                             </tr>
                                             <?php
                                     }
