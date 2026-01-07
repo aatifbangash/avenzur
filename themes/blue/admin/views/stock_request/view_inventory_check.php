@@ -96,6 +96,8 @@
                             <th><?= lang('Actual Quantity'); ?></th>
                             <th><?= lang('System Quantity'); ?></th>
                             <th><?= lang('Variance'); ?></th>
+                            <th><?= lang('Cost'); ?></th>
+                            <th><?= lang('Total Cost'); ?></th>
                         </tr>
                         </thead>
                         <tbody>
@@ -163,12 +165,16 @@
                                                 <td class="dataTables_empty" style="text-align: center; <?= $variance > 0 ? 'color: green;' : ($variance < 0 ? 'color: red;' : '') ?> font-weight: bold;">
                                                     <?= $variance > 0 ? '+' : '' ?><?= number_format($variance, 2) ?>
                                                 </td>
+                                                <td class="dataTables_empty" style="text-align: center;"> <?= number_format($inventory_check->cost ?? 0, 2); ?></td>
+                                                <td class="dataTables_empty" style="text-align: center; <?= ($inventory_check->total_cost ?? 0) > 0 ? 'color: green;' : ((($inventory_check->total_cost ?? 0) < 0) ? 'color: red;' : '') ?> font-weight: bold;">
+                                                    <?= ($inventory_check->total_cost ?? 0) > 0 ? '+' : '' ?><?= number_format($inventory_check->total_cost ?? 0, 2); ?>
+                                                </td>
                                             </tr>
                                             <?php
                                     }
                                 }else{
                             ?>
-                                <tr><td colspan="16" class="dataTables_empty"><?= lang('Could not load data'); ?></td></tr>
+                                <tr><td colspan="18" class="dataTables_empty"><?= lang('Could not load data'); ?></td></tr>
                             <?php
                                 }
                             ?>
