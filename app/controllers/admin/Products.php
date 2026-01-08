@@ -936,56 +936,8 @@ class Products extends MY_Controller
         echo "<hr>Import completed.";
     }
 
-    public function update_rawabi_prices(){
-        $excelFile = $this->upload_path . 'csv/sale-price-and-discount-update-by-rawabi.xls'; // Excel file
-        if (!file_exists($excelFile)) {
-            echo "Excel file not found.";
-            return;
-        }
-
-        // Use IOFactory to auto-detect file format (.xls or .xlsx)
-        try {
-            $spreadsheet = IOFactory::load($excelFile);
-        } catch (Exception $e) {
-            echo "Error loading file: " . $e->getMessage();
-            return;
-        }
-        
-        $sheet = $spreadsheet->getActiveSheet();
-
-        $rows = $sheet->toArray(null, true, true, false);
-
-        echo "<h3>Starting Import...</h3>";
-
-        foreach ($rows as $row) {
-            $item_code = trim($row[2]);
-            $sale_price = (float)$row[5];
-            $product = $this->db
-                ->where('item_code', $item_code)
-                ->get('sma_products')
-                ->row();
-            if ($product) { 
-                $product_id = $product->id; 
-                if($sale_price == $product->price){
-                    echo "No price change for Item Code: {$item_code} - Price remains: {$product->price}<br>";
-                    continue;
-                } else {
-                    $this->db->where('id', $product_id);
-                    $this->db->update('sma_products', [
-                        'price' => $sale_price
-                    ]);
-                    echo "Updated Item Code: {$item_code} - Old Price: {$product->price} -- New Price: {$sale_price}<br>";
-
-                }
-            }else{
-                echo "Product not found for Item Code: {$item_code}<br>";
-                continue;
-            }
-        }
-    }
-
     public function upload_rawabi_expiry_inventory_check(){
-        $excelFile = $this->upload_path . 'csv/Expiry-Physical-Count.xlsx'; // Excel file
+        $excelFile = $this->upload_path . 'csv/Expiry-Physical-Count-2025-New-Upload.xlsx'; // Excel file
         if (!file_exists($excelFile)) {
             echo "Excel file not found.";
             return;
@@ -1002,14 +954,14 @@ class Products extends MY_Controller
 
         $warehouse_id = 48; // Expiry Warehouse ID
         foreach ($rows as $row) {
-            $shelf = trim($row[5]);
-            $item_code = trim($row[7]);
-            $batch_number = trim($row[9]);
-            $expiry_date_raw = $row[11]; // Keep raw value for processing
-            $quantity = (int)$row[12];
-            $cost = (float)$row[13];
-            $total_cost = (float)$row[14];
-            $group_name = trim($row[6]);
+            $shelf = trim($row[3]);
+            $item_code = trim($row[1]);
+            $batch_number = trim($row[5]);
+            $expiry_date_raw = $row[4]; // Keep raw value for processing
+            $quantity = (int)$row[6];
+            $cost = (float)$row[7];
+            $total_cost = (float)$row[8];
+            $group_name = trim($row[0]);
             $item_name = trim($row[2]);
 
             $product = $this->db
@@ -1020,11 +972,11 @@ class Products extends MY_Controller
                 $product_id = $product->id; 
 
                 // Parse expiry date from format like "October-25" or "November-13" or Excel serial date
-                /*$formatted_expiry = null;
+                $formatted_expiry = null;
                 $expiry_month = null;
-                $expiry_year = null;*/
+                $expiry_year = null;
                 
-                /*if ($expiry_date_raw && $expiry_date_raw !== 'N/A' && trim($expiry_date_raw) !== '') {
+                if ($expiry_date_raw && $expiry_date_raw !== 'N/A' && trim($expiry_date_raw) !== '') {
                     // Check if it's an Excel serial date number (numeric)
                     if (is_numeric($expiry_date_raw)) {
                         try {
@@ -1056,13 +1008,9 @@ class Products extends MY_Controller
                             $formatted_expiry = $expiry_year . '-' . $expiry_month . '-01';
                         }
                     }
-                }*/
+                }
 
-                $this->db->update('sma_inventory_check_items', [
-                    'group_name' => $group_name
-                ], ['inv_check_id' => 2, 'product_id' => $product_id, 'batch_number' => $batch_number, 'shelf' => $shelf]);
-
-                /*$this->db->insert('sma_inventory_movements', [
+                $this->db->insert('sma_inventory_movements', [
                     'product_id' => $product_id,
                     'batch_number' => $batch_number,
                     'movement_date' => '2025-12-31 00:00:00',
@@ -1093,11 +1041,10 @@ class Products extends MY_Controller
                     'user_id' => $this->session->userdata('user_id'),
                     'shelf' => $shelf,
                     'system_quantity' => $system_quantity,
-                ]);*/
+                    'group_name' => $group_name,
+                ]);
 
-                echo "Group Name: {$group_name} - updated for Item Code: {$item_code} - Item Name : {$row[2]}<br>";
-
-                //echo "Mapping Shelf: {$shelf} to Product ID: {$product_id} (Item Code: {$item_code}) - Expiry: {$expiry_date} -> {$formatted_expiry} - System Qty: {$system_quantity}<br>";
+                echo "Mapping Shelf: {$shelf} to Product ID: {$product_id} (Item Code: {$item_code}) - Expiry: {$expiry_date} -> {$formatted_expiry} - System Qty: {$system_quantity}<br>";
             }else{ 
                 echo "Product not found for Item Code: {$item_code} - Item Name : {$row[2]}<br>";
                 continue;
