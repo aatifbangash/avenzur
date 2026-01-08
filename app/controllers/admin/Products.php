@@ -936,6 +936,54 @@ class Products extends MY_Controller
         echo "<hr>Import completed.";
     }
 
+    public function update_rawabi_prices(){
+        $excelFile = $this->upload_path . 'csv/sale-price-and-discount-update-by-rawabi.xls'; // Excel file
+        if (!file_exists($excelFile)) {
+            echo "Excel file not found.";
+            return;
+        }
+
+        // Use IOFactory to auto-detect file format (.xls or .xlsx)
+        try {
+            $spreadsheet = IOFactory::load($excelFile);
+        } catch (Exception $e) {
+            echo "Error loading file: " . $e->getMessage();
+            return;
+        }
+        
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $rows = $sheet->toArray(null, true, true, false);
+
+        echo "<h3>Starting Import...</h3>";
+
+        foreach ($rows as $row) {
+            $item_code = trim($row[2]);
+            $sale_price = (float)$row[5];
+            $product = $this->db
+                ->where('item_code', $item_code)
+                ->get('sma_products')
+                ->row();
+            if ($product) { 
+                $product_id = $product->id; 
+                if($sale_price == $product->price){
+                    echo "No price change for Item Code: {$item_code} - Price remains: {$product->price}<br>";
+                    continue;
+                } else {
+                    $this->db->where('id', $product_id);
+                    $this->db->update('sma_products', [
+                        'price' => $sale_price
+                    ]);
+                    echo "Updated Item Code: {$item_code} - Old Price: {$product->price} -- New Price: {$sale_price}<br>";
+
+                }
+            }else{
+                echo "Product not found for Item Code: {$item_code}<br>";
+                continue;
+            }
+        }
+    }
+
     public function upload_rawabi_expiry_inventory_check(){
         $excelFile = $this->upload_path . 'csv/Expiry-Physical-Count.xlsx'; // Excel file
         if (!file_exists($excelFile)) {

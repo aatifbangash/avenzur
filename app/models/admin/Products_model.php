@@ -1822,7 +1822,7 @@ AND im_summary.total_quantity > 0";
 
             //echo $this->db->last_query();exit;
         } else if ($quote_id) {
-            $this->db->select("im.net_unit_sale, 
+            $this->db->select("pr.price as net_unit_sale, 
                             im.net_unit_cost, 
                             im.real_unit_cost,
                             im.real_unit_sale,
