@@ -503,44 +503,65 @@
             var pharmacy_name = '<?php echo $pharmacy_name; ?>';
             var pharmacy_address = '<?php echo $pharmacy_address; ?>';
             var printing_date = '<?php echo date('Y-m-d'); ?>';
+            var invoice_no = '<?php echo $inv->reference_no; ?>';
+            var customer_name = '<?php echo $inv->customer_name; ?>';
 
-              var printWindow = window.open('', 'Instructions', 'height=700,width=700');
-                    printWindow.document.write('<html><head><title>Instructions</title>');
-                    printWindow.document.write('<style>');
-                    // Set the top margin to 0.5 inch (or adjust as needed)
-                    printWindow.document.write('@page { margin: 0.15in; }');
-                    printWindow.document.write('body { font-family: Arial, sans-serif; }');
-                    printWindow.document.write('b { font-size: 16px; }');
-                    printWindow.document.write('</style>');
-                    printWindow.document.write('</head><body>');
-             var html = '';
+            var printWindow = window.open('', 'Instructions', 'height=700,width=700');
+            printWindow.document.write('<html><head><title>Medication Instructions</title>');
+            printWindow.document.write('<style>');
+            printWindow.document.write('@page { margin: 0.3in; size: A5; }');
+            printWindow.document.write('* { margin: 0; padding: 0; box-sizing: border-box; }');
+            printWindow.document.write('body { font-family: Arial, sans-serif; padding: 15px; }');
+            printWindow.document.write('.instruction-page { page-break-after: always; border: 2px solid #1e5a9c; padding: 15px; margin-bottom: 20px; border-radius: 8px; }');
+            printWindow.document.write('.instruction-page:last-child { page-break-after: auto; }');
+            printWindow.document.write('.header { background: linear-gradient(135deg, #1e5a9c 0%, #2b7bc9 100%); color: white; padding: 15px; border-radius: 5px; margin-bottom: 15px; text-align: center; }');
+            printWindow.document.write('.header h2 { font-size: 20px; margin: 0 0 5px 0; font-weight: bold; }');
+            printWindow.document.write('.header .logo-text { font-size: 14px; margin: 3px 0; }');
+            printWindow.document.write('.info-section { margin-bottom: 12px; }');
+            printWindow.document.write('.info-row { display: flex; border-bottom: 1px solid #ddd; padding: 8px 5px; }');
+            printWindow.document.write('.info-row:last-child { border-bottom: none; }');
+            printWindow.document.write('.info-label { font-weight: bold; color: #1e5a9c; width: 140px; font-size: 13px; }');
+            printWindow.document.write('.info-value { flex: 1; color: #333; font-size: 13px; }');
+            printWindow.document.write('.footer { margin-top: 15px; padding-top: 10px; border-top: 2px solid #1e5a9c; text-align: center; }');
+            printWindow.document.write('.tel { color: #1e5a9c; font-weight: bold; font-size: 14px; }');
+            printWindow.document.write('</style>');
+            printWindow.document.write('</head><body>');
+            
+            var html = '';
             for (var medication in instructionsData) {
-                console.log(medication);
                 if (instructionsData.hasOwnProperty(medication)) {
                     var instruction = instructionsData[medication];
-
                     var instrt = instruction.split(':');
-                    html += '<b>' + medication + '</b><br />';
-                    html += instrt[0] + '<br />';
-                    html += pharmacy_name + '<br />';
-                    html += pharmacy_address + '<br />';
-                    html += pharmacist_name + '<br />';
-                    html += 'Date. ' + printing_date + '<br />';
-                    html += 'Exp. ' + instrt[1] + '<br />';
-                    html += 'اسم المريض';
-
+                    var dosage = instrt[0] || '';
+                    var expiry = instrt[1] || '';
                     
-
+                    html += '<div class="instruction-page">';
+                    html += '<div class="header">';
+                    html += '<h2>Pharmacy : ' + pharmacy_name + '</h2>';
+                    html += '<div class="logo-text">' + pharmacy_address + '</div>';
+                    html += '</div>';
+                    
+                    html += '<div class="info-section">';
+                    html += '<div class="info-row"><div class="info-label">Invoice No:</div><div class="info-value">' + invoice_no + '</div></div>';
+                    html += '<div class="info-row"><div class="info-label">Patient name :</div><div class="info-value">' + customer_name + '</div></div>';
+                    html += '<div class="info-row"><div class="info-label">Medication :</div><div class="info-value">' + medication + '</div></div>';
+                    html += '<div class="info-row"><div class="info-label">Dosage :</div><div class="info-value">' + dosage + '</div></div>';
+                    html += '<div class="info-row"><div class="info-label">Expiry Date :</div><div class="info-value">' + expiry + '</div></div>';
+                    html += '<div class="info-row"><div class="info-label">Dispensed by :</div><div class="info-value">' + pharmacist_name + '</div></div>';
+                    html += '<div class="info-row"><div class="info-label">Dispensing Date :</div><div class="info-value">' + printing_date + '</div></div>';
+                    html += '</div>';
+                    
+                    html += '<div class="footer">';
+                    html += '<div class="tel">Tel No : <?php echo $warehouse->phone ?? "+966 50 760 1593"; ?></div>';
+                    html += '</div>';
+                    html += '</div>';
                 }
             }
 
             printWindow.document.write(html);
-
             printWindow.document.write('</body></html>');
-
             printWindow.print();
             printWindow.close();
-
             return true;
         }
 
