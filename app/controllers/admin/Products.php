@@ -936,6 +936,92 @@ class Products extends MY_Controller
         echo "<hr>Import completed.";
     }
 
+    public function upload_rawabi_product_discount_data(){
+        $excelFile = $this->upload_path . 'csv/Cash-Disc.xlsx'; // Excel file
+        if (!file_exists($excelFile)) {
+            echo "Excel file not found.";
+            return;
+        }
+
+        // Increase memory limit temporarily
+        ini_set('memory_limit', '1024M');
+        
+        // Use IOFactory with read filters for memory efficiency
+        try {
+            $reader = IOFactory::createReader(IOFactory::identify($excelFile));
+            $reader->setReadDataOnly(true);
+            
+            // Don't read formatting, just data
+            $reader->setReadEmptyCells(false);
+            
+            $spreadsheet = $reader->load($excelFile);
+        } catch (Exception $e) {
+            echo "Error loading file: " . $e->getMessage();
+            return;
+        }
+        
+        $sheet = $spreadsheet->getActiveSheet();
+        $highestRow = $sheet->getHighestRow();
+        
+        echo "<h3>Starting Import...</h3>";
+        echo "Total rows to process: " . $highestRow . "<br><br>";
+        
+        $processed = 0;
+        $updated = 0;
+        $not_found = 0;
+        
+        // Process row by row to save memory
+        for ($row = 1; $row <= $highestRow; $row++) {
+            $item_code = trim($sheet->getCell('F' . $row)->getValue());
+            $cash_discount1 = $sheet->getCell('H' . $row)->getValue();
+            
+            // Skip empty rows
+            if (empty($item_code)) {
+                continue;
+            }
+            
+            $product = $this->db
+                ->where('item_code', $item_code)
+                ->get('sma_products')
+                ->row();
+            
+            if ($product) { 
+                $product_id = $product->id; 
+
+                $this->db->where('id', $product_id);
+                $this->db->update('sma_products', [
+                    'cash_discount' => ($cash_discount1 * 100) . '%',
+                ]);
+                $updated++;
+            } else { 
+                echo "Product not found for Item Code: {$item_code}<br>";
+                $not_found++;
+            }
+            
+            $processed++;
+            
+            // Show progress every 100 rows
+            if ($processed % 100 == 0) {
+                echo "Processed: {$processed} rows...<br>";
+                flush();
+            }
+            
+            // Free memory periodically
+            if ($processed % 500 == 0) {
+                $sheet->garbageCollect();
+            }
+        }
+        
+        // Clean up
+        $spreadsheet->disconnectWorksheets();
+        unset($spreadsheet);
+        
+        echo "<br><h3>Import Complete!</h3>";
+        echo "Total Processed: {$processed}<br>";
+        echo "Updated: {$updated}<br>";
+        echo "Not Found: {$not_found}<br>";
+    }
+
     public function upload_rawabi_expiry_inventory_check(){
         $excelFile = $this->upload_path . 'csv/Expiry-Physical-Count-2025-New-Upload.xlsx'; // Excel file
         if (!file_exists($excelFile)) {
