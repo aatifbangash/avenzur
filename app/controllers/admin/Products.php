@@ -937,7 +937,7 @@ class Products extends MY_Controller
     }
 
     public function upload_rawabi_product_discount_data(){
-        $excelFile = $this->upload_path . 'csv/Cash-Disc.xlsx'; // Excel file
+        $excelFile = $this->upload_path . 'csv/Credit-Disc.xlsx'; // Excel file
         if (!file_exists($excelFile)) {
             echo "Excel file not found.";
             return;
@@ -972,8 +972,9 @@ class Products extends MY_Controller
         
         // Process row by row to save memory
         for ($row = 1; $row <= $highestRow; $row++) {
-            $item_code = trim($sheet->getCell('F' . $row)->getValue());
-            $cash_discount1 = $sheet->getCell('H' . $row)->getValue();
+            $item_code = trim($sheet->getCell('A' . $row)->getValue());
+            $credit_discount1 = $sheet->getCell('C' . $row)->getValue();
+            $credit_discount2 = $sheet->getCell('D' . $row)->getValue();
             
             // Skip empty rows
             if (empty($item_code)) {
@@ -990,7 +991,8 @@ class Products extends MY_Controller
 
                 $this->db->where('id', $product_id);
                 $this->db->update('sma_products', [
-                    'cash_discount' => ($cash_discount1 * 100) . '%',
+                    'credit_discount' => ($credit_discount1 * 100) . '%',
+                    'credit_dis2' => ($credit_discount2 * 100) . '%',
                 ]);
                 $updated++;
             } else { 
