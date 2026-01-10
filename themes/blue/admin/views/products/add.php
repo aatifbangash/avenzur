@@ -120,6 +120,36 @@ if (!empty($variants)) {
                     </div>
 
                     <div class="form-group all">
+                        <?= lang('Cash Discount 1', 'Cash Discount 1'); ?>
+                        <?= form_input('cash_discount', ($_POST['cash_discount'] ?? ($product ? $product->cash_discount : '')), 'class="form-control tip" id="cash_discount" required="required"'); ?>
+                    </div>
+
+                    <div class="form-group all">
+                        <?= lang('Credit Discount 1', 'Credit Discount 1'); ?>
+                        <?= form_input('credit_discount', ($_POST['credit_discount'] ?? ($product ? $product->credit_discount : '')), 'class="form-control tip" id="credit_discount" required="required"'); ?>
+                    </div>
+
+                    <div class="form-group all">
+                        <?= lang('Cash Discount 2', 'Cash Discount 2'); ?>
+                        <?= form_input('cash_dis2', ($_POST['cash_dis2'] ?? ($product ? $product->cash_dis2 : '')), 'class="form-control tip" id="cash_dis2" required="required"'); ?>
+                    </div>
+
+                    <div class="form-group all">
+                        <?= lang('Credit Discount 2', 'Credit Discount 2'); ?>
+                        <?= form_input('credit_dis2', ($_POST['credit_dis2'] ?? ($product ? $product->credit_dis2 : '')), 'class="form-control tip" id="credit_dis2" required="required"'); ?>
+                    </div>
+
+                    <div class="form-group all">
+                        <?= lang('Cash Discount 3', 'Cash Discount 3'); ?>
+                        <?= form_input('cash_dis3', ($_POST['cash_dis3'] ?? ($product ? $product->cash_dis3 : '')), 'class="form-control tip" id="cash_dis3" required="required"'); ?>
+                    </div>
+
+                    <div class="form-group all">
+                        <?= lang('Credit Discount 3', 'Credit Discount 3'); ?>
+                        <?= form_input('credit_dis3', ($_POST['credit_dis3'] ?? ($product ? $product->credit_dis3 : '')), 'class="form-control tip" id="credit_dis3" required="required"'); ?>
+                    </div>
+
+                    <div class="form-group all">
                         <?= lang('slug', 'slug'); ?>
                         <?= form_input('slug', set_value('slug'), 'class="form-control tip" id="slug" required="required"'); ?>
                     </div>
@@ -177,8 +207,8 @@ if (!empty($variants)) {
                     </div>
 
                     <div class="form-group">
-                                <?= lang('shelf', 'Shelf Name') ?>
-                                <?= form_input('cf3', ($_POST['cf3'] ?? ($product ? $product->cf3 : '')), 'class="form-control" id="cf3"') ?>
+                        <?= lang('Warehouse_Shelf', 'Warehouse Shelf') ?>
+                        <?= form_input('warehouse_shelf', ($_POST['warehouse_shelf'] ?? ($product ? $product->warehouse_shelf : '')), 'class="form-control" id="warehouse_shelf"') ?>
                     </div>
 
                     <div class="form-group standard_combo">
@@ -338,6 +368,56 @@ if (!empty($variants)) {
 
                 <div class="col-md-6 col-md-offset-1">
                     <div class="standard">
+
+                        <div class="form-group all">
+                            <?= lang('Scientific Name', 'scientific_name'); ?>
+                            <?= form_input('scientific_name', set_value('scientific_name'), 'class="form-control tip" id="scientific_name" '); ?>
+                        </div>
+
+                        <div class="form-group all">
+                            <?= lang('Store Condition', 'store_condition'); ?>
+                            <?= form_input('store_condition', set_value('store_condition'), 'class="form-control tip" id="store_condition" '); ?>
+                        </div>
+
+                        <div class="form-group all">
+                            <?= lang('Legal Status', 'legal_status'); ?>
+                            <?= form_input('legal_status', set_value('legal_status'), 'class="form-control tip" id="legal_status" '); ?>
+                        </div>
+
+                        <div class="form-group all">
+                            <?= lang('ATC Code', 'atc_code'); ?>
+                            <?= form_input('atc_code', set_value('atc_code'), 'class="form-control tip" id="atc_code" '); ?>
+                        </div>
+
+                        <div class="form-group all">
+                            <?= lang('Authorized Channel', 'authorized_channel'); ?>
+                            <?= form_input('authorized_channel', set_value('authorized_channel'), 'class="form-control tip" id="authorized_channel" '); ?>
+                        </div>
+
+                        <div class="form-group all">
+                            <?= lang('Marketing Company', 'marketing_company'); ?>
+                            <?= form_input('marketing_company', set_value('marketing_company'), 'class="form-control tip" id="marketing_company" '); ?>
+                        </div>
+
+                        <div class="form-group all">
+                            <?= lang('Manufacture Country', 'manufacture_country'); ?>
+                            <?= form_input('manufacture_country', set_value('manufacture_country'), 'class="form-control tip" id="manufacture_country" '); ?>
+                        </div>
+
+                        <div class="form-group all">
+                            <?= lang('Corp Name', 'corp_name'); ?>
+                            <?= form_input('corp_name', set_value('corp_name'), 'class="form-control tip" id="corp_name" '); ?>
+                        </div>
+
+                        <div class="form-group all">
+                            <?= lang('Group Name', 'group_name'); ?>
+                            <?= form_input('group_name', set_value('group_name'), 'class="form-control tip" id="group_name" '); ?>
+                        </div>
+
+                        <div class="form-group all">
+                            <?= lang('Pharmaceutical Form', 'pharmaceutical_form'); ?>
+                            <?= form_input('pharmaceutical_form', set_value('pharmaceutical_form'), 'class="form-control tip" id="pharmaceutical_form" '); ?>
+                        </div>
 
                         <div class="form-group">
                             <input type="checkbox" class="checkbox" name="incentive" id="incentive">
