@@ -3739,6 +3739,7 @@ class Sales extends MY_Controller
                     <li>' . $detail_link . '</li>
                     <li>' . $return_link . '</li>
                     <li>' . $sale_order_link . '</li>
+                    <li>' . $zatka_invoice_link . '</li>
                 </ul>
             </div></div>';
         }else{
