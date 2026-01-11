@@ -2261,7 +2261,8 @@ class Reports_model extends CI_Model
             sum((SELECT cost FROM sma_rawabi_product_price WHERE product_id = p.id LIMIT 1) * inv.quantity) as total_cost_price,
             SUM(inv.real_unit_cost * inv.quantity) as purchase_price  
             FROM sma_inventory_movements inv 
-            INNER JOIN sma_products p on p.id=inv.product_id";
+            INNER JOIN sma_products p on p.id=inv.product_id
+            WHERE 1=1";
         }else{
             $stockQuery = " SELECT p.id,
             
@@ -2270,7 +2271,8 @@ class Reports_model extends CI_Model
             sum(inv.net_unit_cost * inv.quantity) as total_cost_price,
             SUM(inv.real_unit_cost * inv.quantity) as purchase_price  
             FROM sma_inventory_movements inv 
-            INNER JOIN sma_products p on p.id=inv.product_id";
+            INNER JOIN sma_products p on p.id=inv.product_id
+            WHERE 1=1";
         }
         
         if ($at_date) {

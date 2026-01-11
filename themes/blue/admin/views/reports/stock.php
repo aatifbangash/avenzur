@@ -274,7 +274,7 @@
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
-                                <th><?= $totalQuantity ?></th>
+                                <th><?= number_format($new_grand_total->quantity, 2, '.', ',') ?></th>
                                 <th><?= '-' ?></th>
                                 <th><?= number_format($new_grand_total->total_sale_price, 2, '.', ',') ?></th>
                                 <th><?= '-' ?></th>
