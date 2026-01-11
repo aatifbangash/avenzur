@@ -2196,12 +2196,11 @@ class Reports_model extends CI_Model
             inv.expiry_date as expiry,
             SUM(inv.quantity) as quantity,
             inv.net_unit_sale as sale_price,
-            rp.cost as cost_price,
-            sum(rp.cost * inv.quantity) as total_cost_price,
+            (SELECT cost FROM sma_rawabi_product_price WHERE product_id = p.id LIMIT 1) as cost_price,
+            sum((SELECT cost FROM sma_rawabi_product_price WHERE product_id = p.id LIMIT 1) * inv.quantity) as total_cost_price,
             inv.real_unit_cost as purchase_price  
             FROM `sma_inventory_movements` inv 
-            INNER JOIN sma_products p on p.id=inv.product_id
-            INNER JOIN sma_rawabi_product_price rp on rp.product_id=p.id ";
+            INNER JOIN sma_products p on p.id=inv.product_id ";
         }else{
             $stockQuery = " SELECT p.id,
             p.code item_code, 
@@ -2259,13 +2258,10 @@ class Reports_model extends CI_Model
             
             SUM(inv.quantity) as quantity,
             SUM(inv.net_unit_sale * inv.quantity) as total_sale_price,
-            sum(rp.cost * inv.quantity) as total_cost_price,
+            sum((SELECT cost FROM sma_rawabi_product_price WHERE product_id = p.id LIMIT 1) * inv.quantity) as total_cost_price,
             SUM(inv.real_unit_cost * inv.quantity) as purchase_price  
             FROM sma_inventory_movements inv 
             INNER JOIN sma_products p on p.id=inv.product_id";
-
-            $stockQuery .= "
-                INNER JOIN sma_rawabi_product_price rp on rp.product_id=p.id";
         }else{
             $stockQuery = " SELECT p.id,
             
@@ -2325,12 +2321,11 @@ class Reports_model extends CI_Model
             inv.expiry_date as expiry,
             SUM(inv.quantity) as quantity,
             inv.net_unit_sale as sale_price,
-            rp.cost as cost_price,
-            sum(rp.cost * inv.quantity) as total_cost_price,
+            (SELECT cost FROM sma_rawabi_product_price WHERE product_id = p.id LIMIT 1) as cost_price,
+            sum((SELECT cost FROM sma_rawabi_product_price WHERE product_id = p.id LIMIT 1) * inv.quantity) as total_cost_price,
             inv.real_unit_cost as purchase_price  
             FROM `sma_inventory_movements` inv 
-            INNER JOIN sma_products p on p.id=inv.product_id
-            INNER JOIN sma_rawabi_product_price rp on rp.product_id=p.id";
+            INNER JOIN sma_products p on p.id=inv.product_id";
         }else{
             $stockQuery = " SELECT p.id,
             p.code item_code, 
