@@ -509,10 +509,10 @@
             var printWindow = window.open('', 'Instructions', 'height=400,width=250');
             printWindow.document.write('<html><head><title>Medication Instructions</title>');
             printWindow.document.write('<style>');
-            printWindow.document.write('@page { margin: 0; size: 40mm 58mm portrait; }');
+            printWindow.document.write('@page { margin: 0; size: 55mm 58mm portrait; }');
             printWindow.document.write('* { margin: 0; padding: 0; box-sizing: border-box; }');
-            printWindow.document.write('body { font-family: Arial, sans-serif; font-size: 7px; line-height: 1.1; margin: 0; padding: 0; width: 40mm; }');
-            printWindow.document.write('.instruction-page { page-break-after: auto; page-break-inside: avoid; border: 1px solid #000; padding: 1mm; margin: 0; width: 40mm; height: 58mm; max-height: 58mm; overflow: hidden; }');
+            printWindow.document.write('body { font-family: Arial, sans-serif; font-size: 7px; line-height: 1.1; margin: 0; padding: 0; width: 55mm; }');
+            printWindow.document.write('.instruction-page { page-break-after: auto; page-break-inside: avoid; border: 1px solid #000; padding: 1mm; padding-bottom: 0.5mm; margin: 0; width: 55mm; height: 58mm; max-height: 58mm; overflow: hidden; }');
             printWindow.document.write('.instruction-page:last-child { page-break-after: auto; }');
             printWindow.document.write('.header { background: #000; color: white; padding: 1mm; margin-bottom: 1mm; text-align: left; }');
             printWindow.document.write('.header h2 { font-size: 7px; margin: 0; font-weight: bold; line-height: 1.1; }');
@@ -520,10 +520,10 @@
             printWindow.document.write('.info-section { margin: 0; padding: 0; }');
             printWindow.document.write('.info-row { display: flex; padding: 0.4mm 0; border-bottom: 0.3px solid #ccc; }');
             printWindow.document.write('.info-row:last-child { border-bottom: none; padding-bottom: 0; }');
-            printWindow.document.write('.info-label { font-weight: bold; color: #000; width: 13mm; font-size: 6px; line-height: 1.1; }');
+            printWindow.document.write('.info-label { font-weight: bold; color: #000; width: 17mm; font-size: 6px; line-height: 1.1; }');
             printWindow.document.write('.info-value { flex: 1; color: #000; font-size: 6px; word-wrap: break-word; line-height: 1.1; }');
-            printWindow.document.write('.footer { margin-top: 0.5mm; padding-top: 0.5mm; border-top: 0.5px solid #000; text-align: left; }');
-            printWindow.document.write('.tel { color: #000; font-weight: bold; font-size: 5.5px; line-height: 1.1; }');
+            printWindow.document.write('.footer { margin: 0; padding: 0; border: none; text-align: left; }');
+            printWindow.document.write('.tel { color: #000; font-weight: bold; font-size: 5.5px; line-height: 1.1; margin: 0; padding: 0; }');
             printWindow.document.write('@media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0 !important; padding: 0 !important; } }');
             printWindow.document.write('</style>');
             printWindow.document.write('</head><body>');
