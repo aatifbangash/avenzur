@@ -2734,7 +2734,7 @@ class Reports_model extends CI_Model
                     iv.avz_item_code,
                     CASE 
                         WHEN iv.trs_type = 'purchase' THEN sp.reference_no
-                        WHEN iv.trs_type = 'sale' THEN ss.reference_no
+                        WHEN iv.trs_type = 'sale' THEN ss.id
                         WHEN iv.trs_type = 'pos' THEN ps.reference_no
                         WHEN iv.trs_type = 'transfer_out' THEN sto.transfer_no
                         WHEN iv.trs_type = 'transfer_in' THEN sti.transfer_no
