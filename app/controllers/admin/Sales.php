@@ -502,7 +502,7 @@ class Sales extends MY_Controller
             'warehouse_id'      => $warehouse_id,
             'note'              => $note,
             'staff_note'        => $staff_note,
-            'warning_note'      => $note, 
+            'warning_note'      => $warning_note, 
             'total'             => $grand_total_sale,
             'total_net_sale'    => $grand_total_net_sale,
             'product_discount'  => $product_discount,
