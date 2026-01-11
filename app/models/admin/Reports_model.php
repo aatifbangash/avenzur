@@ -2186,7 +2186,7 @@ class Reports_model extends CI_Model
             $at_date = $this->sma->fld($at_date);
         }
 
-        if($this->Settings->site_name == 'Hills Business Medical'){
+        if($this->Settings->site_name == 'Hills Business Medical' && $warehouse == 32){
             $stockQuery = " SELECT p.id,
             p.code item_code, 
             p.item_code as itm_code,
@@ -2253,7 +2253,7 @@ class Reports_model extends CI_Model
             $at_date = $this->sma->fld($at_date);
         }
 
-        if($this->Settings->site_name == 'Hills Business Medical'){
+        if($this->Settings->site_name == 'Hills Business Medical' && $warehouse == 32){
             $stockQuery = " SELECT p.id,
             
             SUM(inv.quantity) as quantity,
@@ -2311,7 +2311,7 @@ class Reports_model extends CI_Model
             $offset = $page;
         }
 
-        if($this->Settings->site_name == 'Hills Business Medical'){
+        if($this->Settings->site_name == 'Hills Business Medical' && $warehouse == 32){
             $stockQuery = " SELECT p.id,
             p.code item_code, 
             p.item_code as itm_code,
