@@ -2186,7 +2186,24 @@ class Reports_model extends CI_Model
             $at_date = $this->sma->fld($at_date);
         }
 
-        $stockQuery = " SELECT p.id,
+        if($this->Settings->site_name == 'Hills Business Medical'){
+            $stockQuery = " SELECT p.id,
+            p.code item_code, 
+            p.item_code as itm_code,
+            p.name as name, 
+            inv.avz_item_code,
+            inv.batch_number as batch_no,
+            inv.expiry_date as expiry,
+            SUM(inv.quantity) as quantity,
+            inv.net_unit_sale as sale_price,
+            rp.cost as cost_price,
+            sum(rp.cost * inv.quantity) as total_cost_price,
+            inv.real_unit_cost as purchase_price  
+            FROM `sma_inventory_movements` inv 
+            INNER JOIN sma_products p on p.id=inv.product_id
+            INNER JOIN sma_rawabi_product_price rp on rp.product_id=p.id ";
+        }else{
+            $stockQuery = " SELECT p.id,
             p.code item_code, 
             p.item_code as itm_code,
             p.name as name, 
@@ -2199,7 +2216,10 @@ class Reports_model extends CI_Model
             sum(inv.net_unit_cost * inv.quantity) as total_cost_price,
             inv.real_unit_cost as purchase_price  
             FROM `sma_inventory_movements` inv 
-            INNER JOIN sma_products p on p.id=inv.product_id";
+            INNER JOIN sma_products p on p.id=inv.product_id
+            INNER JOIN sma_rawabi_product_price rp on rp.product_id=p.id ";
+        }
+        
         if ($at_date) {
             $stockQuery .= " AND date(inv.movement_date)<= '{$at_date}' ";
         }
@@ -2234,7 +2254,20 @@ class Reports_model extends CI_Model
             $at_date = $this->sma->fld($at_date);
         }
 
-        $stockQuery = " SELECT p.id,
+        if($this->Settings->site_name == 'Hills Business Medical'){
+            $stockQuery = " SELECT p.id,
+            
+            SUM(inv.quantity) as quantity,
+            SUM(inv.net_unit_sale * inv.quantity) as total_sale_price,
+            sum(rp.cost * inv.quantity) as total_cost_price,
+            SUM(inv.real_unit_cost * inv.quantity) as purchase_price  
+            FROM sma_inventory_movements inv 
+            INNER JOIN sma_products p on p.id=inv.product_id";
+
+            $stockQuery .= "
+                INNER JOIN sma_rawabi_product_price rp on rp.product_id=p.id";
+        }else{
+            $stockQuery = " SELECT p.id,
             
             SUM(inv.quantity) as quantity,
             SUM(inv.net_unit_sale * inv.quantity) as total_sale_price,
@@ -2242,6 +2275,8 @@ class Reports_model extends CI_Model
             SUM(inv.real_unit_cost * inv.quantity) as purchase_price  
             FROM sma_inventory_movements inv 
             INNER JOIN sma_products p on p.id=inv.product_id";
+        }
+        
         if ($at_date) {
             $stockQuery .= " AND date(inv.movement_date)<= '{$at_date}' ";
         }
@@ -2280,7 +2315,24 @@ class Reports_model extends CI_Model
             $offset = $page;
         }
 
-        $stockQuery = " SELECT p.id,
+        if($this->Settings->site_name == 'Hills Business Medical'){
+            $stockQuery = " SELECT p.id,
+            p.code item_code, 
+            p.item_code as itm_code,
+            p.name as name, 
+            inv.avz_item_code,
+            inv.batch_number as batch_no,
+            inv.expiry_date as expiry,
+            SUM(inv.quantity) as quantity,
+            inv.net_unit_sale as sale_price,
+            rp.cost as cost_price,
+            sum(rp.cost * inv.quantity) as total_cost_price,
+            inv.real_unit_cost as purchase_price  
+            FROM `sma_inventory_movements` inv 
+            INNER JOIN sma_products p on p.id=inv.product_id
+            INNER JOIN sma_rawabi_product_price rp on rp.product_id=p.id";
+        }else{
+            $stockQuery = " SELECT p.id,
             p.code item_code, 
             p.item_code as itm_code,
             p.name as name, 
@@ -2294,6 +2346,8 @@ class Reports_model extends CI_Model
             inv.real_unit_cost as purchase_price  
             FROM `sma_inventory_movements` inv 
             INNER JOIN sma_products p on p.id=inv.product_id";
+        }
+        
         if ($at_date) {
             $stockQuery .= " AND date(inv.movement_date)<= '{$at_date}' ";
         }
