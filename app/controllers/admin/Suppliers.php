@@ -82,7 +82,7 @@ class Suppliers extends MY_Controller
         }
     }
 
-    public function convert_supplier_payment_multiple_invoice($supplier_id, $ledger_account, $bank_charges_account, $payment_amount, $bank_charges, $reference_no, $type){
+    public function convert_supplier_payment_multiple_invoice($supplier_id, $ledger_account, $bank_charges_account, $payment_amount, $bank_charges, $reference_no, $type, $date){
         $this->load->admin_model('companies_model');
         $supplier = $this->companies_model->getCompanyByID($supplier_id);
 
@@ -100,7 +100,7 @@ class Suppliers extends MY_Controller
             'entrytype_id' => 4,
             'transaction_type' => $type,
             'number'       => 'PM-'.$reference_no,
-            'date'         => date('Y-m-d'), 
+            'date'         => $date, 
             'dr_total'     => $total_amount,
             'cr_total'     => $total_amount,
             'notes'        => 'Payment Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
@@ -1011,7 +1011,7 @@ class Suppliers extends MY_Controller
                     $this->make_supplier_advance_payment($supplier_id, $payment_total, $reference_no, $date, $note, $payment_id);
                     
                     // Create journal entry using supplier advance ledger (NOT regular payment ledger)
-                    $journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $supplier_advance_ledger, $bank_charges_account, $payment_total, $bank_charges, $reference_no, 'supplieradvance');
+                    $journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $supplier_advance_ledger, $bank_charges_account, $payment_total, $bank_charges, $reference_no, 'supplieradvance', $date);
                     $this->purchases_model->update_payment_reference($payment_id, $journal_id);
                     $this->session->set_flashdata('message', lang('Pure advance payment added Successfully!'));
                     admin_redirect('suppliers/view_payment/'.$payment_id);
@@ -1151,7 +1151,7 @@ class Suppliers extends MY_Controller
                             
                             // Create cash payment journal entry (if cash payment > 0)
                             if($cash_payment > 0) {
-                                $cash_journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $ledger_account, $bank_charges_account, $cash_payment, $bank_charges, $reference_no . '-CASH', 'supplierpayment');
+                                $cash_journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $ledger_account, $bank_charges_account, $cash_payment, $bank_charges, $reference_no . '-CASH', 'supplierpayment', $date);
                             }
                             
                             // Create advance settlement journal entry (debit advance ledger, credit supplier ledger)
@@ -1161,7 +1161,7 @@ class Suppliers extends MY_Controller
                             $this->purchases_model->update_payment_reference($combined_payment_id, $cash_journal_id ? $cash_journal_id : $advance_journal_id);
                         } else {
                             // Regular payment without advance settlement
-                            $journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $ledger_account, $bank_charges_account, $cash_payment, $bank_charges, $reference_no, 'supplierpayment');
+                            $journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $ledger_account, $bank_charges_account, $cash_payment, $bank_charges, $reference_no, 'supplierpayment', $date);
                             $this->purchases_model->update_payment_reference($combined_payment_id, $journal_id);
                         }
                         
@@ -1191,7 +1191,7 @@ class Suppliers extends MY_Controller
                             $this->make_supplier_advance_payment($supplier_id, $advance_payment, $advance_reference_no, $date, $note, $advance_payment_id);
                             
                             // Create journal entry for advance payment
-                            $advance_journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $supplier_advance_ledger, $bank_charges_account, $advance_payment, 0, $advance_reference_no, 'supplieradvance');
+                            $advance_journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $supplier_advance_ledger, $bank_charges_account, $advance_payment, 0, $advance_reference_no, 'supplieradvance', $date);
                             $this->purchases_model->update_payment_reference($advance_payment_id, $advance_journal_id);
                             
                             // Set main payment id to advance if no invoice payment
