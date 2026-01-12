@@ -4398,7 +4398,7 @@ if($inv->warning_note != ""){
         $this->data['user']        = $this->site->getUser($inv->created_by);
         $this->data['warehouse']   = $this->site->getWarehouseByID($inv->warehouse_id);
         $this->data['inv']         = $inv;
-        $this->data['rows']        = $this->sales_model->getAllInvoiceItems($id);
+        $this->data['rows']        = $this->sales_model->getAllPickerInvoiceItems($id);
         $this->data['return_sale'] = $inv->return_id ? $this->sales_model->getInvoiceByID($inv->return_id) : null;
         $this->data['return_rows'] = $inv->return_id ? $this->sales_model->getAllInvoiceItems($inv->return_id) : null;
         //echo '<pre>';print_r($this->data);exit;
