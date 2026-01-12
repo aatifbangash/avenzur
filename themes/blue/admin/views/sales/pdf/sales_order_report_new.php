@@ -48,13 +48,13 @@
                     <?php $col = 6; ?>
                     <tr>
                         <th>#</th>
-                        <th><?= lang('Item No.'); ?></th>
                         <th><?= lang('Old No.'); ?></th>
                         <th><?= lang('Description'); ?></th>
-                        <th><?= lang('Warehouse Shelf'); ?></th>
+                        <th><?= lang('Qty'); ?></th>
                         <th><?= lang('Batch'); ?></th>
                         <th><?= lang('Expiry'); ?></th>
-                        <th><?= lang('Qty'); ?></th>
+                        <th><?= lang('Warehouse Shelf'); ?></th>
+                        
                     </tr>
 
                 </thead>
@@ -69,10 +69,6 @@
                         <tr>
                             <td style="text-align:center;vertical-align:middle;"><?= $r; ?></td>
                             <td style="vertical-align:middle;">
-                                <?= $row->product_code ?  $row->product_code : ' - '; ?>
-                                
-                            </td>
-                            <td style="vertical-align:middle;">
                                 <?= $row->item_code ?  $row->item_code : ' - '; ?>
                                 
                             </td>
@@ -81,7 +77,7 @@
                                 
                             </td>
                             <td style="text-align:center; vertical-align:middle;">
-                                <?= $row->warehouse_shelf ? $row->warehouse_shelf : '-' ?>
+                                <?= $this->sma->formatQuantity($row->unit_quantity); ?>
                             </td>
                             <td style="text-align:center; vertical-align:middle;">
                                 <?= $row->batch_no; ?>
@@ -90,8 +86,10 @@
                                 <?= $row->expiry; ?>
                             </td>
                             <td style="text-align:center; vertical-align:middle;">
-                                <?= $this->sma->formatQuantity($row->unit_quantity); ?>
+                                <?= $row->warehouse_shelf ? $row->warehouse_shelf : '-' ?>
                             </td>
+                            
+                            
                             
                             <!--<td style="text-align:right;">
                                 <?= $this->sma->formatNumber($row->real_unit_price); ?>

@@ -822,6 +822,53 @@ class Sales_model extends CI_Model
         return $final;
     }
 
+    public function getAllPickerInvoiceItems($sale_id, $return_id = null, $sale = null)
+    {
+        if($sale == null){
+            $this->db->select('
+            sale_items.*, 
+            tax_rates.code as tax_code, tax_rates.name as tax_name, tax_rates.rate as tax_rate, item_code,
+            products.image, products.details as details, product_variants.name as variant, products.hsn_code as hsn_code, products.second_name as second_name, products.unit as base_unit_id, 
+            products.warehouse_shelf,
+            units.code as base_unit_code')
+            ->join('products', 'products.id=sale_items.product_id', 'left')
+            ->join('product_variants', 'product_variants.id=sale_items.option_id', 'left')
+            ->join('tax_rates', 'tax_rates.id=sale_items.tax_rate_id', 'left')
+            ->join('units', 'units.id=products.unit', 'left')
+            ->group_by('sale_items.id')
+            ->order_by('products.warehouse_shelf', 'asc');
+        }else{
+            $this->db->select('
+            sale_items.*, 
+            tax_rates.code as tax_code, tax_rates.name as tax_name, tax_rates.rate as tax_rate, item_code,
+            products.image, products.details as details, product_variants.name as variant, products.hsn_code as hsn_code, products.second_name as second_name, products.unit as base_unit_id, 
+            products.warehouse_shelf,
+            units.code as base_unit_code,
+            SUM(IFNULL(CASE WHEN sma_inventory_movements.location_id = ' . $sale->warehouse_id . ' THEN sma_inventory_movements.quantity ELSE 0 END, 0)) as total_quantity')
+            ->join('products', 'products.id=sale_items.product_id', 'left')
+            ->join('inventory_movements', 'inventory_movements.avz_item_code=sale_items.avz_item_code', 'left')
+            ->join('product_variants', 'product_variants.id=sale_items.option_id', 'left')
+            ->join('tax_rates', 'tax_rates.id=sale_items.tax_rate_id', 'left')
+            ->join('units', 'units.id=products.unit', 'left')
+            ->group_by('sale_items.id')
+            ->order_by('products.warehouse_shelf', 'asc');
+        }
+        
+        if ($sale_id && !$return_id) {
+            $this->db->where('sale_id', $sale_id);
+        } elseif ($return_id) {
+            $this->db->where('sale_id', $return_id);
+        }
+        $q = $this->db->get('sale_items');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
     public function getAllInvoiceItems($sale_id, $return_id = null, $sale = null)
     {
         if($sale == null){
