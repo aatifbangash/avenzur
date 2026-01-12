@@ -417,7 +417,7 @@ div.box-content span {
                     <?= $this->sma->formatNumber($row->discount2) ?> % | <?= $this->sma->formatNumber($row->second_discount_value) ?>
                 </span>
                 <span>
-                    <?= $this->sma->formatNumber($row->discount1 + $row->discount2) ?> % | <?= $this->sma->formatNumber($row->item_discount + $row->second_discount_value) ?>
+                    <?= $this->sma->formatNumber(($row->item_discount + $row->second_discount_value) / $row->subtotal * 100) ?> % | <?= $this->sma->formatNumber($row->item_discount + $row->second_discount_value) ?>
                 </span>
             </div>
         </div>
