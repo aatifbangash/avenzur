@@ -927,7 +927,7 @@ class Customers extends MY_Controller
         $this->db->insert('sma_memo_entries' ,$memoData);
     }
 
-    public function convert_credit_memo_invoice($memo_id, $customer_id, $ledger_account, $vat_account, $payment_amount, $vat_percent, $reference_no, $type, $customer_entry_type = 'C'){
+    public function convert_credit_memo_invoice($memo_id, $customer_id, $ledger_account, $vat_account, $payment_amount, $vat_percent, $reference_no, $type, $date, $customer_entry_type = 'C'){
         $this->load->admin_model('companies_model');
         $customer = $this->companies_model->getCompanyByID($customer_id);
 
@@ -940,7 +940,7 @@ class Customers extends MY_Controller
             'entrytype_id' => 4,
             'transaction_type' => $type,
             'number'       => 'CM-'.$reference_no,
-            'date'         => date('Y-m-d'),
+            'date'         => $date,
             'dr_total'     => $payment_amount + $vat_amount,
             'cr_total'     => $payment_amount + $vat_amount,
             'notes'        => 'Credit Memo Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
@@ -1153,7 +1153,7 @@ class Customers extends MY_Controller
                 }
             }
 
-            $this->convert_credit_memo_invoice($memo_id, $customer_id, $ledger_account, $vat_account, $payment_total, $vat_percent, $reference_no, 'creditmemo', $customer_entry_type);
+            $this->convert_credit_memo_invoice($memo_id, $customer_id, $ledger_account, $vat_account, $payment_total, $vat_percent, $reference_no, 'creditmemo', $date, $customer_entry_type);
             $this->session->set_flashdata('message', lang('Credit Memo invoice added Successfully!'));
             admin_redirect('customers/list_credit_memo');
         } else {
