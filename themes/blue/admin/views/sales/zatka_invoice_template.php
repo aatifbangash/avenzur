@@ -457,7 +457,18 @@ div.box-content span {
 <!-- TOTALS SECTION -->
 <table class="table-main" style="margin-top:8px;">
 <tr>
-    <td width="65%"></td>
+    <td width="65%" style="vertical-align:top; padding-right:10px;">
+        <?php if (!empty($inv->warning_note)): ?>
+        <div style="border:1px solid #d9534f; border-radius:8px; padding:8px; background-color:#f9f2f4; line-height:1.4;">
+            <div style="font-weight:bold; color:#d9534f; margin-bottom:4px; font-size:9px;">
+                 ملاحظة هامة  Important Note
+            </div>
+            <div style="color:#333; font-size:8px; text-align:right;">
+                <?= nl2br($inv->warning_note) ?>
+            </div>
+        </div>
+        <?php endif; ?>
+    </td>
     <td width="35%">
         <div style="border:1px solid #000; border-radius:8px; padding:4px; line-height:1.1;">
             <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate; border-spacing:2px;">
