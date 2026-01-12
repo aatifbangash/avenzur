@@ -1833,9 +1833,12 @@ class Returns_supplier extends MY_Controller
         }
         $this->data['rows'] = $this->returns_supplier_model->getReturnItemsModal($return_id);
         $supplier = $this->site->getCompanyByID($inv->supplier_id);
+        //echo '<pre>'; print_r( $supplier );
         $this->data['parent_supplier'] = '';
         if($supplier->level == 2 && $supplier->parent_code != '') {
-            $parentSupplier = $this->site->getCompanyByParentCode($supplier->parent_code);
+            
+            $parentSupplier = $this->site->getCompanyBySequenceCode($supplier->parent_code);
+            
             if(isset($parentSupplier->name)) {
                 $this->data['parent_supplier'] = $parentSupplier;
             }
