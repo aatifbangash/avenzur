@@ -108,8 +108,8 @@
                         <?= lang('Parent Supplier Code'); ?>: <?= isset($parent_supplier->sequence_code) ? $parent_supplier->sequence_code : $supplier->sequence_code;?><br>
                         <?= lang('Parent Supplier Name'); ?>: <?= isset($parent_supplier->name) ? $parent_supplier->name : $supplier->name;?><br>
                           
-                        <?= lang('Child Supplier Code'); ?>: <?= !isset($parent_supplier->sequence_code) ? $supplier->sequence_code : '';?><br>
-                        <?= lang('Child Supplier Name'); ?>: <?= !isset($parent_supplier->name) ? $supplier->name : '';?><br>
+                        <?= lang('Child Supplier Code'); ?>: <?= isset($supplier->sequence_code) ? $supplier->sequence_code : '';?><br>
+                        <?= lang('Child Supplier Name'); ?>: <?= isset($supplier->name) ? $supplier->name : '';?><br>
                            
                         </p>
                     </div>

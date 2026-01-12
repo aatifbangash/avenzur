@@ -2117,6 +2117,15 @@ public function logVisitor() {
         return false;
     }
 
+    public function getCompanyBySequenceCode($parent_id)
+    {
+        $q = $this->db->get_where('companies', ['sequence_code' => $parent_id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
     public function getCompanyByParentCode($parent_id)
     {
         $q = $this->db->get_where('companies', ['parent_code' => $parent_id], 1);
