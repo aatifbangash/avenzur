@@ -2584,7 +2584,7 @@ class Sales extends MY_Controller
 
 
 
-    public function convert_sale_invoice($sid)
+    public function convert_sale_invoice($sid, $sldate = null)
     {
         $inv = $this->sales_model->getSaleByID($sid);
           
@@ -2605,7 +2605,7 @@ class Sales extends MY_Controller
                     'entrytype_id' => 4,
                     'transaction_type' => 'saleorder',
                     'number'       => 'SO-'.$inv->reference_no,
-                    'date'         => date('Y-m-d'), 
+                    'date'         => $sldate != null ? $sldate : date('Y-m-d'), 
                     'dr_total'     => $inv->grand_total,
                     'cr_total'     => $inv->grand_total,
                     'notes'        => 'Sale Reference: '.$inv->reference_no.' Date: '.date('Y-m-d H:i:s'),
@@ -6008,7 +6008,9 @@ if($inv->warning_note != ""){
         if ($this->form_validation->run() == true) {
 
             $sale_id = $this->input->post('sale_id');
-            $this->convert_sale_invoice($sale_id);
+            $sldate = $this->sma->fld($this->input->post('sldate'));
+            //echo $sldate; exit;
+            $this->convert_sale_invoice($sale_id, $sldate);
 
             /**
              * Zatca Integration B2B Start
