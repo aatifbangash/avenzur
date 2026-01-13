@@ -42,7 +42,7 @@ class Customers extends MY_Controller
         }
     }
 
-    public function convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $payment_amount, $reference_no, $type, $total_additional_discount, $customer_discount_ledger){
+    public function convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $payment_amount, $reference_no, $type, $total_additional_discount, $customer_discount_ledger, $date){
         $this->load->admin_model('companies_model');
         $customer = $this->companies_model->getCompanyByID($customer_id);
 
@@ -57,7 +57,7 @@ class Customers extends MY_Controller
             'entrytype_id' => 4,
             'transaction_type' => $type,
             'number'       => 'PMC-'.$reference_no,
-            'date'         => date('Y-m-d'),
+            'date'         => $date,
             'dr_total'     => $receiveable_amount,
             'cr_total'     => $receiveable_amount,
             'notes'        => 'Payment Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
@@ -121,7 +121,7 @@ class Customers extends MY_Controller
      * @param string $type Transaction type
      * @return int Entry ID
      */
-    public function convert_customer_payment_advance($customer_id, $payment_ledger, $advance_ledger, $payment_amount, $reference_no, $type){
+    public function convert_customer_payment_advance($customer_id, $payment_ledger, $advance_ledger, $payment_amount, $reference_no, $type, $date){
         $this->load->admin_model('companies_model');
         $customer = $this->companies_model->getCompanyByID($customer_id);
 
@@ -130,7 +130,7 @@ class Customers extends MY_Controller
             'entrytype_id' => 4,
             'transaction_type' => $type,
             'number'       => 'ADV-'.$reference_no,
-            'date'         => date('Y-m-d'),
+            'date'         => $date,
             'dr_total'     => $payment_amount,
             'cr_total'     => $payment_amount,
             'notes'        => 'Customer Advance Payment Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
@@ -550,7 +550,7 @@ class Customers extends MY_Controller
                     $this->sales_model->update_customer_balance($customer_id, $payment_total);
 
                     // Create journal entry: Pass payment ledger and customer advance ledger
-                    $journal_id = $this->convert_customer_payment_advance($customer_id, $ledger_account, $customer_advance_ledger, $payment_total, $reference_no, 'customeradvance');
+                    $journal_id = $this->convert_customer_payment_advance($customer_id, $ledger_account, $customer_advance_ledger, $payment_total, $reference_no, 'customeradvance', $date);
                     $this->sales_model->update_payment_reference($payment_id, $journal_id);
                     // Also create a payments row so the advance appears in payment listings
                     // Use make_customer_payment with NULL sale_id to create an unlinked payment record
@@ -784,7 +784,7 @@ class Customers extends MY_Controller
                         if($cash_payment > 0) {
                             // Use the total amount applied to invoices for the cash journal entry
                             // (previously used $outstanding_amount which was the last invoice's outstanding)
-                            $cash_journal_id = $this->convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $total_invoice_payment, $reference_no . '-CASH', 'customerpayment', $total_additional_discount, $customer_discount_ledger);
+                            $cash_journal_id = $this->convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $total_invoice_payment, $reference_no . '-CASH', 'customerpayment', $total_additional_discount, $customer_discount_ledger, $date);
                         }
                         
                         // Create advance settlement journal entry (debit advance ledger, credit customer ledger)
@@ -797,7 +797,7 @@ class Customers extends MY_Controller
                         // Regular payment without advance settlement (cash only)
                         if($cash_payment > 0) {
                             // For regular cash-only payments, use the total applied to invoices
-                            $journal_id = $this->convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $total_invoice_payment, $reference_no, 'customerpayment', $total_additional_discount, $customer_discount_ledger);
+                            $journal_id = $this->convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $total_invoice_payment, $reference_no, 'customerpayment', $total_additional_discount, $customer_discount_ledger, $date);
                             $this->sales_model->update_payment_reference($combined_payment_id, $journal_id);
                         }
                     }
@@ -825,7 +825,7 @@ class Customers extends MY_Controller
                         //$this->make_customer_payment(NULL, $advance_payment, $advance_reference_no, $date, $note, $advance_payment_id);
                         
                         // Create journal entry for advance payment
-                        $advance_journal_id = $this->convert_customer_payment_advance($customer_id, $ledger_account, $customer_advance_ledger, $advance_payment, $advance_reference_no, 'customeradvance');
+                        $advance_journal_id = $this->convert_customer_payment_advance($customer_id, $ledger_account, $customer_advance_ledger, $advance_payment, $advance_reference_no, 'customeradvance', $date);
                         $this->sales_model->update_payment_reference($advance_payment_id, $advance_journal_id);
                         
                         // Set main payment id to advance if no invoice payment
