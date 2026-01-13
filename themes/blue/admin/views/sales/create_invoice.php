@@ -151,6 +151,17 @@
             </div>
 
             <div class="form-group">
+                <?= lang('date', 'sldate'); ?>
+                <?=
+                form_input(
+                    'sldate',
+                    date('Y-m-d H:i:s'),
+                    'class="form-control input-tip datetime" id="sldate" required="required"'
+                );
+                ?>
+            </div>
+
+            <div class="form-group">
                 <label class="control-label" for="add_accouting_entries"><?= lang('add_accouting_entries'); ?></label>
                 <select name="add_accouting_entries" class="form-control" required>
                     <option value="1"><?= lang('True'); ?></option>
