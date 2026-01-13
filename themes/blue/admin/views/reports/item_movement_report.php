@@ -152,88 +152,162 @@
 
                             <?php if ($reportData) { ?>
                                 <tbody style="text-align:center;">
-                                    <tr>
-                                        <td colspan="2">Opening Balance</td>
-                                        <td colspan="9">&nbsp;</td>
-                                        <!--<td><?php echo $this->sma->formatMoney(($itemOpenings['total_opening_qty'] && $itemOpenings['cost_price'] > 0 ? $itemOpenings['cost_price'] / $itemOpenings['total_opening_qty'] : 0.0), 'none'); ?></td>-->
-                                        
-                                        <td><?php echo $this->sma->formatQuantity(($itemOpenings['total_opening_qty'] ? $itemOpenings['total_opening_qty'] : 0.00)); ?></td>
-                                        <td><?php echo $this->sma->formatQuantity(($itemOpenings['total_opening_qty'] ? $itemOpenings['total_opening_qty'] : 0.00)); ?></td>
-                                        <td><?php echo $this->sma->formatMoney(($itemOpenings['total_opening_value'] ? $itemOpenings['total_opening_value'] : 0.00)); ?></td>
 
-                                    </tr>
+                                <?php
+                                /* =========================
+                                INITIAL TOTAL VARIABLES
+                                ========================= */
+                                $totalPurchased = 0;
+                                $totalSold = 0;
+                                $totalTransferIn = 0;
+                                $totalTransferOut = 0;
+                                $totalCustomerReturn = 0;
+                                $totalSupplierReturn = 0;
+                                $totalAdjustmentPlus = 0;
+                                $totalAdjustmentMinus = 0;
 
-                                    <?php
-                                    $count = 1;
-                                    $balanceQantity = 0;
-                                    $totalValueOfItem  = 0;
-                                    $openingTotal = ($itemOpenings['total_opening_value']);
+                                $count = 1;
+                                $balanceQantity = $itemOpenings['total_opening_qty'] ?? 0;
+                                $totalValueOfItem = $itemOpenings['total_opening_value'] ?? 0;
+                                ?>
 
-                                    foreach ($reportData as $rp) {
+                                <tr>
+                                    <td colspan="2"><strong>Opening Balance</strong></td>
+                                    <td colspan="9"></td>
+                                    <td><?= $this->sma->formatQuantity($balanceQantity); ?></td>
+                                    <td><?= $this->sma->formatQuantity($balanceQantity); ?></td>
+                                    <td><?= $this->sma->formatMoney($totalValueOfItem, 'none'); ?></td>
+                                </tr>
 
-                                        if ($rp->trs_type == 'adjustment_increase' || $rp->trs_type == 'purchase' || $rp->trs_type == 'customer_return' || ($rp->trs_type == 'transfer_in' && $warehouse->id) ) {
-                                            if($count == 1){
-                                                $balanceQantity = $itemOpenings['total_opening_qty'] + $rp->quantity;
-                                            }else{
-                                                $balanceQantity += $rp->quantity;
-                                            }
+                                <?php foreach ($reportData as $rp) {
 
-                                            if($count == 1){
-                                                $totalValueOfItem = $openingTotal + ($rp->quantity * $rp->net_unit_cost);
-                                            }else{
-                                                $totalValueOfItem+= ($rp->quantity * $rp->net_unit_cost);
-                                            }
-                                        }
+                                    /* =========================
+                                    CLASSIFY MOVEMENTS
+                                    ========================= */
+                                    switch ($rp->trs_type) {
 
-                                        if ($rp->trs_type == 'adjustment_decrease' || $rp->trs_type == 'sale' || $rp->trs_type == 'pharmacy sale' || $rp->trs_type == 'return_to_supplier' || ($rp->trs_type == 'transfer_out' && $warehouse->id)) {
-                                            if($count == 1){
-                                                $balanceQantity = $itemOpenings['total_opening_qty'] + $rp->quantity;
-                                            }else{
-                                                $balanceQantity += $rp->quantity;
-                                            }
+                                        case 'purchase':
+                                            $totalPurchased += $rp->quantity;
+                                            break;
 
-                                            if($count == 1){
-                                                $totalValueOfItem = $openingTotal + ($rp->quantity * $rp->net_unit_cost);
-                                            }else{
-                                                $totalValueOfItem+= ($rp->quantity * $rp->net_unit_cost);
-                                            }
-                                        }
-                                        
+                                        case 'sale':
+                                        case 'pharmacy sale':
+                                            $totalSold += abs($rp->quantity);
+                                            break;
 
-                                    ?>
-                                        <tr>
-                                            <td><?= $count; ?></td>
-                                            <td><?= $rp->movement_date; ?></td>
-                                            <td><?= $rp->reference_number != '' ? $rp->reference_number : '-'; ?></td>
-                                            <td><?= $rp->avz_item_code; ?></td>
-                                            <td><?= $rp->trs_type; ?></td>
-                                            <td><?= $rp->counterparty; ?></td>
-                                            <td><?= $rp->expiry; ?></td>
-                                            <td><?= $rp->batch_no; ?></td>
-                                            <td><?= $this->sma->formatMoney($rp->real_unit_sale, 'none'); ?></td>
-                                            <td><?= $rp->real_unit_cost; ?></td>
-                                            <td><?= $rp->net_unit_cost; ?></td>
-                                            <td><?= $this->sma->formatQuantity($rp->quantity); ?></td>
-                                            <td><?= $this->sma->formatQuantity($balanceQantity); ?></td>
-                                            <td><?= $this->sma->formatMoney(($totalValueOfItem), 'none'); ?></td>
-                                        </tr>
-                                    <?php
-                                        $count++;
+                                        case 'transfer_in':
+                                            $totalTransferIn += $rp->quantity;
+                                            break;
+
+                                        case 'transfer_out':
+                                            $totalTransferOut += abs($rp->quantity);
+                                            break;
+
+                                        case 'customer_return':
+                                            $totalCustomerReturn += $rp->quantity;
+                                            break;
+
+                                        case 'return_to_supplier':
+                                            $totalSupplierReturn += abs($rp->quantity);
+                                            break;
+
+                                        case 'adjustment_increase':
+                                            $totalAdjustmentPlus += $rp->quantity;
+                                            break;
+
+                                        case 'adjustment_decrease':
+                                            $totalAdjustmentMinus += abs($rp->quantity);
+                                            break;
                                     }
 
+                                    /* =========================
+                                    RUNNING BALANCE
+                                    ========================= */
+                                    $balanceQantity += $rp->quantity;
+                                    $totalValueOfItem += ($rp->quantity * $rp->net_unit_cost);
 
-                                    ?>
+                                    $link = '';
+                                    if($rp->trs_type == 'sale'){
+                                       $link = admin_url('sales?sid='.$rp->reference_number); 
+                                    }else if($rp->trs_type == 'purchase'){
+                                       $link = admin_url('purchases?pid='.$rp->reference_number);
+                                    }else if($rp->trs_type == 'transfer_in' || $rp->trs_type == 'transfer_out'){
+                                       $link = admin_url('transfers?tid='.$rp->reference_number);
+                                    }else if($rp->trs_type == 'customer_return'){
+                                       $link = admin_url('returns');  
+                                    }else if($rp->trs_type == 'return_to_supplier'){
+                                       $link = admin_url('returns_supplier');
+                                    }
+                                ?>
 
-                                    <tr>
-                                        <td colspan="2">Closing</td>
-                                        <td colspan="9">&nbsp;</td>
-                                        <td><?php echo $this->sma->formatQuantity($balanceQantity); ?></td>
-                                        <td><?php echo $this->sma->formatQuantity($balanceQantity); ?></td>
-                                        <td><?php echo $this->sma->formatMoney($totalValueOfItem, 'none'); ?></td>
+                                <tr>
+                                    <td><?= $count; ?></td>
+                                    <td><?= $rp->movement_date; ?></td>
+                                    <td><a target="_blank" href="<?= $link; ?>"><?= $rp->reference_number ?: '-'; ?></a></td>
+                                    <td><?= $rp->avz_item_code; ?></td>
+                                    <td><?= $rp->trs_type; ?></td>
+                                    <td><?= $rp->counterparty; ?></td>
+                                    <td><?= $rp->expiry; ?></td>
+                                    <td><?= $rp->batch_no; ?></td>
+                                    <td><?= $this->sma->formatMoney($rp->real_unit_sale, 'none'); ?></td>
+                                    <td><?= $rp->real_unit_cost; ?></td>
+                                    <td><?= $rp->net_unit_cost; ?></td>
+                                    <td><?= $this->sma->formatQuantity($rp->quantity); ?></td>
+                                    <td><?= $this->sma->formatQuantity($balanceQantity); ?></td>
+                                    <td><?= $this->sma->formatMoney($totalValueOfItem, 'none'); ?></td>
+                                </tr>
 
-                                    </tr>
+                                <?php $count++; } ?>
+
+                                <!-- =========================
+                                    SUMMARY TOTALS SECTION
+                                ========================= -->
+                                <tr class="info">
+                                    <td colspan="14"><strong>Movement Summary</strong></td>
+                                </tr>
+
+                                <tr>
+                                    <td colspan="4">Total Purchased</td>
+                                    <td colspan="3"><?= $this->sma->formatQuantity($totalPurchased); ?></td>
+
+                                    <td colspan="4">Total Sold</td>
+                                    <td colspan="3"><?= $this->sma->formatQuantity($totalSold); ?></td>
+                                </tr>
+
+                                <tr>
+                                    <td colspan="4">Transfer In</td>
+                                    <td colspan="3"><?= $this->sma->formatQuantity($totalTransferIn); ?></td>
+
+                                    <td colspan="4">Transfer Out</td>
+                                    <td colspan="3"><?= $this->sma->formatQuantity($totalTransferOut); ?></td>
+                                </tr>
+
+                                <tr>
+                                    <td colspan="4">Customer Returns</td>
+                                    <td colspan="3"><?= $this->sma->formatQuantity($totalCustomerReturn); ?></td>
+
+                                    <td colspan="4">Supplier Returns</td>
+                                    <td colspan="3"><?= $this->sma->formatQuantity($totalSupplierReturn); ?></td>
+                                </tr>
+
+                                <tr>
+                                    <td colspan="4">Adjustments (+)</td>
+                                    <td colspan="3"><?= $this->sma->formatQuantity($totalAdjustmentPlus); ?></td>
+
+                                    <td colspan="4">Adjustments (−)</td>
+                                    <td colspan="3"><?= $this->sma->formatQuantity($totalAdjustmentMinus); ?></td>
+                                </tr>
+
+                                <tr class="success">
+                                    <td colspan="2"><strong>Closing Balance</strong></td>
+                                    <td colspan="9"></td>
+                                    <td><strong><?= $this->sma->formatQuantity($balanceQantity); ?></strong></td>
+                                    <td><strong><?= $this->sma->formatQuantity($balanceQantity); ?></strong></td>
+                                    <td><strong><?= $this->sma->formatMoney($totalValueOfItem, 'none'); ?></strong></td>
+                                </tr>
 
                                 </tbody>
+
                             <?php } ?>
                             <tfoot></tfoot>
                         </table>
