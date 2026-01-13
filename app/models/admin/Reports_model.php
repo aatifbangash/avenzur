@@ -780,7 +780,7 @@ class Reports_model extends CI_Model
             ->order_by('sma_accounts_entries.date asc');
         $q = $this->db->get();
         //lq($this);
-
+        
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data_res[] = $row;
@@ -791,9 +791,8 @@ class Reports_model extends CI_Model
 
 
         $this->db
-            ->select('sma_accounts_entryitems.id as entry_id, COALESCE(sum(sma_accounts_entryitems.amount), 0) as amount, 
-                    sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.date, 
-                    sma_accounts_ledgers.code, sma_companies.company, sma_accounts_entries.transaction_type')
+            ->select('COALESCE(sum(sma_accounts_entryitems.amount), 0) as amount, 
+                    sma_accounts_entryitems.dc')
             ->from('sma_accounts_entryitems')
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
             ->join('sma_accounts_ledgers', 'sma_accounts_entryitems.ledger_id=sma_accounts_ledgers.id')
@@ -801,13 +800,10 @@ class Reports_model extends CI_Model
             ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
             ->where('sma_accounts_entries.customer_id', $customer_id)
             ->where('sma_accounts_entries.date <', $start_date)
-            ->group_by('sma_accounts_entryitems.dc')
-            ->group_by('sma_accounts_entries.date')
-            ->group_by('sma_accounts_entries.transaction_type')
-            ->order_by('sma_accounts_entries.date asc');
+            ->group_by('sma_accounts_entryitems.dc');
         $q = $this->db->get();
         //lq($this);
-
+        
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
