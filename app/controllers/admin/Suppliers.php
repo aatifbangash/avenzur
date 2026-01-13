@@ -351,7 +351,7 @@ class Suppliers extends MY_Controller
         }
     }
 
-    public function convert_debit_memo_invoice($memo_id, $supplier_id, $ledger_account, $payment_amount, $reference_no, $type, $supplier_entry_type = 'D', $vat_account = null, $vat_percent = '0'){
+    public function convert_debit_memo_invoice($memo_id, $supplier_id, $ledger_account, $payment_amount, $reference_no, $type, $date, $supplier_entry_type = 'D', $vat_account = null, $vat_percent = '0'){
         $this->load->admin_model('companies_model');
         $supplier = $this->companies_model->getCompanyByID($supplier_id);
 
@@ -368,7 +368,7 @@ class Suppliers extends MY_Controller
             'entrytype_id' => 4,
             'transaction_type' => $type,
             'number'       => 'DM-'.$reference_no,
-            'date'         => date('Y-m-d'), 
+            'date'         => $date, 
             'dr_total'     => $total_amount,
             'cr_total'     => $total_amount,
             'notes'        => 'Debit Memo Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
@@ -783,7 +783,7 @@ class Suppliers extends MY_Controller
                 }
             }
 
-            $this->convert_debit_memo_invoice($memo_id, $supplier_id, $ledger_account, $payment_total, $reference_no, 'debitmemo', $supplier_entry_type, $vat_account, $vat_percent);
+            $this->convert_debit_memo_invoice($memo_id, $supplier_id, $ledger_account, $payment_total, $reference_no, 'debitmemo', $date, $supplier_entry_type, $vat_account, $vat_percent);
             $this->session->set_flashdata('message', lang('Debit Memo invoice added Successfully!'));
             admin_redirect('suppliers/list_debit_memo');
         } else {
