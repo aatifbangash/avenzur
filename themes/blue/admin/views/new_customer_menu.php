@@ -138,12 +138,24 @@
                         <i class="fa fa-chevron-right newmenu-chevron"></i>
                     </a>
                     <ul class="newmenu-sub">
-                        <?php if($Admin || $Owner || $GP['products-add']){ ?>
-                            <li><a href="<?= admin_url('products/add'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('Add Product'); ?></a></li>
-                        <?php } ?>
-                        <?php if($Admin || $Owner || $GP['products-index']){ ?>
-                            <li><a href="<?= admin_url('products'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('List Products'); ?></a></li>
-                        <?php } ?>
+                        <?php if($Admin || $Owner || $GP['products-add']){
+                            if($this->Settings->site_name == 'Avnzor'){ ?>
+                                <li><a href="<?= admin_url('products/add_new'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('Add Product'); ?></a></li>
+                            <?php }else{ ?>
+                                <li><a href="<?= admin_url('products/add'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('Add Product'); ?></a></li>
+                            <?php }
+                         } ?>
+<!--                        --><?php //if($Admin || $Owner || $GP['products-index']){ ?>
+<!--                            <li><a href="--><?php //= admin_url('products'); ?><!--" class="newmenu-link"><i class="fa fa-list"></i> --><?php //= lang('List Products'); ?><!--</a></li>-->
+<!--                        --><?php //} ?>
+
+                        <?php if($Admin || $Owner || $GP['products-index']){
+                            if($this->Settings->site_name == 'Avnzor'){ ?>
+                                <li><a href="<?= admin_url('products/list_products'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('List Products'); ?></a></li>
+                            <?php }else{ ?>
+                                <li><a href="<?= admin_url('products'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('List Products'); ?></a></li>
+                            <?php }
+                        } ?>
                     </ul>
                 </li>
             </ul>

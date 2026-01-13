@@ -26,7 +26,6 @@ class Products_model extends CI_Model
         );
         $this->db->insert('print_jobs', $print_job);
     }
-
     public function add_products($products = [])
     {
         if (!empty($products)) {
@@ -86,7 +85,37 @@ class Products_model extends CI_Model
         }
         return false;
     }
+    public function addProductSimplified($data)
+    {
+        // Generate sequence code
+        $data['sequence_code'] = $this->sequenceCode->generate('PRD', 5);
 
+        // Insert product
+        if ($this->db->insert('products', $data)) {
+            $product_id = $this->db->insert_id();
+
+            // Create warehouse entries with 0 quantity for all warehouses
+            $warehouses = $this->site->getAllWarehouses();
+
+            if (!empty($warehouses)) {
+                foreach ($warehouses as $warehouse) {
+                    $this->db->insert('warehouses_products', [
+                        'product_id'   => $product_id,
+                        'warehouse_id' => $warehouse->id,
+                        'quantity'     => 0,
+                        'avg_cost'     => $data['cost']
+                    ]);
+                }
+            }
+
+            // Sync quantity (this maintains compatibility with existing system)
+            $this->site->syncQuantity(null, null, null, $product_id);
+
+            return true;
+        }
+
+        return false;
+    }
     public function addCombo($data, $products)
     {
         if ($this->db->insert('combos', $data)) {

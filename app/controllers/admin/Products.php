@@ -2619,6 +2619,125 @@ class Products extends MY_Controller
     }*/
 
     /* ------------------------------------------------------- */
+    //add_new
+    public function add_new($id = null)
+    {
+        $this->load->helper('security');
+
+        // Set validation rules for simplified fields
+        $this->form_validation->set_rules('item_code', 'Item Code', 'required|is_unique[products.code]|alpha_dash');
+        $this->form_validation->set_rules('name', 'Product Name', 'required');
+        $this->form_validation->set_rules('cost', 'Cost', 'required|numeric');
+        $this->form_validation->set_rules('sale_price', 'Sale Price', 'required|numeric');
+        $this->form_validation->set_rules('description', 'Description', 'required');
+        $this->form_validation->set_rules('product_image', 'Product Image', 'xss_clean');
+
+        if ($this->form_validation->run() == true) {
+
+            // Prepare simplified product data
+            $data = [
+                'code'           => $this->input->post('item_code'),
+                'name'           => $this->input->post('name'),
+                'cost'           => $this->sma->formatDecimal($this->input->post('cost')),
+                'price'          => $this->sma->formatDecimal($this->input->post('sale_price')),
+                'details'        => $this->input->post('description'),
+                'type'           => 'standard',  // Always standard
+                'barcode_symbology' => 'code128',  // Default barcode
+                'unit'           => 1,  // Default unit (you may need to adjust this)
+                'tax_method'     => 0,  // Default tax method
+                'track_quantity' => 1,  // Track quantity by default
+                'quantity'       => 0,  // Initial quantity
+            ];
+
+            // Handle image upload
+            $photo = null;
+            if ($_FILES['product_image']['size'] > 0) {
+                $this->load->library('upload');
+                $config['upload_path']   = $this->upload_path;
+                $config['allowed_types'] = $this->image_types;
+                $config['max_size']      = $this->allowed_file_size;
+                $config['max_width']     = $this->Settings->iwidth;
+                $config['max_height']    = $this->Settings->iheight;
+                $config['overwrite']     = false;
+                $config['max_filename']  = 25;
+                $config['encrypt_name']  = true;
+
+                $this->upload->initialize($config);
+
+                if (!$this->upload->do_upload('product_image')) {
+                    $error = $this->upload->display_errors();
+                    $this->session->set_flashdata('error', $error);
+                    admin_redirect('products/add_new');
+                }
+
+                $photo = $this->upload->file_name;
+                $data['image'] = $photo;
+
+                // Create thumbnail
+                $this->load->library('image_lib');
+                $config['image_library']  = 'gd2';
+                $config['source_image']   = $this->upload_path . $photo;
+                $config['new_image']      = $this->thumbs_path . $photo;
+                $config['maintain_ratio'] = true;
+                $config['width']          = $this->Settings->twidth;
+                $config['height']         = $this->Settings->theight;
+
+                $this->image_lib->clear();
+                $this->image_lib->initialize($config);
+
+                if (!$this->image_lib->resize()) {
+                    echo $this->image_lib->display_errors();
+                }
+
+                // Add watermark if enabled
+                if ($this->Settings->watermark) {
+                    $this->image_lib->clear();
+                    $wm['source_image']     = $this->upload_path . $photo;
+                    $wm['wm_text']          = 'Copyright ' . date('Y') . ' - ' . $this->Settings->site_name;
+                    $wm['wm_type']          = 'text';
+                    $wm['wm_font_path']     = 'system/fonts/texb.ttf';
+                    $wm['quality']          = '100';
+                    $wm['wm_font_size']     = '16';
+                    $wm['wm_font_color']    = '999999';
+                    $wm['wm_shadow_color']  = 'CCCCCC';
+                    $wm['wm_vrt_alignment'] = 'top';
+                    $wm['wm_hor_alignment'] = 'left';
+                    $wm['wm_padding']       = '10';
+
+                    $this->image_lib->initialize($wm);
+                    $this->image_lib->watermark();
+                }
+
+                $this->image_lib->clear();
+            }
+
+            // Add product using simplified model method
+            if ($this->products_model->addProductSimplified($data)) {
+                $this->session->set_flashdata('message', 'Product added successfully');
+                admin_redirect('products/list_products');
+            } else {
+                $this->session->set_flashdata('error', 'Failed to add product');
+                admin_redirect('products/add_new');
+            }
+
+        } else {
+            // Display form with errors
+            $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+
+            $bc = [
+                ['link' => base_url(), 'page' => 'Home'],
+                ['link' => admin_url('products'), 'page' => 'Products'],
+                ['link' => '#', 'page' => 'Add Product']
+            ];
+
+            $meta = [
+                'page_title' => 'Add Product',
+                'bc' => $bc
+            ];
+
+            $this->page_construct('products/add_new', $meta, $this->data);
+        }
+    }
     public function add($id = null)
     {
         //$this->sma->checkPermissions();
@@ -4399,7 +4518,482 @@ error_reporting(E_ALL);
         exit;
     }
 
+//edit_new
+    public function edit_new($id = null)
+    {
+        $this->load->helper('security');
 
+        if ($this->input->post('id')) {
+            $id = $this->input->post('id');
+        }
+
+        $warehouses = $this->site->getAllWarehouses();
+        $warehouses_products = $this->products_model->getAllWarehousesWithPQ($id);
+        $product = $this->site->getProductByID($id);
+
+        if (!$id || !$product) {
+            $this->session->set_flashdata('error', lang('prduct_not_found'));
+            redirect($_SERVER['HTTP_REFERER']);
+        }
+
+        // Only validate code if it's being changed
+        if ($this->input->post('code') && $this->input->post('code') !== $product->code) {
+            $this->form_validation->set_rules('code', lang('product_code'), 'alpha_dash');
+        }
+
+        // Make slug optional - only validate if SHOP is enabled AND slug is provided
+        if (SHOP && $this->input->post('slug')) {
+            if ($this->input->post('slug') !== $product->slug) {
+                $this->form_validation->set_rules('slug', lang('slug'), 'is_unique[products.slug]|alpha_dash');
+            }
+        }
+
+        // Make weight optional
+        if ($this->input->post('weight')) {
+            $this->form_validation->set_rules('weight', lang('weight'), 'numeric');
+        }
+
+        $this->form_validation->set_rules('digital_file', lang('digital_file'), 'xss_clean');
+
+        if ($this->form_validation->run() == true) {
+
+            // Handle product countries
+            $product_countries = '';
+            if ($this->input->post('cf1') && is_array($this->input->post('cf1'))) {
+                foreach ($this->input->post('cf1') as $pcountry) {
+                    if ($pcountry == '0') {
+                        $product_countries = 0;
+                        break;
+                    }
+                    $product_countries .= $pcountry . ',';
+                }
+                $product_countries = rtrim($product_countries, ',');
+            } else {
+                $product_countries = $product->cf1; // Keep existing value
+            }
+
+            $hide_product = $this->input->post('hide') ? $this->input->post('hide') : 0;
+            $draft_set = $this->input->post('draft');
+            if ($draft_set == 1) {
+                $hide_product = 1;
+            }
+
+            // Build data array - only update fields that are provided
+            $data = [
+                'code' => $this->input->post('code') ?: $product->code,
+                'item_code' => $this->input->post('item_code') ?: $product->item_code,
+                'barcode_symbology' => $this->input->post('barcode_symbology') ?: $product->barcode_symbology,
+                'name' => $this->input->post('name') ?: $product->name,
+                'type' => $this->input->post('type') ?: $product->type,
+                'brand' => $this->input->post('brand') ?: $product->brand,
+                'category_id' => $this->input->post('category') ?: $product->category_id,
+                'subcategory_id' => $this->input->post('subcategory') ?: $product->subcategory_id,
+                'cost' => $this->input->post('price') ? $this->sma->formatDecimal($this->input->post('price')) : $product->cost,
+                'price' => $this->input->post('price') ? $this->sma->formatDecimal($this->input->post('price')) : $product->price,
+                'unit' => $this->input->post('unit') ?: $product->unit,
+                'sale_unit' => $this->input->post('default_sale_unit') ?: $product->sale_unit,
+                'purchase_unit' => $this->input->post('default_purchase_unit') ?: $product->purchase_unit,
+                'tax_rate' => $this->input->post('tax_rate') !== null ? $this->input->post('tax_rate') : $product->tax_rate,
+                'tax_method' => $this->input->post('tax_method') ?: $product->tax_method,
+                'alert_quantity' => $this->input->post('alert_quantity') !== null ? $this->input->post('alert_quantity') : $product->alert_quantity,
+                'track_quantity' => $this->input->post('track_quantity') !== null ? $this->input->post('track_quantity') : $product->track_quantity,
+                'details' => isset($_POST['details']) ? $_POST['details'] : $product->details,
+                'product_details' => isset($_POST['product_details']) ? $_POST['product_details'] : $product->product_details,
+                'supplier1' => $this->input->post('supplier') ?: $product->supplier1,
+                'supplier1price' => $this->input->post('supplier_price') ? $this->sma->formatDecimal($this->input->post('supplier_price')) : $product->supplier1price,
+                'supplier2' => $this->input->post('supplier_2') ?: $product->supplier2,
+                'supplier2price' => $this->input->post('supplier_2_price') ? $this->sma->formatDecimal($this->input->post('supplier_2_price')) : $product->supplier2price,
+                'supplier3' => $this->input->post('supplier_3') ?: $product->supplier3,
+                'supplier3price' => $this->input->post('supplier_3_price') ? $this->sma->formatDecimal($this->input->post('supplier_3_price')) : $product->supplier3price,
+                'supplier4' => $this->input->post('supplier_4') ?: $product->supplier4,
+                'supplier4price' => $this->input->post('supplier_4_price') ? $this->sma->formatDecimal($this->input->post('supplier_4_price')) : $product->supplier4price,
+                'supplier5' => $this->input->post('supplier_5') ?: $product->supplier5,
+                'supplier5price' => $this->input->post('supplier_5_price') ? $this->sma->formatDecimal($this->input->post('supplier_5_price')) : $product->supplier5price,
+                'cf1' => $product_countries,
+                'cf2' => $this->input->post('cf2') ?: $product->cf2,
+                'cf3' => $this->input->post('cf3') ?: $product->cf3,
+                'cf4' => $this->input->post('cf4') ?: $product->cf4,
+                'cf5' => $this->input->post('cf5') ?: $product->cf5,
+                'cf6' => $this->input->post('cf6') ?: $product->cf6,
+                'promotion' => $this->input->post('promotion') !== null ? $this->input->post('promotion') : $product->promotion,
+                'promo_price' => $this->input->post('promo_price') ? $this->sma->formatDecimal($this->input->post('promo_price')) : $product->promo_price,
+                'start_date' => $this->input->post('start_date') ? $this->sma->fsd($this->input->post('start_date')) : $product->start_date,
+                'end_date' => $this->input->post('end_date') ? $this->sma->fsd($this->input->post('end_date')) : $product->end_date,
+                'supplier1_part_no' => $this->input->post('supplier_part_no') ?: $product->supplier1_part_no,
+                'supplier2_part_no' => $this->input->post('supplier_2_part_no') ?: $product->supplier2_part_no,
+                'supplier3_part_no' => $this->input->post('supplier_3_part_no') ?: $product->supplier3_part_no,
+                'supplier4_part_no' => $this->input->post('supplier_4_part_no') ?: $product->supplier4_part_no,
+                'supplier5_part_no' => $this->input->post('supplier_5_part_no') ?: $product->supplier5_part_no,
+                'slug' => $this->input->post('slug') ?: $product->slug, // Keep existing slug if not provided
+                'weight' => $this->input->post('weight') ?: $product->weight,
+                'featured' => $this->input->post('featured') !== null ? $this->input->post('featured') : $product->featured,
+                'special_offer' => $this->input->post('special_offer') !== null ? $this->input->post('special_offer') : $product->special_offer,
+                'hsn_code' => $this->input->post('hsn_code') ?: $product->hsn_code,
+                'hide' => $hide_product,
+                'hide_pos' => $this->input->post('hide_pos') ? $this->input->post('hide_pos') : 0,
+                'second_name' => $this->input->post('second_name') ?: $product->second_name,
+                'trade_name' => $this->input->post('trade_name') ?: $product->trade_name,
+                'manufacture_name' => $this->input->post('manufacture_name') ?: $product->manufacture_name,
+                'main_agent' => $this->input->post('main_agent') ?: $product->main_agent,
+                'draft' => $this->input->post('draft') !== null ? $this->input->post('draft') : $product->draft,
+                'special_product' => $this->input->post('special_product') !== null ? $this->input->post('special_product') : $product->special_product,
+                'google_merch' => $this->input->post('google_merch') !== null ? $this->input->post('google_merch') : $product->google_merch,
+                'cash_discount' => $this->input->post('cash_discount') ?: $product->cash_discount,
+                'credit_discount' => $this->input->post('credit_discount') ?: $product->credit_discount,
+                'cash_dis2' => $this->input->post('cash_dis2') ?: $product->cash_dis2,
+                'credit_dis2' => $this->input->post('credit_dis2') ?: $product->credit_dis2,
+                'cash_dis3' => $this->input->post('cash_dis3') ?: $product->cash_dis3,
+                'credit_dis3' => $this->input->post('credit_dis3') ?: $product->credit_dis3,
+                'warehouse_shelf' => $this->input->post('warehouse_shelf') ?: $product->warehouse_shelf,
+                'scientific_name' => $this->input->post('scientific_name') ?: $product->scientific_name,
+                'store_condition' => $this->input->post('store_condition') ?: $product->store_condition,
+                'legal_status' => $this->input->post('legal_status') ?: $product->legal_status,
+                'atc_code' => $this->input->post('atc_code') ?: $product->atc_code,
+                'authorized_channel' => $this->input->post('authorized_channel') ?: $product->authorized_channel,
+                'marketing_company' => $this->input->post('marketing_company') ?: $product->marketing_company,
+                'manufacture_country' => $this->input->post('manufacture_country') ?: $product->manufacture_country,
+                'group_name' => $this->input->post('group_name') ?: $product->group_name,
+                'pharmaceutical_form' => $this->input->post('pharmaceutical_form') ?: $product->pharmaceutical_form,
+                'corp_name' => $this->input->post('corp_name') ?: $product->corp_name,
+            ];
+
+            // Handle optional Arabic fields
+            if ($this->input->post('name_ar') != '') {
+                $data['name_ar'] = $this->input->post('name_ar');
+            }
+            if ($this->input->post('product_details_ar') != '') {
+                $data['product_details_ar'] = $this->input->post('product_details_ar');
+            }
+
+            $warehouse_qty = null;
+            $product_attributes = null;
+            $update_variants = [];
+            $this->load->library('upload');
+
+            if ($this->input->post('type') == 'standard') {
+                if ($product_variants = $this->products_model->getProductOptions($id)) {
+                    foreach ($product_variants as $pv) {
+                        $update_variants[] = [
+                            'id' => $this->input->post('variant_id_' . $pv->id),
+                            'name' => $this->input->post('variant_name_' . $pv->id),
+                            'cost' => $this->input->post('variant_cost_' . $pv->id),
+                            'price' => $this->input->post('variant_price_' . $pv->id),
+                        ];
+                    }
+                }
+
+                foreach ($warehouses as $warehouse) {
+                    $warehouse_qty[] = [
+                        'warehouse_id' => $this->input->post('wh_' . $warehouse->id),
+                        'rack' => $this->input->post('rack_' . $warehouse->id) ? $this->input->post('rack_' . $warehouse->id) : null,
+                    ];
+                }
+
+                if ($this->input->post('attributes')) {
+                    $a = sizeof($_POST['attr_name']);
+                    for ($r = 0; $r <= $a; $r++) {
+                        if (isset($_POST['attr_name'][$r])) {
+                            if ($product_variatnt = $this->products_model->getPrductVariantByPIDandName($id, trim($_POST['attr_name'][$r]))) {
+                                $this->form_validation->set_message('required', lang('product_already_has_variant') . ' (' . $_POST['attr_name'][$r] . ')');
+                                $this->form_validation->set_rules('new_product_variant', lang('new_product_variant'), 'required');
+                            } else {
+                                $product_attributes[] = [
+                                    'name' => $_POST['attr_name'][$r],
+                                    'warehouse_id' => $_POST['attr_warehouse'][$r],
+                                    'quantity' => $_POST['attr_quantity'][$r],
+                                    'price' => $_POST['attr_price'][$r],
+                                ];
+                            }
+                        }
+                    }
+                }
+            }
+
+            if ($this->input->post('type') == 'service') {
+                $data['track_quantity'] = 0;
+            } elseif ($this->input->post('type') == 'combo') {
+                $total_price = 0;
+                $items = [];
+                if (isset($_POST['combo_item_code'])) {
+                    $c = sizeof($_POST['combo_item_code']) - 1;
+                    for ($r = 0; $r <= $c; $r++) {
+                        if (isset($_POST['combo_item_code'][$r]) && isset($_POST['combo_item_quantity'][$r]) && isset($_POST['combo_item_price'][$r])) {
+                            $items[] = [
+                                'item_code' => $_POST['combo_item_code'][$r],
+                                'quantity' => $_POST['combo_item_quantity'][$r],
+                                'unit_price' => $_POST['combo_item_price'][$r],
+                            ];
+                            $total_price += $_POST['combo_item_price'][$r] * $_POST['combo_item_quantity'][$r];
+                        }
+                    }
+                    if ($this->sma->formatDecimal($total_price) != $this->sma->formatDecimal($this->input->post('price'))) {
+                        $this->form_validation->set_rules('combo_price', 'combo_price', 'required');
+                        $this->form_validation->set_message('required', lang('pprice_not_match_ciprice'));
+                    }
+                }
+                $data['track_quantity'] = 0;
+            } elseif ($this->input->post('type') == 'digital') {
+                if ($this->input->post('file_link')) {
+                    $data['file'] = $this->input->post('file_link');
+                }
+                if ($_FILES['digital_file']['size'] > 0) {
+                    $config['upload_path'] = $this->digital_upload_path;
+                    $config['allowed_types'] = $this->digital_file_types;
+                    $config['max_size'] = $this->allowed_file_size;
+                    $config['overwrite'] = false;
+                    $config['encrypt_name'] = true;
+                    $config['max_filename'] = 25;
+                    $this->upload->initialize($config);
+                    if (!$this->upload->do_upload('digital_file')) {
+                        $error = $this->upload->display_errors();
+                        $this->session->set_flashdata('error', $error);
+                        admin_redirect('products/edit_new/' . $id);
+                    }
+                    $file = $this->upload->file_name;
+                    $data['file'] = $file;
+                }
+                $config = null;
+                $data['track_quantity'] = 0;
+            }
+
+            if (!isset($items)) {
+                $items = null;
+            }
+
+            // Handle product image upload
+            if ($_FILES['product_image']['size'] > 0) {
+                $config['upload_path'] = $this->upload_path;
+                $config['allowed_types'] = $this->image_types;
+                $config['max_size'] = $this->allowed_file_size;
+                $config['max_width'] = $this->Settings->iwidth;
+                $config['max_height'] = $this->Settings->iheight;
+                $config['overwrite'] = false;
+                $config['encrypt_name'] = true;
+                $config['max_filename'] = 25;
+                $this->upload->initialize($config);
+                if (!$this->upload->do_upload('product_image')) {
+                    $error = $this->upload->display_errors();
+                    $this->session->set_flashdata('error', $error);
+                    admin_redirect('products/edit_new/' . $id);
+                }
+                $photo = $this->upload->file_name;
+                $data['image'] = $photo;
+
+                $this->load->library('image_lib');
+                $config['image_library'] = 'gd2';
+                $config['source_image'] = $this->upload_path . $photo;
+                $config['new_image'] = $this->thumbs_path . $photo;
+                $config['maintain_ratio'] = true;
+                $config['width'] = $this->Settings->twidth;
+                $config['height'] = $this->Settings->theight;
+                $this->image_lib->clear();
+                $this->image_lib->initialize($config);
+                if (!$this->image_lib->resize()) {
+                    echo $this->image_lib->display_errors();
+                }
+                if ($this->Settings->watermark) {
+                    $this->image_lib->clear();
+                    $wm['source_image'] = $this->upload_path . $photo;
+                    $wm['wm_text'] = 'Copyright ' . date('Y') . ' - ' . $this->Settings->site_name;
+                    $wm['wm_type'] = 'text';
+                    $wm['wm_font_path'] = 'system/fonts/texb.ttf';
+                    $wm['quality'] = '100';
+                    $wm['wm_font_size'] = '16';
+                    $wm['wm_font_color'] = '999999';
+                    $wm['wm_shadow_color'] = 'CCCCCC';
+                    $wm['wm_vrt_alignment'] = 'top';
+                    $wm['wm_hor_alignment'] = 'left';
+                    $wm['wm_padding'] = '10';
+                    $this->image_lib->initialize($wm);
+                    $this->image_lib->watermark();
+                }
+                $this->image_lib->clear();
+                $config = null;
+            } else if (!empty($this->input->post('product_image_link'))) {
+                $product_image_link = $this->input->post('product_image_link');
+
+                if (filter_var($product_image_link, FILTER_VALIDATE_URL) !== false) {
+                    $image_data = @file_get_contents($product_image_link);
+
+                    if ($image_data !== false) {
+                        $photo = md5(uniqid(rand(), true)) . '.jpg';
+                        file_put_contents($this->upload_path . $photo, $image_data);
+                        $data['image'] = $photo;
+
+                        $this->load->library('image_lib');
+                        $config['image_library'] = 'gd2';
+                        $config['source_image'] = $this->upload_path . $photo;
+                        $config['new_image'] = $this->thumbs_path . $photo;
+                        $config['maintain_ratio'] = true;
+                        $config['width'] = $this->Settings->twidth;
+                        $config['height'] = $this->Settings->theight;
+                        $this->image_lib->clear();
+                        $this->image_lib->initialize($config);
+                        if (!$this->image_lib->resize()) {
+                            echo $this->image_lib->display_errors();
+                        }
+                        if ($this->Settings->watermark) {
+                            $this->image_lib->clear();
+                            $wm['source_image'] = $this->upload_path . $photo;
+                            $wm['wm_text'] = 'Copyright ' . date('Y') . ' - ' . $this->Settings->site_name;
+                            $wm['wm_type'] = 'text';
+                            $wm['wm_font_path'] = 'system/fonts/texb.ttf';
+                            $wm['quality'] = '100';
+                            $wm['wm_font_size'] = '16';
+                            $wm['wm_font_color'] = '999999';
+                            $wm['wm_shadow_color'] = 'CCCCCC';
+                            $wm['wm_vrt_alignment'] = 'top';
+                            $wm['wm_hor_alignment'] = 'left';
+                            $wm['wm_padding'] = '10';
+                            $this->image_lib->initialize($wm);
+                            $this->image_lib->watermark();
+                        }
+                        $this->image_lib->clear();
+                        $config = null;
+                    }
+                }
+            }
+
+            // Handle gallery images
+            $photos = null;
+            if ($_FILES['userfile']['name'][0] != '') {
+                $config['upload_path'] = $this->upload_path;
+                $config['allowed_types'] = $this->image_types;
+                $config['max_size'] = $this->allowed_file_size;
+                $config['max_width'] = $this->Settings->iwidth;
+                $config['max_height'] = $this->Settings->iheight;
+                $config['overwrite'] = false;
+                $config['encrypt_name'] = true;
+                $config['max_filename'] = 25;
+                $files = $_FILES;
+                $cpt = count($_FILES['userfile']['name']);
+                for ($i = 0; $i < $cpt; $i++) {
+                    $_FILES['userfile']['name'] = $files['userfile']['name'][$i];
+                    $_FILES['userfile']['type'] = $files['userfile']['type'][$i];
+                    $_FILES['userfile']['tmp_name'] = $files['userfile']['tmp_name'][$i];
+                    $_FILES['userfile']['error'] = $files['userfile']['error'][$i];
+                    $_FILES['userfile']['size'] = $files['userfile']['size'][$i];
+
+                    $this->upload->initialize($config);
+
+                    if (!$this->upload->do_upload()) {
+                        $error = $this->upload->display_errors();
+                        $this->session->set_flashdata('error', $error);
+                        admin_redirect('products/edit_new/' . $id);
+                    } else {
+                        $pho = $this->upload->file_name;
+                        $photos[] = $pho;
+
+                        $this->load->library('image_lib');
+                        $config['image_library'] = 'gd2';
+                        $config['source_image'] = $this->upload_path . $pho;
+                        $config['new_image'] = $this->thumbs_path . $pho;
+                        $config['maintain_ratio'] = true;
+                        $config['width'] = $this->Settings->twidth;
+                        $config['height'] = $this->Settings->theight;
+
+                        $this->image_lib->initialize($config);
+
+                        if (!$this->image_lib->resize()) {
+                            echo $this->image_lib->display_errors();
+                        }
+
+                        if ($this->Settings->watermark) {
+                            $this->image_lib->clear();
+                            $wm['source_image'] = $this->upload_path . $pho;
+                            $wm['wm_text'] = 'Copyright ' . date('Y') . ' - ' . $this->Settings->site_name;
+                            $wm['wm_type'] = 'text';
+                            $wm['wm_font_path'] = 'system/fonts/texb.ttf';
+                            $wm['quality'] = '100';
+                            $wm['wm_font_size'] = '16';
+                            $wm['wm_font_color'] = '999999';
+                            $wm['wm_shadow_color'] = 'CCCCCC';
+                            $wm['wm_vrt_alignment'] = 'top';
+                            $wm['wm_hor_alignment'] = 'left';
+                            $wm['wm_padding'] = '10';
+                            $this->image_lib->initialize($wm);
+                            $this->image_lib->watermark();
+                        }
+
+                        $this->image_lib->clear();
+                    }
+                }
+                $config = null;
+            } else if (!empty($this->input->post('product_image_gallery'))) {
+                $product_image_gallery = $this->input->post('product_image_gallery');
+                foreach ($product_image_gallery as $image_link) {
+                    if (!empty($image_link) && filter_var($image_link, FILTER_VALIDATE_URL) !== false) {
+                        $image_data = @file_get_contents($image_link);
+
+                        if ($image_data !== false) {
+                            $pho = md5(uniqid(rand(), true)) . '.jpg';
+                            file_put_contents($this->upload_path . $pho, $image_data);
+                            $photos[] = $pho;
+
+                            $this->load->library('image_lib');
+                            $config['image_library'] = 'gd2';
+                            $config['source_image'] = $this->upload_path . $pho;
+                            $config['new_image'] = $this->thumbs_path . $pho;
+                            $config['maintain_ratio'] = true;
+                            $config['width'] = $this->Settings->twidth;
+                            $config['height'] = $this->Settings->theight;
+
+                            $this->image_lib->initialize($config);
+
+                            if (!$this->image_lib->resize()) {
+                                echo $this->image_lib->display_errors();
+                            }
+
+                            if ($this->Settings->watermark) {
+                                $this->image_lib->clear();
+                                $wm['source_image'] = $this->upload_path . $pho;
+                                $wm['wm_text'] = 'Copyright ' . date('Y') . ' - ' . $this->Settings->site_name;
+                                $wm['wm_type'] = 'text';
+                                $wm['wm_font_path'] = 'system/fonts/texb.ttf';
+                                $wm['quality'] = '100';
+                                $wm['wm_font_size'] = '16';
+                                $wm['wm_font_color'] = '999999';
+                                $wm['wm_shadow_color'] = 'CCCCCC';
+                                $wm['wm_vrt_alignment'] = 'top';
+                                $wm['wm_hor_alignment'] = 'left';
+                                $wm['wm_padding'] = '10';
+                                $this->image_lib->initialize($wm);
+                                $this->image_lib->watermark();
+                            }
+
+                            $this->image_lib->clear();
+                        }
+                    }
+                }
+            }
+
+            $data['quantity'] = $wh_total_quantity ?? 0;
+        }
+
+        if ($this->form_validation->run() == true && $this->products_model->updateProduct($id, $data, $items, $warehouse_qty, $product_attributes, $photos, $update_variants)) {
+            $this->session->set_flashdata('message', lang('product_updated'));
+            admin_redirect('products/edit_new/' . $id);
+        } else {
+            $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+            $this->data['images'] = $this->products_model->getProductPhotos($id);
+            $this->data['categories'] = $this->site->getAllCategories();
+            $this->data['tax_rates'] = $this->site->getAllTaxRates();
+            $this->data['brands'] = $this->site->getAllBrands();
+            $this->data['base_units'] = $this->site->getAllBaseUnits();
+            $this->data['warehouses'] = $warehouses;
+            $this->data['warehouses_products'] = $warehouses_products;
+            $this->data['product'] = $product;
+            $this->data['country'] = $this->settings_model->getallCountry();
+            $this->data['variants'] = $this->products_model->getAllVariants();
+            $this->data['subunits'] = $this->site->getUnitsByBUID($product->unit);
+            $this->data['product_variants'] = $this->products_model->getProductOptions($id);
+            $this->data['combo_items'] = $product->type == 'combo' ? $this->products_model->getProductComboItems($product->id) : null;
+            $this->data['product_options'] = $id ? $this->products_model->getProductOptionsWithWH($id) : null;
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('products'), 'page' => lang('products')], ['link' => '#', 'page' => lang('edit_product')]];
+            $meta = ['page_title' => lang('edit_product'), 'bc' => $bc];
+            $this->page_construct('products/edit_new', $meta, $this->data);
+        }
+    }
     public function edit($id = null)
     {
         //$this->sma->checkPermissions();
@@ -5519,7 +6113,15 @@ error_reporting(E_ALL);
             $action .= '<li><a href="' . admin_url('products/add/$1') . '"><i class="fa fa-plus-square"></i> ' . lang('duplicate_product') . '</a></li>';
         }
 
-        $action .= '<li><a href="' . admin_url('products/edit/$1') . '"><i class="fa fa-edit"></i> ' . lang('edit_product') . '</a></li>';
+
+//        new lines here for Avnzor edit product link (edit_new_product)
+        if($this->Settings->site_name == 'Avnzor'){
+            $action .= '<li><a href="' . admin_url('products/edit_new/$1') . '"><i class="fa fa-edit"></i> ' . lang('edit_product') . '</a></li>';
+             }else{
+            $action .= '<li><a href="' . admin_url('products/edit/$1') . '"><i class="fa fa-edit"></i> ' . lang('edit_product') . '</a></li>';
+        }
+
+
         if ($warehouse_id) {
             $action .= '<li><a href="' . admin_url('products/set_rack/$1/' . $warehouse_id) . '" data-toggle="modal" data-target="#myModal"><i class="fa fa-bars"></i> '
                 . lang('set_rack') . '</a></li>';
@@ -6040,6 +6642,26 @@ error_reporting(E_ALL);
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('products')]];
         $meta = ['page_title' => lang('products'), 'bc' => $bc];
         $this->page_construct('products/index', $meta, $this->data);
+    }
+    public function list_products($warehouse_id = null)
+    {
+        //$this->sma->checkPermissions();
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
+            $this->data['warehouses'] = $this->site->getAllWarehouses();
+            $this->data['warehouse_id'] = $warehouse_id;
+            $this->data['warehouse'] = $warehouse_id ? $this->site->getWarehouseByID($warehouse_id) : null;
+        } else {
+            $this->data['warehouses'] = null;
+            $this->data['warehouse_id'] = $this->session->userdata('warehouse_id');
+            $this->data['warehouse'] = $this->session->userdata('warehouse_id') ? $this->site->getWarehouseByID($this->session->userdata('warehouse_id')) : null;
+        }
+
+        $this->data['supplier'] = $this->input->get('supplier') ? $this->site->getCompanyByID($this->input->get('supplier')) : null;
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('products')]];
+        $meta = ['page_title' => lang('products'), 'bc' => $bc];
+        $this->page_construct('products/list_products', $meta, $this->data);
     }
 
     /* --------------------------------------------------------------------------------------------- */
