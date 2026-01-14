@@ -28,18 +28,49 @@
         const item_group = document.getElementById('item_group').value;
         const item = document.getElementById('report_product_id2').value;
         const filterOnType = document.getElementById('filterOnType').value;
+        const agent = document.getElementById('agent').value;
+        const agent2 = document.getElementById('agent2').value;
 
         const queryParams = new URLSearchParams({
             at_date: at_date,
             warehouse: warehouse,
             item_group: item_group,
             item: item,
-            filterOnType: filterOnType
+            filterOnType: filterOnType,
+            agent: agent,
+            agent2: agent2
         }).toString();
 
         //console.log(`<?php echo base_url('reports/stock_export_excel'); ?>?${queryParams}`);
         window.location.href = `<?php echo base_url('admin/reports/stock_export_excel'); ?>?${queryParams}`;
     }
+
+    $(document).ready(function() {
+        // When main agent is selected, populate agent2 dropdown
+        $('#agent').on('change', function() {
+            var main_agent = $(this).val();
+            var agent2_dropdown = $('#agent2');
+            
+            if (main_agent) {
+                $.ajax({
+                    url: '<?php echo admin_url('reports/get_agent2_by_main_agent'); ?>',
+                    type: 'POST',
+                    data: { 
+                        main_agent: main_agent,
+                        <?= $this->security->get_csrf_token_name(); ?>: '<?= $this->security->get_csrf_hash(); ?>'
+                    },
+                    success: function(response) {
+                        agent2_dropdown.html(response);
+                    },
+                    error: function() {
+                        agent2_dropdown.html('<option value="">Select Agent 2</option>');
+                    }
+                });
+            } else {
+                agent2_dropdown.html('<option value="">Select Agent 2</option>');
+            }
+        });
+    });
     
 </script>
 <style>
@@ -187,6 +218,32 @@
 
                                 }
                                 echo form_dropdown('supplier_id', $sp, $supplier_id, 'id="supplier_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('supplier') . '" required="required" style="width:100%;" ', null); ?>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('Company', 'agent'); ?>
+                                <?php
+                                $ag[''] = 'Select Company';
+                                if (!empty($agents)) {
+                                    foreach ($agents as $agentItem) {
+                                        $ag[$agentItem->main_agent] = $agentItem->main_agent;
+                                    }
+                                }
+                                echo form_dropdown('agent', $ag, $agent, 'id="agent" class="form-control input-tip select" data-placeholder="' . lang('select') . ' Agent" style="width:100%;" ', null); ?>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('Agent 2', 'agent2'); ?>
+                                <select name="agent2" id="agent2" class="form-control input-tip select" style="width:100%;">
+                                    <option value="">Select Agent 2</option>
+                                    <?php if (!empty($agent2)): ?>
+                                        <option value="<?= $agent2 ?>" selected><?= $agent2 ?></option>
+                                    <?php endif; ?>
+                                </select>
                             </div>
                         </div>
 
