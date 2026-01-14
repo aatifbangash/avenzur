@@ -176,6 +176,20 @@
                                 <input type="hidden" name="item" value="<?= isset($_GET['item']) ? $_GET['item'] : 0 ?>" id="report_product_id2" />
                             </div>
                         </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('supplier', 'posupplier'); ?>
+                                <?php
+                                $sp[''] = '';
+                                foreach ($suppliers as $supplier) {
+                                    $sp[$supplier->id] = $supplier->company . ' (' . $supplier->name . ') - '. $supplier->sequence_code;
+
+                                }
+                                echo form_dropdown('supplier_id', $sp, $supplier_id, 'id="supplier_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('supplier') . '" required="required" style="width:100%;" ', null); ?>
+                            </div>
+                        </div>
+
                         <div class="col-md-4">
                             <div class="from-group">
                                 <button type="submit" name="submit" style="margin-top: 28px;" class="btn btn-primary"

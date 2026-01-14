@@ -645,11 +645,14 @@ class Reports extends MY_Controller
     {
         $at_date = $this->input->get('at_date') ? $this->input->get('at_date') : null;
         $warehouse = $this->input->get('warehouse') ? $this->input->get('warehouse') : null;
-        //$supplier = $this->input->post('supplier') ? $this->input->post('supplier') : null;
+        $supplier_id = $this->input->get('supplier_id') ? $this->input->get('supplier_id') : null;
         $item_group = $this->input->get('item_group') ? $this->input->get('item_group') : null;
         $item = $this->input->get('item') ? $this->input->get('item') : null;
         $filterOnType = $this->input->get('filterOnType') ? $this->input->get('filterOnType') : null;
         $viewtype = $this->input->get('viewtype') ? $this->input->get('viewtype') : null;
+
+        $this->data['supplier_id'] = $supplier_id;
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
 
         $filterOnTypeArr = [
             "" => "-- ALL --",
@@ -670,9 +673,9 @@ class Reports extends MY_Controller
             $this->load->library('pagination'); 
             $config['per_page'] = 100; 
             $page = ($this->uri->segment(4)) ? $this->uri->segment(4) : 0;
-            $this->data['stock_data'] = $this->reports_model->getStockData($at_date, $warehouse, $item_group, $filterOnType, $item, $page, $config['per_page']);
-            $this->data['stock_data_totals'] = $this->reports_model->getStockDataTotals($at_date, $warehouse, $item_group, $filterOnType, $item);
-            $grand = $this->reports_model->getStockDataGrandTotals($at_date, $warehouse, $item_group, $filterOnType, $item);
+            $this->data['stock_data'] = $this->reports_model->getStockData($at_date, $warehouse, $item_group, $filterOnType, $item, $page, $config['per_page'], $supplier_id);
+            $this->data['stock_data_totals'] = $this->reports_model->getStockDataTotals($at_date, $warehouse, $item_group, $filterOnType, $item, $supplier_id);
+            $grand = $this->reports_model->getStockDataGrandTotals($at_date, $warehouse, $item_group, $filterOnType, $item, $supplier_id);
             $this->data['new_grand_total'] = $grand[0];
             $this->data['offset'] = $page;
 

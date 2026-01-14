@@ -49,13 +49,11 @@
                     <tr>
                         <th>#</th>
                         <th><?= lang('Old No.'); ?></th>
-                        <th><?= lang('Description'); ?></th>
                         <th><?= lang('Location'); ?></th>
+                        <th><?= lang('Description'); ?></th>
                         <th><?= lang('Qty'); ?></th>
                         <th><?= lang('Batch'); ?></th>
                         <th><?= lang('Expiry'); ?></th>
-                        
-                        
                     </tr>
 
                 </thead>
@@ -73,13 +71,14 @@
                                 <?= $row->item_code ?  $row->item_code : ' - '; ?>
                                 
                             </td>
+                            <td style="text-align:center; vertical-align:middle;">
+                                <?= $row->warehouse_shelf ? $row->warehouse_shelf : '-' ?>
+                            </td>
                             <td style="vertical-align:middle;">
                                 <?= $row->product_name; ?>
                                 
                             </td>
-                            <td style="text-align:center; vertical-align:middle;">
-                                <?= $row->warehouse_shelf ? $row->warehouse_shelf : '-' ?>
-                            </td>
+                            
                             <td style="text-align:center; vertical-align:middle;">
                                 <?= $this->sma->formatQuantity($row->unit_quantity); ?>
                             </td>
