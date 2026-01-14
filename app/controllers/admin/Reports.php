@@ -575,10 +575,12 @@ class Reports extends MY_Controller
         $item_group = $this->input->get('item_group') ? $this->input->get('item_group') : null;
         $item = $this->input->get('item') ? $this->input->get('item') : null;
         $filterOnType = $this->input->get('filterOnType') ? $this->input->get('filterOnType') : null;
+        $agent = $this->input->get('agent') ? $this->input->get('agent') : null;
+        $agent2 = $this->input->get('agent2') ? $this->input->get('agent2') : null;
 
         $supplier_id = $this->input->get('supplier_id') ? $this->input->get('supplier_id') : null;
 
-        $data = $this->reports_model->getStockData($at_date, $warehouse, $item_group, $filterOnType, $item, '', '', $supplier_id);
+        $data = $this->reports_model->getStockData($at_date, $warehouse, $item_group, $filterOnType, $item, '', '', $supplier_id, $agent, $agent2);
 
         if (!empty($data)) {
             $this->load->library('excel');
@@ -653,9 +655,14 @@ class Reports extends MY_Controller
         $item = $this->input->get('item') ? $this->input->get('item') : null;
         $filterOnType = $this->input->get('filterOnType') ? $this->input->get('filterOnType') : null;
         $viewtype = $this->input->get('viewtype') ? $this->input->get('viewtype') : null;
+        $agent = $this->input->get('agent') ? $this->input->get('agent') : null;
+        $agent2 = $this->input->get('agent2') ? $this->input->get('agent2') : null;
 
         $this->data['supplier_id'] = $supplier_id;
         $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+        $this->data['agent'] = $agent;
+        $this->data['agent2'] = $agent2;
+        $this->data['agents'] = $this->reports_model->getDistinctAgents();
 
         $filterOnTypeArr = [
             "" => "-- ALL --",
@@ -676,9 +683,9 @@ class Reports extends MY_Controller
             $this->load->library('pagination'); 
             $config['per_page'] = 100; 
             $page = ($this->uri->segment(4)) ? $this->uri->segment(4) : 0;
-            $this->data['stock_data'] = $this->reports_model->getStockData($at_date, $warehouse, $item_group, $filterOnType, $item, $page, $config['per_page'], $supplier_id);
-            $this->data['stock_data_totals'] = $this->reports_model->getStockDataTotals($at_date, $warehouse, $item_group, $filterOnType, $item, $supplier_id);
-            $grand = $this->reports_model->getStockDataGrandTotals($at_date, $warehouse, $item_group, $filterOnType, $item, $supplier_id);
+            $this->data['stock_data'] = $this->reports_model->getStockData($at_date, $warehouse, $item_group, $filterOnType, $item, $page, $config['per_page'], $supplier_id, $agent, $agent2);
+            $this->data['stock_data_totals'] = $this->reports_model->getStockDataTotals($at_date, $warehouse, $item_group, $filterOnType, $item, $supplier_id, $agent, $agent2);
+            $grand = $this->reports_model->getStockDataGrandTotals($at_date, $warehouse, $item_group, $filterOnType, $item, $supplier_id, $agent, $agent2);
             $this->data['new_grand_total'] = $grand[0];
             $this->data['offset'] = $page;
 
@@ -715,6 +722,21 @@ class Reports extends MY_Controller
             $this->page_construct('reports/stock', $meta, $this->data);
         }
 
+    }
+
+    public function get_agent2_by_main_agent()
+    {
+        $main_agent = $this->input->post('main_agent');
+        if ($main_agent) {
+            $agent2_list = $this->reports_model->getAgent2ByMainAgent($main_agent);
+            $options = '<option value="">Select Agent 2</option>';
+            foreach ($agent2_list as $agent) {
+                $options .= '<option value="' . $agent->agent2 . '">' . $agent->agent2 . '</option>';
+            }
+            echo $options;
+        } else {
+            echo '<option value="">Select Agent 2</option>';
+        }
     }
 
     public function getStock()

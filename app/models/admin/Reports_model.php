@@ -2176,7 +2176,7 @@ class Reports_model extends CI_Model
         return $totalPurchases;
     }
 
-    public function getStockDataTotals($at_date, $warehouse, $item_group, $type, $item, $supplier_id){
+    public function getStockDataTotals($at_date, $warehouse, $item_group, $type, $item, $supplier_id, $agent = null, $agent2 = null){
         $stockArray = [];
         if ($at_date) {
             $at_date = $this->sma->fld($at_date);
@@ -2231,6 +2231,12 @@ class Reports_model extends CI_Model
         if ($type) {
             $stockQuery .= " AND inv.type = '{$type}' ";
         }
+        if ($agent) {
+            $stockQuery .= " AND p.main_agent = '{$agent}' ";
+        }
+        if ($agent2) {
+            $stockQuery .= " AND p.agent2 = '{$agent2}' ";
+        }
 
         if ($supplier_id) {
             $stockQuery .= "
@@ -2252,7 +2258,7 @@ class Reports_model extends CI_Model
         return $stockArray;
     }
 
-    public function getStockDataGrandTotals($at_date, $warehouse, $item_group, $type, $item, $supplier_id){
+    public function getStockDataGrandTotals($at_date, $warehouse, $item_group, $type, $item, $supplier_id, $agent = null, $agent2 = null){
         $stockArray = [];
         if ($at_date) {
             $at_date = $this->sma->fld($at_date);
@@ -2296,6 +2302,12 @@ class Reports_model extends CI_Model
         if ($type) {
             $stockQuery .= " AND inv.type = '{$type}' ";
         }
+        if ($agent) {
+            $stockQuery .= " AND p.main_agent = '{$agent}' ";
+        }
+        if ($agent2) {
+            $stockQuery .= " AND p.agent2 = '{$agent2}' ";
+        }
         if ($supplier_id) {
             $stockQuery .= "
                 AND inv.type = 'purchase'
@@ -2314,7 +2326,40 @@ class Reports_model extends CI_Model
         return $stockArray;
     }
 
-    public function getStockData($at_date, $warehouse, $item_group, $type, $item, $page = '', $per_page = '', $supplier_id)
+    public function getDistinctAgents()
+    {
+        $this->db->select('main_agent');
+        $this->db->from('sma_products');
+        $this->db->where('main_agent IS NOT NULL');
+        $this->db->where('main_agent !=', '');
+        $this->db->group_by('main_agent');
+        $this->db->order_by('main_agent', 'ASC');
+        $query = $this->db->get();
+        
+        if ($query->num_rows() > 0) {
+            return $query->result();
+        }
+        return [];
+    }
+
+    public function getAgent2ByMainAgent($main_agent)
+    {
+        $this->db->select('agent2');
+        $this->db->from('sma_products');
+        $this->db->where('main_agent', $main_agent);
+        $this->db->where('agent2 IS NOT NULL');
+        $this->db->where('agent2 !=', '');
+        $this->db->group_by('agent2');
+        $this->db->order_by('agent2', 'ASC');
+        $query = $this->db->get();
+        
+        if ($query->num_rows() > 0) {
+            return $query->result();
+        }
+        return [];
+    }
+
+    public function getStockData($at_date, $warehouse, $item_group, $type, $item, $page = '', $per_page = '', $supplier_id, $agent = null, $agent2 = null)
     {
         
         $stockArray = [];
@@ -2373,6 +2418,12 @@ class Reports_model extends CI_Model
         }
         if ($type) {
             $stockQuery .= " AND inv.type = '{$type}' ";
+        }
+        if ($agent) {
+            $stockQuery .= " AND p.main_agent = '{$agent}' ";
+        }
+        if ($agent2) {
+            $stockQuery .= " AND p.agent2 = '{$agent2}' ";
         }
 
         if ($supplier_id) {
