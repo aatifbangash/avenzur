@@ -2384,7 +2384,7 @@ class Reports_model extends CI_Model
             ";
         }
 
-        $stockQuery .= " GROUP BY inv.product_id, inv.avz_item_code HAVING quantity != 0 ORDER BY p.id DESC";
+        $stockQuery .= " GROUP BY inv.product_id, inv.avz_item_code ORDER BY p.id DESC";
         
         if($page != ''){
             $stockQuery .= " LIMIT {$per_page} OFFSET {$offset}";

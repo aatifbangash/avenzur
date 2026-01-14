@@ -568,6 +568,7 @@ class Reports extends MY_Controller
     }
 
     public function stock_export_excel(){
+        
         $data = array();
         $at_date = $this->input->get('at_date') ? $this->input->get('at_date') : null;
         $warehouse = $this->input->get('warehouse') ? $this->input->get('warehouse') : null;
@@ -575,7 +576,9 @@ class Reports extends MY_Controller
         $item = $this->input->get('item') ? $this->input->get('item') : null;
         $filterOnType = $this->input->get('filterOnType') ? $this->input->get('filterOnType') : null;
 
-        $data = $this->reports_model->getStockData($at_date, $warehouse, $item_group, $filterOnType, $item);
+        $supplier_id = $this->input->get('supplier_id') ? $this->input->get('supplier_id') : null;
+
+        $data = $this->reports_model->getStockData($at_date, $warehouse, $item_group, $filterOnType, $item, '', '', $supplier_id);
 
         if (!empty($data)) {
             $this->load->library('excel');
