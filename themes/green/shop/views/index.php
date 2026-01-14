@@ -51,6 +51,10 @@
     <!-- feature section -->
     <section class="categories section-marg-top">
       <div class="container container-max-width">
+        <div>
+        <h5 style="text-align: center;">Looking for premium supplements and beauty products? Visit our sister brand ↗️ <a href="https://avnzor.com">Avnzor.com</a></h5>
+        <hr />
+        </div>
        <div class="featureTitle text-center"><h1 class="title-wrapper override-h1">Categories</h1></div>
        <!-- cards -->
        <div class="row feature-cards text-center feature-cards2">

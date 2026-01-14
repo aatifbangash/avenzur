@@ -113,6 +113,8 @@
                     <li> <a href="<?= site_url('shop/track_order'); ?>" class="text-dark text-decoration-none" >Track Your Order </a> </li>
                    
                   </ul>
+
+                  
                 </div>
               </div>
 
@@ -144,6 +146,17 @@
             </div>
           </div>
           <div class="text-center border-top pt-3 pb-2">
+            <h5 class="footer-header-collapse arrow-down">
+              <a class="text-dark text-decoration-none" >
+              Our Brands:
+              </a>
+            </h5>
+            <ul class="hide"> 
+              
+              <span>Avenzur: Pharma & Medical Solutions </span><br />
+              <span> Avnzor: Consumer Wellness & Beauty ↗️ <a href="https://avnzor.com">avnzor.com</a> </span>
+              
+            </ul>
             <p class="m-0 fw-bold copyr">Copyright &copy; Avnzor, All rights reserved</p>
           </div>
           <div id="live-chat" style="position: fixed;z-index: 999;bottom: 0.2rem;right: 2rem;">
