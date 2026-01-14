@@ -110,7 +110,7 @@ class Main extends MY_Shop_Controller
             header('Location: https://avenzur.com');
         }*/
 
-        header('Location: https://avnzor.com');
+        //header('Location: https://avnzor.com');
 
         $config = array();
         $config["base_url"] = base_url() . "";
