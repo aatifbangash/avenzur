@@ -936,6 +936,211 @@ class Products extends MY_Controller
         echo "<hr>Import completed.";
     }
 
+    public function rawabi_stock_comparison_report(){
+        $excelFile = $this->upload_path . 'csv/Rawabi-Inventory-Comparison.xlsx';
+        
+        if (!file_exists($excelFile)) {
+            echo "Excel file not found.";
+            return;
+        }
+
+        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($excelFile);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $rows = $sheet->toArray(null, true, true, false);
+
+        echo "<style>
+            table { font-family: Arial, sans-serif; font-size: 12px; }
+            .header-row { background-color: #2c3e50; color: white; font-weight: bold; }
+            .shortage { background-color: #ffcccc; }
+            .excess { background-color: #ffffcc; }
+            .missing { background-color: #ffdddd; }
+            .not-found { background-color: #ff9999; }
+            .section-header { background-color: #e0e0e0; font-weight: bold; }
+            .summary { background-color: #d4edda; padding: 10px; margin-top: 20px; }
+        </style>";
+
+        echo "<h3>🔍 Rawabi Inventory Comparison Report</h3>";
+        echo "<p>Warehouse ID: 32 | Report Date: " . date('Y-m-d H:i:s') . "</p>";
+        
+        echo "<table border='1' cellpadding='5' cellspacing='0' style='border-collapse: collapse; width: 100%;'>";
+        echo "<thead>";
+        echo "<tr class='header-row'>";
+        echo "<th>#</th>";
+        echo "<th>Product Name</th>";
+        echo "<th>Item Code</th>";
+        echo "<th>Physical Qty (Total)</th>";
+        echo "<th>System Qty (Total)</th>";
+        echo "<th>Variance</th>";
+        echo "<th>Status</th>";
+        echo "</tr>";
+        echo "</thead>";
+        echo "<tbody>";
+
+        $warehouse_id = 32; // Main Warehouse ID
+        $processed_items = []; // Track processed product IDs
+        $physical_quantities = []; // Store item_code => total physical quantity
+        $product_names = []; // Store item_code => product name
+        $discrepancy_count = 0;
+        $shortage_count = 0;
+        $excess_count = 0;
+
+        // STEP 1: Aggregate physical quantities by item_code from Excel sheet
+        $row_count = 0;
+        foreach ($rows as $row) {
+            if($row_count == 0) { 
+                $row_count++; 
+                continue; 
+            } // Skip header row
+            
+            $product_name = trim($row[1]);
+            $item_code = trim($row[8]); // Old Code column
+            $physical_count = (int)$row[13]; // Actual Quantity column
+
+            if(empty($item_code)) {
+                continue;
+            }
+
+            // Aggregate quantities for the same item_code
+            if(!isset($physical_quantities[$item_code])) {
+                $physical_quantities[$item_code] = 0;
+                $product_names[$item_code] = $product_name;
+            }
+            $physical_quantities[$item_code] += $physical_count;
+        }
+
+        $total_processed = count($physical_quantities);
+        
+        // STEP 2: Compare each unique item with system quantities
+        $count = 1;
+        foreach($physical_quantities as $item_code => $physical_total) {
+            $product_name = $product_names[$item_code];
+            
+            // Get product from database
+            $product = $this->db
+                ->where('item_code', $item_code)
+                ->get('sma_products')
+                ->row();
+
+            if (!$product) {
+                echo "<tr class='not-found'>";
+                echo "<td>{$count}</td>";
+                echo "<td>{$product_name}</td>";
+                echo "<td>{$item_code}</td>";
+                echo "<td>{$physical_total}</td>";
+                echo "<td>N/A</td>";
+                echo "<td>N/A</td>";
+                echo "<td><strong>❌ Product Not Found in System</strong></td>";
+                echo "</tr>";
+                $discrepancy_count++;
+                $count++;
+                continue;
+            }
+
+            // Get total system quantity from inventory_movements (all batches combined)
+            $this->db->select_sum('quantity');
+            $this->db->where('product_id', $product->id);
+            $this->db->where('location_id', $warehouse_id);
+            $this->db->where('movement_date < ', '2026-01-01 00:00:00'); // Up to current date
+            
+            $result = $this->db->get('sma_inventory_movements')->row();
+            $system_quantity = $result ? (int)$result->quantity : 0;
+
+            // Track this product as processed
+            $processed_items[] = $product->id;
+
+            // Calculate variance
+            $variance = $physical_total - $system_quantity;
+
+            // Only show if there's a discrepancy
+            if($variance != 0) {
+                $row_class = $variance > 0 ? 'excess' : 'shortage';
+                $status_icon = $variance > 0 ? '⚠️ Physical Excess' : '🔴 Physical Shortage';
+                
+                echo "<tr class='{$row_class}'>";
+                echo "<td>{$count}</td>";
+                echo "<td>{$product_name}</td>";
+                echo "<td>{$item_code}</td>";
+                echo "<td>{$physical_total}</td>";
+                echo "<td>{$system_quantity}</td>";
+                echo "<td><strong>" . ($variance > 0 ? '+' : '') . "{$variance}</strong></td>";
+                echo "<td>{$status_icon}</td>";
+                echo "</tr>";
+                
+                $discrepancy_count++;
+                
+                if($variance > 0) {
+
+                    //$this->db->delete('sma_inventory_movements', ['product_id' => $product->id, 'location_id' => 32, 'type' => 'transfer_out', 'quantity' => $physical_total]);
+                    
+
+                    $excess_count++;
+                } else {
+
+                    // Delete query
+
+                    //$this->db->delete('sma_inventory_movements', ['product_id' => $product->id, 'location_id' => 32, 'type' => 'transfer_in', 'quantity' => $physical_total]);
+                    
+                    $shortage_count++;
+                }
+            }
+
+            $count++;
+        }
+
+        // Section: Items in system but not in the sheet
+        echo "<tr class='section-header'>";
+        echo "<td colspan='7'><strong>📋 Items in System but NOT in Physical Count Sheet:</strong></td>";
+        echo "</tr>";
+
+        // Get all products with inventory movements (grouped by product only, not batch)
+        $this->db->select('p.id, p.name, p.item_code, SUM(im.quantity) as system_quantity');
+        $this->db->from('sma_products p');
+        $this->db->join('sma_inventory_movements im', 'p.id = im.product_id', 'inner');
+        $this->db->where('im.location_id', $warehouse_id);
+        $this->db->group_by('p.id');
+        $this->db->having('system_quantity >', 0);
+        $system_items = $this->db->get()->result();
+
+        $missing_from_sheet = 0;
+        foreach($system_items as $item) {
+            // If this product was not in the processed list
+            if(!in_array($item->id, $processed_items)) {
+                echo "<tr class='missing'>";
+                echo "<td>-</td>";
+                echo "<td>{$item->name}</td>";
+                echo "<td>{$item->item_code}</td>";
+                echo "<td>0 (Not in sheet)</td>";
+                echo "<td>{$item->system_quantity}</td>";
+                echo "<td><strong>-{$item->system_quantity}</strong></td>";
+                echo "<td>📝 Missing from Physical Count</td>";
+                echo "</tr>";
+                $missing_from_sheet++;
+                $discrepancy_count++;
+            }
+        }
+
+        echo "</tbody>";
+        echo "</table>";
+
+        // Summary Section
+        echo "<div class='summary'>";
+        echo "<h3>📊 Summary Report</h3>";
+        echo "<ul>";
+        echo "<li><strong>Total Items Processed:</strong> {$total_processed}</li>";
+        echo "<li><strong>Total Discrepancies Found:</strong> {$discrepancy_count}</li>";
+        echo "<li><strong>Physical Shortage (System > Physical):</strong> {$shortage_count}</li>";
+        echo "<li><strong>Physical Excess (Physical > System):</strong> {$excess_count}</li>";
+        echo "<li><strong>Items Missing from Physical Count Sheet:</strong> {$missing_from_sheet}</li>";
+        echo "<li><strong>Matched Items (No Variance):</strong> " . ($total_processed - $shortage_count - $excess_count) . "</li>";
+        echo "</ul>";
+        echo "</div>";
+
+        echo "<br><p><em>Report generated at: " . date('Y-m-d H:i:s') . "</em></p>";
+    }
+
     public function upload_rawabi_product_discount_data(){
         $excelFile = $this->upload_path . 'csv/Credit-Disc.xlsx'; // Excel file
         if (!file_exists($excelFile)) {
@@ -5492,6 +5697,62 @@ error_reporting(E_ALL);
         }
         $this->datatables->add_column('Actions', $action, 'productid, image, code, name');
         echo $this->datatables->generate();
+    }
+
+    public function update_item_agents_rawabi(){
+        $this->load->library('excel');
+
+        $file_path = $this->upload_path . 'csv/COMPANY_AND_AGENT_UPDATE.xls';
+
+        $spreadsheet = IOFactory::load($file_path);
+        $sheet = $spreadsheet->getActiveSheet();
+        $rows = $sheet->toArray(null, true, true, true);
+        
+            // Extract headers (first row)
+        $headers = array_shift($rows);
+        
+        // Filter out empty headers
+        $headers = array_filter($headers, function($value) {
+            return trim($value) !== '';
+        });
+
+        // Optionally reindex headers numerically
+        $headers = array_values($headers);
+
+        // Pass to view for mapping
+        $this->data['headers']   = $headers;
+        $rows_updated = 0;
+        $total_found = 0;
+
+        foreach ($rows as $row){
+            $data = array();
+            //$data['credit_discount'] = $row['H'];
+            //echo '<pre>';print_r($row);exit;
+            $item_code = $row['A'];
+            $company_name = $row['D'];
+            $agent_name = $row['F'];
+
+            $product_details = $this->db
+                    ->where('item_code', $item_code) // exact match
+                    ->get('sma_products')
+                    ->row();
+
+            if($product_details) {
+                $product_id = $product_details->id;
+
+                $total_found++;
+                $data['main_agent'] = $company_name;
+                $data['agent2'] = $agent_name;
+                $this->db->update('products', $data, ['id' => $product_id]);
+                $rows_updated++;
+            }else{
+                // Product not found, handle accordingly (e.g., log, skip, etc.)
+                echo "Product with item code $item_code not found.<br />";
+
+            }
+        }
+
+        echo 'Rows found in database : ' . $total_found.'<br />';
     }
 
     public function getProducts($warehouse_id = null)
