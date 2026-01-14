@@ -1,6 +1,20 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?><!DOCTYPE html>
 <html>
 <head>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Avnzor",
+      "url": "https://avnzor.com",
+      "logo": "https://avnzor.com/cdn/shop/files/logo.svg",
+      "parentOrganization": {
+        "@type": "Organization",
+        "name": "Avenzur",
+        "url": "https://avenzur.com"
+      }
+    }
+    </script>
     <meta charset="utf-8">
     <base href="<?= site_url() ?>"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
