@@ -2176,7 +2176,7 @@ class Reports_model extends CI_Model
         return $totalPurchases;
     }
 
-    public function getStockDataTotals($at_date, $warehouse, $item_group, $type, $item){
+    public function getStockDataTotals($at_date, $warehouse, $item_group, $type, $item, $supplier_id){
         $stockArray = [];
         if ($at_date) {
             $at_date = $this->sma->fld($at_date);
@@ -2232,6 +2232,15 @@ class Reports_model extends CI_Model
             $stockQuery .= " AND inv.type = '{$type}' ";
         }
 
+        if ($supplier_id) {
+            $stockQuery .= "
+                AND inv.type = 'purchase'
+                AND inv.reference_id IN (
+                    SELECT id FROM sma_purchases WHERE supplier_id = '{$supplier_id}'
+                )
+            ";
+        }
+
         $stockQuery .= " GROUP BY inv.product_id, inv.avz_item_code HAVING quantity != 0";
         $stockResults = $this->db->query($stockQuery);
         //echo $this->db->last_query(); exit; 
@@ -2243,7 +2252,7 @@ class Reports_model extends CI_Model
         return $stockArray;
     }
 
-    public function getStockDataGrandTotals($at_date, $warehouse, $item_group, $type, $item){
+    public function getStockDataGrandTotals($at_date, $warehouse, $item_group, $type, $item, $supplier_id){
         $stockArray = [];
         if ($at_date) {
             $at_date = $this->sma->fld($at_date);
@@ -2287,6 +2296,14 @@ class Reports_model extends CI_Model
         if ($type) {
             $stockQuery .= " AND inv.type = '{$type}' ";
         }
+        if ($supplier_id) {
+            $stockQuery .= "
+                AND inv.type = 'purchase'
+                AND inv.reference_id IN (
+                    SELECT id FROM sma_purchases WHERE supplier_id = '{$supplier_id}'
+                )
+            ";
+        }
           $stockResults = $this->db->query($stockQuery);
        // echo $this->db->last_query(); exit; 
         if ($stockResults->num_rows() > 0) {
@@ -2297,7 +2314,7 @@ class Reports_model extends CI_Model
         return $stockArray;
     }
 
-    public function getStockData($at_date, $warehouse, $item_group, $type, $item, $page = '', $per_page = '')
+    public function getStockData($at_date, $warehouse, $item_group, $type, $item, $page = '', $per_page = '', $supplier_id)
     {
         
         $stockArray = [];
@@ -2356,6 +2373,15 @@ class Reports_model extends CI_Model
         }
         if ($type) {
             $stockQuery .= " AND inv.type = '{$type}' ";
+        }
+
+        if ($supplier_id) {
+            $stockQuery .= "
+                AND inv.type = 'purchase'
+                AND inv.reference_id IN (
+                    SELECT id FROM sma_purchases WHERE supplier_id = '{$supplier_id}'
+                )
+            ";
         }
 
         $stockQuery .= " GROUP BY inv.product_id, inv.avz_item_code HAVING quantity != 0 ORDER BY p.id DESC";
