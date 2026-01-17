@@ -170,6 +170,299 @@ class Stock_request_model extends CI_Model
         return false;
     }
 
+    public function deleteInventoryCheckRequest($req_id){
+        $this->db->delete('inventory_check_requests', ['id' => $req_id]);
+
+        $this->db->delete('inventory_check_items', ['inv_check_id' => $req_id]);
+    }
+
+    public function updateAdjustmentStatus($req_id){
+        $this->db->update('inventory_check_requests', ['status' => 'adjusted'], ['id' => $req_id]);
+    }
+
+    public function createInventoryCheckReport($inventory_check_report_data){
+        $this->db->insert_batch('inventory_check_report', $inventory_check_report_data);
+    }
+
+    /*public function getInventoryCheck($req_id, $location_id) {
+        $this->db
+            ->select('
+                im.avz_item_code as avz_code,
+                IFNULL(ci.quantity, 0) as quantity,
+                im.quantity as system_quantity,
+                im.batch_number,
+                im.expiry_date,
+                im.product_id,
+                im.net_unit_cost,
+                im.net_unit_sale,
+                im.real_unit_cost,
+                im.real_unit_sale,
+                p.tax_rate,
+                p.name as product_name,
+                p.code as product_code,
+                p.unit
+            ', false)
+            ->from('sma_inventory_movements im')
+            ->join(
+                'sma_inventory_check_items ci',
+                'im.avz_item_code = ci.avz_code AND ci.inv_check_id = ' . $this->db->escape($req_id),
+                'left'
+            )
+            ->join('sma_products p', 'p.id = im.product_id', 'left')
+            ->where('im.location_id', $location_id)
+            ->where('(IFNULL(ci.quantity, 0) > 0 OR im.quantity > 0)', null, false)
+            ->order_by('ci.quantity', 'desc');
+    
+        $q = $this->db->get();
+        $data_res = [];
+    
+        if ($q && $q->num_rows() > 0) {
+            $raw_data = $q->result();
+    
+            // Aggregate by avz_item_code
+            foreach ($raw_data as $row) {
+                $key = $row->avz_code;
+    
+                if (!isset($data_res[$key])) {
+                    $data_res[$key] = (object) [
+                        'avz_code'        => $row->avz_code,
+                        'quantity'        => $row->quantity, // from check_items (static)
+                        'system_quantity' => $row->system_quantity,
+                        'batch_number'    => $row->batch_number, // you can overwrite or collect all
+                        'expiry_date'     => $row->expiry_date,
+                        'product_id'      => $row->product_id,
+                        'net_unit_cost'   => $row->net_unit_cost,
+                        'net_unit_sale'   => $row->net_unit_sale,
+                        'real_unit_cost'  => $row->real_unit_cost,
+                        'real_unit_sale'  => $row->real_unit_sale,
+                        'tax_rate'        => $row->tax_rate,
+                        'product_name'    => $row->product_name,
+                        'product_code'    => $row->product_code,
+                        'unit'            => $row->unit,
+                    ];
+                } else {
+                    // Aggregate system quantity (sum of im.quantity)
+                    $data_res[$key]->system_quantity += $row->system_quantity;
+                }
+            }
+    
+            // Reindex as simple array
+            $data_res = array_values($data_res);
+        }
+    
+        return $data_res;
+    }*/
+    
+    public function getInventoryCheckByBatch($req_id, $location_id)
+    {
+        $sql = "
+        SELECT
+            chk.product_id,
+            chk.batch_number AS actual_batch,
+            chk.expiry_date AS actual_expiry,
+            chk.excel_quantity AS quantity,
+            chk.shelf AS actual_shelf,
+            chk.system_batch_number AS system_batch,
+            chk.system_expiry_date AS system_expiry,
+            chk.group_name,
+
+            COALESCE(chk.saved_system_quantity, sys.system_quantity) AS system_quantity,
+            sys.avz_code_count,
+            sys.avz_codes,
+            sys.net_unit_cost,
+            sys.net_unit_sale,
+            sys.real_unit_cost,
+            sys.real_unit_sale,
+
+            p.tax_rate,
+            p.name AS product_name,
+            p.code AS product_code,
+            p.item_code,
+            p.unit,
+            p.warehouse_shelf AS shelf,
+
+            u.inventory_group
+
+        FROM
+        (
+            SELECT
+                product_id,
+                batch_number,
+                expiry_date,
+                system_batch_number,
+                system_expiry_date,
+                group_name,
+                shelf,
+                MAX(user_id) AS user_id,
+                SUM(quantity) AS excel_quantity,
+                MAX(system_quantity) AS saved_system_quantity
+            FROM sma_inventory_check_items
+            WHERE inv_check_id = ?
+            GROUP BY
+                product_id,
+                batch_number,
+                expiry_date
+        ) chk
+
+        LEFT JOIN
+        (
+            SELECT
+                product_id,
+                batch_number,
+                expiry_date,
+                SUM(quantity) AS system_quantity,
+                COUNT(DISTINCT avz_item_code) AS avz_code_count,
+                GROUP_CONCAT(DISTINCT avz_item_code SEPARATOR ', ') AS avz_codes,
+                MAX(net_unit_cost) AS net_unit_cost,
+                MAX(net_unit_sale) AS net_unit_sale,
+                MAX(real_unit_cost) AS real_unit_cost,
+                MAX(real_unit_sale) AS real_unit_sale
+            FROM sma_inventory_movements
+            WHERE location_id = ?
+            GROUP BY
+                product_id,
+                batch_number,
+                expiry_date
+        ) sys
+            ON chk.product_id = sys.product_id
+            AND COALESCE(chk.system_batch_number, chk.batch_number) = sys.batch_number
+            AND (COALESCE(chk.system_expiry_date, chk.expiry_date) = sys.expiry_date 
+                 OR (COALESCE(chk.system_expiry_date, chk.expiry_date) IS NULL AND sys.expiry_date IS NULL))
+
+        LEFT JOIN sma_products p
+            ON p.id = chk.product_id
+
+        LEFT JOIN sma_users u
+            ON u.id = chk.user_id
+
+        WHERE chk.excel_quantity IS NOT NULL
+
+        ORDER BY
+            product_name ASC,
+            chk.batch_number ASC,
+            chk.expiry_date ASC
+        ";
+
+        $query = $this->db->query($sql, [$req_id, $location_id]);
+        return $query->result();
+    }
+
+    public function getInventoryCheck($req_id, $location_id){
+        $response = array();
+        
+        $this->db
+        ->select('
+                im.avz_item_code as avz_code,
+                IFNULL(ci.quantity, 0) as quantity,
+                SUM(im.quantity) as system_quantity,
+                im.batch_number,
+                im.expiry_date,
+                im.product_id,
+                im.net_unit_cost,
+                im.net_unit_sale,
+                im.real_unit_cost,
+                im.real_unit_sale,
+                p.tax_rate,
+                p.name as product_name,
+                p.code as product_code,
+                p.unit
+            ', false)
+            ->from('sma_inventory_movements im')
+            ->join('sma_inventory_check_items ci', 'im.avz_item_code = ci.avz_code AND ci.inv_check_id = '.$this->db->escape($req_id), 'left')
+            ->join('sma_products p', 'p.id = im.product_id', 'left')
+            ->where('im.location_id', $location_id)
+            ->group_by('im.avz_item_code')
+            ->having('quantity > 0 OR system_quantity > 0')
+            ->order_by('quantity', 'desc');
+
+        $q = $this->db->get();
+        if(!empty($q)){
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $data_res[] = $row;
+                }
+            } else {
+                $data_res = array();
+            }
+        }else{
+            $data_res = array();
+        }
+        
+        return $data_res; 
+    }
+
+    public function getInventoryCheckReportById($req_id){
+        $response = array();
+        $this->db
+                ->select('sma_inventory_check_report.*')
+                ->from('sma_inventory_check_report')
+                ->where('sma_inventory_check_report.inv_check_id',$req_id);
+
+        $q = $this->db->get();
+        if(!empty($q)){
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $data_res[] = $row;
+                }
+            } else {
+                $data_res = array();
+            }
+        }else{
+            $data_res = array();
+        }
+        
+        return $data_res;
+    }
+
+    public function getInventoryCheckRequestById($req_id){
+        $response = array();
+        $this->db
+                ->select('sma_inventory_check_requests.*, sma_warehouses.name')
+                ->from('sma_inventory_check_requests')
+                ->join('sma_warehouses', 'sma_inventory_check_requests.location_id = sma_warehouses.id', 'left')
+                ->where('sma_inventory_check_requests.id',$req_id)
+                ->group_by('sma_inventory_check_requests.id');
+
+        $q = $this->db->get();
+        if(!empty($q)){
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $data_res[] = $row;
+                }
+            } else {
+                $data_res = array();
+            }
+        }else{
+            $data_res = array();
+        }
+        
+        return $data_res;
+    }
+
+    public function getInventoryCheckRequests(){
+        $response = array();
+        $this->db
+                ->select('sma_inventory_check_requests.*, sma_warehouses.name')
+                ->from('sma_inventory_check_requests')
+                ->join('sma_warehouses', 'sma_inventory_check_requests.location_id = sma_warehouses.id', 'left')
+                ->group_by('sma_inventory_check_requests.id');
+
+        $q = $this->db->get();
+        if(!empty($q)){
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $data_res[] = $row;
+                }
+            } else {
+                $data_res = array();
+            }
+        }else{
+            $data_res = array();
+        }
+        
+        return $data_res;  
+    }
+
     public function getPurchaseRequests(){
         $response = array();
         $this->db
@@ -363,31 +656,31 @@ class Stock_request_model extends CI_Model
 
         if(!$product_ids){
             $this->db
-                ->select('sma_products.id, sma_products.name, sma_products.code, sma_products.cost, SUM(sma_warehouses_products.quantity) As available_stock')
+                ->select('sma_products.id, sma_products.name, sma_products.code, sma_products.cost, SUM(sma_inventory_movements.quantity) As available_stock')
                 ->select('(SELECT SUM(sma_sale_items.quantity) 
                           FROM sma_sale_items
                           INNER JOIN sma_sales ON sma_sale_items.sale_id = sma_sales.id
                           WHERE sma_sale_items.product_id = sma_products.id
                           AND sma_sale_items.warehouse_id = '.$warehouse_id.'
                           AND sma_sales.date >= DATE_SUB(NOW(), INTERVAL 3 MONTH)) AS avg_last_3_months_sales', false)
-                ->from('sma_warehouses_products')
-                ->join('sma_products', 'sma_products.id = sma_warehouses_products.product_id', 'left')
-                ->where('sma_warehouses_products.warehouse_id', $warehouse_id)
-                ->group_by('sma_warehouses_products.product_id');
+                ->from('sma_inventory_movements')
+                ->join('sma_products', 'sma_products.id = sma_inventory_movements.product_id', 'left')
+                ->where('sma_inventory_movements.location_id', $warehouse_id)
+                ->group_by('sma_inventory_movements.product_id');
         }else{
             $this->db
-                ->select('sma_products.id, sma_products.name, sma_products.code, sma_products.cost, SUM(sma_warehouses_products.quantity) As available_stock')
+                ->select('sma_products.id, sma_products.name, sma_products.code, sma_products.cost, SUM(sma_inventory_movements.quantity) As available_stock')
                 ->select('(SELECT SUM(sma_sale_items.quantity) 
                           FROM sma_sale_items
                           INNER JOIN sma_sales ON sma_sale_items.sale_id = sma_sales.id
                           WHERE sma_sale_items.product_id = sma_products.id
                           AND sma_sale_items.warehouse_id = '.$warehouse_id.'
                           AND sma_sales.date >= DATE_SUB(NOW(), INTERVAL 3 MONTH)) AS avg_last_3_months_sales', false)
-                ->from('sma_warehouses_products')
-                ->join('sma_products', 'sma_products.id = sma_warehouses_products.product_id', 'left')
-                ->where('sma_warehouses_products.warehouse_id', $warehouse_id)
-                ->where_in('sma_warehouses_products.product_id', $product_ids)
-                ->group_by('sma_warehouses_products.product_id');
+                ->from('sma_inventory_movements')
+                ->join('sma_products', 'sma_products.id = sma_inventory_movements.product_id', 'left')
+                ->where('sma_inventory_movements.location_id', $warehouse_id)
+                ->where_in('sma_inventory_movements.product_id', $product_ids)
+                ->group_by('sma_inventory_movements.product_id');
         }
 
         $q = $this->db->get();

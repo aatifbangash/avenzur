@@ -1,3 +1,53 @@
+<style>
+    /* Basic styling for pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    padding: 10px 0;
+}
+
+.pagination a, .pagination strong {
+    color: #007bff;
+    float: left;
+    padding: 6px 14px;
+    text-decoration: none;
+    transition: background-color .3s;
+    margin: 0 4px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Active page */
+.pagination strong {
+    background-color: #007bff;
+    color: white;
+    border: 1px solid #007bff;
+}
+
+/* Hover effect */
+.pagination a:hover:not(.active) {
+    background-color: #ddd;
+}
+
+/* Disabled links */
+.pagination .disabled {
+    color: #6c757d;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+/* Additional styling */
+.pagination a {
+    cursor: pointer;
+}
+
+.pagination strong {
+    cursor: default;
+}
+
+    </style>
+
+
 <div class="box">
 	<div class="box-header">
         <h2 class="blue"><i
@@ -6,6 +56,11 @@
 
         <div class="box-icon">
             <ul class="btn-tasks">
+                <li class="dropdown">
+                    <a href="<?= admin_url('entries/upload_trial_balance'); ?>" data-toggle="modal" data-target="#myModal">
+                        <i class="icon fa fa-upload"></i>
+                    </a>
+                </li>
                 <li class="dropdown">
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#">
                         <i class="icon fa fa-tasks tip" data-placement="left" title="<?= lang('actions') ?>"></i>
@@ -119,15 +174,18 @@
                             <td>
                                 <a href="<?= admin_url();?>entries/view/<?= ($entryTypeLabel); ?>/<?= $entry['id']; ?>" class="no-hover" escape="false"><i class="fa fa-log-in"></i><?= lang('entries_views_index_th_actions_view_btn'); ?></a>
                                 <span class="link-pad"></span>
-                                <a href="<?= admin_url();?>entries/edit/<?= ($entryTypeLabel); ?>/<?= $entry['id']; ?>" class="no-hover" escape="false"><i class="fa fa-edit"></i><?= lang('entries_views_index_th_actions_edit_btn'); ?></a>
+                                <!--<a href="<?= admin_url();?>entries/edit/<?= ($entryTypeLabel); ?>/<?= $entry['id']; ?>" class="no-hover" escape="false"><i class="fa fa-edit"></i><?= lang('entries_views_index_th_actions_edit_btn'); ?></a>
                                 <span class="link-pad"></span>
-                                <a href="<?= admin_url();?>entries/delete/<?= ($entryTypeLabel); ?>/<?= $entry['id']; ?>" class="no-hover" escape="false"><i class="fa fa-trash"></i><?= lang('entries_views_index_th_actions_delete_btn'); ?></a>
+                                <a href="<?= admin_url();?>entries/delete/<?= ($entryTypeLabel); ?>/<?= $entry['id']; ?>" class="no-hover" escape="false"><i class="fa fa-trash"></i><?= lang('entries_views_index_th_actions_delete_btn'); ?></a>-->
                                 
                             </td>
                         </tr>
                 <?php } ?>
                     </tbody>
                 </table>
+
+
+                <div class="pagination mt-5">   <?php echo $pagination_links; ?> </div>
             </div>
           </div>
       </div>

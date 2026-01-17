@@ -261,14 +261,14 @@ table#poTable td input.form-control {
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <?= lang('date', 'podate'); ?>
-                                    <?php echo form_input('date', ($_POST['date'] ?? ''), 'class="form-control input-tip datetime" id="podate" required="required"'); ?>
+                                    <?php echo form_input('date', ($_POST['date'] ?? date("d/m/Y H:i")), 'class="form-control input-tip datetime" id="podate" required="required"'); ?>
                                 </div>
                             </div>
                         <?php
                 } ?>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <?= lang('reference_no', 'poref'); ?>
+                                <?= lang('Supplier Reference Number', 'poref'); ?>
                                 <?php echo form_input('reference_no', ($_POST['reference_no'] ?? $ponumber), 'class="form-control input-tip" id="poref"'); ?>
                             </div>
                         </div>
@@ -280,7 +280,7 @@ table#poTable td input.form-control {
                                     <?php
                                     $wh[''] = '';
                     foreach ($warehouses as $warehouse) {
-                        $wh[$warehouse->id] = $warehouse->name;
+                        $wh[$warehouse->id] = $warehouse->name.' ('.$warehouse->code.')';
                     }
                     echo form_dropdown('warehouse', $wh, ($_POST['warehouse'] ?? $Settings->default_warehouse), 'id="powarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" required="required" style="width:100%;" '); ?>
                                 </div>
@@ -487,7 +487,7 @@ table#poTable td input.form-control {
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <?= lang('payment_term', 'popayment_term'); ?>
-                                        <?php echo form_input('payment_term', '', 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('payment_term_tip') . '" id="popayment_term"'); ?>
+                                        <?php echo form_input('payment_term', '', 'class="form-control tip" data-trigger="focus" data-placement="top" readonly title="' . lang('payment_term_tip') . '" id="popayment_term"'); ?>
                                     </div>
                                 </div>
                             </div>
