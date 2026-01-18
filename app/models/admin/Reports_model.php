@@ -1869,6 +1869,28 @@ class Reports_model extends CI_Model
         return false;
     }
 
+    public function getProductByCode($code)
+    {
+        $this->db->select('id, code, name');
+        $this->db->where('code', $code);
+        $q = $this->db->get('products');
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getProductById($id)
+    {
+        $this->db->select('id, code, name');
+        $this->db->where('id', $id);
+        $q = $this->db->get('products');
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
     //=== New Item Movement Report Starts ===//
     public function getAllProducts()
     {
@@ -5745,7 +5767,12 @@ class Reports_model extends CI_Model
         
         // Item code filter
         if ($item_code) {
-            $where_clauses[] = "(prod.code LIKE '%{$item_code}%' OR prod.name LIKE '%{$item_code}%')";
+            // If item_code is numeric, search by product ID, otherwise search by code/name
+            if (is_numeric($item_code)) {
+                $where_clauses[] = "prod.id = {$item_code}";
+            } else {
+                $where_clauses[] = "(prod.code LIKE '%{$item_code}%' OR prod.name LIKE '%{$item_code}%')";
+            }
         }
         
         $where_sql = !empty($where_clauses) ? 'AND ' . implode(' AND ', $where_clauses) : '';
@@ -5764,6 +5791,8 @@ class Reports_model extends CI_Model
                 pi.quantity AS qty,
                 pi.bonus AS bonus,
                 pi.net_unit_cost AS unit_cost,
+                pi.discount AS discount_percent,
+                COALESCE((SELECT SUM(quantity) FROM {$this->db->dbprefix('inventory_movements')} WHERE product_id = prod.id), 0) AS current_stock,
                 pi.sale_price AS public_price,
                 pi.totalbeforevat AS purchase,
                 pi.item_tax AS vat,
@@ -5793,7 +5822,12 @@ class Reports_model extends CI_Model
         }
         
         if ($item_code) {
-            $return_where_clauses[] = "(prod.code LIKE '%{$item_code}%' OR prod.name LIKE '%{$item_code}%')";
+            // If item_code is numeric, search by product ID, otherwise search by code/name
+            if (is_numeric($item_code)) {
+                $return_where_clauses[] = "prod.id = {$item_code}";
+            } else {
+                $return_where_clauses[] = "(prod.code LIKE '%{$item_code}%' OR prod.name LIKE '%{$item_code}%')";
+            }
         }
         
         $return_where_sql = !empty($return_where_clauses) ? 'AND ' . implode(' AND ', $return_where_clauses) : '';
@@ -5812,6 +5846,8 @@ class Reports_model extends CI_Model
                 -pri.quantity AS qty,
                 0 AS bonus,
                 pri.net_cost AS unit_cost,
+                pri.discount AS discount_percent,
+                COALESCE((SELECT SUM(quantity) FROM {$this->db->dbprefix('inventory_movements')} WHERE product_id = prod.id), 0) AS current_stock,
                 pri.net_unit_price AS public_price,
                 -pri.totalbeforevat AS purchase,
                 -pri.item_tax AS vat,
