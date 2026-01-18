@@ -911,8 +911,7 @@ class Suppliers extends MY_Controller
         $meta = ['page_title' => lang('Supplier Payments'), 'bc' => $bc];
 
         if ($this->form_validation->run() == true) {
-            $parentsupplier      = $this->input->post('supplier');
-            $childsupplier    = $this->input->post('childsupplier');
+            $supplier_id      = $this->input->post('supplier');
             $payments_array      = $this->input->post('payment_amount');
             $item_ids = $this->input->post('item_id');
             $reference_no = $this->input->post('reference_no');
@@ -925,12 +924,6 @@ class Suppliers extends MY_Controller
             $supplier_advance_ledger = $this->input->post('supplier_advance_ledger');
             $settle_with_advance = $this->input->post('settle_with_advance');
             $payment_mode = $this->input->post('payment_mode'); // Get payment mode
-            
-            if($childsupplier){
-                $supplier_id = $childsupplier;
-            }else{
-                $supplier_id = $parentsupplier;
-            }
 
             if($bank_charges == '') {
                 $bank_charges = 0;
@@ -1029,9 +1022,10 @@ class Suppliers extends MY_Controller
                         redirect($_SERVER['HTTP_REFERER']);
                     }
                 }
-
-                // Calculate total due amount
+                
+                // Calculate total due amount and total invoice payments
                 $total_due = array_sum($due_amount_array);
+                $total_invoice_payment = array_sum($payments_array); // Actual amount going to invoices
                 
                 // Check if payment exceeds total due amount
                 if($payment_total > $total_due) {
@@ -1047,159 +1041,198 @@ class Suppliers extends MY_Controller
                     }
                 }
 
-                // Handle advance settlement if checkbox is checked
-                // New logic: Calculate shortage between total invoice due and payment entered
+                // Get supplier advance ledger from settings
+                $settings = $this->Settings;
+                $supplier_advance_ledger = isset($settings->supplier_advance_ledger) && !empty($settings->supplier_advance_ledger) 
+                                         ? $settings->supplier_advance_ledger 
+                                         : null;
+                
+                // Initialize payment breakdown variables
                 $cash_payment = $payment_total;
                 $advance_settlement_amount = 0;
-                
-                if($settle_with_advance) {
-                    // Get supplier advance ledger from settings
-                    $settings = $this->Settings;
-                    $supplier_advance_ledger = isset($settings->supplier_advance_ledger) && !empty($settings->supplier_advance_ledger) 
-                                             ? $settings->supplier_advance_ledger 
-                                             : null;
+                $current_advance_balance = 0;
+
+                // Handle advance settlement if checkbox is checked
+                if($settle_with_advance && $supplier_advance_ledger) {
+                    // Get current advance balance
+                    $current_advance_balance = $this->getSupplierAdvanceBalance($supplier_id, $supplier_advance_ledger);
                     
-                    if($supplier_advance_ledger) {
-                        // Get current advance balance
-                        $current_advance_balance = $this->getSupplierAdvanceBalance($supplier_id, $supplier_advance_ledger);
+                    if($current_advance_balance > 0) {
+                        // Calculate shortage (total invoice amount - payment entered)
+                        //$shortage_amount = $total_invoice_payment - $payment_total;
+                        $shortage_amount = $payment_total - $current_advance_balance;
                         
-                        if($current_advance_balance > 0) {
-                            // NEW LOGIC: Calculate shortage (total invoice amount - payment entered)
-                            $shortage_amount = $total_due - $payment_total;
+                        if($shortage_amount > 0) {
+                            $advance_settlement_amount = $current_advance_balance;
+                            $cash_payment = $payment_total - $advance_settlement_amount;
+                            $note .= " (Partial: Cash {$cash_payment}, Advance {$advance_settlement_amount}, Total: " . ($cash_payment + $advance_settlement_amount) . ")";
+                            // Use advance to cover the shortage (minimum of shortage or available advance)
+                            /*$advance_settlement_amount = min($current_advance_balance, $shortage_amount);
                             
-                            if($shortage_amount > 0) {
-                                // Use advance to cover the shortage (minimum of shortage or available advance)
-                                $advance_settlement_amount = min($current_advance_balance, $shortage_amount);
-                                // Cash payment remains as entered
-                                $cash_payment = $payment_total;
-                                
-                                // Add note about settlement
-                                $note .= " (Settlement: Cash {$cash_payment}, Advance {$advance_settlement_amount}, Total: " . ($cash_payment + $advance_settlement_amount) . ")";
-                            }
+                            // CASE 2: If advance can cover ALL invoices (no cash payment needed)
+                            if($advance_settlement_amount >= $total_invoice_payment) {
+                                $advance_settlement_amount = $total_invoice_payment;
+                                $cash_payment = 0;
+                                $note .= " (Full Advance Settlement: {$advance_settlement_amount})";
+                            } else {
+                                // CASE 3: Advance covers part, need cash for remaining
+                                $cash_payment = $total_invoice_payment - $advance_settlement_amount;
+                                $note .= " (Partial: Cash {$cash_payment}, Advance {$advance_settlement_amount}, Total: " . ($cash_payment + $advance_settlement_amount) . ")";
+                            }*/
+                        } else {
+                            // Payment entered is enough, no need for advance
+                            $advance_settlement_amount = $payment_total;
+                            $cash_payment = 0;
                         }
                     }
                 }
-
-                // Case 4 Check: Ensure payment_total can cover the selected invoice payments
-                if(array_sum($payments_array) > $payment_total){
-                    $this->session->set_flashdata('error', 'Total payment amount is insufficient to cover selected invoice payments. Required: ' . array_sum($payments_array) . ', Provided: ' . $payment_total);
-                    redirect($_SERVER['HTTP_REFERER']);
-                }
-
-                // Split payment into invoice payment and advance payment
-                $total_invoice_payment = array_sum($payments_array); // Actual amount going to invoices
-                $advance_payment = $cash_payment - $total_invoice_payment; // Excess cash amount
+                
+                // Calculate advance payment (excess payment beyond invoice settlement)
+                $advance_payment = $payment_total - $total_invoice_payment;
                 
                 $main_payment_id = null;
                     
-                    // Process invoice payments (if there are any)
-                    if($total_invoice_payment > 0) {
-                        // Calculate total settlement amount (cash + advance adjustment)
-                        $total_settlement_amount = $cash_payment + $advance_settlement_amount;
+                // Process invoice payments (if there are any)
+                if($total_invoice_payment > 0) {
+                    // Calculate total settlement amount (cash + advance adjustment)
+                    $total_settlement_amount = $cash_payment + $advance_settlement_amount;
+                    
+                    // CASE 2: Pure advance settlement (no cash payment)
+                    if($advance_settlement_amount > 0 && $cash_payment == 0) {
+                        // Create payment reference using advance ledger only
+                        $combined_payment_id = $this->add_supplier_reference($total_settlement_amount, $reference_no, $date, $note, $supplier_id, 0, null, $supplier_advance_ledger);
                         
-                        // Create combined payment reference for the total settlement amount
+                        if (!$combined_payment_id) {
+                            $this->session->set_flashdata('error', 'Failed to create advance settlement payment reference.');
+                            redirect($_SERVER['HTTP_REFERER']);
+                        }
+                        
+                        // Distribute advance to invoices
+                        for ($i = 0; $i < count($payments_array); $i++) {
+                            $invoice_payment = $payments_array[$i];
+                            $item_id = $item_ids[$i];
+                            
+                            if($invoice_payment > 0){
+                                // Update purchase with payment amount
+                                $this->update_purchase_order($item_id, $invoice_payment);
+                                
+                                // Record advance settlement payment
+                                $this->make_supplier_payment($item_id, $invoice_payment, $reference_no . '-ADV', $date, $note . ' (Advance Settlement)', $combined_payment_id);
+                            }
+                        }
+                        
+                        // Create advance settlement journal entry only (no cash payment)
+                        $advance_journal_id = $this->create_advance_settlement_entry($supplier_id, $supplier_advance_ledger, $advance_settlement_amount, $reference_no . '-ADV', $date, 'Full Advance Settlement');
+                        $this->purchases_model->update_payment_reference($combined_payment_id, $advance_journal_id);
+                        
+                        $main_payment_id = $combined_payment_id;
+                        
+                    } 
+                    // CASE 3: Mixed payment (cash + advance) OR CASE 4/5: Cash only payment
+                    else {
+                        // Create combined payment reference
                         $combined_payment_id = $this->add_supplier_reference($total_settlement_amount, $reference_no, $date, $note, $supplier_id, $bank_charges, $bank_charges_account, $ledger_account);
                         
-                        // Verify payment reference was created successfully
                         if (!$combined_payment_id) {
                             $this->session->set_flashdata('error', 'Failed to create payment reference. Please check system configuration.');
                             redirect($_SERVER['HTTP_REFERER']);
                         }
                         
-                        // Distribute payments to invoices (cash + advance settlement)
-                        $remaining_advance = $advance_settlement_amount;
-                        
-                        for ($i = 0; $i < count($payments_array); $i++) {
-                            $cash_payment_for_invoice = $payments_array[$i];
-                            $item_id = $item_ids[$i];
-                            $due_amount = $due_amount_array[$i];
-                            
-                            // Calculate shortage for this invoice
-                            $invoice_shortage = $due_amount - $cash_payment_for_invoice;
-                            
-                            // Determine how much advance to use for this invoice
-                            $advance_for_this_invoice = 0;
-                            if ($remaining_advance > 0 && $invoice_shortage > 0) {
-                                $advance_for_this_invoice = min($remaining_advance, $invoice_shortage);
-                                $remaining_advance -= $advance_for_this_invoice;
-                            }
-                            
-                            // Total payment for this invoice (cash + advance)
-                            $total_payment_for_invoice = $cash_payment_for_invoice + $advance_for_this_invoice;
-                            
-                            if($total_payment_for_invoice > 0){
-                                // Update purchase with total payment amount
-                                $this->update_purchase_order($item_id, $total_payment_for_invoice);
-                                
-                                // Record cash payment
-                                if ($cash_payment_for_invoice > 0) {
-                                    $this->make_supplier_payment($item_id, $cash_payment_for_invoice, $reference_no, $date, $note . ' (Cash)', $combined_payment_id);
-                                }
-                                
-                                // Record advance settlement payment
-                                if ($advance_for_this_invoice > 0) {
-                                    $this->make_supplier_payment($item_id, $advance_for_this_invoice, $reference_no . '-ADV', $date, $note . ' (Advance Settlement)', $combined_payment_id);
-                                }
-                            }
-                        }
-
-                        // If we are settling with advance, create separate journal entries
+                        // Distribute payments to invoices
                         if($advance_settlement_amount > 0) {
-                            // Get supplier advance ledger
-                            $settings = $this->Settings;
-                            $supplier_advance_ledger = $settings->supplier_advance_ledger;
+                            // CASE 3: Mixed payment - distribute both cash and advance
+                            $remaining_cash = $cash_payment;
+                            $remaining_advance = $advance_settlement_amount;
                             
-                            // Create cash payment journal entry (if cash payment > 0)
+                            for ($i = 0; $i < count($payments_array); $i++) {
+                                $invoice_payment_needed = $payments_array[$i];
+                                $item_id = $item_ids[$i];
+                                
+                                if($invoice_payment_needed > 0){
+                                    // Determine how much cash and advance for this invoice
+                                    $cash_for_invoice = min($remaining_cash, $invoice_payment_needed);
+                                    $remaining_cash -= $cash_for_invoice;
+                                    
+                                    $advance_for_invoice = min($remaining_advance, $invoice_payment_needed - $cash_for_invoice);
+                                    $remaining_advance -= $advance_for_invoice;
+                                    
+                                    $total_for_invoice = $cash_for_invoice + $advance_for_invoice;
+                                    
+                                    // Update purchase with total payment amount
+                                    $this->update_purchase_order($item_id, $total_for_invoice);
+                                    
+                                    // Record cash payment
+                                    if ($cash_for_invoice > 0) {
+                                        $this->make_supplier_payment($item_id, $cash_for_invoice, $reference_no, $date, $note . ' (Cash)', $combined_payment_id);
+                                    }
+                                    
+                                    // Record advance settlement payment
+                                    if ($advance_for_invoice > 0) {
+                                        $this->make_supplier_payment($item_id, $advance_for_invoice, $reference_no . '-ADV', $date, $note . ' (Advance Settlement)', $combined_payment_id);
+                                    }
+                                }
+                            }
+                            
+                            // CASE 3: Create both cash and advance journal entries
                             if($cash_payment > 0) {
                                 $cash_journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $ledger_account, $bank_charges_account, $cash_payment, $bank_charges, $reference_no . '-CASH', 'supplierpayment', $date);
                             }
                             
-                            // Create advance settlement journal entry (debit advance ledger, credit supplier ledger)
-                            // This reduces the advance balance and settles the supplier liability
-                            $advance_journal_id = $this->create_advance_settlement_entry($supplier_id, $supplier_advance_ledger, $advance_settlement_amount, $reference_no . '-ADV', $date, 'Advance Settlement');
+                            $advance_journal_id = $this->create_advance_settlement_entry($supplier_id, $supplier_advance_ledger, $advance_settlement_amount, $reference_no . '-ADV', $date, 'Partial Advance Settlement');
                             
                             $this->purchases_model->update_payment_reference($combined_payment_id, $cash_journal_id ? $cash_journal_id : $advance_journal_id);
+                            
                         } else {
+                            //echo '<pre>';print_r($payments_array);exit;
+                            // CASE 4 or CASE 5: Cash only payment (no advance settlement)
+                            for ($i = 0; $i < count($payments_array); $i++) {
+                                $cash_payment_for_invoice = $payments_array[$i];
+                                $item_id = $item_ids[$i];
+                                
+                                if($cash_payment_for_invoice > 0){
+                                    //$payment_before = $this->purchases_model->getPaidAmount($item_id); 
+                                    //echo '<pre>';print_r($payment_before); // Placeholder to avoid null FK issues
+                                    // Update purchase with payment amount
+                                    $this->update_purchase_order($item_id, $cash_payment_for_invoice);
+                                    
+                                    // Record cash payment
+                                    $this->make_supplier_payment($item_id, $cash_payment_for_invoice, $reference_no, $date, $note, $combined_payment_id);
+                                    //echo 'Cash payment for invoice processed.'. $cash_payment_for_invoice;
+                                }
+                            }
+                            //exit;
                             // Regular payment without advance settlement
-                            $journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $ledger_account, $bank_charges_account, $cash_payment, $bank_charges, $reference_no, 'supplierpayment', $date);
+                            $journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $ledger_account, $bank_charges_account, ($cash_payment - $advance_payment), $bank_charges, $reference_no, 'supplierpayment', $date);
                             $this->purchases_model->update_payment_reference($combined_payment_id, $journal_id);
                         }
                         
                         $main_payment_id = $combined_payment_id;
                     }
+                }
                     
-                    // Process advance payment separately (if there is any)
-                    if($advance_payment > 0) {
-                        // Get supplier advance ledger from settings
-                        $settings = $this->Settings;
-                        $supplier_advance_ledger = isset($settings->supplier_advance_ledger) && !empty($settings->supplier_advance_ledger) 
-                                                 ? $settings->supplier_advance_ledger 
-                                                 : null;
-                        
-                        if($supplier_advance_ledger) {
-                            // Create separate payment reference for advance payment
-                            $advance_reference_no = $reference_no . '-ADV';
-                            $advance_payment_id = $this->add_supplier_reference($advance_payment, $advance_reference_no, $date, $note . ' (Advance)', $supplier_id, 0, $bank_charges_account, $supplier_advance_ledger);
-                            
-                            // Verify payment reference was created successfully
-                            if (!$advance_payment_id) {
-                                $this->session->set_flashdata('error', 'Failed to create advance payment reference. Please check system configuration.');
-                                redirect($_SERVER['HTTP_REFERER']);
-                            }
-                            
-                            // Make advance payment entry
-                            $this->make_supplier_advance_payment($supplier_id, $advance_payment, $advance_reference_no, $date, $note, $advance_payment_id);
-                            
-                            // Create journal entry for advance payment
-                            $advance_journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $supplier_advance_ledger, $bank_charges_account, $advance_payment, 0, $advance_reference_no, 'supplieradvance', $date);
-                            $this->purchases_model->update_payment_reference($advance_payment_id, $advance_journal_id);
-                            
-                            // Set main payment id to advance if no invoice payment
-                            if(!$main_payment_id) {
-                                $main_payment_id = $advance_payment_id;
-                            }
-                        }
+                // Process advance payment separately (if there is any excess)
+                if($advance_payment > 0 && $supplier_advance_ledger) {
+                    // Create separate payment reference for advance payment
+                    $advance_reference_no = $reference_no . '-NEWADV';
+                    $advance_payment_id = $this->add_supplier_reference($advance_payment, $advance_reference_no, $date, $note . ' (New Advance)', $supplier_id, 0, null, $supplier_advance_ledger);
+                    
+                    if (!$advance_payment_id) {
+                        $this->session->set_flashdata('error', 'Failed to create advance payment reference. Please check system configuration.');
+                        redirect($_SERVER['HTTP_REFERER']);
                     }
+                    
+                    // Make advance payment entry
+                    $this->make_supplier_advance_payment($supplier_id, $advance_payment, $advance_reference_no, $date, $note, $advance_payment_id);
+                    
+                    // Create journal entry for advance payment
+                    $advance_journal_id = $this->convert_supplier_payment_multiple_invoice($supplier_id, $supplier_advance_ledger, $bank_charges_account, $advance_payment, 0, $advance_reference_no, 'supplieradvance', $date);
+                    $this->purchases_model->update_payment_reference($advance_payment_id, $advance_journal_id);
+                    
+                    // Set main payment id to advance if no invoice payment
+                    if(!$main_payment_id) {
+                        $main_payment_id = $advance_payment_id;
+                    }
+                }
 
                 $this->session->set_flashdata('message', lang('Payment processed Successfully!'));
                 admin_redirect('suppliers/view_payment/' . $main_payment_id);
@@ -1213,7 +1246,8 @@ class Suppliers extends MY_Controller
                                      ? $settings->supplier_advance_ledger 
                                      : null;
             
-            $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+            // Only show child-level suppliers (level 2) in the payment dropdown
+            $this->data['suppliers']  = $this->site->getAllChildCompanies('supplier');
             $this->data['warehouses'] = $this->site->getAllWarehouses();
             $this->data['supplier_advance_ledger'] = $supplier_advance_ledger;
             $this->page_construct('suppliers/add_payment', $meta, $this->data);

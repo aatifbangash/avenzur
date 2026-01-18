@@ -67,19 +67,9 @@
 
         if (pssupplier = localStorage.getItem('pssupplier')) {
             $('#pssupplier').val(pssupplier);
-
-            loadInvoices($('#pssupplier').val());
-        }
-
-        $(document).on('change', '#childsupplier', function (e) {
-            localStorage.setItem('childsupplier', $(this).val());
-
-            loadInvoices($('#pssupplier').val());
-        });
-
-        if (childsupplier = localStorage.getItem('pssupplier')) {
-            $('#childsupplier').val(childsupplier);
-
+            
+            // Load advance balance immediately for pre-selected supplier
+            loadSupplierAdvanceBalance(pssupplier);
             loadInvoices($('#pssupplier').val());
         }
 
@@ -145,11 +135,17 @@
                 $('#poTable-holder').hide();
                 // Update label
                 $('label[for="pspayment"]').html('<?= lang("Payment Amount") ?> <span style="color: #28a745;">(Advance Payment)</span>');
+                
+                // Clear all invoice payment amounts (set to 0) and reload table to show all as advance
+                clearInvoicePayments();
             } else {
                 // Show invoice table for invoice settlement
                 $('#poTable-holder').show();
                 // Reset label
                 $('label[for="pspayment"]').html('<?= lang("Payment Amount", "pspayment") ?>');
+                
+                // Redistribute payment amount across invoices
+                distributePaymentToInvoices();
             }
         });
         
@@ -165,10 +161,13 @@
         // Event handlers for advance settlement
         $(document).on('change', '#pspayment', function (e) {
             updateAdvanceSettlementCalculation();
-            // Reload invoices to recalculate the advance adjustment row
-            var supplier_id = $('#pssupplier').val();
-            if (supplier_id) {
-                loadInvoices(supplier_id);
+            
+            // Check payment mode and distribute accordingly
+            var payment_mode = $('#payment_mode').val();
+            if (payment_mode === 'advance_only') {
+                clearInvoicePayments();
+            } else {
+                distributePaymentToInvoices();
             }
         });
         
@@ -176,16 +175,8 @@
             updateAdvanceSettlementCalculation();
         });
         
-        $(document).on('change', '#settle-with-advance', function (e) {
-            // Sync with table checkbox
-            $('#settle-with-advance-table').prop('checked', $(this).is(':checked'));
-            updateAdvanceSettlementCalculation();
-        });
-        
         // Event handler for the checkbox in the table
         $(document).on('change', '#settle-with-advance-table', function (e) {
-            // Sync with original checkbox
-            $('#settle-with-advance').prop('checked', $(this).is(':checked'));
             updateAdvanceSettlementCalculation();
         });
         
@@ -208,15 +199,28 @@
 
         // Global variable to store current advance balance
         var current_advance_balance = 0;
+        var last_loaded_supplier_id = null; // Track which supplier's balance is currently loaded
 
         function loadSupplierAdvanceBalance(supplier_id) {
             if (!supplier_id) {
                 $('#advance-balance').text('Please select a supplier');
                 $('#settle-with-advance').prop('disabled', true);
                 current_advance_balance = 0;
+                last_loaded_supplier_id = null;
                 updateAdvanceSettlementCalculation();
                 return;
             }
+
+            // Skip if we already have the balance for this supplier
+            if (last_loaded_supplier_id == supplier_id) {
+                console.log('Advance balance already loaded for supplier:', supplier_id, '- skipping');
+                return;
+            }
+
+            console.log('Loading advance balance for supplier:', supplier_id, 'Previous supplier:', last_loaded_supplier_id);
+            
+            // Mark this supplier as being loaded BEFORE the AJAX call
+            last_loaded_supplier_id = supplier_id;
 
             $.ajax({
                 url: '<?= admin_url('suppliers/get_supplier_advance_balance?supplier_id=') ?>' + supplier_id,
@@ -234,6 +238,7 @@
                     }
                     
                     if (current_advance_balance > 0) {
+                        console.log('Setting advance balance display to:', current_advance_balance.toFixed(2));
                         $('#advance-balance').html('<strong style="color: #28a745;">Available: ' + current_advance_balance.toFixed(2) + '</strong>');
                         $('#settle-with-advance').prop('disabled', false);
                         // The table checkbox will be created dynamically in loadInvoices
@@ -251,6 +256,7 @@
                         $('#settle-with-advance-table').prop('disabled', true);
                     }
                     
+                    console.log('Advance balance display updated. Element HTML:', $('#advance-balance').html());
                     updateAdvanceSettlementCalculation();
                 },
                 error: function (xhr, status, error) {
@@ -274,6 +280,7 @@
                     $('#advance-balance').html('<span style="color: #dc3545;">' + errorMsg + '</span>');
                     $('#settle-with-advance').prop('disabled', true);
                     current_advance_balance = 0;
+                    last_loaded_supplier_id = null;
                     updateAdvanceSettlementCalculation();
                 }
             });
@@ -284,10 +291,21 @@
 
         function updateAdvanceSettlementCalculation() {
             var payment_amount = parseFloat($('#pspayment').val()) || 0;
-            var use_advance = $('#settle-with-advance').is(':checked');
+            var use_advance = $('#settle-with-advance-table').is(':checked');
             
             // Calculate the shortage (invoice total - payment entered)
             var shortage_amount = total_invoice_amount - payment_amount;
+            
+            // Hide "Settle with Advance" option if payment amount exceeds total invoice due
+            if (payment_amount > total_invoice_amount && total_invoice_amount > 0) {
+                // Payment exceeds invoice total, no need for advance settlement
+                $('#settle-with-advance-table').prop('checked', false);
+                // Hide the advance adjustment row in the table
+                $('#advance-adjustment-row').hide();
+            } else if (current_advance_balance > 0 && shortage_amount > 0) {
+                // Show settle with advance row when there's shortage and advance is available
+                $('#advance-adjustment-row').show();
+            }
             
             if (use_advance && current_advance_balance > 0 && shortage_amount > 0) {
                 // Amount to adjust from advance = minimum of shortage or available advance
@@ -321,30 +339,127 @@
             }
         }
 
+        // Clear all invoice payment amounts and reload table to show everything as advance
+        function clearInvoicePayments() {
+            // Set all payment inputs to 0
+            $('input[name="payment_amount[]"]').val(0);
+            
+            // Recalculate totals
+            var total_paying = 0;
+            $('input[name="payment_amount[]"]').each(function() {
+                total_paying += parseFloat($(this).val()) || 0;
+            });
+            
+            // Update total row
+            $('#poTable tbody tr').each(function() {
+                if ($(this).find('b').first().text() === 'Totals:') {
+                    $(this).find('td:eq(2) b').text(total_paying.toFixed(2));
+                }
+            });
+            
+            // Update advance payment row
+            var payment_amount = parseFloat($('#pspayment').val()) || 0;
+            var advance_payment = payment_amount; // All payment goes to advance
+            
+            // Remove existing advance payment row
+            $('.advance-row').remove();
+            
+            // Add advance payment row if amount > 0
+            if (advance_payment > 0 && !isNaN(advance_payment)) {
+                if (supplier_advance_ledger_configured) {
+                    var advanceTr = $('<tr class="row advance-row" style="background-color: #f0f8ff;"></tr>');
+                    var advance_html = '<td colspan="3"><b>Advance Payment (New):</b></td>';
+                    advance_html += '<td colspan="2"><b>'+advance_payment.toFixed(2)+'</b></td>';
+                    advanceTr.html(advance_html);
+                    advanceTr.appendTo('#poTable tbody');
+                } else {
+                    var errorTr = $('<tr class="row error-row advance-row" style="background-color: #ffebee;"></tr>');
+                    var error_html = '<td colspan="5" style="color: #d32f2f;"><b>Error: Supplier Advance Ledger not configured in settings. Cannot process advance payment of '+advance_payment.toFixed(2)+'</b></td>';
+                    errorTr.html(error_html);
+                    errorTr.appendTo('#poTable tbody');
+                }
+            }
+            
+            updateAdvanceSettlementCalculation();
+        }
+
+        // Distribute payment amount across invoices
+        function distributePaymentToInvoices() {
+            var payment_amount = parseFloat($('#pspayment').val()) || 0;
+            var remaining_payment = payment_amount;
+            var total_paying = 0;
+            
+            // Distribute payment to invoices
+            $('input[name="payment_amount[]"]').each(function() {
+                var due_input = $(this).closest('tr').find('input[name="due_amount[]"]');
+                var due_amount = parseFloat(due_input.val()) || 0;
+                
+                var to_pay = 0;
+                if (remaining_payment > 0) {
+                    if (remaining_payment >= due_amount) {
+                        to_pay = due_amount;
+                        remaining_payment -= due_amount;
+                    } else {
+                        to_pay = remaining_payment;
+                        remaining_payment = 0;
+                    }
+                }
+                
+                $(this).val(to_pay);
+                total_paying += to_pay;
+            });
+            
+            // Update total row
+            $('#poTable tbody tr').each(function() {
+                if ($(this).find('b').first().text() === 'Totals:') {
+                    $(this).find('td:eq(2) b').text(total_paying.toFixed(2));
+                }
+            });
+            
+            // Update advance payment row
+            var advance_payment = payment_amount - total_paying;
+            
+            // Remove existing advance payment row
+            $('.advance-row').remove();
+            
+            // Add advance payment row only if there's excess
+            if (advance_payment > 0 && !isNaN(advance_payment) && payment_amount > 0) {
+                if (supplier_advance_ledger_configured) {
+                    var advanceTr = $('<tr class="row advance-row" style="background-color: #f0f8ff;"></tr>');
+                    var advance_html = '<td colspan="3"><b>Advance Payment (New):</b></td>';
+                    advance_html += '<td colspan="2"><b>'+advance_payment.toFixed(2)+'</b></td>';
+                    advanceTr.html(advance_html);
+                    advanceTr.appendTo('#poTable tbody');
+                } else {
+                    var errorTr = $('<tr class="row error-row advance-row" style="background-color: #ffebee;"></tr>');
+                    var error_html = '<td colspan="5" style="color: #d32f2f;"><b>Error: Supplier Advance Ledger not configured in settings. Cannot process advance payment of '+advance_payment.toFixed(2)+'</b></td>';
+                    errorTr.html(error_html);
+                    errorTr.appendTo('#poTable tbody');
+                }
+            }
+            
+            updateAdvanceSettlementCalculation();
+        }
+
         function loadInvoices(supplier_id){
             var v = supplier_id;
             console.log('SupplierId: ', supplier_id);
-            var ch = $('#childsupplier').val();
-
-            if(typeof ch != 'undefined' && ch != "" && ch != 0 && ch != null){
-                v = ch;
-            }
-
-            console.log('CH: ', ch);
 
             var payment_amount = parseFloat($('#pspayment').val()) || 0;
             if (supplier_id) {
-                // Load supplier advance balance first
+                // Load supplier advance balance first and wait for it
                 loadSupplierAdvanceBalance(v);
                 
-                $.ajax({
-                    url: '<?= admin_url('suppliers/pending_invoices?supplier_id=') ?>' + v,
-                    type: 'POST',
-                    dataType: 'json',
-                    data: {
-                        <?= $this->security->get_csrf_token_name() ?>: '<?= $this->security->get_csrf_hash() ?>'
-                    },
-                    success: function (response) {
+                // Add small delay to ensure advance balance is loaded
+                setTimeout(function() {
+                    $.ajax({
+                        url: '<?= admin_url('suppliers/pending_invoices?supplier_id=') ?>' + v,
+                        type: 'POST',
+                        dataType: 'json',
+                        data: {
+                            <?= $this->security->get_csrf_token_name() ?>: '<?= $this->security->get_csrf_hash() ?>'
+                        },
+                        success: function (response) {
                         $('#poTable tbody').empty();
                         if(response == null){
                             
@@ -383,6 +498,9 @@
                             var original_payment_amount = parseFloat($('#pspayment').val()) || 0;
                             var remaining_payment = original_payment_amount;
                             
+                            // Check payment mode to determine distribution behavior
+                            var payment_mode = $('#payment_mode').val();
+                            
                             for(var i=0;i<response.length;i++){
                                 var purchase_date = response[i].date;
                                 var reference_id = response[i].reference_no;
@@ -395,7 +513,8 @@
 
                                 // Calculate payment for this invoice
                                 var to_pay = 0;
-                                if (remaining_payment > 0) {
+                                // Only distribute to invoices if payment mode is NOT advance_only
+                                if (payment_mode !== 'advance_only' && remaining_payment > 0) {
                                     if (remaining_payment >= due_amount) {
                                         to_pay = due_amount;
                                         remaining_payment -= due_amount;
@@ -433,34 +552,42 @@
                                 newTr.appendTo('#poTable');
 
                             // Add advance adjustment row (for settling with existing advance)
-                            if (supplier_advance_ledger_configured && current_advance_balance > 0) {
+                            // Only show when in invoice_settlement mode (not in advance_only mode)
+                            if (payment_mode !== 'advance_only' && supplier_advance_ledger_configured && current_advance_balance > 0) {
                                 var shortage = total_due - original_payment_amount;
                                 var is_checked = $('#settle-with-advance').is(':checked');
                                 var adjustable_amount = is_checked && shortage > 0 ? Math.min(shortage, current_advance_balance) : 0;
                                 
                                 var advanceAdjustTr = $('<tr id="advance-adjustment-row" class="row" style="background-color: #e3f2fd;"></tr>');
                                 var advance_adjust_html = '<td colspan="2"><b>Available Advance to Adjust:</b> <span style="color: #28a745;">' + current_advance_balance.toFixed(2) + '</span></td>';
-                                advance_adjust_html += '<td><label class="checkbox-inline" style="margin-top: 5px;"><input type="checkbox" id="settle-with-advance-table" style="margin-right: 5px;"> Settle with Advance</label></td>';
+                                advance_adjust_html += '<td><label class="checkbox-inline" style="margin-top: 5px;"><input type="checkbox" id="settle-with-advance-table" name="settle_with_advance" value="1" style="margin-right: 5px;"> Settle with Advance</label></td>';
                                 advance_adjust_html += '<td><b id="advance-adjustment-amount">' + adjustable_amount.toFixed(2) + '</b></td>';
                                 advanceAdjustTr.html(advance_adjust_html);
                                 advanceAdjustTr.appendTo('#poTable');
                                 
                                 // Sync the checkbox states
                                 $('#settle-with-advance-table').prop('checked', is_checked);
+                                
+                                // Add event handler for table checkbox
+                                $('#settle-with-advance-table').off('change').on('change', function() {
+                                    updateAdvanceSettlementCalculation();
+                                });
                             }
 
-                            // Show advance payment row only if advance amount > 0 and not NaN
-                            if (advance_payment > 0 && !isNaN(advance_payment)) {
-                                var advanceTr = $('<tr class="row advance-row" style="background-color: #f0f8ff;"></tr>');
-                                var advance_html = '<td colspan="3"><b>Advance Payment (New):</b></td>';
-                                advance_html += '<td><b>'+advance_payment.toFixed(2)+'</b></td>';
-                                advanceTr.html(advance_html);
-                                advanceTr.appendTo('#poTable');
-                                
-                                // Show error if advance ledger not configured
-                                if (!supplier_advance_ledger_configured) {
+                            // Show advance payment row only if there's actual excess payment (payment > total_paying)
+                            // AND payment amount is entered
+                            if (advance_payment > 0 && !isNaN(advance_payment) && original_payment_amount > 0) {
+                                // Only show if advance ledger is configured, otherwise show error
+                                if (supplier_advance_ledger_configured) {
+                                    var advanceTr = $('<tr class="row advance-row" style="background-color: #f0f8ff;"></tr>');
+                                    var advance_html = '<td colspan="3"><b>Advance Payment (New):</b></td>';
+                                    advance_html += '<td><b>'+advance_payment.toFixed(2)+'</b></td>';
+                                    advanceTr.html(advance_html);
+                                    advanceTr.appendTo('#poTable');
+                                } else {
+                                    // Show error if advance ledger not configured and trying to make advance payment
                                     var errorTr = $('<tr class="row error-row" style="background-color: #ffebee;"></tr>');
-                                    var error_html = '<td colspan="4" style="color: #d32f2f;"><b>Error: Supplier Advance Ledger not configured in settings. Cannot process advance payment.</b></td>';
+                                    var error_html = '<td colspan="4" style="color: #d32f2f;"><b>Error: Supplier Advance Ledger not configured in settings. Cannot process advance payment of '+advance_payment.toFixed(2)+'</b></td>';
                                     errorTr.html(error_html);
                                     errorTr.appendTo('#poTable');
                                 }
@@ -471,6 +598,7 @@
                         }
                     }
                 });
+                }, 300); // Wait 300ms for advance balance to load
             }
         }
     
@@ -495,11 +623,6 @@
         if (localStorage.getItem('pssupplier')) {
             localStorage.removeItem('pssupplier');
             $('#pssupplier').val('');
-        }
-
-        if (localStorage.getItem('childsupplier')) {
-            localStorage.removeItem('childsupplier');
-            $('#childsupplier').val('');
         }
 
         if (localStorage.getItem('psledger')) {
@@ -596,13 +719,7 @@
 
         // Form submission validation
         $('form').on('submit', function(e) {
-            // Validate mandatory ledgers first
-            if (!validateMandatoryLedgers()) {
-                e.preventDefault();
-                return false;
-            }
-            
-            // Then validate advance payment
+            // Validate advance payment
             if (!validateAdvancePayment()) {
                 e.preventDefault();
                 return false;
@@ -650,21 +767,10 @@
                             </div>
                         </div>
 
-                        <!--<div class="col-md-4">
-                            <div class="form-group">
-                            <?= lang('supplier', 'pssupplier'); ?>
-                            <?php
-                            $sp[''] = '';
-                            foreach ($suppliers as $supplier) {
-                                $sp[$supplier->id] = $supplier->company. ' ('. $supplier->name.')';
-                            }
-                            echo form_dropdown('supplier', $sp, '', 'id="pssupplier" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('supplier') . '" required="required" style="width:100%;" '); ?>
-                            </div>
-                        </div>-->
-
+                        <!-- Supplier Selection -->
                         <div class="col-md-4">
                             <div class="form-group">
-                                <?= lang('Parent Supplier', 'pssupplier'); ?>
+                                <?= lang('supplier', 'pssupplier'); ?>
                                 <?php if ($Owner || $Admin || $GP['suppliers-add'] || $GP['suppliers-index']) {
                                     ?><div class="input-group"><?php
                                 } ?>
@@ -697,18 +803,6 @@
                             </div>
                         </div>
 
-                        <!-- Child Suppliers -->
-
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <?= lang('Child Supplier', 'pssupplier'); ?>
-                                <?php
-                                $childSupArr[''] = '';
-                                
-                                echo form_dropdown('childsupplier', $childSupArr, $_POST['childsupplier'], 'id="childsupplier" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('child supplier') . '" required="required" style="width:100%;" '); ?>
-                            </div>
-                        </div>
-
                         <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('Payment Amount', 'pspayment'); ?>
@@ -731,21 +825,6 @@
                                 <label><?= lang('Available Advance'); ?></label>
                                 <div id="supplier-advance-info" style="padding: 8px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
                                     <span id="advance-balance">Please select a supplier</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-4" style="display: none;">
-                            <div class="form-group">
-                                <label>&nbsp;</label><br>
-                                <label class="checkbox-inline">
-                                    <input type="checkbox" id="settle-with-advance" name="settle_with_advance" value="1" disabled> 
-                                    Settle with Available Advance
-                                </label>
-                                <div id="advance-settlement-info" style="display:none; font-size:12px; color:#666; margin-top:5px;">
-                                    <div>Cash Payment: <span id="cash-payment-amount">0.00</span></div>
-                                    <div>Advance Settlement: <span id="advance-settlement-amount">0.00</span></div>
-                                    <div><strong>Total Payment: <span id="total-settlement-amount">0.00</span></strong></div>
                                 </div>
                             </div>
                         </div>
@@ -870,85 +949,35 @@
     const hostname = "<?= base_url(); ?>";
 
     var $supplier = $("#pssupplier");
-    var $childsupplierselectbox = $("#childsupplier");
 
     $supplier.change(function (e) {
-		localStorage.setItem("pssupplier", $(this).val());
-		localStorage.setItem("childsupplier", null);
-		$("#supplier_id").val($(this).val());
-		populateChildSuppliers($(this).val());
-	});
-
-	$childsupplierselectbox.change(function (e) {
-		localStorage.setItem("childsupplier", $(this).val());
-		$("#child_supplier_id").val($(this).val());
-	});
-
-    function populateChildSuppliers(pid) {
-		$.ajax({
-			url: hostname + "/admin/suppliers/getChildById",
-			data: { term: "", limit: 10, pid: pid },
-			dataType: "json",
-			success: function (data) {
-				$childsupplierselectbox.empty();
-				$.each(data.results, function (index, value) {
-					$childsupplierselectbox.append(new Option(value.text, value.id));
-				});
-
-				if (localStorage.getItem("childsupplier")) {
-					$childsupplierselectbox
-						.val(localStorage.getItem("childsupplier"))
-						.trigger("change");
-				}
-			},
-		});
-	}
+        localStorage.setItem("pssupplier", $(this).val());
+        $("#supplier_id").val($(this).val());
+    });
 
     if ((pssupplier = localStorage.getItem("pssupplier"))) {
-		$supplier.val(pssupplier).select2({
-			minimumInputLength: 1,
-			data: [],
-			initSelection: function (element, callback) {
-				$.ajax({
-					type: "get",
-					async: false,
-					url: hostname + "/admin/suppliers/getSupplier/" + $(element).val(),
-					dataType: "json",
-					success: function (data) {
-						callback(data[0]);
-					},
-				});
-			},
-			ajax: {
-				url: hostname + "/admin/suppliers/suggestions",
-				dataType: "json",
-				quietMillis: 15,
-				data: function (term, page) {
-					return {
-						term: term,
-						limit: 10,
-					};
-				},
-				results: function (data, page) {
-					if (data.results != null) {
-						return { results: data.results };
-					} else {
-						return { results: [{ id: "", text: "No Match Found" }] };
-					}
-				},
-			},
-		});
-
-		populateChildSuppliers(pssupplier);
-	} else {
-		nsSupplier();
-	}
-
-    function nsChildSupplier() {
-        $("#childsupplier").select2({
+        $supplier.val(pssupplier).select2({
             minimumInputLength: 1,
+            data: [],
+            initSelection: function (element, callback) {
+                $.ajax({
+                    type: "get",
+                    async: false,
+                    url: hostname + "/admin/suppliers/getSupplier/" + $(element).val(),
+                    dataType: "json",
+                    success: function (data) {
+                        callback(data[0]);
+                        // Trigger change after supplier is loaded to ensure advance balance is loaded
+                        setTimeout(function() {
+                            if ($('#pssupplier').val()) {
+                                loadSupplierAdvanceBalance($('#pssupplier').val());
+                            }
+                        }, 100);
+                    },
+                });
+            },
             ajax: {
-                url: hostname + "admin/suppliers/childsuggestions",
+                url: hostname + "/admin/suppliers/childsuggestions",
                 dataType: "json",
                 quietMillis: 15,
                 data: function (term, page) {
@@ -966,13 +995,15 @@
                 },
             },
         });
+    } else {
+        nsChildSupplier();
     }
 
-    function nsSupplier() {
+    function nsChildSupplier() {
         $("#pssupplier").select2({
             minimumInputLength: 1,
             ajax: {
-                url: hostname + "admin/suppliers/suggestions",
+                url: hostname + "admin/suppliers/childsuggestions",
                 dataType: "json",
                 quietMillis: 15,
                 data: function (term, page) {

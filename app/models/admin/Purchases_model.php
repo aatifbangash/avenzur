@@ -79,7 +79,7 @@ class Purchases_model extends CI_Model
             if ($this->site->getReference('ppay') == $data['reference_no']) {
                 $this->site->updateReference('ppay');
             }
-            $this->site->syncPurchasePayments($data['purchase_id']);
+            //$this->site->syncPurchasePayments($data['purchase_id']);
             return true;
         }
         return false;
@@ -832,6 +832,15 @@ class Purchases_model extends CI_Model
         return false;
     }
 
+    public function getPaidAmount($purchase_id)
+    {
+        $q = $this->db->get_where('purchases', ['id' => $purchase_id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
     public function getTaxRateByName($name)
     {
         $q = $this->db->get_where('tax_rates', ['name' => $name], 1);
@@ -1024,8 +1033,18 @@ class Purchases_model extends CI_Model
             $paid_amount = $row->paid;
             $new_amount = $paid_amount + $amount;
 
+            if($new_amount >= $row->grand_total){
+                $payment_status = 'paid';
+            } elseif($new_amount > 0 && $new_amount < $row->grand_total){
+                $payment_status = 'partial';
+            } else {
+                $payment_status = 'pending';
+
+            }
+
             $data = array(
-                'paid' => $new_amount
+                'paid' => $new_amount,
+                'payment_status' => $payment_status
             );
 
             $this->db->update('purchases', $data, array('id' => $id));
