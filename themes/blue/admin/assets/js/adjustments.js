@@ -118,6 +118,7 @@ $(document).ready(function () {
         delete qaitems[item_id];
         row.remove();
         if(qaitems.hasOwnProperty(item_id)) { } else {
+            saveCurrentGridValues();
             localStorage.setItem('qaitems', JSON.stringify(qaitems));
             loadItems();
             return;
@@ -138,6 +139,7 @@ $(document).ready(function () {
         var new_qty = parseFloat($(this).val()),
         item_id = row.attr('data-item-id');
         qaitems[item_id].row.qty = new_qty;
+        saveCurrentGridValues();
         localStorage.setItem('qaitems', JSON.stringify(qaitems));
         loadItems();
     });
@@ -207,9 +209,60 @@ $(document).ready(function () {
         localStorage.setItem('qaitems', JSON.stringify(qaitems));
     });
 
+    // Handle Expiry change and blur
+    $(document).on("change blur", '.rexpiry', function () {
+        var item_id = $(this).closest('tr').attr('data-item-id');
+        var expiry_val = $(this).val();
+        console.log('Expiry event (change/blur) - item_id:', item_id, 'expiry:', expiry_val, 'qaitems[item_id] exists:', !!qaitems[item_id]);
+        if (qaitems[item_id]) {
+            qaitems[item_id].row.expiry = expiry_val;
+            localStorage.setItem('qaitems', JSON.stringify(qaitems));
+            console.log('Expiry saved to localStorage:', qaitems[item_id].row.expiry);
+        } else {
+            console.error('qaitems[' + item_id + '] does not exist!');
+        }
+    });
+
 
 });
 
+
+/* -----------------------
+ * Save current grid values to localStorage before rebuilding
+ ----------------------- */
+function saveCurrentGridValues() {
+    if (!qaitems || Object.keys(qaitems).length === 0) {
+        return;
+    }
+    
+    $('#qaTable tbody tr').each(function() {
+        var $row = $(this);
+        var item_id = $row.attr('data-item-id');
+        
+        if (item_id && qaitems[item_id]) {
+            // Save all current input values to qaitems
+            var expiry = $row.find('.rexpiry').val();
+            var batch = $row.find('.rbatch').val() || $row.find('.rbatch-input').val();
+            var avz_code = $row.find('.ravzcode').val();
+            var purchase_price = $row.find('.rpurchase').val();
+            var cost_price = $row.find('.rcost').val();
+            var sale_price = $row.find('.rsale').val();
+            var quantity = $row.find('.rquantity').val();
+            
+            // Update qaitems with current values
+            if (expiry !== undefined) qaitems[item_id].row.expiry = expiry;
+            if (batch !== undefined) qaitems[item_id].row.batch_no = batch;
+            if (avz_code !== undefined) qaitems[item_id].row.avz_code = avz_code;
+            if (purchase_price !== undefined) qaitems[item_id].row.purchase_price = purchase_price;
+            if (cost_price !== undefined) qaitems[item_id].row.cost_price = cost_price;
+            if (sale_price !== undefined) qaitems[item_id].row.sale_price = sale_price;
+            if (quantity !== undefined) qaitems[item_id].row.qty = quantity;
+        }
+    });
+    
+    // Save to localStorage
+    localStorage.setItem('qaitems', JSON.stringify(qaitems));
+}
 
 /* -----------------------
  * Load Items to table
@@ -251,7 +304,7 @@ function loadItems() {
             
             // Expiry field - readonly for subtraction, editable for addition
             var expiry_readonly = type == 'subtraction' ? 'readonly' : '';
-            tr_html += '<td><input class="form-control text-center rexpiry ' + (type == 'subtraction' ? 'date' : '') + '" ' + expiry_readonly + ' name="expiry[]" type="text" value="' + expiry + '" id="expiry_' + row_no + '" style="font-size: 11px; padding: 4px 2px;"></td>';
+            tr_html += '<td><input class="form-control text-center date rexpiry" ' + expiry_readonly + ' name="expiry[]" autocomplete="off" type="text" value="' + expiry + '" data-id="' + row_no + '" data-item="' + item_id + '" id="expiry_' + row_no + '" style="font-size: 11px; padding: 4px 2px;"></td>';
             
             // AVZ Code field
             tr_html += '<td><input class="form-control text-center ravzcode" name="avz_code[]" type="text" value="' + avz_code + '" id="avz_' + row_no + '"></td>';
@@ -277,7 +330,7 @@ function loadItems() {
 
         });
 
-        var col = 8; // Updated for new columns (Product + Type + Batch + Expiry + AVZ + Purchase + Cost + Sale)
+        var col = 8; // Product + Type + Batch + Expiry + AVZ + Purchase + Cost + Sale
         var tfoot = '<tr id="tfoot" class="tfoot active"><th colspan="'+col+'">Total</th><th class="text-center">' + formatQty(parseFloat(count) - 1) + '</th>';
         tfoot += '<th class="text-center"><i class="fa fa-trash-o" style="opacity:0.5; filter:alpha(opacity=50);"></i></th></tr>';
         $('#qaTable tfoot').html(tfoot);
@@ -294,22 +347,8 @@ function loadItems() {
             loadProductBatches(product_id, row_no, current_batch);
         });
         
-        // Initialize datepicker for expiry fields with type 'addition'
-        $('.rtype').each(function() {
-            var type = $(this).val();
-            var row_no = $(this).data('row');
-            if (type == 'addition') {
-                var $expiryInput = $('#expiry_' + row_no);
-                if (!$expiryInput.attr('readonly') && !$expiryInput.hasClass('hasDatepicker')) {
-                    $expiryInput.datetimepicker({
-                        format: 'yyyy-mm-dd',
-                        minView: 2,
-                        autoclose: true,
-                        todayHighlight: true
-                    });
-                }
-            }
-        });
+        // Datepicker is initialized globally in core.js for all .date elements
+        // No need for custom initialization here
         
         if (an > parseInt(site.settings.bc_fix) && parseInt(site.settings.bc_fix) > 0) {
             $("html, body").animate({scrollTop: $('#sticker').offset().top}, 500);
@@ -345,23 +384,34 @@ function add_adjustment_item(item) {
             });
         }
         qaitems[item_id].row.qty = new_qty;
+        
+        // Preserve existing values for expiry, batch, prices if they exist
+        // This prevents fields from being cleared when quantity is updated
+        if (item.row.expiry) qaitems[item_id].row.expiry = item.row.expiry;
+        if (item.row.batch_no) qaitems[item_id].row.batch_no = item.row.batch_no;
+        if (item.row.purchase_price) qaitems[item_id].row.purchase_price = item.row.purchase_price;
+        if (item.row.cost_price) qaitems[item_id].row.cost_price = item.row.cost_price;
+        if (item.row.sale_price) qaitems[item_id].row.sale_price = item.row.sale_price;
+        if (item.row.avz_code || item.row.avz_item_code) qaitems[item_id].row.avz_code = item.row.avz_code || item.row.avz_item_code;
+        if (item.row.type) qaitems[item_id].row.type = item.row.type;
 
     } else {
         qaitems[item_id] = item;
         
-        // If AVZ code data is present (scanned/searched by AVZ code)
-        if (item.row.avz_item_code) {
-            qaitems[item_id].row.batch_no = item.row.batch_no || '';
-            qaitems[item_id].row.expiry = item.row.expiry || '';
-            qaitems[item_id].row.purchase_price = item.row.purchase_price || '';
-            qaitems[item_id].row.cost_price = item.row.cost_price || '';
-            qaitems[item_id].row.sale_price = item.row.sale_price || '';
-            qaitems[item_id].row.avz_code = item.row.avz_item_code || '';
-            // Set type to addition when AVZ code is scanned
-            qaitems[item_id].row.type = 'addition';
-        }
+        // Initialize all fields to prevent undefined values
+        qaitems[item_id].row.batch_no = item.row.batch_no || '';
+        qaitems[item_id].row.expiry = item.row.expiry || '';
+        qaitems[item_id].row.purchase_price = item.row.purchase_price || '';
+        qaitems[item_id].row.cost_price = item.row.cost_price || '';
+        qaitems[item_id].row.sale_price = item.row.sale_price || '';
+        qaitems[item_id].row.avz_code = item.row.avz_code || item.row.avz_item_code || '';
+        qaitems[item_id].row.type = item.row.type || 'addition';
     }
     qaitems[item_id].order = new Date().getTime();
+    
+    // Save current grid values before rebuilding to prevent data loss
+    saveCurrentGridValues();
+    
     localStorage.setItem('qaitems', JSON.stringify(qaitems));
     loadItems();
     return true;
@@ -590,14 +640,10 @@ $(document).on('change', '.rtype', function() {
         // Remove current quantity display
         $qtyCell.find('#current_qty_' + row_no).remove();
         
-        // Initialize datepicker for expiry - use datetimepicker to match existing format
-        if (!$expiryInput.hasClass('hasDatepicker')) {
-            $expiryInput.datetimepicker({
-                format: 'yyyy-mm-dd',
-                minView: 2,
-                autoclose: true,
-                todayHighlight: true
-            });
+        // Datepicker is initialized globally in core.js for all .date elements
+        // Just ensure the expiry field has the correct value
+        if ($expiryInput.length) {
+            $expiryInput.val(current_expiry);
         }
     }
     
