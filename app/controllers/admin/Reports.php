@@ -4104,6 +4104,22 @@ class Reports extends MY_Controller
         }
     }
 
+    public function get_product_by_id()
+    {
+        $id = $this->input->get('id', true);
+        if ($id) {
+            $product = $this->reports_model->getProductById($id);
+            if ($product) {
+                $response = ['id' => $product->id, 'label' => $product->name . ' (' . $product->code . ')'];
+                $this->sma->send_json($response);
+            } else {
+                echo json_encode(['id' => '', 'label' => '']);
+            }
+        } else {
+            echo json_encode(['id' => '', 'label' => '']);
+        }
+    }
+
     public function supplier_report($user_id = null)
     {
         //$this->sma->checkPermissions('suppliers', true);
@@ -6427,8 +6443,23 @@ class Reports extends MY_Controller
         $end_date = $this->input->get('end_date') ? $this->input->get('end_date') : null;
         $purchase_ref = $this->input->get('purchase_ref') ? $this->input->get('purchase_ref') : null;
         $supplier = $this->input->get('supplier') ? $this->input->get('supplier') : null;
-        $item_code = $this->input->get('item_code') ? $this->input->get('item_code') : null;
-        
+        //$item_code = $this->input->get('item_code') ? $this->input->get('item_code') : null;
+        $sgproduct = $this->input->get('sgproduct') ? $this->input->get('sgproduct') : null;
+
+        //$product_details = $this->reports_model->getProductByName($sgproduct);
+        if($sgproduct){
+            if (preg_match('/\(([^)]+)\)/', $sgproduct, $matches)) {
+                $item_code = $matches[1];
+                $product_details = $this->reports_model->getProductByCode($item_code);
+                $item_code = $product_details->id;
+                
+            }else{
+                $item_code = null;
+            }
+        }else{
+            $item_code = null;
+        }
+
         // Get suppliers for dropdown
         $this->db->select('id, name');
         $this->db->from('companies');
@@ -6442,6 +6473,7 @@ class Reports extends MY_Controller
         $this->data['end_date'] = $end_date;
         $this->data['purchase_ref'] = $purchase_ref;
         $this->data['supplier'] = $supplier;
+        $this->data['sgproduct'] = $sgproduct; // Pass sgproduct to view for pre-selection
         $this->data['item_code'] = $item_code;
         
         // If any filter submitted, fetch data

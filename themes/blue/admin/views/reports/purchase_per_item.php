@@ -8,9 +8,6 @@
         });
         XLSX.writeFile(wb, filename);
     }
-    $(document).ready(function() {
-        // No need for manual Select2 value setting - GET method automatically persists values
-    });
 </script>
 
 <div class="box">
@@ -69,8 +66,11 @@
 
                         <div class="col-md-2">
                             <div class="form-group">
-                                <?= lang('Item Code/Name', 'item_code'); ?>
-                                <?php echo form_input('item_code', ($_GET['item_code'] ?? ''), 'class="form-control" id="item_code" placeholder="' . lang('Item') . '"'); ?>
+                                <?= lang('Product', 'product'); ?>
+                                <?php // echo form_dropdown('product', $allProducts, set_value('product',$product),array('class' => 'form-control', 'id'=>'product'));
+                                ?>
+                                <?php echo form_input('sgproduct', (isset($_GET['sgproduct']) ? $_GET['sgproduct'] : (isset($sgproduct) ? $sgproduct : '')), 'class="form-control" id="suggest_product2" data-bv-notempty="true"'); ?>
+                                <input type="hidden" name="product" value="<?= isset($_POST['product']) ? $_POST['product'] : 0 ?>" id="report_product_id2" />
                             </div>
                         </div>
                     </div>
@@ -104,8 +104,10 @@
                                         <th><?= lang('Item No'); ?></th>
                                         <th><?= lang('Item Name'); ?></th>
                                         <th><?= lang('QTY'); ?></th>
+                                        <th><?= lang('Current Stock'); ?></th>
                                         <th><?= lang('Bonus'); ?></th>
                                         <th><?= lang('Unit Cost'); ?></th>
+                                        <th><?= lang('Discount %'); ?></th>
                                         <th><?= lang('Public Price'); ?></th>
                                         <th><?= lang('Purchase'); ?></th>
                                         <th><?= lang('Vat'); ?></th>
@@ -152,8 +154,10 @@
                                                 <td><?= $data->item_no ?></td>
                                                 <td><?= $data->item_name ?></td>
                                                 <td class="text-right"><?= $this->sma->formatQuantity($data->qty) ?></td>
+                                                <td class="text-right"><?= isset($data->current_stock) ? $this->sma->formatQuantity($data->current_stock) : '0' ?></td>
                                                 <td class="text-right"><?= $data->bonus ?></td>
                                                 <td class="text-right"><?= $this->sma->formatMoney($data->unit_cost) ?></td>
+                                                <td class="text-right"><?= isset($data->discount_percent) ? number_format($data->discount_percent, 2) . '%' : '0.00%' ?></td>
                                                 <td class="text-right"><?= $this->sma->formatMoney($data->public_price) ?></td>
                                                 <td class="text-right"><?= $this->sma->formatMoney($data->purchase) ?></td>
                                                 <td class="text-right"><?= $this->sma->formatMoney($data->vat) ?></td>
@@ -170,7 +174,7 @@
                                     } else {
                                         ?>
                                         <tr>
-                                            <td colspan="16" class="text-center"><?= lang('No records found. Please select filters and click Load Report.'); ?></td>
+                                            <td colspan="18" class="text-center"><?= lang('No records found. Please select filters and click Load Report.'); ?></td>
                                         </tr>
                                     <?php
                                     }
