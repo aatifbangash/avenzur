@@ -383,6 +383,117 @@ class Reports_model extends CI_Model
         return $response;
     }
 
+    public function getCustomerAgingNew($duration, $start_date, $customer_id_array)
+    {
+        // Aging buckets
+        $intervals = [30, 60, 90, 120, 150, 180, 210, 240];
+
+        if (empty($start_date)) {
+            $start_date = date('Y-m-d');
+        }
+
+        // Build buckets: 0-30, 31-60, etc.
+        $buckets = [];
+        $prev = 0;
+        foreach ($intervals as $i => $limit) {
+            if ($limit > $duration) break;
+            $from = ($i == 0) ? 0 : $prev + 1;
+            $to   = $limit;
+            $buckets[] = [
+                'from'  => $from,
+                'to'    => $to,
+                'label' => $from . '-' . $to
+            ];
+            $prev = $limit;
+        }
+        $buckets[] = ['from' => $prev + 1, 'to' => 99999, 'label' => '>' . $duration];
+
+        // Customer filter
+        $customer_filter = '';
+        if (!empty($customer_id_array)) {
+            $ids = implode(',', array_map('intval', $customer_id_array));
+            $customer_filter = " AND s.customer_id IN ($ids)";
+        }
+
+        // Fetch invoices
+        $sql = "
+            SELECT 
+                s.id AS sale_id,
+                s.date,
+                s.customer_id,
+                c.name AS customer_name,
+                s.grand_total,
+                c.payment_term
+            FROM sma_sales s
+            JOIN sma_companies c ON s.customer_id = c.id
+            WHERE s.grand_total > 0
+            $customer_filter
+        ";
+
+        $invoices = $this->db->query($sql)->result();
+
+        $result = [];
+        //echo '<pre>';print_r($invoices);exit;
+        foreach ($invoices as $inv) {
+            
+           
+            $paid = $inv->paid ? $inv->paid : 0;
+            $outstanding = round($inv->grand_total - $paid, 2);
+            //echo 'Invoice'. $inv->sale_id . ' Outstanding: '.$outstanding.'<br />';
+            if ($outstanding <= 0) {
+                continue;
+            }
+
+            /* ============================
+            🔥 FIX STARTS HERE
+            ============================ */
+
+            $invoiceDt = new DateTime(date('Y-m-d', strtotime($inv->date)));
+            $reportDt  = new DateTime($start_date);
+
+            // Skip future invoices
+            if ($invoiceDt > $reportDt) {
+                continue;
+            }
+
+            $days = (int)$invoiceDt->diff($reportDt)->days;
+            /*if($inv->sale_id == 4175) {
+                echo "Invoice Date: " . $inv->date . " | Report Date: " . $start_date . "Paid: ". $paid . " | Days: " . $days . "\n";
+                exit;
+            }*/
+            /* ============================
+            🔥 FIX ENDS HERE
+            ============================ */
+
+            // Determine bucket
+            $bucket_label = '>' . $duration;
+            foreach ($buckets as $b) {
+                if ($days >= $b['from'] && $days <= $b['to']) {
+                    $bucket_label = $b['label'];
+                    break;
+                }
+            }
+            //echo 'Bucket Label: '. $bucket_label . '<br />';
+            // Group by customer
+            if (!isset($result[$inv->customer_id])) {
+                $result[$inv->customer_id] = [
+                    'customer_id'   => $inv->customer_id,
+                    'customer_name' => $inv->customer_name,
+                    'payment_term'  => $inv->payment_term,
+                ];
+                foreach ($buckets as $b) {
+                    $result[$inv->customer_id][$b['label']] = 0;
+                }
+            }
+            
+            $result[$inv->customer_id][$bucket_label] += $outstanding;
+            //echo 'Outstanding adding: '. $result[$inv->customer_id][$bucket_label] . '<br /><br />';
+        }
+        
+        //echo '<pre>';print_r($result);exit;
+        return array_values($result);
+    }
+
     public function getCustomerAging($duration, $start_date, $supplier_id_array)
     {
 

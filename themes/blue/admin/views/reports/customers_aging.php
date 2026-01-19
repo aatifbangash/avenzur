@@ -103,7 +103,7 @@
                 <div class="row">
                     <div class="controls table-controls" style="font-size: 12px !important;">
                         <table id="poTable"
-                                class="table items table-striped table-bordered table-condensed table-hover sortable_table tbl_pdf">
+                                class="table items table-striped table-bordered table-condensed table-hover tbl_pdf">
                             <thead>
                             <tr>
                                 <th>#</th>
