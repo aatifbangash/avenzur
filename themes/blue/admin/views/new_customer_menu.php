@@ -166,7 +166,7 @@
 
         <?php 
         
-        if($Admin || $Owner || $GP['sales-index']){
+        if($Admin || $Owner || $GP['sales-index'] || $GP['reports-customer-aging']){
         ?>
         <!-- ==================== -->
         <!-- ACCOUNT RECEIVABLE -->
@@ -297,7 +297,7 @@
 
         <?php } ?>
 
-        <?php if($Admin || $Owner || $GP['purchases-index'] || $GP['po-index']){ ?>
+        <?php if($Admin || $Owner || $GP['purchases-index'] || $GP['po-index'] || $GP['reports-supplier-aging']){ ?>
         <!-- ==================== -->
         <!-- ACCOUNT PAYABLE -->
         <!-- ==================== -->
