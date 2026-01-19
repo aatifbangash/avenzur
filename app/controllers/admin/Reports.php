@@ -4532,6 +4532,49 @@ class Reports extends MY_Controller
         }
 
         if ($duration) {
+            $supplier_aging_array = $this->reports_model->getCustomerAgingNew($duration, $start_date, $customer_id_array);
+        } else {
+            $supplier_aging_array = $this->reports_model->getCustomerAgingNew($duration = 120, $start_date, $customer_id_array);
+        }
+
+        $this->data['customer_id_array'] = $customer_id_array;
+        $this->data['start_date'] = $this->input->post('from_date');
+
+        $this->data['supplier_aging'] = $supplier_aging_array;
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customers_aging')]];
+        $meta = ['page_title' => lang('customers_aging'), 'bc' => $bc];
+        if ($viewtype == 'pdf') {
+            $this->data['viewtype'] = $viewtype;
+            $name = lang('customers_aging_report') . '.pdf';
+            $html = $this->load->view($this->theme . 'reports/customers_aging', $this->data, true);
+            $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+        } else {
+            $this->page_construct('reports/customers_aging', $meta, $this->data);
+        }
+
+    }
+
+    public function customer_aging_old()
+    {
+        //$this->sma->checkPermissions('customers');
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
+        $duration = $this->input->post('duration') ? $this->input->post('duration') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $response_arr = array();
+
+        $customer_id_array = array();
+        if (!empty($this->input->post('customer'))) {
+            $customer_id_array = $this->input->post('customer');
+        }
+
+        $this->data['customers'] = $this->site->getAllCompanies('customer');
+        $response_arr = array();
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+        }
+
+        if ($duration) {
             $supplier_aging_array = $this->reports_model->getCustomerAging($duration, $start_date, $customer_id_array);
         } else {
             $supplier_aging_array = $this->reports_model->getCustomerAging($duration = 120, $start_date, $customer_id_array);
