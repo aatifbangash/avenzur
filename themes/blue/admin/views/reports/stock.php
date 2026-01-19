@@ -199,7 +199,7 @@
                                     <?php echo form_dropdown('item_group', $optionsCategories, ($_GET['item_group'] ?? ''), array('class' => 'form-control disable-select', 'id' => 'item_group'), array('none')); ?>
 
                                 </div>
-                            </div>
+                        </div>
                         <div class="col-md-4">
                             <div class="form-group">
                                 <?php echo lang('Item', 'item'); ?>
