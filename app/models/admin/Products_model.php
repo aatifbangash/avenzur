@@ -1732,6 +1732,21 @@ class Products_model extends CI_Model
         return false;
     }
 
+    public function getTotalInventoryQuantity($warehouse_id, $item_id)
+    {
+        $this->db->select("SUM(quantity) as total_quantity");
+        $this->db->from('sma_inventory_movements');
+        $this->db->where('location_id', $warehouse_id);
+        $this->db->where('product_id', $item_id);
+        $query = $this->db->get();
+
+        if ($query->num_rows() > 0) {
+            $row = $query->row();
+            return $row->total_quantity;
+        }
+        return false;
+    }
+
     public function check_inventory($warehouse_id, $item_id, $item_batchno, $item_expiry, $item_quantity, $avz_code)
     {
         $this->db->select("im.net_unit_sale, 
