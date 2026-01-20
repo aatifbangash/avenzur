@@ -320,11 +320,9 @@ class Purchase_order extends MY_Controller
             $qty = (float)$row[4];
             $sale_price = (float)$row[5];
             $purchase_price = (float)$row[6];
-            $tax_rate_id = $row[8] == 15 ? 5 : 1;
-            $tax_percent = $row[8];
-            $supplier_name = trim($row[9]);
-            $category = trim($row[10]);
-            $image_link = trim($row[12]);
+            $tax_rate_id = $row[7] == 15 ? 5 : 1;
+            $tax_percent = $row[7];
+            $image_link = trim($row[8]);
             $vat_value = ($purchase_price * $qty * $tax_percent) / 100;
 
             if (!$item_code || !$item_name || !$qty) continue;
