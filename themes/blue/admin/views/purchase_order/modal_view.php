@@ -67,10 +67,10 @@
             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
                 <i class="fa fa-2x">&times;</i>
             </button>
-            <!--<button type="button" id="Print" class="print btn btn-xs btn-default no-print pull-right"
+            <button type="button" id="Print" class="print btn btn-xs btn-default no-print pull-right"
                 style="margin-right:15px;">
                 <i class="fa fa-print"></i> <?= lang('print'); ?>
-            </button>-->
+            </button>
             <?php if ($logo) {
                 ?>
                 <div class="text-center" style="margin-bottom:20px;">
@@ -81,7 +81,7 @@
             } ?>
             <div class="well-sm">
                 <div class="row bold">
-                    <div class="col-xs-4">
+                    <div class="col-xs-6">
                         <p class="bold">
                         <?= lang('Purchase Invoice No.'); ?>: <?= $purchase_id; ?><br>
                             <?= lang('Transaction Date'); ?>: <?= $this->sma->hrld($inv->date); ?><br>
@@ -103,7 +103,7 @@
                         </p>
                     </div>
                     
-                    <div class="col-xs-4">
+                    <div class="col-xs-6">
                         <p class="bold">
                         <?= lang('Parent Supplier Code'); ?>: <?= isset($parent_supplier->sequence_code) ? $parent_supplier->sequence_code : $supplier->sequence_code;?><br>
                         <?= lang('Parent Supplier Name'); ?>: <?= isset($parent_supplier->name) ? $parent_supplier->name : $supplier->name;?><br>
@@ -114,14 +114,7 @@
                         </p>
                     </div>
 
-                    <div class="col-xs-4">
-                        <p class="bold">
-                            <?= lang('Document No.'); ?>: <?= isset($inv->sequence_code) ? $inv->sequence_code : '';?><br>
-                            <?= lang('Invoice No.'); ?>: <?= isset($inv->invoice_number) ? $inv->invoice_number : '';?><br>
-                            <?= lang('JL Entry'); ?>: ID : <?= isset($journal_entry->id) ? $journal_entry->id : '';?> Date: <?= isset($journal_entry->date) ? date('Y', strtotime($journal_entry->date)) : '';?><br>
-                          
-                        </p>
-                    </div>
+                    
 
                     <!-- <div class="col-xs-7 text-right order_barcodes">
                         <img src="<?= admin_url('misc/barcode/' . $this->sma->base64url_encode($inv->reference_no) . '/code128/74/0/1'); ?>"
@@ -195,8 +188,8 @@
                         <tr>
                             <th><?= lang('no.'); ?></th>
                             <th><?= lang('description'); ?></th>
-                            <th><?= lang('Avz Code'); ?></th>
-                            <th><?= lang('Batch No'); ?></th>
+                            
+                            
                             <?php if ($Settings->indian_gst) {
                                 $total_col += 1;
                                 ?>
@@ -210,11 +203,9 @@
                                 echo '<th>' . lang('received') . '</th>';
                             }
                             ?>
-                            <th><?= lang('Sale_price'); ?></th>
-                           <th><?= lang('Purchase_price'); ?></th>
-                            <th><?= lang('Cost_price'); ?></th>
-                            <th><?= lang('Bonus'); ?></th>
 
+                            <th><?= lang('Cost_price'); ?></th>
+                            
                             <th><?= lang('subtotal'); ?></th>
                             <?php if ($Settings->product_discount && $inv->product_discount != 0) {
                                 $total_col += 2;
@@ -229,11 +220,11 @@
                             } ?>
                             <th><?= lang('Total_without_VAT'); ?></th>
                             <?php
-                            if ($Settings->tax1 && $inv->product_tax > 0) {
+                            
                                 $total_col += 2;
                                 echo '<th>' . lang('VAT%') . '</th>';
                                 echo '<th>' . lang('VAT_value') . '</th>';
-                            }
+                            
                             echo '<th>' . lang('Total_with_VAT') . '</th>';
                             ?>
                         </tr>
@@ -257,15 +248,11 @@
                                 <td style="text-align:center; width:40px; vertical-align:middle;"><?= $r; ?></td>
                                 <td style="width: 30%; vertical-align:middle;">
                                     <?= $row->product_code . ' - ' . $row->product_name . ($row->variant ? ' (' . $row->variant . ')' : ''); ?>
-                                    <?= $row->second_name ? '<br>' . $row->second_name : ''; ?>
-                                    <?= $row->supplier_part_no ? '<br>' . lang('supplier_part_no') . ': ' . $row->supplier_part_no : ''; ?>
-                                    <?= $row->details ? '<br>' . $row->details : ''; ?>
+
                                     <?= ($row->expiry && $row->expiry != '0000-00-00') ? '<br>' . lang('EX') . ': ' . $this->sma->hrsd($row->expiry) : ''; ?>
                                     <?= 'Item# '.$row->item_code ;?>
                                 </td>
-                                <td style="width: 8%;text-align:center; vertical-align:middle;"><?= $row->avz_item_code ?: ''; ?>
-                                <td style="width: 8%;text-align:center; vertical-align:middle;"><?= $row->batchno ?: ''; ?>
-                                </td>
+                                
                                 <?php if ($Settings->indian_gst) {
                                     ?>
                                     <td style=" text-align:center; vertical-align:middle;"><?= $row->hsn_code ?: ''; ?></td>
@@ -278,19 +265,11 @@
                                     echo '<td style="text-align:center;vertical-align:middle;width:80px;">' . $this->sma->formatQuantity($row->quantity_received) . '</td>';
                                 }
                                 ?>
-                                <td style="text-align:right; width:100px;">
-                                    <!-- <?= $row->unit_cost != $row->real_unit_cost && $row->item_discount > 0 ? '<del>' . $this->sma->formatMoney($row->real_unit_cost) . '</del>' : ''; ?> -->
-                                    <?= $row->sale_price; ?>
-                                </td>
-                                <td style="text-align:right; width:100px;">
-                                     <?= $this->sma->formatNumber($row->unit_cost); ?>
-                                </td>
+                                
                                 <td style="text-align:right; width:100px;">
                                    <?= $this->sma->formatNumber($row->net_unit_cost); ?>
                                 </td>
-                                <td style="text-align:right; width:100px;">
-                                   <?= $this->sma->formatNumber($row->bonus); ?>
-                                </td>
+                                
                                 <td style="text-align:right; width:120px;"><?php echo $row->subtotal; ?></td>
                                 <?php
                                 if ($Settings->product_discount && $inv->product_discount != 0) {
@@ -314,11 +293,11 @@
                                     <?php echo $row->totalbeforevat; ?></td>
                                 <?php
                                 $vat_value = 0;
-                                if ($Settings->tax1 && $inv->product_tax > 0) {
+                                
                                     $vat_value = $this->sma->formatNumber($row->item_tax);
-                                    echo '<td style="width: 100px; text-align:right; vertical-align:middle;">' . ($row->item_tax != 0 ? ($Settings->indian_gst ? $row->tax : $row->tax_code) : '') . '</td>';
-                                    echo '<td>' . $vat_value . '</td>';
-                                }
+                                    echo '<td style="width: 100px; text-align:right; vertical-align:middle;">' . ($row->item_tax != 0 ? ($Settings->indian_gst ? $row->tax : $row->tax_code) : '0') . '</td>';
+                                    echo '<td style="text-align:right;">' . $vat_value . '</td>';
+                                
                                 ?>
 
                                 <td style="text-align:right; width:120px;">
