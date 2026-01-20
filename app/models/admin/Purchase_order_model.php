@@ -2,12 +2,48 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Purchase_order_model extends CI_Model
-{
+class Purchase_order_model extends CI_Model{
     public function __construct()
     {
         parent::__construct();
         $this->load->admin_model('Inventory_model');
+    }
+
+    /**
+     * Create purchase order from Excel-uploaded data
+     * @param array $data Purchase order header fields
+     * @param array $products Array of product/item rows
+     * @return array ['success'=>true, 'purchase_id'=>ID] or ['success'=>false, 'error'=>msg]
+     */
+    public function addPurchaseFromExcel($data, $po_items)
+    {
+        $this->db->trans_start();
+        // Insert PO header
+        if ($this->db->insert('purchase_orders', $data)) {
+            $purchase_id = $this->db->insert_id();
+            foreach ($po_items as $item) {
+                // Try to get product by code
+                $option_id = null;
+                $tax_rate_id = null;
+                // Try to get tax rate by value
+                if (!empty($item['item_vat_values'])) {
+                    $tax_rate = $this->db->get_where('tax_rates', ['rate' => $item['item_vat_values']], 1)->row();
+                    if ($tax_rate) $tax_rate_id = $tax_rate->id;
+                }
+
+                $item['purchase_id'] = $purchase_id;
+                
+                $this->db->insert('purchase_order_items', $item);
+            }
+            $this->db->trans_complete();
+            if ($this->db->trans_status() === false) {
+                return ['success'=>false, 'error'=>'DB transaction failed'];
+            } else {
+                return ['success'=>true, 'purchase_id'=>$purchase_id];
+            }
+        }
+        $this->db->trans_complete();
+        return ['success'=>false, 'error'=>'Failed to insert purchase order'];
     }
 
     public function addExpense($data = [], $attachments = [])
