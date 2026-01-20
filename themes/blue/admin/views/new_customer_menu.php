@@ -463,6 +463,7 @@
                         <?php if($Admin || $Owner || $this->GP['reports-supplier-aging']){ ?>
                         <li><a href="<?= admin_url('reports/supplier_aging'); ?>" class="newmenu-link"><i class="fa fa-boxes"></i> <?= lang('Aging'); ?></a></li>
                         <?php } ?>
+                        <li><a href="<?= admin_url('reports/consumption_report'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Consumption Report'); ?></a></li>
                         <li><a href="<?= admin_url('reports/purchase_per_item'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Purchase Per Item'); ?></a></li>
                         <li><a href="<?= admin_url('reports/purchase_per_invoice'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Purchase Per Invoice'); ?></a></li>
                         <!--<li><a href="<?= admin_url('reports/purchase_deals'); ?>" class="newmenu-link"><i class="fa fa-gift"></i> <?= lang('Purchase Deals & Discounts'); ?></a></li>

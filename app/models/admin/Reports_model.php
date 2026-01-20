@@ -2184,6 +2184,79 @@ class Reports_model extends CI_Model
         return $pr;
     }
 
+    public function getStockConsumption($warehouse_id, $item, $supplier_id, $agent, $agent2, $period)
+    {
+        $consumptionArray = [];
+
+        $from_date = date('Y-m-d', strtotime("-{$period} months"));
+        $to_date   = date('Y-m-d');
+
+        $consumption_query = "
+            SELECT 
+                p.id,
+                p.item_code AS code,
+                p.name,
+                p.cost,
+                IFNULL(sales.avg_last_3_months_sales, 0) AS avg_last_3_months_sales,
+                SUM(inv.quantity) AS available_stock
+            FROM sma_inventory_movements inv
+            INNER JOIN sma_products p ON p.id = inv.product_id
+
+            LEFT JOIN (
+                SELECT 
+                    si.product_id,
+                    SUM(si.quantity) AS avg_last_3_months_sales
+                FROM sma_sale_items si
+                JOIN sma_sales s ON s.id = si.sale_id
+                WHERE DATE(s.date) BETWEEN '{$from_date}' AND '{$to_date}'
+                GROUP BY si.product_id
+            ) sales ON sales.product_id = p.id
+
+            WHERE 1 = 1
+        ";
+
+        if ($warehouse_id) {
+            $consumption_query .= " AND inv.location_id = {$warehouse_id} ";
+        }
+
+        if ($item) {
+            $consumption_query .= " AND inv.product_id = '{$item}' ";
+        }
+
+        if ($agent) {
+            $consumption_query .= " AND p.main_agent = '{$agent}' ";
+        }
+
+        if ($agent2) {
+            $consumption_query .= " AND p.agent2 = '{$agent2}' ";
+        }
+
+        if ($supplier_id) {
+            $consumption_query .= "
+                AND inv.type = 'purchase'
+                AND inv.reference_id IN (
+                    SELECT id FROM sma_purchases WHERE supplier_id = '{$supplier_id}'
+                )
+            ";
+        }
+
+        $consumption_query .= "
+            GROUP BY inv.product_id
+            ORDER BY p.id DESC
+        ";
+
+        $query = $this->db->query($consumption_query);
+
+        if ($query->num_rows() > 0) {
+            foreach ($query->result() as $row) {
+                $consumptionArray[] = $row;
+            }
+        }
+
+        return $consumptionArray;
+    }
+
+
     public function getSupplierStockData($supplier_id, $warehouse_id, $from_date, $to_date){
         $this->db->select("
             pr.price, 

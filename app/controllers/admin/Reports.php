@@ -724,6 +724,35 @@ class Reports extends MY_Controller
 
     }
 
+    public function consumption_report()
+    {
+        $warehouse_id = $this->session->userdata('warehouse_id');
+        $item = $this->input->get('item') && $this->input->get('sgproduct') ? $this->input->get('item') : null;
+        $supplier_id = $this->input->get('supplier_id') ? $this->input->get('supplier_id') : null;
+        $period = $this->input->get('period') ? $this->input->get('period') : 1;
+        // Load products for dropdown
+        $products = $this->products_model->getAllProducts();
+        $this->data['products'] = $products;
+        $this->data['product'] = $product_ids;
+        $agent = $this->input->get('agent') ? $this->input->get('agent') : null;
+        $agent2 = $this->input->get('agent2') ? $this->input->get('agent2') : null;
+
+        $this->data['supplier_id'] = $supplier_id;
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+        $this->data['agent'] = $agent;
+        $this->data['agent2'] = $agent2;
+        $this->data['agents'] = $this->reports_model->getDistinctAgents();
+        $this->data['period'] = $period;
+
+        // Load filtered stock consumption data
+        $stock_array = $this->reports_model->getStockConsumption($warehouse_id, $item, $supplier_id, $agent, $agent2, $period);
+        $this->data['stock_array'] = $stock_array;
+
+        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Stock Consumption Report')]];
+        $meta = ['page_title' => lang('Stock Consumption Report'), 'bc' => $bc];
+        $this->page_construct('reports/consumption_report', $meta, $this->data);
+    }
+
     public function get_agent2_by_main_agent()
     {
         $main_agent = $this->input->post('main_agent');
