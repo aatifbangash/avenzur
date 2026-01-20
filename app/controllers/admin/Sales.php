@@ -435,11 +435,19 @@ class Sales extends MY_Controller
 
             $cost_of_goods_sold = $net_cost * $item_quantity;
 
+
             $inventoryObj = $this->products_model->check_inventory($warehouse_id, $item_id, $item_batchno, $item_expiry, $item_quantity, $avz_code);
             
             if(!$inventoryObj){
                 $this->session->set_flashdata('error', 'Quote cannot be converted to sale order. The item: '.$item_code.'-'.$item_name.' has no stock in Warehouse');
                 admin_redirect('quotes');
+            }else{
+                $totalInventoryCheck = $this->products_model->getTotalInventoryQuantity($warehouse_id, $item_id);
+                if(!$totalInventoryCheck || $totalInventoryCheck < $item_quantity){
+                    $this->session->set_flashdata('error', 'Quote cannot be converted to sale order. The item: '.$item_code.'-'.$item_name.' has insufficient stock in Warehouse');
+                    admin_redirect('quotes');
+
+                }
             }
 
             $product = [
