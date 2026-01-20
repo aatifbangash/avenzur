@@ -6,6 +6,7 @@ use Mpdf\Mpdf;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 class Purchase_order extends MY_Controller
 {
     public function __construct()
@@ -310,20 +311,41 @@ class Purchase_order extends MY_Controller
         $grand_total_sale = 0;
         $grand_total_vat = 0;
         $grand_total_beqfore_vat = 0;
+        $grand_total_discount = 0;
+        $grand_total_purchase = 0;
 
         foreach ($rows as $row) {
             if ($row_count == 0) { $row_count++; continue; } // Skip header
             $item_code = trim($row[0]);
             $item_name = trim($row[1]);
             $batch_no = trim($row[2]);
-            $expiry_date = $this->sma->fld($row[3]);
+            $expiry_date = null;
+            if (!empty($row[3])) {
+
+                // If Excel date is numeric
+                if (is_numeric($row[3])) {
+                    $expiry_date = Date::excelToDateTimeObject($row[3])->format('Y-m-d');
+                } 
+                // If Excel date is text (already formatted)
+                else {
+                    $expiry_date = $this->sma->fld($row[3]);
+                }
+            }
+            
             $qty = (float)$row[4];
             $sale_price = (float)$row[5];
             $purchase_price = (float)$row[6];
-            $tax_rate_id = $row[7] == 15 ? 5 : 1;
-            $tax_percent = $row[7];
-            $image_link = trim($row[8]);
-            $vat_value = ($purchase_price * $qty * $tax_percent) / 100;
+            
+            $dis1_percent = (float)$row[9];
+            $dis1_value = $row[10] ? $row[10] ? ($dis1_percent / 100) * ($purchase_price * $qty) : 0 : 0;
+            $dis2_percent = (float)$row[11];
+            $dis2_value = $row[12] ? $row[12] ? ($dis2_percent / 100) * (($purchase_price * $qty) - $dis1_value) : 0 : 0;
+            $dis3_percent = (float)$row[13];
+            $dis3_value = $row[14] ? $row[14] ? ($dis3_percent / 100) * (($purchase_price * $qty) - $dis1_value - $dis2_value) : 0 : 0;
+            
+            $cost_price = $row[7] ? (float)$row[7] : (($purchase_price * $qty) - $dis1_value - $dis2_value - $dis3_value) / $qty;
+            
+            $image_link = trim($row[15]);
 
             if (!$item_code || !$item_name || !$qty) continue;
 
@@ -331,6 +353,18 @@ class Purchase_order extends MY_Controller
             $product_id = $product ? $product->id : null;
 
             if(!$product_id){
+
+                if(!$row[8]){
+                    $this->session->set_flashdata('error', 'Tax rate missing for new product: ' . $item_code . '. No purchase order was created.');
+                    @unlink($excelFile);
+                    redirect($_SERVER['HTTP_REFERER']);
+
+                }else{
+                    $tax_rate_id = $row[8] == 15 ? 5 : 1;
+                    $tax_percent = $row[8];
+                    $vat_value = ($purchase_price * $qty * $tax_percent) / 100;
+                }
+
                 // Try to create product
                 $product_data = [
                     'code' => $item_code,
@@ -351,6 +385,10 @@ class Purchase_order extends MY_Controller
                     $product = $this->purchase_order_model->getProductByCode($item_code);
                     $product_id = $product ? $product->id : null;
                 }
+            }else{
+                $tax_rate_id = $product->tax_rate;
+                $tax_percent = $product->tax_rate == 5 ? 15 : 0;
+                $vat_value = ($purchase_price * $qty * $tax_percent) / 100;
             }
 
             if(!$product_id){
@@ -358,14 +396,17 @@ class Purchase_order extends MY_Controller
                 continue;
             }
 
-            $main_net  = ($purchase_price * $qty) + $vat_value;
-            $totalbeforevat = $purchase_price * $qty;
+            $main_net  = ($purchase_price * $qty) - ($dis1_value + $dis2_value + $dis3_value) + $vat_value;
+            $totalbeforevat = $purchase_price * $qty - ($dis1_value + $dis2_value + $dis3_value);
             $totalsale = $sale_price * $qty;
+            $subtotal = $purchase_price * $qty;
 
+            $grand_purchase_total += $subtotal;
             $grand_total_beqfore_vat += $totalbeforevat;
             $grand_total_vat += $vat_value;
             $grand_total_sale += $totalsale;
             $grand_total_purchase += $main_net;
+            $grand_total_discount += ($dis1_value + $dis2_value + $dis3_value);
 
             $products[] = [
                 'product_id' => $product_id,
@@ -373,27 +414,27 @@ class Purchase_order extends MY_Controller
                 'product_name' => $item_name,
                 'batchno' => $batch_no,
                 'expiry' => $expiry_date,
-                'net_unit_cost' => $purchase_price,
+                'net_unit_cost' => $cost_price,
                 'quantity' => $qty,
                 'unit_quantity' => $qty,
                 'warehouse_id' => $warehouse_id,
                 'tax_rate_id' => $tax_rate_id,
                 'tax' => $tax_percent,
-                'discount' => 0,
-                'item_discount' => 0,
+                'discount' => $dis1_percent,
+                'item_discount' => $dis1_value,
                 'sale_price' => $sale_price,
                 'unit_cost' => $purchase_price,
                 'item_tax' => $vat_value,
-                'subtotal' => $totalbeforevat,
+                'subtotal' => $subtotal,
                 'quantity_balance' => 0,
                 'quantity_received' => 0,
-                'discount1' => 0,
-                'discount2' => 0,
-                'discount3' => 0,
+                'discount1' => $dis1_percent,
+                'discount2' => $dis2_percent,
+                'discount3' => $dis3_percent,
                 'totalbeforevat' => $totalbeforevat,
                 'main_net' => $main_net,
-                'second_discount_value' => 0,
-                'third_discount_value' => 0,
+                'second_discount_value' => $dis2_value,
+                'third_discount_value' => $dis3_value,
                 'date' => $date,
             ];
         }
@@ -412,10 +453,10 @@ class Purchase_order extends MY_Controller
             'supplier_id' => $supplier_id,
             'supplier' => $this->site->getCompanyByID($supplier_id)->name,
             'note' => 'Created via Excel upload',
-            'total' => $grand_total_beqfore_vat, // Will be calculated in model
+            'total' => $grand_purchase_total, // Will be calculated in model
             'total_net_purchase' => $grand_total_beqfore_vat, // Will be calculated in model
             'total_sale' => $grand_total_sale, // Will be calculated in model
-            'total_discount' => 0, // Will be calculated in model
+            'total_discount' => $grand_total_discount, // Will be calculated in model
             'total_tax' => $grand_total_vat, // Will be calculated in model
             'grand_total' => $grand_total_purchase, // Will be calculated in model
             'status' => 'pending',
