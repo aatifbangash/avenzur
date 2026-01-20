@@ -1823,45 +1823,45 @@ class Products_model extends CI_Model
             //                 SUM(IFNULL(im.quantity, 0)) as total_quantity,
             //                 pr.tax_rate, pr.type, pr.unit, pr.code as product_code, im.avz_item_code", false);
             $sql = "
-SELECT 
-    pi.purchase_id,
-    pi.product_id,
-    pr.name AS product_name,
-    pr.code as product_code,
-    pr.unit,
-    pr.type,
-    pr.tax_rate,
-    p.supplier_id,
-    p.supplier,
-    im_summary.batch_number AS batchno,
-    im_summary.expiry_date AS expiry,
-    im_summary.net_unit_sale,
-    im_summary.net_unit_cost,
-    im_summary.real_unit_cost,
-    im_summary.avz_item_code,
-    im_summary.total_quantity
-FROM sma_purchase_items pi
-JOIN sma_purchases p 
-    ON p.id = pi.purchase_id
-JOIN sma_products pr 
-    ON pr.id = pi.product_id
-JOIN (
-    SELECT 
-        avz_item_code,
-        batch_number,
-        expiry_date,
-        net_unit_sale,
-        net_unit_cost,
-        real_unit_cost,
-        SUM(quantity) AS total_quantity
-    FROM sma_inventory_movements
-    WHERE location_id = " . $warehouse_id . " 
+                SELECT 
+                    pi.purchase_id,
+                    pi.product_id,
+                    pr.name AS product_name,
+                    pr.code as product_code,
+                    pr.unit,
+                    pr.type,
+                    pr.tax_rate,
+                    p.supplier_id,
+                    p.supplier,
+                    im_summary.batch_number AS batchno,
+                    im_summary.expiry_date AS expiry,
+                    im_summary.net_unit_sale,
+                    im_summary.net_unit_cost,
+                    im_summary.real_unit_cost,
+                    im_summary.avz_item_code,
+                    im_summary.total_quantity
+                FROM sma_purchase_items pi
+                JOIN sma_purchases p 
+                    ON p.id = pi.purchase_id
+                JOIN sma_products pr 
+                    ON pr.id = pi.product_id
+                JOIN (
+                    SELECT 
+                        avz_item_code,
+                        batch_number,
+                        expiry_date,
+                        net_unit_sale,
+                        net_unit_cost,
+                        real_unit_cost,
+                        SUM(quantity) AS total_quantity
+                    FROM sma_inventory_movements
+                    WHERE location_id = " . $warehouse_id . " 
 
-    GROUP BY avz_item_code, batch_number, expiry_date
-) im_summary
-    ON im_summary.avz_item_code = pi.avz_item_code
-WHERE pi.purchase_id = " . $this->input->get('purchase_id') . " 
-AND im_summary.total_quantity > 0";
+                    GROUP BY avz_item_code, batch_number, expiry_date
+                ) im_summary
+                    ON im_summary.avz_item_code = pi.avz_item_code
+                WHERE pi.purchase_id = " . $this->input->get('purchase_id') . " 
+                AND im_summary.total_quantity > 0";
             $query = $this->db->query($sql);
 
             //echo $this->db->last_query();exit;
@@ -1883,7 +1883,7 @@ AND im_summary.total_quantity > 0";
             $this->db->join('sma_purchases pu', 'pu.id = im.reference_id AND im.type = "purchase"', 'left');
             $this->db->where('im.location_id', $warehouse_id);
             $this->db->where('im.product_id', $item_id);
-            $this->db->group_by(['im.avz_item_code', 'im.batch_number', 'im.expiry_date']);
+            $this->db->group_by(['im.avz_item_code', 'im.batch_number']);
             $this->db->order_by('im.expiry_date', 'asc');
             $this->db->having('total_quantity !=', 0);
             $query = $this->db->get();
@@ -1903,7 +1903,8 @@ AND im_summary.total_quantity > 0";
                 $this->db->join('sma_inventory_movements im', 'im.product_id = pr.id', 'left');
                 $this->db->join('sma_purchases pu', 'pu.id = im.reference_id AND im.type = "purchase"', 'left');
                 $this->db->where('pr.id', $item_id);
-                $this->db->group_by(['im.avz_item_code', 'im.batch_number', 'im.expiry_date']);
+                $this->db->where('im.location_id', $warehouse_id);
+                $this->db->group_by(['im.avz_item_code', 'im.batch_number']);
                 $query = $this->db->get();
             }
         } else {
