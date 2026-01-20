@@ -1883,7 +1883,7 @@ class Products_model extends CI_Model
             $this->db->join('sma_purchases pu', 'pu.id = im.reference_id AND im.type = "purchase"', 'left');
             $this->db->where('im.location_id', $warehouse_id);
             $this->db->where('im.product_id', $item_id);
-            $this->db->group_by(['im.avz_item_code', 'im.batch_number']);
+            $this->db->group_by(['im.avz_item_code']);
             $this->db->order_by('im.expiry_date', 'asc');
             $this->db->having('total_quantity !=', 0);
             $query = $this->db->get();
@@ -1904,7 +1904,7 @@ class Products_model extends CI_Model
                 $this->db->join('sma_purchases pu', 'pu.id = im.reference_id AND im.type = "purchase"', 'left');
                 $this->db->where('pr.id', $item_id);
                 $this->db->where('im.location_id', $warehouse_id);
-                $this->db->group_by(['im.avz_item_code', 'im.batch_number']);
+                $this->db->group_by(['im.avz_item_code']);
                 $query = $this->db->get();
             }
         } else {
