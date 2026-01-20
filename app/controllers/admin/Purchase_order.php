@@ -3,7 +3,9 @@
 defined('BASEPATH') or exit('No direct script access allowed');
 
 use Mpdf\Mpdf;
-
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
 class Purchase_order extends MY_Controller
 {
     public function __construct()
@@ -265,6 +267,181 @@ class Purchase_order extends MY_Controller
         return array("data" => $data, "products" => $products);
     }
 
+    public function upload_excel()
+    {
+        // Check file upload
+        if (empty($_FILES['excel_file']['name'])) {
+            $this->session->set_flashdata('error', 'No Excel file uploaded.');
+            redirect($_SERVER['HTTP_REFERER']);
+        }
+
+        $date = $this->sma->fld($this->input->post('date'));
+        $warehouse_id = $this->input->post('warehouse');
+        $supplier_id = $this->input->post('supplier');
+
+        // Upload file to temp location
+        $config['upload_path'] = FCPATH . 'assets/uploads/temp/';
+        $config['allowed_types'] = 'xls|xlsx';
+        $config['max_size'] = 2048;
+        $config['encrypt_name'] = true;
+        $this->load->library('upload', $config);
+
+        if (!$this->upload->do_upload('excel_file')) {
+            $this->session->set_flashdata('error', $this->upload->display_errors());
+            redirect($_SERVER['HTTP_REFERER']);
+        }
+
+        $fileData = $this->upload->data();
+        $excelFile = $fileData['full_path'];
+
+        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($excelFile);
+        $sheet = $spreadsheet->getActiveSheet();
+        $rows = $sheet->toArray(null, true, true, false);
+
+        // Map columns: Item No., Item name, Batch No., EXPIRY DATE, Qty, Sale Price, Purchase price, vat value, Supplier Name, Category, Image link
+        $products = [];
+        $row_count = 0;
+        $missing_products = [];
+        $this->load->admin_model('products_model');
+
+        $grand_total_purchase = 0;
+        $grand_total_sale = 0;
+        $grand_total_vat = 0;
+        $grand_total_beqfore_vat = 0;
+
+        foreach ($rows as $row) {
+            if ($row_count == 0) { $row_count++; continue; } // Skip header
+            $item_code = trim($row[0]);
+            $item_name = trim($row[1]);
+            $batch_no = trim($row[2]);
+            $expiry_date = $this->sma->fld($row[3]);
+            $qty = (float)$row[4];
+            $sale_price = (float)$row[5];
+            $purchase_price = (float)$row[6];
+            $tax_rate_id = $row[8] == 15 ? 5 : 1;
+            $tax_percent = $row[8];
+            $supplier_name = trim($row[9]);
+            $category = trim($row[10]);
+            $image_link = trim($row[12]);
+            $vat_value = ($purchase_price * $qty * $tax_percent) / 100;
+
+            if (!$item_code || !$item_name || !$qty) continue;
+
+            $product = $this->purchase_order_model->getProductByCode($item_code);
+            $product_id = $product ? $product->id : null;
+
+            if(!$product_id){
+                // Try to create product
+                $product_data = [
+                    'code' => $item_code,
+                    'name' => $item_name,
+                    'category_id' => null, // You may want to resolve category name to ID
+                    'cost' => $purchase_price,
+                    'price' => $sale_price,
+                    'tax_rate' => $tax_rate_id,
+                    'image' => $image_link,
+                    'type' => 'standard',
+                    'unit' => 'unit',
+                    'alert_quantity' => 0,
+                    'track_quantity' => 1,
+                    'details' => ''
+                ];
+                $add_result = $this->products_model->addProductSimplified($product_data);
+                if ($add_result) {
+                    $product = $this->purchase_order_model->getProductByCode($item_code);
+                    $product_id = $product ? $product->id : null;
+                }
+            }
+
+            if(!$product_id){
+                $missing_products[] = $item_code;
+                continue;
+            }
+
+            $main_net  = ($purchase_price * $qty) + $vat_value;
+            $totalbeforevat = $purchase_price * $qty;
+            $totalsale = $sale_price * $qty;
+
+            $grand_total_beqfore_vat += $totalbeforevat;
+            $grand_total_vat += $vat_value;
+            $grand_total_sale += $totalsale;
+            $grand_total_purchase += $main_net;
+
+            $products[] = [
+                'product_id' => $product_id,
+                'product_code' => $item_code,
+                'product_name' => $item_name,
+                'batchno' => $batch_no,
+                'expiry' => $expiry_date,
+                'net_unit_cost' => $purchase_price,
+                'quantity' => $qty,
+                'unit_quantity' => $qty,
+                'warehouse_id' => $warehouse_id,
+                'tax_rate_id' => $tax_rate_id,
+                'tax' => $tax_percent,
+                'discount' => 0,
+                'item_discount' => 0,
+                'sale_price' => $sale_price,
+                'unit_cost' => $purchase_price,
+                'item_tax' => $vat_value,
+                'subtotal' => $totalbeforevat,
+                'quantity_balance' => 0,
+                'quantity_received' => 0,
+                'discount1' => 0,
+                'discount2' => 0,
+                'discount3' => 0,
+                'totalbeforevat' => $totalbeforevat,
+                'main_net' => $main_net,
+                'second_discount_value' => 0,
+                'third_discount_value' => 0,
+                'date' => $date,
+            ];
+        }
+
+        //echo '<pre>';print_r($products);exit;
+
+        if (!empty($missing_products)) {
+            $this->session->set_flashdata('error', 'Could not create the following products: ' . implode(', ', $missing_products) . '. No purchase order was created.');
+            @unlink($excelFile);
+            redirect($_SERVER['HTTP_REFERER']);
+        }
+        // Prepare PO data
+        $data = [
+            'date' => $date,
+            'warehouse_id' => $warehouse_id,
+            'supplier_id' => $supplier_id,
+            'supplier' => $this->site->getCompanyByID($supplier_id)->name,
+            'note' => 'Created via Excel upload',
+            'total' => $grand_total_beqfore_vat, // Will be calculated in model
+            'total_net_purchase' => $grand_total_beqfore_vat, // Will be calculated in model
+            'total_sale' => $grand_total_sale, // Will be calculated in model
+            'total_discount' => 0, // Will be calculated in model
+            'total_tax' => $grand_total_vat, // Will be calculated in model
+            'grand_total' => $grand_total_purchase, // Will be calculated in model
+            'status' => 'pending',
+            'created_by' => $this->session->userdata('user_id'),
+            'updated_by' => $this->session->userdata('user_id'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        // Call model to create PO (implement addPurchaseFromExcel in model)
+        $this->load->admin_model('purchase_order_model');
+        $result = $this->purchase_order_model->addPurchaseFromExcel($data, $products);
+
+        // Remove temp file
+        @unlink($excelFile);
+
+        if ($result && isset($result['success']) && $result['success']) {
+            $this->session->set_flashdata('message', 'Purchase order created from Excel successfully.');
+            redirect(admin_url('purchase_order'));
+        } else {
+            $this->session->set_flashdata('error', 'Failed to create purchase order from Excel.');
+            redirect($_SERVER['HTTP_REFERER']);
+        }
+    }
+
     public function add($quote_id = null)
     {
         //error_reporting(-1);
@@ -439,6 +616,7 @@ class Purchase_order extends MY_Controller
         $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
         $this->data['quote_id'] = $quote_id;
         $this->data['suppliers'] = $this->site->getAllParentCompanies('supplier');
+        $this->data['child_suppliers'] = $this->site->getAllChildCompanies('supplier');
         $this->data['categories'] = $this->site->getAllCategories();
         $this->data['tax_rates'] = $this->site->getAllTaxRates();
         $this->data['warehouses'] = $this->site->getAllWarehouses();

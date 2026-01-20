@@ -328,11 +328,74 @@
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-plus"></i><?= lang('create_purchase_order'); ?></h2>
 
-        <!-- CSV upload icon -->
+        <!-- Excel upload icon -->
         <div class="box-icon">
-
+            <ul class="btn-tasks">
+                <li class="dropdown">
+                    <a data-toggle="modal" data-target="#excelUploadModal"><i class="icon fa fa-upload"></i></a>
+                </li>
+            </ul>
         </div>
     </div>
+
+    <!-- Excel Upload Modal -->
+    <div class="modal fade" id="excelUploadModal" tabindex="-1" role="dialog" aria-labelledby="excelUploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="excelUploadModalLabel">Upload Purchase Order Excel</h4>
+                </div>
+                <div class="modal-body">
+                    <?php
+                    $csrf = array(
+                        'name' => $this->security->get_csrf_token_name(),
+                        'hash' => $this->security->get_csrf_hash()
+                    );
+                    $attribs = array('id' => 'excel-upload-form', 'enctype' => 'multipart/form-data');
+                    echo admin_form_open_multipart('purchase_order/upload_excel', $attribs);
+                    ?>
+                    <input type="hidden" name="<?= $csrf['name']; ?>" value="<?= $csrf['hash']; ?>" />
+                    <div class="form-group">
+                        <label for="excel_date">Date</label>
+                        <input type="text" name="date" id="excel_date" class="form-control datetime" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="excel_warehouse">Warehouse</label>
+                        <?php
+                        $wh[""] = "";
+                        foreach ($warehouses as $warehouse) {
+                            $wh[$warehouse->id] = $warehouse->name . ' (' . $warehouse->code . ')';
+                        }
+                        echo form_dropdown('warehouse', $wh, '', 'id="excel_warehouse" class="form-control select" required style="width:100%;"');
+                        ?>
+                    </div>
+                    <div class="form-group">
+                        <label for="excel_supplier">Supplier</label>
+                        <?php
+                        $sup[""] = "";
+                        foreach ($child_suppliers as $supplier) {
+                            $sup[$supplier->id] = $supplier->name;
+                        }
+                        echo form_dropdown('supplier', $sup, '', 'id="excel_supplier" class="form-control select" required style="width:100%;"');
+                        ?>
+                    </div>
+                    <div class="form-group">
+                        <label for="excel_file">Excel File</label>
+                        <input type="file" name="excel_file" id="excel_file" class="form-control" accept=".xls,.xlsx" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    </div>
+                    <?php echo form_close(); ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Excel Upload Modal End -->
+
+
     <div class="box-content">
         <div class="row">
             <div class="col-lg-12">
