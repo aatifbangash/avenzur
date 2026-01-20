@@ -1905,6 +1905,7 @@ class Products_model extends CI_Model
                 $this->db->where('pr.id', $item_id);
                 $this->db->where('im.location_id', $warehouse_id);
                 $this->db->group_by(['im.avz_item_code']);
+                $this->db->order_by('im.id', 'desc');
                 $query = $this->db->get();
             }
         } else {
