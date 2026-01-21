@@ -95,7 +95,7 @@
                                 <?= $row->discount3; ?>
                             </td>
                              <td style="text-align:right;">
-                                <?= $row->item_tax ? '15% - ' . $row->item_tax : '0% ?>
+                                <?= $row->item_tax ? '15% - ' . $row->item_tax : '0%' ?>
                             </td>
                                <td style="text-align:right;">
                                 <?= $row->totalbeforevat; ?>
