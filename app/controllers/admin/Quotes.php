@@ -807,8 +807,16 @@ class Quotes extends MY_Controller
                     if($quote_status == 'approved' || $quote_status == 'converted_to_sale'){
                         $inventoryObj = $this->products_model->check_inventory($warehouse_id, $item_id, $item_batchno, $item_expiry, $item_quantity, $item_avz_code);
                         if(!$inventoryObj){
-                            $this->session->set_flashdata('error', 'Quote cannot be approved. The item: '.$item_code.'-'.$item_name.' has no stock in Warehouse');
-                            admin_redirect('quotes');
+                            $batchObj = $this->products_model->check_inventory_batch_expiry($warehouse_id, $item_id, $item_batchno, $item_expiry, $item_quantity);
+                            
+                            if($batchObj){
+                                $item_avz_code = $batchObj->avz_item_code;
+                                $net_cost = $batchObj->net_unit_cost;
+                                $real_cost = $batchObj->real_unit_cost;
+                            }else{
+                                $this->session->set_flashdata('error', 'Quote cannot be approved. The item: '.$item_code.'-'.$item_name.' has no stock in Warehouse');
+                                admin_redirect('quotes');
+                            }  
                         }
                     }
 
