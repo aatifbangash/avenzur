@@ -731,6 +731,14 @@ public function logVisitor() {
         return false;
     }
 
+    public function getDefaultBiller(){
+        $q = $this->db->get_where('companies', ['group_name' => 'biller'], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
     public function getCurrencyByCode($code)
     {
         $q = $this->db->get_where('currencies', ['code' => $code], 1);

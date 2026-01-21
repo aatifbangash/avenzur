@@ -1340,6 +1340,8 @@ class Purchase_order extends MY_Controller
         $supplier    = $this->site->getCompanyByID($inv->supplier_id);
         $this->data['user']        = $this->site->getUser($inv->created_by);
         $warehouse  = $this->site->getWarehouseByID($inv->warehouse_id);
+        $default_biller = $this->site->getDefaultBiller();
+
         $this->data['inv']         = $inv;
         $this->data['rows'] = $this->purchase_order_model->getAllPurchaseItems($purchase_id);
         //echo '<pre>';print_r($this->data['supplier']);exit;
@@ -1437,12 +1439,12 @@ class Purchase_order extends MY_Controller
 
         <!-- FROM -->
         <div style="float:right; width:48%; vertical-align:top;">
-            <p style="margin:2px 0;"><strong>From:</strong>' . $warehouse->name . '</p>
-            <p style="margin:2px 0;">Address: ' . $warehouse->address . '</p>
-            <p style="margin:2px 0;">City: ' . $warehouse->city . '</p>
-            <p style="margin:2px 0;">Tel: ' . $warehouse->phone . '</p>
-            <p style="margin:2px 0;">Email: ' . $warehouse->eamil . '</p>
-            <p style="margin:2px 0;">GLN: ' . $warehouse->gln . '</p>
+            <p style="margin:2px 0;"><strong>From:</strong>' . $$default_biller->name . '</p>
+            <p style="margin:2px 0;">Address: ' . $default_biller->address . '</p>
+            <p style="margin:2px 0;">City: ' . $default_biller->city . '</p>
+            <p style="margin:2px 0;">VAT Number: ' . $$default_biller->vat_no . '</p>
+            <p style="margin:2px 0;">Tel: ' . $default_biller->phone . '</p>
+            <p style="margin:2px 0;">Email: ' . $default_biller->email . '</p>
         </div>
     </div>
 
