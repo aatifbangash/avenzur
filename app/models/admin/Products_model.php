@@ -1747,6 +1747,35 @@ class Products_model extends CI_Model
         return false;
     }
 
+    public function check_inventory_batch_expiry($warehouse_id, $item_id, $item_batchno, $item_expiry, $item_quantity){
+        $this->db->select("im.net_unit_sale, 
+                            im.net_unit_cost, 
+                            im.real_unit_cost,
+                            im.real_unit_sale,
+                            im.customer_id,
+                            im.product_id,
+                            im.batch_number as batchno, 
+                            im.expiry_date as expiry,
+                            im.avz_item_code,
+                            (SUM(im.quantity)) AS total_quantity", false);
+        $this->db->from('sma_inventory_movements im');
+        $this->db->where('im.location_id', $warehouse_id);
+        $this->db->where('im.product_id', $item_id);
+        $this->db->where('im.batch_number', $item_batchno);
+        $this->db->where('im.expiry_date', $item_expiry);
+        
+        $this->db->group_by(['im.product_id', 'im.batch_number', 'im.expiry_date']);
+        $this->db->having('total_quantity >=', $item_quantity);
+        $query = $this->db->get();
+
+        if ($query->num_rows() > 0) {
+            $rows = $query->result();
+            return $rows[0];
+        } else {
+            return false;
+        }
+    }
+
     public function check_inventory($warehouse_id, $item_id, $item_batchno, $item_expiry, $item_quantity, $avz_code)
     {
         $this->db->select("im.net_unit_sale, 
