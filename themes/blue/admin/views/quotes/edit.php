@@ -317,7 +317,25 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
 
                     add_invoice_item(itemObj);   
                 }else {
-                    bootbox.alert('No records found for this item code.');
+                    //bootbox.alert('No records found for this item code.');
+
+                    let itemObj = selectedItem;
+                    //console.log(selectedItem);
+
+                    itemObj.row.product_id = selectedItem.item_id || 0;
+                    itemObj.row.net_unit_cost = selectedItem.row.cost || 0;
+                    itemObj.row.real_unit_cost = selectedItem.row.cost || 0;
+                    itemObj.row.net_unit_sale = selectedItem.row.price || 0;
+                    itemObj.row.batch_no = itemObj.row.batch_no || '';
+                    //itemObj.row.expiry = itemObj.row.expiry || '';
+                    itemObj.row.cost = selectedItem.row.cost || 0;
+                    itemObj.row.qty = 0;
+                    itemObj.row.dis1 = 0;
+                    itemObj.row.dis2 = 0;
+                    itemObj.row.bonus =  0;
+                    itemObj.row.max_bonus = 0;
+
+                    add_invoice_item(itemObj);
                 }
             },
             error: function (xhr, status, error) {
