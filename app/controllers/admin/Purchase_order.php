@@ -1432,7 +1432,7 @@ class Purchase_order extends MY_Controller
             <p style="margin:2px 0;"><strong>To:</strong> ' . $supplier->name . '</p>
             <p style="margin:2px 0;">Address: ' . $supplier->address . '</p>
             <p style="margin:2px 0;">City: ' . $supplier->city . '</p>
-            <p style="margin:2px 0;">VAT Number: ' . $customer->vat_no . '</p>
+            <p style="margin:2px 0;">VAT Number: ' . $supplier->vat_no . '</p>
             <p style="margin:2px 0;">Tel: ' . $supplier->phone . '</p>
             <p style="margin:2px 0;">Email: ' . $supplier->email . '</p>
         </div>

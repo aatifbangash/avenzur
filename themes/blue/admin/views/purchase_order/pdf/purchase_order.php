@@ -56,7 +56,7 @@
                         <th><?= lang('Dis2 %'); ?></th>
                         <th><?= lang('Dis3 %'); ?></th>
                         <th><?= lang('VAT %'); ?></th>
-                        <th><?= lang('Total without VAT %'); ?></th>
+                        <th><?= lang('Total without VAT'); ?></th>
                         <th><?= lang('Grand Total'); ?></th>
                         
                     </tr>
@@ -95,7 +95,7 @@
                                 <?= $row->discount3; ?>
                             </td>
                              <td style="text-align:right;">
-                                <?= $row->item_tax; ?>
+                                <?= $row->item_tax ? '15% - ' . $row->item_tax : '0% ?>
                             </td>
                                <td style="text-align:right;">
                                 <?= $row->totalbeforevat; ?>
