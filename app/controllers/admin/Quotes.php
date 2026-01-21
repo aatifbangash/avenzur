@@ -1476,6 +1476,7 @@ class Quotes extends MY_Controller
                         <i class='fa fa-heart-o'></i> " . lang('create_sale_order') . "</a>";
         $pc_link      = anchor('admin/purchases/add/$1', '<i class="fa fa-star"></i> ' . lang('create_purchase'));
         $pdf_link     = anchor('admin/quotes/pdf/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf'));
+        $new_pdf_link     = anchor('admin/quotes/pdf_new/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('Download Quotation'));
         $delete_link  = "<a href='#' class='po' title='<b>" . $this->lang->line('delete_quote') . "</b>' data-content=\"<p>"
         . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('quotes/delete/$1') . "'>"
         . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i> "
@@ -1494,6 +1495,7 @@ class Quotes extends MY_Controller
                         } 
                         if($this->Admin || $this->Owner || $this->GP['quotes-pdf']){ 
                             $action .= '<li>' . $pdf_link . '</li>';
+                            $action .= '<li>' . $new_pdf_link . '</li>';
                         }
                         if($this->Admin || $this->Owner || $this->GP['quotes-delete']){ 
                             $action .= '<li>' . $delete_link . '</li>';
@@ -1587,6 +1589,39 @@ class Quotes extends MY_Controller
         $this->data['inv']        = $inv;
 
         $this->load->view($this->theme . 'quotes/modal_view', $this->data);
+    }
+
+    public function pdf_new($quote_id = null, $view = null, $save_bufffer = null)
+    {
+        // /$this->sma->checkPermissions();
+
+        if ($this->input->get('id')) {
+            $quote_id = $this->input->get('id');
+        }
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $inv                 = $this->quotes_model->getQuoteByID($quote_id);
+        if (!$this->session->userdata('view_right')) {
+            $this->sma->view_rights($inv->created_by);
+        }
+        $this->data['rows']       = $this->quotes_model->getAllQuoteItems($quote_id, $inv);
+        $this->data['customer']   = $this->site->getCompanyByID($inv->customer_id);
+        $this->data['biller']     = $this->site->getCompanyByID($inv->biller_id);
+        $this->data['created_by'] = $this->site->getUser($inv->created_by);
+        $this->data['warehouse']  = $this->site->getWarehouseByID($inv->warehouse_id);
+        $this->data['inv']        = $inv;
+        $name                     = $this->lang->line('quote') . '_' . str_replace('/', '_', $inv->reference_no) . '.pdf';
+        $html                     = $this->load->view($this->theme . 'quotes/pdf_new', $this->data, true);
+        if (!$this->Settings->barcode_img) {
+            $html = preg_replace("'\<\?xml(.*)\?\>'", '', $html);
+        }
+        //echo $html;exit;
+        if ($view) {
+            $this->load->view($this->theme . 'quotes/pdf', $this->data);
+        } elseif ($save_bufffer) {
+            return $this->sma->generate_pdf($html, $name, $save_bufffer);
+        } else {
+            $this->sma->generate_pdf($html, $name);
+        }
     }
 
     public function pdf($quote_id = null, $view = null, $save_bufffer = null)
