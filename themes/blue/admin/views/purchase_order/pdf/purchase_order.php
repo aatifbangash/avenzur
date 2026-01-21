@@ -77,31 +77,31 @@
                                 
                             </td>
                             <td style="text-align:center; vertical-align:middle;">
-                                <?= $row->unit_cost; ?>
+                                <?= number_format($row->unit_cost, 2); ?>
                             </td>
                             <td style="text-align:center; vertical-align:middle;">
-                                <?= $row->quantity; ?>
+                                <?= number_format($row->quantity, 2); ?>
                             </td>
                             <td style="text-align:center; vertical-align:middle;">
                                 <?= $row->bonus; ?>
                             </td>
                             <td style="text-align:center; vertical-align:middle;">
-                                <?= $row->discount1; ?>
+                                <?= number_format($row->discount1, 2); ?>
                             </td>
                             <td style="text-align:right;">
-                                <?= $row->discount2; ?>
+                                <?= number_format($row->discount2, 2); ?>
                             </td>
                               <td style="text-align:right;">
-                                <?= $row->discount3; ?>
+                                <?= number_format($row->discount3, 2); ?>
                             </td>
                              <td style="text-align:right;">
-                                <?= $row->item_tax ? '15% - ' . $row->item_tax : '0%' ?>
+                                <?= $row->item_tax ? '15% - ' . number_format($row->item_tax, 2) : '0%' ?>
                             </td>
                                <td style="text-align:right;">
-                                <?= $row->totalbeforevat; ?>
+                                <?= number_format($row->totalbeforevat, 2); ?>
                             </td>
                                <td style="text-align:right;">
-                                <?= $row->main_net; ?>
+                                <?= number_format($row->main_net, 2); ?>
                             </td>
                          
                            
