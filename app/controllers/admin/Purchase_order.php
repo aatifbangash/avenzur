@@ -1439,10 +1439,10 @@ class Purchase_order extends MY_Controller
 
         <!-- FROM -->
         <div style="float:right; width:48%; vertical-align:top;">
-            <p style="margin:2px 0;"><strong>From:</strong>' . $$default_biller->name . '</p>
+            <p style="margin:2px 0;"><strong>From:</strong>' . $default_biller->name . '</p>
             <p style="margin:2px 0;">Address: ' . $default_biller->address . '</p>
             <p style="margin:2px 0;">City: ' . $default_biller->city . '</p>
-            <p style="margin:2px 0;">VAT Number: ' . $$default_biller->vat_no . '</p>
+            <p style="margin:2px 0;">VAT Number: ' . $default_biller->vat_no . '</p>
             <p style="margin:2px 0;">Tel: ' . $default_biller->phone . '</p>
             <p style="margin:2px 0;">Email: ' . $default_biller->email . '</p>
         </div>
