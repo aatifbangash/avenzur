@@ -2337,6 +2337,10 @@ function loadItems() {
 				}*/
 			}
 
+			if (parseFloat(item_base_quantity) <= 0) {
+				$("#row_" + row_no).addClass("danger");
+			}
+
 			if(new_calc.new_unit_sale < new_item.net_unit_cost){
 				//bootbox.alert('Your are selling at sale price lower than cost price');
 				$("#row_" + row_no).addClass("warning");
