@@ -1764,7 +1764,7 @@ class Products_model extends CI_Model
         $this->db->where('im.batch_number', $item_batchno);
         $this->db->where('im.expiry_date', $item_expiry);
         
-        $this->db->group_by(['im.product_id', 'im.batch_number', 'im.expiry_date']);
+        $this->db->group_by(['im.product_id', 'im.batch_number', 'im.expiry_date', 'im.avz_item_code']);
         $this->db->having('total_quantity >=', $item_quantity);
         $query = $this->db->get();
 
@@ -1796,7 +1796,7 @@ class Products_model extends CI_Model
         if ($avz_code != '' && $avz_code != 'null') {
             $this->db->where('im.avz_item_code', $avz_code);
         }
-        $this->db->group_by(['im.product_id', 'im.batch_number', 'im.expiry_date']);
+        $this->db->group_by(['im.product_id', 'im.batch_number', 'im.expiry_date', 'im.avz_item_code']);
         $this->db->having('total_quantity >=', $item_quantity);
         $query = $this->db->get();
 
