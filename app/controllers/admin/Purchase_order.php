@@ -354,7 +354,7 @@ class Purchase_order extends MY_Controller
 
             if(!$product_id){
 
-                if(!$row[8]){
+                if($row[8] == ''){
                     $this->session->set_flashdata('error', 'Tax rate missing for new product: ' . $item_code . '. No purchase order was created.');
                     @unlink($excelFile);
                     redirect($_SERVER['HTTP_REFERER']);
