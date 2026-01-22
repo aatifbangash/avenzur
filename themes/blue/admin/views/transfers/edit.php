@@ -338,16 +338,13 @@
 
                 <div class="row">
                     <div class="col-lg-12">
-
-                <?php if ($Owner || $Admin) { ?>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <?= lang('date', 'todate'); ?>
-                                    <?php echo form_input('date', ($_POST['date'] ?? ''), 'class="form-control input-tip datetime" id="todate" required="required"'); ?>
-                                </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <?= lang('date', 'todate'); ?>
+                                <?php echo form_input('date', ($_POST['date'] ?? ''), 'class="form-control input-tip datetime" id="todate" required="required"'); ?>
                             </div>
-                        <?php
-                } ?>
+                        </div>
+                        
                         <div class="col-md-6">
                             <div class="form-group">
                                 <?= lang('reference_no', 'ref'); ?>
