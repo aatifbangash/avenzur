@@ -1515,29 +1515,23 @@ class Returns_supplier extends MY_Controller
         . lang('delete_return') . '</a>';
         $journal_entry_link      = anchor('admin/entries/view/journal/?rsid=$1', '<i class="fa fa-eye"></i> ' . lang('Journal Entry'));
         
-        if (($this->Owner || $this->Admin || $this->PurchaseManager)) {
-            $action = '<div class="text-center"><div class="btn-group text-left">'
-                . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
-                . lang('actions') . ' <span class="caret"></span></button>
-                <ul class="dropdown-menu pull-right" role="menu">
-                        <li>' . $edit_link . '</li>
-                        <li>' . $journal_entry_link . '</li>
-                        <li>' . $delete_link . '</li> 
-                </ul>
-            </div></div>';
-        }else{
-            $action = '<div class="text-center"><div class="btn-group text-left">'
-                . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
-                . lang('actions') . ' <span class="caret"></span></button>
-                <ul class="dropdown-menu pull-right" role="menu">
-                        <li>' . $journal_entry_link . '</li> 
-                </ul>
-            </div></div>';
+        $action = '<div class="text-center"><div class="btn-group text-left">'
+            . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+            . lang('actions') . ' <span class="caret"></span></button>
+            <ul class="dropdown-menu pull-right" role="menu">';
+        if($this->GP['supplier-returns-edit']){
+            $action .= '<li>' . $edit_link . '</li>';
         }
+        if($this->GP['supplier-returns-delete']){
+            $action .= '<li>' . $delete_link . '</li>';
+        }
+        if($this->Owner || $this->Admin){
+            $action .= '<li>' . $delete_link . '</li>';
 
+        }
         
-         
-    $this->datatables->add_column('Actions', $action, 'id');
+        $action .= '</ul></div></div>';
+        $this->datatables->add_column('Actions', $action, 'id');
        // $this->datatables->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('returns_supplier/edit/$1') . "' class='tip' title='" . lang('edit_return') . "'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . lang('delete_return') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('returns_supplier/delete/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
         echo $this->datatables->generate();
     }

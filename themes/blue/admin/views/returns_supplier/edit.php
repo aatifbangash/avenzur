@@ -384,7 +384,11 @@
                             <div class="form-group">
                                 <?= lang('status', 'status'); ?>
                                 <?php
-                                $post = ['pending' => lang('pending'), 'completed' => lang('completed')];
+                                if($Admin || $Owner || $GP['supplier-returns-approve']){ 
+                                    $post = ['pending' => lang('pending'), 'completed' => lang('completed')];
+                                }else{
+                                    $post = ['pending' => lang('pending')];
+                                }
                                 echo form_dropdown('status', $post, ($_POST['status'] ?? ''), 'id="status" class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . '" required="required" style="width:100%;" ');
                                 ?>
                             </div>
