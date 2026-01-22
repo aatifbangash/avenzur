@@ -297,6 +297,18 @@
                                     </td>
                                     <td>
                                         <span style="display:inline-block;">
+                                            <input type="checkbox" value="1" id="po-approve" class="checkbox" name="po-approve" <?php echo $p->{'po-approve'} ? 'checked' : ''; ?>>
+                                            <label for="po-approve" class="padding05"><?= lang('Approve PO') ?></label>
+                                        </span>
+                                        <span style="display:inline-block;">
+                                            <input type="checkbox" value="1" id="po-create-invoice" class="checkbox" name="po-create-invoice" <?php echo $p->{'po-create-invoice'} ? 'checked' : ''; ?>>
+                                            <label for="po-create-invoice" class="padding05"><?= lang('Create Purchase Invoice') ?></label>
+                                        </span>
+                                        <span style="display:inline-block;">
+                                            <input type="checkbox" value="1" id="grn-add" class="checkbox" name="grn-add" <?php echo $p->{'grn-add'} ? 'checked' : ''; ?>>
+                                            <label for="grn-add" class="padding05"><?= lang('Add GRN') ?></label>
+                                        </span>
+                                        <span style="display:inline-block;">
                                             <input type="checkbox" value="1" id="po-email" class="checkbox" name="po-email" <?php echo $p->{'po-email'} ? 'checked' : ''; ?>>
                                             <label for="po-email" class="padding05"><?= lang('email') ?></label>
                                         </span>
@@ -440,6 +452,10 @@
                                         <input type="checkbox" value="1" class="checkbox" name="supplier-returns-delete" <?php echo $p->{'supplier-returns-delete'} ? 'checked' : ''; ?>>
                                     </td>
                                     <td>
+                                        <span style="display:inline-block;">
+                                            <input type="checkbox" value="1" id="supplier-returns-approve" class="checkbox" name="supplier-returns-approve" <?php echo $p->{'supplier-returns-approve'} ? 'checked' : ''; ?>>
+                                            <label for="supplier-returns-approve" class="padding05"><?= lang('Approve') ?></label>
+                                        </span>
                                         <span style="display:inline-block;">
                                             <input type="checkbox" value="1" id="supplier-returns-email" class="checkbox" name="supplier-returns-email" <?php echo $p->{'supplier-returns-email'} ? 'checked' : ''; ?>>
                                             <label for="supplier-returns-email" class="padding05"><?= lang('email') ?></label>
@@ -597,6 +613,35 @@
                                         <span style="display:inline-block;">
                                             <input type="checkbox" value="1" class="checkbox" id="reports-supplier-aging" name="reports-supplier-aging" <?php echo $p->{'reports-supplier-aging'} ? 'checked' : ''; ?>>
                                             <label for="reports-supplier-aging" class="padding05"><?= lang('Supplier Aging') ?></label>
+                                        </span>
+
+                                        <span style="display:inline-block;">
+                                            <input type="checkbox" value="1" class="checkbox" id="reports-consumption" name="reports-consumption" <?php echo $p->{'reports-consumption'} ? 'checked' : ''; ?>>
+                                            <label for="reports-consumption" class="padding05"><?= lang('Consumption') ?></label>
+                                        </span>
+                                        <span style="display:inline-block;">
+                                            <input type="checkbox" value="1" class="checkbox" id="reports-purchase-per-item" name="reports-purchase-per-item" <?php echo $p->{'reports-purchase-per-item'} ? 'checked' : ''; ?>>
+                                            <label for="reports-purchase-per-item" class="padding05"><?= lang('Purchase Per Item') ?></label>
+                                        </span>
+                                        <span style="display:inline-block;">
+                                            <input type="checkbox" value="1" class="checkbox" id="reports-purchase-per-invoice" name="reports-purchase-per-invoice" <?php echo $p->{'reports-purchase-per-invoice'} ? 'checked' : ''; ?>>
+                                            <label for="reports-purchase-per-invoice" class="padding05"><?= lang('Purchase Per Invoice') ?></label>
+                                        </span>
+                                        <span style="display:inline-block;">
+                                            <input type="checkbox" value="1" class="checkbox" id="reports-collections-by-location" name="reports-collections-by-location" <?php echo $p->{'reports-collections-by-location'} ? 'checked' : ''; ?>>
+                                            <label for="reports-collections-by-location" class="padding05"><?= lang('Collections By Location') ?></label>
+                                        </span>
+                                        <span style="display:inline-block;">
+                                            <input type="checkbox" value="1" class="checkbox" id="reports-invoice-status" name="reports-invoice-status" <?php echo $p->{'reports-invoice-status'} ? 'checked' : ''; ?>>
+                                            <label for="reports-invoice-status" class="padding05"><?= lang('SalesInvoice Status') ?></label>
+                                        </span>
+                                        <span style="display:inline-block;">
+                                            <input type="checkbox" value="1" class="checkbox" id="reports-sales-per-invoice" name="reports-sales-per-invoice" <?php echo $p->{'reports-sales-per-invoice'} ? 'checked' : ''; ?>>
+                                            <label for="reports-sales-per-invoice" class="padding05"><?= lang('Sales Per Invoice') ?></label>
+                                        </span>
+                                        <span style="display:inline-block;">
+                                            <input type="checkbox" value="1" class="checkbox" id="reports-sales-per-item" name="reports-sales-per-item" <?php echo $p->{'reports-sales-per-item'} ? 'checked' : ''; ?>>
+                                            <label for="reports-sales-per-item" class="padding05"><?= lang('Sales Per Item') ?></label>
                                         </span>
                                         
                                     </td>
