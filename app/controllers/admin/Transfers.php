@@ -1176,15 +1176,24 @@ class Transfers extends MY_Controller
         $action = '<div class="text-center"><div class="btn-group text-left">'
             . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
             . lang('actions') . ' <span class="caret"></span></button>
-        <ul class="dropdown-menu pull-right" role="menu">
-            
-            <li>' . $edit_link . '</li>
-            <li>' . $pdf_link . '</li>
-            
-            <li>' . $print_barcode . '</li>
-            <li>' . $journal_entry_link . '</li>
-            <li>' . $delete_link . '</li>
-        </ul>
+        <ul class="dropdown-menu pull-right" role="menu">';
+
+        if($this->GP['transfers-edit']){    
+            $action .= '<li>' . $edit_link . '</li>';
+        }
+        if($this->GP['transfers-pdf']){
+            $action .= '<li>' . $pdf_link . '</li>';
+        }
+        if($this->Owner || $this->Admin){
+            $action .= '<li>' . $print_barcode . '</li>';
+        }
+        if($this->Owner || $this->Admin){
+            $action .= '<li>' . $journal_entry_link . '</li>';
+        }
+        if($this->GP['transfers-delete']){ 
+            $action .= '<li>' . $delete_link . '</li>';
+        }
+        $action .= '</ul>
        </div></div>';
 
         $this->load->library('datatables');
