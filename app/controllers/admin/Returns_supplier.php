@@ -1526,7 +1526,7 @@ class Returns_supplier extends MY_Controller
             $action .= '<li>' . $delete_link . '</li>';
         }
         if($this->Owner || $this->Admin){
-            $action .= '<li>' . $delete_link . '</li>';
+            $action .= '<li>' . $journal_entry_link . '</li>';
 
         }
         
