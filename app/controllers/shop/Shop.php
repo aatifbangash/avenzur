@@ -1256,192 +1256,192 @@ class Shop extends MY_Shop_Controller
     }
     public function contact_us()
     {
-
-        echo '<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "Avnzor Establishment",
-  "url": "https://www.avnzor.com",
-  "logo": "https://avnzor.com/cdn/shop/files/logo.svg",
-  "parentOrganization": {
-    "@type": "Organization",
-    "name": "Avenzur",
-    "url": "https://www.avenzur.com"
-  }
-}
-</script>
-<!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            
-            <style>
-                body {
-                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                    background-color: #ffffff;
-                    color: #1a1a1a;
-                    margin: 0;
-                    padding: 40px 20px;
-                }
-
-                .container {
-                    max-width: 1200px;
-                    margin: 0 auto;
-                }
-
-                h2.section-title {
-                    text-align: center;
-                    font-size: 2rem;
-                    color: #0d1b3e;
-                    margin-bottom: 40px;
-                    font-weight: 500;
-                }
-
-                .contact-grid {
-                    display: flex;
-                    gap: 20px;
-                    flex-wrap: wrap;
-                }
-
-                .card {
-                    background-color: #f8f9fa;
-                    border-radius: 12px;
-                    padding: 40px;
-                    flex: 1;
-                    min-width: 300px;
-                    text-align: center;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                }
-
-                .icon {
-                    width: 32px;
-                    height: 32px;
-                    margin-bottom: 15px;
-                    color: #333;
-                }
-
-                h3 {
-                    font-size: 1.5rem;
-                    margin-bottom: 15px;
-                    color: #1a1a1a;
-                    font-weight: 500;
-                }
-
-                p {
-                    margin: 5px 0;
-                    line-height: 1.6;
-                    color: #444;
-                    font-size: 0.95rem;
-                }
-
-                .label {
-                    font-weight: 700;
-                    color: #000;
-                }
-
-                a {
-                    color: #003399;
-                    text-decoration: underline;
-                }
-
-                .direction-link {
-                    font-weight: bold;
-                    display: inline-block;
-                    margin: 10px 0;
-                }
-
-                @media (max-width: 768px) {
-                    .contact-grid {
-                        flex-direction: column;
+        echo '
+        <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <script type="application/ld+json">
+                    {
+                    "@context": "https://schema.org",
+                    "@type": "Organization",
+                    "name": "Avnzor Establishment",
+                    "url": "https://www.avnzor.com",
+                    "logo": "https://avnzor.com/cdn/shop/files/logo.svg",
+                    "parentOrganization": {
+                        "@type": "Organization",
+                        "name": "Avenzur",
+                        "url": "https://www.avenzur.com"
                     }
-                }
+                    }
+                    </script>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    
+                    <style>
+                        body {
+                            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                            background-color: #ffffff;
+                            color: #1a1a1a;
+                            margin: 0;
+                            padding: 40px 20px;
+                        }
 
+                        .container {
+                            max-width: 1200px;
+                            margin: 0 auto;
+                        }
+
+                        h2.section-title {
+                            text-align: center;
+                            font-size: 2rem;
+                            color: #0d1b3e;
+                            margin-bottom: 40px;
+                            font-weight: 500;
+                        }
+
+                        .contact-grid {
+                            display: flex;
+                            gap: 20px;
+                            flex-wrap: wrap;
+                        }
+
+                        .card {
+                            background-color: #f8f9fa;
+                            border-radius: 12px;
+                            padding: 40px;
+                            flex: 1;
+                            min-width: 300px;
+                            text-align: center;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                        }
+
+                        .icon {
+                            width: 32px;
+                            height: 32px;
+                            margin-bottom: 15px;
+                            color: #333;
+                        }
+
+                        h3 {
+                            font-size: 1.5rem;
+                            margin-bottom: 15px;
+                            color: #1a1a1a;
+                            font-weight: 500;
+                        }
+
+                        p {
+                            margin: 5px 0;
+                            line-height: 1.6;
+                            color: #444;
+                            font-size: 0.95rem;
+                        }
+
+                        .label {
+                            font-weight: 700;
+                            color: #000;
+                        }
+
+                        a {
+                            color: #003399;
+                            text-decoration: underline;
+                        }
+
+                        .direction-link {
+                            font-weight: bold;
+                            display: inline-block;
+                            margin: 10px 0;
+                        }
+
+                        @media (max-width: 768px) {
+                            .contact-grid {
+                                flex-direction: column;
+                            }
+                        }
+
+                        .avenzur-banner {
+                font-family: Helvetica, Arial, sans-serif;
+                background: #ffffff;
+                border: 1px solid #e1e8ed;
+                padding: 30px;
+                border-radius: 12px;
+                max-width: 900px;
+                margin: 20px auto;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 30px;
+            }
+
+            .banner-text {
+                flex: 2;
+                line-height: 1.7;
+                color: #2c3e50;
+            }
+
+            .banner-title {
+                color: #1a73e8;
+                font-weight: 700;
+                font-size: 1.1rem;
+                margin-bottom: 10px;
+                display: block;
+            }
+
+            .cta-container {
+                flex: 1;
+                text-align: right;
+            }
+
+            .btn-avnzor {
+                background-color: #1a73e8;
+                color: white;
+                padding: 14px 24px;
+                text-decoration: none;
+                border-radius: 6px;
+                font-weight: 600;
+                display: inline-block;
+                transition: background 0.3s ease;
+                white-space: nowrap;
+            }
+
+            .btn-avnzor:hover {
+                background-color: #1557b0;
+            }
+
+            @media (max-width: 768px) {
                 .avenzur-banner {
-        font-family: Helvetica, Arial, sans-serif;
-        background: #ffffff;
-        border: 1px solid #e1e8ed;
-        padding: 30px;
-        border-radius: 12px;
-        max-width: 900px;
-        margin: 20px auto;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 30px;
-    }
-
-    .banner-text {
-        flex: 2;
-        line-height: 1.7;
-        color: #2c3e50;
-    }
-
-    .banner-title {
-        color: #1a73e8;
-        font-weight: 700;
-        font-size: 1.1rem;
-        margin-bottom: 10px;
-        display: block;
-    }
-
-    .cta-container {
-        flex: 1;
-        text-align: right;
-    }
-
-    .btn-avnzor {
-        background-color: #1a73e8;
-        color: white;
-        padding: 14px 24px;
-        text-decoration: none;
-        border-radius: 6px;
-        font-weight: 600;
-        display: inline-block;
-        transition: background 0.3s ease;
-        white-space: nowrap;
-    }
-
-    .btn-avnzor:hover {
-        background-color: #1557b0;
-    }
-
-    @media (max-width: 768px) {
-        .avenzur-banner {
-            flex-direction: column;
-            text-align: center;
-            padding: 20px;
-        }
-        .cta-container {
-            text-align: center;
-            width: 100%;
-        }
-        .btn-avnzor {
-            width: 100%;
-            box-sizing: border-box;
-        }
-    }
-            </style>
-        </head>
-        <body>
-        <div class="avenzur-banner">
-    <div class="banner-text">
-        <span class="banner-title">A Strategic Brand Evolution</span>
-        <p>
-            In January 2026, <strong>Avenzur</strong> strategically evolved its consumer platform by launching 
-            <strong>Avnzor.com</strong>. This transition establishes a unique identity, distinguishing our 
-            premium wellness offerings from unrelated entities.
-        </p>
-    </div>
-    
-    <div class="cta-container">
-        <a href="https://avnzor.com" class="btn-avnzor">Visit Avnzor.com</a>
-    </div>
-</div>
+                    flex-direction: column;
+                    text-align: center;
+                    padding: 20px;
+                }
+                .cta-container {
+                    text-align: center;
+                    width: 100%;
+                }
+                .btn-avnzor {
+                    width: 100%;
+                    box-sizing: border-box;
+                }
+            }
+                    </style>
+                </head>
+                <body>
+                <div class="avenzur-banner">
+            <div class="banner-text">
+                <span class="banner-title">A Strategic Brand Evolution</span>
+                <p>
+                    In January 2026, <strong>Avenzur</strong> strategically evolved its consumer platform by launching 
+                    <strong>Avnzor.com</strong>. This transition establishes a unique identity, distinguishing our 
+                    premium wellness offerings from unrelated entities.
+                </p>
+            </div>
+            
+            <div class="cta-container">
+                <a href="https://avnzor.com" class="btn-avnzor">Visit Avnzor.com</a>
+            </div>
+        </div>
         <div class="container">
         
             <h2 class="section-title">Contact</h2>
