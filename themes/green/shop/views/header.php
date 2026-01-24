@@ -1,3 +1,17 @@
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Avnzor",
+    "url": "https://avnzor.com",
+    "logo": "https://avnzor.com/cdn/shop/files/logo.svg",
+    "parentOrganization": {
+      "@type": "Organization",
+      "name": "Avenzur",
+      "url": "https://avenzur.com"
+    }
+  }
+</script>
 <?php  echo "Visit our Site at : <a href='https://avnzor.com'>https://avnzor.com</a>";
 exit; ?>
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
@@ -9,20 +23,7 @@ exit; ?>
   $currentUrl = current_url();
   if (strpos($currentUrl, 'avenzur.com') !== false) {
     ?>
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "Avnzor",
-      "url": "https://avnzor.com",
-      "logo": "https://avnzor.com/cdn/shop/files/logo.svg",
-      "parentOrganization": {
-        "@type": "Organization",
-        "name": "Avenzur",
-        "url": "https://avenzur.com"
-      }
-    }
-    </script>
+    
     <!-- Google Tag Manager -->
     <script>(function (w, d, s, l, i) {
         w[l] = w[l] || []; w[l].push({
