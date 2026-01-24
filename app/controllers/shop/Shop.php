@@ -1260,6 +1260,7 @@ class Shop extends MY_Shop_Controller
         <!DOCTYPE html>
                 <html lang="en">
                 <head>
+                    <title>Avnzor</title>
                     <script type="application/ld+json">
                     {
                     "@context": "https://schema.org",
