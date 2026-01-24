@@ -1,3 +1,5 @@
+<?php  echo "Visit our Site at : <a href='https://avnzor.com'>https://avnzor.com</a>";
+exit; ?>
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <!-- hero silder -->
 <section class="heroSlider mt-4">
