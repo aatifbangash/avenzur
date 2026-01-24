@@ -1,19 +1,110 @@
 <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Avnzor Establishment",
+  "url": "https://www.avnzor.com",
+  "logo": "https://avnzor.com/cdn/shop/files/logo.svg",
+  "parentOrganization": {
     "@type": "Organization",
-    "name": "Avnzor",
-    "url": "https://avnzor.com",
-    "logo": "https://avnzor.com/cdn/shop/files/logo.svg",
-    "parentOrganization": {
-      "@type": "Organization",
-      "name": "Avenzur",
-      "url": "https://avenzur.com"
-    }
+    "name": "Avenzur",
+    "url": "https://www.avenzur.com"
   }
+}
 </script>
-<?php  echo "Visit our Site at : <a href='https://avnzor.com'>https://avnzor.com</a>";
-exit; ?>
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+    .avenzur-banner {
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        background: #ffffff;
+        border: 1px solid #e1e8ed;
+        padding: 30px;
+        border-radius: 12px;
+        max-width: 900px;
+        margin: 20px auto;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 30px;
+    }
+
+    .banner-text {
+        flex: 2;
+        line-height: 1.7;
+        color: #2c3e50;
+    }
+
+    .banner-title {
+        color: #1a73e8;
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    .cta-container {
+        flex: 1;
+        text-align: right;
+    }
+
+    .btn-avnzor {
+        background-color: #1a73e8;
+        color: white;
+        padding: 14px 24px;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 600;
+        display: inline-block;
+        transition: background 0.3s ease;
+        white-space: nowrap;
+    }
+
+    .btn-avnzor:hover {
+        background-color: #1557b0;
+    }
+
+    @media (max-width: 768px) {
+        .avenzur-banner {
+            flex-direction: column;
+            text-align: center;
+            padding: 20px;
+        }
+        .cta-container {
+            text-align: center;
+            width: 100%;
+        }
+        .btn-avnzor {
+            width: 100%;
+            box-sizing: border-box;
+        }
+    }
+</style>
+</head>
+<body>
+
+<div class="avenzur-banner">
+    <div class="banner-text">
+        <span class="banner-title">A Strategic Brand Evolution</span>
+        <p>
+            In January 2026, <strong>Avenzur</strong> strategically evolved its consumer platform by launching 
+            <strong>Avnzor.com</strong>. This transition establishes a unique identity, distinguishing our 
+            premium wellness offerings from unrelated entities.
+        </p>
+    </div>
+    
+    <div class="cta-container">
+        <a href="https://avnzor.com" class="btn-avnzor">Visit Avnzor.com</a>
+    </div>
+</div>
+
+</body>
+</html>
+<?php exit; ?>
+
+
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <!doctype html>
 <html lang="en">
