@@ -1,3 +1,6 @@
+<!DOCTYPE html>
+<html>
+<head>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -12,10 +15,88 @@
   }
 }
 </script>
-<!DOCTYPE html>
-<html>
-<head>
 <style>
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: #ffffff;
+        color: #1a1a1a;
+        margin: 0;
+        padding: 40px 20px;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    h2.section-title {
+        text-align: center;
+        font-size: 2rem;
+        color: #0d1b3e;
+        margin-bottom: 40px;
+        font-weight: 500;
+    }
+
+    .contact-grid {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .card {
+        background-color: #f8f9fa;
+        border-radius: 12px;
+        padding: 40px;
+        flex: 1;
+        min-width: 300px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .icon {
+        width: 32px;
+        height: 32px;
+        margin-bottom: 15px;
+        color: #333;
+    }
+
+    h3 {
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+        color: #1a1a1a;
+        font-weight: 500;
+    }
+
+    p {
+        margin: 5px 0;
+        line-height: 1.6;
+        color: #444;
+        font-size: 0.95rem;
+    }
+
+    .label {
+        font-weight: 700;
+        color: #000;
+    }
+
+    a {
+        color: #003399;
+        text-decoration: underline;
+    }
+
+    .direction-link {
+        font-weight: bold;
+        display: inline-block;
+        margin: 10px 0;
+    }
+
+    @media (max-width: 768px) {
+        .contact-grid {
+            flex-direction: column;
+        }
+    }
     .avenzur-banner {
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
         background: #ffffff;
@@ -99,7 +180,34 @@
         <a href="https://avnzor.com" class="btn-avnzor">Visit Avnzor.com</a>
     </div>
 </div>
+<div class="container">
+        
+    <h2 class="section-title">Contact</h2>
 
+    <div class="contact-grid">
+        <div class="card">
+            <div class="icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+            </div>
+            <h3>Talk to support</h3>
+            <p>Email: <a href="mailto:support@avnzor.com">support@avnzor.com</a></p>
+            <p>Phone: <a href="tel:+966535922118">+966 53 592 2118</a></p>
+            <p style="margin-top: 15px; color: #666;">Sunday – Thursday, 9:00 AM – 6:00 PM (AST)</p>
+        </div>
+
+        <div class="card">
+            <div class="icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            </div>
+            <h3>Business location</h3>
+            <p><span class="label">Avnzor Establishment:</span></p>
+            <p>RP58+2GG, Qurtubah, Riyadh 13244</p>
+            <p>Business Gate Building C20 - Office B2, Riyadh 13244, Saudi Arabia.</p>
+            <p><a href="https://share.google/blW40AnJgLFftEXmY" class="direction-link">Show Direction</a></p>
+            <p style="margin-top: 10px;"><span class="label">Warehouse:</span> 8360 قريه ال زايد, حي المشاعل, RNMA2470، 2470, Riyadh 14328</p>
+        </div>
+    </div>
+</div>
 </body>
 </html>
 <?php exit; ?>
