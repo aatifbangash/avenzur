@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<title>Avnzor</title>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
