@@ -399,7 +399,7 @@
                             //}
                             ?>
                             
-                            <td style="text-align:right; width:120px;"><?= $this->sma->formatNumber($row->totalbeforevat + $totalVAT); ?></td>
+                            <td style="text-align:right; width:120px;"><?= $this->sma->formatNumber($row->totalbeforevat + $vat_value); ?></td>
                             
                         </tr>
                         <?php
