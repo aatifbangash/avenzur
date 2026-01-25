@@ -1393,7 +1393,7 @@ class Products extends MY_Controller
     }
 
     public function upload_customer_returns(){
-        $excelFile = $this->upload_path . 'csv/open-mind-returns.xlsx'; // Excel file
+        $excelFile = $this->upload_path . 'csv/Return-1-2026.xlsx'; // Excel file
         if (!file_exists($excelFile)) {
             echo "Excel file not found.";
             return;
@@ -1413,7 +1413,7 @@ class Products extends MY_Controller
         foreach ($rows as $i => $row) {
             if ($i == 0) continue; // Skip header
 
-            $returnInvoiceNo = trim($row[0]);
+            $returnInvoiceNo = trim($row[8]);
             if (!$returnInvoiceNo) continue;
 
             $groupedReturns[$returnInvoiceNo][] = $row;
@@ -1425,7 +1425,6 @@ class Products extends MY_Controller
     foreach ($groupedReturns as $returnInvoiceNo => $items) {
 
         echo "<hr><b>Processing Return Invoice: {$returnInvoiceNo}</b><br>";
-
         // Reset variables for each invoice
         $products = [];
         $total = 0;
@@ -1438,7 +1437,7 @@ class Products extends MY_Controller
         $firstRow = $items[0];
 
         // Convert Excel serial date to PHP DateTime
-        try {
+        /*try {
             if (is_numeric($firstRow[1])) {
                 $returnDate = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($firstRow[1])->format('Y-m-d H:i:s');
             } else {
@@ -1446,17 +1445,20 @@ class Products extends MY_Controller
             }
         } catch (Exception $e) {
             $returnDate = date('Y-m-d H:i:s');
-        }
-        
-        $customerNo = trim($firstRow[4]);
-        $saleInvoiceNo = trim($firstRow[14]);
+        }*/
+
+        $returnDate = date('Y-m-d H:i:s', strtotime('2026-01-15'));
+        $customerNo = trim($firstRow[1]);
+        $customerCode = trim($firstRow[0]);
+        $customerName = trim($firstRow[2]);
+        $saleInvoiceNo = trim($firstRow[8]);
         $avz_item_code = $this->sma->generateUUIDv4();
 
         $customer_details = $this->db
-                ->where('external_id', $customerNo) // exact match
+                ->where('sequence_code', $customerCode) // exact match
                 ->get('sma_companies')
                 ->row();
-
+        
         if($customer_details) {
             $customer_id = $customer_details->id;
         }else{
@@ -1474,7 +1476,7 @@ class Products extends MY_Controller
             ->row();
 
         $sale_id = $sale ? $sale->id : 0;
-
+        
         // ---------------------------------------------
         // 4. CREATE RETURN HEADER (sma_returns)
         // ---------------------------------------------
@@ -1497,43 +1499,55 @@ class Products extends MY_Controller
             'created_by'   => 1,
             'note'         => 'Opening Customer Return Import',
         ];
-
+        //echo '<pre>';print_r($returnData);echo '</pre>';exit;
         // ---------------------------------------------
         // 5. PROCESS ITEMS
         // ---------------------------------------------
         foreach ($items as $row) {
 
-            $item_code       = trim($row[5]);
-            $qty             = (float)$row[8];
-            $sale_price      = (float)$row[6];
+            $item_code       = trim($row[3]);
+            $qty             = (float)$row[5];
+            $net_amount      = (float)$row[10];    
+
+            $sale_price      = (float)$net_amount / $qty;
             $total_amount    = $sale_price * $qty;
-            $net_amount      = (float)str_replace(',', '', $row[12]);
-            $vat_amount      = (float)$row[16];
-            $purchase_price  = (float)$row[18];
+            //$net_amount      = (float)str_replace(',', '', $row[12]);
+            //$vat_amount      = (float)$row[16];
+            $purchase_price  = (float)$row[9];
             // Convert Excel serial date to PHP DateTime
             try {
-                if (is_numeric($row[19]) && $row[19] > 0) {
-                    $expiry = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row[19])->format('Y-m-d H:i:s');
+                if (is_numeric($row[7]) && $row[7] > 0) {
+                    $expiry = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row[7])->format('Y-m-d H:i:s');
                 } else {
-                    $expiry = date('Y-m-d H:i:s', strtotime($row[19]));
+                    $expiry = date('Y-m-d H:i:s', strtotime($row[7]));
                 }
             } catch (Exception $e) {
                 $expiry = null;
             }
             $item_name       = trim($row[13]);
-            $batch_number =    trim($row[17]);
-            $cost_price =    trim($row[18]);
-            $dis1_precent =   $row[9] * 100;
-            $dis2_precent =   $row[10] * 100;
-            $dis3_precent =   $row[11] * 100;
+            $batch_number =    trim($row[6]);
+            $cost_price =    trim($row[9]);
+            //$dis1_precent =   $row[9] * 100;
+            //$dis2_precent =   $row[10] * 100;
+            //$dis3_precent =   $row[11] * 100;
+            $dis1_precent =   0;
+            $dis2_precent =   0;
+            $dis3_precent =   0;
 
-            $dis1_value = ($total_amount * $dis1_precent) / 100;
-            $dis2_value = (($total_amount - $dis1_value) * $dis2_precent) / 100;
-            $dis3_value = (($total_amount - $dis1_value - $dis2_value) * $dis3_precent) / 100;
+            //$dis1_value = ($total_amount * $dis1_precent) / 100;
+            //$dis2_value = (($total_amount - $dis1_value) * $dis2_precent) / 100;
+            //$dis3_value = (($total_amount - $dis1_value - $dis2_value) * $dis3_precent) / 100;
 
-            $totalbeforevat = $total_amount - $dis1_value - $dis2_value - $dis3_value;
+            $dis1_value = 0;
+            $dis2_value = 0;    
+            $dis3_value = 0;
+
+            //$totalbeforevat = $total_amount - $dis1_value - $dis2_value - $dis3_value;
+
+            $totalbeforevat = $net_amount;
 
             $unit_price = $totalbeforevat / $qty;
+            //echo 'Unit Price: '.$unit_price;exit;
 
             $tax_rate_id = 1;
             $tax_value = 0;
@@ -1605,7 +1619,7 @@ class Products extends MY_Controller
         $returnData['total_tax'] = $total_tax;
         $returnData['grand_total'] = $grand_total;
         $returnData['cost_goods_sold'] = $cost_goods_sold;
-
+        //echo '<pre>';print_r($returnData);echo '</pre>';exit;
         $this->db->insert('sma_returns', $returnData);
         $return_id = $this->db->insert_id();
 
