@@ -1322,6 +1322,7 @@ class Returns extends MY_Controller
         //    $this->datatables->where('created_by', $this->session->userdata('user_id'));
         //}
        
+
         $edit_link         = anchor('admin/returns/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_return'), 'class="tip"');
         $delete_link       = "<a href='#' class='po' title='<b>" . lang('delete_return') . "</b>' data-content=\"<p>"
         . lang('r_u_sure') . "</p><a class='btn btn-danger po po-delete' href='" . admin_url('returns/delete/$1') . "'>"
@@ -1332,13 +1333,20 @@ class Returns extends MY_Controller
         $action = '<div class="text-center"><div class="btn-group text-left">'
         . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
         . lang('actions') . ' <span class="caret"></span></button>
-        <ul class="dropdown-menu pull-right" role="menu">
+        <ul class="dropdown-menu pull-right" role="menu">';
+
+        if($this->GP['returns-edit']){
+            $action .= '<li>' . $edit_link . '</li>';
+        } 
+        
+        if($this->Owner || $this->Admin){
+            $action .= '<li>' . $journal_entry_link . '</li>';
+        }
                 
-                <li>' . $journal_entry_link . '</li>
-                <li>' . $edit_link . '</li>
-                <li>' . $delete_link . '</li> 
-        </ul>
-    </div></div>';
+        if($this->GP['returns-delete']){
+            $action .= '<li>' . $delete_link . '</li>';
+        }
+        $action .= '</ul></div></div>';
          
     $this->datatables->add_column('Actions', $action, 'id');
        // $this->datatables->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('returns/edit/$1') . "' class='tip' title='" . lang('edit_return') . "'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . lang('delete_return') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('returns/delete/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
