@@ -396,8 +396,8 @@ class Purchase_order extends MY_Controller
                 continue;
             }
 
-            $main_net  = ($purchase_price * $qty) - ($dis1_value + $dis2_value + $dis3_value) + $vat_value;
-            $totalbeforevat = $purchase_price * $qty - ($dis1_value + $dis2_value + $dis3_value);
+            $main_net  = ($cost_price * $qty) + $vat_value;
+            $totalbeforevat = $cost_price * $qty;
             $totalsale = $sale_price * $qty;
             $subtotal = $purchase_price * $qty;
 
