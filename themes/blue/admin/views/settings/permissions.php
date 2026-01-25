@@ -427,6 +427,10 @@
                                     </td>
                                     <td>
                                         <span style="display:inline-block;">
+                                            <input type="checkbox" value="1" id="returns-approve" class="checkbox" name="returns-approve" <?php echo $p->{'returns-approve'} ? 'checked' : ''; ?>>
+                                            <label for="returns-approve" class="padding05"><?= lang('Approve') ?></label>
+                                        </span>
+                                        <span style="display:inline-block;">
                                             <input type="checkbox" value="1" id="returns-email" class="checkbox" name="returns-email" <?php echo $p->{'returns-email'} ? 'checked' : ''; ?>>
                                             <label for="returns-email" class="padding05"><?= lang('email') ?></label>
                                         </span>

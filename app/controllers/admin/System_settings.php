@@ -3334,6 +3334,7 @@ class system_settings extends MY_Controller
                 'returns-add'                => $this->input->post('returns-add'),
                 'returns-delete'             => $this->input->post('returns-delete'),
                 'returns-email'              => $this->input->post('returns-email'),
+                'returns-approve'            => $this->input->post('returns-approve'),
                 'returns-pdf'                => $this->input->post('returns-pdf'),
                 'reports-tax'                => $this->input->post('reports-tax'),
                 'stock_request_view'         => $this->input->post('stock_request_view'),
