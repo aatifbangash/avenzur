@@ -372,6 +372,38 @@ class Purchase_order_model extends CI_Model{
         return false;
     }
 
+    public function getAllPurchaseShelvedItems($purchase_id)
+    {
+        $this->db->select('purchase_order_items.*, tax_rates.code as tax_code, tax_rates.name as tax_name, tax_rates.rate as tax_rate,
+         products.unit, products.details as details, product_variants.name as variant, products.hsn_code as hsn_code, 
+         products.second_name as second_name, products.item_code')
+            ->join('products', 'products.id=purchase_order_items.product_id', 'left')
+            ->join('product_variants', 'product_variants.id=purchase_order_items.option_id', 'left')
+            ->join('tax_rates', 'tax_rates.id=purchase_order_items.tax_rate_id', 'left')
+            ->group_by('purchase_order_items.id')
+            ->order_by('id', 'asc');
+        $q = $this->db->get_where('purchase_order_items', ['purchase_id' => $purchase_id]);
+        if ($q->num_rows() > 0) {
+            $data = [];
+            foreach (($q->result()) as $row) {
+                // Calculate shelved quantity for this item
+                $shelved_qty = 0;
+                $sql = "SELECT SUM(si.qty) AS total_qty
+                        FROM sma_purchase_order_shelving_items si
+                        JOIN sma_purchase_order_shelving s ON s.id = si.shelving_id
+                        WHERE s.po_id = ? AND si.product_code = ?";
+                $query = $this->db->query($sql, [$purchase_id, $row->product_code]);
+                if ($query && $query->num_rows() > 0) {
+                    $shelved_qty = (float) $query->row()->total_qty;
+                }
+                $row->shelved_qty = $shelved_qty;
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
     public function getAllPurchaseItems($purchase_id)
     {
         $this->db->select('purchase_order_items.*, tax_rates.code as tax_code, tax_rates.name as tax_name, tax_rates.rate as tax_rate,

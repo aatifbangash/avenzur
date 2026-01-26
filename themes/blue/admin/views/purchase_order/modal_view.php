@@ -197,6 +197,11 @@
                                 <?php
                             } ?>
                             <th><?= lang('Base Quantity'); ?></th>
+                            <?php 
+                            if($this->Settings->site_name == 'Avnzor'){
+                            ?>
+                            <th><?= lang('Shelved Quantity'); ?></th>
+                            <?php } ?>
                             <?php
                             if ($inv->status == 'partial') {
                                 $total_col += 1;
@@ -260,6 +265,12 @@
                                 } ?>
                                 <td style="text-align:center; vertical-align:middle;">
                                     <?= $this->sma->formatQuantity($row->unit_quantity); ?></td>
+                                <?php 
+                                if($this->Settings->site_name == 'Avnzor'){
+                                ?>
+                                <td style="text-align:center; vertical-align:middle;">
+                                    <?= $this->sma->formatQuantity($row->shelved_qty); ?></td>
+                                <?php } ?>
                                 <?php
                                 if ($inv->status == 'partial') {
                                     echo '<td style="text-align:center;vertical-align:middle;width:80px;">' . $this->sma->formatQuantity($row->quantity_received) . '</td>';

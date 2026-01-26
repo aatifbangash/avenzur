@@ -1545,7 +1545,12 @@ class Purchase_order extends MY_Controller
         if (!$this->session->userdata('view_right')) {
             $this->sma->view_rights($inv->created_by, true);
         }
-        $this->data['rows'] = $this->purchase_order_model->getAllPurchaseItems($purchase_id);
+        if($this->Settings->site_name == 'Avnzor'){
+            $this->data['rows'] = $this->purchase_order_model->getAllPurchaseShelvedItems($purchase_id);
+        }else{
+            $this->data['rows'] = $this->purchase_order_model->getAllPurchaseItems($purchase_id);
+        }
+        
         $supplier = $this->site->getCompanyByID($inv->supplier_id);
         $this->data['parent_supplier'] = '';
         if ($supplier->level == 2 && $supplier->parent_code != '') {
