@@ -6016,7 +6016,16 @@ if($inv->warning_note != ""){
         if ($this->form_validation->run() == true) {
 
             $sale_id = $this->input->post('sale_id');
-            $sldate = $this->sma->fld($this->input->post('sldate'));
+            $sldate_input = $this->input->post('sldate');
+            $dt = DateTime::createFromFormat('Y-m-d H:i:s', $sldate_input);
+
+            if ($dt && $dt->format('Y-m-d H:i:s') === $sldate_input) {
+                // Already in correct format → use as-is
+                $sldate = $sldate_input;
+            } else {
+                // Not in Y-m-d H:i:s → apply fld()
+                $sldate = $this->sma->fld($sldate_input);
+            }
             //echo $sldate; exit;
             $this->convert_sale_invoice($sale_id, $sldate);
 
