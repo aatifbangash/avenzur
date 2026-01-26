@@ -386,6 +386,13 @@ class Purchase_order extends MY_Controller
                     $product_id = $product ? $product->id : null;
                 }
             }else{
+                
+                if(($product->image == '' || $product->image == null) && $image_link != ''){
+                    // Update product image
+                    $this->purchase_order_model->updateProductImage($product_id, $image_link);
+
+                }
+
                 $tax_rate_id = $product->tax_rate;
                 $tax_percent = $product->tax_rate == 5 ? 15 : 0;
                 $vat_value = ($purchase_price * $qty * $tax_percent) / 100;

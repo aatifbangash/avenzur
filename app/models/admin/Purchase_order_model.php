@@ -372,6 +372,11 @@ class Purchase_order_model extends CI_Model{
         return false;
     }
 
+    public function updateProductImage($product_id, $image_link)
+    {
+        return $this->db->update('products', ['image' => $image_link], ['id' => $product_id]);
+    }
+
     public function getAllPurchaseShelvedItems($purchase_id)
     {
         $this->db->select('purchase_order_items.*, tax_rates.code as tax_code, tax_rates.name as tax_name, tax_rates.rate as tax_rate,
