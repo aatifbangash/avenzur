@@ -93,17 +93,29 @@
         //   ['key' => 'invoiced', 'label' => 'Invoiced', 'icon' => 'fa-money']
         // ];
 
+        if($this->Settings->site_name == 'Avnzor'){
+          $statuses = [
+            ['key' => 'created', 'label' => 'Created', 'icon' => 'fa-file-text-o', 'color' => 'primary'],
+            ['key' => 'sent_to_supplier', 'label' => 'Sent to GRN Team', 'icon' => 'fa-paper-plane-o', 'color' => 'info'],
+            ['key' => 'waiting_for_goods', 'label' => 'Awaiting Delivery', 'icon' => 'fa-truck', 'color' => 'warning'],
+            ['key' => 'goods_received', 'label' => 'Goods Received', 'icon' => 'fa-dropbox', 'color' => 'success'],
+            ['key' => 'quality_checked', 'label' => 'Quality Checked', 'icon' => 'fa-check-square-o', 'color' => 'success'],
+            ['key' => 'shelved', 'label' => 'Shelved', 'icon' => 'fa-archive', 'color' => 'success'],
+            ['key' => 'pending_invoice', 'label' => 'Invoice Pending', 'icon' => 'fa-clock-o', 'color' => 'primary'],
+            ['key' => 'invoiced', 'label' => 'Invoiced', 'icon' => 'fa-briefcase', 'color' => 'primary'],
 
-        $statuses = [
-          ['key' => 'created', 'label' => 'Created', 'icon' => 'fa-file-text-o', 'color' => 'primary'],
-          ['key' => 'sent_to_supplier', 'label' => 'Sent to GRN Team', 'icon' => 'fa-paper-plane-o', 'color' => 'info'],
-          ['key' => 'waiting_for_goods', 'label' => 'Awaiting Delivery', 'icon' => 'fa-truck', 'color' => 'warning'],
-          ['key' => 'goods_received', 'label' => 'Goods Received', 'icon' => 'fa-dropbox', 'color' => 'success'],
-          ['key' => 'pending_invoice', 'label' => 'Invoice Pending', 'icon' => 'fa-clock-o', 'color' => 'primary'],
-          ['key' => 'invoiced', 'label' => 'Invoiced', 'icon' => 'fa-briefcase', 'color' => 'primary'],
+          ];
+        }else{
+          $statuses = [
+            ['key' => 'created', 'label' => 'Created', 'icon' => 'fa-file-text-o', 'color' => 'primary'],
+            ['key' => 'sent_to_supplier', 'label' => 'Sent to GRN Team', 'icon' => 'fa-paper-plane-o', 'color' => 'info'],
+            ['key' => 'waiting_for_goods', 'label' => 'Awaiting Delivery', 'icon' => 'fa-truck', 'color' => 'warning'],
+            ['key' => 'goods_received', 'label' => 'Goods Received', 'icon' => 'fa-dropbox', 'color' => 'success'],
+            ['key' => 'pending_invoice', 'label' => 'Invoice Pending', 'icon' => 'fa-clock-o', 'color' => 'primary'],
+            ['key' => 'invoiced', 'label' => 'Invoiced', 'icon' => 'fa-briefcase', 'color' => 'primary'],
 
-        ];
-
+          ];
+        }
 
         ?>
 
