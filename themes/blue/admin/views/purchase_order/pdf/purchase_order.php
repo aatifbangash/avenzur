@@ -73,7 +73,7 @@
                         <tr>
                             <td style="text-align:center;vertical-align:middle;"><?= $r; ?></td>
                             <td style="vertical-align:middle;">
-                                <?= $row->product_name; ?>
+                                <?= $row->product_name. '(' . $row->product_code . ')'; ?>
                                 
                             </td>
                             <td style="text-align:center; vertical-align:middle;">
