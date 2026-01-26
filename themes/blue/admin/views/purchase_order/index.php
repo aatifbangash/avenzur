@@ -75,6 +75,11 @@
                                 <!-- <th><?= lang('Sequence Code'); ?></th> -->
                                 <th><?= lang('supplier'); ?></th>
                                 <th style="width: 20px"><?= lang('Status'); ?></th>
+                                <?php 
+                                if ($this->Settings->site_name != 'Hills Business Medical') {
+                                ?>
+                                <th style="width: 20px"><?= lang('Shelf Status'); ?></th>
+                                <?php } ?>
                                 <th style="width: 20px"><?= lang('grand_total'); ?></th>
                                 <!-- <th><?= lang('paid'); ?></th>
                                 <th><?= lang('balance'); ?></th>
@@ -118,6 +123,11 @@
                                         <!-- <td><?= $purchase->sequence_code ?></td> -->
                                         <td><?= $purchase->supplier ?></td>
                                         <td><?= $purchase->status ?></td>
+                                        <?php 
+                                        if ($this->Settings->site_name != 'Hills Business Medical') {
+                                        ?>
+                                        <td><?= $purchase->shelf_status ? 'Shelved' : 'NA' ?></td>
+                                        <?php } ?>
                                         <td><?= number_format($purchase->grand_total, 2) ?></td>
                                         <!-- <td><?= number_format($purchase->paid, 2) ?></td>
                                         <td><?= number_format($purchase->grand_total - $purchase->paid, 2) ?></td>
