@@ -56,6 +56,7 @@
                                 <thead class="thead-light">
                                     <tr>
                                         <th>No</th>
+                                        <th style="width:25%">Item Code</th>
                                         <th style="width:25%">Item Name</th>
                                         <th style="width:10%">Actual Quantity</th>
                                         <th style="width:10%">Actual Bonus</th>
@@ -71,12 +72,13 @@
                                     <?php
                                     $i = 1;
                                     foreach ($rows as $key => $row) { ?>
-                                        <tr data-row-index="<?php echo $key; ?>" data-row-id="<?php echo $row->id; ?>" data-product-id="<?php echo $row->product_id; ?>" data-product-name="<?php echo htmlspecialchars($row->product_name); ?>">
+                                        <tr data-row-index="<?php echo $key; ?>" data-row-id="<?php echo $row->id; ?>" data-product-id="<?php echo $row->product_id; ?>" data-product-code="<?php echo $row->product_code; ?>" data-product-name="<?php echo htmlspecialchars($row->product_name); ?>">
                                             <td>
                                                 <?php echo $i; ?>
                                                 <input type="hidden" name="items[<?php echo $key; ?>][item_id]" value="<?php echo $row->id; ?>">
                                                 <input type="hidden" name="items[<?php echo $key; ?>][product_id]" value="<?php echo $row->product_id; ?>">
                                             </td>
+                                            <td><?php echo $row->product_code; ?></td>
                                             <td><?php echo $row->product_name; ?></td>
                                             <td>
                                                 <input type="text"
@@ -178,6 +180,7 @@
             const currentRow = $(this).closest('tr');
             const rowId = currentRow.data('row-id');
             const productId = currentRow.data('product-id');
+            const productCode = currentRow.data('product-code');
             const productName = currentRow.data('product-name');
             
             // Get current values
@@ -210,6 +213,7 @@
                 'data-row-index': newRowIndex,
                 'data-row-id': rowId,
                 'data-product-id': productId,
+                'data-product-code': productCode,
                 'data-product-name': productName
             });
             
@@ -220,6 +224,7 @@
                     <input type="hidden" name="items[${newRowIndex}][item_id]" value="${rowId}">
                     <input type="hidden" name="items[${newRowIndex}][product_id]" value="${productId}">
                 </td>
+                <td>${productCode}</td>
                 <td>${productName}</td>
                 <td>
                     <input type="text"
