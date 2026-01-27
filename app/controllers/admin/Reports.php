@@ -6395,9 +6395,9 @@ class Reports extends MY_Controller
             
             // Apply date filter (only if provided)
             if ($start_date && $end_date) {
-                $formatted_start_date = $this->sma->fld($start_date);
-                $formatted_end_date = $this->sma->fld($end_date);
-                $this->db->where("{$this->db->dbprefix('sales')}.date BETWEEN '{$formatted_start_date}' AND '{$formatted_end_date}'");
+                $formatted_start_date = $this->sma->fld($start_date) . ' 00:00:00';
+                $formatted_end_date = $this->sma->fld($end_date) . ' 23:59:59';
+                $this->db->where("{$this->db->dbprefix('sales')}.date >= '{$formatted_start_date}' AND {$this->db->dbprefix('sales')}.date <= '{$formatted_end_date}'");
             }
             
             // Apply filters
