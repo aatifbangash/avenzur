@@ -29,16 +29,46 @@
                         <?php echo form_input('name_ar', '', 'class="form-control tip" id="name" data-bv-notempty="true"'); ?>
                     </div>
 
+
                     <div class="form-group">
-                        <?= lang('level', 'level'); ?>
-                        <?php 
-                        $level_options = [
-                            '1' => lang('parent'),
-                            '2' => lang('child')
-                        ];
-                        echo form_dropdown('level', $level_options, '1', 'class="form-control select" id="level"'); 
-                        ?>
+                        <label for="level"><?= lang('level', 'level'); ?></label>
+                        <div style="display: flex; align-items: center; gap: 15px; margin-top: 5px;">
+                            <?php 
+                            $level_options = [
+                                '1' => lang('parent'),
+                                '2' => lang('child')
+                            ];
+                            // If NA is checked by default, set default to '1' (parent)
+                            echo form_dropdown('level', $level_options, '1', 'class="form-control select" id="level" disabled style="max-width: 180px; margin-right: 10px;"'); 
+                            ?>
+                            <input type="checkbox" id="level_na" name="level_na" checked style="vertical-align:middle; margin-right:3px;">
+                            <label for="level_na" style="margin-bottom:0; cursor:pointer;">NA (Not Applicable)</label>
+                        </div>
                     </div>
+                    <script>
+                    $(document).ready(function() {
+                        function toggleLevelDropdown() {
+                            if ($('#level_na').is(':checked')) {
+                                $('#level').prop('disabled', true);
+                            } else {
+                                $('#level').prop('disabled', false);
+                            }
+                        }
+                        $('#level_na').change(function() {
+                            toggleLevelDropdown();
+                        });
+                        toggleLevelDropdown();
+
+                        // On submit, if NA is checked, remove level from POST
+                        $('#crud-supplier-form').submit(function(e) {
+                            if ($('#level_na').is(':checked')) {
+                                $('#level').prop('disabled', true);
+                            } else {
+                                $('#level').prop('disabled', false);
+                            }
+                        });
+                    });
+                    </script>
 
                     <!--<div class="form-group company">
                     <?= lang('contact_person', 'contact_person'); ?>

@@ -32,8 +32,10 @@
                     </div> 
                     <div class="form-group">
                         <?= lang('category', 'category'); ?>
-                        <?php echo form_input('category', $supplier->category, 'class="form-control" id="category"'); ?>
-
+                        <?php 
+                        $catogories_arr = [''=>'Please Select', 'خدمات ' => lang('خدمات'), 'مستودع' => lang('مستودع'), 'وكيل' => lang('وكيل')];
+                        echo form_dropdown('category', $catogories_arr, $supplier->category, 'class="form-control select" id="category" name="category" required="required"'); 
+                        ?>
                     </div>
                     <div class="form-group">
                         <?= lang('vat_no', 'vat_no'); ?>
