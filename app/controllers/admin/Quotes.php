@@ -2,6 +2,10 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
+
 class Quotes extends MY_Controller
 {
     public function __construct()
@@ -1477,6 +1481,7 @@ class Quotes extends MY_Controller
         $pc_link      = anchor('admin/purchases/add/$1', '<i class="fa fa-star"></i> ' . lang('create_purchase'));
         $pdf_link     = anchor('admin/quotes/pdf/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf'));
         $new_pdf_link     = anchor('admin/quotes/pdf_new/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('Download Quotation'));
+        $excel_download = anchor('admin/quotes/excel_new/$1', '<i class="fa fa-file-excel-o"></i> ' . lang('Download_Excel'));
         $delete_link  = "<a href='#' class='po' title='<b>" . $this->lang->line('delete_quote') . "</b>' data-content=\"<p>"
         . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('quotes/delete/$1') . "'>"
         . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i> "
@@ -1496,6 +1501,7 @@ class Quotes extends MY_Controller
                         if($this->Admin || $this->Owner || $this->GP['quotes-pdf']){ 
                             $action .= '<li>' . $pdf_link . '</li>';
                             $action .= '<li>' . $new_pdf_link . '</li>';
+                            $action .= '<li>' . $excel_download . '</li>';
                         }
                         if($this->Admin || $this->Owner || $this->GP['quotes-delete']){ 
                             $action .= '<li>' . $delete_link . '</li>';
@@ -1589,6 +1595,90 @@ class Quotes extends MY_Controller
         $this->data['inv']        = $inv;
 
         $this->load->view($this->theme . 'quotes/modal_view', $this->data);
+    }
+
+    public function excel_new($quote_id = null)
+    {
+        if ($this->input->get('id')) {
+            $quote_id = $this->input->get('id');
+        }
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $inv                 = $this->quotes_model->getQuoteByID($quote_id);
+        if (!$this->session->userdata('view_right')) {
+            $this->sma->view_rights($inv->created_by);
+        }
+        $rows       = $this->quotes_model->getAllQuoteItems($quote_id, $inv);
+        $customer   = $this->site->getCompanyByID($inv->customer_id);
+        $biller     = $this->site->getCompanyByID($inv->biller_id);
+        $created_by = $this->site->getUser($inv->created_by);
+        $warehouse  = $this->site->getWarehouseByID($inv->warehouse_id);
+        
+        // Load PhpSpreadsheet
+        $this->load->library('excel');
+        $sheet = $this->excel->getActiveSheet();
+        $sheet->setTitle('Quote');
+
+        // Header
+        $sheet->setCellValue('A1', 'Quote Reference');
+        $sheet->setCellValue('B1', $inv->id);
+        $sheet->setCellValue('A2', 'Customer');
+        $sheet->setCellValue('B2', $customer ? ($customer->company ?: $customer->name) : '');
+        $sheet->setCellValue('A3', 'Biller');
+        $sheet->setCellValue('B3', $biller ? ($biller->company ?: $biller->name) : '');
+        $sheet->setCellValue('A4', 'Date');
+        $sheet->setCellValue('B4', $inv->date);
+
+        // Table header
+        $sheet->setCellValue('A6', 'No');
+        $sheet->setCellValue('B6', 'Product Code');
+        $sheet->setCellValue('C6', 'Product Name');
+        $sheet->setCellValue('D6', 'Batch');
+        $sheet->setCellValue('E6', 'Expiry');
+        $sheet->setCellValue('F6', 'Quantity');
+        $sheet->setCellValue('G6', 'Sale Price');
+        $sheet->setCellValue('H6', 'Subtotal');
+        $sheet->setCellValue('I6', 'Discount1');
+        $sheet->setCellValue('J6', 'Discount2');
+        $sheet->setCellValue('K6', 'Total Before Vat');
+        $sheet->setCellValue('L6', 'Vat');
+        $sheet->setCellValue('M6', 'Total After Vat');
+        
+
+        $row_num = 7;
+        $i = 1;
+        foreach ($rows as $item) {
+            $sheet->setCellValue('A' . $row_num, $i);
+            $sheet->setCellValue('B' . $row_num, $item->product_code);
+            $sheet->setCellValue('C' . $row_num, $item->product_name);
+            $sheet->setCellValue('D' . $row_num, $item->batch_no ?? '');
+            $sheet->setCellValue('E' . $row_num, $item->expiry ?? '');
+            $sheet->setCellValue('F' . $row_num, $item->quantity);
+            $sheet->setCellValue('G' . $row_num, $item->net_unit_price);
+            $sheet->setCellValue('H' . $row_num, $item->subtotal);
+            $sheet->setCellValue('I' . $row_num, $item->item_discount);
+            $sheet->setCellValue('J' . $row_num, $item->second_discount_value);
+            $sheet->setCellValue('K' . $row_num, $item->totalbeforevat);
+            $sheet->setCellValue('L' . $row_num, $item->item_tax);
+            $sheet->setCellValue('M' . $row_num, $item->main_net);
+            
+            $row_num++;
+            $i++;
+        }
+
+        // Totals
+        $sheet->setCellValue('L' . $row_num, 'Total');
+        $sheet->setCellValue('M' . $row_num, $inv->grand_total);
+
+        $filename = 'Quote_' . str_replace('/', '_', $inv->id) . '.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+        header('Pragma: public');
+
+        $writer = IOFactory::createWriter($this->excel, 'Xlsx');
+        $writer->save('php://output');
+        exit;
     }
 
     public function pdf_new($quote_id = null, $view = null, $save_bufffer = null)
