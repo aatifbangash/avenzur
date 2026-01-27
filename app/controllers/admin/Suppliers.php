@@ -1418,11 +1418,19 @@ class Suppliers extends MY_Controller
         $this->form_validation->set_rules('email', $this->lang->line('email_address'), 'is_unique[companies.email]');
 
         if ($this->form_validation->run('companies/add') == true) {
-              $level = $this->input->post('level');
+              
+            $level_na = $this->input->post('level_na') == 'on' ? true : false;
             
+            if($level_na){
+                $level = '2'; // Default to parent if N/A is checked
+            }else{
+                $level = $this->input->post('level');
+            }
 
+            //echo 'Level: '.$level;exit;
+            //echo 'Level: '.$level;exit;
             // If level is 2 (child), get the parent company's sequence_code
-            if ($level == '2') {
+            if ($level == '2' && !$level_na) {
                 $parent_id = $this->input->post('parent_id');
                 if ($parent_id) {
                     $parent_company = $this->companies_model->getCompanyByID($parent_id);
@@ -1430,39 +1438,41 @@ class Suppliers extends MY_Controller
                         $parent_code = $parent_company->sequence_code;
                     }
                 }
+            }else{
+                $parent_code = null;
             }
 
-        $data = [
-            'name'                => $this->input->post('name') ?? '',
-            'name_ar'             => $this->input->post('name_ar') ?? '', 
-            'category'            => $this->input->post('category') ?? '',
-            'email'               => $this->input->post('email') ?? '',
-            'group_id'            => '4',
-            'group_name'          => 'supplier',
-            'company'             => $this->input->post('company') ?? '',
-            'address'             => $this->input->post('address') ?? '',
-            'vat_no'              => $this->input->post('vat_no') ?? '',
-            'cr'                  => $this->input->post('cr') ?? '',
-            'cr_expiration'       => $this->input->post('cr_expiration') ?? '',
-            'gln'                 => $this->input->post('gln') ?? '',
-            'short_address'       => $this->input->post('short_address') ?? '',
-            'building_number'     => $this->input->post('building_number') ?? '',
-            'city'                => $this->input->post('city') ?? '',
-            'state'               => $this->input->post('state') ?? '',
-            'postal_code'         => $this->input->post('postal_code') ?? '',
-            'country'             => $this->input->post('country') ?? '',
-            'phone'               => $this->input->post('phone') ?? '',
-            'contact_name'        => $this->input->post('contact_name') ?? '',
-            'contact_number'      => $this->input->post('contact_number') ?? '',
-            'ledger_account'      => $this->input->post('ledger_account') ?? 0,
-            'payment_term'        => $this->input->post('payment_term'),
-            'credit_limit'        => $this->input->post('credit_limit') ? $this->input->post('credit_limit') : '0',
-            'balance'             => $this->input->post('balance') ?? 0,
-            'note'                => $this->input->post('note') ?? '',
-            'level'               => $level,
-            'parent_code'         => $parent_code,
-            'sequence_code'       => $this->sequenceCode->generate('SUP', 5)
-        ];
+            $data = [
+                'name'                => $this->input->post('name') ?? '',
+                'name_ar'             => $this->input->post('name_ar') ?? '', 
+                'category'            => $this->input->post('category') ?? '',
+                'email'               => $this->input->post('email') ?? '',
+                'group_id'            => '4',
+                'group_name'          => 'supplier',
+                'company'             => $this->input->post('company') ?? '',
+                'address'             => $this->input->post('address') ?? '',
+                'vat_no'              => $this->input->post('vat_no') ?? '',
+                'cr'                  => $this->input->post('cr') ?? '',
+                'cr_expiration'       => $this->input->post('cr_expiration') ?? '',
+                'gln'                 => $this->input->post('gln') ?? '',
+                'short_address'       => $this->input->post('short_address') ?? '',
+                'building_number'     => $this->input->post('building_number') ?? '',
+                'city'                => $this->input->post('city') ?? '',
+                'state'               => $this->input->post('state') ?? '',
+                'postal_code'         => $this->input->post('postal_code') ?? '',
+                'country'             => $this->input->post('country') ?? '',
+                'phone'               => $this->input->post('phone') ?? '',
+                'contact_name'        => $this->input->post('contact_name') ?? '',
+                'contact_number'      => $this->input->post('contact_number') ?? '',
+                'ledger_account'      => $this->input->post('ledger_account') ?? 0,
+                'payment_term'        => $this->input->post('payment_term'),
+                'credit_limit'        => $this->input->post('credit_limit') ? $this->input->post('credit_limit') : '0',
+                'balance'             => $this->input->post('balance') ?? 0,
+                'note'                => $this->input->post('note') ?? '',
+                'level'               => $level,
+                'parent_code'         => $parent_code,
+                'sequence_code'       => $this->sequenceCode->generate('SUP', 5)
+            ];
         } elseif ($this->input->post('add_supplier')) {
             $this->session->set_flashdata('error', validation_errors());
             admin_redirect('suppliers');
