@@ -146,12 +146,12 @@
                                     <td><?= $count; ?></td>
                                     <td><?= $data['sequence_code']; ?></td>
                                     <td><?= $data['name']; ?></td>
-                                    <td><?= $data['obDebit'] > 0 ? number_format($data['obDebit'], 2, '.', ',') : '-'; ?></td>
-                                    <td><?= $data['obCredit'] > 0 ? number_format($data['obCredit'], 2, '.', ',') : '-'; ?></td>
-                                    <td><?= $data['trsDebit'] > 0 ? number_format($data['trsDebit'], 2, '.', ',') : '-'; ?></td>
-                                    <td><?= $data['trsCredit'] > 0 ? number_format($data['trsCredit'], 2, '.', ',') : '-'; ?></td>
-                                    <td><?= $finalEndDebit > 0 ? number_format($finalEndDebit, 2, '.', ',') : '-'; ?></td>
-                                    <td><?= $finalEndCredit > 0 ? number_format($finalEndCredit, 2, '.', ',') : '-'; ?></td>
+                                    <td><?= $data['obDebit'] > 0 ? number_format($data['obDebit'], 2, '.', ',') : '0.00'; ?></td>
+                                    <td><?= $data['obCredit'] > 0 ? number_format($data['obCredit'], 2, '.', ',') : '0.00'; ?></td>
+                                    <td><?= $data['trsDebit'] > 0 ? number_format($data['trsDebit'], 2, '.', ',') : '0.00'; ?></td>
+                                    <td><?= $data['trsCredit'] > 0 ? number_format($data['trsCredit'], 2, '.', ',') : '0.00'; ?></td>
+                                    <td><?= $finalEndDebit > 0 ? number_format($finalEndDebit, 2, '.', ',') : '0.00'; ?></td>
+                                    <td><?= $finalEndCredit > 0 ? number_format($finalEndCredit, 2, '.', ',') : '0.00'; ?></td>
                                 </tr>
                                 <?php
                             }

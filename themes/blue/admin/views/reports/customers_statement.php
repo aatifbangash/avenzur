@@ -137,11 +137,11 @@
                                                 <td><?= $statement->company; ?></td>
                                                 <td><?= $statement->narration; ?></td>
                                                 
-                                                <td><?= $statement->dc == 'D' ? $this->sma->formatNumber($statement->amount) : '-';
+                                                <td><?= $statement->dc == 'D' ? $this->sma->formatNumber($statement->amount) : '0.00';
                                                     $statement->dc == 'D' ? $totalDebit = ($totalDebit + $statement->amount) : null ?>
 
                                                 </td>
-                                                <td><?php echo $statement->dc == 'C' ? $this->sma->formatNumber($statement->amount) : '-';
+                                                <td><?php echo $statement->dc == 'C' ? $this->sma->formatNumber($statement->amount) : '0.00';
                                                 $statement->dc == 'C' ?
                                                     $totalCredit = $totalCredit + $statement->amount : null ?>
 

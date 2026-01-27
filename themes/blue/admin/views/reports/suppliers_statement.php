@@ -138,12 +138,12 @@
                                 ?>
                                 <tr>
                                     <td><?= $count; ?></td>
-                                    <td><?= $statement->$index ? $statement->$index : '-'; ?></td>
+                                    <td><?= $statement->$index ? $statement->$index : '0.00'; ?></td>
                                     <td><?= $statement->transaction_type; ?></td>
                                     <td><?= $statement->date; ?></td>
                                     <td><?= $statement->code; ?></td>
-                                    <td><?= $statement->narration ? $statement->narration : '-'; ?></td>
-                                    <td><?= $statement->dc == 'D' ? $this->sma->formatNumber($statement->amount) : '-';
+                                    <td><?= $statement->narration ? $statement->narration : '0.00'; ?></td>
+                                    <td><?= $statement->dc == 'D' ? $this->sma->formatNumber($statement->amount) : '0.00';
                                         $statement->dc == 'D' ? $totalDebit = ($totalDebit + $statement->amount) : null ?>
 
                                     </td>

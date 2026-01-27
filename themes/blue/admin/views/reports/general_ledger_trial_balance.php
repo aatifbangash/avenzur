@@ -149,12 +149,12 @@
                                                 <td><?= $count; ?></td>
                                                 <td><?= $data->code; ?></td>
                                                 <td><?= $data->name; ?></td>
-                                                <td><?= $ob_debit > 0 ? $ob_debit : '-'; ?></td>
-                                                <td><?= $ob_credit > 0 ? $ob_credit : '-'; ?></td>
-                                                <td><?= $data->trs_debit > 0 ? $data->trs_debit : '-'; ?></td>
-                                                <td><?= $data->trs_credit >0 ? $data->trs_credit : '-'; ?></td>
-                                                <td><?= $eb_debit > 0 ? $eb_debit : '-'; ?></td>
-                                                <td><?= $eb_credit > 0 ? $eb_credit : '-'; ?></td>
+                                                <td><?= $ob_debit > 0 ? $ob_debit : '0.00'; ?></td>
+                                                <td><?= $ob_credit > 0 ? $ob_credit : '0.00'; ?></td>
+                                                <td><?= $data->trs_debit > 0 ? $data->trs_debit : '0.00'; ?></td>
+                                                <td><?= $data->trs_credit >0 ? $data->trs_credit : '0.00'; ?></td>
+                                                <td><?= $eb_debit > 0 ? $eb_debit : '0.00'; ?></td>
+                                                <td><?= $eb_credit > 0 ? $eb_credit : '0.00'; ?></td>
                                             </tr>
                                         <?php
                                     }
