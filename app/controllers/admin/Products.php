@@ -4,6 +4,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 class Products extends MY_Controller
 {
     public function __construct()
@@ -1390,6 +1391,75 @@ class Products extends MY_Controller
             }
         }
 
+    }
+
+    public function update_expiry_rawabi_inventory(){
+        $excelFile = $this->upload_path . 'csv/expairy-modification.xlsx'; // Excel file
+        if (!file_exists($excelFile)) {
+            echo "Excel file not found.";
+            return;
+        }
+
+        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($excelFile);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $rows = $sheet->toArray(null, true, true, false);
+
+        echo "<h3>Starting Import...</h3>";
+
+        foreach ($rows as $row) {
+            $item_code = trim($row[1]); 
+            $item_name = trim($row[0]);
+            $batch_number = trim($row[2]);
+            $expiry_raw = $row[3];
+            
+            $expiry_raw = null;
+            if (!empty($row[3])) {
+
+                // If Excel date is numeric
+                if (is_numeric($row[3])) {
+                    $expiry_raw = Date::excelToDateTimeObject($row[3])->format('Y-m-d');
+                } 
+                // If Excel date is text (already formatted)
+                else {
+                    $expiry_raw = $this->sma->fld($row[3]);
+                }
+            }
+
+            //$new_expiry_raw = $row[4];
+
+            $product = $this->db
+                ->where('item_code', $item_code)
+                ->get('sma_products')
+                ->row();
+
+            if ($product) { 
+                $product_id = $product->id;
+                echo 'Product found: '.$item_code.' - '.$item_name.'<br>';
+
+                $inventory = $this->db
+                    ->where('product_id', $product_id)
+                    ->where('batch_number', $batch_number)
+                    ->get('sma_inventory_movements')
+                    ->row();
+                if($inventory){
+                    echo 'Inventory found for batch: '.$batch_number.' - Current Expiry: '.$inventory->expiry_date.' - Correct Expiry: '.$expiry_raw.'<br>';
+
+                    // Update entry totals
+                    $this->db->update('sma_inventory_movements', [
+                        'expiry_date' => $expiry_raw
+                    ], ['product_id' => $product_id, 'batch_number' => $batch_number]);
+                }else{
+                    echo 'Inventory NOT found for batch: '.$batch_number.'<br>';
+                    continue;
+                }
+            }else{
+                echo "Product not found for Item Code: {$item_code}<br>";
+                continue;
+            }
+        }
     }
 
     public function upload_customer_returns(){
