@@ -868,6 +868,83 @@ class Suppliers extends MY_Controller
         }
     }
 
+    public function print_payment_pdf($id = null)
+    {
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $payment_ref = $this->purchases_model->getPaymentReferenceByID($id);
+        $payments    = $this->purchases_model->getPaymentByReferenceID($id);
+
+        if (!$payment_ref) {
+            show_error('Payment not found');
+        }
+
+        $this->data['payment_ref'] = $payment_ref;
+        $this->data['payments']    = $payments;
+
+        // Load HTML
+        $html = $this->load->view(
+            $this->theme . 'suppliers/print_payment_pdf',
+            $this->data,
+            true
+        );
+
+        // Remove XML declaration if any
+        $html = preg_replace("'\<\?xml(.*)\?\>'", '', $html);
+
+        // mPDF config (same style as your invoice)
+        $mpdf = new \Mpdf\Mpdf([
+            'format'        => 'A4',
+            'margin_top'    => 70,
+            'margin_bottom' => 60,
+            'margin_left'   => 10,
+            'margin_right'  => 10,
+            'default_font'  => 'DejaVu Sans',
+        ]);
+
+        /* ================= HEADER ================= */
+        $mpdf->SetHTMLHeader('
+        <div style="width:100%; font-family: DejaVu Sans; font-size:11px;">
+            <div style="text-align:right; font-size:10px; color:#666;">
+                Page {PAGENO} of {nbpg}
+            </div>
+
+            <div style="text-align:center; margin:8px 0;">
+                <img src="' . base_url('assets/uploads/logos/avenzur-logov2-024.png') . '" style="max-height:40px;">
+                <h3 style="margin:5px 0;">SUPPLIER PAYMENT VOUCHER</h3>
+            </div>
+
+            <hr>
+        </div>
+        ');
+
+        /* ================= FOOTER ================= */
+        $mpdf->SetHTMLFooter('
+        <hr>
+        <div style="font-size:11px; width:100%; font-family: DejaVu Sans;">
+            <table width="100%" cellspacing="0" cellpadding="5">
+                <tr>
+                    <td align="center">
+                        _________________________<br>Prepared By
+                    </td>
+                    <td align="center">
+                        _________________________<br>Checked By
+                    </td>
+                    <td align="center">
+                        _________________________<br>Approved By
+                    </td>
+                </tr>
+            </table>
+        </div>
+        ');
+
+        $mpdf->WriteHTML($html);
+        $mpdf->Output('Supplier_Payment_' . $payment_ref->reference_no . '.pdf', 'D');
+        exit;
+    }
+
     public function view_payment($id = null){
         //$this->sma->checkPermissions(false, true);
         $this->form_validation->set_rules('id', $this->lang->line('id'), 'required');

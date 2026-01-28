@@ -602,17 +602,28 @@ class Purchases_model extends CI_Model
 
     public function getPaymentByReferenceID($id)
     {
-        $this->db->select('payments.*, companies.company, type, purchases.grand_total, purchases.reference_no as ref_no, purchases.date as purchase_date')
-            ->join('purchases', 'purchases.id=payments.purchase_id', 'left')
-            ->join('companies', 'companies.id=purchases.supplier_id', 'left')
-            ->where('payments.payment_id =', $id);
+        $this->db->select('
+            payments.*, 
+            companies.company,
+            companies.credit_limit,
+            companies.payment_term,
+            purchases.grand_total, 
+            purchases.reference_no as ref_no, 
+            purchases.date as purchase_date,
+            IFNULL(SUM(rs.grand_total), 0) as return_amount
+        ')
+        ->join('purchases', 'purchases.id = payments.purchase_id', 'left')
+        ->join('companies', 'companies.id = purchases.supplier_id', 'left')
+        ->join('returns_supplier rs', 'rs.reference_no = purchases.reference_no', 'left')
+        ->where('payments.payment_id', $id)
+        ->group_by('payments.payment_id'); // aggregate sum
+
         $q = $this->db->get('payments');
+
         if ($q->num_rows() > 0) {
-            foreach (($q->result()) as $row) {
-                $data[] = $row;
-            }
-            return $data;
+            return $q->result(); // returns an array of objects
         }
+
         return false;
     }
 
