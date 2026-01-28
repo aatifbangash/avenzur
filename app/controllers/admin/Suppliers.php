@@ -883,6 +883,7 @@ class Suppliers extends MY_Controller
 
         $this->data['payment_ref'] = $payment_ref;
         $this->data['payments']    = $payments;
+        $biller      = $this->site->getDefaultBiller();
 
         // Load HTML
         $html = $this->load->view(
