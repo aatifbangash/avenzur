@@ -912,7 +912,8 @@ class Suppliers extends MY_Controller
             </div>
 
             <div style="text-align:center; margin:8px 0;">
-                <img src="' . base_url('assets/uploads/logos/avenzur-logov2-024.png') . '" style="max-height:40px;">
+                <img src="data:image/png;base64,' . base64_encode(file_get_contents(base_url() . 'assets/uploads/logos/' . $biller->logo)) . '"
+            alt="Avenzur" style="max-width:120px; height:auto;">
                 <h3 style="margin:5px 0;">SUPPLIER PAYMENT VOUCHER</h3>
             </div>
 
