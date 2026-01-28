@@ -238,10 +238,17 @@
                   switch ($currentStatus) {
                     case 'sent_to_supplier':
                     case 'waiting_for_goods':
-                      echo '<a href="' . admin_url('purchase_order/add_grn/' . $inv->id) . '" 
-                class="btn btn-outline-warning btn-sm mb-2 text-primary">
-                <i class="fa fa-truck me-1"></i> Add GRN
-              </a>';
+                      if ($this->Settings->site_name == 'Avnzor') {
+                          echo '<a href="' . admin_url('purchase_order/add_grn_manual/' . $inv->id) . '" 
+                                  class="btn btn-outline-warning btn-sm mb-2 text-primary">
+                                  <i class="fa fa-truck me-1"></i> Add GRN
+                                </a>';
+                      } else {
+                          echo '<a href="' . admin_url('purchase_order/add_grn/' . $inv->id) . '" 
+                              class="btn btn-outline-warning btn-sm mb-2 text-primary">
+                              <i class="fa fa-truck me-1"></i> Add GRN
+                            </a>';
+                      }
                       break;
 
                     case 'goods_received':

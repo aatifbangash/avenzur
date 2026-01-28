@@ -200,6 +200,7 @@
                             <?php 
                             if($this->Settings->site_name == 'Avnzor'){
                             ?>
+                            <th><?= lang('Received Quantity'); ?></th>
                             <th><?= lang('Shelved Quantity'); ?></th>
                             <?php } ?>
                             <?php
@@ -268,6 +269,8 @@
                                 <?php 
                                 if($this->Settings->site_name == 'Avnzor'){
                                 ?>
+                                <td style="text-align:center; vertical-align:middle;">
+                                    <?= $this->sma->formatQuantity($row->scanned_quantity); ?></td>
                                 <td style="text-align:center; vertical-align:middle;">
                                     <?= $this->sma->formatQuantity($row->shelved_qty); ?></td>
                                 <?php } ?>
