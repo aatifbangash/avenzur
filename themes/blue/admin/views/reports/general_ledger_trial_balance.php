@@ -149,24 +149,24 @@
                                                 <td><?= $count; ?></td>
                                                 <td><?= $data->code; ?></td>
                                                 <td><?= $data->name; ?></td>
-                                                <td><?= $ob_debit > 0 ? $ob_debit : '0.00'; ?></td>
-                                                <td><?= $ob_credit > 0 ? $ob_credit : '0.00'; ?></td>
-                                                <td><?= $data->trs_debit > 0 ? $data->trs_debit : '0.00'; ?></td>
-                                                <td><?= $data->trs_credit >0 ? $data->trs_credit : '0.00'; ?></td>
-                                                <td><?= $eb_debit > 0 ? $eb_debit : '0.00'; ?></td>
-                                                <td><?= $eb_credit > 0 ? $eb_credit : '0.00'; ?></td>
+                                                <td><?= $ob_debit > 0 ? number_format($ob_debit, 2, '.', ',') : '0.00'; ?></td>
+                                                <td><?= $ob_credit > 0 ? number_format($ob_credit, 2, '.', ',') : '0.00'; ?></td>
+                                                <td><?= $data->trs_debit > 0 ? number_format($data->trs_debit, 2, '.', ',') : '0.00'; ?></td>
+                                                <td><?= $data->trs_credit >0 ? number_format($data->trs_credit, 2, '.', ',') : '0.00'; ?></td>
+                                                <td><?= $eb_debit > 0 ? number_format($eb_debit, 2, '.', ',') : '0.00'; ?></td>
+                                                <td><?= $eb_credit > 0 ? number_format($eb_credit, 2, '.', ',') : '0.00'; ?></td>
                                             </tr>
                                         <?php
                                     }
                                 ?>
                                 <tr>
                                     <td colspan="3"><strong>Totals: </strong></td>
-                                    <td colspan="1"><strong><?= $total_ob_debit; ?></strong></td>
-                                    <td colspan="1"><strong><?= $total_ob_credit; ?></strong></td>
-                                    <td colspan="1"><strong><?= $total_trs_debit; ?></strong></td>
-                                    <td colspan="1"><strong><?= $total_trs_credit; ?></strong></td>
-                                    <td colspan="1"><strong><?= $total_eb_debit; ?></strong></td>
-                                    <td colspan="1"><strong><?= $total_eb_credit; ?></strong></td>
+                                    <td colspan="1"><strong><?= number_format($total_ob_debit, 2, '.', ','); ?></strong></td>
+                                    <td colspan="1"><strong><?= number_format($total_ob_credit, 2, '.', ','); ?></strong></td>
+                                    <td colspan="1"><strong><?= number_format($total_trs_debit, 2, '.', ','); ?></strong></td>
+                                    <td colspan="1"><strong><?= number_format($total_trs_credit, 2, '.', ','); ?></strong></td>
+                                    <td colspan="1"><strong><?= number_format($total_eb_debit, 2, '.', ','); ?></strong></td>
+                                    <td colspan="1"><strong><?= number_format($total_eb_credit, 2, '.', ','); ?></strong></td>
                                 </tr>
                             </tbody>
                             <tfoot></tfoot>
