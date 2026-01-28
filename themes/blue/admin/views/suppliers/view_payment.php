@@ -113,8 +113,13 @@
                 <a href="admin/entries/view/journal/<?= $payment_ref->journal_id ?>" class="tip" title="<?= lang('Veiw JL') ?>">
                     <i class="icon fa fa-eye"></i>
                 </a> 
-                <a href="javascript:void(0);" onclick="generatePDF('print_content')" id="pdf" class="tip" title="<?= lang('download_PDF') ?>">
+                <!--<a href="javascript:void(0);" onclick="generatePDF('print_content')" id="pdf" class="tip" title="<?= lang('download_PDF') ?>">
                     <i class="icon fa fa-file-pdf-o"></i>
+                </a>-->
+                <a href="<?= admin_url('suppliers/print_payment_pdf/' . $payment_ref->id) ?>"
+                class="btn btn-danger tip"
+                title="Download PDF">
+                <i class="fa fa-file-pdf-o"></i>
                 </a>
             </li>
             </ul>
