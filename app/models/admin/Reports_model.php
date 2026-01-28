@@ -951,7 +951,7 @@ class Reports_model extends CI_Model
 
         $this->db
             ->group_by('accounts_ledgers.id, sma_accounts_entryitems.dc')
-            ->order_by('accounts_ledgers.name asc');
+            ->order_by('accounts_ledgers.code asc');
         $q = $this->db->get();
         //echo $this->db->last_query();exit;
         if ($q->num_rows() > 0) {
@@ -982,7 +982,7 @@ class Reports_model extends CI_Model
 
         $this->db
             ->group_by('accounts_ledgers.id, sma_accounts_entryitems.dc')
-            ->order_by('accounts_ledgers.name asc');
+            ->order_by('accounts_ledgers.code asc');
 
         $q = $this->db->get();
         //echo $this->db->last_query();exit;
