@@ -590,16 +590,16 @@ class Reports extends MY_Controller
             $this->excel->getActiveSheet()->SetCellValue('B1', lang('Old Code'));
             $this->excel->getActiveSheet()->SetCellValue('C1', lang('Avz Code'));
             $this->excel->getActiveSheet()->SetCellValue('D1', lang('Item Name'));
-            $this->excel->getActiveSheet()->SetCellValue('E1', lang('Batch'));
-            $this->excel->getActiveSheet()->SetCellValue('F1', lang('Expiry'));
-            $this->excel->getActiveSheet()->SetCellValue('G1', lang('Quantity'));
-            $this->excel->getActiveSheet()->SetCellValue('H1', lang('Sale Price'));
-            $this->excel->getActiveSheet()->SetCellValue('I1', lang('Total Sale'));
-            $this->excel->getActiveSheet()->SetCellValue('J1', lang('Purchase Price'));
-            $this->excel->getActiveSheet()->SetCellValue('K1', lang('Total Purchase'));
-            $this->excel->getActiveSheet()->SetCellValue('L1', lang('Cost Price'));
-            $this->excel->getActiveSheet()->SetCellValue('M1', lang('Total Cost'));
-
+            $this->excel->getActiveSheet()->SetCellValue('E1', lang('Shelf'));
+            $this->excel->getActiveSheet()->SetCellValue('F1', lang('Batch'));
+            $this->excel->getActiveSheet()->SetCellValue('G1', lang('Expiry'));
+            $this->excel->getActiveSheet()->SetCellValue('H1', lang('Quantity'));
+            $this->excel->getActiveSheet()->SetCellValue('I1', lang('Sale Price'));
+            $this->excel->getActiveSheet()->SetCellValue('J1', lang('Total Sale'));
+            $this->excel->getActiveSheet()->SetCellValue('K1', lang('Purchase Price'));
+            $this->excel->getActiveSheet()->SetCellValue('L1', lang('Total Purchase'));
+            $this->excel->getActiveSheet()->SetCellValue('M1', lang('Cost Price'));
+            $this->excel->getActiveSheet()->SetCellValue('N1', lang('Total Cost'));
             $row = 2;
             $total_quantity = $total_sale = $total_purchase = $total_cost = 0;
             foreach ($data as $data_row) {
@@ -607,15 +607,16 @@ class Reports extends MY_Controller
                 $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->itm_code);
                 $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->avz_item_code);
                 $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->name);
-                $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->batch_no);
-                $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data_row->expiry);
-                $this->excel->getActiveSheet()->SetCellValue('G' . $row, $data_row->quantity);
-                $this->excel->getActiveSheet()->SetCellValue('H' . $row, ($data_row->sale_price));
-                $this->excel->getActiveSheet()->SetCellValue('I' . $row, ($data_row->sale_price * $data_row->quantity));
-                $this->excel->getActiveSheet()->SetCellValue('J' . $row, ($data_row->purchase_price));
-                $this->excel->getActiveSheet()->SetCellValue('K' . $row, ($data_row->purchase_price * $data_row->quantity));
-                $this->excel->getActiveSheet()->SetCellValue('L' . $row, ($data_row->cost_price));
-                $this->excel->getActiveSheet()->SetCellValue('M' . $row, ($data_row->cost_price * $data_row->quantity));
+                $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->shelf);
+                $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data_row->batch_no);
+                $this->excel->getActiveSheet()->SetCellValue('G' . $row, $data_row->expiry);
+                $this->excel->getActiveSheet()->SetCellValue('H' . $row, $data_row->quantity);
+                $this->excel->getActiveSheet()->SetCellValue('I' . $row, ($data_row->sale_price));
+                $this->excel->getActiveSheet()->SetCellValue('J' . $row, ($data_row->sale_price * $data_row->quantity));
+                $this->excel->getActiveSheet()->SetCellValue('K' . $row, ($data_row->purchase_price));
+                $this->excel->getActiveSheet()->SetCellValue('L' . $row, ($data_row->purchase_price * $data_row->quantity));
+                $this->excel->getActiveSheet()->SetCellValue('M' . $row, ($data_row->cost_price));
+                $this->excel->getActiveSheet()->SetCellValue('N' . $row, ($data_row->cost_price * $data_row->quantity));
                 
                 $total_quantity += $data_row->quantity;
                 $row++;

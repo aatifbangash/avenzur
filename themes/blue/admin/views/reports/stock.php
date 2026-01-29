@@ -270,6 +270,10 @@
                                 <th><?= lang('Old Code'); ?></th>
                                 <th><?= lang('Avz Code'); ?></th>
                                 <th><?= lang('Item Name'); ?></th>
+                                <?php 
+                                    if($this->Settings->site_name == 'Hills Business Medical'){  ?>
+                                        <th><?= lang('Shelf'); ?></th>
+                                <?php } ?>
                                 <th><?= lang('Batch No'); ?></th>
                                 <th><?= lang('Expiry'); ?></th>
                                 <th><?= lang('Quantity Balance'); ?></th>
@@ -309,6 +313,10 @@
                                         <td><?= $row->itm_code ?></td>
                                         <td><?= $row->avz_item_code ?></td>
                                         <td><?= $row->name ?></td>
+                                        <?php 
+                                        if($this->Settings->site_name == 'Hills Business Medical'){  ?>
+                                        <td><?= $row->shelf ?></td>
+                                        <?php } ?>
                                         <td><?= $row->batch_no ?></td>
                                         <td><?= $row->expiry ?></td>
 
@@ -340,6 +348,8 @@
                             <tfoot>
                             <tr>
                                 <th>Total</th>
+                                <th>&nbsp;</th>
+                                <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
