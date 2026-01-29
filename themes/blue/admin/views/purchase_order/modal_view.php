@@ -264,8 +264,16 @@
                                     <td style=" text-align:center; vertical-align:middle;"><?= $row->hsn_code ?: ''; ?></td>
                                     <?php
                                 } ?>
+                                <?php 
+                                if($this->Settings->site_name == 'Avnzor'){
+                                ?>
                                 <td style="text-align:center; vertical-align:middle;">
+                                    <?= $this->sma->formatQuantity($row->actual_quantity); ?></td>
+                                <?php }else { ?>
+                                    <td style="text-align:center; vertical-align:middle;">
                                     <?= $this->sma->formatQuantity($row->unit_quantity); ?></td>
+                                <?php } ?>
+                                
                                 <?php 
                                 if($this->Settings->site_name == 'Avnzor'){
                                 ?>
