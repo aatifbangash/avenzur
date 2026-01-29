@@ -610,6 +610,7 @@ class Purchases_model extends CI_Model
             purchases.grand_total, 
             purchases.reference_no as ref_no, 
             purchases.date as purchase_date,
+            purchases.paid as purchase_paid,
             IFNULL(SUM(rs.grand_total), 0) as return_amount
         ')
         ->join('purchases', 'purchases.id = payments.purchase_id', 'left')
