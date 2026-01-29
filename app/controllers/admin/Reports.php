@@ -600,6 +600,7 @@ class Reports extends MY_Controller
             $this->excel->getActiveSheet()->SetCellValue('L1', lang('Total Purchase'));
             $this->excel->getActiveSheet()->SetCellValue('M1', lang('Cost Price'));
             $this->excel->getActiveSheet()->SetCellValue('N1', lang('Total Cost'));
+
             $row = 2;
             $total_quantity = $total_sale = $total_purchase = $total_cost = 0;
             foreach ($data as $data_row) {

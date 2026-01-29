@@ -2604,10 +2604,10 @@ class Reports_model extends CI_Model
             (SELECT cost FROM sma_rawabi_product_price WHERE product_id = p.id LIMIT 1) as cost_price,
             sum((SELECT cost FROM sma_rawabi_product_price WHERE product_id = p.id LIMIT 1) * inv.quantity) as total_cost_price,
             inv.real_unit_cost as purchase_price,
-            ps.shelf
+            p.warehouse_shelf as shelf
             FROM `sma_inventory_movements` inv 
             INNER JOIN sma_products p on p.id=inv.product_id
-            INNER JOIN sma_product_shelves ps on ps.product_id=p.id AND ps.warehouse_id=inv.location_id ";
+            ";
         }else{
             $stockQuery = " SELECT p.id,
             p.code item_code, 
