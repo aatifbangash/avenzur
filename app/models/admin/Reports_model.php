@@ -383,6 +383,198 @@ class Reports_model extends CI_Model
         return $response;
     }
 
+    public function getSupplierAgingNew($duration, $start_date, $supplier_id_array)
+    {
+        // Aging buckets
+        $intervals = [30, 60, 90, 120, 150, 180, 210, 240];
+
+        if (empty($start_date)) {
+            $start_date = date('Y-m-d');
+        }
+
+        // Build buckets: 0-30, 31-60, etc.
+        $buckets = [];
+        $prev = 0;
+        foreach ($intervals as $i => $limit) {
+            if ($limit > $duration) break;
+            $from = ($i == 0) ? 0 : $prev + 1;
+            $to   = $limit;
+            $buckets[] = [
+                'from'  => $from,
+                'to'    => $to,
+                'label' => $from . '-' . $to
+            ];
+            $prev = $limit;
+        }
+        $buckets[] = ['from' => $prev + 1, 'to' => 99999, 'label' => '>' . $duration];
+
+        // Customer filter
+        $supplier_filter = '';
+        if (!empty($supplier_id_array)) {
+            $ids = implode(',', array_map('intval', $supplier_id_array));
+            $supplier_filter = " AND p.supplier_id IN ($ids)";
+        }
+
+        // Fetch invoices
+        $sql = "
+            SELECT 
+                p.id AS purchase_id,
+                p.date,
+                p.supplier_id,
+                c.name AS supplier_name,
+                p.grand_total,
+                p.paid,
+                c.payment_term
+            FROM sma_purchases p
+            JOIN sma_companies c ON p.supplier_id = c.id
+            WHERE p.grand_total > 0
+            $supplier_filter
+        ";
+
+        $invoices = $this->db->query($sql)->result();
+
+        $result = [];
+        //echo '<pre>';print_r($invoices);exit;
+        foreach ($invoices as $inv) {
+            
+           
+            $paid = $inv->paid ? $inv->paid : 0;
+            $outstanding = round($inv->grand_total - $paid, 2);
+            //echo 'Invoice'. $inv->purchase_id . ' Outstanding: '.$outstanding.'<br />';
+            if ($outstanding <= 0) {
+                continue;
+            }
+            //echo 'Invoice'. $inv->purchase_id . ' Outstanding: '.$outstanding.'<br />';
+            /* ============================
+            🔥 FIX STARTS HERE
+            ============================ */
+
+            $invoiceDt = new DateTime(date('Y-m-d', strtotime($inv->date)));
+            $reportDt  = new DateTime($start_date);
+
+            // Skip future invoices
+            if ($invoiceDt > $reportDt) {
+                continue;
+            }
+
+            $days = (int)$invoiceDt->diff($reportDt)->days;
+            /*if($inv->sale_id == 4175) {
+                echo "Invoice Date: " . $inv->date . " | Report Date: " . $start_date . "Paid: ". $paid . " | Days: " . $days . "\n";
+                exit;
+            }*/
+            /* ============================
+            🔥 FIX ENDS HERE
+            ============================ */
+
+            // Determine bucket
+            $bucket_label = '>' . $duration;
+            foreach ($buckets as $b) {
+                if ($days >= $b['from'] && $days <= $b['to']) {
+                    $bucket_label = $b['label'];
+                    break;
+                }
+            }
+            //echo 'Bucket Label: '. $bucket_label . '<br />';
+            // Group by supplier
+            if (!isset($result[$inv->supplier_id])) {
+                $result[$inv->supplier_id] = [
+                    'supplier_id'   => $inv->supplier_id,
+                    'supplier_name' => $inv->supplier_name,
+                    'payment_term'  => $inv->payment_term,
+                ];
+                foreach ($buckets as $b) {
+                    $result[$inv->supplier_id][$b['label']] = 0;
+                }
+            }
+            
+            $result[$inv->supplier_id][$bucket_label] += $outstanding;
+            //echo 'Outstanding adding: '. $result[$inv->supplier_id][$bucket_label] . '<br /><br />';
+        }
+        
+        //echo '<pre>';print_r($result);exit;
+        return $result;
+    }
+
+    public function getSupplierAging($duration, $start_date, $supplier_id_array)
+    {
+        $response = array();
+        $intervals = [30, 60, 90, 120, 150, 180, 210, 240];
+        $cases = [];
+        $previous_limit = 0;
+        if (empty($start_date)) {
+            $start_date = date('Y-m-d');
+        }
+        $queryCondition = '';
+        if (count($supplier_id_array) > 0) {
+            $supplier_ids = implode(',', $supplier_id_array);
+            $queryCondition = " AND c.id IN($supplier_ids)";
+        }
+        // Always include the "Current" case
+        /*$cases[] = "SUM(CASE 
+            WHEN DATEDIFF(CURDATE(), ae.date) <= c.payment_term THEN 
+                CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+            ELSE 0 
+        END) AS 'Current'";*/
+        $count = 1;
+        foreach ($intervals as $index => $interval) {
+            if ($interval > $duration) {
+                break;
+            }
+
+            if ($count == 1) {
+                $start = $previous_limit;
+            } else {
+                $start = $previous_limit + 1;
+            }
+            $end = $interval;
+            $previous_limit = $end;
+            // replaced CURDATE() with   $start_date 
+            $cases[] = "SUM(CASE 
+                WHEN DATEDIFF('$start_date', ae.date) BETWEEN ($start) AND ($end) THEN 
+                    CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+                ELSE 0 
+            END) AS '$start-$end'";
+
+            $count = $count + 1;
+        }
+
+        // Add the "greater than" case for the selected duration
+        $cases[] = "SUM(CASE 
+            WHEN DATEDIFF('$start_date', ae.date) > ($duration) THEN 
+                CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
+            ELSE 0 
+        END) AS '>$duration'";
+
+        $cases_str = implode(",\n", $cases);
+
+        $q = $this->db->query("SELECT 
+            c.id AS supplier_id,
+            c.name AS supplier_name,
+            c.payment_term,
+            $cases_str
+        FROM 
+            sma_companies c
+        JOIN 
+            sma_accounts_entries ae ON c.id = ae.supplier_id
+        JOIN 
+            sma_accounts_entryitems ei ON ae.id = ei.entry_id
+        JOIN 
+            sma_accounts_ledgers al ON c.ledger_account = al.id
+        WHERE 
+            ei.ledger_id = c.ledger_account $queryCondition 
+        GROUP BY 
+            c.id, c.name");
+
+        $data = array();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        }
+
+        return $data;
+    }
+
     public function getCustomerAgingNew($duration, $start_date, $customer_id_array)
     {
         // Aging buckets
@@ -567,86 +759,6 @@ class Reports_model extends CI_Model
             c.id, c.name");
 
         //echo $this->db->last_query();exit;
-
-        $data = array();
-        if ($q->num_rows() > 0) {
-            foreach (($q->result()) as $row) {
-                $data[] = $row;
-            }
-        }
-
-        return $data;
-    }
-
-    public function getSupplierAging($duration, $start_date, $supplier_id_array)
-    {
-        $response = array();
-        $intervals = [30, 60, 90, 120, 150, 180, 210, 240];
-        $cases = [];
-        $previous_limit = 0;
-        if (empty($start_date)) {
-            $start_date = date('Y-m-d');
-        }
-        $queryCondition = '';
-        if (count($supplier_id_array) > 0) {
-            $supplier_ids = implode(',', $supplier_id_array);
-            $queryCondition = " AND c.id IN($supplier_ids)";
-        }
-        // Always include the "Current" case
-        /*$cases[] = "SUM(CASE 
-            WHEN DATEDIFF(CURDATE(), ae.date) <= c.payment_term THEN 
-                CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
-            ELSE 0 
-        END) AS 'Current'";*/
-        $count = 1;
-        foreach ($intervals as $index => $interval) {
-            if ($interval > $duration) {
-                break;
-            }
-
-            if ($count == 1) {
-                $start = $previous_limit;
-            } else {
-                $start = $previous_limit + 1;
-            }
-            $end = $interval;
-            $previous_limit = $end;
-            // replaced CURDATE() with   $start_date 
-            $cases[] = "SUM(CASE 
-                WHEN DATEDIFF('$start_date', ae.date) BETWEEN ($start) AND ($end) THEN 
-                    CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
-                ELSE 0 
-            END) AS '$start-$end'";
-
-            $count = $count + 1;
-        }
-
-        // Add the "greater than" case for the selected duration
-        $cases[] = "SUM(CASE 
-            WHEN DATEDIFF('$start_date', ae.date) > ($duration) THEN 
-                CASE WHEN ei.dc = 'D' THEN -ei.amount ELSE ei.amount END
-            ELSE 0 
-        END) AS '>$duration'";
-
-        $cases_str = implode(",\n", $cases);
-
-        $q = $this->db->query("SELECT 
-            c.id AS supplier_id,
-            c.name AS supplier_name,
-            c.payment_term,
-            $cases_str
-        FROM 
-            sma_companies c
-        JOIN 
-            sma_accounts_entries ae ON c.id = ae.supplier_id
-        JOIN 
-            sma_accounts_entryitems ei ON ae.id = ei.entry_id
-        JOIN 
-            sma_accounts_ledgers al ON c.ledger_account = al.id
-        WHERE 
-            ei.ledger_id = c.ledger_account $queryCondition 
-        GROUP BY 
-            c.id, c.name");
 
         $data = array();
         if ($q->num_rows() > 0) {

@@ -45,6 +45,7 @@ th { background:#f2f2f2; }
     <th class="right">Discount</th>
     <th class="right">Return</th>
     <th class="right">Paid</th>
+    <th class="right">Balance</th>
     <th class="right">Due</th>
 </tr>
 </thead>
@@ -62,21 +63,78 @@ foreach ($payments as $p):
     <td class="right"><?= number_format($p->grand_total ?? 0, 2) ?></td>
     <td class="right"><?= number_format($p->additional_discount ?? 0, 2) ?></td>
     <td class="right"><?= number_format($p->return_amount ?? 0, 2) ?></td>
+    <td class="right"><?= number_format(($p->purchase_paid - $p->amount) ?? 0, 2) ?></td>
     <td class="right"><?= number_format($p->amount, 2) ?></td>
-    <td class="right"><?= number_format(($p->grand_total - $p->amount) ?? 0, 2) ?></td>
+    <td class="right"><?= number_format(($p->grand_total - $p->purchase_paid) ?? 0, 2) ?></td>
+    
 </tr>
 <?php endforeach; ?>
 
 <tr>
-    <th colspan="7" class="right">Total Paid</th>
+    <th colspan="8" class="right">Total Paid</th>
     <th class="right"><?= number_format($total_paid, 2) ?></th>
 </tr>
 
 </tbody>
 </table>
 
-<br>
 
+<!-- SUPPLIER BALANCE & AGING -->
+<br>
+<table class="no-border" cellpadding="5" style="width: 60%;">
+    <tr>
+        <td><strong>Supplier Advance:</strong></td>
+        <td class="right"><strong><?= number_format($supplier_balance ?? 0, 2) ?></strong></td>
+    </tr>
+    <tr>
+        <td><strong>Supplier Balance:</strong></td>
+        <td class="right"><strong><?= number_format($total_due ?? 0, 2) ?></strong></td>
+    </tr>
+
+    <!--<tr>
+        <td><strong>Supplier Due:</strong></td>
+        <td class="right"><strong><?= number_format($total_due ?? 0, 2) ?></strong></td>
+    </tr>-->
+</table>
+
+<?php if (!empty($supplier_aging)) : ?>
+<br>
+<table class="no-border" cellpadding="5" style="width: 80%;">
+    <tr>
+        <th colspan="2" style="text-align:left; background:#f2f2f2;">Supplier Aging (SAR)</th>
+    </tr>
+    <tr>
+        <td>0-30 days</td>
+        <td class="right"><?= number_format($supplier_aging['0-30'] ?? 0, 2) ?></td>
+    </tr>
+    <tr>
+        <td>31-60 days</td>
+        <td class="right"><?= number_format($supplier_aging['31-60'] ?? 0, 2) ?></td>
+    </tr>
+    <tr>
+        <td>61-90 days</td>
+        <td class="right"><?= number_format($supplier_aging['61-90'] ?? 0, 2) ?></td>
+    </tr>
+    <tr>
+        <td>91-120 days</td>
+        <td class="right"><?= number_format($supplier_aging['91-120'] ?? 0, 2) ?></td>
+    </tr>
+    <tr>
+        <td>121-150 days</td>
+        <td class="right"><?= number_format($supplier_aging['121-150'] ?? 0, 2) ?></td>
+    </tr>
+    <tr>
+        <td>151-180 days</td>
+        <td class="right"><?= number_format($supplier_aging['151-180'] ?? 0, 2) ?></td>
+    </tr>
+    <tr>
+        <td>>180 days</td>
+        <td class="right"><?= number_format($supplier_aging['>180'] ?? 0, 2) ?></td>
+    </tr>
+</table>
+<?php endif; ?>
+
+<br>
 <!-- NOTE -->
 <table class="no-border">
 <tr>

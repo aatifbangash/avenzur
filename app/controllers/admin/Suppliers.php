@@ -881,8 +881,46 @@ class Suppliers extends MY_Controller
             show_error('Payment not found');
         }
 
+        // Get supplier info
+        $supplier_id = $payment_ref->supplier_id ?? $payment_ref->id;
+        $this->load->admin_model('Reports_model');
+        $this->load->admin_model('companies_model');
+        $supplier = $this->companies_model->getCompanyByID($supplier_id);
+
+        // Get supplier balance (trial balance as of today)
+        $today = date('Y-m-d');
+        $balances = $this->Reports_model->get_suppliers_trial_balance('2000-01-01', $today, [$supplier_id]);
+        
+        $supplier_balance = 0;
+        $total_due = 0;
+        if (!empty($balances)) {
+            $b = $balances[$supplier_id];
+            $total_debit = $b['obDebit'] + $b['trsDebit'];
+            $total_credit = $b['obCredit'] + $b['trsCredit'];
+            $supplier_balance = ($total_credit ?? 0) - ($total_debit ?? 0);
+            $total_due = $supplier_balance; // For most cases, due = balance
+        }
+
+        $settings = $this->Settings;
+        $supplier_advance_ledger = isset($settings->supplier_advance_ledger) && !empty($settings->supplier_advance_ledger) 
+                                    ? $settings->supplier_advance_ledger 
+                                    : null;
+
+        $advance_balance = $this->getSupplierAdvanceBalance($supplier_id, $supplier_advance_ledger);
+        $total_paid = $total_debit;
+        //echo $total_due; exit;
+        // Get supplier aging (180 days)
+        $aging = $this->Reports_model->getSupplierAgingNew(180, $today, [$supplier_id]);
+        $supplier_aging = !empty($aging) ? $aging[$supplier_id] : null;
+        //echo '<pre>';print_r($supplier_aging);exit;
+
         $this->data['payment_ref'] = $payment_ref;
         $this->data['payments']    = $payments;
+        $this->data['supplier_balance'] = $advance_balance;
+        $this->data['total_due'] = $total_due;
+        $this->data['total_paid_balance'] = $total_paid;
+        $this->data['supplier_aging'] = $supplier_aging;
+
         $biller      = $this->site->getDefaultBiller();
 
         // Load HTML
