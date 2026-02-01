@@ -450,6 +450,7 @@ class Purchase_order extends MY_Controller
                 'expiry' => $expiry_date,
                 'net_unit_cost' => $cost_price,
                 'quantity' => $qty,
+                'actual_quantity' => $qty,
                 'unit_quantity' => $qty,
                 'warehouse_id' => $warehouse_id,
                 'tax_rate_id' => $tax_rate_id,
