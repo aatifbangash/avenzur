@@ -1463,7 +1463,7 @@ class Products extends MY_Controller
     }
 
     public function upload_customer_returns(){
-        $excelFile = $this->upload_path . 'csv/Return-1-2026.xlsx'; // Excel file
+        $excelFile = $this->upload_path . 'csv/Return-2-2026.xlsx'; // Excel file
         if (!file_exists($excelFile)) {
             echo "Excel file not found.";
             return;
@@ -1582,7 +1582,7 @@ class Products extends MY_Controller
             $sale_price      = (float)$net_amount / $qty;
             $total_amount    = $sale_price * $qty;
             //$net_amount      = (float)str_replace(',', '', $row[12]);
-            //$vat_amount      = (float)$row[16];
+            $vat_amount      = (float)$row[11];
             $purchase_price  = (float)$row[9];
             // Convert Excel serial date to PHP DateTime
             try {
