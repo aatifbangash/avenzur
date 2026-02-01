@@ -1394,7 +1394,7 @@ class Products extends MY_Controller
     }
 
     public function update_expiry_rawabi_inventory(){
-        $excelFile = $this->upload_path . 'csv/expairy-modification.xlsx'; // Excel file
+        $excelFile = $this->upload_path . 'csv/EXP-MODIFECATION.xlsx'; // Excel file
         if (!file_exists($excelFile)) {
             echo "Excel file not found.";
             return;
@@ -1411,20 +1411,20 @@ class Products extends MY_Controller
 
         foreach ($rows as $row) {
             $item_code = trim($row[1]); 
-            $item_name = trim($row[0]);
-            $batch_number = trim($row[2]);
-            $expiry_raw = $row[3];
+            $item_name = trim($row[3]);
+            $batch_number = trim($row[5]);
+            $expiry_raw = $row[6];
             
             $expiry_raw = null;
-            if (!empty($row[3])) {
+            if (!empty($row[6])) {
 
                 // If Excel date is numeric
-                if (is_numeric($row[3])) {
-                    $expiry_raw = Date::excelToDateTimeObject($row[3])->format('Y-m-d');
+                if (is_numeric($row[6])) {
+                    $expiry_raw = Date::excelToDateTimeObject($row[6])->format('Y-m-d');
                 } 
                 // If Excel date is text (already formatted)
                 else {
-                    $expiry_raw = $this->sma->fld($row[3]);
+                    $expiry_raw = $this->sma->fld($row[6]);
                 }
             }
 
@@ -1437,7 +1437,7 @@ class Products extends MY_Controller
 
             if ($product) { 
                 $product_id = $product->id;
-                echo 'Product found: '.$item_code.' - '.$item_name.'<br>';
+                //echo 'Product found: '.$item_code.' - '.$item_name.'<br>';
 
                 $inventory = $this->db
                     ->where('product_id', $product_id)
