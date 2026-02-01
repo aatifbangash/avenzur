@@ -1506,7 +1506,7 @@ class Suppliers extends MY_Controller
                 'entry_id' => $entry_id,
                 'ledger_id' => $supplier_advance_ledger,
                 'amount' => $advance_amount,
-                'dc' => 'D',
+                'dc' => 'C',
                 'reconciliation_date' => $date
             );
             $this->db->insert('sma_accounts_entryitems', $entryitem1);
@@ -1516,7 +1516,7 @@ class Suppliers extends MY_Controller
                 'entry_id' => $entry_id,
                 'ledger_id' => $supplier->ledger_account,
                 'amount' => $advance_amount,
-                'dc' => 'C',
+                'dc' => 'D',
                 'reconciliation_date' => $date
             );
             $this->db->insert('sma_accounts_entryitems', $entryitem2);
