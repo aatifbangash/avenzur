@@ -15,20 +15,22 @@
       color: orange;
     }
     .review-container {
-            margin: 10px auto;
+        
             background-color: #fff;
-            padding: 10px;
+           
             border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+           /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);*/
         }
 
         .review {
-            border-bottom: 1px solid #ccc;
-            padding: 10px 0;
+            border-bottom: 1px solid #dfdfdf;
+            padding: 20px 0;
         }
+        .review p:last-of-type{margin-bottom:0}
+        .review:last-of-type{border-bottom:none}
   </style>
 <section class="page-contents" id="user-profile-section">
-    <div class="container">
+    <div class="container container-max-width ">
         <div class="row">
         <?php if ($this->session->flashdata('submit_review_error')) {
                                     ?>
@@ -49,7 +51,7 @@
             <div class="col-xs-12">
 
                 <div class="row">
-                    <div class="col-sm-9 col-md-10">
+                    <div class="col-md-12">
 
                         <ul class="nav nav-tabs" role="tablist">
                             <li role="presentation" class="active"><a href="#review_products" aria-controls="review_products" role="tab" data-toggle="tab"><?= lang('Products Review'); ?></a></li>
@@ -57,10 +59,10 @@
                         </ul>
 
                         <div class="tab-content padding-lg white bordered-light" style="margin-top:-1px;">
-                            <div role="tabpanel" class="tab-pane fade in active" id="review_products">
+                            <div role="tabpanel" class="tab-pane rate-review fade in active" id="review_products">
 
                                 <?php if( isset($products) && !empty($products) ) {
-                                echo form_open('shop/submit_review', 'class="validate" id="user-profile"'); ?>
+                                echo form_open('shop/submit_review', 'class="validate p-0" id="user-profile"'); ?>
                                     <?php 
                                     $pid =1;
                                     foreach ($products as $key => $product):
@@ -86,7 +88,7 @@
                                           ?>
 
                                    
-                                <?= form_submit('billing', lang('Submit Reviews'), 'class="btn btn-lg btn-primary"'); ?>
+                                <?= form_submit('billing', lang('Submit Reviews'), 'class="btn btn-lg btn-primary mt-3"'); ?>
                                 <?php echo form_close(); ?>
                                 <?php } else{?>
                                     <div class="alert alert-info">No products available for review. Please visit the products section to place an order.</div>
@@ -95,7 +97,7 @@
                         </div>
 
                       
-                            <div role="tabpanel" class="tab-pane fade in" id="past_reviews">
+                            <div role="tabpanel" class="tab-pane rate-review fade in" id="past_reviews">
 
                                 <?php if( isset($reviewProducts) && !empty($reviewProducts) ) {
                                     ?>

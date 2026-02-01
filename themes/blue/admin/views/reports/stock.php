@@ -1,127 +1,279 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<?php if($viewtype!='pdf'){ ?>
+    <style> 
+    .tableFixHead          { overflow: auto; height: 100px; }
+    .tableFixHead thead  { position: sticky; top: 0; z-index: 1; }
+    /* Just common table stuff. Really. */ 
+    .tableFixHead thead th, td {background:#eee;  padding: 8px 16px; }
+    </style> 
+<?php  } ?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
 <script>
-    function exportTableToExcel(tableId, filename = 'table.xlsx') {
+    function generatePDF(){
+       $('.viewtype').val('pdf');  
+       $('#load_report').trigger('click'); 
+       //document.getElementById("searchForm").submit(); 
+       $('.viewtype').val('');  
+    }
+    /*function exportTableToExcel(tableId, filename = 'table.xlsx') {
         const table = document.getElementById(tableId);
         const wb = XLSX.utils.table_to_book(table, {sheet: 'Sheet 1'});
         XLSX.writeFile(wb, filename);
+    }*/
+
+    function exportTableToExcel() {
+        // Get input values
+        const at_date = document.getElementById('at_date').value;
+        const warehouse = document.getElementById('warehouse').value;
+        const item_group = document.getElementById('item_group').value;
+        const item = document.getElementById('report_product_id2').value;
+        const filterOnType = document.getElementById('filterOnType').value;
+        const agent = document.getElementById('agent').value;
+        const agent2 = document.getElementById('agent2').value;
+
+        const queryParams = new URLSearchParams({
+            at_date: at_date,
+            warehouse: warehouse,
+            item_group: item_group,
+            item: item,
+            filterOnType: filterOnType,
+            agent: agent,
+            agent2: agent2
+        }).toString();
+
+        //console.log(`<?php echo base_url('reports/stock_export_excel'); ?>?${queryParams}`);
+        window.location.href = `<?php echo base_url('admin/reports/stock_export_excel'); ?>?${queryParams}`;
     }
 
-    $(document).ready(function () {
-
+    $(document).ready(function() {
+        // When main agent is selected, populate agent2 dropdown
+        $('#agent').on('change', function() {
+            var main_agent = $(this).val();
+            var agent2_dropdown = $('#agent2');
+            
+            if (main_agent) {
+                $.ajax({
+                    url: '<?php echo admin_url('reports/get_agent2_by_main_agent'); ?>',
+                    type: 'POST',
+                    data: { 
+                        main_agent: main_agent,
+                        <?= $this->security->get_csrf_token_name(); ?>: '<?= $this->security->get_csrf_hash(); ?>'
+                    },
+                    success: function(response) {
+                        agent2_dropdown.html(response);
+                    },
+                    error: function() {
+                        agent2_dropdown.html('<option value="">Select Agent 2</option>');
+                    }
+                });
+            } else {
+                agent2_dropdown.html('<option value="">Select Agent 2</option>');
+            }
+        });
     });
+    
 </script>
+<style>
+    /* Basic styling for pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    padding: 10px 0;
+}
+
+.pagination a, .pagination strong {
+    color: #007bff;
+    float: left;
+    padding: 6px 14px;
+    text-decoration: none;
+    transition: background-color .3s;
+    margin: 0 4px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Active page */
+.pagination strong {
+    background-color: #007bff;
+    color: white;
+    border: 1px solid #007bff;
+}
+
+/* Hover effect */
+.pagination a:hover:not(.active) {
+    background-color: #ddd;
+}
+
+/* Disabled links */
+.pagination .disabled {
+    color: #6c757d;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+/* Additional styling */
+.pagination a {
+    cursor: pointer;
+}
+
+.pagination strong {
+    cursor: default;
+}
+</style>
+<?php if($viewtype=='pdf'){ ?>
+    <link href="<?= $assets ?>styles/pdf/pdf.css" rel="stylesheet"> 
+  <?php  } ?>
 <div class="box">
     <div class="box-header">
-        <h2 class="blue"><i class="fa-fw fa fa-users"></i><?= lang('stock_report'); ?></h2>
-
+        <h2 class="blue"><a href="admin/reports/stock"><i class="fa-fw fa fa-users"></i><?= lang('stock_report'); ?></a></h2>
+        <?php  if($viewtype!='pdf'){?>
         <div class="box-icon">
             <ul class="btn-tasks">
-                <li class="dropdown"><a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'stock.xlsx')"
-                                        id="xls" class="tip" title="<?= lang('download_xls') ?>"><i
-                                class="icon fa fa-file-excel-o"></i></a></li>
-                <!--                <li class="dropdown"><a href="#" id="image" class="tip" title="-->
-                <? //= lang('save_image') ?><!--"><i-->
-                <!--                                class="icon fa fa-file-picture-o"></i></a></li>-->
+                <!-- <li class="dropdown"><a href="#" id="image" class="tip" title= <?= lang('save_image') ?> "><i  class="icon fa fa-file-picture-o"></i></a></li> -->
+                <li class="dropdown"><a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'stock.xlsx')"   id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a></li>                              
+                <li class="dropdown"> <a href="javascript:void(0);" onclick="generatePDF()" id="pdf" class="tip" title="<?= lang('download_PDF') ?>"><i class="icon fa fa-file-pdf-o"></i></a></li>
             </ul>
         </div>
+        <?php } ?>
     </div>
     <div class="box-content">
         <div class="row">
-            <?php
-            $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
-            echo admin_form_open_multipart('reports/stock', $attrib)
-            ?>
             <div class="col-lg-12">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <?= lang('At Date', 'at_date'); ?>
-                                <?php echo form_input('at_date', ($at_date ?? ''), 'class="form-control input-tip date" id="at_date"'); ?>
+                <?php
+                if($viewtype!='pdf')
+                {
+                    $attrib = ['data-toggle' => 'validator', 'role' => 'form','id' => 'searchForm', 'name'=>'searchForm', 'method' => 'get'];
+                    echo admin_form_open_multipart('reports/stock', $attrib)
+                    ?>
+                    <input type="hidden" name="viewtype" id="viewtype" class="viewtype" value="" >
+                
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <?= lang('At Date', 'at_date'); ?>
+                                    <?php echo form_input('at_date', ($at_date ?? ''), 'class="form-control input-tip date" id="at_date"'); ?>
+                                </div>
                             </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <?= lang('Store', 'warehouse'); ?>
+                                    <?php
+                                    $optionsWarehouse[0] = 'Select';
+                                    if (!empty($warehouses)) {
+                                        foreach ($warehouses as $warehouse) {
+                                            $optionsWarehouse[$warehouse->id] = $warehouse->name;
+                                        }
+                                    }
+
+                                    ?>
+                                    <?php echo form_dropdown('warehouse', $optionsWarehouse, ($_GET['warehouse'] ?? ''), array('class' => 'form-control disable-select', 'id' => 'warehouse'), array('none')); ?>
+
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <?= lang('Type', 'Type'); ?>
+                                    <?php echo form_dropdown('filterOnType', $filterOnTypeArr, set_value('filterOnType', $_GET['filterOnType']), array('class' => 'form-control', 'data-placeholder' => "-- Select Type --", 'id' => 'filterOnType'),  array('none')); ?>
+
+                                </div>
+                            </div>
+                            
+                            
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-12">
+                        <div class="col-md-4">
+                                <div class="form-group">
+                                    <?= lang('Item Group', 'item_group'); ?>
+                                    <?php
+                                    $optionsCategories[0] = 'Select';
+                                    if (!empty($categories)) {
+                                        foreach ($categories as $cat) {
+                                            $optionsCategories[$cat->id] = $cat->name;
+                                        }
+                                    }
+                                    ?>
+                                    <?php echo form_dropdown('item_group', $optionsCategories, ($_GET['item_group'] ?? ''), array('class' => 'form-control disable-select', 'id' => 'item_group'), array('none')); ?>
+
+                                </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <?= lang('Store', 'warehouse'); ?>
+                                <?php echo lang('Item', 'item'); ?>
+                                <?php echo form_input('sgproduct', (isset($_GET['sgproduct']) ? $_GET['sgproduct'] : ''), 'class="form-control" id="suggest_product2" data-bv-notempty="true"'); ?>
+                                <input type="hidden" name="item" value="<?= isset($_GET['item']) ? $_GET['item'] : 0 ?>" id="report_product_id2" />
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('supplier', 'posupplier'); ?>
                                 <?php
-                                $optionsWarehouse[0] = 'Select';
-                                if (!empty($warehouses)) {
-                                    foreach ($warehouses as $warehouse) {
-                                        $optionsWarehouse[$warehouse->id] = $warehouse->name;
+                                $sp[''] = '';
+                                foreach ($suppliers as $supplier) {
+                                    $sp[$supplier->id] = $supplier->company . ' (' . $supplier->name . ') - '. $supplier->sequence_code;
+
+                                }
+                                echo form_dropdown('supplier_id', $sp, $supplier_id, 'id="supplier_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('supplier') . '" required="required" style="width:100%;" ', null); ?>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('Company', 'agent'); ?>
+                                <?php
+                                $ag[''] = 'Select Company';
+                                if (!empty($agents)) {
+                                    foreach ($agents as $agentItem) {
+                                        $ag[$agentItem->main_agent] = $agentItem->main_agent;
                                     }
                                 }
-
-                                ?>
-                                <?php echo form_dropdown('warehouse', $optionsWarehouse, set_value('warehouse'), array('class' => 'form-control disable-select'), array('none')); ?>
-
+                                echo form_dropdown('agent', $ag, $agent, 'id="agent" class="form-control input-tip select" data-placeholder="' . lang('select') . ' Agent" style="width:100%;" ', null); ?>
                             </div>
                         </div>
+
                         <div class="col-md-4">
                             <div class="form-group">
-                                <?= lang('Supplier', 'supplier'); ?>
-                                <?php
-                                $optionsSuppliers[0] = 'Select';
-                                if (!empty($suppliers)) {
-                                    foreach ($suppliers as $sup) {
-                                        $optionsSuppliers[$sup->id] = $sup->name;
-                                    }
-                                }
-                                ?>
-                                <?php echo form_dropdown('supplier', $optionsSuppliers, set_value('supplier'), array('class' => 'form-control disable-select'), array('none')); ?>
+                                <?= lang('Agent 2', 'agent2'); ?>
+                                <select name="agent2" id="agent2" class="form-control input-tip select" style="width:100%;">
+                                    <option value="">Select Agent 2</option>
+                                    <?php if (!empty($agent2)): ?>
+                                        <option value="<?= $agent2 ?>" selected><?= $agent2 ?></option>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
+                        </div>
 
+                        <div class="col-md-4">
+                            <div class="from-group">
+                                <button type="submit" name="submit" style="margin-top: 28px;" class="btn btn-primary"
+                                        id="load_report"><?= lang('Load Report') ?></button>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-4" style="margin-left: 15px; width: 32.6%">
-                        <div class="form-group">
-                            <?= lang('Item Group', 'item_group'); ?>
-                            <?php
-                            $optionsCategories[0] = 'Select';
-                            if (!empty($categories)) {
-                                foreach ($categories as $cat) {
-                                    $optionsCategories[$cat->id] = $cat->name;
-                                }
-                            }
-                            ?>
-                            <?php echo form_dropdown('item_group', $optionsCategories, set_value('item_group'), array('class' => 'form-control disable-select'), array('none')); ?>
-
-                        </div>
+                    
                     </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <?php echo lang('Item', 'item'); ?>
-                            <?php echo form_input('sgproduct', (isset($_POST['sgproduct']) ? $_POST['sgproduct'] : ''), 'class="form-control" id="suggest_product2" data-bv-notempty="true"'); ?>
-                            <input type="hidden" name="item" value="<?= isset($_POST['item']) ? $_POST['item'] : 0 ?>" id="report_product_id2" />
-                        </div>
-                    </div>
-                    <!--<div class="col-md-4">
-                        <div class="form-group">
-                            <?php //echo lang('Item', 'item'); ?>
-                            <?php //echo form_input('item', set_value('item'), 'class="form-control input-tip" id="item"'); ?>
-                        </div>
-                    </div>-->
-                </div>
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="from-group">
-                            <button type="submit" name="submit" style="margin-top: 28px;" class="btn btn-primary"
-                                    id="load_report"><?= lang('Load Report') ?></button>
-                        </div>
-                    </div>
-                </div>
-                <hr/>
+                    <hr/>
+                    <?php echo form_close(); 
+                } ?>
                 <div class="row">
                     <div class="controls table-controls" style="font-size: 12px !important;">
                         <table id="poTable"
-                               class="table items table-striped table-bordered table-condensed table-hover sortable_table">
+                               class="table items table-striped table-bordered table-condensed table-hover sortable_table tableFixHead tbl_pdf">
                             <thead>
                             <tr>
                                 <th>#</th>
                                 <th><?= lang('Item Code'); ?></th>
+                                <th><?= lang('Old Code'); ?></th>
+                                <th><?= lang('Avz Code'); ?></th>
                                 <th><?= lang('Item Name'); ?></th>
+                                <?php 
+                                    if($this->Settings->site_name == 'Hills Business Medical'){  ?>
+                                        <th><?= lang('Shelf'); ?></th>
+                                <?php } ?>
                                 <th><?= lang('Batch No'); ?></th>
                                 <th><?= lang('Expiry'); ?></th>
                                 <th><?= lang('Quantity Balance'); ?></th>
@@ -144,33 +296,46 @@
                                 $totalCostPrice = 0;
                                 $grandTotalCostPrice = 0;
                                 ?>
+
+                                <?php foreach ($stock_data_totals as $index => $row): ?>
+                                    <?php $totalQuantity += $row->quantity; ?>
+                                    <?php $grandTotalSalePrice += $row->sale_price * $row->quantity; ?>
+                                    <?php $totalPurchasePrice += $row->purchase_price; ?>
+                                    <?php $grandTotalPurchasePrice += $row->purchase_price * $row->quantity; ?>
+                                    <?php $totalCostPrice += $row->cost_price; ?>
+                                    <?php $grandTotalCostPrice += $row->cost_price * $row->quantity; ?>
+                                <?php endforeach; ?>
+
                                 <?php foreach ($stock_data as $index => $row): ?>
                                     <tr>
-                                        <td><?= $index + 1 ?></td>
+                                        <td><?= $offset+ $index + 1 ?></td>
                                         <td><?= $row->item_code ?></td>
+                                        <td><?= $row->itm_code ?></td>
+                                        <td><?= $row->avz_item_code ?></td>
                                         <td><?= $row->name ?></td>
+                                        <?php 
+                                        if($this->Settings->site_name == 'Hills Business Medical'){  ?>
+                                        <td><?= $row->shelf ?></td>
+                                        <?php } ?>
                                         <td><?= $row->batch_no ?></td>
                                         <td><?= $row->expiry ?></td>
 
                                         <td><?= $row->quantity ?></td>
-                                        <?php $totalQuantity += $row->quantity; ?>
+                                        
 
                                         <td><?= number_format($row->sale_price, 2, '.', ',') ?></td>
                                         <?php $totalSalePrice += $row->sale_price; ?>
 
                                         <td><?= number_format($row->sale_price * $row->quantity, 2, '.', ',') ?></td>
-                                        <?php $grandTotalSalePrice += $row->sale_price * $row->quantity; ?>
-
+                                        
                                         <td><?= number_format($row->purchase_price, 2, '.', ',') ?></td>
-                                        <?php $totalPurchasePrice += $row->purchase_price; ?>
-
+                                        
                                         <td><?= number_format($row->purchase_price * $row->quantity, 2, '.', ',') ?></td>
-                                        <?php $grandTotalPurchasePrice += $row->purchase_price * $row->quantity; ?>
-
+                                        
                                         <td><?= number_format($row->cost_price, 2, '.', ',') ?></td>
-                                        <?php $totalCostPrice += $row->cost_price; ?>
+                                        
                                         <td><?= number_format($row->cost_price * $row->quantity, 2, '.', ',') ?></td>
-                                        <?php $grandTotalCostPrice += $row->cost_price * $row->quantity; ?>
+                                        
                                     </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>
@@ -187,19 +352,23 @@
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
-                                <th><?= $totalQuantity ?></th>
-                                <th><?= number_format($totalSalePrice, 2, '.', ',') ?></th>
-                                <th><?= number_format($grandTotalSalePrice, 2, '.', ',') ?></th>
-                                <th><?= number_format($totalPurchasePrice, 2, '.', ',') ?></th>
-                                <th><?= number_format($grandTotalPurchasePrice, 2, '.', ',') ?></th>
-                                <th><?= number_format($totalCostPrice, 2, '.', ',') ?></th>
-                                <th><?= number_format($grandTotalCostPrice, 2, '.', ',') ?></th>
+                                <th>&nbsp;</th>
+                                <th>&nbsp;</th>
+                                <th>&nbsp;</th>
+                                <th><?= number_format($new_grand_total->quantity, 2, '.', ',') ?></th>
+                                <th><?= '-' ?></th>
+                                <th><?= number_format($new_grand_total->total_sale_price, 2, '.', ',') ?></th>
+                                <th><?= '-' ?></th>
+                                <th><?= number_format($new_grand_total->purchase_price, 2, '.', ',') ?></th>
+                                <th><?= '-' ?></th>
+                                <th><?= number_format($new_grand_total->total_cost_price, 2, '.', ',') ?></th>
                             </tr>
                             </tfoot>
                         </table>
+                        <div class="pagination mt-5">   <?php echo $pagination_links; ?> </div>
                     </div>
                 </div>
             </div>
         </div>
-        <?php echo form_close(); ?>
     </div>
+</div>
