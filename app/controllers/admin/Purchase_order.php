@@ -317,35 +317,37 @@ class Purchase_order extends MY_Controller
         foreach ($rows as $row) {
             if ($row_count == 0) { $row_count++; continue; } // Skip header
             $item_code = trim($row[0]);
-            $item_name = trim($row[1]);
-            $batch_no = trim($row[2]);
+            $parent_code = trim($row[1]);
+            $item_name = trim($row[2]);
+            $varient_name = trim($row[3]);
+            $batch_no = trim($row[4]);
             $expiry_date = null;
-            if (!empty($row[3])) {
+            if (!empty($row[5])) {
 
                 // If Excel date is numeric
-                if (is_numeric($row[3])) {
-                    $expiry_date = Date::excelToDateTimeObject($row[3])->format('Y-m-d');
+                if (is_numeric($row[5])) {
+                    $expiry_date = Date::excelToDateTimeObject($row[5])->format('Y-m-d');
                 } 
                 // If Excel date is text (already formatted)
                 else {
-                    $expiry_date = $this->sma->fld($row[3]);
+                    $expiry_date = $this->sma->fld($row[5]);
                 }
             }
             
-            $qty = (float)$row[4];
-            $sale_price = (float)$row[5];
-            $purchase_price = (float)$row[6];
+            $qty = (float)$row[6];
+            $sale_price = (float)$row[7];
+            $purchase_price = (float)$row[8];
             
-            $dis1_percent = (float)$row[9];
-            $dis1_value = $row[10] ? $row[10] ? ($dis1_percent / 100) * ($purchase_price * $qty) : 0 : 0;
-            $dis2_percent = (float)$row[11];
-            $dis2_value = $row[12] ? $row[12] ? ($dis2_percent / 100) * (($purchase_price * $qty) - $dis1_value) : 0 : 0;
-            $dis3_percent = (float)$row[13];
-            $dis3_value = $row[14] ? $row[14] ? ($dis3_percent / 100) * (($purchase_price * $qty) - $dis1_value - $dis2_value) : 0 : 0;
+            $dis1_percent = (float)$row[11];
+            $dis1_value = $row[12] ? $row[12] ? ($dis1_percent / 100) * ($purchase_price * $qty) : 0 : 0;
+            $dis2_percent = (float)$row[13];
+            $dis2_value = $row[14] ? $row[14] ? ($dis2_percent / 100) * (($purchase_price * $qty) - $dis1_value) : 0 : 0;
+            $dis3_percent = (float)$row[15];
+            $dis3_value = $row[16] ? $row[16] ? ($dis3_percent / 100) * (($purchase_price * $qty) - $dis1_value - $dis2_value) : 0 : 0;
             
-            $cost_price = $row[7] ? (float)$row[7] : (($purchase_price * $qty) - $dis1_value - $dis2_value - $dis3_value) / $qty;
+            $cost_price = $row[9] ? (float)$row[9] : (($purchase_price * $qty) - $dis1_value - $dis2_value - $dis3_value) / $qty;
             
-            $image_link = trim($row[15]);
+            $image_link = trim($row[17]);
 
             if (!$item_code || !$item_name || !$qty) continue;
 
@@ -354,15 +356,28 @@ class Purchase_order extends MY_Controller
 
             if(!$product_id){
 
-                if($row[8] == ''){
-                    $this->session->set_flashdata('error', 'Tax rate missing for new product: ' . $item_code . '. No purchase order was created.');
-                    @unlink($excelFile);
-                    redirect($_SERVER['HTTP_REFERER']);
+                if($row[10] == ''){
+                    //$this->session->set_flashdata('error', 'Tax rate missing for new product: ' . $item_code . '. No purchase order was created.');
+                    //@unlink($excelFile);
+                    //redirect($_SERVER['HTTP_REFERER']);
+
+                    $tax_rate_id = 1;
+                    $tax_percent = 0;
+                    $vat_value = ($purchase_price * $qty * $tax_percent) / 100;
 
                 }else{
-                    $tax_rate_id = $row[8] == 15 ? 5 : 1;
-                    $tax_percent = $row[8];
+                    $tax_rate_id = $row[10] == 15 ? 5 : 1;
+                    $tax_percent = $row[10];
                     $vat_value = ($purchase_price * $qty * $tax_percent) / 100;
+                }
+
+                // Check if parent product exists
+                $parent_id = null;
+                if ($parent_code) {
+                    $parent_product = $this->purchase_order_model->getProductByCode($parent_code);
+                    if ($parent_product) {
+                        $parent_id = $parent_product->id;
+                    }
                 }
 
                 // Try to create product
@@ -378,7 +393,9 @@ class Purchase_order extends MY_Controller
                     'unit' => 'unit',
                     'alert_quantity' => 0,
                     'track_quantity' => 1,
-                    'details' => ''
+                    'details' => '',
+                    'variant' => $varient_name,
+                    'parent_id' => $parent_id
                 ];
                 $add_result = $this->products_model->addProductSimplified($product_data);
                 if ($add_result) {
@@ -391,6 +408,10 @@ class Purchase_order extends MY_Controller
                     // Update product image
                     $this->purchase_order_model->updateProductImage($product_id, $image_link);
 
+                }else if(($product->image == '' || $product->image == null) && $image_link == ''){
+                    $this->session->set_flashdata('error', 'Image link missing for existing product: ' . $item_code . '. No purchase order was created.');
+                    @unlink($excelFile);
+                    redirect($_SERVER['HTTP_REFERER']);
                 }
 
                 $tax_rate_id = $product->tax_rate;
