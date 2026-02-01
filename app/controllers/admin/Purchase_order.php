@@ -356,6 +356,12 @@ class Purchase_order extends MY_Controller
 
             if(!$product_id){
 
+                if($image_link == ''){
+                    $this->session->set_flashdata('error', 'Image link missing for new product: ' . $item_code . '. No purchase order was created.');
+                    @unlink($excelFile);
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
+
                 if($row[10] == ''){
                     //$this->session->set_flashdata('error', 'Tax rate missing for new product: ' . $item_code . '. No purchase order was created.');
                     //@unlink($excelFile);
