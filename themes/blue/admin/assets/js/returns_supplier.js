@@ -1883,6 +1883,7 @@ function add_return_item(item) {
   if (item == null) return;
 
   var item_id = site.settings.item_addition == 1 ? item.item_id : item.id;
+  item.row.cost = item.row.net_unit_cost;
   if (rseitems[item_id]) {
     var new_qty = parseFloat(rseitems[item_id].row.qty) + 1;
     rseitems[item_id].row.base_quantity = new_qty;
