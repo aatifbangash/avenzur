@@ -83,6 +83,13 @@
                                         echo (lang('invoice_number')) . ' : ' . ($purchase['invoice_number']) . '<br>';
                                         echo (lang('sequence_code')) . ' : ' . ($purchase['sequence_code']) . '<br>';
                                     }
+
+                                    if($payement_reference_id > 0){
+                                        $link = admin_url('customers/view_payment/' . $payement_reference_id);
+                                        echo (lang('Payment_Reference')) . ' : <a href="' . $link . '" target ="_blank">' . ($payement_reference_id) . '</a><br>';
+
+                                    }
+
                                     if ($entry['sid'] > 0) {
 
                                         echo (lang('Sale_id')) . ' : ' . ($sales['id']) . '<br>';

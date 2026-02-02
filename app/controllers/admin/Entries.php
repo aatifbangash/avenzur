@@ -1522,6 +1522,14 @@ class Entries extends MY_Controller
 			}
 		}
 
+		// Get payment Reference
+		$q = $this->db->get_where('payment_reference', ['journal_id' => $entry['id']], 1);
+		if ($q->num_rows() > 0) {
+			$payment_reference =  $q->row();
+			$payement_reference_id = $payment_reference->id;
+		}	
+
+		$this->data['payement_reference_id'] = isset($payement_reference_id) ? $payement_reference_id : 0;
 		
 		/* Initial data */
 		$curEntryitems = array(); // initilize current entry items array

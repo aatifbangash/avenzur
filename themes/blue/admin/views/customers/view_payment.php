@@ -198,7 +198,7 @@
                                         <tr>
                                             <td><?= $count; ?></td>
                                             <td><?= $payment->sale_id != '' ? $payment->sale_date: $payment->date; ?></td>
-                                            <td><?= $payment->sale_id != '' ? $payment->ref_no: $payment->reference_no; ?></td>
+                                            <td><?= $payment->sale_id != '' ? $payment->sale_id: $payment->sale_id; ?></td>
                                             <td><?= $payment->sale_id != '' ? 'Invoice Payment' : 'Advance Collection'; ?></td>
                                             <td><?= $payment->grand_total > 0 ? number_format($payment->grand_total, 2) : '0.00'; ?></td>
                                             <td><?= $payment->returns_total_deducted > 0 ? number_format($payment->returns_total_deducted, 2) : '0.00'; ?></td>
