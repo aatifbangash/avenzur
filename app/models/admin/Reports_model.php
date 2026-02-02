@@ -575,7 +575,7 @@ class Reports_model extends CI_Model
         return $data;
     }
 
-    public function getCustomerAgingNew($duration, $start_date, $customer_id_array)
+    public function getCustomerAgingNew($duration, $start_date, $customer_id_array, $salesman = null)
     {
         // Aging buckets
         $intervals = [30, 60, 90, 120, 150, 180, 210, 240];
@@ -607,6 +607,12 @@ class Reports_model extends CI_Model
             $customer_filter = " AND s.customer_id IN ($ids)";
         }
 
+        // Salesman filter
+        $salesman_filter = '';
+        if (!empty($salesman)) {
+            $salesman_filter = " AND c.sales_agent = '" . $this->db->escape_str($salesman) . "'";
+        }
+
         // Fetch invoices
         $sql = "
             SELECT 
@@ -614,12 +620,14 @@ class Reports_model extends CI_Model
                 s.date,
                 s.customer_id,
                 c.name AS customer_name,
+                c.sales_agent,
                 s.grand_total,
                 c.payment_term
             FROM sma_sales s
             JOIN sma_companies c ON s.customer_id = c.id
             WHERE s.grand_total > 0
             $customer_filter
+            $salesman_filter
         ";
 
         $invoices = $this->db->query($sql)->result();
@@ -671,6 +679,7 @@ class Reports_model extends CI_Model
                 $result[$inv->customer_id] = [
                     'customer_id'   => $inv->customer_id,
                     'customer_name' => $inv->customer_name,
+                    'sales_agent'   => $inv->sales_agent,
                     'payment_term'  => $inv->payment_term,
                 ];
                 foreach ($buckets as $b) {
@@ -987,7 +996,7 @@ class Reports_model extends CI_Model
         $this->db
             ->select('sma_accounts_entryitems.id as entry_id, COALESCE(sum(sma_accounts_entryitems.amount), 0) as amount, 
                     sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.date, 
-                    sma_accounts_ledgers.code, sma_companies.company, sma_accounts_entries.transaction_type')
+                    sma_accounts_ledgers.code, sma_companies.company, sma_accounts_entries.transaction_type, sma_accounts_entries.sid as sale_id, sma_accounts_entries.memo_id as memo_id')
             ->from('sma_accounts_entryitems')
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
             ->join('sma_accounts_ledgers', 'sma_accounts_entryitems.ledger_id=sma_accounts_ledgers.id')

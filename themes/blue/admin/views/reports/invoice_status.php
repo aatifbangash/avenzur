@@ -136,7 +136,7 @@
                                         <tr>
                                             <td><?= $count; ?></td>
                                             <td><?= $data->date; ?></td>
-                                            <td><?= $data->invoice; ?></td>
+                                            <td><a target="_blank" href="<?= admin_url('sales?sid=' . $data->sale_id); ?>"><?= $data->sale_id; ?></a></td>
                                             <td><?= $data->area; ?></td>
                                             <td><?= $data->sales_man; ?></td>
                                             <td><?= $data->customer_no; ?></td>
