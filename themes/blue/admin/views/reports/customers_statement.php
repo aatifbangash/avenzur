@@ -132,7 +132,7 @@
                                         if($statement->transaction_type == 'sales_invoice' || $statement->transaction_type == 'saleorder'){
                                             $link = admin_url('sales?sid=' . $statement->sale_id);
                                         }else if($statement->transaction_type == 'customerpayment'){
-                                            $link = admin_url('sales/view_payment/' . $statement->payment_id);
+                                            $link = admin_url('customers/view_payment/' . $statement->payment_id);
                                         }else if($statement->transaction_type == 'creditmemo'){
                                             $link = admin_url('customers/view_credit_memo/' . $statement->memo_id);
                                         }

@@ -996,11 +996,16 @@ class Reports_model extends CI_Model
         $this->db
             ->select('sma_accounts_entryitems.id as entry_id, COALESCE(sum(sma_accounts_entryitems.amount), 0) as amount, 
                     sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.date, 
-                    sma_accounts_ledgers.code, sma_companies.company, sma_accounts_entries.transaction_type, sma_accounts_entries.sid as sale_id, sma_accounts_entries.memo_id as memo_id')
+                    sma_accounts_ledgers.code, sma_companies.company, sma_accounts_entries.transaction_type, sma_accounts_entries.sid as sale_id, sma_accounts_entries.memo_id as memo_id, sma_payment_reference.id as payment_id')
             ->from('sma_accounts_entryitems')
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
             ->join('sma_accounts_ledgers', 'sma_accounts_entryitems.ledger_id=sma_accounts_ledgers.id')
             ->join('sma_companies', 'sma_companies.id=sma_accounts_entries.customer_id')
+            ->join(
+                'sma_payment_reference',
+                'sma_payment_reference.journal_id = sma_accounts_entries.id',
+                'left'
+            )
             ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
             ->where('sma_accounts_entries.customer_id', $customer_id)
             ->where('sma_accounts_entries.date >=', $start_date)
