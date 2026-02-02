@@ -755,6 +755,46 @@ class Reports extends MY_Controller
         $this->page_construct('reports/consumption_report', $meta, $this->data);
     }
 
+    public function consumption_report_export_excel(){
+        $warehouse_id = $this->session->userdata('warehouse_id');
+        $item = $this->input->get('item') ? $this->input->get('item') : null;
+        $supplier_id = $this->input->get('supplier_id') ? $this->input->get('supplier_id') : null;
+        $period = $this->input->get('period') ? $this->input->get('period') : 1;
+        $agent = $this->input->get('agent') ? $this->input->get('agent') : null;
+        $agent2 = $this->input->get('agent2') ? $this->input->get('agent2') : null;
+
+        $data = $this->reports_model->getStockConsumption($warehouse_id, $item, $supplier_id, $agent, $agent2, $period);
+
+        if (!empty($data)) {
+            $this->load->library('excel');
+            $this->excel->setActiveSheetIndex(0);
+            $this->excel->getActiveSheet()->setTitle(lang('consumption_report'));
+            $this->excel->getActiveSheet()->SetCellValue('A1', lang('code'));
+            $this->excel->getActiveSheet()->SetCellValue('B1', lang('name'));
+            $this->excel->getActiveSheet()->SetCellValue('C1', lang('Available Quantity'));
+            $this->excel->getActiveSheet()->SetCellValue('D1', lang('Avg Sale'));
+            $this->excel->getActiveSheet()->SetCellValue('E1', lang('Required Stock'));
+            $this->excel->getActiveSheet()->SetCellValue('F1', lang('Months'));
+
+            $row = 2;
+            foreach ($data as $data_row) {
+                $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->code);
+                $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->name);
+                $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->available_stock);
+                $this->excel->getActiveSheet()->SetCellValue('D' . $row, isset($data_row->avg_stock) ? $data_row->avg_stock : ($data_row->avg_last_3_months_sales / $period));
+                $required_stock = isset($data_row->required_stock) ? $data_row->required_stock : (($data_row->avg_last_3_months_sales / $period) - $data_row->available_stock > 0 ? ($data_row->avg_last_3_months_sales / $period) - $data_row->available_stock : 0);
+                $this->excel->getActiveSheet()->SetCellValue('E' . $row, $required_stock);
+                $this->excel->getActiveSheet()->SetCellValue('F' . $row, $period . ' months');
+                $row++;
+            }
+
+            $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+            $filename = 'consumption_report';
+            $this->load->helper('excel');
+            create_excel($this->excel, $filename);
+        }
+    }
+
     public function get_agent2_by_main_agent()
     {
         $main_agent = $this->input->post('main_agent');

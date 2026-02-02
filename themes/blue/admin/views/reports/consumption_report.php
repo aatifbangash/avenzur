@@ -26,12 +26,38 @@
             }
         });
     });
+
+    function exportConsumptionToExcel() {
+        // Get input values
+        const item = document.getElementById('report_product_id2').value;
+        const period = document.getElementById('period').value;
+        const agent = document.getElementById('agent').value;
+        const agent2 = document.getElementById('agent2').value;
+        const supplier_id = document.getElementById('supplier_id').value;
+
+        const queryParams = new URLSearchParams({
+            item: item,
+            period: period,
+            agent: agent,
+            agent2: agent2,
+            supplier_id: supplier_id
+        }).toString();
+
+        window.location.href = `<?php echo base_url('admin/reports/consumption_report_export_excel'); ?>?${queryParams}`;
+    }
 </script>
 
 <div class="box">
     <div class="box-header">
     <h2 class="blue"><i class="fa-fw fa fa-star-o"></i><a href="<?= admin_url('reports/consumption_report'); ?>"><?= lang('Stock Consumption Report'); ?></a>
     </h2>
+    <?php if (!empty($stock_array)): ?>
+    <div class="box-icon">
+        <ul class="btn-tasks">
+            <li class="dropdown"><a href="javascript:void(0);" onclick="exportConsumptionToExcel()" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a></li>
+        </ul>
+    </div>
+    <?php endif; ?>
     </div>
     <div class="box-content">
         <div class="row">
