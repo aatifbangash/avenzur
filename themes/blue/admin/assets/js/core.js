@@ -1902,7 +1902,7 @@ function calculateReturnSupplierInventory(item) {
 
     // Calculations
     const total_quantity = base_quantity.plus(bonus);
-    const total_purchase = toTwoDecimals(cost_price.times(total_quantity));
+    const total_purchase = toTwoDecimals(cost_price.times(base_quantity));
     const total_sale = toTwoDecimals(sale_price.times(total_quantity));
 
     // Discounts

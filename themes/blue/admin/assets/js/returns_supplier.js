@@ -102,6 +102,7 @@ $(document).ready(function (e) {
       var cost_price = $(this).val(),
         item_id = row.attr("data-item-id");
       rseitems[item_id].row.cost_price = cost_price;
+      rseitems[item_id].row.cost = cost_price;
       localStorage.setItem("rseitems", JSON.stringify(rseitems));
       loadItems();
     });
@@ -1139,6 +1140,7 @@ $(document).ready(function (e) {
       var new_cost = parseFloat($(this).val()),
         item_id = row.attr("data-item-id");
       rseitems[item_id].row.cost_price = new_cost;
+      //rseitems[item_id].row.cost = new_cost;
       localStorage.setItem("rseitems", JSON.stringify(rseitems));
       loadItems();
     });
@@ -1261,7 +1263,7 @@ function loadItems() {
       var item = this;
       console.log(item);
       const new_item = {
-        cost: item.row.net_unit_cost ?? 0,
+        cost: item.row.cost ?? 0,
         sale_price: item.row.real_unit_sale ?? item.row.net_unit_sale,
         qty: item.row.base_quantity,
         bonus: item.row.bonus ?? 0,
@@ -1619,7 +1621,7 @@ function loadItems() {
 
       tr_html +=
         '<td><input class="form-control rs_cost_price" name="cost_price[]" type="text" value="' +
-        item.row.net_unit_cost +
+        new_item_cost_price +
         '" data-id="' +
         row_no +
         '" data-item="' +

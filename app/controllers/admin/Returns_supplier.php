@@ -1519,10 +1519,10 @@ class Returns_supplier extends MY_Controller
             . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
             . lang('actions') . ' <span class="caret"></span></button>
             <ul class="dropdown-menu pull-right" role="menu">';
-        if($this->GP['supplier-returns-edit']){
+        if($this->Owner || $this->Admin || $this->GP['supplier-returns-edit']){
             $action .= '<li>' . $edit_link . '</li>';
         }
-        if($this->GP['supplier-returns-delete']){
+        if($this->Owner || $this->Admin || $this->GP['supplier-returns-delete']){
             $action .= '<li>' . $delete_link . '</li>';
         }
         if($this->Owner || $this->Admin){
