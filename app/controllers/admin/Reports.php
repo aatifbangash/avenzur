@@ -4589,6 +4589,10 @@ class Reports extends MY_Controller
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $duration = $this->input->post('duration') ? $this->input->post('duration') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $salesman = $this->input->post('salesman');
+        if ($salesman === '' || $salesman === null) {
+            $salesman = null;
+        }
         $response_arr = array();
 
         $customer_id_array = array();
@@ -4603,13 +4607,15 @@ class Reports extends MY_Controller
         }
 
         if ($duration) {
-            $supplier_aging_array = $this->reports_model->getCustomerAgingNew($duration, $start_date, $customer_id_array);
+            $supplier_aging_array = $this->reports_model->getCustomerAgingNew($duration, $start_date, $customer_id_array, $salesman);
         } else {
-            $supplier_aging_array = $this->reports_model->getCustomerAgingNew($duration = 120, $start_date, $customer_id_array);
+            $supplier_aging_array = $this->reports_model->getCustomerAgingNew($duration = 120, $start_date, $customer_id_array, $salesman);
         }
 
         $this->data['customer_id_array'] = $customer_id_array;
         $this->data['start_date'] = $this->input->post('from_date');
+        $this->data['salesman'] = $salesman;
+        $this->data['selected_salesman'] = $salesman; // Add this for clarity
 
         $this->data['supplier_aging'] = $supplier_aging_array;
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customers_aging')]];
@@ -6421,6 +6427,7 @@ class Reports extends MY_Controller
             
             // Build query
             $this->db->select("DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%d-%b-%y') as date,
+                {$this->db->dbprefix('sales')}.id as sale_id,
                 {$this->db->dbprefix('sales')}.reference_no as invoice,
                 {$this->db->dbprefix('companies')}.city as area,
                 COALESCE({$this->db->dbprefix('companies')}.sales_agent, '') as sales_man,

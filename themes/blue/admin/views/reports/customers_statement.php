@@ -128,30 +128,39 @@
                                             $balance = $balance + $statement->amount;
                                         }
                                         $count++;
+
+                                        if($statement->transaction_type == 'sales_invoice' || $statement->transaction_type == 'saleorder'){
+                                            $link = admin_url('sales?sid=' . $statement->sale_id);
+                                        }else if($statement->transaction_type == 'customerpayment'){
+                                            $link = admin_url('sales/view_payment/' . $statement->payment_id);
+                                        }else if($statement->transaction_type == 'creditmemo'){
+                                            $link = admin_url('customers/view_credit_memo/' . $statement->memo_id);
+                                        }
+
                                         ?>
                                             <tr>
                                                 <td><?= $count; ?></td>
-                                                <td><?= $statement->transaction_type; ?></td>
+                                                <td><a target="_blank" href="<?= $link; ?>"><?= $statement->transaction_type; ?></a></td>
                                                 <td><?= $statement->date; ?></td>
                                                 <td><?= $statement->code; ?></td>
                                                 <td><?= $statement->company; ?></td>
                                                 <td><?= $statement->narration; ?></td>
                                                 
-                                                <td><?= $statement->dc == 'D' ? $this->sma->formatNumber($statement->amount) : '0.00';
+                                                <td><?= $statement->dc == 'D' ? number_format($statement->amount, 2, '.', ',') : '0.00';
                                                     $statement->dc == 'D' ? $totalDebit = ($totalDebit + $statement->amount) : null ?>
 
                                                 </td>
-                                                <td><?php echo $statement->dc == 'C' ? $this->sma->formatNumber($statement->amount) : '0.00';
+                                                <td><?php echo $statement->dc == 'C' ? number_format($statement->amount, 2, '.', ',') : '0.00';
                                                 $statement->dc == 'C' ?
                                                     $totalCredit = $totalCredit + $statement->amount : null ?>
 
                                                 </td>
                                                 <td><?php 
                                                     if($balance >= 0){
-                                                        echo $this->sma->formatNumber($balance); 
+                                                        echo number_format($balance, 2, '.', ','); 
                                                         echo ' Dr';
                                                     }else if($balance < 0){
-                                                        echo $this->sma->formatNumber($balance); 
+                                                        echo number_format(abs($balance), 2, '.', ','); 
                                                         echo ' Cr';
                                                     }
                                                 ?></td>
@@ -173,16 +182,16 @@
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
-                                <th><?= $this->sma->formatNumber($totalDebit).' Dr'; ?></th>
-                                <th><?= $this->sma->formatNumber($totalCredit).' Cr'; ?></th>
+                                <th><?= number_format($totalDebit, 2, '.', ',').' Dr'; ?></th>
+                                <th><?= number_format($totalCredit, 2, '.', ',').' Cr'; ?></th>
                                 <th>
                                     <?php 
                                         
                                         if($balance >= 0){
-                                            echo $this->sma->formatNumber($balance); 
+                                            echo number_format($balance, 2, '.', ','); 
                                             echo ' Dr';
                                         }else if($balance < 0){
-                                            echo $this->sma->formatNumber($balance); 
+                                            echo number_format($balance, 2, '.', ','); 
                                             echo ' Cr';
                                         }
                                     ?>

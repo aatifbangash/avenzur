@@ -89,6 +89,31 @@
                         </div>
 
                         <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('Salesman', 'salesman'); ?>
+                                <?php
+                                // Get unique salesmen from customers
+                                $salesmen = ['' => lang('all_salesmen')];
+                                foreach ($customers as $customer) {
+                                    if (!empty($customer->sales_agent) && !isset($salesmen[$customer->sales_agent])) {
+                                        $salesmen[$customer->sales_agent] = $customer->sales_agent;
+                                    }
+                                }
+                                $selected_salesman = isset($salesman) && !empty($salesman) ? $salesman : '';
+                                ?>
+                                <select name="salesman" class="form-control input-tip select" style="width:100%;">
+                                    <?php foreach ($salesmen as $key => $value): ?>
+                                        <option value="<?php echo htmlspecialchars($key); ?>" <?php echo ($selected_salesman === $key) ? 'selected="selected"' : ''; ?>>
+                                            <?php echo htmlspecialchars($value); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <?php
+                                ?>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
                             <div class="from-group">
                                 <button type="submit" style="margin-top: 28px;" class="btn btn-primary"
                                         id="load_report"><?= lang('Load Report') ?></button>
@@ -108,6 +133,7 @@
                             <tr>
                                 <th>#</th>
                                 <th><?= lang('Customer'); ?></th>
+                                <th><?= lang('Salesman'); ?></th>
                                 <th><?= lang('Credit Term'); ?></th>
                                 <?php
                                     $duration = $this->input->post('duration') ? $this->input->post('duration') : 120;
@@ -176,6 +202,7 @@
                                             <tr>
                                                 <td><?= $count; ?></td>
                                                 <td><?= $data['customer_name']; ?></td>
+                                                <td><?= $data['sales_agent'] ?? ''; ?></td>
                                                 <td><?= $data['payment_term']; ?></td>
                                                 <?php
                                                 $i=1;
@@ -192,13 +219,13 @@
                                                        
                                                         $end = $interval;
                                                         $previous_limit = $end;
-                                                        echo "<td>{$this->sma->formatNumber($data["{$start}-{$end}"])}</td>";
+                                                        echo "<td>" . number_format($data["{$start}-{$end}"], 2, '.', ',') . "</td>";
                                                     $i = $i+1;    
                                                     }
 
-                                                    echo "<td>{$this->sma->formatNumber($data[">{$duration}"])}</td>";
+                                                    echo "<td>" . number_format($data[">{$duration}"], 2, '.', ',') . "</td>";
                                                 ?>
-                                                <td><?= $this->sma->formatNumber($total_sum); ?></td>
+                                                <td><?= number_format($total_sum, 2, '.', ','); ?></td>
                                             </tr>
                                         <?php
                                     }
@@ -207,7 +234,7 @@
                             </tbody>
                             <tfoot style="text-align:center;">
                                 <tr>
-                                    <td colspan="2"><strong></strong></td>
+                                    <td colspan="3"><strong></strong></td>
                                     <td><strong></strong></td>
                                     <?php
                                         $previous_limit = 0;
@@ -223,13 +250,13 @@
                                             }
                                             $end = $interval;
                                             $previous_limit = $end;
-                                            echo "<td><strong>{$this->sma->formatNumber($totals["{$start}-{$end}"])}</strong></td>";
+                                            echo "<td><strong>" . number_format($totals["{$start}-{$end}"], 2, '.', ',') . "</strong></td>";
                                             $i=$i+1;
                                         }
 
-                                        echo "<td><strong>{$this->sma->formatNumber($totals[">{$duration}"])}</strong></td>";
+                                        echo "<td><strong>" . number_format($totals[">{$duration}"], 2, '.', ',') . "</strong></td>";
                                     ?>
-                                    <td><strong><?= $this->sma->formatNumber($totals['total']); ?></strong></td>
+                                    <td><strong><?= number_format($totals['total'], 2, '.', ','); ?></strong></td>
                                 </tr>
                             </tfoot>
                         </table>
