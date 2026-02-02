@@ -3766,14 +3766,14 @@ class Sales extends MY_Controller
             $action .=  '<li>' . $pdf_link . '</li>
                 <li>' . $zatka_invoice_link . '</li>';
 
-            if($Admin || $Owner || $this->GP['returns-add']){
+            if($this->Owner || $this->Admin || $this->GP['returns-add']){
                 $action .=  '<li>' . $return_link . '</li>';
             }
 
-            if(($Admin || $Owner)){
+            if(($this->Admin || $this->Owner)){
                 $action .=  '<li>' . $delete_link . '</li>';
             }
-            if(($Admin || $Owner || $this->Accountant)){
+            if(($this->Admin || $this->Owner || $this->Accountant)){
                 $action .=  '<li>' . $journal_entry_link . '</li>';
             }
             $action .=  '</ul>
