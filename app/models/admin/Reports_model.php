@@ -5953,7 +5953,7 @@ class Reports_model extends CI_Model
             $date_condition .= " AND s.date >= '{$start_date}'";
         }
         if ($end_date) {
-            $date_condition .= " AND s.date <= '{$end_date}'";
+            $date_condition .= " AND s.date < '{$end_date}'";
         }
         if (!empty($customer_id) && $customer_id !== '' && $customer_id !== '0') {
             $customer_condition = " AND s.customer_id = {$customer_id}";
