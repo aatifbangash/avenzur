@@ -5953,7 +5953,7 @@ class Reports_model extends CI_Model
             $date_condition .= " AND s.date >= '{$start_date}'";
         }
         if ($end_date) {
-            $date_condition .= " AND s.date < '{$end_date}'";
+            $date_condition .= " AND s.date < DATE_ADD('{$end_date}', INTERVAL 1 DAY)";
         }
         if (!empty($customer_id) && $customer_id !== '' && $customer_id !== '0') {
             $customer_condition = " AND s.customer_id = {$customer_id}";
@@ -6029,7 +6029,7 @@ class Reports_model extends CI_Model
             $sql .= " AND r.date >= '{$start_date}'";
         }
         if ($end_date) {
-            $sql .= " AND r.date <= '{$end_date}'";
+            $sql .= " AND r.date < DATE_ADD('{$end_date}', INTERVAL 1 DAY)";
         }
 
         // Add customer filter for returns
