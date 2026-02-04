@@ -90,6 +90,20 @@
                         </div>
                     </div>
 
+                    <!-- Tax Rate Row -->
+                    <div class="row" style="margin-top: 20px;">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="tax_rate" style="font-weight: 600; margin-bottom: 8px;">
+                                    Tax Rate <span class="text-danger">*</span>
+                                </label>
+                                <?php 
+                                    $opts = ['1' => lang('No Tax'), '5' => lang('VAT 15%')];
+                                    echo form_dropdown('tax_rate', $opts, ($_POST['tax_rate'] ?? ($product ? $product->tax_rate : '')), 'class="form-control" id="tax_rate" required="required"');
+                                ?>
+                            </div>
+                        </div>
+                    </div>
                     <!-- Description -->
                     <div class="form-group" style="margin-top: 20px;">
                         <label for="description" style="font-weight: 600; margin-bottom: 8px;">

@@ -2920,6 +2920,7 @@ class Products extends MY_Controller
         $this->form_validation->set_rules('sale_price', 'Sale Price', 'required|numeric');
         $this->form_validation->set_rules('description', 'Description', 'required');
         $this->form_validation->set_rules('product_image', 'Product Image', 'xss_clean');
+        $this->form_validation->set_rules('tax_rate', 'Tax Rate', 'required');
 
         if ($this->form_validation->run() == true) {
 
@@ -2936,6 +2937,7 @@ class Products extends MY_Controller
                 'tax_method'     => 0,  // Default tax method
                 'track_quantity' => 1,  // Track quantity by default
                 'quantity'       => 0,  // Initial quantity
+                'tax_rate'       => $this->input->post('tax_rate')
             ];
 
             // Handle image upload
@@ -4845,7 +4847,7 @@ error_reporting(E_ALL);
         $this->form_validation->set_rules('digital_file', lang('digital_file'), 'xss_clean');
 
         if ($this->form_validation->run() == true) {
-
+            //echo $tax_rate = $this->input->post('tax_rate');exit;
             // Handle product countries
             $product_countries = '';
             if ($this->input->post('cf1') && is_array($this->input->post('cf1'))) {

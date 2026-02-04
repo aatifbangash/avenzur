@@ -90,12 +90,30 @@
                         </div>
                     </div>
 
+                    <!-- Tax Rate Row -->
+                    <div class="row" style="margin-top: 20px;">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="tax_rate" style="font-weight: 600; margin-bottom: 8px;">
+                                    Tax Rate <span class="text-danger">*</span>
+                                </label>
+                                <?php
+                                foreach ($tax_rates as $tax) {
+                                    $tr[$tax->id] = $tax->name;
+                                }
+                                //echo '<pre>';print_r($tr);exit;
+                                echo form_dropdown('tax_rate', $tr, ($product->tax_rate), 'class="form-control select" id="tax_rate" placeholder="' . lang('select') . ' ' . lang('product_tax') . '" style="width:100%"')
+                                ?>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Description -->
                     <div class="form-group" style="margin-top: 20px;">
                         <label for="product_details" style="font-weight: 600; margin-bottom: 8px;">
                             Description <span class="text-danger">*</span>
                         </label>
-                        <?= form_textarea('product_details', (isset($_POST['product_details']) ? $_POST['product_details'] : ($product ? $product->product_details : '')), 'class="form-control" id="product_details" rows="5" required="required" placeholder="Enter product description"'); ?>
+                        <?= form_textarea('product_details', (isset($_POST['product_details']) ? $_POST['product_details'] : ($product ? $product->details : '')), 'class="form-control" id="product_details" rows="5" required="required" placeholder="Enter product description"'); ?>
                     </div>
 
                     <!-- Current Product Image Display -->
