@@ -2924,6 +2924,10 @@ class Products extends MY_Controller
 
         if ($this->form_validation->run() == true) {
 
+            if($this->input->post('product_image_link') && filter_var($this->input->post('product_image_link'), FILTER_VALIDATE_URL)){
+                $image_link = $this->input->post('product_image_link');
+            }
+
             // Prepare simplified product data
             $data = [
                 'code'           => $this->input->post('item_code'),
@@ -2937,7 +2941,8 @@ class Products extends MY_Controller
                 'tax_method'     => 0,  // Default tax method
                 'track_quantity' => 1,  // Track quantity by default
                 'quantity'       => 0,  // Initial quantity
-                'tax_rate'       => $this->input->post('tax_rate')
+                'tax_rate'       => $this->input->post('tax_rate'),
+                'image'     => isset($image_link) ? $image_link : null
             ];
 
             // Handle image upload

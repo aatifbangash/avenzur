@@ -89,7 +89,7 @@ class Products_model extends CI_Model
     {
         // Generate sequence code
         $data['sequence_code'] = $this->sequenceCode->generate('PRD', 5);
-
+        //echo '<pre>';print_r($data);exit;
         // Insert product
         if ($this->db->insert('products', $data)) {
             $product_id = $this->db->insert_id();
