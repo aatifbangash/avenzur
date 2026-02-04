@@ -112,6 +112,29 @@
                         <?= form_textarea('description', set_value('description'), 'class="form-control" id="description" rows="5" required="required" placeholder="Enter product description"'); ?>
                     </div>
 
+                    <!-- NEW: Image URL Input -->
+                    <!-- This saves into the same 'image' column in your DB -->
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label style="font-weight: 600; margin-bottom: 8px;">Image URL</label>
+                        <input
+                                type="text"
+                                name="product_image_link"
+                                id="product_image_link"
+                                class="form-control"
+                                placeholder="Paste image URL here (e.g. https://cdn.shopify.com/...)"
+                                value="<?php
+                                // Pre-fill with current value only if it's an external URL
+                                if ($product && $product->image && (str_starts_with($product->image, 'http://') || str_starts_with($product->image, 'https://'))) {
+                                    echo htmlspecialchars($product->image);
+                                }
+                                ?>"
+                                style="width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"
+                        />
+                        <small style="color: #888; margin-top: 4px; display: block;">
+                            If you paste a URL here, it will be saved as the product image (replaces any uploaded file).
+                        </small>
+                    </div>
+
                     <!-- Product Image -->
                     <div class="form-group" style="margin-top: 20px;">
                         <label for="product_image" style="font-weight: 600; margin-bottom: 8px;">
