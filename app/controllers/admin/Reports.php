@@ -772,9 +772,10 @@ class Reports extends MY_Controller
             $this->excel->getActiveSheet()->SetCellValue('A1', lang('code'));
             $this->excel->getActiveSheet()->SetCellValue('B1', lang('name'));
             $this->excel->getActiveSheet()->SetCellValue('C1', lang('Available Quantity'));
-            $this->excel->getActiveSheet()->SetCellValue('D1', lang('Avg Sale'));
-            $this->excel->getActiveSheet()->SetCellValue('E1', lang('Required Stock'));
-            $this->excel->getActiveSheet()->SetCellValue('F1', lang('Months'));
+            $this->excel->getActiveSheet()->SetCellValue('D1', lang('Sale'));
+            $this->excel->getActiveSheet()->SetCellValue('E1', lang('Avg Sale'));
+            $this->excel->getActiveSheet()->SetCellValue('F1', lang('Required Stock'));
+            $this->excel->getActiveSheet()->SetCellValue('G1', lang('Months'));
 
             $row = 2;
             foreach ($data as $data_row) {
@@ -782,9 +783,10 @@ class Reports extends MY_Controller
                 $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->name);
                 $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->available_stock);
                 $this->excel->getActiveSheet()->SetCellValue('D' . $row, isset($data_row->avg_stock) ? $data_row->avg_stock : ($data_row->avg_last_3_months_sales / $period));
+                $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->avg_last_3_months_sales);
                 $required_stock = isset($data_row->required_stock) ? $data_row->required_stock : (($data_row->avg_last_3_months_sales / $period) - $data_row->available_stock > 0 ? ($data_row->avg_last_3_months_sales / $period) - $data_row->available_stock : 0);
-                $this->excel->getActiveSheet()->SetCellValue('E' . $row, $required_stock);
-                $this->excel->getActiveSheet()->SetCellValue('F' . $row, $period . ' months');
+                $this->excel->getActiveSheet()->SetCellValue('F' . $row, $required_stock);
+                $this->excel->getActiveSheet()->SetCellValue('G' . $row, $period . ' months');
                 $row++;
             }
 
