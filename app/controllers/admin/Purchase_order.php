@@ -369,12 +369,12 @@ class Purchase_order extends MY_Controller
 
                     $tax_rate_id = 1;
                     $tax_percent = 0;
-                    $vat_value = ($purchase_price * $qty * $tax_percent) / 100;
+                    $vat_value = ($cost_price * $qty * $tax_percent) / 100;
 
                 }else{
                     $tax_rate_id = $row[10] == 15 ? 5 : 1;
                     $tax_percent = $row[10];
-                    $vat_value = ($purchase_price * $qty * $tax_percent) / 100;
+                    $vat_value = ($cost_price * $qty * $tax_percent) / 100;
                 }
 
                 // Check if parent product exists
@@ -422,7 +422,7 @@ class Purchase_order extends MY_Controller
 
                 $tax_rate_id = $product->tax_rate;
                 $tax_percent = $product->tax_rate == 5 ? 15 : 0;
-                $vat_value = ($purchase_price * $qty * $tax_percent) / 100;
+                $vat_value = ($cost_price * $qty * $tax_percent) / 100;
             }
 
             if(!$product_id){
