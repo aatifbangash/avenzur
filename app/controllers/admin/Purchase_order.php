@@ -336,7 +336,7 @@ class Purchase_order extends MY_Controller
             
             $qty = (float)$row[6];
             $sale_price = (float)$row[7];
-            $purchase_price = (float)$row[8];
+            $purchase_price = (float)$row[8] ? (float)$row[8] : (float)$row[9];
             
             $dis1_percent = (float)$row[11];
             $dis1_value = $row[12] ? $row[12] ? ($dis1_percent / 100) * ($purchase_price * $qty) : 0 : 0;
