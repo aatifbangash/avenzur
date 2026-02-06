@@ -1208,6 +1208,35 @@ public function logVisitor() {
         return false;
     }
 
+    public function getCompanyLedgersByGroupCode($group_code_arr)
+    {
+        $group_ids = [];
+        if (!empty($group_code_arr)) {
+            $this->db->where_in('code', $group_code_arr);
+            $q = $this->db->get('accounts_groups');
+
+            if ($q->num_rows() > 0) {
+                $group_id = $q->result(); // multiple rows
+                $group_ids = array_column($group_id, 'id'); // extract ids
+            }
+        }
+        $this->db
+            ->select('sma_accounts_ledgers.*')
+            ->from('sma_accounts_ledgers')
+            ->where_in('sma_accounts_ledgers.group_id', $group_ids)
+            ->order_by('sma_accounts_ledgers.name asc');
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data_res[] = $row;
+            }
+        } else {
+            $data_res = array();
+        }
+
+        return $data_res;
+    }
+
     public function getCompanyLedgers()
     {
         $this->db
