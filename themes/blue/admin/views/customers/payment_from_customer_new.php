@@ -403,6 +403,8 @@
                 }
                 paymentInput.prop('disabled', true);
                 paymentInput.val('');
+                // Explicitly reset hidden input for unchecked invoice
+                $('#invoice-amount-' + invoiceId).val('0.00');
             }
 
             calculateTotalPayment();
@@ -410,16 +412,40 @@
 
         // Handle return checkbox changes
         $(document).on('change', '.return-checkbox', function() {
+            var isChecked = $(this).is(':checked');
+            var returnId = $(this).val();
+            
+            if (!isChecked) {
+                // Explicitly reset hidden input for unchecked return
+                $('#return-amount-' + returnId).val('0.00');
+            }
+            
             calculateTotalPayment();
         });
 
         // Handle credit memo checkbox changes
         $(document).on('change', '.creditmemo-checkbox', function() {
+            var isChecked = $(this).is(':checked');
+            var creditmemoId = $(this).val();
+            
+            if (!isChecked) {
+                // Explicitly reset hidden input for unchecked credit memo
+                $('#creditmemo-amount-' + creditmemoId).val('0.00');
+            }
+            
             calculateTotalPayment();
         });
 
         // Handle advance checkbox changes
         $(document).on('change', '.advance-checkbox', function() {
+            var isChecked = $(this).is(':checked');
+            var advanceId = $(this).val();
+            
+            if (!isChecked) {
+                // Explicitly reset hidden input for unchecked advance
+                $('#advance-amount-' + advanceId).val('0.00');
+            }
+            
             calculateTotalPayment();
         });
 

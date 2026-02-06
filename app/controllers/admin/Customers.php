@@ -1158,7 +1158,7 @@ class Customers extends MY_Controller
             }
 
             $total_payment = $payment_amount + $applied_advance + $total_applied_returns + $total_applied_creditmemos;
-
+            //echo $total_applied_creditmemos;exit;
             if($total_payments_from_invoices > $total_payment) {
                 $this->session->set_flashdata('error', 'Total payment amount is insufficient to cover the applied amounts for selected invoices. Please adjust the payment amount or applied amounts.');
                 //echo 'More Amount error...';exit;
