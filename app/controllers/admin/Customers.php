@@ -25,6 +25,7 @@ class Customers extends MY_Controller
         }
         $this->lang->admin_load('customers', $this->Settings->user_language);
         $this->load->admin_model('sales_model');
+        $this->load->admin_model('returns_model');
         $this->load->admin_model('purchases_model');
         $this->load->library('form_validation');
         $this->load->admin_model('companies_model');
@@ -40,6 +41,87 @@ class Customers extends MY_Controller
             $this->db->delete('sma_accounts_entryitems', ['entry_id' => $accouting_entry->id]);
             $this->db->delete('sma_accounts_entries', ['id' => $accouting_entry->id]);
         }
+    }
+
+    public function convert_customer_payment_multiple_invoice_new($customer_id, $ledger_account, $payment_amount, $reference_no, $type, $total_additional_discount, $customer_discount_ledger, $date, $customer_advance_ledger, $advance_amount){
+        $this->load->admin_model('companies_model');
+        $customer = $this->companies_model->getCompanyByID($customer_id);
+
+        if($total_additional_discount > 0){
+            $receiveable_amount = $payment_amount + $total_additional_discount;
+        }else{
+            $receiveable_amount = $payment_amount;
+        }
+
+        /*Accounts Entries*/
+        $entry = array(
+            'entrytype_id' => 4,
+            'transaction_type' => $type,
+            'number'       => 'PMC-'.$reference_no,
+            'date'         => $date,
+            'dr_total'     => $receiveable_amount,
+            'cr_total'     => $receiveable_amount,
+            'notes'        => 'Payment Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
+            'sid'          =>  '',
+            'customer_id'  => $customer_id
+            );
+        $add  = $this->db->insert('sma_accounts_entries', $entry);
+        $insert_id = $this->db->insert_id();
+
+        //customer - Credit to reduce receivable
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'C',
+                'ledger_id' => $customer->ledger_account,
+                'amount' => $receiveable_amount + $advance_amount,
+                'narration' => 'Account Receivable'
+            )
+        );
+
+        if($advance_amount > 0){
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'ledger_id' => $customer_advance_ledger,
+                    'amount' => $advance_amount,
+                    'dc' => 'D',
+                    'reconciliation_date' => $date,
+                    'narration' => 'Advance Settlement'
+                )
+            );
+        }
+
+        //payment ledger - Debit to increase cash/bank
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'D',
+                'ledger_id' => $ledger_account,
+                'amount' => $payment_amount,
+                'narration' => 'Payment Received'
+            )
+        );
+
+        if($total_additional_discount > 0){
+            //payment ledger - Debit to increase cash/bank
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $customer_discount_ledger,
+                    'amount' => $total_additional_discount,
+                    'narration' => 'Additional Discount on Payment'
+                )
+            );
+        }
+
+        foreach ($entryitemdata as $row => $itemdata)
+        {
+            $this->db->insert('sma_accounts_entryitems' ,$itemdata['Entryitem']);
+        }
+
+        return $insert_id;
     }
 
     public function convert_customer_payment_multiple_invoice($customer_id, $ledger_account, $payment_amount, $reference_no, $type, $total_additional_discount, $customer_discount_ledger, $date){
@@ -268,13 +350,83 @@ class Customers extends MY_Controller
                 $current_balance = floatval($customer_balance ?? 0);
                 $remaining_limit = max(0, $credit_limit - $current_balance);
                 
+                // Get customer advance ledger from settings
+                $settings = $this->Settings;
+                $customer_advance_ledger = isset($settings->customer_advance_ledger) && !empty($settings->customer_advance_ledger) 
+                                         ? $settings->customer_advance_ledger 
+                                         : null;
+                
+                // Get available advance balance
+                $available_advance = 0;
+                if ($customer_advance_ledger) {
+                    $available_advance = $this->getCustomerAdvanceBalance($customer_id, $customer_advance_ledger);
+                }
+                
                 $response = array(
                     'credit_limit' => $credit_limit,
                     'current_balance' => $current_balance,
                     'remaining_limit' => $remaining_limit,
+                    'available_advance' => $available_advance,
+                    'payment_term' => $customer->payment_term ?? '',
                     'customer_name' => $customer->company != '-' ? $customer->company : $customer->name
                 );
             }
+        }
+        
+        header('Content-Type: application/json');
+        echo json_encode($response);
+    }
+
+    public function get_customer_invoices(){
+        $customer_id = $_GET['customer_id'];
+        $response = array();
+        
+        if ($customer_id) {
+            // Get customer invoices with payment information
+            $invoices = $this->sales_model->getCustomerInvoicesWithPayments($customer_id);
+            $response = $invoices;
+        }
+        
+        header('Content-Type: application/json');
+        echo json_encode($response);
+    }
+
+    public function get_customer_returns(){
+        $customer_id = $_GET['customer_id'];
+        $response = array();
+        
+        if ($customer_id) {
+            // Get customer returns with payment information
+            $returns = $this->sales_model->getCustomerReturnsWithPayments($customer_id);
+            $response = $returns;
+        }
+        
+        header('Content-Type: application/json');
+        echo json_encode($response);
+    }
+
+    public function get_customer_credit_memos(){
+        $customer_id = $_GET['customer_id'];
+        $response = array();
+        
+        if ($customer_id) {
+            // Get customer credit memos with usage information
+            $creditmemos = $this->sales_model->getCustomerCreditMemosWithUsage($customer_id);
+            $response = $creditmemos;
+        }
+        
+        header('Content-Type: application/json');
+        echo json_encode($response);
+    }
+
+    public function get_customer_advances(){
+        $customer_id = $_GET['customer_id'];
+        $response = array();
+        
+        if ($customer_id) {
+            // Get customer advances with usage information
+            $advances = $this->sales_model->getCustomerAdvancesWithUsage($customer_id);
+            $response = $advances;
         }
         
         header('Content-Type: application/json');
@@ -851,6 +1003,236 @@ class Customers extends MY_Controller
             $this->data['warehouses'] = $this->site->getAllWarehouses();
             $this->data['customer_advance_ledger'] = $customer_advance_ledger;
             $this->page_construct('customers/add_payment', $meta, $this->data);
+        }
+    }
+
+    public function payment_from_customer_new(){
+        $this->form_validation->set_rules('customer', $this->lang->line('customer'), 'required');
+        $this->form_validation->set_rules('reference_no', $this->lang->line('reference_no'), 'required');
+        $this->form_validation->set_rules('date', $this->lang->line('date'), 'required');
+        $this->form_validation->set_rules('ledger', $this->lang->line('ledger_account'), 'required');
+
+        $data = [];
+        $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('add payment')]];
+        $meta = ['page_title' => lang('Customer Payments (New)'), 'bc' => $bc];
+
+        if ($this->form_validation->run() == true) {
+            $customer_id = $this->input->post('customer');
+            $reference_no = $this->input->post('reference_no');
+            $ledger_account = $this->input->post('ledger');
+            $date = $this->input->post('date');
+            $note = $this->input->post('note');
+            $payment_amount = $this->input->post('payment_amount') ? (float)$this->input->post('payment_amount') : 0;
+
+            $customer_advance_ledger = isset($this->Settings->customer_advance_ledger) && !empty($this->Settings->customer_advance_ledger) 
+                                     ? $this->Settings->customer_advance_ledger 
+                                     : null;
+
+            // Convert date format
+            $formattedDate = DateTime::createFromFormat('d/m/Y H:i', $date);
+            if ($formattedDate) {
+                $date = $formattedDate->format('Y-m-d');
+            } else {
+                $this->session->set_flashdata('error', 'Invalid date format');
+                admin_redirect('customers/payment_from_customer_new');
+            }
+
+            // Get selected items
+            $invoice_ids = $this->input->post('invoice_ids') ?: [];
+            $return_ids = $this->input->post('return_ids') ?: [];
+            $creditmemo_ids = $this->input->post('creditmemo_ids') ?: [];
+            $advance_ids = $this->input->post('advance_ids') ?: [];
+
+            $invoice_amounts = $this->input->post('invoice_amounts'); // Array of applied amounts
+            $return_amounts = $this->input->post('return_amounts');   // Array of used amounts
+            $creditmemo_amounts = $this->input->post('creditmemo_amounts'); // Array of applied amounts
+            $advance_amounts = $this->input->post('advance_amounts'); // Array of applied amounts
+
+            if (empty($invoice_ids) && empty($return_ids) && empty($creditmemo_ids) && empty($advance_ids)) {
+                $this->session->set_flashdata('error', 'Please select at least one invoice, return, credit memo, or advance');
+                admin_redirect('customers/payment_from_customer_new');
+            }
+
+            // Calculate total outstanding from selected invoices
+            $total_invoice_outstanding = 0;
+            $total_payments_from_invoices = 0;
+            $invoice_details = [];
+            if (!empty($invoice_ids)) {
+                foreach ($invoice_amounts as $invoice_id => $applied_amount) {
+                    if($applied_amount > 0){
+                        $invoice = $this->sales_model->getSaleInvoiceTotalPaid($customer_id, $invoice_id);
+                        $invoice->total_paying = $applied_amount;
+                        $total_payments_from_invoices += $applied_amount;
+                        //echo '<pre>';print_r($invoice);
+                        $invoice_details[$invoice_id] = [
+                            'grand_total' => $invoice->grand_total,
+                            'total_paid' => $invoice->total_paid ?? 0,
+                            'total_paying' => $applied_amount,
+                        ];
+                    }
+                }
+            }
+
+            // Calculate total from selected advances, returns, and credit memos (priority settlement)
+            $priority_total = 0;
+            $advance_details = [];
+            $return_details = [];
+            $creditmemo_details = [];
+            $applied_advance = 0;
+            $total_applied_returns = 0;
+            $total_applied_creditmemos = 0;
+
+            // Process advances
+            if (!empty($advance_amounts)) {
+                $applied_advance = array_sum($advance_amounts);
+                $advance_balance = $this->getCustomerAdvanceBalance($customer_id, $this->Settings->customer_advance_ledger ?? null);
+                
+                if($applied_advance > $advance_balance) {
+                    $this->session->set_flashdata('error', 'Applied advance amount exceeds available customer advance balance.');
+                    admin_redirect('customers/payment_from_customer_new');
+                }
+            }
+
+            // Process returns
+            if (!empty($return_amounts)) {
+                foreach ($return_amounts as $return_id => $applied_amount) {
+                    $return = $this->returns_model->getReturnByID($return_id);
+                    if ($return) {
+                        if($applied_amount > ($return->grand_total - $return->paid)) {
+                            $this->session->set_flashdata('error', 'Applied return amount exceeds outstanding return amount for return ID: ' . $return_id);
+                            admin_redirect('customers/payment_from_customer_new');
+
+                        }else{
+                            $total_applied_returns += $applied_amount;
+                            $return_details[$return_id] = [
+                                'grand_total' => $return->grand_total,
+                                'total_paid' => $return->paid ?? 0,
+                                'total_paying' => $applied_amount,
+                            ];
+                        }
+                    }
+                }
+            }
+
+            // Process credit memos
+            if (!empty($creditmemo_amounts)) {
+                foreach ($creditmemo_amounts as $creditmemo_id => $applied_amount) {
+                    $creditmemo = $this->sales_model->getCreditMemoByID($creditmemo_id);
+                    if ($creditmemo) {
+                        $available = $creditmemo->payment_amount - ($creditmemo->used_amount ?? 0);
+                        
+                        if($applied_amount > $available) {
+                            $this->session->set_flashdata('error', 'Applied credit memo amount exceeds available credit memo amount for credit memo ID: ' . $creditmemo_id);
+                            admin_redirect('customers/payment_from_customer_new');
+
+                        }else{
+                            $total_applied_creditmemos += $applied_amount;
+                            $creditmemo_details[$creditmemo_id] = [
+                                'available' => $available,
+                                'used' => $creditmemo->used_amount ?? 0,
+                                'paying' => $applied_amount
+                            ];
+                        }
+                    }else{
+                        $this->session->set_flashdata('error', 'Credit memo not found for ID: ' . $creditmemo_id);
+                        admin_redirect('customers/payment_from_customer_new');
+                    }
+                }
+            }
+            
+            // For partial payments, allow remaining_amount > 0
+            // Only validate that some payment is being applied
+           /* $remaining_amount = $total_invoice_outstanding - $total_settlement;
+            if ($total_settlement <= 0) {
+                $this->session->set_flashdata('error', 'No payment amount is being applied. Please enter a payment amount or select priority items.');
+                admin_redirect('customers/payment_from_customer_new');
+            }*/
+
+            // Process the payment
+            $this->load->admin_model('companies_model');
+            $customer = $this->companies_model->getCompanyByID($customer_id);
+
+            if (!$customer) {
+                $this->session->set_flashdata('error', 'Customer not found');
+                admin_redirect('customers/payment_from_customer_new');
+            }
+
+            $total_payment = $payment_amount + $applied_advance + $total_applied_returns + $total_applied_creditmemos;
+
+            if($total_payments_from_invoices > $total_payment) {
+                $this->session->set_flashdata('error', 'Total payment amount is insufficient to cover the applied amounts for selected invoices. Please adjust the payment amount or applied amounts.');
+                //echo 'More Amount error...';exit;
+                admin_redirect('customers/payment_from_customer_new');
+            }
+            //echo 'here';exit;
+            // Create payment reference
+            $payment_reference = [
+                'customer_id' => $customer_id,
+                'date' => $date,
+                'sequence_code' => $this->sequenceCode->generate('PAY', 5),
+                'note' => $note,
+                'reference_no' => $reference_no,
+                'amount' => $total_payment,
+                'transfer_from_ledger' => $ledger_account,
+                'created_by' => $this->session->userdata('user_id')
+            ];
+
+            //echo '<pre>';print_r($return_details);exit;
+
+            $payment_id = $this->sales_model->addPaymentReference($payment_reference);
+
+            if (!$payment_id) {
+                $this->session->set_flashdata('error', 'Failed to create payment reference');
+                admin_redirect('customers/payment_from_customer_new');
+            }
+
+            // Process payments for each selected invoice
+            foreach ($invoice_details as $sale_id => $invoice_detail) {
+                $payment_amount = $invoice_detail['total_paying'];
+                $paid_amount = $invoice_detail['total_paid'];
+                
+                if ($payment_amount > 0) {
+                    // Add payment record
+                    $payment_data = [
+                        'date' => $date,
+                        'sale_id' => $sale_id,
+                        'reference_no' => $reference_no,
+                        'amount' => $payment_amount,
+                        'note' => $note,
+                        'created_by' => $this->session->userdata('user_id'),
+                        'type' => 'received',
+                        'payment_id' => $payment_id
+                    ];
+                    
+                    $this->sales_model->addPayment($payment_data);
+                    
+                    // Update sale paid amount
+                    $this->sales_model->update_sale_paid_amount($sale_id, ($paid_amount + $payment_amount));
+                }
+            }
+
+            // Update used amounts for returns and credit memos
+            foreach ($return_details as $return_id => $return_detail) {
+                $this->sales_model->update_return_paid($return_id, ($return_detail['total_paying'] + $return_detail['total_paid']));
+            }
+
+            foreach ($creditmemo_details as $creditmemo_id => $creditmemo_detail) {
+                $this->sales_model->update_credit_memo($creditmemo_id, ($creditmemo_detail['used'] + $creditmemo_detail['paying']));
+            }
+            // Create accounting entry
+            $journal_id = $this->convert_customer_payment_multiple_invoice_new($customer_id, $ledger_account, $total_payment, $reference_no, 'customerpayment', 0, null, $date, $customer_advance_ledger, $applied_advance);
+
+            $this->sales_model->update_payment_reference($payment_id, $journal_id);
+
+            $this->session->set_flashdata('message', 'Payment processed successfully');
+            admin_redirect('customers/view_payment/' . $payment_id);
+        } else {
+            //$this->theme = 'blue/admin/views/'; // Ensure correct theme
+            $data = $this->data;
+            $data['customers'] = $this->site->getAllCompanies('customer');
+            $data['warehouses'] = $this->site->getAllWarehouses();
+            $data['ledgers'] = $this->site->getCompanyLedgersByGroupCode(array('11101', '11102')); // Load ledger data
+            $this->page_construct('customers/payment_from_customer_new', $meta, $data);
         }
     }
 
@@ -2451,6 +2833,99 @@ class Customers extends MY_Controller
     }
 
     /**
+     * Apply customer advance to selected invoices
+     */
+    private function applyAdvanceToCustomerInvoices($customer_id, $invoice_ids, $amount, $payment_reference_id, $advance_ledger) {
+        $this->db->trans_start();
+
+        // Create accounting entry to debit advance ledger (reduce advance balance)
+        $entry_data = [
+            'date' => date('Y-m-d'),
+            'customer_id' => $customer_id,
+            'reference' => 'ADV-SETTLEMENT-' . $payment_reference_id,
+            'note' => 'Advance applied to invoices',
+            'created_by' => $this->session->userdata('user_id'),
+            'created_at' => date('Y-m-d H:i:s')
+        ];
+
+        $this->db->insert('sma_accounts_entries', $entry_data);
+        $entry_id = $this->db->insert_id();
+
+        // Debit advance ledger (reduce advance)
+        $this->db->insert('sma_accounts_entryitems', [
+            'entry_id' => $entry_id,
+            'ledger_id' => $advance_ledger,
+            'amount' => $amount,
+            'dc' => 'D', // Debit reduces advance balance
+            'narration' => 'Advance settlement against invoices'
+        ]);
+
+        // Credit receivable (reduce customer balance)
+        $customer_receivable_ledger = $this->getCustomerReceivableLedger($customer_id);
+        if ($customer_receivable_ledger) {
+            $this->db->insert('sma_accounts_entryitems', [
+                'entry_id' => $entry_id,
+                'ledger_id' => $customer_receivable_ledger,
+                'amount' => $amount,
+                'dc' => 'C', // Credit reduces receivable
+                'narration' => 'Advance settlement against invoices'
+            ]);
+        }
+
+        // Distribute amount across selected invoices
+        $remaining_amount = $amount;
+        foreach ($invoice_ids as $invoice_id) {
+            if ($remaining_amount <= 0) break;
+
+            $invoice = $this->sales_model->getInvoiceByID($invoice_id);
+            $outstanding = $invoice->grand_total - ($invoice->paid ?? 0);
+
+            if ($outstanding > 0) {
+                $apply_to_invoice = min($remaining_amount, $outstanding);
+
+                // Add payment record
+                $this->db->insert('payments', [
+                    'date' => date('Y-m-d'),
+                    'sale_id' => $invoice_id,
+                    'reference_no' => 'ADV-' . $payment_reference_id,
+                    'amount' => $apply_to_invoice,
+                    'paid_by' => 'advance',
+                    'note' => 'Applied from customer advance',
+                    'created_by' => $this->session->userdata('user_id')
+                ]);
+
+                // Update sale paid amount
+                $this->db->set('paid', 'paid + ' . $apply_to_invoice, FALSE)
+                         ->where('id', $invoice_id)
+                         ->update('sales');
+
+                $remaining_amount -= $apply_to_invoice;
+            }
+        }
+
+        $this->db->trans_complete();
+        return $this->db->trans_status();
+    }
+
+    /**
+     * Get customer receivable ledger ID
+     */
+    private function getCustomerReceivableLedger($customer_id) {
+        // Get customer's receivable ledger from companies table or settings
+        $this->db->select('receivable_ledger');
+        $this->db->from('companies');
+        $this->db->where('id', $customer_id);
+        $query = $this->db->get();
+
+        if ($query->num_rows() > 0) {
+            $company = $query->row();
+            return $company->receivable_ledger;
+        }
+
+        return null;
+    }
+
+    /**
      * Get customer advance balance from ledger
      * 
      * @param int $customer_id Customer ID
@@ -2531,6 +3006,69 @@ class Customers extends MY_Controller
                 'message' => 'No existing customer found with this category'
             ]);
         }
+    }
+
+    private function createCustomerAdvance($customer_id, $amount, $payment_id, $date, $reference_no) {
+        // Get customer details
+        $this->load->admin_model('companies_model');
+        $customer = $this->companies_model->getCompanyByID($customer_id);
+
+        if (!$customer) {
+            return false;
+        }
+
+        // Create advance record
+        $advance_data = [
+            'customer_id' => $customer_id,
+            'amount' => $amount,
+            'payment_id' => $payment_id,
+            'date' => $date,
+            'reference_no' => $reference_no,
+            'created_by' => $this->session->userdata('user_id')
+        ];
+
+        $advance_id = $this->sales_model->addCustomerAdvance($advance_data);
+
+        if ($advance_id) {
+            // Create accounting entries for the advance
+            $this->load->admin_model('accounts_model');
+
+            // Debit customer advance ledger, Credit customer receivable
+            $entry_data = [
+                'entrytype_id' => 4, // Payment entry type
+                'transaction_type' => 'ADVANCE',
+                'number' => 'ADV-' . $reference_no,
+                'date' => $date,
+                'dr_total' => $amount,
+                'cr_total' => $amount,
+                'notes' => 'Customer Advance from Payment Reference: ' . $reference_no,
+                'customer_id' => $customer_id
+            ];
+
+            $entry_id = $this->accounts_model->addEntry($entry_data);
+
+            if ($entry_id) {
+                // Debit: Customer Advance Ledger
+                $this->accounts_model->addEntryItem([
+                    'entry_id' => $entry_id,
+                    'ledger_id' => $this->Settings->customer_advance_ledger ?? $customer->ledger_account,
+                    'amount' => $amount,
+                    'dc' => 'D',
+                    'narration' => 'Customer Advance'
+                ]);
+
+                // Credit: Customer Receivable Ledger
+                $this->accounts_model->addEntryItem([
+                    'entry_id' => $entry_id,
+                    'ledger_id' => $customer->ledger_account,
+                    'amount' => $amount,
+                    'dc' => 'C',
+                    'narration' => 'Advance Payment'
+                ]);
+            }
+        }
+
+        return $advance_id;
     }
 }
 

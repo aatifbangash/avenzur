@@ -248,12 +248,37 @@ class Sales_model extends CI_Model
             $new_amount = $paid_amount + $amount;
             
             $data = array(
-                'paid' => $new_amount
+                'paid' => $amount
             );
     
             $this->db->update('sales', $data, array('id' => $id));
         }
         return false;
+    }
+
+    public function getSaleInvoiceTotalPaid($customer_id, $sale_id)
+    {
+        $this->db->select('
+            s.id AS sale_id,
+            s.grand_total,
+            IFNULL(SUM(p.amount), 0) AS total_paid
+        ', false);
+
+        $this->db->from('sma_sales s');
+        $this->db->join('sma_payments p', 'p.sale_id = s.id', 'left');
+
+        $this->db->where('s.id', $sale_id);
+        $this->db->where('s.customer_id', $customer_id);
+
+        $this->db->group_by('s.id');
+
+        $q = $this->db->get();
+
+        if ($q->num_rows() > 0) {
+            return $q->row(); // grand_total + total_paid
+        }
+
+        return null;
     }
 
     public function getPendingInvoicesByCustomer($customer_id) {
@@ -275,6 +300,160 @@ class Sales_model extends CI_Model
         }
     }
 
+    public function getCustomerInvoicesWithPayments($customer_id) {
+        $this->db->select('s.id, s.date, s.reference_no, s.customer_id, s.customer, s.grand_total, 
+                          COALESCE(SUM(p.amount), 0) as total_paid,
+                          s.payment_status, s.due_date', false);
+        $this->db->from('sales s');
+        $this->db->join('payments p', 'p.sale_id = s.id', 'left');
+        $this->db->where('s.customer_id', $customer_id);
+        $this->db->where('s.sale_invoice', 1);
+        $this->db->group_by('s.id');
+        $this->db->order_by('s.date', 'asc');
+        $q = $this->db->get();
+    
+        if ($q->num_rows() > 0) {
+            $invoices = $q->result();
+            
+            // Add calculated fields
+            foreach ($invoices as $key => $invoice) {
+                $invoice->outstanding_amount = $invoice->grand_total - $invoice->total_paid;
+                $invoice->type = 'Sales Invoice';
+
+                // Remove invoice if outstanding is zero or less
+                if ($invoice->outstanding_amount == 0) {
+                    unset($invoices[$key]);
+                }
+            }
+
+            $invoices = array_values($invoices);
+            //echo '<pre>';print_r($invoices);exit;
+            return $invoices;
+        } else {
+            return [];
+        }
+    }
+
+    public function getCustomerReturnsWithPayments($customer_id) {
+        $this->db->select('r.id, r.date, r.reference_no, r.customer_id, r.customer, r.grand_total, 
+                          COALESCE(SUM(r.paid), 0) as total_paid', false);
+        $this->db->from('returns r');
+        //$this->db->join('payments p', 'p.return_id = r.id', 'left');
+        $this->db->where('r.customer_id', $customer_id);
+        $this->db->group_by('r.id');
+        $this->db->order_by('r.date', 'desc');
+        $q = $this->db->get();
+    
+        if ($q->num_rows() > 0) {
+            $returns = $q->result();
+            
+            // Add calculated fields
+            foreach ($returns as $key => $return_item) {
+                $return_item->outstanding_amount = $return_item->grand_total - $return_item->total_paid;
+                $return_item->type = 'Return';
+
+                // Remove invoice if outstanding is zero or less
+                if ($return_item->outstanding_amount == 0) {
+                    unset($returns[$key]);
+                }
+            }
+            
+            $returns = array_values($returns);
+            return $returns;
+        } else {
+            return [];
+        }
+    }
+
+    public function getCustomerCreditMemosWithUsage($customer_id) {
+        $this->db->select('m.id, m.date, m.reference_no, m.customer_id, m.payment_amount as amount, m.used_amount', false);
+        $this->db->from('memo m');
+        $this->db->join('memo_entries me', 'me.memo_id = m.id', 'left');
+        $this->db->where('m.customer_id', $customer_id);
+        $this->db->group_by('m.id');
+        $this->db->order_by('m.date', 'desc');
+        $q = $this->db->get();
+    
+        if ($q->num_rows() > 0) {
+            $creditmemos = $q->result();
+            
+            // Add calculated fields
+            foreach ($creditmemos as $key => $creditmemo) {
+                $creditmemo->available_balance = $creditmemo->amount - $creditmemo->used_amount;
+                $creditmemo->type = 'Credit Memo';
+
+                // Remove credit memo if available balance is zero or less
+                if ($creditmemo->available_balance <= 0) {
+                    unset($creditmemos[$key]);
+                }   
+                
+            }
+            
+            $creditmemos = array_values($creditmemos);
+            return $creditmemos;
+        } else {
+            return [];
+        }
+    }
+
+    public function getCustomerAdvancesWithUsage($customer_id) {
+        // Get customer advance ledger from settings
+        $this->db->select('customer_advance_ledger');
+        $this->db->from('settings');
+        $this->db->where('setting_id', 1); // Assuming settings table has setting_id = 1 for main settings
+        $settings_query = $this->db->get();
+        
+        if ($settings_query->num_rows() == 0) {
+            return [];
+        }
+        
+        $settings = $settings_query->row();
+        $customer_advance_ledger = $settings->customer_advance_ledger;
+        
+        if (!$customer_advance_ledger) {
+            return [];
+        }
+        
+        // Calculate advance balance
+        $this->db->select('
+            COALESCE(SUM(CASE WHEN ei.dc = "C" THEN ei.amount ELSE 0 END), 0) as credit_total,
+            COALESCE(SUM(CASE WHEN ei.dc = "D" THEN ei.amount ELSE 0 END), 0) as debit_total
+        ');
+        $this->db->from('sma_accounts_entryitems ei');
+        $this->db->join('sma_accounts_entries e', 'e.id = ei.entry_id', 'inner');
+        $this->db->where('ei.ledger_id', $customer_advance_ledger);
+        $this->db->where('e.customer_id', $customer_id);
+        
+        // Check if deleted column exists before filtering
+        if ($this->db->field_exists('deleted', 'sma_accounts_entries')) {
+            $this->db->where('e.deleted', 0);
+        }
+        
+        $balance_query = $this->db->get();
+        
+        if ($balance_query->num_rows() > 0) {
+            $result = $balance_query->row();
+            $available_balance = $result->credit_total - $result->debit_total;
+            
+            if ($available_balance > 0) {
+                // Create a virtual advance record
+                $advance = new stdClass();
+                $advance->id = 'advance_' . $customer_id; // Virtual ID
+                $advance->date = date('Y-m-d'); // Current date for display
+                $advance->reference_no = 'ADVANCE';
+                $advance->customer_id = $customer_id;
+                $advance->amount = $available_balance;
+                $advance->used_amount = 0; // Advances don't have a separate used amount field
+                $advance->available_balance = $available_balance;
+                $advance->type = 'Customer Advance';
+                
+                return [$advance];
+            }
+        }
+        
+        return [];
+    }
+
     public function update_balance($id, $new_balance)
     {
         $data = array(
@@ -284,6 +463,25 @@ class Sales_model extends CI_Model
         $this->db->update('companies', $data, array('id' => $id));
 
         return true;
+    }
+
+    public function update_return_paid($return_id, $return_amount){
+        $this->db->update('sma_returns', ['paid' => $return_amount], ['id' => $return_id]);
+    }
+
+    public function update_credit_memo($creditmemo_id, $amount_used){
+        $this->db->update('sma_memo', ['used_amount' => $amount_used], ['id' => $creditmemo_id]);
+    }
+
+    public function getCreditMemoByID($creditmemo_id){
+        $this->db->select('memo.*, companies.company')
+            ->join('companies', 'companies.id=memo.customer_id', 'left')
+            ->where('memo.id =', $creditmemo_id);
+        $q = $this->db->get('memo');
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
     }
 
     public function update_payment_reference($payment_id, $journal_id){
@@ -2139,6 +2337,214 @@ class Sales_model extends CI_Model
         }
         
         return false;
+    }
+
+    /**
+     * Apply advance payment to selected invoices with priority-based settlement
+     */
+    public function applyAdvanceToInvoices($advance_id, $invoice_ids, $amount, $payment_reference_id) {
+        $this->db->trans_start();
+
+        // Record advance usage
+        $this->db->insert('customer_advance_usage', [
+            'advance_id' => $advance_id,
+            'payment_reference_id' => $payment_reference_id,
+            'amount_used' => $amount,
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
+
+        // Update advance used amount
+        $this->db->set('used_amount', 'used_amount + ' . $amount, FALSE)
+                 ->where('id', $advance_id)
+                 ->update('customer_advances');
+
+        // Distribute amount across selected invoices
+        $remaining_amount = $amount;
+        foreach ($invoice_ids as $invoice_id) {
+            if ($remaining_amount <= 0) break;
+
+            $invoice = $this->getInvoiceByID($invoice_id);
+            $outstanding = $invoice->grand_total - ($invoice->paid ?? 0);
+
+            if ($outstanding > 0) {
+                $apply_to_invoice = min($remaining_amount, $outstanding);
+
+                // Add payment record
+                $this->db->insert('payments', [
+                    'date' => date('Y-m-d'),
+                    'sale_id' => $invoice_id,
+                    'reference_no' => 'ADV-' . $payment_reference_id,
+                    'amount' => $apply_to_invoice,
+                    'paid_by' => 'advance',
+                    'note' => 'Applied from customer advance',
+                    'created_by' => $this->session->userdata('user_id')
+                ]);
+
+                // Update sale paid amount
+                $this->db->set('paid', 'paid + ' . $apply_to_invoice, FALSE)
+                         ->where('id', $invoice_id)
+                         ->update('sales');
+
+                $remaining_amount -= $apply_to_invoice;
+            }
+        }
+
+        $this->db->trans_complete();
+        return $this->db->trans_status();
+    }
+
+    /**
+     * Apply return credit to selected invoices with priority-based settlement
+     */
+    public function applyReturnToInvoices($return_id, $invoice_ids, $amount, $payment_reference_id) {
+        $this->db->trans_start();
+
+        // Record return usage
+        $this->db->insert('return_usage', [
+            'return_id' => $return_id,
+            'payment_reference_id' => $payment_reference_id,
+            'amount_used' => $amount,
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
+
+        // Update return paid amount
+        $this->db->set('paid', 'paid + ' . $amount, FALSE)
+                 ->where('id', $return_id)
+                 ->update('sales');
+
+        // Distribute amount across selected invoices
+        $remaining_amount = $amount;
+        foreach ($invoice_ids as $invoice_id) {
+            if ($remaining_amount <= 0) break;
+
+            $invoice = $this->getInvoiceByID($invoice_id);
+            $outstanding = $invoice->grand_total - ($invoice->paid ?? 0);
+
+            if ($outstanding > 0) {
+                $apply_to_invoice = min($remaining_amount, $outstanding);
+
+                // Add payment record
+                $this->db->insert('payments', [
+                    'date' => date('Y-m-d'),
+                    'sale_id' => $invoice_id,
+                    'reference_no' => 'RTN-' . $payment_reference_id,
+                    'amount' => $apply_to_invoice,
+                    'paid_by' => 'return',
+                    'note' => 'Applied from customer return',
+                    'created_by' => $this->session->userdata('user_id')
+                ]);
+
+                // Update sale paid amount
+                $this->db->set('paid', 'paid + ' . $apply_to_invoice, FALSE)
+                         ->where('id', $invoice_id)
+                         ->update('sales');
+
+                $remaining_amount -= $apply_to_invoice;
+            }
+        }
+
+        $this->db->trans_complete();
+        return $this->db->trans_status();
+    }
+
+    /**
+     * Apply credit memo to selected invoices with priority-based settlement
+     */
+    public function applyCreditMemoToInvoices($creditmemo_id, $invoice_ids, $amount, $payment_reference_id) {
+        $this->db->trans_start();
+
+        // Record credit memo usage
+        $this->db->insert('credit_memo_usage', [
+            'credit_memo_id' => $creditmemo_id,
+            'payment_reference_id' => $payment_reference_id,
+            'amount_used' => $amount,
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
+
+        // Update credit memo used amount
+        $this->db->set('used_amount', 'used_amount + ' . $amount, FALSE)
+                 ->where('id', $creditmemo_id)
+                 ->update('credit_memos');
+
+        // Distribute amount across selected invoices
+        $remaining_amount = $amount;
+        foreach ($invoice_ids as $invoice_id) {
+            if ($remaining_amount <= 0) break;
+
+            $invoice = $this->getInvoiceByID($invoice_id);
+            $outstanding = $invoice->grand_total - ($invoice->paid ?? 0);
+
+            if ($outstanding > 0) {
+                $apply_to_invoice = min($remaining_amount, $outstanding);
+
+                // Add payment record
+                $this->db->insert('payments', [
+                    'date' => date('Y-m-d'),
+                    'sale_id' => $invoice_id,
+                    'reference_no' => 'CM-' . $payment_reference_id,
+                    'amount' => $apply_to_invoice,
+                    'paid_by' => 'credit_memo',
+                    'note' => 'Applied from credit memo',
+                    'created_by' => $this->session->userdata('user_id')
+                ]);
+
+                // Update sale paid amount
+                $this->db->set('paid', 'paid + ' . $apply_to_invoice, FALSE)
+                         ->where('id', $invoice_id)
+                         ->update('sales');
+
+                $remaining_amount -= $apply_to_invoice;
+            }
+        }
+
+        $this->db->trans_complete();
+        return $this->db->trans_status();
+    }
+
+    /**
+     * Apply payment amount to selected invoices after priority settlement
+     */
+    public function applyPaymentToInvoices($invoice_ids, $amount, $payment_reference_id, $ledger_account) {
+        $this->db->trans_start();
+
+        // Distribute payment amount across selected invoices
+        $remaining_amount = $amount;
+        foreach ($invoice_ids as $invoice_id) {
+            if ($remaining_amount <= 0) break;
+
+            $invoice = $this->getInvoiceByID($invoice_id);
+            $outstanding = $invoice->grand_total - ($invoice->paid ?? 0);
+
+            if ($outstanding > 0) {
+                $apply_to_invoice = min($remaining_amount, $outstanding);
+
+                // Add payment record
+                $this->db->insert('payments', [
+                    'date' => date('Y-m-d'),
+                    'sale_id' => $invoice_id,
+                    'reference_no' => 'PAY-' . $payment_reference_id,
+                    'amount' => $apply_to_invoice,
+                    'paid_by' => 'cash',
+                    'note' => 'Payment from customer',
+                    'created_by' => $this->session->userdata('user_id')
+                ]);
+
+                // Update sale paid amount
+                $this->db->set('paid', 'paid + ' . $apply_to_invoice, FALSE)
+                         ->where('id', $invoice_id)
+                         ->update('sales');
+
+                $remaining_amount -= $apply_to_invoice;
+            }
+        }
+
+        $this->db->trans_complete();
+        return $this->db->trans_status();
+    }
+
+    public function addCustomerAdvance($data) {
+        $this->db->insert('sma_customer_advances', $data);
+        return $this->db->insert_id();
     }
 
 }
