@@ -636,6 +636,97 @@ class Customers extends MY_Controller
         $this->page_construct('customers/list_payments', $meta, $this->data);
     }
 
+    public function add_advance(){
+       //$this->sma->checkPermissions(false, true);
+        $this->form_validation->set_rules('customer', $this->lang->line('customer'), 'required');
+
+        $data = [];
+        $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Add Advance')]];
+        $meta = ['page_title' => lang('Add Advance'), 'bc' => $bc];
+
+        if ($this->form_validation->run() == true) {
+            $customer_id      = $this->input->post('customer');
+            $payments_array      = $this->input->post('payment_amount');
+            $item_ids = $this->input->post('item_id');
+            $reference_no = $this->input->post('reference_no');
+            $payment_total = $this->input->post('payment_total');
+            $ledger_account = $this->input->post('ledger_account');
+            //$due_amount_array = $this->input->post('due_amount');
+            //$original_amount_array = $this->input->post('original_amount');
+            //$additional_discount_array = $this->input->post('additional_discount');
+            $return_total_array = $this->input->post('return_total');
+            //$note = $this->input->post('note');
+            $date_fmt = $this->input->post('date'); 
+            $formattedDate = DateTime::createFromFormat('d/m/Y H:i', $date_fmt);
+
+            if ($formattedDate) {
+                $date = $formattedDate->format('Y-m-d');
+            } else {
+                echo 'Invalid date format!';
+                $date = null; // Handle invalid input as needed
+            }
+
+            // Get customer advance ledger from settings
+            $settings = $this->Settings;
+            $customer_advance_ledger = isset($settings->customer_advance_ledger) && !empty($settings->customer_advance_ledger) 
+                                     ? $settings->customer_advance_ledger 
+                                     : null;
+
+            // If user explicitly chose to park entire payment as advance via the checkbox,
+            // force treating this as a pure advance on the backend regardless of any
+            // payment_amount[] inputs present (they may be disabled client-side, but
+            // this is a defensive server-side safeguard).
+            if ($this->input->post('park_as_advance')) {
+                $payments_array = null;
+            }
+
+            if(!$payments_array || sizeOf($payments_array) == 0){
+                // Pure advance payment scenario (no invoices selected)
+                if (!$customer_advance_ledger && $payment_total > 0) {
+                    $this->session->set_flashdata('error', 'Cannot process advance payment. Customer Advance Ledger is not configured in system settings.');
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
+
+                if ($payment_total > 0 && $customer_advance_ledger) {
+                    // Create payment reference using payment ledger (bank/cash account)
+                    $payment_id = $this->add_customer_reference($payment_total, $reference_no, $date, $note . ' (Pure Advance)', $customer_id, $ledger_account);
+
+                    if (!$payment_id) {
+                        $this->session->set_flashdata('error', 'Failed to create pure advance payment reference. Please check system configuration.');
+                        redirect($_SERVER['HTTP_REFERER']);
+                    }
+
+                    // NOTE: For pure advances we should NOT create a payments row linked to a sale.
+                    // The payment_reference record + accounting journal represent the advance.
+                    // Update customer balance and create journal entry for the advance.
+                    $this->sales_model->update_customer_balance($customer_id, $payment_total);
+
+                    // Create journal entry: Pass payment ledger and customer advance ledger
+                    $journal_id = $this->convert_customer_payment_advance($customer_id, $ledger_account, $customer_advance_ledger, $payment_total, $reference_no, 'customeradvance', $date);
+                    $this->sales_model->update_payment_reference($payment_id, $journal_id);
+                    // Also create a payments row so the advance appears in payment listings
+                    // Use make_customer_payment with NULL sale_id to create an unlinked payment record
+                    $this->make_customer_payment(NULL, $payment_total, $reference_no, $date, $note . ' (Pure Advance)', $payment_id);
+                    $this->session->set_flashdata('message', lang('Pure advance payment received Successfully!'));
+                    admin_redirect('customers/view_payment/' . $payment_id);
+                }
+            }
+
+        } else {
+            // Check if customer_advance_ledger is configured in settings
+            $settings = $this->Settings;
+           
+            $customer_advance_ledger = isset($settings->customer_advance_ledger) && !empty($settings->customer_advance_ledger) 
+                                     ? $settings->customer_advance_ledger 
+                                     : null;
+            
+            $this->data['customers']  = $this->site->getAllCompanies('customer');
+            $this->data['warehouses'] = $this->site->getAllWarehouses();
+            $this->data['customer_advance_ledger'] = $customer_advance_ledger;
+            $this->page_construct('customers/add_advance', $meta, $this->data);
+        } 
+    }
+
     public function payment_from_customer(){
         //$this->sma->checkPermissions(false, true);
         $this->form_validation->set_rules('customer', $this->lang->line('customer'), 'required');
