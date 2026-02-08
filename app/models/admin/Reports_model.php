@@ -1055,7 +1055,161 @@ class Reports_model extends CI_Model
         return $response_array;
     }
 
-    public function getGeneralLedgerTrialBalance($start_date, $end_date, $department, $employee)
+    public function getGeneralLedgerTrialBalance($start_date, $end_date, $department = null, $employee = null)
+    {
+        $response = array();
+
+        /*
+        |--------------------------------------------------------------------------
+        | 1. PERIOD TRANSACTIONS (TRS) – ORIGINAL LOGIC (UNCHANGED)
+        |--------------------------------------------------------------------------
+        */
+        $this->db
+            ->select('
+                al.id,
+                al.name,
+                al.notes,
+                al.code,
+                COALESCE(SUM(ei.amount), 0) AS total_amount,
+                ei.dc
+            ')
+            ->from('accounts_ledgers al')
+            ->join('sma_accounts_entryitems ei', 'ei.ledger_id = al.id')
+            ->join('sma_accounts_entries e', 'e.id = ei.entry_id')
+            ->where('DATE(e.date) >=', trim($start_date))
+            ->where('DATE(e.date) <=', trim($end_date));
+
+        if (!empty($employee)) {
+            $this->db->where('ei.employee_id', $employee);
+        }
+
+        if (!empty($department)) {
+            $this->db->where('ei.department_id', $department);
+        }
+
+        $this->db
+            ->group_by('al.id, ei.dc')
+            ->order_by('al.code', 'ASC');
+
+        $q = $this->db->get();
+        $trs = ($q->num_rows() > 0) ? $q->result() : [];
+
+        /*
+        |--------------------------------------------------------------------------
+        | 2. FETCH ALL LEDGERS (MASTER LIST)
+        |--------------------------------------------------------------------------
+        */
+        $all_ledgers = $this->db
+            ->select('id, name, code, notes')
+            ->from('accounts_ledgers')
+            ->order_by('code', 'ASC')
+            ->get()
+            ->result();
+
+        /*
+        |--------------------------------------------------------------------------
+        | 3. APPEND MISSING LEDGERS WITH ZERO BALANCE
+        |--------------------------------------------------------------------------
+        */
+        $existing = [];
+
+        foreach ($trs as $row) {
+            $existing[$row->id . '_' . $row->dc] = true;
+        }
+
+        foreach ($all_ledgers as $ledger) {
+
+            // Debit row
+            if (!isset($existing[$ledger->id . '_D'])) {
+                $trs[] = (object)[
+                    'id'           => $ledger->id,
+                    'name'         => $ledger->name,
+                    'notes'        => $ledger->notes,
+                    'code'         => $ledger->code,
+                    'total_amount' => 0,
+                    'dc'           => 'D'
+                ];
+            }
+
+            // Credit row
+            if (!isset($existing[$ledger->id . '_C'])) {
+                $trs[] = (object)[
+                    'id'           => $ledger->id,
+                    'name'         => $ledger->name,
+                    'notes'        => $ledger->notes,
+                    'code'         => $ledger->code,
+                    'total_amount' => 0,
+                    'dc'           => 'C'
+                ];
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 4. SORT AGAIN (JUST IN CASE)
+        |--------------------------------------------------------------------------
+        */
+        usort($trs, function ($a, $b) {
+            return strcmp($a->code, $b->code);
+        });
+
+        $response['trs'] = $trs;
+
+        /*
+        |--------------------------------------------------------------------------
+        | 5. OPENING BALANCE (OB) – YOUR ORIGINAL LOGIC (UNCHANGED)
+        |--------------------------------------------------------------------------
+        */
+        $this->db
+            ->select('
+                al.id,
+                al.name,
+                e.supplier_id,
+                al.notes,
+                al.code,
+                COALESCE(SUM(ei.amount), 0) AS total_amount,
+                ei.dc
+            ')
+            ->from('accounts_ledgers al')
+            ->join('sma_accounts_entryitems ei', 'ei.ledger_id = al.id')
+            ->join('sma_accounts_entries e', 'e.id = ei.entry_id')
+            ->where('DATE(e.date) <', trim($start_date));
+
+        if (!empty($employee)) {
+            $this->db->where('e.employee_id', $employee);
+        }
+
+        if (!empty($department)) {
+            $this->db->where('e.department_id', $department);
+        }
+
+        $this->db
+            ->group_by('al.id, ei.dc')
+            ->order_by('al.code', 'ASC');
+
+        $q = $this->db->get();
+        $ob = [];
+
+        if ($q->num_rows() > 0) {
+            foreach ($q->result() as $row) {
+
+                // keep your supplier-specific logic
+                if ($row->id == 102) {
+                    if (!empty($row->supplier_id) && $row->supplier_id > 0) {
+                        $ob[] = $row;
+                    }
+                } else {
+                    $ob[] = $row;
+                }
+            }
+        }
+
+        $response['ob'] = $ob;
+
+        return $response;
+    }
+
+    /*public function getGeneralLedgerTrialBalance($start_date, $end_date, $department, $employee)
     {
         $response = array();
 
@@ -1132,7 +1286,7 @@ class Reports_model extends CI_Model
         $response['ob'] = $data2;
 
         return $response;
-    }
+    }*/
 
     public function getSuppliersTrialBalance($start_date, $end_date)
     {
