@@ -1458,14 +1458,14 @@ class Customers extends MY_Controller
                                      : null;
 
             // Convert date format
-            $formattedDate = DateTime::createFromFormat('d/m/Y H:i', $date);
-            if ($formattedDate) {
+            $formattedDate = DateTime::createFromFormat('d/m/Y', $date);
+            //echo '<pre>';print_r($formattedDate);exit;
+            if ($formattedDate !== false) {
                 $date = $formattedDate->format('Y-m-d');
             } else {
                 $this->session->set_flashdata('error', 'Invalid date format');
                 admin_redirect('customers/payment_from_customer_new');
             }
-
             // Get selected items
             $invoice_ids = $this->input->post('invoice_ids') ?: [];
             $return_ids = $this->input->post('return_ids') ?: [];
