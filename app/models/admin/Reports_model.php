@@ -622,10 +622,11 @@ class Reports_model extends CI_Model
                 c.name AS customer_name,
                 c.sales_agent,
                 s.grand_total,
+                s.paid,
                 c.payment_term
             FROM sma_sales s
             JOIN sma_companies c ON s.customer_id = c.id
-            WHERE s.grand_total > 0
+            WHERE s.grand_total > 0 AND s.sale_invoice = 1
             $customer_filter
             $salesman_filter
         ";
