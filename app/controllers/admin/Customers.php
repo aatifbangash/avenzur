@@ -869,7 +869,7 @@ class Customers extends MY_Controller
     }*/
 
     public function reconcile_customer_payments(){
-        $customer_id = 	7;
+        $customer_id = 	247;
 
         $this->db->trans_begin();
         
