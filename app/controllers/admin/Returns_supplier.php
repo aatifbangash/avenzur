@@ -527,7 +527,7 @@ class Returns_supplier extends MY_Controller
             //$this->returns_supplier_model->convert_return_invoice($return_insert_id, $products);
             if($data['status'] == 'completed'){
                 $this->convert_return_invoice($return_insert_id);
-                $this->payment_receive_from_supplier($returns);
+                //$this->payment_receive_from_supplier($returns);
             }
 
             $this->session->set_userdata('remove_rlls', 1);
@@ -1313,7 +1313,7 @@ class Returns_supplier extends MY_Controller
             //$this->returns_supplier_model->convert_return_invoice($return_insert_id, $products);
             if($data['status'] == 'completed'){
                 $this->convert_return_invoice($id);
-                $this->payment_receive_from_supplier($returns);
+                //$this->payment_receive_from_supplier($returns);
             }
 
             //$this->session->set_userdata('remove_pols', 1);
