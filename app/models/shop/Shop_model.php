@@ -1,16 +1,196 @@
 <?php
 
+use JetBrains\PhpStorm\Internal\ReturnTypeContract;
+
 defined('BASEPATH') or exit('No direct script access allowed');
 
 class Shop_model extends CI_Model
 {
     protected $table = 'products';
+    protected $coupons_model = "sma_coupons";
 
     public function __construct()
     {
         parent::__construct();
     }
 
+    /**
+     * Change for coupons 
+     * Author: Rajive
+     * Branch: coupons
+     * Date: 2024-09-22
+     */
+ 
+    public function get_latest_cart_products($cartId){
+        
+        $this->db->from('sma_cart');
+        $this->db->where('id', $cartId);
+        
+        // Execute the query and fetch the result
+        $query = $this->db->get();
+        $result = $query->row();
+       
+        $product_ids = $this->extract_product_ids($result);
+         
+        return $product_ids;         
+
+    }
+
+    private function extract_product_ids($cart_data) {
+              
+        // Decode the JSON string into an associative array
+        // $cart_array = json_decode($cart_data,true);
+      
+        // Initialize an empty array to hold product IDs
+        $product_ids = [];
+
+        // Loop through the cart array to extract product_ids
+        foreach ($cart_data as $key => $value) {
+             
+             if($key == "data"){
+                $arr = json_decode($value,true);
+                  
+                 foreach ($arr as $k => $v) {
+                    
+                // Check if the value is an array and contains a product_id
+                if ( isset($v['product_id'])) {
+                    $product_ids[] = $v['product_id'];
+                }
+            }
+             }
+            
+            // Check if the value contains a product_id (it's nested under the unique keys)
+            
+        }
+        
+        
+    // Return the array of product IDs
+    return $product_ids;
+    }
+
+    public function get_order_count($customer_id) {
+     
+        // Query to get the count of orders for the given customer_id
+        $this->db->from('sma_sales');
+        $this->db->where('customer_id', $customer_id);
+        $this->db->where("sale_status", "completed");
+        $this->db->where("payment_status", "paid");
+        
+        // Get the count of rows that match the condition
+        $count = $this->db->count_all_results();
+      
+        return $count;
+    }
+
+    public function get_auto_apply_coupon(){
+        $this->db->from('sma_coupons');
+        $this->db->where('auto_apply', 1);
+        $this->db->where('is_active', 1);
+        $this->db->where('source', 'web');
+        $this->db->limit(1);
+        $query = $this->db->get();
+        return $query->row();
+
+    }
+    public function is_eligible_for_auto_apply($id){
+        /**
+         * Those users who are created after the coupon was created
+         * And has less than x orders completed then its applicable.
+         */
+        $coupon = $this -> get_auto_apply_coupon();
+        if(!$coupon){
+            return ["can_apply" => false, "coupon"  => null];
+        }
+        if($coupon -> source != 'web'){
+            return ["can_apply" => false, "coupon"  => $coupon];
+        }
+        $max_limit = $coupon -> usage_limit_per_user; // User cant have more than this number of orders  to get discount.
+        $coupon_created_at = $coupon -> date_created;
+        $coupon_created_at_timestamp = strtotime($coupon_created_at);
+     
+        /**
+         * Get the user info.
+         */
+
+        $this->db->select('sma_users.*, sma_companies.*'); // Select fields from both tables as required
+        $this->db->from('sma_companies');
+        $this->db->join('sma_users', 'sma_users.company_id = sma_companies.id');
+        $this->db->where('sma_companies.id', $id);// Filter by companyId
+        $this->db->limit(1);
+        
+        $query = $this->db->get();
+         
+        $result = $query->row();
+         
+        if($result -> created_on <= $coupon_created_at_timestamp){
+            return ["can_apply" => false, "coupon"  => $coupon];
+        }
+        $order_count = $this->get_order_count($id);
+        if($order_count >= $max_limit){
+            return ["can_apply" => false, "coupon"  => $coupon];
+        }
+        return ["can_apply" => true, "coupon"  => $coupon];
+
+    }
+    public function get_coupon_by_code($code){
+        $this->db->from('sma_coupons');
+        $this->db->where('code', $coupon);
+        $query = $this->db->get();
+        $coupon_data = $query -> row();
+        return $coupon_data;
+    }
+
+    public function coupon_usage_count($userId, $coupon_code){
+        $this->db->from('sma_referrer');
+        $this->db->where('customer_id', $userId);
+        $this->db->where("coupon_code", $coupon_code);
+        $count = $this->db->count_all_results();
+      
+        return $count;
+    }
+
+    public function can_apply_coupon($coupon,$userId, $cartId){
+          
+        $this->db->from('sma_coupons');
+        $this->db->where('code', $coupon);
+ 
+        $query = $this->db->get();
+        $coupon_data = $query -> row();
+        if(!isset($coupon_data)){
+                return null;
+        }
+   
+       
+        $products_on_cart = $this->get_latest_cart_products($cartId);
+        
+        $orders_by_user = $this->get_order_count($userId);
+        /**
+         * Check each conditions
+        */
+      
+        
+        $ids =   $coupon_data->product_ids  ;
+     
+        if( is_array($ids) && isset($ids)){
+            $product_ids_eligible = json_decode($ids, true);
+            $matching_products = array_intersect($products_on_cart, $product_ids_eligible);
+            if(empty($matching_products)){
+                return null;
+            }
+        }
+        
+        return array("coupon_data" =>$coupon_data, "eligible_products" => json_decode($ids, true));
+    }
+
+    public function get_usage_by_user($customer_id,$coupon_code){
+        $this->db->from('sma_sales');
+        $this->db->where('customer_id', $customer_id);
+        $this->db->where("sale_status", "completed");
+        $this->db->where("payment_status", "paid");
+        $this->db->where("cooupon_code", $coupon_code);
+        $count = $this->db->count_all_results();
+        return $count;
+    }
 
     public function get_count()
     {
@@ -133,13 +313,14 @@ class Shop_model extends CI_Model
 
     public function addSale($data, $items, $customer, $address)
     {
+
         // Sequence-Code
         $this->load->library('SequenceCode');
         $this->sequenceCode = new SequenceCode();
         $data['sequence_code'] = $this->sequenceCode->generate('SL', 5);
 
-        $cost = $this->site->costing($items);
-        // $this->sma->print_arrays($cost);
+       // $cost = $this->site->costing($items);
+       // $this->sma->print_arrays($cost);
 
         if (is_array($customer) && !empty($customer)) {
             $this->db->insert('companies', $customer);
@@ -151,7 +332,7 @@ class Shop_model extends CI_Model
             $this->db->insert('addresses', $address);
             $data['address_id'] = $this->db->insert_id();
         }
-
+    
         $this->db->trans_start();
         if ($this->db->insert('sales', $data)) {
             $sale_id = $this->db->insert_id();
@@ -249,33 +430,91 @@ class Shop_model extends CI_Model
        return $verify_phone_numbers;
     }
 
-    public function getAllBrands()
+    public function getAllBrands($data)
     {
+        $category_slug = isset($data['category_slug']) ? $data['category_slug'] : null;
+        $promo = isset($data['filters']['promo']) ? $data['filters']['promo'] : null;
+
         if ($this->shop_settings->hide0) {
             $pc = "(SELECT count(*) FROM {$this->db->dbprefix('products')} WHERE {$this->db->dbprefix('products')}.brand = {$this->db->dbprefix('brands')}.id)";
             $this->db->select("{$this->db->dbprefix('brands')}.*, {$pc} AS product_count", false)->order_by('name');
+            if ($category_slug) {
+                $this->db->join('sma_categories', 'sma_categories.id = sma_products.category_id', 'left')
+                         ->where('sma_categories.slug', $category_slug);
+            }
             $this->db->having('product_count >', 0);
+        }
+        if ($category_slug  || $promo) {
+            // Start the query to select brands and their product counts
+            $pc = "(SELECT count(*) FROM {$this->db->dbprefix('products')} AS p1 WHERE p1.brand = {$this->db->dbprefix('brands')}.id)";
+            $this->db->select("{$this->db->dbprefix('brands')}.*, {$pc} AS product_count", false)
+                    ->from('brands')->order_by('brands.name')
+                    ->group_by('brands.id');
+
+            // Ensure that each brand appears only once
+            $this->db->join("{$this->db->dbprefix('products')} AS p2", 'p2.brand = brands.id', 'left');
+
+            // If category_slug is provided, join with products and categories tables and filter by category slug
+            if ($category_slug) {
+                $this->db->join("{$this->db->dbprefix('products')} AS p3", 'p3.brand = brands.id', 'left')
+                        ->join('categories', 'categories.id = p3.category_id', 'left')
+                        ->where('categories.slug', $category_slug);
+            }
+
+            if ($promo) {
+                $this->db->where("p2.promotion", 1); // Adjusted this line to reference the correct alias
+            }
+
+            // Execute the query
+            return $this->db->get()->result();
         }
         return $this->db->get('brands')->result();
     }
 
     public function getAllCategories()
     {
+        // if ($this->shop_settings->hide0) {
+        //     $pc = "(SELECT count(*) FROM {$this->db->dbprefix('products')} WHERE {$this->db->dbprefix('products')}.category_id = {$this->db->dbprefix('categories')}.id)";
+        //     $this->db->select("{$this->db->dbprefix('categories')}.*, {$pc} AS product_count", false);
+        //     $this->db->having('product_count >', 0);
+        // }
+        // //$this->db->where('categories.id !=', 29);
+        // $this->db->where_not_in('categories.id', array(29, 32));
+        // $this->db->group_start()->where('parent_id', null)->or_where('parent_id', 0)->group_end()->order_by('name');
+        // $categories = $this->db->get('categories')->result();
+
+        // foreach ($categories as $category) {
+        //     $category->name = ucfirst(strtolower($category->name));
+        // }
+
+        // return $categories;
+        
+        // new code.
         if ($this->shop_settings->hide0) {
             $pc = "(SELECT count(*) FROM {$this->db->dbprefix('products')} WHERE {$this->db->dbprefix('products')}.category_id = {$this->db->dbprefix('categories')}.id)";
             $this->db->select("{$this->db->dbprefix('categories')}.*, {$pc} AS product_count", false);
             $this->db->having('product_count >', 0);
         }
-        //$this->db->where('categories.id !=', 29);
         $this->db->where_not_in('categories.id', array(29, 32));
-        $this->db->group_start()->where('parent_id', null)->or_where('parent_id', 0)->group_end()->order_by('name');
+        $this->db->order_by('name');
         $categories = $this->db->get('categories')->result();
-
-        foreach ($categories as $category) {
-            $category->name = ucfirst(strtolower($category->name));
-        }
-
+        // $categories = $this->buildCategoryHierarchy($categories);
+        // echo "<pre>"; var_dump($categories); exit;
         return $categories;
+    }
+
+    function buildCategoryHierarchy($categories, $parent_id = null) {
+        $result = array();
+        foreach ($categories as $category) {
+            // var_dump($category); exit;
+
+            if ($category->parent_id == $parent_id || ($parent_id === null || $category->parent_id === 0)) {
+                $category->name = ucfirst(strtolower($category->name));
+                $category->children = $this->buildCategoryHierarchy($categories, $category->id);
+                $result[] = $category;
+            }
+        }
+        return $result;
     }
 
     public function getAllCurrencies()
@@ -287,6 +526,24 @@ class Shop_model extends CI_Model
     {
         $this->db->select('name, slug')->order_by('order_no asc');
         return $this->db->get_where('pages', ['active' => 1])->result();
+    }
+
+    public function getProductQuantitiesInWarehouses($product_id){
+        $query = $this->db->select('warehouses_products.*')
+            ->from('warehouses_products')
+            ->where('warehouses_products.product_id', $product_id);
+        /*$query = $this->db->select('location_id as warehouse_id, SUM(quantity) as total_quantity')
+            ->from('inventory_movements')
+            ->where('product_id', $product_id)
+            ->group_by('location_id');*/
+        $result = $query->get();
+
+        if ($result) {
+            return $resultArray = $result->result();
+        } else {
+            // Handle the error, for example, show an error message
+            return false;
+        }
     }
 
     public function getAllWarehouseWithPQ($product_id, $warehouse_id = null)
@@ -389,9 +646,98 @@ class Shop_model extends CI_Model
         return $categories;
     }
 
-    public function getSpecialOffers($limit = 16, $promo = true)
+    public function getCustomersAlsoBought($product_id, $limit = 16){
+        $query = $this->db->query("
+            SELECT mapped.product_id, mapped.id, products.code, products.name
+            FROM sma_sale_items main
+            JOIN sma_sale_items mapped ON main.sale_id = mapped.sale_id
+            JOIN sma_sales sales ON main.sale_id = sales.id
+            JOIN sma_products products ON products.id = mapped.product_id
+            WHERE main.product_id != mapped.product_id
+            AND main.product_id = {$product_id}
+            AND sales.shop = 1
+            ORDER BY mapped.id DESC
+            LIMIT 8
+        ");
+
+        $result = $query->result_array();
+
+        // Extracting product IDs
+        $similarProductIds = array_map(function($sale) {
+            return $sale['product_id'];
+        }, $result);
+
+        if($similarProductIds){
+            $this->db->select("
+            {$this->db->dbprefix('products')}.id as id, 
+            {$this->db->dbprefix('products')}.name as name, 
+            {$this->db->dbprefix('products')}.code as code, 
+            {$this->db->dbprefix('products')}.image as image, 
+            {$this->db->dbprefix('products')}.slug as slug, 
+            {$this->db->dbprefix('products')}.price, 
+            {$this->db->dbprefix('products')}.quantity,
+            (COALESCE(SUM(sma_im.quantity), 0) - COALESCE(SUM(sma_phqor.quantity), 0)) as product_quantity,
+            {$this->db->dbprefix('products')}.type, 
+            {$this->db->dbprefix('products')}.tax_rate as taxRateId, 
+            {$this->db->dbprefix('products')}.tax_method,
+            promotion, 
+            promo_price, 
+            start_date, 
+            end_date, 
+            b.name as brand_name, 
+            b.slug as brand_slug, 
+            c.name as category_name, 
+            c.slug as category_slug,
+            t.name as taxName,
+            t.rate as taxPercentage,
+            t.code as taxCode,
+            CAST(ROUND(AVG(pr.rating), 1) AS UNSIGNED) as avg_rating")
+                ->join('tax_rates t', 'products.tax_rate = t.id', 'left')
+                ->join('brands b', 'products.brand=b.id', 'left')
+                ->join('categories c', 'products.category_id=c.id', 'left')
+                ->join('product_reviews pr', 'products.id=pr.product_id', 'left')
+                ->join('(SELECT product_id, SUM(quantity) AS quantity FROM sma_inventory_movements GROUP BY product_id) AS sma_im', 'products.id=sma_im.product_id', 'left')
+                ->join('(SELECT product_id, SUM(quantity) AS quantity FROM sma_product_qty_onhold_request GROUP BY product_id) AS sma_phqor', 'products.id=sma_phqor.product_id', 'left')
+                ->where('products.quantity >', 0)
+                ->where_in('products.id', $similarProductIds)
+                ->where('hide !=', 1)
+                ->limit($limit);
+
+            $sp = $this->getSpecialPrice();
+            if ($sp->cgp) {
+                $this->db->select('cgp.price as special_price', false)->join($sp->cgp, 'products.id=cgp.product_id', 'left');
+            } elseif ($sp->wgp) {
+                $this->db->select('wgp.price as special_price', false)->join($sp->wgp, 'products.id=wgp.product_id', 'left');
+            }
+
+            $this->db->group_by('products.id');
+            $this->db->order_by('RAND()');
+            $result = $this->db->get('products')->result();
+            //        dd($result);
+            array_map(function ($row) {
+                if ($row->tax_method == '1' && $row->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
+                    $productTaxPercent = $row->taxPercentage;
+
+                    if ($row->promotion == 1) {
+                        $productPromoPrice = $row->promo_price;
+                        $promoProductTaxAmount = $productPromoPrice * ($productTaxPercent / 100);
+                        $row->promo_price = $productPromoPrice + $promoProductTaxAmount;
+                    }
+
+                    $productPrice = $row->price;
+                    $productTaxAmount = $productPrice * ($productTaxPercent / 100);
+                    $row->price = $productPrice + $productTaxAmount;
+                }
+            }, $result);
+        }else{
+            return [];
+        }
+
+        return $result;
+    }
+
+    public function getCustomerAlsoViewed($category_id, $limit = 16)
     {
-        $countryId = get_cookie('shop_country', true); //$this->session->userdata('country');
         $this->db->select("
         {$this->db->dbprefix('products')}.id as id, 
         {$this->db->dbprefix('products')}.name as name, 
@@ -399,7 +745,8 @@ class Shop_model extends CI_Model
         {$this->db->dbprefix('products')}.image as image, 
         {$this->db->dbprefix('products')}.slug as slug, 
         {$this->db->dbprefix('products')}.price, 
-        quantity, 
+        {$this->db->dbprefix('products')}.quantity,
+        (COALESCE(SUM(sma_im.quantity), 0) - COALESCE(SUM(sma_phqor.quantity), 0)) as product_quantity,
         {$this->db->dbprefix('products')}.type, 
         {$this->db->dbprefix('products')}.tax_rate as taxRateId, 
         {$this->db->dbprefix('products')}.tax_method,
@@ -419,7 +766,78 @@ class Shop_model extends CI_Model
             ->join('brands b', 'products.brand=b.id', 'left')
             ->join('categories c', 'products.category_id=c.id', 'left')
             ->join('product_reviews pr', 'products.id=pr.product_id', 'left')
+            ->join('(SELECT product_id, SUM(quantity) AS quantity FROM sma_inventory_movements GROUP BY product_id) AS sma_im', 'products.id=sma_im.product_id', 'left')
+            ->join('(SELECT product_id, SUM(quantity) AS quantity FROM sma_product_qty_onhold_request GROUP BY product_id) AS sma_phqor', 'products.id=sma_phqor.product_id', 'left')
+            ->where('products.quantity >', 0)
+            ->where('products.views >', 0)
+            ->where('hide !=', 1)
+            ->where('products.category_id', $category_id)
+            ->limit($limit);
+
+        $sp = $this->getSpecialPrice();
+        if ($sp->cgp) {
+            $this->db->select('cgp.price as special_price', false)->join($sp->cgp, 'products.id=cgp.product_id', 'left');
+        } elseif ($sp->wgp) {
+            $this->db->select('wgp.price as special_price', false)->join($sp->wgp, 'products.id=wgp.product_id', 'left');
+        }
+
+        $this->db->group_by('products.id');
+        $this->db->order_by('RAND()');
+        $result = $this->db->get('products')->result();
+        //        dd($result);
+        array_map(function ($row) {
+            if ($row->tax_method == '1' && $row->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
+                $productTaxPercent = $row->taxPercentage;
+
+                if ($row->promotion == 1) {
+                    $productPromoPrice = $row->promo_price;
+                    $promoProductTaxAmount = $productPromoPrice * ($productTaxPercent / 100);
+                    $row->promo_price = $productPromoPrice + $promoProductTaxAmount;
+                }
+
+                $productPrice = $row->price;
+                $productTaxAmount = $productPrice * ($productTaxPercent / 100);
+                $row->price = $productPrice + $productTaxAmount;
+            }
+        }, $result);
+        return $result;
+    }
+
+    public function getSpecialOffers($limit = 16, $promo = true)
+    {
+        $countryId = get_cookie('shop_country', true); //$this->session->userdata('country');
+        $this->db->select("
+        {$this->db->dbprefix('products')}.id as id, 
+        {$this->db->dbprefix('products')}.name as name, 
+        {$this->db->dbprefix('products')}.code as code, 
+        {$this->db->dbprefix('products')}.image as image, 
+        {$this->db->dbprefix('products')}.slug as slug, 
+        {$this->db->dbprefix('products')}.price, 
+        {$this->db->dbprefix('products')}.quantity,
+        (COALESCE(SUM(sma_im.quantity), 0) - COALESCE(SUM(sma_phqor.quantity), 0)) as product_quantity, 
+        {$this->db->dbprefix('products')}.type, 
+        {$this->db->dbprefix('products')}.tax_rate as taxRateId, 
+        {$this->db->dbprefix('products')}.tax_method,
+        promotion, 
+        promo_price, 
+        start_date, 
+        end_date, 
+        b.name as brand_name, 
+        b.slug as brand_slug, 
+        c.name as category_name, 
+        c.slug as category_slug,
+        t.name as taxName,
+        t.rate as taxPercentage,
+        t.code as taxCode,
+        CAST(ROUND(AVG(pr.rating), 1) AS UNSIGNED) as avg_rating")
+            ->join('tax_rates t', 'products.tax_rate = t.id', 'left')
+            ->join('brands b', 'products.brand=b.id', 'left')
+            ->join('categories c', 'products.category_id=c.id', 'left')
+            ->join('product_reviews pr', 'products.id=pr.product_id', 'left')
+            ->join('(SELECT product_id, SUM(quantity) AS quantity FROM sma_inventory_movements GROUP BY product_id) AS sma_im', 'products.id=sma_im.product_id', 'left')
+            ->join('(SELECT product_id, SUM(quantity) AS quantity FROM sma_product_qty_onhold_request GROUP BY product_id) AS sma_phqor', 'products.id=sma_phqor.product_id', 'left')
             ->where('products.special_offer', 1)
+            ->where('products.quantity >', 0)
             ->where('hide !=', 1)
             //->where('products.cf1', $countryId)
             ->limit($limit);
@@ -457,6 +875,26 @@ class Shop_model extends CI_Model
                 $productTaxAmount = $productPrice * ($productTaxPercent / 100);
                 $row->price = $productPrice + $productTaxAmount;
             }
+
+            $warehouse_quantities = $this->getProductQuantitiesInWarehouses($row->id);
+            foreach ($warehouse_quantities as $wh_quantity){
+                if(($wh_quantity->warehouse_id == '7' && $wh_quantity->quantity > 0 && $row->id != 3)){
+                    //$virtual_pharmacy_items += $wh_quantity->quantity;
+                    $row->global = 1;
+                }
+
+                // remove the below block after eid
+                // if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0 && $row->id != 3)){
+                            
+                //     $row->global = 1;
+                // }
+
+                // remove the below block after eid
+                // if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0 && $row->id != 3)){
+                    
+                //     $row->global = 1;
+                // }
+            }
         }, $result);
         return $result;
     }
@@ -465,7 +903,7 @@ class Shop_model extends CI_Model
     {
         $this->db->select("{$this->db->dbprefix('categories')}.id as id, {$this->db->dbprefix('categories')}.name as name, {$this->db->dbprefix('categories')}.code as code, {$this->db->dbprefix('categories')}.image as image, {$this->db->dbprefix('categories')}.slug as slug")
             ->where('categories.popular', 1)
-            ->order_by('id desc')
+            ->order_by('name asc')
             ->limit($limit);
         $popular_categories = $this->db->get('categories')->result();
 
@@ -479,7 +917,8 @@ class Shop_model extends CI_Model
             {$this->db->dbprefix('products')}.price, 
             {$this->db->dbprefix('products')}.tax_rate as taxRateId, 
             {$this->db->dbprefix('products')}.tax_method,
-            quantity, 
+            {$this->db->dbprefix('products')}.quantity,
+            (COALESCE(SUM(sma_im.quantity), 0) - COALESCE(SUM(sma_phqor.quantity), 0)) as product_quantity, 
             {$this->db->dbprefix('products')}.type, 
             promotion, 
             promo_price, 
@@ -492,8 +931,11 @@ class Shop_model extends CI_Model
                 ->join('tax_rates t', 'products.tax_rate = t.id', 'left')
                 ->join('brands b', 'products.brand=b.id', 'left')
                 ->join('product_reviews pr', 'products.id=pr.product_id', 'left')
+                ->join('(SELECT product_id, SUM(quantity) AS quantity FROM sma_inventory_movements GROUP BY product_id) AS sma_im', 'products.id=sma_im.product_id', 'left')
+                ->join('(SELECT product_id, SUM(quantity) AS quantity FROM sma_product_qty_onhold_request GROUP BY product_id) AS sma_phqor', 'products.id=sma_phqor.product_id', 'left')
                 ->join('categories c', 'products.category_id=c.id', 'left')
                 ->where('products.category_id', $category->id)
+                ->where('products.quantity >', 0)
                 ->where('hide !=', 1)
                 //->where('products.cf1', $countryId)
                 ->limit(8);
@@ -509,7 +951,7 @@ class Shop_model extends CI_Model
                 $this->db->order_by('promotion desc');
             }
             $this->db->group_by('products.id');
-            $this->db->order_by('RAND()');
+            $this->db->order_by('products.promotion desc, RAND()');
             $products = $this->db->get('products')->result();
 
             array_map(function ($row) {
@@ -525,6 +967,26 @@ class Shop_model extends CI_Model
                     $productPrice = $row->price;
                     $productTaxAmount = $productPrice * ($productTaxPercent / 100);
                     $row->price = $productPrice + $productTaxAmount;
+                }
+
+                $warehouse_quantities = $this->getProductQuantitiesInWarehouses($row->id);
+                foreach ($warehouse_quantities as $wh_quantity){
+                    if(($wh_quantity->warehouse_id == '7' && $wh_quantity->quantity > 0 && $row->id != 3)){
+                        //$virtual_pharmacy_items += $wh_quantity->quantity;
+                        $row->global = 1;
+                    }
+
+                    // remove the below block after eid
+                    // if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0 && $row->id != 3)){
+                                
+                    //     $row->global = 1;
+                    // }
+
+                    // remove the below block after eid
+                    // if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0 && $row->id != 3)){
+                        
+                    //     $row->global = 1;
+                    // }
                 }
             }, $products);
             $category->products = $products;
@@ -571,8 +1033,8 @@ class Shop_model extends CI_Model
 
     }
 
-    public function getBestSellers($limit = 16, $promo = true)
-    {
+    public function getBestSellers($limit = 16, $promo = true, $filters)
+    {   
         $countryId = get_cookie('shop_country', true); //$this->session->userdata('country');
         $this->db->select("
         {$this->db->dbprefix('products')}.id as id, 
@@ -584,7 +1046,8 @@ class Shop_model extends CI_Model
         {$this->db->dbprefix('products')}.quantity, 
         {$this->db->dbprefix('products')}.type, 
         {$this->db->dbprefix('products')}.tax_rate as taxRateId, 
-        {$this->db->dbprefix('products')}.tax_method, 
+        {$this->db->dbprefix('products')}.tax_method,
+        (COALESCE(SUM(sma_im.quantity), 0) - COALESCE(SUM(sma_phqor.quantity), 0)) as product_quantity, 
         promotion, 
         promo_price, 
         start_date, 
@@ -602,10 +1065,23 @@ class Shop_model extends CI_Model
             ->join('brands b', 'products.brand=b.id', 'left')
             ->join('categories c', 'products.category_id=c.id', 'left')
             ->join('product_reviews pr', 'products.id=pr.product_id', 'left')
+            ->join('(SELECT product_id, SUM(quantity) AS quantity FROM sma_inventory_movements GROUP BY product_id) AS sma_im', 'products.id=sma_im.product_id', 'left')
+            ->join('(SELECT product_id, SUM(quantity) AS quantity FROM sma_product_qty_onhold_request GROUP BY product_id) AS sma_phqor', 'products.id=sma_phqor.product_id', 'left')
             ->where('products.best_seller', 1)
-            ->where('hide !=', 1)
+            ->where('products.quantity >', 0)
+            ->where('hide !=', 1);
             //->where('products.cf1', $countryId)
-            ->limit($limit);
+            if (!empty($filters['brands'])) {
+                $brandIds = explode(',', $filters['brands']);
+                $this->db->where_in('brand', $brandIds);
+            }
+            if (!empty($filters['min_price'])) {
+                $this->db->where('price >=', $filters['min_price']);
+            }
+            if (!empty($filters['max_price'])) {
+                $this->db->where('price <=', $filters['max_price']);
+            }
+            $this->db->limit($limit);
 
         /*if($countryId != '0')
         {
@@ -620,12 +1096,12 @@ class Shop_model extends CI_Model
         }
 
         if ($promo) {
-            $this->db->order_by('promotion desc');
+            //$this->db->order_by('promotion desc');
         }
         $this->db->group_by('products.id');
-        $this->db->order_by('id desc');
+        $this->db->order_by('products.promotion desc');
         $result = $this->db->get('products')->result();
-        //        dd($result);
+            //    var_dump($result); exit;
 
         array_map(function ($row) {
             if ($row->tax_method == '1' && $row->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
@@ -640,6 +1116,26 @@ class Shop_model extends CI_Model
                 $productPrice = $row->price;
                 $productTaxAmount = $productPrice * ($productTaxPercent / 100);
                 $row->price = $productPrice + $productTaxAmount;
+            }
+
+            $warehouse_quantities = $this->getProductQuantitiesInWarehouses($row->id);
+            foreach ($warehouse_quantities as $wh_quantity){
+                if(($wh_quantity->warehouse_id == '7' && $wh_quantity->quantity > 0 && $row->id != 3)){
+                    //$virtual_pharmacy_items += $wh_quantity->quantity;
+                    $row->global = 1;
+                }
+
+                // remove the below block after eid
+                // if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0 && $row->id != 3)){
+                            
+                //     $row->global = 1;
+                // }
+
+                // remove the below block after eid
+                // if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0 && $row->id != 3)){
+                    
+                //     $row->global = 1;
+                // }
             }
         }, $result);
         return $result;
@@ -659,6 +1155,7 @@ class Shop_model extends CI_Model
         {$this->db->dbprefix('products')}.type, 
         {$this->db->dbprefix('products')}.tax_rate as taxRateId, 
         {$this->db->dbprefix('products')}.tax_method, 
+        (COALESCE(SUM(sma_im.quantity), 0) - COALESCE(SUM(sma_phqor.quantity), 0)) as product_quantity,
         promotion, 
         promo_price, 
         start_date, 
@@ -676,7 +1173,10 @@ class Shop_model extends CI_Model
             ->join('brands b', 'products.brand=b.id', 'left')
             ->join('categories c', 'products.category_id=c.id', 'left')
             ->join('product_reviews pr', 'products.id=pr.product_id', 'left')
+            ->join('(SELECT product_id, SUM(quantity) AS quantity FROM sma_inventory_movements GROUP BY product_id) AS sma_im', 'products.id=sma_im.product_id', 'left')
+            ->join('(SELECT product_id, SUM(quantity) AS quantity FROM sma_product_qty_onhold_request GROUP BY product_id) AS sma_phqor', 'products.id=sma_phqor.product_id', 'left')
             ->where('products.best_seller', 1)
+            ->where('products.quantity >', 0)
             ->where('hide !=', 1)
             //->where('products.cf1', $countryId)
             ->limit($limit);
@@ -694,7 +1194,7 @@ class Shop_model extends CI_Model
         }
 
         if ($promo) {
-            $this->db->order_by('promotion desc');
+            //$this->db->order_by('promotion desc');
         }
         $this->db->group_by('products.id');
         $this->db->order_by('id asc');
@@ -715,6 +1215,26 @@ class Shop_model extends CI_Model
                 $productTaxAmount = $productPrice * ($productTaxPercent / 100);
                 $row->price = $productPrice + $productTaxAmount;
             }
+
+            $warehouse_quantities = $this->getProductQuantitiesInWarehouses($row->id);
+            foreach ($warehouse_quantities as $wh_quantity){
+                if(($wh_quantity->warehouse_id == '7' && $wh_quantity->quantity > 0 && $row->id != 3)){
+                    //$virtual_pharmacy_items += $wh_quantity->quantity;
+                    $row->global = 1;
+                }
+
+                // remove the below block after eid
+                // if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0 && $row->id != 3)){
+                            
+                //     $row->global = 1;
+                // }
+
+                // remove the below block after eid
+                // if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0 && $row->id != 3)){
+                    
+                //     $row->global = 1;
+                // }
+            }
         }, $result);
         return $result;
     }
@@ -733,6 +1253,7 @@ class Shop_model extends CI_Model
         {$this->db->dbprefix('products')}.type, 
         {$this->db->dbprefix('products')}.tax_rate as taxRateId, 
         {$this->db->dbprefix('products')}.tax_method, 
+        (COALESCE(SUM(sma_im.quantity), 0) - COALESCE(SUM(sma_phqor.quantity), 0)) as product_quantity, 
         promotion, 
         promo_price, 
         start_date, 
@@ -750,7 +1271,10 @@ class Shop_model extends CI_Model
             ->join('brands b', 'products.brand=b.id', 'left')
             ->join('categories c', 'products.category_id=c.id', 'left')
             ->join('product_reviews pr', 'products.id=pr.product_id', 'left')
+            ->join('(SELECT product_id, SUM(quantity) AS quantity FROM sma_inventory_movements GROUP BY product_id) AS sma_im', 'products.id=sma_im.product_id', 'left')
+            ->join('(SELECT product_id, SUM(quantity) AS quantity FROM sma_product_qty_onhold_request GROUP BY product_id) AS sma_phqor', 'products.id=sma_phqor.product_id', 'left')
             ->where('products.featured', 1)
+            ->where('products.quantity >', 0)
             ->where('hide !=', 1)
             //->where('products.cf1', $countryId)
             ->limit($limit);
@@ -789,6 +1313,26 @@ class Shop_model extends CI_Model
                 $productTaxAmount = $productPrice * ($productTaxPercent / 100);
                 $row->price = $productPrice + $productTaxAmount;
             }
+
+            $warehouse_quantities = $this->getProductQuantitiesInWarehouses($row->id);
+            foreach ($warehouse_quantities as $wh_quantity){
+                if(($wh_quantity->warehouse_id == '7' && $wh_quantity->quantity > 0 && $row->id != 3)){
+                    //$virtual_pharmacy_items += $wh_quantity->quantity;
+                    $row->global = 1;
+                }
+
+                // remove the below block after eid
+                // if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0 && $row->id != 3)){
+                            
+                //     $row->global = 1;
+                // }
+
+                // remove the below block after eid
+                // if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0 && $row->id != 3)){
+                    
+                //     $row->global = 1;
+                // }
+            }
         }, $result);
         return $result;
     }
@@ -808,6 +1352,22 @@ class Shop_model extends CI_Model
             $sale = $this->db->get_where('sales', ['id' => $clause['id']], 1)->row();
             return ($sale->customer_id == $this->session->userdata('company_id')) ? $sale : false;
         } elseif (!empty($clause['hash'])) {
+            return $this->db->get_where('sales', $clause, 1)->row();
+        } else {
+            $this->db->order_by('id desc');
+            $sale = $this->db->get_where('sales', ['id' => $clause['id']], 1)->row();
+            return $sale;
+        }
+        return false;
+    }
+    public function getOrderByID($clause)
+    {
+        // if ($this->loggedIn) {
+        //     $this->db->order_by('id desc');
+        //     $sale = $this->db->get_where('sales', ['id' => $clause['id']], 1)->row();
+        //     return ($sale->customer_id == $this->session->userdata('company_id')) ? $sale : false;
+        // } else
+        if (!empty($clause['hash'])) {
             return $this->db->get_where('sales', $clause, 1)->row();
         } else {
             $this->db->order_by('id desc');
@@ -1068,7 +1628,6 @@ class Shop_model extends CI_Model
 
     public function getProducts($filters = [])
     {
-
         $this->db->select("
         {$this->db->dbprefix('products')}.id as id,
         {$this->db->dbprefix('categories')}.name as category_name,
@@ -1080,10 +1639,11 @@ class Shop_model extends CI_Model
         {$this->db->dbprefix('products')}.image as image, 
         {$this->db->dbprefix('products')}.slug as slug, 
         {$this->db->dbprefix('products')}.price,
-        {$this->db->dbprefix('warehouses_products')}.quantity as quantity, 
+        {$this->db->dbprefix('products')}.quantity as quantity, 
         {$this->db->dbprefix('products')}.type, 
         {$this->db->dbprefix('products')}.tax_rate as taxRateId, 
         {$this->db->dbprefix('products')}.tax_method,
+        (COALESCE(SUM(sma_im.quantity), 0) - COALESCE(SUM(sma_phqor.quantity), 0)) as product_quantity,
         promotion, 
         promo_price, 
         start_date, 
@@ -1092,15 +1652,21 @@ class Shop_model extends CI_Model
         t.name as taxName,
         t.rate as taxPercentage,
         t.code as taxCode,
-        CAST(ROUND(AVG(pr.rating), 1) AS UNSIGNED) as avg_rating")
+        CAST(ROUND(AVG(pr.rating), 1) AS UNSIGNED) as avg_rating,
+        CASE 
+        WHEN price > 0 AND promo_price IS NOT NULL THEN (price - promo_price) / price * 100 
+        ELSE 0 
+        END as discount_percentage")
             ->from('products')
             ->join('tax_rates t', 'products.tax_rate = t.id', 'left')
-            ->join('warehouses_products', 'products.id=warehouses_products.product_id', 'left')
+            //->join('warehouses_products', 'products.id=warehouses_products.product_id', 'left')
             ->join('categories', 'products.category_id=categories.id', 'left')
             ->join('brands', 'products.brand=brands.id', 'left')
-            ->join('product_reviews pr', 'products.id=pr.product_id', 'left');
+            ->join('product_reviews pr', 'products.id=pr.product_id', 'left')
+            ->join('(SELECT product_id, SUM(quantity) AS quantity FROM sma_inventory_movements GROUP BY product_id) AS sma_im', 'products.id=sma_im.product_id', 'left')
+            ->join('(SELECT product_id, SUM(quantity) AS quantity FROM sma_product_qty_onhold_request GROUP BY product_id) AS sma_phqor', 'products.id=sma_phqor.product_id', 'left');
         if ($this->shop_settings->warehouse > 0) {
-            $this->db->where('warehouses_products.warehouse_id', $this->shop_settings->warehouse);
+           // $this->db->where('warehouses_products.warehouse_id', $this->shop_settings->warehouse);
         }
         $this->db->group_by('products.id');
 
@@ -1111,7 +1677,14 @@ class Shop_model extends CI_Model
             $this->db->select('wgp.price as special_price', false)->join($sp->wgp, 'products.id=wgp.product_id', 'left');
         }
 
-        $this->db->where('hide !=', 1)->limit($filters['limit'], $filters['offset']);
+        if (!empty($filters['category']['id']) && $filters['category']['id'] == 25 && empty($filters['offset'])) {
+            $this->db->where('hide !=', 1)->limit($filters['limit'] - 1, $filters['offset']);
+        }else if(!empty($filters['category']['id']) && $filters['category']['id'] == 25 && !empty($filters['offset'])){
+            $this->db->where('hide !=', 1)->limit($filters['limit'], $filters['offset'] - 1);
+        }else{
+            $this->db->where('hide !=', 1)->limit($filters['limit'], $filters['offset']);
+        }
+        
         if (!empty($filters)) {
             if (!empty($filters['promo'])) {
                 $today = date('Y-m-d');
@@ -1167,6 +1740,10 @@ class Shop_model extends CI_Model
             if (!empty($filters['brand'])) {
                 $this->db->where('brand', $filters['brand']['id']);
             }
+            if (!empty($filters['brands'])) {
+                $brandIds = explode(',', $filters['brands']);
+                $this->db->where_in('brand', $brandIds);
+            }
             if (!empty($filters['min_price'])) {
                 $this->db->where('price >=', $filters['min_price']);
             }
@@ -1174,14 +1751,23 @@ class Shop_model extends CI_Model
                 $this->db->where('price <=', $filters['max_price']);
             }
             if (!empty($filters['in_stock'])) {
-                $this->db->group_start()->where('warehouses_products.quantity >=', 1)->or_where('type !=', 'standard')->group_end();
+                //$this->db->group_start()->where('warehouses_products.quantity >=', 1)->or_where('type !=', 'standard')->group_end();
             }
+
+            if(!empty($filters['promo']) || !empty($filters['special_product'])){
+                $this->db->where_not_in('sma_products.code', array('HON002', 'HON007', 'HON008', 'HON010', 'HON006'));
+            }
+
             if (empty($filters['query'])) {
                 if (!empty($filters['sorting'])) {
                     $sort = explode('-', $filters['sorting']);
                     $this->db->order_by($sort[0], $this->db->escape_str($sort[1]));
                 } else {
-                    $this->db->order_by('name asc');
+                    if (!empty($filters['promo'])) {
+                        $this->db->order_by('sortby asc, discount_percentage desc, promotion desc, id desc');
+                    }else{
+                        $this->db->order_by('sortby asc, promotion desc, id desc');
+                    }
                 }
             } else {
                 $this->db->order_by($sortcase . ' desc');
@@ -1189,15 +1775,61 @@ class Shop_model extends CI_Model
 
             }
         } else {
-            $this->db->order_by('name asc');
+            $this->db->order_by('id desc');
         }
 
 
         $results = $this->db->get();
+        
         $data = array();
 
         if ($results !== FALSE && $results->num_rows() > 0) {
             $data = $results->result_array();
+
+            // If category_id is 25, fetch product_id 3 and add it to the result set
+            if (!empty($filters['category']['id']) && $filters['category']['id'] == 25 && empty($filters['offset'])) {
+                $this->db->select("
+                {$this->db->dbprefix('products')}.id as id,
+                {$this->db->dbprefix('categories')}.name as category_name,
+                {$this->db->dbprefix('categories')}.slug as category_slug,
+                {$this->db->dbprefix('brands')}.name as brand_name,
+                {$this->db->dbprefix('brands')}.slug as brand_slug, 
+                {$this->db->dbprefix('products')}.name as name, 
+                {$this->db->dbprefix('products')}.code as code, 
+                {$this->db->dbprefix('products')}.image as image, 
+                {$this->db->dbprefix('products')}.slug as slug, 
+                {$this->db->dbprefix('products')}.price,
+                {$this->db->dbprefix('products')}.quantity as quantity, 
+                {$this->db->dbprefix('products')}.type, 
+                {$this->db->dbprefix('products')}.tax_rate as taxRateId, 
+                {$this->db->dbprefix('products')}.tax_method,
+                (COALESCE(SUM(sma_im.quantity), 0) - COALESCE(SUM(sma_phqor.quantity), 0)) as product_quantity,
+                promotion, 
+                promo_price, 
+                start_date, 
+                end_date, 
+                product_details as details,
+                t.name as taxName,
+                t.rate as taxPercentage,
+                t.code as taxCode,
+                CAST(ROUND(AVG(pr.rating), 1) AS UNSIGNED) as avg_rating")
+                ->from('products')
+                ->join('tax_rates t', 'products.tax_rate = t.id', 'left')
+                ->join('categories', 'products.category_id=categories.id', 'left')
+                ->join('brands', 'products.brand=brands.id', 'left')
+                ->join('product_reviews pr', 'products.id=pr.product_id', 'left')
+                ->join('(SELECT product_id, SUM(quantity) AS quantity FROM sma_inventory_movements GROUP BY product_id) AS sma_im', 'products.id=sma_im.product_id', 'left')
+                ->join('(SELECT product_id, SUM(quantity) AS quantity FROM sma_product_qty_onhold_request GROUP BY product_id) AS sma_phqor', 'products.id=sma_phqor.product_id', 'left')
+                ->where('products.id', 3)
+                ->group_by('products.id')
+                ->limit(1);
+            
+                $additional_product = $this->db->get();
+                if ($additional_product !== FALSE && $additional_product->num_rows() > 0) {
+                    $additional_product_data = $additional_product->result_array();
+                    $data = array_merge($additional_product_data, $data);
+                }
+            }
 
             $mapData = array_map(function ($row) {
                 if ($row['tax_method'] == '1' && $row['taxPercentage'] > 0) { // tax_method = 0 means inclusiveTax
@@ -1213,8 +1845,32 @@ class Shop_model extends CI_Model
                     $productTaxAmount = $productPrice * ($productTaxPercent / 100);
 
                     $row['price'] = $productPrice + $productTaxAmount;
+                    $row['name'] = stripslashes($row['name']);
                     return $row;
                 }
+
+                $warehouse_quantities = $this->getProductQuantitiesInWarehouses($row['id']);
+                foreach ($warehouse_quantities as $wh_quantity){
+                    if(($wh_quantity->warehouse_id == '7' && $wh_quantity->quantity > 0) && $row['id'] != 3){
+                        //$virtual_pharmacy_items += $wh_quantity->quantity;
+                        $row['global'] = 1;
+                    }
+
+
+                    // remove the below block after eid
+                    // if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0) && $row['id'] != 3){
+                        
+                    //     $row['global'] = 1;
+                    // }
+
+                    // remove the below block after eid
+                    // if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0) && $row['id'] != 3){
+                        
+                    //     $row['global'] = 1;
+                    // }
+                }
+
+                $row['name'] = stripslashes($row['name']);
                 return $row;
             }, $data);
         }
@@ -1227,7 +1883,7 @@ class Shop_model extends CI_Model
     {
         $this->db->select("{$this->db->dbprefix('products')}.id as id")
             ->join('warehouses_products', 'products.id=warehouses_products.product_id', 'left')
-            ->where('warehouses_products.warehouse_id', $this->shop_settings->warehouse)
+            //->where('warehouses_products.warehouse_id', $this->shop_settings->warehouse)
             ->group_by('products.id');
 
         $sp = $this->getSpecialPrice();
@@ -1266,6 +1922,9 @@ class Shop_model extends CI_Model
             if (!empty($filters['max_price'])) {
                 $this->db->where('products.price <=', $filters['max_price']);
             }
+            if(!empty($filters['promo']) || !empty($filters['special_product'])){
+                $this->db->where_not_in('sma_products.code', array('HON002', 'HON007', 'HON008', 'HON010', 'HON006'));
+            }
             if (!empty($filters['in_stock'])) {
                 $this->db->group_start()->where('warehouses_products.quantity >=', 1)->or_where('type !=', 'standard')->group_end();
             }
@@ -1275,7 +1934,12 @@ class Shop_model extends CI_Model
             $this->db->group_start()->where('warehouses_products.quantity >', 0)->or_where('products.type !=', 'standard')->group_end();
         }
         $this->db->where('hide !=', 1);
-        return $this->db->count_all_results('products');
+        
+        if (!empty($filters['category']['id']) && $filters['category']['id'] == 25) {
+            return $this->db->count_all_results('products') + 1;
+        }else{
+            return $this->db->count_all_results('products');
+        }
     }
 
     public function getProductVariantByID($id)
@@ -1483,7 +2147,9 @@ class Shop_model extends CI_Model
         $searchquery = explode(' ', $booksearch);
         foreach ($searchquery as $booksearch) {
             if (!empty(trim($booksearch))) {
-                $wheres[] = "( {$this->db->dbprefix('products')}.name LIKE '%" . $booksearch . "%' OR  {$this->db->dbprefix('products')}.code LIKE '%" . $booksearch . "%')";
+                $wheres[] = "( {$this->db->dbprefix('products')}.name LIKE '%" . $booksearch . "%' OR  {$this->db->dbprefix('products')}.code LIKE '%" . $booksearch . "%'
+                OR  {$this->db->dbprefix('products')}.product_details LIKE '%" . $booksearch . "%' OR  {$this->db->dbprefix('products')}.name_ar LIKE '%" . $booksearch . "%'
+                 OR  {$this->db->dbprefix('products')}.product_details_ar LIKE '%" . $booksearch . "%')";
             }
         }
         if (!empty($wheres)) {
@@ -1500,6 +2166,7 @@ class Shop_model extends CI_Model
         $this->db->where('hide !=', 1);
         $this->db->limit($limit);
         $q = $this->db->get('products');
+        //echo  $this->db->last_query();exit;
         $checkCounter = 1;
         $oneString = '';
         if ($q !== FALSE && $q->num_rows() > 0) {
@@ -1582,6 +2249,22 @@ class Shop_model extends CI_Model
         $row = $this->db->get('product_qty_onhold_request')->row();
         return $row->total_quantity;
 
+    }
+
+    public function get_notify_data($notify_email, $product_id) {
+        // Check if the email already exists for the given product_id
+        $this->db->where('email', $notify_email);
+        $this->db->where('product_id', $product_id);
+        $query = $this->db->get('out_of_stock_notify'); // 'sma_notify' is the name of your database table
+
+        return $query->num_rows(); // Return the result as an associative array
+    }
+
+    public function insert_notify_data($data) {
+        // Insert data into the database
+        $this->db->insert('out_of_stock_notify', $data); // 'sma_notify' is the name of your database table
+
+        return $this->db->insert_id(); // Return the ID of the inserted row
     }
 
 }

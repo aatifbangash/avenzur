@@ -23,6 +23,14 @@ class Entries extends MY_Controller
     
 	public function index() {
 
+		$this->load->library('pagination'); 
+		$config['base_url'] = admin_url('entries'); 
+		$config['total_rows'] = $this->count_entries();
+		$config['per_page'] = 100; 
+		$config['reuse_query_string'] = TRUE;
+		$this->pagination->initialize($config); 
+        $this->data['pagination_links']=  $this->pagination->create_links();  
+		
 		$eid         = $this->input->get('eid');
         $tran_number   = $this->input->get('tran_number');
 		$start_date     = $this->input->get('start_date');
@@ -32,14 +40,6 @@ class Entries extends MY_Controller
 			$start_date = $this->sma->fld($start_date);
 			$end_date   = $this->sma->fld($end_date);
 		}
-		
-		// $conditions = array(); // conditions if any
-		// if ($conditions)
-		// {
-		// 	// if any conditions apply where clause
-		// 	$this->db->where($conditions);
-		// }
-
 		if ($start_date && $start_date != "0000-00-00") {
             $this->db->where('date >=', $start_date);       
 
@@ -47,22 +47,17 @@ class Entries extends MY_Controller
                 $this->db->where('date <=', $end_date);
             }
         }
-
-
 		if(!empty($eid)){
 			$this->db->where("id LIKE '%$eid%'");	
 		}
-
 		if(!empty($tran_number)){
 			$this->db->where("number LIKE '%$tran_number%'");	
 		}
-
 		// select all entries
-		$query = $this->db->get('sma_accounts_entries');
-
-		
-
-
+		// 	$query = $this->db->get('sma_accounts_entries');
+		$page = ($this->uri->segment(3)) ? $this->uri->segment(3) : 0;
+		$query = $this->db->limit($config['per_page'], $page)->get('accounts_entries');
+		 
 		// pass an array of all entries to view
 		$this->data['entries'] = $query->result_array();
 		
@@ -70,6 +65,199 @@ class Entries extends MY_Controller
 		$bc  = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('Entries'), 'page' => lang('Entries')], ['link' => '#', 'page' => lang('Entries')]];
         $meta = ['page_title' => lang('Entries'), 'bc' => $bc];
         $this->page_construct('accounts/entries_index', $meta, $this->data);
+	}
+
+	public function upload_trial_balance_by_csv(){
+		$this->form_validation->set_rules('ledger', $this->lang->line('ledger'), 'required');
+		$this->form_validation->set_rules('csvfile', $this->lang->line('upload_file'), 'xss_clean');
+
+		if ($this->form_validation->run() == true) {
+			$ledger = $this->input->post('ledger');
+			if (isset($_FILES['csvfile'])) {
+                $this->load->library('upload');
+
+                $config['upload_path'] = $this->digital_upload_path;
+                $config['allowed_types'] = 'csv';
+                $config['max_size'] = $this->allowed_file_size;
+                $config['overwrite'] = true;
+
+                $this->upload->initialize($config);
+				
+                if (!$this->upload->do_upload('csvfile')) {
+                    $error = $this->upload->display_errors();
+                    $this->session->set_flashdata('error', $error);
+                    admin_redirect('entries');
+                }
+                $csv = $this->upload->file_name;
+
+                $arrResult = [];
+                $handle = fopen($this->digital_upload_path . $csv, 'r');
+                if ($handle) {
+                    while (($row = fgetcsv($handle, 5000, ',')) !== false) {
+                        $arrResult[] = $row;
+                    }
+                    fclose($handle);
+                }
+                $arr_length = count($arrResult);
+                if ($arr_length > 5000000) {
+                    $this->session->set_flashdata('error', lang('too_many_records'));
+                    redirect($_SERVER['HTTP_REFERER']);
+                    exit();
+                }
+
+				$parsed = $arrResult;
+
+				$transactions = [];
+				
+				foreach ($parsed as $row) {
+					// Skip rows that look like headers
+					if (
+						isset($row[0]) &&
+						strtolower(trim($row[0])) === 'date' &&
+						isset($row[4]) &&
+						strtolower(trim($row[4])) === 'debit'
+					) {
+						continue;
+					}
+				
+					// Skip completely empty rows
+					if (empty(array_filter($row))) {
+						continue;
+					}
+				
+					// Skip rows that only have account info (e.g., acc no.)
+					if (strtolower(trim($row[0])) === 'acc no.') {
+						continue;
+					}
+				
+					// Optional: check if first column looks like a date
+					if (!preg_match('/\d{1,2}\/\d{1,2}\/\d{4}/', $row[0])) {
+						continue;
+					}
+				
+					// Now extract the transaction row
+					$transactions[] = [
+						'date'        => $row[0] ?? '',
+						'jl_no'       => $row[1] ?? '',
+						'description' => $row[2] ?? '',
+						'doc_no'      => $row[3] ?? '',
+						'debit'       => $row[4] ?? '',
+						'credit'      => $row[5] ?? '',
+						'balance'     => $row[6] ?? '',
+					];
+
+				}
+				
+				foreach ($transactions as $transaction){
+					if($transaction['credit']){
+						$amount = $transaction['credit'];
+						$dc = 'C';
+					}else{
+						$amount = $transaction['debit'];
+						$dc = 'D';
+					}
+					
+					$this->db->where('id', $transaction['doc_no']);
+					$exists = $this->db->get('sma_accounts_entries')->row();
+					
+					if($transaction['doc_no']){
+						if (!$exists) {
+							// Only insert if it doesn't already exist
+							$insert_trs = [
+								'id' => $transaction['doc_no'],
+								'entrytype_id' => 4,
+								'transaction_type' => 'balanceupload',
+								'number' => 'TBU-' . $transaction['doc_no'],
+								'date' => date('Y-m-d', strtotime($transaction['date'])),
+								'notes' => 'Trial Balance Upload, Dated: ' . date('Y-m-d')
+							];
+							$this->db->insert('sma_accounts_entries', $insert_trs);
+							$account_entry_id = $this->db->insert_id();
+						} else {
+							// Record already exists, do nothing or log if needed
+							$account_entry_id = $exists->id;
+						}
+
+						$insert_id = $transaction['doc_no'];
+					}else{
+						$baseTimestamp = strtotime($transaction['date']);
+
+						$insert_trs = [
+							'entrytype_id' => 4,
+							'transaction_type' => 'balanceupload',
+							'number' => 'TBU-' . $transaction['doc_no'],
+							'date' => date('Y-m-d', strtotime('-1 day', $baseTimestamp)),
+							'notes' => 'Trial Balance Upload, Dated: ' . date('Y-m-d')
+						];
+						$this->db->insert('sma_accounts_entries', $insert_trs);
+						$account_entry_id = $this->db->insert_id();
+
+						$insert_id = $account_entry_id;
+					}
+
+					$insert_entry_item = [
+						'entry_id' => $insert_id,
+						'ledger_id' => $ledger,
+						'amount' => $amount,
+						'dc' => $dc,
+						'narration' => $transaction['description']
+					];
+					
+					$account_entry_item_id = $this->db->insert('sma_accounts_entryitems', $insert_entry_item);
+				}
+			
+				admin_redirect('entries');
+				
+			}
+		} else {
+            $data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+
+            admin_redirect('entries');
+        }
+	}
+
+	public function upload_trial_balance(){
+		$this->data['ledgers'] = $this->site->getCompanyLedgers();
+
+		//$this->data['warehouses'] = $this->site->getAllWarehouses();
+        //$this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+        $this->load->view($this->theme . 'accounts/uploadCsvTrialBalance', $this->data);
+	}
+
+	public function count_entries(){
+
+		$eid         = $this->input->get('eid');
+        $tran_number   = $this->input->get('tran_number');
+		$start_date     = $this->input->get('start_date');
+        $end_date     = $this->input->get('end_date'); 
+		
+		$this->db->select(' COUNT(id) as total_record');
+		$this->db->from('sma_accounts_entries');  
+
+		if ($start_date) {
+			$start_date = $this->sma->fld($start_date);
+			$end_date   = $this->sma->fld($end_date);
+		}
+		if ($start_date && $start_date != "0000-00-00") {
+            $this->db->where('date >=', $start_date);       
+
+            if ($end_date  && $end_date != "0000-00-00") {
+                $this->db->where('date <=', $end_date);
+            }
+        }
+		if(!empty($eid)){
+			$this->db->where("id LIKE '%$eid%'");	
+		}
+		if(!empty($tran_number)){
+			$this->db->where("number LIKE '%$tran_number%'");	
+		}
+
+		$query = $this->db->get();
+		 // echo $this->db->last_query(); exit;
+		$row = $query->row();
+		$count = $row->total_record;
+		return $count;   
+
 	}
 
 	public function ledgerList($entrytypeLabel, $searchTerm = null, $selectedLedgers = array()) {
@@ -97,10 +285,10 @@ class Entries extends MY_Controller
 		$department_id = $this->input->post('department_id');
 		$employee_id = $this->input->post('employee_id');
 	
-		if (empty($product_id) && empty($customer_id) && empty($supplier_id) && empty($department_id) && empty($employee_id)) {
-			$this->form_validation->set_message('at_least_one_selected', 'At least one Dimensions (item, customer, supplier, department or employee) field must be selected.');
-			return false;
-		}
+		// if (empty($product_id) && empty($customer_id) && empty($supplier_id) && empty($department_id) && empty($employee_id)) {
+		// 	$this->form_validation->set_message('at_least_one_selected', 'At least one Dimensions (item, customer, supplier, department or employee) field must be selected.');
+		// 	return false;
+		// }
 	
 		return true;
 	}
@@ -150,7 +338,7 @@ class Entries extends MY_Controller
 		// form validation rules 
 		$this->form_validation->set_rules('number', lang('entries_cntrler_add_form_validation_number_label'), 'is_numeric');
 		$this->form_validation->set_rules('date', lang('entries_cntrler_add_form_validation_date_label'), 'required');
-		$this->form_validation->set_rules('tag_id', lang('entries_cntrler_add_form_validation_tag_label'), 'required');
+		// $this->form_validation->set_rules('tag_id', lang('entries_cntrler_add_form_validation_tag_label'), 'required');
 
 		$this->form_validation->set_rules('product_id', 'Product ID', 'callback_at_least_one_selected');
 		$this->form_validation->set_rules('customer_id', 'Customer ID', 'callback_at_least_one_selected');
@@ -367,7 +555,11 @@ class Entries extends MY_Controller
 								'cr_amount' => isset($entryitem['cr_amount']) ? $entryitem['cr_amount'] : '',
 								'narration' => $entryitem['narration'],
 								'ledger_balance' => $entryitem['ledger_balance'],
-								'ledgername' => $this->ledger_model->getName($entryitem['ledger_id'])
+								'ledgername' => $this->ledger_model->getName($entryitem['ledger_id']),
+								'customer_id' => $entryitem['customer_id'],
+								'supplier_id' => $entryitem['supplier_id'],
+								'department_id' => $entryitem['department_id'],
+								'employee_id'  => $entryitem['employee_id']
 							);
 						}else{
 							$curEntryitems[$row] = array
@@ -378,7 +570,12 @@ class Entries extends MY_Controller
 								'dr_amount' => isset($entryitem['dr_amount']) ? $entryitem['dr_amount'] : '',
 								 // if cr_amount isset save it else save empty string
 								'cr_amount' => isset($entryitem['cr_amount']) ? $entryitem['cr_amount'] : '',
-								'narration' => $entryitem['narration']
+								'narration' => $entryitem['narration'],
+								'customer_id' => $entryitem['customer_id'],
+								'supplier_id' => $entryitem['supplier_id'],
+								'department_id' => $entryitem['department_id'],
+								'employee_id'  => $entryitem['employee_id']
+
 							);
 						}
 					}
@@ -465,7 +662,9 @@ class Entries extends MY_Controller
 
 			// loop for all Entryitems from post data
 			foreach ($this->input->post('Entryitem') as $row => $entryitem)
-			{
+			{	 
+				 
+	 
 				// check if $entryitem['ledger_id'] less then or equal to 0
 				if ($entryitem['ledger_id'] <= 0)
 				{
@@ -482,7 +681,11 @@ class Entries extends MY_Controller
 							'dc' => $entryitem['dc'],
 							'ledger_id' => $entryitem['ledger_id'],
 							'amount' => $entryitem['dr_amount'],
-							'narration' => $entryitem['narration']
+							'narration' => $entryitem['narration'],
+							 'customer_id' => $entryitem['customer_id'],
+						 	'supplier_id' => $entryitem['supplier_id'],
+								'department_id' => $entryitem['department_id'],
+								'employee_id'  => $entryitem['employee_id']
 						)
 					);
 				}else // if entrytype is credit
@@ -493,8 +696,12 @@ class Entries extends MY_Controller
 							'dc' => $entryitem['dc'],
 							'ledger_id' => $entryitem['ledger_id'],
 							'amount' => $entryitem['cr_amount'],
-							'narration' => $entryitem['narration']
-
+							'narration' => $entryitem['narration'],
+							 'customer_id' => $entryitem['customer_id'],
+							'supplier_id' => $entryitem['supplier_id'],
+							'department_id' => $entryitem['department_id'],
+							'employee_id'  => $entryitem['employee_id']
+							 
 						)
 					);
 				}
@@ -506,7 +713,7 @@ class Entries extends MY_Controller
 			$entrydata['Entry']['supplier_id'] = $this->input->post('supplier_id') ? $this->input->post('supplier_id') : 0;
 			$entrydata['Entry']['department_id'] = $this->input->post('department_id') ? $this->input->post('department_id') : 0;
 			$entrydata['Entry']['employee_id'] = $this->input->post('employee_id') ? $this->input->post('employee_id') : 0;
-
+			$entrydata['Entry']['transaction_type'] = 'journal';
 
 			/* insert entry data array to entries table - db */
 			$add  = $this->db->insert('sma_accounts_entries', $entrydata['Entry']);
@@ -538,6 +745,7 @@ class Entries extends MY_Controller
 
 				// set entry number as per prefix, suffix and zero padding for that entry type for logging
 				$entryNumber = $this->functionscore->toEntryNumber($entrydata['Entry']['number'], $entrytype['id']);
+
 
 				// insert log if logging is enabled
 				//$this->settings_model->add_log(sprintf(lang('entries_cntrler_add_log'),$entrytype['name'], $entryNumber), 1);
@@ -844,7 +1052,11 @@ class Entries extends MY_Controller
 							'cr_amount' => isset($entryitem['cr_amount']) ? $entryitem['cr_amount'] : '',
 							'narration' => $entryitem['narration'],
 							'ledger_balance' => $entryitem['ledger_balance'],
-							'ledgername' => $this->ledger_model->getName($entryitem['ledger_id'])
+							'ledgername' => $this->ledger_model->getName($entryitem['ledger_id']),
+							'customer_id' => $entryitem['customer_id'],
+						 	'supplier_id' => $entryitem['supplier_id'],
+							'department_id' => $entryitem['department_id'],
+							'employee_id'  => $entryitem['employee_id']
 						);
 					} else {
 						$curEntryitems[$row] = array(
@@ -854,7 +1066,11 @@ class Entries extends MY_Controller
 							'dr_amount' => isset($entryitem['dr_amount']) ? $entryitem['dr_amount'] : '',
 							// if cr_amount isset save it else save empty string
 							'cr_amount' => isset($entryitem['cr_amount']) ? $entryitem['cr_amount'] : '',
-							'narration' => $entryitem['narration']
+							'narration' => $entryitem['narration'],
+							'customer_id' => $entryitem['customer_id'],
+						 	'supplier_id' => $entryitem['supplier_id'],
+							'department_id' => $entryitem['department_id'],
+							'employee_id'  => $entryitem['employee_id']
 						);
 					}
 				}
@@ -885,7 +1101,12 @@ class Entries extends MY_Controller
 								'cr_amount' => '',
 								'narration' => $data['narration'],
 								'ledgername' => $this->ledger_model->getName($data['ledger_id']),
-								'ledger_balance' => $ledger_balance
+								'ledger_balance' => $ledger_balance,
+								'customer_id' => $data['customer_id'],
+						 	'supplier_id' => $data['supplier_id'],
+								'department_id' => $data['department_id'],
+								'employee_id'  => $data['employee_id']
+
 
 							);
 						} else {// if entry item is credit
@@ -897,7 +1118,11 @@ class Entries extends MY_Controller
 								'cr_amount' => $this->sma->formatDecimal($data['amount']),
 								'narration' => $data['narration'],
 								'ledgername' => $this->ledger_model->getName($data['ledger_id']),
-								'ledger_balance' => $ledger_balance
+								'ledger_balance' => $ledger_balance,
+								'customer_id' => $data['customer_id'],
+						 	'supplier_id' => $data['supplier_id'],
+								'department_id' => $data['department_id'],
+								'employee_id'  => $data['employee_id']
 							);
 						}
 					} else {
@@ -912,6 +1137,10 @@ class Entries extends MY_Controller
 								'dr_amount' => $this->sma->formatDecimal($data['amount']),
 								'cr_amount' => '',
 								'narration' => $data['narration'],
+								'customer_id' => $data['customer_id'],
+						 		'supplier_id' => $data['supplier_id'],
+								'department_id' => $data['department_id'],
+								'employee_id'  => $data['employee_id']
 							);
 						}else // if entry item is credit
 						{
@@ -922,6 +1151,10 @@ class Entries extends MY_Controller
 								'dr_amount' => '',
 								'cr_amount' => $this->sma->formatDecimal($data['amount']),
 								'narration' => $data['narration'],
+								'customer_id' => $data['customer_id'],
+						 		'supplier_id' => $data['supplier_id'],
+								'department_id' => $data['department_id'],
+								'employee_id'  => $data['employee_id']
 							);
 						}
 					}
@@ -1020,7 +1253,11 @@ class Entries extends MY_Controller
 							'dc' => $entryitem['dc'],
 							'ledger_id' => $entryitem['ledger_id'],
 							'amount' => $entryitem['dr_amount'],
-							'narration' => $entryitem['narration']
+							'narration' => $entryitem['narration'],
+							'customer_id' => $entryitem['customer_id'],
+						 	'supplier_id' => $entryitem['supplier_id'],
+							'department_id' => $entryitem['department_id'],
+							'employee_id'  => $entryitem['employee_id']
 
 						)
 					);
@@ -1032,7 +1269,11 @@ class Entries extends MY_Controller
 							'dc' => $entryitem['dc'],
 							'ledger_id' => $entryitem['ledger_id'],
 							'amount' => $entryitem['cr_amount'],
-							'narration' => $entryitem['narration']
+							'narration' => $entryitem['narration'],
+							'customer_id' => $entryitem['customer_id'],
+						 	'supplier_id' => $entryitem['supplier_id'],
+							'department_id' => $entryitem['department_id'],
+							'employee_id'  => $entryitem['employee_id']
 						)
 					);
 				}
@@ -1236,31 +1477,63 @@ class Entries extends MY_Controller
 		// pass entrytype to view
 		$this->data['entrytype'] = $entrytype;
 
-		/* Check if valid id */
-		if (empty($id))
-		{
-			// set error alert
-			$this->session->set_flashdata('error', lang('entries_cntrler_edit_entry_not_found_error'));
-			// redirect to index page
-			admin_redirect('accounts/entries_index');
+		$pid = $this->input->get('pid') ? $this->input->get('pid') : null;
+		$sid = $this->input->get('sid') ? $this->input->get('sid') : null;
+		$rid = $this->input->get('rid') ? $this->input->get('rid') : null;
+		$rsid = $this->input->get('rsid') ? $this->input->get('rsid') : null;
+		$tid = $this->input->get('tid') ? $this->input->get('tid') : null; 
+		if ($id=== null && $pid === null && $sid === null && $rid === null && $rsid === null && $tid === null) {
+			// Redirect if all variables are null // set error alert 
+			$this->session->set_flashdata('error', lang('entries_cntrler_edit_entry_not_found_error')); 
+			admin_redirect('accounts/entries_index');// redirect to index page
+		} 
+		if(!empty($id)){
+			$this->db->where('id',$id); 
 		}
-
-		// select entry where id equals $id and store to array
-		$entry = $this->db->where('id',$id)->get('sma_accounts_entries')->row_array();
-
+		if(!empty($pid)){
+			$this->db->where('pid',$pid); 
+		}
+		if(!empty($sid)){
+			$this->db->where('sid',$sid); 
+		}
+		if(!empty($rid)){
+			$this->db->where('rid',$rid); 
+		}
+		if(!empty($rsid)){
+			$this->db->where('rsid',$rsid); 
+		}
+		if(!empty($tid)){
+			$this->db->where('tid',$tid); 
+		} 
+		//$entry = $this->db->where('id',$id)->get('sma_accounts_entries')->row_array();
+		 $entry = $this->db->get('sma_accounts_entries')->row_array(); 
+        
 		/* if entry [NOT] found */
 		if (!$entry)
-		{
-			// set error alert
-			$this->session->set_flashdata('error', lang('entries_cntrler_edit_entry_not_found_error'));
-			// redirect to index page
-			admin_redirect('accounts/entries_index');
+		{  
+			
+			$this->session->set_flashdata('error', lang('Error! Journal entry not found'));
+			$referrer = $this->input->server('HTTP_REFERER', TRUE);
+			if (!empty($referrer)) {
+				redirect($referrer);
+			} else { 
+				  redirect('admin/entries');
+				//admin_redirect('accounts/entries_index'); 
+			}
 		}
 
+		// Get payment Reference
+		$q = $this->db->get_where('payment_reference', ['journal_id' => $entry['id']], 1);
+		if ($q->num_rows() > 0) {
+			$payment_reference =  $q->row();
+			$payement_reference_id = $payment_reference->id;
+		}	
+
+		$this->data['payement_reference_id'] = isset($payement_reference_id) ? $payement_reference_id : 0;
 		
 		/* Initial data */
 		$curEntryitems = array(); // initilize current entry items array
-		$this->db->where('entry_id', $id); // select where entry_id equals $id
+		$this->db->where('entry_id', $entry['id']); // select where entry_id equals $id
 
 		// store selected data to $curEntryitemsData
 		$curEntryitemsData = $this->db->get('sma_accounts_entryitems')->result_array();
@@ -1270,6 +1543,41 @@ class Entries extends MY_Controller
 		// loop to store selected entry items to current entry items array
 		foreach ($curEntryitemsData as $row => $data)
 		{
+			$company_name = "";
+			$supplier_name = "";
+			$department_name = "";
+			$employee_name = "";
+			if($data['customer_id']){
+				 $q = $this->db->get_where('companies', ['id' => $data['customer_id']], 1);
+				 if ($q->num_rows() > 0) {
+					$customer =  $q->row();
+					$company_name = $customer->name;
+				}	
+			 
+			}
+			if($data['department_id']){
+				$q = $this->db->get_where('departments', ['id' => $data['department_id']]);
+				if ($q->num_rows() > 0) {
+					$department =  $q->row();
+					$department_name = $department->name;
+				}				
+			}
+			if($data['supplier_id']){
+				 
+				$q = $this->db->get_where('companies', ['id' => $data['supplier_id']], 1);
+				 if ($q->num_rows() > 0) {
+					$customer =  $q->row();
+					$supplier_name = $customer->name;
+				}				
+			}
+			if($data['employee_id']){
+				$q = $this->db->get_where('employees', ['id' => $data['employee_id']]);
+				if ($q->num_rows() > 0) {
+					$employee =  $q->row();
+					$employee_name = $employee->name;
+				}				
+			}
+
 			// if debit entry
 			if ($data['dc'] == 'D')
 			{
@@ -1278,9 +1586,17 @@ class Entries extends MY_Controller
 					'dc' => $data['dc'],
 					'ledger_id' => $data['ledger_id'],
 					'ledger_name' => $this->ledger_model->getName($data['ledger_id']),
-					'dr_amount' => $this->sma->formatDecimal($data['amount']),
+					'dr_amount' => $data['amount'],
 					'cr_amount' => '',
-					'narration' => $data['narration']
+					'narration' => $data['narration'],
+					'customer_id' => $data['customer_id'],
+					'customer_name' =>  $company_name,
+					'supplier_id' => $data['supplier_id'],
+					'supplier_name' => $supplier_name,
+					'department_id' => $data['department_id'],
+					'department_name' => $department_name,
+					'employee_id'  => $data['employee_id'],
+					'employee_name' => $employee_name
 				);
 				$dr_amount_total =($dr_amount_total)+($data['amount']);
 			}else // if credit entry
@@ -1291,8 +1607,17 @@ class Entries extends MY_Controller
 					'ledger_id' => $data['ledger_id'],
 					'ledger_name' => $this->ledger_model->getName($data['ledger_id']),
 					'dr_amount' => '',
-					'cr_amount' => $this->sma->formatDecimal($data['amount']),
-					'narration' => $data['narration']
+					'cr_amount' => $data['amount'],
+					'narration' => $data['narration'],
+					'customer_id' => $data['customer_id'],
+					'customer_name' =>  $company_name,
+					'supplier_id' => $data['supplier_id'],
+					'supplier_name' => $supplier_name,
+					'department_id' => $data['department_id'],
+					'department_name' => $department_name,
+					'employee_id'  => $data['employee_id'],
+					'employee_name' => $employee_name
+
 
 				);
 			
@@ -1317,12 +1642,31 @@ class Entries extends MY_Controller
 			$this->data['transferAttachments']     = $this->site->getAttachments($entry['tid'], 'transfer');
 		}
 
+		if($entry['transaction_type']=='purchaseorder' and $entry['pid'] > 0){ 
+			$purchase = $this->db->where('id',$entry['pid'])->get('sma_purchases')->row_array();
+			$this->data['purchase'] = $purchase; 
+			// $this->data['supplier'] = $this->db->where('id',$entry['supplier_id'])->get('sma_companies')->row_array(); 
+			$this->data['supplier'] = $this->db->where('id',$purchase['supplier_id'])->get('sma_companies')->row_array(); 
+						  
+		}
+		if($entry['sid']> 0){ 
+			$sales = $this->db->where('id',$entry['sid'])->get('sma_sales')->row_array();
+			$this->data['sales']= $sales ; 
+			$this->data['customer'] = $this->db->where('id',$sales['customer_id'])->get('sma_companies')->row_array();
+		}
+
+		if($entry['tid']> 0){ 
+			$transfer = $this->db->where('id',$entry['tid'])->get('sma_transfers')->row_array();
+			$this->data['transfer']= $transfer ; 
+			 
+		} 
+
 		$this->data['curEntryitems'] = $curEntryitems; // pass current entry items to view
 		$this->data['allTags'] = $this->db->get('sma_accounts_tags')->result_array(); // fetch all tags and pass to view
 		$this->data['entry'] = $entry; // pass entry to view
 		
-		$this->data['dr_amount_total'] = $this->sma->formatDecimal($dr_amount_total);
-		$this->data['cr_amount_total'] = $this->sma->formatDecimal($cr_amount_total);
+		$this->data['dr_amount_total'] = $dr_amount_total;
+		$this->data['cr_amount_total'] = $cr_amount_total;
 		// render page
 		$bc  = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('entries'), 'page' => lang('Entries')], ['link' => '#', 'page' => lang('Entries')]];
         $meta = ['page_title' => lang('Accounts'), 'bc' => $bc];
@@ -1350,8 +1694,11 @@ class Entries extends MY_Controller
 		// $ledgers->toList($ledgers, -1); // create a list of ledgers array
 		// $data['ledger_options'] = $ledgers->ledgerList; // pass ledger list to view
 		// $this->load->view('entries/addrow', $data); // load view
-
-		$this->load->view($this->theme .'accounts/entries_addrow'); // load view
+		$items['customers'] = $this->site->getAllCompanies('customer');
+		$items['suppliers'] = $this->site->getAllCompanies('supplier');
+		$items['departments'] = $this->site->getAllDepartments();
+		$items['employees'] = $this->site->getAllEmployees();
+		$this->load->view($this->theme .'accounts/entries_addrow', ['items'=> $items]); // load view
 	}
 
 	/**

@@ -47,7 +47,7 @@
                                             <tr>
                                                 <td><?= $count; ?></td>
                                                 <td><?= $memo->reference_no; ?></td>
-                                                <td><?= $memo->company; ?></td>
+                                                <td><?= $company->name; ?></td>
                                                 <td><?= $memo->payment_amount; ?></td>
                                                 <td><a href="<?php echo admin_url('suppliers/edit_advance_to_supplier/' . $memo->id); ?>" class="tip" title="Edit Supplier Advance"><i class="fa fa-edit"></i></a></td>
                                             </tr>

@@ -6,32 +6,44 @@
         const wb = XLSX.utils.table_to_book(table, { sheet: 'Sheet 1' });
         XLSX.writeFile(wb, filename);
     }
+    function generatePDF(){
+       $('.viewtype').val('pdf');  
+       document.getElementById("searchForm").submit();
+       $('.viewtype').val(''); 
+    } 
     $(document).ready(function () {
 
     });
 </script>
+<?php if($viewtype=='pdf'){ ?>
+    <link href="<?= $assets ?>styles/pdf/pdf.css" rel="stylesheet"> 
+  <?php  } ?>
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-users"></i><?= lang('vat_purchase_report').' (Invoice)'; ?></h2>
-
+        <?php  if($viewtype!='pdf'){?>
         <div class="box-icon">
             <ul class="btn-tasks">
-            <li class="dropdown"><a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'vat_purchase.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i
-                                class="icon fa fa-file-excel-o"></i></a></li>
-                            </ul>
+                <li class="dropdown"><a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'vat_purchase.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i
+                class="icon fa fa-file-excel-o"></i></a></li>
+                <li class="dropdown"> <a href="javascript:void(0);" onclick="generatePDF()" id="pdf" class="tip" title="<?= lang('download_PDF') ?>"><i
+                class="icon fa fa-file-pdf-o"></i></a></li>
+            </ul>
         </div>
+        <?php } ?>
     </div>
     <div class="box-content">
         <div class="row">
+            <div class="col-lg-12"> 
         <?php
-            $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
+        if($viewtype!='pdf')
+        {
+            $attrib = ['data-toggle' => 'validator', 'role' => 'form','id' => 'searchForm'];
             echo admin_form_open_multipart('reports/vat_purchase', $attrib)
         ?>
-        <div class="col-lg-12">
-                <div class="row">
-
-                <div class="col-lg-12">
-
+        <input type="hidden" name="viewtype" id="viewtype" class="viewtype" value="" > 
+                <div class="row"> 
+                <div class="col-lg-12"> 
                         <div class="col-md-6">
                             <div class="form-group">
                                
@@ -77,24 +89,26 @@
                     </div>
                 </div>
                 <hr />
+                <?php echo form_close(); 
+                } ?>
                 <div class="row">
                     <div class="controls table-controls" style="font-size: 12px !important;">
                         <table id="poTable"
-                                class="table items table-striped table-bordered table-condensed table-hover sortable_table">
+                                class="table items table-striped table-bordered table-condensed table-hover sortable_table tbl_pdf tbl_vat_purchase">
                             <thead>
                             <tr>
                                 <th>SR</th>
                                 <th><?= lang('Trx Type'); ?></th>
                                 <th><?= lang('Branch'); ?></th>
-                                <th><?= lang('INV. NO'); ?></th>
+                                <!-- <th><?= lang('INV. NO'); ?></th> -->
                                 <th><?= lang('INV DATE.'); ?></th>
 
                                 <th><?= lang('TOTAL INV.')//lang('Total Before Discount.'); ?></th>
                                 <th><?= lang('T.DIS')//lang('Total Discount.'); ?></th>
                                 <th><?= lang('T.AFTER DIS')//lang('Total After Discount.'); ?></th>
-
+<!-- 
                                 <th><?= lang('15% VAT VALUE')//lang('Total Items with VAT.'); ?></th>
-                                <th><?= lang('0% VAT VALUE')//lang('Total Items Zero Vat.'); ?></th>
+                                <th><?= lang('0% VAT VALUE')//lang('Total Items Zero Vat.'); ?></th> -->
 
                                 <!-- <th><?= lang('Total Purchases Value'); ?></th> -->
                                 <th><?= lang('VAT Amount')//lang('VAT on Purchases'); ?></th>
@@ -131,57 +145,46 @@
 
                                     $totalWithTax = 0;
                                     foreach ($vat_purchase as $data){
-
+                                        // echo "<pre>";
+                                        // print_r($data);
                                         $sign = "";
                                         
                                         if($data->trans_type == "returnSupplier"){                                         
                                             $sign = "-";
                                         }
-                                        
-                                        $totalTax += $sign.$data->total_tax;
-                                        $totalWithoutTax += $sign.($data->grand_total - $data->total_tax);
+                                               $total_invoice = $data->total_invoice;
+                                               $total_discount  =   $data->total_discount;
+                                               $total_after_discount    =   $data->total_after_discount;
+                                               $total_tax   =   $data->total_tax;
+                                               $net_total = $data->grand_total;
 
-                                        if($data->trans_type == "purchases"){
-                                            $totalWithTax += $sign.($data->grand_total+$data->total_tax);
-                                        }else{
-                                            $totalWithTax += $sign.$data->grand_total;
-                                        }
-
-                                        $totalTotalBeforeDiscount += $sign.$data->grand_total + $data->total_discount;;
-                                        $totalTotalDiscount += $sign.$data->total_discount;
-                                        $totalTotalAfterDiscount += $sign.$data->grand_total;
-
-
-                                        $totalItemWithVAT += $sign.$data->total_item_with_vat;
-                                        $totalItemWithOutVAT += $sign.$data->total_item_without_tax;
+                                               $grand_total_invoice += $total_invoice;
+                                               $grand_total_discount += $total_discount;
+                                               $grand_after_discount += $total_after_discount;
+                                               $grand_total_tax += $total_tax;
+                                               $grand_total += $net_total;
+                                            
+                                               if( $data->trans_type == 'returnSupplier' ) {
+                                                $modal_class = 'oreturn_supplier_link';
+                                               }else{
+                                                $modal_class = 'purchase_link';
+                                               }
+                                               
 
                                         ?>
-                                            <tr id="<?= $data->trans_ID; ?>" class="purchase_link">
+                                            <tr id="<?= $data->trans_ID; ?>" class="<?=$modal_class;?>">
                                                 <td><?= $data->trans_ID; ?></td>
                                                 <td><?=$data->trans_type?></td>
                                                 <td><?= $data->warehouse; ?></td>
-                                                <td><?= $data->reference_no; ?></td>
+                                                <!-- <td><?= $data->reference_no; ?></td> -->
                                                 <td><?= $data->trans_date; ?></td>
                                                 
-                                                <td><?= $sign.$this->sma->formatMoney($data->grand_total+$data->total_discount,'none'); ?></td>
-                                                <td><?= $sign.$this->sma->formatMoney($data->total_discount,'none'); ?></td>
-                                                <td><?= $sign.$this->sma->formatMoney($data->grand_total,'none'); ?></td>
+                                                <td><?= $total_invoice;//$this->sma->formatMoney($data->grand_total + $data->total_discount - $data->total_tax,'none'); ?></td>
+                                                <td><?= $total_discount;//$this->sma->formatMoney($data->total_discount,'none'); ?></td>
+                                                <td><?= $total_after_discount;//$this->sma->formatMoney($data->grand_total - $data->total_tax,'none'); ?></td>
 
-                                                <td><?= $sign.$this->sma->formatMoney($data->total_item_with_vat,'none'); ?></td>
-                                                <td><?= $sign.$this->sma->formatMoney($data->total_item_without_tax,'none'); ?></td>
-
-
-                                                <!-- <td><?= $sign.$this->sma->formatMoney($data->grand_total - $data->total_tax,'none'); ?></td> -->
-                                                <td><?= $sign.$this->sma->formatMoney($data->total_tax,'none'); ?></td>
-                                                <td>
-                                                    <?php
-                                                    if($data->trans_type == "purchases"){
-                                                        echo $sign.$this->sma->formatMoney($data->grand_total+$data->total_tax,'none'); 
-                                                    }else{
-                                                        echo $sign.$this->sma->formatMoney($data->grand_total,'none'); 
-                                                    }
-                                                    ?>
-                                                </td>
+                                                <td><?= $total_tax; ?></td>
+                                                <td><?= $net_total; ?></td>
 
 
 
@@ -203,20 +206,15 @@
                                     <th>&nbsp;</th>
                                     <th>&nbsp;</th>
                                     <th>&nbsp;</th>
+                                    
+
+                                    <th class="text-center"><?=$grand_total_invoice;?></th>
+                                    <th class="text-center"><?=$grand_total_discount ?></th>
+                                    <th class="text-center"><?=$grand_after_discount; //$this->sma->formatMoney($totalTotalAfterDiscount,'none')?></th>
+                                   
+                                   <th class="text-center"><?=$grand_total_tax; //$this->sma->formatMoney($totalTax,'none'); ?></th>
+                                    <th class="text-center"><?=$grand_total; //$this->sma->formatMoney($totalWithTax,'none'); ?></th>
                                     <th>&nbsp;</th>
-
-                                    <th class="text-center"><?=$this->sma->formatMoney($totalTotalBeforeDiscount,'none')?></th>
-                                    <th class="text-center"><?=$this->sma->formatMoney($totalTotalDiscount,'none')?></th>
-                                    <th class="text-center"><?=$this->sma->formatMoney($totalTotalAfterDiscount,'none')?></th>
-
-
-                                    <th class="text-center"><?=$this->sma->formatMoney($totalItemWithVAT,'none')?></th>
-                                    <th class="text-center"><?=$this->sma->formatMoney($totalItemWithOutVAT,'none')?></th>
-
-                                    <!-- <th class="text-center"><?= $this->sma->formatMoney($totalWithoutTax,'none'); ?></th> -->
-                                    <th class="text-center"><?= $this->sma->formatMoney($totalTax,'none'); ?></th>
-                                    <th class="text-center"><?= $this->sma->formatMoney($totalWithTax,'none'); ?></th>
-
 
 
                                     <th>&nbsp;</th>
@@ -237,5 +235,5 @@
 
         </div>
     </div>
-    <?php echo form_close(); ?>
+   
 </div>

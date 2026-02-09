@@ -1,65 +1,264 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
 <script>
-    $(document).ready(function () {
-        
+    function exportTableToExcel(tableId, filename = 'table.xlsx') {
+        const table = document.getElementById(tableId);
+        const wb = XLSX.utils.table_to_book(table, {
+            sheet: 'Sheet 1'
+        });
+        XLSX.writeFile(wb, filename);
+    }
+    function generatePDF(){
+       $('.viewtype').val('pdf');  
+       document.getElementById("searchForm").submit();
+       $('.viewtype').val(''); 
+    } 
+    $(document).ready(function() {
+
     });
 </script>
+<?php if($viewtype=='pdf'){ ?>
+    <link href="<?= $assets ?>styles/pdf/pdf.css" rel="stylesheet"> 
+  <?php  } ?>
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-users"></i><?= lang('customer_aging_report'); ?></h2>
-
+        <?php  if($viewtype!='pdf'){?>
         <div class="box-icon">
             <ul class="btn-tasks">
-                <li class="dropdown"><a href="#" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a></li>
-                <li class="dropdown"><a href="#" id="image" class="tip" title="<?= lang('save_image') ?>"><i class="icon fa fa-file-picture-o"></i></a></li>
+                <li class="dropdown"><a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'customer_aging_report.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a></li>
+                <li class="dropdown"> <a href="javascript:void(0);" onclick="generatePDF()" id="pdf" class="tip" title="<?= lang('download_PDF') ?>"><i
+                class="icon fa fa-file-pdf-o"></i></a></li>
             </ul>
         </div>
+       <?php } ?>
     </div>
     <div class="box-content">
         <div class="row">
-        <?php
-            $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
-            
-        ?>
         <div class="col-lg-12">
+        <?php
+        if($viewtype!='pdf')
+        {
+            $attrib = ['data-toggle' => 'validator', 'role' => 'form','id' => 'searchForm'];
+            echo admin_form_open_multipart('reports/customer_aging', $attrib);
+        ?>
+        <input type="hidden" name="viewtype" id="viewtype" class="viewtype" value="" > 
+        <div class="row">
+                <div class="col-lg-12">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('Duration', 'duration'); ?>
+                                <select id="duration" name="duration" class="form-control input-tip select" required="required" style="width:100%;">
+                                    <option value="30">30 Days</option>
+                                    <option value="60">60 Days</option>
+                                    <option value="90">90 Days</option>
+                                    <option value="120" selected>120 Days</option>
+                                    <option value="150">150 Days</option>
+                                    <option value="180">180 Days</option>
+                                    <option value="210">210 Days</option>
+                                    <option value="240">240 Days</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('Date', 'fromdate'); ?>
+                                <?php echo form_input('from_date', ($start_date ?? ''), 'class="form-control input-tip date" id="fromdate"'); ?>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('customers', 'posupplier'); ?>
+                                <?php
+                                if(empty($customer_id_array)){
+                                    $customer_id_array=array();  
+                                }
+                                $sp = ['' => ''];
+                                foreach ($customers as $customer) {
+                                    $sp[$customer->id] = $customer->company . ' (' . $customer->name . ') - ' . $customer->sequence_code;
+                                } 
+                                echo form_dropdown(
+                                    'customer[]', 
+                                    $sp, 
+                                    $customer_id_array, 
+                                    'id="customer_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('customer') . '" multiple required="required" style="width:100%;"'
+                                );?>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('Salesman', 'salesman'); ?>
+                                <?php
+                                // Get unique salesmen from customers
+                                $salesmen = ['' => lang('all_salesmen')];
+                                foreach ($customers as $customer) {
+                                    if (!empty($customer->sales_agent) && !isset($salesmen[$customer->sales_agent])) {
+                                        $salesmen[$customer->sales_agent] = $customer->sales_agent;
+                                    }
+                                }
+                                $selected_salesman = isset($salesman) && !empty($salesman) ? $salesman : '';
+                                ?>
+                                <select name="salesman" class="form-control input-tip select" style="width:100%;">
+                                    <?php foreach ($salesmen as $key => $value): ?>
+                                        <option value="<?php echo htmlspecialchars($key); ?>" <?php echo ($selected_salesman === $key) ? 'selected="selected"' : ''; ?>>
+                                            <?php echo htmlspecialchars($value); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <?php
+                                ?>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="from-group">
+                                <button type="submit" style="margin-top: 28px;" class="btn btn-primary"
+                                        id="load_report"><?= lang('Load Report') ?></button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <?php echo form_close(); 
+                } ?>
+                <hr/>
                 <div class="row">
                     <div class="controls table-controls" style="font-size: 12px !important;">
                         <table id="poTable"
-                                class="table items table-striped table-bordered table-condensed table-hover sortable_table">
+                                class="table items table-striped table-bordered table-condensed table-hover tbl_pdf">
                             <thead>
                             <tr>
                                 <th>#</th>
                                 <th><?= lang('Customer'); ?></th>
-                                <th><?= lang('Current'); ?></th>
-                                <th><?= lang('1-30'); ?></th>
-                                <th><?= lang('31-60'); ?></th>
-                                <th><?= lang('61-90'); ?></th>
-                                <th><?= lang('91-120'); ?></th>
-                                <th><?= lang('>120'); ?></th>
+                                <th><?= lang('Salesman'); ?></th>
+                                <th><?= lang('Credit Term'); ?></th>
+                                <?php
+                                    $duration = $this->input->post('duration') ? $this->input->post('duration') : 120;
+                                    $intervals = [30, 60, 90, 120, 150, 180, 210, 240];
+                                    $previous_limit = 0;
+                                    $count = 1;
+                                    foreach ($intervals as $interval) {
+                                        if ($interval > $duration) {
+                                            break;
+                                        }
+                                        if($count == 1) {
+                                            $start = $previous_limit;
+                                        }else{
+                                            $start = $previous_limit + 1;
+                                        }
+                                       
+                                        $end = $interval;
+                                        $previous_limit = $end;
+                                        echo "<th>{$start}-{$end}</th>";
+                                        $count = $count+1;
+                                    }
+
+                                    echo "<th>>{$duration}</th>";
+                                ?>
+                                <th><?= lang('Total'); ?></th>
                             </tr>
                             </thead>
                             <tbody style="text-align:center;">
                                 <?php
                                     $count = 0;
+                                    $totals = [
+                                        //'Current' => 0,
+                                        '0-30' => 0,
+                                        '31-60' => 0,
+                                        '61-90' => 0,
+                                        '91-120' => 0,
+                                        '121-150' => 0,
+                                        '151-180' => 0,
+                                        '181-210' => 0,
+                                        '211-240' => 0,
+                                        '>30' => 0,
+                                        '>60' => 0,
+                                        '>90' => 0,
+                                        '>120' => 0,
+                                        '>150' => 0,
+                                        '>180' => 0,
+                                        '>210' => 0,
+                                        '>240' => 0,
+                                        'total' => 0
+                                    ];
+                                    
                                     foreach ($supplier_aging as $key => $data){
+                                        $data = (array)$data;
+
+                                        $total_sum = 0;
+                                        foreach ($data as $k1 => $value) {
+                                            if ($k1 !== 'customer_id' && $k1 !== 'customer_name' && $k1 !== 'payment_term') {
+                                                $total_sum += (float) $value;
+                                                $totals[$k1] += (float) $value;
+                                            }
+                                        }
+                                        $totals['total'] += $total_sum;
+
                                         $count++;
                                         ?>
                                             <tr>
                                                 <td><?= $count; ?></td>
-                                                <td><?= $key; ?></td>
-                                                <td><?= $data['Current']; ?></td>
-                                                <td><?= $data['1-30']; ?></td>
-                                                <td><?= $data['31-60']; ?></td>
-                                                <td><?= $data['61-90']; ?></td>
-                                                <td><?= $data['91-120']; ?></td>
-                                                <td><?= $data['>120']; ?></td>
+                                                <td><?= $data['customer_name']; ?></td>
+                                                <td><?= $data['sales_agent'] ?? ''; ?></td>
+                                                <td><?= $data['payment_term']; ?></td>
+                                                <?php
+                                                $i=1;
+                                                $previous_limit = 0;
+                                                    foreach ($intervals as $interval) {
+                                                        if ($interval > $duration) {
+                                                            break;
+                                                        }
+                                                        if($i == 1) {
+                                                            $start = $previous_limit;
+                                                        }else{
+                                                            $start = $previous_limit + 1;
+                                                        }
+                                                       
+                                                        $end = $interval;
+                                                        $previous_limit = $end;
+                                                        echo "<td>" . number_format($data["{$start}-{$end}"], 2, '.', ',') . "</td>";
+                                                    $i = $i+1;    
+                                                    }
+
+                                                    echo "<td>" . number_format($data[">{$duration}"], 2, '.', ',') . "</td>";
+                                                ?>
+                                                <td><?= number_format($total_sum, 2, '.', ','); ?></td>
                                             </tr>
                                         <?php
                                     }
                                 ?>
                                 
                             </tbody>
-                            <tfoot></tfoot>
+                            <tfoot style="text-align:center;">
+                                <tr>
+                                    <td colspan="3"><strong></strong></td>
+                                    <td><strong></strong></td>
+                                    <?php
+                                        $previous_limit = 0;
+                                        $i=1;
+                                        foreach ($intervals as $interval) {
+                                            if ($interval > $duration) {
+                                                break;
+                                            }
+                                            if($i == 1) {
+                                                $start = $previous_limit;
+                                            }else{
+                                                $start = $previous_limit + 1;
+                                            }
+                                            $end = $interval;
+                                            $previous_limit = $end;
+                                            echo "<td><strong>" . number_format($totals["{$start}-{$end}"], 2, '.', ',') . "</strong></td>";
+                                            $i=$i+1;
+                                        }
+
+                                        echo "<td><strong>" . number_format($totals[">{$duration}"], 2, '.', ',') . "</strong></td>";
+                                    ?>
+                                    <td><strong><?= number_format($totals['total'], 2, '.', ','); ?></strong></td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 

@@ -19,7 +19,7 @@
                 nRow.className = "oreturn_link";
                 return nRow;
             },
-            "aoColumns": [{"bSortable": false,"mRender": checkbox}, {"mRender": fld}, null, null, null, {"mRender": currencyFormat}, {"bSortable": false,"mRender": attachment}, {"bSortable": false}],
+            "aoColumns": [{"bSortable": false,"mRender": checkbox}, {"mRender": fld}, null, null, null, {"mRender": currencyFormat}, null, {"bSortable": false,"mRender": attachment}, {"bSortable": false}],
             "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                 var gtotal = 0;
                 for (var i = 0; i < aaData.length; i++) {
@@ -118,6 +118,19 @@
         });
     });
 
+    $(document).ready(function () {
+        function openModalForLastInsertedId(lastInsertedId) {
+
+            $('#myModal').modal({
+                remote: site.base_url + 'returns/modal_view/' + lastInsertedId,
+            });
+            $('#myModal').modal('show');
+        }
+        var lastInsertedId = '<?= $lastInsertedId; ?>';
+        if (lastInsertedId) {
+            openModalForLastInsertedId(lastInsertedId);
+        }
+    });
 </script>
 
 <?php if ($Owner || ($GP && $GP['bulk_actions'])) {
@@ -137,11 +150,11 @@
                         <i class="icon fa fa-tasks tip" data-placement="left" title="<?=lang('actions')?>"></i>
                     </a>
                     <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
-                        <li>
+                        <!--<li>
                             <a href="<?=admin_url('returns/add')?>">
                                 <i class="fa fa-plus-circle"></i> <?=lang('add_return')?>
                             </a>
-                        </li>
+                        </li>-->
                         <!-- <li>
                             <a href="#" id="excel" data-action="export_excel">
                                 <i class="fa fa-file-excel-o"></i> <?=lang('export_to_excel')?>
@@ -155,22 +168,7 @@
                         </li> -->
                     </ul>
                 </li>
-                <?php if (!empty($warehouses)) {
-                    ?>
-                    <li class="dropdown">
-                        <a data-toggle="dropdown" class="dropdown-toggle" href="#"><i class="icon fa fa-building-o tip" data-placement="left" title="<?=lang('warehouses')?>"></i></a>
-                        <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
-                            <li><a href="<?=admin_url('returns')?>"><i class="fa fa-building-o"></i> <?=lang('all_warehouses')?></a></li>
-                            <li class="divider"></li>
-                            <?php
-                            foreach ($warehouses as $warehouse) {
-                                echo '<li><a href="' . admin_url('returns/' . $warehouse->id) . '"><i class="fa fa-building"></i>' . $warehouse->name . '</a></li>';
-                            } ?>
-                        </ul>
-                    </li>
-                    <?php
-                }
-                ?>
+                
             </ul>
         </div>
     </div>
@@ -192,6 +190,7 @@
                             <th><?= lang('biller'); ?></th>
                             <th><?= lang('customer'); ?></th>
                             <th><?= lang('grand_total'); ?></th>
+                            <th><?= lang('status'); ?></th>
                             <th style="min-width:30px; width: 30px; text-align: center;"><i class="fa fa-chain"></i></th>
                             <th style="width:80px; text-align:center;"><?= lang('actions'); ?></th>
                         </tr>
