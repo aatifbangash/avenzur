@@ -727,6 +727,344 @@ class Customers extends MY_Controller
         } 
     }
 
+    /*public function reconcile_customer_payments()
+    {
+        $customer_id = 202;
+
+        $this->db->trans_begin();
+
+        // 1. Get overpaid sales
+        $sql = "
+            SELECT
+                s.id AS sale_id,
+                s.grand_total,
+                s.paid,
+                s.date,
+                IFNULL(pay.payments_amount, 0) AS payments_amount
+            FROM sma_sales s
+            LEFT JOIN (
+                SELECT sale_id, SUM(amount) AS payments_amount
+                FROM sma_payments
+                GROUP BY sale_id
+            ) pay ON pay.sale_id = s.id
+            WHERE s.customer_id = ?
+            HAVING payments_amount > grand_total
+            ORDER BY s.date ASC
+        ";
+
+        $overpaid_sales = $this->db->query($sql, [$customer_id])->result();
+
+        foreach ($overpaid_sales as $sale) {
+
+            $excess = $sale->payments_amount - $sale->grand_total;
+            if ($excess <= 0) continue;
+            //echo "Reconciling Sale ID: {$sale->sale_id}, Excess Amount: {$excess}<br>";exit;
+            // 2. Get oldest unpaid invoices
+            $unpaid_sql = "
+                SELECT id, grand_total, paid
+                FROM sma_sales
+                WHERE customer_id = ?
+                AND (grand_total - paid) > 0
+                AND id <> ?
+                ORDER BY date ASC
+            ";
+
+            $unpaid_sales = $this->db->query($unpaid_sql, [$customer_id, $sale->sale_id])->result();
+
+            // 3. Payments on overpaid invoice (latest first)
+            $payments = $this->db
+                ->where('sale_id', $sale->sale_id)
+                ->order_by('date', 'DESC')
+                ->get('sma_payments')
+                ->result();
+
+            foreach ($payments as $payment) {
+
+                if ($excess <= 0) break;
+
+                $movable_amount = min($payment->amount, $excess);
+
+                foreach ($unpaid_sales as $unpaid) {
+
+                    if ($movable_amount <= 0) break;
+
+                    $due = $unpaid->grand_total - $unpaid->paid;
+                    if ($due <= 0) continue;
+
+                    $apply_amount = min($movable_amount, $due);
+
+                    echo "Moving payment of amount {$apply_amount} from Sale ID {$sale->sale_id} to Sale ID {$unpaid->id}<br>";
+
+                    // 4️⃣ Move payment
+                    $this->move_payment(
+                        $payment,
+                        $sale->sale_id,
+                        $unpaid->id,
+                        $apply_amount
+                    );
+
+                    $movable_amount -= $apply_amount;
+                    $excess -= $apply_amount;
+                }
+            }
+        }
+
+        if ($this->db->trans_status() === FALSE) {
+            $this->db->trans_rollback();
+            throw new Exception('Reconciliation failed');
+        }
+
+        $this->db->trans_commit();
+    }
+
+    private function move_payment($payment, $from_sale_id, $to_sale_id, $amount)
+    {
+        // Reduce original payment
+        if ($amount < $payment->amount) {
+
+            // Update original payment
+            $this->db->set('amount', 'amount - ' . $amount, false)
+                    ->where('id', $payment->id)
+                    ->update('sma_payments');
+
+            // Create new payment row
+            $new_payment = (array) $payment;
+            unset($new_payment['id']);
+            $new_payment['sale_id'] = $to_sale_id;
+            $new_payment['amount'] = $amount;
+
+            $this->db->insert('sma_payments', $new_payment);
+            $new_payment_id = $this->db->insert_id();
+
+            // Clone payment reference
+            $ref = $this->db
+                ->where('id', $payment->payment_id)
+                ->get('sma_payment_reference')
+                ->row();
+
+            $new_ref = (array) $ref;
+            unset($new_ref['id']);
+            $this->db->insert('sma_payment_reference', $new_ref);
+            $new_ref_id = $this->db->insert_id();
+
+            // Update new payment reference
+            $this->db->where('id', $new_payment_id)
+                    ->update('sma_payments', ['payment_id' => $new_ref_id]);
+
+        } else {
+
+            // Full move
+            $this->db->where('id', $payment->id)
+                    ->update('sma_payments', ['sale_id' => $to_sale_id]);
+        }
+
+        // Update sale totals
+        $this->db->set('paid', 'paid - ' . $amount, false)
+                ->where('id', $from_sale_id)
+                ->update('sma_sales');
+
+        $this->db->set('paid', 'paid + ' . $amount, false)
+                ->where('id', $to_sale_id)
+                ->update('sma_sales');
+    }*/
+
+    public function reconcile_customer_payments(){
+        $customer_id = 53;
+
+        $this->db->trans_begin();
+        
+        $sales_overpaid = "SELECT
+            s.id AS sale_id,
+            s.grand_total,
+            s.paid AS sale_paid_amount,
+            s.`date`,
+            s.customer_id,
+            s.customer,
+            IFNULL(pay.payments_amount, 0) AS payments_amount
+        FROM sma_sales s
+
+        LEFT JOIN (
+            SELECT
+                p.sale_id,
+                SUM(p.amount) AS payments_amount
+            FROM sma_payments p
+            GROUP BY p.sale_id
+        ) pay ON pay.sale_id = s.id
+        WHERE s.customer_id = $customer_id
+        HAVING (payments_amount) AND payments_amount > grand_total";
+        
+        $query = $this->db->query($sales_overpaid);
+
+        $excess_amount_array = [];
+        $total_excess_amount = 0;
+        
+        if ($query->num_rows() > 0) {
+            foreach ($query->result() as $row) {
+                $invoice_amount = $row->grand_total;
+                $sale_id = $row->sale_id;
+                $sale_paid_amount = $row->sale_paid_amount;
+                $payments_amount = $row->payments_amount;
+
+                $excess_amount = $payments_amount - $invoice_amount;
+                //echo "Sale ID $sale_id has excess amount of $excess_amount <br>";
+                if($excess_amount > 0) {
+                    $payments_sql = "SELECT *
+                        FROM sma_payments p
+                        WHERE p.sale_id = $sale_id";
+
+                    $payments_query = $this->db->query($payments_sql);
+                    if ($payments_query->num_rows() > 0) {
+                        foreach ($payments_query->result() as $payment) {
+                            $payment_id = $payment->id;
+                            $payment_amount = $payment->amount;
+                            $payement_reference_id = $payment->payment_id;
+
+                            $amount_to_move = 0;
+                            if($payment_amount <= $excess_amount){
+                                $amount_to_move = $payment_amount;
+                                $excess_amount -= $payment_amount;
+                            } else{
+                                $amount_to_move = $excess_amount;
+                                $excess_amount = 0;
+                            }
+
+                            $excess_amount_array[$sale_id] = $total_excess_amount + $amount_to_move;
+                            $total_excess_amount += $amount_to_move;
+
+                            echo "Payment ID $payment_id on Sale ID $sale_id has excess amount of $amount_to_move. Remaining excess for this invoice: $excess_amount <br>";
+                        
+                            // Actual Update 
+
+                            $this->db->update('sma_payments', ['amount' => $payment_amount - $amount_to_move, 'original_amount' => $payment_amount], ['id' => $payment_id]);
+                        }
+                    }
+                }
+            }
+        }
+        //exit;
+        $unpaid_sql = "
+                        SELECT
+                            s.id AS sale_id,
+                            s.grand_total,
+                            s.paid AS sale_paid_amount,
+                            s.`date`,
+                            s.customer_id,
+                            s.customer,
+                            COALESCE(pay.payments_amount, 0) AS payments_amount
+                        FROM sma_sales s
+                        LEFT JOIN (
+                            SELECT
+                                p.sale_id,
+                                SUM(p.amount) AS payments_amount
+                            FROM sma_payments p
+                            GROUP BY p.sale_id
+                        ) pay ON pay.sale_id = s.id
+                        WHERE s.customer_id = $customer_id
+                        AND COALESCE(pay.payments_amount, 0) < s.grand_total
+                        ORDER BY s.date ASC
+                    ";
+
+
+        $query_unpaid_sql = $this->db->query($unpaid_sql);
+        
+        echo '----------------------------------------<br>';
+
+        if ($query_unpaid_sql->num_rows() > 0) {
+            foreach ($query_unpaid_sql->result() as $row) {
+                $invoice_amount = $row->grand_total;
+                $sale_id = $row->sale_id;
+                $sale_paid_amount = $row->sale_paid_amount;
+                $payments_amount = $row->payments_amount;
+                $amount_due = $invoice_amount - $payments_amount;
+
+                $amount_to_apply = 0;
+                if($total_excess_amount >= $amount_due){
+                    $amount_to_apply = $amount_due;
+                    $total_excess_amount -= $amount_due;
+                }else{
+                    $amount_to_apply = $total_excess_amount;
+                    $total_excess_amount = 0;
+                }
+                
+                echo "Applying amount $amount_to_apply to sale ID $sale_id. Remaining excess to apply: $total_excess_amount <br>";
+            
+                // Actual Update
+                $payment_reference_id = $this->db->insert('sma_payment_reference', 
+                    [
+                        'customer_id' => $customer_id,
+                        'date' => date('Y-m-d'),
+                        'sequence_code' => $this->sequenceCode->generate('PAY', 5),
+                        'note' => 'Reconciliation payment for sale ID ' . $sale_id,
+                        'reference_no'  => $sale_id,
+                        'amount' => $amount_to_apply
+                    ]
+                );
+
+                $this->db->insert('sma_payments', 
+                    [
+                        'date' => date('Y-m-d'),
+                        'sale_id' => $sale_id,
+                        'reference_no'  => $sale_id,
+                        'payment_id' => $payment_reference_id,
+                        'amount' => $amount_to_apply, 
+                        'original_amount' => $payments_amount,
+                        'type' => 'sent',
+                        'note' => 'Reconciliation payment for sale ID ' . $sale_id,
+                        'created_by' => 1
+                    ]
+                );
+            
+            }
+        }
+
+
+        if($total_excess_amount > 0){
+            echo "Remaining excess amount after reconciliation: $total_excess_amount <br>";
+
+            // Handle remaining excess amount (e.g., create delete from credit memos, or return)
+            $credit_memo_sql = "Select *
+                From sma_memo
+                Where customer_id = $customer_id
+                And payment_amount > 0
+                And (used_amount IS NULL OR used_amount <> payment_amount)
+                AND customer_entry_type = 'D'
+                Order By date DESC";
+
+            $query_credit_memo = $this->db->query($credit_memo_sql);
+            if ($query_credit_memo->num_rows() > 0) {
+                foreach ($query_credit_memo->result() as $memo) {
+                    $memo_id = $memo->id;
+                    $payment_amount = $memo->payment_amount;
+                    $used_amount = $memo->used_amount;
+                    $available_amount = $payment_amount - $used_amount;
+                    //echo $available_amount.'<br>';exit;
+                    if($available_amount <= 0) continue;
+
+                    $amount_to_apply = 0;
+                    if($total_excess_amount >= $available_amount){
+                        $amount_to_apply = $available_amount;
+                        $total_excess_amount -= $available_amount;
+                    }else{
+                        $amount_to_apply = $total_excess_amount;
+                        $total_excess_amount = 0;
+                    }
+
+                    // Update used amount in memo
+                    $this->db->update('sma_memo', ['used_amount' => $used_amount + $amount_to_apply], ['id' => $memo_id]);
+
+                    echo "Applying excess amount of $amount_to_apply to debit memo ID $memo_id. Remaining excess to apply: $total_excess_amount <br>";
+                }
+            }
+        }
+
+        if ($this->db->trans_status() === FALSE) {
+            $this->db->trans_rollback();
+            throw new Exception('Reconciliation failed');
+        }
+
+        $this->db->trans_commit();
+    }
+
     public function payment_from_customer(){
         //$this->sma->checkPermissions(false, true);
         $this->form_validation->set_rules('customer', $this->lang->line('customer'), 'required');
