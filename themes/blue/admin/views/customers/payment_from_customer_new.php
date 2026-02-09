@@ -66,8 +66,9 @@
     $(document).ready(function() {
         // Initialize date picker
         $('#date').datetimepicker({
-            format: 'd/m/Y H:i',
-            step: 30
+            format: 'dd/mm/yyyy',
+            autoclose: true,
+            todayHighlight: true
         });
 
         // Handle customer selection change
@@ -740,8 +741,8 @@
                 <div class="row">
                     <div class="col-md-4">
                         <div class="form-group">
-                            <?= lang('date', 'date'); ?>
-                            <?php echo form_input('date', set_value('date', date('d/m/Y H:i')), 'class="form-control input-tip datetime" id="date" required="required"'); ?>
+                            <?= lang('Date', 'date'); ?>
+                            <?php echo form_input('date', ($date ?? date('d/m/Y')), 'class="form-control input-tip date" id="date"'); ?>
                         </div>
                     </div>
 
@@ -767,12 +768,11 @@
                 </div>
 
                 <div class="row">
-
                     <div class="col-md-4">
                         <div class="form-group">
                             <?= lang('Ledger', 'pledger'); ?>
                             <?php
-                            $selected_ledger_id[] = isset($ledger_id) ? $ledger_id : '';
+                            $selected_ledger_id = isset($ledger_id) ? $ledger_id : '';
                             $sp[''] = '';
                             foreach ($ledgers as $ledger) {
                                 $sp[$ledger->id] = $ledger->name;
@@ -780,7 +780,6 @@
                             echo form_dropdown('ledger', $sp, $selected_ledger_id, 'id="ledger_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('ledger') . '" required="required" style="width:100%;" ', null); ?>
                         </div>
                     </div>
-
                     <div class="col-md-4">
                         <div class="form-group">
                             <?= lang('payment_amount', 'payment_amount'); ?>
