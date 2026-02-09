@@ -3034,6 +3034,27 @@ class Products extends MY_Controller
             $this->page_construct('products/add_new', $meta, $this->data);
         }
     }
+
+    public function add_ecommerce($id = null)
+    {
+        $this->load->helper('security');
+      
+            $bc = [
+                ['link' => base_url(), 'page' => 'Home'],
+                ['link' => admin_url('products'), 'page' => 'Products'],
+                ['link' => '#', 'page' => 'Add Product']
+            ];
+
+            $meta = [
+                'page_title' => 'Add Product',
+                'bc' => $bc
+            ];
+
+            $this->page_construct('products/add_ecommerce', $meta, $this->data);
+        
+    }
+
+
     public function add($id = null)
     {
         //$this->sma->checkPermissions();
