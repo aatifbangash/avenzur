@@ -336,7 +336,7 @@ class Entries extends MY_Controller
 		$allowed = $this->mAccountSettings->decimal_places;
 
 		// form validation rules 
-		$this->form_validation->set_rules('number', lang('entries_cntrler_add_form_validation_number_label'), 'is_numeric');
+		//$this->form_validation->set_rules('number', lang('entries_cntrler_add_form_validation_number_label'), 'is_numeric');
 		$this->form_validation->set_rules('date', lang('entries_cntrler_add_form_validation_date_label'), 'required');
 		// $this->form_validation->set_rules('tag_id', lang('entries_cntrler_add_form_validation_tag_label'), 'required');
 
@@ -347,11 +347,11 @@ class Entries extends MY_Controller
 		$this->form_validation->set_rules('employee_id', 'Employee ID', 'callback_at_least_one_selected');
 
 
-		$q = $this->db->get_where('sma_accounts_entries', array('number' => $this->input->post('number')));
+		/*$q = $this->db->get_where('sma_accounts_entries', array('number' => $this->input->post('number')));
 		if ($q->num_rows() > 0) {
 			$this->form_validation->set_rules('number', lang('entries_cntrler_add_form_validation_number_label'), 'is_numeric|is_unique[sma_accounts_entries.number]');
 			$this->form_validation->set_message('is_unique', lang('form_validation_is_db_unique'));
-		}
+		}*/
 		
 		$dc_valid = false; 	// valid debit or credit ledger
 		$dr_total = 0;		// total dr amount initially 0
