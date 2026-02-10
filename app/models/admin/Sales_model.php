@@ -317,7 +317,10 @@ class Sales_model extends CI_Model
             
             // Add calculated fields
             foreach ($invoices as $key => $invoice) {
-                $invoice->outstanding_amount = $invoice->grand_total - $invoice->total_paid;
+                $invoice->outstanding_amount = round(
+                    round($invoice->grand_total, 2) - round($invoice->total_paid, 2),
+                    2
+                );
                 $invoice->type = 'Sales Invoice';
 
                 // Remove invoice if outstanding is zero or less
