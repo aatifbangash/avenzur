@@ -1587,10 +1587,21 @@ class Customers extends MY_Controller
             }
 
             $total_payment = $payment_amount + $applied_advance + $total_applied_returns + $total_applied_creditmemos;
-            //echo $total_applied_creditmemos;exit;
-            if($total_payments_from_invoices > $total_payment) {
+            /*if((float) $total_payments_from_invoices > (float) $total_payment) {
+                echo 'here we are...';exit;
                 $this->session->set_flashdata('error', 'Total payment amount is insufficient to cover the applied amounts for selected invoices. Please adjust the payment amount or applied amounts.');
                 //echo 'More Amount error...';exit;
+                admin_redirect('customers/payment_from_customer_new');
+            }*/
+
+            $total_payment_cents  = (int) round($total_payment * 100);
+            $total_invoices_cents = (int) round($total_payments_from_invoices * 100);
+
+            if (round($total_payments_from_invoices, 1) > round($total_payment, 1)) {
+                $this->session->set_flashdata(
+                    'error',
+                    'Total payment amount is insufficient to cover the applied amounts for selected invoices.'
+                );
                 admin_redirect('customers/payment_from_customer_new');
             }
             //echo 'here';exit;
