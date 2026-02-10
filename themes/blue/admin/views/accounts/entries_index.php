@@ -156,14 +156,16 @@
                 <tbody>
 
                 <?php
+                $counter = 0;
                 foreach ($entries as $entry) {
                     $this->db->where('id', $entry['entrytype_id']);
                     $q = $this->db->get('sma_accounts_entrytypes')->row();
                     $entryTypeName = $q->name;
                     $entryTypeLabel = $q->label;
+                    $counter++;
                     ?>
                         <tr>
-                            <td><?= $entry['id'] ?></td>
+                            <td><?= $counter ?></td>
                             <td><?=  $this->functionscore->dateFromSql($entry['date']) ?></td>
                             <td><?= $entry['number'] ?></td>
                             <td><?= ($this->functionscore->entryLedgers($entry['id'])) ?></td>

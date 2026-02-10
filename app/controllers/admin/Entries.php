@@ -53,6 +53,9 @@ class Entries extends MY_Controller
 		if(!empty($tran_number)){
 			$this->db->where("number LIKE '%$tran_number%'");	
 		}
+
+		$this->db->where("transaction_type NOT IN ('purchase_invoice', 'sales_invoice')");
+
 		// select all entries
 		// 	$query = $this->db->get('sma_accounts_entries');
 		$page = ($this->uri->segment(3)) ? $this->uri->segment(3) : 0;
@@ -251,6 +254,8 @@ class Entries extends MY_Controller
 		if(!empty($tran_number)){
 			$this->db->where("number LIKE '%$tran_number%'");	
 		}
+
+		$this->db->where("transaction_type NOT IN ('purchase_invoice', 'sales_invoice')");
 
 		$query = $this->db->get();
 		 // echo $this->db->last_query(); exit;
