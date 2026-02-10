@@ -806,10 +806,10 @@
                             }
 
                             echo '<div class="row">';
-                            echo '<div class="col-xs-4">';
-                            echo '<div class="form-group">';
-                            echo form_label(lang('entries_views_add_label_number'), 'number');
-                            $data = array(
+                            //echo '<div class="col-xs-4">';
+                            //echo '<div class="form-group">';
+                            //echo form_label(lang('entries_views_add_label_number'), 'number');
+                            /*$data = array(
                                 'id' => "number",
                                 'type' => "number",
                                 'name' => "number",
@@ -818,9 +818,9 @@
                                 'class' => "form-control",
                                 'value' => set_value('number'),
                             );
-                            echo form_input($data);
-                            echo "</div>";
-                            echo "</div>";
+                            //echo form_input($data);
+                            echo "</div>";*/
+                            //echo "</div>";
                             echo '<div class="col-xs-4">';
                             echo '<div class="form-group">';
                             echo form_label(lang('entries_views_add_label_date'), 'date');
