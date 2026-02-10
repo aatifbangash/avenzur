@@ -88,10 +88,10 @@
                             
                             $('#customer-info').show();
                             $('#customer-name').text(response.customer_name);
-                            $('#credit-limit').text('<?= $this->sma->formatMoney(0) ?>'.replace('0.00', response.credit_limit.toFixed(2)));
-                            $('#current-balance').text('<?= $this->sma->formatMoney(0) ?>'.replace('0.00', response.current_balance.toFixed(2)));
-                            $('#remaining-limit').text('<?= $this->sma->formatMoney(0) ?>'.replace('0.00', response.remaining_limit.toFixed(2)));
-                            $('#available-advance').text('<?= $this->sma->formatMoney(0) ?>'.replace('0.00', response.available_advance.toFixed(2)));
+                            $('#credit-limit').text('<?= $this->sma->formatMoney(0) ?>'.replace('0.00', response.credit_limit.toFixed(5)));
+                            $('#current-balance').text('<?= $this->sma->formatMoney(0) ?>'.replace('0.00', response.current_balance.toFixed(5)));
+                            $('#remaining-limit').text('<?= $this->sma->formatMoney(0) ?>'.replace('0.00', response.remaining_limit.toFixed(5)));
+                            $('#available-advance').text('<?= $this->sma->formatMoney(0) ?>'.replace('0.00', response.available_advance.toFixed(5)));
                             $('#payment-term').text(response.payment_term || 'N/A');
                             
                             // Load customer advances
@@ -162,9 +162,9 @@
                         '<td>' + invoice.date + '</td>' +
                         '<td>' + invoice.id + '</td>' +
                         '<td>' + invoice.type + '</td>' +
-                        '<td class="text-right">' + parseFloat(invoice.grand_total).toFixed(2) + '</td>' +
-                        '<td class="text-right">' + parseFloat(invoice.total_paid).toFixed(2) + '</td>' +
-                        '<td class="text-right">' + parseFloat(invoice.outstanding_amount).toFixed(2) + '</td>' +
+                        '<td class="text-right">' + parseFloat(invoice.grand_total).toFixed(5) + '</td>' +
+                        '<td class="text-right">' + parseFloat(invoice.total_paid).toFixed(5) + '</td>' +
+                        '<td class="text-right">' + parseFloat(invoice.outstanding_amount).toFixed(5) + '</td>' +
                         '<td class="text-right"><span class="invoice-payment-amount" id="invoice-payment-' + invoice.id + '">0.00</span>' +
                         '<input type="hidden" name="invoice_amounts[' + invoice.id + ']" value="0.00" id="invoice-amount-' + invoice.id + '"></td>' +
                     '</tr>';
@@ -182,9 +182,9 @@
             }
             
             // Update total summary
-            $('#total-amount').text(totalAmount.toFixed(2));
-            $('#total-paid').text(totalPaid.toFixed(2));
-            $('#total-outstanding').text(totalOutstanding.toFixed(2));
+            $('#total-amount').text(totalAmount.toFixed(5));
+            $('#total-paid').text(totalPaid.toFixed(5));
+            $('#total-outstanding').text(totalOutstanding.toFixed(5));
             $('#total-payment-summary').text('0.00'); // Reset payment summary
             $('#total-payment-summary').text('0.00'); // Reset payment summary
         }
@@ -226,9 +226,9 @@
                         '<td>' + return_item.date + '</td>' +
                         '<td>' + return_item.reference_no + '</td>' +
                         '<td>' + return_item.type + '</td>' +
-                        '<td class="text-right">' + parseFloat(return_item.grand_total).toFixed(2) + '</td>' +
-                        '<td class="text-right">' + parseFloat(return_item.total_paid || 0).toFixed(2) + '</td>' +
-                        '<td class="text-right">' + parseFloat(return_item.outstanding_amount || 0).toFixed(2) + '</td>' +
+                        '<td class="text-right">' + parseFloat(return_item.grand_total).toFixed(5) + '</td>' +
+                        '<td class="text-right">' + parseFloat(return_item.total_paid || 0).toFixed(5) + '</td>' +
+                        '<td class="text-right">' + parseFloat(return_item.outstanding_amount || 0).toFixed(5) + '</td>' +
                         '<td class="text-right"><span class="return-used-amount" id="return-used-' + return_item.id + '">0.00</span>' +
                         '<input type="hidden" name="return_amounts[' + return_item.id + ']" value="0.00" id="return-amount-' + return_item.id + '"></td>' +
                     '</tr>';
@@ -246,9 +246,9 @@
             }
             
             // Update total summary
-            $('#returns-total-amount').text(totalAmount.toFixed(2));
-            $('#returns-total-paid').text(totalPaid.toFixed(2));
-            $('#returns-total-outstanding').text(totalOutstanding.toFixed(2));
+            $('#returns-total-amount').text(totalAmount.toFixed(5));
+            $('#returns-total-paid').text(totalPaid.toFixed(5));
+            $('#returns-total-outstanding').text(totalOutstanding.toFixed(5));
             $('#returns-total-used').text('0.00');
         }
 
@@ -289,9 +289,9 @@
                         '<td>' + creditmemo.date + '</td>' +
                         '<td>' + creditmemo.reference_no + '</td>' +
                         '<td>' + creditmemo.type + '</td>' +
-                        '<td class="text-right">' + parseFloat(creditmemo.amount).toFixed(2) + '</td>' +
-                        '<td class="text-right">' + parseFloat(creditmemo.used_amount || 0).toFixed(2) + '</td>' +
-                        '<td class="text-right">' + parseFloat(creditmemo.available_balance || 0).toFixed(2) + '</td>' +
+                        '<td class="text-right">' + parseFloat(creditmemo.amount).toFixed(5) + '</td>' +
+                        '<td class="text-right">' + parseFloat(creditmemo.used_amount || 0).toFixed(5) + '</td>' +
+                        '<td class="text-right">' + parseFloat(creditmemo.available_balance || 0).toFixed(5) + '</td>' +
                         '<td class="text-right"><span class="creditmemo-applied-amount" id="creditmemo-applied-' + creditmemo.id + '">0.00</span>' +
                         '<input type="hidden" name="creditmemo_amounts[' + creditmemo.id + ']" value="0.00" id="creditmemo-amount-' + creditmemo.id + '"></td>' +
                     '</tr>';
@@ -309,9 +309,9 @@
             }
             
             // Update total summary
-            $('#creditmemo-total-amount').text(totalAmount.toFixed(2));
-            $('#creditmemo-total-used').text(totalUsed.toFixed(2));
-            $('#creditmemo-total-available').text(totalAvailable.toFixed(2));
+            $('#creditmemo-total-amount').text(totalAmount.toFixed(5));
+            $('#creditmemo-total-used').text(totalUsed.toFixed(5));
+            $('#creditmemo-total-available').text(totalAvailable.toFixed(5));
             $('#creditmemo-total-applied').text('0.00');
         }
 
@@ -352,9 +352,9 @@
                         '<td>' + advance.date + '</td>' +
                         '<td>' + advance.reference_no + '</td>' +
                         '<td>' + advance.type + '</td>' +
-                        '<td class="text-right">' + parseFloat(advance.amount).toFixed(2) + '</td>' +
-                        '<td class="text-right">' + parseFloat(advance.used_amount || 0).toFixed(2) + '</td>' +
-                        '<td class="text-right">' + parseFloat(advance.available_balance || 0).toFixed(2) + '</td>' +
+                        '<td class="text-right">' + parseFloat(advance.amount).toFixed(5) + '</td>' +
+                        '<td class="text-right">' + parseFloat(advance.used_amount || 0).toFixed(5) + '</td>' +
+                        '<td class="text-right">' + parseFloat(advance.available_balance || 0).toFixed(5) + '</td>' +
                         '<td class="text-right"><span class="advance-applied-amount" id="advance-applied-' + advance.id + '">0.00</span>' +
                         '<input type="hidden" name="advance_amounts[' + advance.id + ']" value="0.00" id="advance-amount-' + advance.id + '"></td>' +
                     '</tr>';
@@ -372,9 +372,9 @@
             }
             
             // Update total summary
-            $('#advances-total-amount').text(totalAmount.toFixed(2));
-            $('#advances-total-used').text(totalUsed.toFixed(2));
-            $('#advances-total-available').text(totalAvailable.toFixed(2));
+            $('#advances-total-amount').text(totalAmount.toFixed(5));
+            $('#advances-total-used').text(totalUsed.toFixed(5));
+            $('#advances-total-available').text(totalAvailable.toFixed(5));
             $('#advances-total-applied').text('0.00');
         }
 
@@ -395,7 +395,7 @@
                     checkedInvoicesOrder.push(invoiceId);
                 }
                 paymentInput.prop('disabled', false);
-                paymentInput.val(invoiceOutstanding.toFixed(2));
+                paymentInput.val(invoiceOutstanding.toFixed(5));
             } else {
                 // Remove from order tracking
                 var index = checkedInvoicesOrder.indexOf(invoiceId);
@@ -499,7 +499,7 @@
 
             // Update payment amount display immediately with entered amount
             var currentPaymentAmount = parseFloat($('#payment_amount').val()) || 0;
-            $('#payment-amount-display').text(currentPaymentAmount.toFixed(2));
+            $('#payment-amount-display').text(currentPaymentAmount.toFixed(5));
 
             calculateTotalPayment();
         });
@@ -572,17 +572,17 @@
                     var checkbox = $('.invoice-checkbox[value="' + invoiceId + '"]');
                     var invoiceOutstanding = parseFloat(checkbox.data('amount')) || 0;
                     var amountToApply = Math.min(invoiceOutstanding, remainingSettlement);
-                    $('#invoice-payment-' + invoiceId).text(amountToApply.toFixed(2));
-                    $('#invoice-amount-' + invoiceId).val(amountToApply.toFixed(2));
+                    $('#invoice-payment-' + invoiceId).text(amountToApply.toFixed(5));
+                    $('#invoice-amount-' + invoiceId).val(amountToApply.toFixed(5));
                     remainingSettlement -= amountToApply;
                 }
 
                 // Any remaining settlement becomes advance
                 var excessAsAdvance = remainingSettlement;
-                $('#advance-from-payment').text(excessAsAdvance.toFixed(2));
+                $('#advance-from-payment').text(excessAsAdvance.toFixed(5));
             } else {
                 // No invoices selected, all settlement becomes advance
-                $('#advance-from-payment').text(totalAppliedToInvoices.toFixed(2));
+                $('#advance-from-payment').text(totalAppliedToInvoices.toFixed(5));
             }
 
             // Update priority item displays (show how much of each priority item was used)
@@ -592,8 +592,8 @@
             selectedAdvances.each(function() {
                 var available = parseFloat($(this).data('amount')) || 0;
                 var applied = Math.min(available, priorityRemaining);
-                $('#advance-applied-' + $(this).val()).text(applied.toFixed(2));
-                $('#advance-amount-' + $(this).val()).val(applied.toFixed(2));
+                $('#advance-applied-' + $(this).val()).text(applied.toFixed(5));
+                $('#advance-amount-' + $(this).val()).val(applied.toFixed(5));
                 priorityRemaining -= applied;
             });
 
@@ -601,8 +601,8 @@
             selectedReturns.each(function() {
                 var available = parseFloat($(this).data('amount')) || 0;
                 var applied = Math.min(available, priorityRemaining);
-                $('#return-used-' + $(this).val()).text(applied.toFixed(2));
-                $('#return-amount-' + $(this).val()).val(applied.toFixed(2));
+                $('#return-used-' + $(this).val()).text(applied.toFixed(5));
+                $('#return-amount-' + $(this).val()).val(applied.toFixed(5));
                 priorityRemaining -= applied;
             });
 
@@ -610,52 +610,52 @@
             selectedCreditMemos.each(function() {
                 var available = parseFloat($(this).data('amount')) || 0;
                 var applied = Math.min(available, priorityRemaining);
-                $('#creditmemo-applied-' + $(this).val()).text(applied.toFixed(2));
-                $('#creditmemo-amount-' + $(this).val()).val(applied.toFixed(2));
+                $('#creditmemo-applied-' + $(this).val()).text(applied.toFixed(5));
+                $('#creditmemo-amount-' + $(this).val()).val(applied.toFixed(5));
                 priorityRemaining -= applied;
             });
 
             // Update displays
-            $('#total-display').text(isNaN(totalAppliedToInvoices) ? '0.00' : totalAppliedToInvoices.toFixed(2));
-            $('#total-outstanding-selected').text(isNaN(totalInvoiceOutstanding) ? '0.00' : totalInvoiceOutstanding.toFixed(2));
+            $('#total-display').text(isNaN(totalAppliedToInvoices) ? '0.00' : totalAppliedToInvoices.toFixed(5));
+            $('#total-outstanding-selected').text(isNaN(totalInvoiceOutstanding) ? '0.00' : totalInvoiceOutstanding.toFixed(5));
             
             // Update priority breakdown display
-            $('#priority-total-display').text(isNaN(totalPriorityAvailable) ? '0.00' : totalPriorityAvailable.toFixed(2));
-            // $('#payment-amount-display').text(paymentApplied.toFixed(2)); // Moved below
+            $('#priority-total-display').text(isNaN(totalPriorityAvailable) ? '0.00' : totalPriorityAvailable.toFixed(5));
+            // $('#payment-amount-display').text(paymentApplied.toFixed(5)); // Moved below
 
             // Update tfoot totals
             var totalAdvancesApplied = 0;
             $('.advance-applied-amount').each(function() {
                 totalAdvancesApplied += parseFloat($(this).text()) || 0;
             });
-            $('#advances-total-applied').text(totalAdvancesApplied.toFixed(2));
+            $('#advances-total-applied').text(totalAdvancesApplied.toFixed(5));
 
             var totalReturnsUsed = 0;
             $('.return-used-amount').each(function() {
                 totalReturnsUsed += parseFloat($(this).text()) || 0;
             });
-            $('#returns-total-used').text(totalReturnsUsed.toFixed(2));
+            $('#returns-total-used').text(totalReturnsUsed.toFixed(5));
 
             var totalCreditMemosApplied = 0;
             $('.creditmemo-applied-amount').each(function() {
                 totalCreditMemosApplied += parseFloat($(this).text()) || 0;
             });
-            $('#creditmemo-total-applied').text(totalCreditMemosApplied.toFixed(2));
+            $('#creditmemo-total-applied').text(totalCreditMemosApplied.toFixed(5));
 
             var totalInvoicesPaid = 0;
             $('.invoice-payment-amount').each(function() {
                 totalInvoicesPaid += parseFloat($(this).text()) || 0;
             });
-            $('#total-payment-summary').text(totalInvoicesPaid.toFixed(2));
+            $('#total-payment-summary').text(totalInvoicesPaid.toFixed(5));
 
             // Update payment amount display: entered payment + selected priority items
             var totalPaymentAmount = (paymentAmount || 0) + (totalPriorityAvailable || 0);
-            $('#payment-amount-display').text(isNaN(totalPaymentAmount) ? '0.00' : totalPaymentAmount.toFixed(2));
+            $('#payment-amount-display').text(isNaN(totalPaymentAmount) ? '0.00' : totalPaymentAmount.toFixed(5));
 
             // Calculate remaining amount: total applied to invoices - total settlement amount
             var remainingAmount = (totalAppliedToInvoices || 0) - (totalPaymentAmount || 0);
 
-            $('#remaining-amount').text(isNaN(remainingAmount) ? '0.00' : remainingAmount.toFixed(2));
+            $('#remaining-amount').text(isNaN(remainingAmount) ? '0.00' : remainingAmount.toFixed(5));
             // Update remaining amount styling and button state
             updateRemainingAmountStyling(remainingAmount);
         }
