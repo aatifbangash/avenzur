@@ -679,7 +679,7 @@ $(document).ready(function() {
                     }
                     
                     echo "<div class='row'>";
-                        echo "<div class='col-md-4'>";
+                        /*echo "<div class='col-md-4'>";
                             echo '<div class="form-group">';
                             echo form_label(lang('entries_views_edit_label_number'), 'number');
                             $data = array(
@@ -693,8 +693,8 @@ $(document).ready(function() {
                             );
                             echo form_input($data);
                             echo "</div>";
-                        echo "</div>";
-                        echo "<div class='col-md-4'>";
+                        echo "</div>";*/
+                        echo "<div class='col-xs-4'>";
                             echo '<div class="form-group">';
                             echo form_label(lang('entries_views_edit_label_date'), 'date');
                             $data = array(

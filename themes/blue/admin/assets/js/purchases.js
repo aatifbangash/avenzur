@@ -819,6 +819,26 @@ $(document).ready(function () {
 			loadItems();
 		});
 
+	var old_row_deal;
+	$(document)
+		.on("focus", ".rdeal", function () {
+			old_row_deal = $(this).val();
+		})
+		.on("change", ".rdeal", function () {
+			console.log("deal change");
+			var row = $(this).closest("tr");
+			if (!is_numeric($(this).val()) || parseFloat($(this).val()) < 0) {
+				$(this).val(old_row_deal);
+				bootbox.alert(lang.unexpected_value);
+				return;
+			}
+			var new_deal = parseFloat($(this).val()),
+				item_id = row.attr("data-item-id");
+			poitems[item_id].row.deal_discount = new_deal;
+			localStorage.setItem("poitems", JSON.stringify(poitems));
+			loadItems();
+		});
+
 	/* --------------------------
      * Edit Row Bonus Method rbonus
      -------------------------- */

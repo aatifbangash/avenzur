@@ -245,13 +245,28 @@
                     </a>
                     <ul class="newmenu-sub">
                         <?php if($Admin || $Owner || $this->GP['customer-payment-add']){ ?>
-                        <li><a href="<?= admin_url('customers/payment_from_customer'); ?>" class="newmenu-link"><i class="fa fa-hand-o-up"></i> <?= lang('Collect Payment'); ?></a></li>
                         <li><a href="<?= admin_url('customers/payment_from_customer_new'); ?>" class="newmenu-link"><i class="fa fa-hand-o-up"></i> <?= lang('Collection New'); ?></a></li>
                         <?php } ?>
                         <?php if($Admin || $Owner || $this->GP['customer-payment-index']){ ?>
                         <li><a href="<?= admin_url('customers/list_payments'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('Payment List'); ?></a></li>
                         <?php } ?>
                         
+                    </ul>
+                </li>
+                <?php } ?>
+
+                <?php if($Admin || $Owner || $this->GP['customer-payment-add']){ ?>
+                <!-- Collection -->
+                <li class="newmenu-item has-sub">
+                    <a href="#" class="newmenu-link">
+                        <i class="fa fa-money"></i>
+                        <span><?= lang('Advances'); ?></span>
+                        <i class="fa fa-chevron-right newmenu-chevron"></i>
+                    </a>
+                    <ul class="newmenu-sub">
+                        <?php if($Admin || $Owner || $this->GP['customer-payment-add']){ ?>
+                        <li><a href="<?= admin_url('customers/add_advance'); ?>" class="newmenu-link"><i class="fa fa-hand-o-up"></i> <?= lang('Add Advance'); ?></a></li>
+                        <?php } ?>
                     </ul>
                 </li>
                 <?php } ?>
