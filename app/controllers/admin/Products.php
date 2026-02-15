@@ -3054,6 +3054,379 @@ class Products extends MY_Controller
         
     }
 
+    /**
+     * Shopify-style Product Add (with full variant support)
+     * Saves to sma_products and sma_product_variants
+     */
+    public function add_shopify($id = null)
+    {
+        $this->load->helper('security');
+        
+        // Validation rules
+        $this->form_validation->set_rules('title', 'Title', 'required|min_length[3]');
+        $this->form_validation->set_rules('price', 'Price', 'required|numeric|greater_than[0]');
+        $this->form_validation->set_rules('code', 'Product Code', 'required|is_unique[products.code]|alpha_dash');
+        
+        if ($this->form_validation->run() == true) {
+            $this->db->trans_start();
+            
+            try {
+                // Generate handle from title if not provided
+                $handle = $this->input->post('handle') ?: $this->_generate_handle($this->input->post('title'));
+                
+                // Prepare main product data
+                $product_data = [
+                    'code' => $this->input->post('code'),
+                    'name' => $this->input->post('title'),
+                    'name_ar' => $this->input->post('title_ar'),
+                    'details' => $this->input->post('description'),
+                    'product_details' => $this->input->post('description_html'),
+                    'product_type' => $this->input->post('product_type'),
+                    'vendor' => $this->input->post('vendor'),
+                    'tags' => $this->input->post('tags'),
+                    'handle' => $handle,
+                    'slug' => $handle,
+                    'category_id' => $this->input->post('category_id') ?: 1,
+                    'brand' => $this->input->post('brand'),
+                    'price' => $this->sma->formatDecimal($this->input->post('price')),
+                    'cost' => $this->sma->formatDecimal($this->input->post('cost') ?: 0),
+                    'compare_at_price' => $this->sma->formatDecimal($this->input->post('compare_at_price')),
+                    'type' => 'standard',
+                    'barcode_symbology' => 'code128',
+                    'unit' => 1,
+                    'tax_rate' => $this->input->post('tax_rate') ?: 1,
+                    'tax_method' => $this->input->post('tax_method') ?: 0,
+                    'taxable' => $this->input->post('taxable') ? 1 : 0,
+                    'track_quantity' => 1,
+                    'quantity' => 0,
+                    'weight' => $this->input->post('weight'),
+                    'requires_shipping' => $this->input->post('requires_shipping') ? 1 : 0,
+                    'status' => $this->input->post('status') ?: 'draft',
+                    'published_at' => ($this->input->post('status') == 'active') ? date('Y-m-d H:i:s') : null,
+                    'seo_title' => $this->input->post('seo_title'),
+                    'seo_description' => $this->input->post('seo_description'),
+                    'featured' => $this->input->post('featured') ? 1 : 0,
+                    'hide' => 0,
+                ];
+                
+                // Store options as JSON
+                $options = [];
+                if ($this->input->post('option_names')) {
+                    foreach ($this->input->post('option_names') as $idx => $option_name) {
+                        if (!empty($option_name)) {
+                            $options[] = [
+                                'name' => $option_name,
+                                'position' => $idx + 1
+                            ];
+                        }
+                    }
+                }
+                $product_data['options_json'] = !empty($options) ? json_encode($options) : null;
+                
+                // Handle main product image
+                if ($_FILES['product_image']['size'] > 0) {
+                    $photo = $this->_upload_product_image('product_image');
+                    if ($photo) {
+                        $product_data['image'] = $photo;
+                    }
+                } elseif ($this->input->post('product_image_url')) {
+                    $photo = $this->_download_image_from_url($this->input->post('product_image_url'));
+                    if ($photo) {
+                        $product_data['image'] = $photo;
+                    }
+                }
+                
+                // Insert product
+                if (!$this->products_model->addProduct($product_data, null, null, null, null)) {
+                    throw new Exception('Failed to create product');
+                }
+                
+                $product_id = $this->db->insert_id();
+                
+                // Create warehouses_products entries for all warehouses
+                $warehouses = $this->site->getAllWarehouses();
+                foreach ($warehouses as $warehouse) {
+                    $this->db->insert('warehouses_products', [
+                        'product_id' => $product_id,
+                        'warehouse_id' => $warehouse->id,
+                        'quantity' => 0,
+                        'rack' => null,
+                        'avg_cost' => $product_data['cost']
+                    ]);
+                }
+                
+                // Handle variants
+                $variant_skus = $this->input->post('variant_sku');
+                $variant_prices = $this->input->post('variant_price');
+                $variant_compare_prices = $this->input->post('variant_compare_price');
+                $variant_costs = $this->input->post('variant_cost');
+                $variant_barcodes = $this->input->post('variant_barcode');
+                $variant_quantities = $this->input->post('variant_quantity');
+                $variant_weights = $this->input->post('variant_weight');
+                $variant_option1 = $this->input->post('variant_option1');
+                $variant_option2 = $this->input->post('variant_option2');
+                $variant_option3 = $this->input->post('variant_option3');
+                
+                if (!empty($variant_skus) && is_array($variant_skus)) {
+                    foreach ($variant_skus as $idx => $sku) {
+                        // Build variant name from options
+                        $variant_name_parts = array_filter([
+                            $variant_option1[$idx] ?? null,
+                            $variant_option2[$idx] ?? null,
+                            $variant_option3[$idx] ?? null
+                        ]);
+                        $variant_name = !empty($variant_name_parts) ? implode(' / ', $variant_name_parts) : 'Default';
+                        
+                        $variant_data = [
+                            'product_id' => $product_id,
+                            'name' => $variant_name,
+                            'sku' => $sku ?: $product_data['code'] . '-V' . ($idx + 1),
+                            'barcode' => $variant_barcodes[$idx] ?? null,
+                            'option1' => $variant_option1[$idx] ?? null,
+                            'option2' => $variant_option2[$idx] ?? null,
+                            'option3' => $variant_option3[$idx] ?? null,
+                            'price' => $this->sma->formatDecimal($variant_prices[$idx] ?? $product_data['price']),
+                            'compare_at_price' => $this->sma->formatDecimal($variant_compare_prices[$idx] ?? null),
+                            'cost' => $this->sma->formatDecimal($variant_costs[$idx] ?? $product_data['cost']),
+                            'weight' => $variant_weights[$idx] ?? null,
+                            'weight_unit' => 'kg',
+                            'quantity' => $variant_quantities[$idx] ?? 0,
+                            'position' => $idx + 1,
+                            'taxable' => $product_data['taxable'],
+                            'requires_shipping' => $product_data['requires_shipping'],
+                            'inventory_management' => 1,
+                            'inventory_policy' => 'deny',
+                        ];
+                        
+                        $this->db->insert('product_variants', $variant_data);
+                        $variant_id = $this->db->insert_id();
+                        
+                        // Create warehouse entries for each variant
+                        foreach ($warehouses as $warehouse) {
+                            $this->db->insert('warehouses_products_variants', [
+                                'option_id' => $variant_id,
+                                'product_id' => $product_id,
+                                'warehouse_id' => $warehouse->id,
+                                'quantity' => 0
+                            ]);
+                        }
+                    }
+                } else {
+                    // No variants specified, create default variant
+                    $default_variant = [
+                        'product_id' => $product_id,
+                        'name' => 'Default',
+                        'sku' => $product_data['code'],
+                        'barcode' => $this->input->post('barcode'),
+                        'price' => $product_data['price'],
+                        'compare_at_price' => $product_data['compare_at_price'],
+                        'cost' => $product_data['cost'],
+                        'weight' => $product_data['weight'],
+                        'weight_unit' => 'kg',
+                        'quantity' => 0,
+                        'position' => 1,
+                        'taxable' => $product_data['taxable'],
+                        'requires_shipping' => $product_data['requires_shipping'],
+                        'inventory_management' => 1,
+                        'inventory_policy' => 'deny',
+                    ];
+                    
+                    $this->db->insert('product_variants', $default_variant);
+                    $variant_id = $this->db->insert_id();
+                    
+                    foreach ($warehouses as $warehouse) {
+                        $this->db->insert('warehouses_products_variants', [
+                            'option_id' => $variant_id,
+                            'product_id' => $product_id,
+                            'warehouse_id' => $warehouse->id,
+                            'quantity' => 0
+                        ]);
+                    }
+                }
+                
+                // Handle gallery images
+                if (!empty($_FILES['gallery_images']['name'][0])) {
+                    $gallery_photos = $this->_upload_gallery_images();
+                    foreach ($gallery_photos as $photo) {
+                        $this->db->insert('product_photos', [
+                            'product_id' => $product_id,
+                            'photo' => $photo
+                        ]);
+                    }
+                }
+                
+                // Add to collections if specified
+                $collections = $this->input->post('collections');
+                if (!empty($collections) && is_array($collections)) {
+                    foreach ($collections as $collection_id) {
+                        $this->db->insert('product_collection_items', [
+                            'collection_id' => $collection_id,
+                            'product_id' => $product_id,
+                            'position' => 0
+                        ]);
+                    }
+                }
+                
+                $this->db->trans_complete();
+                
+                if ($this->db->trans_status() === FALSE) {
+                    throw new Exception('Transaction failed');
+                }
+                
+                $this->session->set_flashdata('message', 'Product added successfully!');
+                admin_redirect('products');
+                
+            } catch (Exception $e) {
+                $this->db->trans_rollback();
+                $this->session->set_flashdata('error', 'Error: ' . $e->getMessage());
+                admin_redirect('products/add_shopify');
+            }
+            
+        } else {
+            // Display form
+            $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+            $this->data['categories'] = $this->site->getAllCategories();
+            $this->data['brands'] = $this->site->getAllBrands();
+            $this->data['tax_rates'] = $this->site->getAllTaxRates();
+            $this->data['warehouses'] = $this->site->getAllWarehouses();
+            $this->data['collections'] = $this->_get_collections();
+            
+            $bc = [
+                ['link' => base_url(), 'page' => lang('home')],
+                ['link' => admin_url('products'), 'page' => lang('products')],
+                ['link' => '#', 'page' => 'Add Product (Shopify Style)']
+            ];
+            
+            $meta = [
+                'page_title' => 'Add Product - Shopify Style',
+                'bc' => $bc
+            ];
+            
+            $this->page_construct('products/add_shopify', $meta, $this->data);
+        }
+    }
+    
+    /**
+     * Helper: Generate URL-friendly handle from title
+     */
+    private function _generate_handle($title) {
+        $handle = strtolower(trim($title));
+        $handle = preg_replace('/[^a-z0-9-]/', '-', $handle);
+        $handle = preg_replace('/-+/', '-', $handle);
+        $handle = trim($handle, '-');
+        
+        // Check uniqueness
+        $original_handle = $handle;
+        $counter = 1;
+        while ($this->db->where('handle', $handle)->count_all_results('products') > 0) {
+            $handle = $original_handle . '-' . $counter;
+            $counter++;
+        }
+        
+        return $handle;
+    }
+    
+    /**
+     * Helper: Upload product image
+     */
+    private function _upload_product_image($field_name) {
+        $config['upload_path'] = $this->upload_path;
+        $config['allowed_types'] = $this->image_types;
+        $config['max_size'] = $this->allowed_file_size;
+        $config['encrypt_name'] = true;
+        $config['max_filename'] = 25;
+        
+        $this->load->library('upload', $config);
+        
+        if ($this->upload->do_upload($field_name)) {
+            $upload_data = $this->upload->data();
+            $photo = $upload_data['file_name'];
+            
+            // Create thumbnail
+            $this->load->library('image_lib');
+            $resize_config['image_library'] = 'gd2';
+            $resize_config['source_image'] = $this->upload_path . $photo;
+            $resize_config['new_image'] = $this->thumbs_path . $photo;
+            $resize_config['maintain_ratio'] = true;
+            $resize_config['width'] = 300;
+            $resize_config['height'] = 300;
+            
+            $this->image_lib->initialize($resize_config);
+            $this->image_lib->resize();
+            $this->image_lib->clear();
+            
+            return $photo;
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Helper: Upload multiple gallery images
+     */
+    private function _upload_gallery_images() {
+        $photos = [];
+        $files = $_FILES['gallery_images'];
+        $file_count = count($files['name']);
+        
+        for ($i = 0; $i < $file_count; $i++) {
+            if ($files['size'][$i] > 0) {
+                $_FILES['single_image']['name'] = $files['name'][$i];
+                $_FILES['single_image']['type'] = $files['type'][$i];
+                $_FILES['single_image']['tmp_name'] = $files['tmp_name'][$i];
+                $_FILES['single_image']['error'] = $files['error'][$i];
+                $_FILES['single_image']['size'] = $files['size'][$i];
+                
+                $photo = $this->_upload_product_image('single_image');
+                if ($photo) {
+                    $photos[] = $photo;
+                }
+            }
+        }
+        
+        return $photos;
+    }
+    
+    /**
+     * Helper: Download image from URL
+     */
+    private function _download_image_from_url($url) {
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            return null;
+        }
+        
+        $image_data = @file_get_contents($url);
+        if ($image_data === false) {
+            return null;
+        }
+        
+        $photo = md5(uniqid(rand(), true)) . '.jpg';
+        file_put_contents($this->upload_path . $photo, $image_data);
+        
+        // Create thumbnail
+        $this->load->library('image_lib');
+        $config['image_library'] = 'gd2';
+        $config['source_image'] = $this->upload_path . $photo;
+        $config['new_image'] = $this->thumbs_path . $photo;
+        $config['maintain_ratio'] = true;
+        $config['width'] = 300;
+        $config['height'] = 300;
+        
+        $this->image_lib->initialize($config);
+        $this->image_lib->resize();
+        $this->image_lib->clear();
+        
+        return $photo;
+    }
+    
+    /**
+     * Helper: Get all collections
+     */
+    private function _get_collections() {
+        $query = $this->db->get('product_collections');
+        return $query->result();
+    }
+
 
     public function add($id = null)
     {
