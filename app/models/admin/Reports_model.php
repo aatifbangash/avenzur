@@ -998,7 +998,7 @@ class Reports_model extends CI_Model
             ->select('sma_accounts_entryitems.id as entry_id, COALESCE(sum(sma_accounts_entryitems.amount), 0) as amount, 
                     sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.date, 
                     sma_accounts_ledgers.code, sma_companies.company, sma_accounts_entries.transaction_type, sma_accounts_entries.sid as sale_id, sma_accounts_entries.rid as return_id, sma_accounts_entries.memo_id as memo_id, sma_payment_reference.id as payment_id,
-                    sma_sales.warning_note as sale_note, sma_returns.note as return_note, sma_memo.reference_no as memo_note, sma_sales.payment_term as sale_payment_term')
+                    sma_sales.warning_note as sale_note, sma_returns.note as return_note, sma_memo.reference_no as memo_note, sma_sales.payment_term as sale_payment_term, sma_companies.payment_term as company_payment_term')
             ->from('sma_accounts_entryitems')
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
             ->join('sma_accounts_ledgers', 'sma_accounts_entryitems.ledger_id=sma_accounts_ledgers.id')

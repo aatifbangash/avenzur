@@ -179,13 +179,14 @@
                                         $transaction_type = '';
                                         $transaction_id = 0;
                                         $note = '';
-                                        $sale_payment_term = '';
+                                        $sale_payment_term = $statement->company_payment_term;
+                                        //$company_payment_term = $statement->company_payment_term;
                                         if($statement->transaction_type == 'sales_invoice' || $statement->transaction_type == 'saleorder'){
                                             $link = admin_url('sales?sid=' . $statement->sale_id);
                                             $transaction_type = 'Sales';
                                             $transaction_id = $statement->sale_id;
                                             $note = strip_tags(html_entity_decode($statement->sale_note));
-                                            $sale_payment_term = $statement->sale_payment_term;
+                                            $sale_payment_term = $statement->sale_payment_term ?? $statement->company_payment_term;
                                         }else if($statement->transaction_type == 'customerpayment'){
                                             $link = admin_url('customers/view_payment/' . $statement->payment_id);
                                             $transaction_type = 'Payment';
