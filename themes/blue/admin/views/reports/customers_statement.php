@@ -94,10 +94,10 @@
                             <thead>
                             <tr>
                                 <th>#</th>
-                                <th><?= lang('type'); ?></th>
                                 <th><?= lang('date'); ?></th>
+                                <th><?= lang('type'); ?></th>
                                 <th><?= lang('Num'); ?></th>
-                                <th><?= lang('name'); ?></th>
+                                <!--<th><?= lang('name'); ?></th>-->
                                 <th><?= lang('Memo'); ?></th>
                                
                                 <th><?= lang('Debit'); ?></th>
@@ -108,7 +108,7 @@
                             <tbody style="text-align:center;">
                                 <tr>
                                     <td colspan="2">Opening Balance<td>
-                                    <td colspan="5">&nbsp;</td>
+                                    <td colspan="4">&nbsp;</td>
                                     <td><?= $this->sma->formatNumber($total_ob); ?></td>
                                 </tr>
                                 <?php
@@ -129,21 +129,39 @@
                                         }
                                         $count++;
 
+
+                                        $transaction_type = '';
+                                        $transaction_id = 0;
                                         if($statement->transaction_type == 'sales_invoice' || $statement->transaction_type == 'saleorder'){
                                             $link = admin_url('sales?sid=' . $statement->sale_id);
+                                            $transaction_type = 'Sales';
+                                            $transaction_id = $statement->sale_id;
                                         }else if($statement->transaction_type == 'customerpayment'){
                                             $link = admin_url('customers/view_payment/' . $statement->payment_id);
+                                            $transaction_type = 'Payment';
+                                            $transaction_id = $statement->payment_id;
                                         }else if($statement->transaction_type == 'creditmemo'){
                                             $link = admin_url('customers/view_credit_memo/' . $statement->memo_id);
+                                            $transaction_type = 'Memo';
+                                            $transaction_id = $statement->memo_id;
+                                        }else if($statement->transaction_type == 'debitmemo'){
+                                            $link = admin_url('customers/view_credit_memo/' . $statement->memo_id);
+                                            $transaction_type = 'Memo';
+                                            $transaction_id = $statement->memo_id;
+                                        }else if($statement->transaction_type == 'returncustomerorder'){
+                                            $link = admin_url('returns?rid=' . $statement->return_id);
+                                            $transaction_type = 'Return';
+                                            $transaction_id = $statement->return_id;
                                         }
 
                                         ?>
                                             <tr>
                                                 <td><?= $count; ?></td>
-                                                <td><a target="_blank" href="<?= $link; ?>"><?= $statement->transaction_type; ?></a></td>
                                                 <td><?= $statement->date; ?></td>
-                                                <td><?= $statement->code; ?></td>
-                                                <td><?= $statement->company; ?></td>
+                                                <td><a target="_blank" href="<?= $link; ?>"><?= $transaction_type; ?></a></td>
+                                                
+                                                <td><?= $transaction_id; ?></td>
+                                                <!--<td><?= $statement->company; ?></td>-->
                                                 <td><?= $statement->narration; ?></td>
                                                 
                                                 <td><?= $statement->dc == 'D' ? number_format($statement->amount, 2, '.', ',') : '0.00';
@@ -181,7 +199,7 @@
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
-                                <th>&nbsp;</th>
+                                
                                 <th><?= number_format($totalDebit, 2, '.', ',').' Dr'; ?></th>
                                 <th><?= number_format($totalCredit, 2, '.', ',').' Cr'; ?></th>
                                 <th>

@@ -373,6 +373,7 @@ class Sales_model extends CI_Model
         $this->db->from('memo m');
         $this->db->join('memo_entries me', 'me.memo_id = m.id', 'left');
         $this->db->where('m.customer_id', $customer_id);
+        $this->db->where('m.customer_entry_type', 'C');
         $this->db->group_by('m.id');
         $this->db->order_by('m.date', 'desc');
         $q = $this->db->get();
