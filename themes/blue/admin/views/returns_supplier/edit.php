@@ -307,16 +307,13 @@
                 ?>
                 <div class="row">
                     <div class="col-lg-12">
-                        <?php if ($Owner || $Admin) {
-                    ?>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <?= lang('date', 'rsedate'); ?>
-                                    <?php echo form_input('date', (isset($_POST['date']) ? $_POST['date'] : ''), 'class="form-control input-tip datetime" id="rsedate" required="required"'); ?>
-                                </div>
+                        
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('date', 'rsedate'); ?>
+                                <?php echo form_input('date', (isset($_POST['date']) ? $_POST['date'] : ''), 'class="form-control input-tip datetime" id="rsedate" required="required"'); ?>
                             </div>
-                        <?php
-                } ?>
+                        </div>
 
                         <input type="hidden" name="reference_no" id="rseref" value="<?= $reference; ?>" />
                        <!-- <?php /*if ($Owner || $Admin || !$this->session->userdata('biller_id')) {
@@ -344,30 +341,18 @@
                     echo form_input($biller_input);
                 } */?>
 
-                        <?php if ($Owner || $Admin || !$this->session->userdata('warehouse_id')) {
-                    ?>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <?= lang('warehouse', 'rsewarehouse'); ?>
-                                    <?php
-                                    $wh[''] = '';
-                    foreach ($warehouses as $warehouse) {
-                        $wh[$warehouse->id] = $warehouse->name.' ('.$warehouse->code.')';
-                    }
-                    echo form_dropdown('warehouse', $wh, (isset($_POST['warehouse']) ? $_POST['warehouse'] : $Settings->default_warehouse), 'id="rsewarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" required="required" style="width:100%;" '); ?>
-                                </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('warehouse', 'rsewarehouse'); ?>
+                                <?php
+                                $wh[''] = '';
+                                foreach ($warehouses as $warehouse) {
+                                    $wh[$warehouse->id] = $warehouse->name.' ('.$warehouse->code.')';
+                                }
+                                echo form_dropdown('warehouse', $wh, (isset($_POST['warehouse']) ? $_POST['warehouse'] : $Settings->default_warehouse), 'id="rsewarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" required="required" style="width:100%;" '); ?>
                             </div>
-                        <?php
-                } else {
-                    $warehouse_input = [
-                        'type'  => 'hidden',
-                        'name'  => 'warehouse',
-                        'id'    => 'rsewarehouse',
-                        'value' => $this->session->userdata('warehouse_id'),
-                    ];
-
-                    echo form_input($warehouse_input);
-                } ?>
+                        </div>
+                        
 
                         <div class="col-md-4">
                             <div class="form-group">
