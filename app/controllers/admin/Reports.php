@@ -4401,6 +4401,7 @@ class Reports extends MY_Controller
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
 
         $this->data['customers'] = $this->site->getAllCompanies('customer');
+        $this->data['biller'] = $this->site->getDefaultBiller();
 
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
@@ -4411,6 +4412,9 @@ class Reports extends MY_Controller
             // print_r($supplier_details);exit;
             $ledger_account = $supplier_details->ledger_account;
             $supplier_statement = $this->reports_model->getCustomerStatement($start_date, $end_date, $supplier_id, $ledger_account);
+
+            // Get customer aging data
+            $aging_data = $this->reports_model->getCustomerAgingNew(120, date('Y-m-d'), [$supplier_id]);
 
             $total_ob = 0;
             $total_ob_credit = 0;
@@ -4429,6 +4433,8 @@ class Reports extends MY_Controller
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;
             $this->data['customer_id'] = $supplier_id;
+            $this->data['customer_details'] = $supplier_details;
+            $this->data['aging_data'] = $aging_data;
             $this->data['ob_type'] = $ob_type;
             $this->data['total_ob'] = $this->sma->formatDecimal($total_ob);
             $this->data['supplier_statement'] = $supplier_statement['report'];

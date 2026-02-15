@@ -18,8 +18,48 @@
     });
 </script>
 <?php if($viewtype=='pdf'){ ?>
-    <link href="<?= $assets ?>styles/pdf/pdf.css" rel="stylesheet"> 
-  <?php  } ?>
+<link href="<?= $assets ?>styles/pdf/pdf.css" rel="stylesheet">
+
+<!-- PDF Header -->
+<div style="width:100%; margin-bottom:15px; position:relative;">
+
+    <!-- RIGHT: Logo -->
+    <div style="position:absolute; top:0; right:0; text-align:right;">
+        <img src="<?= base_url('assets/uploads/logos/'.$biller->logo); ?>"
+             style="max-width:120px; max-height:60px;">
+    </div>
+
+    <!-- LEFT: Customer details -->
+    <div style="width:70%;">
+        
+        <div style="font-size:10px; color:#666; margin-bottom:6px;">
+            Printed on: <?= date('d/m/Y H:i:s'); ?>
+        </div>
+
+        <div style="font-size:13px; line-height:2.4;">
+            
+            <strong>Date From:</strong> <?= strip_tags($start_date ?? ''); ?>
+            &nbsp;&nbsp;&nbsp;
+            <strong>Date To:</strong> <?= strip_tags($end_date ?? ''); ?>
+            <br>
+
+            <strong>Customer ID:</strong> <?= strip_tags($customer_details->sequence_code ?? ''); ?>
+            &nbsp;&nbsp;&nbsp;
+            <strong>Customer Name:</strong> <?= strip_tags($customer_details->name ?? ''); ?>
+            
+            
+        </div>
+
+    </div>
+
+    <!-- CLEAR -->
+    <div style="clear:both;"></div>
+
+</div>
+
+<?php } ?>
+
+
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-users"></i><?= lang('customer_statement'); ?></h2>
@@ -97,8 +137,9 @@
                                 <th><?= lang('date'); ?></th>
                                 <th><?= lang('type'); ?></th>
                                 <th><?= lang('Num'); ?></th>
+                                <th>Days</th>
                                 <!--<th><?= lang('name'); ?></th>-->
-                                <th><?= lang('Memo'); ?></th>
+                                <th><?= lang('Note'); ?></th>
                                
                                 <th><?= lang('Debit'); ?></th>
                                 <th><?= lang('Credit'); ?></th>
@@ -132,10 +173,14 @@
 
                                         $transaction_type = '';
                                         $transaction_id = 0;
+                                        $note = '';
+                                        $sale_payment_term = '';
                                         if($statement->transaction_type == 'sales_invoice' || $statement->transaction_type == 'saleorder'){
                                             $link = admin_url('sales?sid=' . $statement->sale_id);
                                             $transaction_type = 'Sales';
                                             $transaction_id = $statement->sale_id;
+                                            $note = strip_tags(html_entity_decode($statement->sale_note));
+                                            $sale_payment_term = $statement->sale_payment_term;
                                         }else if($statement->transaction_type == 'customerpayment'){
                                             $link = admin_url('customers/view_payment/' . $statement->payment_id);
                                             $transaction_type = 'Payment';
@@ -144,14 +189,17 @@
                                             $link = admin_url('customers/view_credit_memo/' . $statement->memo_id);
                                             $transaction_type = 'Memo';
                                             $transaction_id = $statement->memo_id;
+                                            $note = strip_tags(html_entity_decode($statement->memo_note));
                                         }else if($statement->transaction_type == 'debitmemo'){
                                             $link = admin_url('customers/view_credit_memo/' . $statement->memo_id);
                                             $transaction_type = 'Memo';
                                             $transaction_id = $statement->memo_id;
+                                            $note = strip_tags(html_entity_decode($statement->memo_note));
                                         }else if($statement->transaction_type == 'returncustomerorder'){
                                             $link = admin_url('returns?rid=' . $statement->return_id);
                                             $transaction_type = 'Return';
                                             $transaction_id = $statement->return_id;
+                                            $note = strip_tags(html_entity_decode($statement->return_note));
                                         }
 
                                         ?>
@@ -161,8 +209,9 @@
                                                 <td><a target="_blank" href="<?= $link; ?>"><?= $transaction_type; ?></a></td>
                                                 
                                                 <td><?= $transaction_id; ?></td>
+                                                <td><?= $sale_payment_term; ?></td>
                                                 <!--<td><?= $statement->company; ?></td>-->
-                                                <td><?= $statement->narration; ?></td>
+                                                <td><?= $note; ?></td>
                                                 
                                                 <td><?= $statement->dc == 'D' ? number_format($statement->amount, 2, '.', ',') : '0.00';
                                                     $statement->dc == 'D' ? $totalDebit = ($totalDebit + $statement->amount) : null ?>
@@ -199,6 +248,7 @@
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
+                                <th>&nbsp;</th>
                                 
                                 <th><?= number_format($totalDebit, 2, '.', ',').' Dr'; ?></th>
                                 <th><?= number_format($totalCredit, 2, '.', ',').' Cr'; ?></th>
@@ -223,6 +273,43 @@
             </div>
 
         </div>
+
+        <?php if($viewtype=='pdf' && !empty($aging_data)): ?>
+        <!-- PDF Footer - Customer Aging -->
+        <div style="margin-top: 30px; border-top: 2px solid #000; padding-top: 10px;">
+            <h3 style="margin-bottom: 15px; font-size: 16px; color: #333;">Customer Aging Summary</h3>
+            <table class="table table-bordered" style="width: 100%; font-size: 12px;">
+                <thead>
+                    <tr style="background-color: #f5f5f5;">
+                        <th style="text-align: center; font-weight: bold;">Current (0-30 days)</th>
+                        <th style="text-align: center; font-weight: bold;">31-60 days</th>
+                        <th style="text-align: center; font-weight: bold;">61-90 days</th>
+                        <th style="text-align: center; font-weight: bold;">91-120 days</th>
+                        <th style="text-align: center; font-weight: bold;">Over 120 days</th>
+                        <th style="text-align: center; font-weight: bold;">Total Outstanding</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php 
+                    $customer_aging = $aging_data[0] ?? []; // Get first (and only) customer aging
+                    
+                    $aging_periods = ['0-30', '31-60', '61-90', '91-120', '>120'];
+                    $total_aging = 0;
+                    ?>
+                    <tr>
+                        <?php foreach($aging_periods as $key): 
+                            $amount = $customer_aging[$key] ?? 0;
+                            $total_aging += $amount;
+                        ?>
+                        <td style="text-align: center;"><?= number_format($amount, 2); ?></td>
+                        <?php endforeach; ?>
+                        <td style="text-align: center; font-weight: bold; background-color: #e9ecef;"><?= number_format($total_aging, 2); ?></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <?php endif; ?>
+
     </div>
 
 </div>
