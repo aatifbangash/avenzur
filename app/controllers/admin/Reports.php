@@ -4444,9 +4444,27 @@ class Reports extends MY_Controller
 
             if ($viewtype == 'pdf') {
                 $this->data['viewtype'] = $viewtype;
+
                 $name = lang('customers_statement_report') . '.pdf';
-                $html = $this->load->view($this->theme . 'reports/customers_statement', $this->data, true);
-                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+
+                $html = $this->load->view(
+                    $this->theme . 'reports/customers_statement',
+                    $this->data,
+                    true
+                );
+
+                // FORCE PORTRAIT ONLY HERE
+                $this->sma->generate_pdf(
+                    $html,
+                    $name,
+                    null,   // path
+                    'I',    // display in browser
+                    null,   // footer
+                    null,   // margin bottom
+                    null,   // header
+                    null,   // margin top
+                    'P'     // ORIENTATION PORTRAIT
+                );
             } else {
                 $this->page_construct('reports/customers_statement', $meta, $this->data);
             }

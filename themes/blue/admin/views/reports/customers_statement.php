@@ -26,7 +26,10 @@
     <!-- RIGHT: Logo -->
     <div style="position:absolute; top:0; right:0; text-align:right;">
         <img src="<?= base_url('assets/uploads/logos/'.$biller->logo); ?>"
-             style="max-width:120px; max-height:60px;">
+             style="max-width:150px; max-height:60px;">
+        <div style="font-size: 12px; font-weight: bold; margin-top: 5px; color: #333;">
+            <?= $biller->name ?? ''; ?>
+        </div>
     </div>
 
     <!-- LEFT: Customer details -->
@@ -133,7 +136,9 @@
                                 class="table items table-striped table-bordered table-condensed table-hover sortable_table tbl_pdf">
                             <thead>
                             <tr>
+                                <?php if($viewtype!='pdf'){ ?>
                                 <th>#</th>
+                                <?php } ?>
                                 <th><?= lang('date'); ?></th>
                                 <th><?= lang('type'); ?></th>
                                 <th><?= lang('Num'); ?></th>
@@ -204,7 +209,9 @@
 
                                         ?>
                                             <tr>
+                                                <?php if($viewtype!='pdf'){ ?>
                                                 <td><?= $count; ?></td>
+                                                <?php } ?>
                                                 <td><?= $statement->date; ?></td>
                                                 <td><a target="_blank" href="<?= $link; ?>"><?= $transaction_type; ?></a></td>
                                                 
@@ -243,7 +250,9 @@
                                     }
                                 ?>
                                 <tr>
+                                <?php if($viewtype!='pdf'){ ?>  
                                 <th>&nbsp;</th>
+                                <?php } ?>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
