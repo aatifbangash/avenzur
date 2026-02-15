@@ -1957,7 +1957,7 @@ class Customers extends MY_Controller
                 'ledger_account' => $ledger_account,
                 'vat_account' => $vat_account,
                 'customer_entry_type' => $customer_entry_type,
-                'type' => 'creditmemo',
+                'type' => $customer_entry_type == 'C' ? 'creditmemo' : 'debitmemo',
                 'date' => $date
             );
 
