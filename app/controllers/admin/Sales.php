@@ -3699,6 +3699,7 @@ class Sales extends MY_Controller
         $email_link        = anchor('admin/sales/email/$1', '<i class="fa fa-envelope"></i> ' . lang('email_sale'), 'data-toggle="modal" data-target="#myModal"');
         $edit_link         = anchor('admin/sales/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_sale'), 'class="sledit"');
         $pdf_link          = anchor('admin/sales/pdf_new/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf'));
+        $excel_link        = anchor('admin/sales/excel_new/$1', '<i class="fa fa-file-excel-o"></i> ' . lang('download_excel'));
         $zatka_invoice_link = anchor('admin/sales/pdf_zatka_invoice/$1', '<i class="fa fa-file-text-o"></i> Zatka Invoice', 'target="_blank"');
         $sale_order_link   = anchor('admin/sales/pdf_sale_order/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_sale_order'));
         $order_picker_link   = anchor('admin/sales/pdf_order_picker/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('Download_Picking_Pdf'));
@@ -3719,6 +3720,7 @@ class Sales extends MY_Controller
                     
                     <li>' . $detail_link . '</li>
                     <li>' . $pdf_link . '</li>
+                    <li>' . $excel_link . '</li>
                     <li>' . $zatka_invoice_link . '</li>
                     <li>' . $journal_entry_link . '</li>
                 </ul>
@@ -3764,6 +3766,7 @@ class Sales extends MY_Controller
             }
             
             $action .=  '<li>' . $pdf_link . '</li>
+                <li>' . $excel_link . '</li>
                 <li>' . $zatka_invoice_link . '</li>';
 
             if($this->Owner || $this->Admin || $this->GP['returns-add']){
@@ -5027,6 +5030,304 @@ if($inv->warning_note != ""){
             $mpdf->WriteHTML($html);
             $mpdf->Output($name, "D");
         }
+    }
+
+    /**
+     * Generate Excel export for sales invoice (same format as pdf_new)
+     */
+    public function excel_new($id = null)
+    {
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $inv                 = $this->sales_model->getInvoiceByID($id);
+        if (!$this->GP['sales-index']) {
+            $this->sma->view_rights($inv->created_by);
+        }
+
+        $this->data['customer']    = $this->site->getCompanyByID($inv->customer_id);
+        $this->data['payments']    = $this->sales_model->getPaymentsForSale($id);
+        $this->data['biller']      = $this->site->getCompanyByID($inv->biller_id);
+        $biller = $this->site->getCompanyByID($inv->biller_id);
+        $customer = $this->data['customer'];
+        $this->data['user']        = $this->site->getUser($inv->created_by);
+        $this->data['warehouse']   = $this->site->getWarehouseByID($inv->warehouse_id);
+        $this->data['inv']         = $inv;
+        $this->data['rows']        = $this->sales_model->getAllInvoiceItems($id);
+        $this->data['return_sale'] = $inv->return_id ? $this->sales_model->getInvoiceByID($inv->return_id) : null;
+        $this->data['return_rows'] = $inv->return_id ? $this->sales_model->getAllInvoiceItems($inv->return_id) : null;
+
+        // Load Excel library
+        $this->load->library('excel');
+        $sheet = $this->excel->setActiveSheetIndex(0);
+
+        // Set document properties
+        $this->excel->getProperties()
+            ->setCreator('AvnZor System')
+            ->setLastModifiedBy('AvnZor System')
+            ->setTitle('Sales Invoice - ' . $inv->reference_no)
+            ->setSubject('Sales Invoice Export')
+            ->setDescription('Sales invoice export in Excel format');
+
+        // Company Header
+        $sheet->setCellValue('A1', $biller->company ?: $biller->name);
+        $sheet->mergeCells('A1:S1');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal('center');
+
+        $sheet->setCellValue('A2', $biller->address);
+        $sheet->mergeCells('A2:S2');
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal('center');
+
+        $sheet->setCellValue('A3', 'Phone: ' . $biller->phone . ' | VAT: ' . ($biller->vat_no ?: 'N/A'));
+        $sheet->mergeCells('A3:S3');
+        $sheet->getStyle('A3')->getAlignment()->setHorizontal('center');
+
+        // Invoice Title
+        $sheet->setCellValue('A5', 'VAT INVOICE');
+        $sheet->mergeCells('A5:S5');
+        $sheet->getStyle('A5')->getFont()->setBold(true)->setSize(16);
+        $sheet->getStyle('A5')->getAlignment()->setHorizontal('center');
+
+        // Invoice Details
+        $row = 7;
+        $sheet->setCellValue('A' . $row, 'Serial Number:');
+        $sheet->setCellValue('B' . $row, $inv->id);
+        $sheet->setCellValue('D' . $row, 'Date:');
+        $sheet->setCellValue('E' . $row, $this->sma->hrld($inv->date));
+        $sheet->setCellValue('G' . $row, 'Ref:');
+        $sheet->setCellValue('H' . $row, $inv->reference_no);
+
+        $row++;
+        $sheet->setCellValue('A' . $row, 'Sale Status:');
+        $sheet->setCellValue('B' . $row, lang($inv->sale_status));
+        $sheet->setCellValue('D' . $row, 'Payment Status:');
+        $sheet->setCellValue('E' . $row, lang($inv->payment_status));
+
+        $row++;
+        $sheet->setCellValue('A' . $row, 'Customer:');
+        $sheet->setCellValue('B' . $row, $customer->company ?: $customer->name);
+        $sheet->setCellValue('D' . $row, 'VAT Number:');
+        $sheet->setCellValue('E' . $row, $customer->vat_no ?: '-');
+
+        $row++;
+        $sheet->setCellValue('A' . $row, 'Address:');
+        $sheet->setCellValue('B' . $row, $customer->address);
+
+        // Set column widths and headers
+        $colWidths = [
+            'A' => 5,   // No.
+            'B' => 40,  // Description
+            'C' => 12,  // Avz Code
+            'D' => 12,  // Batch No
+            'E' => 12,  // HSN/SAC (if applicable)
+            'F' => 12,  // Base Quantity
+            'G' => 10,  // Received (if partial)
+            'H' => 10,  // Bonus
+            'I' => 12,  // Sale Price
+            'J' => 12,  // Subtotal
+            'K' => 10,  // Disc1 %
+            'L' => 12,  // Disc1 Value
+            'M' => 10,  // Disc2 %
+            'N' => 12,  // Disc2 Value
+            'O' => 15,  // Total without VAT
+            'P' => 8,   // VAT %
+            'Q' => 12,  // VAT Value
+            'R' => 15,  // Total with VAT
+        ];
+
+        foreach ($colWidths as $col => $width) {
+            $sheet->getColumnDimension($col)->setWidth($width);
+        }
+
+        // Items Header
+        $row += 2;
+        $sheet->setCellValue('A' . $row, 'No.');
+        $sheet->setCellValue('B' . $row, 'Description');
+        $sheet->setCellValue('C' . $row, 'Avz Code');
+        $sheet->setCellValue('D' . $row, 'Batch No');
+
+        $colIndex = 'E';
+        if ($this->Settings->indian_gst) {
+            $sheet->setCellValue($colIndex . $row, 'HSN/SAC Code');
+            $colIndex++;
+        }
+
+        $sheet->setCellValue($colIndex . $row, 'Base Quantity');
+        $colIndex++;
+
+        if ($inv->status == 'partial') {
+            $sheet->setCellValue($colIndex . $row, 'Received');
+            $colIndex++;
+        }
+
+        $sheet->setCellValue($colIndex . $row, 'Bonus');
+        $colIndex++;
+        $sheet->setCellValue($colIndex . $row, 'Sale Price');
+        $colIndex++;
+        $sheet->setCellValue($colIndex . $row, 'Subtotal');
+        $colIndex++;
+
+        if ($this->Settings->product_discount && $inv->product_discount != 0) {
+            $sheet->setCellValue($colIndex . $row, 'Disc1 %');
+            $colIndex++;
+            $sheet->setCellValue($colIndex . $row, 'Disc1 Value');
+            $colIndex++;
+            $sheet->setCellValue($colIndex . $row, 'Disc2 %');
+            $colIndex++;
+            $sheet->setCellValue($colIndex . $row, 'Disc2 Value');
+            $colIndex++;
+        }
+
+        $sheet->setCellValue($colIndex . $row, 'Total without VAT');
+        $colIndex++;
+
+        if ($this->Settings->tax1 && $inv->product_tax > 0) {
+            $sheet->setCellValue($colIndex . $row, 'VAT %');
+            $colIndex++;
+            $sheet->setCellValue($colIndex . $row, 'VAT Value');
+            $colIndex++;
+        }
+
+        $sheet->setCellValue($colIndex . $row, 'Total with VAT');
+
+        // Style header row
+        $lastCol = $colIndex;
+        $headerRange = 'A' . $row . ':' . $lastCol . $row;
+        $sheet->getStyle($headerRange)->getFont()->setBold(true);
+        $sheet->getStyle($headerRange)->getFill()->setFillType('solid')->getStartColor()->setRGB('CCCCCC');
+        $sheet->getStyle($headerRange)->getBorders()->getAllBorders()->setBorderStyle('thin');
+
+        // Items Data
+        $r = $row + 1;
+        $sr = 1;
+        foreach ($this->data['rows'] as $item) {
+            $colIndex = 'A';
+            $sheet->setCellValue($colIndex . $r, $sr);
+            $colIndex++;
+
+            // Description
+            $description = $item->product_code . ' - ' . $item->product_name;
+            if ($item->variant) {
+                $description .= ' (' . $item->variant . ')';
+            }
+            if ($item->second_name) {
+                $description .= "\n" . $item->second_name;
+            }
+            if ($item->supplier_part_no) {
+                $description .= "\n" . lang('supplier_part_no') . ': ' . $item->supplier_part_no;
+            }
+            if ($item->details) {
+                $description .= "\n" . $item->details;
+            }
+            if ($item->expiry && $item->expiry != '0000-00-00') {
+                $description .= "\n" . lang('EX') . ': ' . $this->sma->hrsd($item->expiry);
+            }
+            $sheet->setCellValue($colIndex . $r, $description);
+            $colIndex++;
+
+            // Avz Code
+            $sheet->setCellValue($colIndex . $r, $item->avz_item_code ?: '');
+            $colIndex++;
+
+            // Batch No
+            $sheet->setCellValue($colIndex . $r, $item->batch_no ?: '');
+            $colIndex++;
+
+            // HSN/SAC Code (if applicable)
+            if ($this->Settings->indian_gst) {
+                $sheet->setCellValue($colIndex . $r, $item->hsn_code ?: '');
+                $colIndex++;
+            }
+
+            // Base Quantity
+            $sheet->setCellValue($colIndex . $r, $this->sma->formatQuantity($item->unit_quantity));
+            $colIndex++;
+
+            // Received (if partial)
+            if ($inv->status == 'partial') {
+                $sheet->setCellValue($colIndex . $r, $this->sma->formatQuantity($item->quantity_received));
+                $colIndex++;
+            }
+
+            // Bonus
+            $sheet->setCellValue($colIndex . $r, $this->sma->formatNumber($item->bonus));
+            $colIndex++;
+
+            // Sale Price
+            $sheet->setCellValue($colIndex . $r, $this->sma->formatNumber($item->real_unit_price));
+            $colIndex++;
+
+            // Subtotal
+            $sheet->setCellValue($colIndex . $r, $this->sma->formatNumber($item->subtotal));
+            $colIndex++;
+
+            // Discounts (if applicable)
+            if ($this->Settings->product_discount && $inv->product_discount != 0) {
+                $sheet->setCellValue($colIndex . $r, $item->discount1 ?: '');
+                $colIndex++;
+                $sheet->setCellValue($colIndex . $r, $this->sma->formatNumber($item->item_discount));
+                $colIndex++;
+                $sheet->setCellValue($colIndex . $r, $item->discount2 ?: '');
+                $colIndex++;
+                $sheet->setCellValue($colIndex . $r, $this->sma->formatNumber($item->second_discount_value));
+                $colIndex++;
+            }
+
+            // Total without VAT
+            $sheet->setCellValue($colIndex . $r, $this->sma->formatNumber($item->totalbeforevat));
+            $colIndex++;
+
+            // VAT (if applicable)
+            if ($this->Settings->tax1 && $inv->product_tax > 0) {
+                $sheet->setCellValue($colIndex . $r, $item->tax ?: '');
+                $colIndex++;
+                $sheet->setCellValue($colIndex . $r, $this->sma->formatNumber($item->item_tax));
+                $colIndex++;
+            }
+
+            // Total with VAT
+            $sheet->setCellValue($colIndex . $r, $this->sma->formatNumber($item->main_net));
+
+            // Style data row
+            $dataRange = 'A' . $r . ':' . $lastCol . $r;
+            $sheet->getStyle($dataRange)->getBorders()->getAllBorders()->setBorderStyle('thin');
+
+            $r++;
+            $sr++;
+        }
+
+        // Summary Section
+        $r += 2;
+        $summaryStartCol = $lastCol === 'R' ? 'P' : ($lastCol === 'Q' ? 'O' : 'N');
+
+        $sheet->setCellValue($summaryStartCol . $r, 'Total:');
+        $sheet->setCellValue(($lastCol) . $r, $this->sma->formatNumber($inv->total));
+        $sheet->getStyle($summaryStartCol . $r . ':' . $lastCol . $r)->getFont()->setBold(true);
+
+        $r++;
+        $sheet->setCellValue($summaryStartCol . $r, 'T-DISC:');
+        $sheet->setCellValue($lastCol . $r, $this->sma->formatNumber($inv->total_discount));
+
+        $r++;
+        $sheet->setCellValue($summaryStartCol . $r, 'Net Before VAT:');
+        $sheet->setCellValue($lastCol . $r, $this->sma->formatNumber($inv->total_net_sale));
+
+        $r++;
+        $sheet->setCellValue($summaryStartCol . $r, 'Total VAT:');
+        $sheet->setCellValue($lastCol . $r, $this->sma->formatNumber($inv->total_tax));
+
+        $r++;
+        $sheet->setCellValue($summaryStartCol . $r, 'Total After VAT:');
+        $sheet->setCellValue($lastCol . $r, $this->sma->formatNumber($inv->grand_total));
+        $sheet->getStyle($summaryStartCol . $r . ':' . $lastCol . $r)->getFont()->setBold(true);
+
+        // Generate filename and export
+        $filename = lang('sale') . '_' . str_replace('/', '_', $inv->reference_no);
+        $this->load->helper('excel');
+        create_excel($this->excel, $filename);
     }
 
     public function pdf_delivery($id = null, $view = null, $save_bufffer = null)
