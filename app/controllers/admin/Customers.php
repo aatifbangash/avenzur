@@ -4,6 +4,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Reader\Xlsx;
+use Mpdf\Mpdf;
 class Customers extends MY_Controller
 {
     public function __construct()
@@ -1985,20 +1986,14 @@ class Customers extends MY_Controller
         }
     }
 
-    public function add_service_invoice($memo_id, $customer_id, $reference_no, $description, $payment_amount, $date){
-        $memoData = array(
-            'memo_id' => $memo_id,
-            'customer_id' => $customer_id,
-            'reference_no' => $reference_no,
-            'description' => $description,
-            'payment_amount' => $payment_amount,
-            'type' => 'serviceinvoice',
-            'date' => $date
-        );
-        $this->db->insert('sma_memo_entries' ,$memoData);
+    public function add_service_invoice($service_data = array()){
+        // Insert memo entries for each service row
+        foreach ($service_data as $entry) {
+            $this->db->insert('sma_memo_entries' ,$entry);
+        }
     }
 
-    public function convert_service_invoice($memo_id, $customer_id, $ledger_account, $vat_account, $payment_amount, $vat_charges, $reference_no, $type){
+    public function convert_service_invoice($memo_id, $customer_id, $vat_account, $payment_amount, $vat_charges, $reference_no, $type, $entry_data){
         $this->load->admin_model('companies_model');
         $customer = $this->companies_model->getCompanyByID($customer_id);
 
@@ -2008,14 +2003,15 @@ class Customers extends MY_Controller
             'transaction_type' => $type,
             'number'       => 'SI-'.$reference_no,
             'date'         => date('Y-m-d'),
-            'dr_total'     => $payment_amount + $vat_charges,
-            'cr_total'     => $payment_amount + $vat_charges,
+            'dr_total'     => $payment_amount,
+            'cr_total'     => $payment_amount,
             'notes'        => 'Service Invoice Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
             'pid'          =>  '',
             'memo_id'      => $memo_id
             );
         $add  = $this->db->insert('sma_accounts_entries', $entry);
         $insert_id = $this->db->insert_id();
+        //$insert_id = 0;
 
         //customer
         $entryitemdata[] = array(
@@ -2023,8 +2019,8 @@ class Customers extends MY_Controller
                 'entry_id' => $insert_id,
                 'dc' => 'D',
                 'ledger_id' => $customer->ledger_account,
-                'amount' => $payment_amount + $vat_charges,
-                'narration' => ''
+                'amount' => $payment_amount,
+                'narration' => 'Customer'
             )
         );
 
@@ -2035,20 +2031,22 @@ class Customers extends MY_Controller
                 'dc' => 'C',
                 'ledger_id' => $vat_account,
                 'amount' => $vat_charges,
-                'narration' => ''
+                'narration' => 'Vat Charges'
             )
         );
 
-        //transfer legdger
-        $entryitemdata[] = array(
-            'Entryitem' => array(
-                'entry_id' => $insert_id,
-                'dc' => 'C',
-                'ledger_id' => $ledger_account,
-                'amount' => $payment_amount,
-                'narration' => ''
-            )
-        );
+        foreach ($entry_data as $entry) {
+            //transfer legdger
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'C',
+                    'ledger_id' => $entry['opposite_ledger'],
+                    'amount' => $entry['payment_amount'] - $entry['vat'],
+                    'narration' => $entry['service_type']
+                )
+            );
+        }
 
         foreach ($entryitemdata as $row => $itemdata)
         {
@@ -2060,6 +2058,44 @@ class Customers extends MY_Controller
         $this->data['service_invoices'] = $this->purchases_model->getCreditMemo('serviceinvoice');
         $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
         $this->page_construct('customers/list_service_invoice', $meta, $this->data);
+    }
+
+    public function service_invoice_pdf($id)
+    {
+        $service_invoice_data = $this->purchases_model->getDebitMemoData($id);
+        $service_invoice_entries_data = $this->purchases_model->getDebitMemoEntriesData($id);
+
+        if (!$service_invoice_data) {
+            $this->session->set_flashdata('error', 'Service invoice not found');
+            redirect($_SERVER['HTTP_REFERER']);
+        }
+
+        // Get customer details
+        $customer = $this->companies_model->getCompanyByID($service_invoice_data->customer_id);
+        $this->data['customer'] = $customer;
+
+        // Get biller details for logo
+        $this->data['biller'] = $this->site->getDefaultBiller();
+
+        $this->data['service_invoice'] = $service_invoice_data;
+        $this->data['service_invoice_entries'] = $service_invoice_entries_data;
+
+        // Generate PDF using mPDF (same as customer statement)
+        $name = 'Service_Invoice_' . $service_invoice_data->reference_no . '.pdf';
+        $html = $this->load->view($this->theme . 'customers/service_invoice_pdf', $this->data, true);
+
+        // Use mPDF directly like customer statement
+        $mpdf = new Mpdf([
+            'format' => 'A4',
+            'orientation' => 'P',       // Portrait
+            'margin_top' => 10,
+            'margin_bottom' => 10,
+            'margin_left' => 10,
+            'margin_right' => 10,
+        ]);
+
+        $mpdf->WriteHTML($html);
+        $mpdf->Output($name, "D"); // Force download
     }
 
     public function edit_service_invoice($id = null){
@@ -2083,22 +2119,30 @@ class Customers extends MY_Controller
     public function service_invoice(){
         //$this->sma->checkPermissions(false, true);
         $this->form_validation->set_rules('customer', $this->lang->line('customer'), 'required');
+        $this->form_validation->set_rules('reference_no', $this->lang->line('reference_no'), 'required');
+        $this->form_validation->set_rules('date', $this->lang->line('date'), 'required');
+        $this->form_validation->set_rules('service_type[]', $this->lang->line('service_type'), 'required');
 
         $data = [];
         $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Service Invoice')]];
         $meta = ['page_title' => lang('Service Invoice'), 'bc' => $bc];
         if ($this->form_validation->run() == true) {
             $request_type = $this->input->post('request_type');
-            $customer_id      = $this->input->post('customer');
-            //$payments_array      = $this->input->post('payment_amount');
-            $descriptions_array      = $this->input->post('description');
-            $item_ids = $this->input->post('item_id');
+            $customer_id = $this->input->post('customer');
             $reference_no = $this->input->post('reference_no');
-            $payment_total = $this->input->post('payment_total');
-            $ledger_account = $this->input->post('ledger_account');
-            $vat_account = $this->input->post('vat_account');
-            $vat_charges = $this->input->post('vat_charges');
             $date_fmt = $this->input->post('date');
+
+            // Process service data arrays
+            $service_types = $this->input->post('service_type[]');
+            $from_cities = $this->input->post('from_city[]');
+            $to_cities = $this->input->post('to_city[]');
+            $from_dates = $this->input->post('from_date[]');
+            $to_dates = $this->input->post('to_date[]');
+            $amounts = $this->input->post('amount[]');
+            $quantities = $this->input->post('quantity[]');
+            $vats = $this->input->post('vat[]');
+            $totals = $this->input->post('total[]');
+            $unit_prices = $this->input->post('unit_price[]');
 
             $formattedDate = DateTime::createFromFormat('Y-m-d', $date_fmt);
             $isDateValid = $formattedDate && $formattedDate->format('Y-m-d') === $date_fmt;
@@ -2110,35 +2154,100 @@ class Customers extends MY_Controller
                 $date = $formattedDate->format('Y-m-d');
             }
 
-            if($payment_total > 0){
-                if($request_type == 'update'){
-                    $memo_id2 = $this->input->post('memo_id');
+            // Calculate total amount from all service rows
+            $payment_total = 0;
+            $vat_charges = 0;
+            $service_data = [];
 
-                    // Delete older data
-                    $this->db->delete('sma_memo_entries', ['memo_id' => $memo_id2]);
-                    $this->db->delete('sma_memo', ['id' => $memo_id2]);
-                    $this->deleteFromAccounting($memo_id2);
+            if (!empty($totals)) {
+                foreach ($totals as $total) {
+                    $payment_total += (float)$total;
                 }
+            }
+
+            if (!empty($vats)) {
+                foreach ($vats as $vat) {
+                    $vat_charges += (float)$vat;
+                }
+            }
+
+            // Prepare service data for storage
+            if (!empty($service_types)) {
+                foreach ($service_types as $index => $service_type) {
+                    $service_data[] = [
+                        'service_type' => $service_type,
+                        'from_city' => $from_cities[$index] ?? '',
+                        'to_city' => $to_cities[$index] ?? '',
+                        'from_date' => $from_dates[$index] ?? '',
+                        'to_date' => $to_dates[$index] ?? '',
+                        'amount' => (float)($amounts[$index] ?? 0),
+                        'quantity' => (float)($quantities[$index] ?? 0),
+                        'vat' => (float)($vats[$index] ?? 0),
+                        'total' => (float)($totals[$index] ?? 0),
+                        'unit_price' => (float)($unit_prices[$index] ?? 0),
+                    ];
+                }
+            }
+
+            if($payment_total > 0){
+                // For now, we'll use default ledger accounts since they're not in the simplified form
+                // In the future, these might need to be configured or selected differently
+
+                $customer_details = $this->companies_model->getCompanyByID($customer_id);
+
+                $customer_ledger_account = $customer_details->ledger_account; // Default to customer ledger for service invoice
+                $vat_account = $this->Settings->vat_on_sale_ledger; // Default VAT account
 
                 $memoData = array(
                     'supplier_id' => 0,
                     'customer_id' => $customer_id,
                     'reference_no' => $reference_no,
                     'payment_amount' => $payment_total,
-                    'bank_charges' => $vat_charges,
-                    'ledger_account' => $ledger_account,
-                    'bank_charges_account' => $vat_account,
+                    'vat_value' => $vat_charges,
+                    'ledger_account' => $customer_ledger_account,
+                    'vat_account' => $vat_account,
                     'type' => 'serviceinvoice',
                     'date' => $date
                 );
 
                 $this->db->insert('sma_memo' ,$memoData);
                 $memo_id = $this->db->insert_id();
+                //$memo_id = 0;
+                $memoEntryData = [];
+                if (!empty($service_data)) {
+                    foreach ($service_data as $index => $service_data_row) {
 
-                $this->add_service_invoice($memo_id, $customer_id, $reference_no, $description, $payment_total, $date);
+                        $memoEntryData[] = [
+                            'memo_id' => $memo_id,
+                            'customer_id' => $customer_id,
+                            'reference_no' => $reference_no,
+                            'description' => 'Service Invoice - '.$service_data_row['service_type'],
+                            'payment_amount' => (float)($service_data_row['total'] ?? 0),
+                            'type' => 'serviceinvoice',
+                            'date' => $date,
+                            'from_val' => $service_data_row['from_city'] ? $service_data_row['from_city'] : $service_data_row['from_date'],
+                            'to_val' => $service_data_row['to_city'] ? $service_data_row['to_city'] : $service_data_row['to_date'],
+                            'quantity' => (float)($service_data_row['quantity'] ?? 0),
+                            'unit_value' => (float)($service_data_row['unit_price'] ?? 0),
+                            'vat' => (float)($service_data_row['vat'] ?? 0),
+                            'service_type' => $service_data_row['service_type'] ?? ''
+                        ];
+                    }
+                }
+
+                $this->add_service_invoice($memoEntryData);
             }
 
-            $this->convert_service_invoice($memo_id, $customer_id, $ledger_account, $vat_account, $payment_total, $vat_charges, $reference_no, 'serviceinvoice');
+            foreach ($memoEntryData as $entry => &$entryData) {
+                if ($entryData['service_type'] == 'transportation') {
+                    $entryData['opposite_ledger'] = 89; // Transportation Income Ledger
+                } else {
+                    $entryData['opposite_ledger'] = 88; // Rent Ledger
+                }
+            }
+            unset($entryData);
+
+            $this->convert_service_invoice($memo_id, $customer_id, $vat_account, $payment_total, $vat_charges, $reference_no, 'serviceinvoice', $memoEntryData);
             $this->session->set_flashdata('message', lang('Service Invoice added Successfully!'));
             admin_redirect('customers/list_service_invoice');
 

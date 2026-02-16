@@ -260,6 +260,27 @@
                 </li>
                 <?php } ?>
 
+                <?php if($Admin || $Owner || $this->GP['customer-payment-index']){ ?>
+                <!-- Service Invoice -->
+                <li class="newmenu-item has-sub">
+                    <a href="#" class="newmenu-link">
+                        <i class="fa fa-credit-card"></i>
+                        <span><?= lang('Service Invoice'); ?></span>
+                        <i class="fa fa-chevron-right newmenu-chevron"></i>
+                    </a>
+                    <ul class="newmenu-sub">
+                        
+                        <?php if($Admin || $Owner || $this->GP['customer-payment-add']){ ?>
+                        <li><a href="<?= admin_url('customers/service_invoice'); ?>" class="newmenu-link"><i class="fa fa-hand-o-up"></i> <?= lang('Add Service Invoice'); ?></a></li>
+                        <?php } ?>
+
+                        <?php if($Admin || $Owner || $this->GP['customer-payment-index']){ ?>
+                        <li><a href="<?= admin_url('customers/list_service_invoice'); ?>" class="newmenu-link"><i class="fa fa-hand-o-up"></i> <?= lang('List Service Invoices'); ?></a></li>
+                        <?php } ?>
+                    </ul>
+                </li>
+                <?php } ?>
+
                 <?php if($Admin || $Owner || $this->GP['returns-index']){ ?>
                 <!-- Returns -->
                 <li class="newmenu-item has-sub">
@@ -442,7 +463,7 @@
                 <?php } ?>
 
                 <?php if($Admin || $Owner || $this->GP['supplier-payment-index']){ ?>
-                <!-- Payments -->
+                <!-- Debit Memos -->
                 <li class="newmenu-item has-sub">
                     <a href="#" class="newmenu-link">
                         <i class="fa fa-credit-card"></i>
@@ -461,6 +482,28 @@
                     </ul>
                 </li>
                 <?php } ?>
+
+                <?php if($Admin || $Owner || $this->GP['supplier-payment-index']){ ?>
+                <!-- Service Invoice -->
+                <li class="newmenu-item has-sub">
+                    <a href="#" class="newmenu-link">
+                        <i class="fa fa-credit-card"></i>
+                        <span><?= lang('Service Invoice'); ?></span>
+                        <i class="fa fa-chevron-right newmenu-chevron"></i>
+                    </a>
+                    <ul class="newmenu-sub">
+                        
+                        <?php if($Admin || $Owner || $this->GP['supplier-payment-add']){ ?>
+                        <li><a href="<?= admin_url('suppliers/service_invoice'); ?>" class="newmenu-link"><i class="fa fa-hand-o-up"></i> <?= lang('Add Service Invoice'); ?></a></li>
+                        <?php } ?>
+
+                        <?php if($Admin || $Owner || $this->GP['supplier-payment-index']){ ?>
+                        <li><a href="<?= admin_url('suppliers/list_service_invoice'); ?>" class="newmenu-link"><i class="fa fa-hand-o-up"></i> <?= lang('List Service Invoices'); ?></a></li>
+                        <?php } ?>
+                    </ul>
+                </li>
+                <?php } ?>
+                
                
                 <!-- Reports -->
                 <li class="newmenu-item has-sub">

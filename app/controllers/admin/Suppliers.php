@@ -2358,7 +2358,7 @@ class Suppliers extends MY_Controller
             'memo_id' => $memo_id,
             'supplier_id' => $supplier_id,
             'reference_no' => $reference_no,
-            'description' => $description,
+            'description' => 'Service Invoice - '.$reference_no,
             'payment_amount' => $payment_amount,
             'type' => 'serviceinvoice',
             'date' => $date
