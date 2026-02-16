@@ -9,15 +9,16 @@
         XLSX.writeFile(wb, filename);
     }
     function generatePDF(){
-       $('.viewtype').val('pdf');  
+       // Use new mPDF method for better portrait control
+       $('.viewtype').val('pdf_new');
        document.getElementById("searchForm").submit();
-       $('.viewtype').val(''); 
+       $('.viewtype').val('');
     } 
     $(document).ready(function() {
 
     });
 </script>
-<?php if($viewtype=='pdf'){ ?>
+<?php if($viewtype=='pdf' || $viewtype=='pdf_new'){ ?>
 <link href="<?= $assets ?>styles/pdf/pdf.css" rel="stylesheet">
 
 <!-- PDF Header -->
@@ -25,7 +26,7 @@
 
     <!-- RIGHT: Logo -->
     <div style="position:absolute; top:0; right:0; text-align:right;">
-        <img src="<?= base_url('assets/uploads/logos/'.$biller->logo); ?>"
+        <img src="<?= base_url('assets/uploads/logos/' . $biller->logo); ?>"
              style="max-width:150px; max-height:60px;">
         <div style="font-size: 12px; font-weight: bold; margin-top: 5px; color: #333;">
             <?= $biller->name ?? ''; ?>
@@ -66,7 +67,7 @@
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-users"></i><?= lang('customer_statement'); ?></h2>
-        <?php  if($viewtype!='pdf'){?>
+        <?php  if($viewtype!='pdf' && $viewtype!='pdf_new'){?>
         <div class="box-icon">
             <ul class="btn-tasks">
                 <li class="dropdown">
@@ -82,7 +83,7 @@
         <div class="row"> 
             <div class="col-lg-12">
                 <?php
-                if($viewtype!='pdf')
+                if($viewtype!='pdf' && $viewtype!='pdf_new')
                 {
                     $attrib = ['data-toggle' => 'validator', 'role' => 'form','id' => 'searchForm'];
                     echo admin_form_open_multipart('reports/customer_statement', $attrib)
@@ -136,7 +137,7 @@
                                 class="table items table-striped table-bordered table-condensed table-hover sortable_table tbl_pdf">
                             <thead>
                             <tr>
-                                <?php if($viewtype!='pdf'){ ?>
+                                <?php if($viewtype!='pdf' && $viewtype!='pdf_new'){ ?>
                                 <th>#</th>
                                 <?php } ?>
                                 <th><?= lang('date'); ?></th>
@@ -210,7 +211,7 @@
 
                                         ?>
                                             <tr>
-                                                <?php if($viewtype!='pdf'){ ?>
+                                                <?php if($viewtype!='pdf' && $viewtype!='pdf_new'){ ?>
                                                 <td><?= $count; ?></td>
                                                 <?php } ?>
                                                 <td><?= $statement->date; ?></td>
@@ -251,7 +252,7 @@
                                     }
                                 ?>
                                 <tr>
-                                <?php if($viewtype!='pdf'){ ?>  
+                                <?php if($viewtype!='pdf' && $viewtype!='pdf_new'){ ?>  
                                 <th>&nbsp;</th>
                                 <?php } ?>
                                 <th>&nbsp;</th>
@@ -284,7 +285,7 @@
 
         </div>
 
-        <?php if($viewtype=='pdf' && !empty($aging_data)): ?>
+        <?php if(($viewtype=='pdf' || $viewtype=='pdf_new') && !empty($aging_data)): ?>
         <!-- PDF Footer - Customer Aging -->
         <div style="margin-top: 30px; border-top: 2px solid #000; padding-top: 10px;">
             <h3 style="margin-bottom: 15px; font-size: 16px; color: #333;">Customer Aging Summary</h3>
