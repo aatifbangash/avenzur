@@ -6676,15 +6676,16 @@ class Reports extends MY_Controller
         $supplier = $this->input->get('supplier') ? $this->input->get('supplier') : null;
         //$item_code = $this->input->get('item_code') ? $this->input->get('item_code') : null;
         $sgproduct = $this->input->get('sgproduct') ? $this->input->get('sgproduct') : null;
-
+        $pname = $this->input->get('product') ? $this->input->get('product') : null;
+        //echo "<pre>"; print_r($this->input->get());exit;
         //$product_details = $this->reports_model->getProductByName($sgproduct);
         if($sgproduct){
-            if (preg_match('/\(([^)]+)\)/', $sgproduct, $matches)) {
-                $item_code = $matches[1];
-                $product_details = $this->reports_model->getProductByCode($item_code);
-                $item_code = $product_details->id;
-                
-            }else{
+            $product_details = $this->reports_model->getProductById($pname);
+            if($product_details) {
+                $sgproduct = $product_details->name;
+                $item_code = $product_details->id; 
+            } else {
+                $sgproduct = null;
                 $item_code = null;
             }
         }else{
