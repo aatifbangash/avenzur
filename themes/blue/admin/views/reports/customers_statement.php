@@ -202,6 +202,11 @@
                                             $transaction_type = 'Memo';
                                             $transaction_id = $statement->memo_id;
                                             $note = strip_tags(html_entity_decode($statement->memo_note));
+                                        }else if($statement->transaction_type == 'serviceinvoice'){
+                                            $link = admin_url('customers/list_service_invoice');
+                                            $transaction_type = 'Service Invoice';
+                                            $transaction_id = $statement->memo_id;
+                                            $note = strip_tags(html_entity_decode($statement->memo_note));
                                         }else if($statement->transaction_type == 'returncustomerorder'){
                                             $link = admin_url('returns?rid=' . $statement->return_id);
                                             $transaction_type = 'Return';
