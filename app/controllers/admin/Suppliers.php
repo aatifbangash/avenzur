@@ -2288,7 +2288,7 @@ class Suppliers extends MY_Controller
     public function service_invoice(){
         //$this->sma->checkPermissions(false, true);
         $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
-        //$this->form_validation->set_rules('reference_no', $this->lang->line('reference_no'), 'required');
+        $this->form_validation->set_rules('reference_no', $this->lang->line('reference_no'), 'required');
         $this->form_validation->set_rules('date', $this->lang->line('date'), 'required');
         
 
@@ -2347,7 +2347,7 @@ class Suppliers extends MY_Controller
 
                 $supplier_details = $this->companies_model->getCompanyByID($supplier_id);
                 $supplier_ledger_account = $supplier_details->ledger_account; // Default to supplier ledger for service invoice
-                $vat_account = $this->Settings->vat_on_sale_ledger; // Default VAT account
+                $vat_account = $this->Settings->vat_on_expense_ledger; // Default VAT account
 
                 $memoData = array(
                     'supplier_id' => $supplier_id,
