@@ -209,6 +209,13 @@
             ?>
             <div class="col-lg-12">
 
+                <?php if ($error) { ?>
+                    <div class="alert alert-danger">
+                        <button data-dismiss="alert" class="close" type="button">×</button>
+                        <?= $error; ?>
+                    </div>
+                <?php } ?>
+
                 <!-- Simplified Header Form -->
                 <div class="row">
                     <div class="col-md-4">

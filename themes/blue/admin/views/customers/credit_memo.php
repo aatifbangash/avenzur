@@ -28,6 +28,13 @@
             echo admin_form_open_multipart('customers/credit_memo', $attrib)
             ?>
             <div class="col-lg-12">
+
+                <?php if (isset($error) && $error) { ?>
+                    <div class="alert alert-danger">
+                        <button data-dismiss="alert" class="close" type="button">×</button>
+                        <?= $error; ?>
+                    </div>
+                <?php } ?>
                 
                 <div class="row">
                     <div class="col-lg-12">
