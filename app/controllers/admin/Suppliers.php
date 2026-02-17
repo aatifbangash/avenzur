@@ -2362,7 +2362,7 @@ class Suppliers extends MY_Controller
                     'description' => $description,
                     'sequence_code' => $this->sequenceCode->generate('SSI', 5)
                 );
-
+                //echo '<pre>';print_r($memoData);exit;
                 $this->db->insert('sma_memo' ,$memoData);
                 $memo_id = $this->db->insert_id();
                 $memoEntryData = [];
