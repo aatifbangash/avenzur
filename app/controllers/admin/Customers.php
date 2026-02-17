@@ -2131,6 +2131,7 @@ class Customers extends MY_Controller
             $customer_id = $this->input->post('customer');
             $reference_no = $this->input->post('reference_no');
             $date_fmt = $this->input->post('date');
+            $description = $this->input->post('description');
 
             // Process service data arrays
             $service_types = $this->input->post('service_type[]');
@@ -2207,7 +2208,8 @@ class Customers extends MY_Controller
                     'ledger_account' => $customer_ledger_account,
                     'vat_account' => $vat_account,
                     'type' => 'serviceinvoice',
-                    'date' => $date
+                    'date' => $date,
+                    'description' => $description
                 );
 
                 $this->db->insert('sma_memo' ,$memoData);
@@ -2221,7 +2223,7 @@ class Customers extends MY_Controller
                             'memo_id' => $memo_id,
                             'customer_id' => $customer_id,
                             'reference_no' => $reference_no,
-                            'description' => 'Service Invoice - '.$service_data_row['service_type'],
+                            'description' => $description,
                             'payment_amount' => (float)($service_data_row['total'] ?? 0),
                             'type' => 'serviceinvoice',
                             'date' => $date,

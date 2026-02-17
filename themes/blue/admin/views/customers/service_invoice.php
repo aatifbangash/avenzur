@@ -238,6 +238,15 @@
                     </div>
                 </div>
 
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <?= lang('description', 'description'); ?>
+                            <?php echo form_textarea('description', ($memo_data->description ?? ''), 'class="form-control" id="description"'); ?>       
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Service Invoice Table -->
                 <div class="row">
                     <div class="col-lg-12">

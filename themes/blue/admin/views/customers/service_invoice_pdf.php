@@ -14,14 +14,14 @@
     </div>
 
     <!-- LEFT: Service Invoice details -->
-    <div style="width:70%;">
+    <div style="width:45%; float:left;">
 
         <div style="font-size:10px; color:#666; margin-bottom:6px;">
             Printed on: <?= date('d/m/Y H:i:s'); ?>
         </div>
 
         <div style="font-size:13px; line-height:2.4;">
-            <strong>Service Invoice No:</strong> <?= $service_invoice->reference_no; ?>
+            <strong>Service Invoice No:</strong> <?= $service_invoice->id; ?>
             <br>
             <strong>Date:</strong> <?= date('d/m/Y', strtotime($service_invoice->date)); ?>
             <br>
@@ -30,8 +30,39 @@
             <br>
             <strong>Customer ID:</strong> <?= $customer->sequence_code; ?>
             <?php endif; ?>
+            <?php if ($customer->vat_no): ?>
+            <br>
+            <strong>Customer VAT No:</strong> <?= $customer->vat_no; ?>
+            <?php endif; ?>
+            <?php if ($customer->cr): ?>
+            <br>
+            <strong>Customer CR No:</strong> <?= $customer->cr; ?>
+            <?php endif; ?>
+            <?php if ($customer->address): ?>
+            <br>
+            <strong>Customer Address:</strong> <?= $customer->address; ?>
+            <?php endif; ?>
         </div>
 
+    </div>
+
+    <!-- RIGHT: Company Information -->
+    <div style="width:45%; float:right; padding:10px; background-color:#f9f9f9; border:1px solid #ddd;">
+        <div style="font-size:12px; line-height:1.8;">
+            <strong>Company Information:</strong><br>
+            <?php if ($biller->name): ?>
+            <strong>Name:</strong> <?= $biller->name; ?><br>
+            <?php endif; ?>
+            <?php if ($biller->vat_no): ?>
+            <strong>VAT No:</strong> <?= $biller->vat_no; ?><br>
+            <?php endif; ?>
+            <?php if ($biller->cr): ?>
+            <strong>CR No:</strong> <?= $biller->cr; ?><br>
+            <?php endif; ?>
+            <?php if ($biller->address): ?>
+            <strong>Address:</strong> <?= $biller->address; ?>
+            <?php endif; ?>
+        </div>
     </div>
 
     <!-- CLEAR -->
@@ -41,7 +72,7 @@
 
 <!-- Service Invoice Title -->
 <div style="text-align:center; margin-bottom:20px;">
-    <h2 style="margin:0; color:#333;">SERVICE INVOICE</h2>
+    <h2 style="margin:0; color:#333;">VAT INVOICE</h2>
 </div>
 
 <!-- Service Details Table -->
@@ -107,10 +138,9 @@
 </table>
 
 <!-- Notes Section -->
-<?php if (!empty($service_invoice->note)): ?>
-<div style="margin-top:20px;">
-    <strong>Notes:</strong><br>
-    <?= nl2br($service_invoice->note); ?>
+<?php if (!empty($service_invoice->description) || !empty($service_invoice->note)): ?>
+<div style="margin-top:20px;font-size:12px; color:#333;">
+    <?= 'Description: '.nl2br(strip_tags($service_invoice->description)); ?>
 </div>
 <?php endif; ?>
 
