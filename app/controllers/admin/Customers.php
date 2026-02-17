@@ -1980,6 +1980,7 @@ class Customers extends MY_Controller
             $this->session->set_flashdata('message', lang('Credit Memo invoice added Successfully!'));
             admin_redirect('customers/list_credit_memo');
         } else {
+            $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
             $this->data['customers']  = $this->site->getAllCompanies('customer');
             $this->data['warehouses'] = $this->site->getAllWarehouses();
             $this->page_construct('customers/credit_memo', $meta, $this->data);
@@ -2080,6 +2081,26 @@ class Customers extends MY_Controller
         $this->data['service_invoice'] = $service_invoice_data;
         $this->data['service_invoice_entries'] = $service_invoice_entries_data;
 
+        // Generate QR code for service invoice (similar to sales)
+        if ($this->Settings->ksa_qrcode) {
+            $biller = $this->data['biller'];
+            $payload = [
+                'seller' => $biller->company && $biller->company != '-' ? $biller->company : $biller->name,
+                'vat_no' => $biller->vat_no ?: $biller->get_no,
+                'date' => $service_invoice_data->date,
+                'grand_total' => $service_invoice_data->payment_amount,
+                'total_tax_amount' => $service_invoice_data->vat_value,
+            ];
+
+            // Convert to JSON directly
+            $qrtext = json_encode($payload);
+            $qr_code = $this->sma->qrcodepng('text', $qrtext, 2, $level = 'H', $sq = null, $svg = false);
+            $this->data['qr_code_base64'] = base64_encode($qr_code);
+        } else {
+            $qr_code = $this->sma->qrcode('link', urlencode(site_url('view/service_invoice/' . $service_invoice_data->id)), 2);
+            $this->data['qr_code_base64'] = base64_encode($qr_code);
+        }
+
         // Generate PDF using mPDF (same as customer statement)
         $name = 'Service_Invoice_' . $service_invoice_data->reference_no . '.pdf';
         $html = $this->load->view($this->theme . 'customers/service_invoice_pdf', $this->data, true);
@@ -2119,7 +2140,7 @@ class Customers extends MY_Controller
     public function service_invoice(){
         //$this->sma->checkPermissions(false, true);
         $this->form_validation->set_rules('customer', $this->lang->line('customer'), 'required');
-        $this->form_validation->set_rules('reference_no', $this->lang->line('reference_no'), 'required');
+        //$this->form_validation->set_rules('reference_no', $this->lang->line('reference_no'), 'required');
         $this->form_validation->set_rules('date', $this->lang->line('date'), 'required');
         $this->form_validation->set_rules('service_type[]', $this->lang->line('service_type'), 'required');
 
@@ -2129,7 +2150,7 @@ class Customers extends MY_Controller
         if ($this->form_validation->run() == true) {
             $request_type = $this->input->post('request_type');
             $customer_id = $this->input->post('customer');
-            $reference_no = $this->input->post('reference_no');
+            $reference_no = $this->input->post('reference_no') ? $this->input->post('reference_no') : '0';
             $date_fmt = $this->input->post('date');
             $description = $this->input->post('description');
 
@@ -2254,6 +2275,7 @@ class Customers extends MY_Controller
             admin_redirect('customers/list_service_invoice');
 
         } else {
+            $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
             $this->data['customers']  = $this->site->getAllCompanies('customer');
             $this->data['warehouses'] = $this->site->getAllWarehouses();
             $this->page_construct('customers/service_invoice', $meta, $this->data);

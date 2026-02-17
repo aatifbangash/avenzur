@@ -47,22 +47,33 @@
     </div>
 
     <!-- RIGHT: Company Information -->
-    <div style="width:45%; float:right; padding:10px; background-color:#f9f9f9; border:1px solid #ddd;">
-        <div style="font-size:12px; line-height:1.8;">
-            <strong>Company Information:</strong><br>
-            <?php if ($biller->name): ?>
-            <strong>Name:</strong> <?= $biller->name; ?><br>
-            <?php endif; ?>
-            <?php if ($biller->vat_no): ?>
-            <strong>VAT No:</strong> <?= $biller->vat_no; ?><br>
-            <?php endif; ?>
-            <?php if ($biller->cr): ?>
-            <strong>CR No:</strong> <?= $biller->cr; ?><br>
-            <?php endif; ?>
-            <?php if ($biller->address): ?>
-            <strong>Address:</strong> <?= $biller->address; ?>
-            <?php endif; ?>
-        </div>
+    <div style="width:45%; float:right; padding:15px; background-color:#f9f9f9;">
+        <table style="width:100%; border:0;">
+            <tr>
+                <td style="vertical-align:top; padding:0 10px 0 0;">
+                    <div style="font-size:12px; line-height:2;">
+                        <strong>Company Information:</strong><br>
+                        <?php if ($biller->name): ?>
+                        <strong>Name:</strong> <?= $biller->name; ?><br>
+                        <?php endif; ?>
+                        <?php if ($biller->vat_no): ?>
+                        <strong>VAT No:</strong> <?= $biller->vat_no; ?><br>
+                        <?php endif; ?>
+                        <?php if ($biller->cr): ?>
+                        <strong>CR No:</strong> <?= $biller->cr; ?><br>
+                        <?php endif; ?>
+                        <?php if ($biller->address): ?>
+                        <strong>Address:</strong> <?= $biller->address; ?>
+                        <?php endif; ?>
+                    </div>
+                </td>
+                <?php if (isset($qr_code_base64)): ?>
+                <td style="vertical-align:top; text-align:right; padding:0; width:80px;">
+                    <img src="data:image/png;base64,<?= $qr_code_base64 ?>" width="70" height="70" />
+                </td>
+                <?php endif; ?>
+            </tr>
+        </table>
     </div>
 
     <!-- CLEAR -->
