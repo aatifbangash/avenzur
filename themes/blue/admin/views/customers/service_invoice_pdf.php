@@ -21,7 +21,7 @@
         </div>
 
         <div style="font-size:13px; line-height:2.4;">
-            <strong>Service Invoice No:</strong> <?= $service_invoice->id; ?>
+            <strong>Service Invoice No:</strong> <?= $service_invoice->sequence_code; ?>
             <br>
             <strong>Date:</strong> <?= date('d/m/Y', strtotime($service_invoice->date)); ?>
             <br>
