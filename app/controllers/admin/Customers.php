@@ -1959,7 +1959,8 @@ class Customers extends MY_Controller
                 'vat_account' => $vat_account,
                 'customer_entry_type' => $customer_entry_type,
                 'type' => $customer_entry_type == 'C' ? 'creditmemo' : 'debitmemo',
-                'date' => $date
+                'date' => $date,
+                'sequence_code' => $this->sequenceCode->generate('CSI', 5)
             );
 
             $this->db->insert('sma_memo', $memoData);

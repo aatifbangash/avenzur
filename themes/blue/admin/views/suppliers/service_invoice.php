@@ -82,7 +82,7 @@
             var ledgerOptions = '<option value="">Select Ledger Account</option>';
             for (var i = 0; i < ledgers.length; i++) {
                 var ledger = ledgers[i];
-                ledgerOptions += '<option value="' + ledger.id + '">' + ledger.name + '</option>';
+                ledgerOptions += '<option value="' + ledger.id + '">' + ledger.name +' - ' + ledger.code + '</option>';
             }
 
             var newRow = `
