@@ -2494,6 +2494,29 @@ class Suppliers extends MY_Controller
 
         $this->data['service_invoice_entries'] = $service_invoice_entries_data;
 
+        // Get the related ledger entry
+        $this->db->select('*');
+        $this->db->from('sma_accounts_entries');
+        $this->db->where('memo_id', $id);
+        $this->db->where('transaction_type', 'serviceinvoice');
+        $ledger_entry = $this->db->get()->row();
+
+        if ($ledger_entry) {
+            $this->db->select('*');
+            $this->db->from('sma_accounts_entryitems');
+            $this->db->where('entry_id', $ledger_entry->id);
+            $ledger_entryitems = $this->db->get()->result();
+
+            // Add ledger names to entryitems
+            foreach ($ledger_entryitems as $item) {
+                $ledger = $this->site->getLedgerByID($item->ledger_id);
+                $item->ledger_name = $ledger ? $ledger->name : 'Unknown Ledger';
+            }
+
+            $this->data['ledger_entry'] = $ledger_entry;
+            $this->data['ledger_entryitems'] = $ledger_entryitems;
+        }
+        
         // Generate QR code for service invoice (similar to sales)
         if ($this->Settings->ksa_qrcode) {
             $biller = $this->data['biller'];
@@ -2517,7 +2540,7 @@ class Suppliers extends MY_Controller
         // Generate PDF using mPDF (same as customer statement)
         $name = 'Supplier_Service_Invoice_' . $service_invoice_data->reference_no . '.pdf';
         $html = $this->load->view($this->theme . 'suppliers/service_invoice_pdf', $this->data, true);
-
+        //echo $html;exit;
         try {
             // Use mPDF directly like customer statement
             $mpdf = new Mpdf([
