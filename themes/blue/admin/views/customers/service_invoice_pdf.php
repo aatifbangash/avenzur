@@ -50,25 +50,25 @@
     <div style="width:45%; float:right; padding:15px; background-color:#f9f9f9;">
         <table style="width:100%; border:0;">
             <tr>
-                <td style="vertical-align:top; padding:0 10px 0 0;">
-                    <div style="font-size:12px; line-height:2;">
-                        <strong>Company Information:</strong><br>
+                <td style="vertical-align:top; padding:0 10px 0 0;border:none;">
+                    <div style="font-size:12px; line-height:3;">
+                        <strong>Company Information:</strong><br><br>
                         <?php if ($biller->name): ?>
-                        <strong>Name:</strong> <?= $biller->name; ?><br>
+                        <strong style="line-height:3;">Name:</strong> <?= $biller->name; ?><br><br>
                         <?php endif; ?>
                         <?php if ($biller->vat_no): ?>
-                        <strong>VAT No:</strong> <?= $biller->vat_no; ?><br>
+                        <strong style="line-height:3;">VAT No:</strong> <?= $biller->vat_no; ?><br><br>
                         <?php endif; ?>
                         <?php if ($biller->cr): ?>
-                        <strong>CR No:</strong> <?= $biller->cr; ?><br>
+                        <strong style="line-height:3;">CR No:</strong> <?= $biller->cr; ?><br><br>
                         <?php endif; ?>
                         <?php if ($biller->address): ?>
-                        <strong>Address:</strong> <?= $biller->address; ?>
+                        <strong style="line-height:3;">Address:</strong> <?= $biller->address; ?>
                         <?php endif; ?>
                     </div>
                 </td>
                 <?php if (isset($qr_code_base64)): ?>
-                <td style="vertical-align:top; text-align:right; padding:0; width:80px;">
+                <td style="vertical-align:top; text-align:right; padding:0; width:80px;border:none;">
                     <img src="data:image/png;base64,<?= $qr_code_base64 ?>" width="70" height="70" />
                 </td>
                 <?php endif; ?>
