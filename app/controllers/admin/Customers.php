@@ -1995,7 +1995,7 @@ class Customers extends MY_Controller
         }
     }
 
-    public function convert_service_invoice($memo_id, $customer_id, $vat_account, $payment_amount, $vat_charges, $reference_no, $type, $entry_data){
+    public function convert_service_invoice($memo_id, $customer_id, $vat_account, $payment_amount, $vat_charges, $reference_no, $type, $date, $entry_data){
         $this->load->admin_model('companies_model');
         $customer = $this->companies_model->getCompanyByID($customer_id);
 
@@ -2004,10 +2004,10 @@ class Customers extends MY_Controller
             'entrytype_id' => 4,
             'transaction_type' => $type,
             'number'       => 'SI-'.$reference_no,
-            'date'         => date('Y-m-d'),
+            'date'         => date('Y-m-d', strtotime($date)),
             'dr_total'     => $payment_amount,
             'cr_total'     => $payment_amount,
-            'notes'        => 'Service Invoice Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
+            'notes'        => 'Service Invoice Reference: '.$reference_no,
             'pid'          =>  '',
             'memo_id'      => $memo_id,
             'customer_id'  => $customer_id
@@ -2272,7 +2272,7 @@ class Customers extends MY_Controller
             }
             unset($entryData);
 
-            $this->convert_service_invoice($memo_id, $customer_id, $vat_account, $payment_total, $vat_charges, $reference_no, 'serviceinvoice', $memoEntryData);
+            $this->convert_service_invoice($memo_id, $customer_id, $vat_account, $payment_total, $vat_charges, $reference_no, 'serviceinvoice', $date, $memoEntryData);
             $this->session->set_flashdata('message', lang('Service Invoice added Successfully!'));
             admin_redirect('customers/list_service_invoice');
 
