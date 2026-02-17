@@ -2008,7 +2008,8 @@ class Customers extends MY_Controller
             'cr_total'     => $payment_amount,
             'notes'        => 'Service Invoice Reference: '.$reference_no.' Date: '.date('Y-m-d H:i:s'),
             'pid'          =>  '',
-            'memo_id'      => $memo_id
+            'memo_id'      => $memo_id,
+            'customer_id'  => $customer_id
             );
         $add  = $this->db->insert('sma_accounts_entries', $entry);
         $insert_id = $this->db->insert_id();
