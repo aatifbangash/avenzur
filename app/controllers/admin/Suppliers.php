@@ -2359,7 +2359,8 @@ class Suppliers extends MY_Controller
                     'vat_account' => $vat_account,
                     'type' => 'serviceinvoice',
                     'date' => $date,
-                    'description' => $description
+                    'description' => $description,
+                    'sequence_code' => $this->sequenceCode->generate('SSI', 5)
                 );
 
                 $this->db->insert('sma_memo' ,$memoData);
