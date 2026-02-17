@@ -1255,6 +1255,19 @@ public function logVisitor() {
         return $data_res;
     }
 
+    public function getLedgerByID($id)
+    {
+        $this->db
+            ->select('sma_accounts_ledgers.*')
+            ->from('sma_accounts_ledgers')
+            ->where('sma_accounts_ledgers.id', $id);
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
     public function getUser($id = null)
     {
         if (!$id) {
