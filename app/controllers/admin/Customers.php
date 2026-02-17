@@ -2104,7 +2104,7 @@ class Customers extends MY_Controller
         // Generate PDF using mPDF (same as customer statement)
         $name = 'Service_Invoice_' . $service_invoice_data->reference_no . '.pdf';
         $html = $this->load->view($this->theme . 'customers/service_invoice_pdf', $this->data, true);
-
+        //echo $html;exit;
         // Use mPDF directly like customer statement
         $mpdf = new Mpdf([
             'format' => 'A4',
