@@ -1080,6 +1080,23 @@ class Purchases_model extends CI_Model
         }
     }
 
+    public function getPettyCash($type)
+    {
+        $this->db->order_by('date', 'asc');
+        $this->db->select('sma_memo.*');
+        $this->db->from('memo');
+        $this->db->where(['type' => $type]);
+        $query = $this->db->get();
+
+        if ($query->num_rows() > 0) {
+            $data = $query->result();
+            return $data;
+        } else {
+            $data = array();
+            return $data;
+        }
+    }
+
     public function getDebitMemo($type)
     {
         $this->db->order_by('date', 'asc');

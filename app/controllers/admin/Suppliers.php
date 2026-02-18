@@ -2267,6 +2267,31 @@ class Suppliers extends MY_Controller
         $this->page_construct('suppliers/list_service_invoice', $meta, $this->data);
     }
 
+    public function list_petty_cash(){
+        $this->data['petty_cash_entries'] = $this->purchases_model->getPettyCash('pettycash');
+        $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Petty Cash List')]];
+        $meta = ['page_title' => lang('Petty Cash List'), 'bc' => $bc];
+        $this->page_construct('suppliers/list_petty_cash', $meta, $this->data);
+    }
+
+    public function edit_petty_cash($id = null){
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $petty_cash_data = $this->purchases_model->getDebitMemoData($id);
+        $petty_cash_entries_data = $this->purchases_model->getDebitMemoEntriesData($id);
+
+        $this->data['memo_data'] = $petty_cash_data;
+        $this->data['memo_entries_data'] = $petty_cash_entries_data;
+        $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+        $this->data['ledgers'] = $this->site->getCompanyLedgers();
+
+        $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('suppliers/list_petty_cash'), 'page' => lang('Petty Cash List')], ['link' => '#', 'page' => lang('Edit Petty Cash')]];
+        $meta = ['page_title' => lang('Edit Petty Cash'), 'bc' => $bc];
+        $this->page_construct('suppliers/petty_cash', $meta, $this->data);
+    }
+
     public function edit_service_invoice($id = null){
         //$this->sma->checkPermissions(false, true);
 
@@ -2283,6 +2308,139 @@ class Suppliers extends MY_Controller
         $this->data['memo_entries_data'] = $service_invoice_entries_data;
         $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
         $this->page_construct('suppliers/service_invoice', $meta, $this->data);
+    }
+
+    public function petty_cash(){
+        //$this->sma->checkPermissions(false, true);
+        $this->form_validation->set_rules('reference_no', $this->lang->line('reference_no'), 'required');
+        $this->form_validation->set_rules('date', $this->lang->line('date'), 'required');
+        
+
+        $data = [];
+        $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Petty Cash')]];
+        $meta = ['page_title' => lang('Petty Cash'), 'bc' => $bc];
+        if ($this->form_validation->run() == true) {
+            $request_type = $this->input->post('request_type');
+            $supplier_names = $this->input->post('supplier_name[]');
+            $main_supplier_id = $this->input->post('main_supplier_id');
+            $reference_no = $this->input->post('reference_no');
+            $description = $this->input->post('note');
+            $date_fmt = $this->input->post('date');
+            $amounts = $this->input->post('amount[]');
+            $vats = $this->input->post('vat[]');
+            $totals = $this->input->post('total[]');
+            $ledger_accounts = $this->input->post('ledger_account[]');
+            $vat_numbers = $this->input->post('vat_number[]');
+            $descriptions = $this->input->post('description[]');
+
+
+            $formattedDate = DateTime::createFromFormat('Y-m-d', $date_fmt);
+            $isDateValid = $formattedDate && $formattedDate->format('Y-m-d') === $date_fmt;
+
+            if($isDateValid){
+                $date = $date_fmt;
+            }else{
+                $formattedDate = DateTime::createFromFormat('d/m/Y', $date_fmt);
+                $date = $formattedDate->format('Y-m-d');
+            }
+
+            $payment_total = 0;
+            $vat_charges = 0;
+            $petty_cash_data = [];
+
+            if (!empty($totals)) {
+                foreach ($totals as $total) {
+                    $payment_total += (float)$total;
+                }
+            }
+
+            if (!empty($vats)) {
+                foreach ($vats as $vat) {
+                    $vat_charges += (float)$vat;
+                }
+            }
+
+            // Prepare service data for storage
+            if (!empty($ledger_accounts)) {
+                foreach ($ledger_accounts as $index => $ledger_account) {
+                    $petty_cash_data[] = [
+                        'supplier_name' => $supplier_names[$index] ?? '',
+                        'ledger_account' => $ledger_account,
+                        'amount' => (float)($amounts[$index] ?? 0),
+                        'vat' => (float)($vats[$index] ?? 0),
+                        'total' => (float)($totals[$index] ?? 0),
+                        'vat_number' => $vat_numbers[$index] ?? '',
+                        'description' => $descriptions[$index] ?? ''
+                    ];
+                }
+            }
+
+            if($payment_total > 0){
+
+                if($request_type == 'update'){
+                    $memo_id2 = $this->input->post('memo_id');
+                   
+                    // Delete older data
+                    $this->db->delete('sma_memo_entries', ['memo_id' => $memo_id2]);
+                    $this->db->delete('sma_memo', ['id' => $memo_id2]);
+                    $this->deleteFromAccounting($memo_id2);
+                }
+
+                // Use main supplier from form for memo
+                $main_supplier_id = $main_supplier_id ?: 0;
+                $supplier_details = $this->companies_model->getCompanyByID($main_supplier_id);
+                $supplier_ledger_account = $supplier_details ? $supplier_details->ledger_account : 0; // Default to supplier ledger for service invoice
+                $vat_account = $this->Settings->vat_on_expense_ledger; // Default VAT account
+
+                $memoData = array(
+                    'supplier_id' => $main_supplier_id,
+                    'customer_id' => 0,
+                    'reference_no' => $reference_no,
+                    'payment_amount' => $payment_total,
+                    'vat_value' => $vat_charges,
+                    'ledger_account' => $supplier_ledger_account,
+                    'vat_account' => $vat_account,
+                    'type' => 'pettycash',
+                    'date' => $date,
+                    'description' => $description,
+                    'sequence_code' => $this->sequenceCode->generate('PCI', 5)
+                );
+                //echo '<pre>';print_r($memoData);exit;
+                $this->db->insert('sma_memo' ,$memoData);
+                $memo_id = $this->db->insert_id();
+                //$memo_id = 0;
+                $memoEntryData = [];
+                if (!empty($petty_cash_data)) {
+                    foreach ($petty_cash_data as $index => $petty_cash_data_row) {
+
+                        $memoEntryData[] = [
+                            'memo_id' => $memo_id,
+                            'name' => $petty_cash_data_row['supplier_name'],
+                            'reference_no' => $reference_no,
+                            'description' => $petty_cash_data_row['description'] ?: $description,
+                            'payment_amount' => (float)($petty_cash_data_row['total'] ?? 0),
+                            'type' => 'pettycash',
+                            'date' => $date,
+                            'vat' => (float)($petty_cash_data_row['vat'] ?? 0),
+                            'ledger_account' => $petty_cash_data_row['ledger_account'] ?? '',
+                            'vat_number' => $petty_cash_data_row['vat_number'] ?? ''
+                        ];
+                    }
+                }
+                
+                $this->add_petty_cash($memoEntryData);
+            }
+
+            $this->convert_petty_cash($memo_id, $main_supplier_id, $vat_account, $payment_total, $vat_charges, $reference_no, 'pettycash', $date, $memoEntryData);
+            $this->session->set_flashdata('message', lang($request_type == 'update' ? 'Petty Cash updated Successfully!' : 'Petty Cash added Successfully!'));
+            admin_redirect('suppliers/list_petty_cash');
+
+        } else {
+            $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+            $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+            $this->data['ledgers'] = $this->site->getCompanyLedgers();
+            $this->page_construct('suppliers/petty_cash', $meta, $this->data);
+        }
     }
 
     public function service_invoice(){
@@ -2398,10 +2556,76 @@ class Suppliers extends MY_Controller
         }
     }
 
+    public function add_petty_cash($petty_cash_data = array()){
+        // Insert memo entries for each petty cash row
+        foreach ($petty_cash_data as $entry) {
+            $this->db->insert('sma_memo_entries' ,$entry);
+        }
+    }
+
     public function add_service_invoice($service_data = array()){
         // Insert memo entries for each service row
         foreach ($service_data as $entry) {
             $this->db->insert('sma_memo_entries' ,$entry);
+        }
+    }
+
+    public function convert_petty_cash($memo_id, $supplier_id, $vat_account, $payment_amount, $vat_charges, $reference_no, $type, $date, $entry_data){
+        $this->load->admin_model('companies_model');
+        $supplier = $this->companies_model->getCompanyByID($supplier_id);
+
+        /*Accounts Entries*/
+        $entry = array(
+            'entrytype_id' => 4,
+            'transaction_type' => $type,
+            'number'       => 'PCI-'.$reference_no,
+            'date'         => date('Y-m-d', strtotime($date)),
+            'dr_total'     => $payment_amount,
+            'cr_total'     => $payment_amount,
+            'notes'        => 'Petty Cash Reference: '.$reference_no,
+            'pid'          =>  '',
+            'memo_id'      => $memo_id,
+            'supplier_id'  => $supplier_id
+            );
+        $add  = $this->db->insert('sma_accounts_entries', $entry);
+        $insert_id = $this->db->insert_id();
+
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'C',
+                'ledger_id' => $supplier->ledger_account,
+                'amount' => $payment_amount,
+                'narration' => ''
+            )
+        );
+
+        //vat charges
+        $entryitemdata[] = array(
+            'Entryitem' => array(
+                'entry_id' => $insert_id,
+                'dc' => 'D',
+                'ledger_id' => $vat_account,
+                'amount' => $vat_charges,
+                'narration' => 'Vat Charges'
+            )
+        );
+
+        foreach ($entry_data as $entry) {
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $entry['ledger_account'],
+                    'amount' => $entry['payment_amount'] - $entry['vat'],
+                    'narration' => ''
+                )
+            );
+        }
+
+        foreach ($entryitemdata as $row => $itemdata)
+        {
+            $this->db->insert('sma_accounts_entryitems' ,$itemdata['Entryitem']);
         }
     }
 
@@ -2558,6 +2782,136 @@ class Suppliers extends MY_Controller
             // If PDF generation fails, show error
             echo "PDF Generation Error: " . $e->getMessage();
             exit;
+        }
+    }
+
+    public function petty_cash_pdf($id)
+    {
+        $petty_cash_data = $this->purchases_model->getDebitMemoData($id);
+        $petty_cash_entries_data = $this->purchases_model->getDebitMemoEntriesData($id);
+
+        if (!$petty_cash_data) {
+            $this->session->set_flashdata('error', 'Petty cash not found');
+            redirect($_SERVER['HTTP_REFERER']);
+        }
+
+        // Get supplier details
+        $supplier = $this->companies_model->getCompanyByID($petty_cash_data->supplier_id);
+        $this->data['supplier'] = $supplier;
+
+        // Get biller details for logo
+        $this->data['biller'] = $this->site->getDefaultBiller();
+
+        $this->data['petty_cash'] = $petty_cash_data;
+        $petty_cash_entries_data = $this->purchases_model->getDebitMemoEntriesData($id);
+
+        // Add ledger names and supplier names to entries
+        foreach ($petty_cash_entries_data as $entry) {
+            $ledger = $this->site->getLedgerByID($entry->ledger_account);
+            $entry->ledger_name = $ledger ? $ledger->name : 'Unknown Ledger';
+            
+            // Use supplier_name directly if available, otherwise try to get from supplier_id
+            if (!empty($entry->supplier_name)) {
+                // supplier_name is already set from the database
+            } else {
+                $supplier_entry = $this->companies_model->getCompanyByID($entry->supplier_id);
+                $entry->supplier_name = $supplier_entry ? $supplier_entry->name : 'Unknown Supplier';
+            }
+        }
+
+        $this->data['petty_cash_entries'] = $petty_cash_entries_data;
+
+        // Get the related ledger entry
+        $this->db->select('*');
+        $this->db->from('sma_accounts_entries');
+        $this->db->where('memo_id', $id);
+        $this->db->where('transaction_type', 'pettycash');
+        $ledger_entry = $this->db->get()->row();
+
+        if ($ledger_entry) {
+            $this->db->select('*');
+            $this->db->from('sma_accounts_entryitems');
+            $this->db->where('entry_id', $ledger_entry->id);
+            $ledger_entryitems = $this->db->get()->result();
+
+            // Add ledger names to entryitems
+            foreach ($ledger_entryitems as $item) {
+                $ledger = $this->site->getLedgerByID($item->ledger_id);
+                $item->ledger_name = $ledger ? $ledger->name : 'Unknown Ledger';
+            }
+
+            $this->data['ledger_entry'] = $ledger_entry;
+            $this->data['ledger_entryitems'] = $ledger_entryitems;
+        }
+
+        // Generate QR code for petty cash (similar to sales)
+        if ($this->Settings->ksa_qrcode) {
+            $biller = $this->data['biller'];
+            $payload = [
+                'seller' => $biller->company && $biller->company != '-' ? $biller->company : $biller->name,
+                'vat_no' => $biller->vat_no ?: $biller->get_no,
+                'date' => $petty_cash_data->date,
+                'grand_total' => $petty_cash_data->payment_amount,
+                'total_tax_amount' => $petty_cash_data->vat_value,
+            ];
+
+            // Convert to JSON directly
+            $qrtext = json_encode($payload);
+            $qr_code = $this->sma->qrcodepng('text', $qrtext, 2, $level = 'H', $sq = null, $svg = false);
+            $this->data['qr_code_base64'] = base64_encode($qr_code);
+        } else {
+            $qr_code = $this->sma->qrcode('link', urlencode(site_url('view/petty_cash/' . $petty_cash_data->id)), 2);
+            $this->data['qr_code_base64'] = base64_encode($qr_code);
+        }
+
+        // Generate PDF using mPDF (same as customer statement)
+        $name = 'Supplier_Petty_Cash_' . $petty_cash_data->reference_no . '.pdf';
+        $html = $this->load->view($this->theme . 'suppliers/petty_cash_pdf', $this->data, true);
+        //echo $html;exit;
+        try {
+            // Use mPDF directly like customer statement
+            $mpdf = new Mpdf([
+                'format' => 'A4',
+                'orientation' => 'P',       // Portrait
+                'margin_top' => 10,
+                'margin_bottom' => 10,
+                'margin_left' => 10,
+                'margin_right' => 10,
+            ]);
+
+            $mpdf->WriteHTML($html);
+            $mpdf->Output($name, "D"); // Force download
+        } catch (Exception $e) {
+            // If PDF generation fails, show error
+            echo "PDF Generation Error: " . $e->getMessage();
+            exit;
+        }
+    }
+
+    public function get_supplier_vat_number() {
+        $supplier_name = $this->input->post('supplier_name');
+
+        if (empty($supplier_name)) {
+            echo json_encode(['success' => false, 'message' => 'Supplier name is required']);
+            return;
+        }
+
+        // Query to get the most recent VAT number for this supplier name
+        $this->db->select('vat_number');
+        $this->db->from('sma_memo_entries');
+        $this->db->where('name', trim($supplier_name));
+        $this->db->where('vat_number IS NOT NULL');
+        $this->db->where('vat_number !=', '');
+        $this->db->order_by('id', 'DESC'); // Get the most recent entry
+        $this->db->limit(1);
+
+        $query = $this->db->get();
+        $result = $query->row();
+
+        if ($result && !empty($result->vat_number)) {
+            echo json_encode(['success' => true, 'vat_number' => $result->vat_number]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'No VAT number found for this supplier']);
         }
     }
 
