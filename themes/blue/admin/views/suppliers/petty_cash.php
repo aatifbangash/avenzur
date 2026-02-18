@@ -60,10 +60,18 @@
             return true;
         });
 
-        // Calculate VAT and totals
-        $(document).on('input', '.amount', function() {
+        // Calculate VAT and totals when amount changes
+        $(document).on('input', '#pettyCashTable .amount', function() {
             var row = $(this).closest('tr');
             calculateRowTotals(row);
+        });
+
+        // Calculate when VAT rate changes
+        $(document).on('change', '#pettyCashTable .vat-rate', function() {
+            console.log('VAT rate changed to:', $(this).val());
+            var row = $(this).closest('tr');
+            console.log('here...',row);
+            calculateRowTotals(row, $(this));
         });
 
         // Auto-populate VAT number when supplier name changes
@@ -96,7 +104,7 @@
 
         // Remove row
         $(document).on('click', '.remove-row', function() {
-            if ($('#serviceTable tbody tr').length > 1) {
+            if ($('#pettyCashTable tbody tr').length > 1) {
                 $(this).closest('tr').remove();
                 updateRowNumbers();
             } else {
@@ -120,6 +128,9 @@
                         <input type="text" class="form-control supplier-name" name="supplier_name[]" placeholder="Enter supplier name">
                     </td>
                     <td>
+                        <input type="text" class="form-control invoice-no" name="invoice_no[]" placeholder="Invoice No.">
+                    </td>
+                    <td>
                         <input type="text" class="form-control vat-number" name="vat_number[]" placeholder="VAT Number">
                     </td>
                     <td>
@@ -134,7 +145,15 @@
                         <input type="number" step="0.01" class="form-control amount" name="amount[]" placeholder="0.00" required>
                     </td>
                     <td>
-                        <input type="number" step="0.01" class="form-control vat" name="vat[]" placeholder="0.00" readonly>
+                        <div style="margin-bottom: 5px;">
+                            <select class="form-control vat-rate" name="vat_rate[]" style="margin-bottom: 3px;">
+                                <option value="0">0%</option>
+                                <option value="15" selected>15%</option>
+                            </select>
+                        </div>
+                        <div>
+                            <input type="number" step="0.01" class="form-control vat" name="vat[]" placeholder="0.00" readonly style="font-size: 12px; padding: 4px 8px;">
+                        </div>
                     </td>
                     <td>
                         <input type="number" step="0.01" class="form-control total" name="total[]" placeholder="0.00" readonly>
@@ -147,17 +166,43 @@
                 </tr>
             `;
             $('#pettyCashTable tbody').append(newRow);
+            // Calculate totals for the new row
+            calculateRowTotals($('#pettyCashTable tbody tr:last'));
+            // Ensure VAT rate is set to 15 for new rows
+            $('#pettyCashTable tbody tr:last .vat-rate').val(15);
         }
 
-        function calculateRowTotals(row) {
-            var amount = parseFloat(row.find('.amount').val()) || 0;
-            var vatRate = 0.15; // 15%
+        function calculateRowTotals(row, vatRateElement = null) {
+            var amountInput = row.find('.amount');
+            var vatRateSelect = vatRateElement || row.find('.vat-rate');
+            var vatInput = row.find('.vat');
+            var totalInput = row.find('.total');
 
-            var vatAmount = amount * vatRate;
+            console.log('calculateRowTotals called');
+            console.log('Amount input value:', amountInput.val());
+            console.log('VAT rate select value:', vatRateSelect.val());
+
+            var amount = parseFloat(amountInput.val()) || 0;
+            var vatRateValue = vatRateSelect.val();
+            var vatRate = (vatRateValue !== "" && vatRateValue !== null) ? parseFloat(vatRateValue) : 15;
+            var vatRatePercent = vatRate / 100;
+
+            console.log('Calculated vatRate:', vatRate);
+            console.log('Calculated vatRatePercent:', vatRatePercent);
+
+            var vatAmount = amount * vatRatePercent;
             var total = amount + vatAmount;
 
-            row.find('.vat').val(vatAmount.toFixed(2));
-            row.find('.total').val(total.toFixed(2));
+            console.log('Calculated vatAmount:', vatAmount);
+            console.log('Calculated total:', total);
+
+            vatInput.val(vatAmount.toFixed(2));
+            totalInput.val(total.toFixed(2));
+            
+            // Ensure VAT rate select has a valid value
+            if (vatRateSelect.val() === "" || vatRateSelect.val() === null) {
+                vatRateSelect.val(15);
+            }
         }
 
         function updateRowNumbers() {
@@ -182,11 +227,21 @@
                     ledgerOptions += '<option value="' + ledger.id + '" ' + selected + '>' + ledger.name +' - ' + ledger.code + '</option>';
                 }
 
+                // Calculate VAT rate from existing data
+                var amount = entry.payment_amount - entry.vat;
+                var vatRate = 0;
+                if (amount > 0) {
+                    vatRate = Math.round((entry.vat / amount) * 100);
+                }
+
                 var newRow = `
                     <tr>
                         <td class="text-center">${rowCount}</td>
                         <td>
                             <input type="text" class="form-control supplier-name" name="supplier_name[]" placeholder="Enter supplier name" value="${entry.supplier_name || ''}">
+                        </td>
+                        <td>
+                            <input type="text" class="form-control invoice-no" name="invoice_no[]" placeholder="Invoice No" value="${entry.invoice_no || ''}">
                         </td>
                         <td>
                             <input type="text" class="form-control vat-number" name="vat_number[]" placeholder="VAT Number" value="${entry.vat_number || ''}">
@@ -203,7 +258,15 @@
                             <input type="number" step="0.01" class="form-control amount" name="amount[]" placeholder="0.00" value="${(entry.payment_amount - entry.vat).toFixed(2)}" required>
                         </td>
                         <td>
-                            <input type="number" step="0.01" class="form-control vat" name="vat[]" placeholder="0.00" value="${entry.vat.toFixed(2)}" readonly>
+                            <div style="margin-bottom: 5px;">
+                                <select class="form-control vat-rate" name="vat_rate[]" required style="margin-bottom: 3px;">
+                                    <option value="0" ${vatRate === 0 ? 'selected' : ''}>0%</option>
+                                    <option value="15" ${vatRate !== 0 ? 'selected' : ''}>15%</option>
+                                </select>
+                            </div>
+                            <div>
+                                <input type="number" step="0.01" class="form-control vat" name="vat[]" placeholder="0.00" value="${entry.vat.toFixed(2)}" readonly style="font-size: 12px; padding: 4px 8px;">
+                            </div>
                         </td>
                         <td>
                             <input type="number" step="0.01" class="form-control total" name="total[]" placeholder="0.00" value="${entry.payment_amount.toFixed(2)}" readonly>
@@ -216,9 +279,25 @@
                     </tr>
                 `;
                 $('#pettyCashTable tbody').append(newRow);
+                
+                // Set the VAT rate select value explicitly
+                var lastRow = $('#pettyCashTable tbody tr:last');
+                lastRow.find('.vat-rate').val(vatRate);
+            });
+
+            // Calculate totals for all existing rows
+            $('#pettyCashTable tbody tr').each(function() {
+                calculateRowTotals($(this));
             });
         });
         <?php endif; ?>
+
+        // Calculate totals for initial row on page load
+        $(document).ready(function() {
+            $('#pettyCashTable tbody tr').each(function() {
+                calculateRowTotals($(this));
+            });
+        });
     });
 </script>
 
@@ -315,13 +394,14 @@
                                 <thead>
                                     <tr>
                                         <th class="text-center" style="width: 5%;">#</th>
-                                        <th style="width: 15%;">Supplier Name</th>
-                                        <th style="width: 12%;">VAT Number</th>
-                                        <th style="width: 15%;">Discretion</th>
-                                        <th style="width: 15%;">Ledger Account</th>
-                                        <th style="width: 10%;">Amount</th>
-                                        <th style="width: 10%;">VAT (15%)</th>
-                                        <th style="width: 10%;">Total</th>
+                                        <th style="width: 12%;">Supplier Name</th>
+                                        <th style="width: 10%;">Invoice No.</th>
+                                        <th style="width: 10%;">VAT Number</th>
+                                        <th style="width: 12%;">Discretion</th>
+                                        <th style="width: 12%;">Ledger Account</th>
+                                        <th style="width: 8%;">Amount</th>
+                                        <th style="width: 10%;">VAT Rate & Amount</th>
+                                        <th style="width: 8%;">Total</th>
                                         <th class="text-center" style="width: 5%;">Action</th>
                                     </tr>
                                 </thead>

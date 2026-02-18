@@ -2332,6 +2332,8 @@ class Suppliers extends MY_Controller
             $ledger_accounts = $this->input->post('ledger_account[]');
             $vat_numbers = $this->input->post('vat_number[]');
             $descriptions = $this->input->post('description[]');
+            $invoice_nos = $this->input->post('invoice_no[]');
+            $vat_rates = $this->input->post('vat_rate[]');
 
 
             $formattedDate = DateTime::createFromFormat('Y-m-d', $date_fmt);
@@ -2365,8 +2367,10 @@ class Suppliers extends MY_Controller
                 foreach ($ledger_accounts as $index => $ledger_account) {
                     $petty_cash_data[] = [
                         'supplier_name' => $supplier_names[$index] ?? '',
+                        'invoice_no' => $invoice_nos[$index] ?? '',
                         'ledger_account' => $ledger_account,
                         'amount' => (float)($amounts[$index] ?? 0),
+                        'vat_rate' => (float)($vat_rates[$index] ?? 15),
                         'vat' => (float)($vats[$index] ?? 0),
                         'total' => (float)($totals[$index] ?? 0),
                         'vat_number' => $vat_numbers[$index] ?? '',
@@ -2416,11 +2420,12 @@ class Suppliers extends MY_Controller
                         $memoEntryData[] = [
                             'memo_id' => $memo_id,
                             'name' => $petty_cash_data_row['supplier_name'],
-                            'reference_no' => $reference_no,
+                            'reference_no' => $petty_cash_data_row['invoice_no'],
                             'description' => $petty_cash_data_row['description'] ?: $description,
                             'payment_amount' => (float)($petty_cash_data_row['total'] ?? 0),
                             'type' => 'pettycash',
                             'date' => $date,
+                            //'vat_rate' => (float)($petty_cash_data_row['vat_rate'] ?? 15),
                             'vat' => (float)($petty_cash_data_row['vat'] ?? 0),
                             'ledger_account' => $petty_cash_data_row['ledger_account'] ?? '',
                             'vat_number' => $petty_cash_data_row['vat_number'] ?? ''
