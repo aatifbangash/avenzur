@@ -8,9 +8,9 @@ th { background-color: #f5f5f5; font-weight: bold; }
 .text-center { text-align: center; }
 .bg-light { background-color: #f9f9f9; }
 .font-weight-bold { font-weight: bold; }
-.ledger-account { width: 40%; }
+.ledger-account { width: 35%; }
 .amount-col { width: 20%; }
-.vat-col { width: 20%; }
+.vat-rate-col { width: 25%; }
 .total-col { width: 20%; }
 </style>
 
@@ -54,7 +54,7 @@ th { background-color: #f5f5f5; font-weight: bold; }
         <tr>
             <th class="ledger-account">Ledger Account</th>
             <th class="amount-col text-right">Amount</th>
-            <th class="vat-col text-right">VAT (15%)</th>
+            <th class="vat-rate-col text-center">VAT Rate & Amount</th>
             <th class="total-col text-right">Total</th>
         </tr>
     </thead>
@@ -64,7 +64,9 @@ th { background-color: #f5f5f5; font-weight: bold; }
         $total_vat = 0;
         $grand_total = 0;
         foreach ($service_invoice_entries as $entry):
-            $total_amount += $entry->amount;
+            $amount = $entry->payment_amount - $entry->vat;
+            $vat_rate = $amount > 0 ? round(($entry->vat / $amount) * 100, 2) : 0;
+            $total_amount += $amount;
             $total_vat += $entry->vat;
             $grand_total += $entry->payment_amount;
         ?>
@@ -72,8 +74,11 @@ th { background-color: #f5f5f5; font-weight: bold; }
             <td>
                 <?php echo $entry->ledger_name; ?>
             </td>
-            <td class="text-right"><?= number_format($entry->payment_amount - $entry->vat, 2); ?> SAR</td>
-            <td class="text-right"><?= number_format($entry->vat, 2); ?> SAR</td>
+            <td class="text-right"><?= number_format($amount, 2); ?> SAR</td>
+            <td class="text-center">
+                <?= number_format($vat_rate, 2); ?>%<br>
+                <small style="color:#666;"><?= number_format($entry->vat, 2); ?> SAR</small>
+            </td>
             <td class="text-right"><?= number_format($entry->payment_amount, 2); ?> SAR</td>
         </tr>
         <?php endforeach; ?>
@@ -81,8 +86,10 @@ th { background-color: #f5f5f5; font-weight: bold; }
     <tfoot>
         <tr class="bg-light font-weight-bold">
             <td class="text-right">Totals:</td>
-            <td class="text-right"><?= number_format($grand_total - $total_vat, 2); ?> SAR</td>
-            <td class="text-right"><?= number_format($total_vat, 2); ?> SAR</td>
+            <td class="text-right"><?= number_format($total_amount, 2); ?> SAR</td>
+            <td class="text-center">
+                <small style="color:#666;">VAT Amount: <?= number_format($total_vat, 2); ?> SAR</small>
+            </td>
             <td class="text-right"><?= number_format($grand_total, 2); ?> SAR</td>
         </tr>
     </tfoot>

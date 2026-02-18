@@ -2464,7 +2464,8 @@ class Suppliers extends MY_Controller
             $description = $this->input->post('description');
             $date_fmt = $this->input->post('date');
             $amounts = $this->input->post('amount[]');
-            $vats = $this->input->post('vat[]');
+            $vat_rates = $this->input->post('vat_rate[]');
+            $vat_amounts = $this->input->post('vat_amount[]');
             $totals = $this->input->post('total[]');
             $ledger_accounts = $this->input->post('ledger_account[]');
 
@@ -2488,9 +2489,9 @@ class Suppliers extends MY_Controller
                 }
             }
 
-            if (!empty($vats)) {
-                foreach ($vats as $vat) {
-                    $vat_charges += (float)$vat;
+            if (!empty($vat_amounts)) {
+                foreach ($vat_amounts as $vat_amount) {
+                    $vat_charges += (float)$vat_amount;
                 }
             }
 
@@ -2500,13 +2501,24 @@ class Suppliers extends MY_Controller
                     $service_data[] = [
                         'ledger_account' => $ledger_account,
                         'amount' => (float)($amounts[$index] ?? 0),
-                        'vat' => (float)($vats[$index] ?? 0),
+                        'vat_rate' => (float)($vat_rates[$index] ?? 15),
+                        'vat_amount' => (float)($vat_amounts[$index] ?? 0),
                         'total' => (float)($totals[$index] ?? 0)
                     ];
                 }
             }
 
             if($payment_total > 0){
+
+                $request_type = $this->input->post('request_type');
+                if($request_type == 'update'){
+                    $memo_id2 = $this->input->post('memo_id');
+                   
+                    // Delete older data
+                    $this->db->delete('sma_memo_entries', ['memo_id' => $memo_id2]);
+                    $this->db->delete('sma_memo', ['id' => $memo_id2]);
+                    $this->deleteFromAccounting($memo_id2);
+                }
 
                 $supplier_details = $this->companies_model->getCompanyByID($supplier_id);
                 $supplier_ledger_account = $supplier_details->ledger_account; // Default to supplier ledger for service invoice
@@ -2540,7 +2552,8 @@ class Suppliers extends MY_Controller
                             'payment_amount' => (float)($service_data_row['total'] ?? 0),
                             'type' => 'serviceinvoice',
                             'date' => $date,
-                            'vat' => (float)($service_data_row['vat'] ?? 0),
+                            //'vat_rate' => (float)($service_data_row['vat_rate'] ?? 15),
+                            'vat' => (float)($service_data_row['vat_amount'] ?? 0),
                             'ledger_account' => $service_data_row['ledger_account'] ?? ''
                         ];
                     }
@@ -2550,7 +2563,7 @@ class Suppliers extends MY_Controller
                 //$this->add_service_invoice($memo_id, $supplier_id, $reference_no, $description, $payment_total, $date);
             }
             $this->convert_service_invoice($memo_id, $supplier_id, $vat_account, $payment_total, $vat_charges, $reference_no, 'serviceinvoice', $date, $memoEntryData);
-            $this->session->set_flashdata('message', lang('Service Invoice added Successfully!'));
+            $this->session->set_flashdata('message', lang($request_type == 'update' ? 'Service Invoice updated Successfully!' : 'Service Invoice added Successfully!'));
             admin_redirect('suppliers/list_service_invoice');
 
         } else {
