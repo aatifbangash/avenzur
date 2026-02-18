@@ -503,6 +503,27 @@
                     </ul>
                 </li>
                 <?php } ?>
+
+                <?php if($Admin || $Owner || $this->GP['supplier-payment-index']){ ?>
+                <!-- Service Invoice -->
+                <li class="newmenu-item has-sub">
+                    <a href="#" class="newmenu-link">
+                        <i class="fa fa-credit-card"></i>
+                        <span><?= lang('Petty Cash'); ?></span>
+                        <i class="fa fa-chevron-right newmenu-chevron"></i>
+                    </a>
+                    <ul class="newmenu-sub">
+                        
+                        <?php if($Admin || $Owner || $this->GP['supplier-payment-add']){ ?>
+                        <li><a href="<?= admin_url('suppliers/petty_cash'); ?>" class="newmenu-link"><i class="fa fa-hand-o-up"></i> <?= lang('Add Petty Cash'); ?></a></li>
+                        <?php } ?>
+
+                        <?php if($Admin || $Owner || $this->GP['supplier-payment-index']){ ?>
+                        <li><a href="<?= admin_url('suppliers/list_petty_cash'); ?>" class="newmenu-link"><i class="fa fa-hand-o-up"></i> <?= lang('List Petty Cash'); ?></a></li>
+                        <?php } ?>
+                    </ul>
+                </li>
+                <?php } ?>
                 
                
                 <!-- Reports -->
