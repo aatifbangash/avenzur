@@ -290,7 +290,7 @@
 
         </div>
 
-        <?php if(($viewtype=='pdf' || $viewtype=='pdf_new') && !empty($aging_data)): ?>
+        <?php if(($viewtype=='pdf' || $viewtype=='pdf_new') && !empty($aging_data) && 1==0): ?>
         <!-- PDF Footer - Customer Aging -->
         <div style="margin-top: 30px; border-top: 2px solid #000; padding-top: 10px;">
             <h3 style="margin-bottom: 15px; font-size: 16px; color: #333;">Customer Aging Summary</h3>
