@@ -206,7 +206,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                                                 <?php
                                                 $wh[''] = '';
                     foreach ($warehouses as $warehouse) {
-                        $wh[$warehouse->id] = $warehouse->name;
+                        $wh[$warehouse->id] = $warehouse->name.' ('.$warehouse->code.')';
                     }
                     echo form_dropdown('warehouse', $wh, ($_POST['warehouse'] ?? $inv->warehouse_id), 'id="slwarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" required="required" style="width:100%;" '); ?>
                                             </div>

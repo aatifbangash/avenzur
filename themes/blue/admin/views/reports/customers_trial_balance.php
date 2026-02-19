@@ -1,30 +1,51 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
 <script>
-    $(document).ready(function () {
-        
+    function exportTableToExcel(tableId, filename = 'table.xlsx') {
+        const table = document.getElementById(tableId);
+        const wb = XLSX.utils.table_to_book(table, {
+            sheet: 'Sheet 1'
+        });
+        XLSX.writeFile(wb, filename);
+    }
+
+    function generatePDF(){
+       $('.viewtype').val('pdf');  
+       document.getElementById("searchForm").submit();
+       $('.viewtype').val(''); 
+    } 
+    $(document).ready(function() {
+
     });
 </script>
+<?php if($viewtype=='pdf'){ ?>
+    <link href="<?= $assets ?>styles/pdf/pdf.css" rel="stylesheet"> 
+  <?php  } ?>
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-users"></i><?= lang('customers_trial_balance'); ?></h2>
-
+        <?php  if($viewtype!='pdf'){?>
         <div class="box-icon">
             <ul class="btn-tasks">
-                <li class="dropdown"><a href="#" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a></li>
-                <li class="dropdown"><a href="#" id="image" class="tip" title="<?= lang('save_image') ?>"><i class="icon fa fa-file-picture-o"></i></a></li>
+                <li class="dropdown"><a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'Customer_Trial_Balance_Report.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a></li>
+                <li class="dropdown"> <a href="javascript:void(0);" onclick="generatePDF()" id="pdf" class="tip" title="<?= lang('download_PDF') ?>"><i
+                class="icon fa fa-file-pdf-o"></i></a></li>
             </ul>
         </div>
+        <?php } ?>
     </div>
     <div class="box-content">
         <div class="row">
+            <div class="col-lg-12">
         <?php
-            $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
-            echo admin_form_open_multipart('reports/customers_trial_balance', $attrib)
-        ?>
-        <div class="col-lg-12">
+          if($viewtype!='pdf')
+          { 
+                $attrib = ['data-toggle' => 'validator', 'role' => 'form', 'id' => 'searchForm'];
+                echo admin_form_open_multipart('reports/customers_trial_balance', $attrib)
+                ?>
+                <input type="hidden" name="viewtype" id="viewtype" class="viewtype" value="" > 
                 <div class="row">
-                    <div class="col-lg-12">
-                       
+                    <div class="col-lg-12"> 
                         <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('From Date', 'podate'); ?>
@@ -47,11 +68,13 @@
                             
                     </div>
                 </div>
+              <?php echo form_close(); 
+              } ?>
                 <hr />
                 <div class="row">
                     <div class="controls table-controls" style="font-size: 12px !important;">
                         <table id="poTable"
-                                class="table items table-striped table-bordered table-condensed table-hover sortable_table">
+                                class="table items table-striped table-bordered table-condensed table-hover sortable_table tbl_pdf">
                             <thead>
                             <tr>
                                 <th>#</th>
@@ -89,8 +112,8 @@
                                          $eb_credit = $data['obCredit'] + $data['trsCredit'];
                                          $eb_debit = $data['obDebit'] + $data['trsDebit'];
 
-                                         $finalEndDebit = "-";
-                                         $finalEndCredit = "-";
+                                         $finalEndDebit = "0.00";
+                                         $finalEndCredit = "0.00";
                                          if( $eb_credit >= $eb_debit){
                                             $finalEndCredit = $eb_credit - $eb_debit;
                                          }else{
@@ -117,12 +140,12 @@
                                                 <td><?= $data['sequence_code']; ?></td>
                                                 <td><?= $data['name']; ?></td>
                                                 <td><?= $data['company']; ?></td>
-                                                <td><?= $data['obDebit'] > 0 ? number_format($data['obDebit'], 2, '.', ',') : '-'; ?></td>
-                                                <td><?= $data['obCredit'] > 0 ? number_format($data['obCredit'], 2, '.', ',') : '-'; ?></td>
-                                                <td><?= $data['trsDebit'] > 0 ? number_format($data['trsDebit'], 2, '.', ',') : '-'; ?></td>
-                                                <td><?= $data['trsCredit'] >0 ? number_format($data['trsCredit'], 2, '.', ',') : '-'; ?></td>
-                                                <td><?= $finalEndDebit > 0 ? number_format($finalEndDebit, 2, '.', ',') : '-'; ?></td>
-                                                <td><?= $finalEndCredit > 0 ? number_format($finalEndCredit, 2, '.', ',') : '-'; ?></td>
+                                                <td><?= $data['obDebit'] > 0 ? number_format($data['obDebit'], 2, '.', ',') : '0.00'; ?></td>
+                                                <td><?= $data['obCredit'] > 0 ? number_format($data['obCredit'], 2, '.', ',') : '0.00'; ?></td>
+                                                <td><?= $data['trsDebit'] > 0 ? number_format($data['trsDebit'], 2, '.', ',') : '0.00'; ?></td>
+                                                <td><?= $data['trsCredit'] >0 ? number_format($data['trsCredit'], 2, '.', ',') : '0.00'; ?></td>
+                                                <td><?= $finalEndDebit > 0 ? number_format($finalEndDebit, 2, '.', ',') : '0.00'; ?></td>
+                                                <td><?= $finalEndCredit > 0 ? number_format($finalEndCredit, 2, '.', ',') : '0.00'; ?></td>
                                             </tr>
                                         <?php
                                     }
@@ -155,5 +178,5 @@
 
         </div>
     </div>
-    <?php echo form_close(); ?>
+
 </div>

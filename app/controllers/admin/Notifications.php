@@ -6,22 +6,28 @@ class Notifications extends MY_Controller
 {
     public function __construct()
     {
+
         parent::__construct();
 
         if (!$this->loggedIn) {
             $this->session->set_userdata('requested_page', $this->uri->uri_string());
             $this->sma->md('login');
         }
-        if (!$this->Owner && !$this->Admin) {
+        /*if (!$this->Owner && !$this->Admin) {
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect($_SERVER['HTTP_REFERER']);
-        }
+        }*/
+        $this->load->library('RASDCore',$params=null, 'rasd');
+
         $this->lang->admin_load('notifications', $this->Settings->user_language);
         $this->load->library('form_validation');
         $this->load->admin_model('cmt_model');
+        $this->upload_path = 'assets/uploads/';
+         
     }
 
     public function addRasdNotification(){
+
         $this->form_validation->set_rules('dispatch_id', lang('Dispatch Id'), 'required|min_length[3]');
 
         if ($this->form_validation->run() == true) {
@@ -31,19 +37,151 @@ class Notifications extends MY_Controller
                 'status' => 'pending',
                 'date' => date('Y-m-d')
             ];
+
+            $batch_data = [];
+            if ($_FILES && $_FILES['csv_file_upload']['name']) {
+
+                $config['upload_path'] = $this->upload_path.'temp/';
+                $config['allowed_types'] = 'csv';
+                $config['max_size'] = 10240;
+
+                $this->load->library('upload', $config);
+
+                if ($this->upload->do_upload('csv_file_upload')) {
+                    $upload_data = $this->upload->data();
+                    $file_path = $config['upload_path'] . $upload_data['file_name'];
+
+                    $csv_data = array_map('str_getcsv', file($file_path));
+
+                    $i = 0;
+                    
+                    foreach ($csv_data as $row) {
+                        if($i > 0){
+                            $timestamp = strtotime($row[3]);
+                            $expiry_date = date('Y-m-d', $timestamp);
+                            $batch_data[] = array(
+                                'notification_id' => $this->input->post('dispatch_id'),
+                                'dispatch_id' => $this->input->post('dispatch_id'),
+                                'gtin' => $row[0],
+                                'serial_no' => $row[1],
+                                'batch_no' => $row[2],
+                                'expiry' => $expiry_date,
+                                'used' => 0
+                            );
+                        }
+
+                        $i++;
+                    }
+                }else{
+                    $upload_error = $this->upload->display_errors();
+                    echo $upload_error;
+                }
+
+                
+            }
         } elseif ($this->input->post('submit')) {
             $this->session->set_flashdata('error', validation_errors());
             admin_redirect('notifications/rasd');
         }
 
-        if ($this->form_validation->run() == true && $this->cmt_model->addRasdNotification($data)) {
+        if ($this->form_validation->run() == true && $this->cmt_model->addRasdNotification($data, $batch_data)) {
             $this->session->set_flashdata('message', lang('notification_added'));
             admin_redirect('notifications/rasd');
         } else {
-            
+            $warehouses = $this->site->getAllWarehouses();
+            $this->data['warehouses'] = $warehouses;
             $this->data['error']    = validation_errors();
             $this->data['modal_js'] = $this->site->modal_js();
             $this->load->view($this->theme . 'notifications/addRasdNotification', $this->data);
+        }
+    }
+
+    public function showUploadNotification(){
+ 
+            $this->data['modal_js'] = $this->site->modal_js();
+            $this->load->view($this->theme . 'notifications/uploadRasdNotificationMap', $this->data);
+        
+    }
+    public function mapNotifications()
+    {
+        log_message("info", "REached MapNotification");
+        $this->load->library('form_validation');
+    $this->form_validation->set_rules('notification_id', 'Notification ID', 'required');
+
+    if ($this->form_validation->run() == false) {
+        echo json_encode(['status' => 'error', 'message' => validation_errors()]);
+        return;
+    }
+
+    $notificationId = $this->input->post('notification_id');
+
+    // File upload configuration
+    $config['upload_path'] = './files/';
+    $config['allowed_types'] = 'csv';
+    $config['max_size'] = 4098; // 2MB
+    $this->load->library('upload', $config);
+
+    if (!$this->upload->do_upload('attachment')) {
+        $error = $this->upload->display_errors();
+        echo json_encode(['status' => 'error', 'message' => $error]);
+        return;
+    }
+
+    $fileData = $this->upload->data();
+    $filePath = $fileData['full_path'];
+
+    // Load the Excel file
+    try {
+        if (($handle = fopen($filePath, 'r')) !== false) {
+             $delimeter = ';';
+             //$header = fgetcsv($handle);
+             $header = fgetcsv($handle, 1000, $delimeter);
+             if (!$header || count($header) < 2) {
+                $delimeter = ',';
+                $header = fgetcsv($handle, 1000, $delimeter);
+
+                if (!$header || count($header) < 2) {
+                    echo json_encode(['status' => 'error', 'message' => 'Invalid CSV format.']);
+                    return;
+                }
+            }
+            
+
+            // Assuming the first row contains headers, start from the second row
+             while (($row = fgetcsv($handle, 1000, $delimeter)) !== false) {
+                
+                // Map fields to variables (modify as per your file structure)
+                $field1 = $row[0] ?? null; // First column
+                $field2 = $row[1] ?? null; // Second column
+                $field3 = $row[2] ?? null; // Third column
+                $field4 = $row[3] ?? null; // Third column
+                // Add more fields as necessary
+
+                // Convert date format from DD-MM-YYYY to YYYY-MM-DD
+                if (!empty($field4)) {
+                    $date = DateTime::createFromFormat('d-m-Y', $field4);
+                    $field4 = $date ? $date->format('Y-m-d') : null;
+                }
+               
+                // Process each row (e.g., save to the database)
+                $data = [
+                    'notification_id' => $notificationId,
+                    'gtin' => $field1,
+                    'qty_remaining' => $field2,
+                    'batch' => $field3,
+                    'expiry_date' => $field4
+                ];
+                 log_message("info", json_encode($data));
+                $this->db->insert('sma_rasd_notifcations_map', $data);
+            }
+            $this->session->set_flashdata('message', lang('notification_added'));
+                admin_redirect('notifications/rasd');
+            }
+          
+      
+        // echo json_encode(['status' => 'success', 'message' => 'File processed successfully.']);
+        } catch (Exception $e) {
+            echo json_encode(['status' => 'error', 'message' => 'Error parsing file: ' . $e->getMessage()]);
         }
     }
 
@@ -197,16 +335,109 @@ class Notifications extends MY_Controller
     }
 
     public function rasd(){
-        if (!$this->Owner && !$this->Admin) {
+        /*if (!$this->Owner && !$this->Admin) {
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect($_SERVER['HTTP_REFERER']);
-        }
-
+        }*/
+      
         $this->data['error'] = validation_errors() ? validation_errors() : $this->session->flashdata('error');
         $bc                  = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Rasd Notifications')]];
         $meta                = ['page_title' => lang('Rasd Notifications'), 'bc' => $bc];
         $this->page_construct('notifications/rasd', $meta, $this->data);
     }
+
+
+    public function acceptDispatch(){
+        if (!$this->input->is_ajax_request()) {
+            show_404();
+        }
+        
+        // Get the parameters from the POST data
+        $dispatchId = $this->input->post('notificationId');
+        //$dispatch_id = '1741942297';
+        $supplierId = $this->input->post('supplierId');
+        //$supplierId = 69;
+        $warehouseId = $this->input->post('warehouseId');
+        //$warehouseId = 32;
+        $child_id = $this->input->post("childSupplierId");
+        //$child_id = 73;
+        if($child_id){
+            $supplierId = $child_id;
+        }
+        $this->load->database();
+        $this->db->select('gln');
+        $this->db->from('sma_companies');
+        $this->db->where('id', $supplierId);
+        $query = $this->db->get();
+
+        $gln = "";
+        if ($query->num_rows() > 0) {
+            $gln = $query->row()->gln; // Return the GLN field value
+        }
+        $this->db->select('gln, rasd_user,rasd_pass',false);
+        $this->db->from('sma_warehouses');
+        $this->db->where('id', $warehouseId);
+        $query = $this->db->get();
+        $warehouse_gln = "";
+        $user = "";
+        $password = "";
+        if ($query->num_rows() > 0) {
+            $warehouse_gln = $query->row()->gln; // Return the GLN field value
+            $user = $query->row()->rasd_user;
+            $password = $query->row()->rasd_pass;
+        }
+        
+        $result = false;
+        $params = [
+            "supplier_gln" => $gln,
+            "notification_id" => $dispatchId,
+            "warehouse_gln" => $warehouse_gln
+        ];
+ 
+        
+         
+        /**
+         * Authenticate with RASD
+         */
+
+        
+            $this->rasd->set_base_url("https://qdttsbe.qtzit.com:10101/api/web");
+            $response = $this->rasd->authenticate($user, $password);
+            if($response['token']){
+                $token = $response['token'];
+                log_message("info", "Authentication successful");
+                /**
+                 * Call the RASD function to Accept Dispatch.
+                 */
+                $payload_used = [
+                    'supplier_gln' => $params['supplier_gln'],
+                    'warehouse_gln' => $params['warehouse_gln'],
+                    'warehouse_id' => $warehouseId
+                ];
+                $zadca_dispatch_response = $this->rasd->accept_dispatch_125($params,$token);
+                if(isset($zadca_dispatch_response['DicOfDic']['MR']['TRID']) && $zadca_dispatch_response['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){                
+                    log_message("info", "Regiter Dispatch successful");
+                    $result = true;
+                    
+                }else{
+                    $result = false;
+                    log_message("error", "Regiter Dispatch Failed");
+                    log_message("error", json_encode($zadca_dispatch_response,true));
+                }
+                $this->cmt_model->add_rasd_transactions($payload_used,'accept_dispatch',$result, $zadca_dispatch_response, $params);
+       
+            }else{
+                $result = false;
+                    log_message("error", "auth Failed");
+
+                  $this->session->set_flashdata('error', 'Failed to Authenticate with RASD with ' . $user . ' '. $password);
+                    admin_redirect('notifications/rasd');
+            }
+
+
+ 
+    }
+     
 
     public function add_rasd_serials_from_csv(){
         

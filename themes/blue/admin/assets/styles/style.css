@@ -2658,4 +2658,9 @@ img.calculator-trigger {
 .tr-group {
     font-weight: bold;
 }
-
+thead th {
+    position: sticky;
+    top: 0;
+    background-color: #f9f9f9; 
+    z-index: 10; 
+}
