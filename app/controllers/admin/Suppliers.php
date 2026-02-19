@@ -1022,7 +1022,7 @@ class Suppliers extends MY_Controller
         //$this->sma->checkPermissions(false, true);
         $this->form_validation->set_rules('supplier', $this->lang->line('supplier'), 'required');
         $this->form_validation->set_rules('ledger_account', $this->lang->line('ledger_account'), 'required');
-        $this->form_validation->set_rules('bank_charges_account', $this->lang->line('bank_charges_account'), 'required');
+        //$this->form_validation->set_rules('bank_charges_account', $this->lang->line('bank_charges_account'), 'required');
 
         $data = [];
         $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('add payment')]];
@@ -1035,7 +1035,15 @@ class Suppliers extends MY_Controller
             $reference_no = $this->input->post('reference_no');
             $payment_total = $this->input->post('payment_total');
             $ledger_account = $this->input->post('ledger_account');
-            $bank_charges_account = $this->input->post('bank_charges_account');
+            //$bank_charges_account = $this->input->post('bank_charges_account');
+
+            $bank_charges_account = $this->Settings->bank_fees_ledger ?? null; // Fallback to null if not set
+            
+            if($bank_charges_account == null || $bank_charges_account == '' || $bank_charges_account == 0){
+                $this->session->set_flashdata('error', 'Bank Charges Ledger is not configured in system settings. Please set it up before adding payments with bank charges.');
+                redirect($_SERVER['HTTP_REFERER']);
+            }
+
             $bank_charges = $this->input->post('bank_charges');
             $note = $this->input->post('note');
             $vat = $this->input->post('vat');
