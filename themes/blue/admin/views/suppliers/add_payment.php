@@ -877,17 +877,6 @@
 
                         <div class="col-md-4">
                             <div class="form-group">
-                            <label id="bank-charges-label"><?= lang('Bank Charges', 'psbankcharges'); ?></label>
-                            <?php 
-
-                                echo form_dropdown('bank_charges_account', $LO, ($_POST['bank_charges_account'] ?? $purchase->bank_charges_account), 'id="psbankcharges" class="ledger-dropdown form-control" required="required"',$DIS);  
-
-                            ?>
-                            </div>
-                        </div>
-
-                        <div class="col-md-4">
-                            <div class="form-group">
                                 <?= lang('Bank Charges Amount', 'psbankchargesamt'); ?>
                                 <?php echo form_input('bank_charges', ($_POST['bank_charges'] ?? $_POST['bank_charges']), 'class="form-control input-tip" id="psbankchargesamt"'); ?>
                             </div>
