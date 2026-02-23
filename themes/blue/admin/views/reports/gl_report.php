@@ -89,7 +89,7 @@
                                 <th><?= lang('description'); ?></th>
                                 <th><?= lang('debit'); ?></th>
                                 <th><?= lang('credit'); ?></th>
-                                
+                                <th><?= lang('userid'); ?></th>
                             </tr>
                             </thead>
                             <tbody style="text-align:center;">
@@ -140,14 +140,14 @@
                                         <td><?= $row->description; ?></td>
                                         <td class="text-right"><?= $row->debit > 0 ? $this->sma->formatNumber($row->debit) : '0'; ?></td>
                                         <td class="text-right"><?= $row->credit > 0 ? $this->sma->formatNumber($row->credit) : '0'; ?></td>
-                                        
+                                        <td><?= $row->user_id; ?></td>
                                     </tr>
                                     <?php
                                 }
                             } else {
                                 ?>
                                 <tr>
-                                    <td colspan="11" class="text-center">No data found for the selected date range.</td>
+                                    <td colspan="12" class="text-center">No data found for the selected date range.</td>
                                 </tr>
                                 <?php
                             }
