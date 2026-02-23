@@ -5398,6 +5398,14 @@ class Reports_model extends CI_Model
                         WHEN pr.id IS NOT NULL THEN pr.id
                         ELSE ae.number
                     END as voucher_id,
+                    CASE
+                        WHEN ae.pid IS NOT NULL AND ae.pid != '' THEN p.created_by
+                        WHEN ae.sid IS NOT NULL AND ae.sid != '' THEN s.created_by
+                        WHEN ae.rid IS NOT NULL AND ae.rid != '' THEN r.created_by
+                        WHEN ae.rsid IS NOT NULL AND ae.rsid != '' THEN rs.created_by
+                        WHEN pr.id IS NOT NULL THEN pr.created_by
+                        ELSE 0
+                    END as user_id,
                     DATE_FORMAT(ae.date, '%d-%b-%y') as date,
                     aei.id as reference,
                     ae.id as trx_id,
@@ -5411,6 +5419,10 @@ class Reports_model extends CI_Model
                 LEFT JOIN sma_accounts_entryitems aei ON ae.id = aei.entry_id
                 LEFT JOIN sma_accounts_ledgers l ON aei.ledger_id = l.id
                 LEFT JOIN sma_payment_reference pr ON pr.journal_id = ae.id
+                LEFT JOIN sma_purchases p ON p.id = ae.pid
+                LEFT JOIN sma_sales s ON s.id = ae.sid
+                LEFT JOIN sma_returns r ON r.id = ae.rid
+                LEFT JOIN sma_returns_supplier rs ON rs.id = ae.rsid
                 $where
                 ORDER BY ae.date ASC, ae.id ASC, aei.id ASC";
 
