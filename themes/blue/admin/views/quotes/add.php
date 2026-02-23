@@ -311,6 +311,7 @@ table#slTable td input.form-control {
                                     <th>Quantity</th>
                                     <th>Max.Bonus</th>
                                     <th>Unit Cost</th>
+                                    <th>Discount %</th>
                                     <th>Locked</th>
                                 </tr>
                             </thead>
@@ -337,6 +338,10 @@ table#slTable td input.form-control {
                         });
 
                         var tickOrCross = found ? '✔' : '✖';
+                        //console.log(item.row);
+                        var total_discount = (item.row.net_unit_cost / item.row.real_unit_cost) * 100;
+                        total_discount = 100 - total_discount;
+                        total_discount = total_discount > 0 ? total_discount.toFixed(2) + '%' : '0.00%';
 
                         var row = `
                             <tr style="cursor:pointer;" class="modal-item" tabindex="0" data-item-id="${item.row.avz_item_code}">
@@ -349,6 +354,7 @@ table#slTable td input.form-control {
                                 <td data-quantity="${item.total_quantity}">${item.total_quantity}</td>
                                 <td data-maxbonus="${item.row.max_bonus}">${item.row.max_bonus}</td>
                                 <td data-netcost="${item.net_unit_cost}">${item.row.net_unit_cost}</td>
+                                <td data-discount="${total_discount}">${total_discount}</td>
                                 <td>${tickOrCross}</td>
                             </tr>
                         `;
