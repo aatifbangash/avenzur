@@ -5363,6 +5363,68 @@ class Reports_model extends CI_Model
         return false;
     }
 
+    public function getGLReport($start_date = null, $end_date = null){
+        $where = "";
+        if ($start_date && $end_date) {
+            $where = "WHERE DATE(ae.date) BETWEEN '$start_date' AND '$end_date'";
+        } elseif ($start_date) {
+            $where = "WHERE DATE(ae.date) >= '$start_date'";
+        } elseif ($end_date) {
+            $where = "WHERE DATE(ae.date) <= '$end_date'";
+        }
+
+        $sql = "SELECT
+                    ae.id as entry_id,
+                    CASE
+                        WHEN ae.pid IS NOT NULL AND ae.pid != '' THEN 'Purchase Invoice'
+                        WHEN ae.sid IS NOT NULL AND ae.sid != '' THEN 'Sales Invoice'
+                        WHEN ae.rid IS NOT NULL AND ae.rid != '' THEN 'Sales Return'
+                        WHEN ae.transaction_type = 'creditmemo' THEN 'Credit Note'
+                        WHEN ae.transaction_type = 'debitmemo' THEN 'Debit Note'
+                        WHEN ae.transaction_type = 'serviceinvoice' THEN 'Service Invoice'
+                        WHEN ae.transaction_type = 'pettycash' THEN 'Petty Cash'
+                        WHEN ae.transaction_type = 'supplierpayment' THEN 'Supplier Payment'
+                        WHEN ae.transaction_type = 'salaries' THEN 'Salaries Voucher'
+                        WHEN ae.transaction_type = 'customerpayment' THEN 'Collection'
+                        WHEN ae.transaction_type = 'customeradvance' THEN 'Customer Advance'
+                        ELSE ae.transaction_type
+                    END as voucher,
+                    CASE
+                        WHEN ae.pid IS NOT NULL AND ae.pid != '' THEN ae.pid
+                        WHEN ae.sid IS NOT NULL AND ae.sid != '' THEN ae.sid
+                        WHEN ae.rid IS NOT NULL AND ae.rid != '' THEN ae.rid
+                        WHEN ae.rsid IS NOT NULL AND ae.rsid != '' THEN ae.rsid
+                        WHEN ae.memo_id IS NOT NULL AND ae.memo_id != '' THEN ae.memo_id
+                        WHEN pr.id IS NOT NULL THEN pr.id
+                        ELSE ae.number
+                    END as voucher_id,
+                    DATE_FORMAT(ae.date, '%d-%b-%y') as date,
+                    aei.id as reference,
+                    ae.id as trx_id,
+                    aei.ledger_id,
+                    l.code as account_number,
+                    l.name as account_name,
+                    aei.narration as description,
+                    CASE WHEN aei.dc = 'D' THEN aei.amount ELSE 0 END as debit,
+                    CASE WHEN aei.dc = 'C' THEN aei.amount ELSE 0 END as credit
+                FROM sma_accounts_entries ae
+                LEFT JOIN sma_accounts_entryitems aei ON ae.id = aei.entry_id
+                LEFT JOIN sma_accounts_ledgers l ON aei.ledger_id = l.id
+                LEFT JOIN sma_payment_reference pr ON pr.journal_id = ae.id
+                $where
+                ORDER BY ae.date ASC, ae.id ASC, aei.id ASC";
+
+        $q = $this->db->query($sql);
+        $data = array();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        }
+
+        return $data;
+    }
+
     public function getCollectionsByLocation($start_date, $end_date, $warehouse)
     {
         // Build date filter only if both dates are provided

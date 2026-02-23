@@ -630,6 +630,7 @@
                 <li><a href="<?= admin_url('accounts'); ?>" class="newmenu-link"><i class="fa fa-calculator"></i> <?= lang('Charts Of Accounts'); ?></a></li>
                 <li><a href="<?= admin_url('entries'); ?>" class="newmenu-link"><i class="fa fa-pencil-square-o"></i> <?= lang('GL Entry'); ?></a></li>
                 <li><a href="<?= admin_url('reports/general_ledger_trial_balance'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i><?= lang('Trial Balance'); ?></a></li>
+                <li><a href="<?= admin_url('reports/GLReport'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('general_ledger_report'); ?></a></li>
             </ul>
         </li>
         <?php } ?>

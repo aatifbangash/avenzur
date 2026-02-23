@@ -109,3 +109,14 @@ $lang['refund']                   = 'Refund';
 $lang['net_returns']              = 'Net Returns';
 $lang['Purchase ID']              = 'Purchase ID';
 $lang['Enter Purchase ID']        = 'Enter Purchase ID';
+
+// GL Report Language Keys
+$lang['general_ledger_report']    = 'General Ledger Report';
+$lang['voucher']                  = 'Voucher';
+$lang['voucher_id']               = 'Voucher ID';
+$lang['trx_id']                   = 'Trx. ID';
+$lang['account_number']           = 'Account Number';
+$lang['account_name']             = 'Account Name';
+$lang['debit']                    = 'Debit';
+$lang['credit']                   = 'Credit';
+$lang['user_id']                  = 'User ID';

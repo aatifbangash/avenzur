@@ -6064,6 +6064,42 @@ class Reports extends MY_Controller
         $this->page_construct('reports/warehouse_stock', $meta, $this->data);
     }
 
+    public function GLReport(){
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $viewtype = $this->input->get('viewtype') ? $this->input->get('viewtype') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : $this->input->get('from_date');
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : $this->input->get('to_date');
+
+        // Set filter values for form persistence (always set these)
+        $this->data['start_date'] = $from_date;
+        $this->data['end_date'] = $to_date;
+        $this->data['viewtype'] = $viewtype;
+
+        // If any filter submitted, fetch data
+        if ($from_date || $to_date) {
+            // Format dates only if provided
+            $start_date = $from_date ? $this->sma->fld($from_date) : null;
+            $end_date = $to_date ? $this->sma->fld($to_date) : null;
+
+            $gl_report_array = $this->reports_model->getGLReport($start_date, $end_date);
+            $this->data['gl_report'] = $gl_report_array;
+
+            if ($viewtype == 'pdf') {
+                $this->load->library('pdf');
+                $html = $this->load->view('reports/gl_report', $this->data, true);
+                $this->pdf->generate($html, 'GL_Report_' . date('Y_m_d_H_i_s'), true);
+            }
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('general_ledger_report')]];
+            $meta = ['page_title' => lang('general_ledger_report'), 'bc' => $bc];
+            $this->page_construct('reports/gl_report', $meta, $this->data);
+        } else {
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('general_ledger_report')]];
+            $meta = ['page_title' => lang('general_ledger_report'), 'bc' => $bc];
+            $this->page_construct('reports/gl_report', $meta, $this->data);
+        }
+    }
+
     public function collections_by_location(){
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
