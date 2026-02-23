@@ -257,6 +257,11 @@
                     $("input[name='total_sales']").val(selectedItem.row.sale_price || '');
                     $("input[name='net_purchases']").val(selectedItem.row.real_unit_cost || '');
                     $("input[name='unit_cost']").val(selectedItem.row.unit_cost || selectedItem.row.cost || '');
+                    
+                    // Populate discount fields
+                    $("input[name='last_purchase_dis']").val(selectedItem.row.last_purchase_discount || 0);
+                    $("input[name='cash_dis']").val(selectedItem.row.cash_discount || 0);
+                    $("input[name='credit_dis']").val(selectedItem.row.credit_discount || 0);
 
 
                 } else {
@@ -554,6 +559,23 @@
                                 </div>
 
 
+                            </div>
+
+                            <div class="form-group">
+                                <label class="col-md-2 control-label">Last Purchase Dis (%)</label>
+                                <div class="col-md-2">
+                                    <input type="text" class="form-control new_item_cls" name="last_purchase_dis" placeholder="0%">
+                                </div>
+
+                                <label class="col-md-2 control-label">Cash Dis (%)</label>
+                                <div class="col-md-2">
+                                    <input type="text" class="form-control new_item_cls" name="cash_dis" placeholder="0%">
+                                </div>
+
+                                <label class="col-md-2 control-label">Credit Dis (%)</label>
+                                <div class="col-md-2">
+                                    <input type="text" class="form-control new_item_cls" name="credit_dis" placeholder="0%">
+                                </div>
                             </div>
 
 

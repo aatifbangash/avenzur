@@ -3938,6 +3938,24 @@ class Purchases extends MY_Controller
                 $row->warehouse_shelf = '';
                 //$row->three_month_sale = $this->purchases_model->getThreeMonthSale($row->id,$start_date,$end_date);
                 $row->get_supplier_discount = $this->deals_model->getPurchaseDiscount($supplier_id);
+                
+                // Add discount fields
+                $amount_after_cash_discount1 = $row->cost - ($row->cost * (str_replace('%', '', $row->cash_discount) / 100));
+                $amount_after_cash_discount2 = $amount_after_cash_discount1 - ($amount_after_cash_discount1 * (str_replace('%', '', $row->cash_dis2) / 100));
+                $amount_after_cash_discount3 = $amount_after_cash_discount2 - ($amount_after_cash_discount2 * (str_replace('%', '', $row->cash_dis3) / 100)); 
+
+                $row->cash_discount = number_format(abs(((($amount_after_cash_discount3 / $row->cost) * 100) - 100)), 2);
+
+                $amount_after_credit_discount1 = $row->cost - ($row->cost * (str_replace('%', '', $row->credit_discount) / 100));
+                $amount_after_credit_discount2 = $amount_after_credit_discount1 - ($amount_after_credit_discount1 * (str_replace('%', '', $row->credit_dis2) / 100));
+                $amount_after_credit_discount3 = $amount_after_credit_discount2 - ($amount_after_credit_discount2 * (str_replace('%', '', $row->credit_dis3) / 100));
+
+                $row->credit_discount = number_format(abs(((($amount_after_credit_discount3 / $row->cost) * 100) - 100)), 2);
+
+                //$row->cash_discount = (str_replace('%', '', $row->cash_discount) ?? 0) + (str_replace('%', '', $row->cash_dis2) ?? 0) + (str_replace('%', '', $row->cash_dis3) ?? 0);
+                //$row->credit_discount = (str_replace('%', '', $row->credit_discount) ?? 0) + (str_replace('%', '', $row->credit_dis2) ?? 0) + (str_replace('%', '', $row->credit_dis3) ?? 0);
+                $row->last_purchase_discount = $this->getLastPurchaseDiscount($row->id, $supplier_id);
+                
                 unset($row->details, $row->product_details, $row->price, $row->file, $row->supplier1price, $row->supplier2price, $row->supplier3price, $row->supplier4price, $row->supplier5price, $row->supplier1_part_no, $row->supplier2_part_no, $row->supplier3_part_no, $row->supplier4_part_no, $row->supplier5_part_no);
                 if ($qty) {
                     $row->qty = $qty;
@@ -3972,6 +3990,29 @@ class Purchases extends MY_Controller
         } else {
             $this->sma->send_json([['id' => 0, 'label' => lang('no_match_found'), 'value' => $term]]);
         }
+    }
+
+    private function getLastPurchaseDiscount($product_id, $supplier_id = null) {
+        $this->db->select('pi.discount, pi.discount1, pi.discount2, pi.discount3, pi.unit_cost, pi.net_unit_cost')
+                ->from('sma_purchase_items pi')
+                ->join('sma_purchases p', 'p.id = pi.purchase_id')
+                ->where('pi.product_id', $product_id)
+                ->where('p.status', 'received')
+                ->order_by('p.date', 'DESC')
+                ->limit(1);
+        
+        if ($supplier_id) {
+            $this->db->where('p.supplier_id', $supplier_id);
+        }
+        
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            $row = $q->row();
+            // Calculate total discount percentage
+            //$total_discount = ($row->discount ?? 0) + ($row->discount1 ?? 0) + ($row->discount2 ?? 0) + ($row->discount3 ?? 0);
+            return number_format(abs(((($row->net_unit_cost / $row->unit_cost) * 100) - 100)), 2); // Return discount percentage
+        }
+        return 0;
     }
 
     public function update_status($id)
