@@ -564,17 +564,17 @@
                             <div class="form-group">
                                 <label class="col-md-2 control-label">Last Purchase Dis (%)</label>
                                 <div class="col-md-2">
-                                    <input type="text" class="form-control new_item_cls" name="last_purchase_dis" placeholder="0%">
+                                    <input type="text" class="form-control new_item_cls" readonly name="last_purchase_dis" placeholder="0%">
                                 </div>
 
                                 <label class="col-md-2 control-label">Cash Dis (%)</label>
                                 <div class="col-md-2">
-                                    <input type="text" class="form-control new_item_cls" name="cash_dis" placeholder="0%">
+                                    <input type="text" class="form-control new_item_cls" readonly name="cash_dis" placeholder="0%">
                                 </div>
 
                                 <label class="col-md-2 control-label">Credit Dis (%)</label>
                                 <div class="col-md-2">
-                                    <input type="text" class="form-control new_item_cls" name="credit_dis" placeholder="0%">
+                                    <input type="text" class="form-control new_item_cls" readonly name="credit_dis" placeholder="0%">
                                 </div>
                             </div>
 
