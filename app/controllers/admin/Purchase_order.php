@@ -349,6 +349,10 @@ class Purchase_order extends MY_Controller
             
             $image_link = trim($row[17]);
 
+            $details = $row[18] ? trim($row[18]) : '';
+            $details_ar = $row[19] ? trim($row[19]) : '';
+
+
             if (!$item_code || !$item_name || !$qty) continue;
 
             $product = $this->purchase_order_model->getProductByCode($item_code);
@@ -412,7 +416,7 @@ class Purchase_order extends MY_Controller
                 
                 if(($product->image == '' || $product->image == null) && $image_link != ''){
                     // Update product image
-                    $this->purchase_order_model->updateProductImage($product_id, $image_link);
+                    //$this->purchase_order_model->updateProductImage($product_id, $image_link);
 
                 }else if(($product->image == '' || $product->image == null) && $image_link == ''){
                     $this->session->set_flashdata('error', 'Image link missing for existing product: ' . $item_code . '. No purchase order was created.');
