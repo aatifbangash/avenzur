@@ -9,21 +9,69 @@
         XLSX.writeFile(wb, filename);
     }
     function generatePDF(){
-       $('.viewtype').val('pdf');  
+       // Use new mPDF method for better portrait control
+       $('.viewtype').val('pdf_new');
        document.getElementById("searchForm").submit();
-       $('.viewtype').val(''); 
+       $('.viewtype').val('');
     }
     $(document).ready(function() {
 
     });
 </script>
-<?php if($viewtype=='pdf'){ ?>
-    <link href="<?= $assets ?>styles/pdf/pdf.css" rel="stylesheet"> 
-  <?php  } ?>
+<?php if($viewtype=='pdf' || $viewtype=='pdf_new'){ ?>
+<link href="<?= $assets ?>styles/pdf/pdf.css" rel="stylesheet">
+
+<!-- PDF Header -->
+<div style="width:100%; margin-bottom:15px; position:relative;">
+
+    <!-- RIGHT: Logo -->
+    <div style="position:absolute; top:0; right:0; text-align:right;">
+        <img src="<?= base_url('assets/uploads/logos/' . $biller->logo); ?>"
+             style="max-width:150px; max-height:60px;">
+        <div style="font-size: 12px; font-weight: bold; margin-top: 5px; color: #333;">
+            <?= $biller->name ?? ''; ?>
+        </div>
+    </div>
+
+    <!-- LEFT: Ledger details -->
+    <div style="width:70%;">
+
+        <div style="font-size:10px; color:#666; margin-bottom:6px;">
+            Printed on: <?= date('d/m/Y H:i:s'); ?>
+        </div>
+
+        <div style="font-size:13px; line-height:2.4;">
+
+            <strong>Date From:</strong> <?= strip_tags($start_date ?? ''); ?>
+            &nbsp;&nbsp;&nbsp;
+            <strong>Date To:</strong> <?= strip_tags($end_date ?? ''); ?>
+            <br>
+
+            <strong>Ledger:</strong> <?php
+                if(isset($ledger_id) && !empty($ledgers)) {
+                    foreach($ledgers as $ledger) {
+                        if($ledger->id == $ledger_id) {
+                            echo $ledger->name . ' (' . $ledger->code . ')';
+                            break;
+                        }
+                    }
+                }
+            ?>
+
+        </div>
+
+    </div>
+
+    <!-- CLEAR -->
+    <div style="clear:both;"></div>
+
+</div>
+
+<?php } ?>
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-users"></i><?= lang('general_ledger_statement'); ?></h2>
-        <?php  if($viewtype!='pdf'){?>
+        <?php  if($viewtype!='pdf' && $viewtype!='pdf_new'){?>
         <div class="box-icon">
             <ul class="btn-tasks">
                 <li class="dropdown"><a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'GL_Statement_Report.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a></li>
@@ -36,7 +84,7 @@
         <div class="row">
             <div class="col-lg-12">
                 <?php
-                if($viewtype!='pdf')
+                if($viewtype!='pdf' && $viewtype!='pdf_new')
                 {
                     $attrib = ['data-toggle' => 'validator', 'role' => 'form','id' => 'searchForm'];
                     echo admin_form_open_multipart('reports/general_ledger_statement', $attrib)
@@ -91,23 +139,26 @@
                                class="table items table-striped table-bordered table-condensed table-hover sortable_table tbl_pdf">
                             <thead>
                             <tr>
+                                <?php if($viewtype!='pdf' && $viewtype!='pdf_new'){ ?>
                                 <th>#</th>
-                                <th><?= lang('type'); ?></th>
+                                <?php } ?>
                                 <th><?= lang('date'); ?></th>
-                                <th><?= lang('Num'); ?></th>
-                                <th><?= lang('name'); ?></th>
-                                <th><?= lang('Memo'); ?></th>
+                                <th><?= lang('type'); ?></th>
+
+                                <!--<th><?= lang('name'); ?></th>-->
+                                <th><?= lang('Note'); ?></th>
+
                                 <th><?= lang('Debit'); ?></th>
                                 <th><?= lang('Credit'); ?></th>
                                 <th><?= lang('balance'); ?></th>
                             </tr>
                             </thead>
                             <tbody style="text-align:center;">
-                            <tr>
-                                <td colspan="2">Opening Balance<td>
-                                <td colspan="5">&nbsp;</td>
-                                <td><?= $this->sma->formatNumber($total_ob); ?></td>
-                            </tr>
+                                <tr>
+                                    <td colspan="2">Opening Balance<td>
+                                    <td colspan="2">&nbsp;</td>
+                                    <td><?= $this->sma->formatNumber($total_ob); ?></td>
+                                </tr>
                             <?php
                             $count = 0;
                             $balance = $total_ob;
@@ -116,51 +167,78 @@
                             $totalDebit = 0;
                             $totalBalance = 0;
                             $openingBalance = $total_ob;
-                            foreach ($supplier_statement as $statement) {
-                                
-                                if ($statement->dc == 'D') {
+
+                            foreach($supplier_statement as $statement){
+
+                                if($statement->dc == 'C'){
+                                    $balance =  $balance - $statement->amount;
+                                }else{
                                     $balance = $balance + $statement->amount;
-                                    
-
-                                } else {
-                                    $balance = $balance - $statement->amount;
-
                                 }
-                                
                                 $count++;
+
+
+                                $transaction_type = '';
+                                $transaction_id = 0;
+                                $note = '';
+                                if($statement->transaction_type == 'journal'){
+                                    $link = admin_url('entries/view/journal/' . $statement->entry_id);
+                                    $transaction_type = 'Journal';
+                                    $transaction_id = $statement->code;
+                                    $note = $statement->narration;
+                                }else if($statement->transaction_type == 'payment'){
+                                    $link = admin_url('entries/view/payment/' . $statement->entry_id);
+                                    $transaction_type = 'Payment';
+                                    $transaction_id = $statement->code;
+                                    $note = $statement->narration;
+                                }else if($statement->transaction_type == 'receipt'){
+                                    $link = admin_url('entries/view/receipt/' . $statement->entry_id);
+                                    $transaction_type = 'Receipt';
+                                    $transaction_id = $statement->code;
+                                    $note = $statement->narration;
+                                }else if($statement->transaction_type == 'contra'){
+                                    $link = admin_url('entries/view/contra/' . $statement->entry_id);
+                                    $transaction_type = 'Contra';
+                                    $transaction_id = $statement->code;
+                                    $note = $statement->narration;
+                                }else{
+                                    $link = admin_url('entries/view/journal/' . $statement->entry_id);
+                                    $transaction_type = $statement->transaction_type;
+                                    $transaction_id = $statement->code;
+                                    $note = $statement->narration;
+                                }
+
                                 ?>
-                                <tr>
-                                    <td><?= $count; ?></td>
-                                    <td><a target="blank"
-                                           href="admin/entries/view/journal/<?php echo $statement->entry_id; ?>"><?= $statement->transaction_type; ?></a>
-                                    </td>
-                                    <td><?= $statement->date; ?></td>
-                                    <td><?= $statement->code; ?></td>
-                                    <td><?= $statement->name; ?></td>
-                                    <td><?= $statement->narration; ?></td>
-                                    
-                                    <td><?= $statement->dc == 'D' ? $this->sma->formatNumber($statement->amount) : '0.00';
-                                        $statement->dc == 'D' ? $totalDebit = ($totalDebit + $statement->amount) : null ?>
+                                    <tr>
+                                        <?php if($viewtype!='pdf' && $viewtype!='pdf_new'){ ?>
+                                        <td><?= $count; ?></td>
+                                        <?php } ?>
+                                        <td><?= $statement->date; ?></td>
+                                        <td><a target="_blank" href="<?= $link; ?>"><?= $transaction_type; ?></a></td>
 
-                                    </td>
-                                    <td><?php echo $statement->dc == 'C' ? $this->sma->formatNumber($statement->amount) : '0.00';
-                                    $statement->dc == 'C' ?
-                                        $totalCredit = $totalCredit + $statement->amount : null ?>
 
-                                    </td>
-                                    <td>
-                                        <?php 
-                                            
+                                        <!--<td><?= $statement->name; ?></td>-->
+                                        <td><?= $note; ?></td>
+
+                                        <td><?= $statement->dc == 'D' ? number_format($statement->amount, 2, '.', ',') : '0.00';
+                                            $statement->dc == 'D' ? $totalDebit = ($totalDebit + $statement->amount) : null ?>
+
+                                        </td>
+                                        <td><?php echo $statement->dc == 'C' ? number_format($statement->amount, 2, '.', ',') : '0.00';
+                                        $statement->dc == 'C' ?
+                                            $totalCredit = $totalCredit + $statement->amount : null ?>
+
+                                        </td>
+                                        <td><?php
                                             if($balance >= 0){
-                                                echo $this->sma->formatNumber($balance);
+                                                echo number_format($balance, 2, '.', ',');
                                                 echo ' Dr';
                                             }else if($balance < 0){
-                                                echo $this->sma->formatNumber(-1 * $balance);
+                                                echo number_format(abs($balance), 2, '.', ',');
                                                 echo ' Cr';
                                             }
-                                        ?>
-                                    </td>
-                                </tr>
+                                        ?></td>
+                                    </tr>
                                 <?php
 
                                 if ($statement->dc == 'D') {
@@ -173,23 +251,24 @@
                             ?>
 
                             <tr>
+                                <?php if($viewtype!='pdf' && $viewtype!='pdf_new'){ ?>
+                                <th>&nbsp;</th>
+                                <?php } ?>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th><?= $this->sma->formatNumber($totalDebit).' Dr'; ?></th>
-                                <th><?= $this->sma->formatNumber($totalCredit).' Cr'; ?></th>
+                                
+
+                                <th><?= number_format($totalDebit, 2, '.', ',').' Dr'; ?></th>
+                                <th><?= number_format($totalCredit, 2, '.', ',').' Cr'; ?></th>
                                 <th>
-                                    <?php 
-                                        
+                                    <?php
+
                                         if($balance >= 0){
-                                            echo $this->sma->formatNumber($balance); 
+                                            echo number_format($balance, 2, '.', ',');
                                             echo ' Dr';
                                         }else if($balance < 0){
-                                            echo $this->sma->formatNumber(-1 * $balance); 
-                                            echo ' Cr';
+                                            echo number_format(abs($balance), 2, '.', ',');
                                         }
                                     ?>
                                 </th>

@@ -4572,6 +4572,7 @@ class Reports extends MY_Controller
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
 
         $this->data['ledgers'] = $this->reports_model->getCompanyLedgers();
+        $this->data['biller'] = $this->site->getDefaultBiller();
 
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
@@ -4610,11 +4611,33 @@ class Reports extends MY_Controller
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('general_ledger_statement')]];
             $meta = ['page_title' => lang('general_ledger_statement'), 'bc' => $bc];
 
-            if ($viewtype == 'pdf') {
+            if ($viewtype == 'pdf_new') {
+                // Use new mPDF method for better portrait control
+                $this->general_ledger_statement_pdf_new();
+                return;
+            } elseif ($viewtype == 'pdf') {
                 $this->data['viewtype'] = $viewtype;
+
                 $name = lang('general_ledger_statement') . '.pdf';
-                $html = $this->load->view($this->theme . 'reports/general_ledger_statement', $this->data, true);
-                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+
+                $html = $this->load->view(
+                    $this->theme . 'reports/general_ledger_statement',
+                    $this->data,
+                    true
+                );
+
+                // FORCE PORTRAIT ONLY HERE
+                $this->sma->generate_pdf(
+                    $html,
+                    $name,
+                    null,   // path
+                    'I',    // display in browser
+                    null,   // footer
+                    null,   // margin bottom
+                    null,   // header
+                    null,   // margin top
+                    'P'     // ORIENTATION PORTRAIT
+                );
             } else {
                 $this->page_construct('reports/general_ledger_statement', $meta, $this->data);
             }
@@ -4623,6 +4646,83 @@ class Reports extends MY_Controller
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('general_ledger_statement')]];
             $meta = ['page_title' => lang('general_ledger_statement'), 'bc' => $bc];
             $this->page_construct('reports/general_ledger_statement', $meta, $this->data);
+        }
+    }
+
+    /**
+     * Generate General Ledger Statement PDF using mPDF (Portrait)
+     * Alternative method using the same logic as sales/pdf_new
+     */
+    public function general_ledger_statement_pdf_new()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+
+        $this->data['ledgers'] = $this->reports_model->getCompanyLedgers();
+        $this->data['biller'] = $this->site->getDefaultBiller();
+
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $ledger_id = $this->input->post('ledger');
+
+            if (!$ledger_id) {
+                $this->session->set_flashdata('error', lang('No ledger is selected.'));
+                redirect($_SERVER['HTTP_REFERER']);
+            }
+
+            $supplier_statement = $this->reports_model->getGeneralLedgerStatement($start_date, $end_date, '', $ledger_id);
+
+            $total_ob = 0;
+            $total_ob_credit = 0;
+            $total_ob_debit = 0;
+            $ob_type = '';
+            foreach ($supplier_statement['ob'] as $ob) {
+                if ($ob->dc == 'D') {
+                    $total_ob_debit = $ob->total_amount;
+                } else if ($ob->dc == 'C') {
+                    $total_ob_credit = $ob->total_amount;
+                }
+            }
+
+            $total_ob = $total_ob_debit - $total_ob_credit;
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['supplier_id'] = $supplier_id;
+            $this->data['ob_type'] = $ob_type;
+            $this->data['ledger_id'] = $ledger_id;
+            $this->data['total_ob'] = $this->sma->formatDecimal($total_ob);
+            $this->data['supplier_statement'] = $supplier_statement['report'];
+
+            // Set viewtype for PDF rendering
+            $this->data['viewtype'] = 'pdf_new';
+
+            // Generate PDF using mPDF (same as sales/pdf_new)
+            $name = lang('general_ledger_statement') . '.pdf';
+            $html = $this->load->view($this->theme . 'reports/general_ledger_statement', $this->data, true);
+
+            // Use mPDF directly like sales/pdf_new
+            $mpdf = new Mpdf([
+                'format' => 'A4',           // Portrait A4
+                'orientation' => 'P',       // Explicitly set Portrait
+                'margin_top' => 10,         // Smaller margins for statement
+                'margin_bottom' => 10,
+                'margin_left' => 10,
+                'margin_right' => 10,
+            ]);
+
+            $mpdf->WriteHTML($html);
+            $mpdf->Output($name, "D"); // Force download
+
+        } else {
+            // If no dates provided, redirect back or show error
+            $this->session->set_flashdata('error', 'Please select date range for general ledger statement');
+            redirect($_SERVER['HTTP_REFERER']);
         }
     }
 
