@@ -403,7 +403,7 @@ class Purchase_order extends MY_Controller
                     'unit' => 'unit',
                     'alert_quantity' => 0,
                     'track_quantity' => 1,
-                    'details' => '',
+                    'details' => $details,
                     'variant' => $varient_name,
                     'parent_id' => $parent_id
                 ];
@@ -413,6 +413,8 @@ class Purchase_order extends MY_Controller
                     $product_id = $product ? $product->id : null;
                 }
             }else{
+
+                $this->purchase_order_model->updateProductImage($product_id, $image_link, $details);
                 
                 if(($product->image == '' || $product->image == null) && $image_link != ''){
                     // Update product image
