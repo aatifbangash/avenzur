@@ -4747,6 +4747,86 @@ class Reports extends MY_Controller
             $supplier_details = $this->companies_model->getCompanyByID($supplier_id);
             $ledger_account = $supplier_details->ledger_account;
             $supplier_statement = $this->reports_model->getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account);
+            
+            $total_ob = 0;
+            $total_ob_credit = 0;
+            $total_ob_debit = 0;
+            $ob_type = '';
+
+            foreach ($supplier_statement['ob'] as $ob) {
+                if ($ob->dc == 'D') {
+                    $total_ob_debit += $ob->amount;
+                } else if ($ob->dc == 'C') {
+                    $total_ob_credit += $ob->amount;
+                }
+            }
+
+            $total_ob = $total_ob_credit - $total_ob_debit;
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['supplier_id'] = $supplier_id;
+            $this->data['ob_type'] = $ob_type;
+            $this->data['total_ob_credit'] = $total_ob_credit;
+            $this->data['total_ob_debit'] = $total_ob_debit;
+            $this->data['total_ob'] = $this->sma->formatDecimal($total_ob);
+            $this->data['supplier_statement'] = $supplier_statement['report'];
+
+            
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('supplier_statement')]];
+            $meta = ['page_title' => lang('supplier_statement'), 'bc' => $bc];
+
+            if ($viewtype == 'pdf_new') {
+                // Use new mPDF method for better portrait control
+                $this->supplier_statement_pdf_new();
+                return;
+            } elseif ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('suppliers_statement_report') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/suppliers_statement', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'P');
+            } else {
+                $this->page_construct('reports/suppliers_statement', $meta, $this->data);
+            }
+
+
+        } else {
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('supplier_statement')]];
+            $meta = ['page_title' => lang('supplier_statement'), 'bc' => $bc];
+            $this->page_construct('reports/suppliers_statement', $meta, $this->data);
+        }
+    }
+
+    /**
+     * Generate Supplier Statement PDF using mPDF (Portrait)
+     * Alternative method using the same logic as sales/pdf_new
+     */
+    public function supplier_statement_pdf_new()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+        $this->data['biller'] = $this->site->getDefaultBiller();
+
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $supplier_id = $this->input->post('supplier');
+
+            if (!$supplier_id) {
+                $this->session->set_flashdata('error', lang('No supplier is selected.'));
+                redirect($_SERVER['HTTP_REFERER']);
+            }
+
+            $supplier_details = $this->companies_model->getCompanyByID($supplier_id);
+            $ledger_account = $supplier_details->ledger_account;
+            $supplier_statement = $this->reports_model->getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account);
 
             $total_ob = 0;
             $total_ob_credit = 0;
@@ -4772,23 +4852,30 @@ class Reports extends MY_Controller
             $this->data['total_ob'] = $this->sma->formatDecimal($total_ob);
             $this->data['supplier_statement'] = $supplier_statement['report'];
 
-            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('supplier_statement')]];
-            $meta = ['page_title' => lang('supplier_statement'), 'bc' => $bc];
+            // Set viewtype for PDF rendering
+            $this->data['viewtype'] = 'pdf_new';
 
-            if ($viewtype == 'pdf') {
-                $this->data['viewtype'] = $viewtype;
-                $name = lang('suppliers_statement_report') . '.pdf';
-                $html = $this->load->view($this->theme . 'reports/suppliers_statement', $this->data, true);
-                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
-            } else {
-                $this->page_construct('reports/suppliers_statement', $meta, $this->data);
-            }
+            // Generate PDF using mPDF (same as sales/pdf_new)
+            $name = lang('suppliers_statement_report') . '.pdf';
+            $html = $this->load->view($this->theme . 'reports/suppliers_statement', $this->data, true);
 
+            // Use mPDF directly like sales/pdf_new
+            $mpdf = new \Mpdf\Mpdf([
+                'format' => 'A4',           // Portrait A4
+                'orientation' => 'P',       // Explicitly set Portrait
+                'margin_top' => 10,         // Smaller margins for statement
+                'margin_bottom' => 10,
+                'margin_left' => 10,
+                'margin_right' => 10,
+            ]);
+
+            $mpdf->WriteHTML($html);
+            $mpdf->Output($name, "I"); // Display in browser
 
         } else {
-            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('supplier_statement')]];
-            $meta = ['page_title' => lang('supplier_statement'), 'bc' => $bc];
-            $this->page_construct('reports/suppliers_statement', $meta, $this->data);
+            // If no dates provided, redirect back or show error
+            $this->session->set_flashdata('error', 'Please select date range for supplier statement');
+            redirect($_SERVER['HTTP_REFERER']);
         }
     }
 
