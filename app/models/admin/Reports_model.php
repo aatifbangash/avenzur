@@ -915,58 +915,82 @@ class Reports_model extends CI_Model
 
         $supplier_ledger = $supplier_info->ledger_account;
 
-        $this->db
-            ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, 
-            sma_accounts_entryitems.narration, sma_accounts_entries.transaction_type, 
-            sma_accounts_entries.date,
-            sma_accounts_entries.sid, 
-            sma_accounts_entries.pid,
-            sma_accounts_entries.tid,
-            sma_accounts_entries.rsid,
-            sma_accounts_entries.rid, 
-            sma_accounts_ledgers.code, 
-            companies.company')
-            ->from('sma_accounts_entryitems')
-            ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-            ->join('companies', 'companies.id=sma_accounts_entries.supplier_id')
-            ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.id=companies.ledger_account')
-            ->where('sma_accounts_entries.supplier_id', $supplier_id)
-            ->where('sma_accounts_entries.date <', $start_date)
-            ->where('sma_accounts_entryitems.ledger_id', $supplier_ledger)
-            ->order_by('sma_accounts_entries.date asc');
-        $q = $this->db->get();
-        //lq($this);
+        $sql = "
+            SELECT 
+                ai.entry_id,
+                ai.amount,
+                ai.dc,
+                ai.narration,
+                e.transaction_type,
+                e.date,
+                e.sid,
+                e.pid,
+                e.tid,
+                e.rsid,
+                e.rid,
+                al.code AS ledger_code,
+                CASE
+                    WHEN e.pid IS NOT NULL AND e.pid != '' THEN p.reference_no
+                    WHEN e.memo_id IS NOT NULL AND e.memo_id != '' THEN m.reference_no
+                    ELSE pr.reference_no
+                END AS reference_no,
+                c.company
+            FROM sma_accounts_entryitems ai
+            JOIN sma_accounts_entries e ON e.id = ai.entry_id
+            JOIN sma_companies c ON c.id = e.supplier_id
+            JOIN sma_accounts_ledgers al ON al.id = c.ledger_account
+            LEFT JOIN sma_purchases p ON p.id = e.pid
+            LEFT JOIN sma_returns_supplier rs ON rs.id = e.rsid
+            LEFT JOIN sma_memo m ON m.id = e.memo_id
+            LEFT JOIN sma_payment_reference pr ON pr.journal_id = e.id
+            WHERE e.supplier_id = ?
+            AND e.date < ?
+            AND ai.ledger_id = ?
+            ORDER BY e.date ASC
+            ";
 
-        if ($q->num_rows() > 0) {
-            foreach (($q->result()) as $row) {
-                $data_res[] = $row;
-            }
-        } else {
-            $data_res = array();
-        }
+            // Execute the query with bindings to avoid SQL injection
+        $q = $this->db->query($sql, [$supplier_id, $start_date, $supplier_ledger]);
 
-        $this->db
-            ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, 
-            sma_accounts_entryitems.narration, 
-            sma_accounts_entries.transaction_type, sma_accounts_entries.date,
-            sma_accounts_entries.sid, 
-            sma_accounts_entries.pid,
-            sma_accounts_entries.tid,
-            sma_accounts_entries.rsid,
-            sma_accounts_entries.rid,
-            sma_accounts_ledgers.code, 
-            companies.company')
-            ->from('sma_accounts_entryitems')
-            ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-            ->join('companies', 'companies.id=sma_accounts_entries.supplier_id')
-            ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.id=companies.ledger_account')
-            ->where('sma_accounts_entries.supplier_id', $supplier_id)
-            ->where('sma_accounts_entries.date >=', $start_date)
-            ->where('sma_accounts_entries.date <=', $end_date)
-            ->where('sma_accounts_entryitems.ledger_id', $supplier_ledger)
-            ->order_by('sma_accounts_entries.date asc');
+        $data_res = ($q->num_rows() > 0) ? $q->result() : [];
 
-        $q = $this->db->get();
+        // Query for period transactions with reference_no
+        $sql2 = "
+            SELECT 
+                ai.entry_id,
+                ai.amount,
+                ai.dc,
+                ai.narration,
+                e.transaction_type,
+                e.date,
+                e.sid,
+                e.pid,
+                e.tid,
+                e.rsid,
+                e.rid,
+                al.code AS ledger_code,
+                CASE
+                    WHEN e.pid IS NOT NULL AND e.pid != '' THEN p.reference_no
+                    WHEN e.memo_id IS NOT NULL AND e.memo_id != '' THEN m.reference_no
+                    ELSE pr.reference_no
+                END AS reference_no,
+                c.company
+            FROM sma_accounts_entryitems ai
+            JOIN sma_accounts_entries e ON e.id = ai.entry_id
+            JOIN sma_companies c ON c.id = e.supplier_id
+            JOIN sma_accounts_ledgers al ON al.id = c.ledger_account
+            LEFT JOIN sma_purchases p ON p.id = e.pid
+            LEFT JOIN sma_returns_supplier rs ON rs.id = e.rsid
+            LEFT JOIN sma_memo m ON m.id = e.memo_id
+            LEFT JOIN sma_payment_reference pr ON pr.journal_id = e.id
+            WHERE e.supplier_id = ?
+            AND e.date >= ?
+            AND e.date <= ?
+            AND ai.ledger_id = ?
+            ORDER BY e.date ASC
+            ";
+
+        $q = $this->db->query($sql2, [$supplier_id, $start_date, $end_date, $supplier_ledger]);
 
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
