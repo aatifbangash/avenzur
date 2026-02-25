@@ -628,10 +628,31 @@
 
                 <li><a href="<?= admin_url('accounts_dashboard'); ?>" class="newmenu-link"><i class="fa fa-sliders"></i> <?= lang('Accounts Dashboard'); ?></a></li>
                 <li><a href="<?= admin_url('accounts'); ?>" class="newmenu-link"><i class="fa fa-calculator"></i> <?= lang('Charts Of Accounts'); ?></a></li>
-                <li><a href="<?= admin_url('entries'); ?>" class="newmenu-link"><i class="fa fa-pencil-square-o"></i> <?= lang('GL Entry'); ?></a></li>
-                <li><a href="<?= admin_url('reports/general_ledger_statement'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('GL Statement'); ?></a></li>
-                <li><a href="<?= admin_url('reports/general_ledger_trial_balance'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i><?= lang('Trial Balance'); ?></a></li>
-                <li><a href="<?= admin_url('reports/GLReport'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('general_ledger_report'); ?></a></li>
+                
+                <li class="newmenu-item has-sub">
+                    <a href="#" class="newmenu-link">
+                        <i class="fa fa-pencil-square-o"></i>
+                        <span><?= lang('JL Entries'); ?></span>
+                        <i class="fa fa-chevron-right newmenu-chevron"></i>
+                    </a>
+                    <ul class="newmenu-sub">
+                        <li><a href="<?= admin_url('entries'); ?>" class="newmenu-link"><i class="fa fa-pencil-square-o"></i> <?= lang('List Entries'); ?></a></li>
+                        <li><a href="<?= admin_url('accounts/jl_entry'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('Add Entry'); ?></a></li>
+                    </ul>
+                </li>
+
+                <li class="newmenu-item has-sub">
+                    <a href="#" class="newmenu-link">
+                        <i class="fa fa-pencil-square-o"></i>
+                        <span><?= lang('Reports'); ?></span>
+                        <i class="fa fa-chevron-right newmenu-chevron"></i>
+                    </a>
+                    <ul class="newmenu-sub">
+                        <li><a href="<?= admin_url('reports/general_ledger_statement'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('GL Statement'); ?></a></li>
+                        <li><a href="<?= admin_url('reports/general_ledger_trial_balance'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i><?= lang('Trial Balance'); ?></a></li>
+                        <li><a href="<?= admin_url('reports/GLReport'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('General Ledger Report'); ?></a></li>
+                    </ul>
+                </li>
             </ul>
         </li>
         <?php } ?>

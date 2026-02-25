@@ -656,4 +656,352 @@ class Accounts extends MY_Controller
 		    force_download($name, $data);
 		}
 	}
+
+	public function jl_entry()
+	{
+		$this->load->admin_model('reports_model');
+		$this->load->admin_model('department_model');
+		$this->load->admin_model('employee_model');
+
+		// Handle POST submission
+		if ($this->input->method() == 'post') {
+			$data = $this->input->post();
+
+			$dr_total = 0;
+			$cr_total = 0;
+			$entryitemdata = array();
+
+			// Validate entries exist
+			if (empty($data['entries'])) {
+				$this->session->set_flashdata('error', 'No entries provided');
+				admin_redirect('accounts/jl_entry');
+			}
+			
+			foreach ($data['entries'] as $item) {
+				// Skip empty rows
+				if (empty($item['ledger_id'])) continue;
+
+				// Validate ledger exists
+				$ledger = $this->db->get_where('sma_accounts_ledgers', array('id' => $item['ledger_id']))->row_array();
+				if (!$ledger) {
+					$this->session->set_flashdata('error', 'Invalid ledger ID: ' . $item['ledger_id']);
+					admin_redirect('accounts/jl_entry');
+				}
+
+				$amount = 0;
+				if ($item['type'] == 'Dr' && !empty($item['dr_amount'])) {
+					$amount = (float) $item['dr_amount'];
+					$dr_total += $amount;
+				} elseif ($item['type'] == 'Cr' && !empty($item['cr_amount'])) {
+					$amount = (float) $item['cr_amount'];
+					$cr_total += $amount;
+				}
+
+				if ($amount > 0) {
+					$entryitemdata[] = array(
+						'dc' => $item['type'] == 'Dr' ? 'D' : 'C',
+						'ledger_id' => $item['ledger_id'],
+						'amount' => $amount,
+						'narration' => $item['description'] ?? '',
+						'department_id' => !empty($item['department_id']) ? $item['department_id'] : null,
+						'employee_id' => !empty($item['employee_id']) ? $item['employee_id'] : null
+					);
+				}
+			}
+
+			// Check if balanced
+			if (abs($dr_total - $cr_total) > 0.01) {
+				$this->session->set_flashdata('error', 'Entry is not balanced. Dr: ' . $dr_total . ' Cr: ' . $cr_total);
+				admin_redirect('accounts/jl_entry');
+			}
+
+			// Get next entry number
+			$q = $this->db->select_max('number')->get('sma_accounts_entries');
+			$next_number = 1;
+			if ($q->num_rows() > 0) {
+				$row = $q->row();
+				$next_number = ((int) $row->number) + 1;
+			}
+
+			$entrydata = array(
+				'entrytype_id' => 4,
+				'transaction_type' => 'journal',
+				'number' => $next_number,
+				'date' => $data['entry_date'],
+				'dr_total' => $dr_total,
+				'cr_total' => $cr_total,
+				'notes' => $data['entry_note'] ?? null,
+			);
+
+			$this->db->trans_start();
+
+			$this->db->insert('sma_accounts_entries', $entrydata);
+			$entry_id = $this->db->insert_id();
+
+			if ($entry_id) {
+				foreach ($entryitemdata as $item) {
+					$item['entry_id'] = $entry_id;
+					$this->db->insert('sma_accounts_entryitems', $item);
+				}
+			}
+
+			$this->db->trans_complete();
+
+			if ($this->db->trans_status() === FALSE) {
+				$this->session->set_flashdata('error', 'Failed to save JL Entry');
+				admin_redirect('accounts/jl_entry');
+			} else {
+				// Handle file uploads
+				if (!empty($_FILES['attachments']['name'][0])) {
+					$this->handle_attachments($entry_id);
+				}
+				
+				$this->session->set_flashdata('message', 'JL Entry added successfully');
+				admin_redirect('entries');
+			}
+		}
+
+		// Show form
+		$this->data['ledgers'] = $this->reports_model->getCompanyLedgers();
+		$this->data['departments'] = $this->department_model->getAllDepartments();
+		$this->data['employees'] = $this->employee_model->getAllEmployees();
+		$this->data['entry'] = null;
+
+		$bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('accounts'), 'page' => lang('accounts')], ['link' => '#', 'page' => lang('JL Entry')]];
+		$meta = ['page_title' => lang('JL Entry'), 'bc' => $bc];
+		$this->page_construct('accounts/jl_entry', $meta, $this->data);
+	}
+
+	public function jl_entry_edit($id = null)
+	{
+		if (!$id) {
+			$this->session->set_flashdata('error', 'Invalid entry ID');
+			admin_redirect('entries');
+		}
+
+		$this->load->admin_model('reports_model');
+		$this->load->admin_model('department_model');
+		$this->load->admin_model('employee_model');
+
+		// Get entry data
+		$entry = $this->db->get_where('sma_accounts_entries', array('id' => $id))->row();
+		if (!$entry) {
+			$this->session->set_flashdata('error', 'Entry not found');
+			admin_redirect('entries');
+		}
+
+		// Get entry items
+		$entry_items = $this->db->get_where('sma_accounts_entryitems', array('entry_id' => $id))->result();
+		
+		// Get entry attachments
+		$entry_attachments = $this->db->get_where('sma_accounts_entry_attachments', array('entry_id' => $id))->result();
+
+		// Handle POST submission (update)
+		if ($this->input->method() == 'post') {
+			$data = $this->input->post();
+
+			$dr_total = 0;
+			$cr_total = 0;
+			$entryitemdata = array();
+
+			// Validate entries exist
+			if (empty($data['entries'])) {
+				$this->session->set_flashdata('error', 'No entries provided');
+				admin_redirect('accounts/jl_entry_edit/' . $id);
+			}
+			
+			foreach ($data['entries'] as $item) {
+				// Skip empty rows
+				if (empty($item['ledger_id'])) continue;
+
+				// Validate ledger exists
+				$ledger = $this->db->get_where('sma_accounts_ledgers', array('id' => $item['ledger_id']))->row_array();
+				if (!$ledger) {
+					$this->session->set_flashdata('error', 'Invalid ledger ID: ' . $item['ledger_id']);
+					admin_redirect('accounts/jl_entry_edit/' . $id);
+				}
+
+				$amount = 0;
+				if ($item['type'] == 'Dr' && !empty($item['dr_amount'])) {
+					$amount = (float) $item['dr_amount'];
+					$dr_total += $amount;
+				} elseif ($item['type'] == 'Cr' && !empty($item['cr_amount'])) {
+					$amount = (float) $item['cr_amount'];
+					$cr_total += $amount;
+				}
+
+				if ($amount > 0) {
+					$entryitemdata[] = array(
+						'dc' => $item['type'] == 'Dr' ? 'D' : 'C',
+						'ledger_id' => $item['ledger_id'],
+						'amount' => $amount,
+						'narration' => $item['description'] ?? '',
+						'department_id' => !empty($item['department_id']) ? $item['department_id'] : null,
+						'employee_id' => !empty($item['employee_id']) ? $item['employee_id'] : null
+					);
+				}
+			}
+
+			// Check if balanced
+			if (abs($dr_total - $cr_total) > 0.01) {
+				$this->session->set_flashdata('error', 'Entry is not balanced. Dr: ' . $dr_total . ' Cr: ' . $cr_total);
+				admin_redirect('accounts/jl_entry_edit/' . $id);
+			}
+
+			$entrydata = array(
+				'date' => $data['entry_date'],
+				'dr_total' => $dr_total,
+				'cr_total' => $cr_total,
+				'notes' => $data['entry_note'] ?? null,
+			);
+
+			$this->db->trans_start();
+
+			// Update entry
+			$this->db->where('id', $id)->update('sma_accounts_entries', $entrydata);
+
+			// Delete old entry items
+			$this->db->where('entry_id', $id)->delete('sma_accounts_entryitems');
+
+			// Insert new entry items
+			foreach ($entryitemdata as $item) {
+				$item['entry_id'] = $id;
+				$this->db->insert('sma_accounts_entryitems', $item);
+			}
+
+			$this->db->trans_complete();
+
+			if ($this->db->trans_status() === FALSE) {
+				$this->session->set_flashdata('error', 'Failed to update JL Entry');
+				admin_redirect('accounts/jl_entry_edit/' . $id);
+			} else {
+				// Handle attachment removals
+				if (!empty($data['remove_attachments'])) {
+					foreach ($data['remove_attachments'] as $attachment_id) {
+						if (!empty($attachment_id)) {
+							$this->delete_attachment($attachment_id);
+						}
+					}
+				}
+				
+				// Handle new file uploads
+				if (!empty($_FILES['attachments']['name'][0])) {
+					$this->handle_attachments($id);
+				}
+				
+				$this->session->set_flashdata('message', 'JL Entry updated successfully');
+				admin_redirect('entries');
+			}
+		}
+
+		// Prepare entry data for form
+		$entry->items = $entry_items;
+		$entry->attachments = $entry_attachments;
+
+		// Show form with existing data
+		$this->data['ledgers'] = $this->reports_model->getCompanyLedgers();
+		$this->data['departments'] = $this->department_model->getAllDepartments();
+		$this->data['employees'] = $this->employee_model->getAllEmployees();
+		$this->data['entry'] = $entry;
+
+		$bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('accounts'), 'page' => lang('accounts')], ['link' => '#', 'page' => lang('Edit JL Entry')]];
+		$meta = ['page_title' => lang('Edit JL Entry'), 'bc' => $bc];
+		$this->page_construct('accounts/jl_entry', $meta, $this->data);
+	}
+
+	/**
+	 * Handle file attachments upload for JL entries
+	 */
+	private function handle_attachments($entry_id)
+	{
+		$upload_path = 'files/jl_attachments/';
+		
+		// Create directory if it doesn't exist
+		if (!is_dir($upload_path)) {
+			mkdir($upload_path, 0755, true);
+		}
+
+		$config['upload_path'] = $upload_path;
+		$config['allowed_types'] = 'pdf|doc|docx|jpg|jpeg|png|xls|xlsx';
+		$config['max_size'] = 10240; // 10MB
+		$config['encrypt_name'] = true;
+
+		$this->load->library('upload', $config);
+
+		$files = $_FILES['attachments'];
+		$file_count = count($files['name']);
+
+		for ($i = 0; $i < $file_count; $i++) {
+			if (!empty($files['name'][$i])) {
+				$_FILES['attachment']['name'] = $files['name'][$i];
+				$_FILES['attachment']['type'] = $files['type'][$i];
+				$_FILES['attachment']['tmp_name'] = $files['tmp_name'][$i];
+				$_FILES['attachment']['error'] = $files['error'][$i];
+				$_FILES['attachment']['size'] = $files['size'][$i];
+
+				$this->upload->initialize($config);
+
+				if ($this->upload->do_upload('attachment')) {
+					$upload_data = $this->upload->data();
+					
+					// Save attachment info to database
+					$attachment_data = array(
+						'entry_id' => $entry_id,
+						'file_name' => $files['name'][$i],
+						'file_path' => $upload_path . $upload_data['file_name'],
+						'file_type' => $upload_data['file_type'],
+						'file_size' => $upload_data['file_size'] * 1024 // Convert to bytes
+					);
+					
+					$this->db->insert('sma_accounts_entry_attachments', $attachment_data);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Delete attachment file and database record
+	 */
+	private function delete_attachment($attachment_id)
+	{
+		// Get attachment info
+		$attachment = $this->db->get_where('sma_accounts_entry_attachments', array('id' => $attachment_id))->row();
+		
+		if ($attachment) {
+			// Delete file from server
+			if (file_exists($attachment->file_path)) {
+				unlink($attachment->file_path);
+			}
+			
+			// Delete database record
+			$this->db->where('id', $attachment_id)->delete('sma_accounts_entry_attachments');
+		}
+	}
+
+	/**
+	 * Download JL entry attachment securely through controller
+	 * This avoids direct file access permission issues
+	 */
+	public function download_attachment($attachment_id)
+	{
+		// Get attachment info from database
+		$attachment = $this->db->get_where('sma_accounts_entry_attachments', array('id' => $attachment_id))->row();
+		
+		if (!$attachment) {
+			show_404();
+			return;
+		}
+		
+		// Check if file exists
+		if (!file_exists($attachment->file_path)) {
+			$this->session->set_flashdata('error', 'File not found on server');
+			redirect($_SERVER['HTTP_REFERER']);
+			return;
+		}
+		
+		// Force download
+		$this->load->helper('download');
+		$file_data = file_get_contents($attachment->file_path);
+		force_download($attachment->file_name, $file_data);
+	}
 }

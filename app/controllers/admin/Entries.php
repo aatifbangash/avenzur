@@ -1,6 +1,8 @@
 <?php 
 defined('BASEPATH') OR exit('No direct script access allowed');
 
+use Mpdf\Mpdf;
+
 class Entries extends MY_Controller 
 {
 	public function __construct() {
@@ -55,6 +57,9 @@ class Entries extends MY_Controller
 		}
 
 		$this->db->where("transaction_type NOT IN ('purchase_invoice', 'sales_invoice')");
+
+		// Order by newest first
+		$this->db->order_by('id', 'DESC');
 
 		// select all entries
 		// 	$query = $this->db->get('sma_accounts_entries');
@@ -232,7 +237,7 @@ class Entries extends MY_Controller
 		$eid         = $this->input->get('eid');
         $tran_number   = $this->input->get('tran_number');
 		$start_date     = $this->input->get('start_date');
-        $end_date     = $this->input->get('end_date'); 
+        $end_date     = $this->input->get('end_date');
 		
 		$this->db->select(' COUNT(id) as total_record');
 		$this->db->from('sma_accounts_entries');  
@@ -1634,6 +1639,11 @@ class Entries extends MY_Controller
 
 		$this->data['defaultAttachments']     = $this->site->getAttachments($entry['id'], 'journal');
 
+		// Load JL Entry specific attachments from sma_accounts_entry_attachments table
+		$jl_attachments = $this->db->where('entry_id', $entry['id'])
+		                            ->get('sma_accounts_entry_attachments')
+		                            ->result_array();
+		$this->data['jl_attachments'] = $jl_attachments;
 
 		if($entry['pid'] > 0){
 			$this->data['purchasesAttachments']  = $this->site->getAttachments($entry['pid'], 'purchase');
@@ -1723,6 +1733,9 @@ class Entries extends MY_Controller
 
 	public function export($entrytypeLabel, $id, $type='xls')
 	{
+		ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
 		/* Check for valid entry type */
 		if (empty($entrytypeLabel))
 		{
@@ -1808,166 +1821,179 @@ class Entries extends MY_Controller
 
 
         if (!empty($data)) {
-
-            $this->load->library('excel');
-            $this->excel->setActiveSheetIndex(0);
-            if ($type=='pdf') {
-                $styleArray = array(
-                    'borders' => array(
-                        'allborders' => array(
-                            'style' => PHPExcel_Style_Border::BORDER_THIN
-                        )
-                    )
-                );
-                $this->excel->getDefaultStyle()->applyFromArray($styleArray);
-            }
-			if ($this->mSettings->drcr_toby == 'toby') {
-				$drcr_toby = lang('entries_views_views_th_to_by');
-			} else {
-				$drcr_toby = lang('entries_views_views_th_dr_cr');
+			
+			// For PDF export, use Mpdf like customer_statement
+			if ($type == 'pdf') {
+				// Load JL Entry attachments
+				$jl_attachments = $this->db->where('entry_id', $entry['id'])
+				                            ->get('sma_accounts_entry_attachments')
+				                            ->result_array();
+				
+				// Prepare data for view
+				$view_data = array(
+					'entrytype' => $entrytype,
+					'entry' => $entry,
+					'curEntryitems' => $curEntryitems,
+					'Settings' => $this->Settings,
+					'mSettings' => $this->mSettings,
+					'jl_attachments' => $jl_attachments
+				);
+				
+				// Generate filename
+				$filename = ucfirst($entrytypeLabel) . '_Entry_' . $entry['number'] . '.pdf';
+				
+				// Load view and get HTML
+				$html = $this->load->view($this->theme . 'accounts/entries_export_pdf', $view_data, true);
+				
+				// Create PDF using Mpdf
+				$mpdf = new Mpdf([
+					'format' => 'A4',
+					'orientation' => 'P',
+					'margin_top' => 10,
+					'margin_bottom' => 10,
+					'margin_left' => 10,
+					'margin_right' => 10,
+				]);
+				
+				$mpdf->WriteHTML($html);
+				$mpdf->Output($filename, "D"); // D for download
+				exit();
 			}
-            $this->excel->getActiveSheet()->setTitle(ucfirst($entrytypeLabel).lang('entry_title')."  #".$entry['number']);
-
-            $this->excel->getActiveSheet()->SetCellValue('A1', ucfirst($entrytypeLabel).lang('entry_title')."  #".$entry['number']);
-            $this->excel->getActiveSheet()->mergeCells('A1:E1');
-
-            $this->excel->getActiveSheet()->SetCellValue('A2', lang('entries_views_add_label_date').": ".$entry['date']);
-            $this->excel->getActiveSheet()->mergeCells('A2:E2');
-
-
-            $this->excel->getActiveSheet()->SetCellValue('A3', $drcr_toby);
-            $this->excel->getActiveSheet()->SetCellValue('B3', lang('entries_views_views_th_ledger'));
-            $this->excel->getActiveSheet()->SetCellValue('C3', lang('entries_views_views_th_dr_amount'));
-            $this->excel->getActiveSheet()->SetCellValue('D3', lang('entries_views_views_th_cr_amount'));
-            $this->excel->getActiveSheet()->SetCellValue('E3', lang('entries_views_views_th_narration') );
-
-            $row = 4;
-            $ttotal = 0;
-            $ttotal_tax = 0;
-            $tgrand_total = 0;
-            foreach ($curEntryitems as $entryitem) {
-                $ir = $row + 1;
-                if ($ir % 2 == 0) {
-                    $style_header = array(                  
-                        'fill' => array(
-                            'type' => PHPExcel_Style_Fill::FILL_SOLID,
-                            'color' => array('rgb'=>'CCCCCC'),
-                        ),
-                    );
-                    $this->excel->getActiveSheet()->getStyle("A$row:E$row")->applyFromArray( $style_header );
-                }
-
-                if ($this->mSettings->drcr_toby == 'toby') {
-					if ($entryitem['dc'] == 'D') {
-						$dr_cr_rows = lang('entries_views_views_toby_D');
-					} else {
-						$dr_cr_rows = lang('entries_views_views_toby_C');
-					}
+			
+			// For Excel export, keep the existing logic
+			if ($type == 'xls') {
+				// Load old PHPExcel library for Excel export
+				require_once APPPATH . 'third_party/PHPExcel/PHPExcel.php';
+				$this->excel = new PHPExcel();
+				$this->excel->setActiveSheetIndex(0);
+				
+				if ($this->mSettings->drcr_toby == 'toby') {
+					$drcr_toby = lang('entries_views_views_th_to_by');
 				} else {
-					if ($entryitem['dc'] == 'D') {
-						$dr_cr_rows = lang('entries_views_views_drcr_D');
+					$drcr_toby = lang('entries_views_views_th_dr_cr');
+				}
+				$this->excel->getActiveSheet()->setTitle(ucfirst($entrytypeLabel).lang('entry_title')."  #".$entry['number']);
+
+				$this->excel->getActiveSheet()->SetCellValue('A1', ucfirst($entrytypeLabel).lang('entry_title')."  #".$entry['number']);
+				$this->excel->getActiveSheet()->mergeCells('A1:E1');
+
+				$this->excel->getActiveSheet()->SetCellValue('A2', lang('entries_views_add_label_date').": ".$entry['date']);
+				$this->excel->getActiveSheet()->mergeCells('A2:E2');
+
+
+				$this->excel->getActiveSheet()->SetCellValue('A3', $drcr_toby);
+				$this->excel->getActiveSheet()->SetCellValue('B3', lang('entries_views_views_th_ledger'));
+				$this->excel->getActiveSheet()->SetCellValue('C3', lang('entries_views_views_th_dr_amount'));
+				$this->excel->getActiveSheet()->SetCellValue('D3', lang('entries_views_views_th_cr_amount'));
+				$this->excel->getActiveSheet()->SetCellValue('E3', lang('entries_views_views_th_narration') );
+
+				$row = 4;
+				$ttotal = 0;
+				$ttotal_tax = 0;
+				$tgrand_total = 0;
+				foreach ($curEntryitems as $entryitem) {
+					$ir = $row + 1;
+					if ($ir % 2 == 0) {
+						$style_header = array(                  
+							'fill' => array(
+								'type' => PHPExcel_Style_Fill::FILL_SOLID,
+								'color' => array('rgb'=>'CCCCCC'),
+							),
+						);
+						$this->excel->getActiveSheet()->getStyle("A$row:E$row")->applyFromArray( $style_header );
+					}
+
+					if ($this->mSettings->drcr_toby == 'toby') {
+						if ($entryitem['dc'] == 'D') {
+							$dr_cr_rows = lang('entries_views_views_toby_D');
+						} else {
+							$dr_cr_rows = lang('entries_views_views_toby_C');
+						}
 					} else {
-						$dr_cr_rows = lang('entries_views_views_drcr_C');
+						if ($entryitem['dc'] == 'D') {
+							$dr_cr_rows = lang('entries_views_views_drcr_D');
+						} else {
+							$dr_cr_rows = lang('entries_views_views_drcr_C');
+						}
+					}
+
+
+				
+					$this->excel->getActiveSheet()->SetCellValue('A' . $row, $dr_cr_rows);
+					$this->excel->getActiveSheet()->SetCellValue('B' . $row, $entryitem['ledger_name']);
+					$this->excel->getActiveSheet()->SetCellValue('C' . $row, $entryitem['dc'] == 'D' ? $entryitem['dr_amount'] : '');
+					$this->excel->getActiveSheet()->SetCellValue('D' . $row, $entryitem['dc'] == 'C' ? $entryitem['cr_amount'] : '');
+					$this->excel->getActiveSheet()->SetCellValue('E' . $row, $entryitem['narration']);
+					$row++;
+				}
+				$style_header = array(                  
+					'fill' => array(
+						'type' => PHPExcel_Style_Fill::FILL_SOLID,
+						'color' => array('rgb'=>'fdbf2d'),
+					),
+				);
+
+
+				$this->excel->getActiveSheet()->getStyle("A$row:E$row")->applyFromArray( $style_header );
+
+				$this->excel->getActiveSheet()->SetCellValue("A$row", lang('entries_views_views_td_total'));
+				$this->excel->getActiveSheet()->mergeCells("A$row:B$row");
+				$this->excel->getActiveSheet()->SetCellValue("C$row", $this->functionscore->toCurrency('D', $entry['dr_total']));
+				$this->excel->getActiveSheet()->SetCellValue("D$row", $this->functionscore->toCurrency('C', $entry['cr_total']));
+
+
+				if ($this->functionscore->calculate($entry['dr_total'], $entry['cr_total'], '==')) {
+					/* Do nothing */
+				} else {
+					if ($this->functionscore->calculate($entry['dr_total'], $entry['cr_total'], '>')) {
+						$this->excel->getActiveSheet()->SetCellValue("A$row", lang('entries_views_views_td_diff'));
+						$this->excel->getActiveSheet()->mergeCells("A$row:B$row");
+						$this->excel->getActiveSheet()->SetCellValue("C$row",  $this->functionscore->toCurrency('D', $this->functionscore->calculate($entry['dr_total'], $entry['cr_total'], '-')));
+					} else {
+						$this->excel->getActiveSheet()->SetCellValue("A$row", lang('entries_views_views_td_diff'));
+						$this->excel->getActiveSheet()->mergeCells("A$row:C$row");
+						$this->excel->getActiveSheet()->SetCellValue("D$row", $this->functionscore->toCurrency('C', $this->functionscore->calculate($entry['cr_total'], $entry['dr_total'], '-')));
 					}
 				}
 
+				$this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(5);
+				$this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(60);
+				$this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
+				$this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
+				$this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(60);
+			   
+				$filename = 'entry_print';
+				$this->excel->getDefaultStyle()->getAlignment()->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
 
-            
-                $this->excel->getActiveSheet()->SetCellValue('A' . $row, $dr_cr_rows);
-                $this->excel->getActiveSheet()->SetCellValue('B' . $row, $entryitem['ledger_name']);
-                $this->excel->getActiveSheet()->SetCellValue('C' . $row, $entryitem['dc'] == 'D' ? $entryitem['dr_amount'] : '');
-                $this->excel->getActiveSheet()->SetCellValue('D' . $row, $entryitem['dc'] == 'C' ? $entryitem['cr_amount'] : '');
-                $this->excel->getActiveSheet()->SetCellValue('E' . $row, $entryitem['narration']);
-                $row++;
-            }
-            $style_header = array(                  
-                'fill' => array(
-                    'type' => PHPExcel_Style_Fill::FILL_SOLID,
-                    'color' => array('rgb'=>'fdbf2d'),
-                ),
-            );
+			
+				$this->excel->getActiveSheet()->getStyle('C2:C' . ($row))->getNumberFormat()->setFormatCode(PHPExcel_Style_NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
+				$this->excel->getActiveSheet()->getStyle('D2:D' . ($row))->getNumberFormat()->setFormatCode(PHPExcel_Style_NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
 
+				$this->excel->getActiveSheet()->getPageSetup()->setOrientation(PHPExcel_Worksheet_PageSetup::ORIENTATION_LANDSCAPE);
 
-            $this->excel->getActiveSheet()->getStyle("A$row:E$row")->applyFromArray( $style_header );
+				$header = 'A1:E1';
+				$this->excel->getActiveSheet()->getStyle($header)->getFill()->setFillType(\PHPExcel_Style_Fill::FILL_SOLID)->getStartColor()->setRGB('94ce58');
+				$style = array(
+					'font' => array('bold' => true,),
+					'alignment' => array('horizontal' => \PHPExcel_Style_Alignment::HORIZONTAL_CENTER,),
+				);
+				$this->excel->getActiveSheet()->getStyle($header)->applyFromArray($style);
+				
+				$header = 'A2:E2';
+				$this->excel->getActiveSheet()->getStyle($header)->getFill()->setFillType(\PHPExcel_Style_Fill::FILL_SOLID)->getStartColor()->setRGB('fdbf2d');
+				$style = array(
+					'font' => array('bold' => true,),
+					'alignment' => array('horizontal' => \PHPExcel_Style_Alignment::HORIZONTAL_CENTER,),
+				);
+				$this->excel->getActiveSheet()->getStyle($header)->applyFromArray($style);
 
-            $this->excel->getActiveSheet()->SetCellValue("A$row", lang('entries_views_views_td_total'));
-            $this->excel->getActiveSheet()->mergeCells("A$row:B$row");
-            $this->excel->getActiveSheet()->SetCellValue("C$row", $this->functionscore->toCurrency('D', $entry['dr_total']));
-            $this->excel->getActiveSheet()->SetCellValue("D$row", $this->functionscore->toCurrency('C', $entry['cr_total']));
-
-
-            if ($this->functionscore->calculate($entry['dr_total'], $entry['cr_total'], '==')) {
-				/* Do nothing */
-			} else {
-				if ($this->functionscore->calculate($entry['dr_total'], $entry['cr_total'], '>')) {
-					$this->excel->getActiveSheet()->SetCellValue("A$row", lang('entries_views_views_td_diff'));
-		            $this->excel->getActiveSheet()->mergeCells("A$row:B$row");
-		            $this->excel->getActiveSheet()->SetCellValue("C$row",  $this->functionscore->toCurrency('D', $this->functionscore->calculate($entry['dr_total'], $entry['cr_total'], '-')));
-				} else {
-					$this->excel->getActiveSheet()->SetCellValue("A$row", lang('entries_views_views_td_diff'));
-		            $this->excel->getActiveSheet()->mergeCells("A$row:C$row");
-		            $this->excel->getActiveSheet()->SetCellValue("D$row", $this->functionscore->toCurrency('C', $this->functionscore->calculate($entry['cr_total'], $entry['dr_total'], '-')));
-				}
+				header('Content-Type: application/vnd.ms-excel');
+				header('Content-Disposition: attachment;filename="' . $filename . '.xls"');
+				header('Cache-Control: max-age=0');
+				$objWriter = PHPExcel_IOFactory::createWriter($this->excel, 'Excel5');
+				$objWriter->save('php://output');
+				exit();
 			}
-
-            $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(5);
-            $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(60);
-            $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(15);
-            $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
-            $this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(60);
-           
-            $filename = 'entry_print';
-            $this->excel->getDefaultStyle()->getAlignment()->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
-
-        
-            $this->excel->getActiveSheet()->getStyle('C2:C' . ($row))->getNumberFormat()->setFormatCode(PHPExcel_Style_NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
-            $this->excel->getActiveSheet()->getStyle('D2:D' . ($row))->getNumberFormat()->setFormatCode(PHPExcel_Style_NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED1);
-
-            $this->excel->getActiveSheet()->getPageSetup()->setOrientation(PHPExcel_Worksheet_PageSetup::ORIENTATION_LANDSCAPE);
-
-            $header = 'A1:E1';
-            $this->excel->getActiveSheet()->getStyle($header)->getFill()->setFillType(\PHPExcel_Style_Fill::FILL_SOLID)->getStartColor()->setRGB('94ce58');
-            $style = array(
-                'font' => array('bold' => true,),
-                'alignment' => array('horizontal' => \PHPExcel_Style_Alignment::HORIZONTAL_CENTER,),
-            );
-            $this->excel->getActiveSheet()->getStyle($header)->applyFromArray($style);
-            
-            $header = 'A2:E2';
-            $this->excel->getActiveSheet()->getStyle($header)->getFill()->setFillType(\PHPExcel_Style_Fill::FILL_SOLID)->getStartColor()->setRGB('fdbf2d');
-            $style = array(
-                'font' => array('bold' => true,),
-                'alignment' => array('horizontal' => \PHPExcel_Style_Alignment::HORIZONTAL_CENTER,),
-            );
-            $this->excel->getActiveSheet()->getStyle($header)->applyFromArray($style);
-
-            if ($type=='pdf') {
-                require_once(APPPATH . "third_party" . DIRECTORY_SEPARATOR . "MPDFF" . DIRECTORY_SEPARATOR . "mpdf.php");
-                $rendererName = PHPExcel_Settings::PDF_RENDERER_MPDF;
-                $rendererLibrary = 'MPDFF';
-                $rendererLibraryPath = APPPATH . 'third_party' . DIRECTORY_SEPARATOR . $rendererLibrary;
-                if (!PHPExcel_Settings::setPdfRenderer($rendererName, $rendererLibraryPath)) {
-                    die('Please set the $rendererName: ' . $rendererName . ' and $rendererLibraryPath: ' . $rendererLibraryPath . ' values' .
-                        PHP_EOL . ' as appropriate for your directory structure');
-                }
-
-                header('Content-Type: application/pdf');
-                header('Content-Disposition: attachment;filename="' . $filename . '.pdf"');
-                header('Cache-Control: max-age=0');
-
-                $objWriter = PHPExcel_IOFactory::createWriter($this->excel, 'PDF');
-                $objWriter->save('php://output');
-                exit();
-            }
-            
-            if ($type=='xls') {
-                header('Content-Type: application/vnd.ms-excel');
-                header('Content-Disposition: attachment;filename="' . $filename . '.xls"');
-                header('Cache-Control: max-age=0');
-                $objWriter = PHPExcel_IOFactory::createWriter($this->excel, 'Excel5');
-                $objWriter->save('php://output');
-                exit();
-            }
         }
 	}
 

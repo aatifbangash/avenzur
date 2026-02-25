@@ -1,7 +1,3 @@
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
-    integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg=="
-    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
 <script type="text/javascript">
     $(document).ready(function () {
 
@@ -312,16 +308,41 @@
                                 }
                                 ?>
 
+                                <?php
+                                if (!empty($jl_attachments)) {
+                                    echo '<div class="clearfix"></div>';
+                                    echo '<h4>JL Entry Attachments</h4>';
+                                    echo '<div class="table-responsive">';
+                                    echo '<table class="table table-bordered table-striped">';
+                                    echo '<thead><tr>';
+                                    echo '<th>File Name</th>';
+                                    echo '<th>File Size</th>';
+                                    echo '<th>Uploaded</th>';
+                                    echo '<th>Action</th>';
+                                    echo '</tr></thead><tbody>';
+                                    
+                                    foreach ($jl_attachments as $attachment) {
+                                        $file_size_kb = round($attachment['file_size'] / 1024, 2);
+                                        $download_url = admin_url('accounts/download_attachment/' . $attachment['id']);
+                                        echo '<tr>';
+                                        echo '<td><i class="fa fa-file"></i> ' . $attachment['file_name'] . '</td>';
+                                        echo '<td>' . $file_size_kb . ' KB</td>';
+                                        echo '<td>' . date('Y-m-d H:i', strtotime($attachment['uploaded_at'])) . '</td>';
+                                        echo '<td><a href="' . $download_url . '" class="btn btn-sm btn-primary"><i class="fa fa-download"></i> Download</a></td>';
+                                        echo '</tr>';
+                                    }
+                                    
+                                    echo '</tbody></table></div>';
+                                }
+                                ?>
+
                                 <!--<a href="<?= admin_url('entries/edit/') . $entrytype['label'] . '/' . $entry['id']; ?>"
                                     class="btn btn-primary"><?= lang('entries_views_views_td_actions_edit_btn'); ?></a>
                                 <a href="<?= admin_url('entries/delete/') . $entrytype['label'] . '/' . $entry['id']; ?>"
                                     class="btn btn-danger"><?= lang('entries_views_views_td_actions_delete_btn'); ?></a>-->
                                 <a href="<?= admin_url('entries/') ?>"
                                     class="btn btn-default"><?= lang('entries_views_views_td_actions_cancel_btn'); ?></a>
-                                <!-- <a href="<?= admin_url('entries/export/') . $entrytype['label'] . '/' . $entry['id']; ?>/xls" class="btn btn-primary"><?= lang('export_to_xls'); ?>
-                    <a href="<?= admin_url('entries/export/') . $entrytype['label'] . '/' . $entry['id']; ?>/pdf" class="btn btn-primary"><?= lang('export_to_pdf'); ?></a></a> -->
-                                <button onclick="generatePDF()"
-                                    class="btn btn-primary"><?= lang('export_to_pdf'); ?></button>
+                                <a href="<?= admin_url('entries/export/') . $entrytype['label'] . '/' . $entry['id']; ?>/pdf" class="btn btn-primary"><i class="fa fa-file-pdf-o"></i> <?= lang('export_to_pdf'); ?></a>
                                 <?php
                                 ?>
                             </div>
@@ -333,181 +354,4 @@
         </div>
     </div>
 
- 
-<script>
-
-
- function generatePDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({
-        orientation: 'p',
-        unit: 'pt',
-        format: 'a4',
-        putOnlyUsedFonts: true
-    });
-
-    const hostname = window.location.hostname; // e.g., retaj.avenzur.com
-    const domainParts = hostname.split('.'); 
-    const subdomain = domainParts.length > 2 ? domainParts[0] : 'www'; // first part if exists
-    // Load your logo from a URL (replace with the actual URL of your logo)
-    const logoUrl = `https://${subdomain}.avenzur.com/assets/uploads/logos/avenzur-logov2-024.png`; // Replace with your logo URL
-
-    // Define logo dimensions
-    const logoWidth = 196; // Width of the logo in points
-    const logoHeight = 36; // Height of the logo in points
-
-    // Calculate the x-coordinate to center the logo
-    const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
-    const logoXPosition = (pageWidth - logoWidth) / 2;
-    const logoYPosition = 20; // Y-position from the top
-
-    // Load the image from the URL and add it to the PDF
-    const image = new Image();
-    image.src = logoUrl;
-    image.onload = function() {
-        doc.addImage(image, 'PNG', logoXPosition, logoYPosition, logoWidth, logoHeight);
-
-        // Set starting position for further content below the logo
-        const startingY = logoYPosition + logoHeight + 20; // Adjust space below the logo
-
-        // Continue with other content, like adding text or HTML
-        var elementText = document.querySelector('#pdfTextContent');
-        var textContent = elementText.innerText || elementText.textContent;
-
-        doc.setFont("Amiri-Regular"); // Set font if required
-        doc.setFontSize(12);
-        doc.text(textContent, 10, startingY);
-
-        // Render HTML content below the text
-        var elementHTML = document.querySelector('#pdfHtmlContent');
-        doc.html(elementHTML, {
-            callback: function (_doc) {
-                _doc.save('generated-document.pdf');
-            },
-            margin: [startingY + 10, 10, 10, 10], // Adjust top margin to account for the text
-            x: 0,
-            y: startingY + 20,
-            width: 600,
-            windowWidth: 675,
-            html2canvas: {
-                useCORS: true,
-                allowTaint: true,
-                scale: 72 / 96
-            }
-        });
-    };
-}
-
-
- function generatePDFCorrect() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({
-        orientation: 'p',
-        unit: 'pt',
-        format: 'a4',
-        putOnlyUsedFonts: true
-    });
-
-    // Ensure the font is correctly loaded
-    const fontList = doc.getFontList();
-    console.log('Available fonts:', fontList);
-
-    // Set the font to Amiri-Regular if it's available
-    if (fontList['Amiri-Regular']) {
-        doc.setFont("Amiri-Regular");
-    } else {
-        console.error('Amiri-Regular font is not available.');
-    }
-
-    // Set the font size
-    doc.setFontSize(16);
-
-    // Extract the text content from the HTML element
-    var elementText = document.querySelector('#pdfTextContent');
-    var textContent = elementText.innerText || elementText.textContent;
-
-    // Add text to the PDF with specified coordinates
-    doc.text(textContent, 10, 50);
-
-    // Render the HTML content in the PDF
-    var elementHTML = document.querySelector('#pdfHtmlContent');
-
-    doc.html(elementHTML, {
-        callback: function (_doc) {
-            // Add text after HTML content has been rendered
-            _doc.save('generated-document.pdf');
-        },
-        margin: [10, 10, 10, 10],
-        x: 0,
-        y: 180, // Start the HTML content below the text added earlier
-        width: 600,
-        windowWidth: 675,
-        html2canvas: {
-            useCORS: true,
-            allowTaint: true,
-            scale: 72 / 96
-        }
-    });
-}
-
-
-        function generatePDFBlah() {
-
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({
-                orientation: 'p',
-                unit: 'pt',
-                format: 'a4',
-                putOnlyUsedFonts: true
-            });
-
-            const fontList = doc.getFontList();
-
-            // Log the font list to the console
-            console.log(fontList);
-            doc.setFont("Amiri-Regular");
-            //             // Set the font size
-            doc.setFontSize(16);
-
-            var elementText = document.querySelector('#pdfTextContent');
-            var textContent = elementText.innerText || elementText.textContent;
-            // Set the font to Amiri
-            doc.text(textContent);
-
-            // add image - logo
-            // Adjust these to manage left and top margins
-            var elementHTML = document.querySelector('#pdfHtmlContent');
-
-            doc.html(elementHTML, {
-                callback: function (_doc) {
-                    _doc.save('generated-document.pdf');
-                },
-                margin: [10, 10, 10, 10],
-                x: 0, // Left margin
-                y: 0, // Top margin
-                width: 600, // Adjust width to manage the right margin
-                windowWidth: 675,
-                html2canvas: {
-                    useCORS: true,
-                    allowTaint: true,
-                    scale: 72 / 96 //scaling for pt to px
-                }
-            });
-
-            //         var elementHTML = document.querySelector('#pdfContent');
-            // var arabicText = elementHTML.innerText || elementHTML.textContent;
-
-            // // Set RTL direction and add text manually
-            // doc.setFontSize(16);
-            // doc.text(arabicText, 10, 10);
-
-            // // Save the PDF
-            // doc.save('generated-document.pdf');
-
-            //         doc.text("مرحبا بكم في مشروع CodeIgniter باستخدام خط أميري", 10, 10);
-
-            // // Save the PDF
-            //doc.save("example.pdf");
-        }
-
-    </script>
+</script>
