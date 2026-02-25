@@ -248,7 +248,7 @@
                                         $statement->dc == 'D' ? $totalDebit = ($totalDebit + $statement->amount) : null ?>
 
                                     </td>
-                                    <td><?php echo $statement->dc == 'C' ? '-' . $this->sma->formatNumber($statement->amount) : '0.00';
+                                    <td><?php echo $statement->dc == 'C' ? $this->sma->formatNumber($statement->amount) : '0.00';
                                     $statement->dc == 'C' ?
                                         $totalCredit = $totalCredit + $statement->amount : null ?>
 
@@ -280,7 +280,7 @@
                                 <th style="text-align:center;">&nbsp;</th>
                                 <th style="text-align:center;">&nbsp;</th>
                                 <th style="text-align:center;"><?= $this->sma->formatNumber($totalDebit); ?></th>
-                                <th style="text-align:center;"><?= '-' . $this->sma->formatNumber($totalCredit); ?></th>
+                                <th style="text-align:center;"><?= $this->sma->formatNumber($totalCredit); ?></th>
                                 <th style="text-align:center;">
                                     <?php 
                                         if($balance >= 0){
