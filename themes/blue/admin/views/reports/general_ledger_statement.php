@@ -21,25 +21,25 @@
 <?php if($viewtype=='pdf' || $viewtype=='pdf_new'){ ?>
 <link href="<?= $assets ?>styles/pdf/pdf.css" rel="stylesheet">
 
-<!-- PDF Header -->
-<div style="width:100%; margin-bottom:15px; position:relative;">
 
-    <!-- RIGHT: Logo -->
-    <div style="position:absolute; top:0; right:0; text-align:right;">
-        <img src="<?= base_url('assets/uploads/logos/' . $biller->logo); ?>"
-             style="max-width:150px; max-height:60px;">
-        <div style="font-size: 12px; font-weight: bold; margin-top: 5px; color: #333;">
-            <?= $biller->name ?? ''; ?>
+<!-- PDF Header -->
+<div style="width:100%; margin-bottom:5px; margin-top:0; padding-top:0; position:relative;">
+
+    <!-- Title and Date Row -->
+    <div style="width:100%; margin-bottom:10px; overflow:hidden;">
+        <!-- RIGHT: Print Date (put right first so it floats to right) -->
+        <div style="float:right; font-size:10px; color:#666; text-align:right;">
+            Printed on: <?= date('d/m/Y H:i:s'); ?>
+        </div>
+        
+        <!-- LEFT: Title -->
+        <div style="font-size:14px; font-weight:bold; color:#333;">
+            General Ledger Statement
         </div>
     </div>
 
-    <!-- LEFT: Ledger details -->
-    <div style="width:70%;">
-
-        <div style="font-size:10px; color:#666; margin-bottom:6px;">
-            Printed on: <?= date('d/m/Y H:i:s'); ?>
-        </div>
-
+    <!-- Ledger Details -->
+    <div style="width:100%;">
         <div style="font-size:13px; line-height:2.4;">
 
             <strong>Date From:</strong> <?= strip_tags($start_date ?? ''); ?>
@@ -59,7 +59,6 @@
             ?>
 
         </div>
-
     </div>
 
     <!-- CLEAR -->
@@ -70,7 +69,9 @@
 <?php } ?>
 <div class="box">
     <div class="box-header">
+        <?php  if($viewtype!='pdf' && $viewtype!='pdf_new'){?>
         <h2 class="blue"><i class="fa-fw fa fa-users"></i><?= lang('general_ledger_statement'); ?></h2>
+        <?php } ?>
         <?php  if($viewtype!='pdf' && $viewtype!='pdf_new'){?>
         <div class="box-icon">
             <ul class="btn-tasks">
@@ -138,26 +139,32 @@
                         <table id="poTable"
                                class="table items table-striped table-bordered table-condensed table-hover sortable_table tbl_pdf">
                             <thead>
-                            <tr>
+                            <tr style="text-align:center;">
                                 <?php if($viewtype!='pdf' && $viewtype!='pdf_new'){ ?>
-                                <th>#</th>
+                                <th style="width:5%; text-align:center;">#</th>
                                 <?php } ?>
-                                <th><?= lang('date'); ?></th>
-                                <th><?= lang('type'); ?></th>
+                                <th style="width:10%; text-align:center;"><?= lang('date'); ?></th>
+                                <th style="width:5%; text-align:center;"><?= lang('type'); ?></th>
 
                                 <!--<th><?= lang('name'); ?></th>-->
-                                <th><?= lang('Note'); ?></th>
+                                <th style="width:25%; text-align:center;"><?= lang('Note'); ?></th>
 
-                                <th><?= lang('Debit'); ?></th>
-                                <th><?= lang('Credit'); ?></th>
-                                <th><?= lang('balance'); ?></th>
+                                <th style="width:15%; text-align:center;"><?= lang('Debit'); ?></th>
+                                <th style="width:15%; text-align:center;"><?= lang('Credit'); ?></th>
+                                <th style="width:15%; text-align:center;"><?= lang('balance'); ?></th>
                             </tr>
                             </thead>
                             <tbody style="text-align:center;">
                                 <tr>
                                     <td colspan="2">Opening Balance<td>
                                     <td colspan="2">&nbsp;</td>
-                                    <td><?= $this->sma->formatNumber($total_ob); ?></td>
+                                    <td><?php 
+                                        if($total_ob >= 0){
+                                            echo '<span style="color:black;">' . $this->sma->formatNumber($total_ob) . '</span>';
+                                        }else{
+                                            echo '<span style="color:red;">-' . $this->sma->formatNumber(abs($total_ob)) . '</span>';
+                                        }
+                                    ?></td>
                                 </tr>
                             <?php
                             $count = 0;
@@ -201,6 +208,49 @@
                                     $transaction_type = 'Contra';
                                     $transaction_id = $statement->code;
                                     $note = $statement->narration;
+                                }else if($statement->transaction_type == 'sales_invoice' || $statement->transaction_type == 'saleorder'){
+                                    $link = admin_url('sales?sid=' . $statement->sale_id);
+                                    $transaction_type = 'Sales';
+                                    $transaction_id = $statement->sale_id;
+                                    $note = strip_tags(html_entity_decode($statement->narration));
+                                }else if($statement->transaction_type == 'purchase_invoice' || $statement->transaction_type == 'purchaseorder'){
+                                    $link = admin_url('purchases?pid=' . $statement->purchase_id);
+                                    $transaction_type = 'Purchase';
+                                    $transaction_id = $statement->purchase_id;
+                                    $note = strip_tags(html_entity_decode($statement->narration));
+                                }else if($statement->transaction_type == 'supplierpayment'){
+                                    $link = admin_url('suppliers/view_payment/' . $statement->payment_id);
+                                    $transaction_type = 'Supplier Payment';
+                                    $transaction_id = $statement->payment_id;
+                                }else if($statement->transaction_type == 'customerpayment'){
+                                    $link = admin_url('customers/view_payment/' . $statement->payment_id);
+                                    $transaction_type = 'Customer Payment';
+                                    $transaction_id = $statement->payment_id;
+                                }else if($statement->transaction_type == 'creditmemo'){
+                                    $link = admin_url('customers/view_credit_memo/' . $statement->memo_id);
+                                    $transaction_type = 'Memo';
+                                    $transaction_id = $statement->memo_id;
+                                    $note = strip_tags(html_entity_decode($statement->memo_note));
+                                }else if($statement->transaction_type == 'debitmemo'){
+                                    $link = admin_url('customers/view_credit_memo/' . $statement->memo_id);
+                                    $transaction_type = 'Memo';
+                                    $transaction_id = $statement->memo_id;
+                                    $note = strip_tags(html_entity_decode($statement->memo_note));
+                                }else if($statement->transaction_type == 'serviceinvoice'){
+                                    $link = admin_url('customers/list_service_invoice');
+                                    $transaction_type = 'Service Invoice';
+                                    $transaction_id = $statement->memo_id;
+                                    $note = strip_tags(html_entity_decode($statement->memo_note));
+                                }else if($statement->transaction_type == 'returncustomerorder'){
+                                    $link = admin_url('returns?rid=' . $statement->return_id);
+                                    $transaction_type = 'Customer Return';
+                                    $transaction_id = $statement->return_id;
+                                    $note = strip_tags(html_entity_decode($statement->narration));
+                                }else if($statement->transaction_type == 'returnorder'){
+                                    $link = admin_url('returns_supplier?rsid=' . $statement->return_id);
+                                    $transaction_type = 'Supplier Return';
+                                    $transaction_id = $statement->return_id;
+                                    $note = strip_tags(html_entity_decode($statement->narration));
                                 }else{
                                     $link = admin_url('entries/view/journal/' . $statement->entry_id);
                                     $transaction_type = $statement->transaction_type;
@@ -224,18 +274,16 @@
                                             $statement->dc == 'D' ? $totalDebit = ($totalDebit + $statement->amount) : null ?>
 
                                         </td>
-                                        <td><?php echo $statement->dc == 'C' ? number_format($statement->amount, 2, '.', ',') : '0.00';
+                                        <td><?php echo $statement->dc == 'C' ? '-' . number_format($statement->amount, 2, '.', ',') : '0.00';
                                         $statement->dc == 'C' ?
                                             $totalCredit = $totalCredit + $statement->amount : null ?>
 
                                         </td>
                                         <td><?php
                                             if($balance >= 0){
-                                                echo number_format($balance, 2, '.', ',');
-                                                echo ' Dr';
+                                                echo '<span style="color:black;">' . number_format($balance, 2, '.', ',') . '</span>';
                                             }else if($balance < 0){
-                                                echo number_format(abs($balance), 2, '.', ',');
-                                                echo ' Cr';
+                                                echo '<span style="color:red;">-' . number_format(abs($balance), 2, '.', ',') . '</span>';
                                             }
                                         ?></td>
                                     </tr>
@@ -250,25 +298,24 @@
                             }
                             ?>
 
-                            <tr>
+                            <tr style="text-align:center;">
                                 <?php if($viewtype!='pdf' && $viewtype!='pdf_new'){ ?>
-                                <th>&nbsp;</th>
+                                <th style="text-align:center;">&nbsp;</th>
                                 <?php } ?>
-                                <th>&nbsp;</th>
-                                <th>&nbsp;</th>
-                                <th>&nbsp;</th>
+                                <th style="text-align:center;">&nbsp;</th>
+                                <th style="text-align:center;">&nbsp;</th>
+                                <th style="text-align:center;">&nbsp;</th>
                                 
 
-                                <th><?= number_format($totalDebit, 2, '.', ',').' Dr'; ?></th>
-                                <th><?= number_format($totalCredit, 2, '.', ',').' Cr'; ?></th>
-                                <th>
+                                <th style="text-align:center;"><?= number_format($totalDebit, 2, '.', ','); ?></th>
+                                <th style="text-align:center;"><?= '-' . number_format($totalCredit, 2, '.', ','); ?></th>
+                                <th style="text-align:center;">
                                     <?php
 
                                         if($balance >= 0){
-                                            echo number_format($balance, 2, '.', ',');
-                                            echo ' Dr';
+                                            echo '<span style="color:black;">' . number_format($balance, 2, '.', ',') . '</span>';
                                         }else if($balance < 0){
-                                            echo number_format(abs($balance), 2, '.', ',');
+                                            echo '<span style="color:red;">-' . number_format(abs($balance), 2, '.', ',') . '</span>';
                                         }
                                     ?>
                                 </th>
