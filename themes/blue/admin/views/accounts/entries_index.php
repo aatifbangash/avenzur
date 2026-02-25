@@ -66,7 +66,7 @@
                         <i class="icon fa fa-tasks tip" data-placement="left" title="<?= lang('actions') ?>"></i>
                     </a>
                     <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
-                        <li><a href="<?= admin_url(); ?>entries/add/journal">Add Journal</a></li>
+                        <li><a href="<?= admin_url(); ?>accounts/jl_entry">Add Journal</a></li>
                          <?php 
                     /*foreach($this->db->get('sma_accounts_entrytypes')->result_array() as $entrytype): ?>
                         <li><a href="<?= admin_url(); ?>entries/add/<?=$entrytype['label']?>"><?= $entrytype['name']; ?></a></li>
@@ -176,7 +176,7 @@
                             <td>
                                 <a href="<?= admin_url();?>entries/view/<?= ($entryTypeLabel); ?>/<?= $entry['id']; ?>" class="no-hover" escape="false"><i class="fa fa-log-in"></i><?= lang('entries_views_index_th_actions_view_btn'); ?></a>
                                 <span class="link-pad"></span>
-                                <a href="<?= admin_url();?>entries/edit/<?= ($entryTypeLabel); ?>/<?= $entry['id']; ?>" class="no-hover" escape="false"><i class="fa fa-edit"></i><?= lang('entries_views_index_th_actions_edit_btn'); ?></a>
+                                <a href="<?= $entryTypeLabel == 'journal' ? admin_url('accounts/jl_entry_edit/' . $entry['id']) : admin_url('entries/edit/' . $entryTypeLabel . '/' . $entry['id']); ?>" class="no-hover" escape="false"><i class="fa fa-edit"></i><?= lang('entries_views_index_th_actions_edit_btn'); ?></a>
                                 <span class="link-pad"></span>
                                 <!--<a href="<?= admin_url();?>entries/delete/<?= ($entryTypeLabel); ?>/<?= $entry['id']; ?>" class="no-hover" escape="false"><i class="fa fa-trash"></i><?= lang('entries_views_index_th_actions_delete_btn'); ?></a>-->
                                 
