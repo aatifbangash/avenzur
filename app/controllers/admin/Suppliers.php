@@ -210,7 +210,7 @@ class Suppliers extends MY_Controller
             $entryitemdata[] = array(
                 'Entryitem' => array(
                     'entry_id' => $insert_id,
-                    'dc' => 'D',
+                    'dc' => 'C',
                     'ledger_id' => $transfer_ledger,
                     'amount' => $payment_amount,
                     'narration' => 'Advance payment to supplier'
@@ -223,7 +223,7 @@ class Suppliers extends MY_Controller
             $entryitemdata[] = array(
                 'Entryitem' => array(
                     'entry_id' => $insert_id,
-                    'dc' => 'D',
+                    'dc' => 'C',
                     'ledger_id' => $bank_charges_account,
                     'amount' => $bank_charges,
                     'narration' => 'Bank charges'
@@ -239,7 +239,7 @@ class Suppliers extends MY_Controller
             $entryitemdata[] = array(
                 'Entryitem' => array(
                     'entry_id' => $insert_id,
-                    'dc' => 'D',
+                    'dc' => 'C',
                     'ledger_id' => $vat_ledger,
                     'amount' => $bank_charge_vat,
                     'narration' => 'VAT on Bank Charges (15%)'
@@ -251,7 +251,7 @@ class Suppliers extends MY_Controller
         $entryitemdata[] = array(
             'Entryitem' => array(
                 'entry_id' => $insert_id,
-                'dc' => 'C',
+                'dc' => 'D',
                 'ledger_id' => $advance_ledger,
                 'amount' => $total_amount,
                 'narration' => 'Advance payment received from supplier'
