@@ -253,6 +253,7 @@ class Purchase_order extends MY_Controller
             'shipping' => $this->sma->formatDecimal($shipping),
             'grand_total' => $grand_total,
             'status' => $status,
+            'created_by' => $this->session->userdata('user_id'),
             'updated_by' => $this->session->userdata('user_id'),
             'updated_at' => date('Y-m-d H:i:s'),
             'payment_term' => $payment_term,
