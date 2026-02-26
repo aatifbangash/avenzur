@@ -1223,13 +1223,15 @@ class Reports_model extends CI_Model
             foreach ($q->result() as $row) {
 
                 // keep your supplier-specific logic
-                if ($row->id == 102) {
+                /*if ($row->id == 102) {
                     if (!empty($row->supplier_id) && $row->supplier_id > 0) {
                         $ob[] = $row;
                     }
                 } else {
                     $ob[] = $row;
-                }
+                }*/
+
+                $ob[] = $row;
             }
         }
 
