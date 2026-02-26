@@ -1432,7 +1432,7 @@ class Suppliers extends MY_Controller
                 if($query->num_rows() > 0) {
                     $result = $query->row();
                     // Advance balance = Credits (advances received) - Debits (advances used/settled)
-                    $advance_balance = $result->credit_total - $result->debit_total;
+                    $advance_balance = $result->debit_total - $result->credit_total;
                 }
             }
             
