@@ -1436,6 +1436,16 @@ class Customers extends MY_Controller
         }
     }
 
+    public function checkDuplicatePaymentReference($reference_no, $type = 'collection') {
+
+        $this->db->where('reference_no', $reference_no);
+        if ($type == 'collection') {
+            $this->db->where('customer_id IS NOT NULL', null, false);
+        }
+        $query = $this->db->get('sma_payment_reference');
+        return $query->num_rows() > 0;
+    }
+
     public function payment_from_customer_new(){
         $this->form_validation->set_rules('customer', $this->lang->line('customer'), 'required');
         $this->form_validation->set_rules('reference_no', $this->lang->line('reference_no'), 'required');
@@ -1452,6 +1462,13 @@ class Customers extends MY_Controller
             $ledger_account = $this->input->post('ledger');
             $date = $this->input->post('date');
             $note = $this->input->post('note');
+
+            $duplicate_reference = $this->checkDuplicatePaymentReference($reference_no, 'collection');
+            if($duplicate_reference) {
+                $this->session->set_flashdata('error', 'The reference number already exists. Please use a unique reference number.');
+                admin_redirect('customers/payment_from_customer_new');
+            }
+
             $payment_amount = $this->input->post('payment_amount') ? (float)$this->input->post('payment_amount') : 0;
 
             $customer_advance_ledger = isset($this->Settings->customer_advance_ledger) && !empty($this->Settings->customer_advance_ledger) 
