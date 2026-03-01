@@ -144,10 +144,10 @@
                                 <th style="width:5%; text-align:center;">#</th>
                                 <?php } ?>
                                 <th style="width:10%; text-align:center;"><?= lang('date'); ?></th>
-                                <th style="width:5%; text-align:center;"><?= lang('type'); ?></th>
+                                <th style="width:8%; text-align:center;"><?= lang('type'); ?></th>
 
                                 <!--<th><?= lang('name'); ?></th>-->
-                                <th style="width:25%; text-align:center;"><?= lang('Note'); ?></th>
+                                <th style="width:22%; text-align:center;"><?= lang('Note'); ?></th>
 
                                 <th style="width:15%; text-align:center;"><?= lang('Debit'); ?></th>
                                 <th style="width:15%; text-align:center;"><?= lang('Credit'); ?></th>
@@ -157,7 +157,11 @@
                             <tbody style="text-align:center;">
                                 <tr>
                                     <td colspan="2">Opening Balance<td>
+                                    <?php if($viewtype!='pdf' && $viewtype!='pdf_new'){ ?>
                                     <td colspan="3">&nbsp;</td>
+                                    <?php }else{ ?>
+                                    <td colspan="2">&nbsp;</td> 
+                                    <?php } ?>
                                     <td><?php 
                                         if($total_ob >= 0){
                                             echo '<span style="color:black;">' . $this->sma->formatNumber($total_ob) . '</span>';
