@@ -382,8 +382,16 @@ class Suppliers extends MY_Controller
 
         // Determine entry direction: Normal (D) or Reversed (C)
         // If supplier is credited (C), reverse all other entries
-        $vat_dc = ($supplier_entry_type == 'D') ? 'D' : 'C';
+        $vat_dc = ($supplier_entry_type == 'D') ? 'C' : 'D';
         $ledger_dc = ($supplier_entry_type == 'D') ? 'C' : 'D';
+
+        if($supplier_entry_type == 'D'){
+            $ledger_amount = $total_amount - $vat_amount;
+            $supplier_amount = $total_amount;
+        }else{
+            $ledger_amount = $total_amount;
+            $supplier_amount = $total_amount - $vat_amount;
+        }
 
         //supplier - debit or credit based on selection
         $entryitemdata[] = array(
@@ -391,7 +399,7 @@ class Suppliers extends MY_Controller
                 'entry_id' => $insert_id,
                 'dc' => $supplier_entry_type, // D or C based on user selection
                 'ledger_id' => $supplier->ledger_account,
-                'amount' => $payment_amount,
+                'amount' => $supplier_amount,
                 'narration' => ''
             )
         );
