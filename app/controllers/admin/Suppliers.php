@@ -423,7 +423,7 @@ class Suppliers extends MY_Controller
                 'entry_id' => $insert_id,
                 'dc' => $ledger_dc,
                 'ledger_id' => $ledger_account,
-                'amount' => $total_amount,
+                'amount' => $ledger_amount,
                 'narration' => ''
             )
         );
