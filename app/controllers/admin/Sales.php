@@ -1,9 +1,11 @@
 <?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
-// ALTER TABLE `sma_sales` ADD `sequence_code` VARCHAR(255) NULL AFTER `sale_invoice`;
+use Mpdf\Mpdf;
+//require_once(APPPATH . 'factories/PdfServiceFactory.php');
 class Sales extends MY_Controller
 {
+    //private $pdfService;
     public function __construct()
     {
         parent::__construct();
@@ -16,29 +18,547 @@ class Sales extends MY_Controller
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect($_SERVER['HTTP_REFERER']);
         }
+        $this->load->admin_model('cmt_model');
+        $this->load->library('RASDCore',$params=null, 'rasd');
         $this->lang->admin_load('sales', $this->Settings->user_language);
         $this->load->library('form_validation');
         $this->load->admin_model('sales_model');
+        $this->load->admin_model('quotes_model');
         $this->load->admin_model('companies_model');
+        $this->load->admin_model('products_model');
+        $this->load->admin_model('settings_model');
         $this->digital_upload_path = 'files/';
         $this->upload_path         = 'assets/uploads/';
         $this->thumbs_path         = 'assets/uploads/thumbs/';
         $this->image_types         = 'gif|jpg|jpeg|png|tif';
         $this->digital_file_types  = 'zip|psd|ai|rar|pdf|doc|docx|xls|xlsx|ppt|pptx|gif|jpg|jpeg|png|tif|txt';
-        $this->allowed_file_size   = '1024';
+        $this->allowed_file_size   = '2048';
         $this->data['logo']        = true;
         $this->load->library('attachments', [
             'path'     => $this->digital_upload_path,
             'types'    => $this->digital_file_types,
             'max_size' => $this->allowed_file_size,
         ]);
+        $this->load->admin_model("Zetca_model");
+        $this->zatca_enabled = false;
+        $d = $this->Zetca_model->get_zetca_settings();
+
+        if($d['zatca_enabled']){
+            $this->zatca_enabled = true;
+            $params = array(
+            'base_url' => $d['zatca_url'],
+            "api_key" => $d['zatca_appkey'],
+            "api_secret" => $d['zatca_secretKey']
+            );
+           $this->load->library('ZatcaServices', $params, 'zatca');                       
+        }
+        //$this->pdfService = PdfServiceFactory::create('html2pdf'); 
     }
 
     /* ------------------------------------------------------------------ */
 
+    public function showUploadSales() {
+        //$this->sma->checkPermissions();
+
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['customers'] = $this->site->getAllCompanies('customer');
+        $this->data['billers'] = $this->site->getAllCompanies('biller');
+
+        echo "<script>console.log(" . json_encode($this->data['customers']) . ");</script>";
+        echo "<script>console.log(" . json_encode($this->data['billers']) . ");</script>";
+
+        $this->load->view($this->theme . 'sales/uploadCsvSales', $this->data);
+    }
+
+
+    public function mapSales()
+    {
+        $this->sma->checkPermissions('csv');
+        $this->load->helper('security');
+        $this->form_validation->set_message('is_natural_no_zero', lang('no_zero_required'));
+        $this->form_validation->set_rules('customer', lang('customer'), 'required');
+        $this->form_validation->set_rules('biller', lang('biller'), 'required');
+        //$this->form_validation->set_rules('sale_status', lang('sale_status'), 'required');
+        //$this->form_validation->set_rules('payment_status', lang('payment_status'), 'required');
+        $this->form_validation->set_rules('userfile', lang('upload_file'), 'xss_clean');
+
+        if ($this->form_validation->run() == true) {
+            $reference = $this->input->post('reference_no') ? $this->input->post('reference_no') : $this->site->getReference('so');
+            if ($this->Owner || $this->Admin) {
+                $date = $this->sma->fld(trim($this->input->post('date')));
+            } else {
+                $date = date('Y-m-d H:i:s');
+            }
+            $warehouse_id     = $this->input->post('warehouse');
+            $customer_id      = $this->input->post('customer');
+            $biller_id        = $this->input->post('biller');
+            $total_items      = $this->input->post('total_items');
+            $sale_status      = 'pending';
+            $payment_status   = 'pending';
+            $payment_term     = $this->input->post('payment_term');
+            $due_date         = $payment_term ? date('Y-m-d', strtotime('+' . $payment_term . ' days')) : null;
+            $shipping         = $this->input->post('shipping') ? $this->input->post('shipping') : 0;
+            $customer_details = $this->site->getCompanyByID($customer_id);
+            $customer         = $customer_details->company && $customer_details->company != '-' ? $customer_details->company : $customer_details->name;
+            $biller_details   = $this->site->getCompanyByID($biller_id);
+            $biller           = $biller_details->company && $biller_details->company != '-' ? $biller_details->company : $biller_details->name;
+            $note             = $this->sma->clear_tags($this->input->post('note'));
+            $staff_note       = $this->sma->clear_tags($this->input->post('staff_note'));
+
+            $total            = 0;
+            $total_net_sale   = 0;
+            $product_tax      = 0;
+            $product_discount = 0;
+            $gst_data         = [];
+            $total_cgst       = $total_sgst       = $total_igst       = 0;
+
+            if (isset($_FILES['userfile'])) {
+                $this->load->library('upload');
+                $config['upload_path']   = $this->digital_upload_path;
+                $config['allowed_types'] = 'csv';
+                $config['max_size']      = $this->allowed_file_size;
+                $config['overwrite']     = true;
+                $this->upload->initialize($config);
+                if (!$this->upload->do_upload()) {
+                    $error = $this->upload->display_errors();
+                    $this->session->set_flashdata('error', $error);
+                    admin_redirect('sales/mapSales');
+                }
+                $csv = $this->upload->file_name;
+
+                $arrResult = [];
+                $handle    = fopen($this->digital_upload_path . $csv, 'r');
+                if ($handle) {
+                    while (($row = fgetcsv($handle, 1000, ',')) !== false) {
+                        $arrResult[] = $row;
+                    }
+                    fclose($handle);
+                }
+                $arr_length = count($arrResult);
+                if ($arr_length > 499) {
+                    $this->session->set_flashdata('error', lang('too_many_products'));
+                    redirect($_SERVER['HTTP_REFERER']);
+                    exit();
+                }
+                $titles = array_shift($arrResult);
+                $keys = [
+                    'code',
+                    'avz_code',
+                    'cost_price',
+                    'purchase_price',
+                    'sale_price',
+                    'quantity',
+                    'batch_no',
+                    'expiry',
+                    'bonus',
+                    'dis1',
+                    'dis1_val',
+                    'dis2',
+                    'dis2_val',
+                    'vat',
+                    'vat_val',
+                    'total_sale',
+                    'net_sale',
+                    'unit_sale_price'
+                ];   
+                $final  = [];
+                
+                foreach ($arrResult as $key => $value) {
+                    $final[] = array_combine($keys, $value);
+                }
+                $rw = 2;
+               
+                foreach ($final as $csv_pr) {
+                    if (isset($csv_pr['code']) && isset($csv_pr['unit_sale_price']) && isset($csv_pr['quantity']) && isset($csv_pr['batch_no'])) {    
+                        if ($product_details = $this->sales_model->getProductByCode($csv_pr['code'])) {
+                            
+                            $item_id        = $product_details->id;
+                            $item_type      = $product_details->type;
+                            $item_code      = $product_details->code;
+                            $item_name      = $product_details->name;
+
+                            $total_sale     = $csv_pr['total_sale'];
+                            $cost_price     = $csv_pr['cost_price'];
+                            $purchase_price = $csv_pr['purchase_price'];
+                            $sale_price     = $csv_pr['sale_price'];
+                            $item_net_price = $csv_pr['unit_sale_price'];
+                            $item_quantity  = $csv_pr['quantity'];
+                            $item_bonus     = $csv_pr['bonus'];
+                            $item_tax_rate  = $csv_pr['vat'];
+                            $vat_val        = $csv_pr['vat_val'];
+                            $item_discount  = $csv_pr['discount'];
+                            $item_dis1      = $csv_pr['dis1'];
+                            $item_dis1_val  = $csv_pr['dis1_val'];
+                            $item_dis2      = $csv_pr['dis2'];
+                            $item_dis2_val  = $csv_pr['dis2_val'];
+                            
+                            $item_batchno   = $csv_pr['batch_no'];  
+                            $avz_code       = $csv_pr['avz_code'];
+                            $totalbeforevat = $csv_pr['net_sale'];
+                            $main_net       = ($csv_pr['net_sale'] + $vat_val);
+                           
+                            $item_expiry    = isset($csv_pr['expiry']) ? $this->sma->fsd($csv_pr['expiry']) : null;
+
+                            if (isset($item_code) && isset($item_net_price) && isset($item_quantity)) {
+                                $product_details  = $this->sales_model->getProductByCode($item_code);
+                                
+                                $prroduct_item_discount = ($item_dis1_val + $item_dis2_val);
+                                $product_discount += $prroduct_item_discount;
+
+                                $tax         = '';
+                                
+                                $unit_price  = $sale_price;
+                                $tax_details = ((isset($item_tax_rate) && !empty($item_tax_rate)) ? $this->sales_model->getTaxRateByName($item_tax_rate) : $this->site->getTaxRateByID($product_details->tax_rate));
+                                if ($tax_details) {
+                                    $ctax     = $this->site->calculateTax($product_details, $tax_details, $unit_price);
+                                    $tax      = $ctax['tax'];
+                                }
+
+                                $product_tax += $vat_val;
+                                $subtotal = $csv_pr['total_sale'];
+                                $unit     = $this->site->getUnitByID($product_details->unit);
+
+                                $product = [
+                                    'product_id'        => $product_details->id,
+                                    'product_code'      => $item_code,
+                                    'product_name'      => $item_name,
+                                    'product_type'      => $item_type,
+                                    'net_cost'          => $cost_price,
+                                    'net_unit_price'    => $item_net_price,
+                                    'quantity'          => $item_quantity + $item_bonus,
+                                    'product_unit_id'   => $product_details->unit,
+                                    'product_unit_code' => $unit->code,
+                                    'unit_quantity'     => $item_quantity,
+                                    'warehouse_id'      => $warehouse_id,
+                                    'item_tax'          => $vat_val,
+                                    'tax_rate_id'       => $tax_details ? $tax_details->id : null,
+                                    'tax'               => $tax,
+                                    'item_discount'     => $item_dis1_val,
+                                    'expiry'            => $item_expiry,
+                                    'discount1'         => $item_dis1,
+                                    'discount2'         => $item_dis2,
+                                    'subtotal'          => $subtotal,
+                                    'batch_no'          => $item_batchno,
+                                    'unit_price'        => $unit_price,
+                                    'real_unit_price'   => $unit_price,
+                                    'subtotal2'         => $main_net,
+                                    'bonus'             => $item_bonus,
+                                    'avz_item_code'     => $avz_code ,
+                                    'totalbeforevat'    => $totalbeforevat,
+                                    'main_net'          => $main_net,
+                                    'real_cost'         => $purchase_price,
+                                    'second_discount_value' => $item_dis2_val
+                                    // 'second_discount_value' => $pr_discount2 * $item_quantity
+                                ];
+
+                                $products[] = ($product);
+                                $total += $total_sale;
+                                $total_net_sale += $totalbeforevat;
+                            }
+                        } else {
+                            $this->session->set_flashdata('error', lang('pr_not_found') . ' ( ' . $csv_pr['code'] . ' ). ' . lang('line_no') . ' ' . $rw);
+                            redirect($_SERVER['HTTP_REFERER']);
+                        }
+                        $rw++;
+                    }
+                }
+            }
+
+            $order_discount = $this->site->calculateDiscount($this->input->post('order_discount'), ($total + $product_tax), true);
+            $total_discount = $product_discount;
+            $order_tax      = $this->input->post('order_tax');
+            $total_tax      = $product_tax + $order_tax;
+            $grand_total = $total_net_sale + $total_tax + $shipping;
+            $data        = ['date'  => $date,
+                'reference_no'      => $reference,
+                'customer_id'       => $customer_id,
+                'customer'          => $customer,
+                'biller_id'         => $biller_id,
+                'biller'            => $biller,
+                'warehouse_id'      => $warehouse_id,
+                'note'              => $note,
+                'staff_note'        => $staff_note,
+                'total'             => $total,
+                'total_net_sale'    => $total_net_sale,
+                'product_discount'  => $product_discount,
+                'order_discount_id' => $this->input->post('order_discount'),
+                'order_discount'    => $order_discount,
+                'total_discount'    => $total_discount,
+                'product_tax'       => $product_tax,
+                'order_tax_id'      => $this->input->post('order_tax'),
+                'order_tax'         => $order_tax,
+                'total_tax'         => $total_tax,
+                'shipping'          => $this->sma->formatDecimal($shipping),
+                'grand_total'       => $grand_total,
+                'total_items'       => $total_items,
+                'sale_status'       => $sale_status,
+                'payment_status'    => $payment_status,
+                'payment_term'      => $payment_term,
+                'due_date'          => $due_date,
+                'paid'              => 0,
+                'created_by'        => $this->session->userdata('user_id'),
+            ];
+            if ($this->Settings->indian_gst) {
+                $data['cgst'] = $total_cgst;
+                $data['sgst'] = $total_sgst;
+                $data['igst'] = $total_igst;
+            }
+
+            if ($payment_status == 'paid') {
+                $payment = [
+                    'date'         => $date,
+                    'reference_no' => $this->site->getReference('pay'),
+                    'amount'       => $grand_total,
+                    'paid_by'      => 'cash',
+                    'cheque_no'    => '',
+                    'cc_no'        => '',
+                    'cc_holder'    => '',
+                    'cc_month'     => '',
+                    'cc_year'      => '',
+                    'cc_type'      => '',
+                    'created_by'   => $this->session->userdata('user_id'),
+                    'note'         => lang('auto_added_for_sale_by_csv') . ' (' . lang('sale_reference_no') . ' ' . $reference . ')',
+                    'type'         => 'received',
+                ];
+            } else {
+                $payment = [];
+            }
+
+            $attachments        = $this->attachments->upload();
+            $data['attachment'] = !empty($attachments);
+        }
+
+        if ($this->form_validation->run() == true && $this->sales_model->addSale($data, $products, $payment, [], $attachments)) {
+            $this->session->set_userdata('remove_slls', 1);
+            $this->session->set_flashdata('message', lang('sale_added'));
+            admin_redirect('sales');
+        } else {
+            $data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+
+            $this->data['warehouses'] = $this->site->getAllWarehouses();
+            $this->data['tax_rates']  = $this->site->getAllTaxRates();
+            $this->data['billers']    = $this->site->getAllCompanies('biller');
+            $this->data['slnumber']   = $this->site->getReference('so');
+
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('sales'), 'page' => lang('sales')], ['link' => '#', 'page' => lang('add_sale_by_csv')]];
+            $meta = ['page_title' => lang('add_sale_by_csv'), 'bc' => $bc];
+            $this->page_construct('sales/sale_by_csv', $meta, $this->data);
+        }
+    }
+
+    public function add_from_quote($quote_id = null){
+        //$this->sma->checkPermissions();
+        /*if(!$this->Admin && !$this->Owner && !$this->GP['sales-coordinator']){
+            $this->session->set_flashdata('error', lang('You do not have permission for this action.'));
+            admin_redirect('quotes');exit;
+        }*/
+
+        if (!$quote_id) {
+            $this->session->set_flashdata('error', lang('Quote ID not provided.'));
+            admin_redirect('quotes');exit;
+        }
+
+        $quote = $this->quotes_model->getQuoteByID($quote_id);
+
+        if($quote->status == 'converted_to_sale'){
+            $this->session->set_flashdata('error', 'Quote already converted to sale order');
+            admin_redirect('quotes');
+        }
+        
+        if($quote->status != 'approved'){
+            $this->session->set_flashdata('error', 'Approved quotes are converted to sale order');
+            admin_redirect('quotes');
+        }
+
+        $quote_items = $this->quotes_model->getAllQuoteItems($quote_id, $quote);
+
+        $date = date('Y-m-d H:i:s');
+        $reference = $quote->reference_no;
+        $customer_id = $quote->customer_id;
+        $customer = $quote->customer;
+        $biller_id = $quote->biller_id;
+        $biller = $quote->biller;
+        $warehouse_id = $quote->warehouse_id;
+        $note = $quote->note;
+        $staff_note = $quote->staff_note;
+        $warning_note =  $quote->warning_note;
+        $product_discount = $quote->product_discount;
+        $total_items = $quote->total_items;
+        $payment_term = $quote->payment_term;
+        $due_date = $due_date         = $payment_term ? date('Y-m-d', strtotime('+' . $payment_term . ' days', strtotime($date))) : null;
+        $attachment = $quote->attachment;
+        
+        $total            = $quote->total;
+        $product_tax      = $quote->product_tax;
+        $product_discount = $quote->product_discount;
+        $grand_total_discount = $quote->total_discount;
+        $grand_total_vat = $quote->total_tax;
+        $grand_total = $quote->grand_total;
+        $grand_total_sale = $quote->total;
+        $grand_total_net_sale = $quote->total_net_sale; 
+        $grand_cost_goods_sold = 0;
+
+        $i = sizeof($quote_items);
+        for ($r = 0; $r < $i; $r++) {
+            $item_id = $quote_items[$r]->product_id;
+            $item_code = $quote_items[$r]->product_code;
+            $item_name = $quote_items[$r]->product_name;
+            $item_type = $quote_items[$r]->product_type;
+            $item_option = $quote_items[$r]->option_id;
+            $net_cost = $quote_items[$r]->net_cost;
+            $item_net_price = $quote_items[$r]->net_unit_price;
+            $item_quantity = $quote_items[$r]->quantity;
+            $item_bonus = $quote_items[$r]->bonus;
+            $item_unit_quantity = $quote_items[$r]->unit_quantity;
+            $warehouse_id = $quote_items[$r]->warehouse_id;
+            $pr_item_tax = $quote_items[$r]->item_tax;
+            $item_tax_rate = $quote_items[$r]->tax_rate_id;
+            $new_item_vat_value = $quote_items[$r]->tax;
+            $item_discount = $quote_items[$r]->item_discount;
+            $new_item_first_discount = $quote_items[$r]->item_discount;
+            $new_item_total_sale = $quote_items[$r]->subtotal;
+            $item_serial = '';
+            $item_serial_no = '';
+            $item_expiry = $quote_items[$r]->expiry;
+            $item_batchno = $quote_items[$r]->batch_no;
+            $real_unit_price = $quote_items[$r]->real_unit_price;
+            $subtotal2 = $quote_items[$r]->subtotal2;
+            $item_dis1 = $quote_items[$r]->discount1;
+            $item_dis2 = $quote_items[$r]->discount2;
+            $item_dis3 = $quote_items[$r]->discount3;
+            $new_item_second_discount = $quote_items[$r]->second_discount_value;
+            $new_item_third_discount = $quote_items[$r]->third_discount_value;
+            $totalbeforevat = $quote_items[$r]->totalbeforevat;
+            $main_net = $quote_items[$r]->main_net;
+            $real_cost = $quote_items[$r]->real_cost;
+            $avz_code = $quote_items[$r]->avz_item_code ?? '';
+
+            $cost_of_goods_sold = $net_cost * $item_quantity;
+
+
+            $inventoryObj = $this->products_model->check_inventory($warehouse_id, $item_id, $item_batchno, $item_expiry, $item_quantity, $avz_code);
+            
+            if(!$inventoryObj){
+                $this->session->set_flashdata('error', 'Quote cannot be converted to sale order. The item: '.$item_code.'-'.$item_name.' has no stock in Warehouse');
+                admin_redirect('quotes');
+            }else{
+                $totalInventoryCheck = $this->products_model->getTotalInventoryQuantity($warehouse_id, $item_id);
+                if(!$totalInventoryCheck || $totalInventoryCheck < $item_quantity){
+                    $this->session->set_flashdata('error', 'Quote cannot be converted to sale order. The item: '.$item_code.'-'.$item_name.' has insufficient stock in Warehouse');
+                    admin_redirect('quotes');
+
+                }
+            }
+
+            $product = [
+                'product_id'        => $item_id,
+                'product_code'      => $item_code,
+                'product_name'      => $item_name,
+                'product_type'      => $item_type,
+                'option_id'         => $item_option,
+                'net_cost'          => $net_cost,
+                'net_unit_price'    => $item_net_price,
+                'unit_price'        => $item_net_price,
+                'quantity'          => $item_quantity,
+                'product_unit_id'   => $quote_items[$r]->product_unit_id,
+                'product_unit_code' => $quote_items[$r]->product_unit_code,
+                'unit_quantity'     => $item_unit_quantity,
+                'warehouse_id'      => $warehouse_id,
+                'item_tax'          => $pr_item_tax,
+                'tax_rate_id'       => $item_tax_rate,
+                'tax'               => $new_item_vat_value,
+                'discount'          => $item_discount,
+                'item_discount'     => $new_item_first_discount,
+                'subtotal'          => $new_item_total_sale,
+                'serial_no'         => $item_serial,
+                'serial_number'     => $item_serial_no,
+                'expiry'            => $item_expiry,
+                'batch_no'          => $item_batchno,
+                //'lot_no'            => $item_lotno,
+                'real_unit_price'   => $real_unit_price,
+                'subtotal2'         => $this->sma->formatDecimal($subtotal2),
+                'bonus'             => $item_bonus,
+                //'bonus'             => 0,
+                'discount1'         => $item_dis1,
+                'discount2'         => $item_dis2,
+                'discount3'         => $item_dis3,
+                'second_discount_value' => $new_item_second_discount,
+                'third_discount_value' => $new_item_third_discount,
+                'totalbeforevat'    => $totalbeforevat,
+                'main_net'          => $main_net,
+                'real_cost'         => $real_cost,
+                'avz_item_code'     => $avz_code
+            ];
+
+            $products[] = ($product);
+            $grand_cost_goods_sold += $cost_of_goods_sold;
+        }
+
+        if (empty($products)) {
+            $this->form_validation->set_rules('product', lang('order_items'), 'required');
+        } else {
+            krsort($products);
+        }
+
+        $data = [
+            'date'  => $date,
+            'reference_no'      => $reference,
+            'customer_id'       => $customer_id,
+            'customer'          => $customer,
+            'biller_id'         => $biller_id,
+            'biller'            => $biller,
+            'warehouse_id'      => $warehouse_id,
+            'note'              => $note,
+            'staff_note'        => $staff_note,
+            'warning_note'      => $warning_note, 
+            'total'             => $grand_total_sale,
+            'total_net_sale'    => $grand_total_net_sale,
+            'product_discount'  => $product_discount,
+            'order_discount_id' => 0,
+            'order_discount'    => 0,
+            'total_discount'    => $grand_total_discount,
+            'product_tax'       => $product_tax,
+            'order_tax_id'      => 0,
+            'order_tax'         => 0,
+            'total_tax'         => $grand_total_vat,
+            'shipping'          => 0,
+            'grand_total'       => $grand_total,
+            'cost_goods_sold'   => $grand_cost_goods_sold,
+            'total_items'       => $total_items,
+            'attachment'        => $attachment,
+            'sale_id'           => $quote_id,
+            'sale_status'       => 'ready',
+            'payment_status'    => 'pending',
+            'payment_term'      => $payment_term,
+            'due_date'          => $due_date,
+            'paid'              => 0,
+            'created_by'        => $this->session->userdata('user_id'),
+            'hash'              => hash('sha256', microtime() . mt_rand()),
+        ];
+
+        $payment = [];
+
+        if ($sale_id = $this->sales_model->addSaleNew($data, $products, $payment, [])) {
+
+            $this->quotes_model->updateStatus($quote_id, 'converted_to_sale', 'Converted to Sale');
+
+            $this->session->set_flashdata('message', lang('Sale Order Added'));
+            admin_redirect('sales?lastInsertedId='.$sale_id);
+        }else{
+            $this->session->set_flashdata('error', lang('Failed Adding Sale Order'));
+            admin_redirect('quotes');
+        }
+
+    }  
+
     public function add($quote_id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
+        if(!$this->Admin && !$this->Owner && !$this->GP['sales-coordinator']){
+            $this->session->set_flashdata('error', lang('You do not have permission for this action.'));
+            admin_redirect('quotes');exit;
+        }
+
         $sale_id = $this->input->get('sale_id') ? $this->input->get('sale_id') : null;
 
         $this->form_validation->set_message('is_natural_no_zero', lang('no_zero_required'));
@@ -46,11 +566,30 @@ class Sales extends MY_Controller
         $this->form_validation->set_rules('biller', lang('biller'), 'required');
         $this->form_validation->set_rules('sale_status', lang('sale_status'), 'required');
         $this->form_validation->set_rules('payment_status', lang('payment_status'), 'required');
+        $this->form_validation->set_rules('quantity[]', lang('quantity'), 'required'); 
+        $this->form_validation->set_rules('batchno[]', lang('batchno'), 'required'); 
+        
+        $product_id_arr= $this->input->post('product_id');  
+        foreach ($product_id_arr as $index => $prid) {
+            // Set validation rules for each quantity field
+            $this->form_validation->set_rules(
+                'quantity['.$index.']',
+                'Quantity for Product '.$_POST['product_name'][$index],  // Replace with actual product identifier
+                'required|greater_than[0]',
+                array(
+                    'required' => 'Quantity for Product '.$_POST['product_name'][$index].' is required.',
+                    'greater_than' => 'Quantity for Product '.$_POST['product_name'][$index].' must be greater than zero.'
+                )
+            );
+        }
+ 
 
         if ($this->form_validation->run() == true) {
+            // echo "<pre>";
+            // print_r($_POST);exit;
 
             $customerId = $this->input->post('customer');
-
+           //  echo 'valid'; exit;  
             $customer = $this->companies_model->getCompanyByID($customerId);
             $customerCreditLimit = $customer->credit_limit;
 
@@ -62,6 +601,8 @@ class Sales extends MY_Controller
             }
             // Check If customer pending sales exceeded the customer credit limit END
 
+            $warning_note = $this->input->post('warning_note') ? $this->input->post('warning_note') : NULL;
+            
             $reference = $this->input->post('reference_no') ? $this->input->post('reference_no') : $this->site->getReference('so');
             if ($this->Owner || $this->Admin) {
                 $date = $this->sma->fld(trim($this->input->post('date')));
@@ -92,15 +633,19 @@ class Sales extends MY_Controller
             $gst_data         = [];
             $total_cgst       = $total_sgst       = $total_igst       = 0;
             $i                = isset($_POST['product_code']) ? sizeof($_POST['product_code']) : 0;
+            //echo '<pre>';print_r($_POST);exit;
             for ($r = 0; $r < $i; $r++) {
                 $item_id            = $_POST['product_id'][$r];
                 $item_type          = $_POST['product_type'][$r];
                 $item_code          = $_POST['product_code'][$r];
+                $avz_code           = $_POST['avz_code'][$r];
                 $item_name          = $_POST['product_name'][$r];
                 $item_option        = isset($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' && $_POST['product_option'][$r] != 'null' ? $_POST['product_option'][$r] : null;
-                $real_unit_price    = $this->sma->formatDecimal($_POST['real_unit_price'][$r]);
+                //$real_unit_price    = $this->sma->formatDecimal($_POST['real_unit_price'][$r]);
                 $unit_price         = $this->sma->formatDecimal($_POST['unit_price'][$r]);
-                //$net_cost           = $this->sma->formatDecimal($_POST['net_cost'][$r]);
+                $real_unit_price = $unit_price;
+                $net_cost           = $this->sma->formatDecimal($_POST['net_cost'][$r]);
+                $real_cost          = $this->sma->formatDecimal($_POST['real_cost'][$r]);
 
                 $item_unit_quantity = $_POST['quantity'][$r];
                 $item_serial        = $_POST['serial'][$r]           ?? '';
@@ -112,19 +657,20 @@ class Sales extends MY_Controller
                 $item_tax_rate      = $_POST['product_tax'][$r]      ?? null;
                 $item_discount      = $_POST['product_discount'][$r] ?? null;
                 $item_unit          = $_POST['product_unit'][$r];
-                $item_quantity      = $_POST['product_base_quantity'][$r];
-                //$item_bonus = $_POST['bonus'][$r];
+                $item_quantity      = $_POST['quantity'][$r];
+                $item_bonus = $_POST['bonus'][$r];
                 $item_dis1 = $_POST['dis1'][$r];
                 $item_dis2 = $_POST['dis2'][$r];
                 $totalbeforevat = $_POST['totalbeforevat'][$r];
                 $main_net = $_POST['main_net'][$r];
 
-                $net_cost_obj = $this->sales_model->getAverageCost($item_batchno, $item_code);
-                $net_cost = $net_cost_obj[0]->cost_price;
-                if(empty($net_cost) || $net_cost == NULL){
-                    $net_cost = 0;
-                }
+                //$net_cost_obj = $this->sales_model->getAvgCost($item_batchno, $item_id);
+                //$net_cost = $net_cost_obj[0]->cost_price;
 
+                //$net_cost = $this->sales_model->getAvgCost($item_batchno, $item_id);
+                //$real_cost = $this->sales_model->getRealAvgCost($item_batchno, $item_id);
+               
+                
                 if (isset($item_code) && isset($real_unit_price) && isset($unit_price) && isset($item_quantity)) {
                     $product_details = $item_type != 'manual' ? $this->sales_model->getProductByCode($item_code) : null;
                     // $unit_price = $real_unit_price;
@@ -132,9 +678,8 @@ class Sales extends MY_Controller
                         $digital = true;
                     }
                     $pr_discount      = $this->site->calculateDiscount($item_discount, $unit_price);
-                    $unit_price       = $this->sma->formatDecimal($unit_price - $pr_discount);
-                    $item_net_price   = $unit_price;
                     $pr_item_discount = $this->sma->formatDecimal($pr_discount * $item_unit_quantity);
+                    $unit_price       = $this->sma->formatDecimal($unit_price);
                     $product_discount += $pr_item_discount;
 
 
@@ -151,10 +696,9 @@ class Sales extends MY_Controller
                     $product_discount += $prroduct_item_discount;
                     //Discount calculation----------------------------------
 
-
-
-
-
+                    // NEW: Net unit price calculation
+                    $item_net_price   = $this->sma->formatDecimal((($real_unit_price * ($item_quantity)) - $pr_item_discount - $pr_item_discount2) / ($item_quantity + $item_bonus));
+                    
                     $pr_item_tax = $item_tax = 0;
                     $tax         = '';
 
@@ -179,9 +723,18 @@ class Sales extends MY_Controller
 
                     $product_tax += $pr_item_tax;
                     $subtotal = $main_net;//(($item_net_price * $item_unit_quantity) + $pr_item_tax);
-                    $subtotal2 = (($item_net_price * $item_unit_quantity));// + $pr_item_tax);
+                    //$subtotal2 = (($item_net_price * $item_unit_quantity) + $product_tax);// + $pr_item_tax);
+                    $subtotal2 = $main_net + $pr_item_tax;
                     $unit     = $this->site->getUnitByID($item_unit);
 
+                    /**
+                     * POST FIELDS
+                     */
+                    $new_item_first_discount = $_POST['item_first_discount'][$r];
+                    $new_item_second_discount = $_POST['item_second_discount'][$r];
+                    $new_item_vat_value = $_POST['item_vat_values'][$r];
+                    $new_item_total_sale = $_POST['item_total_sale'][$r];
+                    
                     $product = [
                         'product_id'        => $item_id,
                         'product_code'      => $item_code,
@@ -190,18 +743,18 @@ class Sales extends MY_Controller
                         'option_id'         => $item_option,
                         'net_cost'          => $net_cost,
                         'net_unit_price'    => $item_net_price,
-                        'unit_price'        => $this->sma->formatDecimal($item_net_price + $item_tax),
-                        'quantity'          => $item_quantity,
+                        'unit_price'        => $item_net_price,
+                        'quantity'          => $item_quantity + $item_bonus,
                         'product_unit_id'   => $unit ? $unit->id : null,
                         'product_unit_code' => $unit ? $unit->code : null,
                         'unit_quantity'     => $item_unit_quantity,
                         'warehouse_id'      => $warehouse_id,
                         'item_tax'          => $pr_item_tax,
                         'tax_rate_id'       => $item_tax_rate,
-                        'tax'               => $tax,
+                        'tax'               => $new_item_vat_value,
                         'discount'          => $item_discount,
-                        'item_discount'     => $prroduct_item_discount,
-                        'subtotal'          => $this->sma->formatDecimal($subtotal),
+                        'item_discount'     => $new_item_first_discount,
+                        'subtotal'          => $new_item_total_sale,
                         'serial_no'         => $item_serial,
                         'serial_number'     => $item_serial_no,
                         'expiry'            => $item_expiry,
@@ -210,16 +763,21 @@ class Sales extends MY_Controller
 
                         'real_unit_price'   => $real_unit_price,
                         'subtotal2'         => $this->sma->formatDecimal($subtotal2),
-                        //'bonus'           => $item_bonus,
-                        'bonus'             => 0,
+                        'bonus'             => $item_bonus,
+                        //'bonus'             => 0,
                         'discount1'         => $item_dis1,
                         'discount2'         => $item_dis2,
+                        'second_discount_value' => $new_item_second_discount,
                         'totalbeforevat'    => $totalbeforevat,
                         'main_net'          => $main_net,
+                        'real_cost'         => $real_cost,
+                        'avz_item_code'     => $avz_code
                     ];
-
+                    
                     $products[] = ($product + $gst_data);
-                    $total += $this->sma->formatDecimal($main_net, 4);//$this->sma->formatDecimal(($item_net_price * $item_unit_quantity), 4);
+                    //$total += $this->sma->formatDecimal($main_net, 4);//$this->sma->formatDecimal(($item_net_price * $item_unit_quantity), 4);
+                    // NEW: Grand total calculation
+                    $total += $this->sma->formatDecimal($subtotal2, 4);
                 }
             }
             if (empty($products)) {
@@ -234,8 +792,22 @@ class Sales extends MY_Controller
             $total_tax      = $this->sma->formatDecimal($order_tax, 4);//$this->sma->formatDecimal(($product_tax + $order_tax), 4);
             //print_r($product_tax);exit;
             // $grand_total    = $this->sma->formatDecimal(($this->sma->formatDecimal($total) + $this->sma->formatDecimal($total_tax) + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
-            $grand_total = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
-            $data        = ['date'  => $date,
+            //$grand_total = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
+            
+            // NEW: Grand total calculation
+            $grand_total = $this->sma->formatDecimal(($total), 4);
+
+             /**
+             * post values
+             */
+            
+             $grand_total_net_sale = $this->input->post('grand_total_net_sale');
+             $grand_total_discount = $this->input->post('grand_total_discount');
+             $grand_total_vat = $this->input->post('grand_total_vat');
+             $grand_total_sale = $this->input->post('grand_total_sale');
+             $grand_total = $this->input->post('grand_total');
+
+            $data = ['date'  => $date,
                 'reference_no'      => $reference,
                 'customer_id'       => $customer_id,
                 'customer'          => $customer,
@@ -244,15 +816,17 @@ class Sales extends MY_Controller
                 'warehouse_id'      => $warehouse_id,
                 'note'              => $note,
                 'staff_note'        => $staff_note,
-                'total'             => $total,
+                'warning_note'      => $warning_note, 
+                'total'             => $grand_total_sale,
+                'total_net_sale'    => $grand_total_net_sale,
                 'product_discount'  => $product_discount,
                 'order_discount_id' => $this->input->post('order_discount'),
                 'order_discount'    => $order_discount,
-                'total_discount'    => $total_discount,
+                'total_discount'    => $grand_total_discount,
                 'product_tax'       => $product_tax,
                 'order_tax_id'      => $this->input->post('order_tax'),
                 'order_tax'         => $order_tax,
-                'total_tax'         => $total_tax,
+                'total_tax'         => $grand_total_vat,
                 'shipping'          => $this->sma->formatDecimal($shipping),
                 'grand_total'       => $grand_total,
                 'total_items'       => $total_items,
@@ -321,16 +895,52 @@ class Sales extends MY_Controller
 
             $attachments        = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
-            // $this->sma->print_arrays($data, $products, $payment, $attachments);
+            //$this->sma->print_arrays($data, $products, $payment, $attachments); exit; 
         }
         
-        if ($this->form_validation->run() == true && $this->sales_model->addSale($data, $products, $payment, [], $attachments)) {
+        if ($this->form_validation->run() == true && $sale_id = $this->sales_model->addSale($data, $products, $payment, [], $attachments)) {
             $this->session->set_userdata('remove_slls', 1);
             if ($quote_id) {
                 $this->db->update('quotes', ['status' => 'completed'], ['id' => $quote_id]);
             }
+            /**
+             * Zatca Integration B2B Start
+             */
+            if($sale_status  == 'completed'){
+                 if($this->zatca_enabled){
+                    $zatca_payload =  $this->Zetca_model->get_zetca_data_b2b($sale_id); 
+                    $zatca_response = $this->zatca->post('',  $zatca_payload);
+                    $is_success = true;
+                    $remarks = "";
+                    if($zatca_response['status'] >= 400){
+                        $is_success = false;
+                        if(isset($zatca_response['body']['errors'])){
+                            if(!empty($zatca_response['body']['errors'])){
+                                $remarks = $zatca_response['body']['errors'][0];
+                            }
+                        }
+                    }
+                    $date = date('Y-m-d H:i:s');
+                    $request = json_encode($zatca_payload, true);
+                    $response = json_encode($zatca_response, true);
+                    $reporting_data = [
+                        "sale_id" => $sale_id,
+                        "date" => $date,
+                        "is_success" => $is_success,
+                        "request" => $request,
+                        "response" => $response,
+                        "remarks" => $remarks
+                    ];
+
+                    $this->Zetca_model->report_zatca_status($reporting_data);
+                 }
+            }
+
+            /**
+             * Zatca Integration B2B End
+             */
             $this->session->set_flashdata('message', lang('sale_added'));
-            admin_redirect('sales');
+            admin_redirect('sales?lastInsertedId='.$sale_id);
         } else {
             if ($quote_id || $sale_id) {
                 if ($quote_id) {
@@ -425,18 +1035,52 @@ class Sales extends MY_Controller
         }
     }
 
+    public function manually_send_invoices_to_zatca(){
+        $sale_ids = array(4093, 4094, 4095, 4096, 4097, 4098); // Sale IDs to be sent to ZATCA
+        $i = 0;
+        for($i=0;$i<sizeOf($sale_ids);$i++){
+            $sale_id = $sale_ids[$i];
+            //echo 'SaleId: '. $sale_id.'<br />';exit;
+            $zatca_payload =  $this->Zetca_model->get_zetca_data_b2b($sale_id); 
+            $zatca_response = $this->zatca->post('',  $zatca_payload);
+            $is_success = true;
+            $remarks = "";
+            if($zatca_response['status'] >= 400){
+                $is_success = false;
+                if(isset($zatca_response['body']['errors'])){
+                    if(!empty($zatca_response['body']['errors'])){
+                        $remarks = $zatca_response['body']['errors'][0];
+                    }
+                }
+            }
+            $date = date('Y-m-d H:i:s');
+            $request = json_encode($zatca_payload, true);
+            $response = json_encode($zatca_response, true);
+            $reporting_data = [
+                "sale_id" => $sale_id,
+                "date" => $date,
+                "is_success" => $is_success,
+                "request" => $request,
+                "response" => $response,
+                "remarks" => $remarks
+            ];
+
+            $this->Zetca_model->report_zatca_status($reporting_data);
+        }
+    }
+
     public function add_delivery($id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
         }
         $sale = $this->sales_model->getInvoiceByID($id);
-        if ($sale->sale_status != 'completed') {
+        /*if ($sale->sale_status != 'completed') {
             $this->session->set_flashdata('error', lang('status_is_x_completed'));
             $this->sma->md();
-        }
+        }*/
 
         if ($delivery = $this->sales_model->getDeliveryBySaleID($id)) {
             $this->edit_delivery($delivery->id);
@@ -491,7 +1135,8 @@ class Sales extends MY_Controller
 
             if ($this->form_validation->run() == true && $this->sales_model->addDelivery($dlDetails)) {
                 $this->session->set_flashdata('message', lang('delivery_added'));
-                admin_redirect('sales/deliveries');
+                //admin_redirect('sales/deliveries');
+                admin_redirect('sales/view/'.$sale_id);
             } else {
                 $this->data['error']           = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
                 $this->data['customer']        = $this->site->getCompanyByID($sale->customer_id);
@@ -573,7 +1218,8 @@ class Sales extends MY_Controller
             'dr_total'     => $amount,
             'cr_total'     => $amount,
             'notes'        => 'Sale Reference: '.$inv->reference_no.' Date: '.date('Y-m-d H:i:s'),
-            'sid'          =>  $inv->id
+            'sid'          =>  $inv->id,
+            'customer_id'  => $inv->customer_id
             );
     
         $add  = $this->db->insert('sma_accounts_entries', $entry);
@@ -790,7 +1436,7 @@ class Sales extends MY_Controller
 
     public function delete_gift_card($id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         if ($this->sales_model->deleteGiftCard($id)) {
             $this->sma->send_json(['error' => 0, 'msg' => lang('gift_card_deleted')]);
@@ -839,7 +1485,7 @@ class Sales extends MY_Controller
 
     public function deliveries()
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         $data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
         $bc            = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('sales'), 'page' => lang('sales')], ['link' => '#', 'page' => lang('deliveries')]];
@@ -912,7 +1558,11 @@ class Sales extends MY_Controller
 
     public function edit($id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
+        if(!$this->Admin && !$this->Owner && !$this->GP['sales-coordinator']){
+            $this->session->set_flashdata('error', lang('You do not have permission for this action.'));
+            admin_redirect('quotes');exit;
+        }
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -934,14 +1584,29 @@ class Sales extends MY_Controller
         }
 
         $this->form_validation->set_message('is_natural_no_zero', lang('no_zero_required'));
-        $this->form_validation->set_rules('reference_no', lang('reference_no'), 'required');
+        //$this->form_validation->set_rules('reference_no', lang('reference_no'), 'required');
         $this->form_validation->set_rules('customer', lang('customer'), 'required');
         $this->form_validation->set_rules('biller', lang('biller'), 'required');
         $this->form_validation->set_rules('sale_status', lang('sale_status'), 'required');
         $this->form_validation->set_rules('payment_status', lang('payment_status'), 'required');
-
+        $this->form_validation->set_rules('batchno[]', lang('Batch Number'), 'required');
+        $product_id_arr= $this->input->post('product_id');  
+        foreach ($product_id_arr as $index => $prid) {
+            // Set validation rules for each quantity field
+            $this->form_validation->set_rules(
+                'quantity['.$index.']',
+                'Quantity for Product '.$_POST['product_name'][$index],  // Replace with actual product identifier
+                'required|greater_than[0]',
+                array(
+                    'required' => 'Quantity for Product '.$_POST['product_name'][$index].' is required.',
+                    'greater_than' => 'Quantity for Product '.$_POST['product_name'][$index].' must be greater than zero.'
+                )
+            );
+        }
         if ($this->form_validation->run() == true) {
-            $reference = $this->input->post('reference_no');
+            // echo "<pre>";
+            // print_r($_POST);exit;
+            //$reference = $this->input->post('reference_no');
             if ($this->Owner || $this->Admin) {
                 $date = $this->sma->fld(trim($this->input->post('date')));
             } else {
@@ -952,7 +1617,7 @@ class Sales extends MY_Controller
             $biller_id        = $this->input->post('biller');
             $total_items      = $this->input->post('total_items');
             $sale_status      = $this->input->post('sale_status');
-            $payment_status   = $this->input->post('payment_status');
+            $payment_status   = "pending";
             $payment_term     = $this->input->post('payment_term');
             $due_date         = $payment_term ? date('Y-m-d', strtotime('+' . $payment_term . ' days', strtotime($date))) : null;
             $shipping         = $this->input->post('shipping') ? $this->input->post('shipping') : 0;
@@ -962,6 +1627,8 @@ class Sales extends MY_Controller
             $biller           = !empty($biller_details->company) && $biller_details->company != '-' ? $biller_details->company : $biller_details->name;
             $note             = $this->sma->clear_tags($this->input->post('note'));
             $staff_note       = $this->sma->clear_tags($this->input->post('staff_note'));
+            $warning_note     = $this->sma->clear_tags($this->input->post('warning_note'));
+            
 
             $total            = 0;
             $product_tax      = 0;
@@ -971,16 +1638,17 @@ class Sales extends MY_Controller
             $total_cgst       = $total_sgst       = $total_igst       = 0;
             $i                = isset($_POST['product_code']) ? sizeof($_POST['product_code']) : 0;
 
-
+            //echo '<pre>';print_r($_POST);exit;
             for ($r = 0; $r < $i; $r++) {
                 $item_id            = $_POST['product_id'][$r];
                 $item_type          = $_POST['product_type'][$r];
                 $item_code          = $_POST['product_code'][$r];
+                $item_avz_code      = $_POST['avz_code'][$r];
                 $item_name          = $_POST['product_name'][$r];
                 $item_option        = isset($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' && $_POST['product_option'][$r] != 'null' ? $_POST['product_option'][$r] : null;
                 //$net_cost           = $this->sma->formatDecimal($_POST['net_cost'][$r]);
-                $real_unit_price    = $this->sma->formatDecimal($_POST['real_unit_price'][$r]);
                 $unit_price         = $this->sma->formatDecimal($_POST['unit_price'][$r]);
+                $real_unit_price    = $unit_price ; //$this->sma->formatDecimal($_POST['real_unit_price'][$r]);
                 $item_unit_quantity = $_POST['quantity'][$r];
                 $item_serial        = $_POST['serial'][$r]           ?? '';
 
@@ -992,10 +1660,12 @@ class Sales extends MY_Controller
                 $item_tax_rate      = $_POST['product_tax'][$r]      ?? null;
                 $item_discount      = $_POST['product_discount'][$r] ?? null;
                 $item_unit          = $_POST['product_unit'][$r];
-                $item_quantity      = $_POST['product_base_quantity'][$r];
+                $item_quantity      = $_POST['quantity'][$r];
+                $net_cost           = $this->sma->formatDecimal($_POST['net_cost'][$r]);
+                $real_cost          = $this->sma->formatDecimal($_POST['real_cost'][$r]);
 
 
-                //$item_bonus = $_POST['bonus'][$r];
+                $item_bonus = $_POST['bonus'][$r];
                 $item_dis1 = $_POST['dis1'][$r];
                 $item_dis2 = $_POST['dis2'][$r];
                 $totalbeforevat = $_POST['totalbeforevat'][$r];
@@ -1003,7 +1673,7 @@ class Sales extends MY_Controller
                 
                 
                 $data2['OperationType'] = 'DRUG SALE';
-                $data2['TransactionNumber']  = $reference;
+                $data2['TransactionNumber']  = '';
                 $data2['FromID'] =  $id;
                 $data2['ToID'] = 0; 
 
@@ -1020,19 +1690,21 @@ class Sales extends MY_Controller
 
                 }
 
-                $net_cost_obj = $this->sales_model->getAverageCost($item_batchno, $item_code);
-                $net_cost = $net_cost_obj[0]->cost_price;
-                if(empty($net_cost) || $net_cost == NULL){
-                    $net_cost = 0;
-                }
+                //$net_cost_obj = $this->sales_model->getAverageCost($item_batchno, $item_code);
+                //$net_cost = $net_cost_obj[0]->cost_price;
 
-                if (isset($item_code) && isset($real_unit_price) && isset($unit_price) && isset($item_quantity)) {
+                //$net_cost = $this->sales_model->getAvgCost($item_batchno, $item_id);
+                //$real_cost = $this->sales_model->getRealAvgCost($item_batchno, $item_id);
+
+               
+                if (isset($item_code) && isset($unit_price) && isset($item_quantity)) {
+                   
                     $product_details = $item_type != 'manual' ? $this->sales_model->getProductByCode($item_code) : null;
 
                     $pr_discount      = $this->site->calculateDiscount($item_discount, $unit_price);
-                    $unit_price       = $this->sma->formatDecimal($unit_price - $pr_discount);
-                    $item_net_price   = $unit_price;
                     $pr_item_discount = $this->sma->formatDecimal($pr_discount * $item_unit_quantity);
+                    $unit_price       = $this->sma->formatDecimal($unit_price);
+                    $item_net_price   = $this->sma->formatDecimal($unit_price - $pr_discount);
                     $product_discount += $pr_item_discount;
 
                     //Discount calculation---------------------------------- 
@@ -1047,8 +1719,22 @@ class Sales extends MY_Controller
                     
                     $product_item_discount = ($product_item_discount1 + $product_item_discount2);
                     $total_product_discount += $product_item_discount;
+
+                    //Discount calculation---------------------------------- 
+                    //The above will be deleted later becasue order discount is not in use                  
+                    $pr_discount      = $this->site->calculateDiscount($item_dis1.'%', $real_unit_price);
+                    $amount_after_dis1 = $real_unit_price - $pr_discount;
+                    $pr_discount2      = $this->site->calculateDiscount($item_dis2.'%', $amount_after_dis1);
+
+                    $pr_item_discount = $this->sma->formatDecimal($pr_discount * $item_unit_quantity);
+                    $pr_item_discount2 = $this->sma->formatDecimal($pr_discount2 * $item_unit_quantity);
+                    $prroduct_item_discount = ($pr_item_discount + $pr_item_discount2);
+                    $product_discount += $prroduct_item_discount;
                     //Discount calculation----------------------------------
 
+                    // NEW: Net unit price calculation
+                    $item_net_price   = $this->sma->formatDecimal((($real_unit_price * $item_quantity) - $pr_item_discount - $pr_item_discount2) / ($item_quantity + $item_bonus));
+                    
                     $pr_item_tax = $item_tax = 0;
                     $tax         = '';
 
@@ -1071,8 +1757,21 @@ class Sales extends MY_Controller
 
                     $product_tax += $pr_item_tax;
                     $subtotal = $main_net;//(($item_net_price * $item_unit_quantity) + $pr_item_tax);
-                    $subtotal2 = (($item_net_price * $item_unit_quantity));
+                    //$subtotal2 = (($item_net_price * $item_unit_quantity));
+
+                    $subtotal2 = ($main_net + $product_tax);
+
                     $unit     = $this->site->getUnitByID($item_unit);
+
+                     /**
+                     * POST FIELDS
+                     */
+                    $new_item_first_discount = $_POST['item_first_discount'][$r];
+                    $new_item_second_discount = $_POST['item_second_discount'][$r];
+                    $new_item_vat_value = $_POST['item_vat_values'][$r];
+                    $new_item_total_sale = $_POST['item_total_sale'][$r];
+                    $item_net_unit_sale = $_POST['item_unit_sale'][$r];
+                    $item_unit_sale = $_POST['unit_price'][$r];
 
                     $product = [
                         'product_id'        => $item_id,
@@ -1081,19 +1780,20 @@ class Sales extends MY_Controller
                         'product_type'      => $item_type,
                         'option_id'         => $item_option,
                         'net_cost'          => $net_cost,
-                        'net_unit_price'    => $item_net_price,
-                        'unit_price'        => $this->sma->formatDecimal($item_net_price + $item_tax),
-                        'quantity'          => $item_quantity,
+                        'net_unit_price'    => $item_net_unit_sale,
+                        'unit_price'        => $item_unit_sale,
+                        'quantity'          => $item_quantity + $item_bonus,
                         'product_unit_id'   => $unit ? $unit->id : null,
                         'product_unit_code' => $unit ? $unit->code : null,
                         'unit_quantity'     => $item_unit_quantity,
                         'warehouse_id'      => $warehouse_id,
                         'item_tax'          => $pr_item_tax,
                         'tax_rate_id'       => $item_tax_rate,
-                        'tax'               => $tax,
+                        'tax'               => $new_item_vat_value,
                         'discount'          => $item_discount,
-                        'item_discount'     => $product_item_discount,
-                        'subtotal'          => $this->sma->formatDecimal($subtotal),
+                        'item_discount'     => $new_item_first_discount,
+                        'second_discount_value' => $new_item_second_discount,
+                        'subtotal'          => $new_item_total_sale,
                         'serial_no'         => $item_serial,
                         'expiry'            => $item_expiry,
                         'batch_no'          => $item_batchno,
@@ -1101,18 +1801,23 @@ class Sales extends MY_Controller
                         'lot_no'            => $item_lotno,
                         'real_unit_price'   => $real_unit_price,
                         'subtotal2'         => $this->sma->formatDecimal($subtotal2),
-                        //'bonus'           => $item_bonus,
-                        'bonus'             => 0,
+                        'bonus'           => $item_bonus,
+                        //'bonus'             => 0,
                         'discount1'         => $item_dis1,
                         'discount2'         => $item_dis2,
                         'totalbeforevat'    => $totalbeforevat,
                         'main_net'          => $main_net,
+                        'avz_item_code'     => $item_avz_code,
+                        'real_cost'         => $real_cost
                     ];
 
                     $products[] = ($product + $gst_data);
-                    $total += $this->sma->formatDecimal($main_net, 4);//$this->sma->formatDecimal(($item_net_price * $item_unit_quantity), 4);
+                    //$total += $this->sma->formatDecimal($main_net, 4);//$this->sma->formatDecimal(($item_net_price * $item_unit_quantity), 4);
+                    $total += $this->sma->formatDecimal($subtotal2, 4);
                 }
             }
+            // echo "products<pre>";
+            // print_r($products);
             if (empty($products)) {
                 $this->form_validation->set_rules('product', lang('order_items'), 'required');
             } else {
@@ -1124,9 +1829,24 @@ class Sales extends MY_Controller
             $order_tax      = $this->site->calculateOrderTax($this->input->post('order_tax'), ($total + $product_tax - $order_discount));
             $total_tax      = $this->sma->formatDecimal(($product_tax + $order_tax), 4);
             // $grand_total    = $this->sma->formatDecimal(($this->sma->formatDecimal($total) + $this->sma->formatDecimal($total_tax) + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
-            $grand_total = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
+            //$grand_total = $this->sma->formatDecimal(($total + $total_tax + $this->sma->formatDecimal($shipping) - $this->sma->formatDecimal($order_discount)), 4);
+            
+            // NEW: Grand total calculation
+            $grand_total = $this->sma->formatDecimal(($total), 4);
+
+              /**
+             * post values
+             */
+        
+            $grand_total_net_sale = $this->input->post('grand_total_net_sale');
+            $grand_total_discount = $this->input->post('grand_total_discount');
+            $grand_total_vat = $this->input->post('grand_total_vat');
+            $grand_total_sale = $this->input->post('grand_total_sale');
+            $grand_total = $this->input->post('grand_total');
+            $cost_goods_sold = $this->input->post('cost_goods_sold');
+            
             $data        = ['date'  => $date,
-                'reference_no'      => $reference,
+                //'reference_no'      => $reference,
                 'customer_id'       => $customer_id,
                 'customer'          => $customer,
                 'biller_id'         => $biller_id,
@@ -1134,17 +1854,20 @@ class Sales extends MY_Controller
                 'warehouse_id'      => $warehouse_id,
                 'note'              => $note,
                 'staff_note'        => $staff_note,
-                'total'             => $total,
+                'warning_note'      => $warning_note,
+                'total'             => $grand_total_sale,
+                'total_net_sale'    => $grand_total_net_sale,
                 'product_discount'  => $total_product_discount,
                 'order_discount_id' => $this->input->post('order_discount'),
                 'order_discount'    => $order_discount,
-                'total_discount'    => $total_product_discount,
+                'total_discount'    => $grand_total_discount,
                 'product_tax'       => $product_tax,
                 'order_tax_id'      => $this->input->post('order_tax'),
                 'order_tax'         => $order_tax,
-                'total_tax'         => $total_tax,
+                'total_tax'         => $grand_total_vat,
                 'shipping'          => $this->sma->formatDecimal($shipping),
                 'grand_total'       => $grand_total,
+                'cost_goods_sold'   => $cost_goods_sold,
                 'total_items'       => $total_items,
                 'sale_status'       => $sale_status,
                 'payment_status'    => $payment_status,
@@ -1153,6 +1876,22 @@ class Sales extends MY_Controller
                 'updated_by'        => $this->session->userdata('user_id'),
                 'updated_at'        => date('Y-m-d H:i:s'),
             ];
+
+            // if($customer_details->balance > 0 && $sale_status == 'completed'){
+            //     if($customer_details->balance >= $grand_total){
+            //         $paid = $grand_total;
+            //         $new_balance = $customer_details->balance - $grand_total;
+            //         $payment_status = 'paid';
+            //     }else{
+            //         $paid = $grand_total - $customer_details->balance;
+            //         $new_balance = 0;
+            //         $payment_status = 'partial';
+            //     }
+
+            //     $data['paid'] = $paid;
+            //     $data['payment_status'] = $payment_status;
+            // }
+
             if ($this->Settings->indian_gst) {
                 $data['cgst'] = $total_cgst;
                 $data['sgst'] = $total_sgst;
@@ -1161,10 +1900,109 @@ class Sales extends MY_Controller
 
             $attachments        = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
-            // $this->sma->print_arrays($data, $products);
+            //$this->sma->print_arrays($data, $products);exit;
         }
+        // echo "<pre>";
+        // print_r($_POST);
+        //  $this->sma->print_arrays($data, $products);exit;
 
         if ($this->form_validation->run() == true && $this->sales_model->updateSale($id, $data, $products, $attachments)) {
+            if($sale_status == 'completed'){
+                $this->convert_sale_invoice($id);
+                /**
+                 * Zatca Integration B2B Start
+                 */
+                if($this->zatca_enabled){
+                    $zatca_payload =  $this->Zetca_model->get_zetca_data_b2b($id); 
+                    $zatca_response = $this->zatca->post('',  $zatca_payload);
+                    $is_success = true;
+                    $remarks = "";
+                    if($zatca_response['status'] >= 400){
+                        $is_success = false;
+                        if(isset($zatca_response['body']['errors'])){
+                            if(!empty($zatca_response['body']['errors'])){
+                                $remarks = $zatca_response['body']['errors'][0];
+                            }
+                        }
+                    }
+                    $date = date('Y-m-d H:i:s');
+                    $request = json_encode($zatca_payload, true);
+                    $response = json_encode($zatca_response, true);
+                    $reporting_data = [
+                        "sale_id" => $id,
+                        "date" => $date,
+                        "is_success" => $is_success,
+                        "request" => $request,
+                        "response" => $response,
+                        "remarks" => $remarks
+                    ];
+
+                    $this->Zetca_model->report_zatca_status($reporting_data);
+                }
+
+                /*if($customer_details->balance > 0){
+                    $this->sales_model->update_balance($customer_details->id, $new_balance);
+                }*/
+
+                /**RASD Integration Code */
+                $data_for_rasd = [
+                    "products" => $products,
+                    "source_warehouse_id" => $data['warehouse_id'],
+                    "destination_customer_id" => $data['customer_id'],
+                    "sale_id" => $id
+                ];
+                $response_model = $this->sales_model->get_rasd_required_fields($data_for_rasd);
+                $body_for_rasd_dispatch = $response_model['payload'];
+
+                //$payload_for_accept_dispatch = $response_model['payload_for_accept_dispatch'];
+                //log_message("info", json_encode($payload_for_accept_dispatch, true));
+
+                $rasd_user = $response_model['user'];
+                $rasd_pass = $response_model['pass'];
+                $resp_sale_status = $response_model['status'];
+                //$ph_user = $response_model['pharmacy_user'];
+                //$ph_pass = $response_model['pharmacy_pass'];
+                //$map_update = $response_model['update_map_table'];
+                $rasd_success = false;
+                log_message("info", json_encode($body_for_rasd_dispatch));
+                $payload_used =  [
+                        'source_gln' => $response_model['source_gln'],
+                        'destination_gln' => $response_model['destination_gln'],
+                        'warehouse_id' => $data['warehouse_id']
+                    ];  
+                    
+                if($resp_sale_status == 'completed'){
+                    foreach($body_for_rasd_dispatch as $index => $payload_dispatch){
+                        log_message("info", "RASD AUTH START");
+                        $this->rasd->set_base_url('https://qdttsbe.qtzit.com:10101/api/web');
+                        $auth_response = $this->rasd->authenticate($rasd_user, $rasd_pass);
+                        if(isset($auth_response['token'])){
+                            $auth_token = $auth_response['token'];
+                            log_message("info", 'RASD Authentication Success: DISPATCH_PRODUCT');
+                            $zadca_dispatch_response = $this->rasd->dispatch_product_133($payload_dispatch, $auth_token);
+                            
+                            
+                            if(isset($zadca_dispatch_response['body']['DicOfDic']['MR']['TRID']) && $zadca_dispatch_response['body']['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){                
+                                log_message("info", "Dispatch successful");
+                                $rasd_success = true;                
+
+                                $this->cmt_model->add_rasd_transactions($payload_used,'sale_dispatch_product',true, $zadca_dispatch_response,$payload_dispatch);
+                            
+                            }else{
+                                $rasd_success = false;
+                                log_message("error", "Dispatch Failed");
+                                log_message("error", json_encode($zadca_dispatch_response,true));
+                                $this->cmt_model->add_rasd_transactions($payload_used,'sale_dispatch_product',false, $zadca_dispatch_response,$payload_dispatch);
+                            }
+                            
+                        }else{
+                            log_message("error", 'RASD Authentication FAILED: DISPATCH_PRODUCT');
+                            $this->cmt_model->add_rasd_transactions($payload_used,'sale_dispatch_product',false, $accept_dispatch_result,$body_for_rasd_dispatch);
+                        }
+                    }
+                }
+            }
+
             $this->session->set_userdata('remove_slls', 1);
             $this->session->set_flashdata('message', lang('sale_updated'));
             admin_redirect($inv->pos ? 'pos/sales' : 'sales');
@@ -1178,7 +2016,7 @@ class Sales extends MY_Controller
                     redirect($_SERVER['HTTP_REFERER']);
                 }
             }
-            $inv_items = $this->sales_model->getAllInvoiceItems($id);
+            $inv_items = $this->sales_model->getAllInvoiceItems($id, null, $this->data['inv']);
 
             
             // krsort($inv_items);
@@ -1200,11 +2038,12 @@ class Sales extends MY_Controller
                         $row->quantity += $pi->quantity_balance;
                     }
                 }
+                //echo '<pre>';print_r($item);exit;
                 $row->id              = $item->product_id;
                 $row->code            = $item->product_code;
                 $row->name            = $item->product_name;
                 $row->type            = $item->product_type;
-                $row->base_quantity   = $item->quantity;
+                $row->base_quantity   = $item->total_quantity;
                 $row->base_unit       = !empty($row->unit) ? $row->unit : $item->product_unit_id;
                 $row->base_unit_price = !empty($row->price) ? $row->price : $item->unit_price;
                 $row->cost            = $item->net_cost;
@@ -1214,13 +2053,18 @@ class Sales extends MY_Controller
                 $row->discount        = $item->discount ? $item->discount : '0';
                 $row->item_tax        = $item->item_tax      > 0 ? $item->item_tax      / $item->quantity : 0;
                 $row->item_discount   = $item->item_discount > 0 ? $item->item_discount / $item->quantity : 0;
+                $row->avz_item_code   = $item->avz_item_code; 
+                $row->net_unit_cost   = $item->net_cost;
+                $row->real_unit_cost  = $item->real_cost;
 
                 //Discount calculation----------------------------------
                 // this row is deleted becasue of discount must not be added in sale price 
                 //$row->price           = $this->sma->formatDecimal($item->net_unit_price + $this->sma->formatDecimal($row->item_discount));
                 
-                $row->price           = $this->sma->formatDecimal($item->net_unit_price);
+                $row->price           = $this->sma->formatDecimal($item->real_unit_price);
                 //Discount calculation----------------------------------
+
+                $row->net_unit_sale = $this->sma->formatDecimal($item->real_unit_price);
 
                 $row->unit_price      = $row->tax_method ? $item->unit_price + $this->sma->formatDecimal($row->item_discount) + $this->sma->formatDecimal($row->item_tax) : $item->unit_price + ($row->item_discount);
                 $row->real_unit_price = $item->real_unit_price;
@@ -1300,6 +2144,63 @@ class Sales extends MY_Controller
 
     public function edit_delivery($id = null)
     {
+        //$this->sma->checkPermissions();
+
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $this->form_validation->set_rules('do_reference_no', lang('do_reference_no'), 'required');
+        $this->form_validation->set_rules('sale_id', lang('sale_id'), 'required');
+        
+
+        if ($this->form_validation->run() == true) {
+            $dlDetails = [
+                'sale_id'           => $this->input->post('sale_id'),
+                'do_reference_no'   => $this->input->post('do_reference_no'),
+                'status'            => $this->input->post('status'),
+                'received_by'       => $this->input->post('received_by'),
+                'note'              => $this->sma->clear_tags($this->input->post('note'))
+            ];
+
+            if ($_FILES['document']['size'] > 0) {
+                $this->load->library('upload');
+                $config['upload_path']   = $this->digital_upload_path;
+                $config['allowed_types'] = $this->digital_file_types;
+                $config['max_size']      = $this->allowed_file_size;
+                $config['overwrite']     = false;
+                $config['encrypt_name']  = true;
+                $this->upload->initialize($config);
+                if (!$this->upload->do_upload('document')) {
+                    $error = $this->upload->display_errors();
+                    $this->session->set_flashdata('error', $error);
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
+                $photo                   = $this->upload->file_name;
+                $dlDetails['attachment'] = $photo;
+            }
+        } elseif ($this->input->post('edit_delivery')) {
+            $this->session->set_flashdata('error', validation_errors());
+            redirect($_SERVER['HTTP_REFERER']);
+        }
+
+        if ($this->form_validation->run() == true && $this->sales_model->updateDelivery($id, $dlDetails)) {
+            $this->sales_model->updateSaleStatus($this->input->post('sale_id'), 'delivered');
+
+            $this->session->set_flashdata('message', lang('delivery_updated'));
+            //admin_redirect('sales/deliveries');
+            admin_redirect('sales/view/'.$sale_id);
+        } else {
+            $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+            $this->data['delivery'] = $this->sales_model->getDeliveryBySaleID($id);
+            $this->data['sale_id'] = $id;
+            $this->data['modal_js'] = $this->site->modal_js();
+            $this->load->view($this->theme . 'sales/edit_delivery', $this->data);
+        }
+    }
+
+    /*public function edit_delivery($id = null)
+    {
         $this->sma->checkPermissions();
 
         if ($this->input->get('id')) {
@@ -1360,7 +2261,7 @@ class Sales extends MY_Controller
             $this->data['modal_js'] = $this->site->modal_js();
             $this->load->view($this->theme . 'sales/edit_delivery', $this->data);
         }
-    }
+    }*/
 
     public function edit_gift_card($id = null)
     {
@@ -1644,7 +2545,7 @@ class Sales extends MY_Controller
 
     public function getDeliveries()
     {
-        $this->sma->checkPermissions('deliveries');
+        //$this->sma->checkPermissions('deliveries');
 
         $detail_link = anchor('admin/sales/view_delivery/$1', '<i class="fa fa-file-text-o"></i> ' . lang('delivery_details'), 'data-toggle="modal" data-target="#myModal"');
         $email_link  = anchor('admin/sales/email_delivery/$1', '<i class="fa fa-envelope"></i> ' . lang('email_delivery'), 'data-toggle="modal" data-target="#myModal"');
@@ -1659,9 +2560,7 @@ class Sales extends MY_Controller
         . lang('actions') . ' <span class="caret"></span></button>
     <ul class="dropdown-menu pull-right" role="menu">
         <li>' . $detail_link . '</li>
-        <li>' . $edit_link . '</li>
         <li>' . $pdf_link . '</li>
-        <li>' . $delete_link . '</li>
     </ul>
 </div></div>';
 
@@ -1693,7 +2592,7 @@ class Sales extends MY_Controller
 
 
 
-    public function convert_sale_invoice($sid)
+    public function convert_sale_invoice($sid, $sldate = null)
     {
         $inv = $this->sales_model->getSaleByID($sid);
           
@@ -1701,11 +2600,7 @@ class Sales extends MY_Controller
              
           if ($this->sales_model->saleToInvoice($sid)) {
 
-            # Update Sales to Completed
-            if(isset($this->GP) && $this->GP['accountant']){
-                $this->db->update('sales', ['sale_status' => 'completed'], ['id' => $sid]);
-                $this->site->syncQuantity($sid);
-            }
+            $this->db->update('sales', ['sale_status' => 'completed'], ['id' => $sid]);
             
             $this->load->admin_model('companies_model');
             $customer = $this->companies_model->getCompanyByID($inv->customer_id);
@@ -1718,57 +2613,89 @@ class Sales extends MY_Controller
                     'entrytype_id' => 4,
                     'transaction_type' => 'saleorder',
                     'number'       => 'SO-'.$inv->reference_no,
-                    'date'         => date('Y-m-d'), 
+                    'date'         => $sldate != null ? $sldate : date('Y-m-d'), 
                     'dr_total'     => $inv->grand_total,
                     'cr_total'     => $inv->grand_total,
                     'notes'        => 'Sale Reference: '.$inv->reference_no.' Date: '.date('Y-m-d H:i:s'),
-                    'sid'          =>  $inv->id
+                    'sid'          =>  $inv->id,
+                    'customer_id'  => $inv->customer_id
                     );
             
             $add  = $this->db->insert('sma_accounts_entries', $entry);
             $insert_id = $this->db->insert_id();
              //$insert_id = 999;
              $entryitemdata = array();
+             $inventory_amount = 0;
+             $sale_amount = 0;
+             $cogs_amount = 0;
              foreach ($inv_items as $item) 
              {
                  $proid = $item->product_id;
                  $product  = $this->site->getProductByID($proid);
                  //products
                  
-
-                $entryitemdata[] = array(
-                    'Entryitem' => array(
-                        'entry_id' => $insert_id,
-                        'dc' => 'D',
-                        'ledger_id' => $customer->cogs_ledger,
-                        //'amount' => $item->main_net,
-                        'amount' => ($item->net_cost * $item->quantity),
-                        'narration' => 'cost of goods sold'
-                    )
-                );
- 
-                $entryitemdata[] = array(
-                    'Entryitem' => array(
-                        'entry_id' => $insert_id,
-                        'dc' => 'C',
-                        'ledger_id' => $customer->sales_ledger,
-                        'amount' => $item->main_net,
-                        'narration' => 'sale account'
-                    )
-                );
- 
-                $entryitemdata[] = array(
-                    'Entryitem' => array(
-                        'entry_id' => $insert_id,
-                        'dc' => 'C',
-                        'ledger_id' => $warehouse_ledgers->inventory_ledger,
-                        //'amount' => $item->main_net,
-                        'amount' => ($item->net_cost * $item->quantity),
-                        'narration' => 'inventory account'
-                    )
-                );
- 
+                $inventory_amount += ($item->net_cost * ($item->quantity + $item->bonus));
+                $sale_amount +=  ($item->real_unit_price * $item->unit_quantity); //$item->main_net;
+                //add bonus to quantity
+                $cogs_amount += ($item->net_cost * ($item->quantity + $item->bonus));
              }
+
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $customer->cogs_ledger,
+                    //'amount' => $item->main_net,
+                    'amount' => $inv->cost_goods_sold,
+                    'narration' => 'cost of goods sold'
+                )
+            );
+
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'C',
+                    'ledger_id' => $warehouse_ledgers->inventory_ledger,
+                    //'amount' => $item->main_net,
+                    'amount' => $inv->cost_goods_sold,
+                    'narration' => 'inventory account'
+                )
+            );
+
+
+              // //total discount
+              $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $customer->discount_ledger,
+                    'amount' => $inv->total_discount,
+                    'narration' => 'total discount'
+                )
+         );
+
+         
+             // //customer
+             $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $customer->ledger_account,
+                    'amount' => ($inv->grand_total),
+                    'narration' => 'customer'
+                  )
+            );
+
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'C',
+                    'ledger_id' => $customer->sales_ledger,
+                    'amount' => $inv->total,
+                    'narration' => 'sale account'
+                )
+            );
+          
           
              // //vat on sale
              $entryitemdata[] = array(
@@ -1776,33 +2703,14 @@ class Sales extends MY_Controller
                              'entry_id' => $insert_id,
                              'dc' => 'C',
                              'ledger_id' => $this->vat_on_sale,
-                             'amount' => $inv->product_tax,
+                             'amount' => $inv->total_tax,
                              'narration' => 'vat on sale'
                          )
                      );
  
  
-             // //customer
-               $entryitemdata[] = array(
-                         'Entryitem' => array(
-                             'entry_id' => $insert_id,
-                             'dc' => 'D',
-                             'ledger_id' => $customer->ledger_account,
-                             'amount' => ($inv->grand_total),
-                             'narration' => 'customer'
-                           )
-                     );
 
-             // //total discount
-             /*$entryitemdata[] = array(
-                    'Entryitem' => array(
-                        'entry_id' => $insert_id,
-                        'dc' => 'D',
-                        'ledger_id' => $this->vat_on_sale,
-                        'amount' => $inv->total_discount,
-                        'narration' => 'total discount'
-                    )
-             );*/
+           
                      
             //   /*Accounts Entry Items*/
             foreach ($entryitemdata as $row => $itemdata)
@@ -1811,16 +2719,7 @@ class Sales extends MY_Controller
                   $this->db->insert('sma_accounts_entryitems', $itemdata['Entryitem']);
             }
 
-
-            $this->session->set_flashdata('message', lang('Sale is Converted to invoice Successfully!'));
-            admin_redirect($_SERVER['HTTP_REFERER'] ?? 'sales');
-       
-
         }
-         }else{
-
-            $this->session->set_flashdata('error', lang('Sale Already Converted to invoice!'));
-            admin_redirect($_SERVER['HTTP_REFERER'] ?? 'sales');
         }
     }
 
@@ -1834,7 +2733,25 @@ class Sales extends MY_Controller
 
         $address_id = $sale->address_id;
         $customer = $this->site->getCompanyByID($sale->customer_id);
-        $address = $this->site->getAddressByID($address_id);
+
+        if($address_id == 0){
+            $address = new stdClass();
+            $address->line1 = $customer->address;
+            $address->phone = $customer->phone;
+            $address->longitude = $customer->longitude;
+            $address->latitude = $customer->latitude;
+            $address->first_name = $customer->first_name;
+            $address->last_name = $customer->last_name;
+        }else{
+            $address = $this->site->getAddressByID($address_id);
+        }
+
+        if (strpos($address->phone, "+966") !== false) {
+            //echo "The string contains +966.";
+        } else {
+            $address->phone = '+966'.$address->phone;
+        }
+
         $sale_items = $this->site->getAllSaleItems($sale->id);
 
         $items_data = array();
@@ -1868,7 +2785,7 @@ class Sales extends MY_Controller
             'source_location_long' => 0.0,
             'source_address' => '-',
             'destination_customer_phone' => $address->phone,
-            'destination_customer_name' => $customer->name,
+            'destination_customer_name' => $address->first_name.' '.$address->last_name,
             'destination_customer_reference' => $sale->reference_no,
             'destination_location_lat' => !empty($address->latitude) ? $address->latitude : 0.0,
             'destination_location_long' => !empty($address->longitude) ? $address->longitude : 0.0,
@@ -1926,12 +2843,13 @@ class Sales extends MY_Controller
 
         // API endpoint URL
         $url = $courier->url.'order/getOrders';
+        $body_digest='';
 
         $privateKey = $courier->auth_key;
         $customerCode= $courier->username;
         $pwd  = $courier->password;
         $account = $courier->api_account;
-
+       
         $bizContent = '{
             "command": "1",
             "serialNumber": ["33", "30", "28"],
@@ -2036,9 +2954,11 @@ class Sales extends MY_Controller
     public function add_to_courier(){
         $courier_id = $_POST['Courier'];
         $sale_id = $_POST['sale_id'];
+        $warehouse_id = $_POST['pickupLocation'];
 
         $courier = $this->site->getCourierById($courier_id);
         $sale = $this->site->getSaleByID($sale_id);
+        $warehouse = $this->site->getWarehouseByID($warehouse_id);
 
         if($sale->courier_id == 0){
             if($courier->name == 'Run X'){
@@ -2053,7 +2973,8 @@ class Sales extends MY_Controller
                             $this->session->set_flashdata('error', $order_resp->message);
                             admin_redirect('sales/ecommerce');
                         }else{
-                            $this->sales_model->updateSaleWithCourier($sale_id, $courier->id);
+                            $tracking_id = isset($order_resp->data->id) ? $order_resp->data->id : '';
+                            $this->sales_model->updateSaleWithCourier($sale_id, $courier->id, $tracking_id, $warehouse_id);
                             $this->session->set_flashdata('message', 'Courier Assigned Successfully');
                             admin_redirect('sales/ecommerce');
                         }
@@ -2064,13 +2985,38 @@ class Sales extends MY_Controller
                 $order_resp = json_decode($response);
 
                 if((isset($order_resp->msg) && $order_resp->msg == 'success')){
-                    $this->sales_model->updateSaleWithCourier($sale_id, $courier->id);
+
+                    $billCode = isset($order_resp->data->billCode) ? $order_resp->data->billCode : '';
+                    $this->sales_model->updateSaleWithCourier($sale_id, $courier->id, $billCode, $warehouse_id);
                     $this->session->set_flashdata('message', 'Courier Assigned Successfully');
                     admin_redirect('sales/ecommerce');
                 }else{
+                    echo $order_resp->message;
+                    print_r($order_resp);
+                    exit;
                     $this->session->set_flashdata('error', $order_resp->message);
                     admin_redirect('sales/ecommerce');
                 }
+            }
+            else if($courier->name == 'STC'){
+                // echo "<pre>";
+                // print_r($courier);
+                // print_r($warehouse);
+                // print_r($sale);
+                // exit;
+                $response = $this->assignSTC($sale, $courier, $warehouse);
+                $order_resp = json_decode($response, true);
+                // echo "<pre>";
+                // print_r($order_resp);
+                if(isset($order_resp['shipmentNumber'])){
+                    $this->sales_model->updateSaleWithCourier($sale_id, $courier->id, $order_resp['shipmentNumber'], $warehouse_id);
+                    $this->session->set_flashdata('message', 'Courier Assigned Successfully');
+                    admin_redirect('sales/ecommerce');
+                }else{
+                    $this->session->set_flashdata('error', $order_resp['error_msg']);
+                    admin_redirect('sales/ecommerce');
+                }
+               
             }
         }else{
             $this->session->set_flashdata('error', lang('Courier Already Assigned'));
@@ -2079,8 +3025,148 @@ class Sales extends MY_Controller
         
     }
 
-    public function create_order($customerCode,$pwd,$key,$account,$waybillinfo,$url) {
+    public function assignSTC($sale, $courier, $warehouse){
+       
+        $address_id = $sale->address_id;
+        $customer = $this->site->getCompanyByID($sale->customer_id);
 
+        if($address_id == 0){
+            $address = new stdClass();
+            $address->line1 = $customer->address;
+            $address->line2 = '';
+            $address->phone = $customer->phone;
+            $address->email = $customer->email;
+            $address->longitude = $customer->longitude;
+            $address->latitude = $customer->latitude;
+            $address->city = $customer->city;
+            $address->state = $customer->state;
+            $address->postal_code = $customer->postal_code;
+            $address->country = $customer->country;
+            $address->first_name = $customer->first_name;
+            $address->last_name = $customer->last_name;
+        }else{
+            $address = $this->site->getAddressByID($address_id);
+        }
+
+        if (strpos($address->phone, "+966") !== false) {
+            //echo "The string contains +966.";
+        } else {
+           // $address->phone = '+966'.$address->phone;
+        }
+
+        $sale_items = $this->site->getAllSaleItems($sale->id);
+
+        $address->phone = $this->arabicToEnglishNumber($address->phone);
+        //print_r($address);exit;
+
+        $packages = [];
+        foreach ($sale_items as $sale_item){
+
+            $product = $this->site->getProductByID($sale_item->product_id);
+            $strippedDescription = str_replace('<p><strong>Product Description:</strong></p>', '', $product->product_details);
+            $strippedDescription = strip_tags($strippedDescription, '<ul><li><strong>');
+
+            $packages[] = [
+                "serialNo" => $sale_item->product_id,
+                "sku" => $sale_item->product_code,
+                "productName" => $sale_item->product_name,
+                "itemCode" => $sale_item->product_code,
+                "price" => $sale_item->subtotal,
+                "htsCode" => ""
+              
+            ];
+
+        }
+
+        $packages_list = json_encode($packages, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+        $url = $courier->url.'/shipment/create';
+        $apiKey = $courier->api_account;
+        $jsonDataArr = array(
+            "partnerCode" => "avenzur",
+            "serviceType" => "delivery",
+            "orderReferences" => array(
+                "partnerReference" => "avenzur-".$sale->id
+            ),
+            "pickUp"=> array(
+                "contactName" => $warehouse->name,
+                "contactMobile" => $warehouse->phone,
+                "contactEmail" => $warehouse->email,
+                "address" => $warehouse->address,
+                "city" => $warehouse->city,
+                "countryCode" => "SA",
+                "hubCode" => $warehouse->hubcode,
+                "longitude" => $warehouse->longitude,
+                "latitude" => $warehouse->latitude,
+                "nationalAddress" => $warehouse->national_address
+            ),
+            "dropOff" => array(
+                "contactName" => $address->first_name.' '.$address->last_name,
+                "contactMobile" => $address->phone,
+                "contactEmail" => $address->email,
+                "address" => $address->line1,
+                "city" => $address->city,
+                "countryCode" => "SA",
+                "longitude" => $address->longitude,
+                "latitude" => $address->latitude,
+                "nationalAddress" => ""
+            ),
+            "payment" => array(
+                "totalAmount" => $sale->total,
+                "collectAmount" => 0.00,
+                "currency" => "SAR"
+            ),
+            "packages" => json_decode($packages_list, true) 
+        );
+        
+       
+        $jsonData = json_encode($jsonDataArr, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+        // echo $url;
+        // echo $apiKey; 
+        // echo $jsonData;
+        // Initialize cURL session
+        $ch = curl_init($url);
+
+        // Set cURL options
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); // Return response as a string
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Api-Key: ' . $apiKey
+        ]);
+        curl_setopt($ch, CURLOPT_POST, true); // HTTP POST method
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData); // Set request body
+
+                // Execute the request
+       $response = curl_exec($ch);
+      
+    //    if (curl_errno($ch)) {
+    //         $error_msg = curl_error($ch);
+    //         echo "cURL Error: $error_msg";
+    //     } else {
+    //         // Get HTTP status code
+    //         $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        
+    //         if ($http_status == 200) {
+    //             // Success response
+    //             echo "Request was successful.\n";
+    //             echo "Response: " . $response;
+    //         } else {
+    //             // Error response
+    //             echo "Request failed with status code: $http_status.\n";
+    //             echo "Response: " . $response;
+    //         }
+    //     }
+        
+
+        // Close cURL session
+        curl_close($ch);
+//print_r($response);exit;
+        return  $response;
+
+    }
+
+    public function create_order($customerCode,$pwd,$key,$account,$waybillinfo,$url) {
         $post_data = $this->get_post_data($customerCode,$pwd,$key,$waybillinfo);
         $head_dagest = $this->get_header_digest($post_data,$key);
         $post_content = array(
@@ -2088,7 +3174,6 @@ class Sales extends MY_Controller
         );
     
         $postdata = http_build_query($post_content);
-    
         $options = array(
             'http' => array(
                 'method' => 'POST',
@@ -2101,8 +3186,9 @@ class Sales extends MY_Controller
                 'timeout' => 15 * 60
             )
         );
+       
         $context = stream_context_create($options);
-    
+       
         $result = file_get_contents($url, false, $context);
         
         return $result;
@@ -2116,7 +3202,6 @@ class Sales extends MY_Controller
         $customerCode= $courier->username;
         $pwd  = $courier->password;
         $account = $courier->api_account;
-        
         $waybillinfo = $this->populateShipmentParams($sale, $courier);
         $resp = $this->create_order($customerCode, $pwd, $privateKey, $account, $waybillinfo, $url);
         
@@ -2125,11 +3210,10 @@ class Sales extends MY_Controller
     }
 
     public function get_post_data($customerCode,$pwd,$key,$waybillinfo){
-
-        $postdate = json_decode($waybillinfo,true);
+        //echo $waybillinfo;exit;
+        $postdate = json_decode($waybillinfo, true);
         $postdate['customerCode'] = $customerCode;
         $postdate['digest'] = $this->get_content_digest($customerCode,$pwd,$key);
-    
         return json_encode($postdate);
     }
 
@@ -2147,22 +3231,45 @@ class Sales extends MY_Controller
     {
         $address_id = $sale->address_id;
         $customer = $this->site->getCompanyByID($sale->customer_id);
-        $address = $this->site->getAddressByID($address_id);
+
+        if($address_id == 0){
+            $address = new stdClass();
+            $address->line1 = $customer->address;
+            $address->line2 = '';
+            $address->phone = $customer->phone;
+            $address->longitude = $customer->longitude;
+            $address->latitude = $customer->latitude;
+            $address->city = $customer->city;
+            $address->state = $customer->state;
+            $address->postal_code = $customer->postal_code;
+            $address->country = $customer->country;
+            $address->first_name = $customer->first_name;
+            $address->last_name = $customer->last_name;
+        }else{
+            $address = $this->site->getAddressByID($address_id);
+        }
+
+        if (strpos($address->phone, "+966") !== false) {
+            //echo "The string contains +966.";
+        } else {
+            $address->phone = '+966'.$address->phone;
+        }
+
         $sale_items = $this->site->getAllSaleItems($sale->id);
 
         $address->phone = $this->arabicToEnglishNumber($address->phone);
 
-        $countryArr = $this->site->getCountryByName($address->country);
+        //$countryArr = $this->site->getCountryByName($address->country);
 
         $items_data = array();
         $items_str = '';
         $count = 0;
+        $jand_items = [];
         foreach ($sale_items as $sale_item){
 
             $product = $this->site->getProductByID($sale_item->product_id);
             $strippedDescription = str_replace('<p><strong>Product Description:</strong></p>', '', $product->product_details);
             $strippedDescription = strip_tags($strippedDescription, '<ul><li><strong>');
-            // Remove additional line
 
             if($count > 0){
                 $items_str .= ',';
@@ -2178,44 +3285,95 @@ class Sales extends MY_Controller
                 "desc":"'.$sale_item->product_name.'"
             }';
 
+            $jand_items[] = [
+                "number" => $sale_item->product_id,
+                "itemType" => "ITN4",
+                "itemName" => $sale_item->product_name,
+                "priceCurrency" => "SAR",
+                "itemValue" => $sale_item->subtotal,
+                "itemUrl" => "https://www.avenzur.com/product/" . $product->slug,
+                "desc" => $sale_item->product_name
+            ];
+
             $count++;
         }
 
-        $waybillinfo = '{
-            "serviceType": "01",
-            "orderType": "1",
-            "deliveryType": "04",
-            "countryCode": "KSA",
-            "receiver":{
-                "address":"'.$address->line1.' '.$address->line2.'",
-                "city":"'.$address->city.'",
-                "mobile":"'.$address->phone.'",
-                "phone":"'.$address->phone.'",
-                "countryCode":"KSA",
-                "name":"'.$customer->name.'",
-                "postCode":"'.$address->postal_code.'",
-                "prov":"'.$address->state.'"
-            },
-            "expressType":"EZKSA",
-            "remark":"",
-            "txlogisticId":"'.$sale->id.'",
-            "goodsType":"ITN4",
-            "priceCurrency":"SAR",
-            "sender":{
-                "address":"Business Gate, Riyadh KSA",
-                "city":"Riyadh",
-                "mobile":"0114654636",
-                "phone":"0114654636",
-                "countryCode":"KSA",
-                "name":"Avenzur.com",
-                "prov":"Riyadh"
-            },
-            "itemsValue":"0",
-            "items":['.$items_str.'],
-            "operateType":1
-        }';
+        $jandt_items_str = json_encode($jand_items, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
-        return $waybillinfo;
+        // $waybillinfo = '{
+        //     "serviceType": "01",
+        //     "orderType": "1",
+        //     "deliveryType": "04",
+        //     "countryCode": "KSA",
+        //     "receiver":{
+        //         "address":"'.$address->line1.' '.$address->line2.'",
+        //         "city":"'.$address->city.'",
+        //         "mobile":"'.$address->phone.'",
+        //         "phone":"'.$address->phone.'",
+        //         "countryCode":"KSA",
+        //         "name":"'.$address->first_name.' '.$address->last_name.'",
+        //         "postCode":"'.$address->postal_code.'",
+        //         "prov":"'.$address->state.'"
+        //     },
+        //     "expressType":"EZKSA",
+        //     "remark":"",
+        //     "txlogisticId":"'.$sale->id.'",
+        //     "goodsType":"ITN4",
+        //     "priceCurrency":"SAR",
+        //     "sender":{
+        //         "address":"Business Gate, Riyadh KSA",
+        //         "city":"Riyadh",
+        //         "mobile":"0114654636",
+        //         "phone":"0114654636",
+        //         "countryCode":"KSA",
+        //         "name":"Avenzur.com",
+        //         "prov":"Riyadh"
+        //     },
+        //     "itemsValue":"0",
+        //     "items":'.$jandt_items_str.',
+        //     "operateType":1
+        // }';
+
+
+        $waybillInfo = [
+            "serviceType" => "01",
+            "orderType" => "1",
+            "deliveryType" => "04",
+            "countryCode" => "KSA",
+            "receiver" => [
+                "address" => $address->line1 . ' ' . $address->line2,
+                "city" => $address->city,
+                "mobile" => $address->phone,
+                "phone" => $address->phone,
+                "countryCode" => "KSA",
+                "name" => $address->first_name . ' ' . $address->last_name,
+                "postCode" => $address->postal_code,
+                "prov" => $address->state
+            ],
+            "expressType" => "EZKSA",
+            "remark" => "",
+            "txlogisticId" => $sale->id,
+            "goodsType" => "ITN4",
+            "priceCurrency" => "SAR",
+            "sender" => [
+                "address" => "Business Gate, Riyadh KSA",
+                "city" => "Riyadh",
+                "mobile" => "0114654636",
+                "phone" => "0114654636",
+                "countryCode" => "KSA",
+                "name" => "Avenzur.com",
+                "prov" => "Riyadh"
+            ],
+            "itemsValue" => "0",
+            "items" => json_decode($jandt_items_str, true),  
+            "operateType" => 1
+        ];
+
+        $jsonWaybillInfo = json_encode($waybillInfo, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+        //echo "data:".$waybillinfo;
+        
+        return $jsonWaybillInfo;
     }
 
     public function get_content_digest($customerCode,$pwd,$key)
@@ -2335,7 +3493,7 @@ class Sales extends MY_Controller
 
     public function assign_courier($id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->data['sale_id'] = $id;
         //$this->data['inv']      = $this->purchases_model->getPurchaseByID($id);
 
@@ -2353,6 +3511,9 @@ class Sales extends MY_Controller
     }
 
     public function getEcommerceSales($warehouse_id = null){
+       
+        //  echo '<pre>'; print_r($this->input->post()); exit; 
+        $keyword=  trim($this->input->post('keyword'));  
         $this->sma->checkPermissions('index');
 
         if ((!$this->Owner && !$this->Admin) && !$warehouse_id) {
@@ -2367,6 +3528,7 @@ class Sales extends MY_Controller
         {
             $convert_sale_invoice = anchor('admin/sales/convert_sale_invoice/$1', '<i class="fa fa-money"></i> ' . lang('Convert to Invoice'));
         }
+        $convert_sale_invoice = anchor('admin/sales/convert_sale_invoice/$1', '<i class="fa fa-money"></i> ' . lang('Convert to Invoice'));
         
         $add_payment_link  = anchor('admin/sales/add_payment/$1', '<i class="fa fa-money"></i> ' . lang('add_payment'), 'data-toggle="modal" data-target="#myModal"');
         $packagink_link    = anchor('admin/sales/packaging/$1', '<i class="fa fa-archive"></i> ' . lang('packaging'), 'data-toggle="modal" data-target="#myModal"');
@@ -2410,6 +3572,7 @@ class Sales extends MY_Controller
         . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
         . lang('actions') . ' <span class="caret"></span></button>
         <ul class="dropdown-menu pull-right" role="menu">
+        <li>' . $convert_sale_invoice . '</li>
             <li>' . $detail_link . '</li>
             <li>' . $duplicate_link . '</li>
             <li>' . $payments_link . '</li>
@@ -2430,20 +3593,36 @@ class Sales extends MY_Controller
         $this->load->library('datatables');
         if ($warehouse_id) {
             $this->datatables
-                ->select("{$this->db->dbprefix('sales')}.id as id, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, {$this->db->dbprefix('sales')}.sequence_code as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, {$this->db->dbprefix('sales')}.attachment, return_id, {$this->db->dbprefix('courier')}.name as courier_name, {$this->db->dbprefix('addresses')}.city, {$this->db->dbprefix('sales')}.delivery_type")
+                ->select("{$this->db->dbprefix('sales')}.id as id, {$this->db->dbprefix('sales')}.id as sale_id,
+                DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, 
+                {$this->db->dbprefix('sales')}.sequence_code as code, biller,  
+                CASE WHEN {$this->db->dbprefix('sales')}.address_id IS NULL OR {$this->db->dbprefix('sales')}.address_id=0 THEN CONCAT({$this->db->dbprefix('companies')}.first_name, ' ',{$this->db->dbprefix('companies')}.last_name )  ELSE CONCAT({$this->db->dbprefix('addresses')}.first_name,' ', {$this->db->dbprefix('addresses')}.last_name) END AS customer,
+                CASE WHEN {$this->db->dbprefix('sales')}.address_id IS NULL OR {$this->db->dbprefix('sales')}.address_id=0 THEN {$this->db->dbprefix('companies')}.phone  ELSE ({$this->db->dbprefix('addresses')}.phone) END AS phone,  
+                sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, 
+                {$this->db->dbprefix('sales')}.attachment, return_id, {$this->db->dbprefix('courier')}.name as courier_name, 
+                CASE WHEN {$this->db->dbprefix('sales')}.address_id IS NULL OR {$this->db->dbprefix('sales')}.address_id=0 THEN {$this->db->dbprefix('companies')}.city  ELSE ({$this->db->dbprefix('addresses')}.city) END AS city,
+
+                {$this->db->dbprefix('sales')}.delivery_type,{$this->db->dbprefix('sales')}.courier_order_status, warehouses.name as warehouse_name")
                 ->from('sales')
+                ->join('warehouses', 'warehouses.id = sales.pickup_location_id', 'left')
                 ->where('warehouse_id', $warehouse_id)
                 ->where('shop', 1);
                 //->join('aramex_shipment', 'aramex_shipment.salesid=sales.id');
         } else {
             $this->datatables
-                ->select("{$this->db->dbprefix('sales')}.id as id, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, {$this->db->dbprefix('sales')}.sequence_code as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, {$this->db->dbprefix('sales')}.attachment, return_id, {$this->db->dbprefix('courier')}.name as courier_name, {$this->db->dbprefix('addresses')}.city, {$this->db->dbprefix('sales')}.delivery_type")
+                ->select("{$this->db->dbprefix('sales')}.id as id, {$this->db->dbprefix('sales')}.id as sale_id , DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, 
+                reference_no, {$this->db->dbprefix('sales')}.sequence_code as code, biller, 
+                CASE WHEN {$this->db->dbprefix('sales')}.address_id IS NULL OR {$this->db->dbprefix('sales')}.address_id=0 THEN CONCAT({$this->db->dbprefix('companies')}.first_name, ' ',{$this->db->dbprefix('companies')}.last_name )   ELSE CONCAT({$this->db->dbprefix('addresses')}.first_name,' ', {$this->db->dbprefix('addresses')}.last_name) END AS customer,
+                CASE WHEN {$this->db->dbprefix('sales')}.address_id IS NULL OR {$this->db->dbprefix('sales')}.address_id=0 THEN {$this->db->dbprefix('companies')}.phone  ELSE ({$this->db->dbprefix('addresses')}.phone) END AS phone,  
+                sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, {$this->db->dbprefix('sales')}.attachment, 
+                return_id, {$this->db->dbprefix('courier')}.name as courier_name,  
+                CASE WHEN {$this->db->dbprefix('sales')}.address_id IS NULL OR {$this->db->dbprefix('sales')}.address_id=0 THEN {$this->db->dbprefix('companies')}.city  ELSE ({$this->db->dbprefix('addresses')}.city) END AS city,
+                {$this->db->dbprefix('sales')}.delivery_type,{$this->db->dbprefix('sales')}.courier_order_status, warehouses.name as warehouse_name")
                 ->from('sales')
-                ->where('shop', 1);
-                
-                
+                ->join('warehouses', 'warehouses.id = sales.pickup_location_id', 'left')
+                ->where('shop', 1);  
         }
-
+ 
         $subquery = "(SELECT COUNT(*) FROM sma_sale_items WHERE sma_sale_items.sale_id = sma_sales.id AND (sma_sale_items.product_code LIKE 'AM-%' OR sma_sale_items.product_code LIKE 'IH-%'))";
         $this->datatables
             ->select("{$subquery} > 0 AS global_product", false); // Use a subquery to determine global_product
@@ -2458,11 +3637,30 @@ class Sales extends MY_Controller
             $this->datatables->join('deliveries', 'deliveries.sale_id=sales.id', 'left')
             ->where('sales.sale_status', 'completed')->where('sales.payment_status', 'paid')
             ->where("({$this->db->dbprefix('deliveries')}.status != 'delivered' OR {$this->db->dbprefix('deliveries')}.status IS NULL)", null);
-        }
-
+        } 
         $this->datatables->join('courier', 'courier.id=sales.courier_id', 'left');
-        $this->datatables->join('addresses', 'addresses.id=sales.address_id', 'left');
+       //  $this->datatables->join('addresses', 'addresses.id=sales.address_id', 'left'); by mm  
+       // ({$this->db->dbprefix('sales')}.address_id IS NOT NULL and {$this->db->dbprefix('sales')}.address_id!=0 )
+        $this->datatables->join("addresses", "{$this->db->dbprefix('sales')}.address_id>0   AND {$this->db->dbprefix('sales')}.address_id = {$this->db->dbprefix('addresses')}.id", "left");
+        $this->datatables->join("companies", "({$this->db->dbprefix('sales')}.address_id IS NULL OR {$this->db->dbprefix('sales')}.address_id=0 )  AND {$this->db->dbprefix('sales')}.customer_id = {$this->db->dbprefix('companies')}.id", "left");
+       
+       if(!empty( $keyword)){ 
+        
+        $this->db->group_start();  
+        $this->datatables->where("{$this->db->dbprefix('sales')}.sale_status",$keyword); 
+        $this->datatables->or_where("{$this->db->dbprefix('sales')}.payment_status",$keyword); 
+        $this->datatables->or_where("{$this->db->dbprefix('sales')}.id",$keyword);  
+        $this->datatables->or_where("{$this->db->dbprefix('sales')}.reference_no",$keyword);  
+        $this->datatables->or_where("{$this->db->dbprefix('sales')}.sequence_code",$keyword);  
+        $this->datatables->or_where("{$this->db->dbprefix('sales')}.courier_order_status",$keyword); 
+        $this->datatables->or_where("{$this->db->dbprefix('courier')}.name",$keyword); 
+        $this->datatables->or_where("{$this->db->dbprefix('sales')}.delivery_type",$keyword);         
 
+        $this->datatables->or_where("({$this->db->dbprefix('sales')}.address_id >0 AND ({$this->db->dbprefix('addresses')}.phone LIKE '%".$keyword."%' OR {$this->db->dbprefix('addresses')}.first_name LIKE '%".$keyword."%' OR {$this->db->dbprefix('addresses')}.last_name LIKE '%".$keyword."%' OR   concat_ws(' ',{$this->db->dbprefix('addresses')}.first_name,{$this->db->dbprefix('addresses')}.last_name) like '%$".$keyword."%'  OR {$this->db->dbprefix('addresses')}.city LIKE '%".$keyword."%')) OR 
+        (({$this->db->dbprefix('sales')}.address_id IS NULL or {$this->db->dbprefix('sales')}.address_id=0) AND ({$this->db->dbprefix('companies')}.phone LIKE '%".$keyword."%' OR {$this->db->dbprefix('companies')}.first_name LIKE '%".$keyword."%' OR {$this->db->dbprefix('companies')}.last_name LIKE '%".$keyword."%' OR   concat_ws(' ',{$this->db->dbprefix('companies')}.first_name,{$this->db->dbprefix('companies')}.last_name) like '%$".$keyword."%' OR {$this->db->dbprefix('companies')}.city LIKE '%".$keyword."%'))
+        ");   
+        $this->db->group_end();   
+       }  
         if ($this->input->get('attachment') == 'yes') {
             $this->datatables->where('payment_status !=', 'paid')->where('attachment !=', null);
         }
@@ -2480,8 +3678,8 @@ class Sales extends MY_Controller
     public function getSales($warehouse_id = null)
     {
         $this->sma->checkPermissions('index');
-
-        if ((!$this->Owner && !$this->Admin) && !$warehouse_id) {
+        $sid = $this->input->get('sid');
+        if ((!$this->Owner && !$this->Admin && !$this->GP['sales-index']) && !$warehouse_id) {
             $user         = $this->site->getUser();
             $warehouse_id = $user->warehouse_id;
         }
@@ -2494,80 +3692,119 @@ class Sales extends MY_Controller
             $convert_sale_invoice = anchor('admin/sales/convert_sale_invoice/$1', '<i class="fa fa-money"></i> ' . lang('Convert to Invoice'));
         }
         
+        $convert_sale_invoice = anchor('admin/sales/convert_sale_invoice/$1', '<i class="fa fa-money"></i> ' . lang('Convert to Invoice'));
         $add_payment_link  = anchor('admin/sales/add_payment/$1', '<i class="fa fa-money"></i> ' . lang('add_payment'), 'data-toggle="modal" data-target="#myModal"');
         $packagink_link    = anchor('admin/sales/packaging/$1', '<i class="fa fa-archive"></i> ' . lang('packaging'), 'data-toggle="modal" data-target="#myModal"');
         $add_delivery_link = anchor('admin/sales/add_delivery/$1', '<i class="fa fa-truck"></i> ' . lang('add_delivery'), 'data-toggle="modal" data-target="#myModal"');
         $email_link        = anchor('admin/sales/email/$1', '<i class="fa fa-envelope"></i> ' . lang('email_sale'), 'data-toggle="modal" data-target="#myModal"');
         $edit_link         = anchor('admin/sales/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_sale'), 'class="sledit"');
-        $pdf_link          = anchor('admin/sales/pdf/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf'));
-        $return_link       = anchor('admin/sales/return_sale/$1', '<i class="fa fa-angle-double-left"></i> ' . lang('return_sale'));
+        $pdf_link          = anchor('admin/sales/pdf_new/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf'));
+        $excel_link        = anchor('admin/sales/excel_new/$1', '<i class="fa fa-file-excel-o"></i> ' . lang('download_excel'));
+        $zatka_invoice_link = anchor('admin/sales/pdf_zatka_invoice/$1', '<i class="fa fa-file-text-o"></i> Zatka Invoice', 'target="_blank"');
+        $sale_order_link   = anchor('admin/sales/pdf_sale_order/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_sale_order'));
+        $order_picker_link   = anchor('admin/sales/pdf_order_picker/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('Download_Picking_Pdf'));
+        $return_link       = anchor('admin/returns/add/?sale=$1', '<i class="fa fa-angle-double-left"></i> ' . lang('return_sale'));
         //$shipment_link     = anchor('$1', '<i class="fa fa-angle-double-left"></i> ' . lang('Shipping_Slip'));
         $delete_link       = "<a href='#' class='po' title='<b>" . lang('delete_sale') . "</b>' data-content=\"<p>"
         . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('sales/delete/$1') . "'>"
         . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i> "
         . lang('delete_sale') . '</a>';
+        $journal_entry_link      = anchor('admin/entries/view/journal/?sid=$1', '<i class="fa fa-eye"></i> ' . lang('Journal Entry'));
         
-        
-       if(isset($this->GP) && $this->GP['accountant'])
+        if(isset($this->GP) && $this->Accountant)
+        {
+            $action = '<div class="text-center"><div class="btn-group text-left">'
+                . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+                . lang('actions') . ' <span class="caret"></span></button>
+                <ul class="dropdown-menu pull-right" role="menu">
+                    
+                    <li>' . $detail_link . '</li>
+                    <li>' . $pdf_link . '</li>
+                    <li>' . $excel_link . '</li>
+                    <li>' . $zatka_invoice_link . '</li>
+                    <li>' . $journal_entry_link . '</li>
+                </ul>
+            </div></div>';
+        }else if(isset($this->GP) && $this->Settings->site_name == 'Avnzor' && $this->sma->in_group('warehouseofficer'))
         {
 
-        $action = '<div class="text-center"><div class="btn-group text-left">'
-        . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
-        . lang('actions') . ' <span class="caret"></span></button>
-        <ul class="dropdown-menu pull-right" role="menu">
-            <li>' . $convert_sale_invoice . '</li>
-            <li>' . $detail_link . '</li>
-            <li>' . $duplicate_link . '</li>
-            <li>' . $payments_link . '</li>
-            <li>' . $add_payment_link . '</li>
-            <li>' . $packagink_link . '</li>
-            <li>' . $add_delivery_link . '</li>
-            <li>' . $edit_link . '</li>
-            <li>' . $pdf_link . '</li>
-            <li>' . $email_link . '</li>
-            <li>' . $return_link . '</li>
-            <li>' . $delete_link . '</li>
-        </ul>
-    </div></div>';
-    }else{
+            $action = '<div class="text-center"><div class="btn-group text-left">'
+                . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+                . lang('actions') . ' <span class="caret"></span></button>
+                <ul class="dropdown-menu pull-right" role="menu">
+                    
+                    <li>' . $detail_link . '</li>
+                    <li>' . $return_link . '</li>
+                    <li>' . $order_picker_link . '</li>
+                </ul>
+            </div></div>';
+        }else if(isset($this->GP) && $this->Settings->site_name == 'Hills Business Medical' && $this->sma->in_group('warehouseofficer'))
+        {
 
-        $action = '<div class="text-center"><div class="btn-group text-left">'
-        . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
-        . lang('actions') . ' <span class="caret"></span></button>
-        <ul class="dropdown-menu pull-right" role="menu">
-            <li>' . $detail_link . '</li>
-            <li>' . $duplicate_link . '</li>
-            <li>' . $payments_link . '</li>
-            <li>' . $add_payment_link . '</li>
-            <li>' . $packagink_link . '</li>
-            <li>' . $add_delivery_link . '</li>
-            <li>' . $edit_link . '</li>
-            <li>' . $pdf_link . '</li>
-            <li>' . $email_link . '</li>
-            <li>' . $return_link . '</li>
-            <li>' . $delete_link . '</li>
-        </ul>
-    </div></div>';
-    }
+            $action = '<div class="text-center"><div class="btn-group text-left">'
+                . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+                . lang('actions') . ' <span class="caret"></span></button>
+                <ul class="dropdown-menu pull-right" role="menu">
+                    
+                    <li>' . $detail_link . '</li>
+                    <li>' . $return_link . '</li>
+                    <li>' . $sale_order_link . '</li>
+                    <li>' . $zatka_invoice_link . '</li>
+                </ul>
+            </div></div>';
+        }else{
+
+            $action = '<div class="text-center"><div class="btn-group text-left">'
+            . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+            . lang('actions') . ' <span class="caret"></span></button>
+            <ul class="dropdown-menu pull-right" role="menu">
+                <li>' . $order_picker_link . '</li>
+                <li>' . $detail_link . '</li>';
+
+            if($this->Settings->site_name != 'Hills Business Medical' && $this->Settings->site_name != 'Demo Company'){
+                $action .= '<li>' . $edit_link . '</li>';
+            }
+            
+            $action .=  '<li>' . $pdf_link . '</li>
+                <li>' . $excel_link . '</li>
+                <li>' . $zatka_invoice_link . '</li>';
+
+            if($this->Owner || $this->Admin || $this->GP['returns-add']){
+                $action .=  '<li>' . $return_link . '</li>';
+            }
+
+            if(($this->Admin || $this->Owner)){
+                $action .=  '<li>' . $delete_link . '</li>';
+            }
+            if(($this->Admin || $this->Owner || $this->Accountant)){
+                $action .=  '<li>' . $journal_entry_link . '</li>';
+            }
+            $action .=  '</ul>
+        </div></div>';
+        }
         //$action = '<div class="text-center">' . $detail_link . ' ' . $edit_link . ' ' . $email_link . ' ' . $delete_link . '</div>';
 
         $this->load->library('datatables');
         if ($warehouse_id) {
             $this->datatables
-                ->select("{$this->db->dbprefix('sales')}.id as id, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, {$this->db->dbprefix('sales')}.sequence_code as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, {$this->db->dbprefix('sales')}.attachment, return_id")
+                ->select("{$this->db->dbprefix('sales')}.id as id, {$this->db->dbprefix('sales')}.id as number,DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, CONCAT('SL-', {$this->db->dbprefix('sales')}.id) as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, CONCAT('files/', {$this->db->dbprefix('sales')}.attachment) as attachment, return_id")
                 ->from('sales')
                 ->where('warehouse_id', $warehouse_id)
                 ->where('shop', 0);
                 //->join('aramex_shipment', 'aramex_shipment.salesid=sales.id');
         } else {
             $this->datatables
-                ->select("{$this->db->dbprefix('sales')}.id as id, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, {$this->db->dbprefix('sales')}.sequence_code as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, {$this->db->dbprefix('sales')}.attachment, return_id,")
+                ->select("{$this->db->dbprefix('sales')}.id as id, {$this->db->dbprefix('sales')}.id as number, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, CONCAT('SL-', {$this->db->dbprefix('sales')}.id) as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, CONCAT('files/', {$this->db->dbprefix('sales')}.attachment) as attachment, return_id")
                 ->from('sales')
-                ->where('shop', 0);
-                
-                
+                ->where('shop', 0); 
+        } 
+        if(is_numeric($sid)) {
+            //$this->datatables->where('id', $sid);
+            $this->datatables->group_start()
+                ->where('id', $sid)
+                ->or_where('reference_no', $sid)
+            ->group_end();
         }
-        
         // $this->datatables->join("{$this->db->dbprefix('aramex_shipment')}", 'sales.id');
         if ($this->input->get('shop') == 'yes') {
             $this->datatables->where('shop', 1);
@@ -2583,7 +3820,7 @@ class Sales extends MY_Controller
             $this->datatables->where('payment_status !=', 'paid')->where('attachment !=', null);
         }
         $this->datatables->where('pos !=', 1); // ->where('sale_status !=', 'returned');
-        if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
+        if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->Admin && !$this->GP['sales-index']) {
             $this->datatables->where('created_by', $this->session->userdata('user_id'));
         } elseif ($this->Customer) {
             $this->datatables->where('customer_id', $this->session->userdata('user_id'));
@@ -2591,7 +3828,155 @@ class Sales extends MY_Controller
         $this->datatables->add_column('Actions', $action, 'id');
         echo $this->datatables->generate();
     }
+        public function getShopSales($warehouse_id = null)
+        {
+            $this->sma->checkPermissions('index');
+            $sid = $this->input->get('sid');
+            if ((!$this->Owner && !$this->Admin && !$this->GP['sales-index']) && !$warehouse_id) {
+                $user         = $this->site->getUser();
+                $warehouse_id = $user->warehouse_id;
+            }
+            $detail_link       = anchor('admin/sales/view/$1', '<i class="fa fa-file-text-o"></i> ' . lang('sale_details'));
+            $duplicate_link    = anchor('admin/sales/add?sale_id=$1', '<i class="fa fa-plus-circle"></i> ' . lang('duplicate_sale'));
+            $payments_link     = anchor('admin/sales/payments/$1', '<i class="fa fa-money"></i> ' . lang('view_payments'), 'data-toggle="modal" data-target="#myModal"');
+            
+            if(isset($this->GP) && $this->GP['accountant'])
+            {
+                $convert_sale_invoice = anchor('admin/sales/convert_sale_invoice/$1', '<i class="fa fa-money"></i> ' . lang('Convert to Invoice'));
+            }
+            
+            $convert_sale_invoice = anchor('admin/sales/convert_sale_invoice/$1', '<i class="fa fa-money"></i> ' . lang('Convert to Invoice'));
+            $add_payment_link  = anchor('admin/sales/add_payment/$1', '<i class="fa fa-money"></i> ' . lang('add_payment'), 'data-toggle="modal" data-target="#myModal"');
+            $packagink_link    = anchor('admin/sales/packaging/$1', '<i class="fa fa-archive"></i> ' . lang('packaging'), 'data-toggle="modal" data-target="#myModal"');
+            $add_delivery_link = anchor('admin/sales/add_delivery/$1', '<i class="fa fa-truck"></i> ' . lang('add_delivery'), 'data-toggle="modal" data-target="#myModal"');
+            $email_link        = anchor('admin/sales/email/$1', '<i class="fa fa-envelope"></i> ' . lang('email_sale'), 'data-toggle="modal" data-target="#myModal"');
+            $edit_link         = anchor('admin/sales/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_sale'), 'class="sledit"');
+            $pdf_link          = anchor('admin/sales/pdf_new/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf'));
+            $zatka_invoice_link = anchor('admin/sales/pdf_zatka_invoice/$1', '<i class="fa fa-file-text-o"></i> Zatka Invoice', 'target="_blank"');
+            $sale_order_link   = anchor('admin/sales/pdf_sale_order/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_sale_order'));
+            $order_picker_link   = anchor('admin/sales/pdf_order_picker/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('Download_Picking_Pdf'));
+            $return_link       = anchor('admin/returns/add/?sale=$1', '<i class="fa fa-angle-double-left"></i> ' . lang('return_sale'));
+            //$shipment_link     = anchor('$1', '<i class="fa fa-angle-double-left"></i> ' . lang('Shipping_Slip'));
+            $delete_link       = "<a href='#' class='po' title='<b>" . lang('delete_sale') . "</b>' data-content=\"<p>"
+            . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('sales/delete/$1') . "'>"
+            . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i> "
+            . lang('delete_sale') . '</a>';
+            $journal_entry_link      = anchor('admin/entries/view/journal/?sid=$1', '<i class="fa fa-eye"></i> ' . lang('Journal Entry'));
+            
+            if(isset($this->GP) && $this->Accountant)
+            {
+                $action = '<div class="text-center"><div class="btn-group text-left">'
+                    . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+                    . lang('actions') . ' <span class="caret"></span></button>
+                    <ul class="dropdown-menu pull-right" role="menu">
+                        
+                        <li>' . $detail_link . '</li>
+                        <li>' . $pdf_link . '</li>
+                        <li>' . $zatka_invoice_link . '</li>
+                        <li>' . $journal_entry_link . '</li>
+                    </ul>
+                </div></div>';
+            }else if(isset($this->GP) && $this->Settings->site_name == 'Avnzor' && $this->sma->in_group('warehouseofficer'))
+            {
 
+                $action = '<div class="text-center"><div class="btn-group text-left">'
+                    . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+                    . lang('actions') . ' <span class="caret"></span></button>
+                    <ul class="dropdown-menu pull-right" role="menu">
+                        
+                        <li>' . $detail_link . '</li>
+                        <li>' . $return_link . '</li>
+                        <li>' . $order_picker_link . '</li>
+                    </ul>
+                </div></div>';
+            }else if(isset($this->GP) && $this->Settings->site_name == 'Hills Business Medical' && $this->sma->in_group('warehouseofficer'))
+            {
+
+                $action = '<div class="text-center"><div class="btn-group text-left">'
+                    . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+                    . lang('actions') . ' <span class="caret"></span></button>
+                    <ul class="dropdown-menu pull-right" role="menu">
+                        
+                        <li>' . $detail_link . '</li>
+                        <li>' . $return_link . '</li>
+                        <li>' . $sale_order_link . '</li>
+                    </ul>
+                </div></div>';
+            }else{
+
+                $action = '<div class="text-center"><div class="btn-group text-left">'
+                . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+                . lang('actions') . ' <span class="caret"></span></button>
+                <ul class="dropdown-menu pull-right" role="menu">
+                    <li>' . $order_picker_link . '</li>
+                    <li>' . $detail_link . '</li>';
+
+                if($this->Settings->site_name != 'Hills Business Medical' && $this->Settings->site_name != 'Demo Company'){
+                    $action .= '<li>' . $edit_link . '</li>';
+                }
+                
+                $action .=  '<li>' . $pdf_link . '</li>
+                    <li>' . $zatka_invoice_link . '</li>';
+
+                if($Admin || $Owner || $this->GP['returns-add']){
+                    $action .=  '<li>' . $return_link . '</li>';
+                }
+
+                if(($Admin || $Owner)){
+                    $action .=  '<li>' . $delete_link . '</li>';
+                }
+                if(($Admin || $Owner || $this->Accountant)){
+                    $action .=  '<li>' . $journal_entry_link . '</li>';
+                }
+                $action .=  '</ul>
+            </div></div>';
+            }
+            //$action = '<div class="text-center">' . $detail_link . ' ' . $edit_link . ' ' . $email_link . ' ' . $delete_link . '</div>';
+
+            $this->load->library('datatables');
+            if ($warehouse_id) {
+                $this->datatables
+                    ->select("{$this->db->dbprefix('sales')}.id as id, {$this->db->dbprefix('sales')}.id as number,DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, CONCAT('SL-', {$this->db->dbprefix('sales')}.id) as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, CONCAT('files/', {$this->db->dbprefix('sales')}.attachment) as attachment, return_id")
+                    ->from('sales')
+                    ->where('warehouse_id', $warehouse_id)
+                    ->where('shop', 1);
+                    //->join('aramex_shipment', 'aramex_shipment.salesid=sales.id');
+            } else {
+                $this->datatables
+                    ->select("{$this->db->dbprefix('sales')}.id as id, {$this->db->dbprefix('sales')}.id as number, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, CONCAT('SL-', {$this->db->dbprefix('sales')}.id) as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, CONCAT('files/', {$this->db->dbprefix('sales')}.attachment) as attachment, return_id")
+                    ->from('sales')
+                    ->where('shop', 1); 
+            } 
+            if(is_numeric($sid)) {
+                //$this->datatables->where('id', $sid);
+                $this->datatables->group_start()
+                    ->where('id', $sid)
+                    ->or_where('reference_no', $sid)
+                ->group_end();
+            }
+            // $this->datatables->join("{$this->db->dbprefix('aramex_shipment')}", 'sales.id');
+            if ($this->input->get('shop') == 'yes') {
+                $this->datatables->where('shop', 1);
+            } elseif ($this->input->get('shop') == 'no') {
+                $this->datatables->where('shop !=', 1);
+            }
+            if ($this->input->get('delivery') == 'no') {
+                $this->datatables->join('deliveries', 'deliveries.sale_id=sales.id', 'left')
+                ->where('sales.sale_status', 'completed')->where('sales.payment_status', 'paid')
+                ->where("({$this->db->dbprefix('deliveries')}.status != 'delivered' OR {$this->db->dbprefix('deliveries')}.status IS NULL)", null);
+            }
+            if ($this->input->get('attachment') == 'yes') {
+                $this->datatables->where('payment_status !=', 'paid')->where('attachment !=', null);
+            }
+            $this->datatables->where('pos !=', 1); // ->where('sale_status !=', 'returned');
+            if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->Admin && !$this->GP['sales-index']) {
+                $this->datatables->where('created_by', $this->session->userdata('user_id'));
+            } elseif ($this->Customer) {
+                $this->datatables->where('customer_id', $this->session->userdata('user_id'));
+            }
+            $this->datatables->add_column('Actions', $action, 'id');
+            echo $this->datatables->generate();
+        }
     public function gift_card_actions()
     {
         if (!$this->Owner && !$this->GP['bulk_actions']) {
@@ -2650,7 +4035,7 @@ class Sales extends MY_Controller
 
     public function gift_cards()
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         $this->data['error'] = validation_errors() ? validation_errors() : $this->session->flashdata('error');
 
@@ -2661,7 +4046,7 @@ class Sales extends MY_Controller
 
     public function index($warehouse_id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
@@ -2674,14 +4059,39 @@ class Sales extends MY_Controller
             $this->data['warehouse']    = $this->session->userdata('warehouse_id') ? $this->site->getWarehouseByID($this->session->userdata('warehouse_id')) : null;
         }
 
+        $this->data['lastInsertedId'] =  $this->input->get('lastInsertedId') ;
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('sales')]];
         $meta = ['page_title' => lang('sales'), 'bc' => $bc];
+        $this->data['sid'] = $this->input->get('sid');
+        $this->page_construct('sales/index', $meta, $this->data);
+    }
+
+    public function shop_sales($warehouse_id = null)
+    {
+        //$this->sma->checkPermissions();
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
+            $this->data['warehouses']   = $this->site->getAllWarehouses();
+            $this->data['warehouse_id'] = $warehouse_id;
+            $this->data['warehouse']    = $warehouse_id ? $this->site->getWarehouseByID($warehouse_id) : null;
+        } else {
+            $this->data['warehouses']   = null;
+            $this->data['warehouse_id'] = $this->session->userdata('warehouse_id');
+            $this->data['warehouse']    = $this->session->userdata('warehouse_id') ? $this->site->getWarehouseByID($this->session->userdata('warehouse_id')) : null;
+        }
+
+        $this->data['lastInsertedId'] =  $this->input->get('lastInsertedId') ;
+        $this->data['is_shop_sales'] = true; // Flag to identify shop sales view
+        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('sales'), 'page' => lang('sales')], ['link' => '#', 'page' => 'Shop Sales']];
+        $meta = ['page_title' => 'Shop Sales', 'bc' => $bc];
+        $this->data['sid'] = $this->input->get('sid');
         $this->page_construct('sales/index', $meta, $this->data);
     }
 
     public function ecommerce($warehouse_id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
@@ -2711,9 +4121,10 @@ class Sales extends MY_Controller
         }
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $inv                 = $this->sales_model->getInvoiceByID($id);
-        if (!$this->session->userdata('view_right')) {
+        if (!$this->GP['sales-index']) {
             $this->sma->view_rights($inv->created_by, true);
         }
+
         $this->data['customer']    = $this->site->getCompanyByID($inv->customer_id);
         $this->data['biller']      = $this->site->getCompanyByID($inv->biller_id);
         $this->data['created_by']  = $this->site->getUser($inv->created_by);
@@ -2725,6 +4136,7 @@ class Sales extends MY_Controller
         $this->data['return_sale'] = $inv->return_id ? $this->sales_model->getInvoiceByID($inv->return_id) : null;
         $this->data['return_rows'] = $inv->return_id ? $this->sales_model->getAllInvoiceItems($inv->return_id) : null;
         $this->data['attachments'] = $this->site->getAttachments($id, 'sale');
+        $this->data['sale_id'] = $id;
 
         $this->load->view($this->theme . 'sales/modal_view', $this->data);
     }
@@ -2778,7 +4190,7 @@ class Sales extends MY_Controller
 
     public function pdf($id = null, $view = null, $save_bufffer = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->load->library('inv_qrcode');
 
         if ($this->input->get('id')) {
@@ -2800,27 +4212,1127 @@ class Sales extends MY_Controller
         $this->data['rows']        = $this->sales_model->getAllInvoiceItems($id);
         $this->data['return_sale'] = $inv->return_id ? $this->sales_model->getInvoiceByID($inv->return_id) : null;
         $this->data['return_rows'] = $inv->return_id ? $this->sales_model->getAllInvoiceItems($inv->return_id) : null;
-        //$this->data['paypal'] = $this->sales_model->getPaypalSettings();
-        //$this->data['skrill'] = $this->sales_model->getSkrillSettings();
-
+        
         $name = lang('sale') . '_' . str_replace('/', '_', $inv->reference_no) . '.pdf';
-        $html = $this->load->view($this->theme . 'sales/pdf', $this->data, true);
+        $html = $this->load->view($this->theme . 'sales/pdf/sales_invoice_report', $this->data, true);
+        echo $html;exit;
+        if (!$this->Settings->barcode_img) {
+            $html = preg_replace("'\<\?xml(.*)\?\>'", '', $html);
+        }
+       
+        $this->load->view($this->theme . 'sales/pdf/sales_invoice_report', $this->data);
+        if ($view) {
+            $this->load->view($this->theme . 'sales/pdf/sales_invoice_report', $this->data);
+        } elseif ($save_bufffer) {
+           // return $this->sma->generate_pdf($html, $name, $save_bufffer, $this->data['biller']->invoice_footer);
+        } else {
+            $this->sma->generate_pdf($html, $name, 'I', $this->data['biller']->invoice_footer);
+        }
+    }
+
+    public function pdf_order_picker($id = null, $view = null, $save_bufffer = null){
+        $this->load->library('inv_qrcode');
+
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $inv                 = $this->sales_model->getInvoiceByID($id);
+        if (!$this->GP['sales-index']) {
+            $this->sma->view_rights($inv->created_by);
+        }
+        $this->data['barcode']     = "<img src='" . admin_url('products/gen_barcode/' . $inv->reference_no) . "' alt='" . $inv->reference_no . "' class='pull-left' />";
+        $this->data['customer']    = $this->site->getCompanyByID($inv->customer_id);
+        $this->data['payments']    = $this->sales_model->getPaymentsForSale($id);
+        $this->data['biller']      = $this->site->getCompanyByID($inv->biller_id);
+
+        if($inv->address_id){
+            $address_info = $this->site->getAddressByID($inv->address_id);
+            $ship_to = $address_info ? $address_info->first_name. ' '. $address_info->last_name : '-';
+            $ship_address = $address_info ? $address_info->line1.' '. $address_info->line2 : '-';
+            $ship_city = $address_info ? $address_info->city : '-';
+            $ship_phone = $address_info ? $address_info->phone : '-';
+            $ship_email = $address_info ? $address_info->email : '-';
+        }else{
+            $customer = $this->data['customer'] ;
+            $ship_to = $customer->name;
+            $ship_address = $customer->address;
+            $ship_city = $customer->city;
+            $ship_phone = $customer->phone;
+            $ship_email = $customer->email;
+        }
+
+        $biller = $this->site->getCompanyByID($inv->biller_id);
+        $customer = $this->data['customer'] ;
+        $this->data['user']        = $this->site->getUser($inv->created_by);
+        $this->data['warehouse']   = $this->site->getWarehouseByID($inv->warehouse_id);
+        $this->data['inv']         = $inv;
+        $this->data['rows']        = $this->sales_model->getAllPickerItems($id);
+        
+        $name = lang('sale') . '_' . str_replace('/', '_', $inv->reference_no) . '.pdf';
+        $html = $this->load->view($this->theme . 'sales/pdf/picker_invoice', $this->data, true);
         if (!$this->Settings->barcode_img) {
             $html = preg_replace("'\<\?xml(.*)\?\>'", '', $html);
         }
 
-        if ($view) {
-            $this->load->view($this->theme . 'sales/pdf', $this->data);
-        } elseif ($save_bufffer) {
-            return $this->sma->generate_pdf($html, $name, $save_bufffer, $this->data['biller']->invoice_footer);
+        // Generate QR code Base64 string
+       if ($this->Settings->ksa_qrcode) {
+            $payload = [
+                'seller' => $biller->company && $biller->company != '-' ? $biller->company : $biller->name,
+                'vat_no' => $biller->vat_no ?: $biller->get_no,
+                'date' => $inv->date,
+                'grand_total' => $return_sale ? ($inv->grand_total + $return_sale->grand_total) : $inv->grand_total,
+                'total_tax_amount' => $return_sale ? ($inv->total_tax + $return_sale->total_tax) : $inv->total_tax,
+            ];
+
+            // Convert to JSON directly
+            $qrtext = json_encode($payload);
+            $qr_code = $this->sma->qrcodepng('text', $qrtext, 2, $level = 'H', $sq = null, $svg = false);
+           //echo $qr_code;exit;
+            $png_base64 = base64_encode($qr_code);
+            
         } else {
-            $this->sma->generate_pdf($html, $name, false, $this->data['biller']->invoice_footer);
+            $qr_code = $this->sma->qrcode('link', urlencode(site_url('view/sale/' . $inv->hash)), 2);
         }
+
+        $mpdf = new Mpdf([
+        'format' => 'A4',
+        'margin_top' => 70,
+        'margin_bottom' => 70,
+        ]);
+
+        $mpdf->SetHTMLHeader('
+<div style="width:100%; font-family: DejaVu Sans, sans-serif; font-size:11px;">
+
+    <!-- TOP BAR WITH PAGE NUMBER -->
+    <div style="width:100%; overflow:hidden; font-size:10px; color:#666; margin-bottom:3px;">
+        <div style="float:right; text-align:right;">
+            Page {PAGENO} of {nbpg}
+        </div>
+    </div>
+
+    <!-- INVOICE INFO & BARCODE -->
+    <div style="width:100%; background-color:#f6f6f6; padding:5px 8px; margin-bottom:5px; overflow:hidden; font-size:11px;">
+
+        <!-- Left: Invoice Info -->
+        <div style="float:left; width:55%;">
+            <p style="margin:2px 0;"><strong>Date:</strong> ' . $this->sma->hrld($inv->date) . '</p>
+            <p style="margin:2px 0;"><strong>Order#</strong> ' . $inv->id . '</p>
+        </div>
+
+        <!-- Right: Barcode and QR -->
+        <div style="float:right; width:40%; text-align:right;">
+            <img src="' . admin_url('misc/barcode/' . $this->sma->base64url_encode($inv->reference_no) . '/code128/74/0/1') . '"
+                alt="' . $inv->reference_no . '" style="height:40px; vertical-align:top; margin-right:5px;"/>
+            
+            <img src="data:image/png;base64,' . $png_base64 . '" width="50" height="50" />
+        </div>
+
+    </div>
+
+    <!-- TO & FROM BLOCK -->
+    <div style="width:100%; overflow:hidden; margin-top:10px; font-size:11px;">
+        <!-- SHIP TO -->
+        <div style="float:left; width:48%; vertical-align:top;">
+            <p style="margin:2px 0;"><strong>BILL TO:</strong> '.$customer->name .'</p>
+            <p style="margin:2px 0;">Address: '. $customer->address .'</p>
+            <p style="margin:2px 0;">City: '. $customer->city .'</p>
+            <p style="margin:2px 0;">Tel: '. $customer->phone .'</p>
+            <p style="margin:2px 0;">Email: '. $customer->email .'</p>
+        </div>
+
+        <!-- BILL TO -->
+        <div style="float:right; width:48%; vertical-align:top;">
+            <p style="margin:2px 0;"><strong>SHIP TO:</strong> '.  $ship_to .'</p>
+            <p style="margin:2px 0;">Address: '. $ship_address .'</p>
+            <p style="margin:2px 0;">City: '. $ship_city .'</p>
+            <p style="margin:2px 0;">Tel: '. $ship_phone .'</p>
+            <p style="margin:2px 0;">Email: '. $ship_email .'</p>
+        </div>
+        
+    </div>
+
+    <hr style="margin:8px 0 0 0; border-top:1px solid #000;">
+</div>
+');
+
+if($inv->warning_note != ""){
+    $note_text = 'Note:';
+}else{
+    $note_text = '';
+}
+
+    $footer_table = '<div style="margin-top:40px; text-align:center; font-size:14px;">
+                    <strong>Thank you for shopping with us!</strong><br>
+                    Avnzor<br>
+                    Al Mashael, Al Mashael, Riyadh 14328, Saudi Arabia<br>
+                    <a href="mailto:support@avnzor.com" style="color:#333; text-decoration:none;">support@avnzor.com</a>
+                    </div>';
+        
+    $mpdf->SetHTMLFooter('
+    <hr style="margin-bottom:5px;">
+
+    <div style="width:100%; font-size:12px; font-family: DejaVu Sans, sans-serif;">
+        <!-- Totals Table -->
+        '.$footer_table.'
+
+    </div>
+');
+
+
+
+            $mpdf->WriteHTML($html);
+            $mpdf->Output("Picker_Invoice.pdf", "D");
+    }
+
+    public function pdf_sale_order($id = null, $view = null, $save_bufffer = null)
+    {   
+        //$this->sma->checkPermissions();
+        $this->load->library('inv_qrcode');
+
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $inv                 = $this->sales_model->getInvoiceByID($id);
+        if (!$this->GP['sales-index']) {
+            $this->sma->view_rights($inv->created_by);
+        }
+        $this->data['barcode']     = "<img src='" . admin_url('products/gen_barcode/' . $inv->reference_no) . "' alt='" . $inv->reference_no . "' class='pull-left' />";
+        $this->data['customer']    = $this->site->getCompanyByID($inv->customer_id);
+        $this->data['payments']    = $this->sales_model->getPaymentsForSale($id);
+        $this->data['biller']      = $this->site->getCompanyByID($inv->biller_id);
+        $biller = $this->site->getCompanyByID($inv->biller_id);
+        $customer = $this->data['customer'] ;
+        $this->data['user']        = $this->site->getUser($inv->created_by);
+        $this->data['warehouse']   = $this->site->getWarehouseByID($inv->warehouse_id);
+        $this->data['inv']         = $inv;
+        $this->data['rows']        = $this->sales_model->getAllPickerInvoiceItems($id);
+        $this->data['return_sale'] = $inv->return_id ? $this->sales_model->getInvoiceByID($inv->return_id) : null;
+        $this->data['return_rows'] = $inv->return_id ? $this->sales_model->getAllInvoiceItems($inv->return_id) : null;
+        //echo '<pre>';print_r($this->data);exit;
+        
+        $name = lang('sale') . '_' . str_replace('/', '_', $inv->reference_no) . '.pdf';
+        $html = $this->load->view($this->theme . 'sales/pdf/sales_order_report_new', $this->data, true);
+        
+        if (!$this->Settings->barcode_img) {
+            $html = preg_replace("'\<\?xml(.*)\?\>'", '', $html);
+        }
+
+        // Generate QR code Base64 string
+       if ($this->Settings->ksa_qrcode) {
+            $payload = [
+                'seller' => $biller->company && $biller->company != '-' ? $biller->company : $biller->name,
+                'vat_no' => $biller->vat_no ?: $biller->get_no,
+                'date' => $inv->date,
+                'grand_total' => $return_sale ? ($inv->grand_total + $return_sale->grand_total) : $inv->grand_total,
+                'total_tax_amount' => $return_sale ? ($inv->total_tax + $return_sale->total_tax) : $inv->total_tax,
+            ];
+
+            // Convert to JSON directly
+            $qrtext = json_encode($payload);
+            $qr_code = $this->sma->qrcodepng('text', $qrtext, 2, $level = 'H', $sq = null, $svg = false);
+           //echo $qr_code;exit;
+            $png_base64 = base64_encode($qr_code);
+            
+        } else {
+            $qr_code = $this->sma->qrcode('link', urlencode(site_url('view/sale/' . $inv->hash)), 2);
+        }
+
+        // Now explicitly generate Base64 PNG
+        //$qr_code = $this->inv_qrcode->generate_base64($qrtext, 150); // 150px size
+
+        if($customer->gln != ''){
+            $customer_gln_text = 'GLN: ';
+        }else{
+            $customer_gln_text = '';
+        }
+       
+        $this->load->view($this->theme . 'sales/pdf/sales_invoice_report', $this->data);
+        if ($view) {
+            $this->load->view($this->theme . 'sales/pdf/sales_invoice_report', $this->data);
+        } elseif ($save_bufffer) {
+           // return $this->sma->generate_pdf($html, $name, $save_bufffer, $this->data['biller']->invoice_footer);
+        } else {
+            
+            $mpdf = new Mpdf([
+            'format' => 'A4',
+            'margin_top' => 80,
+            'margin_bottom' => 70,
+            ]);
+
+            $mpdf->SetHTMLHeader('
+<div style="width:100%; font-family: DejaVu Sans, sans-serif; font-size:11px;">
+
+    <!-- TOP BAR WITH PAGE NUMBER -->
+    <div style="width:100%; overflow:hidden; font-size:10px; color:#666; margin-bottom:3px;">
+        <div style="float:right; text-align:right;">
+            Page {PAGENO} of {nbpg}
+        </div>
+    </div>
+
+    <!-- INVOICE INFO & BARCODE -->
+    <div style="width:100%; background-color:#f6f6f6; padding:5px 8px; margin-bottom:5px; overflow:hidden; font-size:11px;">
+
+        <!-- Left: Invoice Info -->
+        <div style="float:left; width:55%;">
+            <p style="margin:2px 0;"><strong>Date:</strong> ' . $this->sma->hrld($inv->date) . '</p>
+            <p style="margin:2px 0;"><strong>Reference:</strong> ' . date("Y") . '/' . $inv->id . '</p>
+            <p style="margin:2px 0;"><strong>Salesman:</strong> ' . (($customer->sales_agent != '') ? $customer->sales_agent : '-') . '</p>
+            <p style="margin:2px 0;"><strong>Note:</strong> ' . $inv->warning_note . '</p>
+        </div>
+
+        <!-- Right: Barcode and QR -->
+        <div style="float:right; width:40%; text-align:right;">
+            <img src="' . admin_url('misc/barcode/' . $this->sma->base64url_encode($inv->reference_no) . '/code128/74/0/1') . '"
+                alt="' . $inv->reference_no . '" style="height:40px; vertical-align:top; margin-right:5px;"/>
+            
+            <img src="data:image/png;base64,' . $png_base64 . '" width="50" height="50" />
+        </div>
+
+    </div>
+
+    <!-- TO & FROM BLOCK -->
+    <div style="width:100%; overflow:hidden; margin-top:10px; font-size:11px;">
+        <!-- TO -->
+        <div style="float:left; width:48%; vertical-align:top;">
+            <p style="margin:2px 0;"><strong>To:</strong> ('.$customer->external_id.') '. $customer->name .'</p>
+            <p style="margin:2px 0;">Address: '. $customer->address .'</p>
+            <p style="margin:2px 0;">City: '. $customer->city .'</p>
+            <p style="margin:2px 0;">VAT Number: '. $customer->vat_no .'</p>
+            <p style="margin:2px 0;">Tel: '. $customer->phone .'</p>
+            <p style="margin:2px 0;">Email: '. $customer->email .'</p>
+            <p style="margin:2px 0;">'.$customer_gln_text.''. $customer->gln .'</p>
+        </div>
+
+        <!-- FROM -->
+        <div style="float:right; width:48%; vertical-align:top;">
+            <p style="margin:2px 0;"><strong>From:</strong> '.  $biller->name .'</p>
+            <p style="margin:2px 0;">Address: '. $biller->address .'</p>
+            <p style="margin:2px 0;">City: '. $biller->city .'</p>
+            <p style="margin:2px 0;">VAT Number: '. $biller->vat_no .'</p>
+            <p style="margin:2px 0;">Tel: '. $biller->phone .'</p>
+            <p style="margin:2px 0;">Email: '. $biller->email .'</p>
+            <p style="margin:2px 0;">GLN: '. $this->data['warehouse']->gln .'</p>
+        </div>
+    </div>
+
+    <hr style="margin:8px 0 0 0; border-top:1px solid #000;">
+</div>
+');
+
+if($inv->warning_note != ""){
+    $note_text = 'Note:';
+}else{
+    $note_text = '';
+}
+
+    $footer_table = '';
+    $footer_note = '';
+    if($this->Settings->site_name == 'Hills Business Medical' && $this->Settings->site_name != 'Demo Company'){
+        $footer_table = '<div style="width:60%; float:left; text-align:left; margin-bottom:15px;">
+            <table class="table-label" border="1"  cellspacing="0" cellpadding="10" width="100%" style="border-collapse:collapse; font-size: 10px">
+                <tr><td colspan="3" style="text-align: center; vertical-align: middle; background-color: #f2f2f2; font-size: 20px;">'.$inv->id.'</td> <td colspan="3">فريق التحضير</td></tr>
+                <tr><td colspan="3">تحضير بداية</td> <td colspan="3">تحضير نهاية</td></tr>
+                <tr><td colspan="2">بداية تشييك</td> <td colspan="2">اسم المشيك</td> <td colspan="2">كمرا</td></tr>
+                <tr><td colspan="2">عدد كرتون</td> <td colspan="2">ربطة الثلاجة</td> <td colspan="2">خطأ</td></tr>
+            </table>
+        </div>';
+    }else{
+        /*$footer_note = '<div style="float:left; width:60%; text-align:left; padding-right:10px;">
+            <p style="margin:0 0 5px 0;"><strong>'.$note_text.'</strong></p>
+            <p style="margin:0;">
+            '.$inv->warning_note.'
+            </p>
+        </div>';*/
+        $footer_table = '<div style="width:60%; float:left; text-align:left; margin-bottom:15px;">
+            <table class="table-label" border="1"  cellspacing="0" cellpadding="10" width="100%" style="border-collapse:collapse; font-size: 10px">
+                <tr><td colspan="3" style="text-align: center; vertical-align: middle; background-color: #f2f2f2; font-size: 20px;">'.$inv->id.'</td> <td colspan="3">فريق التحضير</td></tr>
+                <tr><td colspan="3">تحضير بداية</td> <td colspan="3">تحضير نهاية</td></tr>
+                <tr><td colspan="2">بداية تشييك</td> <td colspan="2">اسم المشيك</td> <td colspan="2">كمرا</td></tr>
+                <tr><td colspan="2">عدد كرتون</td> <td colspan="2">ربطة الثلاجة</td> <td colspan="2">خطأ</td></tr>
+            </table>
+        </div>';
+    }
+        
+    $mpdf->SetHTMLFooter('
+    <hr style="margin-bottom:5px;">
+
+    <div style="width:100%; font-size:12px; font-family: DejaVu Sans, sans-serif;">
+
+        <!-- Notes Section (Left) -->
+        '.$footer_note.'
+
+        <!-- Totals Table -->
+        <div style="width:35%; float:right; text-align:left; margin-bottom:15px;">
+            <table border="1" cellpadding="4" cellspacing="0" width="100%" style="border-collapse:collapse;">
+                <tr><td>Total</td><td>'.$this->sma->formatNumber($inv->total).'</td></tr>
+                <tr><td>T-DISC</td><td>'.$this->sma->formatNumber($inv->total_discount).'</td></tr>
+                <tr><td>Net Before VAT</td><td>'.$this->sma->formatNumber($inv->total_net_sale).'</td></tr>
+                <tr><td>Total VAT</td><td>'.$this->sma->formatNumber($inv->total_tax).'</td></tr>
+                <tr><td><strong>Total After VAT</strong></td><td><strong>'.$this->sma->formatNumber($inv->grand_total).'</strong></td></tr>
+            </table>
+        </div>
+
+        <!-- Totals Table -->
+        '.$footer_table.'
+
+        <!-- Signature Section -->
+        <div style="width:100%; overflow:hidden; margin-top:50px; font-size:12px;">
+            
+            <div style="float:left; width:24%; text-align:center;">
+                <p>_________________________</p>
+                <p><strong>STORE KEEPER</strong></p>
+            </div>
+
+            <div style="float:right; width:24%; text-align:center;">
+                <p>_________________________</p>
+                <p><strong>SALES MANAGER</strong></p>
+            </div>
+
+            <div style="float:right; width:24%; text-align:center;">
+                <p>_________________________</p>
+                <p><strong>RECEIVED BY</strong></p>
+            </div>
+
+            <div style="float:right; width:24%; text-align:center;">
+                <p>_________________________</p>
+                <p><strong>SIGNATURE</strong></p>
+            </div>
+
+        </div>
+    </div>
+');
+
+
+
+            $mpdf->WriteHTML($html);
+            $mpdf->Output("sale_order.pdf", "D");
+
+                //$this->sma->generate_pdf($html, $name, 'I', $this->data['biller']->invoice_footer);
+            }
+    }
+
+    public function pdf_new($id = null, $view = null, $save_bufffer = null)
+    {   
+        //$this->sma->checkPermissions();
+        $this->load->library('inv_qrcode');
+
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $inv                 = $this->sales_model->getInvoiceByID($id);
+        if (!$this->GP['sales-index']) {
+            $this->sma->view_rights($inv->created_by);
+        }
+        $this->data['barcode']     = "<img src='" . admin_url('products/gen_barcode/' . $inv->reference_no) . "' alt='" . $inv->reference_no . "' class='pull-left' />";
+        $this->data['customer']    = $this->site->getCompanyByID($inv->customer_id);
+        $this->data['payments']    = $this->sales_model->getPaymentsForSale($id);
+        $this->data['biller']      = $this->site->getCompanyByID($inv->biller_id);
+        $biller = $this->site->getCompanyByID($inv->biller_id);
+        $customer = $this->data['customer'] ;
+        $this->data['user']        = $this->site->getUser($inv->created_by);
+        $this->data['warehouse']   = $this->site->getWarehouseByID($inv->warehouse_id);
+        $this->data['inv']         = $inv;
+        $this->data['rows']        = $this->sales_model->getAllInvoiceItems($id);
+        $this->data['return_sale'] = $inv->return_id ? $this->sales_model->getInvoiceByID($inv->return_id) : null;
+        $this->data['return_rows'] = $inv->return_id ? $this->sales_model->getAllInvoiceItems($inv->return_id) : null;
+        //echo '<pre>';print_r($this->data);exit;
+        
+        $name = lang('sale') . '_' . str_replace('/', '_', $inv->reference_no) . '.pdf';
+        $html = $this->load->view($this->theme . 'sales/pdf/sales_invoice_report_new', $this->data, true);
+        
+        if (!$this->Settings->barcode_img) {
+            $html = preg_replace("'\<\?xml(.*)\?\>'", '', $html);
+        }
+
+        // Generate QR code Base64 string
+       if ($this->Settings->ksa_qrcode) {
+            $payload = [
+                'seller' => $biller->company && $biller->company != '-' ? $biller->company : $biller->name,
+                'vat_no' => $biller->vat_no ?: $biller->get_no,
+                'date' => $inv->date,
+                'grand_total' => $return_sale ? ($inv->grand_total + $return_sale->grand_total) : $inv->grand_total,
+                'total_tax_amount' => $return_sale ? ($inv->total_tax + $return_sale->total_tax) : $inv->total_tax,
+            ];
+
+            // Convert to JSON directly
+            $qrtext = json_encode($payload);
+            $qr_code = $this->sma->qrcodepng('text', $qrtext, 2, $level = 'H', $sq = null, $svg = false);
+           //echo $qr_code;exit;
+            $png_base64 = base64_encode($qr_code);
+            
+        } else {
+            $qr_code = $this->sma->qrcode('link', urlencode(site_url('view/sale/' . $inv->hash)), 2);
+        }
+
+        // Now explicitly generate Base64 PNG
+        //$qr_code = $this->inv_qrcode->generate_base64($qrtext, 150); // 150px size
+
+        if($customer->gln != ''){
+            $customer_gln_text = 'GLN: ';
+        }else{
+            $customer_gln_text = '';
+        }
+       
+        $this->load->view($this->theme . 'sales/pdf/sales_invoice_report', $this->data);
+        if ($view) {
+            $this->load->view($this->theme . 'sales/pdf/sales_invoice_report', $this->data);
+        } elseif ($save_bufffer) {
+           // return $this->sma->generate_pdf($html, $name, $save_bufffer, $this->data['biller']->invoice_footer);
+        } else {
+            
+            $mpdf = new Mpdf([
+            'format' => 'A4',
+            'margin_top' => 80,
+            'margin_bottom' => 70,
+            ]);
+
+            $mpdf->SetHTMLHeader('
+<div style="width:100%; font-family: DejaVu Sans, sans-serif; font-size:11px;">
+
+    <!-- TOP BAR WITH PAGE NUMBER -->
+    <div style="width:100%; overflow:hidden; font-size:10px; color:#666; margin-bottom:3px;">
+        <div style="float:right; text-align:right;">
+            Page {PAGENO} of {nbpg}
+        </div>
+    </div>
+
+    <!-- LOGO -->
+    <div style="text-align:center; margin-bottom:5px;">
+        <img src="data:image/png;base64,' . base64_encode(file_get_contents(base_url() . 'assets/uploads/logos/' . $biller->logo)) . '"
+            alt="Avenzur" style="max-width:120px; height:auto;">
+        
+    </div>
+
+    <!-- INVOICE INFO & BARCODE -->
+    <div style="width:100%; background-color:#f6f6f6; padding:5px 8px; margin-bottom:5px; overflow:hidden; font-size:11px;">
+
+        <!-- Left: Invoice Info -->
+        <div style="float:left; width:55%;">
+            <p style="margin:2px 0;"><strong>Date:</strong> ' . $this->sma->hrld($inv->date) . '</p>
+            <p style="margin:2px 0;"><strong>Reference:</strong> ' . date("Y") . '/' . $inv->id . '</p>
+            <p style="margin:2px 0;"><strong>Salesman:</strong> ' . (($customer->sales_agent != '') ? $customer->sales_agent : '-') . '</p>
+            <p style="margin:2px 0;"><strong>Note:</strong> ' . $inv->warning_note . '</p>
+        </div>
+
+        <!-- Right: Barcode and QR -->
+        <div style="float:right; width:40%; text-align:right;">
+            <img src="' . admin_url('misc/barcode/' . $this->sma->base64url_encode($inv->reference_no) . '/code128/74/0/1') . '"
+                alt="' . $inv->reference_no . '" style="height:40px; vertical-align:top; margin-right:5px;"/>
+            
+            <img src="data:image/png;base64,' . $png_base64 . '" width="50" height="50" />
+        </div>
+
+    </div>
+
+    <!-- TO & FROM BLOCK -->
+    <div style="width:100%; overflow:hidden; margin-top:10px; font-size:11px;">
+        <!-- TO -->
+        <div style="float:left; width:48%; vertical-align:top;">
+            <p style="margin:2px 0;"><strong>To:</strong> ('.$customer->external_id.') '. $customer->name .'</p>
+            <p style="margin:2px 0;">Address: '. $customer->address .'</p>
+            <p style="margin:2px 0;">City: '. $customer->city .'</p>
+            <p style="margin:2px 0;">VAT Number: '. $customer->vat_no .'</p>
+            <p style="margin:2px 0;">Tel: '. $customer->phone .'</p>
+            <p style="margin:2px 0;">Email: '. $customer->email .'</p>
+            <p style="margin:2px 0;">'.$customer_gln_text.''. $customer->gln .'</p>
+        </div>
+
+        <!-- FROM -->
+        <div style="float:right; width:48%; vertical-align:top;">
+            <p style="margin:2px 0;"><strong>From:</strong> '.  $biller->name .'</p>
+            <p style="margin:2px 0;">Address: '. $biller->address .'</p>
+            <p style="margin:2px 0;">City: '. $biller->city .'</p>
+            <p style="margin:2px 0;">VAT Number: '. $biller->vat_no .'</p>
+            <p style="margin:2px 0;">Tel: '. $biller->phone .'</p>
+            <p style="margin:2px 0;">Email: '. $biller->email .'</p>
+            <p style="margin:2px 0;">GLN: '. $this->data['warehouse']->gln .'</p>
+        </div>
+    </div>
+
+    <hr style="margin:8px 0 0 0; border-top:1px solid #000;">
+</div>
+');
+
+if($inv->warning_note != ""){
+    $note_text = 'Note:';
+}else{
+    $note_text = '';
+}
+
+    $footer_table = '';
+    $footer_note = '';
+    if($this->Settings->site_name == 'Hills Business Medical' && $this->Settings->site_name != 'Demo Company'){
+        $footer_table = '<div style="width:60%; float:left; text-align:left; margin-bottom:15px;">
+            <table class="table-label" border="1"  cellspacing="0" cellpadding="10" width="100%" style="border-collapse:collapse; font-size: 10px">
+                <tr><td colspan="3" style="text-align: center; vertical-align: middle; background-color: #f2f2f2; font-size: 20px;">'.$inv->id.'</td> <td colspan="3">فريق التحضير</td></tr>
+                <tr><td colspan="3">تحضير بداية</td> <td colspan="3">تحضير نهاية</td></tr>
+                <tr><td colspan="2">بداية تشييك</td> <td colspan="2">اسم المشيك</td> <td colspan="2">كمرا</td></tr>
+                <tr><td colspan="2">عدد كرتون</td> <td colspan="2">ربطة الثلاجة</td> <td colspan="2">خطأ</td></tr>
+            </table>
+        </div>';
+    }else{
+        /*$footer_note = '<div style="float:left; width:60%; text-align:left; padding-right:10px;">
+            <p style="margin:0 0 5px 0;"><strong>'.$note_text.'</strong></p>
+            <p style="margin:0;">
+            '.$inv->warning_note.'
+            </p>
+        </div>';*/
+        $footer_table = '<div style="width:60%; float:left; text-align:left; margin-bottom:15px;">
+            <table class="table-label" border="1"  cellspacing="0" cellpadding="10" width="100%" style="border-collapse:collapse; font-size: 10px">
+                <tr><td colspan="3" style="text-align: center; vertical-align: middle; background-color: #f2f2f2; font-size: 20px;">'.$inv->id.'</td> <td colspan="3">فريق التحضير</td></tr>
+                <tr><td colspan="3">تحضير بداية</td> <td colspan="3">تحضير نهاية</td></tr>
+                <tr><td colspan="2">بداية تشييك</td> <td colspan="2">اسم المشيك</td> <td colspan="2">كمرا</td></tr>
+                <tr><td colspan="2">عدد كرتون</td> <td colspan="2">ربطة الثلاجة</td> <td colspan="2">خطأ</td></tr>
+            </table>
+        </div>';
+    }
+        
+    $mpdf->SetHTMLFooter('
+    <hr style="margin-bottom:5px;">
+
+    <div style="width:100%; font-size:12px; font-family: DejaVu Sans, sans-serif;">
+
+        <!-- Notes Section (Left) -->
+        '.$footer_note.'
+
+        <!-- Totals Table -->
+        <div style="width:35%; float:right; text-align:left; margin-bottom:15px;">
+            <table border="1" cellpadding="4" cellspacing="0" width="100%" style="border-collapse:collapse;">
+                <tr><td>Total</td><td>'.$this->sma->formatNumber($inv->total).'</td></tr>
+                <tr><td>T-DISC</td><td>'.$this->sma->formatNumber($inv->total_discount).'</td></tr>
+                <tr><td>Net Before VAT</td><td>'.$this->sma->formatNumber($inv->total_net_sale).'</td></tr>
+                <tr><td>Total VAT</td><td>'.$this->sma->formatNumber($inv->total_tax).'</td></tr>
+                <tr><td><strong>Total After VAT</strong></td><td><strong>'.$this->sma->formatNumber($inv->grand_total).'</strong></td></tr>
+            </table>
+        </div>
+
+        <!-- Totals Table -->
+        '.$footer_table.'
+
+        <!-- Signature Section -->
+        <div style="width:100%; overflow:hidden; margin-top:50px; font-size:12px;">
+            
+            <div style="float:left; width:24%; text-align:center;">
+                <p>_________________________</p>
+                <p><strong>STORE KEEPER</strong></p>
+            </div>
+
+            <div style="float:right; width:24%; text-align:center;">
+                <p>_________________________</p>
+                <p><strong>SALES MANAGER</strong></p>
+            </div>
+
+            <div style="float:right; width:24%; text-align:center;">
+                <p>_________________________</p>
+                <p><strong>RECEIVED BY</strong></p>
+            </div>
+
+            <div style="float:right; width:24%; text-align:center;">
+                <p>_________________________</p>
+                <p><strong>SIGNATURE</strong></p>
+            </div>
+
+        </div>
+    </div>
+');
+
+
+
+            $mpdf->WriteHTML($html);
+            $mpdf->Output("sale_invoice.pdf", "D");
+
+                //$this->sma->generate_pdf($html, $name, 'I', $this->data['biller']->invoice_footer);
+            }
+    }
+
+    /**
+     * Generate Zatka-compliant invoice PDF
+     * 
+     * This function generates a ZATCA (Zakat, Tax and Customs Authority) compliant
+     * invoice with proper QR code, bilingual text, and required fields
+     * 
+     * @param int $id Invoice ID
+     * @param bool $view Preview in browser
+     * @param bool $save_bufffer Save to buffer
+     * @return void
+     */
+    public function zatka_pdf($id = null, $view = null, $save_bufffer = null)
+    {
+        // Load helper for Zatka-specific functions
+        $this->load->helper('zatka');
+        
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $inv = $this->sales_model->getInvoiceByID($id);
+        
+        if (!$this->GP['sales-index']) {
+            $this->sma->view_rights($inv->created_by);
+        }
+
+        // Get related entities
+        $customer = $this->site->getCompanyByID($inv->customer_id);
+        $biller = $this->site->getCompanyByID($inv->biller_id);
+        $warehouse = $this->site->getWarehouseByID($inv->warehouse_id);
+        $invoice_items = $this->sales_model->getAllInvoiceItems($id);
+
+        // ===== INVOICE HEADER =====
+        $invoice_data = [
+            'invoice_number' => str_pad($inv->id, 4, '0', STR_PAD_LEFT),
+            'invoice_date' => format_zatka_date($inv->date),
+            'invoice_date_hijri' => format_hijri_date($inv->date),
+        ];
+
+        // ===== COMPANY (SELLER) INFORMATION =====
+        $invoice_data['company_name'] = $biller->company && $biller->company != '-' ? $biller->company : $biller->name;
+        $invoice_data['company_name_en'] = $biller->name;
+        $invoice_data['company_name_ar'] = $biller->company && $biller->company != '-' ? $biller->company : $biller->name;
+        
+        $invoice_data['seller_company_name'] = $biller->company && $biller->company != '-' ? $biller->company : $biller->name;
+        $invoice_data['seller_company_name_en'] = $biller->name;
+        $invoice_data['seller_tax_id'] = $biller->vat_no ?: $biller->get_no;
+        $invoice_data['seller_commercial_reg'] = $biller->cf1 ?: ''; // Assuming commercial reg is in cf1
+        $invoice_data['seller_phone'] = format_zatka_phone($biller->phone);
+        $invoice_data['seller_international_id'] = $biller->gln ?: '';
+        $invoice_data['seller_address'] = $biller->address ?: '';
+        $invoice_data['seller_address_city'] = $biller->city ?: '';
+
+        // ===== CUSTOMER INFORMATION =====
+        $invoice_data['customer_name'] = $customer->company && $customer->company != '-' ? $customer->company : $customer->name;
+        $invoice_data['customer_name_en'] = $customer->name;
+        $invoice_data['customer_tax_id'] = $customer->vat_no ?: '';
+        $invoice_data['customer_commercial_reg'] = $customer->cf1 ?: '';
+        $invoice_data['customer_phone'] = format_zatka_phone($customer->phone);
+        $invoice_data['customer_international_id'] = $customer->gln ?: '';
+        $invoice_data['customer_address'] = $customer->address ?: '';
+        $invoice_data['customer_address_city'] = $customer->city ?: '';
+
+        // ===== LINE ITEMS ARRAY =====
+        $items = [];
+        $invoice_total_value = 0;
+        $total_discounts = 0;
+        $subtotal_before_tax = 0;
+        $total_tax = 0;
+
+        foreach ($invoice_items as $item) {
+            // Get product details for lot number and expiry
+            $product = $this->products_model->getProductByID($item->product_id);
+            
+            // Calculate item totals
+            $quantity = $item->quantity;
+            $unit_price = $item->real_unit_price;
+            $total = $quantity * $unit_price;
+            
+            // Calculate discounts
+            $discount_1_percent = $item->discount ? floatval($item->discount) : 0;
+            $discount_2_percent = $item->item_discount ? floatval($item->item_discount) : 0;
+            
+            $discount_calc = calculate_zatka_discount($total, $discount_1_percent, $discount_2_percent);
+            
+            // Calculate tax
+            $tax_rate = $item->tax_rate ?: 15; // Default 15% VAT
+            $tax_amount = calculate_zatka_tax($discount_calc['net_after_discount'], $tax_rate);
+            $line_total = $discount_calc['net_after_discount'] + $tax_amount;
+            
+            $items[] = [
+                'description' => $item->product_name,
+                'description_en' => $item->product_name,
+                'item_code' => $item->product_code,
+                'lot_number' => $product->lot_number ?? '',
+                'expiry_date' => $product->expiry_date ? date('d/m/Y', strtotime($product->expiry_date)) : '',
+                'quantity' => $quantity,
+                'unit_price' => $unit_price,
+                'total' => $total,
+                'discount_1_percent' => $discount_1_percent,
+                'discount_1_amount' => $discount_calc['discount_1_amount'],
+                'discount_2_percent' => $discount_2_percent,
+                'discount_2_amount' => $discount_calc['discount_2_amount'],
+                'total_discount' => $discount_calc['total_discount'],
+                'net_after_discount' => $discount_calc['net_after_discount'],
+                'tax_rate_percent' => $tax_rate,
+                'tax_amount' => $tax_amount,
+                'line_total' => $line_total
+            ];
+            
+            // Accumulate totals
+            $invoice_total_value += $total;
+            $total_discounts += $discount_calc['total_discount'];
+            $subtotal_before_tax += $discount_calc['net_after_discount'];
+            $total_tax += $tax_amount;
+        }
+
+        $invoice_data['items'] = $items;
+
+        // ===== TOTALS SECTION =====
+        $invoice_data['invoice_total_value'] = $invoice_total_value;
+        $invoice_data['total_discounts'] = $total_discounts;
+        $invoice_data['subtotal_before_tax'] = $subtotal_before_tax;
+        $invoice_data['total_tax'] = $total_tax;
+        $invoice_data['total_after_tax'] = $subtotal_before_tax + $total_tax;
+
+        // ===== AGING REPORT DATA =====
+        // For now, all in current period - can be enhanced with actual aging calculation
+        $invoice_data['aging_less_30'] = $invoice_data['total_after_tax'];
+        $invoice_data['aging_30_60'] = 0.00;
+        $invoice_data['aging_60_90'] = 0.00;
+        $invoice_data['aging_90_120'] = 0.00;
+        $invoice_data['aging_more_120'] = 0.00;
+
+        // ===== NOTES & FOOTER =====
+        $invoice_data['invoice_notes'] = generate_zatka_invoice_notes($invoice_data['total_after_tax']);
+
+        // ===== GENERATE ZATKA-COMPLIANT QR CODE =====
+        $qr_data = [
+            'seller_name' => $invoice_data['seller_company_name'],
+            'vat_no' => $invoice_data['seller_tax_id'],
+            'date' => $inv->date,
+            'grand_total' => $invoice_data['total_after_tax'],
+            'total_tax' => $invoice_data['total_tax']
+        ];
+        
+        // Generate Zatka-compliant QR code using TLV format
+        $qr_code_base64_data = generate_zatka_qr_code($qr_data);
+        
+        // Generate QR code PNG image using existing library
+        $qr_code_png = $this->sma->qrcodepng('text', $qr_code_base64_data, 2, $level = 'H', $sq = null, $svg = false);
+        $qr_base64_image = base64_encode($qr_code_png);
+        $invoice_data['qr_code_image'] = '<img src="data:image/png;base64,' . $qr_base64_image . '" width="80" height="80" />';
+
+        // Generate PDF
+        $name = 'Zatka_Invoice_' . str_replace('/', '_', $inv->reference_no) . '.pdf';
+        
+        if ($view) {
+            // Preview in browser
+            $this->load->view($this->theme . 'sales/zatka_invoice_template', $invoice_data);
+        } elseif ($save_bufffer) {
+            $html = $this->load->view($this->theme . 'sales/zatka_invoice_template', $invoice_data, true);
+            return $html;
+        } else {
+            // Generate PDF using mPDF
+            $html = $this->load->view($this->theme . 'sales/zatka_invoice_template', $invoice_data, true);
+            
+            $mpdf = new Mpdf([
+                'format' => 'A4',
+                'margin_top' => 10,
+                'margin_bottom' => 10,
+                'margin_left' => 10,
+                'margin_right' => 10,
+            ]);
+
+            $mpdf->WriteHTML($html);
+            $mpdf->Output($name, "D");
+        }
+    }
+
+    /**
+     * Generate Excel export for sales invoice (same format as pdf_new)
+     */
+    public function excel_new($id = null)
+    {
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $inv                 = $this->sales_model->getInvoiceByID($id);
+        if (!$this->GP['sales-index']) {
+            $this->sma->view_rights($inv->created_by);
+        }
+
+        $this->data['customer']    = $this->site->getCompanyByID($inv->customer_id);
+        $this->data['payments']    = $this->sales_model->getPaymentsForSale($id);
+        $this->data['biller']      = $this->site->getCompanyByID($inv->biller_id);
+        $biller = $this->site->getCompanyByID($inv->biller_id);
+        $customer = $this->data['customer'];
+        $this->data['user']        = $this->site->getUser($inv->created_by);
+        $this->data['warehouse']   = $this->site->getWarehouseByID($inv->warehouse_id);
+        $this->data['inv']         = $inv;
+        $this->data['rows']        = $this->sales_model->getAllInvoiceItems($id);
+        $this->data['return_sale'] = $inv->return_id ? $this->sales_model->getInvoiceByID($inv->return_id) : null;
+        $this->data['return_rows'] = $inv->return_id ? $this->sales_model->getAllInvoiceItems($inv->return_id) : null;
+
+        // Load Excel library
+        $this->load->library('excel');
+        $sheet = $this->excel->setActiveSheetIndex(0);
+
+        // Set document properties
+        $this->excel->getProperties()
+            ->setCreator('AvnZor System')
+            ->setLastModifiedBy('AvnZor System')
+            ->setTitle('Sales Invoice - ' . $inv->reference_no)
+            ->setSubject('Sales Invoice Export')
+            ->setDescription('Sales invoice export in Excel format');
+
+        // Company Header
+        $sheet->setCellValue('A1', $biller->company ?: $biller->name);
+        $sheet->mergeCells('A1:S1');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal('center');
+
+        $sheet->setCellValue('A2', $biller->address);
+        $sheet->mergeCells('A2:S2');
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal('center');
+
+        $sheet->setCellValue('A3', 'Phone: ' . $biller->phone . ' | VAT: ' . ($biller->vat_no ?: 'N/A'));
+        $sheet->mergeCells('A3:S3');
+        $sheet->getStyle('A3')->getAlignment()->setHorizontal('center');
+
+        // Invoice Title
+        $sheet->setCellValue('A5', 'VAT INVOICE');
+        $sheet->mergeCells('A5:S5');
+        $sheet->getStyle('A5')->getFont()->setBold(true)->setSize(16);
+        $sheet->getStyle('A5')->getAlignment()->setHorizontal('center');
+
+        // Invoice Details
+        $row = 7;
+        $sheet->setCellValue('A' . $row, 'Serial Number:');
+        $sheet->setCellValue('B' . $row, $inv->id);
+        $sheet->setCellValue('D' . $row, 'Date:');
+        $sheet->setCellValue('E' . $row, $this->sma->hrld($inv->date));
+        $sheet->setCellValue('G' . $row, 'Ref:');
+        $sheet->setCellValue('H' . $row, $inv->reference_no);
+
+        $row++;
+        $sheet->setCellValue('A' . $row, 'Sale Status:');
+        $sheet->setCellValue('B' . $row, lang($inv->sale_status));
+        $sheet->setCellValue('D' . $row, 'Payment Status:');
+        $sheet->setCellValue('E' . $row, lang($inv->payment_status));
+
+        $row++;
+        $sheet->setCellValue('A' . $row, 'Customer:');
+        $sheet->setCellValue('B' . $row, $customer->company ?: $customer->name);
+        $sheet->setCellValue('D' . $row, 'VAT Number:');
+        $sheet->setCellValue('E' . $row, $customer->vat_no ?: '-');
+
+        $row++;
+        $sheet->setCellValue('A' . $row, 'Address:');
+        $sheet->setCellValue('B' . $row, $customer->address);
+
+        // Set column widths and headers
+        $colWidths = [
+            'A' => 5,   // No.
+            'B' => 40,  // Description
+            'C' => 12,  // Avz Code
+            'D' => 12,  // Batch No
+            'E' => 12,  // HSN/SAC (if applicable)
+            'F' => 12,  // Base Quantity
+            'G' => 10,  // Received (if partial)
+            'H' => 10,  // Bonus
+            'I' => 12,  // Sale Price
+            'J' => 12,  // Subtotal
+            'K' => 10,  // Disc1 %
+            'L' => 12,  // Disc1 Value
+            'M' => 10,  // Disc2 %
+            'N' => 12,  // Disc2 Value
+            'O' => 15,  // Total without VAT
+            'P' => 8,   // VAT %
+            'Q' => 12,  // VAT Value
+            'R' => 15,  // Total with VAT
+        ];
+
+        foreach ($colWidths as $col => $width) {
+            $sheet->getColumnDimension($col)->setWidth($width);
+        }
+
+        // Items Header
+        $row += 2;
+        $sheet->setCellValue('A' . $row, 'No.');
+        $sheet->setCellValue('B' . $row, 'Description');
+        $sheet->setCellValue('C' . $row, 'Avz Code');
+        $sheet->setCellValue('D' . $row, 'Batch No');
+
+        $colIndex = 'E';
+        if ($this->Settings->indian_gst) {
+            $sheet->setCellValue($colIndex . $row, 'HSN/SAC Code');
+            $colIndex++;
+        }
+
+        $sheet->setCellValue($colIndex . $row, 'Base Quantity');
+        $colIndex++;
+
+        if ($inv->status == 'partial') {
+            $sheet->setCellValue($colIndex . $row, 'Received');
+            $colIndex++;
+        }
+
+        $sheet->setCellValue($colIndex . $row, 'Bonus');
+        $colIndex++;
+        $sheet->setCellValue($colIndex . $row, 'Sale Price');
+        $colIndex++;
+        $sheet->setCellValue($colIndex . $row, 'Subtotal');
+        $colIndex++;
+
+        if ($this->Settings->product_discount && $inv->product_discount != 0) {
+            $sheet->setCellValue($colIndex . $row, 'Disc1 %');
+            $colIndex++;
+            $sheet->setCellValue($colIndex . $row, 'Disc1 Value');
+            $colIndex++;
+            $sheet->setCellValue($colIndex . $row, 'Disc2 %');
+            $colIndex++;
+            $sheet->setCellValue($colIndex . $row, 'Disc2 Value');
+            $colIndex++;
+        }
+
+        $sheet->setCellValue($colIndex . $row, 'Total without VAT');
+        $colIndex++;
+
+        if ($this->Settings->tax1 && $inv->product_tax > 0) {
+            $sheet->setCellValue($colIndex . $row, 'VAT %');
+            $colIndex++;
+            $sheet->setCellValue($colIndex . $row, 'VAT Value');
+            $colIndex++;
+        }
+
+        $sheet->setCellValue($colIndex . $row, 'Total with VAT');
+
+        // Style header row
+        $lastCol = $colIndex;
+        $headerRange = 'A' . $row . ':' . $lastCol . $row;
+        $sheet->getStyle($headerRange)->getFont()->setBold(true);
+        $sheet->getStyle($headerRange)->getFill()->setFillType('solid')->getStartColor()->setRGB('CCCCCC');
+        $sheet->getStyle($headerRange)->getBorders()->getAllBorders()->setBorderStyle('thin');
+
+        // Items Data
+        $r = $row + 1;
+        $sr = 1;
+        foreach ($this->data['rows'] as $item) {
+            $colIndex = 'A';
+            $sheet->setCellValue($colIndex . $r, $sr);
+            $colIndex++;
+
+            // Description
+            $description = $item->product_code . ' - ' . $item->product_name;
+            if ($item->variant) {
+                $description .= ' (' . $item->variant . ')';
+            }
+            if ($item->second_name) {
+                $description .= "\n" . $item->second_name;
+            }
+            if ($item->supplier_part_no) {
+                $description .= "\n" . lang('supplier_part_no') . ': ' . $item->supplier_part_no;
+            }
+            if ($item->details) {
+                $description .= "\n" . $item->details;
+            }
+            if ($item->expiry && $item->expiry != '0000-00-00') {
+                $description .= "\n" . lang('EX') . ': ' . $this->sma->hrsd($item->expiry);
+            }
+            $sheet->setCellValue($colIndex . $r, $description);
+            $colIndex++;
+
+            // Avz Code
+            $sheet->setCellValue($colIndex . $r, $item->avz_item_code ?: '');
+            $colIndex++;
+
+            // Batch No
+            $sheet->setCellValue($colIndex . $r, $item->batch_no ?: '');
+            $colIndex++;
+
+            // HSN/SAC Code (if applicable)
+            if ($this->Settings->indian_gst) {
+                $sheet->setCellValue($colIndex . $r, $item->hsn_code ?: '');
+                $colIndex++;
+            }
+
+            // Base Quantity
+            $sheet->setCellValue($colIndex . $r, $this->sma->formatQuantity($item->unit_quantity));
+            $colIndex++;
+
+            // Received (if partial)
+            if ($inv->status == 'partial') {
+                $sheet->setCellValue($colIndex . $r, $this->sma->formatQuantity($item->quantity_received));
+                $colIndex++;
+            }
+
+            // Bonus
+            $sheet->setCellValue($colIndex . $r, $this->sma->formatNumber($item->bonus));
+            $colIndex++;
+
+            // Sale Price
+            $sheet->setCellValue($colIndex . $r, $this->sma->formatNumber($item->real_unit_price));
+            $colIndex++;
+
+            // Subtotal
+            $sheet->setCellValue($colIndex . $r, $this->sma->formatNumber($item->subtotal));
+            $colIndex++;
+
+            // Discounts (if applicable)
+            if ($this->Settings->product_discount && $inv->product_discount != 0) {
+                $sheet->setCellValue($colIndex . $r, $item->discount1 ?: '');
+                $colIndex++;
+                $sheet->setCellValue($colIndex . $r, $this->sma->formatNumber($item->item_discount));
+                $colIndex++;
+                $sheet->setCellValue($colIndex . $r, $item->discount2 ?: '');
+                $colIndex++;
+                $sheet->setCellValue($colIndex . $r, $this->sma->formatNumber($item->second_discount_value));
+                $colIndex++;
+            }
+
+            // Total without VAT
+            $sheet->setCellValue($colIndex . $r, $this->sma->formatNumber($item->totalbeforevat));
+            $colIndex++;
+
+            // VAT (if applicable)
+            if ($this->Settings->tax1 && $inv->product_tax > 0) {
+                $sheet->setCellValue($colIndex . $r, $item->tax ?: '');
+                $colIndex++;
+                $sheet->setCellValue($colIndex . $r, $this->sma->formatNumber($item->item_tax));
+                $colIndex++;
+            }
+
+            // Total with VAT
+            $sheet->setCellValue($colIndex . $r, $this->sma->formatNumber($item->main_net));
+
+            // Style data row
+            $dataRange = 'A' . $r . ':' . $lastCol . $r;
+            $sheet->getStyle($dataRange)->getBorders()->getAllBorders()->setBorderStyle('thin');
+
+            $r++;
+            $sr++;
+        }
+
+        // Summary Section
+        $r += 2;
+        $summaryStartCol = $lastCol === 'R' ? 'P' : ($lastCol === 'Q' ? 'O' : 'N');
+
+        $sheet->setCellValue($summaryStartCol . $r, 'Total:');
+        $sheet->setCellValue(($lastCol) . $r, $this->sma->formatNumber($inv->total));
+        $sheet->getStyle($summaryStartCol . $r . ':' . $lastCol . $r)->getFont()->setBold(true);
+
+        $r++;
+        $sheet->setCellValue($summaryStartCol . $r, 'T-DISC:');
+        $sheet->setCellValue($lastCol . $r, $this->sma->formatNumber($inv->total_discount));
+
+        $r++;
+        $sheet->setCellValue($summaryStartCol . $r, 'Net Before VAT:');
+        $sheet->setCellValue($lastCol . $r, $this->sma->formatNumber($inv->total_net_sale));
+
+        $r++;
+        $sheet->setCellValue($summaryStartCol . $r, 'Total VAT:');
+        $sheet->setCellValue($lastCol . $r, $this->sma->formatNumber($inv->total_tax));
+
+        $r++;
+        $sheet->setCellValue($summaryStartCol . $r, 'Total After VAT:');
+        $sheet->setCellValue($lastCol . $r, $this->sma->formatNumber($inv->grand_total));
+        $sheet->getStyle($summaryStartCol . $r . ':' . $lastCol . $r)->getFont()->setBold(true);
+
+        // Generate filename and export
+        $filename = lang('sale') . '_' . str_replace('/', '_', $inv->reference_no);
+        $this->load->helper('excel');
+        create_excel($this->excel, $filename);
     }
 
     public function pdf_delivery($id = null, $view = null, $save_bufffer = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -3248,14 +5760,14 @@ class Sales extends MY_Controller
                     exit();
                 }
                 $titles = array_shift($arrResult);
-                $keys   = ['code', 'net_unit_price', 'quantity', 'variant', 'item_tax_rate', 'discount', 'serial'];
+                $keys   = ['code', 'net_unit_price', 'quantity', 'variant', 'item_tax_rate', 'discount', 'serial','batch_no'];
                 $final  = [];
                 foreach ($arrResult as $key => $value) {
                     $final[] = array_combine($keys, $value);
                 }
                 $rw = 2;
                 foreach ($final as $csv_pr) {
-                    if (isset($csv_pr['code']) && isset($csv_pr['net_unit_price']) && isset($csv_pr['quantity'])) {
+                    if (isset($csv_pr['code']) && isset($csv_pr['net_unit_price']) && isset($csv_pr['quantity']) && isset($csv_pr['batch_no'])) {    
                         if ($product_details = $this->sales_model->getProductByCode($csv_pr['code'])) {
                             if ($csv_pr['variant']) {
                                 $item_option = $this->sales_model->getProductVariantByName($csv_pr['variant'], $product_details->id);
@@ -3277,6 +5789,7 @@ class Sales extends MY_Controller
                             $item_tax_rate  = $csv_pr['item_tax_rate'];
                             $item_discount  = $csv_pr['discount'];
                             $item_serial    = $csv_pr['serial'];
+                            $item_batchno    = $csv_pr['batch_no'];  
 
                             if (isset($item_code) && isset($item_net_price) && isset($item_quantity)) {
                                 $product_details  = $this->sales_model->getProductByCode($item_code);
@@ -3328,6 +5841,7 @@ class Sales extends MY_Controller
                                     'item_discount'     => $pr_item_discount,
                                     'subtotal'          => $subtotal,
                                     'serial_no'         => $item_serial,
+                                    'batch_no'          => $item_batchno,
                                     'unit_price'        => $this->sma->formatDecimal($unit_price, 4),
                                     'real_unit_price'   => $this->sma->formatDecimal(($unit_price + $pr_discount), 4),
                                 ];
@@ -3483,10 +5997,11 @@ class Sales extends MY_Controller
         $customer       = $this->site->getCompanyByID($customer_id);
         $customer_group = $this->site->getCustomerGroupByID($customer->customer_group_id);
         $rows           = $this->sales_model->getProductNamesWithBatches($sr, $warehouse_id, $pos);
-
+        $count = 0;
         if ($rows) {
             $r = 0;
             foreach ($rows as $row) {
+
                 $c = uniqid(mt_rand(), true);
                 unset($row->details, $row->product_details, $row->image, $row->barcode_symbology, $row->cf1, $row->cf2, $row->cf3, $row->cf5, $row->cf6, $row->supplier1price, $row->supplier2price, $row->cfsupplier3price, $row->supplier4price, $row->supplier5price, $row->supplier1, $row->supplier2, $row->supplier3, $row->supplier4, $row->supplier5, $row->supplier1_part_no, $row->supplier2_part_no, $row->supplier3_part_no, $row->supplier4_part_no, $row->supplier5_part_no);
                 $option               = false;
@@ -3498,7 +6013,7 @@ class Sales extends MY_Controller
                 // $row->expiry          = '';
                 $row->batch_no        = '';
                 $row->lot_no          = '';
-
+                $row->actual_prod_price = $row->price;
                 $options              = $this->sales_model->getProductOptions($row->id, $warehouse_id);
                 if ($options) {
                     $opt = $option_id && $r == 0 ? $this->sales_model->getProductOptionByID($option_id) : $options[0];
@@ -3511,19 +6026,16 @@ class Sales extends MY_Controller
                     $option_id  = false;
                 }
                 $row->option = $option_id;
-                $pis         = $this->site->getPurchasedItems($row->id, $warehouse_id, $row->option);
-
-                
+                $pis         = $this->site->getPurchasedItems($row->id, $warehouse_id, $row->option); 
                 if ($pis) {
                     $row->expiry = "";
                     $row->quantity = 0;
                     foreach ($pis as $pi) {
                         $row->quantity += $pi->quantity_balance;
                         $row->expiry    = $pi->expiry;
+                        $row->serial_number    = $pi->serial_number;
                     }
-                }
-
-
+                } 
                 if ($options) {
                     $option_quantity = 0;
                     foreach ($options as $option) {
@@ -3556,6 +6068,7 @@ class Sales extends MY_Controller
                 } else {
                     $row->price = $row->price + (($row->price * $customer_group->percent) / 100);
                 }
+                $count++;
                 $row->real_unit_price = $row->price;
                 $row->base_quantity   = 0;
                 $row->base_unit       = $row->unit;
@@ -3581,7 +6094,7 @@ class Sales extends MY_Controller
                 $row->batchQuantity = 0;
                 $row->batchPurchaseCost = 0;
                 $row->expiry  = null;
-                
+                $row->serial_no = $count;
                 $batches = $this->site->getProductBatchesData($row->id, $warehouse_id);
                 $pr[] = ['id' => sha1($c . $r), 'item_id' => $row->id, 'label' => $row->name . ' (' . $row->code . ')', 'category' => $row->category_id,
                     'row'     => $row, 'combo_items' => $combo_items, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options, 'batches'=>$batches];
@@ -3622,7 +6135,7 @@ class Sales extends MY_Controller
                 $c = uniqid(mt_rand(), true);
                 unset($row->details, $row->product_details, $row->image, $row->barcode_symbology, $row->cf1, $row->cf2, $row->cf3, $row->cf5, $row->cf6, $row->supplier1price, $row->supplier2price, $row->cfsupplier3price, $row->supplier4price, $row->supplier5price, $row->supplier1, $row->supplier2, $row->supplier3, $row->supplier4, $row->supplier5, $row->supplier1_part_no, $row->supplier2_part_no, $row->supplier3_part_no, $row->supplier4_part_no, $row->supplier5_part_no);
                 $option               = false;
-                $row->quantity        = 0;
+               // $row->quantity        = 0;
                 $row->item_tax_method = $row->tax_method;
                 $row->qty             = 1;
                 $row->discount        = '0';
@@ -3648,9 +6161,9 @@ class Sales extends MY_Controller
                 
                 if ($pis) {
                     $row->expiry = "";
-                    $row->quantity = 0;
+                    //$row->quantity = 0;
                     foreach ($pis as $pi) {
-                        $row->quantity += $pi->quantity_balance;
+                      //  $row->quantity += $pi->quantity_balance;
                         $row->expiry    = $pi->expiry;
                     }
                 }
@@ -3799,9 +6312,671 @@ class Sales extends MY_Controller
         }
     }
 
+    public function create_sale_invoice($id = null){
+        $this->form_validation->set_rules('sale_id', lang('sale_id'), 'required');
+        if ($this->form_validation->run() == true) {
+
+            $sale_id = $this->input->post('sale_id');
+            $sldate_input = $this->input->post('sldate');
+            $dt = DateTime::createFromFormat('Y-m-d H:i:s', $sldate_input);
+
+            if ($dt && $dt->format('Y-m-d H:i:s') === $sldate_input) {
+                // Already in correct format → use as-is
+                $sldate = $sldate_input;
+            } else {
+                // Not in Y-m-d H:i:s → apply fld()
+                $sldate = $this->sma->fld($sldate_input);
+            }
+            //echo $sldate; exit;
+            $this->convert_sale_invoice($sale_id, $sldate);
+
+            /**
+             * Zatca Integration B2B Start
+             */
+            if($this->zatca_enabled){
+                $zatca_payload =  $this->Zetca_model->get_zetca_data_b2b($sale_id); 
+                $zatca_response = $this->zatca->post('',  $zatca_payload);
+                $is_success = true;
+                $remarks = "";
+                if($zatca_response['status'] >= 400){
+                    $is_success = false;
+                    if(isset($zatca_response['body']['errors'])){
+                        if(!empty($zatca_response['body']['errors'])){
+                            $remarks = $zatca_response['body']['errors'][0];
+                        }
+                    }
+                }
+                $date = date('Y-m-d H:i:s');
+                $request = json_encode($zatca_payload, true);
+                $response = json_encode($zatca_response, true);
+                $reporting_data = [
+                    "sale_id" => $sale_id,
+                    "date" => $date,
+                    "is_success" => $is_success,
+                    "request" => $request,
+                    "response" => $response,
+                    "remarks" => $remarks
+                ];
+
+                $this->Zetca_model->report_zatca_status($reporting_data);
+            }
+
+            $this->session->set_flashdata('message', lang('sale_invoiced_successfully'));
+            admin_redirect('sales/view/'.$sale_id);
+        }else{
+            if ($this->input->get('id')) {
+                $id = $this->input->get('id');
+            }
+            $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+            $inv                 = $this->sales_model->getInvoiceByID($id);
+            
+            if (!$this->GP['sales-index']) {
+                $this->sma->view_rights($inv->created_by, true);
+            }
+            $this->data['sale_id'] = $id;
+            
+            $this->load->view($this->theme . 'sales/create_invoice', $this->data);
+        }
+    }
+
+    public function add_driver($id = null){
+        //$this->sma->checkPermissions('index', true);
+
+        $this->form_validation->set_rules('driver_id', lang('driver_id'), 'required');
+        $this->form_validation->set_rules('address', lang('address'), 'required');
+        $this->form_validation->set_rules('sale_id', lang('sale_id'), 'required');
+
+        if ($this->form_validation->run() == true) {
+            $sale_id = $this->input->post('sale_id');
+            $driver_id = $this->input->post('driver_id');
+            $address = $this->input->post('address');
+
+            $sale_details = $this->sales_model->getSaleByID($sale_id);
+
+            if($delivery_id = $this->sales_model->addDriver($sale_id, $driver_id, $address, $sale_details->customer, $sale_details->reference_no)){
+                $this->session->set_flashdata('message', lang('driver_added_successfully'));
+                admin_redirect('sales/view/'.$sale_id);
+            }else{
+                $this->session->set_flashdata('error', lang('failed adding driver'));
+                admin_redirect('sales/view/'.$sale_id);
+            }
+
+        }else{
+            if ($this->input->get('id')) {
+                $id = $this->input->get('id');
+            }
+            $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+            $inv                 = $this->sales_model->getInvoiceByID($id);
+            $groupDetails        = $this->settings_model->getGroupByName('driver');
+            $drivers            = $this->settings_model->getUserByGroupId($groupDetails->id);
+
+            if (!$this->GP['sales-index']) {
+                $this->sma->view_rights($inv->created_by, true);
+            }
+            $this->data['sale_id'] = $id;
+            $this->data['driver'] = $drivers;
+            $this->load->view($this->theme . 'sales/add_driver', $this->data);
+        }
+    }
+
+    public function edit_label($id = null){
+        //$this->sma->checkPermissions('index', true);
+
+        $this->form_validation->set_rules('number_of_cartons', lang('number_of_cartons'), 'required');
+        $this->form_validation->set_rules('refrigirated_items', lang('refrigirated_items'), 'required');
+        $this->form_validation->set_rules('sale_id', lang('sale_id'), 'required');
+        $label = $this->sales_model->getSaleLabels($id);
+
+        if ($this->form_validation->run() == true) {
+            $sale_id = $this->input->post('sale_id');
+            $number_of_cartons = $this->input->post('number_of_cartons');
+            $refrigirated_items = $this->input->post('refrigirated_items');
+
+            if($label_id = $this->sales_model->updateSaleLabel($sale_id, $number_of_cartons, $refrigirated_items)){
+                $this->session->set_flashdata('message', lang('label_updated_successfully'));
+                admin_redirect('sales/view/'.$sale_id);
+            }else{
+                $this->session->set_flashdata('error', lang('failed updating label'));
+                admin_redirect('sales/view/'.$sale_id);
+            }
+        }
+        
+        $this->data['sale_id'] = $id;
+        $this->data['label'] = $label;
+        $this->load->view($this->theme . 'sales/edit_label', $this->data);
+    }
+
+    public function pdf_new_label($id = null, $view = null, $save_bufffer = null)
+    {  
+        //$this->sma->checkPermissions();
+
+        $label = $this->sales_model->getSaleLabels($id);
+        $sale = $this->sales_model->getSaleByID($id);
+        $customer = $this->companies_model->getCompanyByID($sale->customer_id);
+        $biller      = $this->site->getCompanyByID($sale->biller_id);
+
+        // ----- CONSTANT TEST DATA -----
+        $invoice_no    = $sale->id;
+        $customer_name = $customer->name;
+        $region        = $customer->address;
+        $region_no     = '';
+        $num_cartons   = $label->number_of_cartons;
+
+        //$logo_file = FCPATH . 'assets/uploads/logos/label-logo.png';
+        $logo_img  = 'https://retaj.avenzur.com/assets/uploads/logos/'.$biller->logo;
+        /*if (is_file($logo_file)) {
+            $logo_img = 'data:image/png;base64,' . base64_encode(file_get_contents($logo_file));
+        } else {
+            // Fallback to your existing logo path, or leave empty
+            $fallback = FCPATH . 'assets/uploads/logos/logo.png';
+            if (is_file($fallback)) {
+                $logo_img = 'data:image/png;base64,' . base64_encode(file_get_contents($fallback));
+            }
+        }*/
+
+        $barcode_url = admin_url('misc/barcode/' . $this->sma->base64url_encode($invoice_no) . '/code128/60/0/1');
+        $print_dt = $this->sma->hrld(date('Y-m-d H:i:s'));
+
+        $payload = [
+            'seller' => $biller->company && $biller->company != '-' ? $biller->company : $biller->name,
+            'vat_no' => $biller->vat_no ?: $biller->get_no,
+            'date' => $sale->date,
+            'grand_total' => $return_sale ? ($sale->grand_total + $return_sale->grand_total) : $sale->grand_total,
+            'total_tax_amount' => $return_sale ? ($sale->total_tax + $return_sale->total_tax) : $sale->total_tax,
+        ];
+
+        // Convert to JSON directly
+        $qrtext = json_encode($payload);
+        $qr_code = $this->sma->qrcodepng('text', $qrtext, 2, $level = 'H', $sq = null, $svg = false);
+
+        $png_base64 = base64_encode($qr_code);
+
+        $mpdf = new Mpdf([
+            'mode'         => 'utf-8',
+            'format'        => [150, 122], 
+            'margin_top'    => 6,
+            'margin_right'  => 6,
+            'margin_bottom' => 6,
+            'margin_left'   => 6,
+        ]);
+
+        // Minimal CSS for label
+        $css = "";
+
+        for ($i = 1; $i <= $num_cartons; $i++) {
+            // Per-label HTML (one page per carton)
+            $html = $css . '<!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body {
+                        margin: 0;
+                        padding: 20px;
+                        background: #2a2a2a;
+                        font-family: Arial, sans-serif;
+                    }
+                    
+                    .ticket {
+                        width: 500px;
+                        height: 300px;
+                        background: white;
+                        padding: 20px;
+                        position: relative;
+                        direction: rtl;
+                    }
+                    
+                    .header {
+                        width: 100%;
+                        margin-bottom: 15px;
+                    }
+                    
+                    .header table {
+                        width: 100%;
+                        border-collapse: collapse;
+                    }
+                    
+                    .logo {
+                        width: 60px;
+                        height: 60px;
+                        background: #1a1a1a;
+                    }
+                    
+                    .ticket-number {
+                        font-size: 36px;
+                        font-weight: bold;
+                        letter-spacing: 4px;
+                        background-color: #1a1a1a;
+                        color: white;
+                        padding: 4px 8px;
+                        text-align: center;
+                    }
+                    
+                    .info-section {
+                        margin: 20px 0;
+                        text-align: center;
+                    }
+                    .info-section-below {
+                        margin: 20px 0;
+                        width: 100%;
+                    }
+                    
+                    .info-section-below table {
+                        width: 100%;
+                        border-collapse: collapse;
+                    }
+                    
+                    .value {
+                        font-weight: bold;
+                        font-size: 28px;
+                        text-align: center;
+                    }
+                    
+                    .big-display {
+                        margin: 10px 0;
+                        text-align: center;
+                    }
+                    
+                    .big-display table {
+                        margin: 0 auto;
+                        border-collapse: collapse;
+                    }
+                    
+                    .digit-box {
+                        width: 80px;
+                        height: 40px;
+                        background: #1a1a1a;
+                        color: white;
+                        font-size: 30px;
+                        font-weight: bold;
+                        text-align: center;
+                        vertical-align: middle;
+                        padding: 5px;
+                    }
+                    .digit-box-text {
+                        color: black;
+                        font-size: 30px;
+                        font-weight: bold;
+                        text-align: center;
+                        vertical-align: middle;
+                        padding: 5px 10px;
+                    }
+                    
+                    .of-label {
+                        font-size: 24px;
+                        font-weight: bold;
+                        text-align: center;
+                        vertical-align: middle;
+                        padding: 0 10px;
+                    }
+                    
+                    .qr-code {
+                        width: 60px;
+                        height: 60px;
+                        background: #1a1a1a;
+                        color: white;
+                        font-size: 8px;
+                        text-align: center;
+                        vertical-align: middle;
+                        margin: 0 0 0 40px;
+                    }
+                    
+                    .datetime {
+                        text-align: center;
+                        font-size: 12px;
+                    }
+                    .region-label {
+                        font-size: 22px;
+                        text-align: center;
+                    }
+                    
+                    .spacer {
+                        width: 68px;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="ticket">
+                    <div class="header">
+                        <table>
+                            <tr>
+                                <td style="width: 60px;"></td>
+                                <td style="text-align: center;">
+                                    <div class="ticket-number">'.$invoice_no.'</div>
+                                </td>
+                                <td style="width: 60px; margin-right: 20px;"></td>
+                                <td  >
+                                    <img src="'.$logo_img.'" width="160" />
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div class="info-section">
+                        <div class="value">'.$customer->name.'</div>
+                    </div>
+                    
+                    <div class="big-display">
+                        <table>
+                            <tr>
+                                <td class="digit-box-text">عدد كرتون</td>
+                                <td class="digit-box">'.$i.'</td>
+                                <td class="of-label">OF</td>
+                                <td class="digit-box">'.$num_cartons.'</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div class="big-display" style="margin-right:0px !important">
+                        <table>
+                            <tr >
+                                <td class="digit-box-text">ربطة ثلاجة</td>
+                                <td class="digit-box">'.$label->refrigerated_items.'</td>
+                                <td class="spacer"></td>
+                                <td class="spacer"></td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div class="info-section-below">
+                        <table>
+                            <tr>
+                                <td style="width: 100px; vertical-align: bottom;">
+                                    <img src="data:image/png;base64,' . $png_base64 . '" width="80" height="80" />
+                                </td>
+                                <td class="spacer"></td>
+                                <td class="spacer"></td>
+                                <td class="spacer"></td>
+                                <td style="text-align: center; vertical-align: bottom;">
+                                    <div class="region-label">'.$customer->address.'</div>
+                                    <div class="datetime">'.date('d/m/y g:i A').'</div>
+                                </td>
+                                <td style="width: 100px;"></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </body>
+            </html>
+            ';
+
+            $mpdf->WriteHTML($html);
+            if ($i < $num_cartons) {
+                $mpdf->AddPage();
+            }
+        }
+
+        $fname = 'test_labels_' . str_replace('/', '_', $invoice_no) . '_x' . $num_cartons . '.pdf';
+        $mpdf->Output($fname, 'D'); // download
+    }
+
+    /**
+     * Generate Zatka-compliant Invoice PDF
+     * Follows zatka_invoice_pure_tables.html structure exactly
+     */
+    public function pdf_zatka_invoice($id = null, $view = null, $save_buffer = null)
+    {
+        //$this->sma->checkPermissions();
+        $this->load->library('inv_qrcode');
+
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $inv                 = $this->sales_model->getInvoiceByID($id);
+        if (!$this->session->userdata('view_right')) {
+            $this->sma->view_rights($inv->created_by);
+        }
+        $this->data['barcode']     = "<img src='" . admin_url('products/gen_barcode/' . $inv->reference_no) . "' alt='" . $inv->reference_no . "' class='pull-left' />";
+        $this->data['customer']    = $this->site->getCompanyByID($inv->customer_id);
+        $this->data['payments']    = $this->sales_model->getPaymentsForSale($id);
+        $this->data['biller']      = $this->site->getCompanyByID($inv->biller_id);
+        $this->data['user']        = $this->site->getUser($inv->created_by);
+        $this->data['warehouse']   = $this->site->getWarehouseByID($inv->warehouse_id);
+        $this->data['inv']         = $inv;
+        $this->data['rows']        = $this->sales_model->getAllInvoiceItems($id);
+        $this->data['return_sale'] = $inv->return_id ? $this->sales_model->getInvoiceByID($inv->return_id) : null;
+        $this->data['return_rows'] = $inv->return_id ? $this->sales_model->getAllInvoiceItems($inv->return_id) : null;
+        //$this->data['paypal'] = $this->sales_model->getPaypalSettings();
+        //$this->data['skrill'] = $this->sales_model->getSkrillSettings();
+
+        $name = lang('sale') . '_' . str_replace('/', '_', $inv->reference_no) . '.pdf';
+        $html = $this->load->view($this->theme . 'sales/zatka_invoice_template', $this->data, true);
+        //echo $html;exit;
+        if (!$this->Settings->barcode_img) {
+            $html = preg_replace("'\<\?xml(.*)\?\>'", '', $html);
+        }
+
+        if ($view) {
+            $this->load->view($this->theme . 'sales/zatka_invoice_template', $this->data);
+        } elseif ($save_bufffer) {
+            return $this->sma->generate_pdf($html, $name, $save_bufffer, $this->data['biller']->invoice_footer);
+        } else {
+            $this->sma->generate_pdf($html, $name, false, $this->data['biller']->invoice_footer);
+        }
+    }
+
+    public function send_to_rasd($id = null){
+        $this->form_validation->set_rules('sale_id', lang('sale_id'), 'required');
+        if ($this->form_validation->run() == true) {
+            $sale_id = $this->input->post('sale_id');
+            $send_to_rasd = $this->input->post('send_to_rasd');
+            if($send_to_rasd == "1"){
+                $sale = $this->sales_model->getSaleByID($sale_id);
+                $products = $this->sales_model->getAllSaleItems($sale_id);
+                $products = json_decode(json_encode($products), true);
+
+                $this->db->select('id');
+                $this->db->from('sma_returns');
+                $this->db->where('sale_id', $sale_id);
+                $return_records = $this->db->get()->result_array();
+
+                if (!empty($return_records)) {
+                    $return_ids = array_column($return_records, 'id');
+
+                    // Step 2: Get all returned product IDs and quantities
+                    $this->db->select('product_id, quantity');
+                    $this->db->from('sma_return_items');
+                    $this->db->where_in('return_id', $return_ids);
+                    $returned_items = $this->db->get()->result_array();
+
+                    // Step 3: Build a quick lookup map of returned products
+                    $returned_map = [];
+                    foreach ($returned_items as $r) {
+                        if (!isset($returned_map[$r['product_id']])) {
+                            $returned_map[$r['product_id']] = 0;
+                        }
+                        $returned_map[$r['product_id']] += $r['quantity'];
+                    }
+                    
+                    // Step 4: Filter or adjust your $products list
+                    $filtered_products = [];
+
+                    foreach ($products as $p) {
+                        $pid = $p['product_id'];
+                        $qty = $p['quantity'];
+
+                        if (isset($returned_map[$pid])) {
+                            // Reduce quantity if partially returned
+                            $qty -= $returned_map[$pid];
+                            if ($qty > 0) {
+                                $p['quantity'] = $qty;
+                                $filtered_products[] = $p;
+                            }
+                        } else {
+                            // Not returned at all → keep as-is
+                            $filtered_products[] = $p;
+                        }
+                    }
+                    
+                    $products = $filtered_products;
+                }
+
+                if($products){
+                    /**RASD Integration Code */
+                    $data_for_rasd = [
+                        "products" => $products,
+                        "source_warehouse_id" => $sale->warehouse_id,
+                        "destination_customer_id" => $sale->customer_id,
+                        "sale_id" => $sale_id
+                    ];
+                    
+                    $response_model = $this->sales_model->get_rasd_required_fields($data_for_rasd);
+                    $body_for_rasd_dispatch = $response_model['payload'];
+
+                    $rasd_user = $response_model['user'];
+                    $rasd_pass = $response_model['pass'];
+                    $resp_sale_status = $response_model['status'];
+                    
+                    $rasd_success = false;
+                    log_message("info", json_encode($body_for_rasd_dispatch));
+                    $payload_used =  [
+                            'source_gln' => $response_model['source_gln'],
+                            'destination_gln' => $response_model['destination_gln'],
+                            'warehouse_id' => $data['warehouse_id']
+                        ];  
+                    
+                    if($rasd_user){
+                        foreach($body_for_rasd_dispatch as $index => $payload_dispatch){
+                            log_message("info", "RASD AUTH START");
+                            $this->rasd->set_base_url('https://qdttsbe.qtzit.com:10101/api/web');
+                            //$this->rasd->set_base_url('https://qdtts-stg.qtzit.com:10101/api/web');
+                            $auth_response = $this->rasd->authenticate($rasd_user, $rasd_pass);
+                            //echo '<pre>';print_r($auth_response);exit;
+                            if(isset($auth_response['token'])){
+                                $auth_token = $auth_response['token'];
+                                log_message("info", 'RASD Authentication Success: DISPATCH_PRODUCT');
+                                $zadca_dispatch_response = $this->rasd->dispatch_product_133($payload_dispatch, $auth_token);
+                                
+                                
+                                if(isset($zadca_dispatch_response['body']['DicOfDic']['MR']['TRID']) && $zadca_dispatch_response['body']['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){                
+                                    log_message("info", "Dispatch successful");
+                                    $rasd_success = true;                
+
+                                    $this->cmt_model->add_rasd_transactions($payload_used,'sale_dispatch_product',true, $zadca_dispatch_response,$payload_dispatch);
+                                    $this->session->set_flashdata('message', lang('dispatch_sent_to_rasd_successfully'));
+                                }else{
+                                    $rasd_success = false;
+                                    log_message("error", "Dispatch Failed");
+                                    log_message("error", json_encode($zadca_dispatch_response,true));
+                                    $this->cmt_model->add_rasd_transactions($payload_used,'sale_dispatch_product',false, $zadca_dispatch_response,$payload_dispatch);
+                                    $this->session->set_flashdata('error', lang('error_sending_dispatch_to_rasd'));
+                                    admin_redirect('sales/view/'.$sale_id);
+                                    exit;
+                                }
+                                
+                            }else{
+                                log_message("error", 'RASD Authentication FAILED: DISPATCH_PRODUCT');
+                                $this->cmt_model->add_rasd_transactions($payload_used,'sale_dispatch_product',false, $accept_dispatch_result,$body_for_rasd_dispatch);
+                                $this->session->set_flashdata('error', lang('rasd_authentication_failed'));
+                                admin_redirect('sales/view/'.$sale_id);
+                                exit;
+                            }
+                        }
+                        
+                        $this->db->update('sales', ['sale_status' => 'sent_to_rasd'], ['id' => $sale_id]);
+
+                        admin_redirect('sales/view/'.$sale_id);
+                    }else{
+                        $this->session->set_flashdata('error', lang('rasd_authentication_failed'));
+                        admin_redirect('sales/view/'.$sale_id);
+                    }
+
+                }else{
+                    //$this->db->update('sales', ['sale_status' => 'sent_to_rasd'], ['id' => $sale_id]);
+
+                    $this->session->set_flashdata('error', lang('no_items_found_to_send_to_rasd'));
+                    admin_redirect('sales/view/'.$sale_id);
+                }
+            }else{
+                $this->db->update('sales', ['sale_status' => 'sent_to_rasd'], ['id' => $sale_id]);
+
+                $this->session->set_flashdata('message', lang('rasd_sending_skipped'));
+                admin_redirect('sales/view/'.$sale_id);
+            }
+
+        }else{
+            if ($this->input->get('id')) {
+                $id = $this->input->get('id');
+            }
+            $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+            $inv                 = $this->sales_model->getInvoiceByID($id);
+            
+            $this->data['sale_id'] = $id;
+            
+            $this->load->view($this->theme . 'sales/send_to_rasd', $this->data);
+        }
+    }
+
+    public function add_label($id = null){
+        //$this->sma->checkPermissions('index', true);
+
+        $this->form_validation->set_rules('number_of_cartons', lang('number_of_cartons'), 'required');
+        $this->form_validation->set_rules('refrigirated_items', lang('refrigirated_items'), 'required');
+        $this->form_validation->set_rules('sale_id', lang('sale_id'), 'required');
+
+        if ($this->form_validation->run() == true) {
+            $sale_id = $this->input->post('sale_id');
+            $number_of_cartons = $this->input->post('number_of_cartons');
+            $refrigirated_items = $this->input->post('refrigirated_items');
+
+            if($label_id = $this->sales_model->addSaleLabel($sale_id, $number_of_cartons, $refrigirated_items)){
+                $this->session->set_flashdata('message', lang('label_added_successfully'));
+                admin_redirect('sales/view/'.$sale_id);
+            }else{
+                $this->session->set_flashdata('error', lang('failed adding label'));
+                admin_redirect('sales/view/'.$sale_id);
+            }
+
+        }else{
+            if ($this->input->get('id')) {
+                $id = $this->input->get('id');
+            }
+            $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+            $inv                 = $this->sales_model->getInvoiceByID($id);
+            if (!$this->GP['sales-index']) {
+                $this->sma->view_rights($inv->created_by, true);
+            }
+            $this->data['sale_id'] = $id;
+            $this->load->view($this->theme . 'sales/add_label', $this->data);
+        }
+    }
+
+    public function verify_label($id = null){
+        //$this->sma->checkPermissions();
+        $this->load->library('inv_qrcode');
+        
+        $label = $this->sales_model->getSaleLabels($id);
+        $sale = $this->sales_model->getSaleByID($id);
+        $customer = $this->companies_model->getCompanyByID($sale->customer_id);
+
+        $qrtext = 'yup';
+        $qr_code = $this->sma->qrcodepng('text', $qrtext, 2, $level = 'H', $sq = null, $svg = false);
+        $png_base64 = base64_encode($qr_code);
+
+        $this->data['sale_id'] = $id;
+        $this->data['label'] = $label;
+        $this->data['sale'] = $sale;
+        $this->data['customer'] = $customer;
+        $this->data['biller']      = $this->site->getCompanyByID($sale->biller_id);
+
+        $this->load->view($this->theme . 'sales/verify_label', $this->data);
+    }
+
+    public function label_verification($id = null){
+        
+        if($label_id = $this->sales_model->verifyLabel($id)){
+            echo json_encode(['status' => 'success', 'message' => 'Label verified successfully']);
+        }else{
+            echo json_encode(['status' => 'error', 'message' => 'Verification failed']);
+        }
+        return true;
+    }
+
     public function view($id = null)
     {
-        $this->sma->checkPermissions('index');
+        //$this->sma->checkPermissions('index');
         $this->load->library('inv_qrcode');
 
         if ($this->input->get('id')) {
@@ -3809,7 +6984,7 @@ class Sales extends MY_Controller
         }
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $inv                 = $this->sales_model->getInvoiceByID($id);
-        if (!$this->session->userdata('view_right')) {
+        if (!$this->GP['sales-index']) {
             $this->sma->view_rights($inv->created_by);
         }
         $this->data['barcode']     = "<img src='" . admin_url('products/gen_barcode/' . $inv->reference_no) . "' alt='" . $inv->reference_no . "' class='pull-left' />";
@@ -3829,12 +7004,12 @@ class Sales extends MY_Controller
 
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('sales'), 'page' => lang('sales')], ['link' => '#', 'page' => lang('view')]];
         $meta = ['page_title' => lang('view_sales_details'), 'bc' => $bc];
-        $this->page_construct('sales/view', $meta, $this->data);
+        $this->page_construct('sales/view_new', $meta, $this->data);
     }
 
     public function view_delivery($id = null)
     {
-        $this->sma->checkPermissions('deliveries');
+        //$this->sma->checkPermissions('deliveries');
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -3868,7 +7043,7 @@ class Sales extends MY_Controller
 
     public function qty_onhold_requests($id=null){
       
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
        

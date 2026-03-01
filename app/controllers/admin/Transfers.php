@@ -9,12 +9,19 @@ class Transfers extends MY_Controller
         parent::__construct();
         if (!$this->loggedIn) {
             $this->session->set_userdata('requested_page', $this->uri->uri_string());
-            $this->sma->md('login');
+            $url = "admin/login";
+            if( $this->input->server('QUERY_STRING') ){
+                $url = $url.'?'.$this->input->server('QUERY_STRING').'&redirect='.$this->uri->uri_string();
+            }
+           
+            $this->sma->md($url);
         }
         if ($this->Customer || $this->Supplier) {
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect($_SERVER['HTTP_REFERER']);
         }
+        $this->load->admin_model('cmt_model');
+        $this->load->library('RASDCore',$params=null, 'rasd');
         $this->lang->admin_load('transfers', $this->Settings->user_language);
         $this->load->library('form_validation');
         $this->load->admin_model('transfers_model');
@@ -25,6 +32,7 @@ class Transfers extends MY_Controller
         $this->digital_file_types  = 'zip|psd|ai|rar|pdf|doc|docx|xls|xlsx|ppt|pptx|gif|jpg|jpeg|png|tif|txt';
         $this->allowed_file_size   = '1024000';
         $this->data['logo']        = true;
+        $this->load->admin_model('Inventory_model');
         $this->load->library('attachments', [
             'path'     => $this->digital_upload_path,
             'types'    => $this->digital_file_types,
@@ -34,15 +42,64 @@ class Transfers extends MY_Controller
         // Sequence-Code
         $this->load->library('SequenceCode');
         $this->sequenceCode = new SequenceCode();
+        $this->load->admin_model('products_model');
     }
 
+    public function push_serials_to_rasd_manually(){
+        $transfer_id = $_GET['transfer_id'];
+        $items = $this->transfers_model->getAllTransferItems($transfer_id ,'completed');
+
+        foreach ($items as $item) {
+            // Code for serials here
+            $serials_quantity = $item->quantity;
+            $serials_gtin = $item->product_code;
+            $serials_batch_no = $item->batchno;
+            
+            $this->db->select('sma_invoice_serials.*');
+            $this->db->from('sma_invoice_serials');
+            $this->db->join('sma_purchases', 'sma_invoice_serials.pid = sma_purchases.id');
+            $this->db->where('sma_invoice_serials.gtin', $serials_gtin);
+            $this->db->where('sma_invoice_serials.batch_no', $serials_batch_no);
+            $this->db->where('sma_invoice_serials.sid', 0);
+            $this->db->where('sma_invoice_serials.rsid', 0);
+            $this->db->where('sma_invoice_serials.tid', 0);
+            $this->db->where('sma_invoice_serials.pid !=', 0);
+            $this->db->where('sma_purchases.status', 'received');
+            $this->db->limit($serials_quantity);
+
+            $notification_serials = $this->db->get();
+            if ($notification_serials->num_rows() > 0) {
+                foreach (($notification_serials->result()) as $row) {
+                    $this->db->update('sma_invoice_serials', ['tid' => $transfer_id], ['serial_number' => $row->serial_number, 'batch_no' => $row->batch_no, 'gtin' => $row->gtin]);
+                }
+            }
+            // Code for serials end here
+        }
+    }
+
+    public function greater_than_zero($value)
+    { 
+      $quantity=  $this->input->post('quantity');
+        foreach ($quantity as $val) {
+            if ($val <= 0) { 
+                $this->form_validation->set_message('greater_than_zero', 'The {field} field must contain values greater than 0.');
+                return false;
+            }
+        }
+        return true; // All values are greater than 0
+    }
     public function add()
     {
-        $this->sma->checkPermissions();
-
+        //$this->sma->checkPermissions();
+        $this->form_validation->set_rules('quantity[]', lang('quantity'), 'callback_greater_than_zero');
         $this->form_validation->set_message('is_natural_no_zero', lang('no_zero_required'));
         $this->form_validation->set_rules('to_warehouse', lang('warehouse') . ' (' . lang('to') . ')', 'required|is_natural_no_zero');
         $this->form_validation->set_rules('from_warehouse', lang('warehouse') . ' (' . lang('from') . ')', 'required|is_natural_no_zero');
+
+        if (!$this->Owner && !$this->Admin && !$this->GP['transfers-add']) {
+            $this->session->set_flashdata('warning', lang('access_denied'));
+            admin_redirect($_SERVER['HTTP_REFERER']);
+        }
 
         if ($this->form_validation->run()) {
             $transfer_no = $this->input->post('reference_no') ? $this->input->post('reference_no') : $this->site->getReference('to');
@@ -50,8 +107,7 @@ class Transfers extends MY_Controller
                 $date = $this->sma->fld(trim($this->input->post('date')));
             } else {
                 $date = date('Y-m-d H:i:s');
-            }
-
+            } 
             $to_warehouse           = $this->input->post('to_warehouse');
             $from_warehouse         = $this->input->post('from_warehouse');
             $note                   = $this->sma->clear_tags($this->input->post('note'));
@@ -64,16 +120,20 @@ class Transfers extends MY_Controller
             $to_warehouse_code      = $to_warehouse_details->code;
             $to_warehouse_name      = $to_warehouse_details->name;
 
+            $grand_total_cost_price      = 0;
             $total       = 0;
             $product_tax = 0;
             $gst_data    = [];
             $total_cgst  = $total_sgst  = $total_igst  = 0;
             $i           = isset($_POST['product_code']) ? sizeof($_POST['product_code']) : 0;
             for ($r = 0; $r < $i; $r++) {
+                $pr_id              = $_POST['product_id'][$r]; 
                 $item_code          = $_POST['product_code'][$r];
+                $avz_code           = $_POST['avz_code'][$r];
                 $item_net_cost      = $this->sma->formatDecimal($_POST['net_cost'][$r]);
-                $unit_cost          = $this->sma->formatDecimal($_POST['unit_cost'][$r]);
+                $unit_cost          = $this->sma->formatDecimal($_POST['net_cost'][$r]);
                 $real_unit_cost     = $this->sma->formatDecimal($_POST['real_unit_cost'][$r]);
+                $net_unit_cost     = $this->sma->formatDecimal($_POST['net_unit_cost'][$r]);
                 $item_unit_quantity = $_POST['quantity'][$r];
                 $item_tax_rate      = $_POST['product_tax'][$r] ?? null;
                 $item_batchno       = $_POST['batchno'][$r];
@@ -82,22 +142,31 @@ class Transfers extends MY_Controller
                 
                 $item_option        = isset($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' && $_POST['product_option'][$r] != 'undefined' && $_POST['product_option'][$r] != 'null' ? $_POST['product_option'][$r] : null;
                 $item_unit          = $_POST['product_unit'][$r];
-                $item_quantity      = $_POST['product_base_quantity'][$r];
+                $item_quantity      = $_POST['quantity'][$r];
 
                 $unit_cost = $item_net_cost;
 
-                $net_cost_obj = $this->transfers_model->getAverageCost($item_batchno, $item_code);
-                $net_cost = $net_cost_obj[0]->cost_price;
+                //$net_cost_obj = $this->transfers_model->getAverageCost($item_batchno, $item_code);
+                //$net_cost = $net_cost_obj[0]->cost_price;
 
+                //$product_details = $this->transfers_model->getProductByCode($item_code);
+                $product_details = $this->transfers_model->getProductById($pr_id);
+
+                $net_cost = $net_unit_cost;
+                $real_cost = $real_unit_cost;
+                //$net_cost = $this->site->getAvgCost($item_batchno, $product_details->id);
+                //$real_cost = $this->site->getRealAvgCost($item_batchno, $product_details->id);
+              
                 if (isset($item_code) && isset($item_quantity)) {
-                    $product_details = $this->transfers_model->getProductByCode($item_code);
+                    
                     // if (!$this->Settings->overselling) {
-                    $warehouse_quantity = $this->transfers_model->getWarehouseProduct($from_warehouse_details->id, $product_details->id, $item_option, $item_batchno);
-
+                    //$warehouse_quantity = $this->transfers_model->getWarehouseProduct($from_warehouse_details->id, $product_details->id, $item_option, $item_batchno);
+                     $warehouse_quantity =  $this->transfers_model->getWarehouseProductQuantityNewForTransfer($from_warehouse_details->id, $product_details->id, $item_batchno, $item_expiry, $avz_code);      
                     if ($warehouse_quantity->quantity < $item_quantity) {
                         $this->session->set_flashdata('error', lang('no_match_found') . ' (' . lang('product_name') . ' <strong>' . $product_details->name . '</strong> ' . lang('product_code') . ' <strong>' . $product_details->code . '</strong>)');
                         admin_redirect('transfers/add');
                     }
+
                     // }
 
                     $pr_item_tax   = $item_tax   = 0;
@@ -124,15 +193,15 @@ class Transfers extends MY_Controller
 
                     $product_tax += $pr_item_tax;
                     $subtotal = $this->sma->formatDecimal((($item_net_cost * $item_unit_quantity) + $pr_item_tax), 4);
-                    $unit     = $this->site->getUnitByID($item_unit);
-
+                    $unit     = $this->site->getUnitByID($item_unit); 
                     $product = [
                         'product_id'        => $product_details->id,
                         'product_code'      => $item_code,
                         'product_name'      => $product_details->name,
                         'option_id'         => $item_option,
                         'net_unit_cost'     => $net_cost,
-                        'unit_cost'         => $this->sma->formatDecimal($item_net_cost + $item_tax, 4),
+                        //'net_unit_cost1'          => $net_unit_cost,
+                        'unit_cost'         => $this->sma->formatDecimal($item_net_cost + $item_tax, 4),  
                         'quantity'          => $item_quantity,
                         'product_unit_id'   => $item_unit,
                         'product_unit_code' => $unit->code,
@@ -141,18 +210,23 @@ class Transfers extends MY_Controller
                         'warehouse_id'      => $to_warehouse,
                         'item_tax'          => $pr_item_tax,
                         'tax_rate_id'       => $item_tax_rate,
-                        'tax'               => $tax,
+                        'tax'               => str_replace('%', '', $tax),
                         'subtotal'          => $this->sma->formatDecimal($subtotal),
                         'expiry'            => $item_expiry,
                         'real_unit_cost'    => $real_unit_cost,
-                        'sale_price'        => $this->sma->formatDecimal($item_net_cost + $item_tax, 4),
+                        'sale_price'        => $_POST['net_cost'][$r], //$this->sma->formatDecimal($item_net_cost, 4),
                         'date'              => date('Y-m-d', strtotime($date)),
                         'batchno'           => $item_batchno,
-                        'serial_number'   => $item_serial_no
+                        'serial_number'     => $item_serial_no,
+                        'real_cost'         => $real_cost,
+                        'avz_item_code'     => $avz_code
                     ];
 
                     $products[] = ($product + $gst_data);
                     $total += $this->sma->formatDecimal(($item_net_cost * $item_unit_quantity), 4);
+                    $grand_total_cost_price +=  ($net_cost* $item_unit_quantity);   
+
+
                 }
             }
             if (empty($products)) {
@@ -173,7 +247,8 @@ class Transfers extends MY_Controller
                 'note'                    => $note,
                 'total_tax'               => $product_tax,
                 'total'                   => $total,
-                'grand_total'             => $grand_total,
+                'total_cost'              => $grand_total_cost_price,
+                'grand_total'             => $grand_total,   
                 'created_by'              => $this->session->userdata('user_id'),
                 'status'                  => $status,
                 'shipping'                => $shipping,
@@ -189,13 +264,13 @@ class Transfers extends MY_Controller
 
             $attachments        = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
-            // $this->sma->print_arrays($data, $products);
+            //  $this->sma->print_arrays($data, $products);
         }
 
-        if ($this->form_validation->run() == true && $this->transfers_model->addTransfer($data, $products, $attachments)) {
+        if ($this->form_validation->run() == true && $transfer_id = $this->transfers_model->addTransfer($data, $products, $attachments)) {
             $this->session->set_userdata('remove_tols', 1);
             $this->session->set_flashdata('message', lang('transfer_added'));
-            admin_redirect('transfers');
+            admin_redirect('transfers?lastInsertedId='.$transfer_id);
         } else {
             $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
 
@@ -214,7 +289,17 @@ class Transfers extends MY_Controller
             $this->data['warehouses'] = $this->site->getAllWarehouses();
             $this->data['tax_rates']  = $this->site->getAllTaxRates();
             $this->data['rnumber']    = ''; //$this->site->getReference('to');
-
+            if($this->input->get('purchase_id')) {
+                //$this->data['purchase_items'] = $this->transfers_model->getAllPurchaseItemsWithQuantity($this->input->get('purchase_id'));
+                $this->data['purchase_items'] = $this->products_model->getAVZItemCodeDetails();
+                if(empty($this->data['purchase_items'])) {
+                    $this->session->set_flashdata('message', lang('No Item found in the selected Purchase'));
+                    admin_redirect('purchases');
+                }
+                //print_r($this->data['purchase_items']);exit;
+                $this->data['purchase_id'] = $this->input->get('purchase_id');
+            }
+            
             $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('transfers'), 'page' => lang('transfers')], ['link' => '#', 'page' => lang('add_transfer')]];
             $meta = ['page_title' => lang('transfer_quantity'), 'bc' => $bc];
             $this->page_construct('transfers/add', $meta, $this->data);
@@ -438,9 +523,147 @@ class Transfers extends MY_Controller
         }
     }
 
+    public function manual_transfer_rasd(){
+
+        $transfer_id = 572;
+        //$transfer_id = 171;
+        $data = (array) $this->transfers_model->getTransferByID($transfer_id);
+        $products_obj = $this->transfers_model->getAllTransferItems($transfer_id, $data['status']);
+        
+        $products = [];
+
+        if (!empty($products_obj)) {
+            foreach ($products_obj as $item) {
+                $products[] = (array) $item;
+            }
+        }
+
+        /**RASD Integration Code */
+        $data_for_rasd = [
+            "products" => $products,
+            "source_warehouse_id" => $data['from_warehouse_id'],
+            "destination_warehouse_id" => $data['to_warehouse_id'],
+            "transfer_id" => $transfer_id
+        ];
+        $response_model = $this->transfers_model->get_rasd_required_fields($data_for_rasd);
+        $body_for_rasd_dispatch = $response_model['payload'];
+
+        $payload_for_accept_dispatch = $response_model['payload_for_accept_dispatch'];
+        log_message("info", json_encode($payload_for_accept_dispatch, true));
+
+        $rasd_user = $response_model['user'];
+        $rasd_pass = $response_model['pass'];
+        $transfer_status = $response_model['status'];
+        $ph_user = $response_model['pharmacy_user'];
+        $ph_pass = $response_model['pharmacy_pass'];
+        $map_update = $response_model['update_map_table'];
+        $rasd_success = false;
+        log_message("info", json_encode($body_for_rasd_dispatch));
+        $payload_used =  [
+                'source_gln' => $response_model['source_gln'],
+                'destination_gln' => $response_model['destination_gln'],
+                'warehouse_id' => $data['source_warehouse_id']
+            ];  
+            $accept_dispatch_notification = [
+                'warehouse_gln' =>$response_model['destination_gln'],
+                'warehouse_id' => $data['to_warehouse_id'],
+                'supplier_gln' =>  $response_model['source_gln']
+            ];
+        if($transfer_status == 'completed'){
+            foreach($body_for_rasd_dispatch as $index => $payload_dispatch){
+                log_message("info", "RASD AUTH START");
+                $this->rasd->set_base_url('https://qdttsbe.qtzit.com:10101/api/web');
+                $auth_response = $this->rasd->authenticate($rasd_user, $rasd_pass);
+                if(isset($auth_response['token'])){
+                    $auth_token = $auth_response['token'];
+                    log_message("info", 'RASD Authentication Success: DISPATCH_PRODUCT');
+                    $zadca_dispatch_response = $this->rasd->dispatch_product_133($payload_dispatch, $auth_token);
+                    
+                    
+                    if(isset($zadca_dispatch_response['body']['DicOfDic']['MR']['TRID']) && $zadca_dispatch_response['body']['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){                
+                        log_message("info", "Dispatch successful");
+                        $rasd_success = true;
+                        //$this->transfers_model->update_notification_map($map_update);
+                        $accept_dispatch_body = [
+                            'supplier_gln' => $response_model['source_gln'],
+                            'warehouse_gln' => $response_model['destination_gln']
+                        ];                
+
+                        $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',true, $zadca_dispatch_response,$payload_dispatch);
+                        
+                        /**Accept Dispatch By NotificationId */
+                        $this->rasd->set_base_url("https://qdttsbe.qtzit.com:10100/api/web");
+                        $response = $this->rasd->authenticate($ph_user, $ph_pass);
+                        if($response['token']){
+                            $auth_token = $response['token'];
+                            log_message("info", "Authentication successful");
+                            /**
+                             * Call the RASD function to Accept Dispatch.
+                             */
+
+                            $accept_notification_id = $zadca_dispatch_response['body']['DicOfDic']['MR']['AUKey'];
+                            $accept_params  = [
+                                "supplier_gln" => $response_model['source_gln'],
+                                "notification_id" => $accept_notification_id,
+                                "warehouse_gln" => $response_model['destination_gln']
+                            ]; 
+
+                            $accept_payload_used = [
+                                "supplier_gln" => $response_model['source_gln'],
+                                "notification_id" => $accept_notification_id,
+                                "warehouse_gln" => $response_model['destination_gln']
+                            ];
+
+                            $rasd_accept_dispatch_response = $this->rasd->accept_dispatch_125($accept_params,$auth_token);
+                            if(isset($rasd_accept_dispatch_response['DicOfDic']['MR']['TRID']) && $rasd_accept_dispatch_response['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){                
+                                log_message("info", "Regiter Dispatch successful");
+                                $result = true;
+                                
+                            }else{
+                                $result = false;
+                                log_message("error", "Regiter Dispatch Failed");
+                                log_message("error", json_encode($rasd_accept_dispatch_response,true));
+                            }
+                            $this->cmt_model->add_rasd_transactions($accept_payload_used,'accept_dispatch',$result, $rasd_accept_dispatch_response, $accept_params);
+
+                        }else{
+                            $result = false;
+                            log_message("error", "auth Failed");
+
+                            $this->session->set_flashdata('error', 'Failed to Authenticate with RASD with ' . $ph_user . ' '. $ph_pass);
+                            admin_redirect('notifications/rasd');
+                        }
+                        
+                    }else{
+                        $rasd_success = false;
+                        log_message("error", "Dispatch Failed");
+                        log_message("error", json_encode($zadca_dispatch_response,true));
+                        $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',false, $zadca_dispatch_response,$payload_dispatch);
+                    }
+                
+                    
+                }else{
+                    log_message("error", 'RASD Authentication FAILED: DISPATCH_PRODUCT');
+                    $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',false, $accept_dispatch_result,$body_for_rasd_dispatch);
+                }
+            }
+            
+        }else{
+            log_message("warning", 'The Status is not Complete' . $transfer_status);
+        }
+    
+        
+        /**RASD Integration End */
+    }
+
     public function edit($id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
+
+        if (!$this->Owner && !$this->Admin && !$this->GP['transfers-edit']) {
+            $this->session->set_flashdata('warning', lang('access_denied'));
+            admin_redirect($_SERVER['HTTP_REFERER']);
+        }
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -451,10 +674,6 @@ class Transfers extends MY_Controller
             $this->session->set_flashdata('error', 'Cannot edit completed transfers');
 
             admin_redirect('transfers');
-        }
-
-        if (!$this->session->userdata('edit_right')) {
-            $this->sma->view_rights($transfer->created_by);
         }
 
         $this->form_validation->set_message('is_natural_no_zero', lang('no_zero_required'));
@@ -487,7 +706,9 @@ class Transfers extends MY_Controller
             $total_cgst  = $total_sgst  = $total_igst  = 0;
             $i           = isset($_POST['product_code']) ? sizeof($_POST['product_code']) : 0;
             for ($r = 0; $r < $i; $r++) {
+                $pr_id              = $_POST['product_id'][$r];
                 $item_code          = $_POST['product_code'][$r];
+                $avz_code           = $_POST['avz_code'][$r];
                 $item_net_cost      = $this->sma->formatDecimal($_POST['net_cost'][$r]);
                 $unit_cost          = $this->sma->formatDecimal($_POST['unit_cost'][$r]);
                 $real_unit_cost     = $this->sma->formatDecimal($_POST['real_unit_cost'][$r]);
@@ -500,15 +721,20 @@ class Transfers extends MY_Controller
                 $item_expiry        = isset($_POST['expiry'][$r]) ? $this->sma->fsd($_POST['expiry'][$r]) : null;
                 $item_option        = isset($_POST['product_option'][$r]) && $_POST['product_option'][$r] != 'false' && $_POST['product_option'][$r] != 'undefined' && $_POST['product_option'][$r] != 'null' ? $_POST['product_option'][$r] : null;
                 $item_unit          = $_POST['product_unit'][$r];
-                $item_quantity      = $_POST['product_base_quantity'][$r];
+                $item_quantity      = $item_unit_quantity;
 
                 $unit_cost = $item_net_cost;
 
-                $net_cost_obj = $this->transfers_model->getAverageCost($item_batchno, $item_code);
-                $net_cost = $net_cost_obj[0]->cost_price;
+                //$net_cost_obj = $this->transfers_model->getAverageCost($item_batchno, $item_code);
+                //$net_cost = $net_cost_obj[0]->cost_price;
 
-                if (isset($item_code) && isset($real_unit_cost) && isset($unit_cost) && isset($item_quantity)) {
-                    $product_details = $this->transfers_model->getProductByCode($item_code);
+                //$product_details = $this->transfers_model->getProductByCode($item_code);
+                $product_details = $this->transfers_model->getProductById($pr_id);
+
+                $net_cost = $this->site->getAvgCost($item_batchno, $product_details->id);
+                $real_cost = $this->site->getRealAvgCost($item_batchno, $product_details->id);
+
+                if (isset($item_code) && isset($real_unit_cost) && isset($unit_cost) && isset($item_quantity)) {  
                     $pr_item_tax     = $item_tax     = 0;
                     $tax             = '';
                     $item_net_cost   = $unit_cost;
@@ -549,18 +775,21 @@ class Transfers extends MY_Controller
                         'warehouse_id'      => $to_warehouse,
                         'item_tax'          => $pr_item_tax,
                         'tax_rate_id'       => $item_tax_rate,
-                        'tax'               => $tax,
+                        'tax'               => str_replace('%', '', $tax),
                         'subtotal'          => $this->sma->formatDecimal($subtotal),
                         'expiry'            => $item_expiry,
                         'real_unit_cost'    => $real_unit_cost,
-                        'sale_price'        => $this->sma->formatDecimal($item_net_cost + $item_tax, 4),
+                        'sale_price'        => $this->sma->formatDecimal($item_net_cost, 4),
                         'date'              => date('Y-m-d', strtotime($date)),
                         'batchno'           => $item_batchno,
-                        'serial_number'     => $item_serial_no
+                        'serial_number'     => $item_serial_no,
+                        'real_cost'         => $real_cost,
+                        'avz_item_code'     => $avz_code
                     ];
 
                     $products[] = ($product + $gst_data);
-                    $total += $this->sma->formatDecimal(($item_net_cost * $item_unit_quantity), 4);
+                    $total += ($item_net_cost * $item_unit_quantity);
+                    $grand_total_cost_price +=  ($net_cost* $item_unit_quantity);  
                 }
             }
 
@@ -583,7 +812,8 @@ class Transfers extends MY_Controller
                 'note'                    => $note,
                 'total_tax'               => $product_tax,
                 'total'                   => $total,
-                'grand_total'             => $grand_total,
+                'total_cost'              => $grand_total_cost_price,
+                'grand_total'             => $grand_total, 
                 'created_by'              => $this->session->userdata('user_id'),
                 'status'                  => $status,
                 'shipping'                => $shipping,
@@ -600,17 +830,157 @@ class Transfers extends MY_Controller
             // $this->sma->print_arrays($data, $products);exit;
         }
 
-        if ($this->form_validation->run() == true && $this->transfers_model->updateTransfer($id, $data, $products, $attachments)) {
+        if ($this->form_validation->run() == true && $transfer_id = $this->transfers_model->updateTransfer($id, $data, $products, $attachments)) {
+            
+            if($status == 'completed'){
+                /**RASD Integration Code */
+                $data_for_rasd = [
+                    "products" => $products,
+                    "source_warehouse_id" => $data['from_warehouse_id'],
+                    "destination_warehouse_id" => $data['to_warehouse_id'],
+                    "transfer_id" => $transfer_id
+                ];
+                $response_model = $this->transfers_model->get_rasd_required_fields($data_for_rasd);
+                $body_for_rasd_dispatch = $response_model['payload'];
+
+                $payload_for_accept_dispatch = $response_model['payload_for_accept_dispatch'];
+                log_message("info", json_encode($payload_for_accept_dispatch, true));
+
+                $rasd_user = $response_model['user'];
+                $rasd_pass = $response_model['pass'];
+                $transfer_status = $response_model['status'];
+                $ph_user = $response_model['pharmacy_user'];
+                $ph_pass = $response_model['pharmacy_pass'];
+                $map_update = $response_model['update_map_table'];
+                $rasd_success = false;
+                log_message("info", json_encode($body_for_rasd_dispatch));
+                $payload_used =  [
+                        'source_gln' => $response_model['source_gln'],
+                        'destination_gln' => $response_model['destination_gln'],
+                        'warehouse_id' => $data['source_warehouse_id']
+                    ];  
+                    $accept_dispatch_notification = [
+                        'warehouse_gln' =>$response_model['destination_gln'],
+                        'warehouse_id' => $data['to_warehouse_id'],
+                        'supplier_gln' =>  $response_model['source_gln']
+                    ];
+                if($transfer_status == 'completed'){
+                    foreach($body_for_rasd_dispatch as $index => $payload_dispatch){
+                        log_message("info", "RASD AUTH START");
+                        $this->rasd->set_base_url('https://qdttsbe.qtzit.com:10101/api/web');
+                        $auth_response = $this->rasd->authenticate($rasd_user, $rasd_pass);
+                        if(isset($auth_response['token'])){
+                            $auth_token = $auth_response['token'];
+                            log_message("info", 'RASD Authentication Success: DISPATCH_PRODUCT');
+                            $zadca_dispatch_response = $this->rasd->dispatch_product_133($payload_dispatch, $auth_token);
+                            
+                            
+                            if(isset($zadca_dispatch_response['body']['DicOfDic']['MR']['TRID']) && $zadca_dispatch_response['body']['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){                
+                                log_message("info", "Dispatch successful");
+                                $rasd_success = true;
+                                //$this->transfers_model->update_notification_map($map_update);
+                                $accept_dispatch_body = [
+                                    'supplier_gln' => $response_model['source_gln'],
+                                    'warehouse_gln' => $response_model['destination_gln']
+                                ];                
+
+                                $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',true, $zadca_dispatch_response,$payload_dispatch);
+                                /**Accept Dispatch By Pharmacy */
+                                /*$accept_params  = [
+                                    'user' =>  $ph_user,
+                                    'pass' => $ph_pass,
+                                    'body' => $payload_for_accept_dispatch[$index]
+                                ]; 
+                                $accept_dispatch_result = $this->rasd->accept_dispatch_by_lot($accept_params);                        
+                                if(isset($accept_dispatch_result['body']['DicOfDic']['MR']['TRID']) && $accept_dispatch_result['body']['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){
+                                    log_message("info", "Accept Dispatch successful");
+                                    $rasd_success = true;
+                                    $this->cmt_model->add_rasd_transactions($accept_dispatch_notification,'accept_dispatch',true, $accept_dispatch_result, $payload_for_accept_dispatch[$index]);
+                                    
+                                }else{
+                                    log_message("error", "Accept Dispatch Failed");
+                                    $rasd_success = false;
+                                    $this->cmt_model->add_rasd_transactions($accept_dispatch_notification,'accept_dispatch',true, $accept_dispatch_result, $payload_for_accept_dispatch[$index]);
+                                }*/
+
+                                /**Accept Dispatch By NotificationId */
+                                $this->rasd->set_base_url("https://qdttsbe.qtzit.com:10100/api/web");
+                                $response = $this->rasd->authenticate($ph_user, $ph_pass);
+                                if($response['token']){
+                                    $auth_token = $response['token'];
+                                    log_message("info", "Authentication successful");
+                                    /**
+                                     * Call the RASD function to Accept Dispatch.
+                                     */
+
+                                    $accept_notification_id = $zadca_dispatch_response['body']['DicOfDic']['MR']['AUKey'];
+                                    $accept_params  = [
+                                        "supplier_gln" => $response_model['source_gln'],
+                                        "notification_id" => $accept_notification_id,
+                                        "warehouse_gln" => $response_model['destination_gln']
+                                    ]; 
+
+                                    $accept_payload_used = [
+                                        "supplier_gln" => $response_model['source_gln'],
+                                        "notification_id" => $accept_notification_id,
+                                        "warehouse_gln" => $response_model['destination_gln']
+                                    ];
+
+                                    $rasd_accept_dispatch_response = $this->rasd->accept_dispatch_125($accept_params,$auth_token);
+                                    if(isset($rasd_accept_dispatch_response['DicOfDic']['MR']['TRID']) && $rasd_accept_dispatch_response['DicOfDic']['MR']['ResCodeDesc'] != "Failed"){                
+                                        log_message("info", "Regiter Dispatch successful");
+                                        $result = true;
+                                        
+                                    }else{
+                                        $result = false;
+                                        log_message("error", "Regiter Dispatch Failed");
+                                        log_message("error", json_encode($rasd_accept_dispatch_response,true));
+                                    }
+                                    $this->cmt_model->add_rasd_transactions($accept_payload_used,'accept_dispatch',$result, $rasd_accept_dispatch_response, $accept_params);
+
+                                }else{
+                                    $result = false;
+                                    log_message("error", "auth Failed");
+
+                                    $this->session->set_flashdata('error', 'Failed to Authenticate with RASD with ' . $ph_user . ' '. $ph_pass);
+                                    admin_redirect('notifications/rasd');
+                                }
+                                
+                            }else{
+                                $rasd_success = false;
+                                log_message("error", "Dispatch Failed");
+                                log_message("error", json_encode($zadca_dispatch_response,true));
+                                $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',false, $zadca_dispatch_response,$payload_dispatch);
+                            }
+                        
+                            
+                        }else{
+                            log_message("error", 'RASD Authentication FAILED: DISPATCH_PRODUCT');
+                            $this->cmt_model->add_rasd_transactions($payload_used,'dispatch_product',false, $accept_dispatch_result,$body_for_rasd_dispatch);
+                        }
+                    }
+                    
+                }else{
+                    log_message("warning", 'The Status is not Complete' . $transfer_status);
+                }
+            
+                
+                /**RASD Integration End */
+            }
+
             $this->session->set_userdata('remove_tols', 1);
             $this->session->set_flashdata('message', lang('transfer_updated'));
             admin_redirect('transfers');
         } else {
             $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
             $this->data['transfer'] = $this->transfers_model->getTransferByID($id);
-            $transfer_items         = $this->transfers_model->getAllTransferItems($id, $this->data['transfer']->status);
-            krsort($transfer_items);
-            $c = rand(100000, 9999999);
+            $transfer_items         = $this->transfers_model->getAllTransferItemsForModule($id, $this->data['transfer']->status, $this->data['transfer']->from_warehouse_id);
             
+            if(!empty($transfer_items)) {
+                krsort($transfer_items);
+            }
+            $c = rand(100000, 9999999);
+            //echo '<pre>';print_r($transfer_items);exit;
             foreach ($transfer_items as $item) {
                 $row = $this->site->getProductByID($item->product_id);
                 if (!$row) {
@@ -620,20 +990,29 @@ class Transfers extends MY_Controller
                 }
                 $row->quantity         = 0;
                 $row->expiry           = (($item->expiry && $item->expiry != '0000-00-00') ? $this->sma->hrsd($item->expiry) : '');
-                $row->base_quantity    = $item->quantity;
+                $row->base_quantity    = $item->current_quantity;//$item->base_quantity;
+                $row->avz_item_code    = $item->avz_item_code;
                 $row->base_unit        = $row->unit ? $row->unit : $item->product_unit_id;
                 $row->base_unit_cost   = $row->cost ? $row->cost : $item->unit_cost;
+                $row->net_unit_cost    = $item->net_unit_cost;
                 $row->unit             = $item->product_unit_id;
                 $row->qty              = $item->unit_quantity;
                 $row->quantity_balance = $item->quantity_balance;
                 $row->ordered_quantity = $item->quantity;
                 $row->quantity        += $item->quantity_balance;
-                $row->cost           = $item->net_unit_cost;
+                $row->cost             = $item->net_unit_cost;
+                $row->net_unit_sale    = $item->sale_price;
                 
                 if($item->quantity > 0){
                     $row->unit_cost      = $item->net_unit_cost + ($item->item_tax / $item->quantity);
                 }else{
                     $row->unit_cost      = $item->net_unit_cost;
+                }
+
+                if($this->data['transfer']->status == 'sent'){
+                    //echo 'here in sent';exit;
+                   // $row->base_quantity = $row->base_quantity + $row->quantity;
+                   $row->base_quantity = $row->quantity;
                 }
                 
                 $row->real_unit_cost = $item->real_unit_cost;
@@ -686,7 +1065,7 @@ class Transfers extends MY_Controller
                     'row'        => $row, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options,  'batches'=>$batches];
                 $c++;
             }
-
+            
             $this->data['transfer_items'] = json_encode($pr);
             $this->data['id']             = $id;
             $this->data['warehouses']     = $this->site->getAllWarehouses();
@@ -782,7 +1161,8 @@ class Transfers extends MY_Controller
 
     public function getTransfers()
     {
-        $this->sma->checkPermissions('index');
+        //$this->sma->checkPermissions('index');
+        $tid = $this->input->get('tid');
         $detail_link   = anchor('admin/transfers/view/$1', '<i class="fa fa-file-text-o"></i> ' . lang('transfer_details'), 'data-toggle="modal" data-target="#myModal"');
         $email_link    = anchor('admin/transfers/email/$1', '<i class="fa fa-envelope"></i> ' . lang('email_transfer'), 'data-toggle="modal" data-target="#myModal"');
         $edit_link     = anchor('admin/transfers/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_transfer'));
@@ -791,34 +1171,53 @@ class Transfers extends MY_Controller
         $delete_link   = "<a href='#' class='tip po' title='<b>" . lang('delete_transfer') . "</b>' data-content=\"<p>"
             . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' id='a__$1' href='" . admin_url('transfers/delete/$1') . "'>"
             . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i> "
-            . lang('delete_transfer') . '</a>';
+            . lang('delete_transfer') . '</a>'; 
+        $journal_entry_link      = anchor('admin/entries/view/journal/?tid=$1', '<i class="fa fa-eye"></i> ' . lang('Journal Entry'));
         $action = '<div class="text-center"><div class="btn-group text-left">'
             . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
             . lang('actions') . ' <span class="caret"></span></button>
-        <ul class="dropdown-menu pull-right" role="menu">
-            <li>' . $detail_link . '</li>
-            <li>' . $edit_link . '</li>
-            <li>' . $pdf_link . '</li>
-            <li>' . $email_link . '</li>
-            <li>' . $print_barcode . '</li>
-            <li>' . $delete_link . '</li>
-        </ul>
+        <ul class="dropdown-menu pull-right" role="menu">';
+
+        if($this->GP['transfers-edit']){    
+            $action .= '<li>' . $edit_link . '</li>';
+        }
+        if($this->GP['transfers-pdf']){
+            $action .= '<li>' . $pdf_link . '</li>';
+        }
+        if($this->Owner || $this->Admin){
+            $action .= '<li>' . $print_barcode . '</li>';
+        }
+        if($this->Owner || $this->Admin){
+            $action .= '<li>' . $journal_entry_link . '</li>';
+        }
+        if($this->GP['transfers-delete']){ 
+            $action .= '<li>' . $delete_link . '</li>';
+        }
+        $action .= '</ul>
        </div></div>';
 
         $this->load->library('datatables');
 
         $this->datatables
-            ->select('id, date, transfer_no, sequence_code, from_warehouse_name as fname, from_warehouse_code as fcode, to_warehouse_name as tname,to_warehouse_code as tcode, total, total_tax, grand_total, status, attachment')
+            ->select("id, date, transfer_no, sequence_code, from_warehouse_name as fname, from_warehouse_code as fcode, to_warehouse_name as tname,to_warehouse_code as tcode, total, total_tax, grand_total, status, CONCAT('files/', {$this->db->dbprefix('transfers')}.attachment) as attachment")
             ->from('transfers')
             ->edit_column('fname', '$1 ($2)', 'fname, fcode')
             ->edit_column('tname', '$1 ($2)', 'tname, tcode');
 
-        if (!$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
+        if (!$this->Owner && !$this->Admin && !$this->Owner && !$this->Admin && !$this->GP['transfers-index']) {
             // $this->datatables->where('created_by', $this->session->userdata('user_id'));
-            $this->datatables->where('to_warehouse_id', $this->session->userdata('warehouse_id'));
+            $this->datatables->where('from_warehouse_id', $this->session->userdata('warehouse_id'));
+        } else if ($this->Admin || $this->Owner) {
+            // Admins see everything except saved transfers not created by them
+
+            $this->datatables->where("(status != 'save' OR (status = 'save' AND created_by = {$this->session->userdata('user_id')}))", null, false);
+            
         }
         
-        $this->datatables->where('type', 'transfer');
+        //$this->datatables->where('type', 'transfer');
+        if(is_numeric($tid)) {
+            $this->datatables->where('id', $tid);
+        }
 
             $this->datatables->add_column('Actions', $action, 'id')
             ->unset_column('fcode')
@@ -829,9 +1228,12 @@ class Transfers extends MY_Controller
     public function index()
     {
        
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        
+        $this->data['lastInsertedId'] =  $this->input->get('lastInsertedId') ;
+        $this->data['tid'] = $this->input->get('tid');
 
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('transfers')]];
         $meta = ['page_title' => lang('transfers'), 'bc' => $bc];
@@ -869,6 +1271,42 @@ class Transfers extends MY_Controller
         }
     }
 
+    private function extract_gs1_data($input)
+    {
+        $data = [
+            'gtin' => null,
+            'batch_number' => null,
+            'expiry_date' => null,
+        ];
+    
+        // Extract GTIN (14 digits after (01))
+        if (preg_match('/\(01\)(\d{14})/', $input, $matches)) {
+            $data['gtin'] = $matches[1];
+        }
+    
+        // Extract Batch Number (variable length after (10), stops at next AI)
+        if (preg_match('/\(10\)([^\(]+)/', $input, $matches)) {
+            $data['batch_number'] = $matches[1];
+        }
+    
+        // Extract Expiry Date (YYMMDD format after (17))
+        if (preg_match('/\(17\)(\d{6})/', $input, $matches)) {
+            $expiry_raw = $matches[1]; // "270228"
+    
+            // Convert YYMMDD to YYYY-MM-DD
+            $year = substr($expiry_raw, 0, 2); // "27"
+            $month = substr($expiry_raw, 2, 2); // "02"
+            $day = substr($expiry_raw, 4, 2); // "28"
+    
+            // Assume year is in 2000s if below 50, otherwise in 1900s
+            $year = ($year < 50) ? '20' . $year : '19' . $year;
+    
+            $data['expiry_date'] = "$day/$month/$year"; // "2027-02-28"
+        }
+    
+        return $data;
+    }
+
     public function bch_suggestions()
     {
         $this->sma->checkPermissions('index', true);
@@ -879,7 +1317,12 @@ class Transfers extends MY_Controller
             die("<script type='text/javascript'>setTimeout(function(){ window.top.location.href = '" . admin_url('welcome') . "'; }, 10);</script>");
         }
 
-        $analyzed  = $this->sma->analyze_term($term);
+        $extracted_data = $this->extract_gs1_data($term);
+        $search_term = $extracted_data['gtin'] ?? $term;
+        $batch_number = $extracted_data['batch_number'] ?? null;
+        $expiry_date = $extracted_data['expiry_date'] ?? null;
+
+        $analyzed  = $this->sma->analyze_term($search_term);
         $sr        = $analyzed['term'];
         $option_id = $analyzed['option_id'];
         $sr        = addslashes($sr);
@@ -890,12 +1333,14 @@ class Transfers extends MY_Controller
         $rows = $this->transfers_model->getProductNamesWithBatches($sr, $warehouse_id);
         if ($rows) {
             $r = 0;
+            $count = 0;
             foreach ($rows as $row) {
                 $c                     = uniqid(mt_rand(), true);
                 $option                = false;
                 $row->quantity         = 0;
                 $row->item_tax_method  = $row->tax_method;
                 $row->base_quantity    = 0;
+                $row->net_unit_cost    = 0;
                 $row->base_unit        = $row->unit;
                 $row->base_unit_cost   = $row->cost;
                 $row->unit             = $row->purchase_unit ? $row->purchase_unit : $row->unit;
@@ -955,9 +1400,11 @@ class Transfers extends MY_Controller
                 $row->expiry  = null;
 
                 $batches = $this->site->getProductBatchesData($row->id, $warehouse_id);
-
+                $total_quantity = $this->Inventory_model->get_current_stock($row->id, $warehouse_id);
+                $count++;
+                $row->serial_no = $count;
                 $pr[] = ['id' => sha1($c . $r), 'item_id' => $row->id, 'label' => $row->name . ' (' . $row->code . ')',
-                    'row'     => $row, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options,  'batches'=>$batches ];
+                    'row'     => $row, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options,  'batches'=>$batches, 'total_quantity' => $total_quantity ];
                 $r++;
             }
             $this->sma->send_json($pr);
@@ -1350,7 +1797,7 @@ class Transfers extends MY_Controller
                         ];
 
                         $products[] = ($product + $gst_data);
-                        $total += $this->sma->formatDecimal(($item_net_cost * $item_quantity), 4);
+                        $total += $item_net_cost * $item_quantity;
                     }
                     $rw++;
                 }
@@ -1448,6 +1895,7 @@ class Transfers extends MY_Controller
         if ($this->input->get('id')) {
             $transfer_id = $this->input->get('id');
         }
+        
         $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
         $transfer            = $this->transfers_model->getTransferByID($transfer_id);
         if (!$this->session->userdata('view_right')) {

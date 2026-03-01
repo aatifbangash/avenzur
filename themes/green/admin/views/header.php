@@ -1,6 +1,21 @@
-<?php defined('BASEPATH') or exit('No direct script access allowed'); ?><!DOCTYPE html>
+<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<!DOCTYPE html>
 <html>
 <head>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Avnzor",
+      "url": "https://avnzor.com",
+      "logo": "https://avnzor.com/cdn/shop/files/logo.svg",
+      "parentOrganization": {
+        "@type": "Organization",
+        "name": "Avenzur",
+        "url": "https://avenzur.com"
+      }
+    }
+    </script>
     <meta charset="utf-8">
     <base href="<?= site_url() ?>"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +26,7 @@
     <link href="<?= base_url('assets/custom/custom.css') ?>" rel="stylesheet"/>
     <script type="text/javascript" src="<?= $assets ?>js/jquery-2.0.3.min.js"></script>
     <script type="text/javascript" src="<?= $assets ?>js/jquery-migrate-1.2.1.min.js"></script>
+    <script type="text/javascript" src="<?= $assets ?>js/echarts.min.js"></script>
  
     <!--[if lt IE 9]>
     <script src="<?= $assets ?>js/jquery.js"></script>
@@ -432,6 +448,35 @@
                                             <span class="text"> <?= lang('add_adjustment'); ?></span>
                                         </a>
                                     </li>
+
+                                    <li id="products_product_bundles">
+                                        <a class="submenu" href="<?= admin_url('products/product_bundles'); ?>">
+                                            <i class="fa fa-filter"></i>
+                                            <span class="text"> <?= lang('Product_Bundles'); ?></span>
+                                        </a>
+                                    </li>
+
+                                     <li id="products_add_bundle">
+                                        <a class="submenu" href="<?= admin_url('products/add_bundle'); ?>">
+                                            <i class="fa fa-plus-circle"></i>
+                                            <span class="text"> <?= lang('Add_Bundle'); ?></span>
+                                        </a>
+                                    </li>
+
+                                    <li id="products_product_combos">
+                                        <a class="submenu" href="<?= admin_url('products/product_combos'); ?>">
+                                            <i class="fa fa-filter"></i>
+                                            <span class="text"> <?= lang('Product_Combos'); ?></span>
+                                        </a>
+                                    </li>
+
+                                     <li id="products_add_combo">
+                                        <a class="submenu" href="<?= admin_url('products/add_combo'); ?>">
+                                            <i class="fa fa-plus-circle"></i>
+                                            <span class="text"> <?= lang('Add_Combo'); ?></span>
+                                        </a>
+                                    </li>
+
                                     <li id="products_stock_counts">
                                         <a class="submenu" href="<?= admin_url('products/stock_counts'); ?>">
                                             <i class="fa fa-list-ol"></i>
@@ -885,6 +930,15 @@
                                                 <i class="fa fa-upload"></i><span class="text"> <?= lang('change_logo'); ?></span>
                                             </a>
                                         </li>
+                                         <?php if( $this->input->cookie('companyID') == 999 ) {?>
+                                        <li id="system_settings_seo">
+                                            <a href="<?= admin_url('seo_setting/index') ?>">
+                                                <i class="fa fa-search"></i><span class="text"> <?= lang('SEO_Settings'); ?></span>
+                                            </a>
+                                        </li> 
+                                        <?php }?>
+                                        
+
                                         <li id="system_settings_currencies">
                                             <a href="<?= admin_url('system_settings/currencies') ?>">
                                                 <i class="fa fa-money"></i><span class="text"> <?= lang('currencies'); ?></span>
@@ -903,6 +957,16 @@
                                         <li id="system_settings_categories">
                                             <a href="<?= admin_url('system_settings/categories') ?>">
                                                 <i class="fa fa-folder-open"></i><span class="text"> <?= lang('categories'); ?></span>
+                                            </a>
+                                        </li>
+                                        <li id="system_settings_specialities">
+                                            <a href="<?= admin_url('system_settings/specialities') ?>">
+                                                <i class="fa fa-folder-open"></i><span class="text"> <?= lang('specialities'); ?></span>
+                                            </a>
+                                        </li>
+                                        <li id="system_settings_topics">
+                                            <a href="<?= admin_url('system_settings/topics') ?>">
+                                                <i class="fa fa-folder-open"></i><span class="text"> <?= lang('topics'); ?></span>
                                             </a>
                                         </li>
                                         <li id="system_settings_expense_categories">
@@ -990,6 +1054,38 @@
                                 </li>
                                 <?php
                             } ?>
+
+                            <li class="ec_reports">
+                                <a class="dropmenu" href="#">
+                                    <i class="fa fa-bar-chart-o"></i>
+                                    <span class="text"> <?= lang('Ecommerce Reports'); ?> </span>
+                                    <span class="chevron closed"></span>
+                                </a>
+                                <ul>
+                                    <li id="reports_fast_moving_items">
+                                        <a href="<?= admin_url('reports/fast_moving_items') ?>">
+                                            <i class="fa fa-line-chart"></i><span class="text"> <?= lang('Fast_Moving_Items'); ?></span>
+                                        </a>
+                                    </li>
+
+                                    <li id="promotion_items_report">
+                                        <a href="<?= admin_url('reports/promotion_items_report') ?>">
+                                            <i class="fa fa-line-chart"></i><span class="text"> <?= lang('Promotion_Items_Report'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_promo_sales">
+                                        <a href="<?= admin_url('reports/daily_sales_with_promo_code') ?>">
+                                            <i class="fa fa-calendar"></i><span class="text"> <?= lang('Promo Sales By Item'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="reports_promo_sales">
+                                        <a href="<?= admin_url('reports/daily_sales_with_promo_code_by_order') ?>">
+                                            <i class="fa fa-calendar"></i><span class="text"> <?= lang('Promo Sales By Order'); ?></span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
                             <li class="mm_reports">
                                 <a class="dropmenu" href="#">
                                     <i class="fa fa-bar-chart-o"></i>
@@ -1007,6 +1103,7 @@
                                             <i class="fa fa-building"></i><span class="text"> <?= lang('warehouse_stock'); ?></span>
                                         </a>
                                     </li>
+
                                     <li id="reports_best_sellers">
                                         <a href="<?= admin_url('reports/best_sellers') ?>">
                                             <i class="fa fa-line-chart"></i><span class="text"> <?= lang('best_sellers'); ?></span>
@@ -1021,6 +1118,13 @@
                                     </li>
                                         <?php
                                     } ?>
+
+                                    <li id="reports_out_of_stock_dashboard">
+                                        <a href="<?= admin_url('reports/out_of_stock_dashboard') ?>">
+                                            <i class="fa fa-bar-chart-o"></i><span class="text"> <?= lang('Out_Of_Stock_Dashboard'); ?></span>
+                                        </a>
+                                    </li>
+
                                     <li id="reports_quantity_alerts">
                                         <a href="<?= admin_url('reports/quantity_alerts') ?>">
                                             <i class="fa fa-bar-chart-o"></i><span class="text"> <?= lang('product_quantity_alerts'); ?></span>
@@ -1033,7 +1137,7 @@
                                             <i class="fa fa-bar-chart-o"></i><span class="text"> <?= lang('product_expiry_alerts'); ?></span>
                                         </a>
                                     </li>
-                                        <?php
+                                    <?php
                                     } ?>
                                     <li id="reports_products">
                                         <a href="<?= admin_url('reports/products') ?>">
@@ -1070,6 +1174,7 @@
                                             <i class="fa fa-heart"></i><span class="text"> <?= lang('sales_report'); ?></span>
                                         </a>
                                     </li>
+                                   
                                     <li id="reports_payments">
                                         <a href="<?= admin_url('reports/payments') ?>">
                                             <i class="fa fa-money"></i><span class="text"> <?= lang('payments_report'); ?></span>
@@ -1246,6 +1351,11 @@
                                             <i class="fa fa-file"></i><span class="text"> <?= lang('slider_settings'); ?></span>
                                         </a>
                                     </li>
+                                    <li id="tag_settings_index">
+                                        <a href="<?= admin_url('shop_settings/tags') ?>">
+                                            <i class="fa fa-tag"></i><span class="text"> <?= lang('Tag Settings'); ?></span>
+                                        </a>
+                                    </li>
                                     <?php if ($Settings->apis) {
                                         ?>
                                     <li id="api_settings_index">
@@ -1278,6 +1388,11 @@
                                     <li id="shop_settings_sms_log">
                                         <a href="<?= admin_url('shop_settings/sms_log') ?>">
                                             <i class="fa fa-file-text-o"></i><span class="text"> <?= lang('sms_log'); ?></span>
+                                        </a>
+                                    </li>
+                                    <li id="shop_settings_abandoned_cart">
+                                        <a href="<?= admin_url('shop_settings/abandoned_cart') ?>">
+                                            <i class="fa fa-file-text-o"></i><span class="text"> <?= lang('abandoned_cart'); ?></span>
                                         </a>
                                     </li>
                                 </ul>
@@ -1758,23 +1873,37 @@
 
                             <?php
                         } ?>
-                        <?php if ($Owner || $Admin) { ?>
+                        <?php if (isset($this->GP) && $GP['blog_view'] || ($Owner || $Admin) ) { ?>
                         <li class="mm_shop_settings mm_api_settings">
                                 <a class="dropmenu" href="#">
                                     <i class="fa fa-shopping-cart"></i><span class="text"> <?= lang('Blog_Module'); ?> </span>
                                     <span class="chevron closed"></span>
                                 </a>
                                 <ul>
-                                  <li id="shop_settings_pages">
-                                        <a href="<?= admin_url('Blog/allBlogs') ?>">
-                                            <i class="fa fa-file"></i><span class="text"> <?= lang('List_blog'); ?></span>
-                                        </a>
-                                    </li>
-                                    <li id="shop_settings_pages">
-                                        <a href="<?= admin_url('Blog/add_blog') ?>">
-                                            <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Add_blog'); ?></span>
-                                        </a>
-                                    </li>
+                                  <?php
+                                    if($GP['blog_view'] || ($Owner || $Admin)){
+                                        ?>
+                                        <li id="shop_settings_pages">
+                                            <a href="<?= admin_url('Blog/allBlogs') ?>">
+                                                <i class="fa fa-file"></i><span class="text"> <?= lang('List_blog'); ?></span>
+                                            </a>
+                                        </li>
+                                        <?php
+                                    }
+                                  ?>
+                                  <?php
+                                    if($GP['blog_add'] || ($Owner || $Admin)){
+                                        ?>
+                                        <li id="shop_settings_pages">
+                                            <a href="<?= admin_url('Blog/add_blog') ?>">
+                                                <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Add_blog'); ?></span>
+                                            </a>
+                                        </li>
+                                        <?php
+                                    }
+                                  ?>
+                                  
+                                    
                                     <!--<li id="shop_settings_pages">-->
                                     <!--    <a href="<?= admin_url('Blog/add_bcategory') ?>">-->
                                     <!--        <i class="fa fa-plus-circle"></i><span class="text"> <?= lang('Add Blog Category'); ?></span>-->
@@ -1788,7 +1917,7 @@
                                 </ul>
                             </li>
                             <?php } ?>
-                             <?php //if ($Owner || $Admin || $GP['stock_request_view']) { ?>
+                             <?php if ($Owner || $Admin || $GP['stock_request_view']) { ?>
                              <li class="mm_stock_requests">
                                 <a class="dropmenu" href="#">
                                     <i class="fa fa-star-o"></i>
@@ -1832,7 +1961,7 @@
                                     </li>-->
                                 </ul>
                              </li>
-                             <?php //} ?>
+                             <?php } ?>
 
                             <?php 
                              if (isset($GP) && $GP['accountant'] || ($Owner || $Admin) ) {

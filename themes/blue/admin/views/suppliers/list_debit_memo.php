@@ -49,7 +49,10 @@
                                                 <td><?= $memo->reference_no; ?></td>
                                                 <td><?= $memo->company; ?></td>
                                                 <td><?= $memo->payment_amount; ?></td>
-                                                <td><a href="<?php echo admin_url('suppliers/edit_debit_memo/' . $memo->id); ?>" class="tip" title="Edit Debit Memo"><i class="fa fa-edit"></i></a></td>
+                                                <td>
+                                                    <a href="<?php echo admin_url('suppliers/view_debit_memo/' . $memo->id); ?>" class="tip" title="View Debit Memo"><i class="fa fa-eye"></i></a>
+                                                    <a href="<?php echo admin_url('suppliers/delete_debit_memo/' . $memo->id); ?>" class="tip" title="Delete Debit Memo" onclick="return confirm('Are you sure you want to delete this debit memo?');"><i class="fa fa-trash"></i></a>
+                                                </td>
                                             </tr>
                                         <?php
                                     }

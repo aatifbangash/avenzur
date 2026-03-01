@@ -107,26 +107,18 @@
                         <i class="icon fa fa-tasks tip" data-placement="left" title="<?= lang('actions') ?>"></i>
                     </a>
                     <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
-                        <li>
+                        <!--<li>
                             <a href="<?= admin_url('products/add') ?>">
                                 <i class="fa fa-plus-circle"></i> <?= lang('add_product') ?>
                             </a>
-                        </li>
-                        <?php if (!$warehouse_id) {
-                            ?>
-                        <li>
-                            <a href="<?= admin_url('products/update_price') ?>" data-toggle="modal" data-target="#myModal">
-                                <i class="fa fa-file-excel-o"></i> <?= lang('update_price') ?>
-                            </a>
-                        </li>
-                            <?php
-                        } ?>
+                        </li>-->
+                        
                         <li>
                             <a href="#" id="labelProducts" data-action="labels">
                                 <i class="fa fa-print"></i> <?= lang('print_barcode_label') ?>
                             </a>
                         </li>
-                        <li>
+                        <!--<li>
                             <a href="#" id="sync_quantity" data-action="sync_quantity">
                                 <i class="fa fa-arrows-v"></i> <?= lang('sync_quantity') ?>
                             </a>
@@ -135,20 +127,25 @@
                             <a href="#" id="set_avg_cost" data-action="set_avg_cost">
                                 <i class="fa fa-dollar"></i> <?= lang('set_avg_cost') ?>
                             </a>
-                        </li>
+                        </li>-->
                         <li>
                             <a href="#" id="excel" data-action="export_excel">
                                 <i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?>
                             </a>
                         </li>
-                        <li class="divider"></li>
                         <li>
+                            <a href="products/import_excel" id="excel" data-action="import_excel">
+                                <i class="fa fa-file-excel-o"></i> <?= lang('import_to_excel') ?>
+                            </a>
+                        </li>
+                        <li class="divider"></li>
+                        <!--<li>
                             <a href="#" class="bpo" title="<b><?= $this->lang->line('delete_products') ?></b>"
                                 data-content="<p><?= lang('r_u_sure') ?></p><button type='button' class='btn btn-danger' id='delete' data-action='delete'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button>"
                                 data-html="true" data-placement="left">
                             <i class="fa fa-trash-o"></i> <?= lang('delete_products') ?>
                              </a>
-                         </li>
+                         </li>-->
                     </ul>
                 </li>
                 <?php if (!empty($warehouses)) {

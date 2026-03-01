@@ -14,6 +14,8 @@ class Shop extends MY_Shop_Controller
         if ($this->shop_settings->private && !$this->loggedIn) {
             redirect('/login');
         }
+        // echo "<pre>";
+        // print_r($this->session);
     }
 
     // Add/edit customer address
@@ -80,8 +82,10 @@ class Shop extends MY_Shop_Controller
         $this->form_validation->set_rules('mobile_number', lang('mobile_number'), 'trim|required');
         $this->form_validation->set_rules('first_name', lang('first_name'), 'trim|required');
         $this->form_validation->set_rules('last_name', lang('last_name'), 'trim|required');
-        $this->form_validation->set_rules('email', lang('email'), 'trim');
-        
+        if($this->input->post('email')){
+            $this->form_validation->set_rules('email', lang('email'), 'trim|required');
+        }
+    
         if ($this->form_validation->run() == true) {
             // update address
             $action_type_id = $this->input->post('action_type_id');
@@ -93,7 +97,7 @@ class Shop extends MY_Shop_Controller
                 }else {
                     $mobile_verified = $this->input->post('opt_verified');
                 }
-
+               
                 if ($default_address->phone == '' || $default_address->address == '' || $action_type_id == 'default') {
                     $data = ['address' => $this->input->post('address_line_1'),
                         'line2' => $this->input->post('address_line_2'),
@@ -112,6 +116,7 @@ class Shop extends MY_Shop_Controller
                     }
                     if($this->input->post('email') != '') {
                         $data['email'] = $this->input->post('email');
+                        $this->db->update('users', ['email'=>$data['email']], ['company_id' => $this->session->userdata('company_id')]);
                     }
 
                     $this->db->update('companies', $data, ['id' => $this->session->userdata('company_id')]);
@@ -163,6 +168,8 @@ class Shop extends MY_Shop_Controller
             
 
 
+        }else{
+            redirect('cart/checkout');
         }
 
 
@@ -276,11 +283,14 @@ class Shop extends MY_Shop_Controller
     // Add new Order form shop
     public function order()
     {
-
+        
         $guest_checkout = $this->input->post('guest_checkout');
         if (!$guest_checkout && !$this->loggedIn) {
             redirect('login');
         }
+
+        $this->load->admin_model('inventory_model');
+
         $this->form_validation->set_rules('address', lang('address'), 'trim|required');
         $this->form_validation->set_rules('note', lang('comment'), 'trim');
         $this->form_validation->set_rules('payment_method', lang('payment_method'), 'required');
@@ -351,71 +361,83 @@ class Shop extends MY_Shop_Controller
                 $gst_data = [];
                 $pro_weight = [];
                 $total_cgst = $total_sgst = $total_igst = 0;
+                $out_stock_item_found = false;
                 foreach ($this->cart->contents() as $item) {
                     $item_option = null;
+                    $qty_on_hold = $this->shop_model->getProductOnholdQty($item['product_id']);
                     if ($product_details = $this->shop_model->getProductForCart($item['product_id'])) {
-                        $price = $this->sma->setCustomerGroupPrice(($this->loggedIn && isset($product_details->special_price) ? $product_details->special_price : $product_details->price), $this->customer_group);
-                        $price = $this->sma->isPromo($product_details) ? $product_details->promo_price : $price;
-                        if ($item['option']) {
-                            if ($product_variant = $this->shop_model->getProductVariantByID($item['option'])) {
-                                $item_option = $product_variant->id;
-                                $price = $product_variant->price + $price;
+                        //$qty_available = $product_details->quantity - $qty_on_hold;
+                        $new_stock = $this->inventory_model->get_current_stock($item['product_id'], 'null');
+                        $qty_available = intval($new_stock) - $qty_on_hold;
+                        if($qty_available >= $item['qty']){
+                            $price = $this->sma->setCustomerGroupPrice(($this->loggedIn && isset($product_details->special_price) ? $product_details->special_price : $product_details->price), $this->customer_group);
+                            $price = $this->sma->isPromo($product_details) ? $product_details->promo_price : $price;
+                            if ($item['option']) {
+                                if ($product_variant = $this->shop_model->getProductVariantByID($item['option'])) {
+                                    $item_option = $product_variant->id;
+                                    $price = $product_variant->price + $price;
+                                }
                             }
+
+                            $item_net_price = $unit_price = $price;
+                            $item_quantity = $item_unit_quantity = $item['qty'];
+                            $pr_item_tax = $item_tax = 0;
+                            $tax = '';
+
+                            if (!empty($product_details->tax_rate)) {
+                                $tax_details = $this->site->getTaxRateByID($product_details->tax_rate);
+                                $ctax = $this->site->calculateTax($product_details, $tax_details, $unit_price);
+                                $item_tax = $ctax['amount'];
+                                $tax = $ctax['tax'];
+                                if ($product_details->tax_method != 1) {
+                                    $item_net_price = $unit_price - $item_tax;
+                                }
+                                $pr_item_tax = $this->sma->formatDecimalFunc(($item_tax * $item_unit_quantity), 4);
+                                if ($this->Settings->indian_gst && $gst_data = $this->gst->calculateIndianGST($pr_item_tax, ($biller->state == $customer->state), $tax_details)) {
+                                    $total_cgst += $gst_data['cgst'];
+                                    $total_sgst += $gst_data['sgst'];
+                                    $total_igst += $gst_data['igst'];
+                                }
+                            }
+
+                            $product_tax += $pr_item_tax;
+                            $subtotal = (($item_net_price * $item_unit_quantity) + $pr_item_tax);
+
+                            $unit = $this->site->getUnitByID($product_details->unit);
+
+                            $product = [
+                                'product_id' => $product_details->id,
+                                'product_code' => $product_details->code,
+                                'product_name' => $product_details->name,
+                                'product_type' => $product_details->type,
+                                'option_id' => $item_option,
+                                'net_unit_price' => $item_net_price,
+                                'unit_price' => $this->sma->formatDecimalFunc($item_net_price + $item_tax),
+                                'quantity' => $item_quantity,
+                                'product_unit_id' => $unit ? $unit->id : null,
+                                'product_unit_code' => $unit ? $unit->code : null,
+                                'unit_quantity' => $item_unit_quantity,
+                                'warehouse_id' => $this->shop_settings->warehouse,
+                                'item_tax' => $pr_item_tax,
+                                'tax_rate_id' => $product_details->tax_rate,
+                                'tax' => $tax,
+                                'discount' => null,
+                                'item_discount' => 0,
+                                'subtotal' => $this->sma->formatDecimalFunc($subtotal),
+                                'serial_no' => null,
+                                'real_unit_price' => $price,
+                            ];
+                            $ww = $this->shop_model->getProductByID($product_details->id);
+                            $ww2 = array('product_weight' => $ww->weight);
+                            $pro_weight[] = $ww2;
+                            $products[] = ($product + $gst_data);
+                            $total += $this->sma->formatDecimalFunc(($item_net_price * $item_unit_quantity), 4);
+                        }else{
+                            $out_stock_item_found = true;
+                            $this->session->set_flashdata('error', lang('out of stock item') . ' (' . $item['name'] . ')');
+                            redirect('cart');
                         }
-
-                        $item_net_price = $unit_price = $price;
-                        $item_quantity = $item_unit_quantity = $item['qty'];
-                        $pr_item_tax = $item_tax = 0;
-                        $tax = '';
-
-                        if (!empty($product_details->tax_rate)) {
-                            $tax_details = $this->site->getTaxRateByID($product_details->tax_rate);
-                            $ctax = $this->site->calculateTax($product_details, $tax_details, $unit_price);
-                            $item_tax = $ctax['amount'];
-                            $tax = $ctax['tax'];
-                            if ($product_details->tax_method != 1) {
-                                $item_net_price = $unit_price - $item_tax;
-                            }
-                            $pr_item_tax = $this->sma->formatDecimal(($item_tax * $item_unit_quantity), 4);
-                            if ($this->Settings->indian_gst && $gst_data = $this->gst->calculateIndianGST($pr_item_tax, ($biller->state == $customer->state), $tax_details)) {
-                                $total_cgst += $gst_data['cgst'];
-                                $total_sgst += $gst_data['sgst'];
-                                $total_igst += $gst_data['igst'];
-                            }
-                        }
-
-                        $product_tax += $pr_item_tax;
-                        $subtotal = (($item_net_price * $item_unit_quantity) + $pr_item_tax);
-
-                        $unit = $this->site->getUnitByID($product_details->unit);
-
-                        $product = [
-                            'product_id' => $product_details->id,
-                            'product_code' => $product_details->code,
-                            'product_name' => $product_details->name,
-                            'product_type' => $product_details->type,
-                            'option_id' => $item_option,
-                            'net_unit_price' => $item_net_price,
-                            'unit_price' => $this->sma->formatDecimal($item_net_price + $item_tax),
-                            'quantity' => $item_quantity,
-                            'product_unit_id' => $unit ? $unit->id : null,
-                            'product_unit_code' => $unit ? $unit->code : null,
-                            'unit_quantity' => $item_unit_quantity,
-                            'warehouse_id' => $this->shop_settings->warehouse,
-                            'item_tax' => $pr_item_tax,
-                            'tax_rate_id' => $product_details->tax_rate,
-                            'tax' => $tax,
-                            'discount' => null,
-                            'item_discount' => 0,
-                            'subtotal' => $this->sma->formatDecimal($subtotal),
-                            'serial_no' => null,
-                            'real_unit_price' => $price,
-                        ];
-                        $ww = $this->shop_model->getProductByID($product_details->id);
-                        $ww2 = array('product_weight' => $ww->weight);
-                        $pro_weight[] = $ww2;
-                        $products[] = ($product + $gst_data);
-                        $total += $this->sma->formatDecimal(($item_net_price * $item_unit_quantity), 4);
+                        
                     } else {
                         $this->session->set_flashdata('error', lang('product_x_found') . ' (' . $item['name'] . ')');
                         redirect($_SERVER['HTTP_REFERER'] ?? 'cart');
@@ -427,7 +449,7 @@ class Shop extends MY_Shop_Controller
                     : $this->shop_settings->shipping;
 
                 $order_tax = $this->site->calculateOrderTax($this->Settings->default_tax_rate2, ($total + $product_tax));
-                $total_tax = $this->sma->formatDecimal(($product_tax + $order_tax), 4);
+                $total_tax = $this->sma->formatDecimalFunc(($product_tax + $order_tax), 4);
                 //$grand_total = $this->sma->formatDecimal(($total + $total_tax + $shipping), 4);
 
                 $total = !empty($this->cart->total())
@@ -438,7 +460,18 @@ class Shop extends MY_Shop_Controller
                     ? $this->cart->total_item_tax()
                     : $total_tax;
 
-                $grand_total = $this->sma->formatDecimal(($total + $shipping), 4);
+                $total_discount = !empty($this->cart->get_total_discount())
+                    ? $this->cart->get_total_discount()
+                    : 0;
+
+                $grand_total = $this->sma->formatDecimalFunc(($total + $shipping), 4);
+
+                $coupon_details = $this->session->userdata('coupon_details');
+                if(isset($coupon_details['code'])){
+                    $c_code = $coupon_details['code'];
+                }else{
+                    $c_code = '';
+                }
 
                 $data = [
                     'date' => date('Y-m-d H:i:s'),
@@ -454,7 +487,7 @@ class Shop extends MY_Shop_Controller
                     'product_discount' => 0,
                     'order_discount_id' => null,
                     'order_discount' => 0,
-                    'total_discount' => 0,
+                    'total_discount' => $total_discount,
                     'product_tax' => $total_tax,
                     'order_tax_id' => $this->Settings->default_tax_rate2,
                     'order_tax' => $order_tax,
@@ -472,7 +505,8 @@ class Shop extends MY_Shop_Controller
                     'address_id' => ($this->input->post('address') == 'new' || $this->input->post('address') == 'default' ) ? 0 : $address->id,
                     'hash' => hash('sha256', microtime() . mt_rand()),
                     'payment_method' => $this->input->post('payment_method'),
-                    'delivery_type' => $this->input->post('express_delivery')
+                    'delivery_type' => $this->input->post('express_delivery'),
+                    'coupon_code' => $c_code
                 ];
                 if ($this->Settings->invoice_view == 2) {
                     $data['cgst'] = $total_cgst;
@@ -485,7 +519,11 @@ class Shop extends MY_Shop_Controller
                 }
                 // $this->sma->print_arrays($data, $products, $customer, $address);
 
-                if ($sale_id = $this->shop_model->addSale($data, $products, $customer, $address)) {
+                if($out_stock_item_found == true){
+                    $this->session->set_flashdata('error', lang('out of stock item in cart'));
+                    redirect($_SERVER['HTTP_REFERER'] ?? 'cart');
+                }
+                else if ($sale_id = $this->shop_model->addSale($data, $products, $customer, $address)) {
                     //$added_record = $this->aramexshipment($sale_id, $data, $products, $customer, $address,$pro_weight);
                     //$email = $this->order_received($sale_id, $data['hash'], $added_record);
 
@@ -503,7 +541,40 @@ class Shop extends MY_Shop_Controller
                     } elseif ($this->input->post('payment_method') == 'directpay') {
                         //$this->sendTwillioSMS();
                         //$this->sendMsegatSMS();
-                        redirect('pay/directpay/' . $sale_id);
+
+                        $card_name = $this->input->post('card_name');
+                        $card_number = $this->input->post('card_number');
+                        $card_cvv = $this->input->post('card_cvv');
+                        $card_expiry = $this->input->post('card_expiry_year');
+                        $payment_method_details = $this->input->post('payment_method_details');
+                        
+                        $card_expiry_year = trim(explode('/', $card_expiry)[1]);
+                        $card_expiry_month = trim(explode('/', $card_expiry)[0]);
+
+                        $tabby_email = $this->input->post('tabby_email');
+                        $tabby_phone = $this->input->post('tabby_phone');
+
+                        // Store card details in session
+                        $this->session->set_userdata('card_details', array(
+                            'card_name' => $card_name,
+                            'card_number' => $card_number,
+                            'card_cvv' => $card_cvv,
+                            'card_expiry_month' => $card_expiry_month,
+                            'card_expiry_year' => $card_expiry_year,
+                            'payment_method_details' => $payment_method_details
+                        ));
+
+                        // Store tabby details in session
+                        $this->session->set_userdata('tabby_details', array(
+                            'tabby_email' => $tabby_email,
+                            'tabby_phone' => $tabby_phone
+                        ));
+                        
+                        if($card_number == '4847 8358 5060 8454'){
+                            redirect('pay/directpay/' . $sale_id);
+                        }else{
+                            redirect('pay/directpay/' . $sale_id);
+                        }
                     } else {
                         shop_redirect('orders/' . $sale_id . '/' . ($this->loggedIn ? '' : $data['hash']));
                     }
@@ -595,7 +666,7 @@ class Shop extends MY_Shop_Controller
             $p_companyname = $dp->company_name; //"Pharma drug store";
             $p_phonenumber = $dp->landline_number; //"966568241418";
             $p_cellnumber = $dp->cell_number; //"966568241418";
-            $p_shipper_email = $dp->Email; //"ama@pharma.com.sa";
+            $p_shipper_email = $dp->Email; //"aeid@avenzur.com";
 
             $p_AccountEntity = $dp->account_entity; //'RUH';
             $p_AccountNumber = $dp->account_number; //'71449672';
@@ -616,7 +687,7 @@ class Shop extends MY_Shop_Controller
             $p_companyname = "Pharma drug store";
             $p_phonenumber = "966568241418";
             $p_cellnumber = "966568241418";
-            $p_shipper_email = "ama@pharma.com.sa";
+            $p_shipper_email = "aeid@avenzur.com";
 
             $p_AccountEntity = 'RUH';
             $p_AccountNumber = '71449672';
@@ -991,17 +1062,114 @@ class Shop extends MY_Shop_Controller
         }
     }
 
+    public function invoiceorders($id = null, $hash = null, $pdf = null, $buffer_save = null){
+        $hash = $hash ? $hash : $this->input->get('hash', true);
+        /*if (!$this->loggedIn && !$hash) {
+            redirect('/');
+        }
+        if ($this->Staff) {
+            admin_redirect('sales');
+        }*/
+        //order tracking
+       $action = $this->input->get('action');
+       
+       if($action == 'tracking') {
+        $order = $this->shop_model->getOrder(['id' => $id, 'hash' => $hash]);
+        $this->cart->destroy();
+        $this->data['order'] = $order;
+        $this->page_construct('pages/order_tracking', $this->data);
+       }
+        else if ($id && !$pdf) {
+            if ($order = $this->shop_model->getOrder(['id' => $id, 'hash' => $hash])) {
+                $this->load->library('inv_qrcode');
+                $this->data['inv'] = $order;
+                $this->data['rows'] = $this->shop_model->getOrderItems($id);
+                $this->data['customer'] = $this->site->getCompanyByID($order->customer_id);
+                $this->data['biller'] = $this->site->getCompanyByID($order->biller_id);
+                $this->data['address'] = array();
+                $this->data['address'] = $this->shop_model->getAddressByID($order->address_id);
+                
+                $this->data['return_sale'] = $order->return_id ? $this->shop_model->getOrder(['id' => $id]) : null;
+                $this->data['return_rows'] = $order->return_id ? $this->shop_model->getOrderItems($order->return_id) : null;
+                $this->data['paypal'] = $this->shop_model->getPaypalSettings();
+                $this->data['skrill'] = $this->shop_model->getSkrillSettings();
+                $this->data['page_title'] = lang('view_order');
+                $this->data['page_desc'] = '';
+
+                $this->config->load('payment_gateways');
+                $this->data['stripe_secret_key'] = $this->config->item('stripe_secret_key');
+                $this->data['stripe_publishable_key'] = $this->config->item('stripe_publishable_key');
+                $this->data['all_categories'] = $this->shop_model->getAllCategories();
+                $this->page_construct('pages/view_order', $this->data);
+                $this->cart->destroy();
+                //$this->page_construct('pages/thankyou', $this->data);
+            } else {
+                $this->session->set_flashdata('error', lang('access_denied'));
+                redirect('/');
+            }
+        } elseif ($pdf || $this->input->get('download')) {
+            $this->load->library('inv_qrcode');
+            $id = $pdf ? $id : $this->input->get('download', true);
+            $hash = $hash ? $hash : $this->input->get('hash', true);
+            $order = $this->shop_model->getOrder(['id' => $id, 'hash' => $hash]);
+            $this->data['inv'] = $order;
+            $this->data['rows'] = $this->shop_model->getOrderItems($id);
+            $this->data['customer'] = $this->site->getCompanyByID($order->customer_id);
+            $this->data['biller'] = $this->site->getCompanyByID($order->biller_id);
+            $this->data['address'] = $this->shop_model->getAddressByID($order->address_id);
+            $this->data['return_sale'] = $order->return_id ? $this->shop_model->getOrder(['id' => $id]) : null;
+            $this->data['return_rows'] = $order->return_id ? $this->shop_model->getOrderItems($order->return_id) : null;
+            $this->data['Settings'] = $this->Settings;
+            $this->data['all_categories'] = $this->shop_model->getAllCategories();
+            $this->data['shop_settings'] = $this->shop_settings;
+            $html = $this->load->view($this->Settings->theme . '/shop/views/pages/pdf_invoice', $this->data, true);
+            if ($this->input->get('view')) {
+                echo $html;
+                exit;
+            }
+            $name = lang('invoice') . '_' . str_replace('/', '_', $order->reference_no) . '.pdf';
+            if ($buffer_save) {
+                return $this->sma->generate_pdf($html, $name, $buffer_save, $this->data['biller']->invoice_footer);
+            }
+            $this->sma->generate_pdf($html, $name, false, $this->data['biller']->invoice_footer);
+        } elseif (!$id) {
+            $page = $this->input->get('page') ? $this->input->get('page', true) : 1;
+            $limit = 50;
+            $offset = ($page * $limit) - $limit;
+            $this->load->helper('pagination');
+            //$total_rows = $this->shop_model->getCustomerOrdersCount();
+            $this->session->set_userdata('requested_page', $this->uri->uri_string());
+            $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+            $this->data['orders'] = $this->shop_model->getOrders($limit, $offset);
+            //$this->data['pagination'] = pagination('shop/orders', $total_rows, $limit);
+            $this->data['page_info'] = ['page' => $page, 'total' => ceil($total_rows / $limit)];
+            $this->data['page_title'] = lang('my_orders');
+            $this->data['page_desc'] = '';
+            $this->data['all_categories'] = $this->shop_model->getAllCategories();
+            $this->page_construct('pages/orders', $this->data);
+        }
+    }
+
     // Customer order/orders page
     public function orders($id = null, $hash = null, $pdf = null, $buffer_save = null)
     {
         $hash = $hash ? $hash : $this->input->get('hash', true);
         if (!$this->loggedIn && !$hash) {
-            redirect('login');
+            //redirect('/');
         }
         if ($this->Staff) {
             admin_redirect('sales');
         }
-        if ($id && !$pdf) {
+        //order tracking
+       $action = $this->input->get('action');
+       
+       if($action == 'tracking') {
+        $order = $this->shop_model->getOrder(['id' => $id, 'hash' => $hash]);
+        $this->cart->destroy();
+        $this->data['order'] = $order;
+        $this->page_construct('pages/order_tracking', $this->data);
+       }
+        else if ($id && !$pdf) {
             if ($order = $this->shop_model->getOrder(['id' => $id, 'hash' => $hash])) {
                 $this->load->library('inv_qrcode');
                 $this->data['inv'] = $order;
@@ -1071,15 +1239,251 @@ class Shop extends MY_Shop_Controller
             $this->page_construct('pages/orders', $this->data);
         }
     }
-
+    public function track_order($id = null, $hash = null, $pdf = null, $buffer_save = null)
+    {
+        $order_number=$this->input->post('order_number'); 
+        $id= $order_number; 
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['page_title'] = lang('Order_Tracking');
+        if(!empty($id)){ 
+            $order = $this->shop_model->getOrderByID(['id' => $id, 'hash' => $hash]); 
+            // $this->cart->destroy(); 
+            $this->data['order'] = $order;
+            $this->data['order_number'] = $order_number;
+        }
+        $this->page_construct('pages/track_orders', $this->data); 
+        
+    }
     public function contact_us()
     {
+        echo '
+        <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <title>Avnzor</title>
+                    <script type="application/ld+json">
+                    {
+                    "@context": "https://schema.org",
+                    "@type": "Organization",
+                    "name": "Avnzor Establishment",
+                    "url": "https://www.avnzor.com",
+                    "logo": "https://avnzor.com/cdn/shop/files/logo.svg",
+                    "parentOrganization": {
+                        "@type": "Organization",
+                        "name": "Avenzur",
+                        "url": "https://www.avenzur.com"
+                    }
+                    }
+                    </script>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    
+                    <style>
+                        body {
+                            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                            background-color: #ffffff;
+                            color: #1a1a1a;
+                            margin: 0;
+                            padding: 40px 20px;
+                        }
 
-        if (!empty($_POST['formSubmitted'])) {
+                        .container {
+                            max-width: 1200px;
+                            margin: 0 auto;
+                        }
+
+                        h2.section-title {
+                            text-align: center;
+                            font-size: 2rem;
+                            color: #0d1b3e;
+                            margin-bottom: 40px;
+                            font-weight: 500;
+                        }
+
+                        .contact-grid {
+                            display: flex;
+                            gap: 20px;
+                            flex-wrap: wrap;
+                        }
+
+                        .card {
+                            background-color: #f8f9fa;
+                            border-radius: 12px;
+                            padding: 40px;
+                            flex: 1;
+                            min-width: 300px;
+                            text-align: center;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                        }
+
+                        .icon {
+                            width: 32px;
+                            height: 32px;
+                            margin-bottom: 15px;
+                            color: #333;
+                        }
+
+                        h3 {
+                            font-size: 1.5rem;
+                            margin-bottom: 15px;
+                            color: #1a1a1a;
+                            font-weight: 500;
+                        }
+
+                        p {
+                            margin: 5px 0;
+                            line-height: 1.6;
+                            color: #444;
+                            font-size: 0.95rem;
+                        }
+
+                        .label {
+                            font-weight: 700;
+                            color: #000;
+                        }
+
+                        a {
+                            color: #003399;
+                            text-decoration: underline;
+                        }
+
+                        .direction-link {
+                            font-weight: bold;
+                            display: inline-block;
+                            margin: 10px 0;
+                        }
+
+                        @media (max-width: 768px) {
+                            .contact-grid {
+                                flex-direction: column;
+                            }
+                        }
+
+                        .avenzur-banner {
+                font-family: Helvetica, Arial, sans-serif;
+                background: #ffffff;
+                border: 1px solid #e1e8ed;
+                padding: 30px;
+                border-radius: 12px;
+                max-width: 900px;
+                margin: 20px auto;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 30px;
+            }
+
+            .banner-text {
+                flex: 2;
+                line-height: 1.7;
+                color: #2c3e50;
+            }
+
+            .banner-title {
+                color: #1a73e8;
+                font-weight: 700;
+                font-size: 1.1rem;
+                margin-bottom: 10px;
+                display: block;
+            }
+
+            .cta-container {
+                flex: 1;
+                text-align: right;
+            }
+
+            .btn-avnzor {
+                background-color: #1a73e8;
+                color: white;
+                padding: 14px 24px;
+                text-decoration: none;
+                border-radius: 6px;
+                font-weight: 600;
+                display: inline-block;
+                transition: background 0.3s ease;
+                white-space: nowrap;
+            }
+
+            .btn-avnzor:hover {
+                background-color: #1557b0;
+            }
+
+            @media (max-width: 768px) {
+                .avenzur-banner {
+                    flex-direction: column;
+                    text-align: center;
+                    padding: 20px;
+                }
+                .cta-container {
+                    text-align: center;
+                    width: 100%;
+                }
+                .btn-avnzor {
+                    width: 100%;
+                    box-sizing: border-box;
+                }
+            }
+                    </style>
+                </head>
+                <body>
+                <div class="avenzur-banner">
+            <div class="banner-text">
+                <span class="banner-title">A Strategic Brand Evolution</span>
+                <p>
+                    In January 2026, <strong>Avenzur</strong> strategically evolved its consumer platform by launching 
+                    <strong>Avnzor.com</strong>. This transition establishes a unique identity, distinguishing our 
+                    premium wellness offerings from unrelated entities.
+                </p>
+            </div>
+            
+            <div class="cta-container">
+                <a href="https://avnzor.com" class="btn-avnzor">Visit Avnzor.com</a>
+            </div>
+        </div>
+        <div class="container">
+        
+            <h2 class="section-title">Contact</h2>
+
+            <div class="contact-grid">
+                <div class="card">
+                    <div class="icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                    </div>
+                    <h3>Talk to support</h3>
+                    <p>Email: <a href="mailto:support@avnzor.com">support@avnzor.com</a></p>
+                    <p>Phone: <a href="tel:+966535922118">+966 53 592 2118</a></p>
+                    <p style="margin-top: 15px; color: #666;">Sunday – Thursday, 9:00 AM – 6:00 PM (AST)</p>
+                </div>
+
+                <div class="card">
+                    <div class="icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    </div>
+                    <h3>Business location</h3>
+                    <p><span class="label">Avnzor Establishment:</span></p>
+                    <p>RP58+2GG, Qurtubah, Riyadh 13244</p>
+                    <p>Business Gate Building C20 - Office B2, Riyadh 13244, Saudi Arabia.</p>
+                    <p><a href="https://share.google/blW40AnJgLFftEXmY" class="direction-link">Show Direction</a></p>
+                    <p style="margin-top: 10px;"><span class="label">Warehouse:</span> 8360 قريه ال زايد, حي المشاعل, RNMA2470، 2470, Riyadh 14328</p>
+                </div>
+            </div>
+        </div>
+
+        </body>
+        </html>';
+
+        /*if (!empty($_POST['formSubmitted'])) {
             if (
                 $this->shop_model->addContactUsRecord([
                     'user_id' => $this->session->userdata('user_id') ? $this->session->userdata('user_id') : null,
-                    'type' => $_POST['type'],
+                    //'type' => $_POST['type'],
+                    'type' => 'Inquiry',
+                    'name' => $_POST['name'],
+                    'email' => $_POST['email'],
+                    'phone' => $_POST['phone'],
                     'content' => $_POST['content']
                 ])
             )
@@ -1092,7 +1496,7 @@ class Shop extends MY_Shop_Controller
         $this->data['title'] = "Contact Us";
         $this->data['all_categories'] = $this->shop_model->getAllCategories();
         $this->page_construct('pages/contact_us', $this->data);
-        $this->session->unset_userdata('success_message');
+        $this->session->unset_userdata('success_message');*/
     }
 
     // Display Page
@@ -1124,7 +1528,7 @@ class Shop extends MY_Shop_Controller
         } else {
             $page = $this->shop_model->getBlogBySlug($slug);
             if (!$page) {
-                redirect('notify/error_404');
+                redirect('/');
             }
             $this->data['page'] = $page;
             $this->data['page_title'] = $page->title;
@@ -1144,8 +1548,34 @@ class Shop extends MY_Shop_Controller
     // Display Page
     public function product($slug)
     {
-
+        $this->load->admin_model('seo_model');
+        $this->load->admin_model('inventory_model');
         $product = $this->shop_model->getProductBySlug($slug);
+
+       $new_stock = $this->inventory_model->get_current_stock($product->id, 'null');
+       $onhold_stock = $this->inventory_model->get_onhold_stock($product->id);
+       $new_quantity = $new_stock - $onhold_stock;
+       $product->quantity = $new_quantity;
+
+        $warehouse_quantities = $this->shop_model->getProductQuantitiesInWarehouses($product->id);
+        foreach ($warehouse_quantities as $wh_quantity){
+            if(($wh_quantity->warehouse_id == '7' && $wh_quantity->quantity > 0 && $product->id != 3)){
+                //$virtual_pharmacy_items += $wh_quantity->quantity;
+                $product->global = 1;
+            }
+
+            // remove the below block after eid
+            // if(($wh_quantity->warehouse_id == '6' && $wh_quantity->quantity > 0 && $product->id != 3)){
+                        
+            //     $product->global = 1;
+            // }
+
+            // remove the below block after eid
+            // if(($wh_quantity->warehouse_id == '1' && $wh_quantity->quantity > 0 && $product->id != 3)){
+                
+            //     $product->global = 1;
+            // }
+        }
 
         if (!$slug || !$product) {
             $this->session->set_flashdata('error', lang('product_not_found'));
@@ -1156,6 +1586,8 @@ class Shop extends MY_Shop_Controller
             $this->data['combo_items'] = $this->shop_model->getProductComboItems($product->id);
         }
         $this->shop_model->updateProductViews($product->id, $product->views);
+
+        $product->promotion = $this->sma->isPromo($product) ? 1 : 0;
 
         if ($product->tax_method == '1' && $product->taxPercentage > 0) { // tax_method = 0 means inclusiveTax
             $productTaxPercent = $product->taxPercentage;
@@ -1171,12 +1603,16 @@ class Shop extends MY_Shop_Controller
             $product->price = $productPrice + $productTaxAmount;
         }
 
+        $this->site->logVisitor();
+
         $this->data['product'] = $product;
         $this->data['other_products'] = $this->shop_model->getOtherProducts($product->id, $product->category_id, $product->brand);
         $this->data['unit'] = $this->site->getUnitByID($product->unit);
         $this->data['brand'] = $this->site->getBrandByID($product->brand);
         $this->data['images'] = $this->shop_model->getProductPhotos($product->id);
         $this->data['category'] = $this->site->getCategoryByID($product->category_id);
+        $this->data['customer_also_viewed'] = $this->shop_model->getCustomerAlsoViewed($product->category_id);
+        $this->data['customers_also_bought'] = $this->shop_model->getCustomersAlsoBought($product->id);
         $this->data['subcategory'] = $product->subcategory_id ? $this->site->getCategoryByID($product->subcategory_id) : null;
         $this->data['tax_rate'] = $product->tax_rate ? $this->site->getTaxRateByID($product->tax_rate) : null;
         $this->data['warehouse'] = $this->shop_model->getAllWarehouseWithPQ($product->id);
@@ -1186,6 +1622,10 @@ class Shop extends MY_Shop_Controller
         $this->data['page_title'] = $product->code . ' - ' . $product->name;
         $this->data['all_categories'] = $this->shop_model->getAllCategories();
         $this->data['page_desc'] = character_limiter(strip_tags($product->product_details), 160);
+        $this->data['seoSetting'] = $this->seo_model->getSeoSettings(); 
+        $this->data['new_stock'] = $new_stock;
+        $this->data['onhold_stock'] = $onhold_stock;
+        $this->data['new_quantity'] = $new_quantity;
         $this->page_construct('pages/view_product', $this->data);
     }
 
@@ -1300,22 +1740,29 @@ class Shop extends MY_Shop_Controller
 
     public function bestsellers()
     {
+        $data['filters'] = [
+            'min_price' => $this->input->get('min_price'),
+            'max_price' =>  $this->input->get('max_price'),
+            'brands' =>  $this->input->get('brands'),
+        ];
         $this->data['all_categories'] = $this->shop_model->getAllCategories();
         $this->data['location'] = $this->shop_model->getProductLocation();
-        $this->data['best_sellers'] = $this->shop_model->getBestSellers(100);
-
+        $this->data['best_sellers'] = $this->shop_model->getBestSellers(100, true, $data['filters']);
+        $this->data['page_title'] = 'Best Sellers';
+        
+        
         $this->page_construct('pages/best_sellers', $this->data);
     }
 
     // Products,  categories and brands page
     public function products($category_slug = null, $subcategory_slug = null, $brand_slug = null, $promo = null)
     {
-
         $this->session->set_userdata('requested_page', $this->uri->uri_string());
+        $this->site->logVisitor();
+
         if ($this->input->get('category')) {
             $category_slug = $this->input->get('category', true);
         }
-
         if ($this->input->get('brand')) {
             $brand_slug = $this->input->get('brand', true);
         }
@@ -1325,7 +1772,6 @@ class Shop extends MY_Shop_Controller
         if ($this->input->get('special_product') && $this->input->get('special_product') == 'yes') {
             $special_product = true;
         }
-
         if ($category_slug != null) {
             $this->data['featureImage'] = $this->shop_model->getCategoryBySlug($category_slug);
         }
@@ -1339,8 +1785,9 @@ class Shop extends MY_Shop_Controller
             'promo' => $promo,
             'special_product' => $special_product,
             'sorting' => $reset ? null : $this->input->get('sorting'),
-            'min_price' => $reset ? null : $this->input->get('min_price'),
-            'max_price' => $reset ? null : $this->input->get('max_price'),
+            'min_price' => $this->input->get('min_price'),
+            'max_price' =>  $this->input->get('max_price'),
+            'brands' =>  $this->input->get('brands'),
             'in_stock' => $reset ? null : $this->input->get('in_stock'),
             'page' => $this->input->get('page') ? $this->input->get('page', true) : 1,
         ];
@@ -1350,13 +1797,26 @@ class Shop extends MY_Shop_Controller
         $this->data['category_slug'] = $category_slug;
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['page_title'] = (!empty($filters['category']) ? $filters['category']->name : (!empty($filters['brand']) ? $filters['brand']->name : lang('products'))) . ' - ' . $this->shop_settings->shop_name;
-        $this->data['page_title2'] = (!empty($filters['category']) ? $filters['category']->name : (!empty($filters['brand']) ? $filters['brand']->name : lang('products')));
+        if ($this->input->get('promo') && $this->input->get('promo') == 'yes') {
+            $this->data['page_title2'] = 'Promotions';
+            $this->data['promo_banner'] = true;
+        }else if(isset($filters['category']) && $filters['category']->id == 25){
+            $this->data['suppliment_banner'] = true;
+        }else{
+            $this->data['page_title2'] = (!empty($filters['category']) ? $filters['category']->name : (!empty($filters['brand']) ? $filters['brand']->name : lang('products')));
+        }
+        if($brand_slug == 'honstHonst') {
+            $this->data['honst_banner'] = true;
+        }
+        // $this->data['catBrands'] = $this->shop_model->getBrandsByCategoy($filters['category']->id);
+
         $this->data['page_desc'] = !empty($filters['category']) ? $filters['category']->description : (!empty($filters['brand']) ? $filters['brand']->description : $this->shop_settings->products_description);
         $this->data['location'] = $this->shop_model->getProductLocation();
         if ($this->data == 'Saudi Arabia') {
             echo "Test";
 
         }
+        // echo "<pre>"; print_r($this->data); exit;
         $this->page_construct('pages/products', $this->data);
     }
 
@@ -1424,6 +1884,9 @@ class Shop extends MY_Shop_Controller
     public function search()
     {
         $filters = $this->input->post('filters') ? $this->input->post('filters', true) : [];
+        $filters['min_price'] = $this->input->get('min_price');
+        $filters['max_price'] =  $this->input->get('max_price');
+        $filters['brands'] =  $this->input->get('brands');
         $limit = 60;
         $total_rows = $this->shop_model->getProductsCount($filters);
         $filters['limit'] = $limit;
@@ -1440,20 +1903,23 @@ class Shop extends MY_Shop_Controller
                 } else {
                     $value['price'] = $this->sma->setCustomerGroupPrice($value['price'], $this->customer_group);
                     $value['formated_price'] = $this->sma->convertMoney($value['price']);
-                    $value['promo_price'] = $this->sma->isPromo($value) ? $value['promo_price'] : 0;
+                    $value['promo_price'] = $this->sma->isPromo($value) ? $value['promo_price'] : $value['formated_price'];
                     $value['formated_promo_price'] = $this->sma->convertMoney($value['promo_price']);
                     $value['special_price'] = isset($value['special_price']) && !empty($value['special_price']) ? $this->sma->setCustomerGroupPrice($value['special_price'], $this->customer_group) : 0;
                     $value['formated_special_price'] = $this->sma->convertMoney($value['special_price']);
                 }
+
+                $value['promotion'] = $this->sma->isPromo($value) ? 1 : null;
             }
 
             $pagination = pagination('shop/products', $total_rows, $limit);
 
-            if (isset($_GET['promo']) && !empty($_GET['promo'])) {
+            //if (isset($_GET['promo']) && !empty($_GET['promo'])) {
+            if(isset($filters['promo']) && $filters['promo'] == 1)  {
                 $pagination = str_replace('?page=', '?promo=yes&page=', $pagination);
             }
 
-            if (isset($_GET['special_product']) && !empty($_GET['special_product'])) {
+            if (isset($filters['special_product']) && !empty($filters['special_product'])) {
                 $pagination = str_replace('?page=', '?special_product=yes&page=', $pagination);
             }
 
@@ -1512,6 +1978,133 @@ class Shop extends MY_Shop_Controller
         $this->page_construct('pages/wishlist', $this->data);
     }
 
+    public function getArabicToEnglish($term) {
+        // Set API endpoint and your API key
+        $apiKey = 'wg_42c9daf242af8316a7b7d92e5a2aa0e55';
+        $apiEndpoint = 'https://api.weglot.com/translate?api_key='.$apiKey;
+
+        // Prepare the JSON payload
+        // "الصفحة الرئيسية"
+        $data = [
+            "l_from" => "ar",
+            "l_to" => "en",
+            "request_url" => "https://www.avenzur.com/",
+            "words" => [
+                ["w" => $term, "t" => 1]
+            ]
+        ];
+
+        // Convert the payload to JSON format
+        $jsonData = json_encode($data);
+
+        // Initialize cURL session
+        $ch = curl_init($apiEndpoint);
+
+        // Set cURL options
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Content-Length: ' . strlen($jsonData)
+        ]);
+
+        // Execute the POST request
+        $response = curl_exec($ch);
+
+        // Check for errors
+        if (curl_errno($ch)) {
+            echo 'Error:' . curl_error($ch);
+        } else {
+            // Decode the response
+            $responseData = json_decode($response, true);
+            return $responseData;
+        }
+        // Close the cURL session
+        curl_close($ch);
+    }
+
+    public function getEnglishToArabic($term) {
+        // Set API endpoint and your API key
+        $apiKey = 'wg_42c9daf242af8316a7b7d92e5a2aa0e55';
+        $apiEndpoint = 'https://api.weglot.com/translate?api_key=' . $apiKey;
+    
+        // Prepare the JSON payload
+        $data = [
+            "l_to" => "ar",
+            "l_from" => "en",
+            "request_url" => "https://www.avenzur.com/",
+            "words" => [
+                ["w" => "$term", "t" => 1]
+            ]
+        ];
+    
+        // Convert the payload to JSON format
+        $jsonData = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    
+        // Initialize cURL session
+        $ch = curl_init();
+    
+        // Set cURL options
+        curl_setopt_array($ch, [
+            CURLOPT_URL => $apiEndpoint,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => $jsonData,
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/json',
+                'Content-Length: ' . strlen($jsonData)
+            ],
+        ]);
+    
+        // Execute the POST request
+        $response = curl_exec($ch);
+    
+        // Check for errors
+        if (curl_errno($ch)) {
+            echo 'Error:' . curl_error($ch);
+            curl_close($ch);
+            return null;
+        } else {
+            // Decode the response
+            $responseData = json_decode($response, true);
+            curl_close($ch);
+    
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                echo 'JSON decode error: ' . json_last_error_msg();
+                return "JSON decode error.";
+            }
+    
+            // Debug: Print the decoded response
+            // var_dump($responseData['to_words'], $term);
+    
+            if (isset($responseData['to_words']) && is_array($responseData['to_words'])) {
+                return $responseData['to_words'];
+            } else {
+                // Handle the case where the response doesn't have the expected data
+                echo "Unexpected response format.";
+                return "Translation error or unexpected response format.";
+            }
+        }
+    }
+
+    function containsArabic($text) {
+        // Regular expression pattern to match Arabic characters
+        $pattern = '/[\x{0600}-\x{06FF}\x{0750}-\x{077F}\x{08A0}-\x{08FF}\x{FB50}-\x{FDFF}\x{FE70}-\x{FEFF}\x{10E60}-\x{10E7F}]/u';
+        
+        // Check if the text matches the pattern
+        if (preg_match($pattern, $text)) {
+            return true; // The text contains Arabic characters
+        } else {
+            return false; // The text does not contain Arabic characters
+        }
+    }
+    
     public function suggestions($pos = 0)
     {
         $term = $this->input->get('term', true);
@@ -1525,13 +2118,23 @@ class Shop extends MY_Shop_Controller
 
         $analyzed = $this->sma->analyze_term($term);
         $sr = $analyzed['term'];
-        //$option_id = $analyzed['option_id'];
+        $convertToAr = false;
+        // if ($this->containsArabic($sr)) {
+        //     $convertToAr = true;
+        //     $convertedData = $this->getArabicToEnglish($sr);
+        //     $sr = isset($convertedData['to_words'][0]) ? $convertedData['to_words'][0] : "";
+        // }
 
+        //$option_id = $analyzed['option_id'];
         $warehouse = $this->site->getWarehouseByID($warehouse_id);
         $customer_group = "Retail"; //$this->site->getCustomerGroupByID($customer->customer_group_id);
         $rows = $this->shop_model->getProductNames($sr, $warehouse_id, $category_id, $pos);
         $currencies = $this->site->getAllCurrencies();
 
+        $arabic_lang = false;
+        if ($this->containsArabic($sr)) {
+            $arabic_lang = true;
+        }
 
         if ($rows) {
             $r = 0;
@@ -1539,6 +2142,12 @@ class Shop extends MY_Shop_Controller
 
                 $c = uniqid(mt_rand(), true);
                 unset($row->cost, $row->details, $row->product_details, $row->barcode_symbology, $row->cf1, $row->cf2, $row->cf3, $row->cf4, $row->cf5, $row->cf6, $row->supplier1price, $row->supplier2price, $row->cfsupplier3price, $row->supplier4price, $row->supplier5price, $row->supplier1, $row->supplier2, $row->supplier3, $row->supplier4, $row->supplier5, $row->supplier1_part_no, $row->supplier2_part_no, $row->supplier3_part_no, $row->supplier4_part_no, $row->supplier5_part_no);
+                
+                // if ($convertToAr) {
+                //     $convertedData = $this->getEnglishToArabic($row->name);
+                //     $row->name = isset($convertedData[0]) ? $convertedData[0] : "";
+                // }
+
                 $option = false;
                 $row->quantity = 0;
                 $row->item_tax_method = $row->tax_method;
@@ -1547,7 +2156,7 @@ class Shop extends MY_Shop_Controller
                 $row->serial = '';
                 $options = $this->shop_model->getProductOptions($row->id, $warehouse_id);
 
-
+                $original_price = $row->price;
                 if ($options) {
                     $opt = $option_id && $r == 0 ? $this->shop_model->getProductOptionByID($option_id) : $options[0];
                     if (!$option_id || $r > 0) {
@@ -1599,9 +2208,32 @@ class Shop extends MY_Shop_Controller
                 }
                 $units = $this->site->getUnitsByBUID($row->base_unit);
                 $tax_rate = $this->site->getTaxRateByID($row->tax_rate);
+
+                // New tax block
+
+                if ($row->tax_method == '1' && $tax_rate->rate > 0) { // tax_method = 0 means inclusiveTax
+                    $productTaxPercent = $tax_rate->rate;
+        
+                    if ($row->promotion == 1) {
+                        $productPromoPrice = $row->promo_price;
+                        $promoProductTaxAmount = $productPromoPrice * ($productTaxPercent / 100);
+                        $row->promo_price = $productPromoPrice + $promoProductTaxAmount;
+                    }
+        
+                    $productPrice = $row->price;
+                    $productTaxAmount = $productPrice * ($productTaxPercent / 100);
+                    $row->price = $productPrice + $productTaxAmount;
+
+                    $original_price_tax = $original_price * ($productTaxPercent / 100);
+                    $original_price = $original_price + $original_price_tax;
+                }
+
+                // New tax block end 
+
                 $brand = $this->site->getBrandByID($row->brand);
                 $row->brand_name = $brand->name;
-                $pr[] = ['id' => sha1($c . $r), 'item_id' => $row->id, 'image' => $row->image, 'label' => $row->name, 'category' => $row->category_id,
+                $label_name = ($arabic_lang) ? $row->name_ar : $row->name;
+                $pr[] = ['id' => sha1($c . $r), 'item_id' => $row->id, 'original_price' => $original_price, 'image' => $row->image, 'label' => $label_name, 'category' => $row->category_id,
                     'row' => $row, 'combo_items' => $combo_items, 'tax_rate' => $tax_rate, 'units' => $units, 'options' => $options, 'plink' => base_url() . 'product/' . $row->slug];
                 $r++;
             }

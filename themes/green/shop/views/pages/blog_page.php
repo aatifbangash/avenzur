@@ -7,13 +7,13 @@
 				<div class="row">
 				    <h2 style="text-align:center !important; padding:20px 20px ;">Blogs</h2>
                     <?php foreach($blogs as $post) { ?>
-                        <div class="col-md-4">
-                            <div class="card" style="">
+                        <div class="col-md-4" style="margin-bottom: 15px;">
+                            <div class="card">
                                 <img class="card-img-top" src="<?php echo site_url('assets/uploads/'.$post['image']); ?>" >
                                  <div class="card-body">
-                                    <h5 class="card-title"><?php echo $post['title']; ?></h5>
+                                    <h5 class="card-title" style="font-weight: bold;"><?php echo $post['title']; ?></h5>
                                     <p class="card-text"><?php echo $post['description']; ?></p>
-                                        <p class="card-text"><?php echo $post['category']; ?></p>
+                                        <p class="card-text" style="color: #472362;"><?php echo $post['category']; ?></p>
                                         <br>
                                    
                                         

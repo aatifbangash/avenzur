@@ -59,7 +59,7 @@ $autoload['packages'] = array();
 |   $autoload['libraries'] = array('user_agent' => 'ua');
 */
 
-$autoload['libraries'] = array('session', 'database', 'parser', 'sma','FunctionsCore','LedgerTree');
+$autoload['libraries'] = array('session', 'database', 'parser', 'sma','FunctionsCore','LedgerTree','pagination');
 
 
 /*

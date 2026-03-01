@@ -11,13 +11,16 @@ $route['shop']                   = 'main';
 $route['shop/search']            = 'shop/shop/search';
 $route['shop/products']          = 'shop/shop/products';
 $route['product/(:any)']         = 'shop/shop/product/$1';
+$route['blog/(:any)']            = 'shop/shop/blog/$1';
 $route['category/(:any)']        = 'shop/shop/products/$1';
 $route['brand/(:any)']           = 'shop/shop/products/0/0/$1';
+
 $route['category/(:any)/(:any)'] = 'shop/shop/products/$1/$2';
 $route['pay/process_payment']    = 'pay/process_payment';
 $route['pay/test_directpay_post']  = 'pay/test_directpay_post';
 
-$route['sitemapold\.xml']           = "Sitemap/index";
+//$route['sitemapold\.xml']           = "Sitemap/index";
+$route['sitemap.xml']        = "Sitemap/index";
 
 // Page route
 $route['page/contact-us'] = 'shop/shop/contact_us';
@@ -28,6 +31,7 @@ $route['cart']               = 'shop/cart_ajax';
 $route['cart/(:any)']        = 'shop/cart_ajax/$1';
 $route['cart/(:any)/(:any)'] = 'shop/cart_ajax/$1/$2';
 $route['apply_coupon']       = 'shop/cart_ajax/apply_coupon';
+$route['remove_coupon']       = 'shop/cart_ajax/remove_coupon';
 
 // Misc routes
 $route['shop/(:any)']               = 'shop/shop/$1';
@@ -52,12 +56,15 @@ $route['profile/(:any)']         = 'main/profile/$1';
 $route['forgot_password']        = 'main/forgot_password';
 $route['activate/(:any)/(:any)'] = 'main/activate/$1/$2';
 $route['reset_password/(:any)']  = 'main/reset_password/$1';
+$route['notify_me']              = 'main/notify_me';
 
 // Admin area routes
 $route['admin']                      = 'admin/welcome';
 $route['admin/users']                = 'admin/auth/users';
 $route['admin/users/create_user']    = 'admin/auth/create_user';
 $route['admin/users/profile/(:num)'] = 'admin/auth/profile/$1';
+$route['admin/avzlogin']                = 'admin/avzAdmin/index';
+$route['admin/avzlogin/(:any)']         = 'admin/avzAdmin/index/$1';
 $route['admin/login']                = 'admin/auth/login';
 $route['admin/login/(:any)']         = 'admin/auth/login/$1';
 $route['admin/logout']               = 'admin/auth/logout';
@@ -70,4 +77,40 @@ $route['admin/purchases/(:num)'] = 'admin/purchases/index/$1';
 $route['admin/quotes/(:num)']    = 'admin/quotes/index/$1';
 $route['admin/returns/(:num)']   = 'admin/returns/index/$1';
 $route['admin/returns_supplier/(:num)']   = 'admin/returns_supplier/index/$1';
-$route['admin/sales/qty_onhold_requests']     = 'admin/sales/qty_onhold_requests';
+$route['admin/sales/qty_onhold_requests']     = 'admin/sales/qty_onhold_requests'; 
+$route['admin/product_image/remove_image/(:num)'] = 'admin/product_image/remove_image/$1';
+$route['admin/entries/(:num)']   = 'admin/entries/index/$1';
+
+//custom script
+$route['admin/customscript/(:num)']   = 'admin/customscript/index/$1';
+
+//courier call back urls
+$route['courier/stc/callback'] = 'shop/courier/stc_callback';
+$route['api/update_ngrok_url'] = 'api/v1/ngrok/index';
+
+// Budget API routes
+$route['api/v1/budgets/allocate'] = 'api/v1/budgets/allocate';
+$route['api/v1/budgets/allocated'] = 'api/v1/budgets/allocated';
+$route['api/v1/budgets/tracking'] = 'api/v1/budgets/tracking';
+$route['api/v1/budgets/forecast'] = 'api/v1/budgets/forecast';
+$route['api/v1/budgets/alerts'] = 'api/v1/budgets/alerts';
+$route['api/v1/budgets/alerts/configure'] = 'api/v1/budgets/alerts/configure';
+$route['api/v1/budgets/alerts/(:num)/acknowledge'] = 'api/v1/budgets/alerts/$1/acknowledge';
+
+// Cost Center API routes
+$route['api/v1/cost-center/pharmacies'] = 'api/v1/cost_center/pharmacies';
+$route['api/v1/cost-center/pharmacy-detail/(:num)'] = 'api/v1/cost_center/pharmacy_detail/$1';
+$route['api/v1/cost-center/branches'] = 'api/v1/cost_center/branches';
+$route['api/v1/cost-center/summary'] = 'api/v1/cost_center/summary';
+
+// Cost Center Admin routes
+$route['admin/cost_center/pharmacy/(:num)'] = 'admin/cost_center/pharmacy/$1';
+$route['admin/cost_center/branch/(:num)'] = 'admin/cost_center/branch/$1';
+$route['admin/cost_center'] = 'admin/cost_center/dashboard';
+$route['admin/cost_center/dashboard'] = 'admin/cost_center/dashboard';
+
+// Catch-all route for admin modules (must be last)
+$route['admin/(:any)/(:any)/(:any)'] = 'admin/$1/$2/$3';
+$route['admin/(:any)/(:any)'] = 'admin/$1/$2';
+$route['admin/(:any)'] = 'admin/$1/index';
+

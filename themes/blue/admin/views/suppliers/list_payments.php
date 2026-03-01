@@ -36,6 +36,7 @@
                                 <th><?php echo $this->lang->line('Supplier') ?></th>
                                 <th><?php echo $this->lang->line('Date') ?></th>
                                 <th><?php echo $this->lang->line('Payment Amount') ?></th>
+                                <th><?php echo $this->lang->line('Payment Details') ?></th>
                                 <th><?php echo $this->lang->line('Note') ?></th>
                                 <th><?php echo $this->lang->line('Actions') ?></th>
                             </tr>
@@ -51,9 +52,31 @@
                                                 <td><?= $payment->reference_no; ?></td>
                                                 <td><?= $payment->company; ?></td>
                                                 <td><?= $payment->date; ?></td>
-                                                <td><?= $payment->amount; ?></td>
+                                                <td><strong><?= number_format($payment->amount, 2); ?></strong></td>
+                                                <td>
+                                                    <?php 
+                                                    // Check if this is a settlement payment by looking at the note
+                                                    if (strpos($payment->note, 'Settlement: Cash') !== false) {
+                                                        // Extract settlement details from note
+                                                        preg_match('/Settlement: Cash ([0-9.]+), Advance ([0-9.]+)/', $payment->note, $matches);
+                                                        if (count($matches) >= 3) {
+                                                            $cash_amount = $matches[1];
+                                                            $advance_amount = $matches[2];
+                                                            echo '<div style="font-size: 10px;">';
+                                                            echo '<div style="margin-bottom:2px;"><span class="badge badge-success">Std.Payment: ' . number_format($cash_amount, 2) . '</span></div>';
+                                                            echo '<div><span class="badge badge-info">From Advance: ' . number_format($advance_amount, 2) . '</span></div>';
+                                                            echo '</div>';
+                                                        } else {
+                                                            echo '<span class="badge badge-primary">Standard Payment</span>';
+                                                        }
+                                                    } else {
+                                                        echo '<span class="badge badge-primary">Standard Payment</span>';
+                                                    }
+                                                    ?>
+                                                </td>
                                                 <td><?= $payment->note; ?></td>
-                                                <td><a href="<?php echo admin_url('suppliers/edit_payment/' . $payment->id); ?>" class="tip" title="Edit Payment"><i class="fa fa-edit"></i></a></td>
+                                                <!--<td><a href="<?php echo admin_url('suppliers/edit_payment/' . $payment->id); ?>" class="tip" title="Edit Payment"><i class="fa fa-edit"></i></a></td>-->
+                                                <td><a href="<?php echo admin_url('suppliers/view_payment/' . $payment->id); ?>" class="tip" title="View Payment"><i class="fa fa-eye"></i></a></td>
                                             </tr>
                                         <?php
                                     }

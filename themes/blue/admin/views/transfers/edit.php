@@ -40,6 +40,7 @@
                     $('#add_item').focus();
                     return false;
                 }
+
                 $.ajax({
                     type: 'get',
                     url: '<?= admin_url('transfers/bch_suggestions'); ?>',
@@ -49,10 +50,32 @@
                         warehouse_id: $("#from_warehouse").val()
                     },
                     success: function (data) {
-                        $(this).removeClass('ui-autocomplete-loading');
-                        response(data);
+                        if(data[0].id != 0){
+                            $(this).removeClass('ui-autocomplete-loading');
+                            response(data);
+                        }else{
+                            $.ajax({
+                                type: 'get',
+                                url: '<?=admin_url('products/get_items_by_avz_code');?>',
+                                dataType: "json",
+                                data: {
+                                    term: request.term,
+                                    warehouse_id: $("#from_warehouse").val()
+                                },
+                                success: function (data) {
+                                    $(this).removeClass('ui-autocomplete-loading');
+                                    if(data){
+                                        add_transfer_item(data[0]);
+                                    }else{
+                                        bootbox.alert('No records found for this item code.');
+                                    }
+                                    
+                                }
+                            });
+                        }
                     }
                 });
+                
             },
             minLength: 1,
             autoFocus: false,
@@ -69,6 +92,7 @@
                             $('#add_item').focus();
                         });
                     }
+                    $(this).removeClass('ui-autocomplete-loading');
                     $(this).val('');
                 }
                 else if (ui.content.length == 1 && ui.content[0].id != 0) {
@@ -79,9 +103,10 @@
                 }
                 else if (ui.content.length == 1 && ui.content[0].id == 0) {
                     //audio_error.play();
-                    bootbox.alert('<?= lang('no_match_found') ?>', function () {
-                        $('#add_item').focus();
-                    });
+                    //bootbox.alert('<?= lang('no_match_found') ?>', function () {
+                    //    $('#add_item').focus();
+                    //});
+                    $(this).removeClass('ui-autocomplete-loading');
                     $(this).val('');
 
                 }
@@ -89,9 +114,11 @@
             select: function (event, ui) {
                 event.preventDefault();
                 if (ui.item.id !== 0) {
-                    var row = add_transfer_item(ui.item);
-                    if (row)
-                        $(this).val('');
+                    openPopup(ui.item);
+                    $(this).val('');
+                    //var row = add_transfer_item(ui.item);
+                    //if (row)
+                    //    $(this).val('');
                 } else {
                     //audio_error.play();
                     bootbox.alert('<?= lang('no_match_found') ?>');
@@ -148,7 +175,151 @@
          });*/
 
     });
+
+    function openPopup(selectedItem) {
+        // Assuming selectedItem has avz_item_code as part of its data
+        $.ajax({
+            type: 'get',
+            url: '<?= admin_url('products/get_avz_item_code_details'); ?>', // Adjust the URL as needed
+            dataType: "json",
+            data: {
+                item_id: selectedItem.item_id, // Send the unique item code
+                warehouse_id: $("#from_warehouse").val() // Optionally include warehouse ID if needed
+            },
+            success: function (data) {
+                $(this).removeClass('ui-autocomplete-loading');
+
+                // Populate the modal with the returned data
+                if (data && data.length > 0) {
+                    var modalBody = $('#itemModal .modal-body');
+                    modalBody.empty();
+
+                    // Loop through each item and create clickable entries in the modal
+                    var table = `
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Avz Code</th>
+                                    <th>Product</th>
+                                    <th>Supplier</th>
+                                    <th>Batch No</th>
+                                    <th>Expiry</th>
+                                    <th>Quantity</th>
+                                    <th>Locked</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemTableBody"></tbody>
+                        </table>
+                    `;
+
+                    // Append the table to the modal body
+                    modalBody.append(table);
+                    
+                    // Populate the table body with the data
+                    var count = 0;
+                    data.forEach(function (item) {
+                        count++;
+
+                        var avzItemCode = item.row.avz_item_code;
+                        var found = false;
+
+                        Object.keys(toitems).forEach(function (key) {
+                            if (toitems[key].row && toitems[key].row.avz_item_code === avzItemCode) {
+                                found = true;
+                            }
+                        });
+
+                        var tickOrCross = found ? '✔' : '✖';
+                        var row = `
+                            <tr style="cursor:pointer;" class="modal-item" tabindex="0" data-item-id="${item.row.avz_item_code}">
+                                <td>${count}</td>
+                                <td data-avzcode="${item.row.avz_item_code}">${item.row.avz_item_code}</td>
+                                <td data-product="${item.row.name}">${item.row.name}</td>
+                                <td data-supplier="${item.row.supplier}">${item.row.supplier}</td>
+                                <td data-batchno="${item.row.batchno}">${item.row.batchno}</td>
+                                <td data-expiry="${item.row.expiry}">${item.row.expiry}</td>
+                                <td data-quantity="${item.total_quantity}">${item.total_quantity}</td>
+                                <td>${tickOrCross}</td>
+                            </tr>
+                        `;
+                        $('#itemTableBody').append(row);
+                        $('#itemTableBody tr:last-child').data('available', found);
+                    });
+
+                    // Show the modal
+                    $('#itemModal').modal('show');
+                    $('#itemTableBody').on('click', 'tr', function () {
+                        
+                        var clickedItemCode = $(this).data('item-id');
+                        var clickedItemExpiry = $(this).find('td[data-expiry]').data('expiry') || $(this).attr('data-expiry');
+                        var selectedItem = data.find(function (item) {
+                            return String(item.row.avz_item_code).trim() === String(clickedItemCode).trim();
+                        });
+
+                        var previousExpiryAvailable = data.find(function (item) {
+                            
+                            var itemExpiry = new Date(item.row.expiry); // Convert to Date object
+                            var clickedExpiry = new Date(clickedItemExpiry); // Convert clickedItemExpiry to Date object
+                            if(clickedExpiry > itemExpiry){
+                                return true;
+                            }
+                        });
+
+                        if(previousExpiryAvailable){
+                            bootbox.alert('Previous Expiry available for this item');
+                        }
+
+                        if (selectedItem) {
+                            $('#itemModal').modal('hide');
+                            var available = $(this).data('available');
+                            if(!available){
+                                add_transfer_item(selectedItem);
+                            }else{
+                                bootbox.alert('Row already added');
+                            }
+                        }else{
+                            console.log('Item not found');
+                        }
+                    });
+                    
+                } else {
+                    bootbox.alert('No records found for this item code.');
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('AJAX error:', error);
+                bootbox.alert('An error occurred while fetching the item details.');
+            }
+        });
+    }
+
+    function onSelectFromPopup(selectedRecord) {
+        $('#itemModal').modal('hide');
+
+        var row = add_transfer_item(selectedRecord);
+        if (row) {
+            // If the row was successfully added, you can do additional actions here
+            
+        }
+    }
 </script>
+
+<div class="modal fade" id="itemModal" tabindex="-1" role="dialog" aria-labelledby="itemModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="min-width:800px !important;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="itemModalLabel">Select an Item</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- The content will be dynamically generated here -->
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="box">
     <div class="box-header">
@@ -167,16 +338,13 @@
 
                 <div class="row">
                     <div class="col-lg-12">
-
-                <?php if ($Owner || $Admin) { ?>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <?= lang('date', 'todate'); ?>
-                                    <?php echo form_input('date', ($_POST['date'] ?? ''), 'class="form-control input-tip datetime" id="todate" required="required"'); ?>
-                                </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <?= lang('date', 'todate'); ?>
+                                <?php echo form_input('date', ($_POST['date'] ?? ''), 'class="form-control input-tip datetime" id="todate" required="required"'); ?>
                             </div>
-                        <?php
-                } ?>
+                        </div>
+                        
                         <div class="col-md-6">
                             <div class="form-group">
                                 <?= lang('reference_no', 'ref'); ?>
@@ -193,7 +361,7 @@
                                 <?php
                                 $wh[''] = '';
                                 foreach ($warehouses as $warehouse) {
-                                    $wh[$warehouse->id] = $warehouse->name;
+                                    $wh[$warehouse->id] = $warehouse->name.' ('.$warehouse->code.')';
                                 }
                                 // echo form_dropdown('to_warehouse', $wh, ($_POST['to_warehouse'] ?? $Settings->default_warehouse), 'id="to_warehouse"  class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('to_warehouse') . '" required="required" style="width:100%;" ');
                                 ?>  
@@ -206,7 +374,7 @@
                             <div class="form-group">
                                 <?= lang('status', 'tostatus'); ?>
                                 <?php
-                                 $post = ['save' => lang('save'), 'sent' => lang('sent'), 'approved' => lang('Approved'), 'completed' => lang('completed')];
+                                 $post = ['save' => lang('save'), 'completed' => lang('completed')];
                                  echo form_dropdown('status', $post, ($_POST['status'] ?? ''), 'id="tostatus" class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . '" required="required" style="width:100%;" ');
                                 ?>
                             </div>
@@ -218,19 +386,26 @@
                             <div class="form-group">
                                 <?= lang('status', 'tostatus'); ?>
                                 <?php
-                                 $post = ['save' => lang('save'), 'sent' => lang('sent')];
+                                 $post = ['save' => lang('save')];
                                  echo form_dropdown('status', $post, ($_POST['status'] ?? ''), 'id="tostatus" class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . '" required="required" style="width:100%;" ');
                                 ?>
                             </div>
                         </div>
                         <?php } ?>
 
-                    <?php if (!$GP['transfer_pharmacist'] && !$GP['transfer_warehouse_supervisor']) { ?>
+                    <?php if (!$GP['transfer_pharmacist'] && !$GP['transfer_warehouse_supervisor']) { 
+                        if($transfer->status == 'save'){
+                            $post = ['save' => lang('save'), 'sent' => lang('sent'), 'completed' => lang('completed')];
+                        }else if($transfer->status == 'sent'){
+                            $post = ['sent' => lang('sent'), 'completed' => lang('completed')];
+                        }
+
+                        ?>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <?= lang('status', 'tostatus'); ?>
                                 <?php
-                                 $post = ['save' => lang('save'), 'sent' => lang('sent'), 'completed' => lang('completed')];
+                                 //$post = ['save' => lang('save'), 'completed' => lang('completed')];
                                  echo form_dropdown('status', $post, ($_POST['status'] ?? ''), 'id="tostatus" class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . '" required="required" style="width:100%;" ');
                                 ?>
                             </div>
@@ -244,12 +419,12 @@
                             </div>
                         </div>
 
-                        <div class="col-md-6">
+                        <!--<div class="col-md-6">
                             <div class="form-group" style="margin-bottom:5px;">
                                 <?= lang('shipping', 'toshipping'); ?>
                                 <?php echo form_input('shipping', '', 'class="form-control input-tip" id="toshipping"'); ?>
                             </div>
-                        </div>
+                        </div>-->
 
                         <div class="col-md-6">
                             <div class="form-group">
@@ -312,7 +487,7 @@
                                         <thead>
                                         <tr>
                                             <th class="col-md-4"><?= lang('product') . ' (' . lang('code') . ' - ' . lang('name') . ')'; ?></th>
-                                            <th class="col-md-1">Serial No. </th>
+                                            
                                             <th class="col-md-1">Batch </th>
                                             <?php
                                             if ($Settings->product_expiry) {
@@ -320,8 +495,9 @@
                                             }
                                             ?>
                                             <th class="col-md-1"><?= lang('Sales Price'); ?></th>
+                                            <th class="col-md-1"><?= lang('Cost Price'); ?></th>
                                             <th class="col-md-1"><?= lang('quantity'); ?></th>
-                                            <th class="col-md-1"><?= lang('Actual Quantity'); ?></th>
+                                            <!-- <th class="col-md-1"><?= lang('Actual Quantity'); ?></th> -->
                                             <?php
                                             if ($Settings->tax1) {
                                                 echo '<th class="col-md-1">' . $this->lang->line('product_tax') . '</th>';

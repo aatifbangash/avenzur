@@ -85,6 +85,20 @@ class Settings_model extends CI_Model
         }
         return false;
     }
+    public function addSpeciality($data)
+    {
+        if ($this->db->insert('specialities', $data)) {
+            return true;
+        }
+        return false;
+    }
+    public function addTopic($data)
+    {
+        if ($this->db->insert('topics', $data)) {
+            return true;
+        }
+        return false;
+    }
 
     public function addCurrency($data)
     {
@@ -209,6 +223,20 @@ class Settings_model extends CI_Model
         }
         return false;
     }
+    public function deleteSpeciality($id)
+    {
+        if ($this->db->delete('specialities', ['id' => $id])) {
+            return true;
+        }
+        return false;
+    }
+    public function deleteTopic($id)
+    {
+        if ($this->db->delete('topics', ['id' => $id])) {
+            return true;
+        }
+        return false;
+    }
 
     public function deleteCurrency($id)
     {
@@ -230,6 +258,25 @@ class Settings_model extends CI_Model
     {
         if ($this->db->delete('expense_categories', ['id' => $id])) {
             return true;
+        }
+        return false;
+    }
+
+    public function getGroupByName($name)
+    {
+        $this->db->where('name', $name);
+        $query = $this->db->get('groups');
+        return $query->row();
+    }
+
+    public function getUserByGroupId($id)
+    {
+        $q = $this->db->get_where('users', ['group_id' => $id]);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
         }
         return false;
     }
@@ -407,6 +454,44 @@ class Settings_model extends CI_Model
         }
         return false;
     }
+    public function getSpecialityByID($id)
+    {
+        $q = $this->db->get_where('specialities', ['id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getSpecialityByCode($code)
+    {
+        $q = $this->db->get_where('specialities', ['code' => $code], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getTopicByID($id)
+    {
+        $q = $this->db->get_where('topics', ['id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getTopicByCode($code)
+    {
+        $q = $this->db->get_where('topics', ['code' => $code], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+
+
 
     public function getCurrencyByID($id)
     {
@@ -500,6 +585,31 @@ class Settings_model extends CI_Model
     {
         $this->db->where('parent_id', null)->or_where('parent_id', 0);
         $q = $this->db->get('categories');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
+    public function getParentSpecialities()
+    {
+        $this->db->where('parent_id', null)->or_where('parent_id', 0);
+        $q = $this->db->get('specialities');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+    public function getParentTopics()
+    {
+        $this->db->where('parent_id', null)->or_where('parent_id', 0);
+        $q = $this->db->get('topics');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
@@ -664,6 +774,21 @@ class Settings_model extends CI_Model
     public function updateCategory($id, $data = [])
     {
         if ($this->db->update('categories', $data, ['id' => $id])) {
+            return true;
+        }
+        return false;
+    }
+
+    public function updateSpeciality($id, $data = [])
+    {
+        if ($this->db->update('specialities', $data, ['id' => $id])) {
+            return true;
+        }
+        return false;
+    }
+    public function updateTopic($id, $data = [])
+    {
+        if ($this->db->update('topics', $data, ['id' => $id])) {
             return true;
         }
         return false;

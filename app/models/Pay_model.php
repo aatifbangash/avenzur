@@ -9,6 +9,14 @@ class Pay_model extends CI_Model
         parent::__construct();
     }
 
+    public function addReferrer($data)
+    {
+        if ($this->db->insert('referrer', $data)) {
+            return true;
+        }
+        return false;
+    }
+
     public function addPayment($data)
     {
         if ($this->db->insert('payments', $data)) {
@@ -84,6 +92,10 @@ class Pay_model extends CI_Model
         return $this->db->get_where('skrill', ['id' => 1])->row();
     }
 
+    public function updatePayment($id, $status, $note = null){
+        $this->db->update('sales', ['payment_status' => $status, 'note' => $note], ['id' => $id]);
+    }
+
     public function updateStatus($id, $status, $note = null)
     {
         $sale  = $this->getSaleByID($id);
@@ -93,15 +105,15 @@ class Pay_model extends CI_Model
         }
         $cost = [];
         if ($status == 'completed' && $status != $sale->sale_status) {
-            foreach ($items as $item) {
+            /*foreach ($items as $item) {
                 $items_array[] = (array) $item;
             }
-            $cost = $this->site->costing($items_array);
+            $cost = $this->site->costing($items_array);*/
         }
 
         if ($this->db->update('sales', ['sale_status' => $status, 'note' => $note], ['id' => $id])) {
             if ($status == 'completed' && $status != $sale->sale_status) {
-                foreach ($items as $item) {
+                /*foreach ($items as $item) {
                     $item = (array) $item;
                     if ($this->site->getProductByID($item['product_id'])) {
                         $item_costs = $this->site->item_costing($item);
@@ -114,7 +126,7 @@ class Pay_model extends CI_Model
                             }
                         }
                     }
-                }
+                }*/
             }
 
             // Deduct from balance quantity except for ecommerce sales

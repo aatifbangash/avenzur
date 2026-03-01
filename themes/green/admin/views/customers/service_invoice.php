@@ -36,7 +36,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <?= lang('date', 'podate'); ?>
-                                        <?php echo form_input('date', ($memo_data->date ?? ''), 'class="form-control input-tip date" id="podate"'); ?>
+                                        <?php echo form_input('date', ($memo_data->date ?? date("d/m/Y H:i")), 'class="form-control input-tip date" id="podate"'); ?>
                                     </div>
                                 </div>
                             <?php

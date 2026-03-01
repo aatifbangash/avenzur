@@ -157,21 +157,51 @@ class Sma
         return '0000-00-00 00:00:00';
     }
 
-    public function formatDecimal($number, $decimals = null)
+    public function formatDecimalFunc($number, $decimals = 2)
     {
         if (!is_numeric($number)) {
             return null;
         }
-        if (!$decimals && $decimals !== 0) {
-            $decimals = $this->Settings->decimals;
+        $decimals = $this->Settings->decimals;
+        // if (!$decimals && $decimals !== 0) {
+        //     $decimals = $this->Settings->decimals;
+        // }
+        $truncated = intval($number * 100) / 100;
+
+    // Now format the number to two decimal places
+    // number_format($truncated, 2, '.', '');
+    //     echo '<br>'.$number;
+    //     echo '<br>'.number_format($number, $decimals, '.', '');
+    //    echo '<br>'. number_format($truncated, 2, '.', '');
+       return number_format($truncated, 2, '.', '');
+       // return number_format($number, $decimals, '.', '');
+    }
+
+    public function formatDecimal($number, $decimals = 2)
+    {
+        return $number;
+        if (!is_numeric($number)) {
+            return null;
         }
-        return number_format($number, $decimals, '.', '');
+        $decimals = $this->Settings->decimals;
+        // if (!$decimals && $decimals !== 0) {
+        //     $decimals = $this->Settings->decimals;
+        // }
+        $truncated = intval($number * 100) / 100;
+
+    // Now format the number to two decimal places
+    // number_format($truncated, 2, '.', '');
+    //     echo '<br>'.$number;
+    //     echo '<br>'.number_format($number, $decimals, '.', '');
+    //    echo '<br>'. number_format($truncated, 2, '.', '');
+       return number_format($truncated, 2, '.', '');
+       // return number_format($number, $decimals, '.', '');
     }
 
     public function formatMoney($number, $symbol = false)
     {
         if ($symbol !== 'none') {
-            $symbol = $symbol ? $symbol : $this->Settings->symbol;
+            $symbol = $symbol ? ' '.$symbol : ' '.$this->Settings->symbol;
         } else {
             
             $symbol = null;
@@ -190,7 +220,7 @@ class Sma
         ($this->Settings->display_symbol == 2 && $number != 0 ? $symbol : '');
     }
 
-    public function formatNumber($number, $decimals = null)
+    public function formatNumberold($number, $decimals = null)
     {
         if (!$decimals) {
             $decimals = $this->Settings->decimals;
@@ -200,8 +230,30 @@ class Sma
         }
         $ts = $this->Settings->thousands_sep == '0' ? ' ' : $this->Settings->thousands_sep;
         $ds = $this->Settings->decimals_sep;
+        // echo "number".$number;
+        // echo "#decimal:".$decimals;
         return number_format($number, $decimals, $ds, $ts);
     }
+
+    public function formatNumber($number, $decimals = null)
+{
+    if (!is_numeric($number)) {
+        return null;
+    }
+    $decimals = $this->Settings->decimals;
+    // if (!$decimals && $decimals !== 0) {
+    //     $decimals = $this->Settings->decimals;
+    // }
+    //$truncated = intval($number * 100) / 100;
+
+// Now format the number to two decimal places
+// number_format($truncated, 2, '.', '');
+    
+   return number_format($number, $decimals, '.', '');
+//    echo '<br>'. number_format($truncated, 2, '.', '');
+//    return number_format($truncated, 2, '.', '');
+}
+
 
     public function formatQuantity($number, $decimals = null)
     {
@@ -250,6 +302,25 @@ class Sma
         }
 
         return $stringtoreturn;
+    }
+
+    public function generateUUIDv4_old() {
+        // Generate a proper RFC 4122 compliant UUID v4
+        // Format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
+        $bytes = openssl_random_pseudo_bytes(16);
+        $bytes[6] = chr(ord($bytes[6]) & 0x0f | 0x40); // version 4
+        $bytes[8] = chr(ord($bytes[8]) & 0x3f | 0x80); // variant
+        
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
+    }
+
+     public function generateUUIDv4() {
+
+        $timestamp = microtime(true) * 10000;  
+        $randomNumber = mt_rand(100, 999);     
+        $uniqueCode = substr($timestamp . $randomNumber, -6);
+
+        return $uniqueCode;
     }
 
     public function fsd($inv_date)
@@ -322,7 +393,13 @@ class Sma
             $product = json_decode(json_encode($product), false);
         }
         $today = date('Y-m-d');
-        return $product->promotion && $product->start_date <= $today && $product->end_date >= $today && $product->promo_price;
+        
+        return !is_null($product->promotion) && 
+        $product->promo_price && 
+        $product->start_date <= $today && 
+        $product->end_date >= $today;
+        //return  !is_null($product->promotion) && $product->promotion && $product->promo_price;
+        //return $product->promotion && $product->start_date <= $today && $product->end_date >= $today && $product->promo_price;
     }
 
     public function log_payment($type, $msg, $val = null)
@@ -424,6 +501,29 @@ class Sma
         return "<img src='data:image/svg+xml;base64," . base64_encode($svgData) . "' alt='{$text}' class='qrimg' width='100' height='100' style='max-width:" . ($size * 40) . 'px;max-height:' . ($size * 40) . "px;'' />";
     }
 
+    public function qrcodepng($type = 'text', $text = 'http://tecdiary.com', $size = 2, $level = 'H', $sq = null, $svg = false)
+    {
+        if ($type == 'link') {
+            $text = urldecode($text);
+        }
+
+        $this->load->library('tec_qrcode');
+
+        // When SVG requested
+        if ($svg) {
+            $svgData = $this->tec_qrcode->generate_new(['data' => $text]);
+            return $svgData;
+        }
+        
+        $pngData = $this->tec_qrcode->generate_new([
+            'data' => $text,
+            'png'  => true,
+        ]);
+
+        return $pngData;
+        //return $pngData;
+    }
+
     public function roundMoney($num, $nearest = 0.05)
     {
         return round($num * (1 / $nearest)) * $nearest;
@@ -450,12 +550,276 @@ class Sma
         return $rn;
     }
 
+    public function send_whatsapp_notify($receiver_number, $variable){
+        $service = $this->site->getSMSServiceByName('unifonic-whatsapp');
+        $publicId = $service->api_key;
+        $secret = $service->api_secret;
+
+        $whatsappApiUrl = 'https://apis.unifonic.com/v1/messages';
+
+        $payload = [
+            "recipient" => [
+                "contact" => $receiver_number,
+                "channel" => "whatsapp"
+            ],
+            "content" => [
+                "type" => "template",
+                "name" => "otp_whatsapp",
+                "language" => ["code" => "en"],
+                "components" => [
+                    [
+                        "type" => "body",
+                        "parameters" => [
+                            [
+                                "type" => "text",
+                                "text" => (string) $variable
+                            ]
+                        ]
+                    ],
+                    [
+                        "type" => "options",
+                        "parameters" => [
+                            [
+                                "value" => (string) $variable,
+                                "subType" => "url",
+                                "index" => 0
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        $headers = [
+            'PublicId: ' . $publicId,
+            'Secret: ' . $secret,
+            'Content-Type: application/json'
+        ];
+
+        // Initialize cURL session
+        $ch = curl_init($whatsappApiUrl);
+
+        // Set cURL options
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        // Execute cURL session and get the response
+        $response = curl_exec($ch);
+
+        // Check for cURL errors
+        if (curl_errno($ch)) {
+            echo 'Curl error: ' . curl_error($ch);
+        }
+
+        // Close cURL session
+        curl_close($ch);
+
+        return $response;
+    }
+
+    public function whatsapp_order_confirmation($receiver_number, $order_number, $invoice_url){
+        $service = $this->site->getSMSServiceByName('unifonic-whatsapp');
+        $publicId = $service->api_key;
+        $secret = $service->api_secret;
+
+        $whatsappApiUrl = 'https://apis.unifonic.com/v1/messages';
+        if (strpos($receiver_number, '+966') === false) {
+            $receiver_number = '+966' . $receiver_number;
+        }
+
+        //$receiver_number = '+923469122590';
+
+        $payload = [
+            "recipient" => [
+                "contact" => $receiver_number,
+                "channel" => "whatsapp"
+            ],
+            "content" => [
+                "type" => "template",
+                "name" => "order_confirmation",
+                "language" => ["code" => "en"],
+                "components" => [
+                    [
+                        "type" => "body",
+                        "parameters" => [
+                            [
+                                "type" => "text",
+                                "text" => (string) $order_number
+                            ],
+                            [
+                                "type" => "text",
+                                "text" => (string) $invoice_url
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        $headers = [
+            'PublicId: ' . $publicId,
+            'Secret: ' . $secret,
+            'Content-Type: application/json'
+        ];
+
+        // Initialize cURL session
+        $ch = curl_init($whatsappApiUrl);
+
+        // Set cURL options
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        // Execute cURL session and get the response
+        $response = curl_exec($ch);
+
+        // Check for cURL errors
+        if (curl_errno($ch)) {
+            echo 'Curl error: ' . curl_error($ch);
+        }
+
+        // Close cURL session
+        curl_close($ch);
+
+        return $response;
+    }
+
+    public function send_whatsapp_msg($receiver_number, $variable){
+        $service = $this->site->getSMSServiceByName('unifonic-whatsapp');
+        $publicId = $service->api_key;
+        $secret = $service->api_secret;
+
+        $whatsappApiUrl = 'https://apis.unifonic.com/v1/messages';
+        if (strpos($receiver_number, '+966') === false) {
+            $receiver_number = '+966' . $receiver_number;
+        }
+
+        //$receiver_number = '+923469122590';
+
+        $payload = [
+            "recipient" => [
+                "contact" => $receiver_number,
+                "channel" => "whatsapp"
+            ],
+            "content" => [
+                "type" => "template",
+                "name" => "otp_whatsapp",
+                "language" => ["code" => "en"],
+                "components" => [
+                    [
+                        "type" => "body",
+                        "parameters" => [
+                            [
+                                "type" => "text",
+                                "text" => (string) $variable
+                            ]
+                        ]
+                    ],
+                    [
+                        "type" => "options",
+                        "parameters" => [
+                            [
+                                "value" => (string) $variable,
+                                "subType" => "url",
+                                "index" => 0
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        $headers = [
+            'PublicId: ' . $publicId,
+            'Secret: ' . $secret,
+            'Content-Type: application/json'
+        ];
+
+        // Initialize cURL session
+        $ch = curl_init($whatsappApiUrl);
+
+        // Set cURL options
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        // Execute cURL session and get the response
+        $response = curl_exec($ch);
+
+        // Check for cURL errors
+        if (curl_errno($ch)) {
+            echo 'Curl error: ' . curl_error($ch);
+        }
+
+        // Close cURL session
+        curl_close($ch);
+
+        return $response;
+
+    }
+
+    public function send_sms_new($receiver_number, $message){
+        $service = $this->site->getSMSServiceByName('4jawaly');
+        $app_id = $service->api_key;
+        $app_sec = $service->api_secret;
+        $app_hash = base64_encode("{$app_id}:{$app_sec}");
+        $messages = [
+            "messages" => [
+                [
+                    "text" => $message,
+                    "numbers" => ['966'.$receiver_number],
+                    "sender" => "PHMC"
+                ]
+            ]
+        ];
+
+        $url = "https://api-sms.4jawaly.com/api/v1/account/area/sms/send";
+        $headers = [
+            "Accept: application/json",
+            "Content-Type: application/json",
+            "Authorization: Basic {$app_hash}"
+        ];
+
+        $curl = curl_init($url);
+        curl_setopt($curl, CURLOPT_POST, true);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, json_encode($messages));
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+
+        $response = curl_exec($curl);
+        $status_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        curl_close($curl);
+
+        $response_json = json_decode($response, true);
+
+        if ($status_code == 200) {
+            if (isset($response_json["messages"][0]["err_text"])) {
+                return json_encode(['status' => 'error', 'message' => $response_json["messages"][0]["err_text"]]);
+                //echo $response_json["messages"][0]["err_text"];
+            } else {
+                return json_encode(['status' => 'success', 'message' => $response_json["job_id"]]);
+            }
+        } elseif ($status_code == 400) {
+            return json_encode(['status' => 'success', 'message' => $response_json["message"]]);
+        } elseif ($status_code == 422) {
+            return json_encode(['status' => 'error', 'message' => 'The message is empty']);
+        } else {
+            return json_encode(['status' => 'success', 'message' => $status_code]);
+        }
+    }
+
     public function send_sms($receiver_number, $variable){
+        $service = $this->site->getSMSServiceByName('MSEGAT');
+
         $data = [
             'userName' => 'phmc',
             'numbers' => $receiver_number,
             'userSender' => 'phmc',
-            'apiKey' => 'd3a916960217e3c7bc0af6ed80d1435c',
+            'apiKey' => $service->api_key,
             'msg' => 'Your OTP verification code is '.$variable,
         ];
     

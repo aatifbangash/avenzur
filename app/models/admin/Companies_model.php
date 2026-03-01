@@ -9,6 +9,7 @@ class Companies_model extends CI_Model
         parent::__construct();
     }
 
+
     public function addAddress($data)
     {
         if ($this->db->insert('addresses', $data)) {
@@ -168,6 +169,18 @@ class Companies_model extends CI_Model
         return false;
     }
 
+    public function getAllSalesMan()
+    {
+        $q = $this->db->get_where('sma_sales_man');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
     public function getBillerSales($id)
     {
         $this->db->where('biller_id', $id)->from('sales');
@@ -209,9 +222,44 @@ class Companies_model extends CI_Model
         return false;
     }
 
+    public function getCompanyByName($name)
+    {
+        $this->db->order_by('id', 'ASC');
+        $this->db->like('name', $name);
+        $this->db->where(['group_name' => 'customer', 'level' => NULL]);
+        $this->db->limit(1);
+        $q = $this->db->get('companies');
+        if ($q->num_rows() > 0) {
+            return $q->row(); 
+        }
+        return false;
+    }
+
+    public function getCompanyByNameNew($name)
+    {
+        $this->db->order_by('id', 'ASC');
+        $this->db->like('name', $name);
+        $this->db->where(['group_name' => 'supplier']);
+        $this->db->limit(1);
+        $q = $this->db->get('companies');
+        if ($q->num_rows() > 0) {
+            return $q->row(); 
+        }
+        return false;
+    }
+
     public function getCompanyByID($id)
     {
         $q = $this->db->get_where('companies', ['id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getSalesManByName($name)
+    {
+        $q = $this->db->get_where('sales_man', ['name' => $name], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -239,8 +287,8 @@ class Companies_model extends CI_Model
     public function getCustomerSuggestions($term, $limit = 10)
     {
         //$this->db->select("id, (CASE WHEN company = '-' THEN name ELSE CONCAT(company, ' (', name, ' - ', sequence_code ,')') END) as text, (CASE WHEN company = '-' THEN name ELSE CONCAT(company, ' (', name, ' - ', sequence_code ,')') END) as value, phone", false);
-        $this->db->select("id, name as text, name as value, phone", false);
-        $this->db->where(" (id LIKE '%" . $term . "%' OR name LIKE '%" . $term . "%' OR company LIKE '%" . $term . "%' OR sequence_code LIKE '%" . $term . "%' OR email LIKE '%" . $term . "%' OR phone LIKE '%" . $term . "%' OR vat_no LIKE '%" . $term . "%') ");
+        $this->db->select("id, name as text, name as value, phone, payment_term", false);
+        $this->db->where(" (id LIKE '%" . $term . "%' OR name LIKE '%" . $term . "%' OR company LIKE '%" . $term . "%' OR sequence_code LIKE '%" . $term . "%' OR external_id LIKE '%" . $term . "%' OR email LIKE '%" . $term . "%' OR phone LIKE '%" . $term . "%' OR vat_no LIKE '%" . $term . "%') ");
         $q = $this->db->get_where('companies', ['group_name' => 'customer'], $limit);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -293,12 +341,86 @@ class Companies_model extends CI_Model
         return $this->db->count_all_results();
     }
 
+    public function getCompaniesByParentId($pid){
+        $this->db->select('parent_code, sequence_code');
+        //$this->db->where(" (id LIKE '%" . $term . "%' OR name LIKE '%" . $term . "%' OR company LIKE '%" . $term . "%' OR sequence_code LIKE '%" . $term . "%' OR email LIKE '%" . $term . "%' OR phone LIKE '%" . $term . "%' OR vat_no LIKE '%" . $term . "%') ");
+        $this->db->from('companies');
+        $this->db->where('id', $pid);
+        $parent_query = $this->db->get();
+        
+        if ($parent_query->num_rows() > 0) {
+            $parent_code = $parent_query->row()->sequence_code;
+            
+            $this->db->select('id, name as text', false);
+            $this->db->from('companies');
+            $this->db->where('parent_code', $parent_code);
+            $company_query = $this->db->get();
+            
+            if ($company_query->num_rows() > 0) {
+                foreach (($company_query->result()) as $row) {
+                    $data[] = $row;
+                }
+                return $data;
+            }
+        }
+
+        return false;
+    }
+
+
+    public function getAllParentSuppliers()
+{
+    $this->db->select('id, name, company');
+    $this->db->where(['group_name' => 'supplier', 'level' => 1]);
+    $this->db->order_by('name', 'ASC');
+    $q = $this->db->get('companies');
+    
+    if ($q->num_rows() > 0) {
+        $data = [];
+        foreach ($q->result() as $row) {
+            $data[$row->id] = $row->name;
+        }
+        return $data;
+    }
+    return [];
+}
+
+    public function getParentSupplierSuggestions($term, $limit = 10)
+    {
+        //$this->db->select("id, (CASE WHEN company = '-' THEN name ELSE CONCAT(company, ' (', name,' - ', sequence_code, ')') END) as text", false);
+        $this->db->select("id, name as text", false);
+        $this->db->where(" (id LIKE '%" . $term . "%' OR name LIKE '%" . $term . "%' OR company LIKE '%" . $term . "%' OR sequence_code LIKE '%" . $term . "%' OR email LIKE '%" . $term . "%' OR phone LIKE '%" . $term . "%' OR vat_no LIKE '%" . $term . "%') ");
+        $q = $this->db->get_where('companies', ['group_name' => 'supplier', 'level' => 1], $limit);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+
+            return $data;
+        }
+    }
+
+    public function getChildSupplierSuggestions($term, $limit = 10)
+    {
+        //$this->db->select("id, (CASE WHEN company = '-' THEN name ELSE CONCAT(company, ' (', name,' - ', sequence_code, ')') END) as text", false);
+        $this->db->select("id, name as text", false);
+        $this->db->where(" (id LIKE '%" . $term . "%' OR name LIKE '%" . $term . "%' OR company LIKE '%" . $term . "%' OR sequence_code LIKE '%" . $term . "%' OR email LIKE '%" . $term . "%' OR phone LIKE '%" . $term . "%' OR vat_no LIKE '%" . $term . "%') ");
+        $q = $this->db->get_where('companies', ['group_name' => 'supplier', 'level' => 2], $limit);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+
+            return $data;
+        }
+    }
+
     public function getSupplierSuggestions($term, $limit = 10)
     {
         //$this->db->select("id, (CASE WHEN company = '-' THEN name ELSE CONCAT(company, ' (', name,' - ', sequence_code, ')') END) as text", false);
         $this->db->select("id, name as text", false);
         $this->db->where(" (id LIKE '%" . $term . "%' OR name LIKE '%" . $term . "%' OR company LIKE '%" . $term . "%' OR sequence_code LIKE '%" . $term . "%' OR email LIKE '%" . $term . "%' OR phone LIKE '%" . $term . "%' OR vat_no LIKE '%" . $term . "%') ");
-        $q = $this->db->get_where('companies', ['group_name' => 'supplier'], $limit);
+        $q = $this->db->get_where('companies', ['group_name' => 'supplier', 'level' => 1], $limit);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
@@ -331,5 +453,31 @@ class Companies_model extends CI_Model
             return true;
         }
         return false;
+    }
+
+    public function updateCompanyNames($id, $data){
+        $this->db->where('id', $id);
+        if ($this->db->update('companies', $data)) {
+            return true;
+        }
+        return false;
+    }
+
+    public function getCustomerBalance($customer_id)
+    {
+        // Get total outstanding balance for customer (grand_total - paid)
+        $this->db->select('COALESCE(SUM(grand_total - paid), 0) as balance', false);
+        $this->db->from('sales');
+        $this->db->where('customer_id', $customer_id);
+        $this->db->where('payment_status !=', 'paid');
+        
+        $query = $this->db->get();
+        
+        if ($query->num_rows() > 0) {
+            $row = $query->row();
+            return $row->balance;
+        }
+        
+        return 0;
     }
 }

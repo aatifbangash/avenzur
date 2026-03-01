@@ -11,7 +11,7 @@ table#slTable td input.form-control {
 </style>
 <script type="text/javascript">
     var count = 1, an = 1, product_variant = 0, DT = <?= $Settings->default_tax_rate ?>,
-        product_tax = 0, invoice_tax = 0, product_discount = 0, order_discount = 0, total_discount = 0, total = 0, allow_discount = <?= ($Owner || $Admin || $this->session->userdata('allow_discount')) ? 1 : 0; ?>,
+        product_tax = 0, invoice_tax = 0, product_discount = 0, slitems = {}, order_discount = 0, total_discount = 0, total = 0, allow_discount = <?= ($Owner || $Admin || $this->session->userdata('allow_discount')) ? 1 : 0; ?>,
         tax_rates = <?php echo json_encode($tax_rates); ?>;
     //var audio_success = new Audio('<?=$assets?>sounds/sound2.mp3');
     //var audio_error = new Audio('<?=$assets?>sounds/sound3.mp3');
@@ -161,6 +161,7 @@ table#slTable td input.form-control {
                     $('#add_item').focus();
                     return false;
                 }
+
                 $.ajax({
                     type: 'get',
                     url: '<?= admin_url('sales/bch_suggestions'); ?>',
@@ -171,8 +172,46 @@ table#slTable td input.form-control {
                         customer_id: $("#slcustomer").val()
                     },
                     success: function (data) {
-                        $(this).removeClass('ui-autocomplete-loading');
-                        response(data);
+                        if(data[0].id != 0){
+                            $(this).removeClass('ui-autocomplete-loading');
+                            response(data);
+                        }else{
+                            $.ajax({
+                                type: 'get',
+                                url: '<?=admin_url('products/get_items_by_avz_code');?>',
+                                dataType: "json",
+                                data: {
+                                    term: request.term,
+                                    warehouse_id: $("#slwarehouse").val(),
+                                    customer_id: $("#slcustomer").val(),
+                                    module: 'sales'
+                                },
+                                success: function (data) {
+                                    $(this).removeClass('ui-autocomplete-loading');
+                                    if(data){
+
+                                        var avzItemCode = data[0].row.avz_item_code;
+                                        var found = false;
+
+                                        Object.keys(slitems).forEach(function (key) {
+                                            if (slitems[key].row && slitems[key].row.avz_item_code === avzItemCode) {
+                                                found = true;
+                                            }
+                                        });
+
+                                        if(found == true){
+                                            bootbox.alert('Row already exists for this code.');
+                                        }else{
+                                            add_invoice_item(data[0]);
+                                        }
+                                    }else{
+                                        bootbox.alert('No records found for this item code.');
+                                    }
+                                    
+                                }
+                            });
+                        }
+                        
                     }
                 });
             },
@@ -205,9 +244,10 @@ table#slTable td input.form-control {
             select: function (event, ui) {
                 event.preventDefault();
                 if (ui.item.id !== 0) {
-                    var row = add_invoice_item(ui.item);
-                    if (row)
-                        $(this).val('');
+                    openPopup(ui.item);
+                    //var row = add_invoice_item(ui.item);
+                    //if (row)
+                    //    $(this).val('');
                 } else {
                     bootbox.alert('<?= lang('no_match_found') ?>');
                 }
@@ -235,15 +275,169 @@ table#slTable td input.form-control {
                     }
                 });
             }
-        });
-
-        
+        }); 
     });
+
+    function openPopup(selectedItem) {
+        // Assuming selectedItem has avz_item_code as part of its data
+        $.ajax({
+            type: 'get',
+            url: '<?= admin_url('products/get_avz_item_code_details'); ?>', // Adjust the URL as needed
+            dataType: "json",
+            data: {
+                item_id: selectedItem.item_id, // Send the unique item code
+                warehouse_id: $("#slwarehouse").val() // Optionally include warehouse ID if needed
+            },
+            success: function (data) {
+                $(this).removeClass('ui-autocomplete-loading');
+
+                // Populate the modal with the returned data
+                if (data && data.length > 0) {
+                    var modalBody = $('#itemModal .modal-body');
+                    modalBody.empty();
+
+                    // Loop through each item and create clickable entries in the modal
+                    var table = `
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Avz Code</th>
+                                    <th>Product</th>
+                                    <th>Supplier</th>
+                                    <th>Batch No</th>
+                                    <th>Expiry</th>
+                                    <th>Quantity</th>
+                                    <th>Locked</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemTableBody"></tbody>
+                        </table>
+                    `;
+
+                    // Append the table to the modal body
+                    modalBody.append(table);
+                    
+                    // Populate the table body with the data
+                    var count = 0;
+                    var toitemsStorageValue = JSON.parse(localStorage.getItem('slitems'));
+                    data.forEach(function (item) {
+                        count++;
+
+                        var avzItemCode = item.row.avz_item_code;
+                        var found = false;
+
+                        Object.keys(slitems).forEach(function (key) {
+                            if (slitems[key].row && slitems[key].row.avz_item_code === avzItemCode) {
+                                found = true;
+                            }
+                        });
+
+                        var tickOrCross = found ? '✔' : '✖';
+
+                        var row = `
+                            <tr style="cursor:pointer;" class="modal-item" tabindex="0" data-item-id="${item.row.avz_item_code}">
+                                <td>${count}</td>
+                                <td data-avzcode="${item.row.avz_item_code}">${item.row.avz_item_code}</td>
+                                <td data-product="${item.row.name}">${item.row.name}</td>
+                                <td data-supplier="${item.row.supplier}">${item.row.supplier}</td>
+                                <td data-batchno="${item.row.batchno}">${item.row.batchno}</td>
+                                <td data-expiry="${item.row.expiry}">${item.row.expiry}</td>
+                                <td data-quantity="${item.total_quantity}">${item.total_quantity}</td>
+                                <td>${tickOrCross}</td>
+                            </tr>
+                        `;
+                        $('#itemTableBody').append(row);
+                        $('#itemTableBody tr:last-child').data('available', found);
+                    });
+
+                    // Show the modal
+                    $('#itemModal').modal('show');
+                    $('#itemTableBody').on('click', 'tr', function () {
+                        
+                        var clickedItemCode = $(this).data('item-id');
+                        var clickedItemExpiry = $(this).find('td[data-expiry]').data('expiry') || $(this).attr('data-expiry');
+                        var selectedItem = data.find(function (item) {
+                            //return item.row.avz_item_code === clickedItemCode;
+                            return String(item.row.avz_item_code).trim() === String(clickedItemCode).trim();
+                        });
+
+                        var previousExpiryAvailable = data.find(function (item) {
+                            
+                            var itemExpiry = new Date(item.row.expiry); // Convert to Date object
+                            var clickedExpiry = new Date(clickedItemExpiry); // Convert clickedItemExpiry to Date object
+                            if(clickedExpiry > itemExpiry){
+                                return true;
+                            }
+                        });
+
+                        if(previousExpiryAvailable){
+                            bootbox.alert('Previous Expiry available for this item');
+                        }
+
+                        if (selectedItem) {
+                            $('#itemModal').modal('hide');
+                            var available = $(this).data('available');
+                            if(!available){
+                                add_invoice_item(selectedItem);
+                            }else{
+                                bootbox.alert('Row already added');
+                            }
+                        }else{
+                            console.log('Item not found');
+                        }
+                    });
+                    
+                } else {
+                    bootbox.alert('No records found for this item code.');
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('AJAX error:', error);
+                bootbox.alert('An error occurred while fetching the item details.');
+            }
+        });
+    }
+
+    function onSelectFromPopup(selectedRecord) {
+        $('#itemModal').modal('hide');
+
+        var row = add_invoice_item(selectedRecord);
+        if (row) {
+            // If the row was successfully added, you can do additional actions here
+            
+        }
+    }
 </script>
+
+<div class="modal fade" id="itemModal" tabindex="-1" role="dialog" aria-labelledby="itemModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="min-width:800px !important;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="itemModalLabel">Select an Item</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- The content will be dynamically generated here -->
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-plus"></i><?= lang('add_sale'); ?></h2>
+        <!-- CSV upload icon -->
+        <div class="box-icon">
+            <ul class="btn-tasks">
+                <li class="dropdown">
+                    <a href="<?= admin_url('Sales/showUploadSales'); ?>" data-toggle="modal"
+                                        data-target="#myModal"><i class="icon fa fa-upload"></i></a></li>
+            </ul>
+        </div>
     </div>
     <div class="box-content">
         <div class="row">
@@ -270,12 +464,12 @@ table#slTable td input.form-control {
                         <?php
                 } ?>
 
-                        <div class="col-md-4">
+                        <!--<div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('reference_no', 'slref'); ?>
                                 <?php echo form_input('reference_no', ($_POST['reference_no'] ?? $slnumber), 'class="form-control input-tip" id="slref"'); ?>
                             </div>
-                        </div>
+                        </div>-->
                         <?php if ($Owner || $Admin || !$this->session->userdata('biller_id')) {
                     ?>
                             <div class="col-md-4">
@@ -315,7 +509,7 @@ table#slTable td input.form-control {
                                                 <?php
                                                 $wh[''] = '';
                     foreach ($warehouses as $warehouse) {
-                        $wh[$warehouse->id] = $warehouse->name;
+                        $wh[$warehouse->id] = $warehouse->name.' ('.$warehouse->code.')';
                     }
                     echo form_dropdown('warehouse', $wh, ($_POST['warehouse'] ?? $Settings->default_warehouse), 'id="slwarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" required="required" style="width:100%;" '); ?>
                                             </div>
@@ -404,10 +598,11 @@ table#slTable td input.form-control {
                                     <table id="slTable" class="table items table-striped table-bordered table-condensed table-hover sortable_table">
                                         <thead>
                                         <tr>
+                                            <th class="col-md-1">#</th>
                                             <th class="col-md-2">item name</th>
                                             <th class="col-md-1">sale price</th>
                                             <!-- <th class="col-md-1">purchase price</th> -->
-                                            <th class="col-md-1"><?= lang('Serial No.'); ?></th>
+                                            <!--<th class="col-md-1"><?= lang('Serial No.'); ?></th>-->
                                             <th class="col-md-1"><?= lang('Batch_No'); ?></th>
                                             <th class="col-md-1"><?= lang('Expiry Date'); ?></th>
                                             <!--<th class="col-md-1">
@@ -422,7 +617,7 @@ table#slTable td input.form-control {
                                                 <?php //lang('net_unit_price'); ?>
                                             <!--</th>-->
                                             <th class="col-md-1">qty</th>
-                                            <!--<th class="col-md-1">bonus</th>-->
+                                            <th class="col-md-1">bonus</th>
                                             <th class="col-md-1">dis 1</th>
                                             <th class="col-md-1">dis 2</th>
                                             <th class="col-md-1">Vat 15%</th>
@@ -463,7 +658,7 @@ table#slTable td input.form-control {
                             </div>
                         </div>
 
-                        <?php if ($Settings->tax2) {
+                        <?php if ($Settings->tax2 && !1 == 1) {
                                                 ?>
                             <div class="col-md-4">
                                 <div class="form-group">
@@ -477,27 +672,27 @@ table#slTable td input.form-control {
                                 </div>
                             </div>
                         <?php
-                                            } ?>
+                        } ?>
 
                         <?php if ($Owner || $Admin || $this->session->userdata('allow_discount')) {
                                                 ?>
-                            <div class="col-md-4">
+                            <!--<div class="col-md-4">
                                 <div class="form-group">
                                     <?= lang('order_discount', 'sldiscount'); ?>
                                     <?php echo form_input('order_discount', '', 'class="form-control input-tip" id="sldiscount"'); ?>
                                 </div>
-                            </div>
+                            </div>-->
                         <?php
 
                          } ?>
 
-                        <div class="col-md-4">
+                        <!--<div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('shipping', 'slshipping'); ?>
                                 <?php echo form_input('shipping', '', 'class="form-control input-tip" id="slshipping"'); ?>
 
                             </div>
-                        </div>
+                        </div>-->
 
                         <div class="col-md-4">
                             <div class="form-group">
@@ -670,18 +865,25 @@ table#slTable td input.form-control {
                             <div class="col-md-12">
                                 <div class="col-md-6">
                                     <div class="form-group">
+                                        <?= lang('Note', 'warning_note'); ?>
+                                        <span id="warning_message" style="color:red;font-size:12px;"></span>
+                                        <input type="text" name="warning_note" class="form-control" value="" id="warning_note" style="margin-top: 10px; height: 100px;" />
+                                    </div>
+                                </div>
+                                <!--<div class="col-md-6">
+                                    <div class="form-group">
                                         <?= lang('sale_note', 'slnote'); ?>
-                                        <?php echo form_textarea('note', ($_POST['note'] ?? ''), 'class="form-control" id="slnote" style="margin-top: 10px; height: 100px;"'); ?>
-
+                                        <?php //echo form_textarea('note', ($_POST['note'] ?? ''), 'class="form-control" id="slnote" required="required" style="margin-top: 10px; height: 100px;"'); ?>
+                                        <input type="hidden" name="note" class="form-control" required="required" id="slnote" style="margin-top: 10px; height: 100px;" />
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <?= lang('staff_note', 'slinnote'); ?>
-                                        <?php echo form_textarea('staff_note', ($_POST['staff_note'] ?? ''), 'class="form-control" id="slinnote" style="margin-top: 10px; height: 100px;"'); ?>
-
+                                        <?php //echo form_textarea('staff_note', ($_POST['staff_note'] ?? ''), 'class="form-control" id="slinnote" style="margin-top: 10px; height: 100px;"'); ?>
+                                        <input type="hidden" id="warning_note" name="warning_note" value=""  />
                                     </div>
-                                </div>
+                                </div>-->
 
 
                             </div>
@@ -691,7 +893,7 @@ table#slTable td input.form-control {
                             <?php
                             $data = array(
                                 'name' => 'add_sale',
-                                'onclick'=>"return confirm('Are you sure to proceed?')"
+                                'onclick'=>"  return validate_confirm()"
                             );
                             ?>
                             <div

@@ -6,7 +6,7 @@
             "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?= lang('all') ?>"]],
             "iDisplayLength": <?= $Settings->rows_per_page ?>,
             'bProcessing': true, 'bServerSide': true,
-            'sAjaxSource': '<?= admin_url('suppliers/getSuppliers') ?>',
+            'sAjaxSource': '<?= admin_url('suppliers/getChildSuppliers') ?>',
             'fnServerData': function (sSource, aoData, fnCallback) {
                 aoData.push({
                     "name": "<?= $this->security->get_csrf_token_name() ?>",
@@ -22,17 +22,18 @@
             "aoColumns": [{
                 "bSortable": false,
                 "mRender": checkbox
-            }, null, null,null, null, null, null, null, null, null, {"bSortable": false}]
+            }, null, null, null, null, null, null, null, null, null, null, {"bSortable": false}]
         }).dtFilter([
-            {column_number: 1, filter_default_label: "[<?=lang('company');?>]", filter_type: "text", data: []},
-            {column_number: 2, filter_default_label: "[<?=lang('sequence_code');?>]", filter_type: "text", data: []},
-            {column_number: 3, filter_default_label: "[<?=lang('name');?>]", filter_type: "text", data: []},
-            {column_number: 4, filter_default_label: "[<?=lang('email_address');?>]", filter_type: "text", data: []},
-            {column_number: 5, filter_default_label: "[<?=lang('phone');?>]", filter_type: "text", data: []},
-            {column_number: 6, filter_default_label: "[<?=lang('city');?>]", filter_type: "text", data: []},
-            {column_number: 7, filter_default_label: "[<?=lang('country');?>]", filter_type: "text", data: []},
-            {column_number: 8, filter_default_label: "[<?=lang('vat_no');?>]", filter_type: "text", data: []},
-            {column_number: 9, filter_default_label: "[<?=lang('gst_no');?>]", filter_type: "text", data: []},
+            {column_number: 1, filter_default_label: "[<?=lang('sequence_code');?>]", filter_type: "text", data: []},
+            {column_number: 2, filter_default_label: "[<?=lang('name');?>]", filter_type: "text", data: []},
+            {column_number: 3, filter_default_label: "[<?=lang('vat_no');?>]", filter_type: "text", data: []},
+            {column_number: 4, filter_default_label: "[<?=lang('gln');?>]", filter_type: "text", data: []},
+            {column_number: 5, filter_default_label: "[<?=lang('cr');?>]", filter_type: "text", data: []},
+            {column_number: 6, filter_default_label: "[<?=lang('short_address');?>]", filter_type: "text", data: []},
+            {column_number: 7, filter_default_label: "[<?=lang('address');?>]", filter_type: "text", data: []},
+            {column_number: 8, filter_default_label: "[<?=lang('credit_limit');?>]", filter_type: "text", data: []},
+            {column_number: 9, filter_default_label: "[<?=lang('payment_term');?>]", filter_type: "text", data: []},
+            {column_number: 10, filter_default_label: "[<?=lang('category');?>]", filter_type: "text", data: []},
         ], "footer");
     });
 </script>
@@ -50,29 +51,46 @@
                         <i class="icon fa fa-tasks tip"  data-placement="left" title="<?= lang('actions') ?>"></i>
                     </a>
                     <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
+                        <?php 
+                        if($this->Owner || $this->Admin || $this->GP['suppliers-add']){
+                        ?>
                         <li>
                             <a href="<?= admin_url('suppliers/add'); ?>" data-toggle="modal" data-target="#myModal" id="add">
                                 <i class="fa fa-plus-circle"></i> <?= lang('add_supplier'); ?>
                             </a>
                         </li>
-                        <li>
+                        <?php } ?>
+                        <!--<li>
                             <a href="<?= admin_url('suppliers/import_csv'); ?>" data-toggle="modal" data-target="#myModal">
                                 <i class="fa fa-plus-circle"></i> <?= lang('import_by_csv'); ?>
 
                             </a>
+                        </li>-->
+                        <?php 
+                        if($this->Owner || $this->Admin || $this->GP['suppliers-add']){
+                        ?>
+                        <li>
+                            <a href="<?= admin_url('suppliers/import_excel'); ?>" data-toggle="modal" data-target="#myModal">
+                                <i class="fa fa-plus-circle"></i> <?= lang('import_by_excel'); ?>
+                            </a>
                         </li>
+                        <?php } ?>
+                        <?php 
+                        if($this->Owner || $this->Admin || $this->GP['suppliers-index']){
+                        ?>
                         <li>
                             <a href="#" id="excel" data-action="export_excel">
                                 <i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?>
                             </a>
                         </li>
+                        <?php } ?>
                         <li class="divider"></li>
-                        <li>
+                        <!--<li>
                             <a href="#" class="bpo" title="<b><?= $this->lang->line('delete_suppliers') ?></b>"
                                 data-content="<p><?= lang('r_u_sure') ?></p><button type='button' class='btn btn-danger' id='delete' data-action='delete'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button>" data-html="true" data-placement="left">
                                 <i class="fa fa-trash-o"></i> <?= lang('delete_suppliers') ?>
                             </a>
-                        </li>
+                        </li>-->
                     </ul>
                 </li>
             </ul>
@@ -92,15 +110,16 @@
                             <th style="min-width:30px; width: 30px; text-align: center;">
                                 <input class="checkbox checkth" type="checkbox" name="check"/>
                             </th>
-                            <th><?= lang('company'); ?></th>
                             <th><?= lang('sequence_code'); ?></th>
                             <th><?= lang('name'); ?></th>
-                            <th><?= lang('email_address'); ?></th>
-                            <th><?= lang('phone'); ?></th>
-                            <th><?= lang('city'); ?></th>
-                            <th><?= lang('country'); ?></th>
                             <th><?= lang('vat_no'); ?></th>
-                            <th><?= lang('gst_no'); ?></th>
+                            <th><?= lang('gln'); ?></th>
+                            <th><?= lang('cr'); ?></th>
+                            <th><?= lang('short_address'); ?></th>
+                            <th><?= lang('address'); ?></th>
+                            <th><?= lang('credit_limit'); ?></th>
+                            <th><?= lang('payment_term'); ?></th>
+                            <th><?= lang('category'); ?></th>
                             <th style="min-width:105px; text-align:center;"><?= lang('actions'); ?></th>
                         </tr>
                         </thead>

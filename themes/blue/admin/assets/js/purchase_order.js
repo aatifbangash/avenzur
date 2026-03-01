@@ -1,0 +1,1761 @@
+$(document).ready(function () {
+	//$('body a, body button').attr('tabindex', -1);
+	check_add_item_val();
+	if (site.settings.set_focus != 1) {
+		$("#add_item").focus();
+	}
+	// Order level shipping and discoutn localStorage
+	if ((podiscount = localStorage.getItem("podiscount"))) {
+		$("#podiscount").val(podiscount);
+	}
+	$("#potax2").change(function (e) {
+		localStorage.setItem("potax2", $(this).val());
+	});
+	if ((potax2 = localStorage.getItem("potax2"))) {
+		$("#potax2").select2("val", potax2);
+	}
+	$("#postatus").change(function (e) {
+		localStorage.setItem("postatus", $(this).val());
+	});
+	if ((postatus = localStorage.getItem("postatus"))) {
+		$("#postatus").select2("val", postatus);
+	}
+	var old_shipping;
+	$("#poshipping")
+		.focus(function () {
+			old_shipping = $(this).val();
+		})
+		.change(function () {
+			var posh = $(this).val() ? $(this).val() : 0;
+			if (!is_numeric(posh)) {
+				$(this).val(old_shipping);
+				bootbox.alert(lang.unexpected_value);
+				return;
+			}
+			shipping = parseFloat(posh);
+			localStorage.setItem("poshipping", shipping);
+			var gtotal = total + invoice_tax - order_discount + shipping;
+			$("#gtotal").text(formatMoney(gtotal));
+			$("#tship").text(formatMoney(shipping));
+		});
+	if ((poshipping = localStorage.getItem("poshipping"))) {
+		shipping = parseFloat(poshipping);
+		$("#poshipping").val(shipping);
+	}
+
+	$("#popayment_term").change(function (e) {
+		localStorage.setItem("popayment_term", $(this).val());
+	});
+	if ((popayment_term = localStorage.getItem("popayment_term"))) {
+		$("#popayment_term").val(popayment_term);
+	}
+
+	// If there is any item in localStorage
+	if (localStorage.getItem("poitems")) {
+		loadItems();
+	}
+
+	// clear localStorage and reload
+	$("#reset").click(function (e) {
+		bootbox.confirm(lang.r_u_sure, function (result) {
+			if (result) {
+				if (localStorage.getItem("poitems")) {
+					localStorage.removeItem("poitems");
+				}
+				if (localStorage.getItem("podiscount")) {
+					localStorage.removeItem("podiscount");
+				}
+				if (localStorage.getItem("potax2")) {
+					localStorage.removeItem("potax2");
+				}
+				if (localStorage.getItem("poshipping")) {
+					localStorage.removeItem("poshipping");
+				}
+				if (localStorage.getItem("poref")) {
+					localStorage.removeItem("poref");
+				}
+				if (localStorage.getItem("powarehouse")) {
+					localStorage.removeItem("powarehouse");
+				}
+				if (localStorage.getItem("ponote")) {
+					localStorage.removeItem("ponote");
+				}
+				if (localStorage.getItem("posupplier")) {
+					localStorage.removeItem("posupplier");
+				}
+				if (localStorage.getItem("childsupplier")) {
+					localStorage.removeItem("childsupplier");
+				}
+				if (localStorage.getItem("pocurrency")) {
+					localStorage.removeItem("pocurrency");
+				}
+				if (localStorage.getItem("poextras")) {
+					localStorage.removeItem("poextras");
+				}
+				if (localStorage.getItem("podate")) {
+					localStorage.removeItem("podate");
+				}
+				if (localStorage.getItem("postatus")) {
+					localStorage.removeItem("postatus");
+				}
+				if (localStorage.getItem("popayment_term")) {
+					localStorage.removeItem("popayment_term");
+				}
+
+				$("#modal-loading").show();
+				location.reload();
+			}
+		});
+	});
+
+	// save and load the fields in and/or from localStorage
+	var $supplier = $("#posupplier"),
+		$currency = $("#pocurrency");
+
+	var $childsupplierselectbox = $("#childsupplier");
+
+	$("#poref").change(function (e) {
+		localStorage.setItem("poref", $(this).val());
+	});
+	if ((poref = localStorage.getItem("poref"))) {
+		$("#poref").val(poref);
+	}
+	$("#powarehouse").change(function (e) {
+		localStorage.setItem("powarehouse", $(this).val());
+	});
+	if ((powarehouse = localStorage.getItem("powarehouse"))) {
+		$("#powarehouse").select2("val", powarehouse);
+	}
+
+	$("#ponote").redactor("destroy");
+	$("#ponote").redactor({
+		buttons: [
+			"formatting",
+			"|",
+			"alignleft",
+			"aligncenter",
+			"alignright",
+			"justify",
+			"|",
+			"bold",
+			"italic",
+			"underline",
+			"|",
+			"unorderedlist",
+			"orderedlist",
+			"|",
+			"link",
+			"|",
+			"html",
+		],
+		formattingTags: ["p", "pre", "h3", "h4"],
+		minHeight: 100,
+		changeCallback: function (e) {
+			var v = this.get();
+			localStorage.setItem("ponote", v);
+		},
+	});
+	if ((ponote = localStorage.getItem("ponote"))) {
+		$("#ponote").redactor("set", ponote);
+	}
+	$supplier.change(function (e) {
+		localStorage.setItem("posupplier", $(this).val());
+		localStorage.setItem("childsupplier", null);
+		$("#supplier_id").val($(this).val());
+
+		//localStorage.removeItem('childsupplier');
+		//$childsupplierselectbox.empty();
+		//$childsupplierselectbox.val();
+		populateChildSuppliers($(this).val());
+	});
+
+	$childsupplierselectbox.change(function (e) {
+		localStorage.setItem("childsupplier", $(this).val());
+		$("#child_supplier_id").val($(this).val());
+	});
+
+	function populateChildSuppliers(pid) {
+		$.ajax({
+			url: site.base_url + "suppliers/getChildById",
+			data: { term: "", limit: 10, pid: pid },
+			dataType: "json",
+			success: function (data) {
+				$childsupplierselectbox.empty();
+				$.each(data.results, function (index, value) {
+					$childsupplierselectbox.append(new Option(value.text, value.id));
+				});
+
+				if (localStorage.getItem("childsupplier")) {
+					$childsupplierselectbox
+						.val(localStorage.getItem("childsupplier"))
+						.trigger("change");
+				}
+			},
+		});
+	}
+
+	if ((posupplier = localStorage.getItem("posupplier"))) {
+		$supplier.val(posupplier).select2({
+			minimumInputLength: 1,
+			data: [],
+			initSelection: function (element, callback) {
+				$.ajax({
+					type: "get",
+					async: false,
+					url: site.base_url + "suppliers/getSupplier/" + $(element).val(),
+					dataType: "json",
+					success: function (data) {
+						callback(data[0]);
+					},
+				});
+			},
+			ajax: {
+				url: site.base_url + "suppliers/childsuggestions",
+				dataType: "json",
+				quietMillis: 15,
+				data: function (term, page) {
+					return {
+						term: term,
+						limit: 10,
+					};
+				},
+				results: function (data, page) {
+					if (data.results != null) {
+						return { results: data.results };
+					} else {
+						return { results: [{ id: "", text: "No Match Found" }] };
+					}
+				},
+			},
+		});
+
+		populateChildSuppliers(posupplier);
+	} else {
+		nsSupplier();
+		//nsChildSupplierByParentId($(this).val());
+	}
+
+	/*if((childsupplier = localStorage.getItem('childsupplier'))){
+        $childsupplierselectbox.val(childsupplier).select2({
+            minimumInputLength: 1,
+            data: [],
+            initSelection: function (element, callback) {
+                $.ajax({
+                    type: 'get',
+                    async: false,
+                    url: site.base_url + 'suppliers/getSupplier/' + $(element).val(),
+                    dataType: 'json',
+                    success: function (data) {
+                        callback(data[0]);
+                    },
+                });
+            },
+            ajax: {
+                url: site.base_url + 'suppliers/childsuggestions',
+                dataType: 'json',
+                quietMillis: 15,
+                data: function (term, page) {
+                    return {
+                        term: term,
+                        limit: 10,
+                    };
+                },
+                results: function (data, page) {
+                    if (data.results != null) {
+                        return { results: data.results };
+                    } else {
+                        return { results: [{ id: '', text: 'No Match Found' }] };
+                    }
+                },
+            },
+        });
+    }else{
+        nsChildSupplier();
+    }*/
+
+	/*$('.rexpiry').change(function (e) {
+        var item_id = $(this).closest('tr').attr('data-item-id');
+        poitems[item_id].row.expiry = $(this).val();
+        localStorage.setItem('poitems', JSON.stringify(poitems));
+    });*/
+	if (localStorage.getItem("poextras")) {
+		$("#extras").iCheck("check");
+		$("#extras-con").show();
+	}
+	$("#extras").on("ifChecked", function () {
+		localStorage.setItem("poextras", 1);
+		$("#extras-con").slideDown();
+	});
+	$("#extras").on("ifUnchecked", function () {
+		localStorage.removeItem("poextras");
+		$("#extras-con").slideUp();
+	});
+	$(document).on("change", ".rexpiry", function () {
+		var inputDate = $(this).val();
+		var currentDate = new Date();
+
+		var dateParts = inputDate.split("/");
+		var inputDateObj = new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
+
+		var yesterdayDate = new Date();
+		yesterdayDate.setDate(currentDate.getDate() - 1);
+
+		if (inputDateObj.getTime() <= yesterdayDate.getTime()) {
+			$(this).val("");
+			bootbox.alert("Expired product are not allowed");
+			return;
+		} else {
+			var item_id = $(this).closest("tr").attr("data-item-id");
+			poitems[item_id].row.expiry = $(this).val();
+			localStorage.setItem("poitems", JSON.stringify(poitems));
+		}
+	});
+
+	// prevent default action upon enter
+	$("body").bind("keypress", function (e) {
+		if ($(e.target).hasClass("redactor_editor")) {
+			return true;
+		}
+		if (e.keyCode == 13) {
+			e.preventDefault();
+			return false;
+		}
+	});
+
+	// Order tax calcuation
+	if (site.settings.tax2 != 0) {
+		$("#potax2").change(function () {
+			localStorage.setItem("potax2", $(this).val());
+			loadItems();
+			return;
+		});
+	}
+
+	// Order discount calcuation
+	var old_podiscount;
+	$("#podiscount")
+		.focus(function () {
+			old_podiscount = $(this).val();
+		})
+		.change(function () {
+			var pod = $(this).val() ? $(this).val() : 0;
+			if (is_valid_discount(pod)) {
+				localStorage.removeItem("podiscount");
+				localStorage.setItem("podiscount", pod);
+				loadItems();
+				return;
+			} else {
+				$(this).val(old_podiscount);
+				bootbox.alert(lang.unexpected_value);
+				return;
+			}
+		});
+
+	/* ----------------------
+	 * Delete Row Method
+	 * ---------------------- */
+
+	$(document).on("click", ".podel", function () {
+		var row = $(this).closest("tr");
+		var item_id = row.attr("data-item-id");
+		delete poitems[item_id];
+		row.remove();
+		if (poitems.hasOwnProperty(item_id)) {
+		} else {
+			localStorage.setItem("poitems", JSON.stringify(poitems));
+			loadItems();
+			return;
+		}
+	});
+
+	/* -----------------------
+     * Edit Row Modal Hanlder
+     ----------------------- */
+	$(document).on("click", ".edit", function () {
+		var trRowClas = localStorage.getItem("trRowClas");
+		if (trRowClas != undefined && trRowClas != "") {
+			$(".row_" + trRowClas).css("color", "black");
+		}
+		var row = $(this).closest("tr");
+		var row_id = row.attr("id");
+		item_id = row.attr("data-item-id");
+
+		$(".row_" + item_id).css("color", "green");
+		localStorage.setItem("trRowClas", item_id);
+
+		item = poitems[item_id];
+		var qty = row.children().children(".rquantity").val(),
+			product_option = row.children().children(".roption").val(),
+			unit_cost = formatDecimal(row.children().children(".rucost").val()),
+			discount = row.children().children(".rdiscount").val();
+		$("#prModalLabel").text(item.row.name + " (" + item.row.code + ")");
+		var real_unit_cost = item.row.real_unit_cost;
+		var net_cost = real_unit_cost;
+		if (site.settings.tax1) {
+			$("#ptax").select2("val", item.row.tax_rate);
+			$("#old_tax").val(item.row.tax_rate);
+			var item_discount = 0,
+				ds = discount ? discount : "0";
+			if (ds.indexOf("%") !== -1) {
+				var pds = ds.split("%");
+				if (!isNaN(pds[0])) {
+					item_discount = parseFloat(
+						(real_unit_cost * parseFloat(pds[0])) / 100
+					);
+				} else {
+					item_discount = parseFloat(ds);
+				}
+			} else {
+				item_discount = parseFloat(ds);
+			}
+			net_cost -= item_discount;
+			var pr_tax = item.row.tax_rate,
+				pr_tax_val = 0;
+			if (pr_tax !== null && pr_tax != 0) {
+				$.each(tax_rates, function () {
+					if (this.id == pr_tax) {
+						if (this.type == 1) {
+							if (poitems[item_id].row.tax_method == 0) {
+								pr_tax_val = formatDecimal(
+									((real_unit_cost - item_discount) * parseFloat(this.rate)) /
+										(100 + parseFloat(this.rate)),
+									4
+								);
+								pr_tax_rate = formatDecimal(this.rate) + "%";
+								net_cost -= pr_tax_val;
+							} else {
+								pr_tax_val = formatDecimal(
+									((real_unit_cost - item_discount) * parseFloat(this.rate)) /
+										100,
+									4
+								);
+								pr_tax_rate = formatDecimal(this.rate) + "%";
+							}
+						} else if (this.type == 2) {
+							pr_tax_val = parseFloat(this.rate);
+							pr_tax_rate = this.rate;
+						}
+					}
+				});
+			}
+		}
+		if (site.settings.product_serial !== 0) {
+			$("#pserial").val(row.children().children(".rserial").val());
+		}
+		var opt = '<p style="margin: 12px 0 0 0;">n/a</p>';
+		if (item.options !== false) {
+			var o = 1;
+			opt = $(
+				'<select id="poption" name="poption" class="form-control select" />'
+			);
+			$.each(item.options, function () {
+				if (o == 1) {
+					if (product_option == "") {
+						product_variant = this.id;
+					} else {
+						product_variant = product_option;
+					}
+				}
+				$("<option />", { value: this.id, text: this.name }).appendTo(opt);
+				o++;
+			});
+		}
+
+		uopt = $('<select id="punit" name="punit" class="form-control select" />');
+		$.each(item.units, function () {
+			if (this.id == item.row.unit) {
+				$("<option />", {
+					value: this.id,
+					text: this.name,
+					selected: true,
+				}).appendTo(uopt);
+			} else {
+				$("<option />", { value: this.id, text: this.name }).appendTo(uopt);
+			}
+		});
+
+		// Three Month average Sale
+		var threeMonthSale = item.row.three_month_sale;
+		$("#three_month_sale").text(threeMonthSale);
+		// warehouse shelf
+		$("#warehouse_shelf").select2("val", item.row.warehouse_shelf);
+
+		$("#poptions-div").html(opt);
+		$("#punits-div").html(uopt);
+		$("select.select").select2({ minimumResultsForSearch: 7 });
+		$("#pquantity").val(qty);
+		$("#old_qty").val(qty);
+		$("#pcost").val(unit_cost);
+		$("#punit_cost").val(
+			formatDecimal(parseFloat(unit_cost) + parseFloat(pr_tax_val))
+		);
+		$("#poption").select2("val", item.row.option);
+		$("#old_cost").val(unit_cost);
+		$("#row_id").val(row_id);
+		$("#item_id").val(item_id);
+		$("#pexpiry").val(row.children().children(".rexpiry").val());
+		$("#pdiscount").val(discount);
+		$("#net_cost").text(formatMoney(net_cost));
+		$("#pro_tax").text(formatMoney(pr_tax_val));
+		$("#psubtotal").val("");
+		$("#prModal").appendTo("body").modal("show");
+	});
+
+	$("#prModal").on("shown.bs.modal", function (e) {
+		if ($("#poption").select2("val") != "") {
+			$("#poption").select2("val", product_variant);
+			product_variant = 0;
+		}
+	});
+
+	$(document).on("change", "#pcost, #ptax, #pdiscount", function () {
+		var row = $("#" + $("#row_id").val());
+		var item_id = row.attr("data-item-id");
+		var unit_cost = parseFloat($("#pcost").val());
+		var item = poitems[item_id];
+		var ds = $("#pdiscount").val() ? $("#pdiscount").val() : "0";
+		if (ds.indexOf("%") !== -1) {
+			var pds = ds.split("%");
+			if (!isNaN(pds[0])) {
+				item_discount = parseFloat((unit_cost * parseFloat(pds[0])) / 100);
+			} else {
+				item_discount = parseFloat(ds);
+			}
+		} else {
+			item_discount = parseFloat(ds);
+		}
+		unit_cost -= item_discount;
+		var pr_tax = $("#ptax").val(),
+			item_tax_method = item.row.tax_method;
+		var pr_tax_val = 0,
+			pr_tax_rate = 0;
+		if (pr_tax !== null && pr_tax != 0) {
+			$.each(tax_rates, function () {
+				if (this.id == pr_tax) {
+					if (this.type == 1) {
+						if (item_tax_method == 0) {
+							pr_tax_val = formatDecimal(
+								(unit_cost * parseFloat(this.rate)) /
+									(100 + parseFloat(this.rate)),
+								4
+							);
+							pr_tax_rate = formatDecimal(this.rate) + "%";
+							unit_cost -= pr_tax_val;
+						} else {
+							pr_tax_val = formatDecimal(
+								(unit_cost * parseFloat(this.rate)) / 100,
+								4
+							);
+							pr_tax_rate = formatDecimal(this.rate) + "%";
+						}
+					} else if (this.type == 2) {
+						pr_tax_val = parseFloat(this.rate);
+						pr_tax_rate = this.rate;
+					}
+				}
+			});
+		}
+
+		$("#net_cost").text(formatMoney(unit_cost));
+		$("#pro_tax").text(formatMoney(pr_tax_val));
+	});
+
+	$(document).on("change", "#punit", function () {
+		var row = $("#" + $("#row_id").val());
+		var item_id = row.attr("data-item-id");
+		var item = poitems[item_id];
+		if (
+			!is_numeric($("#pquantity").val()) ||
+			parseFloat($("#pquantity").val()) < 0
+		) {
+			$(this).val(old_row_qty);
+			bootbox.alert(lang.unexpected_value);
+			return;
+		}
+		var unit = $("#punit").val();
+		if (unit != poitems[item_id].row.base_unit) {
+			$.each(item.units, function () {
+				if (this.id == unit) {
+					$("#pcost")
+						.val(
+							formatDecimal(
+								parseFloat(item.row.base_unit_cost) * unitToBaseQty(1, this),
+								4
+							)
+						)
+						.change();
+				}
+			});
+		} else {
+			$("#pcost").val(formatDecimal(item.row.base_unit_cost)).change();
+		}
+	});
+
+	$(document).on("click", "#calculate_unit_price", function () {
+		var row = $("#" + $("#row_id").val());
+		var item_id = row.attr("data-item-id");
+		var item = poitems[item_id];
+		if (
+			!is_numeric($("#pquantity").val()) ||
+			parseFloat($("#pquantity").val()) < 0
+		) {
+			$(this).val(old_row_qty);
+			bootbox.alert(lang.unexpected_value);
+			return;
+		}
+		var subtotal = parseFloat($("#psubtotal").val()),
+			qty = parseFloat($("#pquantity").val());
+		$("#pcost")
+			.val(formatDecimal(subtotal / qty, 4))
+			.change();
+		return false;
+	});
+
+	/* -----------------------
+     * Edit Row Method
+     ----------------------- */
+	$(document).on("click", "#editItem", function () {
+		var row = $("#" + $("#row_id").val());
+		var item_id = row.attr("data-item-id"),
+			new_pr_tax = $("#ptax").val(),
+			new_pr_tax_rate = {};
+		if (new_pr_tax) {
+			$.each(tax_rates, function () {
+				if (this.id == new_pr_tax) {
+					new_pr_tax_rate = this;
+				}
+			});
+		}
+
+		if (
+			!is_numeric($("#pquantity").val()) ||
+			parseFloat($("#pquantity").val()) < 0
+		) {
+			$(this).val(old_row_qty);
+			bootbox.alert(lang.unexpected_value);
+			return;
+		}
+
+		var unit = $("#punit").val();
+		var base_quantity = parseFloat($("#pquantity").val());
+		if (unit != poitems[item_id].row.base_unit) {
+			$.each(poitems[item_id].units, function () {
+				if (this.id == unit) {
+					base_quantity = unitToBaseQty($("#pquantity").val(), this);
+				}
+			});
+		}
+
+		(poitems[item_id].row.fup = 1),
+			(poitems[item_id].row.qty = parseFloat($("#pquantity").val())),
+			(poitems[item_id].row.base_quantity = parseFloat(base_quantity)),
+			(poitems[item_id].row.unit = unit),
+			(poitems[item_id].row.real_unit_cost = parseFloat($("#pcost").val())),
+			(poitems[item_id].row.tax_rate = new_pr_tax),
+			(poitems[item_id].tax_rate = new_pr_tax_rate),
+			(poitems[item_id].row.discount = $("#pdiscount").val()
+				? $("#pdiscount").val()
+				: "0"),
+			(poitems[item_id].row.option = $("#poption").val()),
+			(poitems[item_id].row.expiry = $("#pexpiry").val()
+				? $("#pexpiry").val()
+				: "");
+		poitems[item_id].row.warehouse_shelf = $("#warehouse_shelf").val()
+			? $("#warehouse_shelf").val()
+			: "";
+		localStorage.setItem("poitems", JSON.stringify(poitems));
+		$("#prModal").modal("hide");
+		loadItems();
+		if (ws_edit) {
+			$("#poTable input").attr("readonly", "readonly");
+		}
+		return;
+	});
+
+	/* ------------------------------
+     * Show manual item addition modal
+     ------------------------------- */
+	$(document).on("click", "#addManually", function (e) {
+		$("#mModal").appendTo("body").modal("show");
+		return false;
+	});
+
+	var old_row_serialno;
+	var currTabIndex;
+	$(document)
+		.on("focus", ".rserialno", function () {
+			old_row_serialno = $(this).val();
+			currTabIndex = $(this).prop("tabindex");
+		})
+		.on("change", ".rserialno", function () {
+			var row = $(this).closest("tr");
+			var new_serialno = $(this).val(),
+				item_id = row.attr("data-item-id");
+			poitems[item_id].row.serial_number = new_serialno;
+			localStorage.setItem("poitems", JSON.stringify(poitems));
+			loadItems();
+		});
+
+	/* --------------------------
+     * Edit Row BatchNo Method rbatchno
+     -------------------------- */
+	var old_row_batchno;
+	var currTabIndex;
+	$(document)
+		.on("focus", ".rbatchno", function () {
+			old_row_batchno = $(this).val();
+			currTabIndex = $(this).prop("tabindex");
+		})
+		
+		.on("change", ".rbatchno", function () {
+			var row = $(this).closest("tr");
+			
+			var new_batchno = $(this).val(),
+				item_id = row.attr("data-item-id");
+			poitems[item_id].row.batchno = new_batchno;
+			localStorage.setItem("poitems", JSON.stringify(poitems));
+			loadItems();
+		});
+		
+		$(document)
+		.on("focus", ".ravzcode", function () {
+			old_row_batchno = $(this).val();
+			currTabIndex = $(this).prop("tabindex");
+		})
+		.on("change", ".ravzcode", function () {
+			var row = $(this).closest("tr");
+			var new_batchno = $(this).val(),
+				item_id = row.attr("data-item-id");
+			poitems[item_id].row.avz_item_code = new_batchno;
+			localStorage.setItem("poitems", JSON.stringify(poitems));
+			loadItems();
+		});
+
+/* --------------------------
+     * Edit Row Discount3 Method rdis3 rbatchno
+     -------------------------- */
+	var old_row_dis3;
+	$(document)
+		.on("focus", ".rdeal", function () {
+			old_row_rdeal = $(this).val();
+		})
+		.on("change", ".rdeal", function () {
+			var row = $(this).closest("tr");
+			if (!is_numeric($(this).val()) || parseFloat($(this).val()) < 0) {
+				$(this).val(old_row_rdeal);
+				bootbox.alert(lang.unexpected_value);
+				return;
+			}
+			var new_rdeal = parseFloat($(this).val()),
+				item_id = row.attr("data-item-id");
+			poitems[item_id].row.deal_discount= new_rdeal;
+			localStorage.setItem("poitems", JSON.stringify(poitems));
+			loadItems();
+		});
+
+
+/* --------------------------
+     * Edit Row Discount3 Method rdis3 rbatchno
+     -------------------------- */
+	var old_row_dis3;
+	$(document)
+		.on("focus", ".rdis3", function () {
+			old_row_dis3 = $(this).val();
+		})
+		.on("change", ".rdis3", function () {
+			var row = $(this).closest("tr");
+			if (!is_numeric($(this).val()) || parseFloat($(this).val()) < 0) {
+				$(this).val(old_row_dis3);
+				bootbox.alert(lang.unexpected_value);
+				return;
+			}
+			var new_dis3 = parseFloat($(this).val()),
+				item_id = row.attr("data-item-id");
+			poitems[item_id].row.dis3 = new_dis3;
+			localStorage.setItem("poitems", JSON.stringify(poitems));
+			loadItems();
+		});
+
+		
+	/* --------------------------
+     * Edit Row Discount2 Method rdis2 rbatchno
+     -------------------------- */
+	var old_row_dis2;
+	$(document)
+		.on("focus", ".rdis2", function () {
+			old_row_dis2 = $(this).val();
+		})
+		.on("change", ".rdis2", function () {
+			var row = $(this).closest("tr");
+			if (!is_numeric($(this).val()) || parseFloat($(this).val()) < 0) {
+				$(this).val(old_row_dis2);
+				bootbox.alert(lang.unexpected_value);
+				return;
+			}
+			var new_dis2 = parseFloat($(this).val()),
+				item_id = row.attr("data-item-id");
+			poitems[item_id].row.dis2 = new_dis2;
+			localStorage.setItem("poitems", JSON.stringify(poitems));
+			loadItems();
+		});
+
+	/* --------------------------
+     * Edit Row Discount1 Method rdis1
+     -------------------------- */
+	var old_row_dis1;
+	$(document)
+		.on("focus", ".rdis1", function () {
+			old_row_dis1 = $(this).val();
+		})
+		.on("change", ".rdis1", function () {
+			var row = $(this).closest("tr");
+			if (!is_numeric($(this).val()) || parseFloat($(this).val()) < 0) {
+				$(this).val(old_row_dis1);
+				bootbox.alert(lang.unexpected_value);
+				return;
+			}
+			var new_dis1 = parseFloat($(this).val()),
+				item_id = row.attr("data-item-id");
+			poitems[item_id].row.dis1 = new_dis1;
+			localStorage.setItem("poitems", JSON.stringify(poitems));
+			loadItems();
+		});
+
+	/* --------------------------
+     * Edit Row Bonus Method rbonus
+     -------------------------- */
+	var old_row_bonus;
+	$(document)
+		.on("focus", ".rbonus", function () {
+			old_row_bonus = $(this).val();
+		})
+		.on("change", ".rbonus", function () {
+			var row = $(this).closest("tr");
+			if (!is_numeric($(this).val()) || parseFloat($(this).val()) < 0) {
+				$(this).val(old_row_bonus);
+				bootbox.alert(lang.unexpected_value);
+				return;
+			}
+			var new_bonus = parseFloat($(this).val()),
+				item_id = row.attr("data-item-id");
+			poitems[item_id].row.bonus = new_bonus;
+			localStorage.setItem("poitems", JSON.stringify(poitems));
+			loadItems();
+		});
+
+	/* --------------------------
+     * Edit Row Quantity Method rbonus
+     -------------------------- */
+	var old_row_qty;
+	$(document)
+		.on("focus", ".rquantity", function () {
+			old_row_qty = $(this).val();
+		})
+		.on("change", ".rquantity", function () {
+			var row = $(this).closest("tr");
+			if (!is_numeric($(this).val()) || parseFloat($(this).val()) < 0) {
+				$(this).val(old_row_qty);
+				bootbox.alert(lang.unexpected_value);
+				return;
+			}
+			var new_qty = parseFloat($(this).val()),
+			
+			item_id = row.attr("data-item-id");
+			poitems[item_id].row.base_quantity = new_qty;
+			if (poitems[item_id].row.unit != poitems[item_id].row.base_unit) {
+				$.each(poitems[item_id].units, function () {
+					if (this.id == poitems[item_id].row.unit) {
+						poitems[item_id].row.base_quantity = unitToBaseQty(new_qty, this);
+					}
+				});
+			}
+			poitems[item_id].row.qty = new_qty;
+			poitems[item_id].row.received = new_qty;
+			localStorage.setItem("poitems", JSON.stringify(poitems));
+			loadItems();
+		});
+
+	var old_received;
+	$(document)
+		.on("focus", ".received", function () {
+			old_received = $(this).val();
+		})
+		.on("change", ".received", function () {
+			var row = $(this).closest("tr");
+			new_received = $(this).val() ? $(this).val() : 0;
+			if (!is_numeric(new_received)) {
+				$(this).val(old_received);
+				bootbox.alert(lang.unexpected_value);
+				return;
+			}
+			var new_received = parseFloat($(this).val()),
+				item_id = row.attr("data-item-id");
+			if (new_received > poitems[item_id].row.qty) {
+				$(this).val(old_received);
+				bootbox.alert(lang.unexpected_value);
+				return;
+			}
+			(unit = formatDecimal(row.children().children(".runit").val())),
+				$.each(poitems[item_id].units, function () {
+					if (this.id == unit) {
+						qty_received = formatDecimal(unitToBaseQty(new_received, this), 4);
+					}
+				});
+			poitems[item_id].row.unit_received = new_received;
+			poitems[item_id].row.received = qty_received;
+			localStorage.setItem("poitems", JSON.stringify(poitems));
+			loadItems();
+		});
+
+	/* --------------------------
+     * Edit Row Cost Method
+     -------------------------- */
+	var old_cost;
+	$(document)
+		.on("focus", ".rcost", function () {
+			old_cost = $(this).val();
+		})
+		.on("change", ".rcost", function () {
+			var row = $(this).closest("tr");
+			if (!is_numeric($(this).val())) {
+				$(this).val(old_cost);
+				bootbox.alert(lang.unexpected_value);
+				return;
+			}
+			var new_cost = parseFloat($(this).val()),
+				item_id = row.attr("data-item-id");
+			poitems[item_id].row.cost = new_cost;
+			localStorage.setItem("poitems", JSON.stringify(poitems));
+			loadItems();
+		});
+
+	var old_sale_price;
+	$(document)
+		.on("focus", ".scost", function () {
+			old_sale_price = $(this).val();
+		})
+		.on("change", ".scost", function () {
+			var row = $(this).closest("tr");
+			if (!is_numeric($(this).val())) {
+				$(this).val(old_sale_price);
+				bootbox.alert(lang.unexpected_value);
+				return;
+			}
+			var new_sale_price = parseFloat($(this).val()),
+				item_id = row.attr("data-item-id");
+			poitems[item_id].row.sale_price = new_sale_price;
+			localStorage.setItem("poitems", JSON.stringify(poitems));
+			loadItems();
+		});
+
+	$(document).on("click", "#removeReadonly", function () {
+		$("#posupplier").select2("readonly", false);
+		$("#childsupplier").select2("readonly", false);
+		return false;
+	});
+
+	if (po_edit) {
+		$("#posupplier").select2("readonly", true);
+		$("#childsupplier").select2("readonly", true);
+	}
+});
+/* -----------------------
+ * Misc Actions
+ ----------------------- */
+
+// hellper function for supplier if no localStorage value
+function nsChildSupplierByParentId(pid) {
+	$("#childsupplier").select2({
+		ajax: {
+			url: site.base_url + "suppliers/getChildById",
+			dataType: "json",
+			quietMillis: 15,
+			data: function (term, page) {
+				return {
+					pid: pid,
+					search: term,
+				};
+			},
+			results: function (data, page) {
+				if (data.results != null) {
+					return { results: data.results };
+				} else {
+					return { results: [{ id: "", text: "No Match Found" }] };
+				}
+			},
+		},
+	});
+}
+
+function nsChildSupplier() {
+	$("#childsupplier").select2({
+		minimumInputLength: 1,
+		ajax: {
+			url: site.base_url + "suppliers/childsuggestions",
+			dataType: "json",
+			quietMillis: 15,
+			data: function (term, page) {
+				return {
+					term: term,
+					limit: 10,
+				};
+			},
+			results: function (data, page) {
+				if (data.results != null) {
+					return { results: data.results };
+				} else {
+					return { results: [{ id: "", text: "No Match Found" }] };
+				}
+			},
+		},
+	});
+}
+
+function nsSupplier() {
+	$("#posupplier").select2({
+		minimumInputLength: 1,
+		ajax: {
+			url: site.base_url + "suppliers/childsuggestions",
+			dataType: "json",
+			quietMillis: 15,
+			data: function (term, page) {
+				return {
+					term: term,
+					limit: 10,
+				};
+			},
+			results: function (data, page) {
+				if (data.results != null) {
+					return { results: data.results };
+				} else {
+					return { results: [{ id: "", text: "No Match Found" }] };
+				}
+			},
+		},
+	});
+}
+var first_load = 1;
+function loadItems() {
+	if (localStorage.getItem("poitems")) {
+		total = 0;
+		grand_total_vat = 0;
+		grand_total_purchases = 0;
+		grand_total_sales = 0;
+		count = 1;
+		an = 1;
+		product_tax = 0;
+		invoice_tax = 0;
+		product_discount = 0;
+		order_discount = 0;
+		total_discount = 0;
+
+		$("#poTable tbody").empty();
+		poitems = JSON.parse(localStorage.getItem("poitems"));
+
+		var serial = 1;
+		var order_no = new Date().getTime();
+		/**
+		 * INITILIAZE TOTAL VARIABLES
+		 */
+		let new_total_net_purchase = new Decimal(0);
+		let new_total_purchase = new Decimal(0);
+		let new_total_sale = new Decimal(0);
+		let new_total_vat = new Decimal(0);
+		let new_total_discount = new Decimal(0);
+		let new_grant_total = new Decimal(0);
+		let new_grand_deal_discount = new Decimal(0);
+
+		$.each(poitems, function () {
+			var item = this;
+			// check if edit case
+			if(item.id != '') {
+
+			}
+			console.log("itemrow"+ JSON.stringify(item.row.dis1));
+			//JSON.stringify(poitems)
+			const new_calc = calculatePurchaseOrderInventory(item.row);
+			console.log(new_calc);
+			//new_calc.new_third_discount = 0.0;
+			new_calc.deal_discount = 0.0;  
+			 item_dis3 = item.row.dis3 ? item.row.dis3 : 0.0;
+			 item_deal = item.row.deal_discount ? item.row.deal_discount : 0.0;  
+
+			/**
+			 * NEW TOTAL CALCULATION ASSIGNMENT
+			 */
+			const new_net_purchase = new Decimal(new_calc.new_net_purchase); 
+			new_total_net_purchase = new_total_net_purchase.plus(new_net_purchase);
+			//console.log('totalnetpurchase', new_total_net_purchase);
+
+			const calc_total_purchase = new Decimal(new_calc.new_total_purchase); 
+			new_total_purchase = new_total_purchase.plus(calc_total_purchase);
+
+			const calc_total_sale = new Decimal(new_calc.new_total_sale); 
+			new_total_sale = new_total_sale.plus(calc_total_sale);
+
+			const calc_total_vat = new Decimal(new_calc.new_vat_value); 
+			new_total_vat = new_total_vat.plus(calc_total_vat);
+
+			const calc_total_discount = new Decimal(new_calc.new_total_discount); 
+			new_total_discount = new_total_discount.plus(calc_total_discount);
+
+			const calc_grant_total = new Decimal(new_calc.new_grant_total); 
+			new_grant_total = new_grant_total.plus(calc_grant_total);
+
+			const calc_grand_deal_discount = new Decimal(new_calc.new_deal_discount);
+			new_grand_deal_discount = new_grand_deal_discount.plus(calc_grand_deal_discount);
+
+
+			var item_id = site.settings.item_addition == 1 ? item.item_id : item.id;
+			item.order = item.order ? item.order : order_no++;
+			//var sn = item.row.serial_no;
+			 
+			var product_id = item.row.id,
+				item_type = item.row.type,
+				combo_items = item.combo_items,
+				item_cost = formatDecimal( item.row.cost ),
+				item_sale_price = new_calc.new_sale_price,
+				item_oqty = item.row.oqty,
+				item_qty = item.row.qty,
+				item_bqty = item.row.quantity_balance,
+				item_expiry = item.row.expiry,
+				item_batchno = item.row.batchno,
+				avz_item_code = item.row.avz_item_code,
+				item_serialno = item.row.serial_number,
+				item_tax_method = item.row.tax_method,
+				item_ds = item.row.discount,
+				item_discount = 0,
+				item_option = item.row.option,
+				item_code = item.row.code,
+				item_bonus = item.row.bonus,
+				item_dis1 = item.row.dis1,
+				item_dis2 = item.row.dis2,
+				item_supplier_dis = item.row.get_supplier_discount,
+				warehouse_shelf = item.row.warehouse_shelf
+					? item.row.warehouse_shelf
+					: "",
+				item_name = item.row.name
+					.replace(/"/g, "&#034;")
+					.replace(/'/g, "&#039;");
+
+			var qty_received =
+				item.row.received >= 0 ? item.row.received : item.row.qty;
+			var item_supplier_part_no = item.row.supplier_part_no
+				? item.row.supplier_part_no
+				: "";
+			if (item.row.new_entry == 1) {
+				item_bqty = item_qty;
+				item_oqty = item_qty;
+			}
+			var unit_cost = item.row.cost;
+			var product_unit = item.row.unit,
+				base_quantity = item.row.base_quantity;
+			var supplier = localStorage.getItem("posupplier"),
+				belong = false;
+
+			
+			var unit_qty_received = qty_received;
+			if (item.row.fup != 1 && product_unit != item.row.base_unit) {
+				$.each(item.units, function () {
+					if (this.id == product_unit) {
+						base_quantity = formatDecimal(unitToBaseQty(item.row.qty, this), 4);
+						unit_qty_received = item.row.unit_received
+							? item.row.unit_received
+							: formatDecimal(baseToUnitQty(qty_received, this), 4);
+						unit_cost = formatDecimal(
+							parseFloat(item.row.base_unit_cost) * unitToBaseQty(1, this),
+							4
+						);
+					}
+				});
+			}
+			var ds = item_ds ? item_ds : "0";
+			item_discount = calculateDiscount(ds, unit_cost);
+			product_discount += parseFloat(item_discount * item_qty);
+
+			unit_cost = formatDecimal(unit_cost - item_discount);
+			var pr_tax = item.tax_rate;
+			var pr_tax_val = (pr_tax_rate = 0);
+			if (
+				site.settings.tax1 == 1 &&
+				(ptax = calculateTax(pr_tax, unit_cost, item_tax_method))
+			) {
+				pr_tax_val = ptax[0];
+				pr_tax_rate = ptax[1];
+			}
+			pr_tax_val = formatDecimal(pr_tax_val);
+			product_tax += formatDecimal(pr_tax_val * item_qty);
+			//item_cost = item_tax_method == 0 ? formatDecimal(unit_cost - pr_tax_val, 4) : formatDecimal(unit_cost);
+			unit_cost = formatDecimal(unit_cost + item_discount, 4);
+			var sel_opt = "";
+			$.each(item.options, function () {
+				if (this.id == item_option) {
+					sel_opt = this.name;
+				}
+			});
+
+			var total_after_dis1 = 0.0;
+			var total_after_dis2 = 0.0;
+
+			var total_after_dis1_b = 0.0;
+			var total_after_dis2_b = 0.0;
+
+			var vat_15_a = 0.0;
+			var vat_15_b = 0.0;
+			var net_price_a = 0.0;
+			var net_price_b = 0.0;
+
+			var dis1_a = 0.0;
+			var dis2_a = 0.0;
+			var dis1_b = 0.0;
+			var dis2_b = 0.0;
+			var disc3 = 0.0;
+
+			var main_net = 0.0;
+
+			var total_before_dis_vat = parseFloat(item_cost) * parseFloat(item_qty); //(parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty);
+
+			// if (item_supplier_dis != item_dis1 && item_supplier_dis != 0) {
+			// 	item_dis1 = item_supplier_dis;
+			// }
+
+			dis1_a = total_before_dis_vat * parseFloat(item_dis1 / 100);
+			total_after_dis1 = total_before_dis_vat - dis1_a;
+			dis2_a = total_after_dis1 * parseFloat(item_dis2 / 100);
+			total_after_dis2 = total_after_dis1 - dis2_a;
+			vat_15_a = total_after_dis2 * parseFloat(item.tax_rate.rate / 100); //total_after_dis2 * parseFloat(15/100);
+			net_price_a = vat_15_a + total_after_dis2;
+			
+
+			var total_purchases = parseFloat(item_cost) * parseFloat(item_qty);
+			
+			//var total_sales = (parseFloat(item_sale_price)) * parseFloat(item_qty + item_bonus);
+			var total_sales =
+				parseFloat(item_sale_price) * parseFloat(parseFloat(item_qty) + parseFloat(item_bonus));
+				
+			total_after_dis1 = total_purchases * parseFloat(item_dis1 / 100);
+			total_after_dis2 = (total_purchases - total_after_dis1) * parseFloat(item_dis2 / 100);
+		
+			main_net = total_purchases - (formatDecimal(total_after_dis1) + formatDecimal(total_after_dis2));
+			//var new_unit_cost = parseFloat(main_net) / parseFloat(item_qty + item_bonus);
+			var new_unit_cost =
+				parseFloat(main_net) / parseFloat(parseFloat(item_qty) + parseFloat(item_bonus));
+
+	
+
+			var row_no = item.id;
+
+			let displayName = (site.settings.site_name !== "Jarir Alkhair") ? item_code + "-" + item_name: item_name;
+			let expiryWidth = ( site.settings.site_name !== "Jarir Alkhair") ? "100%" : "80px"; 
+
+			var newTr = $(
+				'<tr id="row_' +
+					row_no +
+					'" class="row_' +
+					item_id +
+					'" data-item-id="' +
+					item_id +
+					'"></tr>'
+			);
+			tr_html =
+				'<td><span name="sno[]"  class="rid" value="' +
+				serial +
+				'">' +
+				serial++ +
+				"</td>" +
+				'<td><input name="product_id[]" type="hidden" class="rid" value="' +
+				product_id +
+				'"><input name="product[]" type="hidden" class="rcode" value="' +
+				item_code +
+				'"><input name="product_name[]" type="hidden" class="rname" value="' +
+				item_name +
+				'"><input name="product_option[]" type="hidden" class="roption" value="' +
+				item_option +
+				'"><input name="part_no[]" type="hidden" class="rpart_no" value="' +
+				item_supplier_part_no +
+				'"><input name="totalbeforevat[]" type="hidden" class="totalbeforevat" value="' +
+				new_calc.new_net_purchase +
+				'"><input name="main_net[]" type="hidden" class="main_net" value="' +
+				new_calc.new_grant_total +
+				'"><input name="item_first_discount[]" type="hidden" class="main_net" value="' +
+				new_calc.new_first_discount +
+				'"><input name="item_second_discount[]" type="hidden" class="main_net" value="' +
+				new_calc.new_second_discount +
+				'"><input name="item_vat_values[]" type="hidden" class="main_net" value="' +
+				new_calc.new_vat_value +
+				'"><input name="item_net_purchase[]" type="hidden" class="main_net" value="' +
+				new_calc.new_net_purchase +
+				'"><input name="item_total_purchase[]" type="hidden" class="main_net" value="' +
+				new_calc.new_total_purchase +
+				'"><input name="item_total_sale[]" type="hidden" class="main_net" value="' +
+				new_calc.new_total_sale +
+				'"><input name="item_unit_cost[]" type="hidden" class="main_net" value="' +
+				new_calc.new_unit_cost +
+				'"><input name="item_third_discount[]" type="hidden" class="main_net" value="' +
+				new_calc.new_third_discount +
+				'"><input name="warehouse_shelf[]" type="hidden" class="warehouse_shelf" value="' +
+				warehouse_shelf +
+				'"><span class="sname" id="name_' +
+				row_no +
+				'">' 
+				+ displayName +
+				(sel_opt != "" ? " (" + sel_opt + ")" : "") +
+				' <span class="label label-default">' +
+				item_supplier_part_no +
+				'</span></span> <i class="pull-right fa fa-edit tip edit" id="' +
+				row_no +
+				'" data-item="' +
+				item_id +
+				'" title="Edit" style="cursor:pointer;"></i></td>';
+
+
+			tr_html +=
+				'<td><input class="form-control scost text-center" name="sale_price[]" type="text" value="' +
+				item_sale_price +
+				'" data-id="' +
+				row_no +
+				'" data-item="' +
+				item_id +
+				'" id="ssale_' +
+				row_no +
+				'"></td>';
+
+			tr_html +=
+				'<td class="text-right"><input class="rucost" name="unit_cost[]" type="hidden" value="' +
+				new_calc.new_unit_cost +
+				'"><input class="form-control realucost" name="real_unit_cost[]" type="hidden" value="' +
+				item.row.real_unit_cost +
+				'"><input class="form-control input-sm text-center rcost" type="text" name="net_cost[]" type="hidden" id="cost_' +
+				row_no +
+				'" value="' +
+				new_calc.new_cost_price +
+				'"></td>';
+
+		
+			tr_html +=
+				'<td><input name="quantity_balance[]" type="hidden" class="rbqty" value="' +
+				item_bqty +
+				'"><input class="form-control text-center rquantity" name="quantity[]" type="text" value="' +
+				formatQuantity2(item_qty) +
+				'" data-id="' +
+				row_no +
+				'" data-item="' +
+				item_id +
+				'" id="quantity_' +
+				row_no +
+				'" onClick="this.select();"><input name="product_unit[]" type="hidden" class="runit" value="' +
+				product_unit +
+				'"><input name="product_base_quantity[]" type="hidden" class="rbase_quantity" value="' +
+				base_quantity +
+				'"></td>';
+
+			tr_html +=
+				'<td><input class="form-control text-center rbonus" name="bonus[]" type="text" data-id="' +
+				row_no +
+				'" data-item="' +
+				item_id +
+				'" id="bonus_' +
+				row_no +
+				'" value="' +
+				formatDecimal(item_bonus) +
+				'"onClick="this.select();"></td>';
+
+			tr_html +=
+				'<td><input class="form-control text-center rdis1" name="dis1[]" type="text" data-id="' +
+				row_no +
+				'" data-item="' +
+				item_id +
+				'" id="dis1_' +
+				row_no +
+				'" value="' +
+				formatDecimal(item_dis1) +
+				'" onClick="this.select();"><span style="position:absolute;font-size:10px;margin-top:5px;">' +
+				new_calc.new_first_discount;
+			("</span></td>");
+
+			tr_html +=
+				'<td><input class="form-control text-center rdis2" name="dis2[]" type="text" data-id="' +
+				row_no +
+				'" data-item="' +
+				item_id +
+				'" id="dis2_' +
+				row_no +
+				'" value="' +
+				formatDecimal(item_dis2) +
+				'" onClick="this.select();"><span style="position:absolute;font-size:10px;margin-top:5px;">' +
+				new_calc.new_second_discount;
+			("</span></td>");
+
+		
+
+			tr_html +=
+				'<td><input class="form-control text-center rdis3" name="dis3[]" type="text" data-id="' +
+				row_no +
+				'" data-item="' +
+				item_id +
+				'" id="dis3_' +
+				row_no +
+				'" value="' +
+				formatDecimal(item_dis3) +
+				'" onClick="this.select();"><span style="position:absolute;font-size:10px;margin-top:5px;">' +
+				new_calc.new_third_discount;
+			("</span></td>");
+
+				tr_html +=
+				'<td class="text-right"><input class="form-control input-sm text-right rproduct_tax" name="product_tax[]" type="hidden" id="product_tax_' +
+				row_no +
+				'" value="' +
+				pr_tax.id +
+				'"><span class="text-right rvat15" id="vat15_' +
+				row_no +
+				'">' +
+				new_calc.new_vat_value +
+				"</span></td>";
+
+			tr_html +=
+				'<td><input class="form-control text-center rdeal" name="deal[]" type="text" data-id="' +
+				row_no +
+				'" data-item="' +
+				item_id +
+				'" id="deal_' +
+				row_no +
+				'" value="' +
+				formatDecimal(item_deal) +
+				'" onClick="this.select();"><span style="position:absolute;font-size:10px;margin-top:5px;">' +
+				new_calc.new_deal_discount;
+			("</span></td>");
+
+			tr_html +=
+				'<td class="text-right"><span class="text-right ssubtotal mycalss" id="subtotal_' +
+				row_no +
+				'">' +
+				new_calc.new_total_purchase+
+				"</span></td>";
+
+			tr_html +=
+				'<td class="text-right"><span class="text-right ssubtotal" id="total_sale_' +
+				row_no +
+				'">' +
+				new_calc.new_total_sale +
+				"</span></td>";
+
+			tr_html +=
+				'<td class="text-right"><span class="text-right rnet" id="net_' +
+				row_no +
+				'">' +
+				new_calc.new_net_purchase +
+				"</span></td>";
+
+			tr_html +=
+				'<td class="text-right"><span class="text-right ssubtotal" id="tes2_' +
+				row_no +
+				'">' +
+				new_calc.new_unit_cost+
+				"</span></td>";
+
+			tr_html +=
+				'<td class="text-center"><i class="fa fa-times tip podel" id="' +
+				row_no +
+				'" title="Remove" style="cursor:pointer;"></i></td>';
+			newTr.html(tr_html);
+			newTr.prependTo("#poTable");
+
+		
+
+			total += formatDecimal(main_net, 4); //formatDecimal((parseFloat(item_cost) + parseFloat(pr_tax_val)) * parseFloat(item_qty), 4);
+			grand_total_vat += formatDecimal( vat_15_a);
+			grand_total_purchases += formatDecimal(total_purchases, 2);
+			grand_total_sales += formatDecimal(total_sales, 2);
+			count += parseFloat(item_qty);
+			an++;
+			if (!belong) $("#row_" + row_no).addClass("warning");
+		});
+
+		
+
+		var trRowClas = localStorage.getItem("trRowClas");
+		if (trRowClas != undefined && trRowClas != "") {
+			$(".row_" + trRowClas).css("color", "green");
+		}
+
+		var col = 10;
+		if (site.settings.product_expiry == 1) {
+			col++;
+		}
+		var tfoot =
+			'<tr id="tfoot" class="tfoot active"><th colspan="' +
+			col +
+			'">Total</th><th class="text-center">' + new_total_vat +
+			"</th>";
+		/*if (po_edit) {
+            tfoot += '<th class="rec_con"></th>';
+        }*/
+
+		tfoot +=
+			'<th class="text-right">' + formatMoney(new_total_purchase) + "</th>";
+
+		tfoot +=
+			'<th class="text-right">' + formatMoney(new_total_sale) + "</th>";
+
+		tfoot += '<th class="text-right">' + formatMoney(new_total_net_purchase) + "</th>";
+		tfoot += "<th></th>";
+		tfoot += "<th>";
+		tfoot += '<input type="hidden" name="grand_total_purchase" value="' + new_total_purchase + '">';
+		tfoot += '<input type="hidden" name="grand_total_net_purchase" value="' + new_total_net_purchase + '">';
+		tfoot += '<input type="hidden" name="grand_total_discount" value="' + new_total_discount + '">';
+		tfoot += '<input type="hidden" name="grand_total_vat" value="' + new_total_vat + '">';
+		tfoot += '<input type="hidden" name="grand_total_sale" value="' + new_total_sale + '">';
+		tfoot += '<input type="hidden" name="grand_total" value="' + new_grant_total + '">';
+		tfoot += '<input type="hidden" name="grand_deal_discount" value="' + new_grand_deal_discount + '">';
+		
+	
+		tfoot += "</th></tr>";
+
+
+		$("#poTable tfoot").html(tfoot);
+
+		// Order level discount calculations
+		if ((podiscount = localStorage.getItem("podiscount"))) {
+			var ds = podiscount;
+			if (ds.indexOf("%") !== -1) {
+				var pds = ds.split("%");
+				if (!isNaN(pds[0])) {
+					order_discount = formatDecimal((total * parseFloat(pds[0])) / 100, 4);
+				} else {
+					order_discount = formatDecimal(ds);
+				}
+			} else {
+				order_discount = formatDecimal(ds);
+			}
+		}
+
+		// Order level tax calculations
+		if (site.settings.tax2 != 0) {
+			if ((potax2 = localStorage.getItem("potax2"))) {
+				$.each(tax_rates, function () {
+					if (this.id == potax2) {
+						if (this.type == 2) {
+							invoice_tax = formatDecimal(this.rate);
+						}
+						if (this.type == 1) {
+							invoice_tax = formatDecimal(
+								((total - order_discount) * this.rate) / 100,
+								4
+							);
+						}
+					}
+				});
+			}
+		}
+		total_discount = parseFloat(order_discount + product_discount);
+		// Totals calculations after item addition
+		// var gtotal = total + invoice_tax - order_discount + shipping;    // commented bu mushtaq
+		var gtotal = total + grand_total_vat - order_discount + shipping; // new line add by mushtaq
+		$("#grand_vat").text(formatMoney(new_total_vat));
+		$("#total").text(formatMoney(new_total_purchase));
+		$("#titems").text(an - 1 + " (" + formatQty(parseFloat(count) - 1) + ")");
+		$("#tds").text(formatMoney(new_total_discount));
+		if (site.settings.tax1) {
+			$("#ttax1").text(formatMoney(product_tax));
+			// alert("product_tax: "+product_tax);
+		}
+		// if (site.settings.tax2 != 0) {
+		// 	$("#ttax2").text(formatMoney(invoice_tax));
+		// }
+		$("#gtotal").text(formatMoney(new_grant_total));
+		if (
+			an > parseInt(site.settings.bc_fix) &&
+			parseInt(site.settings.bc_fix) > 0
+		) {
+			$("html, body").animate({ scrollTop: $("#sticker").offset().top }, 500);
+			$(window).scrollTop($(window).scrollTop() + 1);
+		}
+		if (first_load == 1) {
+			first_load = 0;
+			set_page_focus();
+		}
+	}
+
+	// Reset all tabindexes to -1
+	/*document.querySelectorAll('[tabindex]').forEach(function(el) {
+        el.removeAttribute('tabindex');
+    });
+  
+    // Assign tabindexes to valid input elements
+    var inputEls = document.querySelectorAll('input:not([type="hidden"]):not([disabled])');
+    inputEls.forEach(function(el, idx) {
+        el.tabIndex = idx + 1;
+    });
+
+    currTabIndex = document.activeElement.tabIndex;*/
+}
+
+function calculatePurchaseOrderInventory(item) {
+    console.log(item)
+    // Convert all inputs to Decimal and ensure precision
+    const cost_price = toTwoDecimals(item.cost);
+    const sale_price = toTwoDecimals(item.sale_price);
+    const base_quantity = new Decimal(item.qty);
+    const bonus = new Decimal(item.bonus);
+    const tax_rate = toTwoDecimals(item.tax_rate !== null ? item.tax_rate : 0);
+    const discount1 = toTwoDecimals(item.dis1);
+    const discount2 = toTwoDecimals(item.dis2);
+    const discount3 = toTwoDecimals(item.dis3 || 0);
+	const deal_discount = toTwoDecimals(item.deal_discount || 0);
+
+
+    // Calculations
+    const total_quantity = base_quantity.plus(bonus);
+    const total_purchase = toTwoDecimals(cost_price.times(base_quantity));
+    const total_sale = toTwoDecimals(sale_price.times(total_quantity));
+
+    // Discounts
+    const first_discount = toTwoDecimals(total_purchase.times(discount1.dividedBy(100)));
+    const after_first_discount = toTwoDecimals(total_purchase.minus(first_discount));
+    const second_discount = toTwoDecimals(after_first_discount.times(discount2.dividedBy(100)));
+	//add 3rd discount calculation
+	const after_second_discount = toTwoDecimals(after_first_discount.minus(second_discount));
+	const third_discount = toTwoDecimals(after_second_discount.times(discount3.dividedBy(100)));
+    const total_discount = toTwoDecimals(first_discount.plus(second_discount).plus(third_discount));
+
+
+    let net_purchase = toTwoDecimals(total_purchase.minus(first_discount).minus(second_discount).minus(third_discount));
+    let net_cost = total_quantity.greaterThan(0)
+        ? toTwoDecimals(net_purchase.dividedBy(total_quantity))
+        : new Decimal(0);
+
+    // VAT Calculation (15% if tax_rate is 5)
+    let total_vat = new Decimal(0);
+    if (tax_rate.equals(5)) {
+        total_vat = toTwoDecimals(net_purchase.times(new Decimal(15).dividedBy(100)));
+    }
+
+    // SPECIAL DISCOUNT 3 - RECALCULATE THE NET PURCHASE AND NET COST EXCLUDED VAT
+     let deal_discount_cal = new Decimal(0);
+    if( deal_discount.greaterThan(0) ) {
+                deal_discount_cal = toTwoDecimals(net_purchase.times(deal_discount.dividedBy(100)));
+                console.log('deal_discount', deal_discount_cal.toNumber());
+                net_purchase = toTwoDecimals( net_purchase.minus(deal_discount_cal) );
+
+         net_cost = total_quantity.greaterThan(0)
+        ? toTwoDecimals(net_purchase.dividedBy(total_quantity))
+        : new Decimal(0);     
+    }
+
+
+   
+    // Grant Total
+    const grant_total = toTwoDecimals(net_purchase.plus(total_vat));
+
+    // Return calculated values
+    return {
+        new_cost_price: cost_price.toNumber(),
+        new_sale_price: sale_price.toNumber(),
+        new_total_purchase: total_purchase.toNumber(),
+        new_total_discount: total_discount.toNumber(),
+        new_net_purchase: net_purchase.toNumber(),
+        new_total_sale: total_sale.toNumber(),
+        new_first_discount: first_discount.toNumber(),
+        new_second_discount: second_discount.toNumber(),
+        new_vat_value: total_vat.toNumber(),
+        new_unit_cost: net_cost.toNumber(),
+        new_grant_total: grant_total.toNumber(),
+        new_third_discount: third_discount.toNumber(),
+		new_deal_discount: deal_discount_cal.toNumber()
+    };
+}
+
+/* -----------------------------
+ * Add Purchase Iten Function
+ * @param {json} item
+ * @returns {Boolean}
+ ---------------------------- */
+function add_purchase_item(item) {
+	if (count == 1) {
+		poitems = {};
+		if ($("#posupplier").val()) {
+			$("#posupplier").select2("readonly", true);
+		} else {
+			bootbox.alert(lang.select_above);
+			item = null;
+			return;
+		}
+	}
+	if (item == null) return;
+
+	var item_id = site.settings.item_addition == 1 ? item.item_id : item.id;
+	if (poitems[item_id]) {
+		var new_qty = parseFloat(poitems[item_id].row.qty) + 1;
+		poitems[item_id].row.base_quantity = new_qty;
+		if (poitems[item_id].row.unit != poitems[item_id].row.base_unit) {
+			$.each(poitems[item_id].units, function () {
+				if (this.id == poitems[item_id].row.unit) {
+					poitems[item_id].row.base_quantity = unitToBaseQty(new_qty, this);
+				}
+			});
+		}
+		poitems[item_id].row.qty = new_qty;
+	} else {
+		var foundItem = findMatchingPoItem(item, poitems);
+		if (foundItem) {
+			// if (isBatchNoEmpty(foundItem.item_id, poitems)) {
+			// 	bootbox.alert("No batch number entered for the same product");
+			// } else {
+			// 	poitems[item_id] = item;
+			// }
+		} else {
+			poitems[item_id] = item;
+		}
+	}
+	poitems[item_id].order = new Date().getTime();
+	localStorage.setItem("poitems", JSON.stringify(poitems));
+	loadItems();
+	return true;
+}
+
+function isBatchNoEmpty(item_id, poitems) {
+	const poitemKeys = Object.keys(poitems);
+	for (const key of poitemKeys) {
+		const poitem = poitems[key];
+		if (poitem.item_id === item_id && poitem.row.batchno === "") {
+			return true;
+		}
+	}
+	return false;
+}
+
+function findMatchingItemWithSameBatchNo(batchno, item_id, poitems) {
+	var iitem_id = poitems[item_id].item_id;
+	const poitemKeys = Object.keys(poitems);
+	for (const key of poitemKeys) {
+		const poitem = poitems[key];
+		if (
+			poitem.item_id === iitem_id &&
+			poitem.row.batchno == batchno &&
+			poitem.id != item_id
+		) {
+			return poitem;
+		}
+	}
+	return null;
+}
+
+function findMatchingPoItem(item, poitems) {
+	const poitemKeys = Object.keys(poitems);
+	for (const key of poitemKeys) {
+		const poitem = poitems[key];
+		if (poitem.item_id === item.item_id) {
+			return poitem;
+		}
+	}
+	return null;
+}
+
+if (typeof Storage === "undefined") {
+	$(window).bind("beforeunload", function (e) {
+		if (count > 1) {
+			var message = "You will loss data!";
+			return message;
+		}
+	});
+}
