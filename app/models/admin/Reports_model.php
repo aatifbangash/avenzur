@@ -3396,6 +3396,7 @@ class Reports_model extends CI_Model
                         WHEN iv.trs_type = 'pos' THEN ps.reference_no
                         WHEN iv.trs_type = 'transfer_out' THEN sto.transfer_no
                         WHEN iv.trs_type = 'transfer_in' THEN sti.transfer_no
+                        WHEN iv.trs_type = 'customer_return' THEN rt.id
                         ELSE NULL
                     END AS reference_number,
                     CASE 
@@ -3404,7 +3405,7 @@ class Reports_model extends CI_Model
                         WHEN iv.trs_type = 'pos' THEN sw.name
                         WHEN iv.trs_type = 'transfer_out' THEN sto.from_warehouse_name
                         WHEN iv.trs_type = 'transfer_in' THEN sti.to_warehouse_name
-                        ELSE NULL
+                        WHEN iv.trs_type = 'customer_return' THEN rt.customer
                     END AS counterparty
                 FROM 
                     (SELECT 
@@ -3439,7 +3440,8 @@ class Reports_model extends CI_Model
                     LEFT JOIN sma_sales ps ON iv.reference_id = ps.id AND iv.trs_type = 'pos'
                     LEFT JOIN sma_warehouses sw ON ps.warehouse_id = sw.id
                     LEFT JOIN sma_transfers sto ON iv.reference_id = sto.id AND iv.trs_type = 'transfer_out'
-                    LEFT JOIN sma_transfers sti ON iv.reference_id = sti.id AND iv.trs_type = 'transfer_in'";
+                    LEFT JOIN sma_transfers sti ON iv.reference_id = sti.id AND iv.trs_type = 'transfer_in'
+                    LEFT JOIN sma_returns rt ON iv.reference_id = rt.id AND iv.trs_type = 'customer_return'";
 
         if ($document_number) {
             $query .= " WHERE sp.reference_no like '%" . $document_number . "%' 
