@@ -237,6 +237,7 @@
                                     <th>Batch No</th>
                                     <th>Expiry</th>
                                     <th>Quantity</th>
+                                    <th>Stock Levels</th>
                                     <th>Locked</th>
                                 </tr>
                             </thead>
@@ -273,11 +274,20 @@
                                 <td data-batchno="${item.row.batchno}">${item.row.batchno}</td>
                                 <td data-expiry="${item.row.expiry}">${item.row.expiry}</td>
                                 <td data-quantity="${item.total_quantity}">${item.total_quantity}</td>
+                                <td><a href="javascript:void(0);" class="view-stock-btn btn btn-xs btn-primary" data-product-id="${item.row.product_id}" data-product-name="${item.row.name}"><i class="fa fa-eye"></i> Stock</a></td>
                                 <td>${tickOrCross}</td>
                             </tr>
                         `;
                         $('#itemTableBody').append(row);
                         $('#itemTableBody tr:last-child').data('available', found);
+                    });
+
+                    // Prevent stock view button from triggering row click
+                    $('#itemTableBody').on('click', '.view-stock-btn', function(e) {
+                        e.stopPropagation();
+                        var productId = $(this).data('product-id');
+                        var productName = $(this).data('product-name');
+                        viewInventoryLevels(productId, productName);
                     });
 
                     // Show the modal
@@ -518,6 +528,7 @@
                                             <th class="col-md-1"><?= lang('Sales Price'); ?></th>
                                             <th class="col-md-1"><?= lang('Cost Price'); ?></th>
                                             <th class="col-md-1"><?= lang('quantity'); ?></th>
+                                            <th class="col-md-1">Avlbl Qty</th>
                                             <!-- <th class="col-md-1"><?= lang('Actual Quantity'); ?></th> -->
                                             <?php
                                             if ($Settings->tax1) {
