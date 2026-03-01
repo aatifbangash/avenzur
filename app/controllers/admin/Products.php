@@ -1517,7 +1517,7 @@ class Products extends MY_Controller
             $returnDate = date('Y-m-d H:i:s');
         }*/
 
-        $returnDate = date('Y-m-d H:i:s', strtotime('2026-02-15'));
+        $returnDate = date('Y-m-d H:i:s', strtotime('2026-03-01'));
         //$customerNo = trim($firstRow[1]);
         $customerCode = trim($firstRow[0]);
         $customerName = trim($firstRow[1]);
