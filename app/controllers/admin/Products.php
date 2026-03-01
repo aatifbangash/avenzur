@@ -8609,4 +8609,43 @@ error_reporting(E_ALL);
         header('Content-Type: application/json');
         echo json_encode($results);
     }
+
+    /* ----------------------------------------------------------
+     * View Inventory Levels Across All Warehouses
+     * Used in transfers to check stock in other locations
+     ---------------------------------------------------------- */
+    public function inventory_view($product_id = null)
+    {
+        if (!$product_id) {
+            show_404();
+        }
+
+        // Get product details
+        $product = $this->products_model->getProductByID($product_id);
+        if (!$product) {
+            show_404();
+        }
+
+        // Get all warehouses with inventory levels
+        $this->db->select('sma_warehouses.*, 
+            SUM(sma_inventory_movements.quantity) as quantity,
+            SUM(sma_inventory_movements.quantity) as quantity_balance');
+        $this->db->from('sma_warehouses');
+        $this->db->join('sma_inventory_movements', 
+            'sma_inventory_movements.location_id = sma_warehouses.id AND sma_inventory_movements.product_id = ' . (int)$product_id, 
+            'left');
+        $this->db->group_by('sma_warehouses.id');
+        $this->db->order_by('sma_warehouses.name', 'ASC');
+        $query = $this->db->get();
+        
+        $warehouses = $query->result();
+
+        $this->data['product'] = $product;
+        $this->data['warehouses'] = $warehouses;
+        $this->data['product_id'] = $product_id;
+
+        // Load view without main layout (for modal/popup)
+        // Using the theme path for admin views
+        $this->load->view($this->theme . 'products/inventory_view', $this->data);
+    }
 }

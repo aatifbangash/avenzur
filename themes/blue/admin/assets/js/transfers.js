@@ -697,7 +697,7 @@ function loadItems() {
 				base_quantity +
 				"</span></td>";
 
-			//tr_html += "<td><span>" + formatDecimal(item_aqty, 4) + "</span></td>";
+		tr_html += "<td><a href='javascript:void(0);' onclick='viewInventoryLevels(" + item.row.product_id + ", \"" + item_name.replace(/'/g, "\\'") + "\")' class='btn btn-xs btn-primary'><i class='fa fa-eye'></i> Stock</a></td>";
 
 			if (site.settings.tax1 == 1) {
 				tr_html +=
@@ -851,3 +851,51 @@ if (typeof Storage === "undefined") {
 		}
 	});
 }
+
+/* -----------------------------
+ * View Inventory Levels Modal
+ ---------------------------- */
+function viewInventoryLevels(product_id, product_name) {
+	if (!product_id) return;
+	
+	// Show loading modal
+	$('#inventoryModal').remove(); // Remove any existing modal
+	
+	var modalHtml = '<div class="modal fade" id="inventoryModal" tabindex="-1" role="dialog">' +
+		'<div class="modal-dialog modal-lg" role="document">' +
+		'<div class="modal-content">' +
+		'<div class="modal-header">' +
+		'<button type="button" class="close" data-dismiss="modal" aria-label="Close">' +
+		'<span aria-hidden="true">&times;</span></button>' +
+		'<h4 class="modal-title"><i class="fa fa-cubes"></i> Stock Levels - ' + product_name + '</h4>' +
+		'</div>' +
+		'<div class="modal-body" id="inventoryModalBody">' +
+		'<div class="text-center"><i class="fa fa-spinner fa-spin fa-3x"></i><p>Loading...</p></div>' +
+		'</div>' +
+		'<div class="modal-footer">' +
+		'<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>' +
+		'</div>' +
+		'</div>' +
+		'</div>' +
+		'</div>';
+	
+	$('body').append(modalHtml);
+	$('#inventoryModal').modal('show');
+	
+	// Load content via AJAX
+	$.ajax({
+		url: site.base_url + 'products/inventory_view/' + product_id,
+		type: 'GET',
+		success: function(response) {
+			$('#inventoryModalBody').html(response);
+		},
+		error: function() {
+			$('#inventoryModalBody').html(
+				'<div class="alert alert-danger">' +
+				'<i class="fa fa-exclamation-triangle"></i> Failed to load inventory data. Please try again.' +
+				'</div>'
+			);
+		}
+	});
+}
+
