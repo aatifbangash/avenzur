@@ -157,7 +157,7 @@
                             <tbody style="text-align:center;">
                                 <tr>
                                     <td colspan="2">Opening Balance<td>
-                                    <td colspan="2">&nbsp;</td>
+                                    <td colspan="3">&nbsp;</td>
                                     <td><?php 
                                         if($total_ob >= 0){
                                             echo '<span style="color:black;">' . $this->sma->formatNumber($total_ob) . '</span>';
