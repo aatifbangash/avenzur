@@ -4587,28 +4587,29 @@ class Reports extends MY_Controller
             $supplier_statement = $this->reports_model->getGeneralLedgerStatement($start_date, $end_date, '', $ledger_id);
 
             $total_ob = 0;
-            $total_ob_credit = 0;
-            $total_ob_debit = 0;
             $ob_type = '';
-            //echo '<pre>';print_r($supplier_statement['ob'][0]);exit;
-            if($supplier_statement['ob'][0]->total_amount > 0){
-                if ($supplier_statement['ob'][0]->dc == 'D') {
-                    $total_ob_debit = $supplier_statement['ob'][0]->total_amount;
-                } else if ($supplier_statement['ob'][0]->dc == 'C') {
-                    $total_ob_credit = $supplier_statement['ob'][0]->total_amount;
+            if (!empty($supplier_statement['ob'])) {
+                $has_dc = false;
+                $total_ob_credit = 0;
+                $total_ob_debit = 0;
+
+                foreach ($supplier_statement['ob'] as $ob) {
+                    if (isset($ob->dc) && ($ob->dc === 'D' || $ob->dc === 'C')) {
+                        $has_dc = true;
+                        if ($ob->dc === 'D') {
+                            $total_ob_debit += (float) $ob->total_amount;
+                        } elseif ($ob->dc === 'C') {
+                            $total_ob_credit += (float) $ob->total_amount;
+                        }
+                    }
                 }
 
+                if ($has_dc) {
+                    $total_ob = $total_ob_debit - $total_ob_credit;
+                } else {
+                    $total_ob = isset($supplier_statement['ob'][0]->total_amount) ? (float) $supplier_statement['ob'][0]->total_amount : 0;
+                }
             }
-            /*foreach ($supplier_statement['ob'][0] as $ob) {
-                echo $ob->total_amount . '<br>';exit;
-                if ($ob->dc == 'D') {
-                    $total_ob_debit = $ob->total_amount;
-                } else if ($ob->dc == 'C') {
-                    $total_ob_credit = $ob->total_amount;
-                }
-            }*/
-
-            $total_ob = $supplier_statement['ob'][0]->total_amount;
 
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;
@@ -4688,22 +4689,33 @@ class Reports extends MY_Controller
             $supplier_statement = $this->reports_model->getGeneralLedgerStatement($start_date, $end_date, '', $ledger_id);
 
             $total_ob = 0;
-            $total_ob_credit = 0;
-            $total_ob_debit = 0;
             $ob_type = '';
-            foreach ($supplier_statement['ob'] as $ob) {
-                if ($ob->dc == 'D') {
-                    $total_ob_debit = $ob->total_amount;
-                } else if ($ob->dc == 'C') {
-                    $total_ob_credit = $ob->total_amount;
+            if (!empty($supplier_statement['ob'])) {
+                $has_dc = false;
+                $total_ob_credit = 0;
+                $total_ob_debit = 0;
+
+                foreach ($supplier_statement['ob'] as $ob) {
+                    if (isset($ob->dc) && ($ob->dc === 'D' || $ob->dc === 'C')) {
+                        $has_dc = true;
+                        if ($ob->dc === 'D') {
+                            $total_ob_debit += (float) $ob->total_amount;
+                        } elseif ($ob->dc === 'C') {
+                            $total_ob_credit += (float) $ob->total_amount;
+                        }
+                    }
+                }
+
+                if ($has_dc) {
+                    $total_ob = $total_ob_debit - $total_ob_credit;
+                } else {
+                    $total_ob = isset($supplier_statement['ob'][0]->total_amount) ? (float) $supplier_statement['ob'][0]->total_amount : 0;
                 }
             }
 
-            $total_ob = $total_ob_debit - $total_ob_credit;
-
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;
-            $this->data['supplier_id'] = $supplier_id;
+            $this->data['supplier_id'] = '';
             $this->data['ob_type'] = $ob_type;
             $this->data['ledger_id'] = $ledger_id;
             $this->data['total_ob'] = $this->sma->formatDecimal($total_ob);
