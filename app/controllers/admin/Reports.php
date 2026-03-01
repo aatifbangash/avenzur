@@ -4590,15 +4590,25 @@ class Reports extends MY_Controller
             $total_ob_credit = 0;
             $total_ob_debit = 0;
             $ob_type = '';
-            foreach ($supplier_statement['ob'] as $ob) {
+            //echo '<pre>';print_r($supplier_statement['ob'][0]);exit;
+            if($supplier_statement['ob'][0]->total_amount > 0){
+                if ($supplier_statement['ob'][0]->dc == 'D') {
+                    $total_ob_debit = $supplier_statement['ob'][0]->total_amount;
+                } else if ($supplier_statement['ob'][0]->dc == 'C') {
+                    $total_ob_credit = $supplier_statement['ob'][0]->total_amount;
+                }
+
+            }
+            /*foreach ($supplier_statement['ob'][0] as $ob) {
+                echo $ob->total_amount . '<br>';exit;
                 if ($ob->dc == 'D') {
                     $total_ob_debit = $ob->total_amount;
                 } else if ($ob->dc == 'C') {
                     $total_ob_credit = $ob->total_amount;
                 }
-            }
+            }*/
 
-            $total_ob = $total_ob_debit - $total_ob_credit;
+            $total_ob = $supplier_statement['ob'][0]->total_amount;
 
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;

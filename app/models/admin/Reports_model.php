@@ -863,22 +863,23 @@ class Reports_model extends CI_Model
         $response = array();
 
         $this->db
-            ->select('COALESCE(sum(sma_accounts_entryitems.amount), 0) as total_amount, sma_accounts_entryitems.dc')
+            ->select("
+                ROUND(
+                    SUM(CASE WHEN sma_accounts_entryitems.dc = 'D' THEN sma_accounts_entryitems.amount ELSE 0 END)
+                    -
+                    SUM(CASE WHEN sma_accounts_entryitems.dc = 'C' THEN sma_accounts_entryitems.amount ELSE 0 END)
+                , 2) as total_amount
+            ", false)
             ->from('sma_accounts_entryitems')
-            //->join('sma_accounts_entryitems', 'sma_accounts_entryitems.ledger_id=companies.ledger_account')
-            ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
+            ->join('sma_accounts_entries', 'sma_accounts_entries.id = sma_accounts_entryitems.entry_id')
             ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
             ->where('sma_accounts_entries.date <', $start_date);
-        //->group_by('sma_accounts_entryitems.dc');
-        $q = $this->db->get();
-        if ($q->num_rows() > 0) {
-            foreach (($q->result()) as $row) {
-                $data_res[] = $row;
-            }
-        } else {
-            $data_res = array();
-        }
 
+        $q = $this->db->get();
+        //echo $this->db->last_query();exit;
+        $data_res = ($q->num_rows() > 0) ? $q->result() : [];
+        //echo '<pre>';print_r($data_res);exit;
+        
         $this->db
             ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.transaction_type, sma_accounts_entries.date, sma_accounts_ledgers.code, sma_accounts_ledgers.name, (select sum(amount) from sma_accounts_entryitems ei inner join sma_accounts_entries e on e.id =ei.entry_id where e.date < `sma_accounts_entries`.`date` and ei.ledger_id = ' . $ledger_account . ') as openingAmount,')
             ->from('sma_accounts_entryitems')
@@ -890,7 +891,7 @@ class Reports_model extends CI_Model
             ->order_by('sma_accounts_entries.date asc, sma_accounts_entries.id asc');
 
         $q = $this->db->get();
-
+        
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
