@@ -87,7 +87,7 @@ foreach ($payments as $p):
     <td class="right"><?= number_format($p->return_amount ?? 0, 2) ?></td>
     <td class="right"><?= number_format($previously_paid, 2) ?></td>
     <td class="right"><?= number_format($this_payment, 2) ?></td>
-    <td class="right"><?= number_format($total_paid_now, 2) ?></td>
+    <td class="right"><?= number_format($p->amount, 2) ?></td>
     <td class="right"><?= number_format($remaining_due, 2) ?></td>
     
 </tr>
