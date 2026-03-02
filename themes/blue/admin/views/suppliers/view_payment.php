@@ -225,14 +225,33 @@
                                     $count = 0;
                                     foreach($payments as $payment){
                                         $count++;
+                                        
+                                        // Determine invoice type and labels
+                                        $invoice_type = isset($payment->invoice_type) ? $payment->invoice_type : 'advance';
+                                        
+                                        if ($invoice_type == 'service') {
+                                            $type_label = 'Service Invoice Payment';
+                                            $badge = '<span class="label label-info">Service</span>';
+                                        } elseif ($invoice_type == 'purchase') {
+                                            $type_label = 'Purchase Invoice Payment';
+                                            $badge = '';
+                                        } else {
+                                            $type_label = 'Advance Payment';
+                                            $badge = '<span class="label label-warning">Advance</span>';
+                                        }
+                                        
+                                        // Calculate amounts based on invoice type
+                                        $original_amount = ($payment->grand_total > 0) ? $payment->grand_total : 0;
+                                        $amount_due = ($original_amount - $payment->purchase_paid) > 0 ? ($original_amount - $payment->purchase_paid) : 0;
+                                        
                                         ?>
                                         <tr>
                                             <td><?= $count; ?></td>
-                                            <td><?= $payment->purchase_id != '' ? $payment->purchase_date : $payment->date; ?></td>
-                                            <td><?= $payment->purchase_id != '' ? $payment->ref_no : $payment->reference_no; ?></td>
-                                            <td><?= $payment->purchase_id != '' ? 'Invoice Payment' : 'Advance Payment'; ?></td>
-                                            <td><?= $payment->grand_total > 0 ? number_format($payment->grand_total, 2) : '0'; ?></td>
-                                            <td><?= ($payment->grand_total - $payment->amount) > 0 ? number_format(($payment->grand_total - $payment->amount), 2) : '0.00'; ?></td>
+                                            <td><?= $payment->purchase_date ? date('Y-m-d', strtotime($payment->purchase_date)) : $payment->date; ?></td>
+                                            <td><?= $payment->ref_no ? $payment->ref_no : $payment->reference_no; ?> <?= $badge; ?></td>
+                                            <td><?= $type_label; ?></td>
+                                            <td><?= number_format($original_amount, 2); ?></td>
+                                            <td><?= number_format($amount_due, 2); ?></td>
                                             <td><?= number_format($payment->amount, 2); ?></td>
                                         </tr>
                                         <?php

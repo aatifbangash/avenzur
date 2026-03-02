@@ -507,6 +507,8 @@
                                 var total_amount = response[i].grand_total;
                                 var paid_amount = response[i].paid;
                                 var due_amount = response[i].grand_total - response[i].paid;
+                                var invoice_type = response[i].invoice_type || 'purchase'; // Default to 'purchase' if not set
+                                var invoice_label = (invoice_type === 'service') ? ' <span class="label label-info">Service</span>' : '';
 
                                 total_due += due_amount;
                                 total_amt += total_amount;
@@ -528,10 +530,10 @@
                                 
                                 var newTr = $('<tr id="row_' + response[i].id + '" class="row_' + response[i].id + '" data-item-id="' + response[i].id + '"></tr>');
                                 tr_html = '<td>'+purchase_date+'</td>';
-                                tr_html += '<td>'+reference_id+'</td>';
+                                tr_html += '<td>'+reference_id+invoice_label+'</td>';
                                 tr_html += '<td>'+total_amount+'</td>';
                                 tr_html += '<td>'+due_amount+'<input name="due_amount[]" data-item-id="' + response[i].id + '" value="'+due_amount+'" type="hidden" class="rid" /></td>';
-                                tr_html += '<td><input name="payment_amount[]" data-item-id="' + response[i].id + '" value="'+to_pay+'" type="text" class="rid" /><input name="item_id[]" type="hidden" value="' + response[i].id + '"></td>';
+                                tr_html += '<td><input name="payment_amount[]" data-item-id="' + response[i].id + '" value="'+to_pay+'" type="text" class="rid" /><input name="item_id[]" type="hidden" value="' + response[i].id + '"><input name="invoice_type[]" type="hidden" value="' + invoice_type + '"></td>';
                                 newTr.html(tr_html);
                                 newTr.prependTo('#poTable');
                             }
