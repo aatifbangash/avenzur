@@ -46,6 +46,7 @@ th { background:#f2f2f2; }
     <th class="right">Return</th>
     <th class="right">Paid</th>
     <th class="right">Balance</th>
+    <th class="right">Payment</th>
     <th class="right">Due</th>
 </tr>
 </thead>
@@ -86,13 +87,14 @@ foreach ($payments as $p):
     <td class="right"><?= number_format($p->return_amount ?? 0, 2) ?></td>
     <td class="right"><?= number_format($previously_paid, 2) ?></td>
     <td class="right"><?= number_format($this_payment, 2) ?></td>
+    <td class="right"><?= number_format($total_paid_now, 2) ?></td>
     <td class="right"><?= number_format($remaining_due, 2) ?></td>
     
 </tr>
 <?php endforeach; ?>
 
 <tr>
-    <th colspan="8" class="right">Total Paid</th>
+    <th colspan="9" class="right">Total Paid</th>
     <th class="right"><?= number_format($total_paid, 2) ?></th>
 </tr>
 
