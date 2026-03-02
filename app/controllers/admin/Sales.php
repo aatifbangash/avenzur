@@ -5119,13 +5119,14 @@ if($inv->warning_note != ""){
         // Set column widths and headers
         $colWidths = [
             'A' => 5,   // No.
-            'B' => 40,  // Description
-            'C' => 12,  // Avz Code
-            'D' => 12,  // Batch No
-            'E' => 12,  // HSN/SAC (if applicable)
-            'F' => 12,  // Base Quantity
-            'G' => 10,  // Received (if partial)
-            'H' => 10,  // Bonus
+            'B' => 20,  // Code
+            'C' => 40,  // Description
+            'D' => 12,  // Avz Code
+            'E' => 12,  // Batch No
+            'F' => 12,  // HSN/SAC (if applicable)
+            'G' => 12,  // Base Quantity
+            'H' => 10,  // Received (if partial)
+            'I' => 10,  // Bonus
             'I' => 12,  // Sale Price
             'J' => 12,  // Subtotal
             'K' => 10,  // Disc1 %
@@ -5145,11 +5146,12 @@ if($inv->warning_note != ""){
         // Items Header
         $row += 2;
         $sheet->setCellValue('A' . $row, 'No.');
-        $sheet->setCellValue('B' . $row, 'Description');
-        $sheet->setCellValue('C' . $row, 'Avz Code');
-        $sheet->setCellValue('D' . $row, 'Batch No');
+        $sheet->setCellValue('B' . $row, 'Code');
+        $sheet->setCellValue('C' . $row, 'Description');
+        $sheet->setCellValue('D' . $row, 'Avz Code');
+        $sheet->setCellValue('E' . $row, 'Batch No');
 
-        $colIndex = 'E';
+        $colIndex = 'F';
         if ($this->Settings->indian_gst) {
             $sheet->setCellValue($colIndex . $row, 'HSN/SAC Code');
             $colIndex++;
@@ -5208,22 +5210,26 @@ if($inv->warning_note != ""){
             $sheet->setCellValue($colIndex . $r, $sr);
             $colIndex++;
 
+            //Code
+            $sheet->setCellValue($colIndex . $r, $item->product_code);
+            $colIndex++;
+
             // Description
-            $description = $item->product_code . ' - ' . $item->product_name;
+            $description = $item->product_name;
             if ($item->variant) {
-                $description .= ' (' . $item->variant . ')';
+                //$description .= ' (' . $item->variant . ')';
             }
             if ($item->second_name) {
-                $description .= "\n" . $item->second_name;
+                //$description .= "\n" . $item->second_name;
             }
             if ($item->supplier_part_no) {
-                $description .= "\n" . lang('supplier_part_no') . ': ' . $item->supplier_part_no;
+                //$description .= "\n" . lang('supplier_part_no') . ': ' . $item->supplier_part_no;
             }
             if ($item->details) {
-                $description .= "\n" . $item->details;
+                //$description .= "\n" . $item->details;
             }
             if ($item->expiry && $item->expiry != '0000-00-00') {
-                $description .= "\n" . lang('EX') . ': ' . $this->sma->hrsd($item->expiry);
+                //$description .= "\n" . lang('EX') . ': ' . $this->sma->hrsd($item->expiry);
             }
             $sheet->setCellValue($colIndex . $r, $description);
             $colIndex++;
