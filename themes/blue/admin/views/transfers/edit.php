@@ -497,6 +497,7 @@
                                             <th class="col-md-1"><?= lang('Sales Price'); ?></th>
                                             <th class="col-md-1"><?= lang('Cost Price'); ?></th>
                                             <th class="col-md-1"><?= lang('quantity'); ?></th>
+                                            <th class="col-md-1">Avlbl Qty</th>
                                             <!-- <th class="col-md-1"><?= lang('Actual Quantity'); ?></th> -->
                                             <?php
                                             if ($Settings->tax1) {
