@@ -1178,7 +1178,7 @@ class Transfers extends MY_Controller
             . lang('actions') . ' <span class="caret"></span></button>
         <ul class="dropdown-menu pull-right" role="menu">';
 
-        if($this->GP['transfers-edit']){    
+        if($this->Owner || $this->Admin ||$this->GP['transfers-edit']){    
             $action .= '<li>' . $edit_link . '</li>';
         }
         if($this->GP['transfers-pdf']){
