@@ -55,17 +55,38 @@ th { background:#f2f2f2; }
 $total_paid = 0;
 foreach ($payments as $p):
     $total_paid += $p->amount;
+    
+    // Determine invoice type
+    $invoice_type = isset($p->invoice_type) ? $p->invoice_type : 'advance';
+    
+    if ($invoice_type == 'service') {
+        $type_label = 'Service Invoice Payment';
+    } elseif ($invoice_type == 'purchase') {
+        $type_label = 'Purchase Invoice Payment';
+    } else {
+        $type_label = 'Advance Payment';
+    }
+    
+    // Calculate amounts based on invoice type
+    $original_amount = ($p->grand_total > 0) ? $p->grand_total : 0;
+    
+    // For both purchase and service invoices, purchase_paid contains the CURRENT total paid (including this payment)
+    // We need to calculate previously paid (before this payment) and remaining due (after this payment)
+    $total_paid_now = isset($p->purchase_paid) ? $p->purchase_paid : 0;
+    $previously_paid = ($total_paid_now - $p->amount) >= 0 ? ($total_paid_now - $p->amount) : 0;
+    $this_payment = $p->amount;
+    $remaining_due = ($original_amount - $total_paid_now) >= 0 ? ($original_amount - $total_paid_now) : 0;
 ?>
 <tr>
-    <td><?= $p->purchase_id ? date('Y-m-d', strtotime($p->purchase_date)) : date('d-m-Y', strtotime($p->date)) ?></td>
-    <td><?= $p->purchase_id ? $p->ref_no : $p->reference_no ?></td>
-    <td><?= $p->purchase_id ? 'Invoice Payment' : 'Advance Payment' ?></td>
-    <td class="right"><?= number_format($p->grand_total ?? 0, 2) ?></td>
+    <td><?= ($p->purchase_date) ? date('Y-m-d', strtotime($p->purchase_date)) : date('d-m-Y', strtotime($p->date)) ?></td>
+    <td><?= $p->ref_no ? $p->ref_no : $p->reference_no ?></td>
+    <td><?= $type_label ?></td>
+    <td class="right"><?= number_format($original_amount, 2) ?></td>
     <td class="right"><?= number_format($p->additional_discount ?? 0, 2) ?></td>
     <td class="right"><?= number_format($p->return_amount ?? 0, 2) ?></td>
-    <td class="right"><?= number_format(($p->purchase_paid - $p->amount) ?? 0, 2) ?></td>
-    <td class="right"><?= number_format($p->amount, 2) ?></td>
-    <td class="right"><?= number_format(($p->grand_total - $p->purchase_paid) ?? 0, 2) ?></td>
+    <td class="right"><?= number_format($previously_paid, 2) ?></td>
+    <td class="right"><?= number_format($this_payment, 2) ?></td>
+    <td class="right"><?= number_format($remaining_due, 2) ?></td>
     
 </tr>
 <?php endforeach; ?>

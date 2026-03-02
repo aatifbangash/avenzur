@@ -496,6 +496,26 @@ class Suppliers extends MY_Controller
         $this->purchases_model->addPayment($payment);
     }
 
+    public function make_service_invoice_payment($service_invoice_id, $amount, $reference_no, $date, $note, $payment_id){
+        // Update the service invoice used_amount in sma_memo
+        $this->purchases_model->update_service_invoice_used_amount($service_invoice_id, $amount);
+        
+        // Create payment record (with purchase_id = NULL since it's a service invoice)
+        $payment = [
+            'date'          => $date,
+            'purchase_id'   => NULL, // Service invoices don't have purchase_id
+            'memo_id'       => $service_invoice_id, // Link to the service invoice memo
+            'reference_no'  => $reference_no,
+            'amount'        => $amount,
+            'note'          => $note . ' (Service Invoice #' . $service_invoice_id . ')',
+            'created_by'    => $this->session->userdata('user_id'),
+            'type'          => 'sent',
+            'payment_id'    => $payment_id
+        ];
+
+        $this->purchases_model->addPayment($payment);
+    }
+
     public function update_purchase_order($id, $amount){
         $this->purchases_model->update_purchase_paid_amount($id, $amount);
     }
@@ -1040,6 +1060,7 @@ class Suppliers extends MY_Controller
             $supplier_id      = $this->input->post('supplier');
             $payments_array      = $this->input->post('payment_amount');
             $item_ids = $this->input->post('item_id');
+            $invoice_types = $this->input->post('invoice_type'); // Get invoice types (purchase or service)
             $reference_no = $this->input->post('reference_no');
             $payment_total = $this->input->post('payment_total');
             $ledger_account = $this->input->post('ledger_account');
@@ -1245,13 +1266,18 @@ class Suppliers extends MY_Controller
                         for ($i = 0; $i < count($payments_array); $i++) {
                             $invoice_payment = $payments_array[$i];
                             $item_id = $item_ids[$i];
+                            $invoice_type = isset($invoice_types[$i]) ? $invoice_types[$i] : 'purchase';
                             
                             if($invoice_payment > 0){
-                                // Update purchase with payment amount
-                                $this->update_purchase_order($item_id, $invoice_payment);
-                                
-                                // Record advance settlement payment
-                                $this->make_supplier_payment($item_id, $invoice_payment, $reference_no . '-ADV', $date, $note . ' (Advance Settlement)', $combined_payment_id);
+                                // Check if it's a service invoice or purchase invoice
+                                if($invoice_type == 'service'){
+                                    // Handle service invoice payment
+                                    $this->make_service_invoice_payment($item_id, $invoice_payment, $reference_no . '-ADV', $date, $note . ' (Advance Settlement)', $combined_payment_id);
+                                } else {
+                                    // Handle purchase invoice payment
+                                    $this->update_purchase_order($item_id, $invoice_payment);
+                                    $this->make_supplier_payment($item_id, $invoice_payment, $reference_no . '-ADV', $date, $note . ' (Advance Settlement)', $combined_payment_id);
+                                }
                             }
                         }
                         
@@ -1281,6 +1307,7 @@ class Suppliers extends MY_Controller
                             for ($i = 0; $i < count($payments_array); $i++) {
                                 $invoice_payment_needed = $payments_array[$i];
                                 $item_id = $item_ids[$i];
+                                $invoice_type = isset($invoice_types[$i]) ? $invoice_types[$i] : 'purchase';
                                 
                                 if($invoice_payment_needed > 0){
                                     // Determine how much cash and advance for this invoice
@@ -1292,17 +1319,23 @@ class Suppliers extends MY_Controller
                                     
                                     $total_for_invoice = $cash_for_invoice + $advance_for_invoice;
                                     
-                                    // Update purchase with total payment amount
-                                    $this->update_purchase_order($item_id, $total_for_invoice);
-                                    
-                                    // Record cash payment
-                                    if ($cash_for_invoice > 0) {
-                                        $this->make_supplier_payment($item_id, $cash_for_invoice, $reference_no, $date, $note . ' (Cash)', $combined_payment_id);
-                                    }
-                                    
-                                    // Record advance settlement payment
-                                    if ($advance_for_invoice > 0) {
-                                        $this->make_supplier_payment($item_id, $advance_for_invoice, $reference_no . '-ADV', $date, $note . ' (Advance Settlement)', $combined_payment_id);
+                                    // Check if it's a service invoice or purchase invoice
+                                    if($invoice_type == 'service'){
+                                        // Handle service invoice payment (combined amount)
+                                        $this->make_service_invoice_payment($item_id, $total_for_invoice, $reference_no, $date, $note, $combined_payment_id);
+                                    } else {
+                                        // Handle purchase invoice payment
+                                        $this->update_purchase_order($item_id, $total_for_invoice);
+                                        
+                                        // Record cash payment
+                                        if ($cash_for_invoice > 0) {
+                                            $this->make_supplier_payment($item_id, $cash_for_invoice, $reference_no, $date, $note . ' (Cash)', $combined_payment_id);
+                                        }
+                                        
+                                        // Record advance settlement payment
+                                        if ($advance_for_invoice > 0) {
+                                            $this->make_supplier_payment($item_id, $advance_for_invoice, $reference_no . '-ADV', $date, $note . ' (Advance Settlement)', $combined_payment_id);
+                                        }
                                     }
                                 }
                             }
@@ -1322,16 +1355,18 @@ class Suppliers extends MY_Controller
                             for ($i = 0; $i < count($payments_array); $i++) {
                                 $cash_payment_for_invoice = $payments_array[$i];
                                 $item_id = $item_ids[$i];
+                                $invoice_type = isset($invoice_types[$i]) ? $invoice_types[$i] : 'purchase';
                                 
                                 if($cash_payment_for_invoice > 0){
-                                    //$payment_before = $this->purchases_model->getPaidAmount($item_id); 
-                                    //echo '<pre>';print_r($payment_before); // Placeholder to avoid null FK issues
-                                    // Update purchase with payment amount
-                                    $this->update_purchase_order($item_id, $cash_payment_for_invoice);
-                                    
-                                    // Record cash payment
-                                    $this->make_supplier_payment($item_id, $cash_payment_for_invoice, $reference_no, $date, $note, $combined_payment_id);
-                                    //echo 'Cash payment for invoice processed.'. $cash_payment_for_invoice;
+                                    // Check if it's a service invoice or purchase invoice
+                                    if($invoice_type == 'service'){
+                                        // Handle service invoice payment
+                                        $this->make_service_invoice_payment($item_id, $cash_payment_for_invoice, $reference_no, $date, $note, $combined_payment_id);
+                                    } else {
+                                        // Handle purchase invoice payment
+                                        $this->update_purchase_order($item_id, $cash_payment_for_invoice);
+                                        $this->make_supplier_payment($item_id, $cash_payment_for_invoice, $reference_no, $date, $note, $combined_payment_id);
+                                    }
                                 }
                             }
                             //exit;

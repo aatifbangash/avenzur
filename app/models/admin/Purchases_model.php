@@ -602,6 +602,7 @@ class Purchases_model extends CI_Model
 
     public function getPaymentByReferenceID($id)
     {
+        // First, get purchase invoice payments
         $this->db->select('
             payments.*, 
             companies.company,
@@ -611,18 +612,95 @@ class Purchases_model extends CI_Model
             purchases.reference_no as ref_no, 
             purchases.date as purchase_date,
             purchases.paid as purchase_paid,
-            IFNULL(SUM(rs.grand_total), 0) as return_amount
-        ')
-        ->join('purchases', 'purchases.id = payments.purchase_id', 'left')
+            IFNULL(SUM(rs.grand_total), 0) as return_amount,
+            "purchase" as invoice_type,
+            0 as service_invoice_id
+        ', FALSE)
+        ->join('purchases', 'purchases.id = payments.purchase_id', 'inner')
         ->join('companies', 'companies.id = purchases.supplier_id', 'left')
         ->join('returns_supplier rs', 'rs.reference_no = purchases.reference_no', 'left')
         ->where('payments.payment_id', $id)
-        ->group_by('payments.payment_id'); // aggregate sum
+        ->where('payments.purchase_id IS NOT NULL')
+        ->group_by('payments.id');
 
-        $q = $this->db->get('payments');
+        $purchase_payments = $this->db->get('payments')->result();
 
-        if ($q->num_rows() > 0) {
-            return $q->result(); // returns an array of objects
+        // Second, get service invoice payments
+        // Parse the note field to extract service invoice ID
+        $this->db->select('
+            payments.*,
+            companies.company,
+            companies.credit_limit,
+            companies.payment_term,
+            0 as grand_total,
+            payments.reference_no as ref_no,
+            payments.date as purchase_date,
+            0 as purchase_paid,
+            0 as return_amount,
+            "service" as invoice_type,
+            0 as service_invoice_id
+        ', FALSE)
+        ->join('sma_payment_reference pr', 'pr.id = payments.payment_id', 'left')
+        ->join('companies', 'companies.id = pr.supplier_id', 'left')
+        ->where('payments.payment_id', $id)
+        ->where('payments.purchase_id IS NULL')
+        ->where('payments.type', 'sent')
+        ->where('sma_payments.note LIKE', '%Service Invoice #%');
+
+        $service_payment_query = $this->db->get('payments');
+        $service_payments = [];
+
+        if ($service_payment_query->num_rows() > 0) {
+            foreach ($service_payment_query->result() as $payment) {
+                // Extract service invoice ID from note
+                if (preg_match('/Service Invoice #(\d+)/', $payment->note, $matches)) {
+                    $service_invoice_id = $matches[1];
+                    
+                    // Get service invoice details
+                    $this->db->select('payment_amount as grand_total, reference_no as ref_no, date as purchase_date, used_amount as purchase_paid');
+                    $this->db->where('id', $service_invoice_id);
+                    $this->db->where('type', 'serviceinvoice');
+                    $service_invoice = $this->db->get('sma_memo')->row();
+                    
+                    if ($service_invoice) {
+                        $payment->grand_total = $service_invoice->grand_total;
+                        $payment->ref_no = $service_invoice->ref_no;
+                        $payment->purchase_date = $service_invoice->purchase_date;
+                        $payment->purchase_paid = $service_invoice->purchase_paid;
+                        $payment->service_invoice_id = $service_invoice_id;
+                    }
+                }
+                $service_payments[] = $payment;
+            }
+        }
+
+        // Third, get advance payments (no purchase_id and not service invoice)
+        $this->db->select('
+            payments.*,
+            companies.company,
+            companies.credit_limit,
+            companies.payment_term,
+            0 as grand_total,
+            payments.reference_no as ref_no,
+            payments.date as purchase_date,
+            0 as purchase_paid,
+            0 as return_amount,
+            "advance" as invoice_type,
+            0 as service_invoice_id
+        ', FALSE)
+        ->join('sma_payment_reference pr', 'pr.id = payments.payment_id', 'left')
+        ->join('companies', 'companies.id = pr.supplier_id', 'left')
+        ->where('payments.payment_id', $id)
+        ->where('payments.purchase_id IS NULL')
+        ->where('payments.type', 'advance');
+
+        $advance_payments = $this->db->get('payments')->result();
+
+        // Merge all payment types
+        $all_payments = array_merge($purchase_payments, $service_payments, $advance_payments);
+
+        if (count($all_payments) > 0) {
+            return $all_payments;
         }
 
         return false;
@@ -1166,17 +1244,87 @@ class Purchases_model extends CI_Model
 
     public function getPendingInvoicesBySupplier($supplier_id)
     {
+        // Fetch purchase invoices
         $this->db->order_by('date', 'asc');
         $this->db->where('supplier_id', $supplier_id);
         $this->db->where('purchase_invoice', 1);
         $this->db->where_in('payment_status', ['pending', 'due', 'partial']);
         $q = $this->db->get('purchases');
 
+        $purchase_invoices = [];
         if ($q->num_rows() > 0) {
-            return $q->result(); // Return the result directly as an array of objects
-        } else {
-            return []; // Return an empty array if no results
+            $purchase_invoices = $q->result();
         }
+
+        // Fetch service invoices from sma_memo
+        $this->db->select('
+            id,
+            date,
+            reference_no,
+            payment_amount as grand_total,
+            COALESCE(used_amount, 0) as paid,
+            "service" as invoice_type
+        ');
+        $this->db->where('type', 'serviceinvoice');
+        $this->db->where('supplier_id', $supplier_id);
+        $this->db->where('supplier_id !=', 0);
+        $this->db->where('supplier_id IS NOT NULL');
+        
+        // Only include service invoices with outstanding balance
+        $this->db->where('(payment_amount - COALESCE(used_amount, 0)) > 0');
+        
+        $this->db->order_by('date', 'asc');
+        $service_q = $this->db->get('sma_memo');
+
+        $service_invoices = [];
+        if ($service_q->num_rows() > 0) {
+            $service_invoices = $service_q->result();
+        }
+
+        // Merge both arrays
+        $all_invoices = array_merge($purchase_invoices, $service_invoices);
+
+        // Sort by date (ascending)
+        usort($all_invoices, function($a, $b) {
+            return strtotime($a->date) - strtotime($b->date);
+        });
+
+        return $all_invoices;
+    }
+
+    public function update_service_invoice_used_amount($service_invoice_id, $payment_amount)
+    {
+        // Get current used_amount
+        $this->db->select('COALESCE(used_amount, 0) as used_amount');
+        $this->db->where('id', $service_invoice_id);
+        $query = $this->db->get('sma_memo');
+        
+        if ($query->num_rows() > 0) {
+            $row = $query->row();
+            $current_used = $row->used_amount;
+            $new_used_amount = $current_used + $payment_amount;
+            
+            // Update the used_amount
+            $this->db->where('id', $service_invoice_id);
+            $this->db->update('sma_memo', ['used_amount' => $new_used_amount]);
+            
+            return true;
+        }
+        
+        return false;
+    }
+
+    public function get_service_invoice_by_id($service_invoice_id)
+    {
+        $this->db->where('id', $service_invoice_id);
+        $this->db->where('type', 'serviceinvoice');
+        $query = $this->db->get('sma_memo');
+        
+        if ($query->num_rows() > 0) {
+            return $query->row();
+        }
+        
+        return null;
     }
 
     public function puchaseToInvoice($id)
