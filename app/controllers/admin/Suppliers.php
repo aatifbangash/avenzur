@@ -504,6 +504,7 @@ class Suppliers extends MY_Controller
         $payment = [
             'date'          => $date,
             'purchase_id'   => NULL, // Service invoices don't have purchase_id
+            'memo_id'       => $service_invoice_id, // Link to the service invoice memo
             'reference_no'  => $reference_no,
             'amount'        => $amount,
             'note'          => $note . ' (Service Invoice #' . $service_invoice_id . ')',
