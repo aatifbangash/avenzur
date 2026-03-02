@@ -951,7 +951,7 @@ class Suppliers extends MY_Controller
         $this->data['supplier_aging'] = $supplier_aging;
 
         $biller      = $this->site->getDefaultBiller();
-
+        //echo '<pre>';print_r($this->data);exit;
         // Load HTML
         $html = $this->load->view(
             $this->theme . 'suppliers/print_payment_pdf',
