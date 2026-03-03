@@ -1960,6 +1960,17 @@ class Customers extends MY_Controller
             $customer_entry_type = $this->input->post('customer_entry_type') ?: 'C';
             $date_fmt = $this->input->post('date');
 
+            if($ledger_account == null || empty($ledger_account)){
+                $this->session->set_flashdata('error', 'Please select a ledger account for the credit memo.');
+                admin_redirect('customers/credit_memo');
+            }
+
+            if($vat_percent > 0 && ($vat_account == null || empty($vat_account))){
+                $this->session->set_flashdata('error', 'Please select a VAT account for the credit memo since VAT percentage is greater than 0.');
+                admin_redirect('customers/credit_memo');
+
+            }
+
             $formattedDate = DateTime::createFromFormat('Y-m-d', $date_fmt);
             $isDateValid = $formattedDate && $formattedDate->format('Y-m-d') === $date_fmt;
 
