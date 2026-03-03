@@ -1915,6 +1915,33 @@ class Customers extends MY_Controller
         $this->data['memo_data'] = $credit_memo_data;
         $this->data['memo_entries_data'] = $credit_memo_entries_data;
         $this->data['ledger_options'] = $ledger_options;
+
+        $gl_entry = $this->db
+            ->select('id, entrytype_id')
+            ->from('sma_accounts_entries')
+            ->where('memo_id', $id)
+            ->where('transaction_type', 'creditmemo')
+            ->order_by('id', 'DESC')
+            ->limit(1)
+            ->get()
+            ->row();
+
+        $gl_entry_url = null;
+        if ($gl_entry) {
+            $entrytype = $this->db
+                ->select('label')
+                ->from('sma_accounts_entrytypes')
+                ->where('id', $gl_entry->entrytype_id)
+                ->limit(1)
+                ->get()
+                ->row();
+
+            $entrytype_label = ($entrytype && !empty($entrytype->label)) ? $entrytype->label : 'journal';
+            $gl_entry_url = admin_url('entries/view/' . $entrytype_label . '/' . $gl_entry->id);
+        }
+
+        $this->data['gl_entry'] = $gl_entry;
+        $this->data['gl_entry_url'] = $gl_entry_url;
         
         $this->page_construct('customers/view_credit_memo', $meta, $this->data);
     }
