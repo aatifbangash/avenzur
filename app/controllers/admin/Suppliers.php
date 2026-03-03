@@ -2405,6 +2405,54 @@ class Suppliers extends MY_Controller
             $invoice_nos = $this->input->post('invoice_no[]');
             $vat_rates = $this->input->post('vat_rate[]');
 
+            if(empty($main_supplier_id) || $main_supplier_id == 0 || $main_supplier_id == '' || $main_supplier_id == null){
+                $this->session->set_flashdata('error', 'Please select a main supplier before submitting petty cash.');
+                admin_redirect('suppliers/petty_cash');
+                return;
+            }
+
+            $rowCount = max(
+                count((array) $supplier_names),
+                count((array) $invoice_nos),
+                count((array) $amounts),
+                count((array) $vat_rates),
+                count((array) $vats),
+                count((array) $totals),
+                count((array) $vat_numbers),
+                count((array) $descriptions)
+            );
+
+            for ($index = 0; $index < $rowCount; $index++) {
+                $supplierNameValue = trim((string)($supplier_names[$index] ?? ''));
+                $invoiceNoValue = trim((string)($invoice_nos[$index] ?? ''));
+                $amountValue = trim((string)($amounts[$index] ?? ''));
+                $vatRateValue = trim((string)($vat_rates[$index] ?? ''));
+                $vatValue = trim((string)($vats[$index] ?? ''));
+                $totalValue = trim((string)($totals[$index] ?? ''));
+                $vatNumberValue = trim((string)($vat_numbers[$index] ?? ''));
+                $descriptionValue = trim((string)($descriptions[$index] ?? ''));
+
+                $isRowSubmitted = (
+                    $supplierNameValue !== '' ||
+                    $invoiceNoValue !== '' ||
+                    $amountValue !== '' ||
+                    $vatRateValue !== '' ||
+                    $vatValue !== '' ||
+                    $totalValue !== '' ||
+                    $vatNumberValue !== '' ||
+                    $descriptionValue !== ''
+                );
+
+                if ($isRowSubmitted) {
+                    $ledgerAccountValue = trim((string)($ledger_accounts[$index] ?? ''));
+                    if ($ledgerAccountValue === '' || $ledgerAccountValue === '0') {
+                        $this->session->set_flashdata('error', 'Please select ledger account for all rows before submitting petty cash.');
+                        admin_redirect('suppliers/petty_cash');
+                        return;
+                    }
+                }
+            }
+
 
             $formattedDate = DateTime::createFromFormat('Y-m-d', $date_fmt);
             $isDateValid = $formattedDate && $formattedDate->format('Y-m-d') === $date_fmt;
@@ -2538,6 +2586,30 @@ class Suppliers extends MY_Controller
             $vat_amounts = $this->input->post('vat_amount[]');
             $totals = $this->input->post('total[]');
             $ledger_accounts = $this->input->post('ledger_account[]');
+
+            $rowCount = max(
+                count((array) $amounts),
+                count((array) $vat_rates),
+                count((array) $vat_amounts),
+                count((array) $totals)
+            );
+
+            for ($index = 0; $index < $rowCount; $index++) {
+                $amountValue = trim((string)($amounts[$index] ?? ''));
+                $vatRateValue = trim((string)($vat_rates[$index] ?? ''));
+                $vatAmountValue = trim((string)($vat_amounts[$index] ?? ''));
+                $totalValue = trim((string)($totals[$index] ?? ''));
+                $isRowSubmitted = ($amountValue !== '' || $vatRateValue !== '' || $vatAmountValue !== '' || $totalValue !== '');
+
+                if ($isRowSubmitted) {
+                    $ledgerAccountValue = trim((string)($ledger_accounts[$index] ?? ''));
+                    if ($ledgerAccountValue === '' || $ledgerAccountValue === '0') {
+                        $this->session->set_flashdata('error', 'Please select ledger account for all rows before submitting service invoice.');
+                        admin_redirect('suppliers/service_invoice');
+                        return;
+                    }
+                }
+            }
 
             $formattedDate = DateTime::createFromFormat('Y-m-d', $date_fmt);
             $isDateValid = $formattedDate && $formattedDate->format('Y-m-d') === $date_fmt;
