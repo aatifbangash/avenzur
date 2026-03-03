@@ -754,6 +754,17 @@ class Suppliers extends MY_Controller
             $supplier_entry_type = $this->input->post('supplier_entry_type') ?: 'D';
             $date_fmt = $this->input->post('date');
 
+            if($ledger_account == null || empty($ledger_account)){
+                $this->session->set_flashdata('error', 'Please select a ledger account for the debit memo.');
+                admin_redirect('suppliers/debit_memo');
+            }
+
+            if($vat_percent > 0 && ($vat_account == null || empty($vat_account))){
+                $this->session->set_flashdata('error', 'Please select a VAT account for the debit memo since VAT percentage is greater than 0.');
+                admin_redirect('suppliers/debit_memo');
+
+            }
+
             //$date_fmt = '2023-06-27';
             $formattedDate = DateTime::createFromFormat('Y-m-d', $date_fmt);
             $isDateValid = $formattedDate && $formattedDate->format('Y-m-d') === $date_fmt;
