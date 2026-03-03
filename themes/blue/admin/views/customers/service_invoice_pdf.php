@@ -131,8 +131,8 @@
                 ?>
             </td>
             <td style="border:1px solid #ddd; padding:8px; text-align:right;"><?= number_format($entry->quantity, 2); ?></td>
+            <td style="border:1px solid #ddd; padding:8px; text-align:right;"><?= number_format(($entry->unit_value / $entry->quantity), 2); ?> SAR</td>
             <td style="border:1px solid #ddd; padding:8px; text-align:right;"><?= number_format($entry->unit_value, 2); ?> SAR</td>
-            <td style="border:1px solid #ddd; padding:8px; text-align:right;"><?= number_format($entry->unit_value * $entry->quantity, 2); ?> SAR</td>
             <td style="border:1px solid #ddd; padding:8px; text-align:right;"><?= number_format($entry->vat, 2); ?> SAR</td>
             <td style="border:1px solid #ddd; padding:8px; text-align:right;"><?= number_format($entry->payment_amount, 2); ?> SAR</td>
         </tr>
