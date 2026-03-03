@@ -777,7 +777,7 @@
                             foreach ($ledgers as $ledger) {
                                 $sp[$ledger->id] = $ledger->name;
                             }
-                            echo form_dropdown('ledger', $sp, $selected_ledger_id, 'id="ledger_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('ledger') . '" required="required" style="width:100%;" ', null); ?>
+                            echo form_dropdown('ledger', $sp, $selected_ledger_id, 'id="ledger_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('ledger') . '" style="width:100%;" ', null); ?>
                         </div>
                     </div>
                     <div class="col-md-4">
