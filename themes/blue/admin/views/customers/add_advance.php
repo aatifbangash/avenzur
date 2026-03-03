@@ -608,7 +608,7 @@
                             
                         <div class="col-md-4">
                             <div class="form-group">
-                            <?= lang('Transfer To', 'csledger'); ?>
+                            <?= lang('Payment From', 'csledger'); ?>
                             <?php 
 
                                 echo form_dropdown('ledger_account', $LO, ($_POST['ledger_account'] ?? $purchase->ledger_account), 'id="csledger" class="ledger-dropdown form-control" required="required"',$DIS);  

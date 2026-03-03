@@ -54,6 +54,10 @@ class Customers extends MY_Controller
             $receiveable_amount = $payment_amount;
         }
 
+        if($ledger_account == null || empty($ledger_account)){
+            $receiveable_amount += $advance_amount;
+        }
+
         /*Accounts Entries*/
         $entry = array(
             'entrytype_id' => 4,
@@ -75,7 +79,7 @@ class Customers extends MY_Controller
                 'entry_id' => $insert_id,
                 'dc' => 'C',
                 'ledger_id' => $customer->ledger_account,
-                'amount' => $receiveable_amount + $advance_amount,
+                'amount' => $receiveable_amount,
                 'narration' => 'Account Receivable'
             )
         );
@@ -93,16 +97,18 @@ class Customers extends MY_Controller
             );
         }
 
-        //payment ledger - Debit to increase cash/bank
-        $entryitemdata[] = array(
-            'Entryitem' => array(
-                'entry_id' => $insert_id,
-                'dc' => 'D',
-                'ledger_id' => $ledger_account,
-                'amount' => $payment_amount,
-                'narration' => 'Payment Received'
-            )
-        );
+        if(!$ledger_account == null && !empty($ledger_account)){
+            //payment ledger - Debit to increase cash/bank
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'D',
+                    'ledger_id' => $ledger_account,
+                    'amount' => $payment_amount - $advance_amount,
+                    'narration' => 'Payment Received'
+                )
+            );
+        }
 
         if($total_additional_discount > 0){
             //payment ledger - Debit to increase cash/bank
@@ -652,6 +658,12 @@ class Customers extends MY_Controller
             $reference_no = $this->input->post('reference_no');
             $payment_total = $this->input->post('payment_total');
             $ledger_account = $this->input->post('ledger_account');
+
+            if(empty($ledger_account) || $ledger_account == null){
+                $this->session->set_flashdata('error', 'Please select a valid payment ledger account.');
+                redirect($_SERVER['HTTP_REFERER']);
+            }
+
             //$due_amount_array = $this->input->post('due_amount');
             //$original_amount_array = $this->input->post('original_amount');
             //$additional_discount_array = $this->input->post('additional_discount');
@@ -1450,7 +1462,7 @@ class Customers extends MY_Controller
         $this->form_validation->set_rules('customer', $this->lang->line('customer'), 'required');
         $this->form_validation->set_rules('reference_no', $this->lang->line('reference_no'), 'required');
         $this->form_validation->set_rules('date', $this->lang->line('date'), 'required');
-        $this->form_validation->set_rules('ledger', $this->lang->line('ledger_account'), 'required');
+        //$this->form_validation->set_rules('ledger', $this->lang->line('ledger_account'), 'required');
 
         $data = [];
         $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('add payment')]];
@@ -1470,6 +1482,13 @@ class Customers extends MY_Controller
             }
 
             $payment_amount = $this->input->post('payment_amount') ? (float)$this->input->post('payment_amount') : 0;
+
+            if($payment_amount > 0 && !$ledger_account) {
+                $this->session->set_flashdata('error', 'Please select a ledger account for the payment.');
+                admin_redirect('customers/payment_from_customer_new');
+
+            }
+            //echo 'Received payment amount: ' . $payment_amount . '<br>';exit;
 
             $customer_advance_ledger = isset($this->Settings->customer_advance_ledger) && !empty($this->Settings->customer_advance_ledger) 
                                      ? $this->Settings->customer_advance_ledger 
@@ -1611,7 +1630,7 @@ class Customers extends MY_Controller
                 //echo 'More Amount error...';exit;
                 admin_redirect('customers/payment_from_customer_new');
             }*/
-
+            //echo 'Total payment: '.$total_payment;exit;
             $total_payment_cents  = (int) round($total_payment * 100);
             $total_invoices_cents = (int) round($total_payments_from_invoices * 100);
 
@@ -1635,7 +1654,7 @@ class Customers extends MY_Controller
                 'created_by' => $this->session->userdata('user_id')
             ];
 
-            //echo '<pre>';print_r($return_details);exit;
+            //echo '<pre>';print_r($payment_reference);exit;
 
             $payment_id = $this->sales_model->addPaymentReference($payment_reference);
 
@@ -1684,6 +1703,9 @@ class Customers extends MY_Controller
 
             $this->session->set_flashdata('message', 'Payment processed successfully');
             admin_redirect('customers/view_payment/' . $payment_id);
+        }else if($this->input->post() && $this->form_validation->run() == false){
+            $this->session->set_flashdata('error', 'Please Select All the Mandatory Fields.');
+            admin_redirect('customers/payment_from_customer_new');
         } else {
             //$this->theme = 'blue/admin/views/'; // Ensure correct theme
             $data = $this->data;
