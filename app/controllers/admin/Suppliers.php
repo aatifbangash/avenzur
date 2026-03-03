@@ -1079,6 +1079,14 @@ class Suppliers extends MY_Controller
             $supplier_advance_ledger = $this->input->post('supplier_advance_ledger');
             $settle_with_advance = $this->input->post('settle_with_advance');
             $payment_mode = $this->input->post('payment_mode'); // Get payment mode
+            //echo '<pre>'; print_r($payment_mode); exit;
+            if($payment_mode == 'invoice_settlement' || $payment_mode == 'advance_only'){
+                if($ledger_account == '' || $ledger_account == 0){
+                    $this->session->set_flashdata('error', 'Payment Ledger is required. Please select a ledger account.');
+                    redirect($_SERVER['HTTP_REFERER']);
+
+                }
+            }
 
             if($bank_charges == '') {
                 $bank_charges = 0;
