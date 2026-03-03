@@ -173,6 +173,21 @@
                     ?>
                 </div>
             </div>
+
+            <div class="info-row">
+                <div class="info-label">
+                    <i class="fa fa-book"></i> <?= lang('GL Entry'); ?>:
+                </div>
+                <div class="info-value">
+                    <?php if (!empty($gl_entry_url) && !empty($gl_entry)): ?>
+                        <a href="<?= $gl_entry_url; ?>" class="btn btn-xs btn-primary">
+                            <i class="fa fa-external-link"></i> <?= lang('View GL Entry'); ?> #<?= (int)$gl_entry->id; ?>
+                        </a>
+                    <?php else: ?>
+                        N/A
+                    <?php endif; ?>
+                </div>
+            </div>
             
             <div class="info-row">
                 <div class="info-label">
