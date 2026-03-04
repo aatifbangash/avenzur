@@ -19,20 +19,32 @@
                 nRow.className = "oreturn_link";
                 return nRow;
             },
-            "aoColumns": [{"bSortable": false,"mRender": checkbox}, {"mRender": fld}, null, null, null, {"mRender": currencyFormat}, null, {"bSortable": false,"mRender": attachment}, {"bSortable": false}],
+            "aoColumns": [
+                {"bSortable": false, "mData": 0, "mRender": checkbox},
+                {"bSortable": false, "mData": null, "mRender": function (data, type, full) { return full[0]; }},
+                {"mData": 1, "mRender": fld},
+                {"mData": 2},
+                {"mData": 3},
+                {"mData": 4},
+                {"mData": 5, "mRender": currencyFormat},
+                {"mData": 6},
+                {"bSortable": false, "mData": 7, "mRender": attachment},
+                {"bSortable": false, "mData": 8}
+            ],
             "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                 var gtotal = 0;
                 for (var i = 0; i < aaData.length; i++) {
                     gtotal += parseFloat(aaData[aiDisplay[i]][5]);
                 }
                 var nCells = nRow.getElementsByTagName('th');
-                nCells[5].innerHTML = currencyFormat(parseFloat(gtotal));
+                nCells[6].innerHTML = currencyFormat(parseFloat(gtotal));
             }
         }).fnSetFilteringDelay().dtFilter([
-            {column_number: 1, filter_default_label: "[<?=lang('date');?> (yyyy-mm-dd)]", filter_type: "text", data: []},
-            {column_number: 2, filter_default_label: "[<?=lang('reference_no');?>]", filter_type: "text", data: []},
-            {column_number: 3, filter_default_label: "[<?=lang('biller');?>]", filter_type: "text", data: []},
-            {column_number: 4, filter_default_label: "[<?=lang('customer');?>]", filter_type: "text", data: []},
+            {column_number: 1, filter_default_label: "[<?=lang('id');?>]", filter_type: "text", data: []},
+            {column_number: 2, filter_default_label: "[<?=lang('date');?> (yyyy-mm-dd)]", filter_type: "text", data: []},
+            {column_number: 3, filter_default_label: "[<?=lang('reference_no');?>]", filter_type: "text", data: []},
+            {column_number: 4, filter_default_label: "[<?=lang('biller');?>]", filter_type: "text", data: []},
+            {column_number: 5, filter_default_label: "[<?=lang('customer');?>]", filter_type: "text", data: []},
         ], "footer");
 
         if (localStorage.getItem('remove_rels')) {
@@ -185,6 +197,7 @@
                             <th style="min-width:30px; width: 30px; text-align: center;">
                                 <input class="checkbox checkft" type="checkbox" name="check"/>
                             </th>
+                            <th><?= lang('id'); ?></th>
                             <th><?= lang('date'); ?></th>
                             <th><?= lang('reference_no'); ?></th>
                             <th><?= lang('biller'); ?></th>
@@ -197,7 +210,7 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <td colspan="8" class="dataTables_empty"><?= lang('loading_data'); ?></td>
+                            <td colspan="10" class="dataTables_empty"><?= lang('loading_data'); ?></td>
                         </tr>
                         </tbody>
                         <tfoot class="dtFilter">
@@ -205,8 +218,9 @@
                             <th style="min-width:30px; width: 30px; text-align: center;">
                                 <input class="checkbox checkft" type="checkbox" name="check"/>
                             </th>
-                            <th></th><th></th><th></th><th></th>
+                            <th></th><th></th><th></th><th></th><th></th>
                             <th><?= lang('grand_total'); ?></th>
+                            <th></th>
                             <th style="min-width:30px; width: 30px; text-align: center;"><i class="fa fa-chain"></i></th>
                             <th style="width:80px; text-align:center;"><?= lang('actions'); ?></th>
                         </tr>
