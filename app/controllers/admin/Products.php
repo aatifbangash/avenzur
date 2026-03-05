@@ -24,6 +24,11 @@ class Products extends MY_Controller
         $this->load->admin_model('products_model');
         $this->load->admin_model('settings_model');
         $this->load->admin_model('purchases_model');
+        $this->load->admin_model('sales_model');
+
+        // Sequence-Code
+        $this->load->library('SequenceCode');
+        $this->sequenceCode = new SequenceCode();
 
         $this->digital_upload_path = 'files/';
         $this->upload_path = 'assets/uploads/';
@@ -1460,6 +1465,231 @@ class Products extends MY_Controller
                 continue;
             }
         }
+    }
+
+    public function add_customer_reference($amount, $reference_no, $date, $note, $customer_id, $ledger_account){
+        $payment_reference = [
+            'customer_id' => $customer_id,
+            'date' => $date,
+            'sequence_code' => $this->sequenceCode->generate('PAY', 5),
+            'note' => $note,
+            'reference_no'  => $reference_no,
+            'amount' => $amount,
+            'transfer_from_ledger' => $ledger_account,
+            'created_by'    => $this->session->userdata('user_id'),
+            'added_via' => 'auto_script'
+        ];
+
+        $payment_id = $this->sales_model->addPaymentReference($payment_reference);
+        return $payment_id;
+    }
+
+    public function update_customer_outstanding_invoices_payment(){
+        ini_set('display_errors', '1');
+        ini_set('display_startup_errors', '1');
+        error_reporting(E_ALL);
+
+        // Settle customer returns against outstanding invoices
+        $unsettled_returns = $this->db
+            ->where('status', 'completed')
+            ->where('paid < grand_total', null, false)
+            ->get('sma_returns')
+            ->result();
+
+        foreach ($unsettled_returns as $return) {
+
+            $customer_name = $return->customer;
+            $customer_id = $return->customer_id;
+            $paid = $return->paid;
+            $grand_total = $return->grand_total;
+            $return_id = $return->id;
+
+            $Journal_details = $this->db
+                    ->where('rid', $return_id) // exact match
+                    ->get('sma_accounts_entries')
+                    ->row();
+
+            // Remaining amount in return that can be allocated to invoices
+            $remaining_amount = $grand_total - $paid;
+
+            $pending_invoices = $this->sales_model->getCustomerInvoicesWithPayments($customer_id);
+            if (empty($pending_invoices)) {
+                return false;
+            }
+
+            $total_outstanding = 0;
+            foreach ($pending_invoices as $invoice) {
+                $invoice_outstanding = isset($invoice->outstanding_amount)
+                    ? (float) $invoice->outstanding_amount
+                    : ((float) $invoice->grand_total - (float) $invoice->total_paid);
+                if ($invoice_outstanding > 0) {
+                    $total_outstanding += $invoice_outstanding;
+                }
+            }
+
+            $allocatable_amount = min($remaining_amount, $total_outstanding);
+            if ($allocatable_amount <= 0) {
+                return false;
+            }
+
+            $remaining_amount = $allocatable_amount;
+
+            $payment_reference_id = $this->add_customer_reference(
+                $allocatable_amount,
+                $return_id,
+                date('Y-m-d H:i:s'),
+                'Return settlement against outstanding invoices',
+                $customer_id,
+                null
+            );
+
+            $total_applied = 0;
+            foreach ($pending_invoices as $invoice) {
+                if ($remaining_amount <= 0) {
+                    break;
+                }
+
+                $outstanding = isset($invoice->outstanding_amount)
+                    ? (float) $invoice->outstanding_amount
+                    : ((float) $invoice->grand_total - (float) $invoice->total_paid);
+
+                if ($outstanding <= 0) {
+                    continue;
+                }
+
+                $apply_amount = min($remaining_amount, $outstanding);
+
+                $payment = [
+                    'date'          => date('Y-m-d H:i:s'),
+                    'sale_id'       => (int) $invoice->id,
+                    'return_id'     => $return_id,
+                    'reference_no'  => '',
+                    'amount'        => $apply_amount,
+                    'note'          => 'Auto-settled from customer return #' . $return_id,
+                    'created_by'    => $this->session->userdata('user_id'),
+                    'paid_by'       => 'return',
+                    'type'          => 'received',
+                    'customer_id'   => $customer_id,
+                    'payment_id'    => $payment_reference_id,
+                ];
+
+                $this->sales_model->addPayment($payment);
+                $this->sales_model->update_sale_paid_amount((int) $invoice->id, ((float) $invoice->total_paid + $apply_amount));
+
+                $remaining_amount -= $apply_amount;
+                $total_applied += $apply_amount;
+            }
+
+            if ($payment_reference_id) {
+                $this->sales_model->update_payment_reference($payment_reference_id, $Journal_details->id);
+            }
+
+            echo "Settled Return ID: {$return_id} For Customer ID: {$customer_id} - Total Applied: {$total_applied} against outstanding invoices.<br>";
+        }
+
+        // Settle Credit Memos against outstanding invoices
+        /*$unsettled_credit_memos = $this->db
+            ->where('customer_entry_type', 'C')
+            ->where('customer_id > ', '0')
+            ->where('(used_amount IS NULL OR used_amount < payment_amount)', null, false)
+            ->get('sma_memo')
+            ->result();
+
+        foreach ($unsettled_credit_memos as $credit_memo) {
+            $memo_id = $credit_memo->id;
+            $customer_id = $credit_memo->customer_id;
+            $remaining_amount = $credit_memo->payment_amount - $credit_memo->used_amount;
+
+            if ($memo_id <= 0 || $customer_id <= 0 || $remaining_amount <= 0) {
+                return false;
+            }
+
+            $pending_invoices = $this->sales_model->getCustomerInvoicesWithPayments($customer_id);
+            if (empty($pending_invoices)) {
+                return false;
+            }
+
+            $Journal_details = $this->db
+                        ->where('memo_id', $memo_id) // exact match
+                        ->get('sma_accounts_entries')
+                        ->row();
+
+            $total_outstanding = 0;
+            foreach ($pending_invoices as $invoice) {
+                $invoice_outstanding = isset($invoice->outstanding_amount)
+                    ? (float) $invoice->outstanding_amount
+                    : ((float) $invoice->grand_total - (float) $invoice->total_paid);
+                if ($invoice_outstanding > 0) {
+                    $total_outstanding += $invoice_outstanding;
+                }
+            }
+
+            $allocatable_amount = min($remaining_amount, $total_outstanding);
+            if ($allocatable_amount <= 0) {
+                return false;
+            }
+
+            $remaining_amount = $allocatable_amount;
+            $payment_reference_id = $this->add_customer_reference(
+                $allocatable_amount,
+                $memo_id,
+                date('Y-m-d H:i:s'),
+                'Auto settlement from credit memo #' . $memo_id,
+                $customer_id,
+                null
+            );
+
+            $total_applied = 0;
+            foreach ($pending_invoices as $invoice) {
+                if ($remaining_amount <= 0) {
+                    break;
+                }
+
+                $outstanding = isset($invoice->outstanding_amount)
+                    ? (float) $invoice->outstanding_amount
+                    : ((float) $invoice->grand_total - (float) $invoice->total_paid);
+
+                if ($outstanding <= 0) {
+                    continue;
+                }
+
+                $apply_amount = min($remaining_amount, $outstanding);
+
+                $payment = [
+                    'date'         => date('Y-m-d H:i:s'),
+                    'sale_id'      => (int) $invoice->id,
+                    'reference_no' => $memo_id,
+                    'amount'       => $apply_amount,
+                    'note'         => 'Auto-settled from credit memo #' . $memo_id,
+                    'created_by'   => $this->session->userdata('user_id'),
+                    'type'         => 'received',
+                    'paid_by'      => 'credit_memo',
+                    'customer_id' => $customer_id,
+                    'memo_id'     => $memo_id,
+                    'payment_id'   => $payment_reference_id,
+                ];
+
+                $this->sales_model->addPayment($payment);
+                $this->sales_model->update_sale_paid_amount((int) $invoice->id, ((float) $invoice->total_paid + $apply_amount));
+
+                //$this->site->syncSalePayments((int) $invoice->id);
+
+                $remaining_amount -= $apply_amount;
+                $total_applied += $apply_amount;
+            }
+
+            if ($total_applied > 0) {
+                $memo = $this->sales_model->getCreditMemoByID($memo_id);
+                $existing_used_amount = $memo && isset($memo->used_amount) ? (float) $memo->used_amount : 0;
+                $this->sales_model->update_credit_memo($memo_id, $existing_used_amount + $total_applied);
+            }
+
+            if ($payment_reference_id) {
+                $this->sales_model->update_payment_reference($payment_reference_id, $Journal_details->id);
+            }
+
+            echo "Settled Credit Memo ID: {$memo_id} For Customer ID: {$customer_id} - Total Applied: {$total_applied} against outstanding invoices.<br>";
+        }*/
     }
 
     public function upload_customer_returns(){

@@ -506,7 +506,8 @@ class Customers extends MY_Controller
             'reference_no'  => $reference_no,
             'amount' => $amount,
             'transfer_from_ledger' => $ledger_account,
-            'created_by'    => $this->session->userdata('user_id')
+            'created_by'    => $this->session->userdata('user_id'),
+            'added_via' => 'credit_memo_module'
         ];
 
         $payment_id = $this->sales_model->addPaymentReference($payment_reference);
@@ -1789,6 +1790,97 @@ class Customers extends MY_Controller
         $this->db->insert('sma_memo_entries' ,$memoData);
     }
 
+    private function settle_credit_memo_against_oldest_invoices($memo_id, $customer_id, $amount, $journal_id = null, $reference_no = '')
+    {
+        $memo_id = (int) $memo_id;
+        $customer_id = (int) $customer_id;
+        $remaining_amount = (float) $amount;
+
+        if ($memo_id <= 0 || $customer_id <= 0 || $remaining_amount <= 0) {
+            return false;
+        }
+
+        $pending_invoices = $this->sales_model->getCustomerInvoicesWithPayments($customer_id);
+        if (empty($pending_invoices)) {
+            return false;
+        }
+
+        $total_outstanding = 0;
+        foreach ($pending_invoices as $invoice) {
+            $invoice_outstanding = isset($invoice->outstanding_amount)
+                ? (float) $invoice->outstanding_amount
+                : ((float) $invoice->grand_total - (float) $invoice->total_paid);
+            if ($invoice_outstanding > 0) {
+                $total_outstanding += $invoice_outstanding;
+            }
+        }
+
+        $allocatable_amount = min($remaining_amount, $total_outstanding);
+        if ($allocatable_amount <= 0) {
+            return false;
+        }
+
+        $remaining_amount = $allocatable_amount;
+        $payment_reference_id = $this->add_customer_reference(
+            $allocatable_amount,
+            $reference_no,
+            date('Y-m-d H:i:s'),
+            'Auto settlement from credit memo #' . $memo_id,
+            $customer_id,
+            null
+        );
+
+        $total_applied = 0;
+        foreach ($pending_invoices as $invoice) {
+            if ($remaining_amount <= 0) {
+                break;
+            }
+
+            $outstanding = isset($invoice->outstanding_amount)
+                ? (float) $invoice->outstanding_amount
+                : ((float) $invoice->grand_total - (float) $invoice->total_paid);
+
+            if ($outstanding <= 0) {
+                continue;
+            }
+
+            $apply_amount = min($remaining_amount, $outstanding);
+
+            $payment = [
+                'date'         => date('Y-m-d H:i:s'),
+                'sale_id'      => (int) $invoice->id,
+                'reference_no' => $reference_no,
+                'amount'       => $apply_amount,
+                'note'         => 'Auto-settled from credit memo #' . $memo_id,
+                'created_by'   => $this->session->userdata('user_id'),
+                'type'         => 'received',
+                'paid_by'      => 'credit_memo',
+                'customer_id' => $customer_id,
+                'payment_id'   => $payment_reference_id,
+            ];
+
+            $this->sales_model->addPayment($payment);
+            $this->sales_model->update_sale_paid_amount((int) $invoice->id, ((float) $invoice->total_paid + $apply_amount));
+
+            //$this->site->syncSalePayments((int) $invoice->id);
+
+            $remaining_amount -= $apply_amount;
+            $total_applied += $apply_amount;
+        }
+
+        if ($total_applied > 0) {
+            $memo = $this->sales_model->getCreditMemoByID($memo_id);
+            $existing_used_amount = $memo && isset($memo->used_amount) ? (float) $memo->used_amount : 0;
+            $this->sales_model->update_credit_memo($memo_id, $existing_used_amount + $total_applied);
+        }
+
+        if ($payment_reference_id) {
+            $this->sales_model->update_payment_reference($payment_reference_id, $journal_id);
+        }
+
+        return $total_applied > 0;
+    }
+
     public function convert_credit_memo_invoice($memo_id, $customer_id, $ledger_account, $vat_account, $payment_amount, $vat_percent, $reference_no, $type, $date, $customer_entry_type = 'C'){
         $this->load->admin_model('companies_model');
         $customer = $this->companies_model->getCompanyByID($customer_id);
@@ -1860,6 +1952,8 @@ class Customers extends MY_Controller
         {
             $this->db->insert('sma_accounts_entryitems' ,$itemdata['Entryitem']);
         }
+
+        return $insert_id;
     }
 
     public function list_credit_memo(){
@@ -2043,6 +2137,11 @@ class Customers extends MY_Controller
             $this->db->insert('sma_memo', $memoData);
             $memo_id = $this->db->insert_id();
 
+            if (!$memo_id) {
+                $this->session->set_flashdata('error', 'Unable to create credit memo. Please try again.');
+                admin_redirect('customers/credit_memo');
+            }
+
             // Insert memo entries only if valid
             for ($i = 0; $i < count($payments_array); $i++) {
                 $payment_amount = isset($payments_array[$i]) ? trim($payments_array[$i]) : '';
@@ -2054,7 +2153,17 @@ class Customers extends MY_Controller
                 }
             }
 
-            $this->convert_credit_memo_invoice($memo_id, $customer_id, $ledger_account, $vat_account, $payment_total, $vat_percent, $reference_no, 'creditmemo', $date, $customer_entry_type);
+            $journal_id = $this->convert_credit_memo_invoice($memo_id, $customer_id, $ledger_account, $vat_account, $payment_total, $vat_percent, $reference_no, 'creditmemo', $date, $customer_entry_type);
+
+            if ($memoData['type'] == 'creditmemo') {
+                $this->settle_credit_memo_against_oldest_invoices(
+                    $memo_id,
+                    (int) $customer_id,
+                    (float) $payment_total,
+                    $journal_id,
+                    $reference_no
+                );
+            }
             $this->session->set_flashdata('message', lang('Credit Memo invoice added Successfully!'));
             admin_redirect('customers/list_credit_memo');
         } else {
