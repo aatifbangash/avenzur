@@ -477,6 +477,13 @@ class Sales_model extends CI_Model
         $this->db->update('sma_memo', ['used_amount' => $amount_used], ['id' => $creditmemo_id]);
     }
 
+    /*public function update_memo_paid($creditmemo_id, $amount_used)
+    {
+        $this->db->set('used_amount', 'used_amount + ' . $amount_used, FALSE);
+        $this->db->where('id', $creditmemo_id);
+        $this->db->update('sma_memo');
+    }*/
+
     public function getCreditMemoByID($creditmemo_id){
         $this->db->select('memo.*, companies.company')
             ->join('companies', 'companies.id=memo.customer_id', 'left')
