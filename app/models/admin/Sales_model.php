@@ -343,6 +343,7 @@ class Sales_model extends CI_Model
         $this->db->from('returns r');
         //$this->db->join('payments p', 'p.return_id = r.id', 'left');
         $this->db->where('r.customer_id', $customer_id);
+        $this->db->where('r.status', 'completed');
         $this->db->group_by('r.id');
         $this->db->order_by('r.date', 'desc');
         $q = $this->db->get();
