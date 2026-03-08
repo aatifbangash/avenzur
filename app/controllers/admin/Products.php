@@ -1490,12 +1490,12 @@ class Products extends MY_Controller
         error_reporting(E_ALL);
 
         // Settle customer returns against outstanding invoices
-        /*$unsettled_returns = $this->db
+        $unsettled_returns = $this->db
             ->where('status', 'completed')
             ->where('paid < grand_total', null, false)
             ->get('sma_returns')
             ->result();
-
+        
         foreach ($unsettled_returns as $return) {
 
             $customer_name = $return->customer;
@@ -1514,7 +1514,7 @@ class Products extends MY_Controller
 
             $pending_invoices = $this->sales_model->getCustomerInvoicesWithPayments($customer_id);
             if (empty($pending_invoices)) {
-                return false;
+                continue;
             }
 
             $total_outstanding = 0;
@@ -1585,10 +1585,10 @@ class Products extends MY_Controller
             }
 
             echo "Settled Return ID: {$return_id} For Customer ID: {$customer_id} - Total Applied: {$total_applied} against outstanding invoices.<br>";
-        }*/
+        }
 
         // Settle Credit Memos against outstanding invoices
-        $unsettled_credit_memos = $this->db
+        /*$unsettled_credit_memos = $this->db
             ->where('customer_entry_type', 'C')
             ->where('customer_id > ', '0')
             ->where('(used_amount IS NULL OR used_amount < payment_amount)', null, false)
@@ -1689,7 +1689,7 @@ class Products extends MY_Controller
             }
 
             echo "Settled Credit Memo ID: {$memo_id} For Customer ID: {$customer_id} - Total Applied: {$total_applied} against outstanding invoices.<br>";
-        }
+        }*/
     }
 
     public function upload_customer_returns(){
