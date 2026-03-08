@@ -1493,9 +1493,10 @@ class Products extends MY_Controller
         $unsettled_returns = $this->db
             ->where('status', 'completed')
             ->where('paid < grand_total', null, false)
+            ->where_not_in('customer_id', [824, 31])
             ->get('sma_returns')
             ->result();
-        
+        echo "<pre>";print_r($unsettled_returns);echo "</pre>";exit;
         foreach ($unsettled_returns as $return) {
 
             $customer_name = $return->customer;
