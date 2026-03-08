@@ -770,6 +770,7 @@ class Returns extends MY_Controller
 
             $this->sales_model->addPayment($payment);
             $this->sales_model->update_sale_paid_amount((int) $invoice->id, ((float) $invoice->total_paid + $apply_amount));
+            
 
             $remaining_amount -= $apply_amount;
             $total_applied += $apply_amount;
@@ -777,6 +778,7 @@ class Returns extends MY_Controller
 
         if ($payment_reference_id) {
             $this->sales_model->update_payment_reference($payment_reference_id, $journal_id);
+            $this->sales_model->update_return_paid($return_id, $remaining_amount);
         }
 
         return $total_applied > 0;
