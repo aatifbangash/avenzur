@@ -402,6 +402,21 @@
                     </ul>
                 </li>
                 <?php } ?>
+                <?php if($Admin || $Owner || $GP['po-index']){ ?>
+                <!-- Purchase Order -->
+                <li class="newmenu-item has-sub">
+                    <a href="#" class="newmenu-link">
+                        <i class="fa fa-shopping-cart"></i>
+                        <span><?= lang('Purchase Orders Sync'); ?></span>
+                        <i class="fa fa-chevron-right newmenu-chevron"></i>
+                    </a>
+                    <ul class="newmenu-sub">
+                        <?php if($Admin || $Owner || $GP['po-index']){ ?>
+                            <li><a href="<?= admin_url('purchase_order_sync'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('List PO Sync'); ?></a></li>
+                        <?php } ?>
+                    </ul>
+                </li>
+                <?php } ?>
 
                 <!-- Purchases -->
                  <?php if($Admin || $Owner || $GP['purchases-index']){ ?>
