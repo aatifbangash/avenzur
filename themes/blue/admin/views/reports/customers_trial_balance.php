@@ -160,6 +160,7 @@
                                     <th>&nbsp;</th>
                                     <th>&nbsp;</th>
                                     <th>&nbsp;</th>
+                                    <th>&nbsp;</th>
 
                                  
                                     <th class="text-center"><?=number_format($totalObDebit, 2, '.', ',')?></th>
