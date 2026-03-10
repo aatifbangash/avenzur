@@ -550,6 +550,8 @@ class Reports_model extends CI_Model
         $q = $this->db->query("SELECT 
             c.id AS supplier_id,
             c.name AS supplier_name,
+            c.sequence_code AS supplier_code,
+            c.category AS category,
             c.payment_term,
             $cases_str
         FROM 
