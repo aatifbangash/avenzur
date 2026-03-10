@@ -1496,7 +1496,7 @@ class Products extends MY_Controller
             ->where_not_in('customer_id', [824, 31])
             ->get('sma_returns')
             ->result();
-        //echo "<pre>";print_r($unsettled_returns);echo "</pre>";exit;
+        echo "<pre>";print_r($unsettled_returns);echo "</pre>";exit;
         foreach ($unsettled_returns as $return) {
 
             $customer_name = $return->customer;

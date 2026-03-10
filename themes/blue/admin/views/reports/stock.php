@@ -348,7 +348,11 @@
                             <tfoot>
                             <tr>
                                 <th>Total</th>
-                                <th>&nbsp;</th>
+                                <?php 
+                                    if($this->Settings->site_name == 'Hills Business Medical'){  ?>
+                                        <th>&nbsp;</th>
+                                <?php } ?>
+                                
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
