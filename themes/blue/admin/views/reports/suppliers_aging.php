@@ -107,8 +107,9 @@
                                 class="table items table-striped table-bordered table-condensed table-hover sortable_table tbl_pdf" >
                             <thead>
                             <tr>
-                                <th>#</th>
+                                <th>Code</th>
                                 <th><?= lang('Supplier'); ?></th>
+                                <th>Category</th>
                                 <th><?= lang('Credit Term'); ?></th>
                                 <?php
                                     $duration = $this->input->post('duration') ? $this->input->post('duration') : 120;
@@ -176,8 +177,9 @@
                                         $count++;
                                         ?>
                                             <tr>
-                                                <td><?= $count; ?></td>
+                                                <td><?= $data['supplier_code']; ?></td>
                                                 <td><?= $data['supplier_name']; ?></td>
+                                                <td><?= $data['category']; ?></td>
                                                 <td><?= $data['payment_term']; ?></td>
                                                 <?php
                                                     $i=1;
@@ -208,7 +210,7 @@
                             </tbody>
                             <tfoot style="text-align:center;">
                                 <tr>
-                                    <td colspan="2"><strong></strong></td>
+                                    <td colspan="3"><strong></strong></td>
                                     <td><strong></strong></td>
                                     <?php
                                         $previous_limit = 0;
