@@ -133,6 +133,7 @@
                             <tr>
                                 <th>Code</th>
                                 <th><?= lang('Customer'); ?></th>
+                                <th><?= lang('Category'); ?></th>
                                 <th><?= lang('Salesman'); ?></th>
                                 <th><?= lang('Credit Term'); ?></th>
                                 <?php
@@ -202,6 +203,7 @@
                                             <tr>
                                                 <td><?= $data['customer_code']; ?></td>
                                                 <td><?= $data['customer_name']; ?></td>
+                                                <td><?= $data['category']; ?></td>
                                                 <td><?= $data['sales_agent'] ?? ''; ?></td>
                                                 <td><?= $data['payment_term']; ?></td>
                                                 <?php
@@ -234,7 +236,7 @@
                             </tbody>
                             <tfoot style="text-align:center;">
                                 <tr>
-                                    <td colspan="3"><strong></strong></td>
+                                    <td colspan="4"><strong></strong></td>
                                     <td><strong></strong></td>
                                     <?php
                                         $previous_limit = 0;
