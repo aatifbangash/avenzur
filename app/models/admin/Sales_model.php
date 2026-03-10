@@ -582,8 +582,9 @@ class Sales_model extends CI_Model
     }
 
     public function getPaymentReferenceByID($id){
-        $this->db->select('payment_reference.*, companies.name, lb.name as transfer_from')
+        $this->db->select('payment_reference.*, companies.name, c.name as supplier_name, lb.name as transfer_from')
             ->join('companies', 'companies.id=payment_reference.customer_id', 'left')
+            ->join('companies c', 'c.id=payment_reference.supplier_id', 'left')
             ->join('accounts_ledgers lb', 'lb.id=payment_reference.transfer_from_ledger', 'left')
             ->where('payment_reference.id =', $id);
         $q = $this->db->get('payment_reference');
