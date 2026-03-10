@@ -627,7 +627,8 @@ class Reports_model extends CI_Model
                 s.grand_total,
                 s.paid,
                 c.payment_term,
-                c.category
+                c.category,
+                c.credit_limit
             FROM sma_sales s
             JOIN sma_companies c ON s.customer_id = c.id
             WHERE s.grand_total > 0 AND s.sale_invoice = 1
@@ -687,6 +688,7 @@ class Reports_model extends CI_Model
                     'customer_code' => $inv->customer_code,
                     'sales_agent'   => $inv->sales_agent,
                     'payment_term'  => $inv->payment_term,
+                    'credit_limit'  => $inv->credit_limit,
                     'category'      => $inv->category
                 ];
                 foreach ($buckets as $b) {
