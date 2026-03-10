@@ -620,6 +620,7 @@ class Reports_model extends CI_Model
                 s.date,
                 s.customer_id,
                 c.name AS customer_name,
+                c.sequence_code AS customer_code,
                 c.sales_agent,
                 s.grand_total,
                 s.paid,
@@ -680,6 +681,7 @@ class Reports_model extends CI_Model
                 $result[$inv->customer_id] = [
                     'customer_id'   => $inv->customer_id,
                     'customer_name' => $inv->customer_name,
+                    'customer_code' => $inv->customer_code,
                     'sales_agent'   => $inv->sales_agent,
                     'payment_term'  => $inv->payment_term,
                 ];
