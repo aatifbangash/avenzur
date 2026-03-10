@@ -149,7 +149,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('supplier', 'pssupplier'); ?>
-                                <?php echo form_input('supplier', ($payment_ref->name ?? $payment_ref->name), 'class="form-control input-tip" readonly id="pssupplier"'); ?>
+                                <?php echo form_input('supplier', ($payment_ref->name ?? $payment_ref->supplier_name), 'class="form-control input-tip" readonly id="pssupplier"'); ?>
                             </div>
                         </div>
 
