@@ -81,6 +81,7 @@
                                 <th><?= lang('Sequence Code'); ?></th>
                                 <th><?= lang('name'); ?></th>
                                 <th><?= lang('Company'); ?></th>
+                                <th><?= lang('Category'); ?></th>
                                 <th><?= lang('OB Debit'); ?></th>
                                 <th><?= lang('OB Credit'); ?></th>
                                 <th><?= lang('Trs Debit'); ?></th>
@@ -140,6 +141,7 @@
                                                 <td><?= $data['sequence_code']; ?></td>
                                                 <td><?= $data['name']; ?></td>
                                                 <td><?= $data['company']; ?></td>
+                                                <td><?= $data['category']; ?></td>
                                                 <td><?= $data['obDebit'] > 0 ? number_format($data['obDebit'], 2, '.', ',') : '0.00'; ?></td>
                                                 <td><?= $data['obCredit'] > 0 ? number_format($data['obCredit'], 2, '.', ',') : '0.00'; ?></td>
                                                 <td><?= $data['trsDebit'] > 0 ? number_format($data['trsDebit'], 2, '.', ',') : '0.00'; ?></td>
