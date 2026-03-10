@@ -624,7 +624,8 @@ class Reports_model extends CI_Model
                 c.sales_agent,
                 s.grand_total,
                 s.paid,
-                c.payment_term
+                c.payment_term,
+                c.category
             FROM sma_sales s
             JOIN sma_companies c ON s.customer_id = c.id
             WHERE s.grand_total > 0 AND s.sale_invoice = 1
@@ -684,6 +685,7 @@ class Reports_model extends CI_Model
                     'customer_code' => $inv->customer_code,
                     'sales_agent'   => $inv->sales_agent,
                     'payment_term'  => $inv->payment_term,
+                    'category'      => $inv->category
                 ];
                 foreach ($buckets as $b) {
                     $result[$inv->customer_id][$b['label']] = 0;
