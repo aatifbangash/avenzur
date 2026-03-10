@@ -131,7 +131,7 @@
                                 class="table items table-striped table-bordered table-condensed table-hover tbl_pdf">
                             <thead>
                             <tr>
-                                <th>#</th>
+                                <th>Code</th>
                                 <th><?= lang('Customer'); ?></th>
                                 <th><?= lang('Salesman'); ?></th>
                                 <th><?= lang('Credit Term'); ?></th>
@@ -200,7 +200,7 @@
                                         $count++;
                                         ?>
                                             <tr>
-                                                <td><?= $count; ?></td>
+                                                <td><?= $data['customer_code']; ?></td>
                                                 <td><?= $data['customer_name']; ?></td>
                                                 <td><?= $data['sales_agent'] ?? ''; ?></td>
                                                 <td><?= $data['payment_term']; ?></td>
