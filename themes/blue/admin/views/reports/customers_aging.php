@@ -136,7 +136,6 @@
                                 <th><?= lang('Category'); ?></th>
                                 <th><?= lang('Salesman'); ?></th>
                                 <th><?= lang('Credit Term'); ?></th>
-                                <th><?= lang('Credit Limit'); ?></th>
                                 <?php
                                     $duration = $this->input->post('duration') ? $this->input->post('duration') : 120;
                                     $intervals = [30, 60, 90, 120, 150, 180, 210, 240];
@@ -207,7 +206,6 @@
                                                 <td><?= $data['category']; ?></td>
                                                 <td><?= $data['sales_agent'] ?? ''; ?></td>
                                                 <td><?= $data['payment_term']; ?></td>
-                                                <td><?= $data['credit_limit']; ?></td>
                                                 <?php
                                                 $i=1;
                                                 $previous_limit = 0;
@@ -238,7 +236,7 @@
                             </tbody>
                             <tfoot style="text-align:center;">
                                 <tr>
-                                    <td colspan="5"><strong></strong></td>
+                                    <td colspan="4"><strong></strong></td>
                                     <td><strong></strong></td>
                                     <?php
                                         $previous_limit = 0;
