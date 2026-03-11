@@ -19,7 +19,6 @@
                     </div>
                 <?php } ?>
 
-                <p class="introtext"><?php echo lang('review_info'); ?></p>
 
                 <?php if (!empty($rows)) { ?>
                     <?php echo form_open("admin/purchase_order_upload/submit"); ?>
@@ -62,10 +61,11 @@
                         <table class="table table-bordered table-hover table-striped">
                             <thead>
                             <tr>
-                                <th><?php echo $this->lang->line("item_no"); ?></th>
-                                <th><?php echo $this->lang->line("code"); ?></th>
-                                <th><?php echo $this->lang->line("name"); ?></th>
-                                <th><?php echo $this->lang->line("variant"); ?></th>
+                                <th><?php echo $this->lang->line("item_barcode"); ?></th>
+                                <th><?php echo $this->lang->line("item_name"); ?></th>
+                                <th><?php echo $this->lang->line("variant_barcode"); ?></th>
+                                <th><?php echo $this->lang->line("variant_name"); ?></th>
+                                <th><?php echo $this->lang->line("brand"); ?></th>
                                 <th><?php echo $this->lang->line("batch_no"); ?></th>
                                 <th><?php echo $this->lang->line("expiry_date"); ?></th>
                                 <th><?php echo $this->lang->line("quantity"); ?></th>
@@ -81,40 +81,39 @@
                                 <th><?php echo $this->lang->line("discount_3"); ?> <?php echo $this->lang->line("value"); ?></th>
                                 <th><?php echo $this->lang->line("description"); ?></th>
                                 <th><?php echo $this->lang->line("image"); ?></th>
-                                <th><?php echo $this->lang->line("brand"); ?></th>
                                 <th><?php echo $this->lang->line("subtotal"); ?></th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($rows as $i => $row) { ?>
                                 <tr>
-                                    <td><?php echo htmlspecialchars($row['item_no'] ?? ''); ?></td>
-                                    <td><?php echo htmlspecialchars($row['code'] ?? ''); ?></td>
-                                    <td><?php echo word_limiter($row['name'] ?? '', 4); ?></td>
-                                    <td><?php echo htmlspecialchars($row['variant'] ?? ''); ?></td>
-                                    <td><?php echo htmlspecialchars($row['batch_no'] ?? ''); ?></td>
-                                    <td><?php echo $row['expiry_date']; ?></td>
+                                    <td><?php echo htmlspecialchars($row['item_barcode'] ?? ''); ?></td>
+                                    <td><?php echo word_limiter($row['item_name'] ?? '', 4); ?></td>
+                                    <td><?php echo htmlspecialchars($row['variant_barcode'] ?? ''); ?></td>
+                                    <td><?php echo htmlspecialchars($row['variant_name'] ?? ''); ?></td>
+                                    <td><?php echo htmlspecialchars($row['brand_name'] ?? ''); ?></td>
+                                    <td><?php echo htmlspecialchars($row['batch_number'] ?? ''); ?></td>
+                                    <td><?php echo htmlspecialchars($row['expiry_date'] ?? ''); ?></td>
                                     <td><?php echo number_format($row['quantity'] ?? 0, 2); ?></td>
                                     <td><?php echo number_format($row['sale_price'] ?? 0, 2); ?></td>
                                     <td><?php echo number_format($row['purchase_price'] ?? 0, 2); ?></td>
                                     <td><?php echo number_format($row['cost_price'] ?? 0, 2); ?></td>
                                     <td><?php echo number_format($row['vat_percent'] ?? 0, 2); ?></td>
-                                    <td><?php echo number_format($row['discount1'] ?? 0, 2); ?></td>
+                                    <td><?php echo number_format($row['discount1_percent'] ?? 0, 2); ?></td>
                                     <td><?php echo number_format($row['discount1_value'] ?? 0, 2); ?></td>
-                                    <td><?php echo number_format($row['discount2'] ?? 0, 2); ?></td>
+                                    <td><?php echo number_format($row['discount2_percent'] ?? 0, 2); ?></td>
                                     <td><?php echo number_format($row['discount2_value'] ?? 0, 2); ?></td>
-                                    <td><?php echo number_format($row['discount3'] ?? 0, 2); ?></td>
+                                    <td><?php echo number_format($row['discount3_percent'] ?? 0, 2); ?></td>
                                     <td><?php echo number_format($row['discount3_value'] ?? 0, 2); ?></td>
-                                    <td><?php echo word_limiter($row['details'] ?? '', 4); ?></td>
+                                    <td><?php echo word_limiter($row['description_en'] ?? '', 4); ?></td>
                                     <td>
-                                        <?php if (!empty($row['image'])): ?>
-                                            <img src="<?php echo htmlspecialchars($row['image']); ?>" style="height:32px;width:auto">
+                                        <?php if (!empty($row['image_link'])): ?>
+                                            <img src="<?php echo htmlspecialchars($row['image_link']); ?>" style="height:32px;width:auto">
                                         <?php else: ?>
                                             —
                                         <?php endif; ?>
                                     </td>
-                                    <td><?php echo htmlspecialchars($row['brand_name'] ?? ''); ?></td>
-                                    <td><?php echo number_format($row['line_total'] ?? 0, 2); ?></td>
+                                    <td><?php echo number_format($row['subtotal'] ?? 0, 2); ?></td>
                                 </tr>
                             <?php } ?>
                         </tbody>
