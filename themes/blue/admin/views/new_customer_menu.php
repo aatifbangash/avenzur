@@ -412,7 +412,12 @@
                     </a>
                     <ul class="newmenu-sub">
                         <?php if($Admin || $Owner || $GP['po-index']){ ?>
-                            <li><a href="<?= admin_url('purchase_order_sync'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('List PO Sync'); ?></a></li>
+                            <li><a href="<?= admin_url('purchase_order_sync'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('PO Sync'); ?></a></li>
+                        <?php } ?>
+                    </ul>
+                    <ul class="newmenu-sub">
+                        <?php if($Admin || $Owner || $GP['po-index']){ ?>
+                            <li><a href="<?= admin_url('purchase_order_sync/view'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('List PO Sync'); ?></a></li>
                         <?php } ?>
                     </ul>
                 </li>
@@ -869,5 +874,44 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+// Add this function once in your JS file
+function showNotify(type, message) {
+    var icons = {
+        success: 'fa-check-circle',
+        warning: 'fa-exclamation-triangle',
+        error:   'fa-times-circle'
+    };
+    var colors = {
+        success: '#27ae60',
+        warning: '#e67e22',
+        error:   '#e74c3c'
+    };
+    var div = $('<div>')
+        .css({
+            position:     'fixed',
+            top:          '30px',
+            right:        '40px',
+            zIndex:       99999,
+            background: '#428BCA',
+            color:        '#fff',
+            padding:      '20px 28px',
+            borderRadius: '10px',
+            boxShadow:    '0 8px 24px rgba(0,0,0,.35)',
+            fontSize:     '16px',
+            fontWeight:   '600',
+            maxWidth:     '480px',
+            minWidth:     '320px',
+            lineHeight:   '1.8',
+            borderLeft:   '6px solid rgba(255,255,255,0.5)',
+            letterSpacing: '0.3px',
+        })
+        .html('<i class="fa ' + (icons[type] || 'fa-info') + '"></i>  ' + message);
+
+    $('body').append(div);
+    setTimeout(function () {
+        div.fadeOut(500, function () { $(this).remove(); });
+    }, 5000);
+}
 </script>
 
