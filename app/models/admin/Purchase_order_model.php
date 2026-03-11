@@ -396,8 +396,8 @@ class Purchase_order_model extends CI_Model{
                 $sql = "SELECT SUM(si.qty) AS total_qty
                         FROM sma_purchase_order_shelving_items si
                         JOIN sma_purchase_order_shelving s ON s.id = si.shelving_id
-                        WHERE s.po_id = ? AND si.product_code = ?";
-                $query = $this->db->query($sql, [$purchase_id, $row->product_code]);
+                        WHERE s.po_id = ? AND TRIM(LEADING '0' FROM si.product_code) = ? AND si.status = 'active'";
+                $query = $this->db->query($sql, [$purchase_id, ltrim($row->product_code,'0')]);
                 if ($query && $query->num_rows() > 0) {
                     $shelved_qty = (float) $query->row()->total_qty;
                 }

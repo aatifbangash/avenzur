@@ -73,32 +73,32 @@ class Purchase_order_upload_model extends CI_Model
         foreach ($rows as $row) {
 
             // skip invalid/empty rows
-            $item_code = trim((string)($row['code'] ?? ''));
-            $item_name = trim((string)($row['name'] ?? ''));
+            $item_code = trim((string)($row['item_barcode'] ?? ''));
+            $item_name = trim((string)($row['item_name'] ?? ''));
             $qty       = (float)($row['quantity'] ?? 0);
 
             if (!$item_code || !$item_name || !$qty) {
                 continue;
             }
-
-            $varient_name   = trim((string)($row['variant'] ?? ''));
-            $batch_no       = trim((string)($row['batch_no'] ?? ''));
+            
+            $variant_barcode   = trim((string)($row['variant_barcode'] ?? ''));
+            $varient_name   = trim((string)($row['variant_name'] ?? ''));
+            $batch_no       = trim((string)($row['batch_number'] ?? ''));
             $expiry_date    = !empty($row['expiry_date']) ? $row['expiry_date'] : null;
             $sale_price     = (float)($row['sale_price'] ?? 0);
             $purchase_price = (float)($row['purchase_price'] ?? 0);
             $cost_price     = (float)($row['cost_price'] ?? 0);
             $tax_percent    = (float)($row['vat_percent'] ?? 0);
 
-            $dis1_percent   = (float)($row['discount1'] ?? 0);
+            $dis1_percent   = (float)($row['discount1_percent'] ?? 0);
             $dis1_value     = (float)($row['discount1_value'] ?? 0);
-            $dis2_percent   = (float)($row['discount2'] ?? 0);
+            $dis2_percent   = (float)($row['discount2_percent'] ?? 0);
             $dis2_value     = (float)($row['discount2_value'] ?? 0);
-            $dis3_percent   = (float)($row['discount3'] ?? 0);
+            $dis3_percent   = (float)($row['discount3_percent'] ?? 0);
             $dis3_value     = (float)($row['discount3_value'] ?? 0);
 
-            $details        = trim((string)($row['details'] ?? ''));
-            $details_ar     = trim((string)($row['details_ar'] ?? ''));
-            $image_link     = trim((string)($row['image'] ?? ''));
+            $details        = trim((string)($row['description_en'] ?? ''));
+            $image_link     = trim((string)($row['image_link'] ?? ''));
             $brand_name     = trim((string)($row['brand_name'] ?? ''));
 
             // fallback logic
@@ -111,9 +111,7 @@ class Purchase_order_upload_model extends CI_Model
 
             $product = $this->purchase_order_model->getProductByCode($item_code);
             $product_id = $product ? $product->id : null;
-            $parts        = explode("\n", trim($item_name));
-            $english_name = trim($parts[0] ?? '');
-            $arabic_name  = trim($parts[1] ?? '');
+
             if (!$product_id) {
 
                 if ($image_link == '') {
@@ -132,15 +130,10 @@ class Purchase_order_upload_model extends CI_Model
                 }
 
                 $parent_id = null;
-                $parts        = explode("\n", trim($item_name));
-                $english_name = trim($parts[0] ?? '');
-                $arabic_name  = trim($parts[1] ?? '');
-                
-                
+
                 $product_data = [
                     'code'           => $item_code,
-                    'name'           => $english_name,
-                    'name_ar'           => $arabic_name,
+                    'name'           => $item_name,
                     'category_id'    => null,
                     'cost'           => $purchase_price,
                     'price'          => $sale_price,
@@ -151,8 +144,7 @@ class Purchase_order_upload_model extends CI_Model
                     'alert_quantity' => 0,
                     'track_quantity' => 1,
                     'details'        => $details,
-                    'details_ar'     => $details_ar,
-                    'variant'        => $varient_name,
+                    'variant'        => trim($variant_barcode . ' - ' . $varient_name),
                     'parent_id'      => $parent_id,
                     'brand_name'     => $brand_name,
                 ];
@@ -168,11 +160,6 @@ class Purchase_order_upload_model extends CI_Model
 
                 // update image/details for existing product
                 $this->purchase_order_model->updateProductImage($product_id, $image_link, $details);
-
-                // optional brand update for existing product
-                if (!empty($brand_name)) {
-                    $this->db->where('id', $product_id)->update('products', ['brand' => $brand_name]);
-                }
 
                 if (($product->image == '' || $product->image == null) && $image_link == '') {
                     return [
@@ -261,6 +248,7 @@ class Purchase_order_upload_model extends CI_Model
             'updated_by'         => $this->session->userdata('user_id'),
             'updated_at'         => date('Y-m-d H:i:s')
         ];
+
         // To check duplicate purchase order (same supplier, warehouse, and grand total)
         $existing = $this->db
             ->where('supplier_id', $supplier_id)
@@ -276,6 +264,7 @@ class Purchase_order_upload_model extends CI_Model
                 'error' => 'Duplicate purchase order detected.'
             ];
         }
+
         $result = $this->purchase_order_model->addPurchaseFromExcel($data, $products);
 
         if ($result && isset($result['success']) && $result['success']) {
