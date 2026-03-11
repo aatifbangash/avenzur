@@ -61,35 +61,36 @@
 
                                 <thead>
                                     <tr>
-                                        <th>Item No</th>
-                                        <th>Code *</th>
-                                        <th>Product Name *</th>
-                                        <th>Variant</th>
-                                        <th>Batch No</th>
+                                        <th>Item Barcode *</th>
+                                        <th>Item Name *</th>
+                                        <th>Variant Barcode</th>
+                                        <th>Variant Name</th>
+                                        <th>Brand Name*</th>
+                                        <th>Batch Number</th>
                                         <th>Expiry Date</th>
                                         <th>Quantity *</th>
-                                        <th>Sale Price *</th>
-                                        <th>Purchase Price</th>
-                                        <th>Cost Price *</th>
+                                        <th>Sale Price (without VAT) *</th>
+                                        <th>Purchase Price (without VAT)</th>
+                                        <th>Cost Price (without VAT)</th>
                                         <th>VAT %</th>
-                                        <th>Discount 1</th>
+                                        <th>Discount 1 (%)</th>
                                         <th>Discount 1 Value</th>
-                                        <th>Discount 2</th>
+                                        <th>Discount 2 (%)</th>
                                         <th>Discount 2 Value</th>
-                                        <th>Discount 3</th>
+                                        <th>Discount 3 (%)</th>
                                         <th>Discount 3 Value</th>
-                                        <th>Image URL *</th>
                                         <th>Description</th>
-                                        <th>Brand *</th>
+                                        <th>Image URL *</th>
                                     </tr>
                                 </thead>
 
                                 <tbody>
                                     <tr>
                                         <td>8004759189</td>  <!-- Item Number -->
-                                        <td>PRD-475</td>       <!-- Product Code -->
                                         <td>Name of Product</td> <!-- Product Name -->
+                                        <td>PRD-475</td>       <!-- Product Code -->
                                         <td>Product Variant</td> <!-- Variant -->
+                                        <td>Brand Name</td> <!-- Brand Name -->
                                         <td>BW2409A</td>       <!-- Batch Number -->
                                         <td>2027-12-01</td>    <!-- Expiry Date -->
                                         <td>12</td>            <!-- Quantity -->
@@ -103,9 +104,8 @@
                                         <td>0</td>             <!-- Discount 2 Value -->
                                         <td>0</td>             <!-- Discount 3 (%) -->
                                         <td>0</td>             <!-- Discount 3 Value -->
-                                        <td>https://image.com/products/total-war-blue-lemonade.png</td> <!-- Product Image URL -->
                                         <td>Product Description.</td> <!-- Product Description -->
-                                        <td>Brand Name</td> <!-- Brand Name -->
+                                        <td>https://image.com/products/total-war-blue-lemonade.png</td> <!-- Product Image URL -->
                                     </tr>
                                 </tbody>
 
