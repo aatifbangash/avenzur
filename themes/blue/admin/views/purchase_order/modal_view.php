@@ -268,7 +268,8 @@
                                 if($this->Settings->site_name == 'Avnzor'){
                                 ?>
                                 <td style="text-align:center; vertical-align:middle;">
-                                    <?= $this->sma->formatQuantity($row->actual_quantity); ?></td>
+                                  <?= $this->sma->formatQuantity((float)$row->actual_quantity == 0 ? $row->qty : $row->actual_quantity); ?>
+                                </td>
                                 <?php }else { ?>
                                     <td style="text-align:center; vertical-align:middle;">
                                     <?= $this->sma->formatQuantity($row->unit_quantity); ?></td>
