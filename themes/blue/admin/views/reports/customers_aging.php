@@ -131,10 +131,12 @@
                                 class="table items table-striped table-bordered table-condensed table-hover tbl_pdf">
                             <thead>
                             <tr>
-                                <th>#</th>
+                                <th>Code</th>
                                 <th><?= lang('Customer'); ?></th>
+                                <th><?= lang('Category'); ?></th>
                                 <th><?= lang('Salesman'); ?></th>
                                 <th><?= lang('Credit Term'); ?></th>
+                                <th><?= lang('Credit Limit'); ?></th>
                                 <?php
                                     $duration = $this->input->post('duration') ? $this->input->post('duration') : 120;
                                     $intervals = [30, 60, 90, 120, 150, 180, 210, 240];
@@ -200,10 +202,12 @@
                                         $count++;
                                         ?>
                                             <tr>
-                                                <td><?= $count; ?></td>
+                                                <td><?= $data['customer_code']; ?></td>
                                                 <td><?= $data['customer_name']; ?></td>
+                                                <td><?= $data['category']; ?></td>
                                                 <td><?= $data['sales_agent'] ?? ''; ?></td>
                                                 <td><?= $data['payment_term']; ?></td>
+                                                <td><?= $data['credit_limit']; ?></td>
                                                 <?php
                                                 $i=1;
                                                 $previous_limit = 0;
@@ -234,7 +238,7 @@
                             </tbody>
                             <tfoot style="text-align:center;">
                                 <tr>
-                                    <td colspan="3"><strong></strong></td>
+                                    <td colspan="5"><strong></strong></td>
                                     <td><strong></strong></td>
                                     <?php
                                         $previous_limit = 0;

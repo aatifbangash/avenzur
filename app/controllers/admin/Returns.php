@@ -551,8 +551,13 @@ class Returns extends MY_Controller
                     $this->Zetca_model->report_zatca_status($reporting_data);
                 }*/
 
-                $this->convert_return_invoice($return_insert_id);
-                //$this->payment_to_customer($returns, $return_insert_id);  
+                $journal_id = $this->convert_return_invoice($return_insert_id);
+                $this->settle_return_against_oldest_invoices(
+                    $return_insert_id,
+                    (int) $data['customer_id'],
+                    (float) $data['grand_total'],
+                    $journal_id
+                );
             }
 
             $this->session->set_userdata('remove_rels', 1);
@@ -658,7 +663,8 @@ class Returns extends MY_Controller
             'reference_no'  => $reference_no,
             'amount' => $amount,
             'transfer_from_ledger' => $ledger_account,
-            'created_by'    => $this->session->userdata('user_id')
+            'created_by'    => $this->session->userdata('user_id'),
+            'added_via' => 'customer_return_module'
         ];
 
         $payment_id = $this->sales_model->addPaymentReference($payment_reference);
@@ -666,55 +672,116 @@ class Returns extends MY_Controller
     }
 
     public function payment_to_customer($returns, $return_insert_id, $journal_id = NULL){
-        
-        $result = [];
-        foreach ($returns as $item) {
-            $sale_id = $item['sale_id'];
-            $customer_id = $item['customer_id'];
-            $amount = $item['amount'];
+        $customer_id = 0;
+        $net_amount = 0;
 
-            if($sale_id){
-                if (isset($result[$sale_id])) {
-                    $result[$sale_id]['amount'] += $amount;
-                } else {
-                    $result[$sale_id] = [
-                        'sale_id' => $sale_id,
-                        'amount' => $amount,
-                    ];
+        if (!empty($returns)) {
+            foreach ($returns as $item) {
+                if (isset($item['customer_id']) && !empty($item['customer_id'])) {
+                    $customer_id = (int) $item['customer_id'];
+                }
+                if (isset($item['amount'])) {
+                    $net_amount += (float) $item['amount'];
                 }
             }
         }
 
-
-        $net_amount = 0;
-        if($sale_id){
-            $result = array_values($result);
-            foreach($result as $return){
-                $net_amount += $return['amount'];
-                $this->sales_model->update_sale_paid_amount($return['sale_id'], $return['amount']);
-            }
-        }else if($return_insert_id){
-            foreach ($returns as $retitem) {
-                $net_amount += $retitem['amount'];
+        if ($customer_id <= 0 && $return_insert_id) {
+            $return_invoice = $this->returns_model->getReturnByID($return_insert_id);
+            if ($return_invoice) {
+                $customer_id = (int) $return_invoice->customer_id;
+                $net_amount  = $net_amount > 0 ? $net_amount : (float) $return_invoice->grand_total;
             }
         }
-        
-        $payment_id = $this->add_customer_reference($net_amount, '', date('Y-m-d h:i:s'), 'Return By Customer', $customer_id, NULL);
 
-        $payment = [
-            'date'          => date('Y-m-d h:i:s'),
-            'sale_id'       => $sale_id,
-            'return_id'     => $return_insert_id,
-            'reference_no'  => '',
-            'amount'        => $net_amount,
-            'note'          => 'Return By Customer',
-            'created_by'    => $this->session->userdata('user_id'),
-            'type'          => 'sent',
-            'payment_id'    => $payment_id
-        ];
+        return $this->settle_return_against_oldest_invoices($return_insert_id, $customer_id, $net_amount, $journal_id);
+    }
 
-        $this->sales_model->addPayment($payment);
-        $this->sales_model->update_payment_reference($payment_id, $journal_id);
+    private function settle_return_against_oldest_invoices($return_id, $customer_id, $amount, $journal_id = null)
+    {
+        $return_id = (int) $return_id;
+        $customer_id = (int) $customer_id;
+        $remaining_amount = (float) $amount;
+
+        if ($return_id <= 0 || $customer_id <= 0 || $remaining_amount <= 0) {
+            return false;
+        }
+
+        $pending_invoices = $this->sales_model->getCustomerInvoicesWithPayments($customer_id);
+        if (empty($pending_invoices)) {
+            return false;
+        }
+
+        $total_outstanding = 0;
+        foreach ($pending_invoices as $invoice) {
+            $invoice_outstanding = isset($invoice->outstanding_amount)
+                ? (float) $invoice->outstanding_amount
+                : ((float) $invoice->grand_total - (float) $invoice->total_paid);
+            if ($invoice_outstanding > 0) {
+                $total_outstanding += $invoice_outstanding;
+            }
+        }
+
+        $allocatable_amount = min($remaining_amount, $total_outstanding);
+        if ($allocatable_amount <= 0) {
+            return false;
+        }
+
+        $remaining_amount = $allocatable_amount;
+
+        $payment_reference_id = $this->add_customer_reference(
+            $allocatable_amount,
+            $return_id,
+            date('Y-m-d H:i:s'),
+            'Return settlement against outstanding invoices',
+            $customer_id,
+            null
+        );
+
+        $total_applied = 0;
+        foreach ($pending_invoices as $invoice) {
+            if ($remaining_amount <= 0) {
+                break;
+            }
+
+            $outstanding = isset($invoice->outstanding_amount)
+                ? (float) $invoice->outstanding_amount
+                : ((float) $invoice->grand_total - (float) $invoice->total_paid);
+
+            if ($outstanding <= 0) {
+                continue;
+            }
+
+            $apply_amount = min($remaining_amount, $outstanding);
+
+            $payment = [
+                'date'          => date('Y-m-d H:i:s'),
+                'sale_id'       => (int) $invoice->id,
+                'return_id'     => $return_id,
+                'reference_no'  => '',
+                'amount'        => $apply_amount,
+                'note'          => 'Auto-settled from customer return #' . $return_id,
+                'created_by'    => $this->session->userdata('user_id'),
+                'paid_by'       => 'return',
+                'type'          => 'received',
+                'customer_id'   => $customer_id,
+                'payment_id'    => $payment_reference_id,
+            ];
+
+            $this->sales_model->addPayment($payment);
+            $this->sales_model->update_sale_paid_amount((int) $invoice->id, ((float) $invoice->total_paid + $apply_amount));
+            
+
+            $remaining_amount -= $apply_amount;
+            $total_applied += $apply_amount;
+        }
+
+        if ($payment_reference_id) {
+            $this->sales_model->update_payment_reference($payment_reference_id, $journal_id);
+            $this->sales_model->update_return_paid($return_id, $remaining_amount);
+        }
+
+        return $total_applied > 0;
     }
 
     public function convert_return_invoice($rid){
@@ -1213,7 +1280,12 @@ class Returns extends MY_Controller
 
             if($data['status'] == "completed"){
                 $journal_id = $this->convert_return_invoice($id);
-                //$this->payment_to_customer($returns, $id, $journal_id);  
+                $this->settle_return_against_oldest_invoices(
+                    $id,
+                    (int) $data['customer_id'],
+                    (float) $data['grand_total'],
+                    $journal_id
+                );
             }
 
             $this->session->set_userdata('remove_rels', 1);
@@ -1335,7 +1407,7 @@ class Returns extends MY_Controller
         . lang('actions') . ' <span class="caret"></span></button>
         <ul class="dropdown-menu pull-right" role="menu">';
 
-        if($this->GP['returns-edit']){
+        if($this->Owner || $this->Admin || $this->GP['returns-edit']){
             $action .= '<li>' . $edit_link . '</li>';
         } 
         
@@ -1343,9 +1415,9 @@ class Returns extends MY_Controller
             $action .= '<li>' . $journal_entry_link . '</li>';
         }
                 
-        if($this->GP['returns-delete']){
+        /*if($this->Owner || $this->Admin || $this->GP['returns-delete']){
             $action .= '<li>' . $delete_link . '</li>';
-        }
+        }*/
         $action .= '</ul></div></div>';
          
     $this->datatables->add_column('Actions', $action, 'id');

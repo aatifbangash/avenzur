@@ -106,7 +106,7 @@
         $total_vat = 0;
         $grand_total = 0;
         foreach ($service_invoice_entries as $entry):
-            $total_amount += $entry->unit_value * $entry->quantity;
+            $total_amount += $entry->unit_value;
             $total_vat += $entry->vat;
             $grand_total += $entry->payment_amount;
         ?>

@@ -343,6 +343,7 @@ class Sales_model extends CI_Model
         $this->db->from('returns r');
         //$this->db->join('payments p', 'p.return_id = r.id', 'left');
         $this->db->where('r.customer_id', $customer_id);
+        $this->db->where('r.status', 'completed');
         $this->db->group_by('r.id');
         $this->db->order_by('r.date', 'desc');
         $q = $this->db->get();
@@ -477,6 +478,13 @@ class Sales_model extends CI_Model
         $this->db->update('sma_memo', ['used_amount' => $amount_used], ['id' => $creditmemo_id]);
     }
 
+    /*public function update_memo_paid($creditmemo_id, $amount_used)
+    {
+        $this->db->set('used_amount', 'used_amount + ' . $amount_used, FALSE);
+        $this->db->where('id', $creditmemo_id);
+        $this->db->update('sma_memo');
+    }*/
+
     public function getCreditMemoByID($creditmemo_id){
         $this->db->select('memo.*, companies.company')
             ->join('companies', 'companies.id=memo.customer_id', 'left')
@@ -574,8 +582,9 @@ class Sales_model extends CI_Model
     }
 
     public function getPaymentReferenceByID($id){
-        $this->db->select('payment_reference.*, companies.name, lb.name as transfer_from')
+        $this->db->select('payment_reference.*, companies.name, c.name as supplier_name, lb.name as transfer_from')
             ->join('companies', 'companies.id=payment_reference.customer_id', 'left')
+            ->join('companies c', 'c.id=payment_reference.supplier_id', 'left')
             ->join('accounts_ledgers lb', 'lb.id=payment_reference.transfer_from_ledger', 'left')
             ->where('payment_reference.id =', $id);
         $q = $this->db->get('payment_reference');

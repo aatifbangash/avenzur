@@ -550,6 +550,8 @@ class Reports_model extends CI_Model
         $q = $this->db->query("SELECT 
             c.id AS supplier_id,
             c.name AS supplier_name,
+            c.sequence_code AS supplier_code,
+            c.category AS category,
             c.payment_term,
             $cases_str
         FROM 
@@ -620,10 +622,13 @@ class Reports_model extends CI_Model
                 s.date,
                 s.customer_id,
                 c.name AS customer_name,
+                c.sequence_code AS customer_code,
                 c.sales_agent,
                 s.grand_total,
                 s.paid,
-                c.payment_term
+                c.payment_term,
+                c.category,
+                c.credit_limit
             FROM sma_sales s
             JOIN sma_companies c ON s.customer_id = c.id
             WHERE s.grand_total > 0 AND s.sale_invoice = 1
@@ -680,8 +685,11 @@ class Reports_model extends CI_Model
                 $result[$inv->customer_id] = [
                     'customer_id'   => $inv->customer_id,
                     'customer_name' => $inv->customer_name,
+                    'customer_code' => $inv->customer_code,
                     'sales_agent'   => $inv->sales_agent,
                     'payment_term'  => $inv->payment_term,
+                    'credit_limit'  => $inv->credit_limit,
+                    'category'      => $inv->category
                 ];
                 foreach ($buckets as $b) {
                     $result[$inv->customer_id][$b['label']] = 0;
@@ -1951,6 +1959,7 @@ class Reports_model extends CI_Model
                 sma_companies.name,
                 sma_companies.company, 
                 sma_companies.sequence_code, 
+                sma_companies.category,
                 SUM(CASE WHEN sma_accounts_entryitems.dc = 'D' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_debit, 
                 SUM(CASE WHEN sma_accounts_entryitems.dc = 'C' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_credit 
             FROM 
@@ -1981,7 +1990,8 @@ class Reports_model extends CI_Model
                     sma_companies.id, 
                     sma_companies.name, 
                     sma_companies.company, 
-                    sma_companies.sequence_code, 
+                    sma_companies.sequence_code,
+                    sma_companies.category, 
                     SUM(CASE WHEN sma_accounts_entryitems.dc = 'D' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_debit, 
                     SUM(CASE WHEN sma_accounts_entryitems.dc = 'C' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_credit 
                     FROM 

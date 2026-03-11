@@ -423,6 +423,53 @@
                 </li>
                 <?php } ?>
 
+                <?php if($Admin || $Owner || $GP['po-index']){ ?>
+                <!-- Purchase Order -->
+                <li class="newmenu-item has-sub">
+                    <a href="#" class="newmenu-link">
+                        <i class="fa fa-shopping-cart"></i>
+                        <span><?= lang('Purchase Orders Upload'); ?></span>
+                        <i class="fa fa-chevron-right newmenu-chevron"></i>
+                    </a>
+                    <ul class="newmenu-sub">
+                        <?php if($Admin || $Owner || $GP['po-upload']){ ?>
+                            <li>
+                                <a href="<?= admin_url('purchase_order_upload'); ?>" class="newmenu-link">
+                                    <i class="fa fa-upload"></i> <?= lang('Upload PO'); ?>
+                                </a>
+                            </li>
+                        <?php } ?>
+                        <?php if($Admin || $Owner || $GP['po-review']){ ?>
+                            <li>
+                                <a href="<?= admin_url('purchase_order_upload/review'); ?>" class="newmenu-link">
+                                    <i class="fa fa-eye"></i> <?= lang('Review PO'); ?>
+                                </a>
+                            </li>
+                        <?php } ?>
+                    </ul>
+                </li>
+                <?php } ?>
+                <?php if($Admin || $Owner || $GP['po-index']){ ?>
+                <!-- Purchase Order Upload -->
+                    <ul class="newmenu-sub">
+                        <?php if($Admin || $Owner || $GP['po-upload']){ ?>
+                            <li>
+                                <a href="<?= admin_url('purchase_order_upload'); ?>" class="newmenu-link">
+                                    <i class="fa fa-upload"></i> <?= lang('Upload PO'); ?>
+                                </a>
+                            </li>
+                        <?php } ?>
+                        <?php if($Admin || $Owner || $GP['po-review']){ ?>
+                            <li>
+                                <a href="<?= admin_url('purchase_order_upload/review'); ?>" class="newmenu-link">
+                                    <i class="fa fa-eye"></i> <?= lang('Review PO'); ?>
+                                </a>
+                            </li>
+                        <?php } ?>
+                    </ul>
+                </li>
+                <?php } ?>
+
                 <!-- Purchases -->
                  <?php if($Admin || $Owner || $GP['purchases-index']){ ?>
                 <li class="newmenu-item has-sub">
