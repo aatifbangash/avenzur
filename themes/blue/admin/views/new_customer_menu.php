@@ -432,14 +432,14 @@
                         <i class="fa fa-chevron-right newmenu-chevron"></i>
                     </a>
                     <ul class="newmenu-sub">
-                        <?php if($Admin || $Owner || $GP['po-upload']){ ?>
+                        <?php if($Admin || $Owner || $GP['po-index']){ ?>
                             <li>
                                 <a href="<?= admin_url('purchase_order_upload'); ?>" class="newmenu-link">
                                     <i class="fa fa-upload"></i> <?= lang('Upload PO'); ?>
                                 </a>
                             </li>
                         <?php } ?>
-                        <?php if($Admin || $Owner || $GP['po-review']){ ?>
+                        <?php if($Admin || $Owner || $GP['po-index']){ ?>
                             <li>
                                 <a href="<?= admin_url('purchase_order_upload/review'); ?>" class="newmenu-link">
                                     <i class="fa fa-eye"></i> <?= lang('Review PO'); ?>

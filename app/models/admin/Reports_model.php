@@ -688,7 +688,7 @@ class Reports_model extends CI_Model
                     'customer_code' => $inv->customer_code,
                     'sales_agent'   => $inv->sales_agent,
                     'payment_term'  => $inv->payment_term,
-                    'credit_limit'  => $inv->credit_limit,
+                    //'credit_limit'  => $inv->credit_limit,
                     'category'      => $inv->category
                 ];
                 foreach ($buckets as $b) {
@@ -1958,8 +1958,8 @@ class Reports_model extends CI_Model
                 sma_companies.id, 
                 sma_companies.name,
                 sma_companies.company, 
-                sma_companies.sequence_code, 
                 sma_companies.category,
+                sma_companies.sequence_code, 
                 SUM(CASE WHEN sma_accounts_entryitems.dc = 'D' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_debit, 
                 SUM(CASE WHEN sma_accounts_entryitems.dc = 'C' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_credit 
             FROM 
@@ -1990,8 +1990,8 @@ class Reports_model extends CI_Model
                     sma_companies.id, 
                     sma_companies.name, 
                     sma_companies.company, 
-                    sma_companies.sequence_code,
-                    sma_companies.category, 
+                    sma_companies.category,
+                    sma_companies.sequence_code, 
                     SUM(CASE WHEN sma_accounts_entryitems.dc = 'D' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_debit, 
                     SUM(CASE WHEN sma_accounts_entryitems.dc = 'C' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_credit 
                     FROM 

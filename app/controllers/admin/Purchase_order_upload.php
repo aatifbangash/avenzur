@@ -92,111 +92,132 @@ class Purchase_order_upload extends MY_Controller
                 $row_count++;
                 continue; // skip header
             }
-            
-            // Excel columns based on your latest template
-            $item_no        = isset($row[0]) ? trim($row[0]) : '';
-            $code           = isset($row[1]) ? trim($row[1]) : '';
-            $name           = isset($row[2]) ? trim($row[2]) : '';
-            $variant        = isset($row[3]) ? trim($row[3]) : '';
-            $batch_no       = isset($row[4]) ? trim($row[4]) : '';
-            $expiry_raw     = isset($row[5]) ? $row[5] : '';
-            $quantity       = isset($row[6]) ? (float)$row[6] : 0;
-            $sale_price     = isset($row[7]) ? (float)$row[7] : 0;
-            $purchase_price = isset($row[8]) && $row[8] !== '' ? (float)$row[8] : 0;
-            $cost_price     = isset($row[9]) && $row[9] !== '' ? (float)$row[9] : 0;
-            $vat_percent    = isset($row[10]) ? (float)$row[10] : 0;
-            $dis1           = isset($row[11]) ? (float)$row[11] : 0;
-            $dis1_value     = isset($row[12]) ? (float)$row[12] : 0;
-            $dis2           = isset($row[13]) ? (float)$row[13] : 0;
-            $dis2_value     = isset($row[14]) ? (float)$row[14] : 0;
-            $dis3           = isset($row[15]) ? (float)$row[15] : 0;
-            $dis3_value     = isset($row[16]) ? (float)$row[16] : 0;
-            $details_ar    = isset($row[17]) ? trim($row[17]) : '';
-            $details    = isset($row[18]) ? trim($row[18]) : '';
-            $image          = isset($row[19]) ? trim($row[19]) : '';
-            $brand_name     = isset($row[20]) ? trim($row[20]) : '';
-            
-            // skip full54y empty row
+            $item_barcode        = isset($row[0]) ? trim($row[0]) : '';
+            $item_name_en        = isset($row[1]) ? trim($row[1]) : '';
+            $variant_barcode     = isset($row[2]) ? trim($row[2]) : '';
+            $variant_name        = isset($row[3]) ? trim($row[3]) : '';
+            $brand_name          = isset($row[4]) ? trim($row[4]) : '';
+            $batch_number        = isset($row[5]) ? trim($row[5]) : '';
+            $expiry_date_raw     = isset($row[6]) ? $row[6] : '';
+
+            $quantity            = isset($row[7]) ? (float)$row[7] : 0;
+            $sale_price_inc_vat  = isset($row[8]) ? (float)$row[8] : 0;
+            $purchase_price      = isset($row[9]) ? (float)$row[9] : 0;
+            $cost_price          = isset($row[10]) ? (float)$row[10] : 0;
+
+            $vat_percent         = isset($row[11]) ? (float)$row[11] : 0;
+
+            $discount1_percent   = isset($row[12]) ? (float)$row[12] : 0;
+            $discount1_value     = isset($row[13]) ? (float)$row[13] : 0;
+
+            $discount2_percent   = isset($row[14]) ? (float)$row[14] : 0;
+            $discount2_value     = isset($row[15]) ? (float)$row[15] : 0;
+
+            $discount3_percent   = isset($row[16]) ? (float)$row[16] : 0;
+            $discount3_value     = isset($row[17]) ? (float)$row[17] : 0;
+
+            $description_en      = isset($row[18]) ? trim($row[18]) : '';
+            $image_link          = isset($row[19]) ? trim($row[19]) : '';
+
+
+            // skip empty row
             if (
-                $code === '' &&
-                $name === '' &&
-                $brand_name === '' &&
+                trim($item_barcode) === '' &&
+                trim($item_name_en) === '' &&
+                trim($brand_name) === '' &&
                 $quantity == 0 &&
                 $purchase_price == 0 &&
-                $sale_price == 0
-                ) {
+                $sale_price_inc_vat == 0
+            ) {
                 continue;
-                }
-                    
+            }
+
+
             // expiry formatting
             $expiry_date = null;
-            if (!empty($expiry_raw)) {
-                if (is_numeric($expiry_raw)) {
-                    $expiry_date = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($expiry_raw)->format('Y-m-d');
-                    } else {
-                        $expiry_date = date('Y-m-d', strtotime($expiry_raw));
-                        }
+
+            if (!empty($expiry_date_raw)) {
+                if (is_numeric($expiry_date_raw)) {
+                    $expiry_date = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($expiry_date_raw)->format('Y-m-d');
+                } else {
+                    $expiry_date = date('Y-m-d', strtotime($expiry_date_raw));
+                }
             }
-                        
+
+
             // prefer cost price, fallback to purchase price
             $final_cost_price = $cost_price > 0 ? $cost_price : $purchase_price;
 
             $errors = [];
 
+
             // mandatory checks
-            if ($code === '') {
-                $errors[] = 'Code is required';
+            if ($item_barcode === '') {
+                $errors[] = 'Item barcode is required';
             }
-            if ($name === '') {
-                $errors[] = 'Name is required';
+
+            if ($item_name_en === '') {
+                $errors[] = 'Item name is required';
             }
-            if ($image === '') {
-                $errors[] = 'Image is required';
+
+            if ($image_link === '') {
+                $errors[] = 'Image link is required';
             }
+
             if ($brand_name === '') {
-                $errors[] = 'Brand is required';
+                $errors[] = 'Brand name is required';
             }
+
             if ($quantity <= 0) {
                 $errors[] = 'Quantity is required';
             }
+
             if ($final_cost_price <= 0) {
                 $errors[] = 'Cost price is required';
             }
-            if ($sale_price <= 0) {
+
+            if ($sale_price_inc_vat <= 0) {
                 $errors[] = 'Sale price is required';
             }
-            
+
 
             if (!empty($errors)) {
                 $has_errors = true;
             }
+
+
             $parsed_rows[] = [
-                'row_no'          => $row_count + 1,
-                'item_no'         => $item_no,
-                'code'            => $code,
-                'name'            => strtolower($name),
-                'variant'         => $variant,
-                'batch_no'        => $batch_no,
-                'expiry_date'     => $expiry_date,
-                'quantity'        => $quantity,
-                'sale_price'      => $sale_price,
-                'purchase_price'  => $purchase_price,
-                'cost_price'      => $final_cost_price,
-                'vat_percent'     => $vat_percent,
-                'discount1'       => $dis1,
-                'discount1_value' => $dis1_value,
-                'discount2'       => $dis2,
-                'discount2_value' => $dis2_value,
-                'discount3'       => $dis3,
-                'discount3_value' => $dis3_value,
-                'details_ar'     => $details_ar,
-                'details'     => $details,
-                'image'           => $image,
-                'brand_name'      => strtolower($brand_name),
-                'error'          => $errors,
-                'has_error'       => !empty($errors),
+                'row_no'            => $row_count + 1,
+                'item_barcode'      => $item_barcode,
+                'item_name'         => strtolower($item_name_en),
+                'variant_barcode'   => $variant_barcode,
+                'variant_name'      => $variant_name,
+                'batch_number'      => $batch_number,
+                'expiry_date'       => $expiry_date,
+                'quantity'          => $quantity,
+                'sale_price'        => $sale_price_inc_vat,
+                'purchase_price'    => $purchase_price,
+                'cost_price'        => $final_cost_price,
+                'vat_percent'       => $vat_percent,
+
+                'discount1_percent' => $discount1_percent,
+                'discount1_value'   => $discount1_value,
+
+                'discount2_percent' => $discount2_percent,
+                'discount2_value'   => $discount2_value,
+
+                'discount3_percent' => $discount3_percent,
+                'discount3_value'   => $discount3_value,
+                'subtotal'        => $purchase_price * $quantity,
+                'description_en'    => $description_en,
+                'image_link'        => $image_link,
+                'brand_name'        => strtolower($brand_name),
+
+                'error'             => $errors,
+                'has_error'         => !empty($errors),
             ];
-            
+
+
             $row_count++;
         }
         if (!empty($has_errors)) {
