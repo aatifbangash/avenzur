@@ -8,22 +8,22 @@
         width: 100%;
         min-width: 110px;
     }
-    .sale-info-box {
+    .po-info-box {
         background: #f9f9f9;
         border: 1px solid #ddd;
         border-radius: 4px;
         padding: 12px 18px;
         margin-bottom: 16px;
     }
-    .sale-info-box span { margin-right: 24px; font-size: 13px; }
-    .sale-info-box strong { color: #333; }
+    .po-info-box span { margin-right: 24px; font-size: 13px; }
+    .po-info-box strong { color: #333; }
 </style>
 
 <div class="box">
     <div class="box-header">
         <h2 class="blue">
             <i class="fa-fw fa fa-pencil-square-o"></i>
-            Edit Sale Batch / Expiry / Shelf
+            Edit Purchase Batch / Expiry
         </h2>
     </div>
 
@@ -41,32 +41,32 @@
                 <!-- ── Search Form ─────────────────────────────────────────── -->
                 <?php echo admin_form_open('stock_request/edit_sale_batch', 'id="search-form" class="form-inline"'); ?>
                     <div class="form-group" style="margin-bottom:16px;">
-                        <label for="sale_ref" style="margin-right:8px; font-weight:600;">
-                            Sale Reference / ID
+                        <label for="purchase_ref" style="margin-right:8px; font-weight:600;">
+                            Purchase Reference / ID
                         </label>
                         <input type="text"
-                               id="sale_ref"
-                               name="sale_ref"
+                               id="purchase_ref"
+                               name="purchase_ref"
                                class="form-control"
-                               placeholder="e.g. SO-0001 or 42"
+                               placeholder="e.g. PO-0001 or 42"
                                value="<?= htmlspecialchars($search_ref, ENT_QUOTES, 'UTF-8') ?>"
                                style="width:260px; margin-right:8px;"
                                autofocus />
                         <button type="submit" name="search" value="1" class="btn btn-primary">
-                            <i class="fa fa-search"></i> Load Sale
+                            <i class="fa fa-search"></i> Load Purchase
                         </button>
                     </div>
                 <?php echo form_close(); ?>
 
-                <?php if ($sale): ?>
+                <?php if ($purchase): ?>
 
-                    <!-- ── Sale Header Info ────────────────────────────────── -->
-                    <div class="sale-info-box">
-                        <span><strong>Reference:</strong> <?= htmlspecialchars($sale->reference_no, ENT_QUOTES, 'UTF-8') ?></span>
-                        <span><strong>Date:</strong> <?= htmlspecialchars($sale->date, ENT_QUOTES, 'UTF-8') ?></span>
-                        <span><strong>Customer:</strong> <?= htmlspecialchars($sale->customer, ENT_QUOTES, 'UTF-8') ?></span>
-                        <span><strong>Status:</strong> <?= htmlspecialchars($sale->sale_status, ENT_QUOTES, 'UTF-8') ?></span>
-                        <span><strong>Total:</strong> <?= number_format((float)$sale->grand_total, 2) ?></span>
+                    <!-- ── Purchase Header Info ───────────────────────────── -->
+                    <div class="po-info-box">
+                        <span><strong>Reference:</strong> <?= htmlspecialchars($purchase->reference_no, ENT_QUOTES, 'UTF-8') ?></span>
+                        <span><strong>Date:</strong> <?= htmlspecialchars($purchase->date, ENT_QUOTES, 'UTF-8') ?></span>
+                        <span><strong>Supplier:</strong> <?= htmlspecialchars($purchase->supplier ?? '', ENT_QUOTES, 'UTF-8') ?></span>
+                        <span><strong>Status:</strong> <?= htmlspecialchars($purchase->status ?? '', ENT_QUOTES, 'UTF-8') ?></span>
+                        <span><strong>Total:</strong> <?= number_format((float)($purchase->grand_total ?? 0), 2) ?></span>
                     </div>
 
                     <?php if ($items): ?>
@@ -76,8 +76,8 @@
                             $attrib = ['role' => 'form', 'id' => 'batch-edit-form'];
                             echo admin_form_open('stock_request/edit_sale_batch', $attrib);
                         ?>
-                        <input type="hidden" name="save_batch" value="1" />
-                        <input type="hidden" name="sale_id"   value="<?= (int)$sale->id ?>" />
+                        <input type="hidden" name="save_batch"   value="1" />
+                        <input type="hidden" name="purchase_id" value="<?= (int)$purchase->id ?>" />
 
                         <div class="table-responsive">
                             <table class="table table-bordered table-condensed table-hover batch-table">
@@ -91,8 +91,6 @@
                                         <th style="min-width:130px;">New Batch</th>
                                         <th style="min-width:120px;">Current Expiry</th>
                                         <th style="min-width:130px;">New Expiry</th>
-                                        <th style="min-width:100px;">Current Shelf</th>
-                                        <th style="min-width:100px;">New Shelf</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -108,23 +106,23 @@
                                         </td>
                                         <td class="text-center"><?= number_format((float)$item->quantity, 2) ?></td>
 
-                                        <!-- Current batch (read-only display) -->
+                                        <!-- Current batch (read-only) -->
                                         <td>
-                                            <span class="text-muted"><?= htmlspecialchars($item->batch_no ?? '—', ENT_QUOTES, 'UTF-8') ?></span>
+                                            <span class="text-muted"><?= htmlspecialchars($item->batchno ?? '—', ENT_QUOTES, 'UTF-8') ?></span>
                                         </td>
                                         <!-- New batch input -->
                                         <td>
-                                            <input type="hidden" name="item_id[]"      value="<?= (int)$item->id ?>" />
-                                            <input type="hidden" name="product_id[]"   value="<?= (int)$item->product_id ?>" />
+                                            <input type="hidden" name="item_id[]"       value="<?= (int)$item->id ?>" />
+                                            <input type="hidden" name="product_id[]"    value="<?= (int)$item->product_id ?>" />
                                             <input type="hidden" name="avz_item_code[]" value="<?= htmlspecialchars($item->avz_item_code ?? '', ENT_QUOTES, 'UTF-8') ?>" />
                                             <input type="text"
                                                    name="batch_no[]"
                                                    class="form-control input-sm"
-                                                   value="<?= htmlspecialchars($item->batch_no ?? '', ENT_QUOTES, 'UTF-8') ?>"
+                                                   value="<?= htmlspecialchars($item->batchno ?? '', ENT_QUOTES, 'UTF-8') ?>"
                                                    placeholder="Batch No" />
                                         </td>
 
-                                        <!-- Current expiry (read-only display) -->
+                                        <!-- Current expiry (read-only) -->
                                         <td>
                                             <span class="text-muted">
                                                 <?= $item->expiry ? htmlspecialchars($item->expiry, ENT_QUOTES, 'UTF-8') : '—' ?>
@@ -135,21 +133,7 @@
                                             <input type="date"
                                                    name="expiry[]"
                                                    class="form-control input-sm"
-                                                   value="<?= $item->expiry ? htmlspecialchars($item->expiry, ENT_QUOTES, 'UTF-8') : '' ?>"
-                                                   placeholder="YYYY-MM-DD" />
-                                        </td>
-
-                                        <!-- Current shelf (from product) -->
-                                        <td>
-                                            <span class="text-muted"><?= htmlspecialchars($item->warehouse_shelf ?? '—', ENT_QUOTES, 'UTF-8') ?></span>
-                                        </td>
-                                        <!-- New shelf input -->
-                                        <td>
-                                            <input type="text"
-                                                   name="shelf[]"
-                                                   class="form-control input-sm"
-                                                   value="<?= htmlspecialchars($item->warehouse_shelf ?? '', ENT_QUOTES, 'UTF-8') ?>"
-                                                   placeholder="e.g. A1" />
+                                                   value="<?= $item->expiry ? htmlspecialchars($item->expiry, ENT_QUOTES, 'UTF-8') : '' ?>" />
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -160,7 +144,7 @@
                         <div style="margin-top:12px;">
                             <button type="submit"
                                     class="btn btn-success"
-                                    onclick="return confirm('Save batch / expiry / shelf changes for this sale?')">
+                                    onclick="return confirm('Save batch / expiry changes for this purchase?')">
                                 <i class="fa fa-save"></i> Save Changes
                             </button>
                             <a href="<?= admin_url('stock_request/edit_sale_batch') ?>"
@@ -172,10 +156,10 @@
                         <?php echo form_close(); ?>
 
                     <?php else: ?>
-                        <div class="alert alert-warning">No items found for this sale.</div>
+                        <div class="alert alert-warning">No items found for this purchase.</div>
                     <?php endif; ?>
 
-                <?php endif; /* $sale */ ?>
+                <?php endif; /* $purchase */ ?>
 
             </div><!-- /.col -->
         </div><!-- /.row -->
