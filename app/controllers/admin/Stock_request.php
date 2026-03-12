@@ -3102,4 +3102,122 @@ class stock_request extends MY_Controller
         $this->sma->send_json($response);
     }
 
+    /* -----------------------------------------------------------------------
+     * Edit Sale Batch / Expiry / Shelf
+     * Allows warehouse users to look up a sale by reference and correct
+     * the batch number, expiry date and shelf location for each line item.
+     * ----------------------------------------------------------------------- */
+    public function edit_sale_batch()
+    {
+        $this->load->admin_model('sales_model');
+
+        $this->data['error']      = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['message']    = $this->session->flashdata('message');
+        $this->data['sale']       = null;
+        $this->data['items']      = [];
+        $this->data['search_ref'] = '';
+
+        // ---- Handle SAVE -----------------------------------------------
+        if ($this->input->post('save_batch')) {
+            $sale_id      = (int) $this->input->post('sale_id');
+            $item_ids     = $this->input->post('item_id');
+            $batch_nos    = $this->input->post('batch_no');
+            $expiries     = $this->input->post('expiry');
+            $shelves      = $this->input->post('shelf');
+            $product_ids  = $this->input->post('product_id');
+            $avz_codes    = $this->input->post('avz_item_code');
+
+            // Server-side guard: re-fetch the sale and block completed ones
+            $sale_check = $sale_id ? $this->db->get_where('sales', ['id' => $sale_id], 1)->row() : null;
+            if (!$sale_check || $sale_check->sale_status === 'completed') {
+                $this->session->set_flashdata('error', 'Cannot edit batch / expiry / shelf for a completed sale.');
+                admin_redirect('stock_request/edit_sale_batch');
+            }
+
+            if ($sale_id && $item_ids && is_array($item_ids)) {
+                foreach ($item_ids as $idx => $item_id) {
+                    $item_id    = (int) $item_id;
+                    $product_id = isset($product_ids[$idx]) ? (int) $product_ids[$idx] : 0;
+                    $batch_no   = isset($batch_nos[$idx])   ? trim($batch_nos[$idx])   : null;
+                    $raw_expiry = isset($expiries[$idx])    ? trim($expiries[$idx])     : '';
+                    $shelf      = isset($shelves[$idx])     ? trim($shelves[$idx])      : null;
+                    $avz_code   = isset($avz_codes[$idx])   ? trim($avz_codes[$idx])   : null;
+
+                    // Normalise expiry to Y-m-d or NULL
+                    $expiry = null;
+                    if ($raw_expiry !== '') {
+                        $ts = strtotime($raw_expiry);
+                        if ($ts !== false) {
+                            $expiry = date('Y-m-d', $ts);
+                        }
+                    }
+
+                    // Update sale_items – batch, expiry
+                    $this->db->where('id', $item_id)
+                             ->where('sale_id', $sale_id)
+                             ->where('product_id', $product_id)  
+                             ->where('avz_item_code', $avz_code) 
+                             ->update('sale_items', [
+                                 'batch_no' => $batch_no,
+                                 'expiry'   => $expiry,
+                             ]);
+
+                    // Sync ALL inventory_movements rows tied to this avz_item_code
+                    // (covers purchase, sale, transfer, adjustment, etc.) so the
+                    // entire stock lifecycle reflects the corrected batch / expiry.
+                    if ($avz_code !== null && $avz_code !== '') {
+                        $this->db->where('avz_item_code', $avz_code)
+                                 ->update('inventory_movements', [
+                                     'batch_number' => $batch_no,
+                                     'expiry_date'  => $expiry,
+                                 ]);
+                    }
+
+                    // Update the product's warehouse shelf location
+                    if ($shelf !== null && $shelf !== '' && $product_id) {
+                        $this->db->where('id', $product_id)
+                                 ->update('products', ['warehouse_shelf' => $shelf]);
+                    }
+                }
+
+                $this->session->set_flashdata('message', 'Batch / Expiry / Shelf updated successfully.');
+                admin_redirect('stock_request/edit_sale_batch');
+            } else {
+                $this->data['error'] = 'Invalid submission. Please try again.';
+            }
+        }
+
+        // ---- Handle SEARCH ---------------------------------------------
+        if ($this->input->post('search')) {
+            $ref = trim($this->input->post('sale_ref'));
+            $ref = $this->security->xss_clean($ref);
+            $this->data['search_ref'] = $ref;
+
+            // Find by reference_no first, then by numeric ID
+            $sale = $this->db->get_where('sales', ['reference_no' => $ref], 1)->row();
+            if (!$sale && is_numeric($ref)) {
+                $sale = $this->db->get_where('sales', ['id' => (int) $ref], 1)->row();
+            }
+
+            if ($sale) {
+                if ($sale->sale_status === 'completed') {
+                    $this->data['error'] = 'Sale ' . htmlspecialchars($ref, ENT_QUOTES, 'UTF-8') . ' is completed and cannot be edited.';
+                } else {
+                    $this->data['sale']  = $sale;
+                    $this->data['items'] = $this->sales_model->getAllInvoiceItems($sale->id);
+                }
+            } else {
+                $this->data['error'] = 'No sale found for: ' . htmlspecialchars($ref, ENT_QUOTES, 'UTF-8');
+            }
+        }
+
+        $bc   = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('stock_request'), 'page' => lang('Stock Requests')],
+            ['link' => '#', 'page' => 'Edit Sale Batch / Expiry / Shelf'],
+        ];
+        $meta = ['page_title' => 'Edit Sale Batch / Expiry / Shelf', 'bc' => $bc];
+        $this->page_construct('stock_request/edit_sale_batch', $meta, $this->data);
+    }
+
 }
