@@ -11,7 +11,7 @@
         <div class="modal-body">
             <p><?= lang('enter_info'); ?></p>
 
-            <div class="row">
+            <!--<div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
                         <label class="control-label" for="customer_group"><?php echo $this->lang->line('customer_group'); ?></label>
@@ -35,7 +35,7 @@
                         ?>
                     </div>
                 </div>
-            </div>
+            </div>-->
 
             <div class="row">
                 <div class="col-md-6">
@@ -47,31 +47,36 @@
                         <?= lang('name', 'name'); ?>
                         <?php echo form_input('name', $customer->name, 'class="form-control tip" id="name" required="required"'); ?>
                     </div>
+                    <div class="form-group  ">
+                        <?= lang('name_arabic', 'name_arabic'); ?>
+                        <?php echo form_input('name_ar',  $customer->name_ar, 'class="form-control tip" id="name" data-bv-notempty="true"'); ?>
+                    </div> 
                     <div class="form-group">
                         <?= lang('vat_no', 'vat_no'); ?>
                         <?php echo form_input('vat_no', $customer->vat_no, 'class="form-control" id="vat_no"'); ?>
                     </div>
 
                     <div class="form-group">
-                        <?= lang('gst_no', 'gst_no'); ?>
-                        <?php echo form_input('gst_no', $customer->gst_no, 'class="form-control" id="gst_no"'); ?>
+                        <?= lang('gln', 'gln'); ?>
+                        <?php echo form_input('gln', $customer->gln, 'class="form-control" id="gln"'); ?>
                     </div>
                     <!--<div class="form-group company">
                     <?= lang('contact_person', 'contact_person'); ?>
                     <?php //echo form_input('contact_person', $customer->contact_person, 'class="form-control" id="contact_person" required="required"');
                     ?>
                 </div> -->
+                    
                     <div class="form-group">
-                        <?= lang('email_address', 'email_address'); ?>
-                        <input type="email" name="email" class="form-control" required="required" id="email_address" value="<?= $customer->email ?>" />
+                        <?= lang('cr', 'cr'); ?>
+                        <?php echo form_input('cr', $customer->cr, 'class="form-control" id="cr"'); ?>
                     </div>
                     <div class="form-group">
                         <?= lang('phone', 'phone'); ?>
-                        <input type="tel" name="phone" class="form-control" required="required" id="phone" value="<?= $customer->phone ?>" />
+                        <input type="tel" name="phone" class="form-control" id="phone" value="<?= $customer->phone ?>" />
                     </div>
                     <div class="form-group">
-                        <?= lang('address', 'address'); ?>
-                        <?php echo form_input('address', $customer->address, 'class="form-control" id="address" required="required"'); ?>
+                        <?= lang('email_address', 'email_address'); ?>
+                        <input type="email" name="email" class="form-control" id="email_address" value="<?= $customer->email ?>" />
                     </div>
                     <div class="form-group">
                         <?= lang('city', 'city'); ?>
@@ -97,12 +102,26 @@
                         <?php echo form_input('country', $customer->country, 'class="form-control" id="country"'); ?>
                     </div>
                     <div class="form-group">
+                        <?= lang('payment_term', 'popayment_term'); ?>
+                        <?php echo form_input('payment_term', $customer->payment_term, 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('payment_term_tip') . '" id="popayment_term"'); ?>
+                    </div>
+                    <div class="form-group">
                         <?= lang('Credit_limit', 'credit_limit'); ?>
                         <?php echo form_input('credit_limit', $customer->credit_limit, 'class="form-control" id="credit_limit"'); ?>
-                    </div>
+                    </div> 
+                    <div class="form-group">
+                        <?= lang('Cr Expiration', 'cr_expiration'); ?>
+                        <?php echo form_input('cr_expiration', $customer->cr_expiration, 'class="form-control" id="cr_expiration"'); ?>
+                    </div> 
                 </div>
                 <div class="col-md-6">
-
+                    <?php
+                        $categories = array('Pharmacy Client' => 'Pharmacy Client', 'Clinic Client' => 'Clinic Client', 'Hospital Client' => 'Hospital Client', 'Rent Client' => 'Rent Client', 'Warehouse Client' => 'Warehouse Client');
+                    ?>
+                    <div class="form-group">
+                        <?= lang('Category', 'category'); ?>
+                        <?php echo form_dropdown('category', $categories, $customer->category, 'class="form-control select" id="category" required="required"'); ?>
+                    </div>
                     <div class="form-group">
                         <?= lang('Ledger Account', 'ledger_account'); ?>
                         <?php
@@ -143,40 +162,58 @@
                         ?>
                     </div>
 
-
                     <div class="form-group">
-                        <?= lang('ccf1', 'cf1'); ?>
-                        <?php echo form_input('cf1', $customer->cf1, 'class="form-control" id="cf1"'); ?>
-                    </div>
-                    <div class="form-group">
-                        <?= lang('ccf2', 'cf2'); ?>
-                        <?php echo form_input('cf2', $customer->cf2, 'class="form-control" id="cf2"'); ?>
+                        <?= lang('Short Address', 'short_address'); ?>
+                        <?php echo form_input('short_address', $customer->short_address, 'class="form-control" id="short_address"'); ?>
 
                     </div>
                     <div class="form-group">
-                        <?= lang('ccf3', 'cf3'); ?>
-                        <?php echo form_input('cf3', $customer->cf3, 'class="form-control" id="cf3"'); ?>
+                        <?= lang('address', 'address'); ?>
+                        <?php echo form_input('address', $customer->address, 'class="form-control" id="address" required="required"'); ?>
+                    </div>
+                    
+                    <div class="form-group">
+                        <?= lang('Building Number', 'building_number'); ?>
+                        <?php echo form_input('building_number', $customer->building_number, 'class="form-control" id="building_number"'); ?>
                     </div>
                     <div class="form-group">
-                        <?= lang('ccf4', 'cf4'); ?>
-                        <?php echo form_input('cf4', $customer->cf4, 'class="form-control" id="cf4"'); ?>
+                        <?= lang('Unit Number', 'unit_number'); ?>
+                        <?php echo form_input('unit_number', $customer->unit_number, 'class="form-control" id="unit_number"'); ?>
 
                     </div>
                     <div class="form-group">
-                        <?= lang('ccf5', 'cf5'); ?>
-                        <?php echo form_input('cf5', $customer->cf5, 'class="form-control" id="cf5"'); ?>
+                        <?= lang('Additional Number', 'additional_number'); ?>
+                        <?php echo form_input('additional_number', $customer->additional_number, 'class="form-control" id="additional_number"'); ?>
 
                     </div>
                     <div class="form-group">
-                        <?= lang('ccf6', 'cf6'); ?>
-                        <?php echo form_input('cf6', $customer->cf6, 'class="form-control" id="cf6"'); ?>
+                        <?= lang('Promessory Note Amount', 'promessory_note_amount'); ?>
+                        <?php echo form_input('promessory_note_amount', $customer->promessory_note_amount, 'class="form-control" id="promessory_note_amount"'); ?>
+                    </div>
+                    
+                    <?php 
+                    $sm[''] = '';
+                    foreach ($company_sales_man as $sales_man) {
+                        $sm[$sales_man->name] = $sales_man->name;
+                    }
+                    ?>
+                    <div class="form-group">
+                        <?= lang('Sales Man', 'sales_man'); ?>
+                        <?php echo form_dropdown('sales_agent', $sm, $customer->sales_agent, 'class="form-control select" id="sales_agent" required="required"'); ?>
+                    </div>
+                    <?php
+                        $sfda_certificate = array('yes' => 'yes', 'no' => 'no');
+                    ?>
+                    <div class="form-group">
+                        <?= lang('SFDA Certificate', 'sfda_certificate'); ?>
+                        <?php echo form_dropdown('sfda_certificate', $sfda_certificate, $customer->sfda_certificate, 'class="form-control select" id="sfda_certificate" required="required"'); ?>
                     </div>
                 </div>
             </div>
-            <div class="form-group">
+            <!--<div class="form-group">
                 <?= lang('award_points', 'award_points'); ?>
                 <?= form_input('award_points', set_value('award_points', $customer->award_points), 'class="form-control tip" id="award_points"  required="required"'); ?>
-            </div>
+            </div>-->
 
         </div>
         <div class="modal-footer">
@@ -268,6 +305,64 @@
         });
         $('select.ledger-dropdown').select2({
             minimumResultsForSearch: 7
+        });
+
+        // Handle category change to auto-populate ledgers
+        $('#category').on('change', function() {
+            var category = $(this).val();
+            
+            if (!category) {
+                return;
+            }
+
+            // Show loading indicator
+            var ledgerFields = ['ledger_account', 'sales_ledger', 'cogs_ledger', 'discount_ledger', 'return_ledger'];
+            $.each(ledgerFields, function(index, fieldId) {
+                $('#' + fieldId).prop('disabled', true);
+            });
+
+            // AJAX call to get ledgers by category
+            $.ajax({
+                url: '<?= admin_url('customers/get_ledgers_by_category'); ?>',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    category: category,
+                    <?= $this->security->get_csrf_token_name(); ?>: '<?= $this->security->get_csrf_hash(); ?>'
+                },
+                success: function(response) {
+                    // Re-enable fields
+                    $.each(ledgerFields, function(index, fieldId) {
+                        $('#' + fieldId).prop('disabled', false);
+                    });
+
+                    if (response.success && response.ledgers) {
+                        // Populate ledger dropdowns
+                        $.each(response.ledgers, function(ledgerField, ledgerValue) {
+                            if (ledgerValue) {
+                                $('#' + ledgerField).val(ledgerValue).trigger('change');
+                                // Revalidate the field
+                                $('form[data-toggle="validator"]').bootstrapValidator('revalidateField', ledgerField);
+                            }
+                        });
+
+                        // Show success notification
+                        toastr.success('Ledgers auto-populated based on category selection', 'Success');
+                    } else {
+                        // Show info message
+                        toastr.info('No previous customer found with this category. Please select ledgers manually.', 'Info');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    // Re-enable fields
+                    $.each(ledgerFields, function(index, fieldId) {
+                        $('#' + fieldId).prop('disabled', false);
+                    });
+                    
+                    console.error('Error fetching ledgers:', error);
+                    toastr.error('Failed to fetch ledgers. Please select manually.', 'Error');
+                }
+            });
         });
 
         fields = $('.modal-content').find('.form-control');

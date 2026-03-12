@@ -49,7 +49,7 @@
                                                 <td><?= $invoice->reference_no; ?></td>
                                                 <td><?= $invoice->company; ?></td>
                                                 <td><?= $invoice->payment_amount; ?></td>
-                                                <td><a href="<?php echo admin_url('suppliers/edit_service_invoice/' . $invoice->id); ?>" class="tip" title="Edit Service Invoice"><i class="fa fa-edit"></i></a></td>
+                                                <td><a href="<?php echo admin_url('suppliers/service_invoice_pdf/' . $invoice->id); ?>" class="tip" title="Download PDF"><i class="fa fa-file-pdf-o"></i></a></td>
                                             </tr>
                                         <?php
                                     }

@@ -18,7 +18,7 @@ class Products extends REST_Controller
     protected function setProduct($product)
     {
         $product->tax_rate       = $this->products_api->getTaxRateByID($product->tax_rate);
-        $product->unit           = $this->products_api->getProductUnit($product->unit);
+        //$product->unit           = $this->products_api->getProductUnit($product->unit);
         $ctax                    = $this->site->calculateTax($product, $product->tax_rate);
         $product->price          = $this->sma->formatDecimal($product->price);
         $product->net_price      = $this->sma->formatDecimal($product->tax_method ? $product->price : $product->price - $ctax['amount']);
@@ -42,6 +42,7 @@ class Products extends REST_Controller
             'order_by' => $this->get('order_by') ? explode(',', $this->get('order_by')) : ['code', 'acs'],
             'brand'    => $this->get('brand_code') ? $this->get('brand_code') : null,
             'category' => $this->get('category_code') ? $this->get('category_code') : null,
+            'warehouse_id' => $this->get('warehouse_id') ? $this->get('warehouse_id') : null
         ];
 
         if ($code === null) {
@@ -67,8 +68,8 @@ class Products extends REST_Controller
 
                 $data = [
                     'data'  => $pr_data,
-                    'limit' => $filters['limit'],
-                    'start' => $filters['start'],
+                    //'limit' => $filters['limit'],
+                    //'start' => $filters['start'],
                     'total' => $this->products_api->countProducts($filters),
                 ];
                 $this->response($data, REST_Controller::HTTP_OK);
