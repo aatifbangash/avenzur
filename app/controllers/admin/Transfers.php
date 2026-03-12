@@ -1167,6 +1167,7 @@ class Transfers extends MY_Controller
         $email_link    = anchor('admin/transfers/email/$1', '<i class="fa fa-envelope"></i> ' . lang('email_transfer'), 'data-toggle="modal" data-target="#myModal"');
         $edit_link     = anchor('admin/transfers/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_transfer'));
         $pdf_link      = anchor('admin/transfers/pdf/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf'));
+        $excel_link    = anchor('admin/transfers/excel/$1', '<i class="fa fa-file-excel-o"></i> Download Excel');
         $print_barcode = anchor('admin/products/print_barcodes/?transfer=$1', '<i class="fa fa-print"></i> ' . lang('print_barcodes'));
         $delete_link   = "<a href='#' class='tip po' title='<b>" . lang('delete_transfer') . "</b>' data-content=\"<p>"
             . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' id='a__$1' href='" . admin_url('transfers/delete/$1') . "'>"
@@ -1178,11 +1179,12 @@ class Transfers extends MY_Controller
             . lang('actions') . ' <span class="caret"></span></button>
         <ul class="dropdown-menu pull-right" role="menu">';
 
-        if($this->Owner || $this->Admin ||$this->GP['transfers-edit']){    
+        if($this->Owner || $this->Admin || $this->GP['transfers-edit']){    
             $action .= '<li>' . $edit_link . '</li>';
         }
-        if($this->GP['transfers-pdf']){
+        if($this->Owner || $this->Admin || $this->GP['transfers-pdf']){
             $action .= '<li>' . $pdf_link . '</li>';
+            $action .= '<li>' . $excel_link . '</li>';
         }
         if($this->Owner || $this->Admin){
             $action .= '<li>' . $print_barcode . '</li>';
@@ -1269,6 +1271,86 @@ class Transfers extends MY_Controller
         } else {
             $this->sma->generate_pdf($html, $name);
         }
+    }
+
+    public function excel($transfer_id = null)
+    {
+        if ($this->input->get('id')) {
+            $transfer_id = $this->input->get('id');
+        }
+
+        $transfer = $this->transfers_model->getTransferByID((int) $transfer_id);
+        if (!$transfer) {
+            $this->session->set_flashdata('error', 'Transfer not found.');
+            admin_redirect('transfers');
+        }
+
+        $items = $this->transfers_model->getAllTransferItems($transfer_id, $transfer->status);
+
+        $this->load->library('excel');
+        $sheet = $this->excel->setActiveSheetIndex(0);
+        $sheet->setTitle('Transfer');
+
+        // ---- Header info rows ----
+        $sheet->SetCellValue('A1', 'Reference');
+        $sheet->SetCellValue('B1', $transfer->transfer_no);
+        $sheet->SetCellValue('A2', 'Date');
+        $sheet->SetCellValue('B2', $transfer->date);
+        $sheet->SetCellValue('A3', 'From Warehouse');
+        $sheet->SetCellValue('B3', $transfer->from_warehouse_name . ' (' . $transfer->from_warehouse_code . ')');
+        $sheet->SetCellValue('A4', 'To Warehouse');
+        $sheet->SetCellValue('B4', $transfer->to_warehouse_name . ' (' . $transfer->to_warehouse_code . ')');
+        $sheet->SetCellValue('A5', 'Status');
+        $sheet->SetCellValue('B5', $transfer->status);
+        $sheet->SetCellValue('A6', 'Total');
+        $sheet->SetCellValue('B6', $transfer->grand_total);
+
+        // ---- Column headers (row 8) ----
+        $sheet->SetCellValue('A8', '#');
+        $sheet->SetCellValue('B8', 'Product Code');
+        $sheet->SetCellValue('C8', 'Product Name');
+        $sheet->SetCellValue('D8', 'Second Name');
+        $sheet->SetCellValue('E8', 'Batch No');
+        $sheet->SetCellValue('F8', 'Expiry');
+        $sheet->SetCellValue('G8', 'Quantity');
+        $sheet->SetCellValue('H8', 'Unit Cost');
+        $sheet->SetCellValue('I8', 'Net Unit Cost');
+        $sheet->SetCellValue('J8', 'Tax');
+        $sheet->SetCellValue('K8', 'Subtotal');
+
+        // ---- Data rows ----
+        $row = 9;
+        $grand_qty = 0;
+        $grand_subtotal = 0;
+        if ($items) {
+            foreach ($items as $idx => $item) {
+                $sheet->SetCellValue('A' . $row, $idx + 1);
+                $sheet->SetCellValue('B' . $row, $item->product_code ?? '');
+                $sheet->SetCellValue('C' . $row, $item->product_name ?? '');
+                $sheet->SetCellValue('D' . $row, $item->second_name ?? '');
+                $sheet->SetCellValue('E' . $row, $item->batchno ?? '');
+                $sheet->SetCellValue('F' . $row, ($item->expiry && $item->expiry !== '0000-00-00') ? $item->expiry : '');
+                $sheet->SetCellValue('G' . $row, $item->quantity ?? 0);
+                $sheet->SetCellValue('H' . $row, $item->unit_cost ?? 0);
+                $sheet->SetCellValue('I' . $row, $item->net_unit_cost ?? 0);
+                $sheet->SetCellValue('J' . $row, $item->item_tax ?? 0);
+                $sheet->SetCellValue('K' . $row, $item->subtotal ?? 0);
+                $grand_qty      += (float)($item->quantity ?? 0);
+                $grand_subtotal += (float)($item->subtotal ?? 0);
+                $row++;
+            }
+        }
+
+        // ---- Totals row ----
+        $sheet->SetCellValue('F' . $row, 'TOTAL');
+        $sheet->SetCellValue('G' . $row, $grand_qty);
+        $sheet->SetCellValue('K' . $row, $grand_subtotal);
+
+        $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+
+        $filename = 'transfer_' . str_replace('/', '_', $transfer->transfer_no);
+        $this->load->helper('excel');
+        create_excel($this->excel, $filename);
     }
 
     private function extract_gs1_data($input)
