@@ -609,7 +609,7 @@
                         <?php } 
                         
                         if($Admin || $Owner || $this->GP['transfers-edit']){ ?>
-                        <li><a href="<?= admin_url('stock_request/edit_sale_batch'); ?>" class="newmenu-link"><i class="fa fa-cart-plus"></i> <?= lang('Inventory Fix'); ?></a></li>
+                        <!--<li><a href="<?= admin_url('stock_request/edit_sale_batch'); ?>" class="newmenu-link"><i class="fa fa-cart-plus"></i> <?= lang('Inventory Fix'); ?></a></li>-->
                         <?php } ?>
                         <!--<li><a href="<?= admin_url('inventory/returns'); ?>" class="newmenu-link"><i class="fa fa-undo"></i> <?= lang('Returns'); ?></a></li>-->
                     </ul>
