@@ -125,7 +125,7 @@
                     <input type="hidden" name="file_token" value="<?php echo $file_token; ?>">
                     <div class="form-group">
                         <a href="<?php echo admin_url('purchase_order_upload'); ?>" class="btn btn-warning"><?php echo $this->lang->line('back'); ?></a>
-                        <?php echo form_submit('submit', $this->lang->line('submit'), 'class="btn btn-primary"'); ?>
+                        <?php echo form_submit('submit', $this->lang->line('submit'), 'class="btn btn-primary" id="submitBtn"'); ?>
                     </div>
 
                     <?php echo form_close(); ?>
@@ -140,3 +140,11 @@
         </div>
     </div>
 </div>
+<script>
+$(document).ready(function () {
+    $('form').on('submit', function (e) {
+        var btn = $(this).find('input[type=submit], button[type=submit]');
+        btn.prop('disabled', true).val('Processing...');
+    });
+});
+</script>
