@@ -119,6 +119,7 @@ class Purchase_order_upload extends MY_Controller
 
             $description_en      = isset($row[18]) ? trim($row[18]) : '';
             $image_link          = isset($row[19]) ? trim($row[19]) : '';
+            $shelf_life          = isset($row[20]) ? trim($row[20]) : '';
 
 
             // skip empty row
@@ -180,6 +181,13 @@ class Purchase_order_upload extends MY_Controller
             if ($sale_price_inc_vat <= 0) {
                 $errors[] = 'Sale price is required';
             }
+            if ($batch_number === '') {
+                $errors[] = 'Batch number is required';
+            }
+
+            if (empty($expiry_date) && empty(trim($shelf_life))) {
+                $errors[] = 'Either Expiry Date or Shelf Life must be provided';
+            }
 
 
             if (!empty($errors)) {
@@ -212,6 +220,7 @@ class Purchase_order_upload extends MY_Controller
                 'subtotal'        => $purchase_price * $quantity,
                 'description_en'    => $description_en,
                 'image_link'        => $image_link,
+                'shelf_life'        => $shelf_life,
                 'brand_name'        => strtolower($brand_name),
 
                 'error'             => $errors,
@@ -256,20 +265,7 @@ class Purchase_order_upload extends MY_Controller
             'payload' => $payload,
             'file'    => $path,
         ];
-//         $json_string = json_encode($temp_data);
 
-// echo '<pre>';
-// print_r([
-//     'token' => $token,
-//     'json_file' => $json_file,
-//     'rows_count' => count($parsed_rows),
-//     'payload_keys' => array_keys($payload),
-//     'json_encode_success' => $json_string !== false,
-//     'json_error' => json_last_error_msg(),
-//     'json_length' => $json_string ? strlen($json_string) : 0,
-// ]);
-// echo '</pre>';
-// exit;
         // save json
         $json_string = json_encode($temp_data, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
         file_put_contents($json_file, $json_string);
