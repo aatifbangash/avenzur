@@ -156,6 +156,13 @@
                                 <li><a href="<?= admin_url('products'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('List Products'); ?></a></li>
                             <?php }
                         } ?>
+                         <?php if($Admin || $Owner || $GP['products-upload']){
+                            if($this->Settings->site_name == 'Avnzor'){ ?>
+                                <li><a href="<?= admin_url('products/upload_products'); ?>" class="newmenu-link"><i class="fa fa-upload"></i> <?= lang('Upload Products'); ?></a></li>
+                            <?php }else{ ?>
+                                <li><a href="<?= admin_url('products'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('List Products'); ?></a></li>
+                            <?php }
+                        } ?>
                     </ul>
                 </li>
             </ul>
