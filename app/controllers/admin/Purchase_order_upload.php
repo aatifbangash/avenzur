@@ -185,8 +185,8 @@ class Purchase_order_upload extends MY_Controller
                 $errors[] = 'Batch number is required';
             }
 
-            if ($expiry_date === null && $shelf_life === '') {
-                $errors[] = 'Either Expiry Date or Shelf Life is required';
+            if (empty($expiry_date) && empty(trim($shelf_life))) {
+                $errors[] = 'Either Expiry Date or Shelf Life must be provided';
             }
 
 

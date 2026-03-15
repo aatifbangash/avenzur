@@ -66,7 +66,7 @@
                                         <th>Variant Barcode</th>
                                         <th>Variant Name</th>
                                         <th>Brand Name*</th>
-                                        <th>Batch Number</th>
+                                        <th>Batch Number*</th>
                                         <th>Expiry Date</th>
                                         <th>Quantity *</th>
                                         <th>Sale Price (without VAT) *</th>
@@ -121,7 +121,7 @@
                                 <li>Fields marked with <strong>*</strong> are mandatory.</li>
                                 <li>Image URL must be a valid link.</li>
                                 <li>Quantity must be greater than 0.</li>
-                                <li>Every row should have:Batch Number Expiry Date or Shelf Life</li>
+                                <li>Either Expiry Date or Shelf Life must be provided</li>
                                 <li>Use the sample file if unsure about the format.</li>
                             </ul>
 
