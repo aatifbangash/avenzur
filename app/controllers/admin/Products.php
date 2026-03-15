@@ -8894,12 +8894,12 @@ error_reporting(E_ALL);
             $this->session->set_flashdata('error', 'Please select an Excel file.');
             admin_redirect('products/upload_products');
         }
-       
+
         $config['upload_path']   = FCPATH . 'assets/uploads/excel/';
         $config['allowed_types'] = 'xlsx|xls';
         $config['max_size']      = 10240; // 10MB
         $config['encrypt_name']  = TRUE;
-        
+
         if (!is_dir($config['upload_path'])) {
             @mkdir($config['upload_path'], 0777, true);
         }
@@ -8932,10 +8932,10 @@ error_reporting(E_ALL);
             $this->session->set_flashdata('error', 'Excel file is empty.');
             admin_redirect('products/upload_products');
         }
-        
+
         $parsed_rows = [];
-        $validation_errors = [];
-        $row_count   = 0;
+        $row_count = 0;
+
         foreach ($rows as $row) {
             if ($row_count == 0) {
                 $row_count++;
@@ -8945,7 +8945,7 @@ error_reporting(E_ALL);
             $product_code = isset($row[0]) ? trim($row[0]) : '';
             $product_name = isset($row[1]) ? trim($row[1]) : '';
             $brand_name   = isset($row[2]) ? trim($row[2]) : '';
-            $vat_percent  = isset($row[3]) ? (float)$row[3] : 0;
+            $vat_percent  = isset($row[3]) && trim($row[3]) !== '' ? (float) $row[3] : null;
             $description  = isset($row[4]) ? trim($row[4]) : '';
             $image_link   = isset($row[5]) ? trim($row[5]) : '';
 
@@ -8954,7 +8954,7 @@ error_reporting(E_ALL);
                 $product_code === '' &&
                 $product_name === '' &&
                 $brand_name === '' &&
-                $vat_percent === 0 &&
+                $vat_percent === null &&
                 $description === '' &&
                 $image_link === ''
             ) {
@@ -8962,28 +8962,9 @@ error_reporting(E_ALL);
                 continue;
             }
 
-            $row_errors = [];
-
-            // mandatory checks
-            if ($product_code === '') {
-                $row_errors[] = "Product code is required";
-            }
-            if ($product_name === '') {
-                $row_errors[] = "Product name is required";
-            }
-            if ($brand_name === '') {
-                $row_errors[] = "Brand name is required";
-            }
-            if ($image_link === '') {
-                $row_errors[] = "Image link is required";
-            }
-
-            if (!empty($row_errors)) {
-                $validation_errors = array_merge($validation_errors, $row_errors);
-            }
-
             $parsed_rows[] = [
-                'product_code' => trim($product_code),
+                'row_no'       => $row_count + 1,
+                'product_code' => $product_code,
                 'product_name' => $product_name,
                 'brand_name'   => $brand_name,
                 'vat_percent'  => $vat_percent,
@@ -8993,64 +8974,98 @@ error_reporting(E_ALL);
 
             $row_count++;
         }
-        
-
-        if (!empty($validation_errors)) {
-            $this->session->set_flashdata('errors', $validation_errors);
-            $this->session->set_flashdata('error', 'Some rows have errors. Please correct the Excel file and reupload.');
-            @unlink($path);
-            admin_redirect('products/upload_products');
-        }
 
         // Process each row and save to products table
-        $saved_count = 0;
+        $saved_count   = 0;
         $updated_count = 0;
-        $errors = [];
+        $errors        = [];
 
         foreach ($parsed_rows as $row) {
             try {
-                $brand = $row['brand_name'];
-                // Determine tax rate (create if missing)
-                $tax_rate_id =$row['vat_percent'];
+                if (trim($row['product_code']) === '') {
+                    $errors[] = "Row {$row['row_no']}: Product code is required";
+                    continue;
+                }
+
+                $tax_rate_id = $row['vat_percent'];
+
                 // Check if product exists
                 $existing_product = $this->products_model->getProductByCode(trim($row['product_code']));
-                // Prepare product data
-                $insert_data = [
-                    'code'            => $row['product_code'],
-                    'name'            => $row['product_name'],
-                    'cost'            => 0,
-                    'price'           => 0,
-                    'brand_name'           => $$row['brand_name'],
-                    'category_id'     => 1, // Default category, adjust if needed
-                    'tax_rate'        => $tax_rate_id,
-                    'tax_method'      => '1', // Default tax method
-                    'details'         => $row['description'],
-                    'image'           => $row['image_link'],
-                    'type'            => 'standard',
-                    'unit'            => '1', // Default unit
-                    'sale_unit'       => '1',
-                    'purchase_unit'   => '1',
-                    'track_quantity'  => '1',
-                    'alert_quantity'  => 0,
-                ];
-                $update_data = [
-                    'code'       => $row['product_code'],
-                    'name'       => $row['product_name'],
-                    'brand_name' => $row['brand_name'],
-                    'tax_rate'   => $tax_rate_id,
-                    'details'    => $row['description'],
-                    'image'      => $row['image_link'],
-                ];
 
                 if ($existing_product) {
-                    // Update existing product (don't update sequence_code)
+                    // UPDATE CASE: only filled columns will be updated
+                    $update_data = [];
+
+                    if (isset($row['product_name']) && trim($row['product_name']) !== '') {
+                        $update_data['name'] = trim($row['product_name']);
+                    }
+
+                    if (isset($row['brand_name']) && trim($row['brand_name']) !== '') {
+                        $update_data['brand_name'] = trim($row['brand_name']);
+                    }
+
+                    if ($tax_rate_id !== null && $tax_rate_id !== '') {
+                        $update_data['tax_rate'] = (int)$tax_rate_id;
+                    }
+
+                    if (isset($row['description']) && trim($row['description']) !== '') {
+                        $update_data['details'] = trim($row['description']);
+                    }
+
+                    if (isset($row['image_link']) && trim($row['image_link']) !== '') {
+                        $update_data['image'] = trim($row['image_link']);
+                    }
+
+                    // nothing to update
+                    if (empty($update_data)) {
+                        continue;
+                    }
+
                     if ($this->products_model->updateProduct($existing_product->id, $update_data, null, null, null, null, null)) {
                         $updated_count++;
                     } else {
                         $errors[] = "Failed to update product: " . $row['product_code'];
                     }
                 } else {
-                    // Insert new product (add sequence_code)
+                    // INSERT CASE: required validation only here
+                    $row_errors = [];
+
+                    if (trim($row['product_name']) === '') {
+                        $row_errors[] = "Product name is required";
+                    }
+
+                    if (trim($row['brand_name']) === '') {
+                        $row_errors[] = "Brand name is required";
+                    }
+
+                    if (trim($row['image_link']) === '') {
+                        $row_errors[] = "Image link is required";
+                    }
+
+                    if (!empty($row_errors)) {
+                        $errors[] = "Row {$row['row_no']}: " . implode(', ', $row_errors);
+                        continue;
+                    }
+
+                    $insert_data = [
+                        'code'            => $row['product_code'],
+                        'name'            => trim($row['product_name']),
+                        'cost'            => 0,
+                        'price'           => 0,
+                        'brand_name'      => trim($row['brand_name']),
+                        'category_id'     => 1,
+                        'tax_rate'        => $tax_rate_id,
+                        'tax_method'      => '1',
+                        'details'         => trim($row['description']),
+                        'image'           => trim($row['image_link']),
+                        'type'            => 'standard',
+                        'unit'            => '1',
+                        'sale_unit'       => '1',
+                        'purchase_unit'   => '1',
+                        'track_quantity'  => '1',
+                        'alert_quantity'  => 0,
+                    ];
+
                     if ($this->products_model->addProductSimplified($insert_data)) {
                         $saved_count++;
                     } else {
@@ -9073,7 +9088,6 @@ error_reporting(E_ALL);
             $this->session->set_flashdata('message', "Successfully saved {$saved_count} products and updated {$updated_count} products.");
         }
 
-        // Redirect back to upload page
         admin_redirect('products/upload_products');
     }
 }
