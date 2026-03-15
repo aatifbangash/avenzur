@@ -3102,4 +3102,114 @@ class stock_request extends MY_Controller
         $this->sma->send_json($response);
     }
 
+    /* -----------------------------------------------------------------------
+     * Edit Purchase Batch / Expiry
+     * Allows warehouse users to look up a purchase by reference and correct
+     * the batch number and expiry date for each line item.
+     * Updates: purchase_items, sale_items (by avz_item_code), inventory_movements
+     * ----------------------------------------------------------------------- */
+    public function edit_sale_batch()
+    {
+        $this->load->admin_model('purchases_model');
+
+        $this->data['error']      = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['message']    = $this->session->flashdata('message');
+        $this->data['purchase']   = null;
+        $this->data['items']      = [];
+        $this->data['search_ref'] = '';
+
+        // ---- Handle SAVE -----------------------------------------------
+        if ($this->input->post('save_batch')) {
+            $purchase_id = (int) $this->input->post('purchase_id');
+            $item_ids    = $this->input->post('item_id');
+            $batch_nos   = $this->input->post('batch_no');
+            $expiries    = $this->input->post('expiry');
+            $product_ids = $this->input->post('product_id');
+            $avz_codes   = $this->input->post('avz_item_code');
+
+            // Server-side guard: purchase must exist
+            $purchase_check = $purchase_id ? $this->db->get_where('purchases', ['id' => $purchase_id], 1)->row() : null;
+            if (!$purchase_check) {
+                $this->session->set_flashdata('error', 'Purchase not found.');
+                admin_redirect('stock_request/edit_sale_batch');
+            }
+
+            if ($purchase_id && $item_ids && is_array($item_ids)) {
+                foreach ($item_ids as $idx => $item_id) {
+                    $item_id    = (int) $item_id;
+                    $product_id = isset($product_ids[$idx]) ? (int) $product_ids[$idx] : 0;
+                    $batch_no   = isset($batch_nos[$idx])   ? trim($batch_nos[$idx])   : null;
+                    $raw_expiry = isset($expiries[$idx])    ? trim($expiries[$idx])     : '';
+                    $avz_code   = isset($avz_codes[$idx])   ? trim($avz_codes[$idx])   : null;
+
+                    // Normalise expiry to Y-m-d or NULL
+                    $expiry = null;
+                    if ($raw_expiry !== '') {
+                        $ts = strtotime($raw_expiry);
+                        if ($ts !== false) {
+                            $expiry = date('Y-m-d', $ts);
+                        }
+                    }
+
+                    if ($avz_code !== null && $avz_code !== '') {
+                        // 1. Update purchase_items
+                        $this->db->where('avz_item_code', $avz_code)
+                             ->where('purchase_id', $purchase_id)
+                             ->update('purchase_items', [
+                                 'batchno' => $batch_no,
+                                 'expiry'  => $expiry,
+                             ]);
+
+                        // 2. Update sale_items linked to this avz_item_code
+                        $this->db->where('avz_item_code', $avz_code)
+                                 ->update('sale_items', [
+                                     'batch_no' => $batch_no,
+                                     'expiry'   => $expiry,
+                                 ]);
+
+                        // 3. Update ALL inventory_movements tied to this avz_item_code
+                        $this->db->where('avz_item_code', $avz_code)
+                                 ->update('inventory_movements', [
+                                     'batch_number' => $batch_no,
+                                     'expiry_date'  => $expiry,
+                                 ]);
+                    }
+                }
+
+                $this->session->set_flashdata('message', 'Batch / Expiry updated successfully.');
+                admin_redirect('stock_request/edit_sale_batch');
+            } else {
+                $this->data['error'] = 'Invalid submission. Please try again.';
+            }
+        }
+
+        // ---- Handle SEARCH ---------------------------------------------
+        if ($this->input->post('search')) {
+            $ref = trim($this->input->post('purchase_ref'));
+            $ref = $this->security->xss_clean($ref);
+            $this->data['search_ref'] = $ref;
+
+            // Find by reference_no first, then by numeric ID
+            $purchase = $this->db->get_where('purchases', ['reference_no' => $ref], 1)->row();
+            if (!$purchase && is_numeric($ref)) {
+                $purchase = $this->db->get_where('purchases', ['id' => (int) $ref], 1)->row();
+            }
+
+            if ($purchase) {
+                $this->data['purchase'] = $purchase;
+                $this->data['items']    = $this->purchases_model->getAllPurchaseItems($purchase->id);
+            } else {
+                $this->data['error'] = 'No purchase found for: ' . htmlspecialchars($ref, ENT_QUOTES, 'UTF-8');
+            }
+        }
+
+        $bc   = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('stock_request'), 'page' => lang('Stock Requests')],
+            ['link' => '#', 'page' => 'Edit Purchase Batch / Expiry'],
+        ];
+        $meta = ['page_title' => 'Edit Purchase Batch / Expiry', 'bc' => $bc];
+        $this->page_construct('stock_request/edit_sale_batch', $meta, $this->data);
+    }
+
 }

@@ -61,6 +61,7 @@
                         <table class="table table-bordered table-hover table-striped">
                             <thead>
                             <tr>
+                                <th><?php echo $this->lang->line("row_id"); ?></th>
                                 <th><?php echo $this->lang->line("item_barcode"); ?></th>
                                 <th><?php echo $this->lang->line("item_name"); ?></th>
                                 <th><?php echo $this->lang->line("variant_barcode"); ?></th>
@@ -87,6 +88,7 @@
                         <tbody>
                             <?php foreach ($rows as $i => $row) { ?>
                                 <tr>
+                                    <td><?php echo $i + 1; ?></td>
                                     <td><?php echo htmlspecialchars($row['item_barcode'] ?? ''); ?></td>
                                     <td><?php echo word_limiter($row['item_name'] ?? '', 4); ?></td>
                                     <td><?php echo htmlspecialchars($row['variant_barcode'] ?? ''); ?></td>
@@ -120,10 +122,10 @@
 
                         </table>
                     </div>
-
+                    <input type="hidden" name="file_token" value="<?php echo $file_token; ?>">
                     <div class="form-group">
                         <a href="<?php echo admin_url('purchase_order_upload'); ?>" class="btn btn-warning"><?php echo $this->lang->line('back'); ?></a>
-                        <?php echo form_submit('submit', $this->lang->line('submit'), 'class="btn btn-primary"'); ?>
+                        <?php echo form_submit('submit', $this->lang->line('submit'), 'class="btn btn-primary" id="submitBtn"'); ?>
                     </div>
 
                     <?php echo form_close(); ?>
@@ -138,3 +140,11 @@
         </div>
     </div>
 </div>
+<script>
+$(document).ready(function () {
+    $('form').on('submit', function (e) {
+        var btn = $(this).find('input[type=submit], button[type=submit]');
+        btn.prop('disabled', true).val('Processing...');
+    });
+});
+</script>

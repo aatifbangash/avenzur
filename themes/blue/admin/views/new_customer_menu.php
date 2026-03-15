@@ -156,6 +156,13 @@
                                 <li><a href="<?= admin_url('products'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('List Products'); ?></a></li>
                             <?php }
                         } ?>
+                         <?php if($Admin || $Owner || $GP['products-upload']){
+                            if($this->Settings->site_name == 'Avnzor'){ ?>
+                                <li><a href="<?= admin_url('products/upload_products'); ?>" class="newmenu-link"><i class="fa fa-upload"></i> <?= lang('Upload Products'); ?></a></li>
+                            <?php }else{ ?>
+                                <li><a href="<?= admin_url('products'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('List Products'); ?></a></li>
+                            <?php }
+                        } ?>
                     </ul>
                 </li>
             </ul>
@@ -449,27 +456,7 @@
                     </ul>
                 </li>
                 <?php } ?>
-                <?php if($Admin || $Owner || $GP['po-index']){ ?>
-                <!-- Purchase Order Upload -->
-                    <ul class="newmenu-sub">
-                        <?php if($Admin || $Owner || $GP['po-upload']){ ?>
-                            <li>
-                                <a href="<?= admin_url('purchase_order_upload'); ?>" class="newmenu-link">
-                                    <i class="fa fa-upload"></i> <?= lang('Upload PO'); ?>
-                                </a>
-                            </li>
-                        <?php } ?>
-                        <?php if($Admin || $Owner || $GP['po-review']){ ?>
-                            <li>
-                                <a href="<?= admin_url('purchase_order_upload/review'); ?>" class="newmenu-link">
-                                    <i class="fa fa-eye"></i> <?= lang('Review PO'); ?>
-                                </a>
-                            </li>
-                        <?php } ?>
-                    </ul>
-                </li>
-                <?php } ?>
-
+                
                 <!-- Purchases -->
                  <?php if($Admin || $Owner || $GP['purchases-index']){ ?>
                 <li class="newmenu-item has-sub">
@@ -645,6 +632,11 @@
                         <?php } ?>
                         <?php if($Admin || $Owner || $this->GP['transfers-index']){ ?>
                         <li><a href="<?= admin_url('transfers'); ?>" class="newmenu-link"><i class="fa fa-cart-plus"></i> <?= lang('Transfer List'); ?></a></li>
+                        
+                        <?php } 
+                        
+                        if($Admin || $Owner || $this->GP['transfers-edit']){ ?>
+                        <li><a href="<?= admin_url('stock_request/edit_sale_batch'); ?>" class="newmenu-link"><i class="fa fa-cart-plus"></i> <?= lang('Inventory Fix'); ?></a></li>
                         <?php } ?>
                         <!--<li><a href="<?= admin_url('inventory/returns'); ?>" class="newmenu-link"><i class="fa fa-undo"></i> <?= lang('Returns'); ?></a></li>-->
                     </ul>

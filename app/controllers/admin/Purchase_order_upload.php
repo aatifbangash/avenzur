@@ -41,9 +41,9 @@ class Purchase_order_upload extends MY_Controller
     {
         if (empty($_FILES['excel_file']['name'])) {
             $this->session->set_flashdata('error', 'Please select an Excel file.');
-            redirect(admin_url('purchase_order_upload'));
+            admin_redirect('purchase_order_upload');
         }
-
+       
         $date = $this->sma->fld($this->input->post('date'));
         $warehouse_id = (int) $this->input->post('warehouse');
         $supplier_id  = (int) $this->input->post('supplier');
@@ -60,7 +60,7 @@ class Purchase_order_upload extends MY_Controller
 
         if (!$this->upload->do_upload('excel_file')) {
             $this->session->set_flashdata('error', $this->upload->display_errors('', ''));
-            redirect(admin_url('purchase_order_upload'));
+            admin_redirect('purchase_order_upload');
         }
 
         $file = $this->upload->data();
@@ -73,17 +73,18 @@ class Purchase_order_upload extends MY_Controller
             $sheet = $spreadsheet->getActiveSheet();
             $rows = $sheet->toArray(null, true, true, false);
         } catch (Exception $e) {
+            print_r($e->getMessage());
             @unlink($path);
             $this->session->set_flashdata('error', 'Excel could not be read.');
-            redirect(admin_url('purchase_order_upload'));
+            admin_redirect('purchase_order_upload');
         }
 
         if (empty($rows) || count($rows) < 2) {
             @unlink($path);
             $this->session->set_flashdata('error', 'Excel file is empty.');
-            redirect(admin_url('purchase_order_upload'));
+            admin_redirect('purchase_order_upload');
         }
-
+        
         $parsed_rows = [];
         $has_errors  = false;
         $row_count   = 0;
@@ -220,10 +221,11 @@ class Purchase_order_upload extends MY_Controller
 
             $row_count++;
         }
+        
         if (!empty($has_errors)) {
             $this->session->set_flashdata('errors', $errors);
             $this->session->set_flashdata('error', 'Some rows have errors. Please correct the Excel file and reupload.');
-             redirect(admin_url('purchase_order_upload'));
+             admin_redirect('purchase_order_upload');
         }
 
         $payload = [
@@ -235,11 +237,51 @@ class Purchase_order_upload extends MY_Controller
             'has_errors'   => $has_errors,
         ];
 
-        $this->session->set_userdata('po_upload_rows', $parsed_rows);
-        $this->session->set_userdata('po_upload_payload', $payload);
-        $this->session->set_userdata('po_upload_file', $path);
+        // Create temp directory
+        $temp_dir = FCPATH . 'assets/uploads/json/';
 
-        redirect(admin_url('purchase_order_upload/review'));
+        if (!is_dir($temp_dir)) {
+            mkdir($temp_dir, 0777, true);
+        }
+
+        // generate unique token
+        $token = uniqid('po_', true);
+
+        // json file path
+        $json_file = $temp_dir . $token . '.json';
+
+        // data to store
+        $temp_data = [
+            'rows'    => $parsed_rows,
+            'payload' => $payload,
+            'file'    => $path,
+        ];
+//         $json_string = json_encode($temp_data);
+
+// echo '<pre>';
+// print_r([
+//     'token' => $token,
+//     'json_file' => $json_file,
+//     'rows_count' => count($parsed_rows),
+//     'payload_keys' => array_keys($payload),
+//     'json_encode_success' => $json_string !== false,
+//     'json_error' => json_last_error_msg(),
+//     'json_length' => $json_string ? strlen($json_string) : 0,
+// ]);
+// echo '</pre>';
+// exit;
+        // save json
+        $json_string = json_encode($temp_data, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        file_put_contents($json_file, $json_string);
+
+        // store only token in session (very small data)
+        $this->session->set_userdata('po_upload_token', $token);
+        
+        // $this->session->set_userdata('po_upload_rows', $parsed_rows);
+        // $this->session->set_userdata('po_upload_payload', $payload);
+        // $this->session->set_userdata('po_upload_file', $path);
+        
+        admin_redirect('purchase_order_upload/review');
     }
 
 
@@ -248,16 +290,36 @@ class Purchase_order_upload extends MY_Controller
      */
     public function review()
     {
-        $rows = $this->session->userdata('po_upload_rows');
+        $token = $this->session->userdata('po_upload_token');
+        $json_file = FCPATH . 'assets/uploads/json/' . $token . '.json';
+
+        if (!$token) {
+            admin_redirect('purchase_order_upload');
+        }
+
+        $json_file = FCPATH . 'assets/uploads/json/' . $token . '.json';
+
+        if (!file_exists($json_file)) {
+            admin_redirect('purchase_order_upload');
+        }
+
+        // read json
+        $data = json_decode(file_get_contents($json_file), true);
+        
+        $rows    = $data['rows'] ?? [];
+        
+        $this->data['rows'] = $rows;
+        
         if (empty($rows)) {
             $this->session->set_flashdata('error', 'Nothing to review. Please upload file again.');
-            redirect(admin_url('purchase_order_upload'));
+            admin_redirect('purchase_order_upload');
         }
         $this->data['page_title'] = 'Review Purchase Order Items';
         $this->data['suppliers'] = $this->site->getAllParentCompanies('supplier');
         $this->data['child_suppliers'] = $this->site->getAllChildCompanies('supplier');
         $this->data['warehouses'] = $this->site->getAllWarehouses();
         $this->data['rows'] = $rows;
+        $this->data['file_token'] = $token;
 
         $this->load->view($this->theme . 'header', $this->data);
         $this->load->view($this->theme . 'purchase_order_upload/review', $this->data);
@@ -269,14 +331,33 @@ class Purchase_order_upload extends MY_Controller
      */
     public function submit()
     {
-        $rows = $this->session->userdata('po_upload_rows');
+        $token = $this->input->post('file_token');
+        
+        $json_file = FCPATH . 'assets/uploads/json/' . $token . '.json';
+
+        if (!$token) {
+            admin_redirect('purchase_order_upload');
+        }
+
+        $json_file = FCPATH . 'assets/uploads/json/' . $token . '.json';
+
+        if (!file_exists($json_file)) {
+            admin_redirect('purchase_order_upload');
+        }
+
+        // read json
+        $data = json_decode(file_get_contents($json_file), true);
+        
+        $rows    = $data['rows'] ?? [];
+        
+        
         if (empty($rows)) {
             $this->session->set_flashdata('error', 'No parsed rows found. Upload again.');
-            redirect(admin_url('purchase_order_upload'));
+            admin_redirect('purchase_order_upload');
         }
         if (!empty($rows['has_errors'])) {
             $this->session->set_flashdata('error', 'Some rows have errors. Please correct the Excel file and reupload.');
-            redirect(admin_url('purchase_order_upload/review'));
+            admin_redirect('purchase_order_upload/review');
         }
         $rows['date'] = $this->sma->fld($this->input->post('date'));
         $rows['warehouse_id'] = (int) $this->input->post('warehouse');
@@ -290,12 +371,7 @@ class Purchase_order_upload extends MY_Controller
         $this->load->admin_model('purchase_order_upload_model');
         $result = $this->pou->save_reviewed_po($rows);
         if ($result['success']) {
-            $this->session->unset_userdata('po_upload_rows');
-            $this->session->unset_userdata('po_upload_payload');
-            $this->session->unset_userdata('po_upload_file');
-            $this->session->unset_userdata('po_upload_date');
-            $this->session->unset_userdata('po_upload_warehouse_id');
-            $this->session->unset_userdata('po_upload_supplier_id');
+            $this->session->unset_userdata('po_upload_token');
 
             $this->data['page_title']   = 'Purchase Order';
             $this->data['purchase_id']  = $result['purchase_id'];
@@ -305,7 +381,7 @@ class Purchase_order_upload extends MY_Controller
             $this->load->view($this->theme . 'footer', $this->data);
         }else {
             $this->session->set_flashdata('error', $result['error']);
-            redirect(admin_url('purchase_order_upload/review'));
+            admin_redirect('purchase_order_upload/review');
         }
         
     }
