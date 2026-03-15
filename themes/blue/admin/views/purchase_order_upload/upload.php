@@ -81,6 +81,7 @@
                                         <th>Discount 3 Value</th>
                                         <th>Description</th>
                                         <th>Image URL *</th>
+                                        <th>Shelf Life</th>
                                     </tr>
                                 </thead>
 
@@ -106,6 +107,7 @@
                                         <td>0</td>             <!-- Discount 3 Value -->
                                         <td>Product Description.</td> <!-- Product Description -->
                                         <td>https://image.com/products/total-war-blue-lemonade.png</td> <!-- Product Image URL -->
+                                        <td>one week</td>           <!-- Shelf Life -->
                                     </tr>
                                 </tbody>
 
@@ -119,6 +121,7 @@
                                 <li>Fields marked with <strong>*</strong> are mandatory.</li>
                                 <li>Image URL must be a valid link.</li>
                                 <li>Quantity must be greater than 0.</li>
+                                <li>Every row should have:Batch Number Expiry Date or Shelf Life</li>
                                 <li>Use the sample file if unsure about the format.</li>
                             </ul>
 
