@@ -6803,6 +6803,79 @@ error_reporting(E_ALL);
         $this->sma->send_json($units);
     }
 
+    public function update_product_discounts(){
+        $excelFile = $this->upload_path . 'csv/cash-credit-list.xlsx';
+        
+        if (!file_exists($excelFile)) {
+            echo "Excel file not found.";
+            return;
+        }
+
+        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($excelFile);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $rows = $sheet->toArray(null, true, true, false);
+
+        $row_count = 0;
+        $total_found = 0;
+        $rows_updated = 0;
+        foreach ($rows as $row) {
+            if($row_count == 0) { 
+                $row_count++; 
+                continue; 
+            } // Skip header row
+            
+            $data = array();
+            $item_code = trim($row[0]);
+            $item_name = trim($row[1]);
+            $cash_discount = trim($row[2]);
+            $credit_discount = trim($row[3]);
+
+            //echo "Processing Item Code: $item_code, Item Name: $item_name, Cash Discount: $cash_discount, Credit Discount: $credit_discount<br>";
+
+            $product = $this->db->get_where("sma_products", [
+                "code" => $item_code
+            ])->row();
+
+            if($product){
+                //echo "Found Product - Item Code: $item_code, Name: {$product->name}. Updating discounts...<br>";
+                $total_found++;
+                $data['credit_discount'] = ($credit_discount * 100).'%';
+                $data['credit_dis2'] = '0%';
+                $data['credit_dis3'] = '0%';
+                $data['cash_discount'] = ($cash_discount * 100) .'%';
+                $data['cash_dis2'] = '0%';
+                $data['cash_dis3'] = '0%';
+                $this->db->update('products', $data, ['id' => $product->id]);
+                $rows_updated++;
+                echo '<pre>';print_r($data);echo '</pre>';
+            }else{
+                $product_res = $this->db->get_where("sma_products", [
+                    "item_code" => $item_code
+                ])->row();
+
+                if($product_res){
+                    //echo "Found Product with item_code - Item Code: $item_code, Name: {$product_res->name}. Updating discounts...<br>"; 
+                    $total_found++;
+                    $data['credit_discount'] = ($credit_discount * 100).'%';
+                    $data['credit_dis2'] = '0%';
+                    $data['credit_dis3'] = '0%';
+                    $data['cash_discount'] = ($cash_discount * 100) .'%';
+                    $data['cash_dis2'] = '0%';
+                    $data['cash_dis3'] = '0%';
+                    $this->db->update('products', $data, ['id' => $product_res->id]);
+                    $rows_updated++;
+                    echo '<pre>';print_r($data);echo '</pre>';
+                }else{
+                    echo "No product found with Item Code: $item_code. Skipping...<br>";
+                }
+            }
+
+        }
+    }
+
     public function import_excel()
     {
         $this->load->library('excel');
