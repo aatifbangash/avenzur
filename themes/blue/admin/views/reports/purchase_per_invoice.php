@@ -101,6 +101,7 @@ echo admin_form_open('reports/purchase_per_invoice', $attrib);
                             <table id="invoiceTable" class="table table-bordered table-striped table-hover">
                                 <thead>
                                     <tr>
+                                        <th><?= lang('supplier_code') ?></th>
                                         <th><?= lang('type') ?></th>
                                         <th><?= lang('date') ?></th>
                                         <th><?= lang('invoice') ?></th>
@@ -118,6 +119,7 @@ echo admin_form_open('reports/purchase_per_invoice', $attrib);
                                 <tbody>
                                     <?php foreach ($invoices as $invoice): ?>
                                         <tr>
+                                            <td><?= isset($invoice->supplier_code) ? $invoice->supplier_code : '' ?></td>
                                             <td><?= isset($invoice->type) ? $invoice->type : 'Purchase' ?></td>
                                             <td><?= date('d M y', strtotime($invoice->date)) ?></td>
                                             <td><?= isset($invoice->invoice) ? $invoice->invoice : '' ?></td>
@@ -135,7 +137,7 @@ echo admin_form_open('reports/purchase_per_invoice', $attrib);
                                 </tbody>
                                 <tfoot>
                                     <tr class="active">
-                                        <th colspan="7" class="text-right"><?= lang('total') ?>:</th>
+                                        <th colspan="8" class="text-right"><?= lang('total') ?>:</th>
                                         <th class="text-right"><?= number_format(isset($totals['total_purchase']) ? $totals['total_purchase'] : 0, 2) ?></th>
                                         <th class="text-right"><?= number_format(isset($totals['total_vat']) ? $totals['total_vat'] : 0, 2) ?></th>
                                         <th class="text-right"><?= number_format(isset($totals['total_payable']) ? $totals['total_payable'] : 0, 2) ?></th>
@@ -143,7 +145,7 @@ echo admin_form_open('reports/purchase_per_invoice', $attrib);
                                         <th class="text-right"><?= number_format(isset($totals['total_return']) ? $totals['total_return'] : 0, 2) ?></th>
                                     </tr>
                                     <tr class="info">
-                                        <th colspan="12">
+                                        <th colspan="13">
                                             <?= lang('total_invoices') ?>: <?= isset($totals) ? $totals['total_invoices'] : 0 ?> |
                                             <?= lang('total_items') ?>: <?= isset($totals) ? $totals['total_items'] : 0 ?> |
                                             <?= lang('total_quantity') ?>: <?= $this->sma->formatQuantity(isset($totals) ? $totals['total_quantity'] : 0) ?>
