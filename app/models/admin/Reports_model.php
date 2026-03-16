@@ -6278,6 +6278,7 @@ class Reports_model extends CI_Model
                 r.customer_id as customer_no,
                 r.customer as customer_name,
                 c.sales_agent as sales_man,
+                c.sequence_code as customer_sequence,
                 -COALESCE(r.total_tax, 0) as vat,
                 -COALESCE(r.total_discount, 0) as discount,
                 -COALESCE(r.total, 0) as sales,
