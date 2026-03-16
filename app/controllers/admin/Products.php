@@ -8880,4 +8880,214 @@ error_reporting(E_ALL);
         // Using the theme path for admin views
         $this->load->view($this->theme . 'products/inventory_view', $this->data);
     }
+    public function upload_products()
+    {
+        $this->data['page_title'] = 'Upload Products';
+        $this->load->view($this->theme . 'header', $this->data);
+        $this->load->view($this->theme . 'products/upload_excel', $this->data);
+        $this->load->view($this->theme . 'footer', $this->data);
+
+    }
+    public function parse()
+    {
+        if (empty($_FILES['excel_file']['name'])) {
+            $this->session->set_flashdata('error', 'Please select an Excel file.');
+            admin_redirect('products/upload_products');
+        }
+
+        $config['upload_path']   = FCPATH . 'assets/uploads/excel/';
+        $config['allowed_types'] = 'xlsx|xls';
+        $config['max_size']      = 10240; // 10MB
+        $config['encrypt_name']  = TRUE;
+
+        if (!is_dir($config['upload_path'])) {
+            @mkdir($config['upload_path'], 0777, true);
+        }
+
+        $this->load->library('upload', $config);
+
+        if (!$this->upload->do_upload('excel_file')) {
+            $this->session->set_flashdata('error', $this->upload->display_errors('', ''));
+            admin_redirect('products/upload_products');
+        }
+
+        $file = $this->upload->data();
+        $path = $file['full_path'];
+
+        try {
+            $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+            $reader->setReadDataOnly(true);
+            $spreadsheet = $reader->load($path);
+            $sheet = $spreadsheet->getActiveSheet();
+            $rows = $sheet->toArray(null, true, true, false);
+        } catch (Exception $e) {
+            print_r($e->getMessage());
+            @unlink($path);
+            $this->session->set_flashdata('error', 'Excel could not be read.');
+            admin_redirect('products/upload_products');
+        }
+
+        if (empty($rows) || count($rows) < 2) {
+            @unlink($path);
+            $this->session->set_flashdata('error', 'Excel file is empty.');
+            admin_redirect('products/upload_products');
+        }
+
+        $parsed_rows = [];
+        $row_count = 0;
+
+        foreach ($rows as $row) {
+            if ($row_count == 0) {
+                $row_count++;
+                continue; // skip header
+            }
+
+            $product_code = isset($row[0]) ? trim($row[0]) : '';
+            $product_name = isset($row[1]) ? trim($row[1]) : '';
+            $brand_name   = isset($row[2]) ? trim($row[2]) : '';
+            $vat_percent  = isset($row[3]) && trim($row[3]) !== '' ? (float) $row[3] : null;
+            $description  = isset($row[4]) ? trim($row[4]) : '';
+            $image_link   = isset($row[5]) ? trim($row[5]) : '';
+
+            // skip empty row
+            if (
+                $product_code === '' &&
+                $product_name === '' &&
+                $brand_name === '' &&
+                $vat_percent === null &&
+                $description === '' &&
+                $image_link === ''
+            ) {
+                $row_count++;
+                continue;
+            }
+
+            $parsed_rows[] = [
+                'row_no'       => $row_count + 1,
+                'product_code' => $product_code,
+                'product_name' => $product_name,
+                'brand_name'   => $brand_name,
+                'vat_percent'  => $vat_percent,
+                'description'  => $description,
+                'image_link'   => $image_link,
+            ];
+
+            $row_count++;
+        }
+
+        // Process each row and save to products table
+        $saved_count   = 0;
+        $updated_count = 0;
+        $errors        = [];
+
+        foreach ($parsed_rows as $row) {
+            try {
+                if (trim($row['product_code']) === '') {
+                    $errors[] = "Row {$row['row_no']}: Product code is required";
+                    continue;
+                }
+
+                $tax_rate_id = $row['vat_percent'];
+
+                // Check if product exists
+                $existing_product = $this->products_model->getProductByCode(trim($row['product_code']));
+
+                if ($existing_product) {
+                    // UPDATE CASE: only filled columns will be updated
+                    $update_data = [];
+
+                    if (isset($row['product_name']) && trim($row['product_name']) !== '') {
+                        $update_data['name'] = trim($row['product_name']);
+                    }
+
+                    if (isset($row['brand_name']) && trim($row['brand_name']) !== '') {
+                        $update_data['brand_name'] = trim($row['brand_name']);
+                    }
+
+                    if ($tax_rate_id !== null && $tax_rate_id !== '') {
+                        $update_data['tax_rate'] = (int)$tax_rate_id;
+                    }
+
+                    if (isset($row['description']) && trim($row['description']) !== '') {
+                        $update_data['details'] = trim($row['description']);
+                    }
+
+                    if (isset($row['image_link']) && trim($row['image_link']) !== '') {
+                        $update_data['image'] = trim($row['image_link']);
+                    }
+
+                    // nothing to update
+                    if (empty($update_data)) {
+                        continue;
+                    }
+
+                    if ($this->products_model->updateProduct($existing_product->id, $update_data, null, null, null, null, null)) {
+                        $updated_count++;
+                    } else {
+                        $errors[] = "Failed to update product: " . $row['product_code'];
+                    }
+                } else {
+                    // INSERT CASE: required validation only here
+                    $row_errors = [];
+
+                    if (trim($row['product_name']) === '') {
+                        $row_errors[] = "Product name is required";
+                    }
+
+                    if (trim($row['brand_name']) === '') {
+                        $row_errors[] = "Brand name is required";
+                    }
+
+                    if (trim($row['image_link']) === '') {
+                        $row_errors[] = "Image link is required";
+                    }
+
+                    if (!empty($row_errors)) {
+                        $errors[] = "Row {$row['row_no']}: " . implode(', ', $row_errors);
+                        continue;
+                    }
+
+                    $insert_data = [
+                        'code'            => $row['product_code'],
+                        'name'            => trim($row['product_name']),
+                        'cost'            => 0,
+                        'price'           => 0,
+                        'brand_name'      => trim($row['brand_name']),
+                        'category_id'     => 1,
+                        'tax_rate'        => $tax_rate_id,
+                        'tax_method'      => '1',
+                        'details'         => trim($row['description']),
+                        'image'           => trim($row['image_link']),
+                        'type'            => 'standard',
+                        'unit'            => '1',
+                        'sale_unit'       => '1',
+                        'purchase_unit'   => '1',
+                        'track_quantity'  => '1',
+                        'alert_quantity'  => 0,
+                    ];
+
+                    if ($this->products_model->addProductSimplified($insert_data)) {
+                        $saved_count++;
+                    } else {
+                        $errors[] = "Failed to save product: " . $row['product_code'];
+                    }
+                }
+            } catch (Exception $e) {
+                $errors[] = "Error processing " . $row['product_code'] . ": " . $e->getMessage();
+            }
+        }
+
+        // Clean up uploaded file
+        @unlink($path);
+
+        // Set flash messages
+        if (!empty($errors)) {
+            $this->session->set_flashdata('errors', $errors);
+            $this->session->set_flashdata('error', 'Some products could not be saved. Please check the errors.');
+        } else {
+            $this->session->set_flashdata('message', "Successfully saved {$saved_count} products and updated {$updated_count} products.");
+        }
+
+        admin_redirect('products/upload_products');
+    }
 }
