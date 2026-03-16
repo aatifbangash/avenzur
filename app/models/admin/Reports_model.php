@@ -1103,34 +1103,34 @@ class Reports_model extends CI_Model
         |--------------------------------------------------------------------------
         */
         $this->db
-    ->select('
-        ei.ledger_id as id,
-        al.name,
-        al.notes,
-        al.code,
-        COALESCE(SUM(ei.amount),0) AS total_amount,
-        ei.dc
-    ')
-    ->from('sma_accounts_entryitems ei')
-    ->join('sma_accounts_entries e', 'e.id = ei.entry_id', 'inner')
-    ->join('accounts_ledgers al', 'al.id = ei.ledger_id', 'left')   // important
-    ->where('e.date >=', trim($start_date))
-    ->where('e.date <=', trim($end_date));
+            ->select('
+                al.id,
+                al.name,
+                al.notes,
+                al.code,
+                COALESCE(SUM(ei.amount), 0) AS total_amount,
+                ei.dc
+            ')
+            ->from('accounts_ledgers al')
+            ->join('sma_accounts_entryitems ei', 'ei.ledger_id = al.id')
+            ->join('sma_accounts_entries e', 'e.id = ei.entry_id')
+            ->where('DATE(e.date) >=', trim($start_date))
+            ->where('DATE(e.date) <=', trim($end_date));
 
-if (!empty($employee)) {
-    $this->db->where('ei.employee_id', $employee);
-}
+        if (!empty($employee)) {
+            $this->db->where('ei.employee_id', $employee);
+        }
 
-if (!empty($department)) {
-    $this->db->where('ei.department_id', $department);
-}
+        if (!empty($department)) {
+            $this->db->where('ei.department_id', $department);
+        }
 
-$this->db
-    ->group_by('ei.ledger_id, ei.dc')
-    ->order_by('al.code', 'ASC');
+        $this->db
+            ->group_by('al.id, ei.dc')
+            ->order_by('al.code', 'ASC');
 
-$q = $this->db->get();
-$trs = ($q->num_rows() > 0) ? $q->result() : [];
+        $q = $this->db->get();
+        $trs = ($q->num_rows() > 0) ? $q->result() : [];
 
         /*
         |--------------------------------------------------------------------------
@@ -6245,6 +6245,7 @@ $trs = ($q->num_rows() > 0) ? $q->result() : [];
                 s.customer_id as customer_no,
                 s.customer as customer_name,
                 c.sales_agent as sales_man,
+                c.sequence_code as customer_sequence,
                 COALESCE(s.total_tax, 0) as vat,
                 COALESCE(s.total_discount, 0) as discount,
                 COALESCE(s.total, 0) as sales,

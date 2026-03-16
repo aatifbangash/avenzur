@@ -7443,4 +7443,268 @@ class Reports extends MY_Controller
         $this->page_construct('reports/purchase_per_invoice', $meta, $this->data);
     }
 
+    /* -----------------------------------------------------------------------
+     * TEMPORARY DIAGNOSTIC — remove after investigation
+     * URL: admin/reports/debug_trial_balance_diff?from=YYYY-MM-DD&to=YYYY-MM-DD
+     * ----------------------------------------------------------------------- */
+    public function debug_trial_balance_diff()
+    {
+        $from = $this->input->get('from') ?: date('Y-01-01');
+        $to   = $this->input->get('to')   ?: date('Y-m-d');
+
+        // Basic sanity
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $from) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $to)) {
+            show_error('Invalid date format. Use YYYY-MM-DD in the URL: ?from=YYYY-MM-DD&to=YYYY-MM-DD');
+        }
+
+        $db = $this->db;
+
+        // ── 1. Customer map ──────────────────────────────────────────────
+        $customers = [];
+        $ledger_to_customer = [];
+        foreach ($db->query("SELECT id, name, company, sequence_code, ledger_account FROM sma_companies WHERE ledger_account IS NOT NULL AND ledger_account > 0 AND group_name = 'customer' ORDER BY name")->result_array() as $row) {
+            $customers[$row['id']] = $row;
+            $ledger_to_customer[$row['ledger_account']] = $row['id'];
+        }
+        $customer_ledger_ids = array_keys($ledger_to_customer);
+
+        // ── 2. Customer Trial Balance (period) ───────────────────────────
+        $ctb = [];
+        foreach ($db->query("
+            SELECT c.id,
+                   SUM(CASE WHEN ei.dc='D' THEN ei.amount ELSE 0 END) AS total_debit,
+                   SUM(CASE WHEN ei.dc='C' THEN ei.amount ELSE 0 END) AS total_credit
+            FROM sma_accounts_entries e
+            JOIN sma_accounts_entryitems ei ON e.id = ei.entry_id
+            JOIN sma_companies c ON e.customer_id = c.id
+            WHERE DATE(e.date) >= '{$from}' AND DATE(e.date) <= '{$to}'
+              AND e.customer_id IS NOT NULL
+              AND ei.ledger_id = c.ledger_account
+            GROUP BY e.customer_id")->result_array() as $r) {
+            $ctb[$r['id']] = $r;
+        }
+
+        // ── 3. GL amounts for customer ledgers only ───────────────────────
+        $gl = [];
+        if (!empty($customer_ledger_ids)) {
+            $in = implode(',', array_map('intval', $customer_ledger_ids));
+            foreach ($db->query("
+                SELECT ei.ledger_id,
+                       SUM(CASE WHEN ei.dc='D' THEN ei.amount ELSE 0 END) AS total_debit,
+                       SUM(CASE WHEN ei.dc='C' THEN ei.amount ELSE 0 END) AS total_credit
+                FROM sma_accounts_entryitems ei
+                JOIN sma_accounts_entries e ON e.id = ei.entry_id
+                WHERE DATE(e.date) >= '{$from}' AND DATE(e.date) <= '{$to}'
+                  AND ei.ledger_id IN ({$in})
+                GROUP BY ei.ledger_id")->result_array() as $r) {
+                $gl[$r['ledger_id']] = $r;
+            }
+        }
+
+        // ── 4. Comparison ────────────────────────────────────────────────
+        $comparison = [];
+        $grand_diff_dr = $grand_diff_cr = 0;
+        foreach ($customers as $cid => $c) {
+            $lid    = $c['ledger_account'];
+            $ctb_dr = isset($ctb[$cid]) ? (float)$ctb[$cid]['total_debit']  : 0;
+            $ctb_cr = isset($ctb[$cid]) ? (float)$ctb[$cid]['total_credit'] : 0;
+            $gl_dr  = isset($gl[$lid])  ? (float)$gl[$lid]['total_debit']   : 0;
+            $gl_cr  = isset($gl[$lid])  ? (float)$gl[$lid]['total_credit']  : 0;
+            $diff_dr = round($gl_dr - $ctb_dr, 4);
+            $diff_cr = round($gl_cr - $ctb_cr, 4);
+            $comparison[] = compact('cid','c','lid','ctb_dr','ctb_cr','gl_dr','gl_cr','diff_dr','diff_cr');
+            $grand_diff_dr += $diff_dr;
+            $grand_diff_cr += $diff_cr;
+        }
+        usort($comparison, fn($a,$b) => (($b['diff_dr']!=0||$b['diff_cr']!=0)?1:0) - (($a['diff_dr']!=0||$a['diff_cr']!=0)?1:0));
+
+        // ── 5. Orphan entries (customer_id IS NULL on entry header) ──────
+        $orphan_rows = [];
+        $orphan_dr = $orphan_cr = 0;
+        if (!empty($customer_ledger_ids)) {
+            $in = implode(',', array_map('intval', $customer_ledger_ids));
+            foreach ($db->query("
+                SELECT e.id AS entry_id, e.date, e.number as ref_no, e.notes, al.name AS ledger_name,
+                       ei.ledger_id, ei.dc, ei.amount
+                FROM sma_accounts_entryitems ei
+                JOIN sma_accounts_entries e ON e.id = ei.entry_id
+                JOIN sma_accounts_ledgers al ON al.id = ei.ledger_id
+                WHERE DATE(e.date) >= '{$from}' AND DATE(e.date) <= '{$to}'
+                  AND ei.ledger_id IN ({$in})
+                  AND (e.customer_id IS NULL OR e.customer_id = 0)
+                ORDER BY e.date, e.id")->result_array() as $r) {
+                $orphan_rows[] = $r;
+                if ($r['dc']==='D') $orphan_dr += (float)$r['amount'];
+                else                $orphan_cr += (float)$r['amount'];
+            }
+        }
+
+        // ── 6. Cross-customer items ───────────────────────────────────────
+        $silent_rows = [];
+        if (!empty($customer_ledger_ids)) {
+            $in = implode(',', array_map('intval', $customer_ledger_ids));
+            $silent_rows = $db->query("
+                SELECT e.id AS entry_id, e.date, e.number as ref_no, e.notes,
+                       e.customer_id, c.name AS customer_name, c.ledger_account AS customer_ledger,
+                       ei.ledger_id AS item_ledger_id, al.name AS item_ledger_name, ei.dc, ei.amount
+                FROM sma_accounts_entryitems ei
+                JOIN sma_accounts_entries e ON e.id = ei.entry_id
+                JOIN sma_accounts_ledgers al ON al.id = ei.ledger_id
+                JOIN sma_companies c ON c.id = e.customer_id
+                WHERE DATE(e.date) >= '{$from}' AND DATE(e.date) <= '{$to}'
+                  AND e.customer_id IS NOT NULL
+                  AND ei.ledger_id IN ({$in})
+                  AND ei.ledger_id <> c.ledger_account
+                ORDER BY e.date, e.id")->result_array();
+        }
+
+        // ── 7. Customers with no ledger_account ───────────────────────────
+        $no_ledger = $db->query("SELECT id, name, company, sequence_code FROM sma_companies WHERE group_name = 'customer' AND (ledger_account IS NULL OR ledger_account = 0)")->result_array();
+
+        // ── HTML output ──────────────────────────────────────────────────
+        $fmt = fn($n) => number_format((float)$n, 2);
+        ?>
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="utf-8">
+        <title>Trial Balance Diff <?= htmlspecialchars($from) ?> → <?= htmlspecialchars($to) ?></title>
+        <style>
+          body{font-family:Arial,sans-serif;font-size:13px;margin:20px}
+          h2{border-bottom:2px solid #333;padding-bottom:6px}
+          h3{margin-top:32px;color:#444}
+          table{border-collapse:collapse;width:100%;margin-top:10px}
+          th,td{border:1px solid #ccc;padding:5px 8px;white-space:nowrap}
+          th{background:#2c3e50;color:#fff;text-align:center}
+          tr:nth-child(even){background:#f9f9f9}
+          .diff{background:#fff3cd!important;font-weight:bold}
+          .red{color:#c0392b;font-weight:bold}
+          .green{color:#27ae60}
+          .muted{color:#888}
+          .num{text-align:right}
+          .badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px}
+          .ok{background:#d4edda;color:#155724}
+          .bad{background:#f8d7da;color:#721c24}
+          .box{background:#eef4fb;border:1px solid #b0c8e8;padding:12px 18px;border-radius:4px;margin-bottom:20px}
+          .info{background:#fffbe6;border:1px solid #ffe066;padding:10px 16px;border-radius:4px;margin-bottom:10px;font-size:12px}
+        </style>
+        </head>
+        <body>
+        <h2>🔍 Trial Balance Difference: Customer TB vs GL TB</h2>
+        <div class="box">
+          <strong>Period:</strong> <?= htmlspecialchars($from) ?> → <?= htmlspecialchars($to) ?><br>
+          <strong>Customers with ledger:</strong> <?= count($customers) ?><br>
+          <strong>Grand diff (GL − CTB) Debit:</strong>
+            <span class="<?= abs($grand_diff_dr)>0.01?'red':'green' ?>"><?= $fmt($grand_diff_dr) ?></span>
+          &nbsp;|&nbsp;<strong>Credit:</strong>
+            <span class="<?= abs($grand_diff_cr)>0.01?'red':'green' ?>"><?= $fmt($grand_diff_cr) ?></span>
+        </div>
+
+        <h3>Section 1 — Customer-by-Customer Comparison</h3>
+        <div class="info">GL Debit/Credit = all entry items on the customer ledger (no customer_id filter).<br>
+        CTB Debit/Credit = same but only where entry.customer_id = this customer.<br>
+        Diff = GL − CTB (positive = GL has more).</div>
+        <table>
+          <thead><tr>
+            <th>#</th><th>Seq Code</th><th>Customer</th><th>Ledger ID</th>
+            <th>CTB Debit</th><th>CTB Credit</th>
+            <th>GL Debit</th><th>GL Credit</th>
+            <th>Diff Debit</th><th>Diff Credit</th><th>Status</th>
+          </tr></thead>
+          <tbody>
+          <?php $n=0; foreach($comparison as $row): $n++; $hasDiff=($row['diff_dr']!=0||$row['diff_cr']!=0); ?>
+          <tr class="<?= $hasDiff?'diff':'' ?>">
+            <td class="num"><?= $n ?></td>
+            <td><?= htmlspecialchars($row['c']['sequence_code']??'') ?></td>
+            <td><?= htmlspecialchars($row['c']['name']?:$row['c']['company']) ?></td>
+            <td class="num"><?= $row['lid'] ?></td>
+            <td class="num"><?= $fmt($row['ctb_dr']) ?></td>
+            <td class="num"><?= $fmt($row['ctb_cr']) ?></td>
+            <td class="num"><?= $fmt($row['gl_dr']) ?></td>
+            <td class="num"><?= $fmt($row['gl_cr']) ?></td>
+            <td class="num <?= $row['diff_dr']!=0?'red':'muted' ?>"><?= $fmt($row['diff_dr']) ?></td>
+            <td class="num <?= $row['diff_cr']!=0?'red':'muted' ?>"><?= $fmt($row['diff_cr']) ?></td>
+            <td><span class="badge <?= $hasDiff?'bad':'ok' ?>"><?= $hasDiff?'DIFF':'OK' ?></span></td>
+          </tr>
+          <?php endforeach; ?>
+          <tr style="background:#2c3e50;color:#fff;font-weight:bold">
+            <td colspan="8" class="num">Grand Total Differences</td>
+            <td class="num"><?= $fmt($grand_diff_dr) ?></td>
+            <td class="num"><?= $fmt($grand_diff_cr) ?></td>
+            <td></td>
+          </tr>
+          </tbody>
+        </table>
+
+        <h3>Section 2 — Orphan Entry Items (Cause A)</h3>
+        <p>Entry items on a customer ledger where the entry's <code>customer_id</code> is NULL/0. GL counts them; Customer TB ignores them.</p>
+        <p>Count: <strong><?= count($orphan_rows) ?></strong> &nbsp;|&nbsp; Debit total: <strong class="red"><?= $fmt($orphan_dr) ?></strong> &nbsp;|&nbsp; Credit total: <strong class="red"><?= $fmt($orphan_cr) ?></strong></p>
+        <?php if($orphan_rows): ?>
+        <table>
+          <thead><tr><th>Entry ID</th><th>Date</th><th>Ref</th><th>Note</th><th>Ledger ID</th><th>Ledger Name</th><th>D/C</th><th>Amount</th></tr></thead>
+          <tbody>
+          <?php foreach($orphan_rows as $r): ?>
+          <tr>
+            <td class="num"><?= $r['entry_id'] ?></td>
+            <td><?= htmlspecialchars($r['date']) ?></td>
+            <td><?= htmlspecialchars($r['ref_no']) ?></td>
+            <td><?= htmlspecialchars($r['note']) ?></td>
+            <td class="num"><?= $r['ledger_id'] ?></td>
+            <td><?= htmlspecialchars($r['ledger_name']) ?></td>
+            <td style="text-align:center;color:<?= $r['dc']==='D'?'#1565c0':'#b71c1c' ?>"><?= $r['dc'] ?></td>
+            <td class="num"><?= $fmt($r['amount']) ?></td>
+          </tr>
+          <?php endforeach; ?>
+          </tbody>
+        </table>
+        <?php else: ?><p class="green">✔ No orphan entries found.</p><?php endif; ?>
+
+        <h3>Section 3 — Cross-Customer Entry Items (Cause B)</h3>
+        <p>Entries with a <code>customer_id</code> but the line-item ledger belongs to a <em>different</em> customer's ledger account.</p>
+        <p>Count: <strong><?= count($silent_rows) ?></strong></p>
+        <?php if($silent_rows): ?>
+        <table>
+          <thead><tr><th>Entry ID</th><th>Date</th><th>Ref</th><th>Entry Customer</th><th>Entry Customer Ledger</th><th>Item Ledger ID</th><th>Item Ledger Name</th><th>D/C</th><th>Amount</th></tr></thead>
+          <tbody>
+          <?php foreach($silent_rows as $r): ?>
+          <tr>
+            <td class="num"><?= $r['entry_id'] ?></td>
+            <td><?= htmlspecialchars($r['date']) ?></td>
+            <td><?= htmlspecialchars($r['ref_no']) ?></td>
+            <td><?= htmlspecialchars($r['customer_name']) ?> (#<?= $r['customer_id'] ?>)</td>
+            <td class="num"><?= $r['customer_ledger'] ?></td>
+            <td class="num"><?= $r['item_ledger_id'] ?></td>
+            <td><?= htmlspecialchars($r['item_ledger_name']) ?></td>
+            <td style="text-align:center;color:<?= $r['dc']==='D'?'#1565c0':'#b71c1c' ?>"><?= $r['dc'] ?></td>
+            <td class="num"><?= $fmt($r['amount']) ?></td>
+          </tr>
+          <?php endforeach; ?>
+          </tbody>
+        </table>
+        <?php else: ?><p class="green">✔ No cross-customer ledger mismatches.</p><?php endif; ?>
+
+        <h3>Section 4 — Customers Without a Ledger Account</h3>
+        <p>Count: <strong><?= count($no_ledger) ?></strong></p>
+        <?php if($no_ledger): ?>
+        <table>
+          <thead><tr><th>ID</th><th>Name</th><th>Company</th><th>Seq Code</th></tr></thead>
+          <tbody>
+          <?php foreach($no_ledger as $r): ?>
+          <tr>
+            <td class="num"><?= $r['id'] ?></td>
+            <td><?= htmlspecialchars($r['name']) ?></td>
+            <td><?= htmlspecialchars($r['company']) ?></td>
+            <td><?= htmlspecialchars($r['sequence_code']) ?></td>
+          </tr>
+          <?php endforeach; ?>
+          </tbody>
+        </table>
+        <?php else: ?><p class="green">✔ All customers have a ledger account.</p><?php endif; ?>
+
+        <hr style="margin-top:40px">
+        <p class="muted" style="font-size:11px">Generated <?= date('Y-m-d H:i:s') ?> | Period: <?= htmlspecialchars($from) ?> → <?= htmlspecialchars($to) ?></p>
+        </body></html>
+        <?php
+    }
+
 }
