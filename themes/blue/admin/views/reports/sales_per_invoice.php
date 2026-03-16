@@ -91,6 +91,7 @@ echo admin_form_open('reports/sales_per_invoice', $attrib);
                             <table id="invoiceTable" class="table table-bordered table-striped table-hover">
                                 <thead>
                                     <tr>
+                                        <th>Customer Code</th>
                                         <th><?= lang('type') ?></th>
                                         <th><?= lang('date') ?></th>
                                         <th>Sale Invoice No</th>
@@ -111,6 +112,7 @@ echo admin_form_open('reports/sales_per_invoice', $attrib);
                                 <tbody>
                                     <?php foreach ($invoices as $invoice): ?>
                                         <tr class="<?= (isset($invoice->type) && $invoice->type == 'Return') ? 'return-row' : '' ?>">
+                                            <td><?= isset($invoice->customer_sequence) ? $invoice->customer_sequence : '' ?></td>
                                             <td><?= isset($invoice->type) ? $invoice->type : 'Sale' ?></td>
                                             <td><?= isset($invoice->date) ? date('d M y', strtotime($invoice->date)) : '' ?></td>
                                             <td><?= isset($invoice->sale_invoice_no) ? $invoice->sale_invoice_no : '' ?></td>
@@ -131,7 +133,7 @@ echo admin_form_open('reports/sales_per_invoice', $attrib);
                                 </tbody>
                                 <tfoot>
                                     <tr class="active">
-                                        <th colspan="8" class="text-right"><?= lang('total') ?>:</th>
+                                        <th colspan="9" class="text-right"><?= lang('total') ?>:</th>
                                         <th class="text-right"><?= number_format(isset($totals['total_sales']) ? $totals['total_sales'] : 0, 2) ?></th>
                                         <th class="text-right"><?= number_format(isset($totals['total_discount']) ? $totals['total_discount'] : 0, 2) ?></th>
                                         <th class="text-right"><?= number_format(isset($totals['total_net_sales']) ? $totals['total_net_sales'] : 0, 2) ?></th>
@@ -141,7 +143,7 @@ echo admin_form_open('reports/sales_per_invoice', $attrib);
                                         <th class="text-right"><?= number_format(isset($totals['total_receivable']) ? $totals['total_receivable'] : 0, 2) ?></th>
                                     </tr>
                                     <tr class="info">
-                                        <th colspan="15" class="text-center">
+                                        <th colspan="16" class="text-center">
                                             <?= lang('total_invoices') ?>: <?= isset($totals['total_invoices']) ? $totals['total_invoices'] : 0 ?> |
                                             <?= lang('total_items') ?>: <?= isset($totals['total_items']) ? $totals['total_items'] : 0 ?>
                                         </th>
