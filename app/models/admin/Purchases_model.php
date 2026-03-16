@@ -1242,6 +1242,45 @@ class Purchases_model extends CI_Model
         }
     }
 
+    /**
+     * Returns pending purchase invoices for a supplier, including outstanding_amount.
+     * Used by the new payment_to_supplier_new endpoint.
+     */
+    public function getPendingPurchaseInvoicesForPayment($supplier_id)
+    {
+        $this->db->select('p.id, p.date, p.reference_no, p.grand_total, p.paid,
+            COALESCE(SUM(pmt.amount), 0) as paid,
+            (p.grand_total - COALESCE(SUM(pmt.amount), 0)) as outstanding_amount, "purchase" as type');
+        $this->db->from('purchases p');
+        $this->db->join('payments pmt', 'pmt.purchase_id = p.id', 'left');
+        $this->db->where('p.supplier_id', $supplier_id);
+        $this->db->where('p.purchase_invoice', 1);
+        $this->db->where_in('p.payment_status', ['pending', 'due', 'partial']);
+        $this->db->group_by('p.id');
+        $this->db->order_by('p.date', 'asc');
+        $query = $this->db->get();
+        return $query->result_array();
+    }
+
+    /**
+     * Returns debit memos (type='memo') for a supplier that still have available balance.
+     * Used by the new payment_to_supplier_new endpoint.
+     */
+    public function getDebitMemosBySupplierForPayment($supplier_id)
+    {
+        $this->db->select('id, date, reference_no, payment_amount as amount,
+            COALESCE(used_amount, 0) as used_amount,
+            (payment_amount - COALESCE(used_amount, 0)) as available_balance,
+            "memo" as type');
+        $this->db->from('sma_memo');
+        $this->db->where('supplier_id', $supplier_id);
+        $this->db->where('type', 'memo');
+        $this->db->where('(payment_amount - COALESCE(used_amount, 0)) > 0', null, false);
+        $this->db->order_by('date', 'asc');
+        $query = $this->db->get();
+        return $query->result_array();
+    }
+
     public function getPendingInvoicesBySupplier($supplier_id)
     {
         // Fetch purchase invoices
