@@ -8890,6 +8890,7 @@ error_reporting(E_ALL);
     }
     public function parse()
     {
+        $this->load->helper('string');
         if (empty($_FILES['excel_file']['name'])) {
             $this->session->set_flashdata('error', 'Please select an Excel file.');
             admin_redirect('products/upload_products');
@@ -9020,7 +9021,7 @@ error_reporting(E_ALL);
                     'name'            => $row['product_name'],
                     'cost'            => 0,
                     'price'           => 0,
-                    'brand_name'           => $$row['brand_name'],
+                    'brand_name'      => to_snake_case($row['brand_name']),
                     'category_id'     => 1, // Default category, adjust if needed
                     'tax_rate'        => $tax_rate_id,
                     'tax_method'      => '1', // Default tax method
@@ -9036,7 +9037,7 @@ error_reporting(E_ALL);
                 $update_data = [
                     'code'       => $row['product_code'],
                     'name'       => $row['product_name'],
-                    'brand_name' => $row['brand_name'],
+                    'brand_name' => to_snake_case($row['brand_name']),
                     'tax_rate'   => $tax_rate_id,
                     'details'    => $row['description'],
                     'image'      => $row['image_link'],

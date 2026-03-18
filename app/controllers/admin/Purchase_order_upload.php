@@ -39,6 +39,7 @@ class Purchase_order_upload extends MY_Controller
      */
     public function parse()
     {
+        $this->load->helper('string');
         if (empty($_FILES['excel_file']['name'])) {
             $this->session->set_flashdata('error', 'Please select an Excel file.');
             admin_redirect('purchase_order_upload');
@@ -221,7 +222,7 @@ class Purchase_order_upload extends MY_Controller
                 'description_en'    => $description_en,
                 'image_link'        => $image_link,
                 'shelf_life'        => $shelf_life,
-                'brand_name'        => strtolower($brand_name),
+                'brand_name'        => to_snake_case($brand_name),
 
                 'error'             => $errors,
                 'has_error'         => !empty($errors),
