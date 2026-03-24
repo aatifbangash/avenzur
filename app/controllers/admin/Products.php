@@ -9059,8 +9059,14 @@ error_reporting(E_ALL);
                     $errors[] = "Row {$row['row_no']}: Product code is required";
                     continue;
                 }
-
-                $tax_rate_id = $row['vat_percent'];
+                
+                if ($row['vat_percent'] == 15) {
+                    $tax_rate_id = 5;
+                } else {
+                    $tax_rate_id = 1;
+                    $tax_percent = 0;
+                }
+                // $tax_rate_id = $row['vat_percent'];
 
                 // Check if product exists
                 $existing_product = $this->products_model->getProductByCode(trim($row['product_code']));
