@@ -69,8 +69,8 @@
                     $totalAmount = 0;
                     foreach ($rows as $row):
                         $is_vat_15 = ($row->tax_rate_id == 5);
-                        $vat = $is_vat_15 ? ($row->main_net * 0.15) : 0;
-                        $total_after_vat = $row->main_net + $vat;
+                        $vat = $is_vat_15 ? ($row->totalbeforevat * 0.15) : 0;
+                        $total_after_vat = $row->totalbeforevat + $vat;
                         $subTotal = ($row->real_unit_price * $row->unit_quantity);
                         ?>
                         <tr>
