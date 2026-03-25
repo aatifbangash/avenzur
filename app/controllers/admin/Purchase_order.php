@@ -1529,8 +1529,8 @@ class Purchase_order extends MY_Controller
                 <tr><td>Total</td><td>' . $this->sma->formatNumber($inv->total) . '</td></tr>
                 <tr><td>T-DISC</td><td>' . $this->sma->formatNumber($inv->total_discount) . '</td></tr>
                 <tr><td>Net Before VAT</td><td>' . $this->sma->formatNumber($inv->total_net_purchase) . '</td></tr>
-                <tr><td>Total VAT</td><td>' . $this->sma->formatNumber($inv->total_tax) . '</td></tr>
-                <tr><td><strong>Total After VAT</strong></td><td><strong>' . $this->sma->formatNumber($inv->grand_total) . '</strong></td></tr>
+                <tr><td>Total VAT</td><td>' . $this->sma->formatNumber($inv->grand_total * 0.15) . '</td></tr>
+                <tr><td><strong>Total After VAT</strong></td><td><strong>' . $this->sma->formatNumber($inv->grand_total + ($inv->grand_total * 0.15)) . '</strong></td></tr>
             </table>
         </div>
 
