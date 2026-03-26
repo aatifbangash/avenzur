@@ -5517,9 +5517,6 @@ class Reports_model extends CI_Model
                 LEFT JOIN sma_payments p 
                     ON s.id = p.sale_id
 
-                LEFT JOIN sma_returns r 
-                    ON r.id = p.return_id
-
                 LEFT JOIN sma_companies cm 
                     ON cm.id = s.customer_id
 
