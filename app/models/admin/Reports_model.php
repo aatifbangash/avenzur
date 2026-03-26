@@ -5492,7 +5492,7 @@ class Reports_model extends CI_Model
         // Build warehouse filter only if provided
         $warehouseWhere = "";
         if ($warehouse) {
-            $warehouseWhere = " AND (s.warehouse_id = " . $warehouse . " OR r.warehouse_id = " . $warehouse . ")";
+            $warehouseWhere = " AND (s.warehouse_id = " . $warehouse . ")";
         }
 
          $sql = "SELECT 
