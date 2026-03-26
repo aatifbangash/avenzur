@@ -5503,7 +5503,7 @@ class Reports_model extends CI_Model
                     cm.id AS customer_id,
                     cm.name AS customer_name,
                     cm.sales_agent,
-                    p.amount,
+                    s.paid As paid_amount,
                     p.paid_by,
                     p.return_id,
                     s.date AS sale_date,
@@ -5513,8 +5513,8 @@ class Reports_model extends CI_Model
                     pr.transfer_from_ledger,
                     lg.name as ledger_name
 
-                FROM sma_payments p
-                LEFT JOIN sma_sales s 
+                FROM sma_sales s
+                LEFT JOIN sma_payments p 
                     ON s.id = p.sale_id
 
                 LEFT JOIN sma_returns r 
@@ -5531,6 +5531,7 @@ class Reports_model extends CI_Model
                 WHERE cm.group_name = 'customer'
                  ".$dateWhere."
                  ".$warehouseWhere."
+                    GROUP BY s.id
                     ORDER BY 
                     DATE(p.date)
         ";

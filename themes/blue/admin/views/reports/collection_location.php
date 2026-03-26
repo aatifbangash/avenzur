@@ -140,7 +140,7 @@
                                                 <td><?= $data->sale_date; ?></td>
                                                 <td><?= $data->grand_total; ?></td>
                                                 <td><?= $data->payment_id; ?></td>
-                                                <td><?= $data->amount; ?></td>
+                                                <td><?= $data->paid_amount; ?></td>
                                                 <td><?= $data->collection_date; ?></td>
                                                 <td><?php 
                                                     // Calculate collection days (difference between collection_date and sale_date)
