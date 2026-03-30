@@ -7885,9 +7885,6 @@ class Reports extends MY_Controller
     // ─────────────────────────────────────────────────────────────────
     public function vat_report()
     {
-        ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-error_reporting(E_ALL);
         $this->data['error'] = $this->session->flashdata('error');
 
         // ── filters (GET – shareable URL) ──────────────────────────
@@ -7967,6 +7964,7 @@ error_reporting(E_ALL);
 
                 ORDER BY trans_date ASC, trans_id ASC
             ";
+            echo $sql;exit;
             $q = $this->db->query($sql);
             $sales_rows = $q->num_rows() ? $q->result() : [];
         }
