@@ -79,8 +79,8 @@ foreach ($payments as $p):
     $remaining_due = ($original_amount - $total_paid_now) >= 0 ? ($original_amount - $total_paid_now) : 0;
 ?>
 <tr>
-    <td><?= ($p->purchase_date) ? date('Y-m-d', strtotime($p->purchase_date)) : date('d-m-Y', strtotime($p->date)) ?></td>
-    <td><?= $p->ref_no ? $p->ref_no : $p->reference_no ?></td>
+    <td><?= ($p->date) ? date('Y-m-d', strtotime($p->date)) : date('d-m-Y', strtotime($p->purchase_date)) ?></td>
+    <td><?= $p->reference_no ? $p->reference_no : $p->ref_no ?></td>
     <td><?= $type_label ?></td>
     <td class="right"><?= number_format($original_amount, 2) ?></td>
     <td class="right"><?= number_format($p->additional_discount ?? 0, 2) ?></td>
