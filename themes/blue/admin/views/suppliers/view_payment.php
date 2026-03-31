@@ -247,8 +247,8 @@
                                         ?>
                                         <tr>
                                             <td><?= $count; ?></td>
-                                            <td><?= $payment->purchase_date ? date('Y-m-d', strtotime($payment->purchase_date)) : $payment->date; ?></td>
-                                            <td><?= $payment->ref_no ? $payment->ref_no : $payment->reference_no; ?> <?= $badge; ?></td>
+                                            <td><?= $payment->date ? date('Y-m-d', strtotime($payment->date)) : $payment->purchase_date; ?></td>
+                                            <td><?= $payment->reference_no ? $payment->reference_no : $payment->ref_no; ?> <?= $badge; ?></td>
                                             <td><?= $type_label; ?></td>
                                             <td><?= number_format($original_amount, 2); ?></td>
                                             <td><?= number_format($amount_due, 2); ?></td>
