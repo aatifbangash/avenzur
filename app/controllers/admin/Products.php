@@ -1467,6 +1467,23 @@ class Products extends MY_Controller
         }
     }
 
+    public function add_supplier_reference($amount, $reference_no, $date, $note, $supplier_id, $ledger_account){
+        $payment_reference = [
+            'supplier_id' => $supplier_id,
+            'date' => $date,
+            'sequence_code' => $this->sequenceCode->generate('PAY', 5),
+            'note' => $note,
+            'reference_no'  => $reference_no,
+            'amount' => $amount,
+            'transfer_from_ledger' => $ledger_account,
+            'created_by'    => $this->session->userdata('user_id'),
+            'added_via' => 'auto_script'
+        ];
+
+        $payment_id = $this->sales_model->addPaymentReference($payment_reference);
+        return $payment_id;
+    }
+
     public function add_customer_reference($amount, $reference_no, $date, $note, $customer_id, $ledger_account){
         $payment_reference = [
             'customer_id' => $customer_id,
@@ -1482,6 +1499,368 @@ class Products extends MY_Controller
 
         $payment_id = $this->sales_model->addPaymentReference($payment_reference);
         return $payment_id;
+    }
+
+    public function record_ecommerce_purchases_accounting(){
+        $sql = "
+            SELECT 
+                p.po_id,
+                psi.product_code,
+                SUM(psi.qty) AS shelved_quantity,
+                po.supplier_id,
+                poi.net_unit_cost,
+                SUM(psi.qty) * COALESCE(poi.net_unit_cost, 0) AS total_cost
+            FROM sma_purchase_order_shelving p
+            INNER JOIN sma_purchase_orders po 
+                ON p.po_id = po.id
+            INNER JOIN sma_purchase_order_shelving_items psi 
+                ON p.id = psi.shelving_id
+
+            LEFT JOIN (
+                SELECT 
+                    purchase_id,
+                    TRIM(LEADING '0' FROM product_code) AS product_code,
+                    MAX(net_unit_cost) AS net_unit_cost
+                FROM sma_purchase_order_items
+                GROUP BY purchase_id, TRIM(LEADING '0' FROM product_code)
+            ) poi 
+                ON poi.purchase_id = po.id
+            AND poi.product_code = TRIM(LEADING '0' FROM psi.product_code)
+
+            LEFT JOIN sma_accounts_entries e 
+                ON p.po_id = e.pid
+
+            WHERE e.id IS NULL
+
+            GROUP BY 
+                p.po_id,
+                psi.product_code,
+                po.supplier_id,
+                poi.net_unit_cost
+        ";
+
+        $unrecorded_purchases = $this->db->query($sql)->result();
+
+        $grouped_purchases = [];
+
+        foreach ($unrecorded_purchases as $row) {
+            $po_id = $row->po_id;
+
+            if (!isset($grouped_purchases[$po_id])) {
+                $grouped_purchases[$po_id] = [
+                    'po_id' => $row->po_id,
+                    'supplier_id' => $row->supplier_id,
+                    'po_total_cost' => 0,
+                    'items' => []
+                ];
+            }
+
+            $grouped_purchases[$po_id]['po_total_cost'] += (float)$row->total_cost;
+            $grouped_purchases[$po_id]['items'][] = $row;
+        }
+
+        foreach ($grouped_purchases as $purchase) {
+            $supplier_id = $purchase['supplier_id'];
+            $po_id = $purchase['po_id'];
+            $po_total_cost = $purchase['po_total_cost'];
+            $po_items = $purchase['items'];
+            $po_date = $this->db->get_where('sma_purchase_orders', ['id' => $po_id])->row()->date;
+            $po_reference = $this->db->get_where('sma_purchase_orders', ['id' => $po_id])->row()->reference_no;
+
+            $supplier = $this->db->get_where('sma_companies', ['id' => $supplier_id])->row();
+            if (!$supplier) {
+                echo "Supplier not found for purchase ID: {$purchase->id}<br>";
+                continue;
+            }
+
+            $inventory_ledger = 398;
+
+            echo "Recording accounting entry for Purchase Order ID: {$po_id} - Supplier ID: {$supplier_id} - Total Cost: {$po_total_cost}<br>";
+
+            // Create GL entry in sma_accounts_entries
+            $entry_data = [
+                "entrytype_id" => 4,
+                "date" => $po_date,
+                "number" => $po_id,
+                "transaction_type" => "purchaseorder",
+                "notes" => "Accounting entry for purchase Order: {$po_id}",
+                "pid" => $po_id,
+                "supplier_id"   => $supplier_id,
+                "dr_total" => $po_total_cost,
+                "cr_total" => $po_total_cost,
+            ];
+            $this->db->insert("sma_accounts_entries", $entry_data);
+            $entry_id = $this->db->insert_id();
+
+            // Cr Supplier Ledger
+            $this->db->insert("sma_accounts_entryitems", [
+                "entry_id" => $entry_id,
+                "ledger_id" => $supplier->ledger_account,   
+                "dc" => 'C',
+                "amount" => $po_total_cost,
+                'narration' => "Payable to supplier for purchase order {$po_reference}"
+            ]);
+
+            // Dr Inventory Ledger
+            $this->db->insert("sma_accounts_entryitems", [
+                "entry_id" => $entry_id,
+                "ledger_id" => $inventory_ledger,   
+                "dc" => 'D',
+                "amount" => $po_total_cost,
+                'narration' => "Inventory received from supplier for purchase order {$po_reference}"
+            ]);
+        }
+    }
+
+    public function record_ecommerce_sales_accounting(){
+        $unrecorded_sales = $this->db
+            ->where('sale_status', 'completed')
+            ->where('sale_invoice', 0)
+            ->get('sma_sales')
+            ->result();
+
+        foreach ($unrecorded_sales as $sale) {
+            $customer_id = $sale->customer_id;
+            $customer = $this->db->get_where('sma_companies', ['id' => $customer_id])->row();
+            if (!$customer) {
+                echo "Customer not found for sale ID: {$sale->id}<br>";
+                continue;
+            }
+
+            $bank_ledger = 12;
+            $sales_ledger = 256;
+            $inventory_ledger = 68;
+            $cost_of_goods_sold_ledger = 69;
+
+            // Create GL entry in sma_accounts_entries
+            $entry_data = [
+                "entrytype_id" => 4,
+                "date" => $sale->date,
+                "number" => $sale->reference_no,
+                "transaction_type" => "sales_invoice",
+                "notes" => "Accounting entry for sale ID: {$sale->id}",
+                "sid" => $sale->id,
+                "customer_id"   => $customer_id,
+            ];
+            $this->db->insert("sma_accounts_entries", $entry_data);
+            $entry_id = $this->db->insert_id();
+
+            // Cr Customer Ledger
+            $this->db->insert("sma_accounts_entryitems", [
+                "entry_id" => $entry_id,
+                "ledger_id" => $customer_ledger,
+                "debit" => 0,
+                "credit" => $sale->grand_total,
+                "notes" => "Cr Customer Ledger for sale ID: {$sale->id}"
+            ]);
+        }
+    }
+
+    public function update_supplier_outstanding_invoices_payment(){
+        $unsettled_returns = $this->db
+            ->where('status', 'completed')
+            ->where('paid < grand_total', null, false)
+            //->where_not_in('supplier_id', [824, 31])
+            ->get('sma_returns_supplier')
+            ->result();
+        //echo "<pre>";print_r($unsettled_returns);
+        //echo "</pre>";exit;
+
+        foreach ($unsettled_returns as $return) {
+
+            $supplier_name = $return->supplier;
+            $supplier_id = $return->supplier_id;
+            $paid = $return->paid;
+            $grand_total = $return->grand_total;
+            $return_id = $return->id;
+
+            $Journal_details = $this->db
+                    ->where('rsid', $return_id) // exact match
+                    ->get('sma_accounts_entries')
+                    ->row();
+            // Remaining amount in return that can be allocated to invoices
+            $remaining_amount = $grand_total - $paid;
+
+            $pending_invoices = $this->purchases_model->getSupplierInvoicesWithPayments($supplier_id);
+            
+            if (empty($pending_invoices)) {
+                continue;
+            }
+
+            $total_outstanding = 0;
+            foreach ($pending_invoices as $invoice) {
+                $invoice_outstanding = isset($invoice->outstanding_amount)
+                    ? (float) $invoice->outstanding_amount
+                    : ((float) $invoice->grand_total - (float) $invoice->total_paid);
+                if ($invoice_outstanding > 0) {
+                    $total_outstanding += $invoice_outstanding;
+                }
+            }
+
+            $allocatable_amount = min($remaining_amount, $total_outstanding);
+            if ($allocatable_amount <= 0) {
+                return false;
+            }
+
+            $remaining_amount = $allocatable_amount;
+
+            $payment_reference_id = $this->add_supplier_reference(
+                $allocatable_amount,
+                $return_id,
+                date('Y-m-d H:i:s'),
+                'Return settlement against outstanding invoices',
+                $supplier_id,
+                null
+            );
+
+            $total_applied = 0;
+            foreach ($pending_invoices as $invoice) {
+                if ($remaining_amount <= 0) {
+                    break;
+                }
+
+                $outstanding = isset($invoice->outstanding_amount)
+                    ? (float) $invoice->outstanding_amount
+                    : ((float) $invoice->grand_total - (float) $invoice->total_paid);
+
+                if ($outstanding <= 0) {
+                    continue;
+                }
+
+                $apply_amount = min($remaining_amount, $outstanding);
+
+                $payment = [
+                    'date'          => date('Y-m-d H:i:s'),
+                    'purchase_id'       => (int) $invoice->id,
+                    'supplier_return_id'     => $return_id,
+                    'reference_no'  => '',
+                    'amount'        => $apply_amount,
+                    'note'          => 'Auto-settled to supplier return #' . $return_id,
+                    'created_by'    => $this->session->userdata('user_id'),
+                    'paid_by'       => 'return',
+                    'type'          => 'received',
+                    'supplier_id'   => $supplier_id,
+                    'payment_id'    => $payment_reference_id,
+                ];
+
+                $this->purchases_model->addPayment($payment);
+                $this->purchases_model->update_purchase_paid_amount_new((int) $invoice->id, ((float) $invoice->total_paid + $apply_amount));
+
+                $remaining_amount -= $apply_amount;
+                $total_applied += $apply_amount;
+            }
+
+            if ($payment_reference_id) {
+                $this->purchases_model->update_payment_reference($payment_reference_id, $Journal_details->id);
+                $this->purchases_model->update_return_paid($return_id, $remaining_amount);
+            }
+
+            echo "Settled Return ID: {$return_id} For SUPPLIER ID: {$supplier_id} - Total Applied: {$total_applied} against outstanding invoices.<br>";
+        }
+
+        // Settle Debit Memos against outstanding invoices
+        /*$unsettled_debit_memos = $this->db
+            ->where('customer_entry_type', 'C')
+            ->where('customer_id > ', '0')
+            ->where('(used_amount IS NULL OR used_amount < payment_amount)', null, false)
+            ->get('sma_memo')
+            ->result();
+
+        foreach ($unsettled_debit_memos as $debit_memo) {
+            $memo_id = $debit_memo->id;
+            $supplier_id = $debit_memo->supplier_id;
+            $remaining_amount = $debit_memo->payment_amount - $debit_memo->used_amount;
+
+            if ($memo_id <= 0 || $supplier_id <= 0 || $remaining_amount <= 0) {
+                return false;
+            }
+
+            $pending_invoices = $this->sales_model->getSupplierInvoicesWithPayments($supplier_id);
+            if (empty($pending_invoices)) {
+                return false;
+            }
+
+            $Journal_details = $this->db
+                        ->where('memo_id', $memo_id) // exact match
+                        ->get('sma_accounts_entries')
+                        ->row();
+
+            $total_outstanding = 0;
+            foreach ($pending_invoices as $invoice) {
+                $invoice_outstanding = isset($invoice->outstanding_amount)
+                    ? (float) $invoice->outstanding_amount
+                    : ((float) $invoice->grand_total - (float) $invoice->total_paid);
+                if ($invoice_outstanding > 0) {
+                    $total_outstanding += $invoice_outstanding;
+                }
+            }
+
+            $allocatable_amount = min($remaining_amount, $total_outstanding);
+            if ($allocatable_amount <= 0) {
+                return false;
+            }
+
+            $remaining_amount = $allocatable_amount;
+            $payment_reference_id = $this->add_supplier_reference(
+                $allocatable_amount,
+                $memo_id,
+                date('Y-m-d H:i:s'),
+                'Auto settlement from debit memo #' . $memo_id,
+                $supplier_id,
+                null
+            );
+
+            $total_applied = 0;
+            foreach ($pending_invoices as $invoice) {
+                if ($remaining_amount <= 0) {
+                    break;
+                }
+
+                $outstanding = isset($invoice->outstanding_amount)
+                    ? (float) $invoice->outstanding_amount
+                    : ((float) $invoice->grand_total - (float) $invoice->total_paid);
+
+                if ($outstanding <= 0) {
+                    continue;
+                }
+
+                $apply_amount = min($remaining_amount, $outstanding);
+
+                $payment = [
+                    'date'         => date('Y-m-d H:i:s'),
+                    'purchase_id'      => (int) $invoice->id,
+                    'reference_no' => $memo_id,
+                    'amount'       => $apply_amount,
+                    'note'         => 'Auto-settled from credit memo #' . $memo_id,
+                    'created_by'   => $this->session->userdata('user_id'),
+                    'type'         => 'received',
+                    'paid_by'      => 'credit_memo',
+                    'supplier_id' => $supplier_id,
+                    'memo_id'     => $memo_id,
+                    'payment_id'   => $payment_reference_id,
+                ];
+
+                $this->purchases_model->addPayment($payment);
+                $this->purchases_model->update_purchase_paid_amount_new((int) $invoice->id, ((float) $invoice->total_paid + $apply_amount));
+
+                //$this->site->syncSalePayments((int) $invoice->id);
+
+                $remaining_amount -= $apply_amount;
+                $total_applied += $apply_amount;
+            }
+
+            if ($total_applied > 0) {
+                $memo = $this->purchases_model->getDebitMemoByID($memo_id);
+                $existing_used_amount = $memo && isset($memo->used_amount) ? (float) $memo->used_amount : 0;
+                $this->purchases_model->update_debit_memo($memo_id, $existing_used_amount + $total_applied);
+            }
+
+            if ($payment_reference_id) {
+                $this->purchases_model->update_payment_reference($payment_reference_id, $Journal_details->id);
+            }
+
+            echo "Settled Debit Memo ID: {$memo_id} For Supplier ID: {$supplier_id} - Total Applied: {$total_applied} against outstanding invoices.<br>";
+        }*/
     }
 
     public function update_customer_outstanding_invoices_payment(){
