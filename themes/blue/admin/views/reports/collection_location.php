@@ -138,9 +138,9 @@
                                                 <td><?= $data->customer_name; ?></td>
                                                 <td><?= $data->sale_id; ?></td>
                                                 <td><?= $data->sale_date; ?></td>
-                                                <td><?= $data->grand_total; ?></td>
+                                                <td><?= number_format($data->grand_total, 2); ?></td>
                                                 <td><?= $data->payment_id; ?></td>
-                                                <td><?= $data->paid_amount; ?></td>
+                                                <td><?= number_format($data->paid_amount, 2); ?></td>
                                                 <td><?= $data->collection_date; ?></td>
                                                 <td><?php 
                                                     // Calculate collection days (difference between collection_date and sale_date)
@@ -163,9 +163,9 @@
                                     <td colspan="1"><strong>-</strong></td>
                                     <td colspan="1"><strong>-</strong></td>
                                     <td colspan="1"><strong>-</strong></td>
-                                    <td colspan="1"><strong><?= $this->sma->formatNumber($grand_total_sale); ?></strong></td>
+                                    <td colspan="1"><strong><?= number_format($grand_total_sale, 2); ?></strong></td>
                                     <td colspan="1"><strong>-</strong></td>
-                                    <td colspan="1"><strong><?= $this->sma->formatNumber($grand_total_payment); ?></strong></td>
+                                    <td colspan="1"><strong><?= number_format($grand_total_payment, 2); ?></strong></td>
                                     <td colspan="1"><strong>-</strong></td>
                                     <td colspan="1"><strong>-</strong></td>
                                     <td colspan="1"><strong>-</strong></td>
