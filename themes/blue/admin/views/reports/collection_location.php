@@ -114,7 +114,7 @@
                                     foreach ($collections_data as $data){
                                         $count ++ ;
                                         $grand_total_sale += $data->grand_total;
-                                        $grand_total_payment += $data->amount;
+                                        $grand_total_payment += $data->paid_amount;
                                         /*$net_cash = ($data->total_cash - $data->total_returns) ;
                                         $total = $data->total_cash + $data->total_credit_card ;
                                         $net_total = $net_cash + $data->total_credit_card;
