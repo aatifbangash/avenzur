@@ -44,7 +44,7 @@ class Customers extends MY_Controller
         }
     }
 
-    public function convert_customer_payment_multiple_invoice_new($customer_id, $ledger_account, $payment_amount, $reference_no, $type, $total_additional_discount, $customer_discount_ledger, $date, $customer_advance_ledger, $advance_amount){
+    public function convert_customer_payment_multiple_invoice_new($customer_id, $ledger_account, $payment_amount, $reference_no, $type, $total_additional_discount, $customer_discount_ledger, $date, $customer_advance_ledger, $advance_amount, $excess_to_advance = 0){
         $this->load->admin_model('companies_model');
         $customer = $this->companies_model->getCompanyByID($customer_id);
 
@@ -73,16 +73,29 @@ class Customers extends MY_Controller
         $add  = $this->db->insert('sma_accounts_entries', $entry);
         $insert_id = $this->db->insert_id();
 
-        //customer - Credit to reduce receivable
+        //customer - Credit to reduce receivable (invoice portion only; excess is posted to advance)
         $entryitemdata[] = array(
             'Entryitem' => array(
                 'entry_id' => $insert_id,
                 'dc' => 'C',
                 'ledger_id' => $customer->ledger_account,
-                'amount' => $receiveable_amount,
+                'amount' => $receiveable_amount - $excess_to_advance,
                 'narration' => 'Account Receivable'
             )
         );
+
+        if ($excess_to_advance > 0) {
+            // Credit advance ledger — excess payment becomes customer advance (liability)
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'C',
+                    'ledger_id' => $customer_advance_ledger,
+                    'amount' => $excess_to_advance,
+                    'narration' => 'Excess payment posted to customer advance'
+                )
+            );
+        }
 
         if($advance_amount > 0){
             $entryitemdata[] = array(
@@ -1483,6 +1496,7 @@ class Customers extends MY_Controller
             }
 
             $payment_amount = $this->input->post('payment_amount') ? (float)$this->input->post('payment_amount') : 0;
+            $excess_to_advance = $this->input->post('excess_to_advance') ? round((float)$this->input->post('excess_to_advance'), 4) : 0;
 
             if($payment_amount > 0 && !$ledger_account) {
                 $this->session->set_flashdata('error', 'Please select a ledger account for the payment.');
@@ -1495,7 +1509,10 @@ class Customers extends MY_Controller
                                      ? $this->Settings->customer_advance_ledger 
                                      : null;
 
-            // Convert date format
+            if ($excess_to_advance > 0 && !$customer_advance_ledger) {
+                $this->session->set_flashdata('error', 'Customer advance ledger is not configured in Settings. Cannot post excess payment to advance.');
+                admin_redirect('customers/payment_from_customer_new');
+            }
             $formattedDate = DateTime::createFromFormat('d/m/Y', $date);
             //echo '<pre>';print_r($formattedDate);exit;
             if ($formattedDate !== false) {
@@ -1697,8 +1714,9 @@ class Customers extends MY_Controller
             foreach ($creditmemo_details as $creditmemo_id => $creditmemo_detail) {
                 $this->sales_model->update_credit_memo($creditmemo_id, ($creditmemo_detail['used'] + $creditmemo_detail['paying']));
             }
+
             // Create accounting entry
-            $journal_id = $this->convert_customer_payment_multiple_invoice_new($customer_id, $ledger_account, $total_payment, $reference_no, 'customerpayment', 0, null, $date, $customer_advance_ledger, $applied_advance);
+            $journal_id = $this->convert_customer_payment_multiple_invoice_new($customer_id, $ledger_account, $total_payment, $reference_no, 'customerpayment', 0, null, $date, $customer_advance_ledger, $applied_advance, $excess_to_advance);
 
             $this->sales_model->update_payment_reference($payment_id, $journal_id);
 
