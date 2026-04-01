@@ -4,7 +4,8 @@
 #advances-table td, #advances-table th,
 #invoices-table td, #invoices-table th,
 #returns-table td, #returns-table th,
-#creditmemo-table td, #creditmemo-table th {
+#creditmemo-table td, #creditmemo-table th,
+#serviceinvoice-table td, #serviceinvoice-table th {
     padding: 3px 6px !important;
     line-height: 1.1 !important;
     vertical-align: middle !important;
@@ -14,7 +15,8 @@
 #advances-table tbody tr,
 #invoices-table tbody tr,
 #returns-table tbody tr,
-#creditmemo-table tbody tr {
+#creditmemo-table tbody tr,
+#serviceinvoice-table tbody tr {
     height: 28px !important;
 }
 
@@ -29,7 +31,8 @@
 #advances-table input[type="checkbox"],
 #invoices-table input[type="checkbox"],
 #returns-table input[type="checkbox"],
-#creditmemo-table input[type="checkbox"] {
+#creditmemo-table input[type="checkbox"],
+#serviceinvoice-table input[type="checkbox"] {
     margin: 0 !important;
     transform: scale(0.8);
 }
@@ -38,7 +41,8 @@
 #advances-table thead th,
 #invoices-table thead th,
 #returns-table thead th,
-#creditmemo-table thead th {
+#creditmemo-table thead th,
+#serviceinvoice-table thead th {
     font-size: 11px !important;
     font-weight: bold !important;
     padding: 4px 6px !important;
@@ -48,7 +52,8 @@
 #advances-table tfoot td,
 #invoices-table tfoot td,
 #returns-table tfoot td,
-#creditmemo-table tfoot td {
+#creditmemo-table tfoot td,
+#serviceinvoice-table tfoot td {
     padding: 3px 6px !important;
     line-height: 1.1 !important;
     font-size: 12px !important;
@@ -58,7 +63,8 @@
 #advances-table tfoot tr,
 #invoices-table tfoot tr,
 #returns-table tfoot tr,
-#creditmemo-table tfoot tr {
+#creditmemo-table tfoot tr,
+#serviceinvoice-table tfoot tr {
     height: 28px !important;
 }
 </style>
@@ -102,12 +108,15 @@
                             loadCustomerReturns(customer_id);
                             // Load customer credit memos
                             loadCustomerCreditMemos(customer_id);
+                            // Load customer service invoices
+                            loadCustomerServiceInvoices(customer_id);
                         } else {
                             $('#customer-info').hide();
                             $('#advances-section').hide();
                             $('#invoices-section').hide();
                             $('#returns-section').hide();
                             $('#creditmemo-section').hide();
+                            $('#serviceinvoice-section').hide();
                         }
                     },
                     error: function() {
@@ -122,6 +131,7 @@
                 $('#invoices-section').hide();
                 $('#returns-section').hide();
                 $('#creditmemo-section').hide();
+                $('#serviceinvoice-section').hide();
             }
         });
 
@@ -315,6 +325,64 @@
             $('#creditmemo-total-applied').text('0.00');
         }
 
+        // Function to load customer service invoices (sma_memo type=serviceinvoice)
+        function loadCustomerServiceInvoices(customer_id) {
+            $.ajax({
+                url: '<?= admin_url('customers/get_customer_service_invoices') ?>',
+                type: 'GET',
+                data: { customer_id: customer_id },
+                dataType: 'json',
+                success: function(invoices) {
+                    displayServiceInvoices(invoices);
+                },
+                error: function() {
+                    $('#serviceinvoice-section').hide();
+                }
+            });
+        }
+
+        // Function to display service invoices in table
+        function displayServiceInvoices(invoices) {
+            var tbody = $('#serviceinvoice-table tbody');
+            tbody.empty();
+
+            $('#select-all-serviceinvoices').prop('checked', false);
+
+            var totalAmount = 0;
+            var totalPaid = 0;
+            var totalOutstanding = 0;
+
+            if (invoices.length > 0) {
+                $.each(invoices, function(index, inv) {
+                    var row = '<tr>' +
+                        '<td><input type="checkbox" class="serviceinvoice-checkbox" name="service_invoice_ids[]" value="' + inv.id + '" data-amount="' + inv.outstanding_amount + '"></td>' +
+                        '<td>' + inv.date + '</td>' +
+                        '<td>' + inv.reference_no + '</td>' +
+                        '<td>' + inv.type + '</td>' +
+                        '<td class="text-right">' + parseFloat(inv.grand_total).toFixed(5) + '</td>' +
+                        '<td class="text-right">' + parseFloat(inv.total_paid).toFixed(5) + '</td>' +
+                        '<td class="text-right">' + parseFloat(inv.outstanding_amount).toFixed(5) + '</td>' +
+                        '<td class="text-right"><span class="serviceinvoice-payment-amount" id="serviceinvoice-payment-' + inv.id + '">0.00</span>' +
+                        '<input type="hidden" name="service_invoice_amounts[' + inv.id + ']" value="0.00" id="serviceinvoice-amount-' + inv.id + '"></td>' +
+                    '</tr>';
+                    tbody.append(row);
+
+                    totalAmount      += parseFloat(inv.grand_total);
+                    totalPaid        += parseFloat(inv.total_paid);
+                    totalOutstanding += parseFloat(inv.outstanding_amount);
+                });
+                $('#serviceinvoice-section').show();
+            } else {
+                tbody.append('<tr><td colspan="8" class="text-center">No service invoices found for this customer</td></tr>');
+                $('#serviceinvoice-section').show();
+            }
+
+            $('#si-total-amount').text(totalAmount.toFixed(5));
+            $('#si-total-paid').text(totalPaid.toFixed(5));
+            $('#si-total-outstanding').text(totalOutstanding.toFixed(5));
+            $('#si-total-payment').text('0.00');
+        }
+
         // Function to load customer advances
         function loadCustomerAdvances(customer_id) {
             $.ajax({
@@ -437,6 +505,24 @@
             calculateTotalPayment();
         });
 
+        // Handle service invoice checkbox changes
+        $(document).on('change', '.serviceinvoice-checkbox', function() {
+            var isChecked = $(this).is(':checked');
+            var invoiceId = $(this).val();
+
+            if (isChecked) {
+                if (checkedInvoicesOrder.indexOf('si_' + invoiceId) === -1) {
+                    checkedInvoicesOrder.push('si_' + invoiceId);
+                }
+            } else {
+                var idx = checkedInvoicesOrder.indexOf('si_' + invoiceId);
+                if (idx > -1) { checkedInvoicesOrder.splice(idx, 1); }
+                $('#serviceinvoice-amount-' + invoiceId).val('0.00');
+            }
+
+            calculateTotalPayment();
+        });
+
         // Handle advance checkbox changes
         $(document).on('change', '.advance-checkbox', function() {
             var isChecked = $(this).is(':checked');
@@ -460,12 +546,14 @@
             $('.advance-checkbox').prop('checked', false);
             $('.return-checkbox').prop('checked', false);
             $('.creditmemo-checkbox').prop('checked', false);
+            $('.serviceinvoice-checkbox').prop('checked', false);
 
             // Clear select all checkboxes
             $('#select-all-invoices').prop('checked', false);
             $('#select-all-advances').prop('checked', false);
             $('#select-all-returns').prop('checked', false);
             $('#select-all-creditmemos').prop('checked', false);
+            $('#select-all-serviceinvoices').prop('checked', false);
 
             // Reset order tracking
             checkedInvoicesOrder = [];
@@ -479,6 +567,8 @@
             $('.creditmemo-amount').val('0.00');
             $('.advance-applied-amount').text('0.00');
             $('.advance-amount').val('0.00');
+            $('.serviceinvoice-payment-amount').text('0.00');
+            $('[id^="serviceinvoice-amount-"]').val('0.00');
 
             $('#total-display').text('0.00');
             $('#total-outstanding-selected').text('0.00');
@@ -517,9 +607,12 @@
             $('.creditmemo-amount').val('0.00');
             $('.advance-applied-amount').text('0.00');
             $('.advance-amount').val('0.00');
+            $('.serviceinvoice-payment-amount').text('0.00');
+            $('[id^="serviceinvoice-amount-"]').val('0.00');
 
             // Get selected items
             var selectedInvoices = $('.invoice-checkbox:checked');
+            var selectedServiceInvoices = $('.serviceinvoice-checkbox:checked');
             var selectedAdvances = $('.advance-checkbox:checked');
             var selectedReturns = $('.return-checkbox:checked');
             var selectedCreditMemos = $('.creditmemo-checkbox:checked');
@@ -527,6 +620,12 @@
             // Calculate totals
             var totalInvoiceOutstanding = 0;
             selectedInvoices.each(function() {
+                var amount = parseFloat($(this).data('amount')) || 0;
+                totalInvoiceOutstanding += isNaN(amount) ? 0 : amount;
+            });
+
+            // Include service invoice outstanding in the invoice total
+            selectedServiceInvoices.each(function() {
                 var amount = parseFloat($(this).data('amount')) || 0;
                 totalInvoiceOutstanding += isNaN(amount) ? 0 : amount;
             });
@@ -568,13 +667,26 @@
 
                 // Apply settlement to invoices in the order they were checked
                 for (var i = 0; i < checkedInvoicesOrder.length && remainingSettlement > 0; i++) {
-                    var invoiceId = checkedInvoicesOrder[i];
-                    var checkbox = $('.invoice-checkbox[value="' + invoiceId + '"]');
-                    var invoiceOutstanding = parseFloat(checkbox.data('amount')) || 0;
-                    var amountToApply = Math.min(invoiceOutstanding, remainingSettlement);
-                    $('#invoice-payment-' + invoiceId).text(amountToApply.toFixed(5));
-                    $('#invoice-amount-' + invoiceId).val(amountToApply.toFixed(5));
-                    remainingSettlement -= amountToApply;
+                    var item = checkedInvoicesOrder[i];
+                    if (item.indexOf('si_') === 0) {
+                        // Service invoice
+                        var siId = item.substring(3);
+                        var checkbox = $('.serviceinvoice-checkbox[value="' + siId + '"]');
+                        var outstanding = parseFloat(checkbox.data('amount')) || 0;
+                        var amountToApply = Math.min(outstanding, remainingSettlement);
+                        $('#serviceinvoice-payment-' + siId).text(amountToApply.toFixed(5));
+                        $('#serviceinvoice-amount-' + siId).val(amountToApply.toFixed(5));
+                        remainingSettlement -= amountToApply;
+                    } else {
+                        // Regular sales invoice
+                        var invoiceId = item;
+                        var checkbox = $('.invoice-checkbox[value="' + invoiceId + '"]');
+                        var invoiceOutstanding = parseFloat(checkbox.data('amount')) || 0;
+                        var amountToApply = Math.min(invoiceOutstanding, remainingSettlement);
+                        $('#invoice-payment-' + invoiceId).text(amountToApply.toFixed(5));
+                        $('#invoice-amount-' + invoiceId).val(amountToApply.toFixed(5));
+                        remainingSettlement -= amountToApply;
+                    }
                 }
 
                 // Any remaining settlement becomes advance
@@ -646,7 +758,18 @@
             $('.invoice-payment-amount').each(function() {
                 totalInvoicesPaid += parseFloat($(this).text()) || 0;
             });
+            // Add service invoice payments to the summary total
+            $('.serviceinvoice-payment-amount').each(function() {
+                totalInvoicesPaid += parseFloat($(this).text()) || 0;
+            });
             $('#total-payment-summary').text(totalInvoicesPaid.toFixed(5));
+
+            // Update service invoice tfoot payment total
+            var siTotalPayment = 0;
+            $('.serviceinvoice-payment-amount').each(function() {
+                siTotalPayment += parseFloat($(this).text()) || 0;
+            });
+            $('#si-total-payment').text(siTotalPayment.toFixed(5));
 
             // Update payment amount display: entered payment + selected priority items
             var totalPaymentAmount = (paymentAmount || 0) + (totalPriorityAvailable || 0);
@@ -670,7 +793,7 @@
         function updateRemainingAmountStyling(remainingAmount) {
             var remainingElement = $('#remaining-amount');
             var submitBtn = $('#submit-btn');
-            var selectedInvoices = $('.invoice-checkbox:checked');
+            var selectedInvoices = $('.invoice-checkbox:checked, .serviceinvoice-checkbox:checked');
 
             // Remove existing classes
             remainingElement.removeClass('remaining-zero remaining-nonzero');
@@ -725,6 +848,12 @@
         $(document).on('change', '#select-all-creditmemos', function() {
             var isChecked = $(this).is(':checked');
             $('.creditmemo-checkbox').prop('checked', isChecked).trigger('change');
+        });
+
+        // Handle select all service invoices checkbox
+        $(document).on('change', '#select-all-serviceinvoices', function() {
+            var isChecked = $(this).is(':checked');
+            $('.serviceinvoice-checkbox').prop('checked', isChecked).trigger('change');
         });
 
         // Handle select all advances checkbox
@@ -933,6 +1062,47 @@
                                         </tfoot>
                                         <tbody>
                                             <!-- Invoices will be loaded here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Service Invoices Section -->
+                <div id="serviceinvoice-section" class="row" style="display: none; margin-top: 20px;">
+                    <div class="col-md-12">
+                        <div class="box box-info">
+                            <div class="box-header with-border">
+                                <h3 class="box-title">Service Invoices</h3>
+                            </div>
+                            <div class="box-body">
+                                <div class="table-responsive">
+                                    <table id="serviceinvoice-table" class="table table-striped table-bordered">
+                                        <thead style="background-color: #d1ecf1;">
+                                            <tr>
+                                                <th width="5%"><input type="checkbox" id="select-all-serviceinvoices"></th>
+                                                <th>Date</th>
+                                                <th>Reference No</th>
+                                                <th>Type</th>
+                                                <th class="text-right">Total Amount</th>
+                                                <th class="text-right">Paid Amount</th>
+                                                <th class="text-right">Outstanding</th>
+                                                <th class="text-right">Payment Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tfoot style="background-color: #bee5eb; font-weight: bold;">
+                                            <tr>
+                                                <td colspan="4"><strong>Service Invoices Total</strong></td>
+                                                <td class="text-right" id="si-total-amount">0.00</td>
+                                                <td class="text-right" id="si-total-paid">0.00</td>
+                                                <td class="text-right" id="si-total-outstanding">0.00</td>
+                                                <td class="text-right" id="si-total-payment">0.00</td>
+                                            </tr>
+                                        </tfoot>
+                                        <tbody>
+                                            <!-- Service invoices will be loaded here -->
                                         </tbody>
                                     </table>
                                 </div>

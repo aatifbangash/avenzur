@@ -388,7 +388,7 @@ class Customers extends MY_Controller
                     'remaining_limit' => $remaining_limit,
                     'available_advance' => $available_advance,
                     'payment_term' => $customer->payment_term ?? '',
-                    'customer_name' => $customer->company != '-' ? $customer->company : $customer->name
+                    'customer_name' => $customer->name != '-' ? $customer->name : $customer->company
                 );
             }
         }
@@ -435,6 +435,16 @@ class Customers extends MY_Controller
             $response = $creditmemos;
         }
         
+        header('Content-Type: application/json');
+        echo json_encode($response);
+    }
+
+    public function get_customer_service_invoices(){
+        $customer_id = isset($_GET['customer_id']) ? (int) $_GET['customer_id'] : 0;
+        $response = array();
+        if ($customer_id) {
+            $response = $this->sales_model->getCustomerServiceInvoicesForPayment($customer_id);
+        }
         header('Content-Type: application/json');
         echo json_encode($response);
     }
@@ -1531,8 +1541,9 @@ class Customers extends MY_Controller
             $return_amounts = $this->input->post('return_amounts');   // Array of used amounts
             $creditmemo_amounts = $this->input->post('creditmemo_amounts'); // Array of applied amounts
             $advance_amounts = $this->input->post('advance_amounts'); // Array of applied amounts
+            $service_invoice_amounts = $this->input->post('service_invoice_amounts') ?: []; // Service invoices from sma_memo
 
-            if (empty($invoice_ids) && empty($return_ids) && empty($creditmemo_ids) && empty($advance_ids)) {
+            if (empty($invoice_ids) && empty($return_ids) && empty($creditmemo_ids) && empty($advance_ids) && empty($service_invoice_amounts)) {
                 $this->session->set_flashdata('error', 'Please select at least one invoice, return, credit memo, or advance');
                 admin_redirect('customers/payment_from_customer_new');
             }
@@ -1620,6 +1631,34 @@ class Customers extends MY_Controller
                     }else{
                         $this->session->set_flashdata('error', 'Credit memo not found for ID: ' . $creditmemo_id);
                         admin_redirect('customers/payment_from_customer_new');
+                    }
+                }
+            }
+
+            // Process service invoices (sma_memo type=serviceinvoice)
+            $service_invoice_details = [];
+            $total_applied_service_invoices = 0;
+            if (!empty($service_invoice_amounts)) {
+                foreach ($service_invoice_amounts as $memo_id => $applied_amount) {
+                    $applied_amount = (float) $applied_amount;
+                    if ($applied_amount > 0) {
+                        $memo = $this->sales_model->getServiceInvoiceByID($memo_id);
+                        if ($memo) {
+                            $available = (float) $memo->payment_amount - (float) ($memo->used_amount ?? 0);
+                            if ($applied_amount > $available + 0.001) {
+                                $this->session->set_flashdata('error', 'Applied service invoice amount exceeds outstanding amount for service invoice ID: ' . $memo_id);
+                                admin_redirect('customers/payment_from_customer_new');
+                            }
+                            $service_invoice_details[$memo_id] = [
+                                'used'   => (float) ($memo->used_amount ?? 0),
+                                'paying' => $applied_amount,
+                            ];
+                            $total_payments_from_invoices   += $applied_amount;
+                            $total_applied_service_invoices += $applied_amount;
+                        } else {
+                            $this->session->set_flashdata('error', 'Service invoice not found for ID: ' . $memo_id);
+                            admin_redirect('customers/payment_from_customer_new');
+                        }
                     }
                 }
             }
@@ -1713,6 +1752,11 @@ class Customers extends MY_Controller
 
             foreach ($creditmemo_details as $creditmemo_id => $creditmemo_detail) {
                 $this->sales_model->update_credit_memo($creditmemo_id, ($creditmemo_detail['used'] + $creditmemo_detail['paying']));
+            }
+
+            // Update used_amount for service invoices in sma_memo
+            foreach ($service_invoice_details as $memo_id => $detail) {
+                $this->sales_model->update_credit_memo($memo_id, ($detail['used'] + $detail['paying']));
             }
 
             // Create accounting entry
