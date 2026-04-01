@@ -656,6 +656,12 @@
             var remainingAmount = (totalAppliedToInvoices || 0) - (totalPaymentAmount || 0);
 
             $('#remaining-amount').text(isNaN(remainingAmount) ? '0.00' : remainingAmount.toFixed(5));
+
+            // Calculate excess: when payment > invoices, excess goes to customer advance ledger
+            var excessToAdvance = (remainingAmount < -0.001) ? Math.abs(remainingAmount) : 0;
+            $('#advance-from-payment').text(excessToAdvance.toFixed(5));
+            $('#excess-to-advance-input').val(excessToAdvance.toFixed(5));
+
             // Update remaining amount styling and button state
             updateRemainingAmountStyling(remainingAmount);
         }
@@ -669,9 +675,9 @@
             // Remove existing classes
             remainingElement.removeClass('remaining-zero remaining-nonzero');
 
-            // Enable submit only when remaining amount is exactly zero (exact settlement)
-            if (selectedInvoices.length > 0 && Math.abs(remainingAmount) < 0.01) { // Use small epsilon for floating point comparison
-                // Green background for exact settlement
+            // Enable submit on exact settlement OR when excess (gets posted to customer advance)
+            if (selectedInvoices.length > 0 && Math.abs(remainingAmount) < 0.01) {
+                // Green: exact settlement
                 remainingElement.css({
                     'background-color': '#d4edda',
                     'color': '#155724',
@@ -680,8 +686,18 @@
                     'display': 'inline-block'
                 });
                 submitBtn.prop('disabled', false);
+            } else if (selectedInvoices.length > 0 && remainingAmount < -0.01) {
+                // Orange: overpayment — excess will be posted to customer advance ledger
+                remainingElement.css({
+                    'background-color': '#fff3cd',
+                    'color': '#856404',
+                    'padding': '2px 8px',
+                    'border-radius': '3px',
+                    'display': 'inline-block'
+                });
+                submitBtn.prop('disabled', false);
             } else {
-                // Red background if remaining is not zero (over or under payment)
+                // Red: underpayment or no invoices selected
                 remainingElement.css({
                     'background-color': '#f8d7da',
                     'color': '#721c24',
@@ -1061,13 +1077,14 @@
                                             Remaining Amount: <span id="remaining-amount" style="font-size: 16px; font-weight: bold;">0.00</span>
                                         </label>
                                         <br>
-                                        <small class="text-muted">Outstanding amount minus payment amount (must be zero to submit)</small>
+                                        <small class="text-muted">Difference between invoices selected and total payment. Zero = exact match (green). Negative = excess posted to customer advance (orange).</small>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                <input type="hidden" name="excess_to_advance" id="excess-to-advance-input" value="0.00">
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">

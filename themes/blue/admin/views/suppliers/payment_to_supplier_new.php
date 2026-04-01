@@ -116,11 +116,8 @@ $(document).ready(function () {
                     '<td class="text-right">' + parseFloat(inv.paid || 0).toFixed(2) + '</td>' +
                     '<td class="text-right">' + outstanding.toFixed(2) + '</td>' +
                     '<td class="text-right">' +
-                        '<input type="number" class="form-control payment-amount" ' +
-                            'name="invoice_amounts[' + inv.id + ']" ' +
-                            'id="inv-amount-' + inv.id + '" ' +
-                            'value="0.00" step="0.01" min="0" max="' + outstanding + '" ' +
-                            'disabled style="width:90px;">' +
+                        '<span id="inv-amount-display-' + inv.id + '">0.00</span>' +
+                        '<input type="hidden" name="invoice_amounts[' + inv.id + ']" id="inv-amount-' + inv.id + '" value="0.00">' +
                     '</td>' +
                     '</tr>';
                 tbody.append(row);
@@ -174,11 +171,8 @@ $(document).ready(function () {
                     '<td class="text-right">' + parseFloat(memo.used_amount || 0).toFixed(2) + '</td>' +
                     '<td class="text-right">' + available.toFixed(2) + '</td>' +
                     '<td class="text-right">' +
-                        '<input type="number" class="form-control debitmemo-apply" ' +
-                            'name="debit_memo_amounts[' + memo.id + ']" ' +
-                            'id="dm-amount-' + memo.id + '" ' +
-                            'value="0.00" step="0.01" min="0" max="' + available + '" ' +
-                            'disabled style="width:90px;">' +
+                        '<span id="dm-amount-display-' + memo.id + '">0.00</span>' +
+                        '<input type="hidden" name="debit_memo_amounts[' + memo.id + ']" id="dm-amount-' + memo.id + '" value="0.00">' +
                     '</td>' +
                     '</tr>';
                 tbody.append(row);
@@ -197,17 +191,10 @@ $(document).ready(function () {
 
     // ── Invoice checkbox ─────────────────────────────────────────────
     $(document).on('change', '.invoice-checkbox', function () {
-        var invId = $(this).val();
-        var input = $('#inv-amount-' + invId);
-
-        if ($(this).is(':checked')) {
-            input.prop('disabled', false);
-            if (parseFloat(input.val()) === 0) {
-                input.val('');  // clear so user types the amount
-            }
-            input.focus();
-        } else {
-            input.prop('disabled', true).val('0.00');
+        if (!$(this).is(':checked')) {
+            var invId = $(this).val();
+            $('#inv-amount-' + invId).val('0.00');
+            $('#inv-amount-display-' + invId).text('0.00');
         }
         recalculate();
     });
@@ -217,24 +204,12 @@ $(document).ready(function () {
         $('.invoice-checkbox').prop('checked', $(this).is(':checked')).trigger('change');
     });
 
-    // Invoice amount manually edited
-    $(document).on('input', '.payment-amount', function () {
-        recalculate();
-    });
-
     // ── Debit memo checkbox ──────────────────────────────────────────
     $(document).on('change', '.debitmemo-checkbox', function () {
-        var memoId = $(this).val();
-        var input  = $('#dm-amount-' + memoId);
-
-        if ($(this).is(':checked')) {
-            input.prop('disabled', false);
-            if (parseFloat(input.val()) === 0) {
-                input.val('');
-            }
-            input.focus();
-        } else {
-            input.prop('disabled', true).val('0.00');
+        if (!$(this).is(':checked')) {
+            var memoId = $(this).val();
+            $('#dm-amount-' + memoId).val('0.00');
+            $('#dm-amount-display-' + memoId).text('0.00');
         }
         recalculate();
     });
@@ -242,11 +217,6 @@ $(document).ready(function () {
     // Select all debit memos
     $(document).on('change', '#select-all-debitmemos', function () {
         $('.debitmemo-checkbox').prop('checked', $(this).is(':checked')).trigger('change');
-    });
-
-    // Debit memo amount manually edited
-    $(document).on('input', '.debitmemo-apply', function () {
-        recalculate();
     });
 
     // ── Advance checkbox toggle ──────────────────────────────────────
@@ -265,49 +235,70 @@ $(document).ready(function () {
     });
 
     // ── Main recalculate ─────────────────────────────────────────────
+    // Auto-distributes available budget across checked invoices (greedy, DOM order).
+    // Debit memos are applied at full available balance when checked.
     function recalculate() {
-        // Total invoice applied
-        var totalInvApplied = 0;
-        $('.invoice-checkbox:checked').each(function () {
-            var id  = $(this).val();
-            var val = parseFloat($('#inv-amount-' + id).val()) || 0;
-            totalInvApplied += val;
-        });
+        var cashPayment    = parseFloat($('#payment_amount').val()) || 0;
+        var advanceMax     = parseFloat($('#advance-balance-raw').val()) || 0;
+        var advanceApplied = 0;
+        if ($('#use-advance').is(':checked')) {
+            advanceApplied = Math.min(parseFloat($('#advance_amount').val()) || 0, advanceMax);
+            $('#advance_amount').val(advanceApplied.toFixed(2));
+        }
 
-        // Total debit memo applied
+        // Debit memos: each checked memo applies its full available balance
         var totalDMApplied = 0;
-        $('.debitmemo-checkbox:checked').each(function () {
-            var id  = $(this).val();
-            var val = parseFloat($('#dm-amount-' + id).val()) || 0;
-            totalDMApplied += val;
+        $('.debitmemo-checkbox').each(function () {
+            var memoId = $(this).val();
+            if ($(this).is(':checked')) {
+                var amt = parseFloat($(this).data('amount')) || 0;
+                totalDMApplied += amt;
+                $('#dm-amount-' + memoId).val(amt.toFixed(2));
+                $('#dm-amount-display-' + memoId).text(amt.toFixed(2));
+            } else {
+                $('#dm-amount-' + memoId).val('0.00');
+                $('#dm-amount-display-' + memoId).text('0.00');
+            }
         });
         $('#dm-total-applied').text(totalDMApplied.toFixed(2));
 
-        var cashPayment    = parseFloat($('#payment_amount').val()) || 0;
-        var advanceApplied = $('#use-advance').is(':checked') ? (parseFloat($('#advance_amount').val()) || 0) : 0;
-        var advanceMax     = parseFloat($('#advance-balance-raw').val()) || 0;
+        var totalSources = cashPayment + advanceApplied + totalDMApplied;
+        var budgetLeft   = totalSources;
+        var totalInvApplied = 0;
 
-        // Clamp advance to available (only when checkbox is active)
-        if ($('#use-advance').is(':checked') && advanceApplied > advanceMax) {
-            advanceApplied = advanceMax;
-            $('#advance_amount').val(advanceMax.toFixed(2));
-        }
+        // Greedy distribution: fill each checked invoice up to its outstanding; stop when budget exhausted
+        $('.invoice-checkbox').each(function () {
+            var invId       = $(this).val();
+            var outstanding = parseFloat($(this).data('amount')) || 0;
+            if ($(this).is(':checked')) {
+                var apply = Math.min(outstanding, budgetLeft);
+                budgetLeft      -= apply;
+                totalInvApplied += apply;
+                $('#inv-amount-' + invId).val(apply.toFixed(2));
+                $('#inv-amount-display-' + invId).text(apply.toFixed(2));
+            } else {
+                $('#inv-amount-' + invId).val('0.00');
+                $('#inv-amount-display-' + invId).text('0.00');
+            }
+        });
 
-        var totalSources  = cashPayment + advanceApplied + totalDMApplied;
-        var remaining     = totalInvApplied - totalSources;
+        // diff < 0: excess cash (sources > invoices applied) — orange
+        // diff > 0: impossible with greedy fill, but guard anyway
+        // diff = 0: balanced — green, enable submit
+        var diff = totalInvApplied - totalSources;
 
         $('#summary-inv-applied').text(totalInvApplied.toFixed(2));
         $('#summary-cash').text(cashPayment.toFixed(2));
         $('#summary-dm-applied').text(totalDMApplied.toFixed(2));
         $('#summary-advance').text(advanceApplied.toFixed(2));
-        $('#summary-remaining').text(remaining.toFixed(2));
+        $('#summary-remaining').text(diff.toFixed(2));
 
-        var $remaining = $('#summary-remaining');
-        if (Math.abs(remaining) < 0.01) {
-            $remaining.css('color', '#28a745');
+        var $summaryRem = $('#summary-remaining');
+        if (Math.abs(diff) < 0.01) {
+            $summaryRem.css('color', '#28a745');
             $('#submit-btn').prop('disabled', false);
         } else {
-            $remaining.css('color', remaining > 0 ? '#dc3545' : '#f39c12');
+            $summaryRem.css('color', diff > 0 ? '#dc3545' : '#f39c12');
             $('#submit-btn').prop('disabled', true);
         }
     }
