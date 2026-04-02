@@ -272,30 +272,13 @@ class Purchase_order_upload extends MY_Controller
             'payload' => $payload,
             'file'    => $path,
         ];
-//         $json_string = json_encode($temp_data);
 
-// echo '<pre>';
-// print_r([
-//     'token' => $token,
-//     'json_file' => $json_file,
-//     'rows_count' => count($parsed_rows),
-//     'payload_keys' => array_keys($payload),
-//     'json_encode_success' => $json_string !== false,
-//     'json_error' => json_last_error_msg(),
-//     'json_length' => $json_string ? strlen($json_string) : 0,
-// ]);
-// echo '</pre>';
-// exit;
         // save json
         $json_string = json_encode($temp_data, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
         file_put_contents($json_file, $json_string);
 
         // store only token in session (very small data)
         $this->session->set_userdata('po_upload_token', $token);
-        
-        // $this->session->set_userdata('po_upload_rows', $parsed_rows);
-        // $this->session->set_userdata('po_upload_payload', $payload);
-        // $this->session->set_userdata('po_upload_file', $path);
         
         admin_redirect('purchase_order_upload/review');
     }
