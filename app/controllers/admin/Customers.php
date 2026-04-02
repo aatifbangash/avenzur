@@ -663,7 +663,64 @@ class Customers extends MY_Controller
         $data = [];
         $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Customer Payments')]];
         $meta = ['page_title' => lang('Customer Payments'), 'bc' => $bc];
-        $this->data['payments'] = $this->sales_model->getPaymentReferences();
+
+        // Build filters from GET or POST
+        $filters = [
+            'customer_id' => $this->input->get('customer_id') ?: $this->input->post('customer_id'),
+            'from_date'   => $this->input->get('from_date')   ?: $this->input->post('from_date'),
+            'to_date'     => $this->input->get('to_date')     ?: $this->input->post('to_date'),
+        ];
+        // Convert display date (d/m/Y) to Y-m-d for the query
+        foreach (['from_date', 'to_date'] as $f) {
+            if (!empty($filters[$f])) {
+                $d = DateTime::createFromFormat('d/m/Y', $filters[$f]);
+                if ($d) { $filters[$f] = $d->format('Y-m-d'); }
+            }
+        }
+
+        $this->data['payments']  = $this->sales_model->getPaymentReferences($filters);
+        $this->data['customers'] = $this->site->getAllCompanies('customer');
+        $this->data['filters']   = $filters;
+
+        // Export to Excel
+        if ($this->input->get('export_excel') || $this->input->post('export_excel')) {
+            $payments = $this->data['payments'];
+            $this->load->library('excel');
+            $sheet = $this->excel->setActiveSheetIndex(0);
+            $sheet->setTitle('Customer Payments');
+
+            $sheet->SetCellValue('A1', '#');
+            $sheet->SetCellValue('B1', 'Reference No.');
+            $sheet->SetCellValue('C1', 'Customer');
+            $sheet->SetCellValue('D1', 'Category');
+            $sheet->SetCellValue('E1', 'Date');
+            $sheet->SetCellValue('F1', 'Payment Amount');
+            $sheet->SetCellValue('G1', 'Note');
+
+            $row = 2;
+            $count = 1;
+            foreach ($payments as $payment) {
+                $sheet->SetCellValue('A' . $row, $count++);
+                $sheet->SetCellValue('B' . $row, $payment->reference_no);
+                $sheet->SetCellValue('C' . $row, $payment->company);
+                $sheet->SetCellValue('D' . $row, $payment->customer_group);
+                $sheet->SetCellValue('E' . $row, $payment->date);
+                $sheet->SetCellValue('F' . $row, $payment->amount);
+                $sheet->SetCellValue('G' . $row, $payment->note);
+                $row++;
+            }
+
+            foreach (['A'=>5,'B'=>20,'C'=>25,'D'=>20,'E'=>15,'F'=>18,'G'=>30] as $c => $w) {
+                $sheet->getColumnDimension($c)->setWidth($w);
+            }
+
+            $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+            $filename = 'Customer_Payments_' . date('Y-m-d_H_i_s');
+            $this->load->helper('excel');
+            create_excel($this->excel, $filename);
+            return;
+        }
+
         $this->page_construct('customers/list_payments', $meta, $this->data);
     }
 

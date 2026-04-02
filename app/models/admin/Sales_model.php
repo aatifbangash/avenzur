@@ -669,10 +669,24 @@ class Sales_model extends CI_Model
         return false;
     }
 
-    public function getPaymentReferences(){
-        $this->db->select('payment_reference.*, companies.name as company')
+    public function getPaymentReferences($filters = []){
+        $this->db->select('payment_reference.*, companies.name as company, companies.category as customer_group')
                 ->join('companies', 'companies.id=payment_reference.customer_id', 'left')
-                ->where('customer_id <>', NULL);
+                //->join('sma_payments', 'sma_payments.payment_id=payment_reference.id', 'inner')
+                ->where('payment_reference.customer_id <>', NULL)
+                ->where('payment_reference.note NOT LIKE "%Reconciliation payment for sale ID%"');
+
+        if (!empty($filters['customer_id'])) {
+            $this->db->where('payment_reference.customer_id', $filters['customer_id']);
+        }
+        if (!empty($filters['from_date'])) {
+            $this->db->where('payment_reference.date >=', $filters['from_date']);
+        }
+        if (!empty($filters['to_date'])) {
+            $this->db->where('payment_reference.date <=', $filters['to_date']);
+        }
+
+        $this->db->order_by('payment_reference.date', 'DESC');
         $q = $this->db->get('payment_reference');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -680,7 +694,7 @@ class Sales_model extends CI_Model
             }
             return $data;
         }
-        return false;
+        return [];
     }
 
     public function addPayment($data = [], $customer_id = null)

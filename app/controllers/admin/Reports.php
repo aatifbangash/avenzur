@@ -6399,6 +6399,40 @@ class Reports extends MY_Controller
 
     }
 
+    public function payments_by_supplier(){
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $from_date  = $this->input->post('from_date')  ?: null;
+        $to_date    = $this->input->post('to_date')    ?: null;
+        $supplier   = $this->input->post('supplier')   ?: null;
+        $warehouse  = $this->input->post('pharmacy')   ?: null;
+
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date   = $this->sma->fld($to_date);
+            $payments_data = $this->reports_model->getPaymentsBySupplier($start_date, $end_date, $supplier, $warehouse);
+
+            $this->data['start_date']    = $from_date;
+            $this->data['end_date']      = $to_date;
+            $this->data['warehouse']     = $warehouse;
+            $this->data['supplier']      = $supplier;
+            $this->data['payments_data'] = $payments_data;
+
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('Payments by Supplier')]];
+            $meta = ['page_title' => lang('Payments by Supplier'), 'bc' => $bc];
+            $this->page_construct('reports/payment_by_supplier', $meta, $this->data);
+        } else {
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('reports')]];
+            $meta = ['page_title' => lang('reports'), 'bc' => $bc];
+            $this->page_construct('reports/payment_by_supplier', $meta, $this->data);
+        }
+
+    }
+
     public function sales_by_category(){
       
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');

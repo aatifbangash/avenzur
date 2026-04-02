@@ -139,7 +139,7 @@
                                                 <td><?= $data->sale_id; ?></td>
                                                 <td><?= $data->sale_date; ?></td>
                                                 <td><?= number_format($data->grand_total, 2); ?></td>
-                                                <td><?= $data->payment_id; ?></td>
+                                                <td><?= $data->payment_ref_id; ?></td>
                                                 <td><?= number_format($data->paid_amount, 2); ?></td>
                                                 <td><?= $data->collection_date; ?></td>
                                                 <td><?php 
