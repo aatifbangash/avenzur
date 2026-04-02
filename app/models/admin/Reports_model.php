@@ -5503,7 +5503,7 @@ class Reports_model extends CI_Model
                     cm.id AS customer_id,
                     cm.name AS customer_name,
                     cm.sales_agent,
-                    s.paid As paid_amount,
+                    p.amount As paid_amount,
                     p.paid_by,
                     p.return_id,
                     s.date AS sale_date,
@@ -5511,16 +5511,17 @@ class Reports_model extends CI_Model
                     s.grand_total,
                     cm.city as area,
                     pr.transfer_from_ledger,
-                    lg.name as ledger_name
+                    lg.name as ledger_name,
+                    pr.id as payment_ref_id
 
-                FROM sma_sales s
-                LEFT JOIN sma_payments p 
+                FROM sma_payments p
+                LEFT JOIN sma_sales s
                     ON s.id = p.sale_id
 
                 LEFT JOIN sma_companies cm 
                     ON cm.id = s.customer_id
 
-                LEFT JOIN sma_payment_reference pr 
+                INNER JOIN sma_payment_reference pr 
                     ON pr.id = p.payment_id
 
                 LEFT JOIN sma_accounts_ledgers lg
@@ -5621,6 +5622,55 @@ class Reports_model extends CI_Model
             }
         }
 
+        return $data;
+    }
+
+    public function getPaymentsBySupplier($start_date, $end_date, $supplier_id, $warehouse)
+    {
+        $supplierWhere = '';
+        if (!empty($supplier_id)) {
+            $supplierWhere = " AND pr.supplier_id = " . (int)$supplier_id;
+        }
+
+        $warehouseWhere = '';
+        if (!empty($warehouse)) {
+            // Limit to payment references where at least one linked purchase is for this warehouse
+            $warehouseWhere = " AND pr.id IN (
+                SELECT DISTINCT p.payment_id
+                FROM sma_payments p
+                JOIN sma_purchases pu ON pu.id = p.purchase_id
+                WHERE p.purchase_id IS NOT NULL
+                AND pu.warehouse_id = " . (int)$warehouse . "
+            )";
+        }
+
+        $sql = "
+            SELECT
+                DATE(pr.date)                                        AS transaction_date,
+                COUNT(pr.id)                                         AS payment_count,
+                SUM(pr.amount)                                       AS total_amount,
+                SUM(COALESCE(pr.bank_charges, 0))                    AS total_bank_charges,
+                SUM(COALESCE(pr.bank_charge_vat, 0))                 AS total_bank_charge_vat,
+                SUM(pr.amount
+                    - COALESCE(pr.bank_charges, 0)
+                    - COALESCE(pr.bank_charge_vat, 0))               AS net_amount
+            FROM sma_payment_reference pr
+            WHERE pr.supplier_id IS NOT NULL
+              AND DATE(pr.date) >= '" . trim($start_date) . "'
+              AND DATE(pr.date) <= '" . trim($end_date) . "'
+              {$supplierWhere}
+              {$warehouseWhere}
+            GROUP BY DATE(pr.date)
+            ORDER BY DATE(pr.date)
+        ";
+
+        $q    = $this->db->query($sql);
+        $data = [];
+        if ($q->num_rows() > 0) {
+            foreach ($q->result() as $row) {
+                $data[] = $row;
+            }
+        }
         return $data;
     }
 
