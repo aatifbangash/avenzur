@@ -5526,7 +5526,7 @@ class Reports_model extends CI_Model
 
                 LEFT JOIN sma_accounts_ledgers lg
                     ON lg.id = pr.transfer_from_ledger
-                WHERE cm.group_name = 'customer'
+                WHERE cm.group_name = 'customer' AND (pr.added_via IS NULL OR pr.added_via NOT IN ('customer_return_module', 'credit_memo_module'))
                  ".$dateWhere."
                  ".$warehouseWhere."
                     GROUP BY s.id
