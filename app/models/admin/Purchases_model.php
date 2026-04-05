@@ -216,6 +216,21 @@ class Purchases_model extends CI_Model
         $this->db->update('sma_return_supplier_items', ['net_cost' => $net_cost_sales], ['batch_no' => $batch_no, 'product_code' => $item_code]);
     }
 
+    public function getDebitMemoByID($debitmemo_id){
+        $this->db->select('memo.*, companies.company')
+            ->join('companies', 'companies.id=memo.supplier_id', 'left')
+            ->where('memo.id =', $debitmemo_id);
+        $q = $this->db->get('memo');
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function update_debit_memo($debitmemo_id, $amount_used){
+        $this->db->update('sma_memo', ['used_amount' => $amount_used], ['id' => $debitmemo_id]);
+    }
+
     public function update_payment_reference($payment_id, $journal_id)
     {
         $this->db->update('sma_payment_reference', ['journal_id' => $journal_id], ['id' => $payment_id]);
@@ -1115,6 +1130,27 @@ class Purchases_model extends CI_Model
         return false;
     }
 
+    public function update_purchase_paid_amount_new($id, $amount)
+    {
+        $q = $this->db->get_where('purchases', ['id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            $row = $q->row();
+            $paid_amount = $row->paid;
+            $new_amount = $paid_amount + $amount;
+
+            $data = array(
+                'paid' => $amount
+            );
+
+            $this->db->update('purchases', $data, array('id' => $id));
+        }
+        return false;
+    }
+
+    public function update_return_paid($return_id, $return_amount){
+        $this->db->update('sma_returns_supplier', ['paid' => $return_amount], ['id' => $return_id]);
+    }
+
     public function update_purchase_paid_amount($id, $amount)
     {
         $q = $this->db->get_where('purchases', ['id' => $id], 1);
@@ -1211,6 +1247,43 @@ class Purchases_model extends CI_Model
         }
     }
 
+    public function getSupplierInvoicesWithPayments($supplier_id) {
+        $this->db->select('p.id, p.date, p.reference_no, p.supplier_id, p.supplier, p.grand_total, 
+                          COALESCE(SUM(pm.amount), 0) as total_paid,
+                          p.payment_status, p.due_date', false);
+        $this->db->from('purchases p');
+        $this->db->join('payments pm', 'p.id = pm.purchase_id', 'left');
+        $this->db->where('p.supplier_id', $supplier_id);
+        $this->db->where('p.purchase_invoice', 1);
+        $this->db->group_by('p.id');
+        $this->db->order_by('p.date', 'asc');
+        $q = $this->db->get();
+    
+        if ($q->num_rows() > 0) {
+            $invoices = $q->result();
+            
+            // Add calculated fields
+            foreach ($invoices as $key => $invoice) {
+                $invoice->outstanding_amount = round(
+                    round($invoice->grand_total, 2) - round($invoice->total_paid, 2),
+                    2
+                );
+                $invoice->type = 'Purchases Invoice';
+
+                // Remove invoice if outstanding is zero or less
+                if ($invoice->outstanding_amount == 0) {
+                    unset($invoices[$key]);
+                }
+            }
+
+            $invoices = array_values($invoices);
+            //echo '<pre>';print_r($invoices);exit;
+            return $invoices;
+        } else {
+            return [];
+        }
+    }
+
     public function getDebitMemoData($id)
     {
         $this->db->select('sma_memo.*');
@@ -1279,6 +1352,29 @@ class Purchases_model extends CI_Model
         $this->db->order_by('date', 'asc');
         $query = $this->db->get();
         return $query->result_array();
+    }
+
+    public function getSupplierServiceInvoicesForPayment($supplier_id)
+    {
+        $this->db->select('id, date, reference_no, supplier_id, payment_amount, COALESCE(used_amount, 0) as used_amount');
+        $this->db->from('sma_memo');
+        $this->db->where('supplier_id', (int)$supplier_id);
+        $this->db->where('type', 'serviceinvoice');
+        $this->db->where('(payment_amount - COALESCE(used_amount, 0)) > 0', null, false);
+        $this->db->order_by('date', 'asc');
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            $invoices = $q->result();
+            foreach ($invoices as $inv) {
+                $used = (float)$inv->used_amount;
+                $inv->outstanding_amount = round($inv->payment_amount - $used, 5);
+                $inv->grand_total        = $inv->payment_amount;
+                $inv->total_paid         = $used;
+                $inv->type               = 'Service Invoice';
+            }
+            return $invoices;
+        }
+        return [];
     }
 
     public function getPendingInvoicesBySupplier($supplier_id)

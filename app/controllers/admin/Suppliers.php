@@ -2861,6 +2861,19 @@ class Suppliers extends MY_Controller
         echo json_encode($memos);
     }
 
+    public function get_supplier_service_invoices()
+    {
+        $supplier_id = $this->input->get('supplier_id');
+        if (!$supplier_id) {
+            header('Content-Type: application/json');
+            echo json_encode([]);
+            return;
+        }
+        $invoices = $this->purchases_model->getSupplierServiceInvoicesForPayment((int)$supplier_id);
+        header('Content-Type: application/json');
+        echo json_encode($invoices);
+    }
+
     /**
      * Journal entry for new-style supplier invoice payment.
      * Dr  Supplier Payable  = cash_payment + advance_amount
@@ -2985,7 +2998,10 @@ class Suppliers extends MY_Controller
             // Debit-memo selections
             $debit_memo_amounts = $this->input->post('debit_memo_amounts') ?: [];
 
-            if (empty($invoice_ids)) {
+            // Service invoice selections
+            $service_invoice_amounts = $this->input->post('service_invoice_amounts') ?: [];
+
+            if (empty($invoice_ids) && empty($service_invoice_amounts)) {
                 $this->session->set_flashdata('error', 'Please select at least one invoice to settle.');
                 admin_redirect('suppliers/payment_to_supplier_new');
             }
@@ -2994,7 +3010,7 @@ class Suppliers extends MY_Controller
             if ($advance_amount > 0) {
                 $available_advance = $this->getSupplierAdvanceBalance($supplier_id, $supplier_advance_ledger);
                 
-                if ($advance_amount > round($available_advance, 2)) {
+                if ($advance_amount > $available_advance) {
                     $this->session->set_flashdata('error', 'Applied advance amount exceeds available supplier advance balance (' . number_format($available_advance, 2) . ').');
                     admin_redirect('suppliers/payment_to_supplier_new');
                 }
@@ -3032,12 +3048,38 @@ class Suppliers extends MY_Controller
                         admin_redirect('suppliers/payment_to_supplier_new');
                     }
                     $available = $memo->payment_amount - ($memo->used_amount ?? 0);
-                    if ($applied > round($available, 2)) {
+                    if ($applied > $available) {
                         $this->session->set_flashdata('error', 'Applied debit-memo amount exceeds available balance for memo ID: ' . $memo_id);
                         admin_redirect('suppliers/payment_to_supplier_new');
                     }
                     $total_applied_debit_memos += $applied;
                     $debit_memo_details[$memo_id] = [
+                        'used'   => $memo->used_amount ?? 0,
+                        'paying' => $applied,
+                    ];
+                }
+            }
+
+            // Collect service-invoice details
+            $service_invoice_details    = [];
+            $total_service_inv_payments = 0;
+            foreach ($service_invoice_amounts as $memo_id => $applied) {
+                $applied = (float)$applied;
+                
+                if ($applied > 0) {
+                    $memo = $this->purchases_model->getDebitMemoData($memo_id);
+                    if (!$memo) {
+                        $this->session->set_flashdata('error', 'Service invoice not found: ' . $memo_id);
+                        admin_redirect('suppliers/payment_to_supplier_new');
+                    }
+                    $available = $memo->payment_amount - ($memo->used_amount ?? 0);
+                    if ($applied > $available) {
+                        $this->session->set_flashdata('error', 'Applied service invoice amount exceeds outstanding balance for service invoice ID: ' . $memo_id);
+                        admin_redirect('suppliers/payment_to_supplier_new');
+                    }
+                    //echo 'Applied: '.$applied. ' Available: '.$available;exit;
+                    $total_service_inv_payments += $applied;
+                    $service_invoice_details[$memo_id] = [
                         'used'   => $memo->used_amount ?? 0,
                         'paying' => $applied,
                     ];
@@ -3054,8 +3096,9 @@ class Suppliers extends MY_Controller
 
             // Total sources must cover total invoice applied amounts
             $total_sources = $payment_amount + $advance_amount + $total_applied_debit_memos;
-            if (round($total_payments_from_invoices, 2) > round($total_sources, 2)) {
-                $this->session->set_flashdata('error', 'Total payment sources (' . number_format($total_sources, 2) . ') are insufficient to cover the applied invoice amounts (' . number_format($total_payments_from_invoices, 2) . ').');
+            $total_invoices_to_settle = $total_payments_from_invoices + $total_service_inv_payments;
+            if (round($total_invoices_to_settle, 2) > round($total_sources, 2)) {
+                $this->session->set_flashdata('error', 'Total payment sources (' . number_format($total_sources, 2) . ') are insufficient to cover the applied invoice amounts (' . number_format($total_invoices_to_settle, 2) . ').');
                 admin_redirect('suppliers/payment_to_supplier_new');
             }
 
@@ -3089,6 +3132,11 @@ class Suppliers extends MY_Controller
             foreach ($debit_memo_details as $memo_id => $detail) {
                 $this->db->where('id', $memo_id);
                 $this->db->update('sma_memo', ['used_amount' => $detail['used'] + $detail['paying']]);
+            }
+
+            // Update service-invoice used amounts
+            foreach ($service_invoice_details as $memo_id => $detail) {
+                $this->purchases_model->update_service_invoice_used_amount($memo_id, $detail['paying']);
             }
 
             // Create journal entry
