@@ -263,5 +263,18 @@ $(function () {
 
     $(document).on('input change', '.amount-input', updateTotals);
     updateTotals();
+
+    // Normalize voucher_date from dd/mm/yyyy → yyyy-mm-dd before submit
+    // so PHP strtotime() can always parse it correctly.
+    $('#postVoucherForm').on('submit', function () {
+        var dateVal = $.trim($('#voucherDate').val());
+        if (dateVal) {
+            var m = dateVal.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+            if (m) {
+                var iso = m[3] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2);
+                $('#voucherDate').val(iso);
+            }
+        }
+    });
 });
 </script>
