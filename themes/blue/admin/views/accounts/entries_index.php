@@ -176,8 +176,10 @@
                             <td>
                                 <a href="<?= admin_url();?>entries/view/<?= ($entryTypeLabel); ?>/<?= $entry['id']; ?>" class="no-hover" escape="false"><i class="fa fa-log-in"></i><?= lang('entries_views_index_th_actions_view_btn'); ?></a>
                                 <span class="link-pad"></span>
+                                <?php if($Owner || $Admin || $this->GP['jl-entry-edit']){ ?>
                                 <a href="<?= $entryTypeLabel == 'journal' ? admin_url('accounts/jl_entry_edit/' . $entry['id']) : admin_url('entries/edit/' . $entryTypeLabel . '/' . $entry['id']); ?>" class="no-hover" escape="false"><i class="fa fa-edit"></i><?= lang('entries_views_index_th_actions_edit_btn'); ?></a>
                                 <span class="link-pad"></span>
+                                <?php } ?>
                                 <!--<a href="<?= admin_url();?>entries/delete/<?= ($entryTypeLabel); ?>/<?= $entry['id']; ?>" class="no-hover" escape="false"><i class="fa fa-trash"></i><?= lang('entries_views_index_th_actions_delete_btn'); ?></a>-->
                                 
                             </td>
