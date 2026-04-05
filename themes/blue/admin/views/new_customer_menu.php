@@ -715,6 +715,20 @@
                     </ul>
                 </li>
 
+                <?php if($Admin || $Owner) { ?>
+                    <li class="newmenu-item has-sub">
+                        <a href="#" class="newmenu-link">
+                            <i class="fa fa-pencil-square-o"></i>
+                            <span><?= lang('JV Templates'); ?></span>
+                            <i class="fa fa-chevron-right newmenu-chevron"></i>
+                        </a>
+                        <ul class="newmenu-sub">
+                            <li><a href="<?= admin_url('entries/recurring_index'); ?>" class="newmenu-link"><i class="fa fa-pencil-square-o"></i> <?= lang('List JV Templates'); ?></a></li>
+                            <li><a href="<?= admin_url('entries/recurring_add'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('Add JV Template'); ?></a></li>
+                        </ul>
+                    </li>
+                <?php } ?>
+
                 <li class="newmenu-item has-sub">
                     <a href="#" class="newmenu-link">
                         <i class="fa fa-pencil-square-o"></i>
