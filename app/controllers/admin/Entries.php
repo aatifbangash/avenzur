@@ -2197,9 +2197,7 @@ error_reporting(E_ALL);
 			foreach ($debitLines  as $l) { $totalDebit  += (float)($debitAmts[$l['id']]  ?? 0); }
 			foreach ($creditLines as $l) { $totalCredit += (float)($creditAmts[$l['id']] ?? 0); }
 
-			if ($totalDebit == 0 && $totalCredit == 0) {
-				$errors[] = 'Please enter at least one amount.';
-			} elseif (abs($totalDebit - $totalCredit) > 0.005) {
+			if (abs($totalDebit - $totalCredit) > 0.005) {
 				$errors[] = sprintf(
 					'Entry is not balanced. Debit total (%s) must equal Credit total (%s). Difference: %s',
 					number_format($totalDebit, 2),
@@ -2236,7 +2234,6 @@ error_reporting(E_ALL);
 				// Insert debit entry items
 				foreach ($debitLines as $line) {
 					$amt = (float)($debitAmts[$line['id']] ?? 0);
-					if ($amt <= 0) continue;
 					$this->db->insert('sma_accounts_entryitems', [
 						'entry_id'  => $entryId,
 						'dc'        => 'D',
@@ -2249,7 +2246,6 @@ error_reporting(E_ALL);
 				// Insert credit entry items
 				foreach ($creditLines as $line) {
 					$amt = (float)($creditAmts[$line['id']] ?? 0);
-					if ($amt <= 0) continue;
 					$this->db->insert('sma_accounts_entryitems', [
 						'entry_id'  => $entryId,
 						'dc'        => 'C',

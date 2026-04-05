@@ -245,11 +245,7 @@ $(function () {
         var $ind = $('#balanceIndicator');
         var $btn = $('#postBtn');
 
-        if (dr === 0 && cr === 0) {
-            $ind.attr('class', 'balance-bad')
-                .html('<i class="fa fa-exclamation-circle"></i> Enter amounts above  Debit must equal Credit');
-            $btn.prop('disabled', true);
-        } else if (diff < 0.01) {
+        if (diff < 0.01) {
             $ind.attr('class', 'balance-ok')
                 .html('<i class="fa fa-check-circle"></i> Balanced  Total: ' + dr.toFixed(2));
             $btn.prop('disabled', false);
