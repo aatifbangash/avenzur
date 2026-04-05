@@ -2179,7 +2179,12 @@ error_reporting(E_ALL);
 		$errors = [];
 
 		if ($this->input->post()) {
-			$voucherDate  = $this->functionscore->dateToSql($this->input->post('voucher_date'));
+			$_rawDate     = $this->input->post('voucher_date');
+			$voucherDate  = $this->functionscore->dateToSql($_rawDate);
+			// Fallback: handle dd/mm/yyyy format which strtotime() cannot parse
+			if (!$voucherDate && preg_match('#^(\d{1,2})/(\d{1,2})/(\d{4})$#', $_rawDate, $_dm)) {
+				$voucherDate = $_dm[3] . '-' . str_pad($_dm[2], 2, '0', STR_PAD_LEFT) . '-' . str_pad($_dm[1], 2, '0', STR_PAD_LEFT);
+			}
 			$voucherMonth = trim($this->input->post('voucher_month'));
 			$narration    = trim($this->input->post('narration')) ?: ($schedule['narration'] ?: $schedule['name']);
 			$debitAmts    = $this->input->post('debit_amount')  ?: [];  // [line_id => amount]
