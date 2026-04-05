@@ -984,6 +984,7 @@ class Returns_supplier extends MY_Controller
             $this->db->insert('sma_accounts_entryitems', $itemdata['Entryitem']);
         }
 
+        return $insert_id;
     }
 
     public function delete($id = null)
@@ -1312,7 +1313,13 @@ class Returns_supplier extends MY_Controller
 
             //$this->returns_supplier_model->convert_return_invoice($return_insert_id, $products);
             if($data['status'] == 'completed'){
-                $this->convert_return_invoice($id);
+                $journal_id = $this->convert_return_invoice($id);
+                /*$this->settle_return_against_oldest_invoices(
+                    $id,
+                    (int) $data['supplier_id'],
+                    (float) $data['grand_total'],
+                    $journal_id
+                );*/
                 //$this->payment_receive_from_supplier($returns);
             }
 
@@ -1390,8 +1397,112 @@ class Returns_supplier extends MY_Controller
         }
     }
 
+    public function add_supplier_reference($amount, $reference_no, $date, $note, $supplier_id, $ledger_account){
+        $payment_reference = [
+            'supplier_id' => $supplier_id,
+            'date' => $date,
+            'sequence_code' => $this->sequenceCode->generate('PAY', 5),
+            'note' => $note,
+            'reference_no'  => $reference_no,
+            'amount' => $amount,
+            'transfer_from_ledger' => $ledger_account,
+            'created_by'    => $this->session->userdata('user_id'),
+            'added_via' => 'supplier_return_module'
+        ];
+
+        $payment_id = $this->sales_model->addPaymentReference($payment_reference);
+        return $payment_id;
+    }
+
+    private function settle_return_against_oldest_invoices($return_id, $supplier_id, $amount, $journal_id = null)
+    {
+        $return_id = (int) $return_id;
+        $supplier_id = (int) $supplier_id;
+        $remaining_amount = (float) $amount;
+
+        if ($return_id <= 0 || $supplier_id <= 0 || $remaining_amount <= 0) {
+            return false;
+        }
+
+        $pending_invoices = $this->purchases_model->getSupplierInvoicesWithPayments($supplier_id);
+        if (empty($pending_invoices)) {
+            return false;
+        }
+
+        $total_outstanding = 0;
+        foreach ($pending_invoices as $invoice) {
+            $invoice_outstanding = isset($invoice->outstanding_amount)
+                ? (float) $invoice->outstanding_amount
+                : ((float) $invoice->grand_total - (float) $invoice->total_paid);
+            if ($invoice_outstanding > 0) {
+                $total_outstanding += $invoice_outstanding;
+            }
+        }
+
+        $allocatable_amount = min($remaining_amount, $total_outstanding);
+        if ($allocatable_amount <= 0) {
+            return false;
+        }
+
+        $remaining_amount = $allocatable_amount;
+
+        $payment_reference_id = $this->add_supplier_reference(
+            $allocatable_amount,
+            $return_id,
+            date('Y-m-d H:i:s'),
+            'Return settlement against outstanding invoices',
+            $supplier_id,
+            null
+        );
+
+        $total_applied = 0;
+        foreach ($pending_invoices as $invoice) {
+            if ($remaining_amount <= 0) {
+                break;
+            }
+
+            $outstanding = isset($invoice->outstanding_amount)
+                ? (float) $invoice->outstanding_amount
+                : ((float) $invoice->grand_total - (float) $invoice->total_paid);
+
+            if ($outstanding <= 0) {
+                continue;
+            }
+
+            $apply_amount = min($remaining_amount, $outstanding);
+
+            $payment = [
+                'date'          => date('Y-m-d H:i:s'),
+                'purchase_id'       => (int) $invoice->id,
+                'supplier_return_id'     => $return_id,
+                'reference_no'  => '',
+                'amount'        => $apply_amount,
+                'note'          => 'Auto-settled to supplier return #' . $return_id,
+                'created_by'    => $this->session->userdata('user_id'),
+                'paid_by'       => 'return',
+                'type'          => 'received',
+                'supplier_id'   => $supplier_id,
+                'payment_id'    => $payment_reference_id,
+            ];
+
+            $this->purchases_model->addPayment($payment);
+            $this->purchases_model->update_purchase_paid_amount_new((int) $invoice->id, ((float) $invoice->total_paid + $apply_amount));
+            
+
+            $remaining_amount -= $apply_amount;
+            $total_applied += $apply_amount;
+        }
+
+        if ($payment_reference_id) {
+            $this->purchases_model->update_payment_reference($payment_reference_id, $journal_id);
+            $this->purchases_model->update_return_paid($return_id, $remaining_amount);
+        }
+
+        return $total_applied > 0;
+    }
+
     public function generatePDF($warehouse_id = null) 
-   {
+    {
        // $warehouse_id = null
        require_once APPPATH.'third_party/tcpdf/tcpdf.php'; // Load TCPDF library 
 		// Create a new TCPDF instance

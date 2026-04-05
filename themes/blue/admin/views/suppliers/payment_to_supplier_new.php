@@ -33,6 +33,29 @@
     font-size: 12px !important;
     vertical-align: middle !important;
 }
+#serviceinvoice-table td, #serviceinvoice-table th {
+    padding: 3px 6px !important;
+    line-height: 1.1 !important;
+    vertical-align: middle !important;
+    font-size: 12px !important;
+}
+#serviceinvoice-table tbody tr {
+    height: 28px !important;
+}
+#serviceinvoice-table input[type="checkbox"] {
+    margin: 0 !important;
+    transform: scale(0.8);
+}
+#serviceinvoice-table thead th {
+    font-size: 11px !important;
+    font-weight: bold !important;
+    padding: 4px 6px !important;
+}
+#serviceinvoice-table tfoot td {
+    padding: 3px 6px !important;
+    font-size: 12px !important;
+    vertical-align: middle !important;
+}
 </style>
 <script>
 $(document).ready(function () {
@@ -76,6 +99,7 @@ $(document).ready(function () {
 
         loadSupplierInvoices(supplier_id);
         loadSupplierDebitMemos(supplier_id);
+        loadSupplierServiceInvoices(supplier_id);
     });
 
     // ── Load invoices ────────────────────────────────────────────────
@@ -189,6 +213,63 @@ $(document).ready(function () {
         $('#dm-total-applied').text('0.00000');
     }
 
+    // ── Load service invoices ────────────────────────────────────────
+    function loadSupplierServiceInvoices(supplier_id) {
+        $.ajax({
+            url: '<?= admin_url('suppliers/get_supplier_service_invoices') ?>',
+            type: 'GET',
+            data: { supplier_id: supplier_id },
+            dataType: 'json',
+            success: function (invoices) {
+                displayServiceInvoices(invoices);
+            },
+            error: function () {
+                $('#serviceinvoice-section').hide();
+            }
+        });
+    }
+
+    function displayServiceInvoices(invoices) {
+        var tbody = $('#serviceinvoice-table tbody');
+        tbody.empty();
+        $('#select-all-serviceinvoices').prop('checked', false);
+
+        var totalAmt = 0, totalPaid = 0, totalOut = 0;
+
+        if (invoices.length > 0) {
+            $.each(invoices, function (i, inv) {
+                var outstanding = parseFloat(inv.outstanding_amount);
+                totalAmt  += parseFloat(inv.grand_total);
+                totalPaid += parseFloat(inv.total_paid);
+                totalOut  += outstanding;
+
+                var row = '<tr>' +
+                    '<td><input type="checkbox" class="serviceinvoice-checkbox" name="service_invoice_ids[]" value="' + inv.id + '" data-amount="' + outstanding + '"></td>' +
+                    '<td>' + inv.date + '</td>' +
+                    '<td>' + inv.reference_no + '</td>' +
+                    '<td>' + inv.type + '</td>' +
+                    '<td class="text-right">' + parseFloat(inv.grand_total).toFixed(5) + '</td>' +
+                    '<td class="text-right">' + parseFloat(inv.total_paid).toFixed(5) + '</td>' +
+                    '<td class="text-right">' + outstanding.toFixed(5) + '</td>' +
+                    '<td class="text-right">' +
+                        '<span id="si-amount-display-' + inv.id + '">0.00000</span>' +
+                        '<input type="hidden" name="service_invoice_amounts[' + inv.id + ']" id="si-amount-' + inv.id + '" value="0.00000">' +
+                    '</td>' +
+                    '</tr>';
+                tbody.append(row);
+            });
+            $('#serviceinvoice-section').show();
+        } else {
+            tbody.append('<tr><td colspan="8" class="text-center">No pending service invoices for this supplier</td></tr>');
+            $('#serviceinvoice-section').show();
+        }
+
+        $('#si-total-amount').text(totalAmt.toFixed(5));
+        $('#si-total-paid').text(totalPaid.toFixed(5));
+        $('#si-total-outstanding').text(totalOut.toFixed(5));
+        $('#si-total-payment').text('0.00000');
+    }
+
     // ── Invoice checkbox ─────────────────────────────────────────────
     $(document).on('change', '.invoice-checkbox', function () {
         if (!$(this).is(':checked')) {
@@ -196,6 +277,7 @@ $(document).ready(function () {
             $('#inv-amount-' + invId).val('0.00000');
             $('#inv-amount-display-' + invId).text('0.00000');
         }
+        syncPaymentAmount();
         recalculate();
     });
 
@@ -211,6 +293,7 @@ $(document).ready(function () {
             $('#dm-amount-' + memoId).val('0.00000');
             $('#dm-amount-display-' + memoId).text('0.00000');
         }
+        syncPaymentAmount();
         recalculate();
     });
 
@@ -218,6 +301,39 @@ $(document).ready(function () {
     $(document).on('change', '#select-all-debitmemos', function () {
         $('.debitmemo-checkbox').prop('checked', $(this).is(':checked')).trigger('change');
     });
+
+    // ── Service invoice checkbox ────────────────────────────────────
+    $(document).on('change', '.serviceinvoice-checkbox', function () {
+        if (!$(this).is(':checked')) {
+            var siId = $(this).val();
+            $('#si-amount-' + siId).val('0.00000');
+            $('#si-amount-display-' + siId).text('0.00000');
+        }
+        syncPaymentAmount();
+        recalculate();
+    });
+
+    // Select all service invoices
+    $(document).on('change', '#select-all-serviceinvoices', function () {
+        $('.serviceinvoice-checkbox').prop('checked', $(this).is(':checked')).trigger('change');
+    });
+
+    // ── Sync payment_amount to cover all checked invoices ────────────
+    // Called whenever any invoice / service-invoice / debit-memo checkbox changes.
+    // Sets payment_amount = total checked outstanding − debit-memo coverage,
+    // so the greedy distribution in recalculate() always has budget to work with.
+    function syncPaymentAmount() {
+        var totalChecked = 0;
+        $('.invoice-checkbox:checked, .serviceinvoice-checkbox:checked').each(function () {
+            totalChecked += parseFloat($(this).data('amount')) || 0;
+        });
+        var totalDMCoverage = 0;
+        $('.debitmemo-checkbox:checked').each(function () {
+            totalDMCoverage += parseFloat($(this).data('amount')) || 0;
+        });
+        var needed = Math.max(0, totalChecked - totalDMCoverage);
+        $('#payment_amount').val(needed.toFixed(5));
+    }
 
     // ── Advance checkbox toggle ──────────────────────────────────────
     $(document).on('change', '#use-advance', function () {
@@ -263,24 +379,38 @@ $(document).ready(function () {
         $('#dm-total-applied').text(totalDMApplied.toFixed(5));
 
         var totalSources = cashPayment + advanceApplied + totalDMApplied;
-        var budgetLeft   = totalSources;
+        var budgetLeft      = totalSources;
         var totalInvApplied = 0;
+        var totalSIPayment  = 0;
 
-        // Greedy distribution: fill each checked invoice up to its outstanding; stop when budget exhausted
-        $('.invoice-checkbox').each(function () {
-            var invId       = $(this).val();
-            var outstanding = parseFloat($(this).data('amount')) || 0;
+        // Greedy distribution: fill each checked invoice (regular + service) up to its outstanding; stop when budget exhausted
+        $('.invoice-checkbox, .serviceinvoice-checkbox').each(function () {
+            var id           = $(this).val();
+            var isServiceInv = $(this).hasClass('serviceinvoice-checkbox');
+            var outstanding  = parseFloat($(this).data('amount')) || 0;
             if ($(this).is(':checked')) {
                 var apply = Math.min(outstanding, budgetLeft);
                 budgetLeft      -= apply;
                 totalInvApplied += apply;
-                $('#inv-amount-' + invId).val(apply.toFixed(5));
-                $('#inv-amount-display-' + invId).text(apply.toFixed(5));
+                if (isServiceInv) {
+                    totalSIPayment += apply;
+                    $('#si-amount-' + id).val(apply.toFixed(5));
+                    $('#si-amount-display-' + id).text(apply.toFixed(5));
+                } else {
+                    $('#inv-amount-' + id).val(apply.toFixed(5));
+                    $('#inv-amount-display-' + id).text(apply.toFixed(5));
+                }
             } else {
-                $('#inv-amount-' + invId).val('0.00000');
-                $('#inv-amount-display-' + invId).text('0.00000');
+                if (isServiceInv) {
+                    $('#si-amount-' + id).val('0.00000');
+                    $('#si-amount-display-' + id).text('0.00000');
+                } else {
+                    $('#inv-amount-' + id).val('0.00000');
+                    $('#inv-amount-display-' + id).text('0.00000');
+                }
             }
         });
+        $('#si-total-payment').text(totalSIPayment.toFixed(5));
 
         // diff < 0: excess cash (sources > invoices applied) — orange
         // diff > 0: impossible with greedy fill, but guard anyway
@@ -307,10 +437,13 @@ $(document).ready(function () {
     function resetAll() {
         $('#invoices-table tbody').empty();
         $('#debitmemo-table tbody').empty();
+        $('#serviceinvoice-table tbody').empty();
         $('#invoices-section').hide();
         $('#debitmemo-section').hide();
+        $('#serviceinvoice-section').hide();
         $('#inv-total-grand, #inv-total-paid, #inv-total-outstanding').text('0.00000');
         $('#dm-total-amount, #dm-total-used, #dm-total-available, #dm-total-applied').text('0.00000');
+        $('#si-total-amount, #si-total-paid, #si-total-outstanding, #si-total-payment').text('0.00000');
         $('#summary-inv-applied, #summary-cash, #summary-dm-applied, #summary-advance, #summary-remaining').text('0.00000');
         $('#payment_amount').val('0.00000');
         $('#use-advance').prop('checked', false);
@@ -494,6 +627,43 @@ $(document).ready(function () {
                                             <td class="text-right" id="dm-total-used">0.00</td>
                                             <td class="text-right" id="dm-total-available">0.00</td>
                                             <td class="text-right" id="dm-total-applied">0.00</td>
+                                        </tr>
+                                    </tfoot>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service Invoices Section -->
+                <div id="serviceinvoice-section" style="display:none; margin-top:15px;">
+                    <div class="box box-info">
+                        <div class="box-header with-border">
+                            <h3 class="box-title"><i class="fa fa-file-text-o"></i> Pending Service Invoices</h3>
+                        </div>
+                        <div class="box-body">
+                            <div class="table-responsive">
+                                <table id="serviceinvoice-table" class="table table-striped table-bordered table-hover">
+                                    <thead style="background:#d1ecf1;">
+                                        <tr>
+                                            <th width="4%"><input type="checkbox" id="select-all-serviceinvoices"></th>
+                                            <th>Date</th>
+                                            <th>Reference No</th>
+                                            <th>Type</th>
+                                            <th class="text-right">Total Amount</th>
+                                            <th class="text-right">Paid Amount</th>
+                                            <th class="text-right">Outstanding</th>
+                                            <th class="text-right">Apply Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tfoot style="background:#bee5eb; font-weight:bold;">
+                                        <tr>
+                                            <td colspan="4"><strong>Totals</strong></td>
+                                            <td class="text-right" id="si-total-amount">0.00</td>
+                                            <td class="text-right" id="si-total-paid">0.00</td>
+                                            <td class="text-right" id="si-total-outstanding">0.00</td>
+                                            <td class="text-right" id="si-total-payment">0.00</td>
                                         </tr>
                                     </tfoot>
                                     <tbody></tbody>
