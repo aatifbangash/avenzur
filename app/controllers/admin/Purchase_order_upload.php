@@ -145,7 +145,6 @@ class Purchase_order_upload extends MY_Controller
                 }
             }
 
-
             // prefer cost price, fallback to purchase price
             $final_cost_price = $cost_price > 0 ? $cost_price : $purchase_price;
 
@@ -181,6 +180,23 @@ class Purchase_order_upload extends MY_Controller
                 $errors[] = 'Sale price is required';
             }
 
+            // expiry rule check via sma_expiry_category_rules
+            $expiry_rule = $this->pou->getExpiryRule($item_barcode);
+
+            if ($expiry_rule !== null) {
+                if ($expiry_rule['require_batch_number'] && empty($batch_number)) {
+                    $errors[] = 'Batch number is required for this product';
+                }
+                if (empty($expiry_date)) {
+                    $errors[] = 'Expiry date is required for this product';
+                } else {
+                    $months = $expiry_rule['months'];
+                    $min_expiry = (new DateTime(date('Y-m-d')))->modify("+{$months} months");
+                    if (new DateTime($expiry_date) < $min_expiry) {
+                        $errors[] = "Product expiry must be at least {$months} months from today (minimum: " . $min_expiry->format('Y-m-d') . ')';
+                    }
+                }
+            }
 
             if (!empty($errors)) {
                 $has_errors = true;
@@ -256,30 +272,13 @@ class Purchase_order_upload extends MY_Controller
             'payload' => $payload,
             'file'    => $path,
         ];
-//         $json_string = json_encode($temp_data);
 
-// echo '<pre>';
-// print_r([
-//     'token' => $token,
-//     'json_file' => $json_file,
-//     'rows_count' => count($parsed_rows),
-//     'payload_keys' => array_keys($payload),
-//     'json_encode_success' => $json_string !== false,
-//     'json_error' => json_last_error_msg(),
-//     'json_length' => $json_string ? strlen($json_string) : 0,
-// ]);
-// echo '</pre>';
-// exit;
         // save json
         $json_string = json_encode($temp_data, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
         file_put_contents($json_file, $json_string);
 
         // store only token in session (very small data)
         $this->session->set_userdata('po_upload_token', $token);
-        
-        // $this->session->set_userdata('po_upload_rows', $parsed_rows);
-        // $this->session->set_userdata('po_upload_payload', $payload);
-        // $this->session->set_userdata('po_upload_file', $path);
         
         admin_redirect('purchase_order_upload/review');
     }
