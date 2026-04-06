@@ -1696,17 +1696,9 @@ function add_purchase_item(item) {
 		}
 		poitems[item_id].row.qty = new_qty;
 	} else {
-		var foundItem = findMatchingPoItem(item, poitems);
-		if (foundItem) {
-			// if (isBatchNoEmpty(foundItem.item_id, poitems)) {
-			// 	bootbox.alert("No batch number entered for the same product");
-			// } else {
-			// 	poitems[item_id] = item;
-			// }
-		} else {
-			poitems[item_id] = item;
-		}
+		poitems[item_id] = item;
 	}
+	if (!poitems[item_id]) return;
 	poitems[item_id].order = new Date().getTime();
 	localStorage.setItem("poitems", JSON.stringify(poitems));
 	loadItems();

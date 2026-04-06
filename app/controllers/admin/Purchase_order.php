@@ -1376,7 +1376,6 @@ class Purchase_order extends MY_Controller
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $inv = $this->purchase_order_model->getPurchaseByID($purchase_id);
-        //print_r($inv);exit;
 
         $this->data['barcode']     = "<img src='" . admin_url('products/gen_barcode/' . $inv->reference_no) . "' alt='" . $inv->reference_no . "' class='pull-left' />";
         $supplier    = $this->site->getCompanyByID($inv->supplier_id);
@@ -1386,7 +1385,6 @@ class Purchase_order extends MY_Controller
 
         $this->data['inv']         = $inv;
         $this->data['rows'] = $this->purchase_order_model->getAllPurchaseItems($purchase_id);
-        //echo '<pre>';print_r($this->data['supplier']);exit;
 
         $name = lang('purchase_order') . '_' . str_replace('/', '_', $inv->reference_no) . '.pdf';
         $html = $this->load->view($this->theme . 'purchase_order/pdf/purchase_order', $this->data, true);
@@ -1422,7 +1420,24 @@ class Purchase_order extends MY_Controller
         } else {
             $customer_gln_text = '';
         }
+        $total = 0;
+        $total_discount = 0;
+        $net_before_vat = 0;
+        $total_vat = 0;
+        $total_after_vat = 0;
 
+        foreach ($this->data['rows'] as $row) {
+            $row_total_before_vat = (float) $row->totalbeforevat;
+            $row_vat = ((int) $row->tax_rate_id === 5) ? round($row_total_before_vat * 0.15, 2) : 0;
+            $row_total_after_vat = $row_total_before_vat + $row_vat;
+
+            $total += $row_total_before_vat;
+            $net_before_vat += $row_total_before_vat;
+            $total_vat += $row_vat;
+            $total_after_vat += $row_total_after_vat;
+        }
+
+        $total_discount = 0;
 
         $mpdf = new Mpdf([
             'format' => 'A4',
@@ -1526,11 +1541,11 @@ class Purchase_order extends MY_Controller
         <!-- Totals Table -->
         <div style="width:35%; float:right; text-align:left; margin-bottom:15px;">
             <table border="1" cellpadding="4" cellspacing="0" width="100%" style="border-collapse:collapse;">
-                <tr><td>Total</td><td>' . $this->sma->formatNumber($inv->total) . '</td></tr>
-                <tr><td>T-DISC</td><td>' . $this->sma->formatNumber($inv->total_discount) . '</td></tr>
-                <tr><td>Net Before VAT</td><td>' . $this->sma->formatNumber($inv->total_net_purchase) . '</td></tr>
-                <tr><td>Total VAT</td><td>' . $this->sma->formatNumber($inv->total_tax) . '</td></tr>
-                <tr><td><strong>Total After VAT</strong></td><td><strong>' . $this->sma->formatNumber($inv->grand_total) . '</strong></td></tr>
+                <tr><td>Total</td><td>' . $this->sma->formatNumber($total) . '</td></tr>
+                <tr><td>T-DISC</td><td>' . $this->sma->formatNumber($total_discount) . '</td></tr>
+                <tr><td>Net Before VAT</td><td>' . $this->sma->formatNumber($net_before_vat) . '</td></tr>
+                <tr><td>Total VAT</td><td>' .$this->sma->formatNumber($total_vat) . '</td></tr>
+                <tr><td><strong>Total After VAT</strong></td><td><strong>' .$this->sma->formatNumber($total_after_vat) . '</strong></td></tr>
             </table>
         </div>
 
