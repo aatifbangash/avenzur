@@ -44,7 +44,7 @@ class Customers extends MY_Controller
         }
     }
 
-    public function convert_customer_payment_multiple_invoice_new($customer_id, $ledger_account, $payment_amount, $reference_no, $type, $total_additional_discount, $customer_discount_ledger, $date, $customer_advance_ledger, $advance_amount){
+    public function convert_customer_payment_multiple_invoice_new($customer_id, $ledger_account, $payment_amount, $reference_no, $type, $total_additional_discount, $customer_discount_ledger, $date, $customer_advance_ledger, $advance_amount, $excess_to_advance = 0){
         $this->load->admin_model('companies_model');
         $customer = $this->companies_model->getCompanyByID($customer_id);
 
@@ -73,16 +73,29 @@ class Customers extends MY_Controller
         $add  = $this->db->insert('sma_accounts_entries', $entry);
         $insert_id = $this->db->insert_id();
 
-        //customer - Credit to reduce receivable
+        //customer - Credit to reduce receivable (invoice portion only; excess is posted to advance)
         $entryitemdata[] = array(
             'Entryitem' => array(
                 'entry_id' => $insert_id,
                 'dc' => 'C',
                 'ledger_id' => $customer->ledger_account,
-                'amount' => $receiveable_amount,
+                'amount' => $receiveable_amount - $excess_to_advance,
                 'narration' => 'Account Receivable'
             )
         );
+
+        if ($excess_to_advance > 0) {
+            // Credit advance ledger — excess payment becomes customer advance (liability)
+            $entryitemdata[] = array(
+                'Entryitem' => array(
+                    'entry_id' => $insert_id,
+                    'dc' => 'C',
+                    'ledger_id' => $customer_advance_ledger,
+                    'amount' => $excess_to_advance,
+                    'narration' => 'Excess payment posted to customer advance'
+                )
+            );
+        }
 
         if($advance_amount > 0){
             $entryitemdata[] = array(
@@ -375,7 +388,7 @@ class Customers extends MY_Controller
                     'remaining_limit' => $remaining_limit,
                     'available_advance' => $available_advance,
                     'payment_term' => $customer->payment_term ?? '',
-                    'customer_name' => $customer->company != '-' ? $customer->company : $customer->name
+                    'customer_name' => $customer->name != '-' ? $customer->name : $customer->company
                 );
             }
         }
@@ -422,6 +435,16 @@ class Customers extends MY_Controller
             $response = $creditmemos;
         }
         
+        header('Content-Type: application/json');
+        echo json_encode($response);
+    }
+
+    public function get_customer_service_invoices(){
+        $customer_id = isset($_GET['customer_id']) ? (int) $_GET['customer_id'] : 0;
+        $response = array();
+        if ($customer_id) {
+            $response = $this->sales_model->getCustomerServiceInvoicesForPayment($customer_id);
+        }
         header('Content-Type: application/json');
         echo json_encode($response);
     }
@@ -640,7 +663,64 @@ class Customers extends MY_Controller
         $data = [];
         $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Customer Payments')]];
         $meta = ['page_title' => lang('Customer Payments'), 'bc' => $bc];
-        $this->data['payments'] = $this->sales_model->getPaymentReferences();
+
+        // Build filters from GET or POST
+        $filters = [
+            'customer_id' => $this->input->get('customer_id') ?: $this->input->post('customer_id'),
+            'from_date'   => $this->input->get('from_date')   ?: $this->input->post('from_date'),
+            'to_date'     => $this->input->get('to_date')     ?: $this->input->post('to_date'),
+        ];
+        // Convert display date (d/m/Y) to Y-m-d for the query
+        foreach (['from_date', 'to_date'] as $f) {
+            if (!empty($filters[$f])) {
+                $d = DateTime::createFromFormat('d/m/Y', $filters[$f]);
+                if ($d) { $filters[$f] = $d->format('Y-m-d'); }
+            }
+        }
+
+        $this->data['payments']  = $this->sales_model->getPaymentReferences($filters);
+        $this->data['customers'] = $this->site->getAllCompanies('customer');
+        $this->data['filters']   = $filters;
+
+        // Export to Excel
+        if ($this->input->get('export_excel') || $this->input->post('export_excel')) {
+            $payments = $this->data['payments'];
+            $this->load->library('excel');
+            $sheet = $this->excel->setActiveSheetIndex(0);
+            $sheet->setTitle('Customer Payments');
+
+            $sheet->SetCellValue('A1', '#');
+            $sheet->SetCellValue('B1', 'Reference No.');
+            $sheet->SetCellValue('C1', 'Customer');
+            $sheet->SetCellValue('D1', 'Category');
+            $sheet->SetCellValue('E1', 'Date');
+            $sheet->SetCellValue('F1', 'Payment Amount');
+            $sheet->SetCellValue('G1', 'Note');
+
+            $row = 2;
+            $count = 1;
+            foreach ($payments as $payment) {
+                $sheet->SetCellValue('A' . $row, $count++);
+                $sheet->SetCellValue('B' . $row, $payment->reference_no);
+                $sheet->SetCellValue('C' . $row, $payment->company);
+                $sheet->SetCellValue('D' . $row, $payment->customer_group);
+                $sheet->SetCellValue('E' . $row, $payment->date);
+                $sheet->SetCellValue('F' . $row, $payment->amount);
+                $sheet->SetCellValue('G' . $row, $payment->note);
+                $row++;
+            }
+
+            foreach (['A'=>5,'B'=>20,'C'=>25,'D'=>20,'E'=>15,'F'=>18,'G'=>30] as $c => $w) {
+                $sheet->getColumnDimension($c)->setWidth($w);
+            }
+
+            $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+            $filename = 'Customer_Payments_' . date('Y-m-d_H_i_s');
+            $this->load->helper('excel');
+            create_excel($this->excel, $filename);
+            return;
+        }
+
         $this->page_construct('customers/list_payments', $meta, $this->data);
     }
 
@@ -1483,6 +1563,7 @@ class Customers extends MY_Controller
             }
 
             $payment_amount = $this->input->post('payment_amount') ? (float)$this->input->post('payment_amount') : 0;
+            $excess_to_advance = $this->input->post('excess_to_advance') ? round((float)$this->input->post('excess_to_advance'), 4) : 0;
 
             if($payment_amount > 0 && !$ledger_account) {
                 $this->session->set_flashdata('error', 'Please select a ledger account for the payment.');
@@ -1495,7 +1576,10 @@ class Customers extends MY_Controller
                                      ? $this->Settings->customer_advance_ledger 
                                      : null;
 
-            // Convert date format
+            if ($excess_to_advance > 0 && !$customer_advance_ledger) {
+                $this->session->set_flashdata('error', 'Customer advance ledger is not configured in Settings. Cannot post excess payment to advance.');
+                admin_redirect('customers/payment_from_customer_new');
+            }
             $formattedDate = DateTime::createFromFormat('d/m/Y', $date);
             //echo '<pre>';print_r($formattedDate);exit;
             if ($formattedDate !== false) {
@@ -1514,8 +1598,9 @@ class Customers extends MY_Controller
             $return_amounts = $this->input->post('return_amounts');   // Array of used amounts
             $creditmemo_amounts = $this->input->post('creditmemo_amounts'); // Array of applied amounts
             $advance_amounts = $this->input->post('advance_amounts'); // Array of applied amounts
+            $service_invoice_amounts = $this->input->post('service_invoice_amounts') ?: []; // Service invoices from sma_memo
 
-            if (empty($invoice_ids) && empty($return_ids) && empty($creditmemo_ids) && empty($advance_ids)) {
+            if (empty($invoice_ids) && empty($return_ids) && empty($creditmemo_ids) && empty($advance_ids) && empty($service_invoice_amounts)) {
                 $this->session->set_flashdata('error', 'Please select at least one invoice, return, credit memo, or advance');
                 admin_redirect('customers/payment_from_customer_new');
             }
@@ -1603,6 +1688,34 @@ class Customers extends MY_Controller
                     }else{
                         $this->session->set_flashdata('error', 'Credit memo not found for ID: ' . $creditmemo_id);
                         admin_redirect('customers/payment_from_customer_new');
+                    }
+                }
+            }
+
+            // Process service invoices (sma_memo type=serviceinvoice)
+            $service_invoice_details = [];
+            $total_applied_service_invoices = 0;
+            if (!empty($service_invoice_amounts)) {
+                foreach ($service_invoice_amounts as $memo_id => $applied_amount) {
+                    $applied_amount = (float) $applied_amount;
+                    if ($applied_amount > 0) {
+                        $memo = $this->sales_model->getServiceInvoiceByID($memo_id);
+                        if ($memo) {
+                            $available = (float) $memo->payment_amount - (float) ($memo->used_amount ?? 0);
+                            if ($applied_amount > $available + 0.001) {
+                                $this->session->set_flashdata('error', 'Applied service invoice amount exceeds outstanding amount for service invoice ID: ' . $memo_id);
+                                admin_redirect('customers/payment_from_customer_new');
+                            }
+                            $service_invoice_details[$memo_id] = [
+                                'used'   => (float) ($memo->used_amount ?? 0),
+                                'paying' => $applied_amount,
+                            ];
+                            $total_payments_from_invoices   += $applied_amount;
+                            $total_applied_service_invoices += $applied_amount;
+                        } else {
+                            $this->session->set_flashdata('error', 'Service invoice not found for ID: ' . $memo_id);
+                            admin_redirect('customers/payment_from_customer_new');
+                        }
                     }
                 }
             }
@@ -1697,8 +1810,14 @@ class Customers extends MY_Controller
             foreach ($creditmemo_details as $creditmemo_id => $creditmemo_detail) {
                 $this->sales_model->update_credit_memo($creditmemo_id, ($creditmemo_detail['used'] + $creditmemo_detail['paying']));
             }
+
+            // Update used_amount for service invoices in sma_memo
+            foreach ($service_invoice_details as $memo_id => $detail) {
+                $this->sales_model->update_credit_memo($memo_id, ($detail['used'] + $detail['paying']));
+            }
+
             // Create accounting entry
-            $journal_id = $this->convert_customer_payment_multiple_invoice_new($customer_id, $ledger_account, $total_payment, $reference_no, 'customerpayment', 0, null, $date, $customer_advance_ledger, $applied_advance);
+            $journal_id = $this->convert_customer_payment_multiple_invoice_new($customer_id, $ledger_account, $total_payment, $reference_no, 'customerpayment', 0, null, $date, $customer_advance_ledger, $applied_advance, $excess_to_advance);
 
             $this->sales_model->update_payment_reference($payment_id, $journal_id);
 

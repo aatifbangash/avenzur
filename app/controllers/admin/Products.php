@@ -1467,6 +1467,23 @@ class Products extends MY_Controller
         }
     }
 
+    public function add_supplier_reference($amount, $reference_no, $date, $note, $supplier_id, $ledger_account){
+        $payment_reference = [
+            'supplier_id' => $supplier_id,
+            'date' => $date,
+            'sequence_code' => $this->sequenceCode->generate('PAY', 5),
+            'note' => $note,
+            'reference_no'  => $reference_no,
+            'amount' => $amount,
+            'transfer_from_ledger' => $ledger_account,
+            'created_by'    => $this->session->userdata('user_id'),
+            'added_via' => 'auto_script'
+        ];
+
+        $payment_id = $this->sales_model->addPaymentReference($payment_reference);
+        return $payment_id;
+    }
+
     public function add_customer_reference($amount, $reference_no, $date, $note, $customer_id, $ledger_account){
         $payment_reference = [
             'customer_id' => $customer_id,
@@ -1482,6 +1499,368 @@ class Products extends MY_Controller
 
         $payment_id = $this->sales_model->addPaymentReference($payment_reference);
         return $payment_id;
+    }
+
+    public function record_ecommerce_purchases_accounting(){
+        $sql = "
+            SELECT 
+                p.po_id,
+                psi.product_code,
+                SUM(psi.qty) AS shelved_quantity,
+                po.supplier_id,
+                poi.net_unit_cost,
+                SUM(psi.qty) * COALESCE(poi.net_unit_cost, 0) AS total_cost
+            FROM sma_purchase_order_shelving p
+            INNER JOIN sma_purchase_orders po 
+                ON p.po_id = po.id
+            INNER JOIN sma_purchase_order_shelving_items psi 
+                ON p.id = psi.shelving_id
+
+            LEFT JOIN (
+                SELECT 
+                    purchase_id,
+                    TRIM(LEADING '0' FROM product_code) AS product_code,
+                    MAX(net_unit_cost) AS net_unit_cost
+                FROM sma_purchase_order_items
+                GROUP BY purchase_id, TRIM(LEADING '0' FROM product_code)
+            ) poi 
+                ON poi.purchase_id = po.id
+            AND poi.product_code = TRIM(LEADING '0' FROM psi.product_code)
+
+            LEFT JOIN sma_accounts_entries e 
+                ON p.po_id = e.pid
+
+            WHERE e.id IS NULL
+
+            GROUP BY 
+                p.po_id,
+                psi.product_code,
+                po.supplier_id,
+                poi.net_unit_cost
+        ";
+
+        $unrecorded_purchases = $this->db->query($sql)->result();
+
+        $grouped_purchases = [];
+
+        foreach ($unrecorded_purchases as $row) {
+            $po_id = $row->po_id;
+
+            if (!isset($grouped_purchases[$po_id])) {
+                $grouped_purchases[$po_id] = [
+                    'po_id' => $row->po_id,
+                    'supplier_id' => $row->supplier_id,
+                    'po_total_cost' => 0,
+                    'items' => []
+                ];
+            }
+
+            $grouped_purchases[$po_id]['po_total_cost'] += (float)$row->total_cost;
+            $grouped_purchases[$po_id]['items'][] = $row;
+        }
+
+        foreach ($grouped_purchases as $purchase) {
+            $supplier_id = $purchase['supplier_id'];
+            $po_id = $purchase['po_id'];
+            $po_total_cost = $purchase['po_total_cost'];
+            $po_items = $purchase['items'];
+            $po_date = $this->db->get_where('sma_purchase_orders', ['id' => $po_id])->row()->date;
+            $po_reference = $this->db->get_where('sma_purchase_orders', ['id' => $po_id])->row()->reference_no;
+
+            $supplier = $this->db->get_where('sma_companies', ['id' => $supplier_id])->row();
+            if (!$supplier) {
+                echo "Supplier not found for purchase ID: {$purchase->id}<br>";
+                continue;
+            }
+
+            $inventory_ledger = 398;
+
+            echo "Recording accounting entry for Purchase Order ID: {$po_id} - Supplier ID: {$supplier_id} - Total Cost: {$po_total_cost}<br>";
+
+            // Create GL entry in sma_accounts_entries
+            $entry_data = [
+                "entrytype_id" => 4,
+                "date" => $po_date,
+                "number" => $po_id,
+                "transaction_type" => "purchaseorder",
+                "notes" => "Accounting entry for purchase Order: {$po_id}",
+                "pid" => $po_id,
+                "supplier_id"   => $supplier_id,
+                "dr_total" => $po_total_cost,
+                "cr_total" => $po_total_cost,
+            ];
+            $this->db->insert("sma_accounts_entries", $entry_data);
+            $entry_id = $this->db->insert_id();
+
+            // Cr Supplier Ledger
+            $this->db->insert("sma_accounts_entryitems", [
+                "entry_id" => $entry_id,
+                "ledger_id" => $supplier->ledger_account,   
+                "dc" => 'C',
+                "amount" => $po_total_cost,
+                'narration' => "Payable to supplier for purchase order {$po_reference}"
+            ]);
+
+            // Dr Inventory Ledger
+            $this->db->insert("sma_accounts_entryitems", [
+                "entry_id" => $entry_id,
+                "ledger_id" => $inventory_ledger,   
+                "dc" => 'D',
+                "amount" => $po_total_cost,
+                'narration' => "Inventory received from supplier for purchase order {$po_reference}"
+            ]);
+        }
+    }
+
+    public function record_ecommerce_sales_accounting(){
+        $unrecorded_sales = $this->db
+            ->where('sale_status', 'completed')
+            ->where('sale_invoice', 0)
+            ->get('sma_sales')
+            ->result();
+
+        foreach ($unrecorded_sales as $sale) {
+            $customer_id = $sale->customer_id;
+            $customer = $this->db->get_where('sma_companies', ['id' => $customer_id])->row();
+            if (!$customer) {
+                echo "Customer not found for sale ID: {$sale->id}<br>";
+                continue;
+            }
+
+            $bank_ledger = 12;
+            $sales_ledger = 256;
+            $inventory_ledger = 68;
+            $cost_of_goods_sold_ledger = 69;
+
+            // Create GL entry in sma_accounts_entries
+            $entry_data = [
+                "entrytype_id" => 4,
+                "date" => $sale->date,
+                "number" => $sale->reference_no,
+                "transaction_type" => "sales_invoice",
+                "notes" => "Accounting entry for sale ID: {$sale->id}",
+                "sid" => $sale->id,
+                "customer_id"   => $customer_id,
+            ];
+            $this->db->insert("sma_accounts_entries", $entry_data);
+            $entry_id = $this->db->insert_id();
+
+            // Cr Customer Ledger
+            $this->db->insert("sma_accounts_entryitems", [
+                "entry_id" => $entry_id,
+                "ledger_id" => $customer_ledger,
+                "debit" => 0,
+                "credit" => $sale->grand_total,
+                "notes" => "Cr Customer Ledger for sale ID: {$sale->id}"
+            ]);
+        }
+    }
+
+    public function update_supplier_outstanding_invoices_payment(){
+        $unsettled_returns = $this->db
+            ->where('status', 'completed')
+            ->where('paid < grand_total', null, false)
+            //->where_not_in('supplier_id', [824, 31])
+            ->get('sma_returns_supplier')
+            ->result();
+        //echo "<pre>";print_r($unsettled_returns);
+        //echo "</pre>";exit;
+
+        foreach ($unsettled_returns as $return) {
+
+            $supplier_name = $return->supplier;
+            $supplier_id = $return->supplier_id;
+            $paid = $return->paid;
+            $grand_total = $return->grand_total;
+            $return_id = $return->id;
+
+            $Journal_details = $this->db
+                    ->where('rsid', $return_id) // exact match
+                    ->get('sma_accounts_entries')
+                    ->row();
+            // Remaining amount in return that can be allocated to invoices
+            $remaining_amount = $grand_total - $paid;
+
+            $pending_invoices = $this->purchases_model->getSupplierInvoicesWithPayments($supplier_id);
+            
+            if (empty($pending_invoices)) {
+                continue;
+            }
+
+            $total_outstanding = 0;
+            foreach ($pending_invoices as $invoice) {
+                $invoice_outstanding = isset($invoice->outstanding_amount)
+                    ? (float) $invoice->outstanding_amount
+                    : ((float) $invoice->grand_total - (float) $invoice->total_paid);
+                if ($invoice_outstanding > 0) {
+                    $total_outstanding += $invoice_outstanding;
+                }
+            }
+
+            $allocatable_amount = min($remaining_amount, $total_outstanding);
+            if ($allocatable_amount <= 0) {
+                return false;
+            }
+
+            $remaining_amount = $allocatable_amount;
+
+            $payment_reference_id = $this->add_supplier_reference(
+                $allocatable_amount,
+                $return_id,
+                date('Y-m-d H:i:s'),
+                'Return settlement against outstanding invoices',
+                $supplier_id,
+                null
+            );
+
+            $total_applied = 0;
+            foreach ($pending_invoices as $invoice) {
+                if ($remaining_amount <= 0) {
+                    break;
+                }
+
+                $outstanding = isset($invoice->outstanding_amount)
+                    ? (float) $invoice->outstanding_amount
+                    : ((float) $invoice->grand_total - (float) $invoice->total_paid);
+
+                if ($outstanding <= 0) {
+                    continue;
+                }
+
+                $apply_amount = min($remaining_amount, $outstanding);
+
+                $payment = [
+                    'date'          => date('Y-m-d H:i:s'),
+                    'purchase_id'       => (int) $invoice->id,
+                    'supplier_return_id'     => $return_id,
+                    'reference_no'  => '',
+                    'amount'        => $apply_amount,
+                    'note'          => 'Auto-settled to supplier return #' . $return_id,
+                    'created_by'    => $this->session->userdata('user_id'),
+                    'paid_by'       => 'return',
+                    'type'          => 'received',
+                    'supplier_id'   => $supplier_id,
+                    'payment_id'    => $payment_reference_id,
+                ];
+
+                $this->purchases_model->addPayment($payment);
+                $this->purchases_model->update_purchase_paid_amount_new((int) $invoice->id, ((float) $invoice->total_paid + $apply_amount));
+
+                $remaining_amount -= $apply_amount;
+                $total_applied += $apply_amount;
+            }
+
+            if ($payment_reference_id) {
+                $this->purchases_model->update_payment_reference($payment_reference_id, $Journal_details->id);
+                $this->purchases_model->update_return_paid($return_id, $remaining_amount);
+            }
+
+            echo "Settled Return ID: {$return_id} For SUPPLIER ID: {$supplier_id} - Total Applied: {$total_applied} against outstanding invoices.<br>";
+        }
+
+        // Settle Debit Memos against outstanding invoices
+        /*$unsettled_debit_memos = $this->db
+            ->where('customer_entry_type', 'C')
+            ->where('customer_id > ', '0')
+            ->where('(used_amount IS NULL OR used_amount < payment_amount)', null, false)
+            ->get('sma_memo')
+            ->result();
+
+        foreach ($unsettled_debit_memos as $debit_memo) {
+            $memo_id = $debit_memo->id;
+            $supplier_id = $debit_memo->supplier_id;
+            $remaining_amount = $debit_memo->payment_amount - $debit_memo->used_amount;
+
+            if ($memo_id <= 0 || $supplier_id <= 0 || $remaining_amount <= 0) {
+                return false;
+            }
+
+            $pending_invoices = $this->sales_model->getSupplierInvoicesWithPayments($supplier_id);
+            if (empty($pending_invoices)) {
+                return false;
+            }
+
+            $Journal_details = $this->db
+                        ->where('memo_id', $memo_id) // exact match
+                        ->get('sma_accounts_entries')
+                        ->row();
+
+            $total_outstanding = 0;
+            foreach ($pending_invoices as $invoice) {
+                $invoice_outstanding = isset($invoice->outstanding_amount)
+                    ? (float) $invoice->outstanding_amount
+                    : ((float) $invoice->grand_total - (float) $invoice->total_paid);
+                if ($invoice_outstanding > 0) {
+                    $total_outstanding += $invoice_outstanding;
+                }
+            }
+
+            $allocatable_amount = min($remaining_amount, $total_outstanding);
+            if ($allocatable_amount <= 0) {
+                return false;
+            }
+
+            $remaining_amount = $allocatable_amount;
+            $payment_reference_id = $this->add_supplier_reference(
+                $allocatable_amount,
+                $memo_id,
+                date('Y-m-d H:i:s'),
+                'Auto settlement from debit memo #' . $memo_id,
+                $supplier_id,
+                null
+            );
+
+            $total_applied = 0;
+            foreach ($pending_invoices as $invoice) {
+                if ($remaining_amount <= 0) {
+                    break;
+                }
+
+                $outstanding = isset($invoice->outstanding_amount)
+                    ? (float) $invoice->outstanding_amount
+                    : ((float) $invoice->grand_total - (float) $invoice->total_paid);
+
+                if ($outstanding <= 0) {
+                    continue;
+                }
+
+                $apply_amount = min($remaining_amount, $outstanding);
+
+                $payment = [
+                    'date'         => date('Y-m-d H:i:s'),
+                    'purchase_id'      => (int) $invoice->id,
+                    'reference_no' => $memo_id,
+                    'amount'       => $apply_amount,
+                    'note'         => 'Auto-settled from credit memo #' . $memo_id,
+                    'created_by'   => $this->session->userdata('user_id'),
+                    'type'         => 'received',
+                    'paid_by'      => 'credit_memo',
+                    'supplier_id' => $supplier_id,
+                    'memo_id'     => $memo_id,
+                    'payment_id'   => $payment_reference_id,
+                ];
+
+                $this->purchases_model->addPayment($payment);
+                $this->purchases_model->update_purchase_paid_amount_new((int) $invoice->id, ((float) $invoice->total_paid + $apply_amount));
+
+                //$this->site->syncSalePayments((int) $invoice->id);
+
+                $remaining_amount -= $apply_amount;
+                $total_applied += $apply_amount;
+            }
+
+            if ($total_applied > 0) {
+                $memo = $this->purchases_model->getDebitMemoByID($memo_id);
+                $existing_used_amount = $memo && isset($memo->used_amount) ? (float) $memo->used_amount : 0;
+                $this->purchases_model->update_debit_memo($memo_id, $existing_used_amount + $total_applied);
+            }
+
+            if ($payment_reference_id) {
+                $this->purchases_model->update_payment_reference($payment_reference_id, $Journal_details->id);
+            }
+
+            echo "Settled Debit Memo ID: {$memo_id} For Supplier ID: {$supplier_id} - Total Applied: {$total_applied} against outstanding invoices.<br>";
+        }*/
     }
 
     public function update_customer_outstanding_invoices_payment(){
@@ -6803,6 +7182,79 @@ error_reporting(E_ALL);
         $this->sma->send_json($units);
     }
 
+    public function update_product_discounts(){
+        $excelFile = $this->upload_path . 'csv/cash-credit-list.xlsx';
+        
+        if (!file_exists($excelFile)) {
+            echo "Excel file not found.";
+            return;
+        }
+
+        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($excelFile);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $rows = $sheet->toArray(null, true, true, false);
+
+        $row_count = 0;
+        $total_found = 0;
+        $rows_updated = 0;
+        foreach ($rows as $row) {
+            if($row_count == 0) { 
+                $row_count++; 
+                continue; 
+            } // Skip header row
+            
+            $data = array();
+            $item_code = trim($row[0]);
+            $item_name = trim($row[1]);
+            $cash_discount = trim($row[2]);
+            $credit_discount = trim($row[3]);
+
+            //echo "Processing Item Code: $item_code, Item Name: $item_name, Cash Discount: $cash_discount, Credit Discount: $credit_discount<br>";
+
+            $product = $this->db->get_where("sma_products", [
+                "code" => $item_code
+            ])->row();
+
+            if($product){
+                //echo "Found Product - Item Code: $item_code, Name: {$product->name}. Updating discounts...<br>";
+                $total_found++;
+                $data['credit_discount'] = ($credit_discount * 100).'%';
+                $data['credit_dis2'] = '0%';
+                $data['credit_dis3'] = '0%';
+                $data['cash_discount'] = ($cash_discount * 100) .'%';
+                $data['cash_dis2'] = '0%';
+                $data['cash_dis3'] = '0%';
+                $this->db->update('products', $data, ['id' => $product->id]);
+                $rows_updated++;
+                echo '<pre>';print_r($data);echo '</pre>';
+            }else{
+                $product_res = $this->db->get_where("sma_products", [
+                    "item_code" => $item_code
+                ])->row();
+
+                if($product_res){
+                    //echo "Found Product with item_code - Item Code: $item_code, Name: {$product_res->name}. Updating discounts...<br>"; 
+                    $total_found++;
+                    $data['credit_discount'] = ($credit_discount * 100).'%';
+                    $data['credit_dis2'] = '0%';
+                    $data['credit_dis3'] = '0%';
+                    $data['cash_discount'] = ($cash_discount * 100) .'%';
+                    $data['cash_dis2'] = '0%';
+                    $data['cash_dis3'] = '0%';
+                    $this->db->update('products', $data, ['id' => $product_res->id]);
+                    $rows_updated++;
+                    echo '<pre>';print_r($data);echo '</pre>';
+                }else{
+                    echo "No product found with Item Code: $item_code. Skipping...<br>";
+                }
+            }
+
+        }
+    }
+
     public function import_excel()
     {
         $this->load->library('excel');
@@ -8895,12 +9347,12 @@ error_reporting(E_ALL);
             $this->session->set_flashdata('error', 'Please select an Excel file.');
             admin_redirect('products/upload_products');
         }
-       
+
         $config['upload_path']   = FCPATH . 'assets/uploads/excel/';
         $config['allowed_types'] = 'xlsx|xls';
         $config['max_size']      = 10240; // 10MB
         $config['encrypt_name']  = TRUE;
-        
+
         if (!is_dir($config['upload_path'])) {
             @mkdir($config['upload_path'], 0777, true);
         }
@@ -8933,10 +9385,10 @@ error_reporting(E_ALL);
             $this->session->set_flashdata('error', 'Excel file is empty.');
             admin_redirect('products/upload_products');
         }
-        
+
         $parsed_rows = [];
-        $validation_errors = [];
-        $row_count   = 0;
+        $row_count = 0;
+
         foreach ($rows as $row) {
             if ($row_count == 0) {
                 $row_count++;
@@ -8946,7 +9398,7 @@ error_reporting(E_ALL);
             $product_code = isset($row[0]) ? trim($row[0]) : '';
             $product_name = isset($row[1]) ? trim($row[1]) : '';
             $brand_name   = isset($row[2]) ? trim($row[2]) : '';
-            $vat_percent  = isset($row[3]) ? (float)$row[3] : 0;
+            $vat_percent  = isset($row[3]) && trim($row[3]) !== '' ? (float) $row[3] : null;
             $description  = isset($row[4]) ? trim($row[4]) : '';
             $image_link   = isset($row[5]) ? trim($row[5]) : '';
 
@@ -8955,7 +9407,7 @@ error_reporting(E_ALL);
                 $product_code === '' &&
                 $product_name === '' &&
                 $brand_name === '' &&
-                $vat_percent === 0 &&
+                $vat_percent === null &&
                 $description === '' &&
                 $image_link === ''
             ) {
@@ -8963,28 +9415,9 @@ error_reporting(E_ALL);
                 continue;
             }
 
-            $row_errors = [];
-
-            // mandatory checks
-            if ($product_code === '') {
-                $row_errors[] = "Product code is required";
-            }
-            if ($product_name === '') {
-                $row_errors[] = "Product name is required";
-            }
-            if ($brand_name === '') {
-                $row_errors[] = "Brand name is required";
-            }
-            if ($image_link === '') {
-                $row_errors[] = "Image link is required";
-            }
-
-            if (!empty($row_errors)) {
-                $validation_errors = array_merge($validation_errors, $row_errors);
-            }
-
             $parsed_rows[] = [
-                'product_code' => trim($product_code),
+                'row_no'       => $row_count + 1,
+                'product_code' => $product_code,
                 'product_name' => $product_name,
                 'brand_name'   => $brand_name,
                 'vat_percent'  => $vat_percent,
@@ -8994,64 +9427,102 @@ error_reporting(E_ALL);
 
             $row_count++;
         }
-        
-
-        if (!empty($validation_errors)) {
-            $this->session->set_flashdata('errors', $validation_errors);
-            $this->session->set_flashdata('error', 'Some rows have errors. Please correct the Excel file and reupload.');
-            @unlink($path);
-            admin_redirect('products/upload_products');
-        }
 
         // Process each row and save to products table
-        $saved_count = 0;
+        $saved_count   = 0;
         $updated_count = 0;
-        $errors = [];
+        $errors        = [];
 
         foreach ($parsed_rows as $row) {
             try {
-                $brand = $row['brand_name'];
-                // Determine tax rate (create if missing)
-                $tax_rate_id =$row['vat_percent'];
+                if (trim($row['product_code']) === '') {
+                    $errors[] = "Row {$row['row_no']}: Product code is required";
+                    continue;
+                }
+                
+                if ($row['vat_percent'] == 15) {
+                    $tax_rate_id = 5;
+                } else {
+                    $tax_rate_id = 1;
+                }
+
                 // Check if product exists
                 $existing_product = $this->products_model->getProductByCode(trim($row['product_code']));
-                // Prepare product data
-                $insert_data = [
-                    'code'            => $row['product_code'],
-                    'name'            => $row['product_name'],
-                    'cost'            => 0,
-                    'price'           => 0,
-                    'brand_name'      => to_snake_case($row['brand_name']),
-                    'category_id'     => 1, // Default category, adjust if needed
-                    'tax_rate'        => $tax_rate_id,
-                    'tax_method'      => '1', // Default tax method
-                    'details'         => $row['description'],
-                    'image'           => $row['image_link'],
-                    'type'            => 'standard',
-                    'unit'            => '1', // Default unit
-                    'sale_unit'       => '1',
-                    'purchase_unit'   => '1',
-                    'track_quantity'  => '1',
-                    'alert_quantity'  => 0,
-                ];
-                $update_data = [
-                    'code'       => $row['product_code'],
-                    'name'       => $row['product_name'],
-                    'brand_name' => to_snake_case($row['brand_name']),
-                    'tax_rate'   => $tax_rate_id,
-                    'details'    => $row['description'],
-                    'image'      => $row['image_link'],
-                ];
 
                 if ($existing_product) {
-                    // Update existing product (don't update sequence_code)
+                    // UPDATE CASE: only filled columns will be updated
+                    $update_data = [];
+
+                    if (isset($row['product_name']) && trim($row['product_name']) !== '') {
+                        $update_data['name'] = trim($row['product_name']);
+                    }
+
+                    if (isset($row['brand_name']) && trim($row['brand_name']) !== '') {
+                        $update_data['brand_name'] = to_snake_case(trim($row['brand_name']));
+                    }
+
+                    if ($tax_rate_id !== null && $tax_rate_id !== '') {
+                        $update_data['tax_rate'] = (int)$tax_rate_id;
+                    }
+
+                    if (isset($row['description']) && trim($row['description']) !== '') {
+                        $update_data['details'] = trim($row['description']);
+                    }
+
+                    if (isset($row['image_link']) && trim($row['image_link']) !== '') {
+                        $update_data['image'] = trim($row['image_link']);
+                    }
+
+                    // nothing to update
+                    if (empty($update_data)) {
+                        continue;
+                    }
+
                     if ($this->products_model->updateProduct($existing_product->id, $update_data, null, null, null, null, null)) {
                         $updated_count++;
                     } else {
                         $errors[] = "Failed to update product: " . $row['product_code'];
                     }
                 } else {
-                    // Insert new product (add sequence_code)
+                    // INSERT CASE: required validation only here
+                    $row_errors = [];
+
+                    if (trim($row['product_name']) === '') {
+                        $row_errors[] = "Product name is required";
+                    }
+
+                    if (trim($row['brand_name']) === '') {
+                        $row_errors[] = "Brand name is required";
+                    }
+
+                    if (trim($row['image_link']) === '') {
+                        $row_errors[] = "Image link is required";
+                    }
+
+                    if (!empty($row_errors)) {
+                        $errors[] = "Row {$row['row_no']}: " . implode(', ', $row_errors);
+                        continue;
+                    }
+
+                    $insert_data = [
+                        'code'            => $row['product_code'],
+                        'name'            => trim($row['product_name']),
+                        'cost'            => 0,
+                        'price'           => 0,
+                        'brand_name'      => to_snake_case(trim($row['brand_name'])),
+                        'category_id'     => 1,
+                        'tax_rate'        => $tax_rate_id,
+                        'tax_method'      => '1',
+                        'details'         => trim($row['description']),
+                        'image'           => trim($row['image_link']),
+                        'type'            => 'standard',
+                        'unit'            => '1',
+                        'sale_unit'       => '1',
+                        'purchase_unit'   => '1',
+                        'track_quantity'  => '1',
+                        'alert_quantity'  => 0,
+                    ];
+
                     if ($this->products_model->addProductSimplified($insert_data)) {
                         $saved_count++;
                     } else {
@@ -9074,7 +9545,6 @@ error_reporting(E_ALL);
             $this->session->set_flashdata('message', "Successfully saved {$saved_count} products and updated {$updated_count} products.");
         }
 
-        // Redirect back to upload page
         admin_redirect('products/upload_products');
     }
 }

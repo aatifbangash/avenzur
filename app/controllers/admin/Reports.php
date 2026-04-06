@@ -6399,6 +6399,40 @@ class Reports extends MY_Controller
 
     }
 
+    public function payments_by_supplier(){
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $from_date  = $this->input->post('from_date')  ?: null;
+        $to_date    = $this->input->post('to_date')    ?: null;
+        $supplier   = $this->input->post('supplier')   ?: null;
+        $warehouse  = $this->input->post('pharmacy')   ?: null;
+
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date   = $this->sma->fld($to_date);
+            $payments_data = $this->reports_model->getPaymentsBySupplier($start_date, $end_date, $supplier, $warehouse);
+
+            $this->data['start_date']    = $from_date;
+            $this->data['end_date']      = $to_date;
+            $this->data['warehouse']     = $warehouse;
+            $this->data['supplier']      = $supplier;
+            $this->data['payments_data'] = $payments_data;
+
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('Payments by Supplier')]];
+            $meta = ['page_title' => lang('Payments by Supplier'), 'bc' => $bc];
+            $this->page_construct('reports/payment_by_supplier', $meta, $this->data);
+        } else {
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('reports')]];
+            $meta = ['page_title' => lang('reports'), 'bc' => $bc];
+            $this->page_construct('reports/payment_by_supplier', $meta, $this->data);
+        }
+
+    }
+
     public function sales_by_category(){
       
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
@@ -7441,6 +7475,746 @@ class Reports extends MY_Controller
         ];
         $meta = ['page_title' => 'Purchase Per Invoice', 'bc' => $bc];
         $this->page_construct('reports/purchase_per_invoice', $meta, $this->data);
+    }
+
+    /* -----------------------------------------------------------------------
+     * TEMPORARY DIAGNOSTIC — remove after investigation
+     * URL: admin/reports/debug_trial_balance_diff?from=YYYY-MM-DD&to=YYYY-MM-DD
+     * ----------------------------------------------------------------------- */
+    public function debug_trial_balance_diff()
+    {
+        $from = $this->input->get('from') ?: date('Y-01-01');
+        $to   = $this->input->get('to')   ?: date('Y-m-d');
+
+        // Basic sanity
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $from) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $to)) {
+            show_error('Invalid date format. Use YYYY-MM-DD in the URL: ?from=YYYY-MM-DD&to=YYYY-MM-DD');
+        }
+
+        $db = $this->db;
+
+        // ── 1. Customer map ──────────────────────────────────────────────
+        $customers = [];
+        $ledger_to_customer = [];
+        foreach ($db->query("SELECT id, name, company, sequence_code, ledger_account FROM sma_companies WHERE ledger_account IS NOT NULL AND ledger_account > 0 AND group_name = 'customer' ORDER BY name")->result_array() as $row) {
+            $customers[$row['id']] = $row;
+            $ledger_to_customer[$row['ledger_account']] = $row['id'];
+        }
+        $customer_ledger_ids = array_keys($ledger_to_customer);
+
+        // ── 2. Customer Trial Balance (period) ───────────────────────────
+        $ctb = [];
+        foreach ($db->query("
+            SELECT c.id,
+                   SUM(CASE WHEN ei.dc='D' THEN ei.amount ELSE 0 END) AS total_debit,
+                   SUM(CASE WHEN ei.dc='C' THEN ei.amount ELSE 0 END) AS total_credit
+            FROM sma_accounts_entries e
+            JOIN sma_accounts_entryitems ei ON e.id = ei.entry_id
+            JOIN sma_companies c ON e.customer_id = c.id
+            WHERE DATE(e.date) >= '{$from}' AND DATE(e.date) <= '{$to}'
+              AND e.customer_id IS NOT NULL
+              AND ei.ledger_id = c.ledger_account
+            GROUP BY e.customer_id")->result_array() as $r) {
+            $ctb[$r['id']] = $r;
+        }
+
+        // ── 3. GL amounts for customer ledgers only ───────────────────────
+        $gl = [];
+        if (!empty($customer_ledger_ids)) {
+            $in = implode(',', array_map('intval', $customer_ledger_ids));
+            foreach ($db->query("
+                SELECT ei.ledger_id,
+                       SUM(CASE WHEN ei.dc='D' THEN ei.amount ELSE 0 END) AS total_debit,
+                       SUM(CASE WHEN ei.dc='C' THEN ei.amount ELSE 0 END) AS total_credit
+                FROM sma_accounts_entryitems ei
+                JOIN sma_accounts_entries e ON e.id = ei.entry_id
+                WHERE DATE(e.date) >= '{$from}' AND DATE(e.date) <= '{$to}'
+                  AND ei.ledger_id IN ({$in})
+                GROUP BY ei.ledger_id")->result_array() as $r) {
+                $gl[$r['ledger_id']] = $r;
+            }
+        }
+
+        // ── 4. Comparison ────────────────────────────────────────────────
+        $comparison = [];
+        $grand_diff_dr = $grand_diff_cr = 0;
+        foreach ($customers as $cid => $c) {
+            $lid    = $c['ledger_account'];
+            $ctb_dr = isset($ctb[$cid]) ? (float)$ctb[$cid]['total_debit']  : 0;
+            $ctb_cr = isset($ctb[$cid]) ? (float)$ctb[$cid]['total_credit'] : 0;
+            $gl_dr  = isset($gl[$lid])  ? (float)$gl[$lid]['total_debit']   : 0;
+            $gl_cr  = isset($gl[$lid])  ? (float)$gl[$lid]['total_credit']  : 0;
+            $diff_dr = round($gl_dr - $ctb_dr, 4);
+            $diff_cr = round($gl_cr - $ctb_cr, 4);
+            $comparison[] = compact('cid','c','lid','ctb_dr','ctb_cr','gl_dr','gl_cr','diff_dr','diff_cr');
+            $grand_diff_dr += $diff_dr;
+            $grand_diff_cr += $diff_cr;
+        }
+        usort($comparison, fn($a,$b) => (($b['diff_dr']!=0||$b['diff_cr']!=0)?1:0) - (($a['diff_dr']!=0||$a['diff_cr']!=0)?1:0));
+
+        // ── 5. Orphan entries (customer_id IS NULL on entry header) ──────
+        $orphan_rows = [];
+        $orphan_dr = $orphan_cr = 0;
+        if (!empty($customer_ledger_ids)) {
+            $in = implode(',', array_map('intval', $customer_ledger_ids));
+            foreach ($db->query("
+                SELECT e.id AS entry_id, e.date, e.number as ref_no, e.notes, al.name AS ledger_name,
+                       ei.ledger_id, ei.dc, ei.amount
+                FROM sma_accounts_entryitems ei
+                JOIN sma_accounts_entries e ON e.id = ei.entry_id
+                JOIN sma_accounts_ledgers al ON al.id = ei.ledger_id
+                WHERE DATE(e.date) >= '{$from}' AND DATE(e.date) <= '{$to}'
+                  AND ei.ledger_id IN ({$in})
+                  AND (e.customer_id IS NULL OR e.customer_id = 0)
+                ORDER BY e.date, e.id")->result_array() as $r) {
+                $orphan_rows[] = $r;
+                if ($r['dc']==='D') $orphan_dr += (float)$r['amount'];
+                else                $orphan_cr += (float)$r['amount'];
+            }
+        }
+
+        // ── 6. Cross-customer items ───────────────────────────────────────
+        $silent_rows = [];
+        if (!empty($customer_ledger_ids)) {
+            $in = implode(',', array_map('intval', $customer_ledger_ids));
+            $silent_rows = $db->query("
+                SELECT e.id AS entry_id, e.date, e.number as ref_no, e.notes,
+                       e.customer_id, c.name AS customer_name, c.ledger_account AS customer_ledger,
+                       ei.ledger_id AS item_ledger_id, al.name AS item_ledger_name, ei.dc, ei.amount
+                FROM sma_accounts_entryitems ei
+                JOIN sma_accounts_entries e ON e.id = ei.entry_id
+                JOIN sma_accounts_ledgers al ON al.id = ei.ledger_id
+                JOIN sma_companies c ON c.id = e.customer_id
+                WHERE DATE(e.date) >= '{$from}' AND DATE(e.date) <= '{$to}'
+                  AND e.customer_id IS NOT NULL
+                  AND ei.ledger_id IN ({$in})
+                  AND ei.ledger_id <> c.ledger_account
+                ORDER BY e.date, e.id")->result_array();
+        }
+
+        // ── 7. Customers with no ledger_account ───────────────────────────
+        $no_ledger = $db->query("SELECT id, name, company, sequence_code FROM sma_companies WHERE group_name = 'customer' AND (ledger_account IS NULL OR ledger_account = 0)")->result_array();
+
+        // ── HTML output ──────────────────────────────────────────────────
+        $fmt = fn($n) => number_format((float)$n, 2);
+        ?>
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="utf-8">
+        <title>Trial Balance Diff <?= htmlspecialchars($from) ?> → <?= htmlspecialchars($to) ?></title>
+        <style>
+          body{font-family:Arial,sans-serif;font-size:13px;margin:20px}
+          h2{border-bottom:2px solid #333;padding-bottom:6px}
+          h3{margin-top:32px;color:#444}
+          table{border-collapse:collapse;width:100%;margin-top:10px}
+          th,td{border:1px solid #ccc;padding:5px 8px;white-space:nowrap}
+          th{background:#2c3e50;color:#fff;text-align:center}
+          tr:nth-child(even){background:#f9f9f9}
+          .diff{background:#fff3cd!important;font-weight:bold}
+          .red{color:#c0392b;font-weight:bold}
+          .green{color:#27ae60}
+          .muted{color:#888}
+          .num{text-align:right}
+          .badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px}
+          .ok{background:#d4edda;color:#155724}
+          .bad{background:#f8d7da;color:#721c24}
+          .box{background:#eef4fb;border:1px solid #b0c8e8;padding:12px 18px;border-radius:4px;margin-bottom:20px}
+          .info{background:#fffbe6;border:1px solid #ffe066;padding:10px 16px;border-radius:4px;margin-bottom:10px;font-size:12px}
+        </style>
+        </head>
+        <body>
+        <h2>🔍 Trial Balance Difference: Customer TB vs GL TB</h2>
+        <div class="box">
+          <strong>Period:</strong> <?= htmlspecialchars($from) ?> → <?= htmlspecialchars($to) ?><br>
+          <strong>Customers with ledger:</strong> <?= count($customers) ?><br>
+          <strong>Grand diff (GL − CTB) Debit:</strong>
+            <span class="<?= abs($grand_diff_dr)>0.01?'red':'green' ?>"><?= $fmt($grand_diff_dr) ?></span>
+          &nbsp;|&nbsp;<strong>Credit:</strong>
+            <span class="<?= abs($grand_diff_cr)>0.01?'red':'green' ?>"><?= $fmt($grand_diff_cr) ?></span>
+        </div>
+
+        <h3>Section 1 — Customer-by-Customer Comparison</h3>
+        <div class="info">GL Debit/Credit = all entry items on the customer ledger (no customer_id filter).<br>
+        CTB Debit/Credit = same but only where entry.customer_id = this customer.<br>
+        Diff = GL − CTB (positive = GL has more).</div>
+        <table>
+          <thead><tr>
+            <th>#</th><th>Seq Code</th><th>Customer</th><th>Ledger ID</th>
+            <th>CTB Debit</th><th>CTB Credit</th>
+            <th>GL Debit</th><th>GL Credit</th>
+            <th>Diff Debit</th><th>Diff Credit</th><th>Status</th>
+          </tr></thead>
+          <tbody>
+          <?php $n=0; foreach($comparison as $row): $n++; $hasDiff=($row['diff_dr']!=0||$row['diff_cr']!=0); ?>
+          <tr class="<?= $hasDiff?'diff':'' ?>">
+            <td class="num"><?= $n ?></td>
+            <td><?= htmlspecialchars($row['c']['sequence_code']??'') ?></td>
+            <td><?= htmlspecialchars($row['c']['name']?:$row['c']['company']) ?></td>
+            <td class="num"><?= $row['lid'] ?></td>
+            <td class="num"><?= $fmt($row['ctb_dr']) ?></td>
+            <td class="num"><?= $fmt($row['ctb_cr']) ?></td>
+            <td class="num"><?= $fmt($row['gl_dr']) ?></td>
+            <td class="num"><?= $fmt($row['gl_cr']) ?></td>
+            <td class="num <?= $row['diff_dr']!=0?'red':'muted' ?>"><?= $fmt($row['diff_dr']) ?></td>
+            <td class="num <?= $row['diff_cr']!=0?'red':'muted' ?>"><?= $fmt($row['diff_cr']) ?></td>
+            <td><span class="badge <?= $hasDiff?'bad':'ok' ?>"><?= $hasDiff?'DIFF':'OK' ?></span></td>
+          </tr>
+          <?php endforeach; ?>
+          <tr style="background:#2c3e50;color:#fff;font-weight:bold">
+            <td colspan="8" class="num">Grand Total Differences</td>
+            <td class="num"><?= $fmt($grand_diff_dr) ?></td>
+            <td class="num"><?= $fmt($grand_diff_cr) ?></td>
+            <td></td>
+          </tr>
+          </tbody>
+        </table>
+
+        <h3>Section 2 — Orphan Entry Items (Cause A)</h3>
+        <p>Entry items on a customer ledger where the entry's <code>customer_id</code> is NULL/0. GL counts them; Customer TB ignores them.</p>
+        <p>Count: <strong><?= count($orphan_rows) ?></strong> &nbsp;|&nbsp; Debit total: <strong class="red"><?= $fmt($orphan_dr) ?></strong> &nbsp;|&nbsp; Credit total: <strong class="red"><?= $fmt($orphan_cr) ?></strong></p>
+        <?php if($orphan_rows): ?>
+        <table>
+          <thead><tr><th>Entry ID</th><th>Date</th><th>Ref</th><th>Note</th><th>Ledger ID</th><th>Ledger Name</th><th>D/C</th><th>Amount</th></tr></thead>
+          <tbody>
+          <?php foreach($orphan_rows as $r): ?>
+          <tr>
+            <td class="num"><?= $r['entry_id'] ?></td>
+            <td><?= htmlspecialchars($r['date']) ?></td>
+            <td><?= htmlspecialchars($r['ref_no']) ?></td>
+            <td><?= htmlspecialchars($r['note']) ?></td>
+            <td class="num"><?= $r['ledger_id'] ?></td>
+            <td><?= htmlspecialchars($r['ledger_name']) ?></td>
+            <td style="text-align:center;color:<?= $r['dc']==='D'?'#1565c0':'#b71c1c' ?>"><?= $r['dc'] ?></td>
+            <td class="num"><?= $fmt($r['amount']) ?></td>
+          </tr>
+          <?php endforeach; ?>
+          </tbody>
+        </table>
+        <?php else: ?><p class="green">✔ No orphan entries found.</p><?php endif; ?>
+
+        <h3>Section 3 — Cross-Customer Entry Items (Cause B)</h3>
+        <p>Entries with a <code>customer_id</code> but the line-item ledger belongs to a <em>different</em> customer's ledger account.</p>
+        <p>Count: <strong><?= count($silent_rows) ?></strong></p>
+        <?php if($silent_rows): ?>
+        <table>
+          <thead><tr><th>Entry ID</th><th>Date</th><th>Ref</th><th>Entry Customer</th><th>Entry Customer Ledger</th><th>Item Ledger ID</th><th>Item Ledger Name</th><th>D/C</th><th>Amount</th></tr></thead>
+          <tbody>
+          <?php foreach($silent_rows as $r): ?>
+          <tr>
+            <td class="num"><?= $r['entry_id'] ?></td>
+            <td><?= htmlspecialchars($r['date']) ?></td>
+            <td><?= htmlspecialchars($r['ref_no']) ?></td>
+            <td><?= htmlspecialchars($r['customer_name']) ?> (#<?= $r['customer_id'] ?>)</td>
+            <td class="num"><?= $r['customer_ledger'] ?></td>
+            <td class="num"><?= $r['item_ledger_id'] ?></td>
+            <td><?= htmlspecialchars($r['item_ledger_name']) ?></td>
+            <td style="text-align:center;color:<?= $r['dc']==='D'?'#1565c0':'#b71c1c' ?>"><?= $r['dc'] ?></td>
+            <td class="num"><?= $fmt($r['amount']) ?></td>
+          </tr>
+          <?php endforeach; ?>
+          </tbody>
+        </table>
+        <?php else: ?><p class="green">✔ No cross-customer ledger mismatches.</p><?php endif; ?>
+
+        <h3>Section 4 — Customers Without a Ledger Account</h3>
+        <p>Count: <strong><?= count($no_ledger) ?></strong></p>
+        <?php if($no_ledger): ?>
+        <table>
+          <thead><tr><th>ID</th><th>Name</th><th>Company</th><th>Seq Code</th></tr></thead>
+          <tbody>
+          <?php foreach($no_ledger as $r): ?>
+          <tr>
+            <td class="num"><?= $r['id'] ?></td>
+            <td><?= htmlspecialchars($r['name']) ?></td>
+            <td><?= htmlspecialchars($r['company']) ?></td>
+            <td><?= htmlspecialchars($r['sequence_code']) ?></td>
+          </tr>
+          <?php endforeach; ?>
+          </tbody>
+        </table>
+        <?php else: ?><p class="green">✔ All customers have a ledger account.</p><?php endif; ?>
+
+        <hr style="margin-top:40px">
+        <p class="muted" style="font-size:11px">Generated <?= date('Y-m-d H:i:s') ?> | Period: <?= htmlspecialchars($from) ?> → <?= htmlspecialchars($to) ?></p>
+        </body></html>
+        <?php
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    //  UNPAID INVOICES REPORT  (AP + AR)
+    // ─────────────────────────────────────────────────────────────────
+    public function unpaid_invoices()
+    {
+        $this->data['error'] = $this->session->flashdata('error');
+
+        // ── filters (GET so URL is shareable) ──────────────────────
+        $type       = $this->input->get('type')       ?: 'ar';   // ar | ap
+        $start_date = $this->input->get('start_date') ?: null;
+        $end_date   = $this->input->get('end_date')   ?: null;
+        $party_id   = $this->input->get('party_id')   ?: null;   // customer_id or supplier_id
+        $ref_no     = $this->input->get('ref_no')     ?: null;
+
+        // ── dropdown data ──────────────────────────────────────────
+        $this->data['customers']  = $this->site->getAllCompanies('customer');
+        $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+
+        // ── pass filter values back to view ───────────────────────
+        $this->data['type']       = $type;
+        $this->data['start_date'] = $start_date;
+        $this->data['end_date']   = $end_date;
+        $this->data['party_id']   = $party_id;
+        $this->data['ref_no']     = $ref_no;
+
+        $invoices = [];
+
+        if ($type === 'ar') {
+            // ── Accounts Receivable (Sales) ────────────────────────
+            $sql_start = $start_date ? $this->sma->fld($start_date) . ' 00:00:00' : null;
+            $sql_end   = $end_date   ? $this->sma->fld($end_date)   . ' 23:59:59' : null;
+
+            $this->db->select("
+                s.id            AS invoice_id,
+                s.date,
+                s.reference_no,
+                c.name          AS party_name,
+                c.company       AS party_code,
+                c.city          AS area,
+                w.name          AS warehouse_name,
+                s.total         AS invoice_total,
+                s.total_discount AS discount,
+                COALESCE((SELECT SUM(grand_total) FROM {$this->db->dbprefix('returns')} WHERE sale_id = s.id), 0) AS return_amount,
+                s.paid,
+                ROUND(((s.total - s.total_discount) - s.paid), 2) AS outstanding,
+                COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) AS payment_term_days,
+                DATE_ADD(DATE(s.date), INTERVAL COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY) AS due_date_calc,
+                DATEDIFF(CURDATE(), DATE_ADD(DATE(s.date), INTERVAL COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY)) AS days_overdue
+            ", false)
+            ->from('sales s')
+            ->join('companies c',   'c.id = s.customer_id',  'left')
+            ->join('warehouses w',  'w.id = s.warehouse_id', 'left')
+            ->where('s.sale_invoice',  1)
+            ->where('s.grand_total > 0')
+            ->having('outstanding > 0')
+            ->order_by('s.date', 'asc');
+
+            if ($sql_start && $sql_end) {
+                $this->db->where("s.date >= '{$sql_start}' AND s.date <= '{$sql_end}'");
+            }
+            if ($party_id) { $this->db->where('s.customer_id', (int)$party_id); }
+            if ($ref_no)   { $this->db->like('s.reference_no', $ref_no, 'both'); }
+
+            $invoices = $this->db->get()->result();
+
+        } else {
+            // ── Accounts Payable (Purchases) ───────────────────────
+            $sql_start = $start_date ? $this->sma->fld($start_date) . ' 00:00:00' : null;
+            $sql_end   = $end_date   ? $this->sma->fld($end_date)   . ' 23:59:59' : null;
+
+            $this->db->select("
+                p.id            AS invoice_id,
+                p.date,
+                p.reference_no,
+                c.name          AS party_name,
+                c.company       AS party_code,
+                w.name          AS warehouse_name,
+                p.grand_total   AS invoice_total,
+                0               AS discount,
+                0               AS return_amount,
+                p.paid,
+                ROUND((p.grand_total - p.paid), 2) AS outstanding,
+                COALESCE(NULLIF(p.payment_term, 0), NULLIF(c.payment_term, 0), 0) AS payment_term_days,
+                DATE_ADD(DATE(p.date), INTERVAL COALESCE(NULLIF(p.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY) AS due_date_calc,
+                DATEDIFF(CURDATE(), DATE_ADD(DATE(p.date), INTERVAL COALESCE(NULLIF(p.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY)) AS days_overdue
+            ", false)
+            ->from('purchases p')
+            ->join('companies c',   'c.id = p.supplier_id',  'left')
+            ->join('warehouses w',  'w.id = p.warehouse_id', 'left')
+            ->where('p.purchase_invoice', 1)
+            ->where('p.grand_total > 0')
+            ->having('outstanding > 0')
+            ->order_by('p.date', 'asc');
+
+            if ($sql_start && $sql_end) {
+                $this->db->where("p.date >= '{$sql_start}' AND p.date <= '{$sql_end}'");
+            }
+            if ($party_id) { $this->db->where('p.supplier_id', (int)$party_id); }
+            if ($ref_no)   { $this->db->like('p.reference_no', $ref_no, 'both'); }
+
+            $invoices = $this->db->get()->result();
+        }
+
+        $this->data['invoices'] = $invoices;
+
+        // ── Excel export ───────────────────────────────────────────
+        if ($this->input->get('export_excel')) {
+            $this->load->library('excel');
+            $sheet = $this->excel->setActiveSheetIndex(0);
+            $title = ($type === 'ar') ? 'Unpaid AR Invoices' : 'Unpaid AP Invoices';
+            $sheet->setTitle($title);
+
+            $sheet->SetCellValue('A1', '#');
+            $sheet->SetCellValue('B1', lang('date'));
+            $sheet->SetCellValue('C1', lang('reference_no'));
+            $sheet->SetCellValue('D1', ($type === 'ar') ? lang('customer') : lang('supplier'));
+            $sheet->SetCellValue('E1', lang('Invoice Total'));
+            if ($type === 'ar') {
+                $sheet->SetCellValue('F1', lang('Discount'));
+                $sheet->SetCellValue('G1', lang('Returns'));
+                $sheet->SetCellValue('H1', lang('paid'));
+                $sheet->SetCellValue('I1', lang('outstanding'));
+                $sheet->SetCellValue('J1', lang('Due Date'));
+                $sheet->SetCellValue('K1', lang('Days Overdue'));
+            } else {
+                $sheet->SetCellValue('F1', lang('paid'));
+                $sheet->SetCellValue('G1', lang('outstanding'));
+                $sheet->SetCellValue('H1', lang('Due Date'));
+                $sheet->SetCellValue('I1', lang('Days Overdue'));
+            }
+
+            $row = 2;
+            foreach ($invoices as $i => $inv) {
+                $sheet->SetCellValue("A{$row}", $i + 1);
+                $sheet->SetCellValue("B{$row}", date('d-M-Y', strtotime($inv->date)));
+                $sheet->SetCellValue("C{$row}", $inv->reference_no);
+                $sheet->SetCellValue("D{$row}", $inv->party_name);
+                $sheet->SetCellValue("E{$row}", $inv->invoice_total);
+                if ($type === 'ar') {
+                    $sheet->SetCellValue("F{$row}", $inv->discount);
+                    $sheet->SetCellValue("G{$row}", $inv->return_amount);
+                    $sheet->SetCellValue("H{$row}", $inv->paid);
+                    $sheet->SetCellValue("I{$row}", $inv->outstanding);
+                    $sheet->SetCellValue("J{$row}", $inv->due_date_calc ? date('d-M-Y', strtotime($inv->due_date_calc)) : '-');
+                    $sheet->SetCellValue("K{$row}", $inv->days_overdue);
+                } else {
+                    $sheet->SetCellValue("F{$row}", $inv->paid);
+                    $sheet->SetCellValue("G{$row}", $inv->outstanding);
+                    $sheet->SetCellValue("H{$row}", $inv->due_date_calc ? date('d-M-Y', strtotime($inv->due_date_calc)) : '-');
+                    $sheet->SetCellValue("I{$row}", $inv->days_overdue);
+                }
+                $row++;
+            }
+
+            $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+            $filename = ($type === 'ar' ? 'Unpaid_AR_Invoices_' : 'Unpaid_AP_Invoices_') . date('Y-m-d_H_i_s');
+            $this->load->helper('excel');
+            create_excel($this->excel, $filename);
+            return;
+        }
+
+        $label = ($type === 'ar') ? 'Unpaid AR Invoices (Sales)' : 'Unpaid AP Invoices (Purchases)';
+        $bc   = [
+            ['link' => base_url(),          'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => '#',                  'page' => $label],
+        ];
+        $meta = ['page_title' => $label, 'bc' => $bc];
+        $this->page_construct('reports/unpaid_invoices', $meta, $this->data);
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    //  UNIFIED VAT REPORT  (Sales + Purchases + Returns)
+    //  Optimised: date & warehouse filters pushed into each UNION branch
+    //  so MySQL can use indexes on the date column directly.
+    // ─────────────────────────────────────────────────────────────────
+    public function vat_report()
+    {
+        $this->data['error'] = $this->session->flashdata('error');
+
+        // ── filters (GET – shareable URL) ──────────────────────────
+        $type         = $this->input->get('type')         ?: 'all';      // all | sales | purchases
+        $start_date   = $this->input->get('start_date')   ?: date('Y-m-01');
+        $end_date     = $this->input->get('end_date')     ?: date('Y-m-d');
+        $warehouse_id = (int)$this->input->get('warehouse_id');          // 0 = all
+
+        $this->data['type']         = $type;
+        $this->data['start_date']   = $start_date;
+        $this->data['end_date']     = $end_date;
+        $this->data['warehouse_id'] = $warehouse_id;
+        $this->data['warehouses']   = $this->site->getAllWarehouses();
+
+        // ── safe SQL values ────────────────────────────────────────
+        // fld() converts from the user's local display format (e.g. dd-mm-yyyy) to SQL Y-m-d.
+        // Only apply it when the value actually came from user input (GET).
+        // Default values are generated by date() and are already in Y-m-d SQL format.
+        $raw_start = $this->input->get('start_date')   ?: date('Y-m-01');
+        $raw_end   = $this->input->get('end_date')     ?: date('Y-m-d');
+        $sql_start = $raw_start;
+        $sql_end   = $raw_end;
+        //$sql_start = $this->db->escape($raw_start ? $this->sma->fld($raw_start) : date('Y-m-01'));
+        //$sql_end   = $this->db->escape($raw_end   ? $this->sma->fld($raw_end)   : date('Y-m-d'));
+        $wh_clause_s  = $warehouse_id ? "AND s.warehouse_id  = {$warehouse_id}" : '';
+        $wh_clause_r  = $warehouse_id ? "AND r.warehouse_id  = {$warehouse_id}" : '';
+        $wh_clause_p  = $warehouse_id ? "AND p.warehouse_id  = {$warehouse_id}" : '';
+        $wh_clause_rs = $warehouse_id ? "AND rs.warehouse_id = {$warehouse_id}" : '';
+
+        $sales_rows    = [];
+        $purchase_rows = [];
+
+        // ── SALES  (invoices + customer returns) ───────────────────
+        if (in_array($type, ['all', 'sales'])) {
+            $sql = "
+                SELECT
+                    s.id            AS trans_id,
+                    'sale'          AS trans_type,
+                    DATE(s.date)    AS trans_date,
+                    s.reference_no,
+                    s.customer      AS party_name,
+                    c.vat_no        AS party_vat_no,
+                    COALESCE(w.name, '')  AS warehouse,
+                    s.warehouse_id,
+                    s.total                                         AS total_invoice,
+                    s.total_discount                                AS total_discount,
+                    ROUND(s.grand_total - s.total_tax, 4)           AS total_net,
+                    s.total_tax                                     AS total_tax,
+                    s.grand_total                                   AS grand_total
+                FROM sma_sales AS s
+                JOIN sma_companies AS c  ON c.id = s.customer_id
+                LEFT JOIN sma_warehouses AS w ON w.id = s.warehouse_id
+                WHERE DATE(s.date) BETWEEN '{$sql_start}' AND '{$sql_end}'
+                  {$wh_clause_s}
+
+                UNION ALL
+
+                SELECT
+                    r.id                 AS trans_id,
+                    'returnCustomer'     AS trans_type,
+                    DATE(r.date)         AS trans_date,
+                    r.reference_no,
+                    r.customer           AS party_name,
+                    c.vat_no             AS party_vat_no,
+                    COALESCE(w.name, '') AS warehouse,
+                    r.warehouse_id,
+                    -(r.total)                                       AS total_invoice,
+                    -(r.total_discount)                              AS total_discount,
+                    -ROUND(r.grand_total - r.total_tax, 4)           AS total_net,
+                    -(r.total_tax)                                   AS total_tax,
+                    -(r.grand_total)                                 AS grand_total
+                FROM sma_returns AS r
+                JOIN sma_companies AS c  ON c.id = r.customer_id
+                LEFT JOIN sma_warehouses AS w ON w.id = r.warehouse_id
+                WHERE DATE(r.date) BETWEEN '{$sql_start}' AND '{$sql_end}'
+                  {$wh_clause_r}
+
+                ORDER BY trans_date ASC, trans_id ASC
+            ";
+            $q = $this->db->query($sql);
+            $sales_rows = $q->num_rows() ? $q->result() : [];
+        }
+
+        // ── PURCHASES  (invoices + supplier returns) ───────────────
+        if (in_array($type, ['all', 'purchases'])) {
+            $sql = "
+                SELECT
+                    p.id            AS trans_id,
+                    'purchase'      AS trans_type,
+                    DATE(p.date)    AS trans_date,
+                    p.reference_no,
+                    p.supplier      AS party_name,
+                    c.vat_no        AS party_vat_no,
+                    COALESCE(w.name, '')  AS warehouse,
+                    p.warehouse_id,
+                    p.total                                         AS total_invoice,
+                    p.total_discount                                AS total_discount,
+                    ROUND(p.grand_total - p.total_tax, 4)           AS total_net,
+                    p.total_tax                                     AS total_tax,
+                    p.grand_total                                   AS grand_total
+                FROM sma_purchases AS p
+                JOIN sma_companies AS c  ON c.id = p.supplier_id
+                LEFT JOIN sma_warehouses AS w ON w.id = p.warehouse_id
+                WHERE DATE(p.date) BETWEEN '{$sql_start}' AND '{$sql_end}'
+                  {$wh_clause_p}
+
+                UNION ALL
+
+                SELECT
+                    rs.id                AS trans_id,
+                    'returnSupplier'     AS trans_type,
+                    DATE(rs.date)        AS trans_date,
+                    rs.reference_no,
+                    rs.supplier          AS party_name,
+                    c.vat_no             AS party_vat_no,
+                    COALESCE(w.name, '') AS warehouse,
+                    rs.warehouse_id,
+                    -(rs.total)                                      AS total_invoice,
+                    -(rs.total_discount)                             AS total_discount,
+                    -ROUND(rs.grand_total - rs.total_tax, 4)         AS total_net,
+                    -(rs.total_tax)                                  AS total_tax,
+                    -(rs.grand_total)                                AS grand_total
+                FROM sma_returns_supplier AS rs
+                JOIN sma_companies AS c  ON c.id = rs.supplier_id
+                LEFT JOIN sma_warehouses AS w ON w.id = rs.warehouse_id
+                WHERE DATE(rs.date) BETWEEN '{$sql_start}' AND '{$sql_end}' 
+                  {$wh_clause_rs}
+
+                ORDER BY trans_date ASC, trans_id ASC
+            ";
+            //echo $sql;exit;
+            $q = $this->db->query($sql);
+            $purchase_rows = $q->num_rows() ? $q->result() : [];
+        }
+
+        // ── summary totals ─────────────────────────────────────────
+        $sum = [
+            'sales_net'        => 0.0,
+            'sales_vat'        => 0.0,
+            'sales_gross'      => 0.0,
+            'purchase_net'     => 0.0,
+            'purchase_vat'     => 0.0,
+            'purchase_gross'   => 0.0,
+        ];
+        foreach ($sales_rows as $r) {
+            $sum['sales_net']   += (float)$r->total_net;
+            $sum['sales_vat']   += (float)$r->total_tax;
+            $sum['sales_gross'] += (float)$r->grand_total;
+        }
+        foreach ($purchase_rows as $r) {
+            $sum['purchase_net']   += (float)$r->total_net;
+            $sum['purchase_vat']   += (float)$r->total_tax;
+            $sum['purchase_gross'] += (float)$r->grand_total;
+        }
+        $sum['net_vat_position'] = $sum['sales_vat'] - $sum['purchase_vat'];
+
+        $this->data['sales_rows']    = $sales_rows;
+        $this->data['purchase_rows'] = $purchase_rows;
+        $this->data['summary']       = $sum;
+
+        // ── Excel export ───────────────────────────────────────────
+        if ($this->input->get('export_excel')) {
+            $this->load->library('excel');
+            $sheet = $this->excel->setActiveSheetIndex(0);
+            $sheet->setTitle('VAT Report');
+
+            $sheet->SetCellValue('A1', '#');
+            $sheet->SetCellValue('B1', lang('date'));
+            $sheet->SetCellValue('C1', lang('reference_no'));
+            $sheet->SetCellValue('D1', 'Type');
+            $sheet->SetCellValue('E1', 'Party');
+            $sheet->SetCellValue('F1', 'VAT No');
+            $sheet->SetCellValue('G1', 'Warehouse');
+            $sheet->SetCellValue('H1', 'Net (ex-VAT)');
+            $sheet->SetCellValue('I1', 'VAT Amount');
+            $sheet->SetCellValue('J1', 'Grand Total');
+
+            $type_labels = [
+                'sale'           => 'Sales Invoice',
+                'returnCustomer' => 'Sales Return',
+                'purchase'       => 'Purchase Invoice',
+                'returnSupplier' => 'Purchase Return',
+            ];
+
+            $all_rows = [];
+            foreach ($sales_rows    as $r) { $all_rows[] = $r; }
+            foreach ($purchase_rows as $r) { $all_rows[] = $r; }
+            usort($all_rows, function ($a, $b) {
+                return strcmp($a->trans_date, $b->trans_date) ?: ($a->trans_id - $b->trans_id);
+            });
+
+            $row = 2;
+            foreach ($all_rows as $i => $r) {
+                $sheet->SetCellValue("A{$row}", $i + 1);
+                $sheet->SetCellValue("B{$row}", date('d-M-Y', strtotime($r->trans_date)));
+                $sheet->SetCellValue("C{$row}", $r->reference_no);
+                $sheet->SetCellValue("D{$row}", $type_labels[$r->trans_type] ?? $r->trans_type);
+                $sheet->SetCellValue("E{$row}", $r->party_name);
+                $sheet->SetCellValue("F{$row}", $r->party_vat_no);
+                $sheet->SetCellValue("G{$row}", $r->warehouse);
+                $sheet->SetCellValue("H{$row}", round((float)$r->total_net,   2));
+                $sheet->SetCellValue("I{$row}", round((float)$r->total_tax,   2));
+                $sheet->SetCellValue("J{$row}", round((float)$r->grand_total, 2));
+                $row++;
+            }
+
+            $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+            $filename = 'VAT_Report_' . date('Y-m-d');
+            $this->load->helper('excel');
+            create_excel($this->excel, $filename);
+            return;
+        }
+
+        $bc = [
+            ['link' => base_url(),           'page' => lang('home')],
+            ['link' => admin_url('reports'),  'page' => lang('reports')],
+            ['link' => '#',                   'page' => 'VAT Report'],
+        ];
+        $meta = ['page_title' => 'VAT Report', 'bc' => $bc];
+        $this->page_construct('reports/vat_report', $meta, $this->data);
+    }
+
+    public function shelving_report()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $filters = [
+            'status'       => $this->input->post('status') ?: '',
+            'product_code' => $this->input->post('product_code') ?: '',
+            'expiry_from'  => $this->input->post('expiry_from') ?: '',
+            'expiry_to'    => $this->input->post('expiry_to') ?: '',
+            'shelving_id'  => $this->input->post('shelving_id') ?: '',
+        ];
+
+        $submitted  = $this->input->post('submit') || $this->input->post('export_excel') || $this->input->post('export_pdf');
+        $reportData = [];
+
+        if ($submitted) {
+            $reportData = $this->reports_model->get_shelving_report($filters);
+        }
+
+        $this->data['filters']    = $filters;
+        $this->data['reportData'] = $reportData;
+
+        // Excel export
+        if ($this->input->post('export_excel')) {
+            $this->load->library('excel');
+            $sheet = $this->excel->setActiveSheetIndex(0);
+            $sheet->setTitle('Shelving Report');
+
+            $headers = ['PO Date', 'Product Code', 'Product Name', 'Batch #', 'Expiry Date', 'Qty', 'Status'];
+            $cols    = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+
+            foreach ($cols as $i => $col) {
+                $sheet->SetCellValue("{$col}1", $headers[$i]);
+            }
+
+            $row = 2;
+            foreach ($reportData as $r) {
+                $sheet->SetCellValue("A{$row}", $r['po_date']);
+                $sheet->SetCellValue("B{$row}", $r['product_code']);
+                $sheet->SetCellValue("C{$row}", $r['product_name']);
+                $sheet->SetCellValue("D{$row}", $r['batch_no']);
+                $sheet->SetCellValue("E{$row}", $r['expiry_date']);
+                $sheet->SetCellValue("F{$row}", $r['qty']);
+                $sheet->SetCellValue("G{$row}", $r['status']);
+                $row++;
+            }
+
+            $widths = ['A' => 12, 'B' => 15, 'C' => 30, 'D' => 12, 'E' => 12, 'F' => 8, 'G' => 10];
+            foreach ($widths as $col => $w) {
+                $sheet->getColumnDimension($col)->setWidth($w);
+            }
+
+            $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+            $filename = 'Warehouse_Shelving_Report_' . date('Y-m-d_H_i_s');
+            $this->load->helper('excel');
+            create_excel($this->excel, $filename);
+            return;
+        }
+
+        // PDF export
+        if ($this->input->post('export_pdf')) {
+            $html = $this->load->view($this->theme . 'reports/shelving_report_pdf', $this->data, true);
+            $name = 'Warehouse_Shelving_Report_' . date('Y_m_d_H_i_s') . '.pdf';
+            $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            return;
+        }
+
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => '#', 'page' => 'Shelving Report'],
+        ];
+        $meta = ['page_title' => 'Warehouse Shelving Report', 'bc' => $bc];
+        $this->page_construct('reports/shelving_report', $meta, $this->data);
     }
 
 }

@@ -495,6 +495,21 @@
                 </li>
                 <?php } ?>
 
+                <?php if($Admin || $Owner || $this->GP['supplier-payment-add']){ ?>
+                <!-- Collection -->
+                <li class="newmenu-item has-sub">
+                    <a href="#" class="newmenu-link">
+                        <i class="fa fa-money"></i>
+                        <span><?= lang('Advances'); ?></span>
+                        <i class="fa fa-chevron-right newmenu-chevron"></i>
+                    </a>
+                    <ul class="newmenu-sub">
+                        <?php if($Admin || $Owner || $this->GP['supplier-payment-add']){ ?>
+                        <li><a href="<?= admin_url('suppliers/add_payment'); ?>" class="newmenu-link"><i class="fa fa-hand-o-up"></i> <?= lang('Add Advance'); ?></a></li>
+                        <?php } ?>
+                    </ul>
+                </li>
+                <?php } ?>
 
                 <?php if($Admin || $Owner || $this->GP['supplier-payment-index']){ ?>
                 <!-- Payments -->
@@ -506,7 +521,7 @@
                     </a>
                     <ul class="newmenu-sub">
                         <?php if($Admin || $Owner || $this->GP['supplier-payment-add']){ ?>
-                            <li><a href="<?= admin_url('suppliers/add_payment'); ?>" class="newmenu-link"><i class="fa fa-hand-holding-usd"></i> <?= lang('Pay Supplier'); ?></a></li>
+                            <li><a href="<?= admin_url('suppliers/payment_to_supplier_new'); ?>" class="newmenu-link"><i class="fa fa-hand-holding-usd"></i> <?= lang('Pay Supplier'); ?></a></li>
                         <?php } ?>
                         <?php if($Admin || $Owner || $this->GP['supplier-payment-index']){ ?>
                             <li><a href="<?= admin_url('suppliers/list_payments'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('Supplier Payments'); ?></a></li>
@@ -666,6 +681,9 @@
                         <?php if($Admin || $Owner || $this->GP['reports-transfer']){ ?>
                         <li><a href="<?= admin_url('reports/transfer_report'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Transfer Report'); ?></a></li>
                         <?php } ?>
+                        <?php if($Admin || $Owner || $this->GP['reports-warehouse-stock']){ ?>
+                        <li><a href="<?= admin_url('reports/shelving_report'); ?>" class="newmenu-link"><i class="fa fa-archive"></i> <?= lang('Warehouse Shelving Report'); ?></a></li>
+                        <?php } ?>
                     </ul>
                 </li>
 
@@ -700,6 +718,20 @@
                     </ul>
                 </li>
 
+                <?php if($Admin || $Owner) { ?>
+                    <li class="newmenu-item has-sub">
+                        <a href="#" class="newmenu-link">
+                            <i class="fa fa-pencil-square-o"></i>
+                            <span><?= lang('JV Templates'); ?></span>
+                            <i class="fa fa-chevron-right newmenu-chevron"></i>
+                        </a>
+                        <ul class="newmenu-sub">
+                            <li><a href="<?= admin_url('entries/recurring_index'); ?>" class="newmenu-link"><i class="fa fa-pencil-square-o"></i> <?= lang('List JV Templates'); ?></a></li>
+                            <li><a href="<?= admin_url('entries/recurring_add'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('Add JV Template'); ?></a></li>
+                        </ul>
+                    </li>
+                <?php } ?>
+
                 <li class="newmenu-item has-sub">
                     <a href="#" class="newmenu-link">
                         <i class="fa fa-pencil-square-o"></i>
@@ -710,6 +742,8 @@
                         <li><a href="<?= admin_url('reports/general_ledger_statement'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('GL Statement'); ?></a></li>
                         <li><a href="<?= admin_url('reports/general_ledger_trial_balance'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i><?= lang('Trial Balance'); ?></a></li>
                         <li><a href="<?= admin_url('reports/GLReport'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('General Ledger Report'); ?></a></li>
+                        <li><a href="<?= admin_url('reports/unpaid_invoices'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Unpaid Invoices Report'); ?></a></li>
+                        <li><a href="<?= admin_url('reports/vat_report'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Vat Report'); ?></a></li>
                     </ul>
                 </li>
             </ul>
@@ -808,8 +842,7 @@
         
         if($Admin || $Owner || $this->GP['sales-deliveries'] || $this->GP['truck_registration_view'] ||  $this->GP['products-adjustments'] || $this->GP['inventory-check'] || $this->GP['rasd-notifications']){
             
-        if($this->GP['rasd-notifications']){
-
+        if($this->GP['rasd-notifications'] || $Admin || $Owner){
         ?>
         
         <!-- Services -->

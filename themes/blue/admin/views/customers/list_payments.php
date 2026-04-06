@@ -1,72 +1,194 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<script>
-    $(document).ready(function () {
-        $('#addRowBtn').click(function() {
-            var newRow = '<tr>' +
-                '<td><input type="text" placeholder="Enter Description" class="form-control" name="description[]" /></td>' +
-                '<td><input type="text" placeholder="Enter Amount" class="form-control" name="payment_amount[]" /></td>' +
-                '</tr>';
-            $('#poTable tbody').append(newRow);
-        });
-    });
-</script>
+
+<?php
+// Rebuild display values from filters (Y-m-d back to d/m/Y for the inputs)
+$filter_from    = '';
+$filter_to      = '';
+$filter_cust_id = !empty($filters['customer_id']) ? $filters['customer_id'] : '';
+if (!empty($filters['from_date'])) {
+    $d = DateTime::createFromFormat('Y-m-d', $filters['from_date']);
+    $filter_from = $d ? $d->format('d/m/Y') : $filters['from_date'];
+}
+if (!empty($filters['to_date'])) {
+    $d = DateTime::createFromFormat('Y-m-d', $filters['to_date']);
+    $filter_to = $d ? $d->format('d/m/Y') : $filters['to_date'];
+}
+?>
+
+<style>
+#paymentFilterForm .form-group { margin-bottom: 0; }
+</style>
 
 <div class="box">
     <div class="box-header">
-        <h2 class="blue"><i class="fa-fw fa fa-info-circle"></i><?= lang('Customer Payment'); ?></h2>
-
-        <div class="box-icon">
-            <ul class="btn-tasks">
-                
-            </ul>
-        </div>
+        <h2 class="blue"><i class="fa-fw fa fa-money"></i><?= lang('Customer Payments'); ?></h2>
     </div>
     <div class="box-content">
+
+        <!-- ── Filter Form ─────────────────────────────────────── -->
+        <form id="paymentFilterForm" method="get" action="<?= admin_url('customers/list_payments') ?>">
+            <div class="row" style="margin-bottom:15px; padding: 10px 15px; background:#f9f9f9; border:1px solid #e0e0e0; border-radius:4px;">
+
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="from_date" style="font-size:12px; font-weight:600;"><?= lang('From Date') ?></label>
+                        <input type="text" id="from_date" name="from_date" class="form-control input-sm date-picker-filter"
+                               placeholder="dd/mm/yyyy" value="<?= htmlspecialchars($filter_from) ?>" autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="to_date" style="font-size:12px; font-weight:600;"><?= lang('To Date') ?></label>
+                        <input type="text" id="to_date" name="to_date" class="form-control input-sm date-picker-filter"
+                               placeholder="dd/mm/yyyy" value="<?= htmlspecialchars($filter_to) ?>" autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="customer_id" style="font-size:12px; font-weight:600;"><?= lang('Customer') ?></label>
+                        <select name="customer_id" id="customer_id" class="form-control input-sm select" style="width:100%;">
+                            <option value=""><?= lang('All Customers') ?></option>
+                            <?php if (!empty($customers)): foreach ($customers as $c): ?>
+                                <option value="<?= $c->id ?>" <?= ($filter_cust_id == $c->id) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($c->company . ' (' . $c->name . ')') ?>
+                                </option>
+                            <?php endforeach; endif; ?>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-2" style="padding-top:22px;">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="fa fa-filter"></i> <?= lang('Filter') ?>
+                    </button>
+                    <a href="<?= admin_url('customers/list_payments') ?>" class="btn btn-default btn-sm">
+                        <i class="fa fa-times"></i> <?= lang('Reset') ?>
+                    </a>
+                </div>
+
+            </div>
+        </form>
+
+        <!-- ── Export button ──────────────────────────────────── -->
+        <div class="row" style="margin-bottom:10px;">
+            <div class="col-md-12 text-right">
+                <?php
+                $export_params = http_build_query([
+                    'customer_id'  => $filter_cust_id,
+                    'from_date'    => $filter_from,
+                    'to_date'      => $filter_to,
+                    'export_excel' => 1,
+                ]);
+                ?>
+                <a href="<?= admin_url('customers/list_payments') ?>?<?= $export_params ?>"
+                   class="btn btn-success btn-sm">
+                    <i class="fa fa-file-excel-o"></i> <?= lang('Export Excel') ?>
+                </a>
+            </div>
+        </div>
+
+        <!-- ── Table ──────────────────────────────────────────── -->
         <div class="row">
             <div class="col-lg-12">
-                
-                <div class="row">
-                    <div class="controls table-controls" style="font-size: 12px !important;">
-                        <table id="poTable"
-                                class="table items table-striped table-bordered table-condensed table-hover sortable_table">
-                            <thead>
+                <div class="table-responsive" style="font-size: 12px;">
+                    <table id="paymentsTable"
+                           class="table table-striped table-bordered table-condensed table-hover">
+                        <thead style="background:#f5f5f5;">
                             <tr>
                                 <th>#</th>
-                                <th><?php echo $this->lang->line('Reference No.'); ?></th>
-                                <th><?php echo $this->lang->line('Customer') ?></th>
-                                <th><?php echo $this->lang->line('Date') ?></th>
-                                <th><?php echo $this->lang->line('Payment Amount') ?></th>
-                                <th><?php echo $this->lang->line('Note') ?></th>
-                                <th><?php echo $this->lang->line('Actions') ?></th>
+                                <th><?= lang('Reference No.') ?></th>
+                                <th><?= lang('Customer') ?></th>
+                                <th><?= lang('Category') ?></th>
+                                <th><?= lang('Date') ?></th>
+                                <th class="text-right"><?= lang('Payment Amount') ?></th>
+                                <th><?= lang('Note') ?></th>
+                                <th><?= lang('Actions') ?></th>
                             </tr>
-                            </thead>
-                            <tbody style="text-align:center;">
-                                <?php 
-                                    $count = 0;
-                                    foreach($payments as $payment){
-                                        $count++;
-                                        ?>
-                                            <tr>
-                                                <td><?= $count; ?></td>
-                                                <td><?= $payment->reference_no; ?></td>
-                                                <td><?= $payment->company; ?></td>
-                                                <td><?= $payment->date; ?></td>
-                                                <td><?= $payment->amount; ?></td>
-                                                <td><?= $payment->note; ?></td>
-                                                <!--<td><a href="<?php echo admin_url('customers/edit_payment/' . $payment->id); ?>" class="tip" title="Edit Payment"><i class="fa fa-edit"></i></a></td>-->
-                                                <td><a href="<?php echo admin_url('customers/view_payment/' . $payment->id); ?>" class="tip" title="View Payment"><i class="fa fa-eye"></i></a></td>
-                                            </tr>
-                                        <?php
-                                    }
-                                ?>
-                            </tbody>
-                            <tfoot></tfoot>
-                        </table>
-                    </div>
-                
+                        </thead>
+                        <tbody>
+                            <?php
+                            $count = 0;
+                            $grand_total = 0.0;
+                            if (!empty($payments)):
+                                foreach ($payments as $payment):
+                                    $count++;
+                                    $grand_total += (float) $payment->amount;
+                            ?>
+                            <tr>
+                                <td><?= $count ?></td>
+                                <td><?= htmlspecialchars($payment->reference_no) ?></td>
+                                <td><?= htmlspecialchars($payment->company) ?></td>
+                                <td>
+                                    <?php if (!empty($payment->customer_group)): ?>
+                                        <span class="label label-info"><?= htmlspecialchars($payment->customer_group) ?></span>
+                                    <?php else: ?>
+                                        <span class="text-muted">—</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?= $payment->date ?></td>
+                                <td class="text-right">
+                                    <?= number_format((float) $payment->amount, 2) ?>
+                                </td>
+                                <td><?= htmlspecialchars($payment->note) ?></td>
+                                <td>
+                                    <a href="<?= admin_url('customers/view_payment/' . $payment->id) ?>"
+                                       class="tip btn btn-xs btn-default" title="<?= lang('View Payment') ?>">
+                                        <i class="fa fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <?php endforeach; endif; ?>
+                        </tbody>
+                        <tfoot style="background:#e8f5e8; font-weight:bold;">
+                            <tr>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th class="text-right"><?= lang('Total') ?></th>
+                                <th class="text-right"><?= number_format($grand_total, 2) ?></th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
             </div>
-
         </div>
-    </div>
-</div>
+
+    </div><!-- /.box-content -->
+</div><!-- /.box -->
+
+<script>
+$(document).ready(function () {
+    // Date pickers
+    $('.date-picker-filter').datetimepicker({
+        format: 'dd/mm/yyyy',
+        autoclose: true,
+        todayHighlight: true,
+        minView: 2
+    });
+
+    // DataTable for sorting / searching / pagination
+    if ($.fn.dataTable) {
+        $('#paymentsTable').DataTable({
+            destroy:   true,
+            paging:    true,
+            searching: true,
+            ordering:  true,
+            order:     [],
+            pageLength: 100,
+            columnDefs: [{ orderable: false, targets: [7] }],
+            language: {
+                search: '<?= lang("Search") ?>:',
+                emptyTable: '<?= lang("No payments found") ?>',
+                lengthMenu: '_MENU_ records per page',
+                info: 'Showing _START_ to _END_ of _TOTAL_ records'
+            }
+        });
+    }
+});
+</script>
 

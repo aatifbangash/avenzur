@@ -375,6 +375,7 @@ class Sales_model extends CI_Model
         $this->db->join('memo_entries me', 'me.memo_id = m.id', 'left');
         $this->db->where('m.customer_id', $customer_id);
         $this->db->where('m.customer_entry_type', 'C');
+        $this->db->where('m.type !=', 'serviceinvoice');
         $this->db->group_by('m.id');
         $this->db->order_by('m.date', 'desc');
         $q = $this->db->get();
@@ -476,6 +477,52 @@ class Sales_model extends CI_Model
 
     public function update_credit_memo($creditmemo_id, $amount_used){
         $this->db->update('sma_memo', ['used_amount' => $amount_used], ['id' => $creditmemo_id]);
+    }
+
+    /**
+     * Get unpaid/partially-paid service invoices for a customer from sma_memo.
+     * Only returns rows where payment_amount > used_amount.
+     *
+     * @param int $customer_id
+     * @return array
+     */
+    public function getCustomerServiceInvoicesForPayment($customer_id) {
+        $this->db->select('id, date, reference_no, customer_id, payment_amount, used_amount');
+        $this->db->from('sma_memo');
+        $this->db->where('customer_id', (int) $customer_id);
+        $this->db->where('type', 'serviceinvoice');
+        $this->db->where('payment_amount > COALESCE(used_amount, 0)', null, false);
+        $this->db->order_by('date', 'asc');
+
+        $q = $this->db->get();
+
+        if ($q->num_rows() > 0) {
+            $invoices = $q->result();
+
+            foreach ($invoices as $inv) {
+                $used_amount = (float) ($inv->used_amount ?? 0);
+
+                $inv->outstanding_amount = round($inv->payment_amount - $used_amount, 5);
+                $inv->grand_total        = $inv->payment_amount;
+                $inv->total_paid         = $used_amount;
+                $inv->type               = 'Service Invoice';
+            }
+
+            return $invoices;
+        }
+
+        return [];
+    }
+
+    /**
+     * Fetch a single sma_memo row (used for service invoice validation in POST handler).
+     *
+     * @param int $id
+     * @return object|false
+     */
+    public function getServiceInvoiceByID($id) {
+        $q = $this->db->get_where('sma_memo', ['id' => (int) $id]);
+        return ($q->num_rows() > 0) ? $q->row() : false;
     }
 
     /*public function update_memo_paid($creditmemo_id, $amount_used)
@@ -622,10 +669,24 @@ class Sales_model extends CI_Model
         return false;
     }
 
-    public function getPaymentReferences(){
-        $this->db->select('payment_reference.*, companies.name as company')
+    public function getPaymentReferences($filters = []){
+        $this->db->select('payment_reference.*, companies.name as company, companies.category as customer_group')
                 ->join('companies', 'companies.id=payment_reference.customer_id', 'left')
-                ->where('customer_id <>', NULL);
+                //->join('sma_payments', 'sma_payments.payment_id=payment_reference.id', 'inner')
+                ->where('payment_reference.customer_id <>', NULL)
+                ->where('payment_reference.note NOT LIKE "%Reconciliation payment for sale ID%"');
+
+        if (!empty($filters['customer_id'])) {
+            $this->db->where('payment_reference.customer_id', $filters['customer_id']);
+        }
+        if (!empty($filters['from_date'])) {
+            $this->db->where('payment_reference.date >=', $filters['from_date']);
+        }
+        if (!empty($filters['to_date'])) {
+            $this->db->where('payment_reference.date <=', $filters['to_date']);
+        }
+
+        $this->db->order_by('payment_reference.date', 'DESC');
         $q = $this->db->get('payment_reference');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -633,7 +694,7 @@ class Sales_model extends CI_Model
             }
             return $data;
         }
-        return false;
+        return [];
     }
 
     public function addPayment($data = [], $customer_id = null)

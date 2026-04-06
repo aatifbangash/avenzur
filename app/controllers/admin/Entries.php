@@ -1997,4 +1997,590 @@ error_reporting(E_ALL);
         }
 	}
 
+	// =========================================================================
+	// RECURRING JV TEMPLATES: Depreciation, Amortization & Custom
+	// =========================================================================
+
+	/**
+	 * List all recurring JV templates.
+	 */
+	public function recurring_index()
+	{
+		$schedules = $this->db->order_by('id', 'DESC')->get('sma_jl_recurring_schedules')->result_array();
+
+		foreach ($schedules as &$s) {
+			$s['posted_count'] = $this->db->where(['schedule_id' => $s['id'], 'status' => 'posted'])->count_all_results('sma_jl_recurring_schedule_items');
+			$s['line_count']   = $this->db->where('schedule_id', $s['id'])->count_all_results('sma_jl_recurring_schedule_lines');
+		}
+		unset($s);
+
+		$this->data['schedules'] = $schedules;
+		$bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('entries'), 'page' => 'Entries'], ['link' => '#', 'page' => 'Recurring JV Templates']];
+		$meta = ['page_title' => 'Recurring JV Templates'];
+		$this->page_construct('accounts/recurring_index', $meta, $this->data);
+	}
+
+	/**
+	 * Add a new recurring JV template (multi-account debit/credit).
+	 */
+	public function recurring_add()
+	{
+		$errors = [];
+
+		if ($this->input->post()) {
+			$name          = trim($this->input->post('name'));
+			$type          = trim($this->input->post('type')) ?: 'depreciation';
+			$periodType    = $this->input->post('period_type') ?: 'monthly';
+			$narration     = $this->input->post('narration');
+			$entrytypeId   = $this->input->post('entrytype_id') ?: null;
+			$debitLedgers  = $this->input->post('debit_ledger_id')  ?: [];
+			$creditLedgers = $this->input->post('credit_ledger_id') ?: [];
+
+			if (!$name)             $errors[] = 'Template Name is required.';
+			if (empty($debitLedgers))  $errors[] = 'At least one Debit account is required.';
+			if (empty($creditLedgers)) $errors[] = 'At least one Credit account is required.';
+
+			// Validate all ledger IDs
+			$allIds = array_merge((array)$debitLedgers, (array)$creditLedgers);
+			foreach ($allIds as $lid) {
+				if (!ctype_digit((string)$lid) || (int)$lid <= 0) {
+					$errors[] = 'One or more selected accounts are invalid.';
+					break;
+				}
+			}
+
+			if (empty($errors)) {
+				$scheduleData = [
+					'type'                => $type,
+					'name'                => $name,
+					'description'         => $this->input->post('description'),
+					'period_type'         => $periodType,
+					'narration'           => $narration,
+					'entrytype_id'        => $entrytypeId,
+					'status'              => 'active',
+					'created_by'          => $this->session->userdata('user_id'),
+					// Fields kept for schema compatibility; not used in JV template mode
+					'total_amount'        => 0,
+					'salvage_value'       => 0,
+					'periods'             => 0,
+					'amount_per_period'   => 0,
+					'ledger_debit_id'     => (int)$debitLedgers[0],
+					'ledger_credit_id'    => (int)$creditLedgers[0],
+					'start_date'          => date('Y-m-d'),
+				];
+				$this->db->insert('sma_jl_recurring_schedules', $scheduleData);
+				$scheduleId = $this->db->insert_id();
+
+				// Insert debit template lines
+				foreach ((array)$debitLedgers as $i => $lid) {
+					if (!(int)$lid) continue;
+					$this->db->insert('sma_jl_recurring_schedule_lines', [
+						'schedule_id'   => $scheduleId,
+						'ledger_id'     => (int)$lid,
+						'dc'            => 'D',
+						'display_order' => $i,
+						'notes'         => (isset($_POST['debit_notes'][$i]) ? trim($_POST['debit_notes'][$i]) : null),
+					]);
+				}
+
+				// Insert credit template lines
+				foreach ((array)$creditLedgers as $i => $lid) {
+					if (!(int)$lid) continue;
+					$this->db->insert('sma_jl_recurring_schedule_lines', [
+						'schedule_id'   => $scheduleId,
+						'ledger_id'     => (int)$lid,
+						'dc'            => 'C',
+						'display_order' => $i,
+						'notes'         => (isset($_POST['credit_notes'][$i]) ? trim($_POST['credit_notes'][$i]) : null),
+					]);
+				}
+
+				$this->session->set_flashdata('message', 'JV Template "' . $name . '" created successfully.');
+				admin_redirect('entries/recurring_view/' . $scheduleId);
+			}
+		}
+
+		$this->data['ledger_options'] = $this->db->select('id, code, name')->order_by('code', 'asc')->get('sma_accounts_ledgers')->result_array();
+		$this->data['entrytypes']     = $this->db->get('sma_accounts_entrytypes')->result_array();
+		$this->data['error']          = !empty($errors) ? implode('<br>', $errors) : $this->session->flashdata('error');
+
+		$bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('entries/recurring_index'), 'page' => 'Recurring JV Templates'], ['link' => '#', 'page' => 'Add Template']];
+		$meta = ['page_title' => 'Add Recurring JV Template', 'bc' => $bc];
+		$this->page_construct('accounts/recurring_add', $meta, $this->data);
+	}
+
+	/**
+	 * View a recurring JV template: shows account lines and posted vouchers.
+	 */
+	public function recurring_view($id = null)
+	{
+		if (!$id) { admin_redirect('entries/recurring_index'); }
+
+		$schedule = $this->db->where('id', $id)->get('sma_jl_recurring_schedules')->row_array();
+		if (!$schedule) {
+			$this->session->set_flashdata('error', 'Template not found.');
+			admin_redirect('entries/recurring_index');
+		}
+
+		// Load all template lines with ledger info
+		$lines = $this->db
+			->select('l.id, l.ledger_id, l.dc, l.display_order, l.notes, a.code as ledger_code, a.name as ledger_name')
+			->from('sma_jl_recurring_schedule_lines l')
+			->join('sma_accounts_ledgers a', 'a.id = l.ledger_id', 'left')
+			->where('l.schedule_id', $id)
+			->order_by('l.dc', 'ASC')
+			->order_by('l.display_order', 'ASC')
+			->get()->result_array();
+
+		// Load posted vouchers (schedule items)
+		$items = $this->db
+			->where('schedule_id', $id)
+			->order_by('period_number', 'DESC')
+			->get('sma_jl_recurring_schedule_items')->result_array();
+
+		$this->data['schedule']      = $schedule;
+		$this->data['debit_lines']   = array_values(array_filter($lines, function($l){ return $l['dc'] === 'D'; }));
+		$this->data['credit_lines']  = array_values(array_filter($lines, function($l){ return $l['dc'] === 'C'; }));
+		$this->data['items']         = $items;
+
+		$bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('entries/recurring_index'), 'page' => 'Recurring JV Templates'], ['link' => '#', 'page' => $schedule['name']]];
+		$meta = ['page_title' => 'JV Template: ' . $schedule['name'], 'bc' => $bc];
+		$this->page_construct('accounts/recurring_view', $meta, $this->data);
+	}
+
+	/**
+	 * Post a monthly voucher using the JV template.
+	 * GET:  Shows form with template accounts; user enters amounts.
+	 * POST: Validates balance (debit = credit), creates journal entry.
+	 */
+	public function recurring_post_voucher($scheduleId = null)
+	{
+		if (!$scheduleId) { admin_redirect('entries/recurring_index'); }
+
+		$schedule = $this->db->where('id', $scheduleId)->get('sma_jl_recurring_schedules')->row_array();
+		if (!$schedule) {
+			$this->session->set_flashdata('error', 'Template not found.');
+			admin_redirect('entries/recurring_index');
+		}
+
+		// Load template lines with ledger info
+		$lines = $this->db
+			->select('l.id, l.ledger_id, l.dc, l.display_order, l.notes, a.code as ledger_code, a.name as ledger_name')
+			->from('sma_jl_recurring_schedule_lines l')
+			->join('sma_accounts_ledgers a', 'a.id = l.ledger_id', 'left')
+			->where('l.schedule_id', $scheduleId)
+			->order_by('l.dc', 'ASC')
+			->order_by('l.display_order', 'ASC')
+			->get()->result_array();
+
+		$debitLines  = array_values(array_filter($lines, function($l){ return $l['dc'] === 'D'; }));
+		$creditLines = array_values(array_filter($lines, function($l){ return $l['dc'] === 'C'; }));
+
+		$errors = [];
+
+		if ($this->input->post()) {
+			$_rawDate     = $this->input->post('voucher_date');
+			$voucherDate  = $this->functionscore->dateToSql($_rawDate);
+			// Fallback: handle dd/mm/yyyy format which strtotime() cannot parse
+			if (!$voucherDate && preg_match('#^(\d{1,2})/(\d{1,2})/(\d{4})$#', $_rawDate, $_dm)) {
+				$voucherDate = $_dm[3] . '-' . str_pad($_dm[2], 2, '0', STR_PAD_LEFT) . '-' . str_pad($_dm[1], 2, '0', STR_PAD_LEFT);
+			}
+			$voucherMonth = trim($this->input->post('voucher_month'));
+			$narration    = trim($this->input->post('narration')) ?: ($schedule['narration'] ?: $schedule['name']);
+			$debitAmts    = $this->input->post('debit_amount')  ?: [];  // [line_id => amount]
+			$creditAmts   = $this->input->post('credit_amount') ?: [];  // [line_id => amount]
+
+			if (!$voucherDate) $errors[] = 'Voucher Date is required.';
+
+			$totalDebit  = 0;
+			$totalCredit = 0;
+			foreach ($debitLines  as $l) { $totalDebit  += (float)($debitAmts[$l['id']]  ?? 0); }
+			foreach ($creditLines as $l) { $totalCredit += (float)($creditAmts[$l['id']] ?? 0); }
+
+			if (abs($totalDebit - $totalCredit) > 0.005) {
+				$errors[] = sprintf(
+					'Entry is not balanced. Debit total (%s) must equal Credit total (%s). Difference: %s',
+					number_format($totalDebit, 2),
+					number_format($totalCredit, 2),
+					number_format(abs($totalDebit - $totalCredit), 2)
+				);
+			}
+
+			if (empty($errors)) {
+				// Resolve entry type
+				$entrytypeId = $schedule['entrytype_id'];
+				if (!$entrytypeId) {
+					$et = $this->db->limit(1)->get('sma_accounts_entrytypes')->row_array();
+					$entrytypeId = $et ? $et['id'] : 1;
+				}
+
+				// Auto-number the journal entry
+				$maxNum  = $this->db->select('MAX(number) AS mx')->get('sma_accounts_entries')->row_array();
+				$nextNum = ($maxNum['mx'] ?? 0) + 1;
+
+				$fullNarration = $narration . ($voucherMonth ? ' – ' . $voucherMonth : '');
+
+				$this->db->insert('sma_accounts_entries', [
+					'entrytype_id'     => $entrytypeId,
+					'number'           => $nextNum,
+					'date'             => $voucherDate,
+					'dr_total'         => $totalDebit,
+					'cr_total'         => $totalCredit,
+					'notes'            => $fullNarration,
+					'transaction_type' => $schedule['type'],
+				]);
+				$entryId = $this->db->insert_id();
+
+				// Insert debit entry items
+				foreach ($debitLines as $line) {
+					$amt = (float)($debitAmts[$line['id']] ?? 0);
+					$this->db->insert('sma_accounts_entryitems', [
+						'entry_id'  => $entryId,
+						'dc'        => 'D',
+						'ledger_id' => $line['ledger_id'],
+						'amount'    => $amt,
+						'narration' => $fullNarration,
+					]);
+				}
+
+				// Insert credit entry items
+				foreach ($creditLines as $line) {
+					$amt = (float)($creditAmts[$line['id']] ?? 0);
+					$this->db->insert('sma_accounts_entryitems', [
+						'entry_id'  => $entryId,
+						'dc'        => 'C',
+						'ledger_id' => $line['ledger_id'],
+						'amount'    => $amt,
+						'narration' => $fullNarration,
+					]);
+				}
+
+				// Record posting in schedule items
+				$nextPeriod = $this->db->where('schedule_id', $scheduleId)->count_all_results('sma_jl_recurring_schedule_items') + 1;
+				$this->db->insert('sma_jl_recurring_schedule_items', [
+					'schedule_id'   => $scheduleId,
+					'period_number' => $nextPeriod,
+					'due_date'      => $voucherDate,
+					'amount'        => $totalDebit,
+					'entry_id'      => $entryId,
+					'status'        => 'posted',
+					'posted_at'     => date('Y-m-d H:i:s'),
+				]);
+
+				$this->session->set_flashdata('message', 'Voucher posted successfully as Journal Entry #' . $nextNum . '.');
+				admin_redirect('entries/recurring_view/' . $scheduleId);
+			}
+		}
+
+		$this->data['schedule']      = $schedule;
+		$this->data['debit_lines']   = $debitLines;
+		$this->data['credit_lines']  = $creditLines;
+		$this->data['error']         = !empty($errors) ? implode('<br>', $errors) : null;
+		// Next voucher number preview
+		$maxNum = $this->db->select('MAX(number) AS mx')->get('sma_accounts_entries')->row_array();
+		$this->data['next_entry_num'] = ($maxNum['mx'] ?? 0) + 1;
+		$this->data['posted_count']   = $this->db->where('schedule_id', $scheduleId)->count_all_results('sma_jl_recurring_schedule_items');
+
+		$bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('entries/recurring_index'), 'page' => 'Recurring JV Templates'], ['link' => admin_url('entries/recurring_view/' . $scheduleId), 'page' => $schedule['name']], ['link' => '#', 'page' => 'Post Voucher']];
+		$meta = ['page_title' => 'Post Voucher – ' . $schedule['name'], 'bc' => $bc];
+		$this->page_construct('accounts/recurring_post_voucher', $meta, $this->data);
+	}
+
+	/**
+	 * Delete a recurring JV template (and its items).
+	 * Does NOT delete already-posted JL entries.
+	 */
+	public function recurring_delete($id = null)
+	{
+		if (!$id) { admin_redirect('entries/recurring_index'); }
+
+		$schedule = $this->db->where('id', $id)->get('sma_jl_recurring_schedules')->row_array();
+		if (!$schedule) {
+			$this->session->set_flashdata('error', 'Template not found.');
+			admin_redirect('entries/recurring_index');
+		}
+
+		// Delete template lines and schedule items (but not the actual JL entries)
+		$this->db->where('schedule_id', $id)->delete('sma_jl_recurring_schedule_lines');
+		$this->db->where('schedule_id', $id)->delete('sma_jl_recurring_schedule_items');
+		$this->db->where('id', $id)->delete('sma_jl_recurring_schedules');
+
+		$this->session->set_flashdata('message', 'Template "' . $schedule['name'] . '" deleted.');
+		admin_redirect('entries/recurring_index');
+	}
+
+	// =========================================================================
+	// SALARY RUNS
+	// =========================================================================
+
+	/**
+	 * List all salary runs.
+	 */
+	public function salary_index()
+	{
+		$runs = $this->db->order_by('id', 'DESC')->get('sma_salary_runs')->result_array();
+		$this->data['runs'] = $runs;
+
+		$bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('entries'), 'page' => 'Entries'], ['link' => '#', 'page' => 'Salary Runs']];
+		$meta = ['page_title' => 'Salary Runs', 'bc' => $bc];
+		$this->page_construct('accounts/salary_index', $meta, $this->data);
+	}
+
+	/**
+	 * Create a new salary run (draft).
+	 * Accepts employee rows via POST: rows[0][employee_id], rows[0][employee_name],
+	 * rows[0][ledger_salary_exp_id], rows[0][ledger_payable_id],
+	 * rows[0][gross_amount], rows[0][deductions], rows[0][narration], rows[0][department_id]
+	 */
+	public function salary_add()
+	{
+		$this->form_validation->set_rules('run_name',     'Run Name',    'required|trim');
+		$this->form_validation->set_rules('period_month', 'Month',       'required|is_natural_no_zero|less_than[13]');
+		$this->form_validation->set_rules('period_year',  'Year',        'required|is_natural_no_zero');
+		$this->form_validation->set_rules('run_date',     'Run Date',    'required');
+
+		if ($this->form_validation->run() == FALSE) {
+			// Flat list of child ledgers — no tree, no groups
+			$this->data['ledger_options'] = $this->db->select('id, code, name')->order_by('code', 'asc')->get('sma_accounts_ledgers')->result_array();
+			$this->data['employees']      = $this->site->getAllEmployees();
+			$this->data['departments']    = $this->site->getAllDepartments();
+			$this->data['entrytypes']     = $this->db->get('sma_accounts_entrytypes')->result_array();
+			$this->data['error']          = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+
+			$bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('entries/salary_index'), 'page' => 'Salary Runs'], ['link' => '#', 'page' => 'New Salary Run']];
+			$meta = ['page_title' => 'New Salary Run', 'bc' => $bc];
+			$this->page_construct('accounts/salary_add', $meta, $this->data);
+			
+			return;
+		}
+
+		$rows = $this->input->post('rows');
+		if (empty($rows) || !is_array($rows)) {
+			$this->session->set_flashdata('error', 'Please add at least one employee salary row.');
+			admin_redirect('entries/salary_add');
+		}
+
+		// Calculate totals
+		$totalGross      = 0;
+		$totalDeductions = 0;
+		$totalNet        = 0;
+		$validRows       = [];
+
+		foreach ($rows as $row) {
+			if (empty($row['employee_name']) || empty($row['ledger_salary_exp_id']) || empty($row['ledger_payable_id'])) {
+				continue;
+			}
+			$gross      = (float) ($row['gross_amount']  ?? 0);
+			$deductions = (float) ($row['deductions']    ?? 0);
+			$net        = $gross - $deductions;
+
+			$totalGross      += $gross;
+			$totalDeductions += $deductions;
+			$totalNet        += $net;
+
+			$validRows[] = [
+				'employee_id'          => (int) ($row['employee_id'] ?? 0),
+				'employee_name'        => $this->input->post('rows')[array_search($row, $rows)]['employee_name'] ?? $row['employee_name'],
+				'ledger_salary_exp_id' => (int) $row['ledger_salary_exp_id'],
+				'ledger_payable_id'    => (int) $row['ledger_payable_id'],
+				'gross_amount'         => $gross,
+				'deductions'           => $deductions,
+				'net_amount'           => $net,
+				'narration'            => $row['narration']     ?? '',
+				'department_id'        => (int) ($row['department_id'] ?? 0),
+			];
+		}
+
+		if (empty($validRows)) {
+			$this->session->set_flashdata('error', 'No valid employee rows found. Please fill all required fields.');
+			admin_redirect('entries/salary_add');
+		}
+
+		// Insert run header
+		$runData = [
+			'run_name'        => $this->input->post('run_name'),
+			'period_month'    => (int) $this->input->post('period_month'),
+			'period_year'     => (int) $this->input->post('period_year'),
+			'run_date'        => $this->functionscore->dateToSql($this->input->post('run_date')),
+			'description'     => $this->input->post('description'),
+			'total_gross'     => $totalGross,
+			'total_deductions' => $totalDeductions,
+			'total_net'       => $totalNet,
+			'entrytype_id'    => $this->input->post('entrytype_id') ?: null,
+			'status'          => 'draft',
+			'created_by'      => $this->session->userdata('user_id'),
+		];
+		$this->db->insert('sma_salary_runs', $runData);
+		$runId = $this->db->insert_id();
+
+		// Insert individual rows
+		foreach ($validRows as $vr) {
+			$vr['run_id'] = $runId;
+			$this->db->insert('sma_salary_run_items', $vr);
+		}
+
+		$this->session->set_flashdata('message', 'Salary run "' . $runData['run_name'] . '" created as draft with ' . count($validRows) . ' employees.');
+		admin_redirect('entries/salary_view/' . $runId);
+	}
+
+	/**
+	 * View a salary run and its employee lines.
+	 */
+	public function salary_view($id = null)
+	{
+		if (!$id) { admin_redirect('entries/salary_index'); }
+
+		$run = $this->db->where('id', $id)->get('sma_salary_runs')->row_array();
+		if (!$run) {
+			$this->session->set_flashdata('error', 'Salary run not found.');
+			admin_redirect('entries/salary_index');
+		}
+
+		$items = $this->db->where('run_id', $id)->get('sma_salary_run_items')->result_array();
+
+		// Attach ledger names for display
+		foreach ($items as &$item) {
+			$item['salary_exp_ledger_name'] = $this->ledger_model->getName($item['ledger_salary_exp_id']);
+			$item['payable_ledger_name']    = $this->ledger_model->getName($item['ledger_payable_id']);
+		}
+		unset($item);
+
+		$this->data['run']   = $run;
+		$this->data['items'] = $items;
+
+		// If already posted, attach JL entry info
+		if ($run['entry_id']) {
+			$this->data['jl_entry'] = $this->db->where('id', $run['entry_id'])->get('sma_accounts_entries')->row_array();
+		}
+
+		$bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('entries/salary_index'), 'page' => 'Salary Runs'], ['link' => '#', 'page' => $run['run_name']]];
+		$meta = ['page_title' => 'Salary Run: ' . $run['run_name'], 'bc' => $bc];
+		$this->page_construct('accounts/salary_view', $meta, $this->data);
+	}
+
+	/**
+	 * Post a salary run to the JL.
+	 * Creates one combined JL entry: Dr each salary-expense ledger, Cr each salary-payable ledger.
+	 */
+	public function salary_post($id = null)
+	{
+		$run = $this->db->where('id', $id)->get('sma_salary_runs')->row_array();
+		if (!$run) {
+			$this->session->set_flashdata('error', 'Salary run not found.');
+			admin_redirect('entries/salary_index');
+		}
+
+		if ($run['status'] === 'posted') {
+			$this->session->set_flashdata('error', 'This salary run is already posted.');
+			admin_redirect('entries/salary_view/' . $id);
+		}
+
+		$items = $this->db->where('run_id', $id)->get('sma_salary_run_items')->result_array();
+		if (empty($items)) {
+			$this->session->set_flashdata('error', 'No employee items to post.');
+			admin_redirect('entries/salary_view/' . $id);
+		}
+
+		// Determine entry type
+		$entrytypeId = $run['entrytype_id'];
+		if (!$entrytypeId) {
+			$et = $this->db->limit(1)->get('sma_accounts_entrytypes')->row_array();
+			$entrytypeId = $et ? $et['id'] : 1;
+		}
+
+		$maxNum  = $this->db->select('MAX(number) AS mx')->get('sma_accounts_entries')->row_array();
+		$nextNum = ($maxNum['mx'] ?? 0) + 1;
+
+		$months      = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+		$periodLabel = $months[$run['period_month']] . ' ' . $run['period_year'];
+		$notes       = 'Salary - ' . $run['run_name'] . ' (' . $periodLabel . ')';
+
+		// Insert JL entry header — Dr total = Cr total = total_gross (net + deductions)
+		$entryData = [
+			'entrytype_id'     => $entrytypeId,
+			'number'           => $nextNum,
+			'date'             => $run['run_date'],
+			'dr_total'         => $run['total_gross'],
+			'cr_total'         => $run['total_gross'],
+			'notes'            => $notes,
+			'transaction_type' => 'salary',
+		];
+		$this->db->insert('sma_accounts_entries', $entryData);
+		$entryId = $this->db->insert_id();
+
+		// Insert Dr lines (Salary Expense) - gross per employee
+		foreach ($items as $item) {
+			$this->db->insert('sma_accounts_entryitems', [
+				'entry_id'      => $entryId,
+				'dc'            => 'D',
+				'ledger_id'     => $item['ledger_salary_exp_id'],
+				'amount'        => $item['gross_amount'],
+				'narration'     => 'Salary: ' . $item['employee_name'] . ($item['narration'] ? ' - ' . $item['narration'] : ''),
+				'employee_id'   => $item['employee_id'],
+				'department_id' => $item['department_id'],
+			]);
+		}
+
+		// Insert Cr lines (Salary Payable) per employee:
+		//   Line 1 — net salary (what the employee receives)
+		//   Line 2 — deductions (withheld from employee, held as payable until remitted)
+		// Together they equal the gross, keeping Dr = Cr.
+		foreach ($items as $item) {
+			if ($item['net_amount'] > 0) {
+				$this->db->insert('sma_accounts_entryitems', [
+					'entry_id'      => $entryId,
+					'dc'            => 'C',
+					'ledger_id'     => $item['ledger_payable_id'],
+					'amount'        => $item['net_amount'],
+					'narration'     => 'Net Salary: ' . $item['employee_name'],
+					'employee_id'   => $item['employee_id'],
+					'department_id' => $item['department_id'],
+				]);
+			}
+			if ($item['deductions'] > 0) {
+				$this->db->insert('sma_accounts_entryitems', [
+					'entry_id'      => $entryId,
+					'dc'            => 'C',
+					'ledger_id'     => $item['ledger_payable_id'],
+					'amount'        => $item['deductions'],
+					'narration'     => 'Deductions: ' . $item['employee_name'],
+					'employee_id'   => $item['employee_id'],
+					'department_id' => $item['department_id'],
+				]);
+			}
+		}
+
+		// Update run status
+		$this->db->where('id', $id)->update('sma_salary_runs', [
+			'status'   => 'posted',
+			'entry_id' => $entryId,
+		]);
+
+		$this->session->set_flashdata('message', 'Salary run posted to JL as entry #' . $nextNum . '.');
+		admin_redirect('entries/salary_view/' . $id);
+	}
+
+	/**
+	 * Delete a salary run (only if still in draft status).
+	 */
+	public function salary_delete($id = null)
+	{
+		$run = $this->db->where('id', $id)->get('sma_salary_runs')->row_array();
+		if (!$run) {
+			$this->session->set_flashdata('error', 'Salary run not found.');
+			admin_redirect('entries/salary_index');
+		}
+
+		if ($run['status'] === 'posted') {
+			$this->session->set_flashdata('error', 'Cannot delete a posted salary run. Reverse the JL entry first.');
+			admin_redirect('entries/salary_view/' . $id);
+		}
+
+		$this->db->where('run_id', $id)->delete('sma_salary_run_items');
+		$this->db->where('id', $id)->delete('sma_salary_runs');
+
+		$this->session->set_flashdata('message', 'Salary run "' . $run['run_name'] . '" deleted.');
+		admin_redirect('entries/salary_index');
+	}
+
 }

@@ -303,7 +303,7 @@
                                     <?php $totalPurchasePrice += $row->purchase_price; ?>
                                     <?php $grandTotalPurchasePrice += $row->purchase_price * $row->quantity; ?>
                                     <?php $totalCostPrice += $row->cost_price; ?>
-                                    <?php $grandTotalCostPrice += $row->cost_price * $row->quantity; ?>
+                                    <?php $grandTotalCostPrice += $row->total_cost_price; ?>
                                 <?php endforeach; ?>
 
                                 <?php foreach ($stock_data as $index => $row): ?>
@@ -334,7 +334,7 @@
                                         
                                         <td><?= number_format($row->cost_price, 2, '.', ',') ?></td>
                                         
-                                        <td><?= number_format($row->cost_price * $row->quantity, 2, '.', ',') ?></td>
+                                        <td><?= number_format($row->total_cost_price, 2, '.', ',') ?></td>
                                         
                                     </tr>
                                 <?php endforeach; ?>

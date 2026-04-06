@@ -238,7 +238,7 @@
                                             <?php if ($imageMissing) : ?>
                                                 <span class="label label-warning">No Image</span>
                                             <?php else : ?>
-                                                <img src="<?= base_url('assets/uploads/' . $row->image) ?>"
+                                                <img src="<?= htmlspecialchars($row->image) ?>"
                                                     alt="<?= htmlspecialchars($row->name) ?>"
                                                     style="width:60px; height:60px; object-fit:cover; border:1px solid #ddd; padding:2px; background:#fff;">
                                             <?php endif; ?>
