@@ -156,13 +156,13 @@
                                                 <td class="text-right"><?= $this->sma->formatQuantity($data->qty) ?></td>
                                                 <td class="text-right"><?= isset($data->current_stock) ? $this->sma->formatQuantity($data->current_stock) : '0' ?></td>
                                                 <td class="text-right"><?= $data->bonus ?></td>
-                                                <td class="text-right"><?= $this->sma->formatMoney($data->unit_cost) ?></td>
+                                                <td class="text-right"><?= number_format($data->unit_cost, 2) ?></td>
                                                 <td class="text-right"><?= isset($data->discount_percent) ? number_format($data->discount_percent, 2) . '%' : '0.00%' ?></td>
-                                                <td class="text-right"><?= $this->sma->formatMoney($data->public_price) ?></td>
-                                                <td class="text-right"><?= $this->sma->formatMoney($data->purchase) ?></td>
-                                                <td class="text-right"><?= $this->sma->formatMoney($data->vat) ?></td>
-                                                <td class="text-right"><?= $this->sma->formatMoney($data->payable) ?></td>
-                                                <!--<td class="text-right"><?= $this->sma->formatMoney($data->payment) ?></td>-->
+                                                <td class="text-right"><?= number_format($data->public_price, 2) ?></td>
+                                                <td class="text-right"><?= number_format($data->purchase, 2) ?></td>
+                                                <td class="text-right"><?= number_format($data->vat, 2) ?></td>
+                                                <td class="text-right"><?= number_format($data->payable, 2) ?></td>
+                                                <!--<td class="text-right"><?= number_format($data->payment, 2) ?></td>-->
                                             </tr>
                                         <?php
                                         }
