@@ -68,6 +68,9 @@
                     $subTotal = 0;
                     $totalAmount = 0;
                     foreach ($rows as $row):
+                        $is_vat_15 = ($row->tax_rate_id == 5);
+                        $vat = $is_vat_15 ? ($row->totalbeforevat * 0.15) : 0;
+                        $total_after_vat = $row->totalbeforevat + $vat;
                         $subTotal = ($row->real_unit_price * $row->unit_quantity);
                         ?>
                         <tr>
@@ -95,13 +98,15 @@
                                 <?= number_format($row->discount3, 2); ?>
                             </td>
                              <td style="text-align:right;">
-                                <?= $row->item_tax ? '15% - ' . number_format($row->item_tax, 2) : '0%' ?>
+                                <?= $is_vat_15 ? '15% - ' . number_format($vat, 2) : '0%' ?>
                             </td>
-                               <td style="text-align:right;">
+
+                            <td style="text-align:right;">
                                 <?= number_format($row->totalbeforevat, 2); ?>
                             </td>
-                               <td style="text-align:right;">
-                                <?= number_format($row->main_net, 2); ?>
+
+                            <td style="text-align:right;">
+                                <?= number_format($total_after_vat, 2); ?>
                             </td>
                          
                            
