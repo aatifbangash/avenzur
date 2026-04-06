@@ -39,6 +39,7 @@ class Purchase_order_upload extends MY_Controller
      */
     public function parse()
     {
+        $this->load->helper('string');
         if (empty($_FILES['excel_file']['name'])) {
             $this->session->set_flashdata('error', 'Please select an Excel file.');
             admin_redirect('purchase_order_upload');
@@ -119,6 +120,7 @@ class Purchase_order_upload extends MY_Controller
 
             $description_en      = isset($row[18]) ? trim($row[18]) : '';
             $image_link          = isset($row[19]) ? trim($row[19]) : '';
+            $shelf_life          = isset($row[20]) ? trim($row[20]) : '';
 
 
             // skip empty row
@@ -179,6 +181,13 @@ class Purchase_order_upload extends MY_Controller
             if ($sale_price_inc_vat <= 0) {
                 $errors[] = 'Sale price is required';
             }
+            if ($batch_number === '') {
+                $errors[] = 'Batch number is required';
+            }
+
+            if (empty($expiry_date) && empty(trim($shelf_life))) {
+                $errors[] = 'Either Expiry Date or Shelf Life must be provided';
+            }
 
             // expiry rule check via sma_expiry_category_rules
             $expiry_rule = $this->pou->getExpiryRule($item_barcode);
@@ -228,7 +237,8 @@ class Purchase_order_upload extends MY_Controller
                 'subtotal'        => $purchase_price * $quantity,
                 'description_en'    => $description_en,
                 'image_link'        => $image_link,
-                'brand_name'        => strtolower($brand_name),
+                'shelf_life'        => $shelf_life,
+                'brand_name'        => to_snake_case($brand_name),
 
                 'error'             => $errors,
                 'has_error'         => !empty($errors),

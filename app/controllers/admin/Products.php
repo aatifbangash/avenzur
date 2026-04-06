@@ -9342,6 +9342,7 @@ error_reporting(E_ALL);
     }
     public function parse()
     {
+        $this->load->helper('string');
         if (empty($_FILES['excel_file']['name'])) {
             $this->session->set_flashdata('error', 'Please select an Excel file.');
             admin_redirect('products/upload_products');
@@ -9443,9 +9444,7 @@ error_reporting(E_ALL);
                     $tax_rate_id = 5;
                 } else {
                     $tax_rate_id = 1;
-                    $tax_percent = 0;
                 }
-                // $tax_rate_id = $row['vat_percent'];
 
                 // Check if product exists
                 $existing_product = $this->products_model->getProductByCode(trim($row['product_code']));
@@ -9459,7 +9458,7 @@ error_reporting(E_ALL);
                     }
 
                     if (isset($row['brand_name']) && trim($row['brand_name']) !== '') {
-                        $update_data['brand_name'] = trim($row['brand_name']);
+                        $update_data['brand_name'] = to_snake_case(trim($row['brand_name']));
                     }
 
                     if ($tax_rate_id !== null && $tax_rate_id !== '') {
@@ -9510,7 +9509,7 @@ error_reporting(E_ALL);
                         'name'            => trim($row['product_name']),
                         'cost'            => 0,
                         'price'           => 0,
-                        'brand_name'      => trim($row['brand_name']),
+                        'brand_name'      => to_snake_case(trim($row['brand_name'])),
                         'category_id'     => 1,
                         'tax_rate'        => $tax_rate_id,
                         'tax_method'      => '1',

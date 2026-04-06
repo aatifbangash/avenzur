@@ -148,6 +148,7 @@ class Purchase_order_upload_model extends CI_Model
             $varient_name   = trim((string)($row['variant_name'] ?? ''));
             $batch_no       = trim((string)($row['batch_number'] ?? ''));
             $expiry_date    = !empty($row['expiry_date']) ? $row['expiry_date'] : null;
+            $shelf_life     = !empty($row['shelf_life']) ? (int)$row['shelf_life'] : null;
             $sale_price     = (float)($row['sale_price'] ?? 0);
             $purchase_price = (float)($row['purchase_price'] ?? 0);
             $cost_price     = (float)($row['cost_price'] ?? 0);
@@ -210,6 +211,7 @@ class Purchase_order_upload_model extends CI_Model
                     'variant'        => trim($variant_barcode . ' - ' . $varient_name),
                     'parent_id'      => $parent_id,
                     'brand_name'     => $brand_name,
+                    'shelf_life'     => $shelf_life,
                 ];
 
                 $add_result = $this->products_model->addProductSimplified($product_data);
