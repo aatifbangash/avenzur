@@ -8141,4 +8141,80 @@ class Reports extends MY_Controller
         $this->page_construct('reports/vat_report', $meta, $this->data);
     }
 
+    public function shelving_report()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $filters = [
+            'status'       => $this->input->post('status') ?: '',
+            'product_code' => $this->input->post('product_code') ?: '',
+            'expiry_from'  => $this->input->post('expiry_from') ?: '',
+            'expiry_to'    => $this->input->post('expiry_to') ?: '',
+            'shelving_id'  => $this->input->post('shelving_id') ?: '',
+        ];
+
+        $submitted  = $this->input->post('submit') || $this->input->post('export_excel') || $this->input->post('export_pdf');
+        $reportData = [];
+
+        if ($submitted) {
+            $reportData = $this->reports_model->get_shelving_report($filters);
+        }
+
+        $this->data['filters']    = $filters;
+        $this->data['reportData'] = $reportData;
+
+        // Excel export
+        if ($this->input->post('export_excel')) {
+            $this->load->library('excel');
+            $sheet = $this->excel->setActiveSheetIndex(0);
+            $sheet->setTitle('Shelving Report');
+
+            $headers = ['PO Date', 'Product Code', 'Product Name', 'Batch #', 'Expiry Date', 'Qty', 'Status'];
+            $cols    = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+
+            foreach ($cols as $i => $col) {
+                $sheet->SetCellValue("{$col}1", $headers[$i]);
+            }
+
+            $row = 2;
+            foreach ($reportData as $r) {
+                $sheet->SetCellValue("A{$row}", $r['po_date']);
+                $sheet->SetCellValue("B{$row}", $r['product_code']);
+                $sheet->SetCellValue("C{$row}", $r['product_name']);
+                $sheet->SetCellValue("D{$row}", $r['batch_no']);
+                $sheet->SetCellValue("E{$row}", $r['expiry_date']);
+                $sheet->SetCellValue("F{$row}", $r['qty']);
+                $sheet->SetCellValue("G{$row}", $r['status']);
+                $row++;
+            }
+
+            $widths = ['A' => 12, 'B' => 15, 'C' => 30, 'D' => 12, 'E' => 12, 'F' => 8, 'G' => 10];
+            foreach ($widths as $col => $w) {
+                $sheet->getColumnDimension($col)->setWidth($w);
+            }
+
+            $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+            $filename = 'Warehouse_Shelving_Report_' . date('Y-m-d_H_i_s');
+            $this->load->helper('excel');
+            create_excel($this->excel, $filename);
+            return;
+        }
+
+        // PDF export
+        if ($this->input->post('export_pdf')) {
+            $html = $this->load->view($this->theme . 'reports/shelving_report_pdf', $this->data, true);
+            $name = 'Warehouse_Shelving_Report_' . date('Y_m_d_H_i_s') . '.pdf';
+            $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            return;
+        }
+
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => '#', 'page' => 'Shelving Report'],
+        ];
+        $meta = ['page_title' => 'Warehouse Shelving Report', 'bc' => $bc];
+        $this->page_construct('reports/shelving_report', $meta, $this->data);
+    }
+
 }
