@@ -82,6 +82,7 @@
                                 <th><?php echo $this->lang->line("discount_3"); ?> <?php echo $this->lang->line("value"); ?></th>
                                 <th><?php echo $this->lang->line("description"); ?></th>
                                 <th><?php echo $this->lang->line("image"); ?></th>
+                                <th><?php echo $this->lang->line("Shelf Life"); ?></th>
                                 <th><?php echo $this->lang->line("subtotal"); ?></th>
                             </tr>
                         </thead>
@@ -110,11 +111,12 @@
                                     <td><?php echo word_limiter($row['description_en'] ?? '', 4); ?></td>
                                     <td>
                                         <?php if (!empty($row['image_link'])): ?>
-                                            <img src="<?php echo htmlspecialchars($row['image_link']); ?>" style="height:32px;width:auto">
+                                            <img src="<?php echo htmlspecialchars($row['image_link']); ?>" alt="product image" style="height:32px;width:auto">
                                         <?php else: ?>
                                             —
                                         <?php endif; ?>
                                     </td>
+                                    <td><?php echo htmlspecialchars($row['shelf_life'] ?? '—'); ?></td>
                                     <td><?php echo number_format($row['subtotal'] ?? 0, 2); ?></td>
                                 </tr>
                             <?php } ?>

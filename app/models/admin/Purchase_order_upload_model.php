@@ -148,7 +148,7 @@ class Purchase_order_upload_model extends CI_Model
             $varient_name   = trim((string)($row['variant_name'] ?? ''));
             $batch_no       = trim((string)($row['batch_number'] ?? ''));
             $expiry_date    = !empty($row['expiry_date']) ? $row['expiry_date'] : null;
-            $shelf_life     = !empty($row['shelf_life']) ? (int)$row['shelf_life'] : null;
+            $shelf_life     = !empty($row['shelf_life']) ? trim((string)$row['shelf_life']) : null;
             $sale_price     = (float)($row['sale_price'] ?? 0);
             $purchase_price = (float)($row['purchase_price'] ?? 0);
             $cost_price     = (float)($row['cost_price'] ?? 0);
@@ -223,8 +223,8 @@ class Purchase_order_upload_model extends CI_Model
 
             } else {
 
-                // update image/details for existing product
-                $this->purchase_order_model->updateProductImage($product_id, $image_link, $details);
+                // update image/details/shelf_life for existing product
+                $this->purchase_order_model->updateProductImage($product_id, $image_link, $details, $shelf_life);
 
                 if (($product->image == '' || $product->image == null) && $image_link == '') {
                     return [
@@ -261,6 +261,7 @@ class Purchase_order_upload_model extends CI_Model
                 'product_name'          => $item_name,
                 'batchno'               => $batch_no,
                 'expiry'                => $expiry_date,
+                'shelf_life'            => $shelf_life,
                 'net_unit_cost'         => $cost_price,
                 'quantity'              => $qty,
                 'actual_quantity'       => $qty,
