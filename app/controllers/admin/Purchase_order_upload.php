@@ -74,9 +74,8 @@ class Purchase_order_upload extends MY_Controller
             $sheet = $spreadsheet->getActiveSheet();
             $rows = $sheet->toArray(null, true, true, false);
         } catch (Exception $e) {
-            print_r($e->getMessage());
             @unlink($path);
-            $this->session->set_flashdata('error', 'Excel could not be read.');
+            $this->session->set_flashdata('error', 'Excel could not be read: ' . $e->getMessage());
             admin_redirect('purchase_order_upload');
         }
 
@@ -249,9 +248,15 @@ class Purchase_order_upload extends MY_Controller
         }
         
         if (!empty($has_errors)) {
-            $this->session->set_flashdata('errors', $errors);
+            $all_errors = [];
+            foreach ($parsed_rows as $r) {
+                foreach ($r['error'] as $err) {
+                    $all_errors[] = "Row {$r['row_no']}: $err";
+                }
+            }
+            $this->session->set_flashdata('errors', $all_errors);
             $this->session->set_flashdata('error', 'Some rows have errors. Please correct the Excel file and reupload.');
-             admin_redirect('purchase_order_upload');
+            admin_redirect('purchase_order_upload');
         }
 
         $payload = [
