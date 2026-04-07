@@ -7827,6 +7827,7 @@ class Reports extends MY_Controller
             ->join('companies c',   'c.id = p.supplier_id',  'left')
             ->join('warehouses w',  'w.id = p.warehouse_id', 'left')
             ->where('p.purchase_invoice', 1)
+            ->where('p.note != "import from excel"') // exclude return-type purchases
             ->where('p.grand_total > 0')
             ->having('outstanding > 0')
             ->order_by('p.date', 'asc');
