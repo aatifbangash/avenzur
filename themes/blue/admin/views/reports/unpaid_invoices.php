@@ -8,9 +8,9 @@
     }
 
     $(document).ready(function () {
-        // Date pickers
+        // Date pickers (date-only — no time component)
         $('#start_date, #end_date').datetimepicker({
-            format: site.dateFormats.js_date,
+            format: site.dateFormats.js_sdate,
             fontAwesome: true,
             language: 'sma',
             weekStart: 1,
