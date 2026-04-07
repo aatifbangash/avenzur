@@ -205,6 +205,8 @@
                         <th><?= lang('date') ?></th>
                         <th><?= lang('reference_no') ?></th>
                         <th><?= ($type === 'ar') ? lang('customer') : lang('supplier') ?></th>
+                        <th>Seq. Code</th>
+                        <th>Ledger Acc.</th>
                         <?php if ($type === 'ar'): ?><th><?= lang('area') ?></th><?php endif; ?>
                         <th class="text-right"><?= lang('Invoice Total') ?></th>
                         <?php if ($type === 'ar'): ?>
@@ -237,6 +239,8 @@
                         <td><?= date('d-M-Y', strtotime($inv->date)) ?></td>
                         <td><a href="<?= $detail_url ?>" target="_blank"><?= htmlspecialchars($inv->reference_no ?: '#' . $inv->invoice_id) ?></a></td>
                         <td><?= htmlspecialchars($inv->party_name) ?></td>
+                        <td><?= htmlspecialchars($inv->sequence_code ?? '') ?></td>
+                        <td><?= htmlspecialchars($inv->ledger_name ?? '') ?></td>
                         <?php if ($type === 'ar'): ?><td><?= htmlspecialchars($inv->area ?? '') ?></td><?php endif; ?>
                         <td class="text-right"><?= number_format($inv->invoice_total ,2) ?></td>
                         <?php if ($type === 'ar'): ?>
@@ -263,7 +267,7 @@
                 </tbody>
                 <tfoot>
                     <tr style="font-weight:bold; background-color:#f0f0f0;">
-                        <td colspan="<?= ($type === 'ar') ? 5 : 4 ?>" class="text-right"><?= lang('total') ?></td>
+                        <td colspan="<?= ($type === 'ar') ? 7 : 6 ?>" class="text-right"><?= lang('total') ?></td>
                         <td class="text-right"><?= number_format($total_invoice ,2) ?></td>
                         <?php if ($type === 'ar'): ?>
                         <td class="text-right"><?= number_format($total_discount ,2) ?></td>
