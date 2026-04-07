@@ -250,7 +250,7 @@
                             <?php
                             $d = (int)$inv->days_overdue;
                             if ($d <= 0) {
-                                $badge_text = ($d === 0) ? 'Due today' : '' . abs($d) . 'd';
+                                $badge_text = ($d === 0) ? 'Due today' : '' . abs($d) . '';
                                 echo "<span class=\"label label-success\">{$badge_text}</span>";
                             } else {
                                 $badge = ($d >= 90) ? 'danger' : (($d >= 30) ? 'warning' : 'default');
