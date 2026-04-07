@@ -233,8 +233,12 @@ class Purchase_order_upload_model extends CI_Model
                     ];
                 }
 
-                $tax_rate_id = $product->tax_rate;
-                $tax_percent = ((int)$product->tax_rate === 5) ? 15 : 0;
+                if ($tax_percent == 15) {
+                    $tax_rate_id = 5;
+                } else {
+                    $tax_rate_id = 1;
+                    $tax_percent = 0;
+                }
             }
 
             if (!$product_id) {
@@ -330,7 +334,6 @@ class Purchase_order_upload_model extends CI_Model
                 'error' => 'Duplicate purchase order detected.'
             ];
         }
-
         $result = $this->purchase_order_model->addPurchaseFromExcel($data, $products);
 
         if ($result && isset($result['success']) && $result['success']) {
