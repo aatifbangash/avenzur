@@ -7749,29 +7749,26 @@ class Reports extends MY_Controller
         $this->data['error'] = $this->session->flashdata('error');
 
         // ── filters (GET so URL is shareable) ──────────────────────
-        $type       = $this->input->get('type')       ?: 'ar';   // ar | ap
-        $start_date = $this->input->get('start_date') ?: null;
-        $end_date   = $this->input->get('end_date')   ?: null;
-        $party_id   = $this->input->get('party_id')   ?: null;   // customer_id or supplier_id
-        $ref_no     = $this->input->get('ref_no')     ?: null;
+        $type     = $this->input->get('type')    ?: 'ar';   // ar | ap
+        $at_date  = $this->input->get('at_date') ?: null;   // show invoices on or before this date
+        $party_id = $this->input->get('party_id') ?: null;  // customer_id or supplier_id
+        $ref_no   = $this->input->get('ref_no')   ?: null;
 
         // ── dropdown data ──────────────────────────────────────────
         $this->data['customers']  = $this->site->getAllCompanies('customer');
         $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
 
         // ── pass filter values back to view ───────────────────────
-        $this->data['type']       = $type;
-        $this->data['start_date'] = $start_date;
-        $this->data['end_date']   = $end_date;
-        $this->data['party_id']   = $party_id;
-        $this->data['ref_no']     = $ref_no;
+        $this->data['type']     = $type;
+        $this->data['at_date']  = $at_date;
+        $this->data['party_id'] = $party_id;
+        $this->data['ref_no']   = $ref_no;
 
         $invoices = [];
 
         if ($type === 'ar') {
             // ── Accounts Receivable (Sales) ────────────────────────
-            $sql_start = $start_date ? $this->sma->fld(explode(' ', trim($start_date))[0] . ' 00:00:00') : null;
-            $sql_end   = $end_date   ? $this->sma->fld(explode(' ', trim($end_date))[0]   . ' 23:59:59') : null;
+            $sql_at = $at_date ? $this->sma->fld(explode(' ', trim($at_date))[0] . ' 23:59:59') : null;
 
             $this->db->select("
                 s.id            AS invoice_id,
@@ -7798,8 +7795,8 @@ class Reports extends MY_Controller
             ->having('outstanding > 0')
             ->order_by('s.date', 'asc');
 
-            if ($sql_start && $sql_end) {
-                $this->db->where("s.date >= '{$sql_start}' AND s.date <= '{$sql_end}'");
+            if ($sql_at) {
+                $this->db->where("s.date <= '{$sql_at}'");
             }
             if ($party_id) { $this->db->where('s.customer_id', (int)$party_id); }
             if ($ref_no)   { $this->db->like('s.reference_no', $ref_no, 'both'); }
@@ -7808,8 +7805,7 @@ class Reports extends MY_Controller
 
         } else {
             // ── Accounts Payable (Purchases) ───────────────────────
-            $sql_start = $start_date ? $this->sma->fld(explode(' ', trim($start_date))[0] . ' 00:00:00') : null;
-            $sql_end   = $end_date   ? $this->sma->fld(explode(' ', trim($end_date))[0]   . ' 23:59:59') : null;
+            $sql_at = $at_date ? $this->sma->fld(explode(' ', trim($at_date))[0] . ' 23:59:59') : null;
 
             $this->db->select("
                 p.id            AS invoice_id,
@@ -7835,8 +7831,8 @@ class Reports extends MY_Controller
             ->having('outstanding > 0')
             ->order_by('p.date', 'asc');
 
-            if ($sql_start && $sql_end) {
-                $this->db->where("p.date >= '{$sql_start}' AND p.date <= '{$sql_end}'");
+            if ($sql_at) {
+                $this->db->where("p.date <= '{$sql_at}'");
             }
             if ($party_id) { $this->db->where('p.supplier_id', (int)$party_id); }
             if ($ref_no)   { $this->db->like('p.reference_no', $ref_no, 'both'); }
