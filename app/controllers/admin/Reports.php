@@ -7776,6 +7776,8 @@ class Reports extends MY_Controller
                 s.reference_no,
                 c.name          AS party_name,
                 c.company       AS party_code,
+                c.sequence_code AS sequence_code,
+                al.name         AS ledger_name,
                 c.city          AS area,
                 w.name          AS warehouse_name,
                 s.total         AS invoice_total,
@@ -7788,8 +7790,9 @@ class Reports extends MY_Controller
                 DATEDIFF(CURDATE(), DATE_ADD(DATE(s.date), INTERVAL COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY)) AS days_overdue
             ", false)
             ->from('sales s')
-            ->join('companies c',   'c.id = s.customer_id',  'left')
-            ->join('warehouses w',  'w.id = s.warehouse_id', 'left')
+            ->join('companies c',          'c.id = s.customer_id',          'left')
+            ->join('accounts_ledgers al',  'al.id = c.ledger_account',      'left')
+            ->join('warehouses w',          'w.id = s.warehouse_id',         'left')
             ->where('s.sale_invoice',  1)
             ->where('s.grand_total > 0')
             ->having('outstanding > 0')
@@ -7813,6 +7816,8 @@ class Reports extends MY_Controller
                 p.reference_no,
                 c.name          AS party_name,
                 c.company       AS party_code,
+                c.sequence_code AS sequence_code,
+                al.name         AS ledger_name,
                 w.name          AS warehouse_name,
                 p.grand_total   AS invoice_total,
                 0               AS discount,
@@ -7824,8 +7829,9 @@ class Reports extends MY_Controller
                 DATEDIFF(CURDATE(), DATE_ADD(DATE(p.date), INTERVAL COALESCE(NULLIF(p.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY)) AS days_overdue
             ", false)
             ->from('purchases p')
-            ->join('companies c',   'c.id = p.supplier_id',  'left')
-            ->join('warehouses w',  'w.id = p.warehouse_id', 'left')
+            ->join('companies c',          'c.id = p.supplier_id',          'left')
+            ->join('accounts_ledgers al',  'al.id = c.ledger_account',      'left')
+            ->join('warehouses w',          'w.id = p.warehouse_id',         'left')
             ->where('p.purchase_invoice', 1)
             ->where('p.note != "import from excel"') // exclude return-type purchases
             ->where('p.grand_total > 0')
