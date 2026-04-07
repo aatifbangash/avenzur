@@ -8,8 +8,8 @@
     }
 
     $(document).ready(function () {
-        // Date pickers (date-only — no time component)
-        $('#start_date, #end_date').datetimepicker({
+        // Date picker (date-only — no time component)
+        $('#at_date').datetimepicker({
             format: site.dateFormats.js_sdate,
             fontAwesome: true,
             language: 'sma',
@@ -100,15 +100,8 @@
 
                 <div class="col-md-2">
                     <div class="form-group">
-                        <?= lang('start_date', 'start_date'); ?>
-                        <?php echo form_input('start_date', ($start_date ?? ''), 'class="form-control input-tip date" id="start_date" placeholder="From date"'); ?>
-                    </div>
-                </div>
-
-                <div class="col-md-2">
-                    <div class="form-group">
-                        <?= lang('end_date', 'end_date'); ?>
-                        <?php echo form_input('end_date', ($end_date ?? ''), 'class="form-control input-tip date" id="end_date" placeholder="To date"'); ?>
+                        <label for="at_date">At Date</label>
+                        <?php echo form_input('at_date', ($at_date ?? ''), 'class="form-control input-tip date" id="at_date" placeholder="At date"'); ?>
                     </div>
                 </div>
 
@@ -245,23 +238,23 @@
                         <td><a href="<?= $detail_url ?>" target="_blank"><?= htmlspecialchars($inv->reference_no ?: '#' . $inv->invoice_id) ?></a></td>
                         <td><?= htmlspecialchars($inv->party_name) ?></td>
                         <?php if ($type === 'ar'): ?><td><?= htmlspecialchars($inv->area ?? '') ?></td><?php endif; ?>
-                        <td class="text-right"><?= $this->sma->formatMoney($inv->invoice_total) ?></td>
+                        <td class="text-right"><?= number_format($inv->invoice_total ,2) ?></td>
                         <?php if ($type === 'ar'): ?>
-                        <td class="text-right"><?= $this->sma->formatMoney($inv->discount) ?></td>
-                        <td class="text-right"><?= $this->sma->formatMoney($inv->return_amount) ?></td>
+                        <td class="text-right"><?= number_format($inv->discount ,2) ?></td>
+                        <td class="text-right"><?= number_format($inv->return_amount ,2) ?></td>
                         <?php endif; ?>
-                        <td class="text-right"><?= $this->sma->formatMoney($inv->paid) ?></td>
-                        <td class="text-right" style="font-weight:600; color:#c0392b;"><?= $this->sma->formatMoney($inv->outstanding) ?></td>
+                        <td class="text-right"><?= number_format($inv->paid ,2) ?></td>
+                        <td class="text-right" style="font-weight:600; color:#c0392b;"><?= number_format($inv->outstanding ,2) ?></td>
                         <td class="text-center"><?= ($inv->due_date_calc && $inv->due_date_calc !== '0000-00-00') ? date('d-M-Y', strtotime($inv->due_date_calc)) : '-' ?></td>
                         <td class="text-center">
                             <?php
                             $d = (int)$inv->days_overdue;
                             if ($d <= 0) {
-                                $badge_text = ($d === 0) ? 'Due today' : 'In ' . abs($d) . 'd';
+                                $badge_text = ($d === 0) ? 'Due today' : '' . abs($d) . 'd';
                                 echo "<span class=\"label label-success\">{$badge_text}</span>";
                             } else {
                                 $badge = ($d >= 90) ? 'danger' : (($d >= 30) ? 'warning' : 'default');
-                                echo "<span class=\"label label-{$badge}\">{$d}d</span>";
+                                echo "<span class=\"label label-{$badge}\">{$d}</span>";
                             }
                             ?>
                         </td>
@@ -271,13 +264,13 @@
                 <tfoot>
                     <tr style="font-weight:bold; background-color:#f0f0f0;">
                         <td colspan="<?= ($type === 'ar') ? 5 : 4 ?>" class="text-right"><?= lang('total') ?></td>
-                        <td class="text-right"><?= $this->sma->formatMoney($total_invoice) ?></td>
+                        <td class="text-right"><?= number_format($total_invoice ,2) ?></td>
                         <?php if ($type === 'ar'): ?>
-                        <td class="text-right"><?= $this->sma->formatMoney($total_discount) ?></td>
-                        <td class="text-right"><?= $this->sma->formatMoney($total_returns) ?></td>
+                        <td class="text-right"><?= number_format($total_discount ,2) ?></td>
+                        <td class="text-right"><?= number_format($total_returns ,2) ?></td>
                         <?php endif; ?>
-                        <td class="text-right"><?= $this->sma->formatMoney($total_paid) ?></td>
-                        <td class="text-right" style="color:#c0392b;"><?= $this->sma->formatMoney($total_outstanding) ?></td>
+                        <td class="text-right"><?= number_format($total_paid ,2) ?></td>
+                        <td class="text-right" style="color:#c0392b;"><?= number_format($total_outstanding ,2) ?></td>
                         <td></td>
                         <td></td>
                     </tr>
