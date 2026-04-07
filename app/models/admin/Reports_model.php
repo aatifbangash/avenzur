@@ -5526,7 +5526,7 @@ class Reports_model extends CI_Model
 
                 LEFT JOIN sma_accounts_ledgers lg
                     ON lg.id = pr.transfer_from_ledger
-                WHERE cm.group_name = 'customer' AND (pr.added_via IS NULL OR pr.added_via NOT IN ('customer_return_module', 'credit_memo_module'))
+                WHERE cm.group_name = 'customer' AND (p.paid_by NOT IN ('return', 'credit_memo')) AND (pr.added_via IS NULL OR pr.added_via NOT IN ('customer_return_module', 'credit_memo_module'))
                  ".$dateWhere."
                  ".$warehouseWhere."
                     GROUP BY s.id
@@ -5535,7 +5535,7 @@ class Reports_model extends CI_Model
         ";
         $q = $this->db->query($sql);
         $data = array();
-        //echo $this->db->last_query();
+        //echo $this->db->last_query();exit;
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
@@ -6702,5 +6702,75 @@ class Reports_model extends CI_Model
         });
 
         return $result;
+    }
+
+    public function get_shelving_report($filters = [])
+    {
+        // Require at least one filter to prevent full-table slow queries
+        $hasFilter = !empty($filters['shelving_id'])
+            || !empty($filters['product_code'])
+            || !empty($filters['expiry_from'])
+            || !empty($filters['expiry_to'])
+            || !empty($filters['status']);
+
+        if (!$hasFilter) {
+            return [];
+        }
+
+        $params = [];
+        $where  = [];
+
+        if (!empty($filters['status'])) {
+            $where[]  = "posi.status = ?";
+            $params[] = $filters['status'];
+        }
+        // When status is empty (All), no status filter is added — all statuses returned
+
+        if (!empty($filters['shelving_id'])) {
+            $where[]  = "posi.shelving_id = ?";
+            $params[] = $filters['shelving_id'];
+        }
+
+        if (!empty($filters['product_code'])) {
+            // prefix LIKE is index-friendly; leading-wildcard is not
+            $where[]  = "posi.product_code LIKE ?";
+            $params[] = $filters['product_code'] . '%';
+        }
+
+        if (!empty($filters['expiry_from'])) {
+            $where[]  = "posi.expiry_date >= ?";
+            $params[] = $filters['expiry_from'];
+        }
+
+        if (!empty($filters['expiry_to'])) {
+            $where[]  = "posi.expiry_date <= ?";
+            $params[] = $filters['expiry_to'];
+        }
+
+        $whereClause = implode(' AND ', $where);
+
+        // Direct code match — lets MySQL use index on sma_products.code
+        // Avoids TRIM(LEADING '0') on both sides which blocks index use
+        $sql = "
+            SELECT
+                posi.shelving_id,
+                posi.product_code,
+                COALESCE(p.name, posi.product_code) AS product_name,
+                posi.batch_no,
+                posi.expiry_date,
+                posi.qty,
+                posi.status,
+                po.date AS po_date
+            FROM sma_purchase_order_shelving_items posi
+            JOIN sma_purchase_order_shelving pos ON pos.id = posi.shelving_id
+            JOIN sma_purchase_orders po ON po.id = pos.po_id
+            LEFT JOIN sma_products p ON p.code = posi.product_code
+            WHERE {$whereClause}
+            ORDER BY posi.expiry_date ASC, posi.product_code ASC
+            LIMIT 500
+        ";
+
+        $query = $this->db->query($sql, $params);
+        return $query->result_array();
     }
 }

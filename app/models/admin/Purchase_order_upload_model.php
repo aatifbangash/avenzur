@@ -16,6 +16,69 @@ class Purchase_order_upload_model extends CI_Model
     }
 
     /**
+     * Get expiry rule for a product from sma_expiry_category_rules.
+     * Priority: product-level → subcategory-level → category-level.
+     * Returns array ['months' => int, 'require_batch_number' => bool] or null.
+     */
+    public function getExpiryRule($item_barcode)
+    {
+        $product = $this->db
+            ->select('id, category_id, subcategory_id')
+            ->from('sma_products')
+            ->where('code', $item_barcode)
+            ->get()->row();
+
+        if (!$product) {
+            return null;
+        }
+
+        // 1. product-level rule
+        $rule = $this->db
+            ->select('months_before_expiry, require_batch_number')
+            ->from('sma_expiry_category_rules')
+            ->where('product_id', $product->id)
+            ->where('is_active', 1)
+            ->get()->row();
+
+        if ($rule) {
+            return ['months' => (int) $rule->months_before_expiry, 'require_batch_number' => (bool) $rule->require_batch_number];
+        }
+
+        // 2. subcategory-level rule
+        if ($product->subcategory_id) {
+            $rule = $this->db
+                ->select('months_before_expiry, require_batch_number')
+                ->from('sma_expiry_category_rules')
+                ->where('subcategory_id', $product->subcategory_id)
+                ->where('product_id', null)
+                ->where('is_active', 1)
+                ->get()->row();
+
+            if ($rule) {
+                return ['months' => (int) $rule->months_before_expiry, 'require_batch_number' => (bool) $rule->require_batch_number];
+            }
+        }
+
+        // 3. category-level rule
+        if ($product->category_id) {
+            $rule = $this->db
+                ->select('months_before_expiry, require_batch_number')
+                ->from('sma_expiry_category_rules')
+                ->where('category_id', $product->category_id)
+                ->where('subcategory_id', null)
+                ->where('product_id', null)
+                ->where('is_active', 1)
+                ->get()->row();
+
+            if ($rule) {
+                return ['months' => (int) $rule->months_before_expiry, 'require_batch_number' => (bool) $rule->require_batch_number];
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Save reviewed PO rows into DB
      * @param array $payload
      * @return array
@@ -85,6 +148,7 @@ class Purchase_order_upload_model extends CI_Model
             $varient_name   = trim((string)($row['variant_name'] ?? ''));
             $batch_no       = trim((string)($row['batch_number'] ?? ''));
             $expiry_date    = !empty($row['expiry_date']) ? $row['expiry_date'] : null;
+            $shelf_life     = !empty($row['shelf_life']) ? trim((string)$row['shelf_life']) : null;
             $sale_price     = (float)($row['sale_price'] ?? 0);
             $purchase_price = (float)($row['purchase_price'] ?? 0);
             $cost_price     = (float)($row['cost_price'] ?? 0);
@@ -147,6 +211,7 @@ class Purchase_order_upload_model extends CI_Model
                     'variant'        => trim($variant_barcode . ' - ' . $varient_name),
                     'parent_id'      => $parent_id,
                     'brand_name'     => $brand_name,
+                    'shelf_life'     => $shelf_life,
                 ];
 
                 $add_result = $this->products_model->addProductSimplified($product_data);
@@ -158,8 +223,8 @@ class Purchase_order_upload_model extends CI_Model
 
             } else {
 
-                // update image/details for existing product
-                $this->purchase_order_model->updateProductImage($product_id, $image_link, $details);
+                // update image/details/shelf_life for existing product
+                $this->purchase_order_model->updateProductImage($product_id, $image_link, $details, $shelf_life);
 
                 if (($product->image == '' || $product->image == null) && $image_link == '') {
                     return [
@@ -196,6 +261,7 @@ class Purchase_order_upload_model extends CI_Model
                 'product_name'          => $item_name,
                 'batchno'               => $batch_no,
                 'expiry'                => $expiry_date,
+                'shelf_life'            => $shelf_life,
                 'net_unit_cost'         => $cost_price,
                 'quantity'              => $qty,
                 'actual_quantity'       => $qty,

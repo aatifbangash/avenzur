@@ -39,6 +39,7 @@ class Purchase_order_upload extends MY_Controller
      */
     public function parse()
     {
+        $this->load->helper('string');
         if (empty($_FILES['excel_file']['name'])) {
             $this->session->set_flashdata('error', 'Please select an Excel file.');
             admin_redirect('purchase_order_upload');
@@ -73,9 +74,8 @@ class Purchase_order_upload extends MY_Controller
             $sheet = $spreadsheet->getActiveSheet();
             $rows = $sheet->toArray(null, true, true, false);
         } catch (Exception $e) {
-            print_r($e->getMessage());
             @unlink($path);
-            $this->session->set_flashdata('error', 'Excel could not be read.');
+            $this->session->set_flashdata('error', 'Excel could not be read: ' . $e->getMessage());
             admin_redirect('purchase_order_upload');
         }
 
@@ -119,6 +119,7 @@ class Purchase_order_upload extends MY_Controller
 
             $description_en      = isset($row[18]) ? trim($row[18]) : '';
             $image_link          = isset($row[19]) ? trim($row[19]) : '';
+            $shelf_life          = isset($row[20]) ? trim($row[20]) : '';
 
 
             // skip empty row
@@ -144,7 +145,6 @@ class Purchase_order_upload extends MY_Controller
                     $expiry_date = date('Y-m-d', strtotime($expiry_date_raw));
                 }
             }
-
 
             // prefer cost price, fallback to purchase price
             $final_cost_price = $cost_price > 0 ? $cost_price : $purchase_price;
@@ -180,7 +180,31 @@ class Purchase_order_upload extends MY_Controller
             if ($sale_price_inc_vat <= 0) {
                 $errors[] = 'Sale price is required';
             }
+            if ($batch_number === '') {
+                $errors[] = 'Batch number is required';
+            }
 
+            if (empty($expiry_date) && empty(trim($shelf_life))) {
+                $errors[] = 'Either Expiry Date or Shelf Life must be provided';
+            }
+
+            // expiry rule check via sma_expiry_category_rules
+            $expiry_rule = $this->pou->getExpiryRule($item_barcode);
+
+            if ($expiry_rule !== null) {
+                if ($expiry_rule['require_batch_number'] && empty($batch_number)) {
+                    $errors[] = 'Batch number is required for this product';
+                }
+                if (empty($expiry_date)) {
+                    $errors[] = 'Expiry date is required for this product';
+                } else {
+                    $months = $expiry_rule['months'];
+                    $min_expiry = (new DateTime(date('Y-m-d')))->modify("+{$months} months");
+                    if (new DateTime($expiry_date) < $min_expiry) {
+                        $errors[] = "Product expiry must be at least {$months} months from today (minimum: " . $min_expiry->format('Y-m-d') . ')';
+                    }
+                }
+            }
 
             if (!empty($errors)) {
                 $has_errors = true;
@@ -212,7 +236,8 @@ class Purchase_order_upload extends MY_Controller
                 'subtotal'        => $purchase_price * $quantity,
                 'description_en'    => $description_en,
                 'image_link'        => $image_link,
-                'brand_name'        => strtolower($brand_name),
+                'shelf_life'        => $shelf_life,
+                'brand_name'        => to_snake_case($brand_name),
 
                 'error'             => $errors,
                 'has_error'         => !empty($errors),
@@ -223,9 +248,15 @@ class Purchase_order_upload extends MY_Controller
         }
         
         if (!empty($has_errors)) {
-            $this->session->set_flashdata('errors', $errors);
+            $all_errors = [];
+            foreach ($parsed_rows as $r) {
+                foreach ($r['error'] as $err) {
+                    $all_errors[] = "Row {$r['row_no']}: $err";
+                }
+            }
+            $this->session->set_flashdata('errors', $all_errors);
             $this->session->set_flashdata('error', 'Some rows have errors. Please correct the Excel file and reupload.');
-             admin_redirect('purchase_order_upload');
+            admin_redirect('purchase_order_upload');
         }
 
         $payload = [
@@ -256,30 +287,13 @@ class Purchase_order_upload extends MY_Controller
             'payload' => $payload,
             'file'    => $path,
         ];
-//         $json_string = json_encode($temp_data);
 
-// echo '<pre>';
-// print_r([
-//     'token' => $token,
-//     'json_file' => $json_file,
-//     'rows_count' => count($parsed_rows),
-//     'payload_keys' => array_keys($payload),
-//     'json_encode_success' => $json_string !== false,
-//     'json_error' => json_last_error_msg(),
-//     'json_length' => $json_string ? strlen($json_string) : 0,
-// ]);
-// echo '</pre>';
-// exit;
         // save json
         $json_string = json_encode($temp_data, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
         file_put_contents($json_file, $json_string);
 
         // store only token in session (very small data)
         $this->session->set_userdata('po_upload_token', $token);
-        
-        // $this->session->set_userdata('po_upload_rows', $parsed_rows);
-        // $this->session->set_userdata('po_upload_payload', $payload);
-        // $this->session->set_userdata('po_upload_file', $path);
         
         admin_redirect('purchase_order_upload/review');
     }

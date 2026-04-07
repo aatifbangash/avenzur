@@ -372,9 +372,13 @@ class Purchase_order_model extends CI_Model{
         return false;
     }
 
-    public function updateProductImage($product_id, $image_link, $details='')
+    public function updateProductImage($product_id, $image_link, $details = '', $shelf_life = null)
     {
-        return $this->db->update('products', ['image' => $image_link, 'details' => $details], ['id' => $product_id]);
+        $data = ['image' => $image_link, 'details' => $details];
+        if ($shelf_life !== null) {
+            $data['shelf_life'] = $shelf_life;
+        }
+        return $this->db->update('products', $data, ['id' => $product_id]);
     }
 
     public function getAllPurchaseShelvedItems($purchase_id)

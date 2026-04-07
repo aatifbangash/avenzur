@@ -681,6 +681,9 @@
                         <?php if($Admin || $Owner || $this->GP['reports-transfer']){ ?>
                         <li><a href="<?= admin_url('reports/transfer_report'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Transfer Report'); ?></a></li>
                         <?php } ?>
+                        <?php if($Admin || $Owner || $this->GP['reports-warehouse-stock']){ ?>
+                        <li><a href="<?= admin_url('reports/shelving_report'); ?>" class="newmenu-link"><i class="fa fa-archive"></i> <?= lang('Warehouse Shelving Report'); ?></a></li>
+                        <?php } ?>
                     </ul>
                 </li>
 
