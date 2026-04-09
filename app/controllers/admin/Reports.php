@@ -6277,23 +6277,83 @@ class Reports extends MY_Controller
 
     public function GLReport(){
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
-        $viewtype = $this->input->get('viewtype') ? $this->input->get('viewtype') : null;
-        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : $this->input->get('from_date');
-        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : $this->input->get('to_date');
+        $viewtype     = $this->input->get('viewtype')      ?: null;
+        $from_date    = $this->input->get('from_date')     ?: null;
+        $to_date      = $this->input->get('to_date')       ?: null;
+        $export_excel = $this->input->get('export_excel')  ?: null;
 
         // Set filter values for form persistence (always set these)
         $this->data['start_date'] = $from_date;
-        $this->data['end_date'] = $to_date;
-        $this->data['viewtype'] = $viewtype;
+        $this->data['end_date']   = $to_date;
+        $this->data['viewtype']   = $viewtype;
+
+        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('general_ledger_report')]];
+        $meta = ['page_title' => lang('general_ledger_report'), 'bc' => $bc];
 
         // If any filter submitted, fetch data
         if ($from_date || $to_date) {
-            // Format dates only if provided
-            $start_date = $from_date ? $this->sma->fld($from_date) : null;
-            $end_date = $to_date ? $this->sma->fld($to_date) : null;
+            $start_date = $from_date ? $this->sma->fld(explode(' ', trim($from_date))[0] . ' 00:00:00') : null;
+            $end_date   = $to_date   ? $this->sma->fld(explode(' ', trim($to_date))[0]   . ' 23:59:59') : null;
 
             $gl_report_array = $this->reports_model->getGLReport($start_date, $end_date);
             $this->data['gl_report'] = $gl_report_array;
+
+            // ── Server-side Excel export (ALL rows, not just current page) ──
+            if ($export_excel) {
+                $this->load->library('excel');
+                $sheet = $this->excel->setActiveSheetIndex(0);
+                $sheet->setTitle('GL Report');
+
+                $sheet->SetCellValue('A1', '#');
+                $sheet->SetCellValue('B1', lang('voucher'));
+                $sheet->SetCellValue('C1', lang('voucher_id'));
+                $sheet->SetCellValue('D1', lang('trx_id'));
+                $sheet->SetCellValue('E1', lang('date'));
+                $sheet->SetCellValue('F1', lang('reference'));
+                $sheet->SetCellValue('G1', lang('account_number'));
+                $sheet->SetCellValue('H1', lang('account_name'));
+                $sheet->SetCellValue('I1', lang('description'));
+                $sheet->SetCellValue('J1', lang('debit'));
+                $sheet->SetCellValue('K1', lang('credit'));
+                $sheet->SetCellValue('L1', lang('userid'));
+
+                $row         = 2;
+                $total_debit = 0;
+                $total_credit = 0;
+                $count       = 0;
+                foreach ((array)$gl_report_array as $r) {
+                    $count++;
+                    $total_debit  += $r->debit;
+                    $total_credit += $r->credit;
+                    $sheet->SetCellValue('A' . $row, $count);
+                    $sheet->SetCellValue('B' . $row, $r->voucher);
+                    $sheet->SetCellValue('C' . $row, $r->voucher_id);
+                    $sheet->SetCellValue('D' . $row, $r->trx_id);
+                    $sheet->SetCellValue('E' . $row, $r->date);
+                    $sheet->SetCellValue('F' . $row, $r->reference);
+                    $sheet->SetCellValue('G' . $row, $r->account_number);
+                    $sheet->SetCellValue('H' . $row, $r->account_name);
+                    $sheet->SetCellValue('I' . $row, $r->description);
+                    $sheet->SetCellValue('J' . $row, $r->debit  > 0 ? (float)$r->debit  : 0);
+                    $sheet->SetCellValue('K' . $row, $r->credit > 0 ? (float)$r->credit : 0);
+                    $sheet->SetCellValue('L' . $row, $r->user_id);
+                    $row++;
+                }
+                // Totals row
+                $sheet->SetCellValue('A' . $row, '');
+                $sheet->SetCellValue('I' . $row, lang('total'));
+                $sheet->SetCellValue('J' . $row, $total_debit);
+                $sheet->SetCellValue('K' . $row, $total_credit);
+
+                $cols = ['A'=>5,'B'=>20,'C'=>12,'D'=>10,'E'=>14,'F'=>12,'G'=>18,'H'=>30,'I'=>35,'J'=>14,'K'=>14,'L'=>10];
+                foreach ($cols as $c => $w) { $this->excel->getActiveSheet()->getColumnDimension($c)->setWidth($w); }
+                $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+
+                $filename = 'GL_Report_' . date('Y-m-d_H_i_s');
+                $this->load->helper('excel');
+                create_excel($this->excel, $filename);
+                return;
+            }
 
             if ($viewtype == 'pdf') {
                 $this->load->library('pdf');
@@ -6301,12 +6361,8 @@ class Reports extends MY_Controller
                 $this->pdf->generate($html, 'GL_Report_' . date('Y_m_d_H_i_s'), true);
             }
 
-            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('general_ledger_report')]];
-            $meta = ['page_title' => lang('general_ledger_report'), 'bc' => $bc];
             $this->page_construct('reports/gl_report', $meta, $this->data);
         } else {
-            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('general_ledger_report')]];
-            $meta = ['page_title' => lang('general_ledger_report'), 'bc' => $bc];
             $this->page_construct('reports/gl_report', $meta, $this->data);
         }
     }
