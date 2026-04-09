@@ -1,20 +1,35 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
 <script>
-    function exportTableToExcel(tableId, filename = 'table.xlsx') {
-        const table = document.getElementById(tableId);
-        const wb = XLSX.utils.table_to_book(table, {
-            sheet: 'Sheet 1'
-        });
-        XLSX.writeFile(wb, filename);
-    }
     function generatePDF(){
-       $('.viewtype').val('pdf');
+       $('#viewtype').val('pdf');
        document.getElementById("searchForm").submit();
-       $('.viewtype').val('');
+       $('#viewtype').val('');
     }
     $(document).ready(function() {
-
+        <?php if (!empty($gl_report)): ?>
+        $('#poTable').DataTable({
+            paging:        true,
+            pageLength:    100,
+            lengthMenu:    [[50, 100, 250, 500, -1], [50, 100, 250, 500, 'All']],
+            pagingType:    'full_numbers',
+            ordering:      false,
+            searching:     true,
+            info:          true,
+            autoWidth:     false,
+            scrollX:       true,
+            language: {
+                search:      '<?= lang("search") ?>:',
+                lengthMenu:  '<?= lang("show") ?> _MENU_ <?= lang("entries") ?>',
+                info:        '<?= lang("showing") ?> _START_ <?= lang("to") ?> _END_ <?= lang("of") ?> _TOTAL_ <?= lang("entries") ?>',
+                paginate: {
+                    first:    '&laquo;',
+                    last:     '&raquo;',
+                    next:     '&rsaquo;',
+                    previous: '&lsaquo;'
+                }
+            }
+        });
+        <?php endif; ?>
     });
 </script>
 <?php if($viewtype=='pdf'){ ?>
@@ -26,7 +41,15 @@
         <?php  if($viewtype!='pdf'){?>
         <div class="box-icon">
             <ul class="btn-tasks">
-                <li class="dropdown"><a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'GL_Report.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a></li>
+                <li class="dropdown">
+                    <?php
+                    $export_params = $_GET;
+                    $export_params['export_excel'] = 1;
+                    unset($export_params['viewtype']);
+                    ?>
+                    <a href="<?= admin_url('reports/GLReport?' . http_build_query($export_params)) ?>"
+                       class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a>
+                </li>
                 <li class="dropdown"> <a href="javascript:void(0);" onclick="generatePDF()" id="pdf" class="tip" title="<?= lang('download_PDF') ?>"><i class="icon fa fa-file-pdf-o"></i></a></li>
             </ul>
         </div>
@@ -38,10 +61,10 @@
                 <?php
                 if($viewtype!='pdf')
                 {
-                    $attrib = ['data-toggle' => 'validator', 'role' => 'form','id' => 'searchForm'];
+                    $attrib = ['data-toggle' => 'validator', 'role' => 'form', 'id' => 'searchForm', 'method' => 'get'];
                     echo admin_form_open_multipart('reports/GLReport', $attrib)
                     ?>
-                    <input type="hidden" name="viewtype" id="viewtype" class="viewtype" value="" >
+                    <input type="hidden" name="viewtype" id="viewtype" value="">
 
                 <div class="row">
                     <div class="col-lg-12">
@@ -154,6 +177,11 @@
                             ?>
 
                             <?php if (!empty($gl_report)) { ?>
+                            <?php } ?>
+
+                            </tbody>
+                            <tfoot>
+                            <?php if (!empty($gl_report)) { ?>
                             <tr class="active">
                                 <th colspan="9" class="text-right"><?= lang('total'); ?></th>
                                 <th class="text-right"><?= $this->sma->formatNumber($total_debit); ?></th>
@@ -161,9 +189,7 @@
                                 <th>&nbsp;</th>
                             </tr>
                             <?php } ?>
-
-                            </tbody>
-                            <tfoot></tfoot>
+                            </tfoot>
                         </table>
                     </div>
 
