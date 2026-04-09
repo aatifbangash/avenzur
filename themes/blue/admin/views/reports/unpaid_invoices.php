@@ -274,7 +274,7 @@
                         <td class="text-right"><?= number_format($total_returns ,2) ?></td>
                         <?php endif; ?>
                         <td class="text-right"><?= number_format($total_paid ,2) ?></td>
-                        <td class="text-right" style="color:#c0392b;"><?= number_format($total_outstanding ,2) ?></td>
+                        <td class="text-right" style="color:#c0392b;"><?= number_format(($total_outstanding) ,2) ?></td>
                         <td></td>
                         <td></td>
                     </tr>
