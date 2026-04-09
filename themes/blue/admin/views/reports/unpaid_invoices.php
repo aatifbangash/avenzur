@@ -210,7 +210,7 @@
                         <?php if ($type === 'ar'): ?><th><?= lang('area') ?></th><?php endif; ?>
                         <th class="text-right"><?= lang('Invoice Total') ?></th>
                         <?php if ($type === 'ar'): ?>
-                        <th class="text-right"><?= lang('discount') ?></th>
+                        
                         <th class="text-right"><?= lang('Returns') ?></th>
                         <?php endif; ?>
                         <th class="text-right"><?= lang('paid') ?></th>
@@ -244,7 +244,7 @@
                         <?php if ($type === 'ar'): ?><td><?= htmlspecialchars($inv->area ?? '') ?></td><?php endif; ?>
                         <td class="text-right"><?= number_format($inv->invoice_total ,2) ?></td>
                         <?php if ($type === 'ar'): ?>
-                        <td class="text-right"><?= number_format($inv->discount ,2) ?></td>
+                        
                         <td class="text-right"><?= number_format($inv->return_amount ,2) ?></td>
                         <?php endif; ?>
                         <td class="text-right"><?= number_format($inv->paid ,2) ?></td>
@@ -270,7 +270,7 @@
                         <td colspan="<?= ($type === 'ar') ? 7 : 6 ?>" class="text-right"><?= lang('total') ?></td>
                         <td class="text-right"><?= number_format($total_invoice ,2) ?></td>
                         <?php if ($type === 'ar'): ?>
-                        <td class="text-right"><?= number_format($total_discount ,2) ?></td>
+                        
                         <td class="text-right"><?= number_format($total_returns ,2) ?></td>
                         <?php endif; ?>
                         <td class="text-right"><?= number_format($total_paid ,2) ?></td>
