@@ -7824,7 +7824,13 @@ class Reports extends MY_Controller
 
         if ($type === 'ar') {
             // ── Accounts Receivable (Sales) ────────────────────────
-            $sql_at = $at_date ? $this->sma->fld(explode(' ', trim($at_date))[0] . ' 23:59:59') : null;
+            $sql_at = $at_date ? $this->sma->fld($at_date) . ' 23:59:59' : null;
+
+            $paid_subquery = "(SELECT COALESCE(SUM(sp.amount), 0)
+                            FROM {$this->db->dbprefix('payments')} sp
+                            WHERE sp.sale_id = s.id" .
+                            ($sql_at ? " AND sp.date <= '{$sql_at}'" : "") .
+                            ")";
 
             $this->db->select("
                 s.id            AS invoice_id,
@@ -7836,29 +7842,35 @@ class Reports extends MY_Controller
                 al.name         AS ledger_name,
                 c.city          AS area,
                 w.name          AS warehouse_name,
-                s.grand_total         AS invoice_total,
+                s.grand_total   AS invoice_total,
                 s.total_discount AS discount,
-                COALESCE((SELECT SUM(grand_total) FROM {$this->db->dbprefix('returns')} WHERE sale_id = s.id), 0) AS return_amount,
-                s.paid,
-                ROUND(((s.grand_total) - s.paid), 2) AS outstanding,
+                COALESCE((SELECT SUM(grand_total) 
+                        FROM {$this->db->dbprefix('returns')} 
+                        WHERE sale_id = s.id), 0) AS return_amount,
+                {$paid_subquery} AS paid,
+                ROUND((s.grand_total - {$paid_subquery}), 2) AS outstanding,
                 COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) AS payment_term_days,
                 DATE_ADD(DATE(s.date), INTERVAL COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY) AS due_date_calc,
                 DATEDIFF(CURDATE(), DATE_ADD(DATE(s.date), INTERVAL COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY)) AS days_overdue
             ", false)
             ->from('sales s')
-            ->join('companies c',          'c.id = s.customer_id',          'left')
-            ->join('accounts_ledgers al',  'al.id = c.ledger_account',      'left')
-            ->join('warehouses w',          'w.id = s.warehouse_id',         'left')
-            ->where('s.sale_invoice',  1)
-            ->where('s.grand_total > 0')
-            ->having('outstanding > 0')
+            ->join('companies c',         'c.id = s.customer_id',     'left')
+            ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
+            ->join('warehouses w',        'w.id = s.warehouse_id',    'left')
+            ->where('s.sale_invoice', 1)
+            ->where('s.grand_total >', 0)
+            ->having('outstanding >', 0)
             ->order_by('s.date', 'asc');
 
             if ($sql_at) {
                 $this->db->where("s.date <= '{$sql_at}'");
             }
-            if ($party_id) { $this->db->where('s.customer_id', (int)$party_id); }
-            if ($ref_no)   { $this->db->like('s.reference_no', $ref_no, 'both'); }
+            if ($party_id) {
+                $this->db->where('s.customer_id', (int)$party_id);
+            }
+            if ($ref_no) {
+                $this->db->like('s.reference_no', $ref_no, 'both');
+            }
 
             $invoices = $this->db->get()->result();
 
