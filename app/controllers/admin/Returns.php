@@ -778,7 +778,7 @@ class Returns extends MY_Controller
 
         if ($payment_reference_id) {
             $this->sales_model->update_payment_reference($payment_reference_id, $journal_id);
-            $this->sales_model->update_return_paid($return_id, $remaining_amount);
+            $this->sales_model->update_return_paid($return_id, $total_applied);
         }
 
         return $total_applied > 0;

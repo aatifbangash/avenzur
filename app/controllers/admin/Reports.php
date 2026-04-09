@@ -7780,11 +7780,11 @@ class Reports extends MY_Controller
                 al.name         AS ledger_name,
                 c.city          AS area,
                 w.name          AS warehouse_name,
-                s.total         AS invoice_total,
+                s.grand_total         AS invoice_total,
                 s.total_discount AS discount,
                 COALESCE((SELECT SUM(grand_total) FROM {$this->db->dbprefix('returns')} WHERE sale_id = s.id), 0) AS return_amount,
                 s.paid,
-                ROUND(((s.total - s.total_discount) - s.paid), 2) AS outstanding,
+                ROUND(((s.grand_total) - s.paid), 2) AS outstanding,
                 COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) AS payment_term_days,
                 DATE_ADD(DATE(s.date), INTERVAL COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY) AS due_date_calc,
                 DATEDIFF(CURDATE(), DATE_ADD(DATE(s.date), INTERVAL COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY)) AS days_overdue
