@@ -143,6 +143,29 @@ table#slTable td input.form-control {
         if (slbiller = localStorage.getItem('slbiller')) {
             $('#slbiller').val(slbiller);
         }
+
+        // ── Update customer info panel on customer change ─────────────
+        function loadCustomerInfo(customerId) {
+            if (!customerId) return;
+            $.ajax({
+                url: '<?= admin_url('quotes/get_customer_info') ?>',
+                type: 'get',
+                dataType: 'json',
+                data: { customer_id: customerId },
+                success: function(data) {
+                    if (data.error) return;
+                    $('#sales-agent-value').text(data.sales_agent || '—');
+                    $('#customer-balance-value').text(data.balance + ' SAR');
+                    $('#credit-limit-value').text(data.credit_limit + ' SAR');
+                    $('#remaining-limit-value').text(data.remaining_limit + ' SAR');
+                }
+            });
+        }
+        $(document).on('change', '#qtcustomer', function() {
+            loadCustomerInfo($(this).val());
+        });
+        // ──────────────────────────────────────────────────────────────
+
         if (!localStorage.getItem('slref')) {
             localStorage.setItem('slref', '<?=$slnumber?>');
         }
@@ -603,6 +626,13 @@ table#slTable td input.form-control {
                                             <div class="form-group">
                                                 <label><?= lang('customer_credit_info', 'customer_balance'); ?></label>
                                                 <div id="customer-balance-display" style="padding: 8px; background-color: #f5f5f5; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
+                                                    <div style="margin-bottom: 6px;">
+                                                        <strong>Salesman:</strong>
+                                                        <span id="sales-agent-value" style="float: right; color: #333;">
+                                                            <?= isset($sales_agent) ? htmlspecialchars($sales_agent) : '' ?>
+                                                        </span>
+                                                        <div style="clear: both;"></div>
+                                                    </div>
                                                     <div style="margin-bottom: 6px;">
                                                         <strong><?= lang('balance', 'customer_balance'); ?>:</strong>
                                                         <span id="customer-balance-value" style="float: right; color: #333;">
