@@ -350,12 +350,14 @@ class Quotes extends MY_Controller
                     $this->data['credit_limit'] = $credit_limit;
                     $this->data['remaining_limit'] = $remaining_limit;
                     $this->data['customer_name'] = $customer->company != '-' ? $customer->company : $customer->name;
+                    $this->data['sales_agent'] = $customer->sales_agent ?? '';
                 }
             } else {
                 $this->data['customer_balance'] = 0;
                 $this->data['credit_limit'] = 0;
                 $this->data['remaining_limit'] = 0;
                 $this->data['customer_name'] = '';
+                $this->data['sales_agent'] = '';
             }
             
             $bc                        = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('quotes'), 'page' => lang('quotes')], ['link' => '#', 'page' => lang('add_quote')]];
@@ -974,12 +976,14 @@ class Quotes extends MY_Controller
                     $this->data['credit_limit'] = $credit_limit;
                     $this->data['remaining_limit'] = $remaining_limit;
                     $this->data['customer_name'] = $customer->company != '-' ? $customer->company : $customer->name;
+                    $this->data['sales_agent'] = $customer->sales_agent ?? '';
                 }
             } else {
                 $this->data['customer_balance'] = 0;
                 $this->data['credit_limit'] = 0;
                 $this->data['remaining_limit'] = 0;
                 $this->data['customer_name'] = '';
+                $this->data['sales_agent'] = '';
             }
             
             $inv_items = $this->quotes_model->getAllQuoteItems($id, $this->data['inv']);
@@ -1805,6 +1809,35 @@ class Quotes extends MY_Controller
             $this->session->set_flashdata('error', validation_errors());
             redirect($_SERVER['HTTP_REFERER']);
         }
+    }
+
+    /**
+     * AJAX: return customer credit info + salesman for the quotes add/edit page.
+     * URL: quotes/get_customer_info?customer_id=X
+     */
+    public function get_customer_info()
+    {
+        $customer_id = (int)$this->input->get('customer_id');
+        if (!$customer_id) {
+            $this->sma->send_json(['error' => 1]);
+            return;
+        }
+        $customer = $this->companies_model->getCompanyByID($customer_id);
+        if (!$customer) {
+            $this->sma->send_json(['error' => 1]);
+            return;
+        }
+        $balance         = (float)($this->companies_model->getCustomerBalance($customer_id) ?? 0);
+        $credit_limit    = (float)($customer->credit_limit ?? 0);
+        $remaining_limit = max(0, $credit_limit - $balance);
+
+        $this->sma->send_json([
+            'error'          => 0,
+            'balance'        => number_format($balance, 4),
+            'credit_limit'   => number_format($credit_limit, 4),
+            'remaining_limit'=> number_format($remaining_limit, 4),
+            'sales_agent'    => $customer->sales_agent ?? '',
+        ]);
     }
 
     public function suggestions($pos = 0)
