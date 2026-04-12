@@ -66,20 +66,20 @@
                                         <th>Variant Barcode</th>
                                         <th>Variant Name</th>
                                         <th>Brand Name*</th>
-                                        <th>Batch Number*</th>
+                                        <th>Batch Number</th>
                                         <th>Expiry Date</th>
                                         <th>Quantity *</th>
                                         <th>Sale Price (without VAT) *</th>
-                                        <th>Purchase Price (without VAT)</th>
-                                        <th>Cost Price (without VAT)</th>
-                                        <th>VAT %</th>
+                                        <th>Purchase Price (without VAT)*</th>
+                                        <th>Cost Price (without VAT)*</th>
+                                        <th>VAT %*</th>
                                         <th>Discount 1 (%)</th>
                                         <th>Discount 1 Value</th>
                                         <th>Discount 2 (%)</th>
                                         <th>Discount 2 Value</th>
                                         <th>Discount 3 (%)</th>
                                         <th>Discount 3 Value</th>
-                                        <th>Description</th>
+                                        <th>Description*</th>
                                         <th>Image URL *</th>
                                         <th>Shelf Life</th>
                                     </tr>
@@ -121,7 +121,7 @@
                                 <li>Fields marked with <strong>*</strong> are mandatory.</li>
                                 <li>Image URL must be a valid link.</li>
                                 <li>Quantity must be greater than 0.</li>
-                                <li>Either Expiry Date or Shelf Life must be provided</li>
+                                <li>Highlighted green cells in sample file are mandatory.</li>
                                 <li>Use the sample file if unsure about the format.</li>
                             </ul>
 

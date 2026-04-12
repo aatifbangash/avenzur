@@ -180,32 +180,16 @@ class Purchase_order_upload extends MY_Controller
             if ($sale_price_inc_vat <= 0) {
                 $errors[] = 'Sale price is required';
             }
-            if ($batch_number === '') {
-                $errors[] = 'Batch number is required';
+            if ($purchase_price <= 0) {
+                $errors[] = 'Purchase price is required';
             }
-
-            if (empty($expiry_date) && empty(trim($shelf_life))) {
-                $errors[] = 'Either Expiry Date or Shelf Life must be provided';
+            if ($vat_percent <= 0) {
+                $errors[] = 'VAT percentage is required';
             }
-
-            // expiry rule check via sma_expiry_category_rules
-            $expiry_rule = $this->pou->getExpiryRule($item_barcode);
-
-            if ($expiry_rule !== null) {
-                if ($expiry_rule['require_batch_number'] && empty($batch_number)) {
-                    $errors[] = 'Batch number is required for this product';
-                }
-                if (empty($expiry_date)) {
-                    $errors[] = 'Expiry date is required for this product';
-                } else {
-                    $months = $expiry_rule['months'];
-                    $min_expiry = (new DateTime(date('Y-m-d')))->modify("+{$months} months");
-                    if (new DateTime($expiry_date) < $min_expiry) {
-                        $errors[] = "Product expiry must be at least {$months} months from today (minimum: " . $min_expiry->format('Y-m-d') . ')';
-                    }
-                }
+            if ($description_en === '') {
+                $errors[] = 'Description is required';
             }
-
+            
             if (!empty($errors)) {
                 $has_errors = true;
             }
