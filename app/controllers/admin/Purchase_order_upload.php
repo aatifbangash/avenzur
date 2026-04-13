@@ -183,9 +183,6 @@ class Purchase_order_upload extends MY_Controller
             if ($purchase_price <= 0) {
                 $errors[] = 'Purchase price is required';
             }
-            if ($vat_percent <= 0) {
-                $errors[] = 'VAT percentage is required';
-            }
             if ($description_en === '') {
                 $errors[] = 'Description is required';
             }
