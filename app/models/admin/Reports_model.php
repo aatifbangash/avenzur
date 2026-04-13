@@ -5503,7 +5503,10 @@ class Reports_model extends CI_Model
                     cm.id AS customer_id,
                     cm.name AS customer_name,
                     cm.sales_agent,
-                    p.amount As paid_amount,
+                    CASE WHEN p.original_amount IS NOT NULL AND p.original_amount > 0
+                         THEN p.original_amount
+                         ELSE p.amount
+                    END AS paid_amount,
                     p.paid_by,
                     p.return_id,
                     s.date AS sale_date,
@@ -5530,7 +5533,7 @@ class Reports_model extends CI_Model
                  ".$dateWhere."
                  ".$warehouseWhere."
                     GROUP BY s.id
-                    HAVING p.amount > 0.01
+                    HAVING paid_amount > 0.01
                     ORDER BY 
                     DATE(p.date)
         ";
