@@ -325,7 +325,7 @@
                             <li><a href="<?= admin_url('reports/customer_aging'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Aging'); ?></a></li>
                         <?php } ?>
                         
-                        <li><a href="<?= admin_url('reports/collections_by_location'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Collection Report'); ?></a></li>
+                        <li><a href="<?= admin_url('reports/collections_by_location'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Collection Per Invoice'); ?></a></li>
                         <li><a href="<?= admin_url('reports/invoice_status'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Invoice Status'); ?></a></li>
                         <li><a href="<?= admin_url('reports/sales_per_invoice'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Sales Per Invoice'); ?></a></li>
                         <li><a href="<?= admin_url('reports/sales_per_item'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Sales Per Item'); ?></a></li>

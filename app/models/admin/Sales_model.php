@@ -670,8 +670,9 @@ class Sales_model extends CI_Model
     }
 
     public function getPaymentReferences($filters = []){
-        $this->db->select('payment_reference.*, companies.name as company, companies.category as customer_group')
+        $this->db->select('payment_reference.*, companies.name as company, companies.category as customer_group, companies.sequence_code, al.name as ledger_name')
                 ->join('companies', 'companies.id=payment_reference.customer_id', 'left')
+                ->join('accounts_ledgers al', 'al.id = payment_reference.transfer_from_ledger', 'left')
                 //->join('sma_payments', 'sma_payments.payment_id=payment_reference.id', 'inner')
                 ->where('payment_reference.customer_id <>', NULL)
                 ->where('payment_reference.note NOT LIKE "%Reconciliation payment for sale ID%"');

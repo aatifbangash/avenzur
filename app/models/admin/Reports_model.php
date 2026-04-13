@@ -5530,6 +5530,7 @@ class Reports_model extends CI_Model
                  ".$dateWhere."
                  ".$warehouseWhere."
                     GROUP BY s.id
+                    HAVING p.amount > 0.01
                     ORDER BY 
                     DATE(p.date)
         ";

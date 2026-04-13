@@ -691,27 +691,30 @@ class Customers extends MY_Controller
 
             $sheet->SetCellValue('A1', '#');
             $sheet->SetCellValue('B1', 'Reference No.');
-            $sheet->SetCellValue('C1', 'Customer');
-            $sheet->SetCellValue('D1', 'Category');
-            $sheet->SetCellValue('E1', 'Date');
-            $sheet->SetCellValue('F1', 'Payment Amount');
-            $sheet->SetCellValue('G1', 'Note');
+            $sheet->SetCellValue('C1', 'Customer Code');
+            $sheet->SetCellValue('D1', 'Customer');
+            $sheet->SetCellValue('E1', 'Category');
+            $sheet->SetCellValue('F1', 'Date');
+            $sheet->SetCellValue('G1', 'Payment Amount');
+            $sheet->SetCellValue('H1', 'Bank');
 
             $row = 2;
             $count = 1;
             foreach ($payments as $payment) {
+                $date_only = !empty($payment->date) ? date('d-M-Y', strtotime($payment->date)) : '';
                 $sheet->SetCellValue('A' . $row, $count++);
                 $sheet->SetCellValue('B' . $row, $payment->reference_no);
-                $sheet->SetCellValue('C' . $row, $payment->company);
-                $sheet->SetCellValue('D' . $row, $payment->customer_group);
-                $sheet->SetCellValue('E' . $row, $payment->date);
-                $sheet->SetCellValue('F' . $row, $payment->amount);
-                $sheet->SetCellValue('G' . $row, $payment->note);
+                $sheet->SetCellValue('C' . $row, $payment->sequence_code ?? '');
+                $sheet->SetCellValue('D' . $row, $payment->company);
+                $sheet->SetCellValue('E' . $row, $payment->customer_group);
+                $sheet->SetCellValue('F' . $row, $date_only);
+                $sheet->SetCellValue('G' . $row, $payment->amount);
+                $sheet->SetCellValue('H' . $row, $payment->ledger_name ?? '');
                 $row++;
             }
 
-            foreach (['A'=>5,'B'=>20,'C'=>25,'D'=>20,'E'=>15,'F'=>18,'G'=>30] as $c => $w) {
-                $sheet->getColumnDimension($c)->setWidth($w);
+            foreach (range('A', 'H') as $col) {
+                $sheet->getColumnDimension($col)->setAutoSize(true);
             }
 
             $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
