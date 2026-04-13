@@ -99,11 +99,12 @@ if (!empty($filters['to_date'])) {
                             <tr>
                                 <th>#</th>
                                 <th><?= lang('Reference No.') ?></th>
+                                <th><?= lang('Customer Code') ?></th>
                                 <th><?= lang('Customer') ?></th>
                                 <th><?= lang('Category') ?></th>
                                 <th><?= lang('Date') ?></th>
                                 <th class="text-right"><?= lang('Payment Amount') ?></th>
-                                <th><?= lang('Note') ?></th>
+                                <th><?= lang('Bank') ?></th>
                                 <th><?= lang('Actions') ?></th>
                             </tr>
                         </thead>
@@ -119,6 +120,7 @@ if (!empty($filters['to_date'])) {
                             <tr>
                                 <td><?= $count ?></td>
                                 <td><?= htmlspecialchars($payment->reference_no) ?></td>
+                                <td><?= htmlspecialchars($payment->sequence_code ?? '') ?></td>
                                 <td><?= htmlspecialchars($payment->company) ?></td>
                                 <td>
                                     <?php if (!empty($payment->customer_group)): ?>
@@ -127,11 +129,11 @@ if (!empty($filters['to_date'])) {
                                         <span class="text-muted">—</span>
                                     <?php endif; ?>
                                 </td>
-                                <td><?= $payment->date ?></td>
+                                <td><?= !empty($payment->date) ? date('d-M-Y', strtotime($payment->date)) : '' ?></td>
                                 <td class="text-right">
                                     <?= number_format((float) $payment->amount, 2) ?>
                                 </td>
-                                <td><?= htmlspecialchars($payment->note) ?></td>
+                                <td><?= htmlspecialchars($payment->ledger_name ?? '') ?></td>
                                 <td>
                                     <a href="<?= admin_url('customers/view_payment/' . $payment->id) ?>"
                                        class="tip btn btn-xs btn-default" title="<?= lang('View Payment') ?>">
@@ -143,6 +145,7 @@ if (!empty($filters['to_date'])) {
                         </tbody>
                         <tfoot style="background:#e8f5e8; font-weight:bold;">
                             <tr>
+                                <th></th>
                                 <th></th>
                                 <th></th>
                                 <th></th>

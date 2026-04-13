@@ -22,7 +22,7 @@
   <?php  } ?>
 <div class="box">
     <div class="box-header">
-        <h2 class="blue"><i class="fa-fw fa fa-users"></i><?= lang('Collections_by_Location'); ?></h2>
+        <h2 class="blue"><i class="fa-fw fa fa-users"></i><?= lang('Collections_Per_Invoice'); ?></h2>
         <?php  if($viewtype!='pdf'){?>
         <div class="box-icon">
             <ul class="btn-tasks">
@@ -137,7 +137,7 @@
                                                 <td><?= $data->sequence_code ?? $data->customer_id; ?></td>
                                                 <td><?= $data->customer_name; ?></td>
                                                 <td><?= $data->sale_id; ?></td>
-                                                <td><?= $data->sale_date; ?></td>
+                                                <td><?= $data->sale_date ? date('d-M-Y', strtotime($data->sale_date)) : '' ?></td>
                                                 <td><?= number_format($data->grand_total, 2); ?></td>
                                                 <td><?= $data->payment_ref_id; ?></td>
                                                 <td><?= number_format($data->paid_amount, 2); ?></td>
@@ -163,7 +163,7 @@
                                     <td colspan="1"><strong>-</strong></td>
                                     <td colspan="1"><strong>-</strong></td>
                                     <td colspan="1"><strong>-</strong></td>
-                                    <td colspan="1"><strong><?= number_format($grand_total_sale, 2); ?></strong></td>
+                                    <td colspan="1"><strong>-</strong></td>
                                     <td colspan="1"><strong>-</strong></td>
                                     <td colspan="1"><strong><?= number_format($grand_total_payment, 2); ?></strong></td>
                                     <td colspan="1"><strong>-</strong></td>
