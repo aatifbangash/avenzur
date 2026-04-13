@@ -230,14 +230,25 @@
                     elseif ($inv->days_overdue >= 30)  $row_class = 'overdue-medium';
                     elseif ($inv->days_overdue >= 1)   $row_class = 'overdue-low';
 
-                    $detail_url = ($type === 'ar')
-                        ? admin_url('sales?sid=' . $inv->invoice_id)
-                        : admin_url('purchases/view/' . $inv->invoice_id);
+                    if ($type !== 'ar') {
+                        $detail_url = admin_url('purchases/view/' . $inv->invoice_id);
+                    } elseif (!empty($inv->source) && $inv->source === 'service') {
+                        $detail_url = null; // service memo — no direct sales link
+                    } else {
+                        $detail_url = admin_url('sales?sid=' . $inv->invoice_id);
+                    }
                 ?>
                     <tr class="<?= $row_class ?>">
                         <td><?= $i ?></td>
                         <td><?= date('d-M-Y', strtotime($inv->date)) ?></td>
-                        <td><a href="<?= $detail_url ?>" target="_blank"><?= htmlspecialchars($inv->reference_no ?: '#' . $inv->invoice_id) ?></a></td>
+                        <td>
+                            <?php if ($detail_url): ?>
+                                <a href="<?= $detail_url ?>" target="_blank"><?= htmlspecialchars($inv->reference_no ?: '#' . $inv->invoice_id) ?></a>
+                            <?php else: ?>
+                                <?= htmlspecialchars($inv->reference_no ?: '#' . $inv->invoice_id) ?>
+                                <span class="label label-default" style="margin-left:4px;">Service</span>
+                            <?php endif; ?>
+                        </td>
                         <td><?= htmlspecialchars($inv->party_name) ?></td>
                         <td><?= htmlspecialchars($inv->sequence_code ?? '') ?></td>
                         <td><?= htmlspecialchars($inv->ledger_name ?? '') ?></td>
