@@ -675,6 +675,7 @@ class Sales_model extends CI_Model
                 ->join('accounts_ledgers al', 'al.id = payment_reference.transfer_from_ledger', 'left')
                 //->join('sma_payments', 'sma_payments.payment_id=payment_reference.id', 'inner')
                 ->where('payment_reference.customer_id <>', NULL)
+                ->where('(payment_reference.added_via IS NULL OR payment_reference.added_via NOT IN ("customer_return_modu", "credit_memo_module", "auto_script"))')
                 ->where('payment_reference.note NOT LIKE "%Reconciliation payment for sale ID%"');
 
         if (!empty($filters['customer_id'])) {
