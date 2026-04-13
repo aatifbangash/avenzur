@@ -5512,7 +5512,7 @@ class Reports_model extends CI_Model
                     cm.city as area,
                     pr.transfer_from_ledger,
                     lg.name as ledger_name,
-                    pr.id as payment_ref_id
+                    pr.reference_no as payment_ref_id
 
                 FROM sma_payments p
                 LEFT JOIN sma_sales s
