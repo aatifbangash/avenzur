@@ -741,11 +741,27 @@ class Purchases_model extends CI_Model
         return false;
     }
 
-    public function getPaymentReferences()
+    public function getPaymentReferences($filters = [])
     {
-        $this->db->select('payment_reference.*, companies.name as company')
+        $this->db->select('payment_reference.*, companies.name as company, companies.sequence_code, companies.category as supplier_group, al.name as ledger_name, (CASE WHEN EXISTS(SELECT 1 FROM sma_payments p WHERE p.payment_id = sma_payment_reference.id AND p.type = "advance") THEN "advance" ELSE "standard" END) as payment_type', false)
             ->join('companies', 'companies.id=payment_reference.supplier_id', 'left')
+            ->join('accounts_ledgers al', 'al.id = payment_reference.transfer_from_ledger', 'left')
             ->where('supplier_id <>', NULL);
+
+        if (!empty($filters['supplier_id'])) {
+            $this->db->where('payment_reference.supplier_id', $filters['supplier_id']);
+        }
+        if (!empty($filters['category'])) {
+            $this->db->where('companies.category', $filters['category']);
+        }
+        if (!empty($filters['from_date'])) {
+            $this->db->where('payment_reference.date >=', $filters['from_date']);
+        }
+        if (!empty($filters['to_date'])) {
+            $this->db->where('payment_reference.date <=', $filters['to_date']);
+        }
+
+        $this->db->order_by('payment_reference.date', 'DESC');
         $q = $this->db->get('payment_reference');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -753,7 +769,7 @@ class Purchases_model extends CI_Model
             }
             return $data;
         }
-        return false;
+        return [];
     }
 
     public function getPayments()

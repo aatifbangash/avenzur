@@ -667,6 +667,8 @@ class Customers extends MY_Controller
         // Build filters from GET or POST
         $filters = [
             'customer_id' => $this->input->get('customer_id') ?: $this->input->post('customer_id'),
+            'category'    => $this->input->get('category')    ?: $this->input->post('category'),
+            'sales_agent' => $this->input->get('sales_agent') ?: $this->input->post('sales_agent'),
             'from_date'   => $this->input->get('from_date')   ?: $this->input->post('from_date'),
             'to_date'     => $this->input->get('to_date')     ?: $this->input->post('to_date'),
         ];
@@ -678,9 +680,28 @@ class Customers extends MY_Controller
             }
         }
 
-        $this->data['payments']  = $this->sales_model->getPaymentReferences($filters);
-        $this->data['customers'] = $this->site->getAllCompanies('customer');
-        $this->data['filters']   = $filters;
+        $customers = $this->site->getAllCompanies('customer');
+
+        // Distinct categories from customers list
+        $customer_categories = [];
+        if (!empty($customers)) {
+            foreach ($customers as $c) {
+                if (!empty($c->category) && !in_array($c->category, $customer_categories)) {
+                    $customer_categories[] = $c->category;
+                }
+            }
+            sort($customer_categories);
+        }
+
+        // All salesmen
+        $sm_query = $this->db->order_by('name', 'ASC')->get('sales_man');
+        $salesmen = ($sm_query->num_rows() > 0) ? $sm_query->result() : [];
+
+        $this->data['payments']            = $this->sales_model->getPaymentReferences($filters);
+        $this->data['customers']           = $customers;
+        $this->data['customer_categories'] = $customer_categories;
+        $this->data['salesmen']            = $salesmen;
+        $this->data['filters']             = $filters;
 
         // Export to Excel
         if ($this->input->get('export_excel') || $this->input->post('export_excel')) {
@@ -694,9 +715,10 @@ class Customers extends MY_Controller
             $sheet->SetCellValue('C1', 'Customer Code');
             $sheet->SetCellValue('D1', 'Customer');
             $sheet->SetCellValue('E1', 'Category');
-            $sheet->SetCellValue('F1', 'Date');
-            $sheet->SetCellValue('G1', 'Payment Amount');
-            $sheet->SetCellValue('H1', 'Bank');
+            $sheet->SetCellValue('F1', 'Sales Agent');
+            $sheet->SetCellValue('G1', 'Date');
+            $sheet->SetCellValue('H1', 'Payment Amount');
+            $sheet->SetCellValue('I1', 'Bank');
 
             $row = 2;
             $count = 1;
@@ -706,14 +728,15 @@ class Customers extends MY_Controller
                 $sheet->SetCellValue('B' . $row, $payment->reference_no);
                 $sheet->SetCellValue('C' . $row, $payment->sequence_code ?? '');
                 $sheet->SetCellValue('D' . $row, $payment->company);
-                $sheet->SetCellValue('E' . $row, $payment->customer_group);
-                $sheet->SetCellValue('F' . $row, $date_only);
-                $sheet->SetCellValue('G' . $row, $payment->amount);
-                $sheet->SetCellValue('H' . $row, $payment->ledger_name ?? '');
+                $sheet->SetCellValue('E' . $row, $payment->customer_group ?? '');
+                $sheet->SetCellValue('F' . $row, $payment->sales_agent ?? '');
+                $sheet->SetCellValue('G' . $row, $date_only);
+                $sheet->SetCellValue('H' . $row, $payment->amount);
+                $sheet->SetCellValue('I' . $row, $payment->ledger_name ?? '');
                 $row++;
             }
 
-            foreach (range('A', 'H') as $col) {
+            foreach (range('A', 'I') as $col) {
                 $sheet->getColumnDimension($col)->setAutoSize(true);
             }
 

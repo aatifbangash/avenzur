@@ -670,7 +670,7 @@ class Sales_model extends CI_Model
     }
 
     public function getPaymentReferences($filters = []){
-        $this->db->select('payment_reference.*, companies.name as company, companies.category as customer_group, companies.sequence_code, al.name as ledger_name')
+        $this->db->select('payment_reference.*, companies.name as company, companies.category as customer_group, companies.sequence_code, companies.sales_agent, al.name as ledger_name')
                 ->join('companies', 'companies.id=payment_reference.customer_id', 'left')
                 ->join('accounts_ledgers al', 'al.id = payment_reference.transfer_from_ledger', 'left')
                 //->join('sma_payments', 'sma_payments.payment_id=payment_reference.id', 'inner')
@@ -680,6 +680,12 @@ class Sales_model extends CI_Model
 
         if (!empty($filters['customer_id'])) {
             $this->db->where('payment_reference.customer_id', $filters['customer_id']);
+        }
+        if (!empty($filters['category'])) {
+            $this->db->where('companies.category', $filters['category']);
+        }
+        if (!empty($filters['sales_agent'])) {
+            $this->db->where('companies.sales_agent', $filters['sales_agent']);
         }
         if (!empty($filters['from_date'])) {
             $this->db->where('payment_reference.date >=', $filters['from_date']);

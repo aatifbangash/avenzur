@@ -1049,7 +1049,81 @@ class Suppliers extends MY_Controller
         $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Supplier Payments')]];
         $meta = ['page_title' => lang('Supplier Payments'), 'bc' => $bc];
 
-        $this->data['payments'] = $this->purchases_model->getPaymentReferences();
+        // Build filters from GET
+        $filters = [
+            'supplier_id' => $this->input->get('supplier_id') ?: $this->input->post('supplier_id'),
+            'category'    => $this->input->get('category')    ?: $this->input->post('category'),
+            'from_date'   => $this->input->get('from_date')   ?: $this->input->post('from_date'),
+            'to_date'     => $this->input->get('to_date')     ?: $this->input->post('to_date'),
+        ];
+        // Convert display date (d/m/Y) to Y-m-d for the query
+        foreach (['from_date', 'to_date'] as $f) {
+            if (!empty($filters[$f])) {
+                $d = DateTime::createFromFormat('d/m/Y', $filters[$f]);
+                if ($d) { $filters[$f] = $d->format('Y-m-d'); }
+            }
+        }
+
+        $this->data['payments']   = $this->purchases_model->getPaymentReferences($filters);
+        $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+        $this->data['filters']    = $filters;
+
+        // Build distinct category list from suppliers
+        $categories = [];
+        if (!empty($this->data['suppliers'])) {
+            foreach ($this->data['suppliers'] as $s) {
+                if (!empty($s->category) && !in_array($s->category, $categories)) {
+                    $categories[] = $s->category;
+                }
+            }
+            sort($categories);
+        }
+        $this->data['supplier_categories'] = $categories;
+
+        // Export to Excel
+        if ($this->input->get('export_excel') || $this->input->post('export_excel')) {
+            $payments = $this->data['payments'];
+            $this->load->library('excel');
+            $sheet = $this->excel->setActiveSheetIndex(0);
+            $sheet->setTitle('Supplier Payments');
+
+            $sheet->SetCellValue('A1', '#');
+            $sheet->SetCellValue('B1', 'Reference No.');
+            $sheet->SetCellValue('C1', 'Supplier Code');
+            $sheet->SetCellValue('D1', 'Supplier');
+            $sheet->SetCellValue('E1', 'Category');
+            $sheet->SetCellValue('F1', 'Date');
+            $sheet->SetCellValue('G1', 'Payment Amount');
+            $sheet->SetCellValue('H1', 'Bank');
+            $sheet->SetCellValue('I1', 'Payment Type');
+
+            $row = 2;
+            $count = 1;
+            foreach ($payments as $payment) {
+                $date_only = !empty($payment->date) ? date('d-M-Y', strtotime($payment->date)) : '';
+                $sheet->SetCellValue('A' . $row, $count++);
+                $sheet->SetCellValue('B' . $row, $payment->reference_no);
+                $sheet->SetCellValue('C' . $row, $payment->sequence_code ?? '');
+                $sheet->SetCellValue('D' . $row, $payment->company);
+                $sheet->SetCellValue('E' . $row, $payment->supplier_group ?? '');
+                $sheet->SetCellValue('F' . $row, $date_only);
+                $sheet->SetCellValue('G' . $row, $payment->amount);
+                $sheet->SetCellValue('H' . $row, $payment->ledger_name ?? '');
+                $sheet->SetCellValue('I' . $row, ucfirst($payment->payment_type ?? 'standard'));
+                $row++;
+            }
+
+            foreach (range('A', 'I') as $col) {
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+            }
+
+            $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+            $filename = 'Supplier_Payments_' . date('Y-m-d_H_i_s');
+            $this->load->helper('excel');
+            create_excel($this->excel, $filename);
+            return;
+        }
+
         $this->page_construct('suppliers/list_payments', $meta, $this->data);
     }
 
