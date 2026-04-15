@@ -4011,6 +4011,10 @@ class Sales extends MY_Controller
         if ($this->input->get('attachment') == 'yes') {
             $this->datatables->where('payment_status !=', 'paid')->where('attachment !=', null);
         }
+        $allowed_statuses = ['completed', 'delivered', 'label_verifired', 'ready', 'sent_to_rasd', 'pending', 'returned'];
+        if (in_array($this->input->get('sale_status'), $allowed_statuses)) {
+            $this->datatables->where('sale_status', $this->input->get('sale_status'));
+        }
         $this->datatables->where('pos !=', 1); // ->where('sale_status !=', 'returned');
         if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->Admin && !$this->GP['sales-index']) {
             $this->datatables->where('created_by', $this->session->userdata('user_id'));
