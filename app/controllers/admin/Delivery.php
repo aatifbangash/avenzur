@@ -39,7 +39,9 @@ class Delivery extends MY_Controller
             ->select("deliveries.id, 
                   DATE_FORMAT(sma_deliveries.date_string, '%Y-%m-%d') as date, 
                   COALESCE(CONCAT(u.first_name, ' ', u.last_name), deliveries.driver_name, 'N/A') as driver, 
-                  tr.truck_no as truck", FALSE)
+                  tr.truck_no as truck,
+                  deliveries.status,
+                  deliveries.receipt", FALSE)
             ->from('sma_deliveries')
             ->join('sma_delivery_driver dd', 'deliveries.driver_id = dd.id', 'left')
             ->join('sma_truck_registration tr', 'deliveries.truck_number = tr.id', 'left')
@@ -379,6 +381,29 @@ class Delivery extends MY_Controller
             redirect(admin_url('delivery/edit/' . $delivery_id));
             exit;
         }
+
+        // Receipt is mandatory when marking as delivered
+        $receipt_filename = null;
+        if ($status === 'delivered') {
+            if (!empty($_FILES['receipt']['name'])) {
+                $this->load->library('upload', [
+                    'upload_path'   => FCPATH . 'files/receipts/',
+                    'allowed_types' => 'jpg|jpeg|png|gif|pdf',
+                    'max_size'      => 10240,
+                    'encrypt_name'  => true,
+                ]);
+                if (!$this->upload->do_upload('receipt')) {
+                    $this->session->set_flashdata('error', 'Receipt upload failed: ' . $this->upload->display_errors('', ''));
+                    redirect(admin_url('delivery/edit/' . $delivery_id));
+                    return;
+                }
+                $receipt_filename = $this->upload->data('file_name');
+            } elseif (empty($delivery_info->receipt)) {
+                $this->session->set_flashdata('error', 'A delivery receipt is required when marking the delivery as Delivered.');
+                redirect(admin_url('delivery/edit/' . $delivery_id));
+                return;
+            }
+        }
         
         /*foreach($delivery_items as $item){
             $sale_details = $this->sales_model->getSaleByID($item->invoice_id);
@@ -418,6 +443,10 @@ class Delivery extends MY_Controller
             'updated_by' => $this->session->userdata('user_id'),
             'updated_at' => date('Y-m-d H:i:s')
         ];
+
+        if ($receipt_filename) {
+            $delivery_data['receipt'] = $receipt_filename;
+        }
 
         if ($this->delivery_model->update_delivery($delivery_id, $delivery_data, $delivery_items)) {
             $this->session->set_flashdata('message', 'Delivery updated successfully');
