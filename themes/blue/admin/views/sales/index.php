@@ -6,7 +6,7 @@
             "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?=lang('all')?>"]],
             "iDisplayLength": <?=$Settings->rows_per_page?>,
             'bProcessing': true, 'bServerSide': true,
-            'sAjaxSource': '<?=admin_url((isset($is_shop_sales) && $is_shop_sales ? 'sales/getShopSales' : 'sales/getSales') . ($warehouse_id ? '/' . $warehouse_id : '') . '?sid='.$sid.'&v=1' . ($this->input->get('shop') ? '&shop=' . $this->input->get('shop') : '') . ($this->input->get('attachment') ? '&attachment=' . $this->input->get('attachment') : '') . ($this->input->get('delivery') ? '&delivery=' . $this->input->get('delivery') : '')); ?>',
+            'sAjaxSource': '<?=admin_url((isset($is_shop_sales) && $is_shop_sales ? 'sales/getShopSales' : 'sales/getSales') . ($warehouse_id ? '/' . $warehouse_id : '') . '?sid='.$sid.'&v=1' . ($this->input->get('shop') ? '&shop=' . $this->input->get('shop') : '') . ($this->input->get('attachment') ? '&attachment=' . $this->input->get('attachment') : '') . ($this->input->get('delivery') ? '&delivery=' . $this->input->get('delivery') : '') . ($this->input->get('sale_status') ? '&sale_status=' . urlencode($this->input->get('sale_status')) : '')); ?>',
             'fnServerData': function (sSource, aoData, fnCallback) {
                 aoData.push({
                     "name": "<?=$this->security->get_csrf_token_name()?>",
@@ -27,14 +27,14 @@
             "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                 var gtotal = 0, paid = 0, balance = 0;
                 for (var i = 0; i < aaData.length; i++) {
-                    gtotal += parseFloat(aaData[aiDisplay[i]][8]);
-                    paid += parseFloat(aaData[aiDisplay[i]][9]);
-                    balance += parseFloat(aaData[aiDisplay[i]][10]);
+                    gtotal += parseFloat(aaData[aiDisplay[i]][6]);
+                    paid += parseFloat(aaData[aiDisplay[i]][7]);
+                    balance += parseFloat(aaData[aiDisplay[i]][8]);
                 }
                 var nCells = nRow.getElementsByTagName('th');
-                nCells[8].innerHTML = currencyFormat(parseFloat(gtotal));
-                nCells[9].innerHTML = currencyFormat(parseFloat(paid));
-                nCells[10].innerHTML = currencyFormat(parseFloat(balance));
+                nCells[6].innerHTML = currencyFormat(parseFloat(gtotal));
+                nCells[7].innerHTML = currencyFormat(parseFloat(paid));
+                nCells[8].innerHTML = currencyFormat(parseFloat(balance));
             }
         }).fnSetFilteringDelay().dtFilter([
             {column_number: 1, filter_default_label: "[<?=lang('number');?>]", filter_type: "text", data: []},
@@ -42,8 +42,8 @@
             {column_number: 3, filter_default_label: "[<?=lang('reference_no');?>]", filter_type: "text", data: []},
             {column_number: 4, filter_default_label: "[<?=lang('biller');?>]", filter_type: "text", data: []},
             {column_number: 5, filter_default_label: "[<?=lang('customer');?>]", filter_type: "text", data: []},
-            {column_number: 7, filter_default_label: "[<?=lang('sale_status');?>]", filter_type: "select", data: ["completed", "delivered", "label_verifired", "ready", "sent_to_rasd", "pending", "returned"]},
-            {column_number: 11, filter_default_label: "[<?=lang('payment_status');?>]", filter_type: "text", data: []},
+            {column_number: 6, filter_default_label: "[<?=lang('sale_status');?>]", filter_type: "text", data: []},
+            {column_number: 10, filter_default_label: "[<?=lang('payment_status');?>]", filter_type: "text", data: []},
         ], "footer");
 
         if (localStorage.getItem('remove_slls')) {
@@ -265,6 +265,18 @@
                 <!-- <p class="introtext"><?=lang('list_results');?></p> -->
                 <div class="col-md-3"><input type="text" id="sid" name="sid" class="form-control input-tip"></div>
                 <div class="col-md-3"> <input type="button" id="searchByNumber" class="btn btn-primary" value="Search By Serial Number"></div>
+                <div class="col-md-3">
+                    <select id="saleStatusFilter" class="form-control">
+                        <option value="">-- <?=lang('all')?> <?=lang('sale_status')?> --</option>
+                        <option value="completed" <?=$this->input->get('sale_status')=='completed'?'selected':''?>>Completed</option>
+                        <option value="delivered" <?=$this->input->get('sale_status')=='delivered'?'selected':''?>>Delivered</option>
+                        <option value="label_verifired" <?=$this->input->get('sale_status')=='label_verifired'?'selected':''?>>Label Verified</option>
+                        <option value="ready" <?=$this->input->get('sale_status')=='ready'?'selected':''?>>Ready</option>
+                        <option value="sent_to_rasd" <?=$this->input->get('sale_status')=='sent_to_rasd'?'selected':''?>>Sent to Rasd</option>
+                        <option value="pending" <?=$this->input->get('sale_status')=='pending'?'selected':''?>>Pending</option>
+                        <option value="returned" <?=$this->input->get('sale_status')=='returned'?'selected':''?>>Returned</option>
+                    </select>
+                </div>
 
 
                 <div class="table-responsive">
@@ -300,7 +312,7 @@
                             <th style="min-width:30px; width: 30px; text-align: center;">
                                 <input class="checkbox checkft" type="checkbox" name="check"/>
                             </th>
-                            <th></th><th></th><th></th><th></th><th></th><th></th><th></th>
+                            <th></th><th></th><th></th><th></th><th></th>
                             <th><?= lang('grand_total'); ?></th>
                             <th><?= lang('paid'); ?></th>
                             <th><?= lang('balance'); ?></th>
@@ -329,15 +341,24 @@
 
 <script>
     document.getElementById('searchByNumber').addEventListener('click', function() {
-    var pidValue = document.getElementById('sid').value; 
-    if (pidValue) { 
-       
-        var baseUrl = window.location.href.split('?')[0]; 
-        var newUrl = baseUrl + "?sid=" + encodeURIComponent(pidValue);
-        window.location.href = newUrl; 
-    } else {
-        alert("Please enter a purchase number."); 
+    var pidValue = document.getElementById('sid').value;
+    var statusValue = document.getElementById('saleStatusFilter').value;
+    if (!pidValue && !statusValue) {
+        alert("Please enter a purchase number or select a status.");
+        return;
     }
+    var baseUrl = window.location.href.split('?')[0];
+    var params = [];
+    if (pidValue) params.push("sid=" + encodeURIComponent(pidValue));
+    if (statusValue) params.push("sale_status=" + encodeURIComponent(statusValue));
+    window.location.href = baseUrl + "?" + params.join("&");
+});
+
+    document.getElementById('saleStatusFilter').addEventListener('change', function() {
+    var statusValue = this.value;
+    var baseUrl = window.location.href.split('?')[0];
+    var newUrl = statusValue ? baseUrl + "?sale_status=" + encodeURIComponent(statusValue) : baseUrl;
+    window.location.href = newUrl;
 });
 
 </script>
