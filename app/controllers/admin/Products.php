@@ -1352,6 +1352,444 @@ class Products extends MY_Controller
 
     }
 
+    public function send_shopify_sales_to_zatca()
+    {
+        $csvFile = $this->upload_path . 'csv/shopify_orders_export.csv';
+        if (!file_exists($csvFile)) {
+            echo "CSV file not found.";
+            return;
+        }
+
+        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Csv();
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($csvFile);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $rows = $sheet->toArray(null, true, true, false);
+
+        echo "<h3>Processing Shopify Sales...</h3>";
+
+        // ==============================
+        // 🧠 STEP 1: GROUP ORDERS
+        // ==============================
+        $orders = [];
+
+        foreach ($rows as $i => $row) {
+
+            if ($i == 0) continue;
+
+            $orderId = trim($row[0]);
+            if (!$orderId) continue;
+
+            $paymentStatus = trim($row[2]);
+            if (strtolower($paymentStatus) != 'paid') {
+                continue; // Skip non-paid orders
+            }
+
+            if (!isset($orders[$orderId])) {
+                $orders[$orderId] = [
+                    'orderId' => $orderId,
+                    'orderDate' => trim($row[15]),
+                    'paymentStatus' => $paymentStatus,
+                    'discount' => (float) $row[13],
+
+                    'items' => [],
+                    'total_gross' => 0,
+                    'document_gross' => (float) $row[11],
+                    'document_tax' => (float) $row[10],
+                    'document_discount' => (float) $row[13]
+                ];
+            }
+
+            $qty   = (float) $row[16];
+            $price = (float) $row[18];
+
+            if ($qty <= 0) continue;
+
+            $gross = $qty * $price;
+
+            $orders[$orderId]['items'][] = [
+                'product_name' => trim($row[17]),
+                'quantity'     => $qty,
+                'unit_price'   => $price,
+                'gross'        => $gross
+            ];
+
+            // total gross of order
+            $orders[$orderId]['total_gross'] += $gross;
+        }
+
+        // ==============================
+        // 🚀 STEP 2: PROCESS EACH ORDER
+        // ==============================
+
+        foreach ($orders as $orderId => $order) {
+
+            if (strtolower($order['paymentStatus']) != 'paid') {
+                continue;
+            }
+
+            $taxRate = 15;
+
+            // Safety check
+            if ($order['discount'] > $order['total_gross']) {
+                $order['discount'] = $order['total_gross'];
+            }
+
+            // Format date
+            $date = new DateTime($order['orderDate']);
+            $formattedDate = $date->format("Y-m-d\TH:i:s.v\Z");
+
+            // ==============================
+            // 🧾 INIT PAYLOAD
+            // ==============================
+            $payload = [];
+            $payload['kind'] = "Simplified-Invoice";
+            $payload['invoiceNo'] = 'INV' . $orderId;
+            $payload['issueDate'] = $formattedDate;
+            $payload['currency'] = 'SAR';
+            $payload['items'] = [];
+
+            // Totals
+            $totalAmount = 0;
+            $totalNet = 0;
+            $totalTax = 0;
+            $totalGross = 0;
+            $totalDiscount = 0;
+
+            // ==============================
+            // 🔥 STEP 3: ITEM CALCULATIONS
+            // ==============================
+            foreach ($order['items'] as $item) {
+
+                $itemGross = $item['gross'];
+
+                // 👉 DISTRIBUTE DISCOUNT
+                $itemDiscount = 0;
+                if ($order['total_gross'] > 0 && $order['discount'] > 0) {
+                    $itemDiscount = ($itemGross / $order['total_gross']) * $order['discount'];
+                }
+
+                $discountedGross = $itemGross - $itemDiscount;
+
+                // 👉 VAT CALCULATION (AFTER DISCOUNT)
+                $netAmount = $discountedGross / (1 + ($taxRate / 100));
+                $taxAmount = $discountedGross - $netAmount;
+
+                // ==============================
+                // 🧾 BUILD ITEM
+                // ==============================
+                $row = [];
+
+                $row['product'] = $item['product_name'];
+                $row['quantity'] = (int) $item['quantity'];
+                $row['unit'] = 'EA';
+                $row['unitPrice'] = round($item['unit_price'], 2);
+
+                $row['tax'] = $taxRate;
+                $row['taxFormat'] = '%';
+                $row['taxCategory'] = "Standard";
+                $row['taxExemptionReasonCode'] = "";
+                $row['taxExemptionReason'] = "";
+
+                $row['amount'] = round($itemGross, 2);
+                $row['discountAmount'] = round($itemDiscount, 2);
+                $row['netAmount'] = round($netAmount, 2);
+                $row['taxAmount'] = round($taxAmount, 2);
+                $row['grossAmount'] = round($discountedGross, 2);
+
+                // Totals
+                $totalAmount += $row['amount'];
+                $totalNet += $row['netAmount'];
+                $totalTax += $row['taxAmount'];
+                $totalGross += $row['grossAmount'];
+                $totalDiscount += $row['discountAmount'];
+
+                $payload['items'][] = $row;
+            }
+
+            // ==============================
+            // 🧾 FINAL TOTALS
+            // ==============================
+            $payload['amount'] = round($totalAmount, 2);
+            $payload['discountAmount'] = round($order['document_discount'], 2);
+            $payload['netAmount'] = round($totalNet, 2);
+            $payload['taxAmount'] = round($order['document_tax'], 2);
+            $payload['grossAmount'] = round($order['document_gross'], 3);
+
+            // ==============================
+            // 🔍 DEBUG
+            // ==============================
+            /*echo "<hr><pre>";
+            print_r($payload);
+            echo "</pre>";*/
+
+            // ==============================
+            // 🚀 SEND TO ZATCA
+            // ==============================
+
+            $param = "?appKey=" . $this->Settings->zatca_appkey .
+                     "&secretKey=" . $this->Settings->zatca_secretkey;
+
+            $url = $this->Settings->zatca_url . $endpoint . $param;
+
+            // --------------------
+            // HEADERS SAFE BUILD
+            // --------------------
+            $default_headers = [
+                'Content-Type: application/json',
+                'Accept: application/json'
+            ];
+
+            if (!isset($headers) || !is_array($headers)) {
+                $headers = [];
+            }
+
+            $headers = array_merge($default_headers, $headers);
+
+            // --------------------
+            // CURL INIT
+            // --------------------
+            $ch = curl_init();
+
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+            // --------------------
+            // SSL (IMPORTANT for ZATCA)
+            // --------------------
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+
+            // --------------------
+            // EXECUTE
+            // --------------------
+            $response = curl_exec($ch);
+
+            // ERROR HANDLING (VERY IMPORTANT)
+            if ($response === false) {
+                $error = curl_error($ch);
+                curl_close($ch);
+
+                die("CURL ERROR: " . $error);
+            }
+
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+            curl_close($ch);
+
+            // OUTPUT
+            echo "HTTP CODE: " . $httpCode . "<br>";
+            echo "<pre>";
+            echo $response;
+            echo "</pre>";
+            
+
+            exit; // remove for production
+        }
+
+        echo "<h3>Done ✅</h3>";
+    }
+
+    /*public function send_shopify_sales_to_zatca(){
+        $csvFile = $this->upload_path . 'csv/shopify_orders_export.csv';
+
+        if (!file_exists($csvFile)) {
+            echo "CSV file not found.";
+            return;
+        }
+
+        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Csv();
+        $reader->setReadDataOnly(false); // IMPORTANT: allow writing
+        $spreadsheet = $reader->load($csvFile);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $rows = $sheet->toArray(null, true, true, false);
+
+        echo "<h3>Processing Shopify Sales...</h3>";
+
+        foreach ($rows as $i => $row) {
+
+            if ($i == 0) continue; // Skip header
+
+            $rowIndex = $i + 1;
+
+            $orderId = trim($row[0]);
+            $customerEmail = trim($row[1]);
+            $paymentStatus = trim($row[2]);
+            $paymentDate = trim($row[3]);
+            $subTotal = trim($row[10]);
+            $totalTax = trim($row[12]);
+            $total = trim($row[13]);
+            $discount = trim($row[15]);
+            $orderDate = trim($row[17]);
+            $itemQuantity = trim($row[18]);
+            $itemName = trim($row[19]);
+            $itemPrice = trim($row[20]);
+            $itemCode = trim($row[22]);
+            $billingName = trim($row[23]);
+            $billingStreet = trim($row[24]);
+            $billingAddress1 = trim($row[25]);
+            $billingAddress2 = trim($row[26]);
+            $billingCity = trim($row[28]);
+            $billingPhone = trim($row[32]);
+            $shippingName = trim($row[33]);
+            $shippingStreet = trim($row[34]);
+            $shippingAddress1 = trim($row[35]);
+            $shippingAddress2 = trim($row[36]);
+            $shippingCity = trim($row[38]);
+
+            // Here you would add your logic to send this data to ZATCA API
+            // For example, you might create a JSON payload and make an HTTP POST request
+            // to the ZATCA endpoint with the order details.
+
+            echo "Processed Order ID: {$orderId} - Customer: {$customerEmail} - Total: {$total}<br>";
+            exit;
+
+
+
+        }
+
+    }*/
+
+    public function supplier_summary_report()
+    {
+        $excelFile = $this->upload_path . 'csv/Supplier-Summary-Report.xlsx';
+
+        if (!file_exists($excelFile)) {
+            echo "Excel file not found.";
+            return;
+        }
+
+        // ==============================
+        // 📊 STEP 1: FETCH DATA (ONCE)
+        // ==============================
+
+        // 🔹 Purchases
+        $purchases = $this->db->query("
+            SELECT 
+                po.supplier,
+                SUM(posi.qty) AS total_purchased_quantity
+            FROM sma_purchase_order_shelving_items posi
+
+            INNER JOIN sma_purchase_order_shelving pos 
+                ON pos.id = posi.shelving_id
+
+            INNER JOIN sma_purchase_orders po 
+                ON po.id = pos.po_id
+
+            WHERE 
+                posi.status IN ('active','restock')   -- ✅ only real stock
+                AND po.supplier_id != 74              -- ❌ exclude purchase orders
+
+            GROUP BY po.supplier
+        ")->result_array();
+
+        // 🔹 Sales
+        $sales = $this->db->query("
+            SELECT 
+                po.supplier,
+                SUM(si.quantity) AS total_sold_quantity,
+                SUM(si.unit_price * si.quantity) AS total_sales_value
+            FROM sma_sale_items si
+            JOIN sma_purchase_order_items poi 
+                ON CONVERT(TRIM(LEADING '0' FROM si.product_code) USING utf8mb4)
+                = CONVERT(TRIM(LEADING '0' FROM poi.product_code) USING utf8mb4)
+            JOIN sma_purchase_orders po 
+                ON po.id = poi.purchase_id
+            WHERE po.supplier_id != 74
+            GROUP BY po.supplier
+        ")->result_array();
+
+        // 🔹 Current Stock
+        $stock = $this->db->query("
+            SELECT 
+                po.supplier,
+                SUM(posi.qty) AS current_stock_quantity
+            FROM sma_purchase_order_shelving_items posi
+            JOIN sma_purchase_order_shelving pos ON pos.id = posi.shelving_id
+            JOIN sma_purchase_orders po ON po.id = pos.po_id
+            WHERE po.supplier_id != 74
+            GROUP BY po.supplier
+        ")->result_array();
+
+        // ==============================
+        // 🧠 STEP 2: MAP ARRAYS
+        // ==============================
+
+        $purchases_map = array_column($purchases, null, 'supplier');
+        $sales_map     = array_column($sales, null, 'supplier');
+        $stock_map     = array_column($stock, null, 'supplier');
+
+        // ==============================
+        // 📂 STEP 3: READ EXCEL
+        // ==============================
+
+        $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+        $reader->setReadDataOnly(false); // IMPORTANT: allow writing
+        $spreadsheet = $reader->load($excelFile);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $rows = $sheet->toArray(null, true, true, false);
+
+        echo "<h3>Processing Suppliers...</h3>";
+
+        foreach ($rows as $i => $row) {
+
+            if ($i == 0) continue; // Skip header
+
+            $rowIndex = $i + 1;
+
+            $supplier_name = trim($row[0]);
+
+            // ==============================
+            // 📊 STEP 4: CALCULATIONS
+            // ==============================
+
+            $total_purchased_quantity = isset($purchases_map[$supplier_name]) 
+                ? $purchases_map[$supplier_name]['total_purchased_quantity'] 
+                : 0;
+
+            $total_sold_quantity = isset($sales_map[$supplier_name]) 
+                ? $sales_map[$supplier_name]['total_sold_quantity'] 
+                : 0;
+
+            $total_sales_value = isset($sales_map[$supplier_name]) 
+                ? $sales_map[$supplier_name]['total_sales_value'] 
+                : 0;
+
+            $current_stock_quantity = isset($stock_map[$supplier_name]) 
+                ? $stock_map[$supplier_name]['current_stock_quantity'] 
+                : 0;
+
+            // ==============================
+            // ✏️ STEP 5: WRITE TO EXCEL
+            // ==============================
+
+            // Adjust columns as per your sheet layout
+            $sheet->setCellValue('N' . $rowIndex, $total_purchased_quantity);
+            $sheet->setCellValue('O' . $rowIndex, $total_sold_quantity);
+            $sheet->setCellValue('P' . $rowIndex, $current_stock_quantity);
+            $sheet->setCellValue('Q' . $rowIndex, $total_sales_value);
+
+            echo "Processed: {$supplier_name}<br>";
+        }
+
+        // ==============================
+        // 💾 STEP 6: SAVE FILE
+        // ==============================
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+
+        $outputFile = $this->upload_path . 'csv/Supplier-Summary-Report-Updated.xlsx';
+        $writer->save($outputFile);
+
+        echo "<h3>Done ✅ File saved: {$outputFile}</h3>";
+    }
+
     public function upload_rawabi_average_cost(){
         $excelFile = $this->upload_path . 'csv/Inventory.xlsx'; // Excel file
         if (!file_exists($excelFile)) {
@@ -2073,7 +2511,7 @@ class Products extends MY_Controller
     }
 
     public function upload_customer_returns(){
-        $excelFile = $this->upload_path . 'csv/sales-returns-feb2026.xlsx'; // Excel file
+        $excelFile = $this->upload_path . 'csv/returns-03-26.xlsx'; // Excel file
         if (!file_exists($excelFile)) {
             echo "Excel file not found.";
             return;
@@ -2127,7 +2565,7 @@ class Products extends MY_Controller
             $returnDate = date('Y-m-d H:i:s');
         }*/
 
-        $returnDate = date('Y-m-d H:i:s', strtotime('2026-03-01'));
+        $returnDate = date('Y-m-d H:i:s', strtotime('2026-03-31'));
         //$customerNo = trim($firstRow[1]);
         $customerCode = trim($firstRow[0]);
         $customerName = trim($firstRow[1]);
@@ -2480,6 +2918,77 @@ class Products extends MY_Controller
         // Insert all entry items
         foreach ($entryitemdata as $itemdata) {
             $this->db->insert('sma_accounts_entryitems', $itemdata);
+        }
+
+        // -----------------------------------------
+        // SETTLE RETURN AGAINST OLDEST INVOICES
+        // -----------------------------------------
+        $pending_invoices = $this->sales_model->getCustomerInvoicesWithPayments($customer_id);
+        if (!empty($pending_invoices) && $grand_total > 0) {
+
+            $total_outstanding = 0;
+            foreach ($pending_invoices as $invoice) {
+                $inv_outstanding = isset($invoice->outstanding_amount)
+                    ? (float) $invoice->outstanding_amount
+                    : ((float) $invoice->grand_total - (float) $invoice->total_paid);
+                if ($inv_outstanding > 0) {
+                    $total_outstanding += $inv_outstanding;
+                }
+            }
+
+            $allocatable = min((float) $grand_total, $total_outstanding);
+
+            if ($allocatable > 0) {
+                $payment_reference_id = $this->add_customer_reference(
+                    $allocatable,
+                    $return_id,
+                    $returnDate,
+                    'Return settlement against outstanding invoices',
+                    $customer_id,
+                    null
+                );
+
+                $rem = $allocatable;
+                $total_applied = 0;
+                foreach ($pending_invoices as $invoice) {
+                    if ($rem <= 0) break;
+
+                    $outstanding = isset($invoice->outstanding_amount)
+                        ? (float) $invoice->outstanding_amount
+                        : ((float) $invoice->grand_total - (float) $invoice->total_paid);
+
+                    if ($outstanding <= 0) continue;
+
+                    $apply_amount = min($rem, $outstanding);
+
+                    $payment = [
+                        'date'         => $returnDate,
+                        'sale_id'      => (int) $invoice->id,
+                        'return_id'    => $return_id,
+                        'reference_no' => '',
+                        'amount'       => $apply_amount,
+                        'note'         => 'Auto-settled from customer return #' . $return_id,
+                        'created_by'   => 1,
+                        'paid_by'      => 'return',
+                        'type'         => 'received',
+                        'customer_id'  => $customer_id,
+                        'payment_id'   => $payment_reference_id,
+                    ];
+
+                    $this->sales_model->addPayment($payment);
+                    $this->sales_model->update_sale_paid_amount((int) $invoice->id, ((float) $invoice->total_paid + $apply_amount));
+
+                    $rem -= $apply_amount;
+                    $total_applied += $apply_amount;
+                }
+
+                if ($payment_reference_id) {
+                    $this->sales_model->update_payment_reference($payment_reference_id, $entry_id);
+                    $this->sales_model->update_return_paid($return_id, $total_applied);
+                }
+
+                echo "&nbsp;&nbsp;↳ Settled {$total_applied} SAR against outstanding invoices.<br>";
+            }
         }
 
         echo "✅ Return Invoice {$returnInvoiceNo} completed (Entry ID: {$entry_id})<br>";
