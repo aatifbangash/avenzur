@@ -224,7 +224,7 @@
                         <li><a href="<?= admin_url('customers/payment_from_customer_new'); ?>" class="newmenu-link"><i class="fa fa-hand-o-up"></i> <?= lang('Collection New'); ?></a></li>
                         <?php } ?>
                         <?php if($Admin || $Owner || $this->GP['customer-payment-index']){ ?>
-                        <li><a href="<?= admin_url('customers/list_payments'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('Payment List'); ?></a></li>
+                        <li><a href="<?= admin_url('customers/list_payments'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('Collection List'); ?></a></li>
                         <?php } ?>
                         
                     </ul>
@@ -495,21 +495,6 @@
                 </li>
                 <?php } ?>
 
-                <?php if($Admin || $Owner || $this->GP['supplier-payment-add']){ ?>
-                <!-- Collection -->
-                <li class="newmenu-item has-sub">
-                    <a href="#" class="newmenu-link">
-                        <i class="fa fa-money"></i>
-                        <span><?= lang('Advances'); ?></span>
-                        <i class="fa fa-chevron-right newmenu-chevron"></i>
-                    </a>
-                    <ul class="newmenu-sub">
-                        <?php if($Admin || $Owner || $this->GP['supplier-payment-add']){ ?>
-                        <li><a href="<?= admin_url('suppliers/add_payment'); ?>" class="newmenu-link"><i class="fa fa-hand-o-up"></i> <?= lang('Add Advance'); ?></a></li>
-                        <?php } ?>
-                    </ul>
-                </li>
-                <?php } ?>
 
                 <?php if($Admin || $Owner || $this->GP['supplier-payment-index']){ ?>
                 <!-- Payments -->
@@ -521,10 +506,11 @@
                     </a>
                     <ul class="newmenu-sub">
                         <?php if($Admin || $Owner || $this->GP['supplier-payment-add']){ ?>
+                            <li><a href="<?= admin_url('suppliers/add_payment'); ?>" class="newmenu-link"><i class="fa fa-hand-o-up"></i> <?= lang('Add Advance'); ?></a></li>
                             <li><a href="<?= admin_url('suppliers/payment_to_supplier_new'); ?>" class="newmenu-link"><i class="fa fa-hand-holding-usd"></i> <?= lang('Pay Supplier'); ?></a></li>
                         <?php } ?>
                         <?php if($Admin || $Owner || $this->GP['supplier-payment-index']){ ?>
-                            <li><a href="<?= admin_url('suppliers/list_payments'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('Supplier Payments'); ?></a></li>
+                            <li><a href="<?= admin_url('suppliers/list_payments'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('Payments List'); ?></a></li>
                         <?php } ?>
                         
                     </ul>

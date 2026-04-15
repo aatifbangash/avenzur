@@ -2,9 +2,11 @@
 
 <?php
 // Rebuild display values from filters (Y-m-d back to d/m/Y for the inputs)
-$filter_from    = '';
-$filter_to      = '';
-$filter_cust_id = !empty($filters['customer_id']) ? $filters['customer_id'] : '';
+$filter_from        = '';
+$filter_to          = '';
+$filter_cust_id     = !empty($filters['customer_id']) ? $filters['customer_id'] : '';
+$filter_category    = !empty($filters['category'])    ? $filters['category']    : '';
+$filter_sales_agent = !empty($filters['sales_agent']) ? $filters['sales_agent'] : '';
 if (!empty($filters['from_date'])) {
     $d = DateTime::createFromFormat('Y-m-d', $filters['from_date']);
     $filter_from = $d ? $d->format('d/m/Y') : $filters['from_date'];
@@ -27,9 +29,9 @@ if (!empty($filters['to_date'])) {
 
         <!-- ── Filter Form ─────────────────────────────────────── -->
         <form id="paymentFilterForm" method="get" action="<?= admin_url('customers/list_payments') ?>">
-            <div class="row" style="margin-bottom:15px; padding: 10px 15px; background:#f9f9f9; border:1px solid #e0e0e0; border-radius:4px;">
+            <div class="row" style="margin-bottom:8px; padding: 10px 15px; background:#f9f9f9; border:1px solid #e0e0e0; border-radius:4px;">
 
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <div class="form-group">
                         <label for="from_date" style="font-size:12px; font-weight:600;"><?= lang('From Date') ?></label>
                         <input type="text" id="from_date" name="from_date" class="form-control input-sm date-picker-filter"
@@ -37,7 +39,7 @@ if (!empty($filters['to_date'])) {
                     </div>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <div class="form-group">
                         <label for="to_date" style="font-size:12px; font-weight:600;"><?= lang('To Date') ?></label>
                         <input type="text" id="to_date" name="to_date" class="form-control input-sm date-picker-filter"
@@ -45,7 +47,7 @@ if (!empty($filters['to_date'])) {
                     </div>
                 </div>
 
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="form-group">
                         <label for="customer_id" style="font-size:12px; font-weight:600;"><?= lang('Customer') ?></label>
                         <select name="customer_id" id="customer_id" class="form-control input-sm select" style="width:100%;">
@@ -59,11 +61,39 @@ if (!empty($filters['to_date'])) {
                     </div>
                 </div>
 
-                <div class="col-md-2" style="padding-top:22px;">
-                    <button type="submit" class="btn btn-primary btn-sm">
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label for="sales_agent" style="font-size:12px; font-weight:600;"><?= lang('Sales Agent') ?></label>
+                        <select name="sales_agent" id="sales_agent" class="form-control input-sm" style="width:100%;">
+                            <option value=""><?= lang('All Agents') ?></option>
+                            <?php if (!empty($salesmen)): foreach ($salesmen as $sm): ?>
+                                <option value="<?= htmlspecialchars($sm->name) ?>" <?= ($filter_sales_agent === $sm->name) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($sm->name) ?>
+                                </option>
+                            <?php endforeach; endif; ?>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label for="category" style="font-size:12px; font-weight:600;"><?= lang('Category') ?></label>
+                        <select name="category" id="category" class="form-control input-sm" style="width:100%;">
+                            <option value=""><?= lang('All Categories') ?></option>
+                            <?php if (!empty($customer_categories)): foreach ($customer_categories as $cat): ?>
+                                <option value="<?= htmlspecialchars($cat) ?>" <?= ($filter_category === $cat) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($cat) ?>
+                                </option>
+                            <?php endforeach; endif; ?>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-1" style="padding-top:22px;">
+                    <button type="submit" class="btn btn-primary btn-sm btn-block">
                         <i class="fa fa-filter"></i> <?= lang('Filter') ?>
                     </button>
-                    <a href="<?= admin_url('customers/list_payments') ?>" class="btn btn-default btn-sm">
+                    <a href="<?= admin_url('customers/list_payments') ?>" class="btn btn-default btn-sm btn-block" style="margin-top:4px;">
                         <i class="fa fa-times"></i> <?= lang('Reset') ?>
                     </a>
                 </div>
@@ -77,6 +107,8 @@ if (!empty($filters['to_date'])) {
                 <?php
                 $export_params = http_build_query([
                     'customer_id'  => $filter_cust_id,
+                    'category'     => $filter_category,
+                    'sales_agent'  => $filter_sales_agent,
                     'from_date'    => $filter_from,
                     'to_date'      => $filter_to,
                     'export_excel' => 1,
@@ -102,6 +134,7 @@ if (!empty($filters['to_date'])) {
                                 <th><?= lang('Customer Code') ?></th>
                                 <th><?= lang('Customer') ?></th>
                                 <th><?= lang('Category') ?></th>
+                                <th><?= lang('Sales Agent') ?></th>
                                 <th><?= lang('Date') ?></th>
                                 <th class="text-right"><?= lang('Payment Amount') ?></th>
                                 <th><?= lang('Bank') ?></th>
@@ -129,6 +162,7 @@ if (!empty($filters['to_date'])) {
                                         <span class="text-muted">—</span>
                                     <?php endif; ?>
                                 </td>
+                                <td><?= htmlspecialchars($payment->sales_agent ?? '') ?></td>
                                 <td><?= !empty($payment->date) ? date('d-M-Y', strtotime($payment->date)) : '' ?></td>
                                 <td class="text-right">
                                     <?= number_format((float) $payment->amount, 2) ?>
@@ -145,6 +179,7 @@ if (!empty($filters['to_date'])) {
                         </tbody>
                         <tfoot style="background:#e8f5e8; font-weight:bold;">
                             <tr>
+                                <th></th>
                                 <th></th>
                                 <th></th>
                                 <th></th>
@@ -183,7 +218,7 @@ $(document).ready(function () {
             ordering:  true,
             order:     [],
             pageLength: 100,
-            columnDefs: [{ orderable: false, targets: [7] }],
+            columnDefs: [{ orderable: false, targets: [9] }],
             language: {
                 search: '<?= lang("Search") ?>:',
                 emptyTable: '<?= lang("No payments found") ?>',
