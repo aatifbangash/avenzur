@@ -5,7 +5,7 @@
         <h2 class="blue"><i class="fa-fw fa fa-edit"></i><?=lang('edit')?> Delivery</h2>
     </div>
     <div class="box-content">
-        <?php echo admin_form_open('delivery/update/' . $delivery->id, 'id="delivery-form"'); ?>
+        <?php echo admin_form_open_multipart('delivery/update/' . $delivery->id, 'id="delivery-form"'); ?>
         
         <input type="hidden" name="id" value="<?=$delivery->id?>" />
         <?php //echo '<pre>';print_r($delivery);exit; ?>
@@ -100,6 +100,21 @@
                     echo form_dropdown('status', $post, ($_POST['status'] ?? $delivery->status), ' class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . '" id="status"  style="width:100%;" ');
                     ?>
                 </div>
+
+                <?php if ($delivery->status == 'out_for_delivery'): ?>
+                <div class="form-group" id="receipt-group">
+                    <label for="receipt">Delivery Receipt <span class="required">*</span></label>
+                    <?php if (!empty($delivery->receipt)): ?>
+                        <div class="mb-1">
+                            <a href="<?=base_url('files/receipts/' . $delivery->receipt)?>" target="_blank" class="btn btn-xs btn-info">
+                                <i class="fa fa-file"></i> View Current Receipt
+                            </a>
+                        </div>
+                    <?php endif; ?>
+                    <input type="file" name="receipt" id="receipt" class="form-control" accept="image/*,.pdf" />
+                    <span class="help-block">Accepted: images or PDF. Required when marking as Delivered.</span>
+                </div>
+                <?php endif; ?>
 
             </div>
         </div>
@@ -274,4 +289,17 @@
     });
 
     $('#driver_id').trigger('change');
+
+    // Enforce receipt when status = delivered
+    document.getElementById('delivery-form').addEventListener('submit', function(e) {
+        var statusEl = document.getElementById('status');
+        var receiptEl = document.getElementById('receipt');
+        if (statusEl && statusEl.value === 'delivered' && receiptEl && receiptEl.files.length === 0) {
+            <?php if (empty($delivery->receipt)): ?>
+            e.preventDefault();
+            alert('A delivery receipt is required when marking the delivery as Delivered.');
+            receiptEl.focus();
+            <?php endif; ?>
+        }
+    });
 </script>
