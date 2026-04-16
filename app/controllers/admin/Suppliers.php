@@ -2160,8 +2160,69 @@ class Suppliers extends MY_Controller
     }
 
     public function list_service_invoice(){
-        $this->data['service_invoices'] = $this->purchases_model->getDebitMemo('serviceinvoice');
-        //$this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Supplier Service Invoice')]];
+        $meta = ['page_title' => lang('Supplier Service Invoice'), 'bc' => $bc];
+
+        // Build filters
+        $filters = [
+            'supplier_id' => $this->input->get('supplier_id') ?: $this->input->post('supplier_id'),
+            'from_date'   => $this->input->get('from_date')   ?: $this->input->post('from_date'),
+            'to_date'     => $this->input->get('to_date')     ?: $this->input->post('to_date'),
+        ];
+        // Convert display date (d/m/Y) to Y-m-d for queries
+        foreach (['from_date', 'to_date'] as $f) {
+            if (!empty($filters[$f])) {
+                $d = DateTime::createFromFormat('d/m/Y', $filters[$f]);
+                if ($d) { $filters[$f] = $d->format('Y-m-d'); }
+            }
+        }
+
+        $service_invoices = $this->purchases_model->getDebitMemo('serviceinvoice', $filters);
+        $suppliers        = $this->site->getAllCompanies('supplier');
+
+        $this->data['service_invoices'] = $service_invoices;
+        $this->data['suppliers']        = $suppliers;
+        $this->data['filters']          = $filters;
+
+        // Export to Excel
+        if ($this->input->get('export_excel')) {
+            $this->load->library('excel');
+            $sheet = $this->excel->setActiveSheetIndex(0);
+            $sheet->setTitle('Service Invoices');
+
+            $sheet->SetCellValue('A1', '#');
+            $sheet->SetCellValue('B1', 'Reference No.');
+            $sheet->SetCellValue('C1', 'Supplier Code');
+            $sheet->SetCellValue('D1', 'Supplier');
+            $sheet->SetCellValue('E1', 'Date');
+            $sheet->SetCellValue('F1', 'Payment Amount');
+            $sheet->SetCellValue('G1', 'VAT Amount');
+
+            $row = 2;
+            $count = 1;
+            foreach ($service_invoices as $inv) {
+                $date_fmt = !empty($inv->date) ? date('d-M-Y', strtotime($inv->date)) : '';
+                $sheet->SetCellValue('A' . $row, $count++);
+                $sheet->SetCellValue('B' . $row, $inv->reference_no);
+                $sheet->SetCellValue('C' . $row, $inv->sequence_code ?? '');
+                $sheet->SetCellValue('D' . $row, $inv->company ?? '');
+                $sheet->SetCellValue('E' . $row, $date_fmt);
+                $sheet->SetCellValue('F' . $row, round((float)$inv->payment_amount, 2));
+                $sheet->SetCellValue('G' . $row, round((float)($inv->vat_value ?? 0), 2));
+                $row++;
+            }
+
+            foreach (range('A', 'G') as $col) {
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+            }
+
+            $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+            $filename = 'Service_Invoices_' . date('Y-m-d_H_i_s');
+            $this->load->helper('excel');
+            create_excel($this->excel, $filename);
+            return;
+        }
+
         $this->page_construct('suppliers/list_service_invoice', $meta, $this->data);
     }
 
