@@ -79,8 +79,11 @@
                         <div class="form-group">
                             <label for="period">Period</label>
                             <select class="form-control" id="period" name="period">
-                                <option value="1" <?= (isset($period) && $period == 1) ? 'selected' : ''; ?>>Last 1 Month</option>
-                                <option value="3" <?= (isset($period) && $period == 3) ? 'selected' : ''; ?>>Last 3 Months</option>
+                                <option value="1"  <?= (isset($period) && $period == 1)  ? 'selected' : ''; ?>>Last 1 Month</option>
+                                <option value="3"  <?= (isset($period) && $period == 3)  ? 'selected' : ''; ?>>Last 3 Months</option>
+                                <option value="6"  <?= (isset($period) && $period == 6)  ? 'selected' : ''; ?>>Last 6 Months</option>
+                                <option value="9"  <?= (isset($period) && $period == 9)  ? 'selected' : ''; ?>>Last 9 Months</option>
+                                <option value="12" <?= (isset($period) && $period == 12) ? 'selected' : ''; ?>>Last 1 Year</option>
                             </select>
                         </div>
                     </div>
