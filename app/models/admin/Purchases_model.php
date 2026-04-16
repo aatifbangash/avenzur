@@ -1227,22 +1227,30 @@ class Purchases_model extends CI_Model
         }
     }
 
-    public function getDebitMemo($type)
+    public function getDebitMemo($type, $filters = [])
     {
-        $this->db->order_by('date', 'asc');
-        $this->db->select('sma_memo.*, companies.company');
+        $this->db->order_by('sma_memo.date', 'desc');
+        $this->db->select('sma_memo.*, companies.company, companies.sequence_code');
         $this->db->from('memo');
-        $this->db->join('companies', 'sma_memo.supplier_id = companies.id');
-        $this->db->where(['type' => $type]);
+        $this->db->join('companies', 'sma_memo.supplier_id = companies.id', 'left');
+        $this->db->where('sma_memo.type', $type);
+
+        if (!empty($filters['supplier_id'])) {
+            $this->db->where('sma_memo.supplier_id', $filters['supplier_id']);
+        }
+        if (!empty($filters['from_date'])) {
+            $this->db->where('DATE(sma_memo.date) >=', $filters['from_date']);
+        }
+        if (!empty($filters['to_date'])) {
+            $this->db->where('DATE(sma_memo.date) <=', $filters['to_date']);
+        }
+
         $query = $this->db->get();
 
         if ($query->num_rows() > 0) {
-            $data = $query->result();
-            return $data;
-        } else {
-            $data = array();
-            return $data;
+            return $query->result();
         }
+        return [];
     }
 
     public function getCreditMemo($type)
