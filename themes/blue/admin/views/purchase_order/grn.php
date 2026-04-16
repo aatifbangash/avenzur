@@ -15,7 +15,7 @@
                     <div class="">
 
                         <div class="card-body">
-                            <?= form_open('admin/purchase_order/add_grn/' . $po_id, ['class' => 'needs-validation', 'novalidate' => true]); ?>
+                            <?= form_open_multipart('admin/purchase_order/add_grn/' . $po_id, ['class' => 'needs-validation', 'novalidate' => true, 'id' => 'grn-form']); ?>
 
                             <!-- Supplier Information Section -->
                             <h5 class="mb-3">Supplier Information</h5>
@@ -47,6 +47,14 @@
                                         'value' => date('Y-m-d\TH:i'),
                                         'required' => true
                                     ]); ?>
+                                </div>
+                            </div>
+
+                            <div class="form-row mb-3">
+                                <div class="form-group col-md-6">
+                                    <label for="attachment">Attachment <span class="text-danger">*</span></label>
+                                    <input type="file" name="attachment" id="attachment" class="form-control" accept=".jpg,.jpeg,.png,.gif,.pdf" required />
+                                    <span class="help-block text-muted small">Required. Accepted formats: images or PDF. Max 10MB.</span>
                                 </div>
                             </div>
 
@@ -136,8 +144,8 @@
 
 
 
-                            <div class="text-end">
-                                <button type="submit" class="btn btn-success">Submit GRN</button>
+                            <div class="text-end mt-2">
+                                <button type="submit" class="btn btn-success" id="grn-submit-btn">Submit GRN</button>
                             </div>
 
                             <?= form_close(); ?>
@@ -175,6 +183,16 @@
     }
 
     $(document).ready(function() {
+        // Block submit if no attachment selected
+        $('#grn-form').on('submit', function(e) {
+            if ($('#attachment').val() === '') {
+                e.preventDefault();
+                alert('Please select an attachment file before submitting the GRN.');
+                $('#attachment').focus();
+                return false;
+            }
+        });
+
         // Handle split batch button click
         $(document).on('click', '.split-batch-btn', function() {
             const currentRow = $(this).closest('tr');
