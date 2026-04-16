@@ -43,6 +43,11 @@
     .vat-positive { color: #27ae60; font-weight: 700; }
     .vat-negative { color: #e74c3c; font-weight: 700; }
     .net-position-box { border-radius: 6px; padding: 12px 18px; color: #fff; font-weight: 700; font-size: 16px; }
+    .row-memo-service   { background-color: #eafaf1 !important; }
+    .row-memo-petty     { background-color: #f5eaff !important; }
+    .row-memo-credit    { background-color: #ffe8e8 !important; }
+    .row-memo-debit     { background-color: #e8eeff !important; }
+    .row-memo-general   { background-color: #f5f5f5 !important; }
 </style>
 
 <div class="box">
@@ -207,23 +212,35 @@
         $type_labels = [
             'sale'            => 'Sales Invoice',
             'returnCustomer'  => 'Sales Return',
-            'purchases'       => 'Purchase Invoice',
+            'purchase'        => 'Purchase Invoice',
             'returnSupplier'  => 'Purchase Return',
-            'serviceInvoice'  => 'Service Invoice',
+            'serviceinvoice'  => 'Service Invoice',
+            'pettycash'       => 'Petty Cash',
+            'creditmemo'      => 'Credit Memo',
+            'debitmemo'       => 'Debit Memo',
+            'memo'            => 'Memo',
         ];
         $type_row_class = [
             'sale'            => 'row-sales-invoice',
             'returnCustomer'  => 'row-sales-return',
-            'purchases'       => 'row-purchase-inv',
+            'purchase'        => 'row-purchase-inv',
             'returnSupplier'  => 'row-purchase-return',
-            'serviceInvoice'  => '',
+            'serviceinvoice'  => 'row-memo-service',
+            'pettycash'       => 'row-memo-petty',
+            'creditmemo'      => 'row-memo-credit',
+            'debitmemo'       => 'row-memo-debit',
+            'memo'            => 'row-memo-general',
         ];
         $type_badge = [
             'sale'            => 'primary',
             'returnCustomer'  => 'danger',
-            'purchases'       => 'warning',
+            'purchase'        => 'warning',
             'returnSupplier'  => 'danger',
-            'serviceInvoice'  => 'default',
+            'serviceinvoice'  => 'success',
+            'pettycash'       => 'info',
+            'creditmemo'      => 'danger',
+            'debitmemo'       => 'warning',
+            'memo'            => 'default',
         ];
 
         $has_sales     = !empty($sales_rows);
@@ -328,7 +345,12 @@
                         <td><?= $i ?></td>
                         <td><?= date('d-M-Y', strtotime($r->trans_date)) ?></td>
                         <td><?= htmlspecialchars($r->reference_no ?? '') ?></td>
-                        <td><span class="label label-<?= $badge ?>"><?= $tlabel ?></span></td>
+                        <td>
+                            <span class="label label-<?= $badge ?>"><?= $tlabel ?></span>
+                            <?php if (!empty($r->entry_type ?? '')): ?>
+                                <span class="label label-<?= ($r->entry_type === 'D') ? 'info' : 'warning' ?>" style="font-size:10px; margin-left:3px;"><?= htmlspecialchars($r->entry_type) ?></span>
+                            <?php endif; ?>
+                        </td>
                         <td><?= htmlspecialchars($r->party_name ?? '') ?></td>
                         <td style="font-size:11px;"><?= htmlspecialchars($r->party_vat_no ?? '') ?></td>
                         <td><?= htmlspecialchars($r->warehouse ?? '') ?></td>
@@ -405,7 +427,12 @@
                         <td><?= $j ?></td>
                         <td><?= date('d-M-Y', strtotime($r->trans_date)) ?></td>
                         <td><?= htmlspecialchars($r->reference_no ?? '') ?></td>
-                        <td><span class="label label-<?= $badge ?>"><?= $tlabel ?></span></td>
+                        <td>
+                            <span class="label label-<?= $badge ?>"><?= $tlabel ?></span>
+                            <?php if (!empty($r->entry_type ?? '')): ?>
+                                <span class="label label-<?= ($r->entry_type === 'D') ? 'info' : 'warning' ?>" style="font-size:10px; margin-left:3px;"><?= htmlspecialchars($r->entry_type) ?></span>
+                            <?php endif; ?>
+                        </td>
                         <td><?= htmlspecialchars($r->party_name ?? '') ?></td>
                         <td style="font-size:11px;"><?= htmlspecialchars($r->party_vat_no ?? '') ?></td>
                         <td><?= htmlspecialchars($r->warehouse ?? '') ?></td>
@@ -463,7 +490,13 @@
             <span style="background:#eaf4fb; padding:2px 8px; border-radius:3px; margin-right:6px; border:1px solid #aed"></span> Sales Invoice &nbsp;
             <span style="background:#fdecea; padding:2px 8px; border-radius:3px; margin-right:6px; border:1px solid #fcc"></span> Sales Return &nbsp;
             <span style="background:#fffbe6; padding:2px 8px; border-radius:3px; margin-right:6px; border:1px solid #eca"></span> Purchase Invoice &nbsp;
-            <span style="background:#fde8f0; padding:2px 8px; border-radius:3px; margin-right:6px; border:1px solid #ecb"></span> Purchase Return
+            <span style="background:#fde8f0; padding:2px 8px; border-radius:3px; margin-right:6px; border:1px solid #ecb"></span> Purchase Return &nbsp;
+            <span style="background:#eafaf1; padding:2px 8px; border-radius:3px; margin-right:6px; border:1px solid #9fc"></span> Service Invoice &nbsp;
+            <span style="background:#f5eaff; padding:2px 8px; border-radius:3px; margin-right:6px; border:1px solid #d9b"></span> Petty Cash &nbsp;
+            <span style="background:#ffe8e8; padding:2px 8px; border-radius:3px; margin-right:6px; border:1px solid #faa"></span> Credit Memo &nbsp;
+            <span style="background:#e8eeff; padding:2px 8px; border-radius:3px; margin-right:6px; border:1px solid #aaf"></span> Debit Memo &nbsp;
+            <span style="background:#f5f5f5; padding:2px 8px; border-radius:3px; margin-right:6px; border:1px solid #ccc"></span> Memo
+            &nbsp;&nbsp;<em>D/C badge = Debit/Credit entry direction</em>
         </div>
 
     </div><!-- /.box-content -->

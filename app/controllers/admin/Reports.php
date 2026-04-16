@@ -8172,6 +8172,86 @@ class Reports extends MY_Controller
             $purchase_rows = $q->num_rows() ? $q->result() : [];
         }
 
+        // ── MEMOS  (service invoice · petty cash · credit/debit/general memo) ──
+        $memo_sql = "
+            SELECT
+                m.id                                                    AS trans_id,
+                m.type                                                  AS trans_type,
+                DATE(m.date)                                            AS trans_date,
+                m.reference_no,
+                CASE WHEN m.customer_id > 0
+                     THEN IFNULL(c_cust.company, '')
+                     ELSE IFNULL(c_supp.company, '')
+                END                                                     AS party_name,
+                CASE WHEN m.customer_id > 0
+                     THEN IFNULL(c_cust.vat_no, '')
+                     ELSE IFNULL(c_supp.vat_no, '')
+                END                                                     AS party_vat_no,
+                ''                                                      AS warehouse,
+                0                                                       AS warehouse_id,
+                0                                                       AS total_discount,
+                m.payment_amount                                        AS raw_gross,
+                CASE
+                    WHEN m.type IN ('serviceinvoice','pettycash')
+                        THEN IFNULL(m.vat_value, 0)
+                    ELSE
+                        ROUND(m.payment_amount
+                            * CAST(IFNULL(m.vat_percent,'0') AS DECIMAL(15,4))
+                            / (100 + CAST(IFNULL(m.vat_percent,'0') AS DECIMAL(15,4))), 4)
+                END                                                     AS raw_vat,
+                CASE WHEN m.customer_id > 0
+                     THEN m.customer_entry_type
+                     ELSE m.supplier_entry_type
+                END                                                     AS entry_type,
+                CASE WHEN m.customer_id > 0 THEN 'customer' ELSE 'supplier' END AS party_side
+            FROM sma_memo m
+            LEFT JOIN sma_companies c_cust ON c_cust.id = m.customer_id AND m.customer_id > 0
+            LEFT JOIN sma_companies c_supp ON c_supp.id = m.supplier_id AND m.supplier_id > 0
+            WHERE DATE(m.date) BETWEEN '{$sql_start}' AND '{$sql_end}'
+              AND m.type IN ('serviceinvoice','pettycash','creditmemo','debitmemo','memo')
+              AND (m.customer_id > 0 OR m.supplier_id > 0)
+              AND (
+                  CASE
+                      WHEN m.type IN ('serviceinvoice','pettycash')
+                          THEN IFNULL(m.vat_value, 0)
+                      ELSE
+                          ROUND(m.payment_amount
+                              * CAST(IFNULL(m.vat_percent,'0') AS DECIMAL(15,4))
+                              / (100 + CAST(IFNULL(m.vat_percent,'0') AS DECIMAL(15,4))), 4)
+                  END
+              ) > 0
+            ORDER BY m.date ASC, m.id ASC
+        ";
+        $memo_q = $this->db->query($memo_sql);
+        if ($memo_q->num_rows() > 0) {
+            foreach ($memo_q->result() as $row) {
+                // Sign: credit on customer side or debit on supplier side = reduction (negative amounts)
+                $is_reduction = ($row->party_side === 'customer' && $row->entry_type === 'C')
+                             || ($row->party_side === 'supplier' && $row->entry_type === 'D');
+                $sign = $is_reduction ? -1 : 1;
+
+                $raw_vat   = (float)$row->raw_vat;
+                $raw_gross = (float)$row->raw_gross;
+                $row->total_tax    = round($sign * $raw_vat, 4);
+                $row->total_net    = round($sign * ($raw_gross - $raw_vat), 4);
+                $row->grand_total  = round($sign * $raw_gross, 4);
+                $row->total_invoice = $row->grand_total;
+
+                if ($row->party_side === 'customer' && in_array($type, ['all', 'sales'])) {
+                    $sales_rows[] = $row;
+                } elseif ($row->party_side === 'supplier' && in_array($type, ['all', 'purchases'])) {
+                    $purchase_rows[] = $row;
+                }
+            }
+            // Re-sort after appending memos
+            usort($sales_rows,    function ($a, $b) {
+                return strcmp($a->trans_date, $b->trans_date) ?: ($a->trans_id - $b->trans_id);
+            });
+            usort($purchase_rows, function ($a, $b) {
+                return strcmp($a->trans_date, $b->trans_date) ?: ($a->trans_id - $b->trans_id);
+            });
+        }
+
         // ── summary totals ─────────────────────────────────────────
         $sum = [
             'sales_net'        => 0.0,
@@ -8219,6 +8299,11 @@ class Reports extends MY_Controller
                 'returnCustomer' => 'Sales Return',
                 'purchase'       => 'Purchase Invoice',
                 'returnSupplier' => 'Purchase Return',
+                'serviceinvoice' => 'Service Invoice',
+                'pettycash'      => 'Petty Cash',
+                'creditmemo'     => 'Credit Memo',
+                'debitmemo'      => 'Debit Memo',
+                'memo'           => 'Memo',
             ];
 
             $all_rows = [];
