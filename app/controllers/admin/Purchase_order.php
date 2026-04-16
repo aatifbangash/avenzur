@@ -2278,6 +2278,25 @@ class Purchase_order extends MY_Controller
     {
 
         if ($this->input->post()) {
+            // Mandatory attachment upload
+            if (empty($_FILES['attachment']['name'])) {
+                $this->session->set_flashdata('error', 'An attachment is required to submit the GRN.');
+                admin_redirect('purchase_order/add_grn/' . $po_id);
+                return;
+            }
+            $this->load->library('upload', [
+                'upload_path'   => FCPATH . 'files/receipts/',
+                'allowed_types' => 'jpg|jpeg|png|gif|pdf',
+                'max_size'      => 10240,
+                'encrypt_name'  => true,
+            ]);
+            if (!$this->upload->do_upload('attachment')) {
+                $this->session->set_flashdata('error', 'Attachment upload failed: ' . $this->upload->display_errors('', ''));
+                admin_redirect('purchase_order/add_grn/' . $po_id);
+                return;
+            }
+            $attachment_filename = $this->upload->data('file_name');
+
             $items = $this->input->post('items', true);
 
             if (empty($items)) {
@@ -2384,7 +2403,8 @@ class Purchase_order extends MY_Controller
                 'grn_notes' => $this->input->post('remarks'),
                 'received_by' => $this->session->userdata('user_id'),
                 'updated_by' => $this->session->userdata('user_id'),
-                'updated_at' => date('Y-m-d H:i:s')
+                'updated_at' => date('Y-m-d H:i:s'),
+                'attachment' => $attachment_filename,
             ]);
 
             $this->db->trans_complete(); // Complete transaction
