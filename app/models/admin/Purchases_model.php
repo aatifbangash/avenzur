@@ -1234,6 +1234,7 @@ class Purchases_model extends CI_Model
         $this->db->from('memo');
         $this->db->join('companies', 'sma_memo.supplier_id = companies.id', 'left');
         $this->db->where('sma_memo.type', $type);
+        $this->db->where('sma_memo.supplier_id >', 0);
 
         if (!empty($filters['supplier_id'])) {
             $this->db->where('sma_memo.supplier_id', $filters['supplier_id']);
