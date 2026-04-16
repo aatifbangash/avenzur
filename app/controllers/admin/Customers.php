@@ -2846,10 +2846,10 @@ class Customers extends MY_Controller
 
     public function customer_actions()
     {
-        if (!$this->Owner && !$this->GP['bulk_actions']) {
+        /*if (!$this->Owner && !$this->GP['bulk_actions']) {
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect($_SERVER['HTTP_REFERER']);
-        }
+        }*/
 
         $this->form_validation->set_rules('form_action', lang('form_action'), 'required');
 
