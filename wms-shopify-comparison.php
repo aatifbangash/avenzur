@@ -172,21 +172,22 @@ if (isset($_GET['export']) && $_GET['export'] == '1') {
 
     $stmt->execute();
     $result = $stmt->get_result();
-
-    while ($row = $result->fetch_assoc()) {
-        fputcsv($output, [
-            $row['barcode'], 
-            $row['title'],
-            $row['unit_cost'],
-            $row['price'],
-            $row['shelved_qty'],
-            $row['damaged_qty'],
-            $row['expiry_qty'],
-            $row['reserved_qty'],
-            $row['sellable_qty'],
-            $row['shopify_qty'],
-            $row['variance']
-        ]);
+    if ($result && $result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            fputcsv($output, [
+                $row['barcode'], 
+                $row['title'],
+                $row['unit_cost'],
+                $row['price'],
+                $row['shelved_qty'],
+                $row['damaged_qty'],
+                $row['expiry_qty'],
+                $row['reserved_qty'],
+                $row['sellable_qty'],
+                $row['shopify_qty'],
+                $row['variance']
+            ]);
+        }
     }
 
     fclose($output);
