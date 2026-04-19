@@ -2095,7 +2095,10 @@ class Products extends MY_Controller
     }
 
     public function update_supplier_outstanding_invoices_payment(){
-        $unsettled_returns = $this->db
+        ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
+        /*$unsettled_returns = $this->db
             ->where('status', 'completed')
             ->where('paid < grand_total', null, false)
             //->where_not_in('supplier_id', [824, 31])
@@ -2194,30 +2197,30 @@ class Products extends MY_Controller
             }
 
             echo "Settled Return ID: {$return_id} For SUPPLIER ID: {$supplier_id} - Total Applied: {$total_applied} against outstanding invoices.<br>";
-        }
+        }*/
 
         // Settle Debit Memos against outstanding invoices
-        /*$unsettled_debit_memos = $this->db
-            ->where('customer_entry_type', 'C')
-            ->where('customer_id > ', '0')
+        $unsettled_debit_memos = $this->db
+            ->where('supplier_entry_type', 'D')
+            ->where('supplier_id >', '0')
             ->where('(used_amount IS NULL OR used_amount < payment_amount)', null, false)
             ->get('sma_memo')
             ->result();
-
+        //echo "<pre>";print_r($unsettled_debit_memos);echo "</pre>";exit;
         foreach ($unsettled_debit_memos as $debit_memo) {
             $memo_id = $debit_memo->id;
             $supplier_id = $debit_memo->supplier_id;
             $remaining_amount = $debit_memo->payment_amount - $debit_memo->used_amount;
 
             if ($memo_id <= 0 || $supplier_id <= 0 || $remaining_amount <= 0) {
-                return false;
+                continue;
             }
 
-            $pending_invoices = $this->sales_model->getSupplierInvoicesWithPayments($supplier_id);
+            $pending_invoices = $this->purchases_model->getSupplierInvoicesWithPayments($supplier_id);
             if (empty($pending_invoices)) {
-                return false;
+                continue;
             }
-
+            
             $Journal_details = $this->db
                         ->where('memo_id', $memo_id) // exact match
                         ->get('sma_accounts_entries')
@@ -2232,7 +2235,7 @@ class Products extends MY_Controller
                     $total_outstanding += $invoice_outstanding;
                 }
             }
-
+            
             $allocatable_amount = min($remaining_amount, $total_outstanding);
             if ($allocatable_amount <= 0) {
                 return false;
@@ -2242,7 +2245,7 @@ class Products extends MY_Controller
             $payment_reference_id = $this->add_supplier_reference(
                 $allocatable_amount,
                 $memo_id,
-                date('Y-m-d H:i:s'),
+                $debit_memo->date,
                 'Auto settlement from debit memo #' . $memo_id,
                 $supplier_id,
                 null
@@ -2265,14 +2268,14 @@ class Products extends MY_Controller
                 $apply_amount = min($remaining_amount, $outstanding);
 
                 $payment = [
-                    'date'         => date('Y-m-d H:i:s'),
+                    'date'         => $debit_memo->date,
                     'purchase_id'      => (int) $invoice->id,
                     'reference_no' => $memo_id,
                     'amount'       => $apply_amount,
-                    'note'         => 'Auto-settled from credit memo #' . $memo_id,
+                    'note'         => 'Auto-settled from debit memo #' . $memo_id,
                     'created_by'   => $this->session->userdata('user_id'),
                     'type'         => 'received',
-                    'paid_by'      => 'credit_memo',
+                    'paid_by'      => 'debit_memo',
                     'supplier_id' => $supplier_id,
                     'memo_id'     => $memo_id,
                     'payment_id'   => $payment_reference_id,
@@ -2298,7 +2301,7 @@ class Products extends MY_Controller
             }
 
             echo "Settled Debit Memo ID: {$memo_id} For Supplier ID: {$supplier_id} - Total Applied: {$total_applied} against outstanding invoices.<br>";
-        }*/
+        }
     }
 
     public function update_customer_outstanding_invoices_payment(){
