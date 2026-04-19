@@ -1,64 +1,8 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <style>
-    @media print {
-        /* body {
-            zoom: 80%;
-            margin: 0;
-            padding: 0;
-        } */
-
-        /* Ensure modal content is printed */
-        .modal {
-            position: static;
-            /* Ensure it's positioned well for print */
-            display: block !important;
-            /* Ensure modal content is visible */
-            width: 100%;
-            /* Ensure modal uses full width */
-            background-color: #fff;
-            /* Set a white background for clarity */
-        }
-
-        /* Hide backdrop, buttons, or other interactive elements */
-        /* .modal-backdrop,
-        .print-hide {
-            display: none !important;
-        } */
-
-        /* Ensure proper page breaks inside tables */
-        /* table,
-        tr,
-        td {
-            page-break-inside: avoid;
-        } */
-
-        /* Optional: Remove shadows, borders, or extra elements that might interfere with printing */
-        /* .modal-shadow,
-        .modal-border {
-            box-shadow: none;
-            border: none;
-        } */
-
-        /* Adjust font size for better readability */
-        body,
-        table {
-            font-size: 12px;
-        }
-
-        /* Ensure proper table formatting in print */
-
-        .table-summary {
-            float: right !important;
-            width: 30% !important;
-        }
-
-        /* .clear {
-            clear: both;
-        } */
-
-        .header, .footer, .navigation, .no-print {
-        display: none;
-    }
+    .table-summary {
+        float: right;
+        width: 30%;
     }
 </style>
 <div class="modal-dialog modal-lg no-modal-header" style="width: 90%; font-size: 12px;">
@@ -108,8 +52,8 @@
                         <?= lang('Parent Supplier Code'); ?>: <?= isset($parent_supplier->sequence_code) ? $parent_supplier->sequence_code : $supplier->sequence_code;?><br>
                         <?= lang('Parent Supplier Name'); ?>: <?= isset($parent_supplier->name) ? $parent_supplier->name : $supplier->name;?><br>
                           
-                        <?= lang('Child Supplier Code'); ?>: <?= !isset($parent_supplier->sequence_code) ? $supplier->sequence_code : '';?><br>
-                        <?= lang('Child Supplier Name'); ?>: <?= !isset($parent_supplier->name) ? $supplier->name : '';?><br>
+                        <?= lang('Child Supplier Code'); ?>: <?= $supplier->sequence_code;?><br>
+                        <?= lang('Child Supplier Name'); ?>: <?= $supplier->name;?><br>
                            
                         </p>
                     </div>
@@ -508,6 +452,10 @@
                         <td><?php echo $inv->total_discount; ?></td>
                     </tr>
                     <tr>
+                        <td>Deal-DISC</td>
+                        <td><?php echo $inv->grand_deal_discount; ?></td>
+                    </tr>
+                    <tr>
                         <td>Net Before VAT</td>
                         <td><?php echo $inv->total_net_purchase; ?></td>
                     </tr>
@@ -607,25 +555,33 @@
     });
 
     document.getElementById("Print").onclick = function () {
-        //printElement(document.getElementById("printThis"));
-        window.print();
+        var content = document.getElementById("printThis").innerHTML;
+        var win = window.open('', '_blank', 'width=900,height=700');
+        win.document.write('<html><head><meta charset="utf-8"><title>Print</title>');
+        // Copy all stylesheets from the parent page
+        var sheets = document.getElementsByTagName('link');
+        for (var i = 0; i < sheets.length; i++) {
+            if (sheets[i].rel === 'stylesheet') {
+                win.document.write('<link rel="stylesheet" href="' + sheets[i].href + '">');
+            }
+        }
+        win.document.write('<style>');
+        win.document.write('body { font-size: 12px; margin: 10mm; }');
+        win.document.write('.no-print, .close, #Print { display: none !important; }');
+        win.document.write('.table-summary { float: right !important; width: 30% !important; }');
+        win.document.write('@media print { @page { margin: 10mm; } }');
+        win.document.write('</style>');
+        win.document.write('</head><body>');
+        win.document.write(content);
+        win.document.write('</body></html>');
+        win.document.close();
+        win.focus();
+        // Wait for images/styles to load before printing
+        win.onload = function () {
+            win.print();
+            win.close();
+        };
     };
-
-    // function printElement(elem) {
-    //     var domClone = elem.cloneNode(true);
-
-    //     var $printSection = document.getElementById("printSection");
-
-    //     if (!$printSection) {
-    //         var $printSection = document.createElement("div");
-    //         $printSection.id = "printSection";
-    //         document.body.appendChild($printSection);
-    //     }
-
-    //     $printSection.innerHTML = "";
-    //     $printSection.appendChild(domClone);
-    //     window.print();
-    // }
 
 
 </script>

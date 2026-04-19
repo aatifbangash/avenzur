@@ -506,6 +506,10 @@
                         <td><?php echo $inv->total_discount; ?></td>
                     </tr>
                     <tr>
+                        <td>Deal-DISC</td>
+                        <td><?php echo $inv->grand_deal_discount; ?></td>
+                    </tr>
+                    <tr>
                         <td>Net Before VAT</td>
                         <td><?php echo $inv->total_net_purchase; ?></td>
                     </tr>

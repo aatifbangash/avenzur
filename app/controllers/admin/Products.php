@@ -2096,9 +2096,9 @@ class Products extends MY_Controller
 
     public function update_supplier_outstanding_invoices_payment(){
         ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-error_reporting(E_ALL);
-        /*$unsettled_returns = $this->db
+        ini_set('display_startup_errors', '1');
+        error_reporting(E_ALL);
+        $unsettled_returns = $this->db
             ->where('status', 'completed')
             ->where('paid < grand_total', null, false)
             //->where_not_in('supplier_id', [824, 31])
@@ -2148,7 +2148,7 @@ error_reporting(E_ALL);
             $payment_reference_id = $this->add_supplier_reference(
                 $allocatable_amount,
                 $return_id,
-                date('Y-m-d H:i:s'),
+                $return->date,
                 'Return settlement against outstanding invoices',
                 $supplier_id,
                 null
@@ -2171,7 +2171,7 @@ error_reporting(E_ALL);
                 $apply_amount = min($remaining_amount, $outstanding);
 
                 $payment = [
-                    'date'          => date('Y-m-d H:i:s'),
+                    'date'          => $return->date,
                     'purchase_id'       => (int) $invoice->id,
                     'supplier_return_id'     => $return_id,
                     'reference_no'  => '',
@@ -2197,10 +2197,10 @@ error_reporting(E_ALL);
             }
 
             echo "Settled Return ID: {$return_id} For SUPPLIER ID: {$supplier_id} - Total Applied: {$total_applied} against outstanding invoices.<br>";
-        }*/
+        }
 
         // Settle Debit Memos against outstanding invoices
-        $unsettled_debit_memos = $this->db
+        /*$unsettled_debit_memos = $this->db
             ->where('supplier_entry_type', 'D')
             ->where('supplier_id >', '0')
             ->where('(used_amount IS NULL OR used_amount < payment_amount)', null, false)
@@ -2301,7 +2301,7 @@ error_reporting(E_ALL);
             }
 
             echo "Settled Debit Memo ID: {$memo_id} For Supplier ID: {$supplier_id} - Total Applied: {$total_applied} against outstanding invoices.<br>";
-        }
+        }*/
     }
 
     public function update_customer_outstanding_invoices_payment(){
