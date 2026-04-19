@@ -231,7 +231,12 @@
                     elseif ($inv->days_overdue >= 1)   $row_class = 'overdue-low';
 
                     if ($type !== 'ar') {
-                        $detail_url = admin_url('purchases/view/' . $inv->invoice_id);
+                        // AP: service memos have no purchase view link
+                        if (!empty($inv->source) && $inv->source === 'service') {
+                            $detail_url = null;
+                        } else {
+                            $detail_url = admin_url('purchases/view/' . $inv->invoice_id);
+                        }
                     } elseif (!empty($inv->source) && $inv->source === 'service') {
                         $detail_url = null; // service memo — no direct sales link
                     } else {
