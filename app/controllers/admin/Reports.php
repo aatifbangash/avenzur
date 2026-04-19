@@ -7923,7 +7923,17 @@ class Reports extends MY_Controller
 
         } else {
             // ── Accounts Payable (Purchases) ───────────────────────
-            $sql_at = $at_date ? $this->sma->fld(explode(' ', trim($at_date))[0] . ' 23:59:59') : null;
+            $sql_at = $at_date ? $this->sma->fld($at_date) . ' 23:59:59' : null;
+
+            // When an "at date" filter is applied, use a date-filtered subquery so we
+            // see what was paid AS OF that date. Without a date filter the stored p.paid
+            // field is used because the payments table may not record every AP payment.
+            $ap_paid_expr = $sql_at
+                ? "(SELECT COALESCE(SUM(sp.amount), 0)
+                    FROM {$this->db->dbprefix('payments')} sp
+                    WHERE sp.purchase_id = p.id
+                    AND sp.date <= '{$sql_at}')"
+                : "p.paid";
 
             $this->db->select("
                 p.id            AS invoice_id,
@@ -7937,20 +7947,21 @@ class Reports extends MY_Controller
                 p.grand_total   AS invoice_total,
                 0               AS discount,
                 0               AS return_amount,
-                p.paid,
-                ROUND((p.grand_total - p.paid), 2) AS outstanding,
+                ({$ap_paid_expr})                                    AS paid,
+                ROUND((p.grand_total - ({$ap_paid_expr})), 2)        AS outstanding,
                 COALESCE(NULLIF(p.payment_term, 0), NULLIF(c.payment_term, 0), 0) AS payment_term_days,
                 DATE_ADD(DATE(p.date), INTERVAL COALESCE(NULLIF(p.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY) AS due_date_calc,
-                DATEDIFF(CURDATE(), DATE_ADD(DATE(p.date), INTERVAL COALESCE(NULLIF(p.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY)) AS days_overdue
+                DATEDIFF(CURDATE(), DATE_ADD(DATE(p.date), INTERVAL COALESCE(NULLIF(p.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY)) AS days_overdue,
+                'purchase'      AS source
             ", false)
             ->from('purchases p')
-            ->join('companies c',          'c.id = p.supplier_id',          'left')
-            ->join('accounts_ledgers al',  'al.id = c.ledger_account',      'left')
-            ->join('warehouses w',          'w.id = p.warehouse_id',         'left')
+            ->join('companies c',         'c.id = p.supplier_id',     'left')
+            ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
+            ->join('warehouses w',        'w.id = p.warehouse_id',    'left')
             ->where('p.purchase_invoice', 1)
-            ->where('p.note != "import from excel"') // exclude return-type purchases
-            ->where('p.grand_total > 0')
-            ->having('outstanding > 0')
+            ->where('p.note !=', 'import from excel')
+            ->where('p.grand_total >', 0)
+            ->having('outstanding >', 0)
             ->order_by('p.date', 'asc');
 
             if ($sql_at) {
@@ -7960,6 +7971,47 @@ class Reports extends MY_Controller
             if ($ref_no)   { $this->db->like('p.reference_no', $ref_no, 'both'); }
 
             $invoices = $this->db->get()->result();
+
+            // ── Unpaid supplier service invoices from sma_memo ────────
+            $this->db->select("
+                m.id                                                     AS invoice_id,
+                m.date,
+                m.reference_no,
+                c.name                                                   AS party_name,
+                c.company                                                AS party_code,
+                c.sequence_code                                          AS sequence_code,
+                al.name                                                  AS ledger_name,
+                NULL                                                     AS warehouse_name,
+                m.payment_amount                                         AS invoice_total,
+                0                                                        AS discount,
+                0                                                        AS return_amount,
+                COALESCE(m.used_amount, 0)                               AS paid,
+                ROUND(m.payment_amount - COALESCE(m.used_amount, 0), 2) AS outstanding,
+                0                                                        AS payment_term_days,
+                NULL                                                     AS due_date_calc,
+                0                                                        AS days_overdue,
+                'service'                                                AS source
+            ", false)
+            ->from('memo m')
+            ->join('companies c',         'c.id = m.supplier_id',     'left')
+            ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
+            ->where('m.type', 'serviceinvoice')
+            ->where('m.supplier_id >', 0)
+            ->having('outstanding >', 0)
+            ->order_by('m.date', 'asc');
+
+            if ($sql_at) {
+                $sql_date_only = explode(' ', $sql_at)[0];
+                $this->db->where("m.date <= '{$sql_date_only}'");
+            }
+            if ($party_id) { $this->db->where('m.supplier_id', (int)$party_id); }
+            if ($ref_no)   { $this->db->like('m.reference_no', $ref_no, 'both'); }
+
+            $service_invoices = $this->db->get()->result();
+
+            // Merge and re-sort by date ascending
+            $invoices = array_merge($invoices, $service_invoices);
+            usort($invoices, function ($a, $b) { return strcmp($a->date, $b->date); });
         }
 
         $this->data['invoices'] = $invoices;
