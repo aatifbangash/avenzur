@@ -2203,6 +2203,7 @@ class Products extends MY_Controller
         /*$unsettled_debit_memos = $this->db
             ->where('supplier_entry_type', 'D')
             ->where('supplier_id >', '0')
+            ->where('type', 'memo')
             ->where('(used_amount IS NULL OR used_amount < payment_amount)', null, false)
             ->get('sma_memo')
             ->result();
