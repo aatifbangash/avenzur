@@ -107,7 +107,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('From Date', 'podate'); ?>
-                                <?php echo form_input('from_date', ($start_date ?? ''), 'class="form-control input-tip date" id="fromdate"'); ?>
+                                <?php echo form_input('from_date', ($start_date ?? ($default_from_date ?? '')), 'class="form-control input-tip date" id="fromdate"'); ?>
                             </div>
                         </div>
 
@@ -156,9 +156,9 @@
                                 <th style="width:8%; text-align:center;"><?= lang('type'); ?></th>
                                 <th style="width:10%; text-align:center;"><?= lang('date'); ?></th>
                                 <th style="width:25%; text-align:center;"><?= lang('Description'); ?></th>
-                                <th style="width:12%; text-align:center;"><?= lang('Debit'); ?></th>
-                                <th style="width:12%; text-align:center;"><?= lang('Credit'); ?></th>
-                                <th style="width:12%; text-align:center;"><?= lang('balance'); ?></th>
+                                <th style="width:12%; text-align:right;"><?= lang('Debit'); ?></th>
+                                <th style="width:12%; text-align:right;"><?= lang('Credit'); ?></th>
+                                <th style="width:12%; text-align:right;"><?= lang('balance'); ?></th>
                             </tr>
                             </thead>
                             <tbody style="text-align:center;">
@@ -172,9 +172,9 @@
                                 <?php } ?>
                                 <td><?php 
                                     if($total_ob >= 0){
-                                        echo '<span style="color:black;">' . $this->sma->formatNumber($total_ob) . '</span>';
+                                        echo '<span style="color:black;">' . number_format($total_ob, 2, '.', ',') . '</span>';
                                     }else{
-                                        echo '<span style="color:red;">-' . $this->sma->formatNumber(abs($total_ob)) . '</span>';
+                                        echo '<span style="color:red;">-' . number_format(abs($total_ob), 2, '.', ',') . '</span>';
                                     }
                                 ?></td>
                             </tr>
@@ -204,33 +204,44 @@
                                 $count++;
                                 $index = $serialArray[$statement->transaction_type];
                                 
-                                // Map transaction types to display labels (matching general_ledger_statement)
+                                // Map transaction types to display labels and build links
                                 $transaction_type = '';
+                                $link = null;
                                 if($statement->transaction_type == 'journal'){
+                                    $link = admin_url('entries/view/journal/' . $statement->entry_id);
                                     $transaction_type = 'Journal';
                                 }else if($statement->transaction_type == 'payment'){
+                                    $link = admin_url('entries/view/payment/' . $statement->entry_id);
                                     $transaction_type = 'Payment';
                                 }else if($statement->transaction_type == 'receipt'){
+                                    $link = admin_url('entries/view/receipt/' . $statement->entry_id);
                                     $transaction_type = 'Receipt';
                                 }else if($statement->transaction_type == 'contra'){
+                                    $link = admin_url('entries/view/contra/' . $statement->entry_id);
                                     $transaction_type = 'Contra';
                                 }else if($statement->transaction_type == 'sales_invoice' || $statement->transaction_type == 'saleorder'){
+                                    $link = admin_url('sales?sid=' . $statement->sid);
                                     $transaction_type = 'Sales';
                                 }else if($statement->transaction_type == 'purchase_invoice' || $statement->transaction_type == 'purchaseorder'){
+                                    $link = admin_url('purchases?pid=' . $statement->pid);
                                     $transaction_type = 'Purchase';
                                 }else if($statement->transaction_type == 'supplierpayment'){
+                                    $link = admin_url('suppliers/view_payment/' . $statement->payment_reference);
                                     $transaction_type = 'Payment';
                                 }else if($statement->transaction_type == 'customerpayment'){
+                                    $link = admin_url('customers/view_payment/' . $statement->entry_id);
                                     $transaction_type = 'Customer Payment';
-                                }else if($statement->transaction_type == 'creditmemo'){
-                                    $transaction_type = 'Memo';
-                                }else if($statement->transaction_type == 'debitmemo'){
+                                }else if($statement->transaction_type == 'creditmemo' || $statement->transaction_type == 'debitmemo'){
+                                    $link = admin_url('customers/view_credit_memo/' . $statement->memo_id);
                                     $transaction_type = 'Memo';
                                 }else if($statement->transaction_type == 'serviceinvoice'){
+                                    $link = admin_url('customers/list_service_invoice');
                                     $transaction_type = 'Service Invoice';
                                 }else if($statement->transaction_type == 'returncustomerorder'){
+                                    $link = admin_url('returns?rid=' . $statement->rid);
                                     $transaction_type = 'Customer Return';
                                 }else if($statement->transaction_type == 'returnorder'){
+                                    $link = admin_url('returns_supplier?rsid=' . $statement->rsid);
                                     $transaction_type = 'Return';
                                 }else{
                                     $transaction_type = ucfirst($statement->transaction_type);
@@ -241,23 +252,23 @@
                                     <td><?= $count; ?></td>
                                     <?php } ?>
                                     <td><?= $statement->reference_no ? $statement->reference_no : '0'; ?></td>
-                                    <td><?= $transaction_type; ?></td>
+                                    <td><?php if($link && ($viewtype!='pdf' && $viewtype!='pdf_new')): ?><a target="_blank" href="<?= $link; ?>"><?= $transaction_type; ?></a><?php else: echo $transaction_type; endif; ?></td>
                                     <td><?= $statement->date; ?></td>
                                     <td><?= $statement->narration ? $statement->narration : '-'; ?></td>
-                                    <td><?= $statement->dc == 'D' ? $this->sma->formatNumber($statement->amount) : '0.00';
+                                    <td style="text-align:right;"><?= $statement->dc == 'D' ? number_format($statement->amount, 2, '.', ',') : '0.00';
                                         $statement->dc == 'D' ? $totalDebit = ($totalDebit + $statement->amount) : null ?>
 
                                     </td>
-                                    <td><?php echo $statement->dc == 'C' ? $this->sma->formatNumber($statement->amount) : '0.00';
+                                    <td style="text-align:right;"><?php echo $statement->dc == 'C' ? number_format($statement->amount, 2, '.', ',') : '0.00';
                                     $statement->dc == 'C' ?
                                         $totalCredit = $totalCredit + $statement->amount : null ?>
 
                                     </td>
-                                    <td><?php 
+                                    <td style="text-align:right;"><?php 
                                         if($balance >= 0){
-                                            echo '<span style="color:black;">' . $this->sma->formatNumber($balance) . '</span>';
+                                            echo '<span style="color:black;">' . number_format($balance, 2, '.', ',') . '</span>';
                                         }else if($balance < 0){
-                                            echo '<span style="color:red;">-' . $this->sma->formatNumber(abs($balance)) . '</span>';
+                                            echo '<span style="color:red;">-' . number_format(abs($balance), 2, '.', ',') . '</span>';
                                         }
                                         ?></td>
                                 </tr>
@@ -279,14 +290,14 @@
                                 <th style="text-align:center;">&nbsp;</th>
                                 <th style="text-align:center;">&nbsp;</th>
                                 <th style="text-align:center;">&nbsp;</th>
-                                <th style="text-align:center;"><?= $this->sma->formatNumber($totalDebit); ?></th>
-                                <th style="text-align:center;"><?= $this->sma->formatNumber($totalCredit); ?></th>
-                                <th style="text-align:center;">
+                                <th style="text-align:right;"><?= number_format($totalDebit, 2, '.', ','); ?></th>
+                                <th style="text-align:right;"><?= number_format($totalCredit, 2, '.', ','); ?></th>
+                                <th style="text-align:right;">
                                     <?php 
                                         if($balance >= 0){
-                                            echo '<span style="color:black;">' . $this->sma->formatNumber($balance) . '</span>';
+                                            echo '<span style="color:black;">' . number_format($balance, 2, '.', ',') . '</span>';
                                         }else if($balance < 0){
-                                            echo '<span style="color:red;">-' . $this->sma->formatNumber(abs($balance)) . '</span>';
+                                            echo '<span style="color:red;">-' . number_format(abs($balance), 2, '.', ',') . '</span>';
                                         }
                                     ?>
                                 </th>

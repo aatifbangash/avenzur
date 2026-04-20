@@ -4758,6 +4758,10 @@ class Reports extends MY_Controller
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
 
+        // Default from_date to January 1st of the current year
+        $default_from = date('d/m/Y', mktime(0, 0, 0, 1, 1, (int)date('Y')));
+        $this->data['default_from_date'] = $default_from;
+
         $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
 
         if ($from_date) {
