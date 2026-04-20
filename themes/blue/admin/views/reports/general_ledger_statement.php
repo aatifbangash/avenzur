@@ -149,9 +149,9 @@
                                 <!--<th><?= lang('name'); ?></th>-->
                                 <th style="width:22%; text-align:center;"><?= lang('Note'); ?></th>
 
-                                <th style="width:15%; text-align:center;"><?= lang('Debit'); ?></th>
-                                <th style="width:15%; text-align:center;"><?= lang('Credit'); ?></th>
-                                <th style="width:15%; text-align:center;"><?= lang('balance'); ?></th>
+                                <th style="width:15%; text-align:right;"><?= lang('Debit'); ?></th>
+                                <th style="width:15%; text-align:right;"><?= lang('Credit'); ?></th>
+                                <th style="width:15%; text-align:right;"><?= lang('balance'); ?></th>
                             </tr>
                             </thead>
                             <tbody style="text-align:center;">
@@ -162,7 +162,7 @@
                                     <?php }else{ ?>
                                     <td colspan="2">&nbsp;</td> 
                                     <?php } ?>
-                                    <td><?php 
+                                    <td style="text-align:right;"><?php 
                                         if($total_ob >= 0){
                                             echo '<span style="color:black;">' . $this->sma->formatNumber($total_ob) . '</span>';
                                         }else{
@@ -274,16 +274,16 @@
                                         <!--<td><?= $statement->name; ?></td>-->
                                         <td><?= $note; ?></td>
 
-                                        <td><?= $statement->dc == 'D' ? number_format($statement->amount, 2, '.', ',') : '0.00';
+                                        <td style="text-align:right;"><?= $statement->dc == 'D' ? number_format($statement->amount, 2, '.', ',') : '0.00';
                                             $statement->dc == 'D' ? $totalDebit = ($totalDebit + $statement->amount) : null ?>
 
                                         </td>
-                                        <td><?php echo $statement->dc == 'C' ? '-' . number_format($statement->amount, 2, '.', ',') : '0.00';
+                                        <td style="text-align:right;"><?php echo $statement->dc == 'C' ? number_format($statement->amount, 2, '.', ',') : '0.00';
                                         $statement->dc == 'C' ?
                                             $totalCredit = $totalCredit + $statement->amount : null ?>
 
                                         </td>
-                                        <td><?php
+                                        <td style="text-align:right;"><?php
                                             if($balance >= 0){
                                                 echo '<span style="color:black;">' . number_format($balance, 2, '.', ',') . '</span>';
                                             }else if($balance < 0){
@@ -311,9 +311,9 @@
                                 <th style="text-align:center;">&nbsp;</th>
                                 
 
-                                <th style="text-align:center;"><?= number_format($totalDebit, 2, '.', ','); ?></th>
-                                <th style="text-align:center;"><?= '-' . number_format($totalCredit, 2, '.', ','); ?></th>
-                                <th style="text-align:center;">
+                                <th style="text-align:right;"><?= number_format($totalDebit, 2, '.', ','); ?></th>
+                                <th style="text-align:right;"><?= number_format($totalCredit, 2, '.', ','); ?></th>
+                                <th style="text-align:right;">
                                     <?php
 
                                         if($balance >= 0){

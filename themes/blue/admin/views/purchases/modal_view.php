@@ -499,27 +499,23 @@
 
                     <tr>
                         <td>Total</td>
-                        <td><?php echo $inv->total; ?></td>
+                        <td><?php echo number_format($inv->total, 2); ?></td>
                     </tr>
                     <tr>
-                        <td>T-DISC</td>
-                        <td><?php echo $inv->total_discount; ?></td>
-                    </tr>
-                    <tr>
-                        <td>Deal-DISC</td>
-                        <td><?php echo $inv->grand_deal_discount; ?></td>
+                        <td>INV-DISC</td>
+                        <td><?php echo number_format($inv->total_discount - $inv->grand_deal_discount, 2); ?></td>
                     </tr>
                     <tr>
                         <td>Net Before VAT</td>
-                        <td><?php echo $inv->total_net_purchase; ?></td>
+                        <td><?php echo number_format($inv->total_net_purchase + $inv->grand_deal_discount, 2); ?></td>
                     </tr>
                     <tr>
                         <td>Total VAT</td>
-                        <td><?php echo $inv->total_tax; ?></td>
+                        <td><?php echo number_format($inv->total_tax, 2); ?></td>
                     </tr>
                     <tr>
                         <td>Total After VAT</td>
-                        <td><?php echo $inv->grand_total; ?></td>
+                        <td><?php echo number_format($inv->grand_total + $inv->grand_deal_discount, 2); ?></td>
                     </tr>
                 </table>
             </div>
@@ -528,7 +524,13 @@
             <!-- <?= $Settings->invoice_view > 0 ? $this->gst->summary($rows, $return_rows, ($return_purchase ? $inv->product_tax + $return_purchase->product_tax : $inv->product_tax), true) : ''; ?> -->
 
             <div class="row">
-                <div class="col-xs-12">
+                <div class="col-xs-6">
+                    <?php if ($inv->grand_deal_discount > 0): ?>
+                    <div style="display:inline-block; border:1px solid #ddd; border-radius:4px; padding:6px 14px; margin-bottom:8px; background:#f9f9f9;">
+                        <strong><?= lang('Deal Discount'); ?>:</strong>
+                        <?php echo number_format($inv->grand_deal_discount, 2); ?>
+                    </div>
+                    <?php endif; ?>
                     <?php
                     if ($inv->note || $inv->note != '') {
                         ?>

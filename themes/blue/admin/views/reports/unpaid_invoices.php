@@ -231,8 +231,8 @@
                     elseif ($inv->days_overdue >= 1)   $row_class = 'overdue-low';
 
                     if ($type !== 'ar') {
-                        // AP: service memos have no purchase view link
-                        if (!empty($inv->source) && $inv->source === 'service') {
+                        // AP: service memos and credit memos have no purchase view link
+                        if (!empty($inv->source) && in_array($inv->source, ['service', 'credit_memo'])) {
                             $detail_url = null;
                         } else {
                             $detail_url = admin_url('purchases/view/' . $inv->invoice_id);
@@ -241,6 +241,14 @@
                         $detail_url = null; // service memo — no direct sales link
                     } else {
                         $detail_url = admin_url('sales?sid=' . $inv->invoice_id);
+                    }
+
+                    // Badge label for memo-type rows
+                    $source_badge = '';
+                    if (!empty($inv->source) && $inv->source === 'service') {
+                        $source_badge = '<span class="label label-default" style="margin-left:4px;">Service</span>';
+                    } elseif (!empty($inv->source) && $inv->source === 'credit_memo') {
+                        $source_badge = '<span class="label label-info" style="margin-left:4px;">Credit Memo</span>';
                     }
                 ?>
                     <tr class="<?= $row_class ?>">
@@ -251,8 +259,8 @@
                                 <a href="<?= $detail_url ?>" target="_blank"><?= htmlspecialchars($inv->reference_no ?: '#' . $inv->invoice_id) ?></a>
                             <?php else: ?>
                                 <?= htmlspecialchars($inv->reference_no ?: '#' . $inv->invoice_id) ?>
-                                <span class="label label-default" style="margin-left:4px;">Service</span>
                             <?php endif; ?>
+                            <?= $source_badge ?>
                         </td>
                         <td><?= htmlspecialchars($inv->party_name) ?></td>
                         <td><?= htmlspecialchars($inv->sequence_code ?? '') ?></td>
