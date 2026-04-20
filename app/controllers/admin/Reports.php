@@ -7952,7 +7952,7 @@ class Reports extends MY_Controller
                 0               AS discount,
                 0               AS return_amount,
                 ({$ap_paid_expr})                                    AS paid,
-                ROUND((p.grand_total - ({$ap_paid_expr})), 2)        AS outstanding,
+                ROUND(((p.grand_total + p.grand_deal_discount) - ({$ap_paid_expr})), 2)        AS outstanding,
                 COALESCE(NULLIF(p.payment_term, 0), NULLIF(c.payment_term, 0), 0) AS payment_term_days,
                 DATE_ADD(DATE(p.date), INTERVAL COALESCE(NULLIF(p.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY) AS due_date_calc,
                 DATEDIFF(CURDATE(), DATE_ADD(DATE(p.date), INTERVAL COALESCE(NULLIF(p.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY)) AS days_overdue,
