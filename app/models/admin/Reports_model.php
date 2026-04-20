@@ -943,7 +943,8 @@ class Reports_model extends CI_Model
                     WHEN e.memo_id IS NOT NULL AND e.memo_id != '' THEN m.reference_no
                     ELSE pr.reference_no
                 END AS reference_no,
-                c.company
+                c.company,
+                pr.id as payment_reference
             FROM sma_accounts_entryitems ai
             JOIN sma_accounts_entries e ON e.id = ai.entry_id
             JOIN sma_companies c ON c.id = e.supplier_id
@@ -978,12 +979,14 @@ class Reports_model extends CI_Model
                 e.rsid,
                 e.rid,
                 al.code AS ledger_code,
+                pr.id as payment_reference,
                 CASE
                     WHEN e.pid IS NOT NULL AND e.pid != '' THEN p.reference_no
                     WHEN e.memo_id IS NOT NULL AND e.memo_id != '' THEN m.reference_no
                     ELSE pr.reference_no
                 END AS reference_no,
-                c.company
+                c.company,
+                m.id as memo_id
             FROM sma_accounts_entryitems ai
             JOIN sma_accounts_entries e ON e.id = ai.entry_id
             JOIN sma_companies c ON c.id = e.supplier_id
