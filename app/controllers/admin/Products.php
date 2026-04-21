@@ -2193,7 +2193,7 @@ class Products extends MY_Controller
 
             if ($payment_reference_id) {
                 $this->purchases_model->update_payment_reference($payment_reference_id, $Journal_details->id);
-                $this->purchases_model->update_return_paid($return_id, $remaining_amount);
+                $this->purchases_model->update_return_paid($return_id, $total_applied);
             }
 
             echo "Settled Return ID: {$return_id} For SUPPLIER ID: {$supplier_id} - Total Applied: {$total_applied} against outstanding invoices.<br>";
