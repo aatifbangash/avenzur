@@ -41,90 +41,145 @@ $damaged_cond = "
 
 // ── SUMMARY METRICS ───────────────────────────────────────────────────────────
 $met = $db->query("
-    SELECT
-        (SELECT COUNT(DISTINCT COALESCE(NULLIF(TRIM(LEADING '0' FROM product_code),''),'0'))
-         FROM sma_purchase_order_items)                                        AS wms_purchased,
+   SELECT
+    (SELECT COUNT(DISTINCT COALESCE(NULLIF(TRIM(LEADING '0' FROM product_code),''),'0'))
+     FROM sma_purchase_order_items) AS wms_purchased,
 
-        (SELECT COUNT(DISTINCT COALESCE(NULLIF(TRIM(LEADING '0' FROM si.product_code),''),'0'))
-         FROM sma_purchase_order_shelving_items si
-         JOIN sma_purchase_order_shelving s ON s.id = si.shelving_id
-         WHERE si.qty > 0)                                                     AS wms_shelved,
+    (SELECT COUNT(DISTINCT COALESCE(NULLIF(TRIM(LEADING '0' FROM si.product_code),''),'0'))
+     FROM sma_purchase_order_shelving_items si
+     JOIN sma_purchase_order_shelving s ON s.id = si.shelving_id
+     WHERE si.qty > 0) AS wms_shelved,
 
-        (SELECT COUNT(DISTINCT barcode)
-         FROM sma_shopify_location_products_inventory
-         WHERE status = 'ACTIVE' AND barcode IS NOT NULL AND barcode != '')    AS shopify_active,
+    (SELECT COUNT(DISTINCT barcode)
+     FROM sma_shopify_location_products_inventory
+     WHERE status = 'ACTIVE' AND barcode IS NOT NULL AND barcode != '') AS shopify_active,
 
-        (SELECT COALESCE(SUM(si.qty), 0)
-         FROM sma_purchase_order_shelving_items si
-         JOIN sma_purchase_order_shelving s ON s.id = si.shelving_id
-         WHERE si.qty > 0
-           AND NOT (UPPER(s.rack_number) LIKE 'E201%'
-                 OR UPPER(s.rack_number) LIKE 'E202%'
-                 OR UPPER(s.box_number)  LIKE 'F101%'))                        AS wms_total_units,
+    (SELECT COALESCE(SUM(si.qty), 0)
+     FROM sma_purchase_order_shelving_items si
+     JOIN sma_purchase_order_shelving s ON s.id = si.shelving_id
+     WHERE si.qty > 0
+       AND NOT (
+            s.rack_number LIKE 'E201%'
+         OR s.rack_number LIKE 'E202%'
+         OR s.box_number  LIKE 'F101%'
+       )
+    ) AS wms_total_units,
 
-        (SELECT COALESCE(SUM(inventory_quantity), 0)
-         FROM sma_shopify_location_products_inventory
-         WHERE status = 'ACTIVE' AND barcode IS NOT NULL AND barcode != '')    AS shopify_total_units,
+    (SELECT COALESCE(SUM(inventory_quantity), 0)
+     FROM sma_shopify_location_products_inventory
+     WHERE status = 'ACTIVE' AND barcode IS NOT NULL AND barcode != '') AS shopify_total_units,
 
-        (SELECT COALESCE(SUM(si.qty), 0)
-         FROM sma_purchase_order_shelving_items si
-         JOIN sma_purchase_order_shelving s ON s.id = si.shelving_id
-         WHERE UPPER(s.rack_number) LIKE 'E201%'
-            OR UPPER(s.rack_number) LIKE 'E202%'
-            OR UPPER(s.box_number)  LIKE 'F101%')                             AS total_damaged,
+    (SELECT COALESCE(SUM(si.qty), 0)
+     FROM sma_purchase_order_shelving_items si
+     JOIN sma_purchase_order_shelving s ON s.id = si.shelving_id
+     WHERE s.rack_number LIKE 'E201%'
+        OR s.rack_number LIKE 'E202%'
+        OR s.box_number  LIKE 'F101%'
+    ) AS total_damaged,
 
-        (SELECT COALESCE(SUM(si.qty), 0)
-         FROM sma_purchase_order_shelving_items si
-         JOIN sma_purchase_order_shelving s ON s.id = si.shelving_id
-         WHERE s.bin_type = 'expiry')                                          AS total_expiry,
+   
+    (SELECT COALESCE(SUM(si.qty), 0)
+     FROM sma_purchase_order_shelving_items si
+     JOIN sma_products p
+        ON TRIM(LEADING '0' FROM p.code) = TRIM(LEADING '0' FROM si.product_code)
+     JOIN sma_expiry_category_rules r
+        ON r.category_id = p.category_id
+       AND r.is_active = 1
+     WHERE si.status = 'active'
+       AND si.qty > 0
+       AND si.expiry_date IS NOT NULL
+       AND si.expiry_date >= CURDATE()
+       AND si.expiry_date <= DATE_ADD(CURDATE(), INTERVAL r.months_before_expiry MONTH)
+    ) AS total_expiry,
 
-        (SELECT COALESCE(SUM(si.quantity), 0)
-         FROM sma_sale_items si
-         JOIN sma_sales s ON s.id = si.sale_id
-         WHERE s.sale_status IN ('pending','processing','ordered'))            AS total_reserved,
+    (SELECT COALESCE(SUM(si.quantity), 0)
+     FROM sma_sale_items si
+     JOIN sma_sales s ON s.id = si.sale_id
+     WHERE s.sale_status IN ('pending','processing','ordered')
+    ) AS total_reserved,
 
-        (SELECT DISTINCT location_id FROM sma_shopify_location_products_inventory LIMIT 1) AS location_id,
+    (SELECT DISTINCT location_id
+     FROM sma_shopify_location_products_inventory
+     LIMIT 1) AS location_id,
 
-        NOW() AS synced_at
+    NOW() AS synced_at
 ")->fetch_assoc();
 
 // ── PRODUCT LIST (with barcode) ───────────────────────────────────────────────
 // Pre-aggregate reserved qty once — avoids correlated subquery per row
 $inner_sql = "
     SELECT
-        sh.barcode,
-        sh.location_id,
-        sh.title,
-        COALESCE(sh.unit_cost, 0)                                              AS unit_cost,
-        sh.price,
-        sh.inventory_quantity                                                  AS shopify_qty,
-        GREATEST(COALESCE(SUM(si.qty), 0), 0)                                  AS shelved_qty,
-        GREATEST(COALESCE(SUM(
-            CASE WHEN UPPER(s.rack_number) LIKE 'E201%'
-                   OR UPPER(s.rack_number) LIKE 'E202%'
-                   OR UPPER(s.box_number)  LIKE 'F101%'
-                 THEN si.qty ELSE 0 END
-        ), 0), 0)                                                              AS damaged_qty,
-        GREATEST(COALESCE(SUM(
-            CASE WHEN s.bin_type = 'expiry'
-                 THEN si.qty ELSE 0 END
-        ), 0), 0)                                                              AS expiry_qty,
-        COALESCE(res.reserved_qty, 0)                                          AS reserved_qty
-    FROM sma_shopify_location_products_inventory sh
-    LEFT JOIN sma_purchase_order_shelving_items si
-           ON COALESCE(NULLIF(TRIM(LEADING '0' FROM si.product_code), ''), '0') = sh.barcode
-    LEFT JOIN sma_purchase_order_shelving s ON s.id = si.shelving_id
-    LEFT JOIN (
-        SELECT p.code_clean, SUM(sli.quantity) AS reserved_qty
-        FROM sma_sale_items sli
-        JOIN sma_products p  ON p.id  = sli.product_id
-        JOIN sma_sales    sl ON sl.id = sli.sale_id
-        WHERE sl.sale_status IN ('pending','processing','ordered')
-        GROUP BY p.code_clean
-    ) res ON res.code_clean = sh.barcode
-    WHERE sh.status = 'ACTIVE'
-      AND sh.barcode IS NOT NULL AND sh.barcode != ''
-    GROUP BY sh.id, sh.barcode, sh.location_id, sh.title, sh.unit_cost, sh.price, sh.inventory_quantity
+    sh.barcode,
+    sh.location_id,
+    sh.title,
+    COALESCE(sh.unit_cost,0) AS unit_cost,
+    sh.price,
+    sh.inventory_quantity AS shopify_qty,
+
+    SUM(si.qty) AS shelved_qty,
+
+    SUM(
+        CASE
+            WHEN s.rack_number REGEXP '^(E201|E202)'
+              OR s.box_number REGEXP '^F101'
+            THEN si.qty ELSE 0
+        END
+    ) AS damaged_qty,
+
+    COALESCE(exp.expiry_qty,0) AS expiry_qty,
+    COALESCE(res.reserved_qty,0) AS reserved_qty
+
+FROM sma_shopify_location_products_inventory sh
+
+LEFT JOIN sma_purchase_order_shelving_items si
+    ON TRIM(LEADING '0' FROM si.product_code) = TRIM(LEADING '0' FROM sh.barcode)
+
+LEFT JOIN sma_purchase_order_shelving s
+    ON s.id = si.shelving_id
+
+LEFT JOIN (
+    SELECT
+        TRIM(LEADING '0' FROM p.code) AS code,
+        SUM(sli.quantity) AS reserved_qty
+    FROM sma_sale_items sli
+    JOIN sma_products p ON p.id = sli.product_id
+    JOIN sma_sales sl ON sl.id = sli.sale_id
+    WHERE sl.sale_status IN ('pending','processing','ordered')
+    GROUP BY code
+) res
+    ON res.code = TRIM(LEADING '0' FROM sh.barcode)
+
+LEFT JOIN (
+    SELECT
+        TRIM(LEADING '0' FROM si.product_code) AS code,
+        SUM(si.qty) AS expiry_qty
+    FROM sma_purchase_order_shelving_items si
+    JOIN sma_products p
+        ON TRIM(LEADING '0' FROM p.code) = TRIM(LEADING '0' FROM si.product_code)
+    JOIN sma_expiry_category_rules r
+        ON r.category_id = p.category_id
+       AND r.is_active = 1
+    WHERE si.status = 'active'
+      AND si.qty > 0
+      AND si.expiry_date IS NOT NULL
+      AND si.expiry_date >= CURDATE()
+      AND si.expiry_date <= DATE_ADD(CURDATE(), INTERVAL r.months_before_expiry MONTH)
+    GROUP BY code
+) exp
+    ON exp.code = TRIM(LEADING '0' FROM sh.barcode)
+
+WHERE sh.status = 'ACTIVE'
+  AND sh.barcode IS NOT NULL
+  AND sh.barcode != ''
+
+GROUP BY
+    sh.id,
+    sh.barcode,
+    sh.location_id,
+    sh.title,
+    sh.unit_cost,
+    sh.price,
+    sh.inventory_quantity
 ";
 
 $base_sql     = "FROM ({$inner_sql}) base";
@@ -172,22 +227,21 @@ if (isset($_GET['export']) && $_GET['export'] == '1') {
 
     $stmt->execute();
     $result = $stmt->get_result();
-    if ($result && $result->num_rows > 0) {
-        while ($row = $result->fetch_assoc()) {
-            fputcsv($output, [
-                $row['barcode'], 
-                $row['title'],
-                $row['unit_cost'],
-                $row['price'],
-                $row['shelved_qty'],
-                $row['damaged_qty'],
-                $row['expiry_qty'],
-                $row['reserved_qty'],
-                $row['sellable_qty'],
-                $row['shopify_qty'],
-                $row['variance']
-            ]);
-        }
+
+    while ($row = $result->fetch_assoc()) {
+        fputcsv($output, [
+            $row['barcode'], 
+            $row['title'],
+            $row['unit_cost'],
+            $row['price'],
+            $row['shelved_qty'],
+            $row['damaged_qty'],
+            $row['expiry_qty'],
+            $row['reserved_qty'],
+            $row['sellable_qty'],
+            $row['shopify_qty'],
+            $row['variance']
+        ]);
     }
 
     fclose($output);
