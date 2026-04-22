@@ -139,6 +139,7 @@
                                     <input type="checkbox" id="select-all-invoices" />
                                 </th>
                                 <th><?=lang('reference_no')?></th>
+                                <th><?=lang('id')?></th>
                                 <th><?=lang('customer')?></th>
                                 <th><?=lang('date')?></th>
                                 <th><?=lang('amount')?></th>
@@ -160,6 +161,7 @@
                                                 <?php endif; ?> />
                                     </td>
                                     <td><strong><?=$invoice->reference_no?></strong></td>
+                                    <td><span class="label label-default"><?=$invoice->id?></span></td>
                                     <td><?=$invoice->customer_name?></td>
                                     <td><?=date('Y-m-d', strtotime($invoice->sale_date))?></td>
                                     <td><strong><?=$this->sma->formatMoney($invoice->total_amount)?></strong></td>

@@ -129,6 +129,7 @@
                     <thead>
                         <tr>
                             <th><?=lang('reference_no')?></th>
+                            <th>Invoice No.</th>
                             <th><?=lang('customer')?></th>
                             <th><?=lang('date')?></th>
                             <th><?=lang('items')?></th>
@@ -142,6 +143,7 @@
                         <?php foreach ($items as $item): ?>
                             <tr>
                                 <td><?=$item->reference_no?></td>
+                                <td><span class="label label-default"><?=$item->invoice_id?></span></td>
                                 <td><?=$item->customer_name?></td>
                                 <td><?=date('Y-m-d', strtotime($item->sale_date))?></td>
                                 <td><?=$item->quantity_items?></td>
@@ -176,6 +178,7 @@
                         <tr>
                             
                             <th><?=lang('reference_no')?></th>
+                            <th>Invoice No.</th>
                             <th><?=lang('customer')?></th>
                             <th><?=lang('date')?></th>
                             <th><?=lang('amount')?></th>
@@ -191,6 +194,7 @@
                             <tr <?php if(!empty($invoice->assigned_delivery_id) && $invoice->current_delivery_id != $delivery->id): ?>class="warning"<?php endif; ?>>
                                 
                                 <td><?=$invoice->reference_no?></td>
+                                <td><span class="label label-default"><?=$invoice->id?></span></td>
                                 <td><?=$invoice->customer_name?></td>
                                 <td><?=date('Y-m-d', strtotime($invoice->sale_date))?></td>
                                 <td><?=$this->sma->formatMoney($invoice->total_amount)?></td>

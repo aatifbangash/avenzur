@@ -6189,7 +6189,7 @@ class Reports_model extends CI_Model
             LEFT JOIN {$this->db->dbprefix('sales')} s ON s.id = si.sale_id
             LEFT JOIN {$this->db->dbprefix('companies')} c ON c.id = s.customer_id
             LEFT JOIN {$this->db->dbprefix('products')} p ON p.id = si.product_id
-            WHERE 1=1
+            WHERE s.sale_status = 'completed'
             {$where_sql}
         ";
         //echo $sales_sql;exit;
@@ -6248,7 +6248,7 @@ class Reports_model extends CI_Model
             LEFT JOIN {$this->db->dbprefix('sales')} s ON s.id = r.sale_id
             LEFT JOIN {$this->db->dbprefix('companies')} c ON c.id = r.customer_id
             LEFT JOIN {$this->db->dbprefix('products')} p ON p.id = ri.product_id
-            WHERE 1=1
+            WHERE (s.sale_status = 'completed' OR r.sale_id IS NULL)
             {$return_where_sql}
         ";
         
