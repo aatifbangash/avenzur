@@ -187,8 +187,9 @@ class Delivery_model extends CI_Model
                 // Remove duplicates (just in case)
                 $sale_ids = array_unique($sale_ids);
 
-                // Update all related sales
+                // Only update sales not already individually marked as delivered/completed
                 $this->db->where_in('id', $sale_ids);
+                $this->db->where_not_in('sale_status', ['delivered', 'completed']);
                 $this->db->update('sma_sales', ['sale_status' => 'out_for_delivery']);
 
                 $this->db->update('sma_truck_registration', ['status' => 'out_for_delivery'], ['id' => $truck_id]);
@@ -290,6 +291,62 @@ class Delivery_model extends CI_Model
 
         if ($updated_by) {
             $this->log_delivery_action($delivery_id, 'items_added', $updated_by);
+        }
+
+        return true;
+    }
+
+    /**
+     * Mark a single delivery item as delivered (per-invoice receipt upload).
+     * Auto-marks the whole delivery as delivered if all items are done.
+     *
+     * @param int    $delivery_id
+     * @param int    $invoice_id
+     * @param string $receipt  Filename of uploaded receipt
+     * @return string|bool  'all_delivered' if every item is now done, true otherwise, false on failure
+     */
+    public function mark_delivery_item_delivered($delivery_id, $invoice_id, $receipt)
+    {
+        // Mark this item
+        $this->db->update('sma_delivery_items', [
+            'is_delivered' => 1,
+            'receipt'      => $receipt,
+            'delivered_at' => date('Y-m-d H:i:s'),
+        ], ['delivery_id' => $delivery_id, 'invoice_id' => $invoice_id]);
+
+        if ($this->db->affected_rows() === 0) {
+            return false;
+        }
+
+        // Update individual sale status
+        $this->db->update('sma_sales', ['sale_status' => 'delivered'], ['id' => $invoice_id]);
+
+        // Audit
+        $this->log_delivery_action($delivery_id, 'item_delivered_invoice_' . $invoice_id, null);
+
+        // Check if all items in this delivery are now delivered
+        // Use raw query to avoid CI3 QB stale state from previous update() calls
+        // COALESCE handles any NULLs that may exist in is_delivered
+        $count_q  = $this->db->query(
+            "SELECT COUNT(*) AS cnt FROM sma_delivery_items WHERE delivery_id = " . (int)$delivery_id . " AND COALESCE(is_delivered, 0) = 0"
+        );
+        $pending = (int)$count_q->row()->cnt;
+
+        if ($pending === 0) {
+            // All items done — mark whole delivery as delivered
+            $this->db->update('sma_deliveries', [
+                'status'     => 'delivered',
+                'updated_at' => date('Y-m-d H:i:s'),
+            ], ['id' => $delivery_id]);
+
+            // Free up the truck
+            $delivery = $this->get_delivery_by_id($delivery_id);
+            if ($delivery) {
+                $this->db->update('sma_truck_registration', ['status' => 'available'], ['id' => $delivery->truck_number]);
+            }
+
+            $this->log_delivery_action($delivery_id, 'all_items_delivered', null);
+            return 'all_delivered';
         }
 
         return true;

@@ -6458,6 +6458,7 @@ class Reports_model extends CI_Model
             LEFT JOIN {$this->db->dbprefix('companies')} c ON c.id = p.supplier_id
             LEFT JOIN {$this->db->dbprefix('products')} prod ON prod.id = pi.product_id
             WHERE p.note <> 'import from excel'
+            AND p.status = 'received'
             {$where_sql}
         ";
         
@@ -6513,7 +6514,7 @@ class Reports_model extends CI_Model
             LEFT JOIN {$this->db->dbprefix('purchases')} p ON p.id = pr.reference_no
             LEFT JOIN {$this->db->dbprefix('companies')} c ON c.id = pr.supplier_id
             LEFT JOIN {$this->db->dbprefix('products')} prod ON prod.id = pri.product_id
-            WHERE 1=1
+            WHERE pr.status = 'completed'
             {$return_where_sql}
         ";
         

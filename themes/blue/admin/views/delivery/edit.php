@@ -90,31 +90,19 @@
 
                 <div class="form-group">
                     <?= lang('Mark Status', 'status'); ?>
-                    <?php
-                    if($delivery->status == 'out_for_delivery'){
-                        $post = ['delivered' => lang('Delivered')];
-                    }else{
+                    <?php if ($delivery->status == 'out_for_delivery'): ?>
+                        <input type="hidden" name="status" value="out_for_delivery" />
+                        <p class="form-control-static">
+                            <span class="label label-warning">Out for Delivery</span>
+                            <small class="text-muted"> &mdash; Mark individual invoices as delivered using the table below.</small>
+                        </p>
+                    <?php else: ?>
+                        <?php
                         $post = ['driver_assigned' => lang('Assigned'), 'out_for_delivery' => lang('Out for Delivery')];
-                    }
-
-                    echo form_dropdown('status', $post, ($_POST['status'] ?? $delivery->status), ' class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . '" id="status"  style="width:100%;" ');
-                    ?>
-                </div>
-
-                <?php if ($delivery->status == 'out_for_delivery'): ?>
-                <div class="form-group" id="receipt-group">
-                    <label for="receipt">Delivery Receipt <span class="required">*</span></label>
-                    <?php if (!empty($delivery->receipt)): ?>
-                        <div class="mb-1">
-                            <a href="<?=base_url('files/receipts/' . $delivery->receipt)?>" target="_blank" class="btn btn-xs btn-info">
-                                <i class="fa fa-file"></i> View Current Receipt
-                            </a>
-                        </div>
+                        echo form_dropdown('status', $post, ($_POST['status'] ?? $delivery->status), ' class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . '" id="status"  style="width:100%;" ');
+                        ?>
                     <?php endif; ?>
-                    <input type="file" name="receipt" id="receipt" class="form-control" accept="image/*,.pdf" />
-                    <span class="help-block">Accepted: images or PDF. Required when marking as Delivered.</span>
                 </div>
-                <?php endif; ?>
 
             </div>
         </div>
@@ -134,9 +122,12 @@
                             <th><?=lang('date')?></th>
                             <th><?=lang('items')?></th>
                             <th><?=lang('refrigerated_items')?></th>
-                            <?php if($delivery->status != 'out_for_delivery'){ ?>
+                            <?php if ($delivery->status == 'out_for_delivery'): ?>
+                            <th>Status</th>
                             <th><?=lang('action')?></th>
-                            <?php } ?>
+                            <?php elseif ($delivery->status != 'delivered'): ?>
+                            <th><?=lang('action')?></th>
+                            <?php endif; ?>
                         </tr>
                     </thead>
                     <tbody>
@@ -148,13 +139,37 @@
                                 <td><?=date('Y-m-d', strtotime($item->sale_date))?></td>
                                 <td><?=$item->quantity_items?></td>
                                 <td><?=$item->refrigerated_items?></td>
-                                <?php if($delivery->status != 'out_for_delivery'){ ?>
+                                <?php if ($delivery->status == 'out_for_delivery'): ?>
+                                <td>
+                                    <?php if (!empty($item->is_delivered)): ?>
+                                        <span class="label label-success"><i class="fa fa-check"></i> Delivered</span>
+                                    <?php else: ?>
+                                        <span class="label label-warning">Pending</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php if (!empty($item->is_delivered)): ?>
+                                        <?php if (!empty($item->receipt)): ?>
+                                            <a href="<?=base_url('files/receipts/' . $item->receipt)?>" target="_blank" class="btn btn-xs btn-info">
+                                                <i class="fa fa-file"></i> Receipt
+                                            </a>
+                                        <?php else: ?>
+                                            <span class="text-muted">&mdash;</span>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        <button type="button" class="btn btn-sm btn-success"
+                                            onclick="openMarkDelivered(<?=$delivery->id?>, <?=$item->invoice_id?>)">
+                                            <i class="fa fa-check"></i> Mark Delivered
+                                        </button>
+                                    <?php endif; ?>
+                                </td>
+                                <?php elseif ($delivery->status != 'delivered'): ?>
                                 <td>
                                     <button type="button" class="btn btn-sm btn-danger" onclick="removeItem(<?=$delivery->id?>, <?=$item->invoice_id?>)">
                                         <i class="fa fa-trash"></i>
                                     </button>
                                 </td>
-                                <?php } ?>
+                                <?php endif; ?>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -229,6 +244,36 @@
     </div>
 </div>
 
+<!-- Mark Item Delivered Modal -->
+<div class="modal fade" id="markDeliveredModal" tabindex="-1" role="dialog" aria-labelledby="markDeliveredModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">&times;</button>
+                <h4 class="modal-title" id="markDeliveredModalLabel"><i class="fa fa-check-circle text-success"></i> Mark Invoice as Delivered</h4>
+            </div>
+            <form id="markDeliveredForm" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <input type="hidden" name="delivery_id" id="mdi_delivery_id" value="" />
+                    <input type="hidden" name="invoice_id" id="mdi_invoice_id" value="" />
+                    <input type="hidden" name="<?=$this->security->get_csrf_token_name()?>" value="<?=$this->security->get_csrf_hash()?>" />
+                    <div class="form-group">
+                        <label for="mdi_receipt">Delivery Receipt <span class="required">*</span></label>
+                        <input type="file" name="receipt" id="mdi_receipt" class="form-control" accept="image/*,.pdf" required />
+                        <span class="help-block">Accepted: images or PDF (max 10 MB).</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" id="confirmMarkDelivered">
+                        <i class="fa fa-check"></i> Confirm Delivered
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
     function removeItem(deliveryId, invoiceId) {
         if (confirm('<?=lang('r_u_sure')?>')) {
@@ -276,7 +321,49 @@
         }
     }
 
+    function openMarkDelivered(deliveryId, invoiceId) {
+        $('#mdi_delivery_id').val(deliveryId);
+        $('#mdi_invoice_id').val(invoiceId);
+        $('#mdi_receipt').val('');
+        $('#markDeliveredModal').modal('show');
+    }
+
     $(document).ready(function() {
+
+        $('#confirmMarkDelivered').on('click', function() {
+            var $btn = $(this);
+            if (!$('#mdi_receipt')[0].files.length) {
+                alert('Please attach a delivery receipt before confirming.');
+                return;
+            }
+            $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> Saving...');
+            var formData = new FormData($('#markDeliveredForm')[0]);
+            $.ajax({
+                url: '<?=admin_url('delivery/mark_item_delivered')?>',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function(response) {
+                    $btn.prop('disabled', false).html('<i class="fa fa-check"></i> Confirm Delivered');
+                    if (response.error === 0) {
+                        $('#markDeliveredModal').modal('hide');
+                        if (response.all_delivered) {
+                            alert('All invoices delivered! This delivery is now marked as complete.');
+                        }
+                        location.reload();
+                    } else {
+                        alert(response.msg || 'Failed to mark as delivered.');
+                    }
+                },
+                error: function() {
+                    $btn.prop('disabled', false).html('<i class="fa fa-check"></i> Confirm Delivered');
+                    alert('A server error occurred. Please try again.');
+                }
+            });
+        });
+
         $('#select-all-invoices').on('change', function() {
             $('.invoice-checkbox').prop('checked', $(this).is(':checked'));
         });
