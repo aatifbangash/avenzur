@@ -6576,7 +6576,7 @@ class Reports_model extends CI_Model
             s.sequence_code as supplier_code,
             (p.total) as purchase,
             p.total_tax as vat,
-            p.grand_total as payable,
+            p.grand_total + COALESCE(p.grand_deal_discount, 0) as payable,
             0 as payment,
             0 as return_amount,
             COALESCE(p.total_discount, 0) - COALESCE(p.grand_deal_discount, 0) as invoice_discount,
