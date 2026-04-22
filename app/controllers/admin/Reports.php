@@ -8153,6 +8153,8 @@ class Reports extends MY_Controller
             $total_invoices = 0;
             $total_items = 0;
             $total_quantity = 0;
+            $total_invoice_discount = 0;
+            $total_deal_discount = 0;
 
             if ($invoices_data && is_array($invoices_data)) {
                 foreach ($invoices_data as $inv) {
@@ -8166,6 +8168,10 @@ class Reports extends MY_Controller
 
                     // Sum returns
                     $total_return += isset($inv->return_amount) ? floatval($inv->return_amount) : 0;
+
+                    // Sum discounts
+                    $total_invoice_discount += isset($inv->invoice_discount) ? floatval($inv->invoice_discount) : 0;
+                    $total_deal_discount += isset($inv->deal_discount) ? floatval($inv->deal_discount) : 0;
 
                     // Count invoices (only count purchase type, not payment or return type)
                     if (isset($inv->type) && $inv->type == 'Purchase') {
@@ -8185,7 +8191,9 @@ class Reports extends MY_Controller
                 'total_amount' => $total_payable,
                 'total_invoices' => $total_invoices,
                 'total_items' => $total_items,
-                'total_quantity' => $total_quantity
+                'total_quantity' => $total_quantity,
+                'total_invoice_discount' => $total_invoice_discount,
+                'total_deal_discount' => $total_deal_discount,
             ];
 
             log_message('debug', 'Totals calculated - Purchase: ' . $total_purchase . ', Payment: ' . $total_payment . ', Return: ' . $total_return . ', Invoices: ' . $total_invoices);

@@ -110,6 +110,8 @@ echo admin_form_open('reports/purchase_per_invoice', $attrib);
                                         <th><?= lang('supplier_no') ?></th>
                                         <th><?= lang('supplier_name') ?></th>
                                         <th><?= lang('purchase') ?></th>
+                                        <th><?= lang('invoice_discount') ?></th>
+                                        <th><?= lang('deal_discount') ?></th>
                                         <th><?= lang('vat') ?></th>
                                         <th><?= lang('payable') ?></th>
                                         <th><?= lang('payment') ?></th>
@@ -128,6 +130,8 @@ echo admin_form_open('reports/purchase_per_invoice', $attrib);
                                             <td><?= isset($invoice->supplier_no) ? $invoice->supplier_no : '' ?></td>
                                             <td><?= isset($invoice->supplier_name) ? $invoice->supplier_name : '' ?></td>
                                             <td class="text-right"><?= number_format(isset($invoice->purchase) ? $invoice->purchase : 0, 2) ?></td>
+                                            <td class="text-right"><?= number_format(isset($invoice->invoice_discount) ? $invoice->invoice_discount : 0, 2) ?></td>
+                                            <td class="text-right"><?= number_format(isset($invoice->deal_discount) ? $invoice->deal_discount : 0, 2) ?></td>
                                             <td class="text-right"><?= number_format(isset($invoice->vat) ? $invoice->vat : 0, 2) ?></td>
                                             <td class="text-right"><?= number_format(isset($invoice->payable) ? $invoice->payable : 0, 2) ?></td>
                                             <td class="text-right"><?= number_format(isset($invoice->payment) ? $invoice->payment : 0, 2) ?></td>
@@ -139,13 +143,15 @@ echo admin_form_open('reports/purchase_per_invoice', $attrib);
                                     <tr class="active">
                                         <th colspan="8" class="text-right"><?= lang('total') ?>:</th>
                                         <th class="text-right"><?= number_format(isset($totals['total_purchase']) ? $totals['total_purchase'] : 0, 2) ?></th>
+                                        <th class="text-right"><?= number_format(isset($totals['total_invoice_discount']) ? $totals['total_invoice_discount'] : 0, 2) ?></th>
+                                        <th class="text-right"><?= number_format(isset($totals['total_deal_discount']) ? $totals['total_deal_discount'] : 0, 2) ?></th>
                                         <th class="text-right"><?= number_format(isset($totals['total_vat']) ? $totals['total_vat'] : 0, 2) ?></th>
                                         <th class="text-right"><?= number_format(isset($totals['total_payable']) ? $totals['total_payable'] : 0, 2) ?></th>
                                         <th class="text-right"><?= number_format(isset($totals['total_payment']) ? $totals['total_payment'] : 0, 2) ?></th>
                                         <th class="text-right"><?= number_format(isset($totals['total_return']) ? $totals['total_return'] : 0, 2) ?></th>
                                     </tr>
                                     <tr class="info">
-                                        <th colspan="13">
+                                        <th colspan="15">
                                             <?= lang('total_invoices') ?>: <?= isset($totals) ? $totals['total_invoices'] : 0 ?> |
                                             <?= lang('total_items') ?>: <?= isset($totals) ? $totals['total_items'] : 0 ?> |
                                             <?= lang('total_quantity') ?>: <?= $this->sma->formatQuantity(isset($totals) ? $totals['total_quantity'] : 0) ?>
