@@ -299,13 +299,14 @@
             <table class="items-table">
                 <thead>
                     <tr>
-                        <th style="width: 5%;">#</th>
-                        <th style="width: 18%;">Invoice No.</th>
-                        <th style="width: 27%;">Customer</th>
-                        <th style="width: 13%;">Invoice Date</th>
-                        <th class="text-right" style="width: 15%;">Amount</th>
-                        <th class="text-center" style="width: 10%;">Items</th>
-                        <th class="text-center" style="width: 12%;">Refrigerated</th>
+                        <th style="width: 4%;">#</th>
+                        <th style="width: 14%;">Reference No.</th>
+                        <th style="width: 8%;">Invoice No.</th>
+                        <th style="width: 24%;">Customer</th>
+                        <th style="width: 11%;">Invoice Date</th>
+                        <th class="text-right" style="width: 13%;">Amount</th>
+                        <th class="text-center" style="width: 8%;">Items</th>
+                        <th class="text-center" style="width: 8%;">Refrigerated</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -324,6 +325,7 @@
                         <tr>
                             <td><?= $counter++ ?></td>
                             <td><strong><?= isset($item->reference_no) ? $item->reference_no : 'N/A' ?></strong></td>
+                            <td><span style="display:inline-block;padding:2px 6px;background:#e0e0e0;border-radius:3px;font-weight:bold;font-size:11px;">#<?= isset($item->invoice_id) ? $item->invoice_id : 'N/A' ?></span></td>
                             <td><?= isset($item->customer_name) ? $item->customer_name : 'N/A' ?></td>
                             <td><?= isset($item->sale_date) ? date('d M Y', strtotime($item->sale_date)) : 'N/A' ?></td>
                             <td class="text-right"><?= isset($item->total_amount) ? number_format($item->total_amount, 2) : '0.00' ?> SAR</td>
@@ -336,7 +338,7 @@
                         endforeach; 
                     ?>
                         <tr class="total-row">
-                            <td colspan="4" style="text-align: right; padding-right: 12px;">
+                            <td colspan="5" style="text-align: right; padding-right: 12px;">
                                 <strong>GRAND TOTAL:</strong>
                             </td>
                             <td class="text-right">
