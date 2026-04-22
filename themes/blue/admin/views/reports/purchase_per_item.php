@@ -54,13 +54,14 @@
                         <div class="col-md-2">
                             <div class="form-group">
                                 <?= lang('Supplier', 'supplier_filter'); ?>
-                                <?php
-                                $sup[''] = lang('select') . ' ' . lang('Supplier');
-                                foreach ($suppliers as $supplier_item) {
-                                    $sup[$supplier_item->id] = $supplier_item->name;
-                                }
-                                echo form_dropdown('supplier', $sup, ($_GET['supplier'] ?? ''), 'id="supplier_filter" class="form-control skip" data-placeholder="' . lang('select') . ' ' . lang('Supplier') . '" style="width:100%;"');
-                                ?>
+                                <select name="supplier" id="supplier_filter" class="form-control select2" data-placeholder="<?= lang('select') . ' ' . lang('Supplier') ?>" style="width:100%;">
+                                    <option value=""><?= lang('all') ?></option>
+                                    <?php foreach ($suppliers as $supplier_item): ?>
+                                        <option value="<?= $supplier_item->id ?>" <?= (isset($_GET['supplier']) && $_GET['supplier'] == $supplier_item->id) ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($supplier_item->name) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
                             </div>
                         </div>
 
@@ -101,15 +102,19 @@
                                         <th><?= lang('Return Ref'); ?></th>
                                         <th><?= lang('Supplier No'); ?></th>
                                         <th><?= lang('Supplier Name'); ?></th>
+                                        <th><?= lang('Agent'); ?></th>
                                         <th><?= lang('Item No'); ?></th>
                                         <th><?= lang('Item Name'); ?></th>
                                         <th><?= lang('QTY'); ?></th>
                                         <th><?= lang('Current Stock'); ?></th>
                                         <th><?= lang('Bonus'); ?></th>
                                         <th><?= lang('Unit Cost'); ?></th>
-                                        <th><?= lang('Discount %'); ?></th>
-                                        <th><?= lang('Public Price'); ?></th>
                                         <th><?= lang('Purchase'); ?></th>
+                                        <th><?= lang('Discount %'); ?></th>
+                                        <th><?= lang('Total Discount'); ?></th>
+                                        <th><?= lang('Deal Disc %'); ?></th>
+                                        <th><?= lang('Deal Disc Value'); ?></th>
+                                        <th><?= lang('Public Price'); ?></th>
                                         <th><?= lang('Vat'); ?></th>
                                         <th><?= lang('Payable'); ?></th>
                                         <!--<th><?= lang('Payment'); ?></th>-->
@@ -123,6 +128,8 @@
                                         $grand_totals = [
                                             'qty' => 0,
                                             'bonus' => 0,
+                                            'total_discount_value' => 0,
+                                            'deal_discount_value' => 0,
                                             'purchase' => 0,
                                             'vat' => 0,
                                             'payable' => 0,
@@ -135,10 +142,11 @@
                                             // Accumulate totals
                                             $grand_totals['qty'] += $data->qty;
                                             $grand_totals['bonus'] += $data->bonus;
+                                            $grand_totals['total_discount_value'] += $data->total_discount_value;
+                                            $grand_totals['deal_discount_value'] += $data->deal_discount_value;
                                             $grand_totals['purchase'] += $data->purchase;
                                             $grand_totals['vat'] += $data->vat;
                                             $grand_totals['payable'] += $data->payable;
-                                            //$grand_totals['payment'] += $data->payment;
                                             
                                             // Determine row class for returns (red)
                                             $row_class = ($data->type == 'Return') ? 'style="background-color: #ffe6e6;"' : '';
@@ -151,15 +159,19 @@
                                                 <td><?= $data->return_ref ?></td>
                                                 <td><?= $data->supplier_no ?></td>
                                                 <td><?= $data->supplier_name ?></td>
+                                                <td><?= $data->agent ?></td>
                                                 <td><?= $data->item_no ?></td>
                                                 <td><?= $data->item_name ?></td>
                                                 <td class="text-right"><?= $this->sma->formatQuantity($data->qty) ?></td>
                                                 <td class="text-right"><?= isset($data->current_stock) ? $this->sma->formatQuantity($data->current_stock) : '0' ?></td>
                                                 <td class="text-right"><?= $data->bonus ?></td>
                                                 <td class="text-right"><?= number_format($data->unit_cost, 2) ?></td>
-                                                <td class="text-right"><?= isset($data->discount_percent) ? number_format($data->discount_percent, 2) . '%' : '0.00%' ?></td>
-                                                <td class="text-right"><?= number_format($data->public_price, 2) ?></td>
                                                 <td class="text-right"><?= number_format($data->purchase, 2) ?></td>
+                                                <td class="text-right"><?= isset($data->discount_percent) ? number_format($data->discount_percent, 2) . '%' : '0.00%' ?></td>
+                                                <td class="text-right"><?= number_format($data->total_discount_value, 2) ?></td>
+                                                <td class="text-right"><?= number_format($data->deal_discount_percent, 2) ?>%</td>
+                                                <td class="text-right"><?= number_format($data->deal_discount_value, 2) ?></td>
+                                                <td class="text-right"><?= number_format($data->public_price, 2) ?></td>
                                                 <td class="text-right"><?= number_format($data->vat, 2) ?></td>
                                                 <td class="text-right"><?= number_format($data->payable, 2) ?></td>
                                                 <!--<td class="text-right"><?= number_format($data->payment, 2) ?></td>-->
@@ -169,12 +181,26 @@
 
                                         // Display grand totals row
                                         ?>
-                                        
+                                        <tr style="font-weight:bold; background-color:#f5f5f5;">
+                                            <td colspan="10" class="text-right"><?= lang('Total') ?></td>
+                                            <td class="text-right"><?= $this->sma->formatQuantity($grand_totals['qty']) ?></td>
+                                            <td></td>
+                                            <td class="text-right"><?= $this->sma->formatQuantity($grand_totals['bonus']) ?></td>
+                                            <td></td>
+                                            <td class="text-right"><?= number_format($grand_totals['purchase'], 2) ?></td>
+                                            <td></td>
+                                            <td class="text-right"><?= number_format($grand_totals['total_discount_value'], 2) ?></td>
+                                            <td></td>
+                                            <td class="text-right"><?= number_format($grand_totals['deal_discount_value'], 2) ?></td>
+                                            <td></td>
+                                            <td class="text-right"><?= number_format($grand_totals['vat'], 2) ?></td>
+                                            <td class="text-right"><?= number_format($grand_totals['payable'], 2) ?></td>
+                                        </tr>
                                     <?php
                                     } else {
                                         ?>
                                         <tr>
-                                            <td colspan="18" class="text-center"><?= lang('No records found. Please select filters and click Load Report.'); ?></td>
+                                            <td colspan="22" class="text-center"><?= lang('No records found. Please select filters and click Load Report.'); ?></td>
                                         </tr>
                                     <?php
                                     }
