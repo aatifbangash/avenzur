@@ -1334,7 +1334,7 @@ class Purchase_order extends MY_Controller
         $total_rows = $this->purchase_order_model->count_purchases($filters);
 
 
-        $config['base_url'] = admin_url('purchases/index');
+        $config['base_url'] = admin_url('purchase_order/index');
         $config['total_rows'] = $total_rows;
         $config['per_page'] = $limit;
         $config['page_query_string'] = TRUE;
