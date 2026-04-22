@@ -4825,10 +4825,754 @@ class Reports extends MY_Controller
     }
 
     /**
+     * Diagnostic: compare Supplier Statement ledger balance vs Unpaid Invoices balance
+     * for a single supplier.
+     *
+     * Access: /admin/reports/debug_supplier_balance/674
+     * Outputs a plain-HTML dump — no layout, no auth check, direct browser output.
+     */
+    public function debug_supplier_balance($supplier_id = 674)
+    {
+        $supplier_id = (int) $supplier_id;
+        $pfx         = $this->db->dbprefix; // 'sma_'
+
+        $this->db->reset_query();
+
+        $sup = $this->db->query("SELECT * FROM {$pfx}companies WHERE id = ?", [$supplier_id])->row();
+        if (!$sup) { echo "<b>Supplier ID $supplier_id not found.</b>"; die; }
+        $ledger_id = (int) $sup->ledger_account;
+
+        $fmt = fn($v) => number_format((float)$v, 2, '.', ',');
+
+        echo "<!doctype html><html><head><meta charset='utf-8'>
+        <style>
+            body{font-family:Arial,sans-serif;font-size:13px;padding:20px}
+            table{border-collapse:collapse;width:100%;margin-bottom:30px}
+            th,td{border:1px solid #ccc;padding:5px 10px;white-space:nowrap}
+            th{background:#dde;text-align:center}
+            .num{text-align:right}
+            .red{color:red;font-weight:bold}
+            .grn{color:green}
+            .yel{background:#fffbe6}
+            .zero{color:#aaa}
+        </style></head><body>";
+
+        $date_cut = '2026-03-31';
+
+        echo "<h1>Purchase vs Accounting vs Payments — Supplier ID: $supplier_id — {$sup->name}</h1>";
+        echo "<p>Supplier Ledger Account ID: <b>$ledger_id</b> &nbsp;|&nbsp; Date filter: up to <b>{$date_cut}</b></p>";
+
+        // ── Single query: purchases LEFT JOIN accounting entries LEFT JOIN payments ─
+        $rows = $this->db->query("
+            SELECT
+                p.id                                                        AS pid,
+                p.date                                                      AS p_date,
+                p.reference_no                                              AS p_ref,
+                ROUND(p.grand_total, 2)                                     AS grand_total,
+                ROUND(COALESCE(p.grand_deal_discount, 0), 2)               AS deal_disc,
+                ROUND(p.grand_total + COALESCE(p.grand_deal_discount,0),2) AS invoice_total,
+
+                /* Accounting: debit (purchase booked) on this supplier ledger */
+                ROUND(COALESCE(acc.acc_debit,  0), 2)                      AS acc_debit,
+                /* Accounting: credit (payment/return posted) on this supplier ledger */
+                ROUND(COALESCE(acc.acc_credit, 0), 2)                      AS acc_credit,
+                /* Net still owed per accounting ledger */
+                ROUND(COALESCE(acc.acc_debit,0) - COALESCE(acc.acc_credit,0), 2) AS acc_net_owed,
+
+                /* Payments table: sum of payments recorded against this purchase */
+                ROUND(COALESCE(pay.pay_total, 0), 2)                       AS pay_total,
+
+                /* Outstanding per unpaid-invoices logic */
+                ROUND(
+                    (p.grand_total + COALESCE(p.grand_deal_discount,0))
+                    - COALESCE(pay.pay_total, 0),
+                2)                                                          AS outstanding
+
+            FROM {$pfx}purchases p
+
+            /* Accounting side: sum entryitems for this purchase on the supplier ledger */
+            LEFT JOIN (
+                SELECT
+                    e.pid,
+                    SUM(CASE WHEN ai.dc = 'D' THEN ai.amount ELSE 0 END) AS acc_debit,
+                    SUM(CASE WHEN ai.dc = 'C' THEN ai.amount ELSE 0 END) AS acc_credit
+                FROM {$pfx}accounts_entries e
+                JOIN {$pfx}accounts_entryitems ai ON ai.entry_id = e.id
+                WHERE e.supplier_id = ?
+                  AND ai.ledger_id  = ?
+                  AND e.pid IS NOT NULL AND e.pid != ''
+                  AND DATE(e.date) <= ?
+                GROUP BY e.pid
+            ) acc ON acc.pid = p.id
+
+            /* Payments side */
+            LEFT JOIN (
+                SELECT purchase_id, SUM(amount) AS pay_total
+                FROM {$pfx}payments
+                WHERE DATE(date) <= ?
+                GROUP BY purchase_id
+            ) pay ON pay.purchase_id = p.id
+
+            WHERE p.supplier_id      = ?
+              AND p.purchase_invoice = 1
+              AND p.grand_total      > 0
+              AND DATE(p.date)       <= ?
+            ORDER BY p.date
+        ", [$supplier_id, $ledger_id, $date_cut, $date_cut, $supplier_id, $date_cut])->result();
+
+        // ── Totals ────────────────────────────────────────────────────────────────
+        $t_invoice = $t_acc_debit = $t_acc_credit = $t_acc_net = $t_pay = $t_out = 0.0;
+
+        echo "<table>
+            <thead><tr>
+                <th>#</th>
+                <th>purchase_id</th>
+                <th>date</th>
+                <th>reference_no</th>
+                <th>grand_total</th>
+                <th>deal_disc</th>
+                <th>invoice_total<br><small>(grand+deal)</small></th>
+                <th>acc_debit<br><small>(purchase entry)</small></th>
+                <th>acc_credit<br><small>(payment/return entry)</small></th>
+                <th>acc_net_owed<br><small>(debit−credit)</small></th>
+                <th>payments_tbl<br><small>(sma_payments SUM)</small></th>
+                <th>outstanding<br><small>(invoice_total−payments)</small></th>
+                <th>DIFF<br><small>(acc_net − outstanding)</small></th>
+            </tr></thead><tbody>";
+
+        foreach ($rows as $i => $r) {
+            $t_invoice   += (float)$r->invoice_total;
+            $t_acc_debit += (float)$r->acc_debit;
+            $t_acc_credit+= (float)$r->acc_credit;
+            $t_acc_net   += (float)$r->acc_net_owed;
+            $t_pay       += (float)$r->pay_total;
+            $t_out       += (float)$r->outstanding;
+
+            $diff = round((float)$r->acc_net_owed - (float)$r->outstanding, 2);
+            $row_cls = ($diff != 0) ? 'yel' : '';
+            $diff_cls = ($diff != 0) ? 'red' : 'zero';
+
+            echo "<tr class='{$row_cls}'>
+                <td>" . ($i+1) . "</td>
+                <td>{$r->pid}</td>
+                <td>{$r->p_date}</td>
+                <td>{$r->p_ref}</td>
+                <td class='num'>{$fmt($r->grand_total)}</td>
+                <td class='num'>" . ($r->deal_disc != 0 ? $fmt($r->deal_disc) : "<span class='zero'>0.00</span>") . "</td>
+                <td class='num'>{$fmt($r->invoice_total)}</td>
+                <td class='num'>{$fmt($r->acc_debit)}</td>
+                <td class='num'>" . ($r->acc_credit != 0 ? $fmt($r->acc_credit) : "<span class='zero'>0.00</span>") . "</td>
+                <td class='num'>{$fmt($r->acc_net_owed)}</td>
+                <td class='num'>" . ($r->pay_total != 0 ? $fmt($r->pay_total) : "<span class='zero'>0.00</span>") . "</td>
+                <td class='num'>{$fmt($r->outstanding)}</td>
+                <td class='num {$diff_cls}'>{$fmt($diff)}</td>
+            </tr>";
+        }
+
+        $total_diff = round($t_acc_net - $t_out, 2);
+        echo "<tr style='background:#dde;font-weight:bold'>
+            <td colspan='4'>TOTALS</td>
+            <td class='num'>{$fmt($t_invoice)}</td>
+            <td></td>
+            <td class='num'>{$fmt($t_invoice)}</td>
+            <td class='num'>{$fmt($t_acc_debit)}</td>
+            <td class='num'>{$fmt($t_acc_credit)}</td>
+            <td class='num'>{$fmt($t_acc_net)}</td>
+            <td class='num'>{$fmt($t_pay)}</td>
+            <td class='num'>{$fmt($t_out)}</td>
+            <td class='num " . ($total_diff != 0 ? 'red' : 'grn') . "'>{$fmt($total_diff)}</td>
+        </tr>";
+
+        echo "</tbody></table>";
+
+        echo "<p><b>DIFF column</b> = acc_net_owed − outstanding.
+              A non-zero value means the accounting ledger and the payments table disagree on what is owed for that purchase.</p>";
+
+        // ══════════════════════════════════════════════════════════════════════════
+        // TABLE 2A: sma_payment_reference — payment vouchers for this supplier
+        // Each row is one payment voucher, joined to its accounting entry + items
+        // ══════════════════════════════════════════════════════════════════════════
+        echo "<h2 style='margin-top:40px;border-bottom:2px solid #333'>Payment Vouchers (sma_payment_reference) — up to {$date_cut}</h2>";
+
+        $pr_rows = $this->db->query("
+            SELECT
+                pr.id                                   AS pr_id,
+                DATE(pr.date)                           AS pr_date,
+                pr.reference_no                         AS pr_ref,
+                pr.amount                               AS pr_amount,
+                pr.note                                 AS pr_note,
+                pr.added_via,
+                pr.journal_id,
+
+                /* Accounting entry linked to this voucher */
+                e.transaction_type,
+                e.pid,
+                e.memo_id                               AS e_memo_id,
+                e.rsid,
+
+                /* What is this voucher linked to? */
+                p.reference_no                          AS purchase_ref,
+                m.reference_no                          AS memo_ref,
+                m.type                                  AS memo_type,
+                m.supplier_entry_type,
+
+                /* Accounting amounts on the supplier ledger — pre-aggregated via JOIN */
+                ROUND(COALESCE(ai_agg.acc_debit,  0), 2) AS acc_debit,
+                ROUND(COALESCE(ai_agg.acc_credit, 0), 2) AS acc_credit
+
+            FROM {$pfx}payment_reference pr
+            LEFT JOIN {$pfx}accounts_entries e  ON e.id  = pr.journal_id
+            LEFT JOIN {$pfx}purchases p          ON p.id  = e.pid
+            LEFT JOIN {$pfx}memo m               ON m.id  = e.memo_id
+            LEFT JOIN (
+                SELECT
+                    ai.entry_id,
+                    SUM(CASE WHEN ai.dc = 'D' THEN ai.amount ELSE 0 END) AS acc_debit,
+                    SUM(CASE WHEN ai.dc = 'C' THEN ai.amount ELSE 0 END) AS acc_credit
+                FROM {$pfx}accounts_entryitems ai
+                WHERE ai.ledger_id = {$ledger_id}
+                GROUP BY ai.entry_id
+            ) ai_agg ON ai_agg.entry_id = e.id
+            WHERE pr.supplier_id = {$supplier_id}
+              AND DATE(pr.date)  <= '{$date_cut}'
+            ORDER BY pr.date, pr.id
+        ", [])->result();
+
+        $pr_total_amount = $pr_total_acc_debit = $pr_total_acc_credit = 0.0;
+
+        echo "<table>
+            <thead><tr>
+                <th>#</th>
+                <th>pr.id</th>
+                <th>date</th>
+                <th>pr.reference_no</th>
+                <th>pr.amount</th>
+                <th>journal_id</th>
+                <th>transaction_type</th>
+                <th>linked_to</th>
+                <th>detail</th>
+                <th>acc_debit<br><small>(on supplier ledger)</small></th>
+                <th>acc_credit<br><small>(on supplier ledger)</small></th>
+                <th>note / added_via</th>
+            </tr></thead><tbody>";
+
+        foreach ($pr_rows as $i => $r) {
+            $pr_total_amount     += (float)$r->pr_amount;
+            $pr_total_acc_debit  += (float)$r->acc_debit;
+            $pr_total_acc_credit += (float)$r->acc_credit;
+
+            // Determine what this voucher is linked to
+            if (!empty($r->pid)) {
+                $linked = 'Purchase';
+                $detail = "pid={$r->pid} ({$r->purchase_ref})";
+            } elseif (!empty($r->e_memo_id)) {
+                $mtype  = $r->memo_type === 'memo' ? 'Memo (' . $r->supplier_entry_type . ')' : ucfirst($r->memo_type);
+                $linked = $mtype;
+                $detail = "memo_id={$r->e_memo_id} ({$r->memo_ref})";
+            } elseif (!empty($r->rsid)) {
+                $linked = 'Return';
+                $detail = "rsid={$r->rsid}";
+            } else {
+                $linked = $r->transaction_type ?: '—';
+                $detail = '—';
+            }
+
+            $acc_diff = round((float)$r->acc_credit - (float)$r->pr_amount, 2);
+            $diff_cls = ($acc_diff != 0) ? 'red' : 'zero';
+
+            echo "<tr>
+                <td>" . ($i + 1) . "</td>
+                <td>{$r->pr_id}</td>
+                <td>{$r->pr_date}</td>
+                <td>{$r->pr_ref}</td>
+                <td class='num'>{$fmt($r->pr_amount)}</td>
+                <td>" . ($r->journal_id ?: '<span class="red">NO ENTRY</span>') . "</td>
+                <td>" . ($r->transaction_type ?: '<span class="red">—</span>') . "</td>
+                <td><b>{$linked}</b></td>
+                <td>{$detail}</td>
+                <td class='num'>" . ($r->acc_debit != 0 ? $fmt($r->acc_debit) : "<span class='zero'>0.00</span>") . "</td>
+                <td class='num'>" . ($r->acc_credit != 0 ? $fmt($r->acc_credit) : "<span class='zero'>0.00</span>") . "</td>
+                <td>" . htmlspecialchars((string)$r->pr_note) . " <small class='zero'>" . htmlspecialchars((string)$r->added_via) . "</small></td>
+            </tr>";
+        }
+
+        echo "<tr style='background:#dde;font-weight:bold'>
+            <td colspan='4'>TOTALS</td>
+            <td class='num'>{$fmt($pr_total_amount)}</td>
+            <td colspan='4'></td>
+            <td class='num'>{$fmt($pr_total_acc_debit)}</td>
+            <td class='num'>{$fmt($pr_total_acc_credit)}</td>
+            <td></td>
+        </tr>";
+        echo "</tbody></table>";
+
+        // ══════════════════════════════════════════════════════════════════════════
+        // TABLE 2B: sma_payments — individual payment lines for this supplier
+        // ══════════════════════════════════════════════════════════════════════════
+        echo "<h2 style='margin-top:40px;border-bottom:2px solid #333'>Payment Lines (sma_payments) — up to {$date_cut}</h2>";
+
+        $sp_rows = $this->db->query("
+            SELECT
+                sp.id,
+                DATE(sp.date)           AS sp_date,
+                sp.reference_no         AS sp_ref,
+                sp.type                 AS pay_type,
+                sp.paid_by,
+                sp.amount,
+                sp.purchase_id,
+                sp.memo_id,
+                sp.return_id,
+                sp.note,
+
+                p.reference_no          AS purchase_ref,
+                m.reference_no          AS memo_ref,
+                m.type                  AS memo_type,
+                m.supplier_entry_type
+
+            FROM {$pfx}payments sp
+            LEFT JOIN {$pfx}purchases p ON p.id = sp.purchase_id
+            LEFT JOIN {$pfx}memo m       ON m.id = sp.memo_id
+            WHERE sp.supplier_id = {$supplier_id}
+              AND DATE(sp.date)  <= '{$date_cut}'
+            ORDER BY sp.date, sp.id
+        ", [])->result();
+
+        $sp_total = 0.0;
+
+        echo "<table>
+            <thead><tr>
+                <th>#</th>
+                <th>pay.id</th>
+                <th>date</th>
+                <th>reference_no</th>
+                <th>pay_type</th>
+                <th>paid_by</th>
+                <th>amount</th>
+                <th>linked_to</th>
+                <th>detail</th>
+                <th>note</th>
+            </tr></thead><tbody>";
+
+        foreach ($sp_rows as $i => $r) {
+            $sp_total += (float)$r->amount;
+
+            if (!empty($r->purchase_id)) {
+                $linked = 'Purchase';
+                $detail = "pid={$r->purchase_id} ({$r->purchase_ref})";
+            } elseif (!empty($r->memo_id)) {
+                $mtype  = $r->memo_type === 'memo' ? 'Memo (' . $r->supplier_entry_type . ')' : ucfirst((string)$r->memo_type);
+                $linked = $mtype;
+                $detail = "memo_id={$r->memo_id} ({$r->memo_ref})";
+            } elseif (!empty($r->return_id)) {
+                $linked = 'Return';
+                $detail = "return_id={$r->return_id}";
+            } else {
+                $linked = '—';
+                $detail = '—';
+            }
+
+            echo "<tr>
+                <td>" . ($i + 1) . "</td>
+                <td>{$r->id}</td>
+                <td>{$r->sp_date}</td>
+                <td>{$r->sp_ref}</td>
+                <td>{$r->pay_type}</td>
+                <td>{$r->paid_by}</td>
+                <td class='num'>{$fmt($r->amount)}</td>
+                <td><b>{$linked}</b></td>
+                <td>{$detail}</td>
+                <td>" . htmlspecialchars((string)$r->note) . "</td>
+            </tr>";
+        }
+
+        echo "<tr style='background:#dde;font-weight:bold'>
+            <td colspan='6'>TOTAL</td>
+            <td class='num'>{$fmt($sp_total)}</td>
+            <td colspan='3'></td>
+        </tr>";
+        echo "</tbody></table>";
+
+        // ── Grand comparison ──────────────────────────────────────────────────────
+        echo "<h2 style='margin-top:40px;border-bottom:2px solid #333'>Summary</h2>";
+        echo "<table style='width:auto'>
+            <tr><th>Item</th><th>Amount</th></tr>
+            <tr><td>Total outstanding (purchases table)</td><td class='num'>{$fmt($t_out)}</td></tr>
+            <tr><td>Total acc_net_owed (accounting ledger)</td><td class='num'>{$fmt($t_acc_net)}</td></tr>
+            <tr><td>Payment vouchers total (sma_payment_reference)</td><td class='num'>{$fmt($pr_total_amount)}</td></tr>
+            <tr><td>Payment vouchers acc_credit (on supplier ledger)</td><td class='num'>{$fmt($pr_total_acc_credit)}</td></tr>
+            <tr><td>sma_payments total</td><td class='num'>{$fmt($sp_total)}</td></tr>
+            <tr class='yel'><td><b>Diff: payment_reference vs sma_payments</b></td>
+                <td class='num " . (round($pr_total_amount - $sp_total, 2) != 0 ? 'red' : 'grn') . "'><b>{$fmt(round($pr_total_amount - $sp_total, 2))}</b></td></tr>
+        </table>";
+
+        echo "</body></html>";
+        die;
+    }
+
+    /**
      * Generate Supplier Statement PDF using mPDF (Portrait)
      * Alternative method using the same logic as sales/pdf_new
      */
-    public function supplier_statement_pdf_new()
+    public function supplier_statement_pdf_new(){
+        // ── helper ────────────────────────────────────────────────────────────────
+        $h  = fn($t) => "<h2 style='margin-top:30px;color:#333;border-bottom:2px solid #333'>$t</h2>";
+        $fmt = fn($v) => number_format((float)$v, 2, '.', ',');
+
+        echo "<!doctype html><html><head><meta charset='utf-8'>
+              <style>
+                body{font-family:monospace;font-size:13px;padding:20px}
+                table{border-collapse:collapse;width:100%;margin-bottom:20px}
+                th,td{border:1px solid #ccc;padding:4px 8px;white-space:nowrap}
+                th{background:#eee}
+                .red{color:red;font-weight:bold}
+                .grn{color:green}
+                .yel{background:#fffbe6}
+              </style></head><body>";
+
+        echo "<h1>Supplier Balance Diagnostic — ID: $supplier_id — {$sup->name}</h1>";
+        echo "<p>Ledger Account ID: <b>$ledger_id</b></p>";
+
+        // ══════════════════════════════════════════════════════════════════════════
+        // SECTION A: ACCOUNTING LEDGER (all-time) — exactly what the statement uses
+        // ══════════════════════════════════════════════════════════════════════════
+        echo $h('A. Accounting Ledger Entries (all-time, ledger_id=' . $ledger_id . ')');
+
+        $sql_ledger = "
+            SELECT
+                e.id          AS entry_id,
+                e.date,
+                e.transaction_type,
+                e.pid,
+                e.rsid,
+                e.memo_id,
+                ai.dc,
+                ai.amount,
+                ai.narration,
+                CASE
+                    WHEN e.pid IS NOT NULL AND e.pid != ''         THEN p.reference_no
+                    WHEN e.memo_id IS NOT NULL AND e.memo_id != '' THEN m.reference_no
+                    ELSE pr.reference_no
+                END AS ref_no
+            FROM {$pfx}accounts_entryitems ai
+            JOIN {$pfx}accounts_entries e  ON e.id  = ai.entry_id
+            LEFT JOIN {$pfx}purchases p    ON p.id  = e.pid
+            LEFT JOIN {$pfx}memo m         ON m.id  = e.memo_id
+            LEFT JOIN {$pfx}payment_reference pr ON pr.journal_id = e.id
+            WHERE e.supplier_id = ?
+              AND ai.ledger_id  = ?
+            ORDER BY e.date, e.id
+        ";
+        $ledger_rows = $this->db->query($sql_ledger, [$supplier_id, $ledger_id])->result();
+
+        $ledger_total_debit  = 0.0;
+        $ledger_total_credit = 0.0;
+        $ledger_by_pid       = [];   // pid  → sum of debit entries
+        $ledger_by_type      = [];   // transaction_type → [debit,credit]
+
+        echo "<table>
+            <tr><th>#</th><th>entry_id</th><th>date</th><th>type</th>
+                <th>pid</th><th>ref_no</th><th>D/C</th><th>amount</th></tr>";
+        foreach ($ledger_rows as $i => $r) {
+            $amt = (float)$r->amount;
+            if ($r->dc === 'D') {
+                $ledger_total_debit += $amt;
+                if ($r->pid) $ledger_by_pid[$r->pid]['debit'] = ($ledger_by_pid[$r->pid]['debit'] ?? 0) + $amt;
+            } else {
+                $ledger_total_credit += $amt;
+                if ($r->pid) $ledger_by_pid[$r->pid]['credit'] = ($ledger_by_pid[$r->pid]['credit'] ?? 0) + $amt;
+            }
+            $ledger_by_type[$r->transaction_type][$r->dc] = ($ledger_by_type[$r->transaction_type][$r->dc] ?? 0) + $amt;
+
+            $cls = ($r->dc === 'D') ? '' : 'grn';
+            echo "<tr class='$cls'>
+                <td>" . ($i+1) . "</td>
+                <td>{$r->entry_id}</td><td>{$r->date}</td>
+                <td>{$r->transaction_type}</td><td>" . ($r->pid ?: '-') . "</td>
+                <td>" . ($r->ref_no ?: '-') . "</td>
+                <td><b>{$r->dc}</b></td>
+                <td style='text-align:right'>{$fmt($amt)}</td>
+            </tr>";
+        }
+        echo "</table>";
+
+        $ledger_net = $ledger_total_credit - $ledger_total_debit;  // positive = we owe supplier
+        echo "<p><b>Total Debit: {$fmt($ledger_total_debit)} | Total Credit: {$fmt($ledger_total_credit)} | Net (credit−debit = amount owed): <span class='red'>{$fmt($ledger_net)}</span></b></p>";
+
+        // ── breakdown by transaction type ─────────────────────────────────────────
+        echo $h('A1. Ledger Breakdown by Transaction Type');
+        echo "<table><tr><th>transaction_type</th><th>total_debit</th><th>total_credit</th><th>net</th></tr>";
+        foreach ($ledger_by_type as $tt => $dc) {
+            $d = $dc['D'] ?? 0;
+            $c = $dc['C'] ?? 0;
+            $n = $c - $d;
+            echo "<tr><td>$tt</td><td style='text-align:right'>{$fmt($d)}</td>
+                      <td style='text-align:right'>{$fmt($c)}</td>
+                      <td style='text-align:right;color:" . ($n < 0 ? 'red' : 'green') . "'>{$fmt($n)}</td></tr>";
+        }
+        echo "</table>";
+
+        // ══════════════════════════════════════════════════════════════════════════
+        // SECTION B: UNPAID INVOICES — purchases table
+        // ══════════════════════════════════════════════════════════════════════════
+        echo $h('B. Purchases (unpaid invoices source — purchase_invoice=1)');
+
+        $purch_rows = $this->db->query("
+            SELECT
+                p.id, p.date, p.reference_no,
+                p.grand_total,
+                COALESCE(p.grand_deal_discount, 0) AS deal_disc,
+                ROUND(p.grand_total + COALESCE(p.grand_deal_discount, 0), 2) AS invoice_total,
+                COALESCE(p.paid, 0) AS stored_paid,
+                COALESCE((SELECT SUM(sp.amount) FROM {$pfx}payments sp WHERE sp.purchase_id = p.id), 0) AS payments_table_paid,
+                ROUND((p.grand_total + COALESCE(p.grand_deal_discount,0)) - COALESCE(p.paid,0), 2) AS outstanding_stored,
+                ROUND((p.grand_total + COALESCE(p.grand_deal_discount,0))
+                      - COALESCE((SELECT SUM(sp.amount) FROM {$pfx}payments sp WHERE sp.purchase_id = p.id), 0), 2) AS outstanding_live
+            FROM {$pfx}purchases p
+            WHERE p.supplier_id = ?
+              AND p.purchase_invoice = 1
+              AND p.grand_total > 0
+              AND (p.note != 'import from excel' OR p.note IS NULL)
+            ORDER BY p.date
+        ", [$supplier_id])->result();
+
+        $purch_total_invoice  = 0.0;
+        $purch_total_paid     = 0.0;
+        $purch_total_out_live = 0.0;
+        $purch_ids            = [];
+
+        echo "<table>
+            <tr><th>p.id</th><th>date</th><th>ref_no</th>
+                <th>grand_total</th><th>deal_disc</th><th>invoice_total</th>
+                <th>p.paid(stored)</th><th>payments_tbl_paid</th>
+                <th>outstanding(stored)</th><th>outstanding(live)</th><th>diff(stored vs live)</th></tr>";
+        foreach ($purch_rows as $r) {
+            $purch_ids[] = $r->id;
+            $purch_total_invoice  += (float)$r->invoice_total;
+            $purch_total_paid     += (float)$r->payments_table_paid;
+            $purch_total_out_live += (float)$r->outstanding_live;
+            $diff = round((float)$r->outstanding_stored - (float)$r->outstanding_live, 2);
+            $cls  = ($diff != 0) ? 'yel' : '';
+            echo "<tr class='$cls'>
+                <td>{$r->id}</td><td>{$r->date}</td><td>{$r->reference_no}</td>
+                <td style='text-align:right'>{$fmt($r->grand_total)}</td>
+                <td style='text-align:right'>{$fmt($r->deal_disc)}</td>
+                <td style='text-align:right'>{$fmt($r->invoice_total)}</td>
+                <td style='text-align:right'>{$fmt($r->stored_paid)}</td>
+                <td style='text-align:right'>{$fmt($r->payments_table_paid)}</td>
+                <td style='text-align:right'>{$fmt($r->outstanding_stored)}</td>
+                <td style='text-align:right'>{$fmt($r->outstanding_live)}</td>
+                <td style='text-align:right" . ($diff != 0 ? ";color:red' class='red'" : "'") . ">$diff</td>
+            </tr>";
+        }
+        echo "</table>";
+        echo "<p><b>Total invoice_total: {$fmt($purch_total_invoice)} | Total paid (payments tbl): {$fmt($purch_total_paid)} | Total outstanding (live): <span class='red'>{$fmt($purch_total_out_live)}</span></b></p>";
+
+        // ── purchases with no accounting entry ────────────────────────────────────
+        echo $h('B1. Purchases that have NO accounting entry in the supplier ledger');
+        $ledger_pids = array_keys($ledger_by_pid);
+        $missing = array_diff($purch_ids, $ledger_pids);
+        if ($missing) {
+            echo "<p class='red'>Purchase IDs with no ledger entry: " . implode(', ', $missing) . "</p>";
+        } else {
+            echo "<p class='grn'>All invoiced purchases have at least one ledger entry.</p>";
+        }
+
+        // ── accounting entries for purchases with mismatch ────────────────────────
+        echo $h('B2. Accounting debit vs Payments-table paid — per purchase');
+        echo "<table>
+            <tr><th>p.id</th><th>ref_no</th>
+                <th>invoice_total</th><th>ledger_debit</th><th>ledger_credit</th>
+                <th>payments_tbl_paid</th>
+                <th>ledger_net_owed</th><th>unpaid_outstanding</th><th>DIFF</th></tr>";
+        $section_b2_total_diff = 0.0;
+        foreach ($purch_rows as $r) {
+            $l_debit  = $ledger_by_pid[$r->id]['debit']  ?? 0;
+            $l_credit = $ledger_by_pid[$r->id]['credit'] ?? 0;
+            $l_net    = $l_debit - $l_credit;                 // amount still owed per ledger
+            $unpaid   = (float)$r->outstanding_live;
+            $diff     = round($l_net - $unpaid, 2);
+            $section_b2_total_diff += $diff;
+            $cls = ($diff != 0) ? 'yel' : '';
+            echo "<tr class='$cls'>
+                <td>{$r->id}</td><td>{$r->reference_no}</td>
+                <td style='text-align:right'>{$fmt($r->invoice_total)}</td>
+                <td style='text-align:right'>{$fmt($l_debit)}</td>
+                <td style='text-align:right'>{$fmt($l_credit)}</td>
+                <td style='text-align:right'>{$fmt($r->payments_table_paid)}</td>
+                <td style='text-align:right'>{$fmt($l_net)}</td>
+                <td style='text-align:right'>{$fmt($unpaid)}</td>
+                <td style='text-align:right" . ($diff != 0 ? ";color:red'" : "'") . ">$diff</td>
+            </tr>";
+        }
+        echo "</table>";
+        echo "<p><b>Sum of DIFF across all purchases: <span class='red'>{$fmt($section_b2_total_diff)}</span></b></p>";
+
+        // ══════════════════════════════════════════════════════════════════════════
+        // SECTION C: PAYMENTS — sma_payments table
+        // ══════════════════════════════════════════════════════════════════════════
+        echo $h('C. Payments Table (sma_payments) for this supplier');
+
+        $pay_rows = $this->db->query("
+            SELECT sp.id, sp.date, sp.purchase_id, sp.amount, sp.note,
+                   p.reference_no AS purchase_ref
+            FROM {$pfx}payments sp
+            LEFT JOIN {$pfx}purchases p ON p.id = sp.purchase_id
+            WHERE sp.purchase_id IN (
+                SELECT id FROM {$pfx}purchases WHERE supplier_id = ?
+            )
+            ORDER BY sp.date
+        ", [$supplier_id])->result();
+
+        $pay_total = 0.0;
+        echo "<table>
+            <tr><th>pay.id</th><th>date</th><th>purchase_id</th><th>purchase_ref</th><th>amount</th><th>note</th></tr>";
+        foreach ($pay_rows as $r) {
+            $pay_total += (float)$r->amount;
+            echo "<tr>
+                <td>{$r->id}</td><td>{$r->date}</td>
+                <td>{$r->purchase_id}</td><td>" . ($r->purchase_ref ?: '-') . "</td>
+                <td style='text-align:right'>{$fmt($r->amount)}</td>
+                <td>" . htmlspecialchars((string)$r->note) . "</td>
+            </tr>";
+        }
+        echo "</table>";
+        echo "<p><b>Total payments recorded (payments table): {$fmt($pay_total)}</b></p>";
+
+        // ── accounting payment entries vs payments table ───────────────────────────
+        echo $h('C1. Accounting entries with transaction_type=supplierpayment (credits in ledger)');
+        $acc_pay_credit = $ledger_by_type['supplierpayment']['C'] ?? 0;
+        $acc_pay_debit  = $ledger_by_type['supplierpayment']['D'] ?? 0;
+        echo "<p>Ledger: supplierpayment Credit = <b>{$fmt($acc_pay_credit)}</b> | Debit = <b>{$fmt($acc_pay_debit)}</b></p>";
+        echo "<p>Payments table total: <b>{$fmt($pay_total)}</b></p>";
+        $diff_pay = round($acc_pay_credit - $pay_total, 2);
+        $cls = ($diff_pay != 0) ? 'red' : 'grn';
+        echo "<p class='$cls'>Difference (ledger credit − payments tbl): <b>{$fmt($diff_pay)}</b></p>";
+
+        // ══════════════════════════════════════════════════════════════════════════
+        // SECTION D: SUPPLIER RETURNS (returns_supplier)
+        // ══════════════════════════════════════════════════════════════════════════
+        echo $h('D. Supplier Returns (sma_returns_supplier)');
+
+        $ret_rows = $this->db->query("
+            SELECT rs.id, rs.date, rs.reference_no,
+                   rs.grand_total
+            FROM {$pfx}returns_supplier rs
+            WHERE rs.supplier_id = ?
+            ORDER BY rs.date
+        ", [$supplier_id])->result();
+
+        $ret_total = 0.0;
+        echo "<table>
+            <tr><th>rs.id</th><th>date</th><th>ref_no</th><th>grand_total</th></tr>";
+        foreach ($ret_rows as $r) {
+            $ret_total += (float)$r->grand_total;
+            echo "<tr>
+                <td>{$r->id}</td><td>{$r->date}</td><td>{$r->reference_no}</td>
+                <td style='text-align:right'>{$fmt($r->grand_total)}</td>
+            </tr>";
+        }
+        echo "</table>";
+        echo "<p><b>Total returns: {$fmt($ret_total)}</b></p>";
+
+        $acc_ret_credit = $ledger_by_type['returnorder']['C'] ?? 0;
+        $diff_ret = round($acc_ret_credit - $ret_total, 2);
+        $cls = ($diff_ret != 0) ? 'red' : 'grn';
+        echo "<p>Accounting returnorder credits in ledger: <b>{$fmt($acc_ret_credit)}</b></p>";
+        echo "<p class='$cls'>Difference (ledger − returns tbl): <b>{$fmt($diff_ret)}</b></p>";
+
+        // ══════════════════════════════════════════════════════════════════════════
+        // SECTION E: MEMO ITEMS (service invoices + credit memos)
+        // ══════════════════════════════════════════════════════════════════════════
+        echo $h('E. Memo table entries for this supplier');
+
+        $memo_rows = $this->db->query("
+            SELECT m.id, m.date, m.reference_no, m.type, m.supplier_entry_type,
+                   m.payment_amount, COALESCE(m.used_amount, 0) AS used_amount,
+                   ROUND(m.payment_amount - COALESCE(m.used_amount, 0), 2) AS outstanding
+            FROM {$pfx}memo m
+            WHERE m.supplier_id = ?
+            ORDER BY m.date
+        ", [$supplier_id])->result();
+
+        $memo_total_out = 0.0;
+        echo "<table>
+            <tr><th>m.id</th><th>date</th><th>ref_no</th><th>type</th><th>supplier_entry_type</th>
+                <th>payment_amount</th><th>used_amount</th><th>outstanding</th></tr>";
+        foreach ($memo_rows as $r) {
+            $memo_total_out += (float)$r->outstanding;
+            echo "<tr>
+                <td>{$r->id}</td><td>{$r->date}</td><td>{$r->reference_no}</td>
+                <td>{$r->type}</td><td>" . ($r->supplier_entry_type ?: '-') . "</td>
+                <td style='text-align:right'>{$fmt($r->payment_amount)}</td>
+                <td style='text-align:right'>{$fmt($r->used_amount)}</td>
+                <td style='text-align:right'>{$fmt($r->outstanding)}</td>
+            </tr>";
+        }
+        echo "</table>";
+        echo "<p><b>Total memo outstanding: {$fmt($memo_total_out)}</b></p>";
+
+        // ══════════════════════════════════════════════════════════════════════════
+        // SECTION F: ACCOUNTING ENTRIES NOT LINKED TO ANY PURCHASE
+        // (journals, direct entries, etc. that still affect this ledger)
+        // ══════════════════════════════════════════════════════════════════════════
+        echo $h('F. Accounting entries with NO pid (journals, manual entries, etc.)');
+
+        $no_pid_debit  = 0.0;
+        $no_pid_credit = 0.0;
+        $no_pid_rows   = array_filter($ledger_rows, fn($r) => empty($r->pid));
+        echo "<table>
+            <tr><th>entry_id</th><th>date</th><th>type</th><th>D/C</th><th>amount</th><th>narration</th></tr>";
+        foreach ($no_pid_rows as $r) {
+            $amt = (float)$r->amount;
+            $r->dc === 'D' ? $no_pid_debit += $amt : $no_pid_credit += $amt;
+            echo "<tr>
+                <td>{$r->entry_id}</td><td>{$r->date}</td><td>{$r->transaction_type}</td>
+                <td><b>{$r->dc}</b></td>
+                <td style='text-align:right'>{$fmt($amt)}</td>
+                <td>" . htmlspecialchars((string)$r->narration) . "</td>
+            </tr>";
+        }
+        echo "</table>";
+        echo "<p><b>No-pid entries: Debit = {$fmt($no_pid_debit)} | Credit = {$fmt($no_pid_credit)}</b></p>";
+
+        // ══════════════════════════════════════════════════════════════════════════
+        // SECTION G: SUMMARY — THE MISMATCH
+        // ══════════════════════════════════════════════════════════════════════════
+        echo $h('G. SUMMARY — Where the difference comes from');
+
+        $unpaid_total = $purch_total_out_live + $memo_total_out;
+
+        echo "<table>
+            <tr><th>Source</th><th>Amount</th></tr>
+            <tr><td>Ledger net owed (Credit − Debit)</td>
+                <td style='text-align:right'><b>{$fmt($ledger_net)}</b></td></tr>
+            <tr><td>Unpaid invoices total (purchases outstanding)</td>
+                <td style='text-align:right'>{$fmt($purch_total_out_live)}</td></tr>
+            <tr><td>Unpaid invoices total (memo outstanding)</td>
+                <td style='text-align:right'>{$fmt($memo_total_out)}</td></tr>
+            <tr><td>Unpaid invoices TOTAL (purchases + memos)</td>
+                <td style='text-align:right'><b>{$fmt($unpaid_total)}</b></td></tr>
+            <tr class='yel'><td><b>DIFFERENCE (ledger − unpaid)</b></td>
+                <td style='text-align:right'><b class='red'>{$fmt($ledger_net - $unpaid_total)}</b></td></tr>
+        </table>";
+
+        echo "<br><h3>Likely suspects:</h3><ul>
+            <li>Return orders NOT reducing p.paid  → diff in Section D</li>
+            <li>Payments in accounting NOT in sma_payments → diff in Section C1</li>
+            <li>Journal entries shifting ledger   → Section F</li>
+            <li>Purchases with deal_discount      → Section B (invoice_total vs grand_total)</li>
+            <li>Stored p.paid vs live payments    → Section B (stored vs live columns)</li>
+        </ul>";
+
+        echo "</body></html>";
+        die;
+    }
+
+    /**
+     * Generate Supplier Statement PDF using mPDF (Portrait)
+     * Alternative method using the same logic as sales/pdf_new
+     */
+    /*public function supplier_statement_pdf_new()
     {
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
@@ -4903,7 +5647,7 @@ class Reports extends MY_Controller
             $this->session->set_flashdata('error', 'Please select date range for supplier statement');
             redirect($_SERVER['HTTP_REFERER']);
         }
-    }
+    }*/
 
     public function customer_aging()
     {
