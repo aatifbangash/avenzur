@@ -255,6 +255,135 @@ class Delivery extends MY_Controller
     /**
      * Verify that a driver ID is valid and belongs to the driver group
      */
+    /**
+     * AJAX: Mark a single delivery item (invoice) as delivered with per-item receipt upload.
+     * Automatically marks the whole delivery as delivered when the last item is done.
+     */
+    public function mark_item_delivered()
+    {
+        $delivery_id = (int)$this->input->post('delivery_id');
+        $invoice_id  = (int)$this->input->post('invoice_id');
+
+        if (!$delivery_id || !$invoice_id) {
+            echo json_encode(['error' => 1, 'msg' => 'Invalid request.']);
+            return;
+        }
+
+        if (empty($_FILES['receipt']['name'])) {
+            echo json_encode(['error' => 1, 'msg' => 'A delivery receipt is required.']);
+            return;
+        }
+
+        $upload_path = FCPATH . 'files/receipts/';
+        if (!is_dir($upload_path)) {
+            mkdir($upload_path, 0755, true);
+        }
+
+        $this->load->library('upload', [
+            'upload_path'   => $upload_path,
+            'allowed_types' => 'jpg|jpeg|png|gif|pdf',
+            'max_size'      => 10240,
+            'encrypt_name'  => true,
+        ]);
+
+        if (!$this->upload->do_upload('receipt')) {
+            echo json_encode(['error' => 1, 'msg' => 'Receipt upload failed: ' . $this->upload->display_errors('', '')]);
+            return;
+        }
+
+        $receipt_filename = $this->upload->data('file_name');
+
+        $result = $this->delivery_model->mark_delivery_item_delivered($delivery_id, $invoice_id, $receipt_filename);
+
+        if ($result !== false) {
+            // Auto-convert this sale to a final invoice
+            $this->_auto_convert_to_invoice($invoice_id);
+            echo json_encode(['error' => 0, 'all_delivered' => ($result === 'all_delivered')]);
+        } else {
+            echo json_encode(['error' => 1, 'msg' => 'Failed to mark item as delivered.']);
+        }
+    }
+
+    /**
+     * Auto-convert a sale to a final invoice (mirrors Sales::convert_sale_invoice).
+     * Called automatically when a delivery is marked as delivered.
+     */
+    private function _auto_convert_to_invoice($sid)
+    {
+        $inv = $this->sales_model->getSaleByID($sid);
+
+        if (!$inv || $inv->sale_invoice != 0) {
+            return; // Already converted or sale not found
+        }
+
+        if ($this->sales_model->saleToInvoice($sid)) {
+
+            $this->db->update('sales', ['sale_status' => 'completed'], ['id' => $sid]);
+
+            $this->load->admin_model('companies_model');
+            $customer           = $this->companies_model->getCompanyByID($inv->customer_id);
+            $inv_items          = $this->sales_model->getAllSaleItems($sid);
+            $warehouse_ledgers  = $this->site->getWarehouseByID($inv->warehouse_id);
+
+            // Accounting entry header
+            $entry = [
+                'entrytype_id'     => 4,
+                'transaction_type' => 'saleorder',
+                'number'           => 'SO-' . $inv->reference_no,
+                'date'             => date('Y-m-d'),
+                'dr_total'         => $inv->grand_total,
+                'cr_total'         => $inv->grand_total,
+                'notes'            => 'Sale Reference: ' . $inv->reference_no . ' Date: ' . date('Y-m-d H:i:s'),
+                'sid'              => $inv->id,
+                'customer_id'      => $inv->customer_id,
+            ];
+            $this->db->insert('sma_accounts_entries', $entry);
+            $insert_id = $this->db->insert_id();
+
+            // Accounting entry lines
+            $lines = [
+                ['dc' => 'D', 'ledger_id' => $customer->cogs_ledger,              'amount' => $inv->cost_goods_sold, 'narration' => 'cost of goods sold'],
+                ['dc' => 'C', 'ledger_id' => $warehouse_ledgers->inventory_ledger, 'amount' => $inv->cost_goods_sold, 'narration' => 'inventory account'],
+                ['dc' => 'D', 'ledger_id' => $customer->discount_ledger,           'amount' => $inv->total_discount,  'narration' => 'total discount'],
+                ['dc' => 'D', 'ledger_id' => $customer->ledger_account,            'amount' => $inv->grand_total,     'narration' => 'customer'],
+                ['dc' => 'C', 'ledger_id' => $customer->sales_ledger,              'amount' => $inv->total,           'narration' => 'sale account'],
+                ['dc' => 'C', 'ledger_id' => $this->vat_on_sale,                   'amount' => $inv->total_tax,       'narration' => 'vat on sale'],
+            ];
+            foreach ($lines as $line) {
+                $this->db->insert('sma_accounts_entryitems', array_merge(['entry_id' => $insert_id], $line));
+            }
+
+            // Zatca integration (if enabled)
+            $this->load->admin_model('Zetca_model');
+            $zatca_settings = $this->Zetca_model->get_zetca_settings();
+            if (!empty($zatca_settings['zatca_enabled'])) {
+                $this->load->library('ZatcaServices', [
+                    'base_url'   => $zatca_settings['zatca_url'],
+                    'api_key'    => $zatca_settings['zatca_appkey'],
+                    'api_secret' => $zatca_settings['zatca_secretKey'],
+                ], 'zatca');
+                $zatca_payload  = $this->Zetca_model->get_zetca_data_b2b($sid);
+                $zatca_response = $this->zatca->post('', $zatca_payload);
+                $is_success     = true;
+                $remarks        = '';
+                if ($zatca_response['status'] >= 400) {
+                    $is_success = false;
+                    if (!empty($zatca_response['body']['errors'])) {
+                        $remarks = $zatca_response['body']['errors'][0];
+                    }
+                }
+                $this->Zetca_model->report_zatca_status([
+                    'sale_id'    => $sid,
+                    'date'       => date('Y-m-d H:i:s'),
+                    'is_success' => $is_success,
+                    'request'    => json_encode($zatca_payload),
+                    'response'   => json_encode($zatca_response),
+                    'remarks'    => $remarks,
+                ]);
+            }
+        }
+    }
+
     private function verify_driver($driver_id)
     {
         // Get the driver group ID
@@ -382,28 +511,8 @@ class Delivery extends MY_Controller
             exit;
         }
 
-        // Receipt is mandatory when marking as delivered
+        // Per-item receipts are handled via mark_item_delivered AJAX — no global receipt needed
         $receipt_filename = null;
-        if ($status === 'delivered') {
-            if (!empty($_FILES['receipt']['name'])) {
-                $this->load->library('upload', [
-                    'upload_path'   => FCPATH . 'files/receipts/',
-                    'allowed_types' => 'jpg|jpeg|png|gif|pdf',
-                    'max_size'      => 10240,
-                    'encrypt_name'  => true,
-                ]);
-                if (!$this->upload->do_upload('receipt')) {
-                    $this->session->set_flashdata('error', 'Receipt upload failed: ' . $this->upload->display_errors('', ''));
-                    redirect(admin_url('delivery/edit/' . $delivery_id));
-                    return;
-                }
-                $receipt_filename = $this->upload->data('file_name');
-            } elseif (empty($delivery_info->receipt)) {
-                $this->session->set_flashdata('error', 'A delivery receipt is required when marking the delivery as Delivered.');
-                redirect(admin_url('delivery/edit/' . $delivery_id));
-                return;
-            }
-        }
         
         /*foreach($delivery_items as $item){
             $sale_details = $this->sales_model->getSaleByID($item->invoice_id);
