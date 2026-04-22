@@ -5213,7 +5213,7 @@ class Reports extends MY_Controller
      * Generate Supplier Statement PDF using mPDF (Portrait)
      * Alternative method using the same logic as sales/pdf_new
      */
-    public function supplier_statement_pdf_new(){
+    /*public function supplier_statement_pdf_new(){
         // ── helper ────────────────────────────────────────────────────────────────
         $h  = fn($t) => "<h2 style='margin-top:30px;color:#333;border-bottom:2px solid #333'>$t</h2>";
         $fmt = fn($v) => number_format((float)$v, 2, '.', ',');
@@ -5566,13 +5566,13 @@ class Reports extends MY_Controller
 
         echo "</body></html>";
         die;
-    }
+    }*/
 
     /**
      * Generate Supplier Statement PDF using mPDF (Portrait)
      * Alternative method using the same logic as sales/pdf_new
      */
-    /*public function supplier_statement_pdf_new()
+    public function supplier_statement_pdf_new()
     {
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
@@ -5647,7 +5647,7 @@ class Reports extends MY_Controller
             $this->session->set_flashdata('error', 'Please select date range for supplier statement');
             redirect($_SERVER['HTTP_REFERER']);
         }
-    }*/
+    }
 
     public function customer_aging()
     {
