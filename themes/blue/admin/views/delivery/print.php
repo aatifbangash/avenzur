@@ -395,14 +395,15 @@
             <table class="items-table">
                 <thead>
                     <tr>
-                        <th style="width: 5%;">#</th>
-                        <th style="width: 15%;">Invoice No.</th>
-                        <th style="width: 25%;">Customer</th>
-                        <th style="width: 12%;">Invoice Date</th>
-                        <th class="text-right" style="width: 13%;">Amount</th>
-                        <th class="text-center" style="width: 10%;">Items</th>
-                        <th class="text-center" style="width: 10%;">Refrigerated</th>
-                        <th class="text-center" style="width: 10%;">Notes</th>
+                        <th style="width: 4%;">#</th>
+                        <th style="width: 12%;">Reference No.</th>
+                        <th style="width: 8%;">Invoice No.</th>
+                        <th style="width: 22%;">Customer</th>
+                        <th style="width: 10%;">Invoice Date</th>
+                        <th class="text-right" style="width: 12%;">Amount</th>
+                        <th class="text-center" style="width: 8%;">Items</th>
+                        <th class="text-center" style="width: 8%;">Refrigerated</th>
+                        <th class="text-center" style="width: 8%;">Notes</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -421,6 +422,7 @@
                         <tr>
                             <td><?= $counter++ ?></td>
                             <td><strong><?= isset($item->reference_no) ? $item->reference_no : 'N/A' ?></strong></td>
+                            <td><span style="display:inline-block;padding:3px 8px;background:#e0e0e0;border-radius:4px;font-weight:bold;font-size:12px;">#<?= isset($item->invoice_id) ? $item->invoice_id : 'N/A' ?></span></td>
                             <td><?= isset($item->customer_name) ? $item->customer_name : 'N/A' ?></td>
                             <td><?= isset($item->sale_date) ? date('d M Y', strtotime($item->sale_date)) : 'N/A' ?></td>
                             <td class="text-right"><?= isset($item->total_amount) ? number_format($item->total_amount, 2) : '0.00' ?> SAR</td>
@@ -434,7 +436,7 @@
                         endforeach; 
                     ?>
                         <tr class="total-row">
-                            <td colspan="4" style="text-align: right; padding-right: 15px;">
+                            <td colspan="5" style="text-align: right; padding-right: 15px;">
                                 <strong>GRAND TOTAL:</strong>
                             </td>
                             <td class="text-right">
