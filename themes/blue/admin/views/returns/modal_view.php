@@ -367,7 +367,7 @@
                             </td>
                             <td style="text-align:right; width:100px;">
                                  <!-- <?= $row->unit_cost != $row->real_unit_cost && $row->item_discount > 0 ? '<del>' . $this->sma->formatMoney($row->real_unit_price) . '</del>' : ''; ?> -->
-                                <?= $this->sma->formatNumber($row->real_unit_price); ?>
+                                <?= $this->sma->formatNumber($row->net_unit_price); ?>
                             </td>
                            
                             
