@@ -746,7 +746,8 @@ class Purchases_model extends CI_Model
         $this->db->select('payment_reference.*, companies.name as company, companies.sequence_code, companies.category as supplier_group, al.name as ledger_name, (CASE WHEN EXISTS(SELECT 1 FROM sma_payments p WHERE p.payment_id = sma_payment_reference.id AND p.type = "advance") THEN "advance" ELSE "standard" END) as payment_type', false)
             ->join('companies', 'companies.id=payment_reference.supplier_id', 'left')
             ->join('accounts_ledgers al', 'al.id = payment_reference.transfer_from_ledger', 'left')
-            ->where('supplier_id <>', NULL);
+            ->where('supplier_id <>', NULL)
+            ->where('(payment_reference.added_via IS NULL OR payment_reference.added_via NOT IN ("auto_script"))');
 
         if (!empty($filters['supplier_id'])) {
             $this->db->where('payment_reference.supplier_id', $filters['supplier_id']);
