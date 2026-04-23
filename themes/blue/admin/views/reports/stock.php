@@ -304,8 +304,11 @@
                                     <?php $grandTotalPurchasePrice += $row->purchase_price * $row->quantity; ?>
                                     <?php $totalCostPrice += $row->cost_price; ?>
                                     <?php 
-                                        $row->total_cost_price = $row->total_cost_price ?? ($row->inventory_cost_price * $row->quantity);
-                                        $grandTotalCostPrice += $row->total_cost_price; 
+                                        $total_cost_price = $row->total_cost_price > 0
+                                            ? $row->total_cost_price
+                                            : ($row->inventory_cost_price * $row->quantity);
+
+                                        $grandTotalCostPrice += $total_cost_price;
                                     ?>
                                 <?php endforeach; ?>
 
