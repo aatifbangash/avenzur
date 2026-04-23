@@ -2926,6 +2926,7 @@ class Reports_model extends CI_Model
             inv.expiry_date as expiry,
             SUM(inv.quantity) as quantity,
             inv.net_unit_sale as sale_price,
+            inv.net_unit_cost as inventory_cost_price,
             (SELECT cost FROM sma_rawabi_product_price WHERE product_id = p.id LIMIT 1) as cost_price,
             sum((SELECT cost FROM sma_rawabi_product_price WHERE product_id = p.id LIMIT 1) * inv.quantity) as total_cost_price,
             inv.real_unit_cost as purchase_price,
