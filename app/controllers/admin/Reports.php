@@ -9190,4 +9190,101 @@ class Reports extends MY_Controller
         $this->page_construct('reports/vat_report', $meta, $this->data);
     }
 
+    public function po_shelving_report()
+    {
+        //$this->sma->checkPermissions('purchases');
+
+        $sql = "
+            SELECT 
+                po.id AS po_id,
+                po.reference_no,
+                po.date,
+                po.supplier_id,
+                po.supplier AS supplier_name,
+                COALESCE(poi.total_qty, 0)   AS ordered_qty,
+                COALESCE(s.shelved_qty, 0)   AS shelved_qty,
+                COALESCE(poi.sku_ordered, 0) AS sku_ordered,
+                COALESCE(s.sku_received, 0)  AS sku_received,
+                COALESCE(poi.total_value, 0) AS po_value
+            FROM sma_purchase_orders po
+            LEFT JOIN (
+                SELECT 
+                    purchase_id,
+                    SUM(quantity)                  AS total_qty,
+                    SUM(quantity * unit_cost)       AS total_value,
+                    COUNT(DISTINCT CONVERT(TRIM(LEADING '0' FROM product_code) USING utf8mb4)) AS sku_ordered
+                FROM sma_purchase_order_items
+                GROUP BY purchase_id
+            ) poi ON poi.purchase_id = po.id
+            LEFT JOIN (
+                SELECT 
+                    pos.po_id,
+                    SUM(CASE WHEN posi.status IN ('active','restock') THEN posi.qty ELSE 0 END) AS shelved_qty,
+                    COUNT(DISTINCT CASE WHEN posi.status IN ('active','restock') THEN CONVERT(TRIM(LEADING '0' FROM posi.product_code) USING utf8mb4) END) AS sku_received
+                FROM sma_purchase_order_shelving pos
+                JOIN sma_purchase_order_shelving_items posi ON pos.id = posi.shelving_id
+                GROUP BY pos.po_id
+            ) s ON s.po_id = po.id
+            ORDER BY po.date DESC
+        ";
+
+        $this->data['rows'] = $this->db->query($sql)->result();
+
+        $bc   = [
+            ['link' => base_url(),          'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => '#',                  'page' => 'PO Shelving Report'],
+        ];
+        $meta = ['page_title' => 'PO Shelving Report', 'bc' => $bc];
+        $this->page_construct('reports/po_shelving_report', $meta, $this->data);
+    }
+
+    public function po_shelving_detail($po_id = null)
+    {
+        if (!$po_id || !is_numeric($po_id)) {
+            show_error('Invalid PO ID', 400);
+        }
+        $po_id = (int) $po_id;
+
+        // PO header
+        $this->data['po'] = $this->db->query(
+            "SELECT id, reference_no, date, supplier FROM sma_purchase_orders WHERE id = ?",
+            [$po_id]
+        )->row();
+
+        if (!$this->data['po']) {
+            show_error('PO not found', 404);
+        }
+
+        // Ordered items
+        $this->data['ordered'] = $this->db->query("
+            SELECT 
+                TRIM(LEADING '0' FROM product_code) AS product_code,
+                product_name,
+                SUM(quantity)               AS ordered_qty,
+                unit_cost,
+                SUM(quantity * unit_cost)   AS line_value
+            FROM sma_purchase_order_items
+            WHERE purchase_id = ?
+            GROUP BY product_code, product_name, unit_cost
+            ORDER BY product_name
+        ", [$po_id])->result();
+
+        // Shelved items
+        $this->data['shelved'] = $this->db->query("
+            SELECT 
+                TRIM(LEADING '0' FROM posi.product_code) AS product_code,
+                (SELECT name FROM sma_products WHERE TRIM(LEADING '0' FROM code) = TRIM(LEADING '0' FROM posi.product_code) LIMIT 1) AS product_name,
+                posi.status,
+                SUM(posi.qty) AS shelved_qty
+            FROM sma_purchase_order_shelving pos
+            JOIN sma_purchase_order_shelving_items posi ON pos.id = posi.shelving_id
+            WHERE pos.po_id = ? AND posi.status IN ('active','restock')
+            GROUP BY posi.product_code, posi.status
+            ORDER BY product_name
+        ", [$po_id])->result();
+
+        $this->load->view($this->theme . 'reports/po_shelving_detail_modal', $this->data);
+    }
+
 }

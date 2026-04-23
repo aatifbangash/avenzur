@@ -670,6 +670,9 @@
                         <?php if($Admin || $Owner || $this->GP['reports-warehouse-stock']){ ?>
                         <li><a href="<?= admin_url('reports/shelving_report'); ?>" class="newmenu-link"><i class="fa fa-archive"></i> <?= lang('Warehouse Shelving Report'); ?></a></li>
                         <?php } ?>
+                        <?php if($this->Settings->site_name == 'Avnzor'){ ?>
+                            <li><a href="<?= admin_url('reports/po_shelving_report'); ?>" class="newmenu-link"><i class="fa fa-calculator"></i> <?= lang('PO Shelving Report'); ?></a></li>
+                        <?php } ?>
                     </ul>
                 </li>
 
