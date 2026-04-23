@@ -2810,15 +2810,31 @@ class Reports_model extends CI_Model
         }
 
         if($this->Settings->site_name == 'Hills Business Medical' && $warehouse == 32){
-            $stockQuery = " SELECT p.id,
-            
-            SUM(inv.quantity) as quantity,
-            SUM(inv.net_unit_sale * inv.quantity) as total_sale_price,
-            sum((SELECT cost FROM sma_rawabi_product_price WHERE product_id = p.id LIMIT 1) * inv.quantity) as total_cost_price,
-            SUM(inv.real_unit_cost * inv.quantity) as purchase_price  
+            $stockQuery = " 
+            SELECT 
+                p.id,
+                SUM(inv.quantity) AS quantity,
+                SUM(inv.net_unit_sale * inv.quantity) AS total_sale_price,
+
+                SUM(
+                    COALESCE(rpp.cost, inv.net_unit_cost) * inv.quantity
+                ) AS total_cost_price,
+
+                SUM(inv.real_unit_cost * inv.quantity) AS purchase_price  
+
             FROM sma_inventory_movements inv 
-            INNER JOIN sma_products p on p.id=inv.product_id
-            WHERE 1=1";
+            INNER JOIN sma_products p 
+                ON p.id = inv.product_id
+
+            LEFT JOIN (
+                SELECT product_id, cost AS cost
+                FROM sma_rawabi_product_price
+                GROUP BY product_id
+            ) rpp 
+                ON rpp.product_id = p.id
+
+            WHERE 1=1
+            ";
         }else{
             $stockQuery = " SELECT p.id,
             

@@ -303,13 +303,7 @@
                                     <?php $totalPurchasePrice += $row->purchase_price; ?>
                                     <?php $grandTotalPurchasePrice += $row->purchase_price * $row->quantity; ?>
                                     <?php $totalCostPrice += $row->cost_price; ?>
-                                    <?php 
-                                        $total_cost_price = $row->total_cost_price > 0
-                                            ? $row->total_cost_price
-                                            : ($row->inventory_cost_price * $row->quantity);
-
-                                        $grandTotalCostPrice += $total_cost_price;
-                                    ?>
+                                    <?php $grandTotalCostPrice += $row->total_cost_price ?? ($row->inventory_cost_price * $row->quantity); ?>
                                 <?php endforeach; ?>
 
                                 <?php foreach ($stock_data as $index => $row): ?>
@@ -340,7 +334,7 @@
                                         
                                         <td><?= number_format($row->cost_price ?? $row->inventory_cost_price, 2, '.', ',') ?></td>
                                         
-                                        <td><?= number_format($row->total_cost_price, 2, '.', ',') ?></td>
+                                        <td><?= number_format($row->total_cost_price ?? ($row->inventory_cost_price * $row->quantity), 2, '.', ',') ?></td>
                                         
                                     </tr>
                                 <?php endforeach; ?>
@@ -371,7 +365,7 @@
                                 <th><?= '-' ?></th>
                                 <th><?= number_format($new_grand_total->purchase_price, 2, '.', ',') ?></th>
                                 <th><?= '-' ?></th>
-                                <th><?= number_format($new_grand_total->total_cost_price, 2, '.', ',') ?></th>
+                                <th><?= number_format($grandTotalCostPrice, 2, '.', ',') ?></th>
                             </tr>
                             </tfoot>
                         </table>
