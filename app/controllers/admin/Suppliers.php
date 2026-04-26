@@ -3182,7 +3182,9 @@ class Suppliers extends MY_Controller
                         $this->session->set_flashdata('error', 'Debit memo not found: ' . $memo_id);
                         admin_redirect('suppliers/payment_to_supplier_new');
                     }
-                    $available = $memo->payment_amount - ($memo->used_amount ?? 0);
+                    $vat_pct      = isset($memo->vat_percent) ? (float)$memo->vat_percent : 0;
+                    $gross_amount = $memo->payment_amount * (1 + $vat_pct / 100);
+                    $available    = $gross_amount - ($memo->used_amount ?? 0);
                     if ($applied > $available) {
                         $this->session->set_flashdata('error', 'Applied debit-memo amount exceeds available balance for memo ID: ' . $memo_id);
                         admin_redirect('suppliers/payment_to_supplier_new');

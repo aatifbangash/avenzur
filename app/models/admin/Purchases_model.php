@@ -1367,14 +1367,16 @@ class Purchases_model extends CI_Model
      */
     public function getDebitMemosBySupplierForPayment($supplier_id)
     {
-        $this->db->select('id, date, reference_no, payment_amount as amount,
+        $this->db->select('id, date, reference_no,
+            COALESCE(vat_percent, 0) as vat_percent,
+            (payment_amount * (1 + COALESCE(vat_percent, 0) / 100)) as amount,
             COALESCE(used_amount, 0) as used_amount,
-            (payment_amount - COALESCE(used_amount, 0)) as available_balance,
+            ((payment_amount * (1 + COALESCE(vat_percent, 0) / 100)) - COALESCE(used_amount, 0)) as available_balance,
             "memo" as type');
         $this->db->from('sma_memo');
         $this->db->where('supplier_id', $supplier_id);
         $this->db->where('type', 'memo');
-        $this->db->where('(payment_amount - COALESCE(used_amount, 0)) > 0', null, false);
+        $this->db->where('((payment_amount * (1 + COALESCE(vat_percent, 0) / 100)) - COALESCE(used_amount, 0)) > 0', null, false);
         $this->db->order_by('date', 'asc');
         $query = $this->db->get();
         return $query->result_array();
