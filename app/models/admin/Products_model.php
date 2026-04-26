@@ -1946,6 +1946,19 @@ class Products_model extends CI_Model
                 $this->db->join('sma_purchases pu', 'pu.id = im.reference_id AND im.type = "purchase"', 'left');
                 $this->db->where('pr.id', $item_id);
                 $this->db->where('im.location_id', $warehouse_id);
+
+                // exclude pending supplier returns
+                $this->db->where("
+                    NOT EXISTS (
+                        SELECT 1
+                        FROM sma_return_supplier_items rsi
+                        JOIN sma_returns_supplier rs 
+                            ON rs.id = rsi.return_id
+                        WHERE rs.status = 'pending'
+                        AND rsi.avz_item_code = im.avz_item_code
+                    )
+                ", null, false);
+
                 $this->db->group_by(['im.avz_item_code']);
                 $this->db->order_by('im.id', 'desc');
                 $query = $this->db->get();
