@@ -6486,7 +6486,7 @@ class Reports_model extends CI_Model
                 pi.sale_price AS public_price,
                 (pi.unit_cost * pi.quantity) AS purchase,
                 pi.item_tax AS vat,
-                (pi.subtotal + pi.item_tax + COALESCE((
+                (pi.totalbeforevat + pi.item_tax + COALESCE((
                     SELECT CASE WHEN poi.deal_discount >= 100 THEN COALESCE(pi.subtotal, 0)
                                 WHEN poi.deal_discount > 0    THEN poi.deal_discount / (100 - poi.deal_discount) * COALESCE(pi.subtotal, 0)
                                 ELSE 0 END
