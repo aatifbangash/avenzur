@@ -121,7 +121,7 @@ $(document).ready(function () {
         });
 
         loadSupplierInvoices(supplier_id);
-        loadSupplierDebitMemos(supplier_id);
+        // loadSupplierDebitMemos(supplier_id); // hidden
         loadSupplierServiceInvoices(supplier_id);
         loadSupplierCreditMemos(supplier_id);
     });
@@ -711,8 +711,8 @@ $(document).ready(function () {
                     </div>
                 </div>
 
-                <!-- Debit Memos Section -->
-                <div id="debitmemo-section" style="display:none; margin-top:15px;">
+                <!-- Debit Memos Section (hidden) -->
+                <div id="debitmemo-section" style="display:none !important;">
                     <div class="box box-warning">
                         <div class="box-header with-border">
                             <h3 class="box-title"><i class="fa fa-minus-circle"></i> Available Debit Memos</h3>
