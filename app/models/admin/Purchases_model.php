@@ -1376,10 +1376,41 @@ class Purchases_model extends CI_Model
         $this->db->from('sma_memo');
         $this->db->where('supplier_id', $supplier_id);
         $this->db->where('type', 'memo');
+        $this->db->where('(supplier_entry_type IS NULL OR supplier_entry_type != \'C\')', null, false);
         $this->db->where('((payment_amount * (1 + COALESCE(vat_percent, 0) / 100)) - COALESCE(used_amount, 0)) > 0', null, false);
         $this->db->order_by('date', 'asc');
         $query = $this->db->get();
         return $query->result_array();
+    }
+
+    /**
+     * Returns credit memos (type='memo', supplier_entry_type='C') for a supplier that still have outstanding balance.
+     * Used by payment_to_supplier_new — these are amounts payable TO the supplier.
+     */
+    public function getSupplierCreditMemosForPayment($supplier_id)
+    {
+        $this->db->select('id, date, reference_no, supplier_id,
+            payment_amount,
+            COALESCE(used_amount, 0) as used_amount');
+        $this->db->from('sma_memo');
+        $this->db->where('supplier_id', (int)$supplier_id);
+        $this->db->where('type', 'memo');
+        $this->db->where('supplier_entry_type', 'C');
+        $this->db->where('(payment_amount - COALESCE(used_amount, 0)) > 0', null, false);
+        $this->db->order_by('date', 'asc');
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            $memos = $q->result();
+            foreach ($memos as $memo) {
+                $used                    = (float)$memo->used_amount;
+                $memo->outstanding_amount = round($memo->payment_amount - $used, 5);
+                $memo->grand_total        = $memo->payment_amount;
+                $memo->total_paid         = $used;
+                $memo->type               = 'Credit Memo';
+            }
+            return $memos;
+        }
+        return [];
     }
 
     public function getSupplierServiceInvoicesForPayment($supplier_id)

@@ -3010,6 +3010,23 @@ class Suppliers extends MY_Controller
     }
 
     /**
+     * AJAX: Return credit memos payable to a supplier.
+     * GET param: supplier_id
+     */
+    public function get_supplier_credit_memos_for_payment()
+    {
+        $supplier_id = $this->input->get('supplier_id');
+        if (!$supplier_id) {
+            header('Content-Type: application/json');
+            echo json_encode([]);
+            return;
+        }
+        $memos = $this->purchases_model->getSupplierCreditMemosForPayment((int)$supplier_id);
+        header('Content-Type: application/json');
+        echo json_encode($memos);
+    }
+
+    /**
      * Journal entry for new-style supplier invoice payment.
      * Dr  Supplier Payable  = cash_payment + advance_amount
      * Dr  Bank Charges      = bank_charges  (if any)
@@ -3136,7 +3153,10 @@ class Suppliers extends MY_Controller
             // Service invoice selections
             $service_invoice_amounts = $this->input->post('service_invoice_amounts') ?: [];
 
-            if (empty($invoice_ids) && empty($service_invoice_amounts)) {
+            // Credit memo selections
+            $credit_memo_amounts = $this->input->post('credit_memo_amounts') ?: [];
+
+            if (empty($invoice_ids) && empty($service_invoice_amounts) && empty($credit_memo_amounts)) {
                 $this->session->set_flashdata('error', 'Please select at least one invoice to settle.');
                 admin_redirect('suppliers/payment_to_supplier_new');
             }
@@ -3223,6 +3243,30 @@ class Suppliers extends MY_Controller
                 }
             }
 
+            // Collect credit-memo details
+            $credit_memo_details        = [];
+            $total_credit_memo_payments = 0;
+            foreach ($credit_memo_amounts as $memo_id => $applied) {
+                $applied = (float)$applied;
+                if ($applied > 0) {
+                    $memo = $this->purchases_model->getDebitMemoData($memo_id);
+                    if (!$memo) {
+                        $this->session->set_flashdata('error', 'Credit memo not found: ' . $memo_id);
+                        admin_redirect('suppliers/payment_to_supplier_new');
+                    }
+                    $available = $memo->payment_amount - ($memo->used_amount ?? 0);
+                    if ($applied > $available) {
+                        $this->session->set_flashdata('error', 'Applied credit memo amount exceeds outstanding balance for credit memo ID: ' . $memo_id);
+                        admin_redirect('suppliers/payment_to_supplier_new');
+                    }
+                    $total_credit_memo_payments += $applied;
+                    $credit_memo_details[$memo_id] = [
+                        'used'   => $memo->used_amount ?? 0,
+                        'paying' => $applied,
+                    ];
+                }
+            }
+
             // Verify supplier exists
             $this->load->admin_model('companies_model');
             $supplier = $this->companies_model->getCompanyByID($supplier_id);
@@ -3233,7 +3277,7 @@ class Suppliers extends MY_Controller
 
             // Total sources must cover total invoice applied amounts
             $total_sources = $payment_amount + $advance_amount + $total_applied_debit_memos;
-            $total_invoices_to_settle = $total_payments_from_invoices + $total_service_inv_payments;
+            $total_invoices_to_settle = $total_payments_from_invoices + $total_service_inv_payments + $total_credit_memo_payments;
             if (round($total_invoices_to_settle, 2) > round($total_sources, 2)) {
                 $this->session->set_flashdata('error', 'Total payment sources (' . number_format($total_sources, 2) . ') are insufficient to cover the applied invoice amounts (' . number_format($total_invoices_to_settle, 2) . ').');
                 admin_redirect('suppliers/payment_to_supplier_new');
@@ -3274,6 +3318,13 @@ class Suppliers extends MY_Controller
             // Update service-invoice used amounts
             foreach ($service_invoice_details as $memo_id => $detail) {
                 $this->purchases_model->update_service_invoice_used_amount($memo_id, $detail['paying']);
+            }
+
+            // Update credit-memo used amounts
+            foreach ($credit_memo_details as $memo_id => $detail) {
+                $new_used = $detail['used'] + $detail['paying'];
+                $this->db->where('id', $memo_id);
+                $this->db->update('sma_memo', ['used_amount' => $new_used]);
             }
 
             // Create journal entry
