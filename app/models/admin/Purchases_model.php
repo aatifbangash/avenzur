@@ -1347,9 +1347,9 @@ class Purchases_model extends CI_Model
      */
     public function getPendingPurchaseInvoicesForPayment($supplier_id)
     {
-        $this->db->select('p.id, p.date, p.reference_no, p.grand_total, p.paid,
+        $this->db->select('p.id, p.date, p.reference_no, ((p.grand_total + COALESCE(p.grand_deal_discount, 0))) as grand_total, p.paid,
             COALESCE(SUM(pmt.amount), 0) as paid,
-            (p.grand_total - COALESCE(SUM(pmt.amount), 0)) as outstanding_amount, "purchase" as type');
+            (((p.grand_total + COALESCE(p.grand_deal_discount, 0))) - COALESCE(SUM(pmt.amount), 0)) as outstanding_amount, "purchase" as type');
         $this->db->from('purchases p');
         $this->db->join('payments pmt', 'pmt.purchase_id = p.id', 'left');
         $this->db->where('p.supplier_id', $supplier_id);
