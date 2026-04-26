@@ -56,6 +56,29 @@
     font-size: 12px !important;
     vertical-align: middle !important;
 }
+#creditmemo-table td, #creditmemo-table th {
+    padding: 3px 6px !important;
+    line-height: 1.1 !important;
+    vertical-align: middle !important;
+    font-size: 12px !important;
+}
+#creditmemo-table tbody tr {
+    height: 28px !important;
+}
+#creditmemo-table input[type="checkbox"] {
+    margin: 0 !important;
+    transform: scale(0.8);
+}
+#creditmemo-table thead th {
+    font-size: 11px !important;
+    font-weight: bold !important;
+    padding: 4px 6px !important;
+}
+#creditmemo-table tfoot td {
+    padding: 3px 6px !important;
+    font-size: 12px !important;
+    vertical-align: middle !important;
+}
 </style>
 <script>
 $(document).ready(function () {
@@ -100,6 +123,7 @@ $(document).ready(function () {
         loadSupplierInvoices(supplier_id);
         loadSupplierDebitMemos(supplier_id);
         loadSupplierServiceInvoices(supplier_id);
+        loadSupplierCreditMemos(supplier_id);
     });
 
     // ── Load invoices ────────────────────────────────────────────────
@@ -229,6 +253,63 @@ $(document).ready(function () {
         });
     }
 
+    // ── Load credit memos ─────────────────────────────────────────────────
+    function loadSupplierCreditMemos(supplier_id) {
+        $.ajax({
+            url: '<?= admin_url('suppliers/get_supplier_credit_memos_for_payment') ?>',
+            type: 'GET',
+            data: { supplier_id: supplier_id },
+            dataType: 'json',
+            success: function (memos) {
+                displayCreditMemos(memos);
+            },
+            error: function () {
+                $('#creditmemo-section').hide();
+            }
+        });
+    }
+
+    function displayCreditMemos(memos) {
+        var tbody = $('#creditmemo-table tbody');
+        tbody.empty();
+        $('#select-all-creditmemos').prop('checked', false);
+
+        var totalAmt = 0, totalPaid = 0, totalOut = 0;
+
+        if (memos.length > 0) {
+            $.each(memos, function (i, memo) {
+                var outstanding = parseFloat(memo.outstanding_amount);
+                totalAmt  += parseFloat(memo.grand_total);
+                totalPaid += parseFloat(memo.total_paid);
+                totalOut  += outstanding;
+
+                var row = '<tr>' +
+                    '<td><input type="checkbox" class="creditmemo-checkbox" name="creditmemo_ids_ui[]" value="' + memo.id + '" data-amount="' + outstanding + '"></td>' +
+                    '<td>' + memo.date + '</td>' +
+                    '<td>' + memo.reference_no + '</td>' +
+                    '<td>' + memo.type + '</td>' +
+                    '<td class="text-right">' + parseFloat(memo.grand_total).toFixed(5) + '</td>' +
+                    '<td class="text-right">' + parseFloat(memo.total_paid).toFixed(5) + '</td>' +
+                    '<td class="text-right">' + outstanding.toFixed(5) + '</td>' +
+                    '<td class="text-right">' +
+                        '<span id="cm-amount-display-' + memo.id + '">0.00000</span>' +
+                        '<input type="hidden" name="credit_memo_amounts[' + memo.id + ']" id="cm-amount-' + memo.id + '" value="0.00000">' +
+                    '</td>' +
+                    '</tr>';
+                tbody.append(row);
+            });
+            $('#creditmemo-section').show();
+        } else {
+            tbody.append('<tr><td colspan="8" class="text-center">No pending credit memos for this supplier</td></tr>');
+            $('#creditmemo-section').show();
+        }
+
+        $('#cm-total-amount').text(totalAmt.toFixed(5));
+        $('#cm-total-paid').text(totalPaid.toFixed(5));
+        $('#cm-total-outstanding').text(totalOut.toFixed(5));
+        $('#cm-total-payment').text('0.00000');
+    }
+
     function displayServiceInvoices(invoices) {
         var tbody = $('#serviceinvoice-table tbody');
         tbody.empty();
@@ -318,13 +399,29 @@ $(document).ready(function () {
         $('.serviceinvoice-checkbox').prop('checked', $(this).is(':checked')).trigger('change');
     });
 
+    // ── Credit memo checkbox ────────────────────────────────────────
+    $(document).on('change', '.creditmemo-checkbox', function () {
+        if (!$(this).is(':checked')) {
+            var cmId = $(this).val();
+            $('#cm-amount-' + cmId).val('0.00000');
+            $('#cm-amount-display-' + cmId).text('0.00000');
+        }
+        syncPaymentAmount();
+        recalculate();
+    });
+
+    // Select all credit memos
+    $(document).on('change', '#select-all-creditmemos', function () {
+        $('.creditmemo-checkbox').prop('checked', $(this).is(':checked')).trigger('change');
+    });
+
     // ── Sync payment_amount to cover all checked invoices ────────────
     // Called whenever any invoice / service-invoice / debit-memo checkbox changes.
     // Sets payment_amount = total checked outstanding − debit-memo coverage,
     // so the greedy distribution in recalculate() always has budget to work with.
     function syncPaymentAmount() {
         var totalChecked = 0;
-        $('.invoice-checkbox:checked, .serviceinvoice-checkbox:checked').each(function () {
+        $('.invoice-checkbox:checked, .serviceinvoice-checkbox:checked, .creditmemo-checkbox:checked').each(function () {
             totalChecked += parseFloat($(this).data('amount')) || 0;
         });
         var totalDMCoverage = 0;
@@ -382,11 +479,13 @@ $(document).ready(function () {
         var budgetLeft      = totalSources;
         var totalInvApplied = 0;
         var totalSIPayment  = 0;
+        var totalCMPayment  = 0;
 
-        // Greedy distribution: fill each checked invoice (regular + service) up to its outstanding; stop when budget exhausted
-        $('.invoice-checkbox, .serviceinvoice-checkbox').each(function () {
+        // Greedy distribution: fill each checked invoice (regular + service + credit memo) up to its outstanding; stop when budget exhausted
+        $('.invoice-checkbox, .serviceinvoice-checkbox, .creditmemo-checkbox').each(function () {
             var id           = $(this).val();
             var isServiceInv = $(this).hasClass('serviceinvoice-checkbox');
+            var isCreditMemo = $(this).hasClass('creditmemo-checkbox');
             var outstanding  = parseFloat($(this).data('amount')) || 0;
             if ($(this).is(':checked')) {
                 var apply = Math.min(outstanding, budgetLeft);
@@ -396,6 +495,10 @@ $(document).ready(function () {
                     totalSIPayment += apply;
                     $('#si-amount-' + id).val(apply.toFixed(5));
                     $('#si-amount-display-' + id).text(apply.toFixed(5));
+                } else if (isCreditMemo) {
+                    totalCMPayment += apply;
+                    $('#cm-amount-' + id).val(apply.toFixed(5));
+                    $('#cm-amount-display-' + id).text(apply.toFixed(5));
                 } else {
                     $('#inv-amount-' + id).val(apply.toFixed(5));
                     $('#inv-amount-display-' + id).text(apply.toFixed(5));
@@ -404,6 +507,9 @@ $(document).ready(function () {
                 if (isServiceInv) {
                     $('#si-amount-' + id).val('0.00000');
                     $('#si-amount-display-' + id).text('0.00000');
+                } else if (isCreditMemo) {
+                    $('#cm-amount-' + id).val('0.00000');
+                    $('#cm-amount-display-' + id).text('0.00000');
                 } else {
                     $('#inv-amount-' + id).val('0.00000');
                     $('#inv-amount-display-' + id).text('0.00000');
@@ -411,6 +517,7 @@ $(document).ready(function () {
             }
         });
         $('#si-total-payment').text(totalSIPayment.toFixed(5));
+        $('#cm-total-payment').text(totalCMPayment.toFixed(5));
 
         // diff < 0: excess cash (sources > invoices applied) — orange
         // diff > 0: impossible with greedy fill, but guard anyway
@@ -438,12 +545,15 @@ $(document).ready(function () {
         $('#invoices-table tbody').empty();
         $('#debitmemo-table tbody').empty();
         $('#serviceinvoice-table tbody').empty();
+        $('#creditmemo-table tbody').empty();
         $('#invoices-section').hide();
         $('#debitmemo-section').hide();
         $('#serviceinvoice-section').hide();
+        $('#creditmemo-section').hide();
         $('#inv-total-grand, #inv-total-paid, #inv-total-outstanding').text('0.00000');
         $('#dm-total-amount, #dm-total-used, #dm-total-available, #dm-total-applied').text('0.00000');
         $('#si-total-amount, #si-total-paid, #si-total-outstanding, #si-total-payment').text('0.00000');
+        $('#cm-total-amount, #cm-total-paid, #cm-total-outstanding, #cm-total-payment').text('0.00000');
         $('#summary-inv-applied, #summary-cash, #summary-dm-applied, #summary-advance, #summary-remaining').text('0.00000');
         $('#payment_amount').val('0.00000');
         $('#use-advance').prop('checked', false);
@@ -457,6 +567,7 @@ $(document).ready(function () {
     $('#supplier-info').hide();
     $('#invoices-section').hide();
     $('#debitmemo-section').hide();
+    $('#creditmemo-section').hide();
     $('#submit-btn').prop('disabled', true);
 });
 </script>
@@ -664,6 +775,43 @@ $(document).ready(function () {
                                             <td class="text-right" id="si-total-paid">0.00</td>
                                             <td class="text-right" id="si-total-outstanding">0.00</td>
                                             <td class="text-right" id="si-total-payment">0.00</td>
+                                        </tr>
+                                    </tfoot>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Credit Memos Section -->
+                <div id="creditmemo-section" style="display:none; margin-top:15px;">
+                    <div class="box box-danger">
+                        <div class="box-header with-border">
+                            <h3 class="box-title"><i class="fa fa-file-o"></i> Pending Credit Memos</h3>
+                        </div>
+                        <div class="box-body">
+                            <div class="table-responsive">
+                                <table id="creditmemo-table" class="table table-striped table-bordered table-hover">
+                                    <thead style="background:#f8d7da;">
+                                        <tr>
+                                            <th width="4%"><input type="checkbox" id="select-all-creditmemos"></th>
+                                            <th>Date</th>
+                                            <th>Reference No</th>
+                                            <th>Type</th>
+                                            <th class="text-right">Total Amount</th>
+                                            <th class="text-right">Paid Amount</th>
+                                            <th class="text-right">Outstanding</th>
+                                            <th class="text-right">Apply Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tfoot style="background:#f5c6cb; font-weight:bold;">
+                                        <tr>
+                                            <td colspan="4"><strong>Totals</strong></td>
+                                            <td class="text-right" id="cm-total-amount">0.00</td>
+                                            <td class="text-right" id="cm-total-paid">0.00</td>
+                                            <td class="text-right" id="cm-total-outstanding">0.00</td>
+                                            <td class="text-right" id="cm-total-payment">0.00</td>
                                         </tr>
                                     </tfoot>
                                     <tbody></tbody>
