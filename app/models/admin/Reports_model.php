@@ -6474,8 +6474,8 @@ class Reports_model extends CI_Model
                     LIMIT 1
                 ), 0) AS deal_discount_percent,
                 COALESCE((
-                    SELECT CASE WHEN poi.deal_discount >= 100 THEN COALESCE(pi.subtotal, 0)
-                                WHEN poi.deal_discount > 0    THEN poi.deal_discount / (100 - poi.deal_discount) * COALESCE(pi.subtotal, 0)
+                    SELECT CASE WHEN poi.deal_discount >= 100 THEN COALESCE(pi.totalbeforevat, 0)
+                                WHEN poi.deal_discount > 0    THEN poi.deal_discount / (100 - poi.deal_discount) * COALESCE(pi.totalbeforevat, 0)
                                 ELSE 0 END
                     FROM {$this->db->dbprefix('purchase_order_items')} poi
                     JOIN {$this->db->dbprefix('purchase_orders')} po ON po.id = poi.purchase_id
@@ -6487,8 +6487,8 @@ class Reports_model extends CI_Model
                 (pi.unit_cost * pi.quantity) AS purchase,
                 pi.item_tax AS vat,
                 (pi.totalbeforevat + pi.item_tax + COALESCE((
-                    SELECT CASE WHEN poi.deal_discount >= 100 THEN COALESCE(pi.subtotal, 0)
-                                WHEN poi.deal_discount > 0    THEN poi.deal_discount / (100 - poi.deal_discount) * COALESCE(pi.subtotal, 0)
+                    SELECT CASE WHEN poi.deal_discount >= 100 THEN COALESCE(pi.totalbeforevat, 0)
+                                WHEN poi.deal_discount > 0    THEN poi.deal_discount / (100 - poi.deal_discount) * COALESCE(pi.totalbeforevat, 0)
                                 ELSE 0 END
                     FROM {$this->db->dbprefix('purchase_order_items')} poi
                     JOIN {$this->db->dbprefix('purchase_orders')} po ON po.id = poi.purchase_id
