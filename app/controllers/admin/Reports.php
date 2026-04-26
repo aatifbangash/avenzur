@@ -618,8 +618,10 @@ class Reports extends MY_Controller
                 $this->excel->getActiveSheet()->SetCellValue('J' . $row, ($data_row->sale_price * $data_row->quantity));
                 $this->excel->getActiveSheet()->SetCellValue('K' . $row, ($data_row->purchase_price));
                 $this->excel->getActiveSheet()->SetCellValue('L' . $row, ($data_row->purchase_price * $data_row->quantity));
-                $this->excel->getActiveSheet()->SetCellValue('M' . $row, ($data_row->cost_price));
-                $this->excel->getActiveSheet()->SetCellValue('N' . $row, ($data_row->cost_price * $data_row->quantity));
+                $excel_cost_price  = $data_row->cost_price  ?: ($data_row->inventory_cost_price ?? 0);
+                $excel_total_cost  = $data_row->total_cost_price ?: ($excel_cost_price * $data_row->quantity);
+                $this->excel->getActiveSheet()->SetCellValue('M' . $row, $excel_cost_price);
+                $this->excel->getActiveSheet()->SetCellValue('N' . $row, $excel_total_cost);
                 
                 $total_quantity += $data_row->quantity;
                 $row++;
