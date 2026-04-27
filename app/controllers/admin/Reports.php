@@ -9058,16 +9058,6 @@ class Reports extends MY_Controller
             WHERE DATE(m.date) BETWEEN '{$sql_start}' AND '{$sql_end}'
               AND m.type IN ('serviceinvoice','pettycash','creditmemo','debitmemo','memo')
               AND (m.customer_id > 0 OR m.supplier_id > 0)
-              AND (
-                  CASE
-                      WHEN m.type IN ('serviceinvoice','pettycash')
-                          THEN IFNULL(m.vat_value, 0)
-                      ELSE
-                          ROUND(m.payment_amount
-                              * CAST(IFNULL(m.vat_percent,'0') AS DECIMAL(15,4))
-                              / (100 + CAST(IFNULL(m.vat_percent,'0') AS DECIMAL(15,4))), 4)
-                  END
-              ) > 0
             ORDER BY m.date ASC, m.id ASC
         ";
         $memo_q = $this->db->query($memo_sql);
@@ -9076,6 +9066,10 @@ class Reports extends MY_Controller
                 // Sign: credit on customer side or debit on supplier side = reduction (negative amounts)
                 $is_reduction = ($row->party_side === 'customer' && $row->entry_type === 'C')
                              || ($row->party_side === 'supplier' && $row->entry_type === 'D');
+                // Petty cash is always a real outgoing expense — never a reduction
+                if ($row->trans_type === 'pettycash') {
+                    $is_reduction = false;
+                }
                 $sign = $is_reduction ? -1 : 1;
 
                 $raw_vat   = (float)$row->raw_vat;
@@ -9154,6 +9148,29 @@ class Reports extends MY_Controller
                 'memo'           => 'Memo',
             ];
 
+            $get_memo_label = function ($r) use ($type_labels) {
+                $memoTypes = ['serviceinvoice', 'pettycash', 'creditmemo', 'debitmemo', 'memo'];
+                if (!in_array($r->trans_type, $memoTypes)) {
+                    return $type_labels[$r->trans_type] ?? $r->trans_type;
+                }
+                $side   = $r->party_side ?? '';
+                $entry  = $r->entry_type ?? '';
+                $prefix = ($side === 'supplier') ? 'Supplier' : (($side === 'customer') ? 'Customer' : '');
+                $p      = $prefix ? "{$prefix} " : '';
+                switch ($r->trans_type) {
+                    case 'serviceinvoice': return "{$p}Service Invoice";
+                    case 'pettycash':      return "{$p}Petty Cash";
+                    case 'creditmemo':     return "{$p}Credit Memo";
+                    case 'debitmemo':      return "{$p}Debit Memo";
+                    case 'memo':
+                        if ($entry === 'C') return "{$p}Credit Memo";
+                        if ($entry === 'D') return "{$p}Debit Memo";
+                        return "{$p}Memo";
+                    default:
+                        return $type_labels[$r->trans_type] ?? $r->trans_type;
+                }
+            };
+
             $all_rows = [];
             foreach ($sales_rows    as $r) { $all_rows[] = $r; }
             foreach ($purchase_rows as $r) { $all_rows[] = $r; }
@@ -9166,7 +9183,7 @@ class Reports extends MY_Controller
                 $sheet->SetCellValue("A{$row}", $i + 1);
                 $sheet->SetCellValue("B{$row}", date('d-M-Y', strtotime($r->trans_date)));
                 $sheet->SetCellValue("C{$row}", $r->reference_no);
-                $sheet->SetCellValue("D{$row}", $type_labels[$r->trans_type] ?? $r->trans_type);
+                $sheet->SetCellValue("D{$row}", $get_memo_label($r));
                 $sheet->SetCellValue("E{$row}", $r->party_name);
                 $sheet->SetCellValue("F{$row}", $r->party_vat_no);
                 $sheet->SetCellValue("G{$row}", $r->warehouse);
