@@ -243,6 +243,30 @@
             'memo'            => 'default',
         ];
 
+        // Returns an enriched label for memo rows showing Supplier/Customer + Credit/Debit direction.
+        $get_memo_label = function ($r) use ($type_labels) {
+            $memoTypes = ['serviceinvoice', 'pettycash', 'creditmemo', 'debitmemo', 'memo'];
+            if (!in_array($r->trans_type, $memoTypes)) {
+                return $type_labels[$r->trans_type] ?? $r->trans_type;
+            }
+            $side   = $r->party_side ?? '';
+            $entry  = $r->entry_type ?? '';
+            $prefix = ($side === 'supplier') ? 'Supplier' : (($side === 'customer') ? 'Customer' : '');
+            $p      = $prefix ? "{$prefix} " : '';
+            switch ($r->trans_type) {
+                case 'serviceinvoice': return "{$p}Service Invoice";
+                case 'pettycash':      return "{$p}Petty Cash";
+                case 'creditmemo':     return "{$p}Credit Memo";
+                case 'debitmemo':      return "{$p}Debit Memo";
+                case 'memo':
+                    if ($entry === 'C') return "{$p}Credit Memo";
+                    if ($entry === 'D') return "{$p}Debit Memo";
+                    return "{$p}Memo";
+                default:
+                    return $type_labels[$r->trans_type] ?? $r->trans_type;
+            }
+        };
+
         $has_sales     = !empty($sales_rows);
         $has_purchases = !empty($purchase_rows);
         ?>
@@ -266,7 +290,7 @@
                     <td><?= $idx ?></td>
                     <td><?= date('d-M-Y', strtotime($r->trans_date)) ?></td>
                     <td><?= htmlspecialchars($r->reference_no) ?></td>
-                    <td><?= $type_labels[$r->trans_type] ?? $r->trans_type ?></td>
+                    <td><?= $get_memo_label($r) ?></td>
                     <td><?= htmlspecialchars($r->party_name ?? '') ?></td>
                     <td><?= htmlspecialchars($r->party_vat_no ?? '') ?></td>
                     <td><?= htmlspecialchars($r->warehouse ?? '') ?></td>
@@ -282,7 +306,7 @@
                     <td><?= $idx ?></td>
                     <td><?= date('d-M-Y', strtotime($r->trans_date)) ?></td>
                     <td><?= htmlspecialchars($r->reference_no) ?></td>
-                    <td><?= $type_labels[$r->trans_type] ?? $r->trans_type ?></td>
+                    <td><?= $get_memo_label($r) ?></td>
                     <td><?= htmlspecialchars($r->party_name ?? '') ?></td>
                     <td><?= htmlspecialchars($r->party_vat_no ?? '') ?></td>
                     <td><?= htmlspecialchars($r->warehouse ?? '') ?></td>
@@ -338,8 +362,16 @@
                         $s_sub_vat   += $vat;
                         $s_sub_gross += $gross;
                         $rclass  = $type_row_class[$r->trans_type] ?? '';
+                        if ($r->trans_type === 'memo') {
+                            if (($r->entry_type ?? '') === 'C') $rclass = 'row-memo-credit';
+                            elseif (($r->entry_type ?? '') === 'D') $rclass = 'row-memo-debit';
+                        }
                         $badge   = $type_badge[$r->trans_type] ?? 'default';
-                        $tlabel  = $type_labels[$r->trans_type] ?? $r->trans_type;
+                        if ($r->trans_type === 'memo') {
+                            if (($r->entry_type ?? '') === 'C') $badge = 'danger';
+                            elseif (($r->entry_type ?? '') === 'D') $badge = 'warning';
+                        }
+                        $tlabel  = $get_memo_label($r);
                 ?>
                     <tr class="<?= $rclass ?>">
                         <td><?= $i ?></td>
@@ -347,9 +379,6 @@
                         <td><?= htmlspecialchars($r->reference_no ?? '') ?></td>
                         <td>
                             <span class="label label-<?= $badge ?>"><?= $tlabel ?></span>
-                            <?php if (!empty($r->entry_type ?? '')): ?>
-                                <span class="label label-<?= ($r->entry_type === 'D') ? 'info' : 'warning' ?>" style="font-size:10px; margin-left:3px;"><?= htmlspecialchars($r->entry_type) ?></span>
-                            <?php endif; ?>
                         </td>
                         <td><?= htmlspecialchars($r->party_name ?? '') ?></td>
                         <td style="font-size:11px;"><?= htmlspecialchars($r->party_vat_no ?? '') ?></td>
@@ -420,8 +449,16 @@
                         $p_sub_vat   += $vat;
                         $p_sub_gross += $gross;
                         $rclass  = $type_row_class[$r->trans_type] ?? '';
+                        if ($r->trans_type === 'memo') {
+                            if (($r->entry_type ?? '') === 'C') $rclass = 'row-memo-credit';
+                            elseif (($r->entry_type ?? '') === 'D') $rclass = 'row-memo-debit';
+                        }
                         $badge   = $type_badge[$r->trans_type] ?? 'default';
-                        $tlabel  = $type_labels[$r->trans_type] ?? $r->trans_type;
+                        if ($r->trans_type === 'memo') {
+                            if (($r->entry_type ?? '') === 'C') $badge = 'danger';
+                            elseif (($r->entry_type ?? '') === 'D') $badge = 'warning';
+                        }
+                        $tlabel  = $get_memo_label($r);
                 ?>
                     <tr class="<?= $rclass ?>">
                         <td><?= $j ?></td>
@@ -429,9 +466,6 @@
                         <td><?= htmlspecialchars($r->reference_no ?? '') ?></td>
                         <td>
                             <span class="label label-<?= $badge ?>"><?= $tlabel ?></span>
-                            <?php if (!empty($r->entry_type ?? '')): ?>
-                                <span class="label label-<?= ($r->entry_type === 'D') ? 'info' : 'warning' ?>" style="font-size:10px; margin-left:3px;"><?= htmlspecialchars($r->entry_type) ?></span>
-                            <?php endif; ?>
                         </td>
                         <td><?= htmlspecialchars($r->party_name ?? '') ?></td>
                         <td style="font-size:11px;"><?= htmlspecialchars($r->party_vat_no ?? '') ?></td>
@@ -491,12 +525,12 @@
             <span style="background:#fdecea; padding:2px 8px; border-radius:3px; margin-right:6px; border:1px solid #fcc"></span> Sales Return &nbsp;
             <span style="background:#fffbe6; padding:2px 8px; border-radius:3px; margin-right:6px; border:1px solid #eca"></span> Purchase Invoice &nbsp;
             <span style="background:#fde8f0; padding:2px 8px; border-radius:3px; margin-right:6px; border:1px solid #ecb"></span> Purchase Return &nbsp;
-            <span style="background:#eafaf1; padding:2px 8px; border-radius:3px; margin-right:6px; border:1px solid #9fc"></span> Service Invoice &nbsp;
-            <span style="background:#f5eaff; padding:2px 8px; border-radius:3px; margin-right:6px; border:1px solid #d9b"></span> Petty Cash &nbsp;
-            <span style="background:#ffe8e8; padding:2px 8px; border-radius:3px; margin-right:6px; border:1px solid #faa"></span> Credit Memo &nbsp;
-            <span style="background:#e8eeff; padding:2px 8px; border-radius:3px; margin-right:6px; border:1px solid #aaf"></span> Debit Memo &nbsp;
-            <span style="background:#f5f5f5; padding:2px 8px; border-radius:3px; margin-right:6px; border:1px solid #ccc"></span> Memo
-            &nbsp;&nbsp;<em>D/C badge = Debit/Credit entry direction</em>
+            <span style="background:#eafaf1; padding:2px 8px; border-radius:3px; margin-right:6px; border:1px solid #9fc"></span> Supplier/Customer Service Invoice &nbsp;
+            <span style="background:#f5eaff; padding:2px 8px; border-radius:3px; margin-right:6px; border:1px solid #d9b"></span> Supplier/Customer Petty Cash &nbsp;
+            <span style="background:#ffe8e8; padding:2px 8px; border-radius:3px; margin-right:6px; border:1px solid #faa"></span> Supplier/Customer Credit Memo &nbsp;
+            <span style="background:#e8eeff; padding:2px 8px; border-radius:3px; margin-right:6px; border:1px solid #aaf"></span> Supplier/Customer Debit Memo &nbsp;
+            <span style="background:#f5f5f5; padding:2px 8px; border-radius:3px; margin-right:6px; border:1px solid #ccc"></span> Supplier/Customer Memo
+            &nbsp;&nbsp;<em>Type labels include party side and direction (e.g. "Supplier Credit Memo", "Customer Debit Memo")</em>
         </div>
 
     </div><!-- /.box-content -->
