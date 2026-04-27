@@ -169,7 +169,7 @@
                             <td><?=  $this->functionscore->dateFromSql($entry['date']) ?></td>
                             <td><?= $entry['number'] ?></td>
                             <td><?= ($this->functionscore->entryLedgers($entry['id'])) ?></td>
-                            <td><?= ($entryTypeName) ?></td>
+                            <td><?= ($entry['transaction_type']) ?></td>
                             <td><?= $this->functionscore->showTag($entry['tag_id']) ?></td>
                             <td><?= $this->functionscore->toCurrency('D', $entry['dr_total']) ?></td>
                             <td><?= $this->functionscore->toCurrency('C', $entry['cr_total']) ?></td>
