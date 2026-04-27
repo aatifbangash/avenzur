@@ -9066,8 +9066,8 @@ class Reports extends MY_Controller
                 // Sign: credit on customer side or debit on supplier side = reduction (negative amounts)
                 $is_reduction = ($row->party_side === 'customer' && $row->entry_type === 'C')
                              || ($row->party_side === 'supplier' && $row->entry_type === 'D');
-                // Petty cash is always a real outgoing expense — never a reduction
-                if ($row->trans_type === 'pettycash') {
+                // Petty cash and service invoices are always real outgoing expenses/income — never reductions
+                if (in_array($row->trans_type, ['pettycash', 'serviceinvoice'])) {
                     $is_reduction = false;
                 }
                 $sign = $is_reduction ? -1 : 1;
