@@ -6732,6 +6732,7 @@ class Reports_model extends CI_Model
 
         // Exclude returns with note "import from excel"
         $this->db->where('(rs.note IS NULL OR rs.note != "import from excel")');
+        $this->db->where('rs.status', 'completed'); // Only include completed returns
 
         // Apply filters
         if (!empty($supplier_id)) {
