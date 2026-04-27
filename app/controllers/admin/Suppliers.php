@@ -3299,6 +3299,7 @@ class Suppliers extends MY_Controller
                 $this->purchases_model->addPayment([
                     'date'         => $date,
                     'purchase_id'  => $purchase_id,
+                    'supplier_id'  => $supplier_id,
                     'reference_no' => $reference_no,
                     'amount'       => $detail['total_paying'],
                     'note'         => $note,
@@ -3307,6 +3308,36 @@ class Suppliers extends MY_Controller
                     'payment_id'   => $payment_id,
                 ]);
                 $this->purchases_model->update_purchase_paid_amount($purchase_id, $detail['total_paying']);
+            }
+
+            // Record payment per service invoice
+            foreach ($service_invoice_details as $memo_id => $detail) {
+                $this->purchases_model->addPayment([
+                    'date'         => $date,
+                    'memo_id'      => $memo_id,
+                    'supplier_id'  => $supplier_id,
+                    'reference_no' => $reference_no,
+                    'amount'       => $detail['paying'],
+                    'note'         => 'Service Invoice #' . $memo_id . ($note ? ' - ' . $note : ''),
+                    'created_by'   => $this->session->userdata('user_id'),
+                    'type'         => 'sent',
+                    'payment_id'   => $payment_id,
+                ]);
+            }
+
+            // Record payment per credit memo
+            foreach ($credit_memo_details as $memo_id => $detail) {
+                $this->purchases_model->addPayment([
+                    'date'         => $date,
+                    'memo_id'      => $memo_id,
+                    'supplier_id'  => $supplier_id,
+                    'reference_no' => $reference_no,
+                    'amount'       => $detail['paying'],
+                    'note'         => 'Credit Memo #' . $memo_id . ($note ? ' - ' . $note : ''),
+                    'created_by'   => $this->session->userdata('user_id'),
+                    'type'         => 'sent',
+                    'payment_id'   => $payment_id,
+                ]);
             }
 
             // Update debit-memo used amounts
