@@ -109,8 +109,6 @@
                         <div class="col-md-2">
                             <div class="form-group">
                                 <?= lang('Product', 'product'); ?>
-                                <?php // echo form_dropdown('product', $allProducts, set_value('product',$product),array('class' => 'form-control', 'id'=>'product'));
-                                ?>
                                 <?php echo form_input('sgproduct', (isset($_GET['sgproduct']) ? $_GET['sgproduct'] : (isset($sgproduct) ? $sgproduct : '')), 'class="form-control" id="suggest_product2" data-bv-notempty="true"'); ?>
                                 <input type="hidden" name="product" value="<?= isset($_POST['product']) ? $_POST['product'] : 0 ?>" id="report_product_id2" />
                             </div>
@@ -119,9 +117,20 @@
                 </div>
                 <div class="row">
                     <div class="col-lg-12">
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <div class="form-group">
-                                <button type="submit" style="margin-top: 0px;" class="btn btn-primary" id="load_report"><?= lang('Load Report') ?></button>
+                                <?= lang('Type', 'record_type'); ?>
+                                <select name="record_type" id="record_type" class="form-control">
+                                    <option value="all"    <?= (($record_type ?? 'all') === 'all')     ? 'selected' : '' ?>>All</option>
+                                    <option value="purchase" <?= (($record_type ?? '') === 'purchase') ? 'selected' : '' ?>>Purchases Only</option>
+                                    <option value="return"   <?= (($record_type ?? '') === 'return')   ? 'selected' : '' ?>>Returns Only</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label>&nbsp;</label><br>
+                                <button type="submit" class="btn btn-primary" id="load_report"><?= lang('Load Report') ?></button>
                             </div>
                         </div>
                     </div>
@@ -148,13 +157,14 @@
                                         <th><?= lang('Item Name'); ?></th>
                                         <th><?= lang('Public Price'); ?></th>
                                         <th><?= lang('QTY'); ?></th>
+                                        <th><?= lang('Purchase'); ?></th>
                                         <th><?= lang('Bonus'); ?></th>
                                         <th><?= lang('Discount %'); ?></th>
                                         <th><?= lang('Total Discount'); ?></th>
                                         <th><?= lang('Deal Disc %'); ?></th>
                                         <th><?= lang('Deal Disc Value'); ?></th>
                                         <th><?= lang('Unit Cost'); ?></th>
-                                        <th><?= lang('Purchase'); ?></th>
+                                        <th><?= lang('Net Purchase'); ?></th>
                                         <th><?= lang('Vat'); ?></th>
                                         <th><?= lang('Payable'); ?></th>
                                     </tr>
@@ -165,10 +175,11 @@
                                         $count = 0;
                                         $grand_totals = [
                                             'qty'                  => 0,
+                                            'purchase'             => 0,
                                             'bonus'                => 0,
                                             'total_discount_value' => 0,
                                             'deal_discount_value'  => 0,
-                                            'purchase'             => 0,
+                                            'net_purchase'         => 0,
                                             'vat'                  => 0,
                                             'payable'              => 0,
                                         ];
@@ -176,10 +187,11 @@
                                         foreach ($purchase_data as $data) {
                                             $count++;
                                             $grand_totals['qty']                  += $data->qty;
+                                            $grand_totals['purchase']             += $data->purchase;
                                             $grand_totals['bonus']                += $data->bonus;
                                             $grand_totals['total_discount_value'] += $data->total_discount_value;
                                             $grand_totals['deal_discount_value']  += $data->deal_discount_value;
-                                            $grand_totals['purchase']             += $data->purchase;
+                                            $grand_totals['net_purchase']         += $data->net_purchase;
                                             $grand_totals['vat']                  += $data->vat;
                                             $grand_totals['payable']              += $data->payable;
 
@@ -198,13 +210,14 @@
                                                 <td><?= $data->item_name ?></td>
                                                 <td class="text-right"><?= number_format($data->public_price, 2) ?></td>
                                                 <td class="text-right"><?= $this->sma->formatQuantity($data->qty) ?></td>
+                                                <td class="text-right"><?= number_format($data->purchase, 2) ?></td>
                                                 <td class="text-right"><?= $data->bonus ?></td>
                                                 <td class="text-right"><?= isset($data->discount_percent) ? number_format($data->discount_percent, 2) . '%' : '0.00%' ?></td>
                                                 <td class="text-right"><?= number_format($data->total_discount_value, 2) ?></td>
                                                 <td class="text-right"><?= number_format($data->deal_discount_percent, 2) ?>%</td>
                                                 <td class="text-right"><?= number_format($data->deal_discount_value, 2) ?></td>
                                                 <td class="text-right"><?= number_format($data->unit_cost, 2) ?></td>
-                                                <td class="text-right"><?= number_format($data->purchase, 2) ?></td>
+                                                <td class="text-right"><?= number_format($data->net_purchase, 2) ?></td>
                                                 <td class="text-right"><?= number_format($data->vat, 2) ?></td>
                                                 <td class="text-right"><?= number_format($data->payable, 2) ?></td>
                                             </tr>
@@ -214,13 +227,14 @@
                                         <tr style="font-weight:bold; background-color:#f5f5f5;">
                                             <td colspan="11" class="text-right"><?= lang('Total') ?></td>
                                             <td class="text-right"><?= $this->sma->formatQuantity($grand_totals['qty']) ?></td>
+                                            <td class="text-right"><?= number_format($grand_totals['purchase'], 2) ?></td>
                                             <td class="text-right"><?= $this->sma->formatQuantity($grand_totals['bonus']) ?></td>
                                             <td></td>
                                             <td class="text-right"><?= number_format($grand_totals['total_discount_value'], 2) ?></td>
                                             <td></td>
                                             <td class="text-right"><?= number_format($grand_totals['deal_discount_value'], 2) ?></td>
                                             <td></td>
-                                            <td class="text-right"><?= number_format($grand_totals['purchase'], 2) ?></td>
+                                            <td class="text-right"><?= number_format($grand_totals['net_purchase'], 2) ?></td>
                                             <td class="text-right"><?= number_format($grand_totals['vat'], 2) ?></td>
                                             <td class="text-right"><?= number_format($grand_totals['payable'], 2) ?></td>
                                         </tr>
@@ -228,7 +242,7 @@
                                     } else {
                                         ?>
                                         <tr>
-                                            <td colspan="21" class="text-center"><?= lang('No records found. Please select filters and click Load Report.'); ?></td>
+                                            <td colspan="22" class="text-center"><?= lang('No records found. Please select filters and click Load Report.'); ?></td>
                                         </tr>
                                     <?php
                                     }

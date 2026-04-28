@@ -6417,7 +6417,7 @@ class Reports_model extends CI_Model
      * @param string $item_code - Item code to filter
      * @return array - Purchase per item data
      */
-    public function getPurchasePerItem($start_date, $end_date, $purchase_ref, $supplier_id, $item_code)
+    public function getPurchasePerItem($start_date, $end_date, $purchase_ref, $supplier_id, $item_code, $record_type = 'all')
     {
         // Build WHERE clauses conditionally for purchases
         $where_clauses = [];
@@ -6485,6 +6485,7 @@ class Reports_model extends CI_Model
                 COALESCE((SELECT SUM(quantity) FROM {$this->db->dbprefix('inventory_movements')} WHERE product_id = prod.id), 0) AS current_stock,
                 pi.sale_price AS public_price,
                 (pi.unit_cost * pi.quantity) AS purchase,
+                pi.totalbeforevat AS net_purchase,
                 pi.item_tax AS vat,
                 (pi.totalbeforevat + pi.item_tax + COALESCE((
                     SELECT CASE WHEN poi.deal_discount >= 100 THEN COALESCE(pi.totalbeforevat, 0)
@@ -6553,6 +6554,7 @@ class Reports_model extends CI_Model
                 COALESCE((SELECT SUM(quantity) FROM {$this->db->dbprefix('inventory_movements')} WHERE product_id = prod.id), 0) AS current_stock,
                 pri.net_unit_price AS public_price,
                 -pri.totalbeforevat AS purchase,
+                -pri.totalbeforevat AS net_purchase,
                 -pri.item_tax AS vat,
                 -(pri.totalbeforevat + pri.item_tax) AS payable,
                 0 AS payment
@@ -6565,13 +6567,15 @@ class Reports_model extends CI_Model
             {$return_where_sql}
         ";
         
-        // Combine both queries
-        $sql = "
-            {$purchase_sql}
-            UNION ALL
-            {$return_sql}
-            ORDER BY date DESC, purchase_ref
-        ";
+        // Combine both queries (wrap in subquery to allow type filter)
+        $union_sql = "({$purchase_sql}) UNION ALL ({$return_sql})";
+        if ($record_type === 'purchase') {
+            $sql = "SELECT * FROM ({$union_sql}) AS combined WHERE type = 'Purchase' ORDER BY date DESC, purchase_ref";
+        } elseif ($record_type === 'return') {
+            $sql = "SELECT * FROM ({$union_sql}) AS combined WHERE type = 'Return' ORDER BY date DESC, purchase_ref";
+        } else {
+            $sql = "SELECT * FROM ({$union_sql}) AS combined ORDER BY date DESC, purchase_ref";
+        }
         
         $query = $this->db->query($sql);
         
