@@ -146,6 +146,7 @@
                                         <th><?= lang('Supplier Name'); ?></th>
                                         <th><?= lang('Item No'); ?></th>
                                         <th><?= lang('Item Name'); ?></th>
+                                        <th><?= lang('Public Price'); ?></th>
                                         <th><?= lang('QTY'); ?></th>
                                         <th><?= lang('Bonus'); ?></th>
                                         <th><?= lang('Discount %'); ?></th>
@@ -154,7 +155,6 @@
                                         <th><?= lang('Deal Disc Value'); ?></th>
                                         <th><?= lang('Unit Cost'); ?></th>
                                         <th><?= lang('Purchase'); ?></th>
-                                        <th><?= lang('Public Price'); ?></th>
                                         <th><?= lang('Vat'); ?></th>
                                         <th><?= lang('Payable'); ?></th>
                                     </tr>
@@ -196,6 +196,7 @@
                                                 <td><?= $data->supplier_name ?></td>
                                                 <td><?= $data->item_no ?></td>
                                                 <td><?= $data->item_name ?></td>
+                                                <td class="text-right"><?= number_format($data->public_price, 2) ?></td>
                                                 <td class="text-right"><?= $this->sma->formatQuantity($data->qty) ?></td>
                                                 <td class="text-right"><?= $data->bonus ?></td>
                                                 <td class="text-right"><?= isset($data->discount_percent) ? number_format($data->discount_percent, 2) . '%' : '0.00%' ?></td>
@@ -204,7 +205,6 @@
                                                 <td class="text-right"><?= number_format($data->deal_discount_value, 2) ?></td>
                                                 <td class="text-right"><?= number_format($data->unit_cost, 2) ?></td>
                                                 <td class="text-right"><?= number_format($data->purchase, 2) ?></td>
-                                                <td class="text-right"><?= number_format($data->public_price, 2) ?></td>
                                                 <td class="text-right"><?= number_format($data->vat, 2) ?></td>
                                                 <td class="text-right"><?= number_format($data->payable, 2) ?></td>
                                             </tr>
@@ -212,7 +212,7 @@
                                         }
                                         ?>
                                         <tr style="font-weight:bold; background-color:#f5f5f5;">
-                                            <td colspan="10" class="text-right"><?= lang('Total') ?></td>
+                                            <td colspan="11" class="text-right"><?= lang('Total') ?></td>
                                             <td class="text-right"><?= $this->sma->formatQuantity($grand_totals['qty']) ?></td>
                                             <td class="text-right"><?= $this->sma->formatQuantity($grand_totals['bonus']) ?></td>
                                             <td></td>
@@ -221,7 +221,6 @@
                                             <td class="text-right"><?= number_format($grand_totals['deal_discount_value'], 2) ?></td>
                                             <td></td>
                                             <td class="text-right"><?= number_format($grand_totals['purchase'], 2) ?></td>
-                                            <td></td>
                                             <td class="text-right"><?= number_format($grand_totals['vat'], 2) ?></td>
                                             <td class="text-right"><?= number_format($grand_totals['payable'], 2) ?></td>
                                         </tr>
