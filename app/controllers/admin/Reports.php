@@ -7757,10 +7757,11 @@ class Reports extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         
         // Get filter parameters from GET
-        $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : null;
-        $end_date = $this->input->get('end_date') ? $this->input->get('end_date') : null;
-        $purchase_ref = $this->input->get('purchase_ref') ? $this->input->get('purchase_ref') : null;
-        $supplier = $this->input->get('supplier') ? $this->input->get('supplier') : null;
+        $start_date   = $this->input->get('start_date')   ?: null;
+        $end_date     = $this->input->get('end_date')     ?: null;
+        $purchase_ref = $this->input->get('purchase_ref') ?: null;
+        $supplier     = $this->input->get('supplier')     ?: null;
+        $record_type  = $this->input->get('record_type')  ?: 'all';
         //$item_code = $this->input->get('item_code') ? $this->input->get('item_code') : null;
         $sgproduct = $this->input->get('sgproduct') ? $this->input->get('sgproduct') : null;
         $pname = $this->input->get('product') ? $this->input->get('product') : null;
@@ -7788,12 +7789,13 @@ class Reports extends MY_Controller
         $this->data['suppliers'] = $query->result();
         
         // Set filter values for form persistence (always set these)
-        $this->data['start_date'] = $start_date;
-        $this->data['end_date'] = $end_date;
+        $this->data['start_date']   = $start_date;
+        $this->data['end_date']     = $end_date;
         $this->data['purchase_ref'] = $purchase_ref;
-        $this->data['supplier'] = $supplier;
-        $this->data['sgproduct'] = $sgproduct; // Pass sgproduct to view for pre-selection
-        $this->data['item_code'] = $item_code;
+        $this->data['supplier']     = $supplier;
+        $this->data['record_type']  = $record_type;
+        $this->data['sgproduct']    = $sgproduct;
+        $this->data['item_code']    = $item_code;
         
         // If any filter submitted, fetch data
         if ($start_date || $end_date || $purchase_ref || $supplier || $item_code) {
@@ -7804,11 +7806,12 @@ class Reports extends MY_Controller
             
             // Fetch data from model
             $purchase_data = $this->reports_model->getPurchasePerItem(
-                $formatted_start_date, 
-                $formatted_end_date, 
+                $formatted_start_date,
+                $formatted_end_date,
                 $purchase_ref,
                 $supplier,
-                $item_code
+                $item_code,
+                $record_type
             );
             
             $this->data['purchase_data'] = $purchase_data;
