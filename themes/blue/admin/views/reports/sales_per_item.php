@@ -1,5 +1,23 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
+<style>
+    #salesItemTable th,
+    #salesItemTable td {
+        white-space: nowrap;
+        font-size: 12px;
+        padding: 4px 6px;
+        vertical-align: middle;
+    }
+    /* Allow wrapping only for long-text columns */
+    #salesItemTable th:nth-child(10),
+    #salesItemTable td:nth-child(10),
+    #salesItemTable th:nth-child(12),
+    #salesItemTable td:nth-child(12) {
+        white-space: normal;
+        min-width: 130px;
+        max-width: 200px;
+    }
+</style>
 <script>
     function exportTableToExcel(tableId, filename = 'table.xlsx') {
         const table = document.getElementById(tableId);
@@ -153,6 +171,7 @@
                                         <th><?= lang('Area'); ?></th>
                                         <th><?= lang('Sales Man'); ?></th>
                                         <th><?= lang('Agent'); ?></th>
+                                        <th><?= lang('Category'); ?></th>
                                         <th><?= lang('Customer No'); ?></th>
                                         <th><?= lang('Customer Name'); ?></th>
                                         <th><?= lang('Item No'); ?></th>
@@ -213,6 +232,7 @@
                                                 <td><?= $data->area ?></td>
                                                 <td><?= $data->sales_man ?></td>
                                                 <td><?= $data->agent ?></td>
+                                                <td><?= $data->category ?></td>
                                                 <td><?= $data->customer_no ?></td>
                                                 <td><?= $data->customer_name ?></td>
                                                 <td><?= $data->item_no ?></td>
@@ -235,7 +255,7 @@
                                         // Display grand totals row
                                         ?>
                                         <tr style="background-color: #f0f0f0; font-weight: bold;">
-                                            <td colspan="12" class="text-right"><strong><?= lang('Grand Total'); ?>:</strong></td>
+                                            <td colspan="13" class="text-right"><strong><?= lang('Grand Total'); ?>:</strong></td>
                                             <td class="text-right"><strong><?= $this->sma->formatQuantity($grand_totals['qty']) ?></strong></td>
                                             <td class="text-right"><strong><?= $grand_totals['bonus'] ?></strong></td>
                                             <td colspan="2"></td>
@@ -251,7 +271,7 @@
                                     } else {
                                         ?>
                                         <tr>
-                                            <td colspan="23" class="text-center"><?= lang('No records found. Please select filters and click Load Report.'); ?></td>
+                                            <td colspan="24" class="text-center"><?= lang('No records found. Please select filters and click Load Report.'); ?></td>
                                         </tr>
                                     <?php
                                     }
