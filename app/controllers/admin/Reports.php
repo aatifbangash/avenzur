@@ -7696,6 +7696,7 @@ class Reports extends MY_Controller
         $invoice_id = $this->input->get('invoice_id') ? $this->input->get('invoice_id') : null;
         $salesman = $this->input->get('salesman') ? $this->input->get('salesman') : null;
         $item_code = $this->input->get('item_code') ? $this->input->get('item_code') : null;
+        $category = $this->input->get('category') ? $this->input->get('category') : null;
         
         // Get sales men for dropdown
         $this->db->select('id, name');
@@ -7703,6 +7704,12 @@ class Reports extends MY_Controller
         $this->db->order_by('name', 'asc');
         $query = $this->db->get();
         $this->data['salesmen'] = $query->result();
+
+        // Get distinct customer categories for dropdown
+        $cat_query = $this->db->query(
+            "SELECT DISTINCT category FROM sma_companies WHERE group_name = 'customer' AND category IS NOT NULL AND category != '' ORDER BY category"
+        );
+        $this->data['customer_categories'] = $cat_query->result();
         
         // Set filter values for form persistence (always set these)
         $this->data['start_date'] = $start_date;
@@ -7710,9 +7717,10 @@ class Reports extends MY_Controller
         $this->data['invoice_id'] = $invoice_id;
         $this->data['salesman'] = $salesman;
         $this->data['item_code'] = $item_code;
+        $this->data['category'] = $category;
         
         // If any filter submitted, fetch data
-        if ($start_date || $end_date || $invoice_id || $salesman || $item_code) {
+        if ($start_date || $end_date || $invoice_id || $salesman || $item_code || $category) {
             
             // Pre-fetch salesman name if needed
             $salesman_name = null;
@@ -7733,7 +7741,8 @@ class Reports extends MY_Controller
                 $formatted_end_date, 
                 $invoice_id,
                 $salesman_name,
-                $item_code
+                $item_code,
+                $category
             );
             
             $this->data['sales_data'] = $sales_data;
