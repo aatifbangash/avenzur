@@ -6300,12 +6300,13 @@ class Reports_model extends CI_Model
         return [];
     }
 
-    public function getSalesPerInvoice($start_date, $end_date, $customer_id = null, $pharmacy_id = null)
+    public function getSalesPerInvoice($start_date, $end_date, $customer_id = null, $pharmacy_id = null, $salesman_name = null, $record_type = 'all')
     {
         // Build WHERE conditions for filtering
         $date_condition = "";
         $customer_condition = "";
         $warehouse_condition = "";
+        $salesman_condition = "";
 
         if ($start_date) {
             $date_condition .= " AND s.date >= '{$start_date}'";
@@ -6318,6 +6319,9 @@ class Reports_model extends CI_Model
         }
         if (!empty($pharmacy_id) && $pharmacy_id !== '' && $pharmacy_id !== '0') {
             $warehouse_condition = " AND s.warehouse_id = {$pharmacy_id}";
+        }
+        if (!empty($salesman_name)) {
+            $salesman_condition = " AND c.sales_agent = '{$this->db->escape_str($salesman_name)}'";
         }
 
         // Build the UNION query for Sales + Returns
@@ -6332,6 +6336,7 @@ class Reports_model extends CI_Model
                 s.customer as customer_name,
                 c.sales_agent as sales_man,
                 c.sequence_code as customer_sequence,
+                COALESCE(c.category, '') as category,
                 COALESCE(s.total_tax, 0) as vat,
                 COALESCE(s.total_discount, 0) as discount,
                 COALESCE(s.total, 0) as sales,
@@ -6351,7 +6356,8 @@ class Reports_model extends CI_Model
             WHERE s.sale_status = 'completed' 
             {$date_condition}
             {$customer_condition}
-            {$warehouse_condition})
+            {$warehouse_condition}
+            {$salesman_condition})
             
             UNION ALL
             
@@ -6365,6 +6371,7 @@ class Reports_model extends CI_Model
                 r.customer as customer_name,
                 c.sales_agent as sales_man,
                 c.sequence_code as customer_sequence,
+                COALESCE(c.category, '') as category,
                 -COALESCE(r.total_tax, 0) as vat,
                 -COALESCE(r.total_discount, 0) as discount,
                 -COALESCE(r.total, 0) as sales,
@@ -6402,9 +6409,20 @@ class Reports_model extends CI_Model
             $sql .= " AND r.warehouse_id = {$pharmacy_id}";
         }
 
-        $sql .= ")
-            ORDER BY date DESC
-        ";
+        // Add salesman filter for returns
+        if (!empty($salesman_name)) {
+            $sql .= " AND c.sales_agent = '{$this->db->escape_str($salesman_name)}'";
+        }
+
+        $sql .= ")";
+
+        if ($record_type === 'sale') {
+            $sql = "SELECT * FROM ({$sql}) AS combined WHERE type = 'Sale' ORDER BY date DESC";
+        } elseif ($record_type === 'return') {
+            $sql = "SELECT * FROM ({$sql}) AS combined WHERE type = 'Return' ORDER BY date DESC";
+        } else {
+            $sql = "SELECT * FROM ({$sql}) AS combined ORDER BY date DESC";
+        }
 
         $query = $this->db->query($sql);
 

@@ -1,4 +1,44 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<script>
+    // ── Pagination ───────────────────────────────────────────────────
+    var SPINV_PAGE_SIZE = 100;
+    var SPINV_current   = 1;
+
+    function spinvGetRows() {
+        return $('#invoiceTable tbody tr.spinv-data-row');
+    }
+
+    function spinvRender() {
+        var rows  = spinvGetRows();
+        var total = rows.length;
+        var pages = Math.max(1, Math.ceil(total / SPINV_PAGE_SIZE));
+        if (SPINV_current > pages) SPINV_current = pages;
+
+        rows.hide();
+        var start = (SPINV_current - 1) * SPINV_PAGE_SIZE;
+        rows.slice(start, start + SPINV_PAGE_SIZE).show();
+
+        var from = total === 0 ? 0 : start + 1;
+        var to   = Math.min(start + SPINV_PAGE_SIZE, total);
+        $('#spinv-page-info').text('Showing ' + from + '–' + to + ' of ' + total + ' rows');
+
+        $('#spinv-prev').prop('disabled', SPINV_current <= 1);
+        $('#spinv-next').prop('disabled', SPINV_current >= pages);
+        $('#spinv-page-num').text('Page ' + SPINV_current + ' of ' + pages);
+    }
+
+    $(document).ready(function () {
+        if ($('.spinv-data-row').length) { spinvRender(); }
+
+        $(document).on('click', '#spinv-prev', function () {
+            if (SPINV_current > 1) { SPINV_current--; spinvRender(); }
+        });
+        $(document).on('click', '#spinv-next', function () {
+            var pages = Math.max(1, Math.ceil(spinvGetRows().length / SPINV_PAGE_SIZE));
+            if (SPINV_current < pages) { SPINV_current++; spinvRender(); }
+        });
+    });
+</script>
 
 <div class="box">
     <div class="box-header">
@@ -66,18 +106,51 @@ echo admin_form_open('reports/sales_per_invoice', $attrib);
 
 <hr>
 
-<!-- Buttons Row -->
+<!-- Filter Row 2: Type + Salesman + Buttons -->
 <div class="row">
-    <div class="col-md-2 mb-3">
-        <button type="submit" name="submit" class="btn btn-primary btn-block">
-            <i class="fa fa-search"></i> <?= lang('generate') ?>
-        </button>
+    <div class="col-md-3 mb-3">
+        <div class="form-group">
+            <label for="record_type"><?= lang('Type') ?></label>
+            <select name="record_type" id="record_type" class="form-control">
+                <option value="all" <?= (isset($record_type) && $record_type == 'all') ? 'selected' : '' ?>>All</option>
+                <option value="sale" <?= (isset($record_type) && $record_type == 'sale') ? 'selected' : '' ?>>Sales Only</option>
+                <option value="return" <?= (isset($record_type) && $record_type == 'return') ? 'selected' : '' ?>>Returns Only</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <div class="form-group">
+            <label for="salesman"><?= lang('Salesman') ?></label>
+            <select name="salesman" id="salesman" class="form-control select2" data-placeholder="<?= lang('select') . ' ' . lang('Salesman') ?>">
+                <option value=""><?= lang('all') ?></option>
+                <?php if (isset($salesmen) && is_array($salesmen)): ?>
+                    <?php foreach ($salesmen as $sm): ?>
+                        <option value="<?= $sm->id ?>" <?= (isset($salesman_id) && $salesman_id == $sm->id) ? 'selected' : '' ?>>
+                            <?= $sm->name ?>
+                        </option>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </select>
+        </div>
     </div>
 
     <div class="col-md-2 mb-3">
-        <button type="button" class="btn btn-success btn-block" onclick="exportToExcel()">
-            <i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?>
-        </button>
+        <div class="form-group">
+            <label>&nbsp;</label><br>
+            <button type="submit" name="submit" class="btn btn-primary btn-block">
+                <i class="fa fa-search"></i> <?= lang('generate') ?>
+            </button>
+        </div>
+    </div>
+
+    <div class="col-md-2 mb-3">
+        <div class="form-group">
+            <label>&nbsp;</label><br>
+            <button type="button" class="btn btn-success btn-block" onclick="exportToExcel()">
+                <i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?>
+            </button>
+        </div>
     </div>
 </div>
 
@@ -91,14 +164,14 @@ echo admin_form_open('reports/sales_per_invoice', $attrib);
                             <table id="invoiceTable" class="table table-bordered table-striped table-hover">
                                 <thead>
                                     <tr>
-                                        <th>Customer Code</th>
                                         <th><?= lang('type') ?></th>
                                         <th><?= lang('date') ?></th>
                                         <th>Sale Invoice No</th>
                                         <th>Return Inv No</th>
                                         <th>Area</th>
                                         <th>Sales Man</th>
-                                        <th>Customer No</th>
+                                        <th>Category</th>
+                                        <th>Customer Code</th>
                                         <th>Customer Name</th>
                                         <th class="text-right">Sales</th>
                                         <th class="text-right">Discount</th>
@@ -111,15 +184,15 @@ echo admin_form_open('reports/sales_per_invoice', $attrib);
                                 </thead>
                                 <tbody>
                                     <?php foreach ($invoices as $invoice): ?>
-                                        <tr class="<?= (isset($invoice->type) && $invoice->type == 'Return') ? 'return-row' : '' ?>">
-                                            <td><?= isset($invoice->customer_sequence) ? $invoice->customer_sequence : '' ?></td>
+                                        <tr class="spinv-data-row <?= (isset($invoice->type) && $invoice->type == 'Return') ? 'return-row' : '' ?>">
                                             <td><?= isset($invoice->type) ? $invoice->type : 'Sale' ?></td>
                                             <td><?= isset($invoice->date) ? date('d M y', strtotime($invoice->date)) : '' ?></td>
                                             <td><?= isset($invoice->sale_invoice_no) ? $invoice->sale_invoice_no : '' ?></td>
                                             <td><?= isset($invoice->return_inv_no) ? $invoice->return_inv_no : '' ?></td>
                                             <td><?= isset($invoice->area) ? $invoice->area : '' ?></td>
                                             <td><?= isset($invoice->sales_man) ? $invoice->sales_man : '' ?></td>
-                                            <td><?= isset($invoice->customer_no) ? $invoice->customer_no : '' ?></td>
+                                            <td><?= isset($invoice->category) ? $invoice->category : '' ?></td>
+                                            <td><?= isset($invoice->customer_sequence) ? $invoice->customer_sequence : '' ?></td>
                                             <td><?= isset($invoice->customer_name) ? $invoice->customer_name : '' ?></td>
                                             <td class="text-right"><?= number_format(isset($invoice->sales) ? $invoice->sales : 0, 2) ?></td>
                                             <td class="text-right"><?= number_format(isset($invoice->discount) ? $invoice->discount : 0, 2) ?></td>
@@ -150,6 +223,18 @@ echo admin_form_open('reports/sales_per_invoice', $attrib);
                                     </tr>
                                 </tfoot>
                             </table>
+
+                        <!-- Pagination controls -->
+                        <div style="margin-top:10px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <button id="spinv-prev" class="btn btn-default btn-sm" type="button">
+                                <i class="fa fa-chevron-left"></i> Prev
+                            </button>
+                            <span id="spinv-page-num" style="font-size:13px;"></span>
+                            <button id="spinv-next" class="btn btn-default btn-sm" type="button">
+                                Next <i class="fa fa-chevron-right"></i>
+                            </button>
+                            <span id="spinv-page-info" class="text-muted" style="font-size:12px; margin-left:8px;"></span>
+                        </div>
                         </div>
                     </div>
                 <?php elseif(isset($invoices)): ?>
@@ -215,8 +300,20 @@ function exportToExcel() {
     .table-responsive {
         overflow-x: auto;
     }
-    .table th, .table td {
+    /* Scope sizing rules to this table only */
+    #invoiceTable th,
+    #invoiceTable td {
         white-space: nowrap;
+        font-size: 12px;
+        padding: 4px 6px;
+        vertical-align: middle;
+    }
+    /* Customer Name column (9th) may wrap — it carries long text */
+    #invoiceTable th:nth-child(9),
+    #invoiceTable td:nth-child(9) {
+        white-space: normal;
+        min-width: 130px;
+        max-width: 200px;
     }
     .text-right {
         text-align: right;
