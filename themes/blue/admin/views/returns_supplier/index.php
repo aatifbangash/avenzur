@@ -6,7 +6,7 @@
             "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?=lang('all')?>"]],
             "iDisplayLength": <?=$Settings->rows_per_page?>,
             'bProcessing': true, 'bServerSide': true,
-            'sAjaxSource': '<?=admin_url('returns_supplier/getReturns' . ($warehouse_id ? '/' . $warehouse_id : '')); ?>',
+            'sAjaxSource': '<?=admin_url('returns_supplier/getReturns' . ($warehouse_id ? '/' . $warehouse_id : '') . ((!empty($rsid) && is_numeric($rsid)) ? '?rsid=' . (int)$rsid : '')); ?>',
             'fnServerData': function (sSource, aoData, fnCallback) {
                 aoData.push({
                     "name": "<?=$this->security->get_csrf_token_name()?>",

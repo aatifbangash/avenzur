@@ -1598,6 +1598,8 @@ class Returns_supplier extends MY_Controller
     {
 
         //$this->sma->checkPermissions('index');
+        $rsid = $this->input->get('rsid');
+
         if ((!$this->Owner && !$this->Admin) && !$warehouse_id) {
             $user = $this->site->getUser();
             $warehouse_id = $user->warehouse_id;
@@ -1617,6 +1619,10 @@ class Returns_supplier extends MY_Controller
 
         if (!$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
             $this->datatables->where('created_by', $this->session->userdata('user_id'));
+        }
+
+        if (!empty($rsid) && is_numeric($rsid)) {
+            $this->datatables->where("{$this->db->dbprefix('returns_supplier')}.id", (int)$rsid);
         }
 
         $edit_link         = anchor('admin/returns_supplier/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_return'), 'class="tip"');
@@ -1664,6 +1670,7 @@ class Returns_supplier extends MY_Controller
         }
 
         $this->data['lastInsertedId'] =  $this->input->get('lastInsertedId') ;
+        $this->data['rsid'] = $this->input->get('rsid');
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('returns_supplier')]];
         $meta = ['page_title' => lang('returns_supplier'), 'bc' => $bc];
         $this->page_construct('returns_supplier/index', $meta, $this->data);

@@ -888,17 +888,39 @@ class Reports_model extends CI_Model
         $data_res = ($q->num_rows() > 0) ? $q->result() : [];
         //echo '<pre>';print_r($data_res);exit;
         
-        $this->db
-            ->select('sma_accounts_entryitems.entry_id, sma_accounts_entryitems.amount, sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.transaction_type, sma_accounts_entries.date, sma_accounts_ledgers.code, sma_accounts_ledgers.name, (select sum(amount) from sma_accounts_entryitems ei inner join sma_accounts_entries e on e.id =ei.entry_id where e.date < `sma_accounts_entries`.`date` and ei.ledger_id = ' . $ledger_account . ') as openingAmount,')
-            ->from('sma_accounts_entryitems')
-            ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
-            ->join('sma_accounts_ledgers', 'sma_accounts_ledgers.id=sma_accounts_entryitems.ledger_id')
-            ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
-            ->where('sma_accounts_entries.date >=', $start_date)
-            ->where('sma_accounts_entries.date <=', $end_date)
-            ->order_by('sma_accounts_entries.date asc, sma_accounts_entries.id asc');
+        $la = (int) $ledger_account;
+        $sql = "SELECT
+                    aei.entry_id,
+                    aei.amount,
+                    aei.dc,
+                    aei.narration,
+                    ae.transaction_type,
+                    ae.date,
+                    al.code,
+                    al.name,
+                    ae.sid  AS sale_id,
+                    ae.pid  AS purchase_id,
+                    ae.rsid AS supplier_return_id,
+                    ae.rid   AS return_id,
+                    ae.memo_id,
+                    pr.id   AS payment_id,
+                    m.reference_no AS memo_note,
+                    (SELECT SUM(ei2.amount)
+                     FROM sma_accounts_entryitems ei2
+                     INNER JOIN sma_accounts_entries e2 ON e2.id = ei2.entry_id
+                     WHERE e2.date < ae.date
+                     AND ei2.ledger_id = {$la}) AS openingAmount
+                FROM sma_accounts_entryitems aei
+                JOIN sma_accounts_entries ae  ON ae.id  = aei.entry_id
+                JOIN sma_accounts_ledgers  al ON al.id  = aei.ledger_id
+                LEFT JOIN sma_payment_reference pr ON pr.journal_id = ae.id
+                LEFT JOIN sma_memo m ON m.id = ae.memo_id
+                WHERE aei.ledger_id = ?
+                AND ae.date >= ?
+                AND ae.date <= ?
+                ORDER BY ae.date ASC, ae.id ASC";
 
-        $q = $this->db->get();
+        $q = $this->db->query($sql, [$ledger_account, $start_date, $end_date]);
         
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
