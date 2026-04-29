@@ -144,10 +144,11 @@
                                 <th style="width:5%; text-align:center;">#</th>
                                 <?php } ?>
                                 <th style="width:10%; text-align:center;"><?= lang('date'); ?></th>
+                                <th style="width:8%; text-align:center;"><?= lang('source'); ?></th>
                                 <th style="width:8%; text-align:center;"><?= lang('type'); ?></th>
 
                                 <!--<th><?= lang('name'); ?></th>-->
-                                <th style="width:22%; text-align:center;"><?= lang('Note'); ?></th>
+                                <th style="width:20%; text-align:center;"><?= lang('Note'); ?></th>
 
                                 <th style="width:15%; text-align:right;"><?= lang('Debit'); ?></th>
                                 <th style="width:15%; text-align:right;"><?= lang('Credit'); ?></th>
@@ -156,11 +157,12 @@
                             </thead>
                             <tbody style="text-align:center;">
                                 <tr>
-                                    <td colspan="2">Opening Balance<td>
                                     <?php if($viewtype!='pdf' && $viewtype!='pdf_new'){ ?>
-                                    <td colspan="3">&nbsp;</td>
+                                    <td colspan="3">Opening Balance</td>
+                                    <td colspan="4">&nbsp;</td>
                                     <?php }else{ ?>
-                                    <td colspan="2">&nbsp;</td> 
+                                    <td colspan="2">Opening Balance</td>
+                                    <td colspan="4">&nbsp;</td>
                                     <?php } ?>
                                     <td style="text-align:right;"><?php 
                                         if($total_ob >= 0){
@@ -214,12 +216,12 @@
                                     $note = $statement->narration;
                                 }else if($statement->transaction_type == 'sales_invoice' || $statement->transaction_type == 'saleorder'){
                                     $link = admin_url('sales?sid=' . $statement->sale_id);
-                                    $transaction_type = 'Sales';
+                                    $transaction_type = 'Sales Invoice';
                                     $transaction_id = $statement->sale_id;
                                     $note = strip_tags(html_entity_decode($statement->narration));
                                 }else if($statement->transaction_type == 'purchase_invoice' || $statement->transaction_type == 'purchaseorder'){
                                     $link = admin_url('purchases?pid=' . $statement->purchase_id);
-                                    $transaction_type = 'Purchase';
+                                    $transaction_type = 'Purchase Invoice';
                                     $transaction_id = $statement->purchase_id;
                                     $note = strip_tags(html_entity_decode($statement->narration));
                                 }else if($statement->transaction_type == 'supplierpayment'){
@@ -232,12 +234,12 @@
                                     $transaction_id = $statement->payment_id;
                                 }else if($statement->transaction_type == 'creditmemo'){
                                     $link = admin_url('customers/view_credit_memo/' . $statement->memo_id);
-                                    $transaction_type = 'Memo';
+                                    $transaction_type = 'Credit Note';
                                     $transaction_id = $statement->memo_id;
                                     $note = strip_tags(html_entity_decode($statement->memo_note));
                                 }else if($statement->transaction_type == 'debitmemo'){
-                                    $link = admin_url('customers/view_credit_memo/' . $statement->memo_id);
-                                    $transaction_type = 'Memo';
+                                    $link = admin_url('suppliers/view_debit_memo/' . $statement->memo_id);
+                                    $transaction_type = 'Debit Note';
                                     $transaction_id = $statement->memo_id;
                                     $note = strip_tags(html_entity_decode($statement->memo_note));
                                 }else if($statement->transaction_type == 'serviceinvoice'){
@@ -247,13 +249,13 @@
                                     $note = strip_tags(html_entity_decode($statement->memo_note));
                                 }else if($statement->transaction_type == 'returncustomerorder'){
                                     $link = admin_url('returns?rid=' . $statement->return_id);
-                                    $transaction_type = 'Customer Return';
+                                    $transaction_type = 'Sales Return';
                                     $transaction_id = $statement->return_id;
                                     $note = strip_tags(html_entity_decode($statement->narration));
                                 }else if($statement->transaction_type == 'returnorder'){
-                                    $link = admin_url('returns_supplier?rsid=' . $statement->return_id);
+                                    $link = admin_url('returns_supplier?rsid=' . $statement->supplier_return_id);
                                     $transaction_type = 'Supplier Return';
-                                    $transaction_id = $statement->return_id;
+                                    $transaction_id = $statement->supplier_return_id;
                                     $note = strip_tags(html_entity_decode($statement->narration));
                                 }else{
                                     $link = admin_url('entries/view/journal/' . $statement->entry_id);
@@ -268,7 +270,8 @@
                                         <td><?= $count; ?></td>
                                         <?php } ?>
                                         <td><?= $statement->date; ?></td>
-                                        <td><a target="_blank" href="<?= $link; ?>"><?= $transaction_type; ?></a></td>
+                                        <td><a target="_blank" href="<?= $link; ?>"><?= $transaction_id; ?></a></td>
+                                        <td><?= $transaction_type; ?></td>
 
 
                                         <!--<td><?= $statement->name; ?></td>-->
@@ -306,6 +309,7 @@
                                 <?php if($viewtype!='pdf' && $viewtype!='pdf_new'){ ?>
                                 <th style="text-align:center;">&nbsp;</th>
                                 <?php } ?>
+                                <th style="text-align:center;">&nbsp;</th>
                                 <th style="text-align:center;">&nbsp;</th>
                                 <th style="text-align:center;">&nbsp;</th>
                                 <th style="text-align:center;">&nbsp;</th>
