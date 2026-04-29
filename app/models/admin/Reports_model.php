@@ -6147,7 +6147,7 @@ class Reports_model extends CI_Model
      * @param string $item_code - Item code to filter
      * @return array - Sales per item data
      */
-    public function getSalesPerItem($start_date, $end_date, $invoice_id, $salesman_name, $item_code)
+    public function getSalesPerItem($start_date, $end_date, $invoice_id, $salesman_name, $item_code, $category = null)
     {
         // Build WHERE clauses conditionally
         $where_clauses = [];
@@ -6174,6 +6174,11 @@ class Reports_model extends CI_Model
         // Item code filter
         if ($item_code) {
             $where_clauses[] = "(p.code LIKE '%{$item_code}%' OR p.name LIKE '%{$item_code}%')";
+        }
+
+        // Category filter
+        if ($category) {
+            $where_clauses[] = "c.category = '{$this->db->escape_str($category)}'";
         }
         
         $where_sql = !empty($where_clauses) ? 'AND ' . implode(' AND ', $where_clauses) : '';
@@ -6235,6 +6240,11 @@ class Reports_model extends CI_Model
             $return_where_clauses[] = "(p.code LIKE '%{$item_code}%' OR p.name LIKE '%{$item_code}%')";
         }
         
+        // Category filter for returns
+        if ($category) {
+            $return_where_clauses[] = "c.category = '{$this->db->escape_str($category)}'";
+        }
+
         $return_where_sql = !empty($return_where_clauses) ? 'AND ' . implode(' AND ', $return_where_clauses) : '';
         
         // Query for RETURNS

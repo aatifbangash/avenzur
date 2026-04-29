@@ -117,6 +117,19 @@
                     <div class="col-lg-12">
                         <div class="col-md-3">
                             <div class="form-group">
+                                <?= lang('Category', 'category'); ?>
+                                <?php
+                                $cat_opts = ['' => lang('All Categories')];
+                                foreach ($customer_categories as $cat) {
+                                    $cat_opts[$cat->category] = $cat->category;
+                                }
+                                echo form_dropdown('category', $cat_opts, ($_GET['category'] ?? ''), 'id="category" class="form-control skip" style="width:100%;"');
+                                ?>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>&nbsp;</label><br>
                                 <button type="submit" style="margin-top: 0px;" class="btn btn-primary" id="load_report"><?= lang('Load Report') ?></button>
                             </div>
                         </div>
