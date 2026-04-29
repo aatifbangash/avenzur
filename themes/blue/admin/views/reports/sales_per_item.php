@@ -101,6 +101,7 @@
                                         <th><?= lang('Return Inv#'); ?></th>
                                         <th><?= lang('Area'); ?></th>
                                         <th><?= lang('Sales Man'); ?></th>
+                                        <th><?= lang('Agent'); ?></th>
                                         <th><?= lang('Customer No'); ?></th>
                                         <th><?= lang('Customer Name'); ?></th>
                                         <th><?= lang('Item No'); ?></th>
@@ -160,6 +161,7 @@
                                                 <td><?= $data->return_inv ?></td>
                                                 <td><?= $data->area ?></td>
                                                 <td><?= $data->sales_man ?></td>
+                                                <td><?= $data->agent ?></td>
                                                 <td><?= $data->customer_no ?></td>
                                                 <td><?= $data->customer_name ?></td>
                                                 <td><?= $data->item_no ?></td>
@@ -182,7 +184,7 @@
                                         // Display grand totals row
                                         ?>
                                         <tr style="background-color: #f0f0f0; font-weight: bold;">
-                                            <td colspan="11" class="text-right"><strong><?= lang('Grand Total'); ?>:</strong></td>
+                                            <td colspan="12" class="text-right"><strong><?= lang('Grand Total'); ?>:</strong></td>
                                             <td class="text-right"><strong><?= $this->sma->formatQuantity($grand_totals['qty']) ?></strong></td>
                                             <td class="text-right"><strong><?= $grand_totals['bonus'] ?></strong></td>
                                             <td colspan="2"></td>
@@ -198,7 +200,7 @@
                                     } else {
                                         ?>
                                         <tr>
-                                            <td colspan="22" class="text-center"><?= lang('No records found. Please select filters and click Load Report.'); ?></td>
+                                            <td colspan="23" class="text-center"><?= lang('No records found. Please select filters and click Load Report.'); ?></td>
                                         </tr>
                                     <?php
                                     }
