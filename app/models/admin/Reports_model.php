@@ -6538,7 +6538,7 @@ class Reports_model extends CI_Model
                 ), 0) AS deal_discount_value,
                 COALESCE((SELECT SUM(quantity) FROM {$this->db->dbprefix('inventory_movements')} WHERE product_id = prod.id), 0) AS current_stock,
                 pi.sale_price AS public_price,
-                (pi.unit_cost * pi.quantity) AS purchase,
+                (pi.subtotal) AS purchase,
                 pi.totalbeforevat AS net_purchase,
                 pi.item_tax AS vat,
                 (pi.totalbeforevat + pi.item_tax + COALESCE((
