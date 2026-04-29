@@ -3997,6 +3997,17 @@ class Sales extends MY_Controller
                 ->or_where('reference_no', $sid)
             ->group_end();
         }
+        // Date range filter
+        $from_date = $this->input->get('from_date');
+        $to_date   = $this->input->get('to_date');
+        if ($from_date) {
+            $converted_from = substr($this->sma->fld($from_date . ' 00:00:00'), 0, 10);
+            $this->datatables->where("DATE({$this->db->dbprefix('sales')}.date) >=", $converted_from);
+        }
+        if ($to_date) {
+            $converted_to = substr($this->sma->fld($to_date . ' 23:59:59'), 0, 10);
+            $this->datatables->where("DATE({$this->db->dbprefix('sales')}.date) <=", $converted_to);
+        }
         // $this->datatables->join("{$this->db->dbprefix('aramex_shipment')}", 'sales.id');
         if ($this->input->get('shop') == 'yes') {
             $this->datatables->where('shop', 1);
@@ -4012,8 +4023,13 @@ class Sales extends MY_Controller
             $this->datatables->where('payment_status !=', 'paid')->where('attachment !=', null);
         }
         $allowed_statuses = ['completed', 'delivered', 'label_verifired', 'ready', 'sent_to_rasd', 'pending', 'returned'];
-        if (in_array($this->input->get('sale_status'), $allowed_statuses)) {
-            $this->datatables->where('sale_status', $this->input->get('sale_status'));
+        $sale_status_raw = $this->input->get('sale_status');
+        if ($sale_status_raw) {
+            $statuses = array_values(array_filter(array_intersect(explode(',', $sale_status_raw), $allowed_statuses)));
+            if (!empty($statuses)) {
+                $quoted = implode(',', array_map(function($s) { return "'" . $s . "'"; }, $statuses));
+                $this->datatables->where("sale_status IN ({$quoted})", null, false);
+            }
         }
         $this->datatables->where('pos !=', 1); // ->where('sale_status !=', 'returned');
         if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->Admin && !$this->GP['sales-index']) {
@@ -4259,6 +4275,7 @@ class Sales extends MY_Controller
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('sales')]];
         $meta = ['page_title' => lang('sales'), 'bc' => $bc];
         $this->data['sid'] = $this->input->get('sid');
+        $this->data['customers'] = $this->site->getAllCompanies('customer');
         $this->page_construct('sales/index', $meta, $this->data);
     }
 
