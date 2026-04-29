@@ -6,7 +6,7 @@
             "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?=lang('all')?>"]],
             "iDisplayLength": <?=$Settings->rows_per_page?>,
             'bProcessing': true, 'bServerSide': true,
-            'sAjaxSource': '<?=admin_url((isset($is_shop_sales) && $is_shop_sales ? 'sales/getShopSales' : 'sales/getSales') . ($warehouse_id ? '/' . $warehouse_id : '') . '?sid='.$sid.'&v=1' . ($this->input->get('shop') ? '&shop=' . $this->input->get('shop') : '') . ($this->input->get('attachment') ? '&attachment=' . $this->input->get('attachment') : '') . ($this->input->get('delivery') ? '&delivery=' . $this->input->get('delivery') : '') . ($this->input->get('sale_status') ? '&sale_status=' . urlencode($this->input->get('sale_status')) : '')); ?>',
+            'sAjaxSource': '<?=admin_url((isset($is_shop_sales) && $is_shop_sales ? 'sales/getShopSales' : 'sales/getSales') . ($warehouse_id ? '/' . $warehouse_id : '') . '?sid='.$sid.'&v=1' . ($this->input->get('shop') ? '&shop=' . $this->input->get('shop') : '') . ($this->input->get('attachment') ? '&attachment=' . $this->input->get('attachment') : '') . ($this->input->get('delivery') ? '&delivery=' . $this->input->get('delivery') : '') . ($this->input->get('sale_status') ? '&sale_status=' . urlencode($this->input->get('sale_status')) : '') . ($this->input->get('from_date')  ? '&from_date='  . urlencode($this->input->get('from_date'))  : '') . ($this->input->get('to_date')    ? '&to_date='    . urlencode($this->input->get('to_date'))    : '')); ?>',
             'fnServerData': function (sSource, aoData, fnCallback) {
                 aoData.push({
                     "name": "<?=$this->security->get_csrf_token_name()?>",
@@ -263,19 +263,36 @@
             <div class="col-lg-12">
 
                 <!-- <p class="introtext"><?=lang('list_results');?></p> -->
-                <div class="col-md-3"><input type="text" id="sid" name="sid" class="form-control input-tip"></div>
-                <div class="col-md-3"> <input type="button" id="searchByNumber" class="btn btn-primary" value="Search By Serial Number"></div>
-                <div class="col-md-3">
-                    <select id="saleStatusFilter" class="form-control">
-                        <option value="">-- <?=lang('all')?> <?=lang('sale_status')?> --</option>
-                        <option value="completed" <?=$this->input->get('sale_status')=='completed'?'selected':''?>>Completed</option>
-                        <option value="delivered" <?=$this->input->get('sale_status')=='delivered'?'selected':''?>>Delivered</option>
-                        <option value="label_verifired" <?=$this->input->get('sale_status')=='label_verifired'?'selected':''?>>Label Verified</option>
-                        <option value="ready" <?=$this->input->get('sale_status')=='ready'?'selected':''?>>Ready</option>
-                        <option value="sent_to_rasd" <?=$this->input->get('sale_status')=='sent_to_rasd'?'selected':''?>>Sent to Rasd</option>
-                        <option value="pending" <?=$this->input->get('sale_status')=='pending'?'selected':''?>>Pending</option>
-                        <option value="returned" <?=$this->input->get('sale_status')=='returned'?'selected':''?>>Returned</option>
-                    </select>
+                <!-- Filter Row 1: Dates, Serial#, Status, Search Button -->
+                <div class="row" style="margin-bottom:8px;">
+                    <div class="col-md-2">
+                        <label><?=lang('from_date')?></label>
+                        <input type="text" id="filterFromDate" class="form-control input-tip date" placeholder="From Date" value="<?=htmlspecialchars($this->input->get('from_date') ?? '')?>"> 
+                    </div>
+                    <div class="col-md-2">
+                        <label><?=lang('to_date')?></label>
+                        <input type="text" id="filterToDate" class="form-control input-tip date" placeholder="To Date" value="<?=htmlspecialchars($this->input->get('to_date') ?? '')?>"> 
+                    </div>
+                    <div class="col-md-2">
+                        <label><?=lang('Sale #')?></label>
+                        <input type="text" id="sid" name="sid" class="form-control input-tip" placeholder="Serial #" value="<?=htmlspecialchars($sid ?? '')?>">
+                    </div>
+                    <div class="col-md-3">
+                        <label><?=lang('sale_status')?></label>
+                        <?php
+                        $active_statuses = $this->input->get('sale_status') ? explode(',', $this->input->get('sale_status')) : [];
+                        $status_options  = ['completed'=>'Completed','delivered'=>'Delivered','label_verifired'=>'Label Verified','ready'=>'Ready','sent_to_rasd'=>'Sent to Rasd','pending'=>'Pending','returned'=>'Returned'];
+                        ?>
+                        <select id="saleStatusFilter" multiple class="form-control" style="width:100%;">
+                            <?php foreach ($status_options as $val => $label): ?>
+                                <option value="<?=$val?>" <?=in_array($val, $active_statuses)?'selected':''?>><?=$label?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label>&nbsp;</label><br>
+                        <input type="button" id="searchByNumber" class="btn btn-primary btn-block" value="<?=lang('search')?>">
+                    </div>
                 </div>
 
 
@@ -340,25 +357,29 @@
 ?>
 
 <script>
-    document.getElementById('searchByNumber').addEventListener('click', function() {
-    var pidValue = document.getElementById('sid').value;
-    var statusValue = document.getElementById('saleStatusFilter').value;
-    if (!pidValue && !statusValue) {
-        alert("Please enter a purchase number or select a status.");
-        return;
+$(document).ready(function () {
+    if ($.fn.select2) {
+        $('#saleStatusFilter').select2({
+            placeholder: '-- <?=lang('all')?> <?=lang('sale_status')?> --',
+            allowClear: true,
+            width: '100%'
+        });
     }
-    var baseUrl = window.location.href.split('?')[0];
+});
+
+document.getElementById('searchByNumber').addEventListener('click', function () {
+    var sidValue    = document.getElementById('sid').value.trim();
+    var statuses    = $('#saleStatusFilter').val();
+    var fromDate    = document.getElementById('filterFromDate').value.trim();
+    var toDate      = document.getElementById('filterToDate').value.trim();
+
     var params = [];
-    if (pidValue) params.push("sid=" + encodeURIComponent(pidValue));
-    if (statusValue) params.push("sale_status=" + encodeURIComponent(statusValue));
-    window.location.href = baseUrl + "?" + params.join("&");
-});
+    if (sidValue)                        params.push('sid='         + encodeURIComponent(sidValue));
+    if (statuses && statuses.length > 0) params.push('sale_status=' + encodeURIComponent(statuses.join(',')));
+    if (fromDate)                        params.push('from_date='   + encodeURIComponent(fromDate));
+    if (toDate)                          params.push('to_date='     + encodeURIComponent(toDate));
 
-    document.getElementById('saleStatusFilter').addEventListener('change', function() {
-    var statusValue = this.value;
     var baseUrl = window.location.href.split('?')[0];
-    var newUrl = statusValue ? baseUrl + "?sale_status=" + encodeURIComponent(statusValue) : baseUrl;
-    window.location.href = newUrl;
+    window.location.href = params.length ? baseUrl + '?' + params.join('&') : baseUrl;
 });
-
 </script>
