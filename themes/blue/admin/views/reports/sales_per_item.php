@@ -8,8 +8,46 @@
         });
         XLSX.writeFile(wb, filename);
     }
-    $(document).ready(function() {
-        // No need for manual Select2 value setting - GET method automatically persists values
+
+    // ── Pagination ────────────────────────────────────────────────────
+    var SPI_PAGE_SIZE = 100;
+    var SPI_current   = 1;
+
+    function spiGetRows() {
+        return $('#salesItemTable tbody tr.spi-data-row');
+    }
+
+    function spiRender() {
+        var rows  = spiGetRows();
+        var total = rows.length;
+        var pages = Math.max(1, Math.ceil(total / SPI_PAGE_SIZE));
+        if (SPI_current > pages) SPI_current = pages;
+
+        rows.hide();
+        var start = (SPI_current - 1) * SPI_PAGE_SIZE;
+        rows.slice(start, start + SPI_PAGE_SIZE).show();
+
+        // Info
+        var from = total === 0 ? 0 : start + 1;
+        var to   = Math.min(start + SPI_PAGE_SIZE, total);
+        $('#spi-page-info').text('Showing ' + from + '\u2013' + to + ' of ' + total + ' rows');
+
+        // Buttons
+        $('#spi-prev').prop('disabled', SPI_current <= 1);
+        $('#spi-next').prop('disabled', SPI_current >= pages);
+        $('#spi-page-num').text('Page ' + SPI_current + ' of ' + pages);
+    }
+
+    $(document).ready(function () {
+        if ($('.spi-data-row').length) { spiRender(); }
+
+        $(document).on('click', '#spi-prev', function () {
+            if (SPI_current > 1) { SPI_current--; spiRender(); }
+        });
+        $(document).on('click', '#spi-next', function () {
+            var pages = Math.max(1, Math.ceil(spiGetRows().length / SPI_PAGE_SIZE));
+            if (SPI_current < pages) { SPI_current++; spiRender(); }
+        });
     });
 </script>
 
@@ -153,7 +191,7 @@
                                             // Determine row class for returns (red)
                                             $row_class = ($data->type == 'Return') ? 'style="background-color: #ffe6e6;"' : '';
                                             ?>
-                                            <tr <?= $row_class ?>>
+                                            <tr class="spi-data-row" <?= $row_class ?>>
                                                 <td><?= $count ?></td>
                                                 <td><?= $data->type ?></td>
                                                 <td><?= $data->date ?></td>
@@ -208,6 +246,20 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        <!-- Pagination controls -->
+                        <?php if (isset($sales_data) && !empty($sales_data)): ?>
+                        <div style="margin-top:10px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                            <button id="spi-prev" class="btn btn-default btn-sm" type="button">
+                                <i class="fa fa-chevron-left"></i> Prev
+                            </button>
+                            <span id="spi-page-num" style="font-size:13px;"></span>
+                            <button id="spi-next" class="btn btn-default btn-sm" type="button">
+                                Next <i class="fa fa-chevron-right"></i>
+                            </button>
+                            <span id="spi-page-info" class="text-muted" style="font-size:12px; margin-left:8px;"></span>
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
