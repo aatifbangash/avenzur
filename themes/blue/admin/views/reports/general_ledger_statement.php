@@ -183,6 +183,10 @@
 
                             foreach($supplier_statement as $statement){
 
+                                if(empty($statement->amount) || $statement->amount == 0) {
+                                    continue;
+                                }
+
                                 if($statement->dc == 'C'){
                                     $balance =  $balance - $statement->amount;
                                 }else{
