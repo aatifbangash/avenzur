@@ -8033,27 +8033,44 @@ class Reports extends MY_Controller
         $this->data['customers'] = $this->site->getAllCompanies('customer');
         $this->data['warehouses'] = $this->site->getAllWarehouses();
 
+        // Salesmen dropdown
+        $sm_q = $this->db->select('id, name')->from('sales_man')->order_by('name', 'asc')->get();
+        $this->data['salesmen'] = $sm_q->result();
+
         // Initialize default values
-        $this->data['customer_id'] = null;
-        $this->data['pharmacy_id'] = null;
-        $this->data['start_date'] = null;
-        $this->data['end_date'] = null;
+        $this->data['customer_id']  = null;
+        $this->data['pharmacy_id']  = null;
+        $this->data['start_date']   = null;
+        $this->data['end_date']     = null;
+        $this->data['salesman_id']  = null;
+        $this->data['record_type']  = 'all';
 
         // Check if form is submitted
         $from_date = $this->input->post('from_date');
-        $to_date = $this->input->post('to_date');
+        $to_date   = $this->input->post('to_date');
 
         if ($from_date) {
             // Get filter parameters
             $customer_id = $this->input->post('customer_id');
             $pharmacy_id = $this->input->post('pharmacy_id');
+            $salesman_id = $this->input->post('salesman');
+            $record_type = $this->input->post('record_type') ?: 'all';
+
+            // Pre-fetch salesman name
+            $salesman_name = null;
+            if ($salesman_id) {
+                $sm_name_q = $this->db->select('name')->from('sales_man')->where('id', $salesman_id)->get();
+                if ($sm_name_q->num_rows() > 0) {
+                    $salesman_name = $sm_name_q->row()->name;
+                }
+            }
 
             // Convert dates using sma->fld() like supplier_statement
             $start_date = $this->sma->fld($from_date);
-            $end_date = $this->sma->fld($to_date);
+            $end_date   = $this->sma->fld($to_date);
 
             // Get sales data from model
-            $invoices = $this->reports_model->getSalesPerInvoice($start_date, $end_date, $customer_id, $pharmacy_id);
+            $invoices = $this->reports_model->getSalesPerInvoice($start_date, $end_date, $customer_id, $pharmacy_id, $salesman_name, $record_type);
 
             // Calculate totals
             $totals = [
@@ -8087,8 +8104,10 @@ class Reports extends MY_Controller
             $this->data['totals'] = $totals;
             $this->data['customer_id'] = $customer_id;
             $this->data['pharmacy_id'] = $pharmacy_id;
-            $this->data['start_date'] = $from_date;
-            $this->data['end_date'] = $to_date;
+            $this->data['salesman_id'] = $salesman_id;
+            $this->data['record_type'] = $record_type;
+            $this->data['start_date']  = $from_date;
+            $this->data['end_date']    = $to_date;
         }
 
         // Page setup
