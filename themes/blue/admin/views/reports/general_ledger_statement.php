@@ -201,7 +201,7 @@
                                 if($statement->transaction_type == 'journal'){
                                     $link = admin_url('entries/view/journal/' . $statement->entry_id);
                                     $transaction_type = 'Journal';
-                                    $transaction_id = $statement->code;
+                                    $transaction_id = $statement->entry_id;
                                     $note = $statement->narration;
                                 }else if($statement->transaction_type == 'payment'){
                                     $link = admin_url('entries/view/payment/' . $statement->entry_id);
