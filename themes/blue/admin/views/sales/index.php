@@ -25,7 +25,7 @@
                 //if(aData[7] > aData[9]){ nRow.className = "product_link warning"; } else { nRow.className = "product_link"; }
                 return nRow;
             },
-            "aoColumns": <?php if ($is_hills): ?>[{"bSortable": false,"mRender": checkbox}, {"sWidth": "55px"}, {"mRender": fld}, {"sWidth": "90px"}, {"sWidth": "55px"}, {"bVisible": false}, {"sWidth": "380px"}, {"mRender": row_status}, {"mRender": currencyFormat}, {"bVisible": false}, {"bVisible": false}, {"bVisible": false}, {"bSortable": false,"mRender": attachment}, {"bVisible": false}, {"bSortable": false}]<?php else: ?>[{"bSortable": false,"mRender": checkbox}, null, {"mRender": fld},null, null, null, null, {"mRender": row_status}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": pay_status}, {"bSortable": false,"mRender": attachment}, {"bVisible": false}, {"bSortable": false}]<?php endif; ?>,
+            "aoColumns": <?php if ($is_hills): ?>[{"bSortable": false,"mRender": checkbox}, {"sWidth": "55px"}, {"sWidth": "165px", "mRender": fld}, {"sWidth": "90px"}, {"sWidth": "55px"}, {"bVisible": false}, {"sWidth": "270px"}, {"mRender": row_status}, {"mRender": currencyFormat}, {"bVisible": false}, {"bVisible": false}, {"bVisible": false}, {"bSortable": false,"mRender": attachment}, {"bVisible": false}, {"bSortable": false}]<?php else: ?>[{"bSortable": false,"mRender": checkbox}, null, {"mRender": fld},null, null, null, null, {"mRender": row_status}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": pay_status}, {"bSortable": false,"mRender": attachment}, {"bVisible": false}, {"bSortable": false}]<?php endif; ?>,
             "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                 <?php if ($is_hills): ?>
                 var gtotal = 0;
@@ -314,11 +314,11 @@
                                 <input class="checkbox checkft" type="checkbox" name="check"/>
                             </th>
                             <th<?php if($is_hills): ?> style="width:55px;max-width:55px;"<?php endif; ?>><?= lang('Sale #'); ?></th>
-                            <th><?= lang('date'); ?></th>
+                            <th<?php if($is_hills): ?> style="width:165px;min-width:165px;"<?php endif; ?>><?= lang('date'); ?></th>
                             <th<?php if($is_hills): ?> style="width:90px;max-width:90px;"<?php endif; ?>><?= lang('reference_no'); ?></th>
                             <th<?php if($is_hills): ?> style="width:55px;max-width:55px;"<?php endif; ?>>Code</th>
                             <th><?= lang('biller'); ?></th>
-                            <th<?php if($is_hills): ?> style="width:380px;min-width:380px;"<?php endif; ?>><?= lang('customer'); ?></th>
+                            <th<?php if($is_hills): ?> style="width:270px;min-width:270px;"<?php endif; ?>><?= lang('customer'); ?></th>
                             <th><?= lang('sale_status'); ?></th>
                             <th><?= lang('grand_total'); ?></th>
                             <th><?= lang('paid'); ?></th>
