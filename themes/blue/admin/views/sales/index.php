@@ -281,7 +281,7 @@
                         <label><?=lang('sale_status')?></label>
                         <?php
                         $active_statuses = $this->input->get('sale_status') ? explode(',', $this->input->get('sale_status')) : [];
-                        $status_options  = ['completed'=>'Completed','delivered'=>'Delivered','label_verifired'=>'Label Verified','ready'=>'Ready','sent_to_rasd'=>'Sent to Rasd','pending'=>'Pending','returned'=>'Returned'];
+                        $status_options  = ['completed'=>'Completed','delivered'=>'Delivered','label_verifired'=>'Label Verified','ready'=>'Ready','sent_to_rasd'=>'Sent to Rasd','pending'=>'Pending','out_for_delivery'=>'Out for Delivery'];
                         ?>
                         <select id="saleStatusFilter" multiple class="form-control" style="width:100%;">
                             <?php foreach ($status_options as $val => $label): ?>

@@ -4041,7 +4041,7 @@ class Sales extends MY_Controller
         if ($this->input->get('attachment') == 'yes') {
             $this->datatables->where('payment_status !=', 'paid')->where('attachment !=', null);
         }
-        $allowed_statuses = ['completed', 'delivered', 'label_verifired', 'ready', 'sent_to_rasd', 'pending', 'returned'];
+        $allowed_statuses = ['completed', 'delivered', 'label_verifired', 'ready', 'sent_to_rasd', 'pending', 'out_for_delivery', 'returned'];
         $sale_status_raw = $this->input->get('sale_status');
         if ($sale_status_raw) {
             $statuses = array_values(array_filter(array_intersect(explode(',', $sale_status_raw), $allowed_statuses)));
