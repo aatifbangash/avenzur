@@ -8935,6 +8935,12 @@ class Reports extends MY_Controller
         $per_page = 100;
 
         $payments = $this->purchases_model->getPaymentReferences($filters);
+
+        // Exclude suppliers whose category contains خدمات
+        $payments = array_values(array_filter($payments, function ($p) {
+            return stripos($p->supplier_group ?? '', 'خدمات') === false;
+        }));
+
         $total    = count($payments);
         $offset   = ($page - 1) * $per_page;
         $paged    = array_slice($payments, $offset, $per_page);
