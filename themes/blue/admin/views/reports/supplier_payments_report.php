@@ -76,17 +76,6 @@ $base_url    = admin_url('reports/supplier_payments_report') . ($base_qs ? '?' .
                     <a href="<?= admin_url('reports/supplier_payments_report') ?>" class="btn btn-default btn-sm"><i class="fa fa-times"></i> Reset</a>
                 </div>
 
-                <div class="col-md-2 text-right" style="padding-top:22px;">
-                    <?php
-                    $excel_params = array_filter(['supplier_id' => $filter_supplier_id, 'from_date' => $filter_from, 'to_date' => $filter_to]);
-                    $excel_params['export_excel'] = 1;
-                    $excel_url = admin_url('reports/supplier_payments_report?' . http_build_query($excel_params));
-                    ?>
-                    <a href="<?= $excel_url ?>" class="btn btn-success btn-sm">
-                        <i class="fa fa-file-excel-o"></i> Export Excel
-                    </a>
-                </div>
-
             </div>
         </form>
         <!-- ── End Filter Form ──────────────────────────────────── -->

@@ -8941,39 +8941,6 @@ class Reports extends MY_Controller
 
         $grand_total_sum = array_sum(array_column($payments, 'amount'));
 
-        // Excel export
-        if ($this->input->get('export_excel')) {
-            $this->load->library('excel');
-            $sheet = $this->excel->setActiveSheetIndex(0);
-            $sheet->setTitle('Customer Collections Report');
-            $sheet->SetCellValue('A1', '#');
-            $sheet->SetCellValue('B1', 'Date');
-            $sheet->SetCellValue('C1', 'Customer Code');
-            $sheet->SetCellValue('D1', 'Customer Name');
-            $sheet->SetCellValue('E1', 'Collection Amount');
-
-            $row = 2;
-            foreach ($payments as $i => $p) {
-                $sheet->SetCellValue('A' . $row, $i + 1);
-                $sheet->SetCellValue('B' . $row, !empty($p->date) ? date('d-M-Y', strtotime($p->date)) : '');
-                $sheet->SetCellValue('C' . $row, $p->sequence_code ?? '');
-                $sheet->SetCellValue('D' . $row, $p->company ?? '');
-                $sheet->SetCellValue('E' . $row, round((float)$p->amount, 2));
-                $row++;
-            }
-            // Totals row
-            $sheet->SetCellValue('D' . $row, 'Total');
-            $sheet->SetCellValue('E' . $row, round($grand_total_sum, 2));
-
-            foreach (range('A', 'E') as $col) {
-                $sheet->getColumnDimension($col)->setAutoSize(true);
-            }
-            $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
-            $this->load->helper('excel');
-            create_excel($this->excel, 'Customer_Collections_Report_' . date('Y-m-d'));
-            return;
-        }
-
         $this->data['payments']        = $paged;
         $this->data['total_records']   = $total;
         $this->data['grand_total_sum'] = $grand_total_sum;
@@ -9023,39 +8990,6 @@ class Reports extends MY_Controller
         $paged    = array_slice($payments, $offset, $per_page);
 
         $grand_total_sum = array_sum(array_column($payments, 'amount'));
-
-        // Excel export
-        if ($this->input->get('export_excel')) {
-            $this->load->library('excel');
-            $sheet = $this->excel->setActiveSheetIndex(0);
-            $sheet->setTitle('Supplier Payments Report');
-            $sheet->SetCellValue('A1', '#');
-            $sheet->SetCellValue('B1', 'Date');
-            $sheet->SetCellValue('C1', 'Supplier Code');
-            $sheet->SetCellValue('D1', 'Supplier Name');
-            $sheet->SetCellValue('E1', 'Payment Amount');
-
-            $row = 2;
-            foreach ($payments as $i => $p) {
-                $sheet->SetCellValue('A' . $row, $i + 1);
-                $sheet->SetCellValue('B' . $row, !empty($p->date) ? date('d-M-Y', strtotime($p->date)) : '');
-                $sheet->SetCellValue('C' . $row, $p->sequence_code ?? '');
-                $sheet->SetCellValue('D' . $row, $p->company ?? '');
-                $sheet->SetCellValue('E' . $row, round((float)$p->amount, 2));
-                $row++;
-            }
-            // Totals row
-            $sheet->SetCellValue('D' . $row, 'Total');
-            $sheet->SetCellValue('E' . $row, round($grand_total_sum, 2));
-
-            foreach (range('A', 'E') as $col) {
-                $sheet->getColumnDimension($col)->setAutoSize(true);
-            }
-            $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
-            $this->load->helper('excel');
-            create_excel($this->excel, 'Supplier_Payments_Report_' . date('Y-m-d'));
-            return;
-        }
 
         $this->data['payments']        = $paged;
         $this->data['total_records']   = $total;
