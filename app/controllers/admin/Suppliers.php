@@ -3278,7 +3278,8 @@ class Suppliers extends MY_Controller
             // Total sources must cover total invoice applied amounts
             $total_sources = $payment_amount + $advance_amount + $total_applied_debit_memos;
             $total_invoices_to_settle = $total_payments_from_invoices + $total_service_inv_payments + $total_credit_memo_payments;
-            if (round($total_invoices_to_settle, 2) > round($total_sources, 2)) {
+
+            if (($total_invoices_to_settle - $total_sources) > 0.01) {
                 $this->session->set_flashdata('error', 'Total payment sources (' . number_format($total_sources, 2) . ') are insufficient to cover the applied invoice amounts (' . number_format($total_invoices_to_settle, 2) . ').');
                 admin_redirect('suppliers/payment_to_supplier_new');
             }
