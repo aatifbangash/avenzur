@@ -8910,6 +8910,83 @@ class Reports extends MY_Controller
     }
 
     // ─────────────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────
+    //  SUPPLIER PAYMENTS REPORT
+    // ─────────────────────────────────────────────────────────────────
+    public function supplier_payments_report()
+    {
+        $this->load->admin_model('purchases_model');
+
+        $filters = [
+            'supplier_id' => $this->input->get('supplier_id') ?: '',
+            'from_date'   => $this->input->get('from_date')   ?: '',
+            'to_date'     => $this->input->get('to_date')     ?: '',
+        ];
+
+        // Convert display date (d/m/Y) to Y-m-d
+        foreach (['from_date', 'to_date'] as $f) {
+            if (!empty($filters[$f])) {
+                $d = DateTime::createFromFormat('d/m/Y', $filters[$f]);
+                if ($d) { $filters[$f] = $d->format('Y-m-d'); }
+            }
+        }
+
+        $page     = max(1, (int)($this->input->get('page') ?: 1));
+        $per_page = 100;
+
+        $payments = $this->purchases_model->getPaymentReferences($filters);
+        $total    = count($payments);
+        $offset   = ($page - 1) * $per_page;
+        $paged    = array_slice($payments, $offset, $per_page);
+
+        $grand_total_sum = array_sum(array_column($payments, 'amount'));
+
+        // Excel export
+        if ($this->input->get('export_excel')) {
+            $this->load->library('excel');
+            $sheet = $this->excel->setActiveSheetIndex(0);
+            $sheet->setTitle('Supplier Payments Report');
+            $sheet->SetCellValue('A1', '#');
+            $sheet->SetCellValue('B1', 'Date');
+            $sheet->SetCellValue('C1', 'Supplier Code');
+            $sheet->SetCellValue('D1', 'Supplier Name');
+            $sheet->SetCellValue('E1', 'Payment Amount');
+
+            $row = 2;
+            foreach ($payments as $i => $p) {
+                $sheet->SetCellValue('A' . $row, $i + 1);
+                $sheet->SetCellValue('B' . $row, !empty($p->date) ? date('d-M-Y', strtotime($p->date)) : '');
+                $sheet->SetCellValue('C' . $row, $p->sequence_code ?? '');
+                $sheet->SetCellValue('D' . $row, $p->company ?? '');
+                $sheet->SetCellValue('E' . $row, round((float)$p->amount, 2));
+                $row++;
+            }
+            // Totals row
+            $sheet->SetCellValue('D' . $row, 'Total');
+            $sheet->SetCellValue('E' . $row, round($grand_total_sum, 2));
+
+            foreach (range('A', 'E') as $col) {
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+            }
+            $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+            $this->load->helper('excel');
+            create_excel($this->excel, 'Supplier_Payments_Report_' . date('Y-m-d'));
+            return;
+        }
+
+        $this->data['payments']        = $paged;
+        $this->data['total_records']   = $total;
+        $this->data['grand_total_sum'] = $grand_total_sum;
+        $this->data['filters']         = $filters;
+        $this->data['page']            = $page;
+        $this->data['per_page']        = $per_page;
+        $this->data['suppliers']       = $this->site->getAllCompanies('supplier');
+
+        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => 'Supplier Payments Report']];
+        $meta = ['page_title' => 'Supplier Payments Report', 'bc' => $bc];
+        $this->page_construct('reports/supplier_payments_report', $meta, $this->data);
+    }
+
     //  UNIFIED VAT REPORT  (Sales + Purchases + Returns)
     //  Optimised: date & warehouse filters pushed into each UNION branch
     //  so MySQL can use indexes on the date column directly.
