@@ -3,6 +3,7 @@
 <script>
     $(document).ready(function () {
         oTable = $('#SLData').dataTable({
+            "bAutoWidth": <?php echo $is_hills ? 'false' : 'true'; ?>,
             "aaSorting": [[1, "desc"], [2, "desc"]],
             "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?=lang('all')?>"]],
             "iDisplayLength": <?=$Settings->rows_per_page?>,
@@ -24,15 +25,14 @@
                 //if(aData[7] > aData[9]){ nRow.className = "product_link warning"; } else { nRow.className = "product_link"; }
                 return nRow;
             },
-            "aoColumns": <?php if ($is_hills): ?>[{"bSortable": false,"mRender": checkbox}, null, {"mRender": fld}, null, null, {"bVisible": false}, null, {"mRender": row_status}, {"mRender": currencyFormat}, {"bVisible": false}, {"bVisible": false}, {"bVisible": false}, {"bSortable": false,"mRender": attachment}, {"bVisible": false}, {"bSortable": false}]<?php else: ?>[{"bSortable": false,"mRender": checkbox}, null, {"mRender": fld},null, null, null, null, {"mRender": row_status}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": pay_status}, {"bSortable": false,"mRender": attachment}, {"bVisible": false}, {"bSortable": false}]<?php endif; ?>,
+            "aoColumns": <?php if ($is_hills): ?>[{"bSortable": false,"mRender": checkbox}, {"sWidth": "55px"}, {"mRender": fld}, {"sWidth": "90px"}, {"sWidth": "55px"}, {"bVisible": false}, {"sWidth": "380px"}, {"mRender": row_status}, {"mRender": currencyFormat}, {"bVisible": false}, {"bVisible": false}, {"bVisible": false}, {"bSortable": false,"mRender": attachment}, {"bVisible": false}, {"bSortable": false}]<?php else: ?>[{"bSortable": false,"mRender": checkbox}, null, {"mRender": fld},null, null, null, null, {"mRender": row_status}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": pay_status}, {"bSortable": false,"mRender": attachment}, {"bVisible": false}, {"bSortable": false}]<?php endif; ?>,
             "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                 <?php if ($is_hills): ?>
                 var gtotal = 0;
                 for (var i = 0; i < aiDisplay.length; i++) {
                     gtotal += parseFloat(aaData[aiDisplay[i]][8]);
                 }
-                var nCells = nRow.getElementsByTagName('th');
-                nCells[6].innerHTML = currencyFormat(parseFloat(gtotal));
+                document.getElementById('hills-footer-gtotal').innerHTML = currencyFormat(parseFloat(gtotal));
                 <?php else: ?>
                 var gtotal = 0, paid = 0, balance = 0;
                 for (var i = 0; i < aaData.length; i++) {
@@ -313,12 +313,12 @@
                             <th style="min-width:30px; width: 30px; text-align: center;">
                                 <input class="checkbox checkft" type="checkbox" name="check"/>
                             </th>
-                            <th><?= lang('Sale #'); ?></th>
+                            <th<?php if($is_hills): ?> style="width:55px;max-width:55px;"<?php endif; ?>><?= lang('Sale #'); ?></th>
                             <th><?= lang('date'); ?></th>
-                            <th><?= lang('reference_no'); ?></th>
-                            <th>Code</th>
+                            <th<?php if($is_hills): ?> style="width:90px;max-width:90px;"<?php endif; ?>><?= lang('reference_no'); ?></th>
+                            <th<?php if($is_hills): ?> style="width:55px;max-width:55px;"<?php endif; ?>>Code</th>
                             <th><?= lang('biller'); ?></th>
-                            <th><?= lang('customer'); ?></th>
+                            <th<?php if($is_hills): ?> style="width:380px;min-width:380px;"<?php endif; ?>><?= lang('customer'); ?></th>
                             <th><?= lang('sale_status'); ?></th>
                             <th><?= lang('grand_total'); ?></th>
                             <th><?= lang('paid'); ?></th>
@@ -340,7 +340,7 @@
                                 <input class="checkbox checkft" type="checkbox" name="check"/>
                             </th>
                             <th></th><th></th><th></th><th></th><th></th>
-                            <th><?= lang('grand_total'); ?></th>
+                            <th id="hills-footer-gtotal"><?= lang('grand_total'); ?></th>
                             <th><?= lang('paid'); ?></th>
                             <th><?= lang('balance'); ?></th>
                             <th></th>
