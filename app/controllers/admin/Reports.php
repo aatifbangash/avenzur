@@ -8911,6 +8911,83 @@ class Reports extends MY_Controller
 
     // ─────────────────────────────────────────────────────────────────
     // ─────────────────────────────────────────────────────────────────
+    //  CUSTOMER COLLECTIONS REPORT
+    // ─────────────────────────────────────────────────────────────────
+    public function customer_collections_report()
+    {
+        $this->load->admin_model('sales_model');
+
+        $filters = [
+            'customer_id' => $this->input->get('customer_id') ?: '',
+            'from_date'   => $this->input->get('from_date')   ?: '',
+            'to_date'     => $this->input->get('to_date')     ?: '',
+        ];
+
+        // Convert display date (d/m/Y) to Y-m-d
+        foreach (['from_date', 'to_date'] as $f) {
+            if (!empty($filters[$f])) {
+                $d = DateTime::createFromFormat('d/m/Y', $filters[$f]);
+                if ($d) { $filters[$f] = $d->format('Y-m-d'); }
+            }
+        }
+
+        $page     = max(1, (int)($this->input->get('page') ?: 1));
+        $per_page = 100;
+
+        $payments = $this->sales_model->getPaymentReferences($filters);
+        $total    = count($payments);
+        $offset   = ($page - 1) * $per_page;
+        $paged    = array_slice($payments, $offset, $per_page);
+
+        $grand_total_sum = array_sum(array_column($payments, 'amount'));
+
+        // Excel export
+        if ($this->input->get('export_excel')) {
+            $this->load->library('excel');
+            $sheet = $this->excel->setActiveSheetIndex(0);
+            $sheet->setTitle('Customer Collections Report');
+            $sheet->SetCellValue('A1', '#');
+            $sheet->SetCellValue('B1', 'Date');
+            $sheet->SetCellValue('C1', 'Customer Code');
+            $sheet->SetCellValue('D1', 'Customer Name');
+            $sheet->SetCellValue('E1', 'Collection Amount');
+
+            $row = 2;
+            foreach ($payments as $i => $p) {
+                $sheet->SetCellValue('A' . $row, $i + 1);
+                $sheet->SetCellValue('B' . $row, !empty($p->date) ? date('d-M-Y', strtotime($p->date)) : '');
+                $sheet->SetCellValue('C' . $row, $p->sequence_code ?? '');
+                $sheet->SetCellValue('D' . $row, $p->company ?? '');
+                $sheet->SetCellValue('E' . $row, round((float)$p->amount, 2));
+                $row++;
+            }
+            // Totals row
+            $sheet->SetCellValue('D' . $row, 'Total');
+            $sheet->SetCellValue('E' . $row, round($grand_total_sum, 2));
+
+            foreach (range('A', 'E') as $col) {
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+            }
+            $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+            $this->load->helper('excel');
+            create_excel($this->excel, 'Customer_Collections_Report_' . date('Y-m-d'));
+            return;
+        }
+
+        $this->data['payments']        = $paged;
+        $this->data['total_records']   = $total;
+        $this->data['grand_total_sum'] = $grand_total_sum;
+        $this->data['filters']         = $filters;
+        $this->data['page']            = $page;
+        $this->data['per_page']        = $per_page;
+        $this->data['customers']       = $this->site->getAllCompanies('customer');
+
+        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => 'Customer Collections Report']];
+        $meta = ['page_title' => 'Customer Collections Report', 'bc' => $bc];
+        $this->page_construct('reports/customer_collections_report', $meta, $this->data);
+    }
+
+    // ─────────────────────────────────────────────────────────────────
     //  SUPPLIER PAYMENTS REPORT
     // ─────────────────────────────────────────────────────────────────
     public function supplier_payments_report()

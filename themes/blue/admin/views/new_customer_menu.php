@@ -329,7 +329,7 @@
                         <li><a href="<?= admin_url('reports/invoice_status'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Invoice Status'); ?></a></li>
                         <li><a href="<?= admin_url('reports/sales_per_invoice'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Sales Per Invoice'); ?></a></li>
                         <li><a href="<?= admin_url('reports/sales_per_item'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Sales Per Item'); ?></a></li>
-                        
+                        <li><a href="<?= admin_url('reports/customer_collections_report'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Customer Collections Report'); ?></a></li>
                     </ul>
                 </li>
 
