@@ -2,11 +2,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
 <script>
     function exportTableToExcel(tableId, filename = 'table.xlsx') {
+        // Show all rows (bypass pagination) before exporting
+        $('#' + tableId + ' tbody tr.ppi-data-row').show();
+
         const table = document.getElementById(tableId);
-        const wb = XLSX.utils.table_to_book(table, {
-            sheet: 'Sheet 1'
-        });
+        const wb = XLSX.utils.table_to_book(table, { sheet: 'Sheet 1' });
         XLSX.writeFile(wb, filename);
+
+        // Restore paginated view
+        ppiRender();
     }
 
     // ── Pagination ────────────────────────────────────────────────────
