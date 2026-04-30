@@ -415,10 +415,10 @@ $(document).ready(function () {
         $('.creditmemo-checkbox').prop('checked', $(this).is(':checked')).trigger('change');
     });
 
-    // ── Sync payment_amount to cover all checked invoices ────────────
-    // Called whenever any invoice / service-invoice / debit-memo checkbox changes.
-    // Sets payment_amount = total checked outstanding − debit-memo coverage,
-    // so the greedy distribution in recalculate() always has budget to work with.
+    // ── Sync hidden totals for checked invoices (does NOT touch #payment_amount) ──
+    // #payment_amount is always controlled by the user.
+    // This function only keeps the hidden #total_invoices_checked in sync so
+    // other parts of the page can read how much is selected if needed.
     function syncPaymentAmount() {
         var totalChecked = 0;
         $('.invoice-checkbox:checked, .serviceinvoice-checkbox:checked, .creditmemo-checkbox:checked').each(function () {
@@ -429,7 +429,7 @@ $(document).ready(function () {
             totalDMCoverage += parseFloat($(this).data('amount')) || 0;
         });
         var needed = Math.max(0, totalChecked - totalDMCoverage);
-        $('#payment_amount').val(needed.toFixed(5));
+        $('#total_invoices_checked').val(needed.toFixed(5));
     }
 
     // ── Advance checkbox toggle ──────────────────────────────────────
@@ -476,7 +476,7 @@ $(document).ready(function () {
         $('#dm-total-applied').text(totalDMApplied.toFixed(5));
 
         var totalSources = cashPayment + advanceApplied + totalDMApplied;
-        var budgetLeft      = totalSources;
+        var budgetLeft      = Math.round(totalSources * 1e5) / 1e5;
         var totalInvApplied = 0;
         var totalSIPayment  = 0;
         var totalCMPayment  = 0;
@@ -486,11 +486,11 @@ $(document).ready(function () {
             var id           = $(this).val();
             var isServiceInv = $(this).hasClass('serviceinvoice-checkbox');
             var isCreditMemo = $(this).hasClass('creditmemo-checkbox');
-            var outstanding  = parseFloat($(this).data('amount')) || 0;
+            var outstanding  = Math.round((parseFloat($(this).data('amount')) || 0) * 1e5) / 1e5;
             if ($(this).is(':checked')) {
-                var apply = Math.min(outstanding, budgetLeft);
-                budgetLeft      -= apply;
-                totalInvApplied += apply;
+                var apply = Math.round(Math.min(outstanding, budgetLeft) * 1e5) / 1e5;
+                budgetLeft      = Math.round((budgetLeft - apply) * 1e5) / 1e5;
+                totalInvApplied = Math.round((totalInvApplied + apply) * 1e5) / 1e5;
                 if (isServiceInv) {
                     totalSIPayment += apply;
                     $('#si-amount-' + id).val(apply.toFixed(5));
@@ -627,6 +627,7 @@ $(document).ready(function () {
                         <div class="form-group">
                             <?= lang('payment_amount', 'payment_amount'); ?>
                             <?= form_input('payment_amount', '0.00', 'class="form-control" id="payment_amount" type="number" step="0.01" min="0" placeholder="0.00"'); ?>
+                            <input type="hidden" id="total_invoices_checked" value="0.00000">
                         </div>
                     </div>
                     <div class="col-md-3">
