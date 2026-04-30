@@ -219,7 +219,7 @@
                                     $transaction_id = $statement->code;
                                     $note = $statement->narration;
                                 }else if($statement->transaction_type == 'sales_invoice' || $statement->transaction_type == 'saleorder'){
-                                    $link = admin_url('sales?sid=' . $statement->sale_id);
+                                    $link = admin_url('sales/completed_sales?sid=' . $statement->sale_id);
                                     $transaction_type = 'Sales Invoice';
                                     $transaction_id = $statement->sale_id;
                                     $note = strip_tags(html_entity_decode($statement->narration));
