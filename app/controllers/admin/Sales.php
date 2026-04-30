@@ -3977,19 +3977,38 @@ class Sales extends MY_Controller
         //$action = '<div class="text-center">' . $detail_link . ' ' . $edit_link . ' ' . $email_link . ' ' . $delete_link . '</div>';
 
         $this->load->library('datatables');
-        if ($warehouse_id) {
-            $this->datatables
-                ->select("{$this->db->dbprefix('sales')}.id as id, {$this->db->dbprefix('sales')}.id as number,DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, CONCAT('SL-', {$this->db->dbprefix('sales')}.id) as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, IFNULL(CONCAT('files/receipts/', (SELECT receipt FROM sma_delivery_items di WHERE di.invoice_id = {$this->db->dbprefix('sales')}.id AND COALESCE(di.is_delivered,0)=1 AND di.receipt IS NOT NULL AND di.receipt != '' LIMIT 1)), CONCAT('files/', {$this->db->dbprefix('sales')}.attachment)) as attachment, return_id")
-                ->from('sales')
-                ->where('warehouse_id', $warehouse_id)
-                ->where('shop', 0);
-                //->join('aramex_shipment', 'aramex_shipment.salesid=sales.id');
-        } else {
-            $this->datatables
-                ->select("{$this->db->dbprefix('sales')}.id as id, {$this->db->dbprefix('sales')}.id as number, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, CONCAT('SL-', {$this->db->dbprefix('sales')}.id) as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, IFNULL(CONCAT('files/receipts/', (SELECT receipt FROM sma_delivery_items di WHERE di.invoice_id = {$this->db->dbprefix('sales')}.id AND COALESCE(di.is_delivered,0)=1 AND di.receipt IS NOT NULL AND di.receipt != '' LIMIT 1)), CONCAT('files/', {$this->db->dbprefix('sales')}.attachment)) as attachment, return_id")
-                ->from('sales')
-                ->where('shop', 0); 
-        } 
+
+        if($this->Settings->site_name == 'Hills Business Medical'){
+            if ($warehouse_id) {
+                $this->datatables
+                    ->select("{$this->db->dbprefix('sales')}.id as id, {$this->db->dbprefix('sales')}.id as number,DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, CONCAT('SL-', {$this->db->dbprefix('sales')}.id) as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, IFNULL(CONCAT('files/receipts/', (SELECT receipt FROM sma_delivery_items di WHERE di.invoice_id = {$this->db->dbprefix('sales')}.id AND COALESCE(di.is_delivered,0)=1 AND di.receipt IS NOT NULL AND di.receipt != '' LIMIT 1)), CONCAT('files/', {$this->db->dbprefix('sales')}.attachment)) as attachment, return_id")
+                    ->from('sales')
+                    ->where('warehouse_id', $warehouse_id)
+                    ->where('shop', 0)
+                    ->where('sale_status <>', 'completed');
+                    //->join('aramex_shipment', 'aramex_shipment.salesid=sales.id');
+            } else {
+                $this->datatables
+                    ->select("{$this->db->dbprefix('sales')}.id as id, {$this->db->dbprefix('sales')}.id as number, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, CONCAT('SL-', {$this->db->dbprefix('sales')}.id) as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, IFNULL(CONCAT('files/receipts/', (SELECT receipt FROM sma_delivery_items di WHERE di.invoice_id = {$this->db->dbprefix('sales')}.id AND COALESCE(di.is_delivered,0)=1 AND di.receipt IS NOT NULL AND di.receipt != '' LIMIT 1)), CONCAT('files/', {$this->db->dbprefix('sales')}.attachment)) as attachment, return_id")
+                    ->from('sales')
+                    ->where('shop', 0)
+                    ->where('sale_status <>', 'completed');
+            } 
+        }else{
+            if ($warehouse_id) {
+                $this->datatables
+                    ->select("{$this->db->dbprefix('sales')}.id as id, {$this->db->dbprefix('sales')}.id as number,DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, CONCAT('SL-', {$this->db->dbprefix('sales')}.id) as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, IFNULL(CONCAT('files/receipts/', (SELECT receipt FROM sma_delivery_items di WHERE di.invoice_id = {$this->db->dbprefix('sales')}.id AND COALESCE(di.is_delivered,0)=1 AND di.receipt IS NOT NULL AND di.receipt != '' LIMIT 1)), CONCAT('files/', {$this->db->dbprefix('sales')}.attachment)) as attachment, return_id")
+                    ->from('sales')
+                    ->where('warehouse_id', $warehouse_id)
+                    ->where('shop', 0);
+                    //->join('aramex_shipment', 'aramex_shipment.salesid=sales.id');
+            } else {
+                $this->datatables
+                    ->select("{$this->db->dbprefix('sales')}.id as id, {$this->db->dbprefix('sales')}.id as number, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, CONCAT('SL-', {$this->db->dbprefix('sales')}.id) as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, IFNULL(CONCAT('files/receipts/', (SELECT receipt FROM sma_delivery_items di WHERE di.invoice_id = {$this->db->dbprefix('sales')}.id AND COALESCE(di.is_delivered,0)=1 AND di.receipt IS NOT NULL AND di.receipt != '' LIMIT 1)), CONCAT('files/', {$this->db->dbprefix('sales')}.attachment)) as attachment, return_id")
+                    ->from('sales')
+                    ->where('shop', 0); 
+            } 
+        }  
         if(is_numeric($sid)) {
             //$this->datatables->where('id', $sid);
             $this->datatables->group_start()
