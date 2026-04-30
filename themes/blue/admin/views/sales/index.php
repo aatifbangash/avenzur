@@ -1,4 +1,5 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<?php $is_hills = ($Settings->site_name == 'Hills Business Medical'); ?>
 <script>
     $(document).ready(function () {
         oTable = $('#SLData').dataTable({
@@ -23,8 +24,16 @@
                 //if(aData[7] > aData[9]){ nRow.className = "product_link warning"; } else { nRow.className = "product_link"; }
                 return nRow;
             },
-            "aoColumns": [{"bSortable": false,"mRender": checkbox}, null, {"mRender": fld},null, null, null, null, {"mRender": row_status}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": pay_status}, {"bSortable": false,"mRender": attachment}, {"bVisible": false}, {"bSortable": false}],
+            "aoColumns": <?php if ($is_hills): ?>[{"bSortable": false,"mRender": checkbox}, null, {"mRender": fld}, null, null, {"bVisible": false}, null, {"mRender": row_status}, {"mRender": currencyFormat}, {"bVisible": false}, {"bVisible": false}, {"bVisible": false}, {"bSortable": false,"mRender": attachment}, {"bVisible": false}, {"bSortable": false}]<?php else: ?>[{"bSortable": false,"mRender": checkbox}, null, {"mRender": fld},null, null, null, null, {"mRender": row_status}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": pay_status}, {"bSortable": false,"mRender": attachment}, {"bVisible": false}, {"bSortable": false}]<?php endif; ?>,
             "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
+                <?php if ($is_hills): ?>
+                var gtotal = 0;
+                for (var i = 0; i < aiDisplay.length; i++) {
+                    gtotal += parseFloat(aaData[aiDisplay[i]][8]);
+                }
+                var nCells = nRow.getElementsByTagName('th');
+                nCells[6].innerHTML = currencyFormat(parseFloat(gtotal));
+                <?php else: ?>
                 var gtotal = 0, paid = 0, balance = 0;
                 for (var i = 0; i < aaData.length; i++) {
                     gtotal += parseFloat(aaData[aiDisplay[i]][6]);
@@ -35,15 +44,16 @@
                 nCells[6].innerHTML = currencyFormat(parseFloat(gtotal));
                 nCells[7].innerHTML = currencyFormat(parseFloat(paid));
                 nCells[8].innerHTML = currencyFormat(parseFloat(balance));
+                <?php endif; ?>
             }
         }).fnSetFilteringDelay().dtFilter([
             {column_number: 1, filter_default_label: "[<?=lang('number');?>]", filter_type: "text", data: []},
             {column_number: 2, filter_default_label: "[<?=lang('date');?> (yyyy-mm-dd)]", filter_type: "text", data: []},
             {column_number: 3, filter_default_label: "[<?=lang('reference_no');?>]", filter_type: "text", data: []},
             {column_number: 4, filter_default_label: "[<?=lang('biller');?>]", filter_type: "text", data: []},
-            {column_number: 5, filter_default_label: "[<?=lang('customer');?>]", filter_type: "text", data: []},
+            <?php if (!$is_hills): ?>{column_number: 5, filter_default_label: "[<?=lang('customer');?>]", filter_type: "text", data: []},<?php endif; ?>
             {column_number: 6, filter_default_label: "[<?=lang('sale_status');?>]", filter_type: "text", data: []},
-            {column_number: 10, filter_default_label: "[<?=lang('payment_status');?>]", filter_type: "text", data: []},
+            <?php if (!$is_hills): ?>{column_number: 10, filter_default_label: "[<?=lang('payment_status');?>]", filter_type: "text", data: []},<?php endif; ?>
         ], "footer");
 
         if (localStorage.getItem('remove_slls')) {
