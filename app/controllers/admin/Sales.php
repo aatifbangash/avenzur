@@ -4298,6 +4298,100 @@ class Sales extends MY_Controller
         $this->page_construct('sales/index', $meta, $this->data);
     }
 
+    public function completed_sales($warehouse_id = null)
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
+            $this->data['warehouses']   = $this->site->getAllWarehouses();
+            $this->data['warehouse_id'] = $warehouse_id;
+            $this->data['warehouse']    = $warehouse_id ? $this->site->getWarehouseByID($warehouse_id) : null;
+        } else {
+            $this->data['warehouses']   = null;
+            $this->data['warehouse_id'] = $this->session->userdata('warehouse_id');
+            $this->data['warehouse']    = $this->session->userdata('warehouse_id') ? $this->site->getWarehouseByID($this->session->userdata('warehouse_id')) : null;
+        }
+        $this->data['sid'] = $this->input->get('sid');
+        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('sales'), 'page' => lang('sales')], ['link' => '#', 'page' => 'Completed Sales']];
+        $meta = ['page_title' => 'Completed Sales', 'bc' => $bc];
+        $this->page_construct('sales/completed_sales', $meta, $this->data);
+    }
+
+    public function getCompletedSales($warehouse_id = null)
+    {
+        $sid = $this->input->get('sid');
+
+        if (!$this->Owner && !$this->Admin) {
+            $user         = $this->site->getUser();
+            $warehouse_id = $user->warehouse_id;
+        }
+
+        $detail_link        = anchor('admin/sales/view/$1',              '<i class="fa fa-file-text-o"></i> ' . lang('sale_details'));
+        $return_link        = anchor('admin/returns/add/$1',             '<i class="fa fa-angle-double-left"></i> ' . lang('return_sale'));
+        $journal_entry_link = anchor('admin/entries/view/journal/?sid=$1','<i class="fa fa-eye"></i> '           . lang('Journal Entry'));
+        $zatka_invoice_link = anchor('admin/sales/pdf_zatka_invoice/$1', '<i class="fa fa-file-text-o"></i> Zatka Invoice', 'target="_blank"');
+
+        $action = '<div class="text-center"><div class="btn-group text-left">'
+            . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+            . lang('actions') . ' <span class="caret"></span></button>
+            <ul class="dropdown-menu pull-right" role="menu">
+                <li>' . $detail_link . '</li>';
+
+        if ($this->Owner || $this->Admin || (isset($this->GP) && $this->GP['returns-add'])) {
+            $action .= '<li>' . $return_link . '</li>';
+        }
+        if ($this->Owner || $this->Admin || $this->Accountant) {
+            $action .= '<li>' . $journal_entry_link . '</li>';
+        }
+        $action .= '<li>' . $zatka_invoice_link . '</li>
+            </ul>
+        </div></div>';
+
+        $this->load->library('datatables');
+        if ($warehouse_id) {
+            $this->datatables
+                ->select("{$this->db->dbprefix('sales')}.id as id, {$this->db->dbprefix('sales')}.id as number, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, CONCAT('SL-', {$this->db->dbprefix('sales')}.id) as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, IFNULL(CONCAT('files/receipts/', (SELECT receipt FROM sma_delivery_items di WHERE di.invoice_id = {$this->db->dbprefix('sales')}.id AND COALESCE(di.is_delivered,0)=1 AND di.receipt IS NOT NULL AND di.receipt != '' LIMIT 1)), CONCAT('files/', {$this->db->dbprefix('sales')}.attachment)) as attachment, return_id")
+                ->from('sales')
+                ->where('warehouse_id', $warehouse_id)
+                ->where('shop', 0);
+        } else {
+            $this->datatables
+                ->select("{$this->db->dbprefix('sales')}.id as id, {$this->db->dbprefix('sales')}.id as number, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, CONCAT('SL-', {$this->db->dbprefix('sales')}.id) as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, IFNULL(CONCAT('files/receipts/', (SELECT receipt FROM sma_delivery_items di WHERE di.invoice_id = {$this->db->dbprefix('sales')}.id AND COALESCE(di.is_delivered,0)=1 AND di.receipt IS NOT NULL AND di.receipt != '' LIMIT 1)), CONCAT('files/', {$this->db->dbprefix('sales')}.attachment)) as attachment, return_id")
+                ->from('sales')
+                ->where('shop', 0);
+        }
+
+        // Always filter to completed only
+        $this->datatables->where('sale_status', 'completed');
+        $this->datatables->where('pos !=', 1);
+
+        if (is_numeric($sid) && $sid > 0) {
+            $this->datatables->group_start()
+                ->where('id', $sid)
+                ->or_where('reference_no', $sid)
+            ->group_end();
+        }
+
+        $from_date = $this->input->get('from_date');
+        $to_date   = $this->input->get('to_date');
+        if ($from_date) {
+            $converted_from = substr($this->sma->fld($from_date . ' 00:00:00'), 0, 10);
+            $this->datatables->where("DATE({$this->db->dbprefix('sales')}.date) >=", $converted_from);
+        }
+        if ($to_date) {
+            $converted_to = substr($this->sma->fld($to_date . ' 23:59:59'), 0, 10);
+            $this->datatables->where("DATE({$this->db->dbprefix('sales')}.date) <=", $converted_to);
+        }
+
+        if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->Admin && !$this->GP['sales-index']) {
+            $this->datatables->where('created_by', $this->session->userdata('user_id'));
+        } elseif ($this->Customer) {
+            $this->datatables->where('customer_id', $this->session->userdata('user_id'));
+        }
+
+        $this->datatables->add_column('Actions', $action, 'id');
+        echo $this->datatables->generate();
+    }
+
     public function shop_sales($warehouse_id = null)
     {
         //$this->sma->checkPermissions();
