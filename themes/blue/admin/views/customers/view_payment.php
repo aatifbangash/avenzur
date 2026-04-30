@@ -11,7 +11,7 @@
         });
 
         // Load your logo from a URL (replace with the actual URL of your logo)
-        const logoUrl = 'https://retaj.avenzur.com/assets/uploads/logos/avenzur-logov2-024.png'; // Replace with your logo URL
+        const logoUrl = '<?= base_url('assets/uploads/logos/avenzur-logov2-024.png') ?>'; // Same-origin URL
 
         // Define logo dimensions
         const logoWidth = 196; // Width of the logo in points

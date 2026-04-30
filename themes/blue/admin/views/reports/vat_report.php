@@ -95,6 +95,11 @@
                     <i class="fa fa-arrow-circle-left text-warning"></i> Input VAT (Purchases)
                 </a>
             </li>
+            <li class="<?= ($type === 'journals') ? 'active' : '' ?>">
+                <a href="javascript:void(0);" class="type-tab" data-type="journals">
+                    <i class="fa fa-book text-muted"></i> Journal Vouchers (VAT on Expense)
+                </a>
+            </li>
         </ul>
 
         <!-- Filter Form -->
@@ -174,7 +179,7 @@
                 </div>
             </div>
             <?php endif; ?>
-            <?php if (in_array($type, ['all', 'purchases'])): ?>
+            <?php if (in_array($type, ['all', 'purchases', 'journals'])): ?>
             <div class="col-md-3">
                 <div class="summary-box" style="background:#e67e22;">
                     <div class="label-sm"><i class="fa fa-arrow-circle-left"></i> Input VAT (Purchases)</div>
@@ -219,6 +224,7 @@
             'creditmemo'      => 'Credit Memo',
             'debitmemo'       => 'Debit Memo',
             'memo'            => 'Memo',
+            'journal'         => 'Journal Voucher',
         ];
         $type_row_class = [
             'sale'            => 'row-sales-invoice',
@@ -230,6 +236,7 @@
             'creditmemo'      => 'row-memo-credit',
             'debitmemo'       => 'row-memo-debit',
             'memo'            => 'row-memo-general',
+            'journal'         => 'row-memo-general',
         ];
         $type_badge = [
             'sale'            => 'primary',
@@ -241,6 +248,7 @@
             'creditmemo'      => 'danger',
             'debitmemo'       => 'warning',
             'memo'            => 'default',
+            'journal'         => 'default',
         ];
 
         // Returns an enriched label for memo rows showing Supplier/Customer + Credit/Debit direction.
@@ -406,10 +414,10 @@
         <?php endif; /* end sales section */ ?>
 
         <!-- ── PURCHASES SECTION ─────────────────────────────────── -->
-        <?php if (in_array($type, ['all', 'purchases'])): ?>
+        <?php if (in_array($type, ['all', 'purchases', 'journals'])): ?>
         <div class="section-heading purchases">
-            <i class="fa fa-arrow-circle-left" style="color:#e67e22;"></i>
-            &nbsp;Input VAT — Purchases &amp; Purchase Returns
+            <i class="fa fa-<?= $type === 'journals' ? 'book' : 'arrow-circle-left' ?>" style="color:#<?= $type === 'journals' ? '7f8c8d' : 'e67e22' ?>;"></i>
+            &nbsp;<?= $type === 'journals' ? 'Journal Vouchers — VAT on Expense' : 'Input VAT — Purchases &amp; Purchase Returns' ?>
             <span class="pull-right" style="font-weight:400; font-size:12px;">
                 <?= count($purchase_rows) ?> transactions &nbsp;|&nbsp;
                 VAT: <strong><?= $this->sma->formatMoney($p_vat) ?></strong>

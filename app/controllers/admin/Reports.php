@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
@@ -8919,7 +8919,7 @@ class Reports extends MY_Controller
         $this->data['error'] = $this->session->flashdata('error');
 
         // ── filters (GET – shareable URL) ──────────────────────────
-        $type         = $this->input->get('type')         ?: 'all';      // all | sales | purchases
+        $type         = $this->input->get('type')         ?: 'all';      // all | sales | purchases | journals
         $start_date   = $this->input->get('start_date')   ?: date('Y-m-01');
         $end_date     = $this->input->get('end_date')     ?: date('Y-m-d');
         $warehouse_id = (int)$this->input->get('warehouse_id');          // 0 = all
@@ -9125,6 +9125,46 @@ class Reports extends MY_Controller
             });
         }
 
+        // ── JOURNAL VOUCHERS with VAT on Expense ──────────────────
+        // Include only journal entries that have a line item on the "vat on expense" ledger.
+        if (in_array($type, ['all', 'purchases', 'journals'])) {
+            $journal_sql = "
+                SELECT
+                    ae.id                                       AS trans_id,
+                    'journal'                                   AS trans_type,
+                    DATE(ae.date)                               AS trans_date,
+                    ae.number                                   AS reference_no,
+                    IFNULL(NULLIF(ae.notes,''), ae.number)      AS party_name,
+                    ''                                          AS party_vat_no,
+                    ''                                          AS warehouse,
+                    0                                           AS warehouse_id,
+                    0                                           AS total_discount,
+                    SUM(aei.amount)                             AS total_tax,
+                    (ae.dr_total - SUM(aei.amount))             AS total_net,
+                    ae.dr_total                                 AS grand_total,
+                    ae.dr_total                                 AS total_invoice
+                FROM sma_accounts_entries ae
+                JOIN sma_accounts_entryitems aei ON aei.entry_id = ae.id
+                JOIN sma_accounts_ledgers al     ON al.id = aei.ledger_id
+                WHERE ae.transaction_type = 'journal'
+                  AND LOWER(al.name) LIKE '%vat%expense%'
+                  AND DATE(ae.date) BETWEEN '{$sql_start}' AND '{$sql_end}'
+                GROUP BY ae.id
+                ORDER BY ae.date ASC, ae.id ASC
+            ";
+            $jq = $this->db->query($journal_sql);
+            if ($jq->num_rows() > 0) {
+                foreach ($jq->result() as $row) {
+                    $row->party_side  = 'supplier';
+                    $row->entry_type  = 'D';
+                    $purchase_rows[]  = $row;
+                }
+                usort($purchase_rows, function ($a, $b) {
+                    return strcmp($a->trans_date, $b->trans_date) ?: ($a->trans_id - $b->trans_id);
+                });
+            }
+        }
+
         // ── summary totals ─────────────────────────────────────────
         $sum = [
             'sales_net'        => 0.0,
@@ -9177,6 +9217,7 @@ class Reports extends MY_Controller
                 'creditmemo'     => 'Credit Memo',
                 'debitmemo'      => 'Debit Memo',
                 'memo'           => 'Memo',
+                'journal'        => 'Journal Voucher',
             ];
 
             $get_memo_label = function ($r) use ($type_labels) {
