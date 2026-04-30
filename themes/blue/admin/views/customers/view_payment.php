@@ -126,7 +126,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <?= lang('date', 'psdate'); ?>
-                                        <?php echo form_input('date', ($payment_ref->date ?? ''), 'class="form-control input-tip date" id="psdate" readonly required="required"'); ?>
+                                        <?php echo form_input('date', (date('Y-m-d', strtotime($payment_ref->date)) ?? ''), 'class="form-control input-tip date" id="psdate" readonly required="required"'); ?>
                                     </div>
                                 </div>
                             <?php
@@ -142,20 +142,20 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('Payment Amount', 'pspayment'); ?>
-                                <?php echo form_input('payment_total', ($payment_ref->amount ?? $_POST['payment_total']), 'class="form-control input-tip" readonly id="pspayment"'); ?>
+                                <?php echo form_input('payment_total', number_format($payment_ref->amount ?? $_POST['payment_total'], 2), 'class="form-control input-tip" readonly id="pspayment"'); ?>
                             </div>
                         </div>
 
                         <div class="col-md-4">
                             <div class="form-group">
-                                <?= lang('supplier', 'pssupplier'); ?>
-                                <?php echo form_input('supplier', ($payment_ref->name ?? $payment_ref->supplier_name), 'class="form-control input-tip" readonly id="pssupplier"'); ?>
+                                <?= lang('Customer', 'pssupplier'); ?>
+                                <?php echo form_input('supplier', (($payment_ref->customer_code ? $payment_ref->customer_code . ' - ' : '') . ($payment_ref->name ?? $payment_ref->supplier_name)), 'class="form-control input-tip" readonly id="pssupplier"'); ?>
                             </div>
                         </div>
 
                         <div class="col-md-4">
                             <div class="form-group">
-                                <?= lang('Transfer From', 'psledger'); ?>
+                                <?= lang('Collected By', 'psledger'); ?>
                                 <?php echo form_input('ledger_account', ($payment_ref->transfer_from ?? $payment_ref->transfer_from), 'class="form-control input-tip" readonly id="psledger"'); ?>
                             </div>
                         </div>
@@ -183,7 +183,7 @@
                                 <th><?php echo $this->lang->line('Orig. Amt.') ?></th>
                                 <th><?php echo $this->lang->line('Return. Amt.') ?></th>
                                 <th><?php echo $this->lang->line('Discount') ?></th>
-                                <th><?php echo $this->lang->line('Payment'); ?></th>
+                                <th><?php echo $this->lang->line('Collected Amount'); ?></th>
                                 <th><?php echo $this->lang->line('Amt. Due.'); ?></th>
                                 
                                 
