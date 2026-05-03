@@ -216,15 +216,15 @@
                 <li class="newmenu-item has-sub">
                     <a href="#" class="newmenu-link">
                         <i class="fa fa-money"></i>
-                        <span><?= lang('Collection'); ?></span>
+                        <span><?= lang('Receipts'); ?></span>
                         <i class="fa fa-chevron-right newmenu-chevron"></i>
                     </a>
                     <ul class="newmenu-sub">
                         <?php if($Admin || $Owner || $this->GP['customer-payment-add']){ ?>
-                        <li><a href="<?= admin_url('customers/payment_from_customer_new'); ?>" class="newmenu-link"><i class="fa fa-hand-o-up"></i> <?= lang('Collection New'); ?></a></li>
+                        <li><a href="<?= admin_url('customers/payment_from_customer_new'); ?>" class="newmenu-link"><i class="fa fa-hand-o-up"></i> <?= lang('Add Receipt'); ?></a></li>
                         <?php } ?>
                         <?php if($Admin || $Owner || $this->GP['customer-payment-index']){ ?>
-                        <li><a href="<?= admin_url('customers/list_payments'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('Collection List'); ?></a></li>
+                        <li><a href="<?= admin_url('customers/list_payments'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('Receipt List'); ?></a></li>
                         <?php } ?>
                         
                     </ul>
