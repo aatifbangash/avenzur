@@ -235,6 +235,9 @@
                                         } elseif ($invoice_type == 'purchase') {
                                             $type_label = 'Purchase Invoice Payment';
                                             $badge = '';
+                                        } elseif ($invoice_type == 'credit_memo') {
+                                            $type_label = 'Credit Memo Payment';
+                                            $badge = '<span class="label label-default">Credit Memo</span>';
                                         } else {
                                             $type_label = 'Advance Payment';
                                             $badge = '<span class="label label-warning">Advance</span>';

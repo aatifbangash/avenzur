@@ -14,12 +14,11 @@ th { background:#f2f2f2; }
     <td><strong>Voucher No:</strong> <?= $payment_ref->id ?></td>
     <td>
         <strong>Date:</strong> <?= date('Y-m-d', strtotime($payment_ref->date)) ?><br>
-        <strong>Payment Amount:</strong> <?= number_format((float)$payment_ref->amount, 2) ?>
     </td>
 </tr>
 <tr>
     <td><strong>Supplier:</strong>
-        <?php if (!empty($supplier->sequence_code)): ?><strong><?= htmlspecialchars($supplier->sequence_code) ?></strong> - <?php endif; ?>
+        <?php if (!empty($supplier->sequence_code)): ?><?= '('.htmlspecialchars($supplier->sequence_code).')' ?> - <?php endif; ?>
         <?= htmlspecialchars($payment_ref->name) ?>
     </td>
     <td><strong>Journal Ref:</strong> <?= $payment_ref->journal_id ?></td>
@@ -34,7 +33,7 @@ th { background:#f2f2f2; }
 </tr>
 <tr>
     <td><strong>Payment Term:</strong> <?= number_format($payment_ref->payment_term, 2) ?></td>
-    <td></td>
+    <td><strong>Payment Amount:</strong> <?= number_format((float)$payment_ref->amount, 2) ?></td>
 </tr>
 </table>
 
@@ -70,6 +69,8 @@ foreach ($payments as $p):
         $type_label = 'Service Invoice Payment';
     } elseif ($invoice_type == 'purchase') {
         $type_label = 'Purchase Invoice Payment';
+    } elseif ($invoice_type == 'credit_memo') {
+        $type_label = 'Credit Memo Payment';
     } else {
         $type_label = 'Advance Payment';
     }
@@ -129,38 +130,29 @@ foreach ($payments as $p):
 
 <?php if (!empty($supplier_aging)) : ?>
 <br>
-<table class="no-border" cellpadding="5" style="width: 80%;">
-    <tr>
-        <th colspan="2" style="text-align:left; background:#f2f2f2;">Supplier Aging (SAR)</th>
-    </tr>
-    <tr>
-        <td>0-30 days</td>
-        <td class="right"><?= number_format($supplier_aging['0-30'] ?? 0, 2) ?></td>
-    </tr>
-    <tr>
-        <td>31-60 days</td>
-        <td class="right"><?= number_format($supplier_aging['31-60'] ?? 0, 2) ?></td>
-    </tr>
-    <tr>
-        <td>61-90 days</td>
-        <td class="right"><?= number_format($supplier_aging['61-90'] ?? 0, 2) ?></td>
-    </tr>
-    <tr>
-        <td>91-120 days</td>
-        <td class="right"><?= number_format($supplier_aging['91-120'] ?? 0, 2) ?></td>
-    </tr>
-    <tr>
-        <td>121-150 days</td>
-        <td class="right"><?= number_format($supplier_aging['121-150'] ?? 0, 2) ?></td>
-    </tr>
-    <tr>
-        <td>151-180 days</td>
-        <td class="right"><?= number_format($supplier_aging['151-180'] ?? 0, 2) ?></td>
-    </tr>
-    <tr>
-        <td>>180 days</td>
-        <td class="right"><?= number_format($supplier_aging['>180'] ?? 0, 2) ?></td>
-    </tr>
+<table cellpadding="5" style="width:100%;">
+    <thead>
+        <tr>
+            <th class="center">0-30 days</th>
+            <th class="center">31-60 days</th>
+            <th class="center">61-90 days</th>
+            <th class="center">91-120 days</th>
+            <th class="center">121-150 days</th>
+            <th class="center">151-180 days</th>
+            <th class="center">&gt;180 days</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="right"><?= number_format($supplier_aging['0-30']    ?? 0, 2) ?></td>
+            <td class="right"><?= number_format($supplier_aging['31-60']   ?? 0, 2) ?></td>
+            <td class="right"><?= number_format($supplier_aging['61-90']   ?? 0, 2) ?></td>
+            <td class="right"><?= number_format($supplier_aging['91-120']  ?? 0, 2) ?></td>
+            <td class="right"><?= number_format($supplier_aging['121-150'] ?? 0, 2) ?></td>
+            <td class="right"><?= number_format($supplier_aging['151-180'] ?? 0, 2) ?></td>
+            <td class="right"><?= number_format($supplier_aging['>180']    ?? 0, 2) ?></td>
+        </tr>
+    </tbody>
 </table>
 <?php endif; ?>
 
