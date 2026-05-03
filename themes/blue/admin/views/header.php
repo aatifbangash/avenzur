@@ -375,7 +375,7 @@
             <div id="sidebar-left">
                 <div class="sidebar-nav nav-collapse collapse navbar-collapse" id="sidebar_menu">
                     <?php 
-                        if((isset($Settings->pos_standalone) && $Settings->pos_standalone) || ($this->Settings->site_name == 'Hills Business Medical' || $this->Settings->site_name == 'Demo Company' || $this->Settings->site_name == 'Retaj Company' || $this->Settings->site_name == 'Avnzor')){
+                        if((isset($Settings->pos_standalone) && $Settings->pos_standalone) || ($this->Settings->site_name == 'Hills Business Medical' || $this->Settings->site_name == 'Demo Company' || $this->Settings->site_name == 'Retaj Company' || $this->Settings->site_name == 'Abaad Company' || $this->Settings->site_name == 'Avnzor')){
                             include 'new_customer_menu.php';
                         }else{
                     ?>
