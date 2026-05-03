@@ -610,7 +610,7 @@ class Reports extends MY_Controller
                 $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->itm_code);
                 $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->avz_item_code);
                 $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->name);
-                $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->shelf);
+                $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->shelf ?? '');
                 $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data_row->batch_no);
                 $this->excel->getActiveSheet()->SetCellValue('G' . $row, $data_row->expiry);
                 $this->excel->getActiveSheet()->SetCellValue('H' . $row, $data_row->quantity);
