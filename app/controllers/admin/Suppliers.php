@@ -977,7 +977,7 @@ class Suppliers extends MY_Controller
         // mPDF config (same style as your invoice)
         $mpdf = new \Mpdf\Mpdf([
             'format'        => 'A4',
-            'margin_top'    => 70,
+            'margin_top'    => 35,
             'margin_bottom' => 60,
             'margin_left'   => 10,
             'margin_right'  => 10,
@@ -990,13 +990,9 @@ class Suppliers extends MY_Controller
             <div style="text-align:right; font-size:10px; color:#666;">
                 Page {PAGENO} of {nbpg}
             </div>
-
-            <div style="text-align:center; margin:8px 0;">
-                <img src="data:image/png;base64,' . base64_encode(file_get_contents(base_url() . 'assets/uploads/logos/' . $biller->logo)) . '"
-            alt="Avenzur" style="max-width:120px; height:auto;">
-                <h3 style="margin:5px 0;">SUPPLIER PAYMENT VOUCHER</h3>
+            <div style="text-align:center; margin:4px 0;">
+                <h3 style="margin:4px 0;">SUPPLIER PAYMENT VOUCHER</h3>
             </div>
-
             <hr>
         </div>
         ');

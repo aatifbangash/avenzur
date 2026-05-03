@@ -711,8 +711,51 @@ class Purchases_model extends CI_Model
 
         $advance_payments = $this->db->get('payments')->result();
 
+        // Fourth, get credit memo payments (memo_id set, note contains "Credit Memo #")
+        $this->db->select('
+            payments.*,
+            companies.company,
+            companies.credit_limit,
+            companies.payment_term,
+            0 as grand_total,
+            payments.reference_no as ref_no,
+            payments.date as purchase_date,
+            0 as purchase_paid,
+            0 as return_amount,
+            "credit_memo" as invoice_type,
+            0 as service_invoice_id
+        ', FALSE)
+        ->join('sma_payment_reference pr', 'pr.id = payments.payment_id', 'left')
+        ->join('companies', 'companies.id = pr.supplier_id', 'left')
+        ->where('payments.payment_id', $id)
+        ->where('payments.purchase_id IS NULL')
+        ->where('payments.type', 'sent')
+        ->like('payments.note', 'Credit Memo #');
+
+        $credit_memo_payment_query = $this->db->get('payments');
+        $credit_memo_payments = [];
+
+        if ($credit_memo_payment_query->num_rows() > 0) {
+            foreach ($credit_memo_payment_query->result() as $payment) {
+                if (preg_match('/Credit Memo #(\d+)/', $payment->note, $matches)) {
+                    $memo_id = $matches[1];
+                    $this->db->select('payment_amount as grand_total, reference_no as ref_no, date as purchase_date, used_amount as purchase_paid');
+                    $this->db->where('id', $memo_id);
+                    $memo = $this->db->get('sma_memo')->row();
+                    if ($memo) {
+                        $payment->grand_total   = $memo->grand_total;
+                        $payment->ref_no        = $memo->ref_no;
+                        $payment->purchase_date = $memo->purchase_date;
+                        $payment->purchase_paid = $memo->purchase_paid;
+                    }
+                    $payment->service_invoice_id = $memo_id;
+                }
+                $credit_memo_payments[] = $payment;
+            }
+        }
+
         // Merge all payment types
-        $all_payments = array_merge($purchase_payments, $service_payments, $advance_payments);
+        $all_payments = array_merge($purchase_payments, $service_payments, $credit_memo_payments, $advance_payments);
 
         if (count($all_payments) > 0) {
             return $all_payments;
