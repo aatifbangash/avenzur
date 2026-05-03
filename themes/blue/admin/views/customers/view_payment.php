@@ -104,7 +104,7 @@
                     <i class="icon fa fa-eye"></i>
                 </a>
 
-                <a href="javascript:void(0);" onclick="generatePDF('print_content')" id="pdf" class="tip" title="<?= lang('download_PDF') ?>">
+                <a href="<?= admin_url('customers/print_payment_pdf/' . $payment_ref->id) ?>" target="_blank" class="tip" title="<?= lang('download_PDF') ?>">
                     <i class="icon fa fa-file-pdf-o"></i>
                 </a>
             </li>

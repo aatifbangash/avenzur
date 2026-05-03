@@ -659,6 +659,100 @@ class Customers extends MY_Controller
         
     }
 
+    public function print_payment_pdf($id = null)
+    {
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
+        }
+
+        $payment_ref = $this->sales_model->getPaymentReferenceByID($id);
+        $payments    = $this->sales_model->getPaymentByReferenceID($id);
+
+        if (!$payment_ref) {
+            show_error('Payment not found');
+        }
+
+        $customer_id = $payment_ref->customer_id ?? null;
+
+        $this->load->admin_model('Reports_model');
+        $this->load->admin_model('companies_model');
+        $customer = $this->companies_model->getCompanyByID($customer_id);
+
+        // Customer balance via ledger
+        $today = date('Y-m-d');
+        $total_due = 0;
+        if ($customer_id && $customer && !empty($customer->ledger_account)) {
+            $bal = $this->db->select('
+                COALESCE(SUM(CASE WHEN ei.dc = "D" THEN ei.amount ELSE 0 END), 0) as total_debit,
+                COALESCE(SUM(CASE WHEN ei.dc = "C" THEN ei.amount ELSE 0 END), 0) as total_credit
+            ')
+            ->from('sma_accounts_entryitems ei')
+            ->join('sma_accounts_entries e', 'e.id = ei.entry_id', 'inner')
+            ->where('ei.ledger_id', $customer->ledger_account)
+            ->where('e.customer_id', $customer_id)
+            ->get()->row();
+            if ($bal) {
+                $total_due = $bal->total_debit - $bal->total_credit;
+            }
+        }
+
+        // Customer advance balance
+        $customer_advance_ledger = isset($this->Settings->customer_advance_ledger) ? $this->Settings->customer_advance_ledger : null;
+        $advance_balance = $this->getCustomerAdvanceBalance($customer_id, $customer_advance_ledger);
+
+        // Customer aging
+        $aging = $this->Reports_model->getCustomerAgingNew(180, $today, [$customer_id]);
+        $customer_aging = !empty($aging) ? $aging[$customer_id] : null;
+
+        $this->data['payment_ref']     = $payment_ref;
+        $this->data['payments']        = $payments;
+        $this->data['customer']        = $customer;
+        $this->data['customer_balance']= $advance_balance;
+        $this->data['total_due']       = $total_due;
+        $this->data['customer_aging']  = $customer_aging;
+
+        $html = $this->load->view($this->theme . 'customers/print_payment_pdf', $this->data, true);
+        $html = preg_replace("'\<\?xml(.*)\?\>'", '', $html);
+
+        $mpdf = new \Mpdf\Mpdf([
+            'format'        => 'A4',
+            'margin_top'    => 35,
+            'margin_bottom' => 60,
+            'margin_left'   => 10,
+            'margin_right'  => 10,
+            'default_font'  => 'DejaVu Sans',
+        ]);
+
+        $mpdf->SetHTMLHeader('
+        <div style="width:100%; font-family: DejaVu Sans; font-size:11px;">
+            <div style="text-align:right; font-size:10px; color:#666;">
+                Page {PAGENO} of {nbpg}
+            </div>
+            <div style="text-align:center; margin:4px 0;">
+                <h3 style="margin:4px 0;">CUSTOMER COLLECTION VOUCHER</h3>
+            </div>
+            <hr>
+        </div>
+        ');
+
+        $mpdf->SetHTMLFooter('
+        <hr>
+        <div style="font-size:11px; width:100%; font-family: DejaVu Sans;">
+            <table width="100%" cellspacing="0" cellpadding="5">
+                <tr>
+                    <td align="center">_________________________<br>Prepared By</td>
+                    <td align="center">_________________________<br>Checked By</td>
+                    <td align="center">_________________________<br>Approved By</td>
+                </tr>
+            </table>
+        </div>
+        ');
+
+        $mpdf->WriteHTML($html);
+        $mpdf->Output('Customer_Payment_' . $payment_ref->reference_no . '.pdf', 'D');
+        exit;
+    }
+
     public function list_payments(){
         $data = [];
         $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Customer Payments')]];
