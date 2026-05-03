@@ -29,8 +29,8 @@ th { background:#f2f2f2; }
     <td><strong>Payment Amount:</strong> <?= number_format((float)$payment_ref->amount, 2) ?></td>
 </tr>
 <tr>
-    <td><strong>Credit Limit:</strong> <?= number_format($payment_ref->credit_limit ?? 0, 2) ?></td>
-    <td><strong>Payment Term:</strong> <?= $payment_ref->payment_term ?? '' ?></td>
+    <td><strong>Credit Limit:</strong> <?= number_format($customer->credit_limit ?? 0, 2) ?></td>
+    <td><strong>Payment Term:</strong> <?= $customer->payment_term ?? '' ?></td>
 </tr>
 </table>
 
@@ -70,7 +70,7 @@ foreach ($payments as $p):
 ?>
 <tr>
     <td><?= $p->sale_id ? date('Y-m-d', strtotime($p->sale_date)) : date('Y-m-d', strtotime($p->date)) ?></td>
-    <td><?= $p->ref_no ?? $p->sale_id ?></td>
+    <td><?= $p->ref_no ?: ($p->sale_id ?: '-') ?></td>
     <td><?= $type_label ?></td>
     <td class="right"><?= number_format($original_amount, 2) ?></td>
     <td class="right"><?= number_format($return_amount, 2) ?></td>

@@ -729,7 +729,7 @@ class Customers extends MY_Controller
                 Page {PAGENO} of {nbpg}
             </div>
             <div style="text-align:center; margin:4px 0;">
-                <h3 style="margin:4px 0;">CUSTOMER COLLECTION VOUCHER</h3>
+                <h3 style="margin:4px 0;">RECEIPT VOUCHER</h3>
             </div>
             <hr>
         </div>
