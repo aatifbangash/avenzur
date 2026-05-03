@@ -27,12 +27,30 @@ th { background:#f2f2f2; }
     <td><strong>Transfer From:</strong> <?= $payment_ref->transfer_from ?></td>
     <td><strong>Bank Charges:</strong> <?= number_format($payment_ref->bank_charges, 2) ?></td>
 </tr>
+<?php
+// First priority: purchase row values; second priority: supplier from sma_companies
+$purchase_row = null;
+if (!empty($payments)) {
+    foreach ($payments as $_p) {
+        if (isset($_p->invoice_type) && $_p->invoice_type === 'purchase') {
+            $purchase_row = $_p;
+            break;
+        }
+    }
+}
+$display_credit_limit  = ($purchase_row && !empty($purchase_row->credit_limit))
+    ? $purchase_row->credit_limit
+    : ($supplier->credit_limit ?? 0);
+$display_payment_term  = ($purchase_row && !empty($purchase_row->payment_term))
+    ? $purchase_row->payment_term
+    : ($supplier->payment_term ?? '');
+?>
 <tr>
     <td><strong>VAT on Bank Charges:</strong> <?= number_format($payment_ref->bank_charge_vat, 2) ?></td>
-    <td><strong>Credit Limit:</strong> <?= number_format($payment_ref->credit_limit, 2) ?></td>
+    <td><strong>Credit Limit:</strong> <?= number_format((float)$display_credit_limit, 2) ?></td>
 </tr>
 <tr>
-    <td><strong>Payment Term:</strong> <?= number_format($payment_ref->payment_term, 2) ?></td>
+    <td><strong>Payment Term:</strong> <?= htmlspecialchars((string)$display_payment_term) ?></td>
     <td><strong>Payment Amount:</strong> <?= number_format((float)$payment_ref->amount, 2) ?></td>
 </tr>
 </table>
