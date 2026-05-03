@@ -700,9 +700,9 @@ class Customers extends MY_Controller
         $customer_advance_ledger = isset($this->Settings->customer_advance_ledger) ? $this->Settings->customer_advance_ledger : null;
         $advance_balance = $this->getCustomerAdvanceBalance($customer_id, $customer_advance_ledger);
 
-        // Customer aging
+        // Customer aging — getCustomerAgingNew returns array_values(), so index by 0 for single customer
         $aging = $this->Reports_model->getCustomerAgingNew(180, $today, [$customer_id]);
-        $customer_aging = !empty($aging) ? $aging[$customer_id] : null;
+        $customer_aging = !empty($aging) ? $aging[0] : null;
 
         $this->data['payment_ref']     = $payment_ref;
         $this->data['payments']        = $payments;
