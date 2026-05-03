@@ -9163,14 +9163,23 @@ class Reports extends MY_Controller
                 ''                                                      AS warehouse,
                 0                                                       AS warehouse_id,
                 0                                                       AS total_discount,
-                m.payment_amount                                        AS raw_gross,
+                -- For serviceinvoice/pettycash: payment_amount is grand_total (VAT-inclusive)
+                -- For memo/creditmemo/debitmemo: payment_amount is net (ex-VAT), so gross = net + vat
+                CASE
+                    WHEN m.type IN ('serviceinvoice','pettycash')
+                        THEN m.payment_amount
+                    ELSE
+                        ROUND(m.payment_amount
+                            * (1 + CAST(IFNULL(m.vat_percent,'0') AS DECIMAL(15,4)) / 100), 4)
+                END                                                     AS raw_gross,
                 CASE
                     WHEN m.type IN ('serviceinvoice','pettycash')
                         THEN IFNULL(m.vat_value, 0)
                     ELSE
+                        -- payment_amount is net, so VAT = net * rate / 100
                         ROUND(m.payment_amount
                             * CAST(IFNULL(m.vat_percent,'0') AS DECIMAL(15,4))
-                            / (100 + CAST(IFNULL(m.vat_percent,'0') AS DECIMAL(15,4))), 4)
+                            / 100, 4)
                 END                                                     AS raw_vat,
                 CASE WHEN m.customer_id > 0
                      THEN m.customer_entry_type
