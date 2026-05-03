@@ -106,7 +106,16 @@ foreach ($payments as $p):
 
 <?php if (!empty($customer_aging)) : ?>
 <br>
-<table cellpadding="5" style="width:100%;">
+<table cellpadding="5" style="width:100%; table-layout:fixed;">
+    <colgroup>
+        <col style="width:14.28%">
+        <col style="width:14.28%">
+        <col style="width:14.28%">
+        <col style="width:14.28%">
+        <col style="width:14.28%">
+        <col style="width:14.28%">
+        <col style="width:14.32%">
+    </colgroup>
     <thead>
         <tr>
             <th class="center">0-30 days</th>
