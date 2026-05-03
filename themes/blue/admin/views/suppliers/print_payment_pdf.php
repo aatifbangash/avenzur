@@ -12,10 +12,16 @@ th { background:#f2f2f2; }
 <table class="no-border" cellpadding="5">
 <tr>
     <td><strong>Voucher No:</strong> <?= $payment_ref->id ?></td>
-    <td><strong>Date:</strong> <?= date('Y-m-d', strtotime($payment_ref->date)) ?></td>
+    <td>
+        <strong>Date:</strong> <?= date('Y-m-d', strtotime($payment_ref->date)) ?><br>
+        <strong>Payment Amount:</strong> <?= number_format((float)$payment_ref->amount, 2) ?>
+    </td>
 </tr>
 <tr>
-    <td><strong>Supplier:</strong> <?= $payment_ref->name ?></td>
+    <td><strong>Supplier:</strong>
+        <?php if (!empty($supplier->sequence_code)): ?><strong><?= htmlspecialchars($supplier->sequence_code) ?></strong> - <?php endif; ?>
+        <?= htmlspecialchars($payment_ref->name) ?>
+    </td>
     <td><strong>Journal Ref:</strong> <?= $payment_ref->journal_id ?></td>
 </tr>
 <tr>
@@ -55,7 +61,7 @@ th { background:#f2f2f2; }
 <?php
 $total_paid = 0;
 foreach ($payments as $p):
-    $total_paid += $p->amount;
+    $total_paid += (float)$p->amount;
     
     // Determine invoice type
     $invoice_type = isset($p->invoice_type) ? $p->invoice_type : 'advance';
@@ -94,8 +100,9 @@ foreach ($payments as $p):
 <?php endforeach; ?>
 
 <tr>
-    <th colspan="9" class="right">Total Paid</th>
+    <th colspan="8" class="right">Total Paid</th>
     <th class="right"><?= number_format($total_paid, 2) ?></th>
+    <th></th>
 </tr>
 
 </tbody>

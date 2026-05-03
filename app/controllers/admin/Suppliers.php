@@ -960,6 +960,7 @@ class Suppliers extends MY_Controller
         $this->data['total_due'] = $total_due;
         $this->data['total_paid_balance'] = $total_paid;
         $this->data['supplier_aging'] = $supplier_aging;
+        $this->data['supplier'] = $supplier;
 
         $biller      = $this->site->getDefaultBiller();
         //echo '<pre>';print_r($this->data);exit;
