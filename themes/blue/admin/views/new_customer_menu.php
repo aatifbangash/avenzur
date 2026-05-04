@@ -208,6 +208,7 @@
                         <?php if($Admin || $Owner || $this->GP['sales-index']){ ?>
                         <li><a href="<?= admin_url('sales/shop_sales'); ?>" class="newmenu-link"><i class="fa fa-shopping-cart"></i> <?= lang('Shop Sales'); ?></a></li>
                         <?php } ?>
+                        <li><a href="<?= admin_url('sales/completed_sales'); ?>" class="newmenu-link"><i class="fa fa-calculator"></i> <?= lang('Sales Invoices'); ?></a></li>
                     </ul>
                 </li>
 
@@ -695,7 +696,7 @@
 
                 <li><a href="<?= admin_url('accounts_dashboard'); ?>" class="newmenu-link"><i class="fa fa-sliders"></i> <?= lang('Accounts Dashboard'); ?></a></li>
                 <li><a href="<?= admin_url('accounts'); ?>" class="newmenu-link"><i class="fa fa-calculator"></i> <?= lang('Charts Of Accounts'); ?></a></li>
-                <li><a href="<?= admin_url('sales/completed_sales'); ?>" class="newmenu-link"><i class="fa fa-calculator"></i> <?= lang('Sales Invoices'); ?></a></li>
+                
                 <li class="newmenu-item has-sub">
                     <a href="#" class="newmenu-link">
                         <i class="fa fa-pencil-square-o"></i>
