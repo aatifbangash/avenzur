@@ -404,6 +404,8 @@ class Purchases extends MY_Controller
                 $discount3 = $_POST['dis3'][$r];
                 $item_third_discount = $_POST['item_third_discount'][$r];
 
+                $deal_discount = $_POST['deal'][$r];
+
                 //$net_cost_obj = $this->purchases_model->getAverageCost($item_batchno, $item_code);
                 //$net_cost_sales = $net_cost_obj[0]->cost_price;
 
@@ -477,6 +479,12 @@ class Purchases extends MY_Controller
                     $new_item_second_discount = $_POST['item_second_discount'][$r];
                     $new_item_vat_value = $_POST['item_vat_values'][$r];
 
+                    if($deal_discount > 0){
+                        $deal_discount_value = ($_POST['item_total_purchase'][$r] - $new_item_first_discount - $new_item_second_discount) * $deal_discount / 100;
+                    }else{
+                        $deal_discount_value = 0;
+                    }
+
                     $product = [
                         'product_id' => $product_details->id,
                         'product_code' => $item_code,
@@ -511,6 +519,8 @@ class Purchases extends MY_Controller
                         'discount1' => $item_dis1,
                         'discount2' => $item_dis2,
                         'second_discount_value' => $new_item_second_discount,
+                        'deal_discount' => $deal_discount,
+                        'deal_discount_value' => $deal_discount_value,
                         'totalbeforevat' => $_POST['item_net_purchase'][$r],
                         'main_net' => $main_net,
                         'discount3' => $discount3,
