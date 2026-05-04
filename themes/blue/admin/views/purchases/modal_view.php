@@ -257,9 +257,6 @@
                                 <td style="text-align:center; width:40px; vertical-align:middle;"><?= $r; ?></td>
                                 <td style="width: 30%; vertical-align:middle;">
                                     <?= $row->product_code . ' - ' . $row->product_name . ($row->variant ? ' (' . $row->variant . ')' : ''); ?>
-                                    <?= $row->second_name ? '<br>' . $row->second_name : ''; ?>
-                                    <?= $row->supplier_part_no ? '<br>' . lang('supplier_part_no') . ': ' . $row->supplier_part_no : ''; ?>
-                                    <?= $row->details ? '<br>' . $row->details : ''; ?>
                                     <?= ($row->expiry && $row->expiry != '0000-00-00') ? '<br>' . lang('EX') . ': ' . $this->sma->hrsd($row->expiry) : ''; ?>
                                     <?= 'Item# '.$row->item_code ;?>
                                 </td>
