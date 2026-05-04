@@ -133,6 +133,11 @@
                                             <label for="sales-create-invoice" class="padding05"><?= lang('Create Invoice') ?></label>
                                         </span>
 
+                                        <span style="display:inline-block;">
+                                            <input type="checkbox" value="1" id="sales-view-invoice" class="checkbox" name="sales-view-invoice" <?php echo $p->{'sales-view-invoice'} ? 'checked' : ''; ?>>
+                                            <label for="sales-view-invoice" class="padding05"><?= lang('View Invoice') ?></label>
+                                        </span>
+
                                         <!--<span style="display:inline-block;">
                                             <input type="checkbox" value="1" id="sales-payments" class="checkbox" name="sales-payments" <?php echo $p->{'sales-payments'} ? 'checked' : ''; ?>>
                                             <label for="sales-payments" class="padding05"><?= lang('payments') ?></label>
@@ -563,6 +568,36 @@
                                         <span style="display:inline-block;">
                                             <input type="checkbox" value="1" id="supplier-payment-pdf" class="checkbox" name="supplier-payment-pdf" <?php echo $p->{'supplier-payment-pdf'} ? 'checked' : ''; ?>>
                                             <label for="supplier-payment-pdf" class="padding05"><?= lang('pdf') ?></label>
+                                        </span>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td><?= lang('Finance'); ?></td>
+                                    <td colspan="5">
+                                        <span style="display:inline-block;">
+                                            <input type="checkbox" value="1" class="checkbox" id="finance-view" name="finance-view" <?php echo $p->{'finance-view'} ? 'checked' : ''; ?>>
+                                            <label for="finance-view" class="padding05"><?= lang(' View') ?></label>
+                                        </span>
+
+                                        <span style="display:inline-block;">
+                                            <input type="checkbox" value="1" class="checkbox" id="finance-view-reports" name="finance-view-reports" <?php echo $p->{'finance-view-reports'} ? 'checked' : ''; ?>>
+                                            <label for="finance-view-reports" class="padding05"><?= lang('Reports') ?></label>
+                                        </span>
+                                        
+                                        <span style="display:inline-block;">
+                                            <input type="checkbox" value="1" class="checkbox" id="finance-chart-accounts" name="finance-chart-accounts" <?php echo $p->{'finance-chart-accounts'} ? 'checked' : ''; ?>>
+                                            <label for="finance-chart-accounts" class="padding05"><?= lang('Chart of Accounts') ?></label>
+                                        </span>
+
+                                        <span style="display:inline-block;">
+                                            <input type="checkbox" value="1" class="checkbox" id="finance-jv" name="finance-jv" <?php echo $p->{'finance-jv'} ? 'checked' : ''; ?>>
+                                            <label for="finance-jv" class="padding05"><?= lang('Journal Voucher') ?></label>
+                                        </span>
+
+                                        <span style="display:inline-block;">
+                                            <input type="checkbox" value="1" class="checkbox" id="finance-jv-templates" name="finance-jv-templates" <?php echo $p->{'finance-jv-templates'} ? 'checked' : ''; ?>>
+                                            <label for="finance-jv-templates" class="padding05"><?= lang('JV Templates') ?></label>
                                         </span>
                                     </td>
                                 </tr>
