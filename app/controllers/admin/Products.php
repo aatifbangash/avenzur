@@ -2961,7 +2961,7 @@ class Products extends MY_Controller
     }
 
     public function upload_customer_returns(){
-        $excelFile = $this->upload_path . 'csv/returns-03-26.xlsx'; // Excel file
+        $excelFile = $this->upload_path . 'csv/Return-Apr-2026-1.xlsx'; // Excel file
         if (!file_exists($excelFile)) {
             echo "Excel file not found.";
             return;
