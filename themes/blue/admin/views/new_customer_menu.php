@@ -208,7 +208,9 @@
                         <?php if($Admin || $Owner || $this->GP['sales-index']){ ?>
                         <li><a href="<?= admin_url('sales/shop_sales'); ?>" class="newmenu-link"><i class="fa fa-shopping-cart"></i> <?= lang('Shop Sales'); ?></a></li>
                         <?php } ?>
+                        <?php if($Admin || $Owner || $this->GP['sales-view-invoice']){ ?>
                         <li><a href="<?= admin_url('sales/completed_sales'); ?>" class="newmenu-link"><i class="fa fa-calculator"></i> <?= lang('Sales Invoices'); ?></a></li>
+                        <?php } ?>
                     </ul>
                 </li>
 
@@ -682,7 +684,7 @@
             </ul>
         </li>
 
-        <?php if($Admin || $Owner || $this->GP['customer-payment-index'] || $this->GP['supplier-payment-index']){ ?>
+        <?php if($Admin || $Owner || $this->GP['finance-view']){ ?>
         <!-- FINANCE -->
         <li class="newmenu-item has-sub">
             <a href="#" class="newmenu-link bluecolor">
@@ -695,8 +697,10 @@
                 <li><a href="<?= admin_url('cost_center/dashboard'); ?>" class="newmenu-link"><i class="fa fa-dashboard"></i><?= lang('Cost Center'); ?></a></li>
 
                 <li><a href="<?= admin_url('accounts_dashboard'); ?>" class="newmenu-link"><i class="fa fa-sliders"></i> <?= lang('Accounts Dashboard'); ?></a></li>
+                <?php if($Admin || $Owner || $this->GP['finance-chart-accounts']){ ?>
                 <li><a href="<?= admin_url('accounts'); ?>" class="newmenu-link"><i class="fa fa-calculator"></i> <?= lang('Charts Of Accounts'); ?></a></li>
-                
+                <?php } ?>
+                <?php if($Admin || $Owner || $this->GP['finance-jv']){ ?>
                 <li class="newmenu-item has-sub">
                     <a href="#" class="newmenu-link">
                         <i class="fa fa-pencil-square-o"></i>
@@ -708,8 +712,8 @@
                         <li><a href="<?= admin_url('accounts/jl_entry'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('Add Entry'); ?></a></li>
                     </ul>
                 </li>
-
-                <?php if($Admin || $Owner) { ?>
+                <?php } ?>
+                <?php if($Admin || $Owner || $this->GP['finance-jv-templates']) { ?>
                     <li class="newmenu-item has-sub">
                         <a href="#" class="newmenu-link">
                             <i class="fa fa-pencil-square-o"></i>
@@ -723,6 +727,7 @@
                     </li>
                 <?php } ?>
 
+                <?php if($Admin || $Owner || $this->GP['finance-view-reports']) { ?>
                 <li class="newmenu-item has-sub">
                     <a href="#" class="newmenu-link">
                         <i class="fa fa-pencil-square-o"></i>
@@ -737,6 +742,7 @@
                         <li><a href="<?= admin_url('reports/vat_report'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Vat Report'); ?></a></li>
                     </ul>
                 </li>
+                <?php } ?>
             </ul>
         </li>
         <?php } ?>
