@@ -9228,6 +9228,57 @@ class Reports extends MY_Controller
             });
         }
 
+        // ── PAYMENT BANK CHARGES WITH VAT (sma_payment_reference) ─
+        // Payments that have bank_charge_vat > 0 must appear in the VAT report
+        // as a purchase-side or sale-side expense depending on supplier/customer presence.
+        {
+            $pr_sql = "
+                SELECT
+                    pr.id                                               AS trans_id,
+                    'payment_bankcharge'                                AS trans_type,
+                    DATE(pr.date)                                       AS trans_date,
+                    pr.reference_no,
+                    CASE WHEN pr.customer_id > 0
+                         THEN IFNULL(c_cust.company, '')
+                         ELSE IFNULL(c_supp.company, '')
+                    END                                                 AS party_name,
+                    CASE WHEN pr.customer_id > 0
+                         THEN IFNULL(c_cust.vat_no, '')
+                         ELSE IFNULL(c_supp.vat_no, '')
+                    END                                                 AS party_vat_no,
+                    ''                                                  AS warehouse,
+                    0                                                   AS warehouse_id,
+                    0                                                   AS total_discount,
+                    ROUND(pr.bank_charges, 4)                           AS total_net,
+                    ROUND(pr.bank_charge_vat, 4)                        AS total_tax,
+                    ROUND(pr.bank_charges + pr.bank_charge_vat, 4)      AS grand_total,
+                    CASE WHEN pr.customer_id > 0 THEN 'customer' ELSE 'supplier' END AS party_side
+                FROM sma_payment_reference pr
+                LEFT JOIN sma_companies c_cust ON c_cust.id = pr.customer_id AND pr.customer_id > 0
+                LEFT JOIN sma_companies c_supp ON c_supp.id = pr.supplier_id AND pr.supplier_id > 0
+                WHERE DATE(pr.date) BETWEEN '{$sql_start}' AND '{$sql_end}'
+                  AND COALESCE(pr.bank_charge_vat, 0) > 0
+                ORDER BY pr.date ASC, pr.id ASC
+            ";
+            $pr_q = $this->db->query($pr_sql);
+            if ($pr_q->num_rows() > 0) {
+                foreach ($pr_q->result() as $row) {
+                    $row->total_invoice = $row->grand_total;
+                    if ($row->party_side === 'customer' && in_array($type, ['all', 'sales'])) {
+                        $sales_rows[] = $row;
+                    } elseif ($row->party_side === 'supplier' && in_array($type, ['all', 'purchases'])) {
+                        $purchase_rows[] = $row;
+                    }
+                }
+                usort($sales_rows,    function ($a, $b) {
+                    return strcmp($a->trans_date, $b->trans_date) ?: ($a->trans_id - $b->trans_id);
+                });
+                usort($purchase_rows, function ($a, $b) {
+                    return strcmp($a->trans_date, $b->trans_date) ?: ($a->trans_id - $b->trans_id);
+                });
+            }
+        }
+
         // ── JOURNAL VOUCHERS with VAT on Expense ──────────────────
         // Include only journal entries that have a line item on the "vat on expense" ledger.
         if (in_array($type, ['all', 'purchases', 'journals'])) {
