@@ -74,8 +74,7 @@
             <?php if ($logo) {
                 ?>
                 <div class="text-center" style="margin-bottom:20px;">
-                    <img src="<?= base_url() . 'assets/uploads/logos/' . $Settings->logo; ?>"
-                        alt="<?= $Settings->site_name; ?>">
+                    <h2 class="bold"><?= lang('Purchase Invoice'); ?></h2>
                 </div>
                 <?php
             } ?>
@@ -212,7 +211,6 @@
                             ?>
                             <th><?= lang('Sale_price'); ?></th>
                            <th><?= lang('Purchase_price'); ?></th>
-                            <th><?= lang('Cost_price'); ?></th>
                             <th><?= lang('Bonus'); ?></th>
 
                             <th><?= lang('subtotal'); ?></th>
@@ -226,14 +224,18 @@
                                 $total_col += 2;
                                 echo '<th>' . lang('Disc2 %') . '</th>';
                                 echo '<th>' . lang('Disc2 Value') . '</th>';
+                            }
+
+                            if ($Settings->product_discount && $inv->product_discount != 0) {
+                                $total_col += 2;
+                                echo '<th>' . lang('Deal Disc %') . '</th>';
+                                echo '<th>' . lang('Deal Disc Value') . '</th>';
                             } ?>
+                            <th><?= lang('Cost_price'); ?></th>
                             <th><?= lang('Total_without_VAT'); ?></th>
                             <?php
-                            if ($Settings->tax1 && $inv->product_tax > 0) {
-                                $total_col += 2;
-                                echo '<th>' . lang('VAT%') . '</th>';
-                                echo '<th>' . lang('VAT_value') . '</th>';
-                            }
+                            $total_col += 1;
+                            echo '<th>' . lang('VAT_value') . '</th>';
                             echo '<th>' . lang('Total_with_VAT') . '</th>';
                             ?>
                         </tr>
@@ -283,12 +285,9 @@
                                      <?= $this->sma->formatNumber($row->unit_cost); ?>
                                 </td>
                                 <td style="text-align:right; width:100px;">
-                                   <?= $this->sma->formatNumber($row->net_unit_cost); ?>
-                                </td>
-                                <td style="text-align:right; width:100px;">
                                    <?= $this->sma->formatNumber($row->bonus); ?>
                                 </td>
-                                <td style="text-align:right; width:120px;"><?php echo $row->subtotal; ?></td>
+                                <td style="text-align:right; width:120px;"><?php echo number_format($row->subtotal, 2); ?></td>
                                 <?php
                                 if ($Settings->product_discount && $inv->product_discount != 0) {
                                     echo '<td style=" text-align:right; vertical-align:middle;">' . ($row->discount != 0 ? $row->discount : '') . '</td>';
@@ -304,22 +303,23 @@
                                     $pr_item_discount2 = $this->sma->formatDecimal($pr_discount2 * $row->quantity);
                                     $row->discount2 = $this->sma->formatNumber($row->discount2, null);
                                     echo '<td style="width: 120px; text-align:right; vertical-align:middle;">' . ($row->discount2 != 0 ? $row->discount2 : '') . '</td>';
-                                    echo '<td style="width: 100px; text-align:right; vertical-align:middle;">' . $row->second_discount_value . '</td>';
+                                    echo '<td style="width: 100px; text-align:right; vertical-align:middle;">' . ($row->second_discount_value != 0 ? $row->second_discount_value : '') . '</td>';
+                                    echo '<td style="text-align:right; vertical-align:middle;">' . ($row->deal_discount_percent != 0 ? number_format($row->deal_discount_percent, 2) . '%' : '') . '</td>';
+                                    echo '<td style="text-align:right; vertical-align:middle;">' . ($row->deal_discount_value != 0 ? $this->sma->formatNumber($row->deal_discount_value) : '') . '</td>';
                                 }
                                 ?>
+                                <td style="text-align:right; width:100px;">
+                                   <?= $this->sma->formatNumber($row->net_unit_cost); ?>
+                                </td>
                                 <td style="text-align:right; width:120px;">
-                                    <?php echo $row->totalbeforevat; ?></td>
+                                    <?php echo number_format($row->totalbeforevat, 2); ?></td>
                                 <?php
-                                $vat_value = 0;
-                                if ($Settings->tax1 && $inv->product_tax > 0) {
-                                    $vat_value = $this->sma->formatNumber($row->item_tax);
-                                    echo '<td style="width: 100px; text-align:right; vertical-align:middle;">' . ($row->item_tax != 0 ? ($Settings->indian_gst ? $row->tax : $row->tax_code) : '') . '</td>';
-                                    echo '<td>' . $vat_value . '</td>';
-                                }
+                                $vat_value = $this->sma->formatNumber($row->item_tax);
+                                echo '<td style="text-align:right; vertical-align:middle;">' . $vat_value . '</td>';
                                 ?>
 
                                 <td style="text-align:right; width:120px;">
-                                    <?php echo $row->main_net; //$this->sma->formatNumber($row->subtotal)  + $this->sma->formatNumber($vat_value); ?></td>
+                                    <?php echo number_format($row->main_net, 2); ?></td>
 
                             </tr>
                             <?php
