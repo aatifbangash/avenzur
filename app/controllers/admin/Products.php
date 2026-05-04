@@ -1352,6 +1352,173 @@ class Products extends MY_Controller
 
     }
 
+    public function inventory_importer(){
+
+    }
+
+    public function update_shopify_sales()
+    {
+        // Join sma_sales to sma_shopify_orders matching reference_no to order_number
+        // order_number may be stored as integer; reference_no may be "1147" or "#1147"
+        $results = $this->db
+            ->select('s.id AS sale_id, s.reference_no, s.date AS sale_date, s.grand_total, so.order_number, so.payload')
+            ->from('sma_sales s')
+            ->join(
+                'sma_shopify_orders so',
+                "CAST(so.order_number AS CHAR) = s.reference_no
+                 OR CAST(so.order_number AS CHAR) = REPLACE(s.reference_no, '#', '')",
+                'inner'
+            )
+            ->order_by('s.date', 'DESC')
+            ->get()
+            ->result();
+
+        echo "<style>
+            body { font-family: Arial, sans-serif; font-size: 13px; }
+            h2   { color: #2c3e50; }
+            .order-block  { border:1px solid #ddd; border-radius:6px; margin-bottom:28px; padding:15px; }
+            .order-header { background:#2c3e50; color:#fff; padding:8px 14px; border-radius:4px; margin-bottom:12px; font-size:14px; }
+            table { width:100%; border-collapse:collapse; margin-bottom:10px; }
+            th  { background:#3c8dbc; color:#fff; padding:6px 10px; text-align:left; }
+            td  { padding:5px 10px; border-bottom:1px solid #eee; vertical-align:top; }
+            tr:nth-child(even) td { background:#f9f9f9; }
+            .sec { font-weight:700; color:#3c8dbc; margin:14px 0 5px; font-size:12px; text-transform:uppercase; letter-spacing:.5px; }
+            .badge-paid   { background:#27ae60; color:#fff; padding:2px 8px; border-radius:3px; font-size:11px; }
+            .badge-unpaid { background:#e74c3c; color:#fff; padding:2px 8px; border-radius:3px; font-size:11px; }
+        </style>";
+
+        if (empty($results)) {
+            echo "<p>No sma_sales records matched any sma_shopify_orders.</p>";
+            return;
+        }
+
+        echo "<h2>Shopify Orders Matched with Sales &mdash; " . count($results) . " record(s)</h2>";
+
+        foreach ($results as $row) {
+            $p = json_decode($row->payload, true);
+            if (!$p) {
+                echo "<p>Could not parse payload for Sale ID {$row->sale_id} / Order {$row->order_number}</p>";
+                continue;
+            }
+
+            $customer       = $p['customer']        ?? [];
+            $billing        = $p['billing_address']  ?? [];
+            $line_items     = $p['line_items']        ?? [];
+            $discount_codes = $p['discount_codes']    ?? [];
+
+            $customer_name  = trim(($customer['first_name'] ?? '') . ' ' . ($customer['last_name'] ?? ''));
+            $customer_email = $p['email']              ?? '—';
+            $customer_phone = $billing['phone']        ?? '—';
+            $order_date     = !empty($p['created_at'])
+                                ? date('d-M-Y H:i', strtotime($p['created_at']))
+                                : '—';
+            $fin_status     = $p['financial_status']   ?? '—';
+            $badge          = strtolower($fin_status) === 'paid'
+                                ? "<span class='badge-paid'>paid</span>"
+                                : "<span class='badge-unpaid'>{$fin_status}</span>";
+
+            echo "<div class='order-block'>";
+            echo "<div class='order-header'>
+                    Order {$p['name']}
+                    &nbsp;|&nbsp; Sale ID: {$row->sale_id}
+                    &nbsp;|&nbsp; {$order_date}
+                    &nbsp;|&nbsp; {$badge}
+                  </div>";
+
+            // ── Order Summary ────────────────────────────────────
+            echo "<div class='sec'>Order Summary</div>";
+            echo "<table>
+                    <tr><th>Field</th><th>Value</th></tr>
+                    <tr><td>Order Number</td><td>{$p['name']}</td></tr>
+                    <tr><td>Reference No (sma_sales)</td><td>{$row->reference_no}</td></tr>
+                    <tr><td>Order Date</td><td>{$order_date}</td></tr>
+                    <tr><td>Currency</td><td>" . ($p['currency'] ?? '—') . "</td></tr>
+                    <tr><td>Customer</td><td>{$customer_name}</td></tr>
+                    <tr><td>Email</td><td>{$customer_email}</td></tr>
+                    <tr><td>Phone</td><td>{$customer_phone}</td></tr>
+                    <tr><td>City</td><td>" . ($billing['city'] ?? '—') . "</td></tr>
+                    <tr><td>Address</td><td>" . htmlspecialchars(trim(($billing['address1'] ?? '') . ' ' . ($billing['address2'] ?? ''))) . "</td></tr>
+                  </table>";
+
+            // ── Financials ───────────────────────────────────────
+            echo "<div class='sec'>Financials (SAR)</div>";
+            echo "<table>
+                    <tr><th>Field</th><th>Amount</th></tr>
+                    <tr><td>Line Items Total</td><td>" . number_format((float)($p['total_line_items_price'] ?? 0), 2) . "</td></tr>
+                    <tr><td>Total Discounts</td><td>" . number_format((float)($p['total_discounts'] ?? 0), 2) . "</td></tr>
+                    <tr><td>Subtotal (after discount, excl. tax)</td><td>" . number_format((float)($p['subtotal_price'] ?? 0), 2) . "</td></tr>
+                    <tr><td>Total Tax (VAT 15%)</td><td>" . number_format((float)($p['total_tax'] ?? 0), 2) . "</td></tr>
+                    <tr><td>Shipping</td><td>" . number_format((float)($p['total_shipping_price_set']['shop_money']['amount'] ?? 0), 2) . "</td></tr>
+                    <tr><td>Total Before Vat</td><td>" . number_format((float)(($p['total_price'] ?? 0) / 1.15), 2) . "</td></tr>
+                    <tr><td><strong>Grand Total</strong></td><td><strong>" . number_format((float)($p['total_price'] ?? 0), 2) . "</strong></td></tr>
+                  </table>";
+
+            // ── Discount Codes ───────────────────────────────────
+            if (!empty($discount_codes)) {
+                echo "<div class='sec'>Discount Codes</div>";
+                echo "<table>
+                        <tr><th>Code</th><th>Type</th><th>Amount (SAR)</th></tr>";
+                foreach ($discount_codes as $dc) {
+                    echo "<tr>
+                            <td>" . htmlspecialchars($dc['code'] ?? '') . "</td>
+                            <td>" . htmlspecialchars($dc['type'] ?? '') . "</td>
+                            <td>" . number_format((float)($dc['amount'] ?? 0), 2) . "</td>
+                          </tr>";
+                }
+                echo "</table>";
+            }
+
+            // ── Line Items ───────────────────────────────────────
+            echo "<div class='sec'>Line Items</div>";
+            echo "<table>
+                    <tr>
+                        <th>#</th><th>Product</th><th>SKU</th>
+                        <th>Qty</th><th>Unit Price</th><th>Discount</th>
+                        <th>Taxable</th><th>Tax Rate</th><th>Tax</th><th>Net (excl. tax)</th><th>Line Total (incl. tax)</th>
+                    </tr>";
+            foreach ($line_items as $idx => $item) {
+                $item_discount        = array_sum(array_column($item['discount_allocations'] ?? [], 'amount'));
+                $gross                = (float)($item['price'] ?? 0) * (int)($item['quantity'] ?? 1);
+                // discount_allocations are also VAT-inclusive when taxable
+                $gross_after_discount = $gross - $item_discount;
+
+                $is_taxable = !empty($item['taxable']);
+                if ($is_taxable) {
+                    // Unit price is VAT-inclusive: extract VAT by dividing by 1.15
+                    $net_excl_tax = $gross_after_discount / 1.15;
+                    $item_tax     = $gross_after_discount - $net_excl_tax; // = gross * (0.15/1.15)
+                    $tax_rate     = 0.15;
+                } else {
+                    $net_excl_tax = $gross_after_discount;
+                    $item_tax     = 0;
+                    $tax_rate     = 0;
+                }
+                $line_total = $net_excl_tax + $item_tax; // equals $gross_after_discount when taxable
+
+                $line_total = $net_excl_tax + $item_tax;
+
+                echo "<tr>
+                        <td>" . ($idx + 1) . "</td>
+                        <td>" . htmlspecialchars($item['name'] ?? '') . "</td>
+                        <td>" . htmlspecialchars($item['sku']  ?? '—') . "</td>
+                        <td>" . (int)($item['quantity'] ?? 0) . "</td>
+                        <td>" . number_format((float)($item['price'] ?? 0), 2) . "</td>
+                        <td>" . number_format($item_discount, 2) . "</td>
+                        <td>" . ($is_taxable ? '<span style=\"color:green\">Yes</span>' : '<span style=\"color:#aaa\">No</span>') . "</td>
+                        <td>" . ($is_taxable ? (($tax_rate * 100) . '%') : '—') . "</td>
+                        <td>" . number_format($item_tax, 2) . "</td>
+                        <td>" . number_format($net_excl_tax, 2) . "</td>
+                        <td>" . number_format($line_total, 2) . "</td>
+                      </tr>";
+            }
+            echo "</table>";
+
+            echo "</div>"; // .order-block
+
+            exit;
+        }
+    }
+
     public function send_shopify_sales_to_zatca()
     {
         $csvFile = $this->upload_path . 'csv/shopify_orders_export.csv';
@@ -1394,6 +1561,16 @@ class Products extends MY_Controller
                     'discount' => (float) $row[13],
 
                     'items' => [],
+                    'clientData' => [
+                        "name" => $row[24],
+                        "buildingNo"  => $row[31],
+                        "taxNo" => '',
+                        "street" => $row[30],
+                        "city"=> $row[29],
+                        "district"=> $row[78],
+                        "postalCode"=> $row[35],
+                        "countryCode"=> $row[32]
+                    ],
                     'total_gross' => 0,
                     'document_gross' => (float) $row[11],
                     'document_tax' => (float) $row[10],
@@ -1424,7 +1601,6 @@ class Products extends MY_Controller
         // ==============================
 
         foreach ($orders as $orderId => $order) {
-
             if (strtolower($order['paymentStatus']) != 'paid') {
                 continue;
             }
@@ -1449,6 +1625,7 @@ class Products extends MY_Controller
             $payload['issueDate'] = $formattedDate;
             $payload['currency'] = 'SAR';
             $payload['items'] = [];
+            $payload['clientData'] = $order['clientData'];
 
             // Totals
             $totalAmount = 0;
@@ -1463,7 +1640,7 @@ class Products extends MY_Controller
             foreach ($order['items'] as $item) {
 
                 $itemGross = $item['gross'];
-
+                
                 // 👉 DISTRIBUTE DISCOUNT
                 $itemDiscount = 0;
                 if ($order['total_gross'] > 0 && $order['discount'] > 0) {
@@ -1905,6 +2082,275 @@ class Products extends MY_Controller
         }
     }
 
+    public function import_inventory()
+    {
+        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('products'), 'page' => lang('products')], ['link' => '#', 'page' => 'Import Inventory']];
+        $meta = ['page_title' => 'Import Inventory', 'bc' => $bc];
+
+        // ── GET: show form ──────────────────────────────────────────
+        if (!$this->input->post()) {
+            $this->data['warehouses'] = $this->site->getAllWarehouses();
+            $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+            $this->page_construct('products/import_inventory', $meta, $this->data);
+            return;
+        }
+
+        // ── POST: process upload ────────────────────────────────────
+        $warehouse_id = (int)$this->input->post('warehouse_id');
+        $supplier_id  = (int)$this->input->post('supplier_id');
+
+        if (!$warehouse_id || !$supplier_id) {
+            $this->session->set_flashdata('error', 'Please select a warehouse and supplier.');
+            admin_redirect('products/import_inventory');
+        }
+
+        $upload_path = $this->upload_path . 'csv/';
+        if (!is_dir($upload_path)) { mkdir($upload_path, 0755, true); }
+
+        $config = [
+            'upload_path'   => $upload_path,
+            'allowed_types' => 'xlsx|xls',
+            'max_size'      => 51200, // 50 MB
+            'overwrite'     => true,
+            'file_name'     => 'inventory_import_' . time(),
+        ];
+        $this->load->library('upload', $config);
+        if (!$this->upload->do_upload('excel_file')) {
+            $this->session->set_flashdata('error', $this->upload->display_errors('', ''));
+            admin_redirect('products/import_inventory');
+        }
+
+        $file_path = $upload_path . $this->upload->data('file_name');
+
+        // ── Read Excel ──────────────────────────────────────────────
+        try {
+            $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+            $reader->setReadDataOnly(true);
+            $spreadsheet = $reader->load($file_path);
+        } catch (Exception $e) {
+            // Try xls fallback
+            try {
+                $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xls();
+                $reader->setReadDataOnly(true);
+                $spreadsheet = $reader->load($file_path);
+            } catch (Exception $e2) {
+                $this->session->set_flashdata('error', 'Could not read file: ' . $e2->getMessage());
+                admin_redirect('products/import_inventory');
+            }
+        }
+
+        $rows = $spreadsheet->getActiveSheet()->toArray(null, true, true, false);
+        $spreadsheet->disconnectWorksheets();
+        unset($spreadsheet);
+
+        // ── Column map (0-based, from screenshot) ──────────────────
+        // 0: ASKON Code, 1: GTIN, 2: Item name, 3: Batch No.,
+        // 4: EXPIRY DATE, 5: Qty, 6: Sale Price, 7: Purchase price,
+        // 8: Cost Price, 9: Vat, 10: Supplier Name, 11: Supplier Id(Code), 12: LOC_DESCRIPTION_A
+
+        // ── Pre-fetch: build product map (item_code → id) ──────────
+        $unique_codes = [];
+        foreach ($rows as $i => $row) {
+            if ($i === 0) continue;
+            $code = trim((string)($row[0] ?? ''));
+            if ($code !== '') $unique_codes[$code] = true;
+        }
+        $unique_codes = array_keys($unique_codes);
+
+        $product_map = []; // code → row object
+        if ($unique_codes) {
+            // Try matching on sma_products.code
+            $by_code = $this->db->where_in('code', $unique_codes)->get('sma_products')->result();
+            foreach ($by_code as $p) { $product_map[$p->code] = $p; }
+            // Fallback: sma_products.item_code for unmatched
+            $unmatched = array_diff($unique_codes, array_keys($product_map));
+            if ($unmatched) {
+                $by_item_code = $this->db->where_in('item_code', array_values($unmatched))->get('sma_products')->result();
+                foreach ($by_item_code as $p) { if (!isset($product_map[$p->item_code])) $product_map[$p->item_code] = $p; }
+            }
+        }
+
+        // ── Fetch supplier info ─────────────────────────────────────
+        $supplier = $this->db->get_where('sma_companies', ['id' => $supplier_id], 1)->row();
+        $supplier_name = $supplier ? $supplier->name : 'Unknown Supplier';
+
+        // ── Process rows ────────────────────────────────────────────
+        $ref_no         = 'IMP-' . date('YmdHis');
+        $now            = date('Y-m-d H:i:s');
+        $today          = date('Y-m-d');
+        $created_by     = $this->session->userdata('user_id');
+
+        $purchase_items      = [];
+        $inserted_products   = 0;
+        $updated_products    = 0;
+        $skipped_rows        = 0;
+
+        $grand_total_cost    = 0;
+        $grand_total_sale    = 0;
+        $grand_total_vat     = 0;
+        $grand_total         = 0;
+
+        foreach ($rows as $i => $row) {
+            if ($i === 0) continue; // skip header
+
+            $item_code     = trim((string)($row[0]  ?? ''));
+            $gtin          = trim((string)($row[1]  ?? ''));
+            $item_name     = trim((string)($row[2]  ?? ''));
+            $batch_no      = trim((string)($row[3]  ?? ''));
+            $expiry_raw    = $row[4]  ?? null;
+            $quantity      = (float)($row[5]  ?? 0);
+            $sale_price    = (float)($row[6]  ?? 0);
+            $purchase_price= (float)($row[7]  ?? 0); // real unit cost (with VAT if applicable)
+            $cost_price    = (float)($row[8]  ?? 0); // net unit cost (excl. VAT)
+            $vat_rate      = (float)($row[9]  ?? 0); // e.g. 0.15 or 0
+
+            if ($item_code === '' || $quantity <= 0) { $skipped_rows++; continue; }
+
+            // ── Parse expiry date ───────────────────────────────────
+            $expiry = null;
+            if (!empty($expiry_raw)) {
+                try {
+                    if (is_numeric($expiry_raw)) {
+                        $expiry = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($expiry_raw)->format('Y-m-d');
+                    } else {
+                        $d = DateTime::createFromFormat('d-M-y', $expiry_raw)
+                          ?: DateTime::createFromFormat('d/m/Y', $expiry_raw)
+                          ?: DateTime::createFromFormat('Y-m-d', $expiry_raw)
+                          ?: date_create($expiry_raw);
+                        $expiry = $d ? $d->format('Y-m-d') : null;
+                    }
+                } catch (Exception $e) { $expiry = null; }
+            }
+
+            // ── Calculations ────────────────────────────────────────
+            $subtotal      = $cost_price * $quantity;          // total cost excl VAT
+            $item_vat      = $subtotal * $vat_rate;            // total VAT for this line
+            $main_net      = $subtotal + $item_vat;            // total incl VAT
+            $total_sale    = $sale_price * $quantity;
+
+            $grand_total_cost += $subtotal;
+            $grand_total_vat  += $item_vat;
+            $grand_total_sale += $total_sale;
+            $grand_total      += $main_net;
+
+            // ── Find or create product ──────────────────────────────
+            $product = $product_map[$item_code] ?? null;
+
+            if (!$product) {
+                // Insert new product (minimal fields; update later via product edit)
+                $new_product = [
+                    'name'           => $item_name,
+                    'code'           => $item_code,
+                    'item_code'      => $item_code,
+                    'price'          => $sale_price,
+                    'cost'           => $cost_price,
+                    'tax_rate'       => $vat_rate > 0 ? 5 : 4, // 5 = 15% VAT id assumption; adjust if needed
+                    'tax_method'     => $vat_rate > 0 ? 1 : 0,
+                    'quantity'       => 0,
+                    'alert_quantity' => 5,
+                    'type'           => 'standard',
+                    'product_details'=> ''
+                ];
+                $this->db->insert('sma_products', $new_product);
+                $new_id = $this->db->insert_id();
+                $new_product['id']   = $new_id;
+                $new_product['code'] = $item_code;
+                $product = (object)$new_product;
+                $product_map[$item_code] = $product;
+                $inserted_products++;
+            } else {
+                // Update price/cost if sheet has newer data
+                $this->db->where('id', $product->id)->update('sma_products', [
+                    'price' => $sale_price,
+                    'cost'  => $cost_price,
+                ]);
+                $updated_products++;
+            }
+
+            $avz_code = $this->sma->generateUUIDv4();
+
+            $purchase_items[] = [
+                'product_id'            => $product->id,
+                'product_code'          => $item_code,
+                'product_name'          => $item_name,
+                'option_id'             => null,
+                'net_unit_cost'         => $cost_price,
+                'unit_cost'             => $purchase_price,
+                'real_unit_cost'        => $purchase_price,
+                'base_unit_cost'        => $purchase_price,
+                'quantity'              => $quantity,
+                'quantity_balance'      => $quantity,
+                'quantity_received'     => $quantity,
+                'unit_quantity'         => $quantity,
+                'warehouse_id'          => $warehouse_id,
+                'item_tax'              => $item_vat,
+                'tax_rate_id'           => $vat_rate > 0 ? 5 : 4,
+                'discount'              => '',
+                'item_discount'         => 0,
+                'expiry'                => $expiry,
+                'sale_price'            => $sale_price,
+                'batchno'               => $batch_no,
+                'serial_number'         => '',
+                'bonus'                 => 0,
+                'discount1'             => 0,
+                'discount2'             => 0,
+                'second_discount_value' => 0,
+                'subtotal'              => $subtotal,
+                'totalbeforevat'        => $subtotal,
+                'main_net'              => $main_net,
+                'date'                  => $today,
+                'status'                => 'received',
+                'avz_item_code'         => $avz_code,
+            ];
+        }
+
+        if (empty($purchase_items)) {
+            $this->session->set_flashdata('error', 'No valid rows found in the uploaded file.');
+            admin_redirect('products/import_inventory');
+        }
+
+        // ── Build purchase header ───────────────────────────────────
+        $purchase_data = [
+            'reference_no'       => $ref_no,
+            'date'               => $now,
+            'supplier_id'        => $supplier_id,
+            'supplier'           => $supplier_name,
+            'warehouse_id'       => $warehouse_id,
+            'note'               => 'Inventory import from Excel',
+            'total'              => $grand_total_cost,
+            'total_net_purchase' => $grand_total_cost,
+            'total_sale'         => $grand_total_sale,
+            'product_discount'   => 0,
+            'order_discount'     => 0,
+            'total_discount'     => 0,
+            'product_tax'        => $grand_total_vat,
+            'order_tax'          => 0,
+            'total_tax'          => $grand_total_vat,
+            'shipping'           => 0,
+            'grand_total'        => $grand_total,
+            'status'             => 'received',
+            'sequence_code'      => $this->sequenceCode->generate('PR', 5),
+            'created_by'         => $created_by,
+            'attachment'         => 0,
+        ];
+
+        // ── Insert via model (handles purchase_items + inventory movements + AVCO) ──
+        $purchase_id = $this->purchases_model->addPurchase($purchase_data, $purchase_items);
+
+        if ($purchase_id) {
+            $msg = "Import successful. Purchase <strong>#{$ref_no}</strong> created (ID: {$purchase_id}). "
+                 . "Rows: <strong>" . count($purchase_items) . "</strong> | "
+                 . "New products: <strong>{$inserted_products}</strong> | "
+                 . "Updated: <strong>{$updated_products}</strong> | "
+                 . "Skipped: <strong>{$skipped_rows}</strong>.";
+            $this->session->set_flashdata('message', $msg);
+            admin_redirect('purchases/view/' . $purchase_id);
+        } else {
+            $this->session->set_flashdata('error', 'Import failed. Please check the file and try again.');
+            admin_redirect('products/import_inventory');
+        }
+    }
+
     public function add_supplier_reference($amount, $reference_no, $date, $note, $supplier_id, $ledger_account){
         $payment_reference = [
             'supplier_id' => $supplier_id,
@@ -2101,7 +2547,7 @@ class Products extends MY_Controller
         $unsettled_returns = $this->db
             ->where('status', 'completed')
             ->where('paid < grand_total', null, false)
-            //->where_not_in('supplier_id', [824, 31])
+            ->where_in('supplier_id', [570, 654, 660, 664,668,702,752,788,803])
             ->get('sma_returns_supplier')
             ->result();
         //echo "<pre>";print_r($unsettled_returns);
@@ -2202,7 +2648,7 @@ class Products extends MY_Controller
         // Settle Debit Memos against outstanding invoices
         /*$unsettled_debit_memos = $this->db
             ->where('supplier_entry_type', 'D')
-            ->where('supplier_id >', '0')
+            ->where_in('supplier_id', [570, 654, 660, 664,668,702,752,788,803])
             ->where('type', 'memo')
             ->where('(used_amount IS NULL OR used_amount < payment_amount)', null, false)
             ->get('sma_memo')
@@ -2314,7 +2760,7 @@ class Products extends MY_Controller
         $unsettled_returns = $this->db
             ->where('status', 'completed')
             ->where('paid < grand_total', null, false)
-            ->where_not_in('customer_id', [824, 31])
+            ->where_in('customer_id', [570, 654, 660, 664,668,702,752,788,803])
             ->get('sma_returns')
             ->result();
         echo "<pre>";print_r($unsettled_returns);echo "</pre>";exit;
