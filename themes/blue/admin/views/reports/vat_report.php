@@ -225,6 +225,7 @@
             'debitmemo'       => 'Debit Memo',
             'memo'            => 'Memo',
             'journal'         => 'Journal Voucher',
+            'payment_bankcharge' => 'Bank Charge (VAT)',
         ];
         $type_row_class = [
             'sale'            => 'row-sales-invoice',
@@ -237,6 +238,7 @@
             'debitmemo'       => 'row-memo-debit',
             'memo'            => 'row-memo-general',
             'journal'         => 'row-memo-general',
+            'payment_bankcharge' => 'row-memo-petty',
         ];
         $type_badge = [
             'sale'            => 'primary',
@@ -249,11 +251,12 @@
             'debitmemo'       => 'warning',
             'memo'            => 'default',
             'journal'         => 'default',
+            'payment_bankcharge' => 'info',
         ];
 
         // Returns an enriched label for memo rows showing Supplier/Customer + Credit/Debit direction.
         $get_memo_label = function ($r) use ($type_labels) {
-            $memoTypes = ['serviceinvoice', 'pettycash', 'creditmemo', 'debitmemo', 'memo'];
+            $memoTypes = ['serviceinvoice', 'pettycash', 'creditmemo', 'debitmemo', 'memo', 'payment_bankcharge'];
             if (!in_array($r->trans_type, $memoTypes)) {
                 return $type_labels[$r->trans_type] ?? $r->trans_type;
             }
@@ -270,6 +273,7 @@
                     if ($entry === 'C') return "{$p}Credit Memo";
                     if ($entry === 'D') return "{$p}Debit Memo";
                     return "{$p}Memo";
+                case 'payment_bankcharge': return "{$p}Bank Charge (VAT)";
                 default:
                     return $type_labels[$r->trans_type] ?? $r->trans_type;
             }
