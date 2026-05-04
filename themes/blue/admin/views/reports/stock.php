@@ -295,6 +295,8 @@
                                 $grandTotalPurchasePrice = 0;
                                 $totalCostPrice = 0;
                                 $grandTotalCostPrice = 0;
+                                $check_date = !empty($at_date) ? strtotime($at_date) : time();
+                                $use_inventory_cost = $check_date >= strtotime('2026-01-01');
                                 ?>
 
                                 <?php foreach ($stock_data_totals as $index => $row): ?>
@@ -303,7 +305,7 @@
                                     <?php $totalPurchasePrice += $row->purchase_price; ?>
                                     <?php $grandTotalPurchasePrice += $row->purchase_price * $row->quantity; ?>
                                     <?php $totalCostPrice += $row->cost_price; ?>
-                                    <?php $grandTotalCostPrice += $row->total_cost_price ?? ($row->inventory_cost_price * $row->quantity); ?>
+                                    <?php $grandTotalCostPrice += $use_inventory_cost ? ($row->inventory_cost_price * $row->quantity) : $row->total_cost_price; ?>
                                 <?php endforeach; ?>
 
                                 <?php foreach ($stock_data as $index => $row): ?>
@@ -332,9 +334,9 @@
                                         
                                         <td><?= number_format($row->purchase_price * $row->quantity, 2, '.', ',') ?></td>
                                         
-                                        <td><?= number_format($row->cost_price ?? $row->inventory_cost_price, 2, '.', ',') ?></td>
+                                        <td><?= number_format($use_inventory_cost ? $row->inventory_cost_price : $row->cost_price, 2, '.', ',') ?></td>
                                         
-                                        <td><?= number_format($row->total_cost_price ?? ($row->inventory_cost_price * $row->quantity), 2, '.', ',') ?></td>
+                                        <td><?= number_format($use_inventory_cost ? ($row->inventory_cost_price * $row->quantity) : $row->total_cost_price, 2, '.', ',') ?></td>
                                         
                                     </tr>
                                 <?php endforeach; ?>
