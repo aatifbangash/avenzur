@@ -427,46 +427,13 @@ class Purchases_model extends CI_Model
         $this->db->select('purchase_items.*, tax_rates.code as tax_code, tax_rates.name as tax_name, tax_rates.rate as tax_rate,
          products.unit, products.details as details, product_variants.name as variant, products.hsn_code as hsn_code, 
          products.second_name as second_name, products.item_code')
-            ->select('COALESCE(
-                NULLIF((
-                    SELECT poi.deal_discount
-                    FROM sma_purchase_order_items poi
-                    JOIN sma_purchase_orders po ON po.id = poi.purchase_id
-                    WHERE po.purchase_id = sma_purchase_items.purchase_id AND poi.product_id = sma_purchase_items.product_id
-                    LIMIT 1
-                ), 0),
-                (
-                    SELECT p.grand_deal_discount
-                           / NULLIF(
-                               (SELECT SUM(pi2.totalbeforevat) FROM sma_purchase_items pi2 WHERE pi2.purchase_id = sma_purchase_items.purchase_id)
-                               + p.grand_deal_discount, 0)
-                           * 100
-                    FROM sma_purchases p
-                    WHERE p.id = sma_purchase_items.purchase_id
-                    LIMIT 1
-                ),
-                0
-            ) AS deal_discount_percent,
-            COALESCE(
-                NULLIF((
-                    SELECT CASE WHEN poi.deal_discount >= 100 THEN COALESCE(sma_purchase_items.totalbeforevat, 0)
-                                WHEN poi.deal_discount > 0    THEN poi.deal_discount / (100 - poi.deal_discount) * COALESCE(sma_purchase_items.totalbeforevat, 0)
-                                ELSE 0 END
-                    FROM sma_purchase_order_items poi
-                    JOIN sma_purchase_orders po ON po.id = poi.purchase_id
-                    WHERE po.purchase_id = sma_purchase_items.purchase_id AND poi.product_id = sma_purchase_items.product_id
-                    LIMIT 1
-                ), 0),
-                (
-                    SELECT p.grand_deal_discount
-                           * COALESCE(sma_purchase_items.totalbeforevat, 0)
-                           / NULLIF((SELECT SUM(pi2.totalbeforevat) FROM sma_purchase_items pi2 WHERE pi2.purchase_id = sma_purchase_items.purchase_id), 0)
-                    FROM sma_purchases p
-                    WHERE p.id = sma_purchase_items.purchase_id
-                    LIMIT 1
-                ),
-                0
-            ) AS deal_discount_value', false)
+            ->select('COALESCE(sma_purchase_items.deal_discount, 0) AS deal_discount_percent,
+            CASE
+                WHEN COALESCE(sma_purchase_items.deal_discount_value, 0) <> 0 THEN sma_purchase_items.deal_discount_value
+                WHEN COALESCE(sma_purchase_items.deal_discount, 0) >= 100      THEN COALESCE(sma_purchase_items.totalbeforevat, 0)
+                WHEN COALESCE(sma_purchase_items.deal_discount, 0) > 0         THEN sma_purchase_items.deal_discount / (100 - sma_purchase_items.deal_discount) * COALESCE(sma_purchase_items.totalbeforevat, 0)
+                ELSE 0
+            END AS deal_discount_value', false)
             ->join('products', 'products.id=purchase_items.product_id', 'left')
             ->join('product_variants', 'product_variants.id=purchase_items.option_id', 'left')
             ->join('tax_rates', 'tax_rates.id=purchase_items.tax_rate_id', 'left')
