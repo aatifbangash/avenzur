@@ -605,6 +605,7 @@ class Reports extends MY_Controller
 
             $row = 2;
             $total_quantity = $total_sale = $total_purchase = $total_cost = 0;
+            $use_inventory_cost = !empty($at_date) ? strtotime($at_date) >= strtotime('2026-01-01') : (time() >= strtotime('2026-01-01'));
             foreach ($data as $data_row) {
                 $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->item_code);
                 $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->itm_code);
@@ -618,8 +619,8 @@ class Reports extends MY_Controller
                 $this->excel->getActiveSheet()->SetCellValue('J' . $row, ($data_row->sale_price * $data_row->quantity));
                 $this->excel->getActiveSheet()->SetCellValue('K' . $row, ($data_row->purchase_price));
                 $this->excel->getActiveSheet()->SetCellValue('L' . $row, ($data_row->purchase_price * $data_row->quantity));
-                $excel_cost_price  = $data_row->cost_price  ?: ($data_row->inventory_cost_price ?? 0);
-                $excel_total_cost  = $data_row->total_cost_price ?: ($excel_cost_price * $data_row->quantity);
+                $excel_cost_price = $use_inventory_cost ? $data_row->inventory_cost_price : $data_row->cost_price;
+                $excel_total_cost = $use_inventory_cost ? ($data_row->inventory_cost_price * $data_row->quantity) : $data_row->total_cost_price;
                 $this->excel->getActiveSheet()->SetCellValue('M' . $row, $excel_cost_price);
                 $this->excel->getActiveSheet()->SetCellValue('N' . $row, $excel_total_cost);
                 
