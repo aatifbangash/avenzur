@@ -9090,7 +9090,9 @@ class Reports extends MY_Controller
                 ORDER BY trans_date ASC, trans_id ASC
             ";
             $q = $this->db->query($sql);
-            $sales_rows = $q->num_rows() ? $q->result() : [];
+            $sales_rows = $q->num_rows()
+                ? array_values(array_filter($q->result(), function ($r) { return abs((float)$r->total_tax) > 0.001; }))
+                : [];
         }
 
         // ── PURCHASES  (invoices + supplier returns) ───────────────
@@ -9142,7 +9144,9 @@ class Reports extends MY_Controller
             ";
             //echo $sql;exit;
             $q = $this->db->query($sql);
-            $purchase_rows = $q->num_rows() ? $q->result() : [];
+            $purchase_rows = $q->num_rows()
+                ? array_values(array_filter($q->result(), function ($r) { return abs((float)$r->total_tax) > 0.001; }))
+                : [];
         }
 
         // ── MEMOS  (service invoice · petty cash · credit/debit/general memo) ──
@@ -9212,6 +9216,9 @@ class Reports extends MY_Controller
                 $row->total_net    = round($sign * ($raw_gross - $raw_vat), 4);
                 $row->grand_total  = round($sign * $raw_gross, 4);
                 $row->total_invoice = $row->grand_total;
+
+                // Skip zero-VAT memo rows
+                if (abs($row->total_tax) < 0.001) continue;
 
                 if ($row->party_side === 'customer' && in_array($type, ['all', 'sales'])) {
                     $sales_rows[] = $row;
@@ -9309,6 +9316,7 @@ class Reports extends MY_Controller
             $jq = $this->db->query($journal_sql);
             if ($jq->num_rows() > 0) {
                 foreach ($jq->result() as $row) {
+                    if (abs((float)$row->total_tax) < 0.001) continue;
                     $row->party_side  = 'supplier';
                     $row->entry_type  = 'D';
                     $purchase_rows[]  = $row;
@@ -9356,10 +9364,9 @@ class Reports extends MY_Controller
             $sheet->SetCellValue('D1', 'Type');
             $sheet->SetCellValue('E1', 'Party');
             $sheet->SetCellValue('F1', 'VAT No');
-            $sheet->SetCellValue('G1', 'Warehouse');
-            $sheet->SetCellValue('H1', 'Net (ex-VAT)');
-            $sheet->SetCellValue('I1', 'VAT Amount');
-            $sheet->SetCellValue('J1', 'Grand Total');
+            $sheet->SetCellValue('G1', 'Net (ex-VAT)');
+            $sheet->SetCellValue('H1', 'VAT Amount');
+            $sheet->SetCellValue('I1', 'Grand Total');
 
             $type_labels = [
                 'sale'           => 'Sales Invoice',
@@ -9372,6 +9379,7 @@ class Reports extends MY_Controller
                 'debitmemo'      => 'Debit Memo',
                 'memo'           => 'Memo',
                 'journal'        => 'Journal Voucher',
+                'payment_bankcharge' => 'Bank Charge (VAT)',
             ];
 
             $get_memo_label = function ($r) use ($type_labels) {
@@ -9408,14 +9416,13 @@ class Reports extends MY_Controller
             foreach ($all_rows as $i => $r) {
                 $sheet->SetCellValue("A{$row}", $i + 1);
                 $sheet->SetCellValue("B{$row}", date('d-M-Y', strtotime($r->trans_date)));
-                $sheet->SetCellValue("C{$row}", $r->reference_no);
+                $sheet->SetCellValue("C{$row}", ($r->reference_no && $r->reference_no !== '0') ? $r->reference_no : $r->trans_id);
                 $sheet->SetCellValue("D{$row}", $get_memo_label($r));
                 $sheet->SetCellValue("E{$row}", $r->party_name);
                 $sheet->SetCellValue("F{$row}", $r->party_vat_no);
-                $sheet->SetCellValue("G{$row}", $r->warehouse);
-                $sheet->SetCellValue("H{$row}", round((float)$r->total_net,   2));
-                $sheet->SetCellValue("I{$row}", round((float)$r->total_tax,   2));
-                $sheet->SetCellValue("J{$row}", round((float)$r->grand_total, 2));
+                $sheet->SetCellValue("G{$row}", round((float)$r->total_net,   2));
+                $sheet->SetCellValue("H{$row}", round((float)$r->total_tax,   2));
+                $sheet->SetCellValue("I{$row}", round((float)$r->grand_total, 2));
                 $row++;
             }
 
