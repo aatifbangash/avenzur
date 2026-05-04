@@ -9379,7 +9379,7 @@ class Reports extends MY_Controller
                 'debitmemo'      => 'Debit Memo',
                 'memo'           => 'Memo',
                 'journal'        => 'Journal Voucher',
-                'payment_bankcharge' => 'Bank Charge (VAT)',
+                'payment_bankcharge' => 'Payment',
             ];
 
             $get_memo_label = function ($r) use ($type_labels) {
@@ -9414,9 +9414,12 @@ class Reports extends MY_Controller
 
             $row = 2;
             foreach ($all_rows as $i => $r) {
+                $ref_display = in_array($r->trans_type, ['returnCustomer', 'returnSupplier'])
+                    ? $r->trans_id
+                    : (($r->reference_no && $r->reference_no !== '0') ? $r->reference_no : $r->trans_id);
                 $sheet->SetCellValue("A{$row}", $i + 1);
                 $sheet->SetCellValue("B{$row}", date('d-M-Y', strtotime($r->trans_date)));
-                $sheet->SetCellValue("C{$row}", ($r->reference_no && $r->reference_no !== '0') ? $r->reference_no : $r->trans_id);
+                $sheet->SetCellValue("C{$row}", $ref_display);
                 $sheet->SetCellValue("D{$row}", $get_memo_label($r));
                 $sheet->SetCellValue("E{$row}", $r->party_name);
                 $sheet->SetCellValue("F{$row}", $r->party_vat_no);

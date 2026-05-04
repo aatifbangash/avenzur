@@ -225,7 +225,7 @@
             'debitmemo'       => 'Debit Memo',
             'memo'            => 'Memo',
             'journal'         => 'Journal Voucher',
-            'payment_bankcharge' => 'Bank Charge (VAT)',
+            'payment_bankcharge' => 'Payment',
         ];
         $type_row_class = [
             'sale'            => 'row-sales-invoice',
@@ -273,10 +273,19 @@
                     if ($entry === 'C') return "{$p}Credit Memo";
                     if ($entry === 'D') return "{$p}Debit Memo";
                     return "{$p}Memo";
-                case 'payment_bankcharge': return "{$p}Bank Charge (VAT)";
+                case 'payment_bankcharge':
+                    return ($side === 'supplier') ? 'Supplier Payment' : (($side === 'customer') ? 'Customer Payment' : 'Payment');
                 default:
                     return $type_labels[$r->trans_type] ?? $r->trans_type;
             }
+        };
+
+        // Returns the display reference: returns always show their DB id; others use reference_no with id fallback
+        $get_ref = function ($r) {
+            if (in_array($r->trans_type, ['returnCustomer', 'returnSupplier'])) {
+                return $r->trans_id;
+            }
+            return ($r->reference_no && $r->reference_no !== '0') ? $r->reference_no : $r->trans_id;
         };
 
         $has_sales     = !empty($sales_rows);
@@ -301,7 +310,7 @@
                 <tr>
                     <td><?= $idx ?></td>
                     <td><?= date('d-M-Y', strtotime($r->trans_date)) ?></td>
-                    <td><?= htmlspecialchars(($r->reference_no && $r->reference_no !== '0') ? $r->reference_no : $r->trans_id) ?></td>
+                    <td><?= htmlspecialchars($get_ref($r)) ?></td>
                     <td><?= $get_memo_label($r) ?></td>
                     <td><?= htmlspecialchars($r->party_name ?? '') ?></td>
                     <td><?= htmlspecialchars($r->party_vat_no ?? '') ?></td>
@@ -316,7 +325,7 @@
                 <tr>
                     <td><?= $idx ?></td>
                     <td><?= date('d-M-Y', strtotime($r->trans_date)) ?></td>
-                    <td><?= htmlspecialchars(($r->reference_no && $r->reference_no !== '0') ? $r->reference_no : $r->trans_id) ?></td>
+                    <td><?= htmlspecialchars($get_ref($r)) ?></td>
                     <td><?= $get_memo_label($r) ?></td>
                     <td><?= htmlspecialchars($r->party_name ?? '') ?></td>
                     <td><?= htmlspecialchars($r->party_vat_no ?? '') ?></td>
@@ -385,7 +394,7 @@
                     <tr class="<?= $rclass ?>">
                         <td><?= $i ?></td>
                         <td><?= date('d-M-Y', strtotime($r->trans_date)) ?></td>
-                        <td><?= htmlspecialchars(($r->reference_no && $r->reference_no !== '0') ? $r->reference_no : $r->trans_id) ?></td>
+                        <td><?= htmlspecialchars($get_ref($r)) ?></td>
                         <td>
                             <span class="label label-<?= $badge ?>"><?= $tlabel ?></span>
                         </td>
@@ -470,7 +479,7 @@
                     <tr class="<?= $rclass ?>">
                         <td><?= $j ?></td>
                         <td><?= date('d-M-Y', strtotime($r->trans_date)) ?></td>
-                        <td><?= htmlspecialchars(($r->reference_no && $r->reference_no !== '0') ? $r->reference_no : $r->trans_id) ?></td>
+                        <td><?= htmlspecialchars($get_ref($r)) ?></td>
                         <td>
                             <span class="label label-<?= $badge ?>"><?= $tlabel ?></span>
                         </td>
