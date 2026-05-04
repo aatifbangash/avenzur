@@ -288,7 +288,7 @@
             <thead>
                 <tr>
                     <th>#</th><th>Date</th><th>Ref#</th><th>Type</th>
-                    <th>Party</th><th>VAT No</th><th>Warehouse</th>
+                    <th>Party</th><th>VAT No</th>
                     <th>Net (ex-VAT)</th><th>VAT Amount</th><th>Grand Total</th>
                 </tr>
             </thead>
@@ -301,11 +301,10 @@
                 <tr>
                     <td><?= $idx ?></td>
                     <td><?= date('d-M-Y', strtotime($r->trans_date)) ?></td>
-                    <td><?= htmlspecialchars($r->reference_no) ?></td>
+                    <td><?= htmlspecialchars(($r->reference_no && $r->reference_no !== '0') ? $r->reference_no : $r->trans_id) ?></td>
                     <td><?= $get_memo_label($r) ?></td>
                     <td><?= htmlspecialchars($r->party_name ?? '') ?></td>
                     <td><?= htmlspecialchars($r->party_vat_no ?? '') ?></td>
-                    <td><?= htmlspecialchars($r->warehouse ?? '') ?></td>
                     <td><?= round((float)$r->total_net, 2) ?></td>
                     <td><?= round((float)$r->total_tax, 2) ?></td>
                     <td><?= round((float)$r->grand_total, 2) ?></td>
@@ -317,11 +316,10 @@
                 <tr>
                     <td><?= $idx ?></td>
                     <td><?= date('d-M-Y', strtotime($r->trans_date)) ?></td>
-                    <td><?= htmlspecialchars($r->reference_no) ?></td>
+                    <td><?= htmlspecialchars(($r->reference_no && $r->reference_no !== '0') ? $r->reference_no : $r->trans_id) ?></td>
                     <td><?= $get_memo_label($r) ?></td>
                     <td><?= htmlspecialchars($r->party_name ?? '') ?></td>
                     <td><?= htmlspecialchars($r->party_vat_no ?? '') ?></td>
-                    <td><?= htmlspecialchars($r->warehouse ?? '') ?></td>
                     <td><?= round((float)$r->total_net, 2) ?></td>
                     <td><?= round((float)$r->total_tax, 2) ?></td>
                     <td><?= round((float)$r->grand_total, 2) ?></td>
@@ -352,7 +350,6 @@
                         <th>Type</th>
                         <th><?= lang('customer') ?></th>
                         <th>VAT No</th>
-                        <th><?= lang('warehouse') ?></th>
                         <th class="text-right">Net Amount<br><small class="muted">(ex-VAT)</small></th>
                         <th class="text-right">VAT Amount</th>
                         <th class="text-right">Grand Total</th>
@@ -361,7 +358,7 @@
                 <tbody>
                 <?php
                 if (!$has_sales): ?>
-                    <tr><td colspan="10" class="text-center muted">No sales records found for the selected period.</td></tr>
+                    <tr><td colspan="9" class="text-center muted">No sales records found for the selected period.</td></tr>
                 <?php else:
                     $s_sub_net   = 0; $s_sub_vat = 0; $s_sub_gross = 0;
                     $i = 0;
@@ -388,13 +385,12 @@
                     <tr class="<?= $rclass ?>">
                         <td><?= $i ?></td>
                         <td><?= date('d-M-Y', strtotime($r->trans_date)) ?></td>
-                        <td><?= htmlspecialchars($r->reference_no ?? '') ?></td>
+                        <td><?= htmlspecialchars(($r->reference_no && $r->reference_no !== '0') ? $r->reference_no : $r->trans_id) ?></td>
                         <td>
                             <span class="label label-<?= $badge ?>"><?= $tlabel ?></span>
                         </td>
                         <td><?= htmlspecialchars($r->party_name ?? '') ?></td>
                         <td style="font-size:11px;"><?= htmlspecialchars($r->party_vat_no ?? '') ?></td>
-                        <td><?= htmlspecialchars($r->warehouse ?? '') ?></td>
                         <td class="text-right"><?= $this->sma->formatMoney($net) ?></td>
                         <td class="text-right <?= ($vat < 0) ? 'vat-negative' : 'vat-positive' ?>"><?= $this->sma->formatMoney($vat) ?></td>
                         <td class="text-right"><?= $this->sma->formatMoney($gross) ?></td>
@@ -403,7 +399,7 @@
                 </tbody>
                 <tfoot>
                     <tr style="font-weight:bold; background:#d6eaf8;">
-                        <td colspan="7" class="text-right"><?= lang('total') ?></td>
+                        <td colspan="6" class="text-right"><?= lang('total') ?></td>
                         <td class="text-right"><?= $this->sma->formatMoney($s_sub_net) ?></td>
                         <td class="text-right <?= ($s_sub_vat < 0) ? 'vat-negative' : 'vat-positive' ?>"><?= $this->sma->formatMoney($s_sub_vat) ?></td>
                         <td class="text-right"><?= $this->sma->formatMoney($s_sub_gross) ?></td>
@@ -439,7 +435,6 @@
                         <th>Type</th>
                         <th><?= lang('supplier') ?></th>
                         <th>VAT No</th>
-                        <th><?= lang('warehouse') ?></th>
                         <th class="text-right">Net Amount<br><small class="muted">(ex-VAT)</small></th>
                         <th class="text-right">VAT Amount</th>
                         <th class="text-right">Grand Total</th>
@@ -448,7 +443,7 @@
                 <tbody>
                 <?php
                 if (!$has_purchases): ?>
-                    <tr><td colspan="10" class="text-center muted">No purchase records found for the selected period.</td></tr>
+                    <tr><td colspan="9" class="text-center muted">No purchase records found for the selected period.</td></tr>
                 <?php else:
                     $p_sub_net   = 0; $p_sub_vat = 0; $p_sub_gross = 0;
                     $j = 0;
@@ -475,13 +470,12 @@
                     <tr class="<?= $rclass ?>">
                         <td><?= $j ?></td>
                         <td><?= date('d-M-Y', strtotime($r->trans_date)) ?></td>
-                        <td><?= htmlspecialchars($r->reference_no ?? '') ?></td>
+                        <td><?= htmlspecialchars(($r->reference_no && $r->reference_no !== '0') ? $r->reference_no : $r->trans_id) ?></td>
                         <td>
                             <span class="label label-<?= $badge ?>"><?= $tlabel ?></span>
                         </td>
                         <td><?= htmlspecialchars($r->party_name ?? '') ?></td>
                         <td style="font-size:11px;"><?= htmlspecialchars($r->party_vat_no ?? '') ?></td>
-                        <td><?= htmlspecialchars($r->warehouse ?? '') ?></td>
                         <td class="text-right"><?= $this->sma->formatMoney($net) ?></td>
                         <td class="text-right <?= ($vat < 0) ? 'vat-negative' : 'vat-positive' ?>"><?= $this->sma->formatMoney($vat) ?></td>
                         <td class="text-right"><?= $this->sma->formatMoney($gross) ?></td>
@@ -490,7 +484,7 @@
                 </tbody>
                 <tfoot>
                     <tr style="font-weight:bold; background:#fdebd0;">
-                        <td colspan="7" class="text-right"><?= lang('total') ?></td>
+                        <td colspan="6" class="text-right"><?= lang('total') ?></td>
                         <td class="text-right"><?= $this->sma->formatMoney($p_sub_net) ?></td>
                         <td class="text-right <?= ($p_sub_vat < 0) ? 'vat-negative' : 'vat-positive' ?>"><?= $this->sma->formatMoney($p_sub_vat) ?></td>
                         <td class="text-right"><?= $this->sma->formatMoney($p_sub_gross) ?></td>
