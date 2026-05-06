@@ -330,10 +330,10 @@ class Delivery extends MY_Controller
                 'entrytype_id'     => 4,
                 'transaction_type' => 'saleorder',
                 'number'           => 'SO-' . $inv->reference_no,
-                'date'             => date('Y-m-d'),
+                'date'             => date('Y-m-d', strtotime($inv->date)),
                 'dr_total'         => $inv->grand_total,
                 'cr_total'         => $inv->grand_total,
-                'notes'            => 'Sale Reference: ' . $inv->reference_no . ' Date: ' . date('Y-m-d H:i:s'),
+                'notes'            => 'Sale Reference: ' . $inv->reference_no . ' Date: ' . date('Y-m-d H:i:s', strtotime($inv->date)),
                 'sid'              => $inv->id,
                 'customer_id'      => $inv->customer_id,
             ];
