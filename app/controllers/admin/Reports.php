@@ -8595,20 +8595,31 @@ class Reports extends MY_Controller
         $this->data['error'] = $this->session->flashdata('error');
 
         // ── filters (GET so URL is shareable) ──────────────────────
-        $type     = $this->input->get('type')    ?: 'ar';   // ar | ap
-        $at_date  = $this->input->get('at_date') ?: null;   // show invoices on or before this date
-        $party_id = $this->input->get('party_id') ?: null;  // customer_id or supplier_id
-        $ref_no   = $this->input->get('ref_no')   ?: null;
+        $type        = $this->input->get('type')       ?: 'ar';   // ar | ap
+        $at_date     = $this->input->get('at_date')    ?: date('d-m-Y');  // default today
+        $party_id    = $this->input->get('party_id')   ?: null;  // customer_id or supplier_id
+        $ref_no      = $this->input->get('ref_no')     ?: null;
+        $salesman_id = $this->input->get('salesman_id') ?: null; // AR only
 
         // ── dropdown data ──────────────────────────────────────────
         $this->data['customers']  = $this->site->getAllCompanies('customer');
         $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+        $sm_q = $this->db->select('id, name')->from('sales_man')->order_by('name', 'asc')->get();
+        $this->data['salesmen']   = $sm_q->result();
+
+        // Resolve salesman name for filtering
+        $salesman_name = null;
+        if ($salesman_id) {
+            $sm_row = $this->db->select('name')->from('sales_man')->where('id', (int)$salesman_id)->get()->row();
+            if ($sm_row) { $salesman_name = $sm_row->name; }
+        }
 
         // ── pass filter values back to view ───────────────────────
-        $this->data['type']     = $type;
-        $this->data['at_date']  = $at_date;
-        $this->data['party_id'] = $party_id;
-        $this->data['ref_no']   = $ref_no;
+        $this->data['type']        = $type;
+        $this->data['at_date']     = $at_date;
+        $this->data['party_id']    = $party_id;
+        $this->data['ref_no']      = $ref_no;
+        $this->data['salesman_id'] = $salesman_id;
 
         $invoices = [];
 
@@ -8631,6 +8642,7 @@ class Reports extends MY_Controller
                 c.sequence_code AS sequence_code,
                 al.name         AS ledger_name,
                 c.city          AS area,
+                c.sales_agent   AS sales_man,
                 w.name          AS warehouse_name,
                 s.grand_total   AS invoice_total,
                 s.total_discount AS discount,
@@ -8660,6 +8672,9 @@ class Reports extends MY_Controller
             }
             if ($ref_no) {
                 $this->db->like('s.reference_no', $ref_no, 'both');
+            }
+            if ($salesman_name) {
+                $this->db->where('c.sales_agent', $salesman_name);
             }
 
             $invoices = $this->db->get()->result();
@@ -8704,6 +8719,7 @@ class Reports extends MY_Controller
             if ($ref_no) {
                 $this->db->like('m.reference_no', $ref_no, 'both');
             }
+            // Service invoices have no biller — skip salesman filter for them
 
             $service_invoices = $this->db->get()->result();
 
