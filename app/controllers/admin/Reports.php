@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
@@ -8592,7 +8592,9 @@ class Reports extends MY_Controller
     // ─────────────────────────────────────────────────────────────────
     public function unpaid_invoices()
     {
-        // Backward compatibility for old links
+        // Backward compatibility for old links.
+        // Legacy endpoint: /reports/unpaid_invoices?type=ar|ap
+        // New endpoints: /reports/unpaid_invoices_ar and /reports/unpaid_invoices_ap
         $params = $this->input->get();
         $target = (!empty($params['type']) && $params['type'] === 'ap')
             ? 'reports/unpaid_invoices_ap'
@@ -8605,6 +8607,7 @@ class Reports extends MY_Controller
     public function unpaid_invoices_ar()
     {
         $this->data['error'] = $this->session->flashdata('error');
+        // AR access is controlled independently from AP through group permissions.
         $can_view_ar = ($this->Owner || $this->Admin || !empty($this->GP['reports-unpaid-invoices-ar']));
         if (!$can_view_ar) {
             $this->session->set_flashdata('error', lang('access_denied'));
@@ -8626,6 +8629,7 @@ class Reports extends MY_Controller
         $this->data['suppliers']   = [];
         $this->data['form_action'] = admin_url('reports/unpaid_invoices_ar');
 
+        // AR report uses customer/sales sources only.
         $invoices = $this->get_unpaid_invoices_ar($at_date, $party_id, $ref_no, $salesman_id);
         $this->data['invoices'] = $invoices;
 
@@ -8647,6 +8651,7 @@ class Reports extends MY_Controller
     public function unpaid_invoices_ap()
     {
         $this->data['error'] = $this->session->flashdata('error');
+        // AP access is controlled independently from AR through group permissions.
         $can_view_ap = ($this->Owner || $this->Admin || !empty($this->GP['reports-unpaid-invoices-ap']));
         if (!$can_view_ap) {
             $this->session->set_flashdata('error', lang('access_denied'));
@@ -8667,6 +8672,7 @@ class Reports extends MY_Controller
         $this->data['suppliers']   = $this->site->getAllCompanies('supplier');
         $this->data['form_action'] = admin_url('reports/unpaid_invoices_ap');
 
+        // AP report uses supplier/purchase sources only.
         $invoices = $this->get_unpaid_invoices_ap($at_date, $party_id, $ref_no);
         $this->data['invoices'] = $invoices;
 
@@ -8687,6 +8693,9 @@ class Reports extends MY_Controller
 
     private function get_unpaid_invoices_ar($at_date, $party_id, $ref_no, $salesman_id)
     {
+        // AR data builder:
+        // - Sales unpaid invoices
+        // - Customer service invoices from memo
         $sql_at = $at_date ? $this->sma->fld($at_date) . ' 23:59:59' : null;
         $salesman_name = null;
         if ($salesman_id) {
@@ -8800,6 +8809,10 @@ class Reports extends MY_Controller
 
     private function get_unpaid_invoices_ap($at_date, $party_id, $ref_no)
     {
+        // AP data builder:
+        // - Purchase unpaid invoices
+        // - Supplier service invoices from memo
+        // - Supplier credit memos from memo
         $sql_at = $at_date ? $this->sma->fld($at_date) . ' 23:59:59' : null;
         $ap_paid_expr = $sql_at
             ? "(SELECT COALESCE(SUM(sp.amount), 0)
