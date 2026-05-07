@@ -95,6 +95,12 @@ class SequenceCode
                 $this->_ci->db->select('MAX(sequence_code) as maxNumber');
                 $latestCode = $this->_ci->db->get('sma_transfers')->row_array();
                 break;
+            
+            // Return Supplier Code
+            case 'SRTN':
+                $this->_ci->db->select('MAX(sequence_code) as maxNumber');
+                $latestCode = $this->_ci->db->get('sma_returns_supplier')->row_array();
+                break;
 
                 // Department Code
             case 'DP':
@@ -106,6 +112,25 @@ class SequenceCode
             case 'EM':
                 $this->_ci->db->select('MAX(code) as maxNumber');
                 $latestCode = $this->_ci->db->get('sma_employees')->row_array();
+                break;
+
+            // Payment Code
+            case 'PAY':
+                $this->_ci->db->select('MAX(sequence_code) as maxNumber');
+                $latestCode = $this->_ci->db->get('sma_payment_reference')->row_array();
+                break;
+            // Supplier Service Code
+            case 'SSI':
+                $this->_ci->db->select('MAX(sequence_code) as maxNumber');
+                $latestCode = $this->_ci->db->get('sma_memo')->row_array();
+                break;
+            case 'SCI':
+                $this->_ci->db->select('MAX(sequence_code) as maxNumber');
+                $latestCode = $this->_ci->db->get('sma_memo')->row_array();
+                break;
+            case 'PCI':
+                $this->_ci->db->select('MAX(sequence_code) as maxNumber');
+                $latestCode = $this->_ci->db->get('sma_memo')->row_array();
                 break;
         }
 

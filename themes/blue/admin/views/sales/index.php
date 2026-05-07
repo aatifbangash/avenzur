@@ -1,12 +1,14 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<?php $is_hills = ($Settings->site_name == 'Hills Business Medical'); ?>
 <script>
     $(document).ready(function () {
         oTable = $('#SLData').dataTable({
+            "bAutoWidth": <?php echo $is_hills ? 'false' : 'true'; ?>,
             "aaSorting": [[1, "desc"], [2, "desc"]],
             "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?=lang('all')?>"]],
             "iDisplayLength": <?=$Settings->rows_per_page?>,
             'bProcessing': true, 'bServerSide': true,
-            'sAjaxSource': '<?=admin_url('sales/getSales' . ($warehouse_id ? '/' . $warehouse_id : '') . '?v=1' . ($this->input->get('shop') ? '&shop=' . $this->input->get('shop') : '') . ($this->input->get('attachment') ? '&attachment=' . $this->input->get('attachment') : '') . ($this->input->get('delivery') ? '&delivery=' . $this->input->get('delivery') : '')); ?>',
+            'sAjaxSource': '<?=admin_url((isset($is_shop_sales) && $is_shop_sales ? 'sales/getShopSales' : 'sales/getSales') . ($warehouse_id ? '/' . $warehouse_id : '') . '?sid='.$sid.'&v=1' . ($this->input->get('shop') ? '&shop=' . $this->input->get('shop') : '') . ($this->input->get('attachment') ? '&attachment=' . $this->input->get('attachment') : '') . ($this->input->get('delivery') ? '&delivery=' . $this->input->get('delivery') : '') . ($this->input->get('sale_status') ? '&sale_status=' . urlencode($this->input->get('sale_status')) : '') . ($this->input->get('from_date')  ? '&from_date='  . urlencode($this->input->get('from_date'))  : '') . ($this->input->get('to_date')    ? '&to_date='    . urlencode($this->input->get('to_date'))    : '')); ?>',
             'fnServerData': function (sSource, aoData, fnCallback) {
                 aoData.push({
                     "name": "<?=$this->security->get_csrf_token_name()?>",
@@ -23,26 +25,35 @@
                 //if(aData[7] > aData[9]){ nRow.className = "product_link warning"; } else { nRow.className = "product_link"; }
                 return nRow;
             },
-            "aoColumns": [{"bSortable": false,"mRender": checkbox}, {"mRender": fld},null, null, null, null, {"mRender": row_status}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": pay_status}, {"bSortable": false,"mRender": attachment}, {"bVisible": false}, {"bSortable": false}],
+            "aoColumns": <?php if ($is_hills): ?>[{"bSortable": false,"mRender": checkbox}, {"sWidth": "55px"}, {"sWidth": "165px", "mRender": fld}, {"sWidth": "90px"}, {"sWidth": "55px"}, {"bVisible": false}, {"sWidth": "270px"}, {"mRender": row_status}, {"mRender": currencyFormat}, {"bVisible": false}, {"bVisible": false}, {"bVisible": false}, {"bSortable": false,"mRender": attachment}, {"bVisible": false}, {"bSortable": false}]<?php else: ?>[{"bSortable": false,"mRender": checkbox}, null, {"mRender": fld},null, null, null, null, {"mRender": row_status}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": pay_status}, {"bSortable": false,"mRender": attachment}, {"bVisible": false}, {"bSortable": false}]<?php endif; ?>,
             "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
+                <?php if ($is_hills): ?>
+                var gtotal = 0;
+                for (var i = 0; i < aiDisplay.length; i++) {
+                    gtotal += parseFloat(aaData[aiDisplay[i]][8]);
+                }
+                document.getElementById('hills-footer-gtotal').innerHTML = currencyFormat(parseFloat(gtotal));
+                <?php else: ?>
                 var gtotal = 0, paid = 0, balance = 0;
                 for (var i = 0; i < aaData.length; i++) {
                     gtotal += parseFloat(aaData[aiDisplay[i]][6]);
                     paid += parseFloat(aaData[aiDisplay[i]][7]);
-                    balance += parseFloat(formatDecimals(aaData[aiDisplay[i]][8]));
+                    balance += parseFloat(aaData[aiDisplay[i]][8]);
                 }
                 var nCells = nRow.getElementsByTagName('th');
                 nCells[6].innerHTML = currencyFormat(parseFloat(gtotal));
                 nCells[7].innerHTML = currencyFormat(parseFloat(paid));
                 nCells[8].innerHTML = currencyFormat(parseFloat(balance));
+                <?php endif; ?>
             }
         }).fnSetFilteringDelay().dtFilter([
-            {column_number: 1, filter_default_label: "[<?=lang('date');?> (yyyy-mm-dd)]", filter_type: "text", data: []},
-            {column_number: 2, filter_default_label: "[<?=lang('reference_no');?>]", filter_type: "text", data: []},
-            {column_number: 3, filter_default_label: "[<?=lang('biller');?>]", filter_type: "text", data: []},
-            {column_number: 4, filter_default_label: "[<?=lang('customer');?>]", filter_type: "text", data: []},
-            {column_number: 5, filter_default_label: "[<?=lang('sale_status');?>]", filter_type: "text", data: []},
-            {column_number: 9, filter_default_label: "[<?=lang('payment_status');?>]", filter_type: "text", data: []},
+            {column_number: 1, filter_default_label: "[<?=lang('number');?>]", filter_type: "text", data: []},
+            {column_number: 2, filter_default_label: "[<?=lang('date');?> (yyyy-mm-dd)]", filter_type: "text", data: []},
+            {column_number: 3, filter_default_label: "[<?=lang('reference_no');?>]", filter_type: "text", data: []},
+            {column_number: 4, filter_default_label: "[<?=lang('biller');?>]", filter_type: "text", data: []},
+            <?php if (!$is_hills): ?>{column_number: 5, filter_default_label: "[<?=lang('customer');?>]", filter_type: "text", data: []},<?php endif; ?>
+            {column_number: 6, filter_default_label: "[<?=lang('sale_status');?>]", filter_type: "text", data: []},
+            <?php if (!$is_hills): ?>{column_number: 10, filter_default_label: "[<?=lang('payment_status');?>]", filter_type: "text", data: []},<?php endif; ?>
         ], "footer");
 
         if (localStorage.getItem('remove_slls')) {
@@ -224,6 +235,23 @@
 
     });
 
+
+    $(document).ready(function () {
+        var lastInsertedId = '<?= $last_inserted_id; ?>';
+
+        function openModalForLastInsertedId(id) {
+
+            $('#myModal').modal({
+                remote: site.base_url + 'sales/modal_view/' + lastInsertedId,
+            });
+            $('#myModal').modal('show');
+        }
+        lastInsertedId = '<?php echo $lastInsertedId; ?>';
+        if (lastInsertedId) {
+            openModalForLastInsertedId('sales/modal_view/', lastInsertedId);
+        }
+    });
+
 </script>
 
 <?php if ($Owner || ($GP && $GP['bulk_actions'])) {
@@ -237,71 +265,46 @@
         </h2>
 
         <div class="box-icon">
-            <ul class="btn-tasks">
-                <li class="dropdown">
-                    <a data-toggle="dropdown" class="dropdown-toggle" href="#">
-                        <i class="icon fa fa-tasks tip" data-placement="left" title="<?=lang('actions')?>"></i>
-                    </a>
-                    <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
-                        <li>
-                            <a href="<?=admin_url('sales/add')?>">
-                                <i class="fa fa-plus-circle"></i> <?=lang('add_sale')?>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" id="excel" data-action="export_excel">
-                                <i class="fa fa-file-excel-o"></i> <?=lang('export_to_excel')?>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" id="combine" data-action="combine">
-                                <i class="fa fa-file-pdf-o"></i> <?=lang('combine_to_pdf')?>
-                            </a>
-                        </li>
-                        <li class="divider"></li>
-                        <li>
-                            <a href="#" class="bpo" title="<b><?=lang('delete_sales')?></b>" data-content="<p><?=lang('r_u_sure')?></p><button type='button' class='btn btn-danger' id='delete' data-action='delete'><?=lang('i_m_sure')?></a> <button class='btn bpo-close'><?=lang('no')?></button>" data-html="true" data-placement="left">
-                                <i class="fa fa-trash-o"></i> <?=lang('delete_sales')?>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-                <?php if (!empty($warehouses)) {
-                    ?>
-                    <li class="dropdown">
-                        <a data-toggle="dropdown" class="dropdown-toggle" href="#"><i class="icon fa fa-building-o tip" data-placement="left" title="<?=lang('warehouses')?>"></i></a>
-                        <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
-                            <li><a href="<?=admin_url('sales')?>"><i class="fa fa-building-o"></i> <?=lang('all_warehouses')?></a></li>
-                            <li class="divider"></li>
-                            <?php
-                            foreach ($warehouses as $warehouse) {
-                                echo '<li><a href="' . admin_url('sales/' . $warehouse->id) . '"><i class="fa fa-building"></i>' . $warehouse->name . '</a></li>';
-                            } ?>
-                        </ul>
-                    </li>
-                    <?php
-                }
-                ?>
-                <?php if (SHOP) {
-                    ?>
-                <li class="dropdown">
-                    <a data-toggle="dropdown" class="dropdown-toggle" href="#"><i class="icon fa fa-list-alt tip" data-placement="left" title="<?=lang('sales')?>"></i></a>
-                    <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
-                        <li<?= $this->input->get('shop') == 'yes' ? ' class="active"' : ''; ?>><a href="<?=admin_url('sales?shop=yes')?>"><i class="fa fa-shopping-cart"></i> <?=lang('shop_sales')?></a></li>
-                        <li<?= $this->input->get('shop') == 'no' ? ' class="active"' : ''; ?>><a href="<?=admin_url('sales?shop=no')?>"><i class="fa fa-heart"></i> <?=lang('staff_sales')?></a></li>
-                        <li<?= !$this->input->get('shop') ? ' class="active"' : ''; ?>><a href="<?=admin_url('sales')?>"><i class="fa fa-list-alt"></i> <?=lang('all_sales')?></a></li>
-                    </ul>
-                </li>
-                    <?php
-                } ?>
-            </ul>
+            
         </div>
     </div>
     <div class="box-content">
         <div class="row">
             <div class="col-lg-12">
 
-                <p class="introtext"><?=lang('list_results');?></p>
+                <!-- <p class="introtext"><?=lang('list_results');?></p> -->
+                <!-- Filter Row 1: Dates, Serial#, Status, Search Button -->
+                <div class="row" style="margin-bottom:8px;">
+                    <div class="col-md-2">
+                        <label><?=lang('from_date')?></label>
+                        <input type="text" id="filterFromDate" class="form-control input-tip date" placeholder="From Date" value="<?=htmlspecialchars($this->input->get('from_date') ?? '')?>"> 
+                    </div>
+                    <div class="col-md-2">
+                        <label><?=lang('to_date')?></label>
+                        <input type="text" id="filterToDate" class="form-control input-tip date" placeholder="To Date" value="<?=htmlspecialchars($this->input->get('to_date') ?? '')?>"> 
+                    </div>
+                    <div class="col-md-2">
+                        <label><?=lang('Sale #')?></label>
+                        <input type="text" id="sid" name="sid" class="form-control input-tip" placeholder="Serial #" value="<?=htmlspecialchars($sid ?? '')?>">
+                    </div>
+                    <div class="col-md-3">
+                        <label><?=lang('sale_status')?></label>
+                        <?php
+                        $active_statuses = $this->input->get('sale_status') ? explode(',', $this->input->get('sale_status')) : [];
+                        $status_options  = ['completed'=>'Completed','delivered'=>'Delivered','label_verifired'=>'Label Verified','ready'=>'Ready','sent_to_rasd'=>'Sent to Rasd','pending'=>'Pending','out_for_delivery'=>'Out for Delivery'];
+                        ?>
+                        <select id="saleStatusFilter" multiple class="form-control" style="width:100%;">
+                            <?php foreach ($status_options as $val => $label): ?>
+                                <option value="<?=$val?>" <?=in_array($val, $active_statuses)?'selected':''?>><?=$label?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label>&nbsp;</label><br>
+                        <input type="button" id="searchByNumber" class="btn btn-primary btn-block" value="<?=lang('search')?>">
+                    </div>
+                </div>
+
 
                 <div class="table-responsive">
                     <table id="SLData" class="table table-bordered table-hover table-striped" cellpadding="0" cellspacing="0" border="0">
@@ -310,11 +313,12 @@
                             <th style="min-width:30px; width: 30px; text-align: center;">
                                 <input class="checkbox checkft" type="checkbox" name="check"/>
                             </th>
-                            <th><?= lang('date'); ?></th>
-                            <th><?= lang('reference_no'); ?></th>
-                            <th>Code</th>
+                            <th<?php if($is_hills): ?> style="width:55px;max-width:55px;"<?php endif; ?>><?= lang('Sale #'); ?></th>
+                            <th<?php if($is_hills): ?> style="width:165px;min-width:165px;"<?php endif; ?>><?= lang('date'); ?></th>
+                            <th<?php if($is_hills): ?> style="width:90px;max-width:90px;"<?php endif; ?>><?= lang('reference_no'); ?></th>
+                            <th<?php if($is_hills): ?> style="width:55px;max-width:55px;"<?php endif; ?>>Code</th>
                             <th><?= lang('biller'); ?></th>
-                            <th><?= lang('customer'); ?></th>
+                            <th<?php if($is_hills): ?> style="width:270px;min-width:270px;"<?php endif; ?>><?= lang('customer'); ?></th>
                             <th><?= lang('sale_status'); ?></th>
                             <th><?= lang('grand_total'); ?></th>
                             <th><?= lang('paid'); ?></th>
@@ -336,7 +340,7 @@
                                 <input class="checkbox checkft" type="checkbox" name="check"/>
                             </th>
                             <th></th><th></th><th></th><th></th><th></th>
-                            <th><?= lang('grand_total'); ?></th>
+                            <th id="hills-footer-gtotal"><?= lang('grand_total'); ?></th>
                             <th><?= lang('paid'); ?></th>
                             <th><?= lang('balance'); ?></th>
                             <th></th>
@@ -361,3 +365,31 @@
     <?php
 }
 ?>
+
+<script>
+$(document).ready(function () {
+    if ($.fn.select2) {
+        $('#saleStatusFilter').select2({
+            placeholder: '-- <?=lang('all')?> <?=lang('sale_status')?> --',
+            allowClear: true,
+            width: '100%'
+        });
+    }
+});
+
+document.getElementById('searchByNumber').addEventListener('click', function () {
+    var sidValue    = document.getElementById('sid').value.trim();
+    var statuses    = $('#saleStatusFilter').val();
+    var fromDate    = document.getElementById('filterFromDate').value.trim();
+    var toDate      = document.getElementById('filterToDate').value.trim();
+
+    var params = [];
+    if (sidValue)                        params.push('sid='         + encodeURIComponent(sidValue));
+    if (statuses && statuses.length > 0) params.push('sale_status=' + encodeURIComponent(statuses.join(',')));
+    if (fromDate)                        params.push('from_date='   + encodeURIComponent(fromDate));
+    if (toDate)                          params.push('to_date='     + encodeURIComponent(toDate));
+
+    var baseUrl = window.location.href.split('?')[0];
+    window.location.href = params.length ? baseUrl + '?' + params.join('&') : baseUrl;
+});
+</script>

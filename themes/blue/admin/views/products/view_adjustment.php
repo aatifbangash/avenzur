@@ -36,9 +36,13 @@
                     <tr>
                         <th><?= lang('no'); ?></th>
                         <th><?= lang('description'); ?></th>
-                        <th><?= lang('variant'); ?></th>
+                        <th><?= lang('batch_number'); ?></th>
+                        <th><?= lang('expiry_date'); ?></th>
+                        <th><?= lang('avz_code'); ?></th>
                         <th><?= lang('type'); ?></th>
                         <th><?= lang('quantity'); ?></th>
+                        <th><?= lang('cost_price'); ?></th>
+                        <th><?= lang('sale_price'); ?></th>
                     </tr>
 
                     </thead>
@@ -54,9 +58,13 @@
                                 <?= $row->product_code . ' - ' . $row->product_name . ($row->variant ? ' (' . $row->variant . ')' : ''); ?>
                                 <?= $row->serial_no ? '<br>' . $row->serial_no : ''; ?>
                             </td>
-                            <th><?= $row->variant; ?></th>
-                            <th><?= lang($row->type); ?></th>
+                            <td style="text-align:center; vertical-align:middle;"><?= $row->batchno ? $row->batchno : '-'; ?></td>
+                            <td style="text-align:center; vertical-align:middle;"><?= $row->expiry ? date('Y-m-d', strtotime($row->expiry)) : '-'; ?></td>
+                            <td style="text-align:center; vertical-align:middle;"><?= $row->avz_item_code ? $row->avz_item_code : '-'; ?></td>
+                            <td style="text-align:center; vertical-align:middle;"><?= lang($row->type); ?></td>
                             <td style="width: 80px; text-align:center; vertical-align:middle;"><?= $this->sma->formatQuantity($row->quantity); ?></td>
+                            <td style="text-align:right; vertical-align:middle;"><?= $row->unit_cost ? $this->sma->formatMoney($row->unit_cost) : '-'; ?></td>
+                            <td style="text-align:right; vertical-align:middle;"><?= $row->sale_price ? $this->sma->formatMoney($row->sale_price) : '-'; ?></td>
                         </tr>
                         <?php
                         $r++;
