@@ -22,12 +22,6 @@
             forceParse: 0
         });
 
-        // Auto-submit on type tab change
-        $(document).on('click', '.type-tab', function () {
-            $('#type').val($(this).data('type'));
-            $('#party_id').val('');
-            $('#filterForm').submit();
-        });
     });
 </script>
 
@@ -63,7 +57,7 @@
                     $export_params = $_GET;
                     $export_params['export_excel'] = 1;
                     ?>
-                    <a href="<?= admin_url('reports/unpaid_invoices?' . http_build_query($export_params)) ?>"
+                    <a href="<?= ($form_action ?? admin_url('reports/unpaid_invoices')) . '?' . http_build_query($export_params) ?>"
                        class="tip" title="Export (Server-side Excel)">
                         <i class="icon fa fa-download"></i>
                     </a>
@@ -74,26 +68,11 @@
 
     <div class="box-content">
 
-        <!-- Type Tabs -->
-        <ul class="nav nav-tabs" style="margin-bottom: 15px;">
-            <li class="<?= ($type === 'ar') ? 'active' : '' ?>">
-                <a href="javascript:void(0);" class="type-tab" data-type="ar">
-                    <i class="fa fa-arrow-down text-success"></i> AR &mdash; Receivables (Sales)
-                </a>
-            </li>
-            <li class="<?= ($type === 'ap') ? 'active' : '' ?>">
-                <a href="javascript:void(0);" class="type-tab" data-type="ap">
-                    <i class="fa fa-arrow-up text-danger"></i> AP &mdash; Payables (Purchases)
-                </a>
-            </li>
-        </ul>
-
         <!-- Filter Form -->
         <?php
         $attrib = ['id' => 'filterForm', 'method' => 'get', 'role' => 'form'];
-        echo admin_form_open_multipart('reports/unpaid_invoices', $attrib);
+        echo admin_form_open_multipart($form_action ?? 'reports/unpaid_invoices', $attrib);
         ?>
-        <input type="hidden" name="type" id="type" value="<?= htmlspecialchars($type) ?>">
 
         <div class="row">
             <div class="col-lg-12">

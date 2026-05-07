@@ -8588,342 +8588,406 @@ class Reports extends MY_Controller
     }
 
     // ─────────────────────────────────────────────────────────────────
-    //  UNPAID INVOICES REPORT  (AP + AR)
+    //  UNPAID INVOICES REPORTS (split AR / AP)
     // ─────────────────────────────────────────────────────────────────
     public function unpaid_invoices()
     {
+        // Backward compatibility for old links
+        $params = $this->input->get();
+        $target = (!empty($params['type']) && $params['type'] === 'ap')
+            ? 'reports/unpaid_invoices_ap'
+            : 'reports/unpaid_invoices_ar';
+        unset($params['type']);
+        $query = http_build_query($params);
+        admin_redirect($query ? $target . '?' . $query : $target);
+    }
+
+    public function unpaid_invoices_ar()
+    {
         $this->data['error'] = $this->session->flashdata('error');
-
-        // ── filters (GET so URL is shareable) ──────────────────────
-        $type        = $this->input->get('type')       ?: 'ar';   // ar | ap
-        $at_date     = $this->input->get('at_date')    ?: date('d-m-Y');  // default today
-        $party_id    = $this->input->get('party_id')   ?: null;  // customer_id or supplier_id
-        $ref_no      = $this->input->get('ref_no')     ?: null;
-        $salesman_id = $this->input->get('salesman_id') ?: null; // AR only
-
-        // ── dropdown data ──────────────────────────────────────────
-        $this->data['customers']  = $this->site->getAllCompanies('customer');
-        $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
-        $sm_q = $this->db->select('id, name')->from('sales_man')->order_by('name', 'asc')->get();
-        $this->data['salesmen']   = $sm_q->result();
-
-        // Resolve salesman name for filtering
-        $salesman_name = null;
-        if ($salesman_id) {
-            $sm_row = $this->db->select('name')->from('sales_man')->where('id', (int)$salesman_id)->get()->row();
-            if ($sm_row) { $salesman_name = $sm_row->name; }
+        $can_view_ar = ($this->Owner || $this->Admin || !empty($this->GP['reports-unpaid-invoices-ar']));
+        if (!$can_view_ar) {
+            $this->session->set_flashdata('error', lang('access_denied'));
+            admin_redirect('reports');
         }
 
-        // ── pass filter values back to view ───────────────────────
-        $this->data['type']        = $type;
+        $at_date     = $this->input->get('at_date') ?: date('d-m-Y');
+        $party_id    = $this->input->get('party_id') ?: null;
+        $ref_no      = $this->input->get('ref_no') ?: null;
+        $salesman_id = $this->input->get('salesman_id') ?: null;
+
+        $this->data['type']        = 'ar';
         $this->data['at_date']     = $at_date;
         $this->data['party_id']    = $party_id;
         $this->data['ref_no']      = $ref_no;
         $this->data['salesman_id'] = $salesman_id;
+        $this->data['customers']   = $this->site->getAllCompanies('customer');
+        $this->data['salesmen']    = $this->db->select('id, name')->from('sales_man')->order_by('name', 'asc')->get()->result();
+        $this->data['suppliers']   = [];
+        $this->data['form_action'] = admin_url('reports/unpaid_invoices_ar');
 
-        $invoices = [];
-
-        if ($type === 'ar') {
-            // ── Accounts Receivable (Sales) ────────────────────────
-            $sql_at = $at_date ? $this->sma->fld($at_date) . ' 23:59:59' : null;
-
-            $paid_subquery = "(SELECT COALESCE(SUM(sp.amount), 0)
-                            FROM {$this->db->dbprefix('payments')} sp
-                            WHERE sp.sale_id = s.id" .
-                            ($sql_at ? " AND sp.date <= '{$sql_at}'" : "") .
-                            ")";
-
-            $this->db->select("
-                s.id            AS invoice_id,
-                s.date,
-                s.reference_no,
-                c.name          AS party_name,
-                c.company       AS party_code,
-                c.sequence_code AS sequence_code,
-                al.name         AS ledger_name,
-                c.city          AS area,
-                c.sales_agent   AS sales_man,
-                w.name          AS warehouse_name,
-                s.grand_total   AS invoice_total,
-                s.total_discount AS discount,
-                COALESCE((SELECT SUM(grand_total) 
-                        FROM {$this->db->dbprefix('returns')} 
-                        WHERE sale_id = s.id), 0) AS return_amount,
-                {$paid_subquery} AS paid,
-                ROUND((s.grand_total - {$paid_subquery}), 2) AS outstanding,
-                COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) AS payment_term_days,
-                DATE_ADD(DATE(s.date), INTERVAL COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY) AS due_date_calc,
-                DATEDIFF(CURDATE(), DATE_ADD(DATE(s.date), INTERVAL COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY)) AS days_overdue
-            ", false)
-            ->from('sales s')
-            ->join('companies c',         'c.id = s.customer_id',     'left')
-            ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
-            ->join('warehouses w',        'w.id = s.warehouse_id',    'left')
-            ->where('s.sale_invoice', 1)
-            ->where('s.grand_total >', 0)
-            ->having('outstanding >', 0)
-            ->order_by('s.date', 'asc');
-
-            if ($sql_at) {
-                $this->db->where("s.date <= '{$sql_at}'");
-            }
-            if ($party_id) {
-                $this->db->where('s.customer_id', (int)$party_id);
-            }
-            if ($ref_no) {
-                $this->db->like('s.reference_no', $ref_no, 'both');
-            }
-            if ($salesman_name) {
-                $this->db->where('c.sales_agent', $salesman_name);
-            }
-
-            $invoices = $this->db->get()->result();
-            foreach ($invoices as $inv) { $inv->source = 'sale'; }
-
-            // ── Unpaid service invoices from sma_memo ─────────────
-            $this->db->select("
-                m.id            AS invoice_id,
-                m.date,
-                m.reference_no,
-                c.name          AS party_name,
-                c.company       AS party_code,
-                c.sequence_code AS sequence_code,
-                al.name         AS ledger_name,
-                c.city          AS area,
-                NULL            AS warehouse_name,
-                m.payment_amount AS invoice_total,
-                0               AS discount,
-                0               AS return_amount,
-                COALESCE(m.used_amount, 0)                               AS paid,
-                ROUND(m.payment_amount - COALESCE(m.used_amount, 0), 2) AS outstanding,
-                0               AS payment_term_days,
-                NULL            AS due_date_calc,
-                0               AS days_overdue,
-                'service'       AS source
-            ", false)
-            ->from('memo m')
-            ->join('companies c',         'c.id = m.customer_id',     'left')
-            ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
-            ->where('m.type', 'serviceinvoice')
-            ->where('m.customer_id >', 0)
-            ->having('outstanding >', 0)
-            ->order_by('m.date', 'asc');
-
-            if ($sql_at) {
-                $sql_date_only = explode(' ', $sql_at)[0];
-                $this->db->where("m.date <= '{$sql_date_only}'");
-            }
-            if ($party_id) {
-                $this->db->where('m.customer_id', (int)$party_id);
-            }
-            if ($ref_no) {
-                $this->db->like('m.reference_no', $ref_no, 'both');
-            }
-            // Service invoices have no biller — skip salesman filter for them
-
-            $service_invoices = $this->db->get()->result();
-
-            // Merge and re-sort by date ascending
-            $invoices = array_merge($invoices, $service_invoices);
-            usort($invoices, function ($a, $b) { return strcmp($a->date, $b->date); });
-
-        } else {
-            // ── Accounts Payable (Purchases) ───────────────────────
-            $sql_at = $at_date ? $this->sma->fld($at_date) . ' 23:59:59' : null;
-
-            // When an "at date" filter is applied, use a date-filtered subquery so we
-            // see what was paid AS OF that date. Without a date filter the stored p.paid
-            // field is used because the payments table may not record every AP payment.
-            $ap_paid_expr = $sql_at
-                ? "(SELECT COALESCE(SUM(sp.amount), 0)
-                    FROM {$this->db->dbprefix('payments')} sp
-                    WHERE sp.purchase_id = p.id
-                    AND sp.date <= '{$sql_at}')"
-                : "p.paid";
-
-            $this->db->select("
-                p.id            AS invoice_id,
-                p.date,
-                p.reference_no,
-                c.name          AS party_name,
-                c.company       AS party_code,
-                c.sequence_code AS sequence_code,
-                al.name         AS ledger_name,
-                w.name          AS warehouse_name,
-                ROUND(((p.grand_total + COALESCE(p.grand_deal_discount, 0))), 2) AS invoice_total,
-                0               AS discount,
-                0               AS return_amount,
-                ({$ap_paid_expr})                                    AS paid,
-                ROUND(((p.grand_total + COALESCE(p.grand_deal_discount, 0)) - ({$ap_paid_expr})), 2) AS outstanding,
-                COALESCE(NULLIF(p.payment_term, 0), NULLIF(c.payment_term, 0), 0) AS payment_term_days,
-                DATE_ADD(DATE(p.date), INTERVAL COALESCE(NULLIF(p.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY) AS due_date_calc,
-                DATEDIFF(CURDATE(), DATE_ADD(DATE(p.date), INTERVAL COALESCE(NULLIF(p.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY)) AS days_overdue,
-                'purchase'      AS source
-            ", false)
-            ->from('purchases p')
-            ->join('companies c',         'c.id = p.supplier_id',     'left')
-            ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
-            ->join('warehouses w',        'w.id = p.warehouse_id',    'left')
-            ->where('p.purchase_invoice', 1)
-            ->where('p.note !=', 'import from excel')
-            ->where('p.grand_total >', 0)
-            ->having('outstanding >', 0)
-            ->order_by('p.date', 'asc');
-
-            if ($sql_at) {
-                $this->db->where("p.date <= '{$sql_at}'");
-            }
-            if ($party_id) { $this->db->where('p.supplier_id', (int)$party_id); }
-            if ($ref_no)   { $this->db->like('p.reference_no', $ref_no, 'both'); }
-
-            $invoices = $this->db->get()->result();
-
-            // ── Unpaid supplier service invoices from sma_memo ────────
-            $this->db->select("
-                m.id                                                     AS invoice_id,
-                m.date,
-                m.reference_no,
-                c.name                                                   AS party_name,
-                c.company                                                AS party_code,
-                c.sequence_code                                          AS sequence_code,
-                al.name                                                  AS ledger_name,
-                NULL                                                     AS warehouse_name,
-                m.payment_amount                                         AS invoice_total,
-                0                                                        AS discount,
-                0                                                        AS return_amount,
-                COALESCE(m.used_amount, 0)                               AS paid,
-                ROUND(m.payment_amount - COALESCE(m.used_amount, 0), 2) AS outstanding,
-                0                                                        AS payment_term_days,
-                NULL                                                     AS due_date_calc,
-                0                                                        AS days_overdue,
-                'service'                                                AS source
-            ", false)
-            ->from('memo m')
-            ->join('companies c',         'c.id = m.supplier_id',     'left')
-            ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
-            ->where('m.type', 'serviceinvoice')
-            ->where('m.supplier_id >', 0)
-            ->having('outstanding >', 0)
-            ->order_by('m.date', 'asc');
-
-            if ($sql_at) {
-                $sql_date_only = explode(' ', $sql_at)[0];
-                $this->db->where("m.date <= '{$sql_date_only}'");
-            }
-            if ($party_id) { $this->db->where('m.supplier_id', (int)$party_id); }
-            if ($ref_no)   { $this->db->like('m.reference_no', $ref_no, 'both'); }
-
-            $service_invoices = $this->db->get()->result();
-
-            // ── Unpaid supplier credit memos from sma_memo ────────────
-            $this->db->select("
-                m.id                                                     AS invoice_id,
-                m.date,
-                m.reference_no,
-                c.name                                                   AS party_name,
-                c.company                                                AS party_code,
-                c.sequence_code                                          AS sequence_code,
-                al.name                                                  AS ledger_name,
-                NULL                                                     AS warehouse_name,
-                m.payment_amount                                         AS invoice_total,
-                0                                                        AS discount,
-                0                                                        AS return_amount,
-                COALESCE(m.used_amount, 0)                               AS paid,
-                ROUND(m.payment_amount - COALESCE(m.used_amount, 0), 2) AS outstanding,
-                0                                                        AS payment_term_days,
-                NULL                                                     AS due_date_calc,
-                0                                                        AS days_overdue,
-                'credit_memo'                                            AS source
-            ", false)
-            ->from('memo m')
-            ->join('companies c',         'c.id = m.supplier_id',     'left')
-            ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
-            ->where('m.type', 'memo')
-            ->where('m.supplier_id >', 0)
-            ->where('m.supplier_entry_type', 'C')
-            ->having('outstanding >', 0)
-            ->order_by('m.date', 'asc');
-
-            if ($sql_at) {
-                $sql_date_only = explode(' ', $sql_at)[0];
-                $this->db->where("m.date <= '{$sql_date_only}'");
-            }
-            if ($party_id) { $this->db->where('m.supplier_id', (int)$party_id); }
-            if ($ref_no)   { $this->db->like('m.reference_no', $ref_no, 'both'); }
-
-            $credit_memos = $this->db->get()->result();
-
-            // Merge all AP sources and re-sort by date ascending
-            $invoices = array_merge($invoices, $service_invoices, $credit_memos);
-            usort($invoices, function ($a, $b) { return strcmp($a->date, $b->date); });
-        }
-
+        $invoices = $this->get_unpaid_invoices_ar($at_date, $party_id, $ref_no, $salesman_id);
         $this->data['invoices'] = $invoices;
 
-        // ── Excel export ───────────────────────────────────────────
         if ($this->input->get('export_excel')) {
-            $this->load->library('excel');
-            $sheet = $this->excel->setActiveSheetIndex(0);
-            $title = ($type === 'ar') ? 'Unpaid AR Invoices' : 'Unpaid AP Invoices';
-            $sheet->setTitle($title);
-
-            $sheet->SetCellValue('A1', '#');
-            $sheet->SetCellValue('B1', lang('date'));
-            $sheet->SetCellValue('C1', lang('reference_no'));
-            $sheet->SetCellValue('D1', ($type === 'ar') ? lang('customer') : lang('supplier'));
-            $sheet->SetCellValue('E1', lang('Invoice Total'));
-            if ($type === 'ar') {
-                $sheet->SetCellValue('F1', lang('Discount'));
-                $sheet->SetCellValue('G1', lang('Returns'));
-                $sheet->SetCellValue('H1', lang('paid'));
-                $sheet->SetCellValue('I1', lang('outstanding'));
-                $sheet->SetCellValue('J1', lang('Due Date'));
-                $sheet->SetCellValue('K1', lang('Days Overdue'));
-            } else {
-                $sheet->SetCellValue('F1', lang('paid'));
-                $sheet->SetCellValue('G1', lang('outstanding'));
-                $sheet->SetCellValue('H1', lang('Due Date'));
-                $sheet->SetCellValue('I1', lang('Days Overdue'));
-            }
-
-            $row = 2;
-            foreach ($invoices as $i => $inv) {
-                $sheet->SetCellValue("A{$row}", $i + 1);
-                $sheet->SetCellValue("B{$row}", date('d-M-Y', strtotime($inv->date)));
-                $sheet->SetCellValue("C{$row}", $inv->reference_no);
-                $sheet->SetCellValue("D{$row}", $inv->party_name);
-                $sheet->SetCellValue("E{$row}", $inv->invoice_total);
-                if ($type === 'ar') {
-                    $sheet->SetCellValue("F{$row}", $inv->discount);
-                    $sheet->SetCellValue("G{$row}", $inv->return_amount);
-                    $sheet->SetCellValue("H{$row}", $inv->paid);
-                    $sheet->SetCellValue("I{$row}", $inv->outstanding);
-                    $sheet->SetCellValue("J{$row}", $inv->due_date_calc ? date('d-M-Y', strtotime($inv->due_date_calc)) : '-');
-                    $sheet->SetCellValue("K{$row}", $inv->days_overdue);
-                } else {
-                    $sheet->SetCellValue("F{$row}", $inv->paid);
-                    $sheet->SetCellValue("G{$row}", $inv->outstanding);
-                    $sheet->SetCellValue("H{$row}", $inv->due_date_calc ? date('d-M-Y', strtotime($inv->due_date_calc)) : '-');
-                    $sheet->SetCellValue("I{$row}", $inv->days_overdue);
-                }
-                $row++;
-            }
-
-            $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
-            $filename = ($type === 'ar' ? 'Unpaid_AR_Invoices_' : 'Unpaid_AP_Invoices_') . date('Y-m-d_H_i_s');
-            $this->load->helper('excel');
-            create_excel($this->excel, $filename);
+            $this->export_unpaid_invoices_excel($invoices, 'ar');
             return;
         }
 
-        $label = ($type === 'ar') ? 'Unpaid AR Invoices (Sales)' : 'Unpaid AP Invoices (Purchases)';
-        $bc   = [
-            ['link' => base_url(),          'page' => lang('home')],
+        $label = 'Unpaid AR Invoices (Sales)';
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
             ['link' => admin_url('reports'), 'page' => lang('reports')],
-            ['link' => '#',                  'page' => $label],
+            ['link' => '#', 'page' => $label],
         ];
         $meta = ['page_title' => $label, 'bc' => $bc];
         $this->page_construct('reports/unpaid_invoices', $meta, $this->data);
+    }
+
+    public function unpaid_invoices_ap()
+    {
+        $this->data['error'] = $this->session->flashdata('error');
+        $can_view_ap = ($this->Owner || $this->Admin || !empty($this->GP['reports-unpaid-invoices-ap']));
+        if (!$can_view_ap) {
+            $this->session->set_flashdata('error', lang('access_denied'));
+            admin_redirect('reports');
+        }
+
+        $at_date  = $this->input->get('at_date') ?: date('d-m-Y');
+        $party_id = $this->input->get('party_id') ?: null;
+        $ref_no   = $this->input->get('ref_no') ?: null;
+
+        $this->data['type']        = 'ap';
+        $this->data['at_date']     = $at_date;
+        $this->data['party_id']    = $party_id;
+        $this->data['ref_no']      = $ref_no;
+        $this->data['salesman_id'] = null;
+        $this->data['customers']   = [];
+        $this->data['salesmen']    = [];
+        $this->data['suppliers']   = $this->site->getAllCompanies('supplier');
+        $this->data['form_action'] = admin_url('reports/unpaid_invoices_ap');
+
+        $invoices = $this->get_unpaid_invoices_ap($at_date, $party_id, $ref_no);
+        $this->data['invoices'] = $invoices;
+
+        if ($this->input->get('export_excel')) {
+            $this->export_unpaid_invoices_excel($invoices, 'ap');
+            return;
+        }
+
+        $label = 'Unpaid AP Invoices (Purchases)';
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => '#', 'page' => $label],
+        ];
+        $meta = ['page_title' => $label, 'bc' => $bc];
+        $this->page_construct('reports/unpaid_invoices', $meta, $this->data);
+    }
+
+    private function get_unpaid_invoices_ar($at_date, $party_id, $ref_no, $salesman_id)
+    {
+        $sql_at = $at_date ? $this->sma->fld($at_date) . ' 23:59:59' : null;
+        $salesman_name = null;
+        if ($salesman_id) {
+            $sm_row = $this->db->select('name')->from('sales_man')->where('id', (int)$salesman_id)->get()->row();
+            if ($sm_row) {
+                $salesman_name = $sm_row->name;
+            }
+        }
+
+        $paid_subquery = "(SELECT COALESCE(SUM(sp.amount), 0)
+                        FROM {$this->db->dbprefix('payments')} sp
+                        WHERE sp.sale_id = s.id" .
+                        ($sql_at ? " AND sp.date <= '{$sql_at}'" : "") .
+                        ")";
+
+        $this->db->select("
+            s.id            AS invoice_id,
+            s.date,
+            s.reference_no,
+            c.name          AS party_name,
+            c.company       AS party_code,
+            c.sequence_code AS sequence_code,
+            al.name         AS ledger_name,
+            c.city          AS area,
+            c.sales_agent   AS sales_man,
+            w.name          AS warehouse_name,
+            s.grand_total   AS invoice_total,
+            s.total_discount AS discount,
+            COALESCE((SELECT SUM(grand_total)
+                    FROM {$this->db->dbprefix('returns')}
+                    WHERE sale_id = s.id), 0) AS return_amount,
+            {$paid_subquery} AS paid,
+            ROUND((s.grand_total - {$paid_subquery}), 2) AS outstanding,
+            COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) AS payment_term_days,
+            DATE_ADD(DATE(s.date), INTERVAL COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY) AS due_date_calc,
+            DATEDIFF(CURDATE(), DATE_ADD(DATE(s.date), INTERVAL COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY)) AS days_overdue
+        ", false)
+        ->from('sales s')
+        ->join('companies c', 'c.id = s.customer_id', 'left')
+        ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
+        ->join('warehouses w', 'w.id = s.warehouse_id', 'left')
+        ->where('s.sale_invoice', 1)
+        ->where('s.grand_total >', 0)
+        ->having('outstanding >', 0)
+        ->order_by('s.date', 'asc');
+
+        if ($sql_at) {
+            $this->db->where("s.date <= '{$sql_at}'");
+        }
+        if ($party_id) {
+            $this->db->where('s.customer_id', (int)$party_id);
+        }
+        if ($ref_no) {
+            $this->db->like('s.reference_no', $ref_no, 'both');
+        }
+        if ($salesman_name) {
+            $this->db->where('c.sales_agent', $salesman_name);
+        }
+
+        $invoices = $this->db->get()->result();
+        foreach ($invoices as $inv) {
+            $inv->source = 'sale';
+        }
+
+        $this->db->select("
+            m.id            AS invoice_id,
+            m.date,
+            m.reference_no,
+            c.name          AS party_name,
+            c.company       AS party_code,
+            c.sequence_code AS sequence_code,
+            al.name         AS ledger_name,
+            c.city          AS area,
+            NULL            AS warehouse_name,
+            m.payment_amount AS invoice_total,
+            0               AS discount,
+            0               AS return_amount,
+            COALESCE(m.used_amount, 0)                               AS paid,
+            ROUND(m.payment_amount - COALESCE(m.used_amount, 0), 2) AS outstanding,
+            0               AS payment_term_days,
+            NULL            AS due_date_calc,
+            0               AS days_overdue,
+            'service'       AS source
+        ", false)
+        ->from('memo m')
+        ->join('companies c', 'c.id = m.customer_id', 'left')
+        ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
+        ->where('m.type', 'serviceinvoice')
+        ->where('m.customer_id >', 0)
+        ->having('outstanding >', 0)
+        ->order_by('m.date', 'asc');
+
+        if ($sql_at) {
+            $sql_date_only = explode(' ', $sql_at)[0];
+            $this->db->where("m.date <= '{$sql_date_only}'");
+        }
+        if ($party_id) {
+            $this->db->where('m.customer_id', (int)$party_id);
+        }
+        if ($ref_no) {
+            $this->db->like('m.reference_no', $ref_no, 'both');
+        }
+
+        $service_invoices = $this->db->get()->result();
+        $invoices = array_merge($invoices, $service_invoices);
+        usort($invoices, function ($a, $b) {
+            return strcmp($a->date, $b->date);
+        });
+        return $invoices;
+    }
+
+    private function get_unpaid_invoices_ap($at_date, $party_id, $ref_no)
+    {
+        $sql_at = $at_date ? $this->sma->fld($at_date) . ' 23:59:59' : null;
+        $ap_paid_expr = $sql_at
+            ? "(SELECT COALESCE(SUM(sp.amount), 0)
+                FROM {$this->db->dbprefix('payments')} sp
+                WHERE sp.purchase_id = p.id
+                AND sp.date <= '{$sql_at}')"
+            : "p.paid";
+
+        $this->db->select("
+            p.id            AS invoice_id,
+            p.date,
+            p.reference_no,
+            c.name          AS party_name,
+            c.company       AS party_code,
+            c.sequence_code AS sequence_code,
+            al.name         AS ledger_name,
+            w.name          AS warehouse_name,
+            ROUND(((p.grand_total + COALESCE(p.grand_deal_discount, 0))), 2) AS invoice_total,
+            0               AS discount,
+            0               AS return_amount,
+            ({$ap_paid_expr})                                    AS paid,
+            ROUND(((p.grand_total + COALESCE(p.grand_deal_discount, 0)) - ({$ap_paid_expr})), 2) AS outstanding,
+            COALESCE(NULLIF(p.payment_term, 0), NULLIF(c.payment_term, 0), 0) AS payment_term_days,
+            DATE_ADD(DATE(p.date), INTERVAL COALESCE(NULLIF(p.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY) AS due_date_calc,
+            DATEDIFF(CURDATE(), DATE_ADD(DATE(p.date), INTERVAL COALESCE(NULLIF(p.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY)) AS days_overdue,
+            'purchase'      AS source
+        ", false)
+        ->from('purchases p')
+        ->join('companies c', 'c.id = p.supplier_id', 'left')
+        ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
+        ->join('warehouses w', 'w.id = p.warehouse_id', 'left')
+        ->where('p.purchase_invoice', 1)
+        ->where('p.note !=', 'import from excel')
+        ->where('p.grand_total >', 0)
+        ->having('outstanding >', 0)
+        ->order_by('p.date', 'asc');
+
+        if ($sql_at) {
+            $this->db->where("p.date <= '{$sql_at}'");
+        }
+        if ($party_id) {
+            $this->db->where('p.supplier_id', (int)$party_id);
+        }
+        if ($ref_no) {
+            $this->db->like('p.reference_no', $ref_no, 'both');
+        }
+
+        $invoices = $this->db->get()->result();
+
+        $this->db->select("
+            m.id                                                     AS invoice_id,
+            m.date,
+            m.reference_no,
+            c.name                                                   AS party_name,
+            c.company                                                AS party_code,
+            c.sequence_code                                          AS sequence_code,
+            al.name                                                  AS ledger_name,
+            NULL                                                     AS warehouse_name,
+            m.payment_amount                                         AS invoice_total,
+            0                                                        AS discount,
+            0                                                        AS return_amount,
+            COALESCE(m.used_amount, 0)                               AS paid,
+            ROUND(m.payment_amount - COALESCE(m.used_amount, 0), 2) AS outstanding,
+            0                                                        AS payment_term_days,
+            NULL                                                     AS due_date_calc,
+            0                                                        AS days_overdue,
+            'service'                                                AS source
+        ", false)
+        ->from('memo m')
+        ->join('companies c', 'c.id = m.supplier_id', 'left')
+        ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
+        ->where('m.type', 'serviceinvoice')
+        ->where('m.supplier_id >', 0)
+        ->having('outstanding >', 0)
+        ->order_by('m.date', 'asc');
+
+        if ($sql_at) {
+            $sql_date_only = explode(' ', $sql_at)[0];
+            $this->db->where("m.date <= '{$sql_date_only}'");
+        }
+        if ($party_id) {
+            $this->db->where('m.supplier_id', (int)$party_id);
+        }
+        if ($ref_no) {
+            $this->db->like('m.reference_no', $ref_no, 'both');
+        }
+        $service_invoices = $this->db->get()->result();
+
+        $this->db->select("
+            m.id                                                     AS invoice_id,
+            m.date,
+            m.reference_no,
+            c.name                                                   AS party_name,
+            c.company                                                AS party_code,
+            c.sequence_code                                          AS sequence_code,
+            al.name                                                  AS ledger_name,
+            NULL                                                     AS warehouse_name,
+            m.payment_amount                                         AS invoice_total,
+            0                                                        AS discount,
+            0                                                        AS return_amount,
+            COALESCE(m.used_amount, 0)                               AS paid,
+            ROUND(m.payment_amount - COALESCE(m.used_amount, 0), 2) AS outstanding,
+            0                                                        AS payment_term_days,
+            NULL                                                     AS due_date_calc,
+            0                                                        AS days_overdue,
+            'credit_memo'                                            AS source
+        ", false)
+        ->from('memo m')
+        ->join('companies c', 'c.id = m.supplier_id', 'left')
+        ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
+        ->where('m.type', 'memo')
+        ->where('m.supplier_id >', 0)
+        ->where('m.supplier_entry_type', 'C')
+        ->having('outstanding >', 0)
+        ->order_by('m.date', 'asc');
+
+        if ($sql_at) {
+            $sql_date_only = explode(' ', $sql_at)[0];
+            $this->db->where("m.date <= '{$sql_date_only}'");
+        }
+        if ($party_id) {
+            $this->db->where('m.supplier_id', (int)$party_id);
+        }
+        if ($ref_no) {
+            $this->db->like('m.reference_no', $ref_no, 'both');
+        }
+        $credit_memos = $this->db->get()->result();
+
+        $invoices = array_merge($invoices, $service_invoices, $credit_memos);
+        usort($invoices, function ($a, $b) {
+            return strcmp($a->date, $b->date);
+        });
+        return $invoices;
+    }
+
+    private function export_unpaid_invoices_excel($invoices, $type)
+    {
+        $this->load->library('excel');
+        $sheet = $this->excel->setActiveSheetIndex(0);
+        $title = ($type === 'ar') ? 'Unpaid AR Invoices' : 'Unpaid AP Invoices';
+        $sheet->setTitle($title);
+
+        $sheet->SetCellValue('A1', '#');
+        $sheet->SetCellValue('B1', lang('date'));
+        $sheet->SetCellValue('C1', lang('reference_no'));
+        $sheet->SetCellValue('D1', ($type === 'ar') ? lang('customer') : lang('supplier'));
+        $sheet->SetCellValue('E1', lang('Invoice Total'));
+        if ($type === 'ar') {
+            $sheet->SetCellValue('F1', lang('Discount'));
+            $sheet->SetCellValue('G1', lang('Returns'));
+            $sheet->SetCellValue('H1', lang('paid'));
+            $sheet->SetCellValue('I1', lang('outstanding'));
+            $sheet->SetCellValue('J1', lang('Due Date'));
+            $sheet->SetCellValue('K1', lang('Days Overdue'));
+        } else {
+            $sheet->SetCellValue('F1', lang('paid'));
+            $sheet->SetCellValue('G1', lang('outstanding'));
+            $sheet->SetCellValue('H1', lang('Due Date'));
+            $sheet->SetCellValue('I1', lang('Days Overdue'));
+        }
+
+        $row = 2;
+        foreach ($invoices as $i => $inv) {
+            $sheet->SetCellValue("A{$row}", $i + 1);
+            $sheet->SetCellValue("B{$row}", date('d-M-Y', strtotime($inv->date)));
+            $sheet->SetCellValue("C{$row}", $inv->reference_no);
+            $sheet->SetCellValue("D{$row}", $inv->party_name);
+            $sheet->SetCellValue("E{$row}", $inv->invoice_total);
+            if ($type === 'ar') {
+                $sheet->SetCellValue("F{$row}", $inv->discount);
+                $sheet->SetCellValue("G{$row}", $inv->return_amount);
+                $sheet->SetCellValue("H{$row}", $inv->paid);
+                $sheet->SetCellValue("I{$row}", $inv->outstanding);
+                $sheet->SetCellValue("J{$row}", $inv->due_date_calc ? date('d-M-Y', strtotime($inv->due_date_calc)) : '-');
+                $sheet->SetCellValue("K{$row}", $inv->days_overdue);
+            } else {
+                $sheet->SetCellValue("F{$row}", $inv->paid);
+                $sheet->SetCellValue("G{$row}", $inv->outstanding);
+                $sheet->SetCellValue("H{$row}", $inv->due_date_calc ? date('d-M-Y', strtotime($inv->due_date_calc)) : '-');
+                $sheet->SetCellValue("I{$row}", $inv->days_overdue);
+            }
+            $row++;
+        }
+
+        $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+        $filename = ($type === 'ar' ? 'Unpaid_AR_Invoices_' : 'Unpaid_AP_Invoices_') . date('Y-m-d_H_i_s');
+        $this->load->helper('excel');
+        create_excel($this->excel, $filename);
     }
 
     // ─────────────────────────────────────────────────────────────────

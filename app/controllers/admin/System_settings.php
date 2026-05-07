@@ -3183,6 +3183,7 @@ class system_settings extends MY_Controller
     {
         $this->form_validation->set_rules('group', lang('group'), 'is_natural_no_zero');
         if ($this->form_validation->run() == true) {
+            $this->ensure_unpaid_invoice_permission_columns();
             $data = [
                 'products-index'             => $this->input->post('products-index'),
                 'products-edit'              => $this->input->post('products-edit'),
@@ -3289,9 +3290,11 @@ class system_settings extends MY_Controller
                 'reports-customer-tb'        => $this->input->post('reports-customer-tb'),
                 'reports-customer-statement' => $this->input->post('reports-customer-statement'),
                 'reports-customer-aging'     => $this->input->post('reports-customer-aging'),
+                'reports-unpaid-invoices-ar' => $this->input->post('reports-unpaid-invoices-ar'),
                 'reports-supplier-tb'        => $this->input->post('reports-supplier-tb'),
                 'reports-supplier-statement' => $this->input->post('reports-supplier-statement'),
                 'reports-supplier-aging'     => $this->input->post('reports-supplier-aging'),
+                'reports-unpaid-invoices-ap' => $this->input->post('reports-unpaid-invoices-ap'),
                 'reports-consumption'        => $this->input->post('reports-consumption'),
                 'reports-purchase-per-item'  => $this->input->post('reports-purchase-per-item'),
                 'reports-purchase-per-invoice'  => $this->input->post('reports-purchase-per-invoice'),
@@ -3383,6 +3386,46 @@ class system_settings extends MY_Controller
             $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('system_settings'), 'page' => lang('system_settings')], ['link' => '#', 'page' => lang('group_permissions')]];
             $meta = ['page_title' => lang('group_permissions'), 'bc' => $bc];
             $this->page_construct('settings/permissions', $meta, $this->data);
+        }
+    }
+
+    private function ensure_unpaid_invoice_permission_columns()
+    {
+        $permissions_table = 'permissions';
+        $prefixed_permissions_table = $this->db->dbprefix('permissions');
+
+        $has_ar = $this->db->field_exists('reports-unpaid-invoices-ar', $permissions_table)
+            || $this->db->field_exists('reports-unpaid-invoices-ar', $prefixed_permissions_table);
+        $has_ap = $this->db->field_exists('reports-unpaid-invoices-ap', $permissions_table)
+            || $this->db->field_exists('reports-unpaid-invoices-ap', $prefixed_permissions_table);
+
+        if ($has_ar && $has_ap) {
+            return;
+        }
+
+        $this->load->dbforge();
+        $new_columns = [];
+
+        if (!$has_ar) {
+            $new_columns['reports-unpaid-invoices-ar'] = [
+                'type'       => 'TINYINT',
+                'constraint' => '1',
+                'null'       => true,
+                'default'    => 0,
+            ];
+        }
+
+        if (!$has_ap) {
+            $new_columns['reports-unpaid-invoices-ap'] = [
+                'type'       => 'TINYINT',
+                'constraint' => '1',
+                'null'       => true,
+                'default'    => 0,
+            ];
+        }
+
+        if (!empty($new_columns)) {
+            $this->dbforge->add_column($permissions_table, $new_columns);
         }
     }
 
