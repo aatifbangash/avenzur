@@ -642,6 +642,10 @@
                                             <label for="reports-customer-aging" class="padding05"><?= lang('Customer Aging') ?></label>
                                         </span>
                                         <span style="display:inline-block;">
+                                            <input type="checkbox" value="1" class="checkbox" id="reports-unpaid-invoices-ar" name="reports-unpaid-invoices-ar" <?php echo !empty($p->{'reports-unpaid-invoices-ar'}) ? 'checked' : ''; ?>>
+                                            <label for="reports-unpaid-invoices-ar" class="padding05"><?= lang('Unpaid Invoices AR') ?></label>
+                                        </span>
+                                        <span style="display:inline-block;">
                                             <input type="checkbox" value="1" class="checkbox" id="reports-supplier-tb" name="reports-supplier-tb" <?php echo $p->{'reports-supplier-tb'} ? 'checked' : ''; ?>>
                                             <label for="reports-supplier-tb" class="padding05"><?= lang('Supplier TB') ?></label>
                                         </span>
@@ -652,6 +656,10 @@
                                         <span style="display:inline-block;">
                                             <input type="checkbox" value="1" class="checkbox" id="reports-supplier-aging" name="reports-supplier-aging" <?php echo $p->{'reports-supplier-aging'} ? 'checked' : ''; ?>>
                                             <label for="reports-supplier-aging" class="padding05"><?= lang('Supplier Aging') ?></label>
+                                        </span>
+                                        <span style="display:inline-block;">
+                                            <input type="checkbox" value="1" class="checkbox" id="reports-unpaid-invoices-ap" name="reports-unpaid-invoices-ap" <?php echo !empty($p->{'reports-unpaid-invoices-ap'}) ? 'checked' : ''; ?>>
+                                            <label for="reports-unpaid-invoices-ap" class="padding05"><?= lang('Unpaid Invoices AP') ?></label>
                                         </span>
 
                                         <span style="display:inline-block;">
