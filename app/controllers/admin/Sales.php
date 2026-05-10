@@ -4326,7 +4326,7 @@ class Sales extends MY_Controller
         }
 
         $detail_link        = anchor('admin/sales/view/$1',              '<i class="fa fa-file-text-o"></i> ' . lang('sale_details'));
-        $return_link        = anchor('admin/returns/add/$1',             '<i class="fa fa-angle-double-left"></i> ' . lang('return_sale'));
+        $return_link        = anchor('admin/returns/add?sale=$1',             '<i class="fa fa-angle-double-left"></i> ' . lang('return_sale'));
         $journal_entry_link = anchor('admin/entries/view/journal/?sid=$1','<i class="fa fa-eye"></i> '           . lang('Journal Entry'));
         $zatka_invoice_link = anchor('admin/sales/pdf_zatka_invoice/$1', '<i class="fa fa-file-text-o"></i> Zatka Invoice', 'target="_blank"');
 
