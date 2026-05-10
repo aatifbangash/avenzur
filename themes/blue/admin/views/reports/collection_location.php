@@ -172,21 +172,6 @@
                                     <td colspan="1"><strong>-</strong></td>
                                     <td colspan="1"><strong>-</strong></td>
                                 </tr>
-                                <?php if (isset($receipt_list_total) && $receipt_list_total !== null) { ?>
-                                <tr style="background:#f9f9f9;">
-                                    <td colspan="10" class="text-left" style="padding:8px 12px;">
-                                        <strong><?= lang('customer_payments'); ?></strong>
-                                        — <?= lang('total_amount'); ?> (<?= lang('all'); ?> <?= lang('warehouse'); ?>, same date range as this report):
-                                        <?php if (!empty($collections_warehouse_id)) { ?>
-                                            <span class="text-muted" style="font-weight:normal;"><?= lang('note'); ?>: <?= lang('customer_payments'); ?> is not filtered by location.</span>
-                                        <?php } ?>
-                                    </td>
-                                    <td colspan="1"><strong><?= number_format((float) $receipt_list_total, 2); ?></strong></td>
-                                    <td colspan="3" class="text-left text-muted" style="font-size:11px;padding:8px;">
-                                        The first total sums payment lines on this report (return / credit memo lines excluded). This row sums receipt header amounts and should match Customer Payments for the same dates. Any gap is usually header vs lines or excluded line types.
-                                    </td>
-                                </tr>
-                                <?php } ?>
                             </tbody>
                             <tfoot></tfoot>
                         </table>
