@@ -173,7 +173,7 @@
 
         <?php 
         
-        if($Admin || $Owner || $GP['sales-index'] || $GP['reports-customer-aging']){
+        if($Admin || $Owner || $GP['sales-index'] || $GP['reports-customer-aging'] || !empty($GP['reports-unpaid-invoices-ar'])){
         ?>
         <!-- ==================== -->
         <!-- ACCOUNT RECEIVABLE -->
@@ -327,6 +327,9 @@
                         <?php if($Admin || $Owner || $this->GP['reports-customer-aging']){ ?>
                             <li><a href="<?= admin_url('reports/customer_aging'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Aging'); ?></a></li>
                         <?php } ?>
+                        <?php if($Admin || $Owner || !empty($this->GP['reports-unpaid-invoices-ar'])){ ?>
+                            <li><a href="<?= admin_url('reports/unpaid_invoices_ar'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Unpaid Invoices Report'); ?> (AR)</a></li>
+                        <?php } ?>
                         
                         <li><a href="<?= admin_url('reports/collections_by_location'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Collection Per Invoice'); ?></a></li>
                         <li><a href="<?= admin_url('reports/invoice_status'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Invoice Status'); ?></a></li>
@@ -344,7 +347,7 @@
 
         <?php } ?>
 
-        <?php if($Admin || $Owner || $GP['purchases-index'] || $GP['po-index'] || $GP['reports-supplier-aging']){ ?>
+        <?php if($Admin || $Owner || $GP['purchases-index'] || $GP['po-index'] || $GP['reports-supplier-aging'] || !empty($GP['reports-unpaid-invoices-ap'])){ ?>
         <!-- ==================== -->
         <!-- ACCOUNT PAYABLE -->
         <!-- ==================== -->
@@ -601,6 +604,9 @@
                         <?php if($Admin || $Owner || $this->GP['reports-supplier-aging']){ ?>
                         <li><a href="<?= admin_url('reports/supplier_aging'); ?>" class="newmenu-link"><i class="fa fa-boxes"></i> <?= lang('Aging'); ?></a></li>
                         <?php } ?>
+                        <?php if($Admin || $Owner || !empty($this->GP['reports-unpaid-invoices-ap'])){ ?>
+                        <li><a href="<?= admin_url('reports/unpaid_invoices_ap'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Unpaid Invoices Report'); ?> (AP)</a></li>
+                        <?php } ?>
                         <li><a href="<?= admin_url('reports/consumption_report'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Consumption Report'); ?></a></li>
                         <li><a href="<?= admin_url('reports/purchase_per_item'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Purchase Per Item'); ?></a></li>
                         <li><a href="<?= admin_url('reports/purchase_per_invoice'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Purchase Per Invoice'); ?></a></li>
@@ -738,7 +744,6 @@
                         <li><a href="<?= admin_url('reports/general_ledger_statement'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('GL Statement'); ?></a></li>
                         <li><a href="<?= admin_url('reports/general_ledger_trial_balance'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i><?= lang('Trial Balance'); ?></a></li>
                         <li><a href="<?= admin_url('reports/GLReport'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('General Ledger Report'); ?></a></li>
-                        <li><a href="<?= admin_url('reports/unpaid_invoices'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Unpaid Invoices Report'); ?></a></li>
                         <li><a href="<?= admin_url('reports/vat_report'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Vat Report'); ?></a></li>
                     </ul>
                 </li>

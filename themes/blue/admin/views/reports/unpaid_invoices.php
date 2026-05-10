@@ -22,12 +22,6 @@
             forceParse: 0
         });
 
-        // Auto-submit on type tab change
-        $(document).on('click', '.type-tab', function () {
-            $('#type').val($(this).data('type'));
-            $('#party_id').val('');
-            $('#filterForm').submit();
-        });
     });
 </script>
 
@@ -63,7 +57,7 @@
                     $export_params = $_GET;
                     $export_params['export_excel'] = 1;
                     ?>
-                    <a href="<?= admin_url('reports/unpaid_invoices?' . http_build_query($export_params)) ?>"
+                    <a href="<?= ($form_action ?? admin_url('reports/unpaid_invoices')) . '?' . http_build_query($export_params) ?>"
                        class="tip" title="Export (Server-side Excel)">
                         <i class="icon fa fa-download"></i>
                     </a>
@@ -74,26 +68,11 @@
 
     <div class="box-content">
 
-        <!-- Type Tabs -->
-        <ul class="nav nav-tabs" style="margin-bottom: 15px;">
-            <li class="<?= ($type === 'ar') ? 'active' : '' ?>">
-                <a href="javascript:void(0);" class="type-tab" data-type="ar">
-                    <i class="fa fa-arrow-down text-success"></i> AR &mdash; Receivables (Sales)
-                </a>
-            </li>
-            <li class="<?= ($type === 'ap') ? 'active' : '' ?>">
-                <a href="javascript:void(0);" class="type-tab" data-type="ap">
-                    <i class="fa fa-arrow-up text-danger"></i> AP &mdash; Payables (Purchases)
-                </a>
-            </li>
-        </ul>
-
         <!-- Filter Form -->
         <?php
         $attrib = ['id' => 'filterForm', 'method' => 'get', 'role' => 'form'];
-        echo admin_form_open_multipart('reports/unpaid_invoices', $attrib);
+        echo admin_form_open_multipart($form_action ?? 'reports/unpaid_invoices', $attrib);
         ?>
-        <input type="hidden" name="type" id="type" value="<?= htmlspecialchars($type) ?>">
 
         <div class="row">
             <div class="col-lg-12">
@@ -113,7 +92,7 @@
                 </div>
 
                 <?php if ($type === 'ar'): ?>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="form-group">
                         <label for="party_id"><?= lang('customer') ?></label>
                         <?php
@@ -123,6 +102,19 @@
                         }
                         echo form_dropdown('party_id', $cust_opts, ($party_id ?? ''),
                             'id="party_id" class="form-control input-tip select" style="width:100%;" data-placeholder="' . lang('select') . ' ' . lang('customer') . '"');
+                        ?>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="salesman_id">Salesman</label>
+                        <?php
+                        $sm_opts = ['' => '— All Salesmen —'];
+                        foreach ($salesmen as $sm) {
+                            $sm_opts[$sm->id] = $sm->name;
+                        }
+                        echo form_dropdown('salesman_id', $sm_opts, ($salesman_id ?? ''),
+                            'id="salesman_id" class="form-control input-tip select" style="width:100%;" data-placeholder="Select Salesman"');
                         ?>
                     </div>
                 </div>
@@ -202,12 +194,15 @@
                 <thead>
                     <tr>
                         <th>#</th>
+                        <?php if ($type === 'ar'): ?><th>Salesman</th><?php endif; ?>
                         <th><?= lang('date') ?></th>
+                        <th style="width:60px;"><?= lang('id') ?></th>
                         <th><?= lang('reference_no') ?></th>
                         <th><?= ($type === 'ar') ? lang('customer') : lang('supplier') ?></th>
                         <th>Seq. Code</th>
-                        <th>Ledger Acc.</th>
+                        <th>Type</th>
                         <?php if ($type === 'ar'): ?><th><?= lang('area') ?></th><?php endif; ?>
+                        <?php if ($type === 'ar'): ?><th>Pay. Term</th><?php endif; ?>
                         <th class="text-right"><?= lang('Invoice Total') ?></th>
                         <?php if ($type === 'ar'): ?>
                         
@@ -240,7 +235,7 @@
                     } elseif (!empty($inv->source) && $inv->source === 'service') {
                         $detail_url = null; // service memo — no direct sales link
                     } else {
-                        $detail_url = admin_url('sales?sid=' . $inv->invoice_id);
+                        $detail_url = admin_url('sales/completed_sales?sid=' . $inv->invoice_id);
                     }
 
                     // Badge label for memo-type rows
@@ -253,19 +248,24 @@
                 ?>
                     <tr class="<?= $row_class ?>">
                         <td><?= $i ?></td>
+                        <?php if ($type === 'ar'): ?><td><?= htmlspecialchars($inv->sales_man ?? '') ?></td><?php endif; ?>
                         <td><?= date('d-M-Y', strtotime($inv->date)) ?></td>
-                        <td>
+                        <td style="width:60px; text-align:center;">
                             <?php if ($detail_url): ?>
-                                <a href="<?= $detail_url ?>" target="_blank"><?= htmlspecialchars($inv->reference_no ?: '#' . $inv->invoice_id) ?></a>
+                                <a href="<?= $detail_url ?>" target="_blank"><?= $inv->invoice_id ?></a>
                             <?php else: ?>
-                                <?= htmlspecialchars($inv->reference_no ?: '#' . $inv->invoice_id) ?>
+                                <?= $inv->invoice_id ?>
                             <?php endif; ?>
+                        </td>
+                        <td>
+                            <?= htmlspecialchars($inv->reference_no ?: '') ?>
                             <?= $source_badge ?>
                         </td>
                         <td><?= htmlspecialchars($inv->party_name) ?></td>
                         <td><?= htmlspecialchars($inv->sequence_code ?? '') ?></td>
                         <td><?= htmlspecialchars($inv->ledger_name ?? '') ?></td>
                         <?php if ($type === 'ar'): ?><td><?= htmlspecialchars($inv->area ?? '') ?></td><?php endif; ?>
+                        <?php if ($type === 'ar'): ?><td class="text-center"><?= ($inv->payment_term_days > 0) ? (int)$inv->payment_term_days . 'd' : '-' ?></td><?php endif; ?>
                         <td class="text-right"><?= number_format($inv->invoice_total ,2) ?></td>
                         <?php if ($type === 'ar'): ?>
                         
@@ -291,7 +291,7 @@
                 </tbody>
                 <tfoot>
                     <tr style="font-weight:bold; background-color:#f0f0f0;">
-                        <td colspan="<?= ($type === 'ar') ? 7 : 6 ?>" class="text-right"><?= lang('total') ?></td>
+                        <td colspan="<?= ($type === 'ar') ? 10 : 7 ?>" class="text-right"><?= lang('total') ?></td>
                         <td class="text-right"><?= number_format($total_invoice ,2) ?></td>
                         <?php if ($type === 'ar'): ?>
                         
