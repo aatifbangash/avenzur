@@ -5520,16 +5520,19 @@ class Reports_model extends CI_Model
 
     public function getCollectionsByLocation($start_date, $end_date, $warehouse)
     {
-        // Build date filter only if both dates are provided
+        // Receipt list (getPaymentReferences) filters on payment_reference.date only — match that for the period.
+        // Display column still uses line/header date when useful for reconciliation.
+        $dateFilterExpr = "DATE(pr.date)";
+        $collectionDateExpr = "DATE(COALESCE(p.date, pr.date))";
         $dateWhere = "";
-        
+
         if ($start_date && $end_date) {
-            $dateWhere = " AND DATE(p.date) >= '".trim($start_date)."'
-                AND DATE(p.date) <= '".trim($end_date)."' ";
-        }else if($start_date) {
-            $dateWhere = " AND DATE(p.date) >= '".trim($start_date)."' ";
-        }else if($end_date) {
-            $dateWhere = " AND DATE(p.date) <= '".trim($end_date)."' ";
+            $dateWhere = " AND ".$dateFilterExpr." >= '".trim($start_date)."'
+                AND ".$dateFilterExpr." <= '".trim($end_date)."' ";
+        } elseif ($start_date) {
+            $dateWhere = " AND ".$dateFilterExpr." >= '".trim($start_date)."' ";
+        } elseif ($end_date) {
+            $dateWhere = " AND ".$dateFilterExpr." <= '".trim($end_date)."' ";
         }
         // Build warehouse filter only if provided
         $warehouseWhere = "";
@@ -5537,9 +5540,11 @@ class Reports_model extends CI_Model
             $warehouseWhere = " AND (s.warehouse_id = " . $warehouse . ")";
         }
 
-         $sql = "SELECT 
+        // Customer: join via sale when allocated; otherwise use payment_reference.customer_id (same idea as view_payment / receipt breakdown).
+        // added_via / note filters: keep in sync with Sales_model::getPaymentReferences() so this report matches Receipt List.
+        $sql = "SELECT 
                     p.id as payment_id,
-                    DATE(p.date) AS collection_date,
+                    ".$collectionDateExpr." AS collection_date,
                     cm.external_id AS external_id,
                     cm.sequence_code AS sequence_code,
                     cm.id AS customer_id,
@@ -5563,21 +5568,26 @@ class Reports_model extends CI_Model
                 LEFT JOIN sma_sales s
                     ON s.id = p.sale_id
 
-                LEFT JOIN sma_companies cm 
-                    ON cm.id = s.customer_id
-
                 INNER JOIN sma_payment_reference pr 
                     ON pr.id = p.payment_id
 
+                LEFT JOIN sma_companies cm 
+                    ON cm.id = COALESCE(s.customer_id, pr.customer_id)
+
                 LEFT JOIN sma_accounts_ledgers lg
                     ON lg.id = pr.transfer_from_ledger
-                WHERE cm.group_name = 'customer' AND (p.paid_by NOT IN ('return', 'credit_memo')) AND (pr.added_via IS NULL OR pr.added_via NOT IN ('customer_return_module', 'credit_memo_module'))
+                WHERE pr.customer_id IS NOT NULL
+                    AND pr.customer_id <> 0
+                    AND cm.group_name = 'customer'
+                    AND (p.paid_by NOT IN ('return', 'credit_memo'))
+                    AND (pr.added_via IS NULL OR pr.added_via NOT IN ('customer_return_modu', 'credit_memo_module', 'auto_script'))
+                    AND (pr.note IS NULL OR pr.note NOT LIKE '%Reconciliation payment for sale ID%')
                  ".$dateWhere."
                  ".$warehouseWhere."
-                    GROUP BY s.id
+                    GROUP BY p.id
                     HAVING paid_amount > 0.01
                     ORDER BY 
-                    DATE(p.date)
+                    ".$collectionDateExpr."
         ";
         $q = $this->db->query($sql);
         $data = array();

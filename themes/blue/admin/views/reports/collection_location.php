@@ -111,7 +111,7 @@
                                     
                                     $grand_total_sale = 0;
                                     $grand_total_payment = 0;
-                                    foreach ($collections_data as $data){
+                                    foreach (($collections_data ?? []) as $data){
                                         $count ++ ;
                                         $grand_total_sale += $data->grand_total;
                                         $grand_total_payment += $data->paid_amount;
@@ -142,12 +142,14 @@
                                                 <td><?= $data->payment_ref_id; ?></td>
                                                 <td><?= number_format($data->paid_amount, 2); ?></td>
                                                 <td><?= $data->collection_date; ?></td>
-                                                <td><?php 
-                                                    // Calculate collection days (difference between collection_date and sale_date)
-                                                    $sale_date = new DateTime($data->sale_date);
-                                                    $collection_date = new DateTime($data->collection_date);
-                                                    $diff = $collection_date->diff($sale_date);
-                                                    echo $diff->days;
+                                                <td><?php
+                                                    if (!empty($data->sale_date) && !empty($data->collection_date)) {
+                                                        $sale_date = new DateTime($data->sale_date);
+                                                        $collection_date = new DateTime($data->collection_date);
+                                                        echo $collection_date->diff($sale_date)->days;
+                                                    } else {
+                                                        echo '';
+                                                    }
                                                 ?></td>
                                                 <td><?= $data->ledger_name; ?></td>
                                                
@@ -170,6 +172,21 @@
                                     <td colspan="1"><strong>-</strong></td>
                                     <td colspan="1"><strong>-</strong></td>
                                 </tr>
+                                <?php if (isset($receipt_list_total) && $receipt_list_total !== null) { ?>
+                                <tr style="background:#f9f9f9;">
+                                    <td colspan="10" class="text-left" style="padding:8px 12px;">
+                                        <strong><?= lang('customer_payments'); ?></strong>
+                                        — <?= lang('total_amount'); ?> (<?= lang('all'); ?> <?= lang('warehouse'); ?>, same date range as this report):
+                                        <?php if (!empty($collections_warehouse_id)) { ?>
+                                            <span class="text-muted" style="font-weight:normal;"><?= lang('note'); ?>: <?= lang('customer_payments'); ?> is not filtered by location.</span>
+                                        <?php } ?>
+                                    </td>
+                                    <td colspan="1"><strong><?= number_format((float) $receipt_list_total, 2); ?></strong></td>
+                                    <td colspan="3" class="text-left text-muted" style="font-size:11px;padding:8px;">
+                                        The first total sums payment lines on this report (return / credit memo lines excluded). This row sums receipt header amounts and should match Customer Payments for the same dates. Any gap is usually header vs lines or excluded line types.
+                                    </td>
+                                </tr>
+                                <?php } ?>
                             </tbody>
                             <tfoot></tfoot>
                         </table>
