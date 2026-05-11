@@ -20,7 +20,7 @@ $page_end     = min($page * $per_page, $total_records);
 
 // Build pagination base URL (preserve all filters)
 $base_params = ['supplier_id' => $filter_supplier_id, 'from_date' => $filter_from, 'to_date' => $filter_to];
-$base_qs     = http_build_query(array_filter($base_params));
+$base_qs     = http_build_query($base_params);
 $base_url    = admin_url('reports/supplier_payments_report') . ($base_qs ? '?' . $base_qs . '&' : '?');
 ?>
 
@@ -44,16 +44,16 @@ $base_url    = admin_url('reports/supplier_payments_report') . ($base_qs ? '?' .
                 <div class="col-md-2">
                     <div class="form-group">
                         <label for="from_date" style="font-size:12px; font-weight:600;">From Date</label>
-                        <input type="text" id="from_date" name="from_date" class="form-control input-sm date-picker-filter"
-                               placeholder="dd/mm/yyyy" value="<?= htmlspecialchars($filter_from) ?>" autocomplete="off">
+                        <input type="text" id="from_date" name="from_date" class="form-control input-tip input-sm rpt-date-filter"
+                               placeholder="<?= lang('from_date') ?>" value="<?= htmlspecialchars($filter_from) ?>" autocomplete="off">
                     </div>
                 </div>
 
                 <div class="col-md-2">
                     <div class="form-group">
                         <label for="to_date" style="font-size:12px; font-weight:600;">To Date</label>
-                        <input type="text" id="to_date" name="to_date" class="form-control input-sm date-picker-filter"
-                               placeholder="dd/mm/yyyy" value="<?= htmlspecialchars($filter_to) ?>" autocomplete="off">
+                        <input type="text" id="to_date" name="to_date" class="form-control input-tip input-sm rpt-date-filter"
+                               placeholder="<?= lang('to_date') ?>" value="<?= htmlspecialchars($filter_to) ?>" autocomplete="off">
                     </div>
                 </div>
 
@@ -73,7 +73,7 @@ $base_url    = admin_url('reports/supplier_payments_report') . ($base_qs ? '?' .
 
                 <div class="col-md-3" style="padding-top:22px;">
                     <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-filter"></i> Filter</button>
-                    <a href="<?= admin_url('reports/supplier_payments_report') ?>" class="btn btn-default btn-sm"><i class="fa fa-times"></i> Reset</a>
+                    <a href="<?= admin_url('reports/supplier_payments_report') ?>?from_date=&amp;to_date=&amp;supplier_id=" class="btn btn-default btn-sm"><i class="fa fa-times"></i> Reset</a>
                 </div>
 
             </div>
@@ -210,16 +210,32 @@ $base_url    = admin_url('reports/supplier_payments_report') . ($base_qs ? '?' .
 
 <script>
 $(document).ready(function () {
-    // Date pickers
-    $('.date-picker-filter').datepicker({
-        format: 'dd/mm/yyyy',
-        autoclose: true,
-        todayHighlight: true
+    $('#sprFilterForm').on('submit', function () {
+        var ser = $(this).serialize();
+        if (ser.indexOf('from_date=') === -1) {
+            $(this).append($('<input>', {type: 'hidden', name: 'from_date', value: ''}));
+        }
     });
-
-    // Select2 for supplier dropdown
     if ($.fn.select2) {
         $('#supplier_id').select2({ placeholder: 'All Suppliers', allowClear: true });
     }
+    setTimeout(function () {
+        if (!$.fn.datetimepicker) {
+            return;
+        }
+        var fmt = (typeof site !== 'undefined' && site.dateFormats && site.dateFormats.js_sdate)
+            ? site.dateFormats.js_sdate
+            : 'dd/mm/yyyy';
+        var opts = {
+            format: fmt,
+            fontAwesome: true,
+            language: 'sma',
+            todayBtn: 1,
+            autoclose: 1,
+            minView: 2,
+            forceParse: 0
+        };
+        $('#sprFilterForm .rpt-date-filter').datetimepicker(opts);
+    }, 0);
 });
 </script>
