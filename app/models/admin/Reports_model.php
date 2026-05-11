@@ -5534,14 +5534,16 @@ class Reports_model extends CI_Model
         } elseif ($end_date) {
             $dateWhere = " AND ".$dateFilterExpr." <= '".trim($end_date)."' ";
         }
-        // Build warehouse filter only if provided
-        $warehouseWhere = "";
-        if ($warehouse) {
-            $warehouseWhere = " AND (s.warehouse_id = " . $warehouse . ")";
-        }
+        $dateWherePr2 = str_replace('DATE(pr.date)', 'DATE(pr2.date)', $dateWhere);
 
-        // Customer: join via sale when allocated; otherwise use payment_reference.customer_id (same idea as view_payment / receipt breakdown).
-        // added_via / note filters: keep in sync with Sales_model::getPaymentReferences() so this report matches Receipt List.
+        // Totals must match Customer Payments (sum of payment_reference.amount).. The list uses receipt headers, not raw line sums
+        // Allocate each receipt's pr.amount across its payment lines in proportion to line amounts so the report footer equals the list
+        // for the same date + added_via/note filters .. Warehouse is not applied here so totals match the list (which has no location filter).
+        $lineRaw = "CASE WHEN p.original_amount IS NOT NULL AND p.original_amount > 0
+                         THEN p.original_amount
+                         ELSE p.amount
+                    END";
+
         $sql = "SELECT 
                     p.id as payment_id,
                     ".$collectionDateExpr." AS collection_date,
@@ -5550,9 +5552,14 @@ class Reports_model extends CI_Model
                     cm.id AS customer_id,
                     cm.name AS customer_name,
                     cm.sales_agent,
-                    CASE WHEN p.original_amount IS NOT NULL AND p.original_amount > 0
-                         THEN p.original_amount
-                         ELSE p.amount
+                    CASE
+                        WHEN line_sums.sum_line_amount > 0.00001
+                        THEN pr.amount * (".$lineRaw." / line_sums.sum_line_amount)
+                        WHEN p.id = (
+                            SELECT MIN(p0.id) FROM sma_payments p0 WHERE p0.payment_id = pr.id
+                        )
+                        THEN pr.amount
+                        ELSE 0
                     END AS paid_amount,
                     p.paid_by,
                     p.return_id,
@@ -5571,6 +5578,25 @@ class Reports_model extends CI_Model
                 INNER JOIN sma_payment_reference pr 
                     ON pr.id = p.payment_id
 
+                INNER JOIN (
+                    SELECT
+                        p2.payment_id,
+                        SUM(
+                            CASE
+                                WHEN p2.original_amount IS NOT NULL AND p2.original_amount > 0 THEN p2.original_amount
+                                ELSE p2.amount
+                            END
+                        ) AS sum_line_amount
+                    FROM sma_payments p2
+                    INNER JOIN sma_payment_reference pr2 ON pr2.id = p2.payment_id
+                    WHERE pr2.customer_id IS NOT NULL
+                        AND pr2.customer_id <> 0
+                        AND (pr2.added_via IS NULL OR pr2.added_via NOT IN ('customer_return_modu', 'credit_memo_module', 'auto_script'))
+                        AND (pr2.note IS NULL OR pr2.note NOT LIKE '%Reconciliation payment for sale ID%')
+                        ".$dateWherePr2."
+                    GROUP BY p2.payment_id
+                ) line_sums ON line_sums.payment_id = pr.id
+
                 LEFT JOIN sma_companies cm 
                     ON cm.id = COALESCE(s.customer_id, pr.customer_id)
 
@@ -5578,12 +5604,9 @@ class Reports_model extends CI_Model
                     ON lg.id = pr.transfer_from_ledger
                 WHERE pr.customer_id IS NOT NULL
                     AND pr.customer_id <> 0
-                    AND cm.group_name = 'customer'
-                    AND (p.paid_by NOT IN ('return', 'credit_memo'))
                     AND (pr.added_via IS NULL OR pr.added_via NOT IN ('customer_return_modu', 'credit_memo_module', 'auto_script'))
                     AND (pr.note IS NULL OR pr.note NOT LIKE '%Reconciliation payment for sale ID%')
                  ".$dateWhere."
-                 ".$warehouseWhere."
                     GROUP BY p.id
                     HAVING paid_amount > 0.01
                     ORDER BY 
