@@ -5,6 +5,7 @@
 $filter_from        = '';
 $filter_to          = '';
 $filter_customer_id = !empty($filters['customer_id']) ? $filters['customer_id'] : '';
+$filter_sales_agent = isset($filters['sales_agent']) ? (string) $filters['sales_agent'] : '';
 if (!empty($filters['from_date'])) {
     $d = DateTime::createFromFormat('Y-m-d', $filters['from_date']);
     $filter_from = $d ? $d->format('d/m/Y') : $filters['from_date'];
@@ -19,8 +20,14 @@ $page_start   = $total_records > 0 ? (($page - 1) * $per_page) + 1 : 0;
 $page_end     = min($page * $per_page, $total_records);
 
 // Build pagination base URL (preserve all filters)
-$base_params = ['customer_id' => $filter_customer_id, 'from_date' => $filter_from, 'to_date' => $filter_to];
-$base_qs     = http_build_query(array_filter($base_params));
+$base_params = [
+    'customer_id' => $filter_customer_id,
+    'sales_agent' => $filter_sales_agent,
+    'from_date'   => $filter_from,
+    'to_date'     => $filter_to,
+];
+// Keep empty from_date in the query string so pagination does not re-apply the "first of month" default
+$base_qs     = http_build_query($base_params);
 $base_url    = admin_url('reports/customer_collections_report') . ($base_qs ? '?' . $base_qs . '&' : '?');
 ?>
 
@@ -44,16 +51,30 @@ $base_url    = admin_url('reports/customer_collections_report') . ($base_qs ? '?
                 <div class="col-md-2">
                     <div class="form-group">
                         <label for="from_date" style="font-size:12px; font-weight:600;">From Date</label>
-                        <input type="text" id="from_date" name="from_date" class="form-control input-sm date-picker-filter"
-                               placeholder="dd/mm/yyyy" value="<?= htmlspecialchars($filter_from) ?>" autocomplete="off">
+                        <input type="text" id="from_date" name="from_date" class="form-control input-tip input-sm rpt-date-filter"
+                               placeholder="<?= lang('from_date') ?>" value="<?= htmlspecialchars($filter_from) ?>" autocomplete="off">
                     </div>
                 </div>
 
                 <div class="col-md-2">
                     <div class="form-group">
                         <label for="to_date" style="font-size:12px; font-weight:600;">To Date</label>
-                        <input type="text" id="to_date" name="to_date" class="form-control input-sm date-picker-filter"
-                               placeholder="dd/mm/yyyy" value="<?= htmlspecialchars($filter_to) ?>" autocomplete="off">
+                        <input type="text" id="to_date" name="to_date" class="form-control input-tip input-sm rpt-date-filter"
+                               placeholder="<?= lang('to_date') ?>" value="<?= htmlspecialchars($filter_to) ?>" autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label for="sales_agent" style="font-size:12px; font-weight:600;"><?= lang('Sales Agent') ?></label>
+                        <select name="sales_agent" id="sales_agent" class="form-control input-sm select" style="width:100%;">
+                            <option value=""><?= lang('All Agents') ?></option>
+                            <?php if (!empty($salesmen)): foreach ($salesmen as $sm): ?>
+                                <option value="<?= htmlspecialchars($sm->name) ?>" <?= ($filter_sales_agent === $sm->name) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($sm->name) ?>
+                                </option>
+                            <?php endforeach; endif; ?>
+                        </select>
                     </div>
                 </div>
 
@@ -73,7 +94,7 @@ $base_url    = admin_url('reports/customer_collections_report') . ($base_qs ? '?
 
                 <div class="col-md-3" style="padding-top:22px;">
                     <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-filter"></i> Filter</button>
-                    <a href="<?= admin_url('reports/customer_collections_report') ?>" class="btn btn-default btn-sm"><i class="fa fa-times"></i> Reset</a>
+                    <a href="<?= admin_url('reports/customer_collections_report') ?>?from_date=&amp;to_date=&amp;customer_id=&amp;sales_agent=" class="btn btn-default btn-sm"><i class="fa fa-times"></i> Reset</a>
                 </div>
 
             </div>
@@ -210,16 +231,34 @@ $base_url    = admin_url('reports/customer_collections_report') . ($base_qs ? '?
 
 <script>
 $(document).ready(function () {
-    // Date pickers
-    $('.date-picker-filter').datepicker({
-        format: 'dd/mm/yyyy',
-        autoclose: true,
-        todayHighlight: true
+    $('#ccrFilterForm').on('submit', function () {
+        var ser = $(this).serialize();
+        if (ser.indexOf('from_date=') === -1) {
+            $(this).append($('<input>', {type: 'hidden', name: 'from_date', value: ''}));
+        }
     });
-
-    // Select2 for customer dropdown
     if ($.fn.select2) {
+        $('#sales_agent').select2({ placeholder: '<?= addslashes(lang('All Agents')) ?>', allowClear: true });
         $('#customer_id').select2({ placeholder: 'All Customers', allowClear: true });
     }
+
+    setTimeout(function () {
+        if (!$.fn.datetimepicker) {
+            return;
+        }
+        var fmt = (typeof site !== 'undefined' && site.dateFormats && site.dateFormats.js_sdate)
+            ? site.dateFormats.js_sdate
+            : 'dd/mm/yyyy';
+        var opts = {
+            format: fmt,
+            fontAwesome: true,
+            language: 'sma',
+            todayBtn: 1,
+            autoclose: 1,
+            minView: 2,
+            forceParse: 0
+        };
+        $('#ccrFilterForm .rpt-date-filter').datetimepicker(opts);
+    }, 0);
 });
 </script>

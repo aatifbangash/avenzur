@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
@@ -9011,9 +9011,12 @@ class Reports extends MY_Controller
     {
         $this->load->admin_model('sales_model');
 
+        $from_date_in_query = array_key_exists('from_date', $_GET);
+
         $filters = [
             'customer_id' => $this->input->get('customer_id') ?: '',
-            'from_date'   => $this->input->get('from_date')   ?: '',
+            'sales_agent' => $this->input->get('sales_agent') ?: '',
+            'from_date'   => $from_date_in_query ? trim((string) $this->input->get('from_date')) : '',
             'to_date'     => $this->input->get('to_date')     ?: '',
         ];
 
@@ -9024,9 +9027,16 @@ class Reports extends MY_Controller
                 if ($d) { $filters[$f] = $d->format('Y-m-d'); }
             }
         }
+        // Default start of month only when from_date was not sent at all (first visit / clean URL)
+        if (!$from_date_in_query && empty($filters['from_date'])) {
+            $filters['from_date'] = date('Y-m-01');
+        }
 
         $page     = max(1, (int)($this->input->get('page') ?: 1));
         $per_page = 100;
+
+        $sm_query = $this->db->order_by('name', 'ASC')->get('sales_man');
+        $salesmen = ($sm_query->num_rows() > 0) ? $sm_query->result() : [];
 
         $payments = $this->sales_model->getPaymentReferences($filters);
         $total    = count($payments);
@@ -9042,6 +9052,7 @@ class Reports extends MY_Controller
         $this->data['page']            = $page;
         $this->data['per_page']        = $per_page;
         $this->data['customers']       = $this->site->getAllCompanies('customer');
+        $this->data['salesmen']        = $salesmen;
 
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => 'Customer Collections Report']];
         $meta = ['page_title' => 'Customer Collections Report', 'bc' => $bc];
@@ -9055,9 +9066,11 @@ class Reports extends MY_Controller
     {
         $this->load->admin_model('purchases_model');
 
+        $from_date_in_query = array_key_exists('from_date', $_GET);
+
         $filters = [
             'supplier_id' => $this->input->get('supplier_id') ?: '',
-            'from_date'   => $this->input->get('from_date')   ?: '',
+            'from_date'   => $from_date_in_query ? trim((string) $this->input->get('from_date')) : '',
             'to_date'     => $this->input->get('to_date')     ?: '',
         ];
 
@@ -9067,6 +9080,9 @@ class Reports extends MY_Controller
                 $d = DateTime::createFromFormat('d/m/Y', $filters[$f]);
                 if ($d) { $filters[$f] = $d->format('Y-m-d'); }
             }
+        }
+        if (!$from_date_in_query && empty($filters['from_date'])) {
+            $filters['from_date'] = date('Y-m-01');
         }
 
         $page     = max(1, (int)($this->input->get('page') ?: 1));
