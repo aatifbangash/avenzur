@@ -242,11 +242,6 @@
                                 echo '<th>' . lang('Disc2 %') . '</th>';
                                 echo '<th>' . lang('Disc2 Val') . '</th>';
                             }
-                            if ($Settings->product_discount && $inv->product_discount != 0) {
-                                $col += 2;
-                                echo '<th>' . lang('Deal Disc %') . '</th>';
-                                echo '<th>' . lang('Deal Disc Value') . '</th>';
-                            }
                             echo '<th>' . lang('Total_without_VAT') . '</th>';
                             if ($Settings->tax1 && $inv->product_tax > 0) {
                                 $col +=2; 
@@ -266,13 +261,8 @@
                             <tr>
                                 <td style="text-align:center;vertical-align:middle;"><?= $r; ?></td>
                                 <td style="vertical-align:middle;">
-                                    <?php
-                                    $pdf_pn = strip_tags(html_entity_decode((string) ($row->product_name ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
-                                    $pdf_va = $row->variant ? strip_tags(html_entity_decode((string) $row->variant, ENT_QUOTES | ENT_HTML5, 'UTF-8')) : '';
-                                    $pdf_det = $row->details ? strip_tags(html_entity_decode((string) $row->details, ENT_QUOTES | ENT_HTML5, 'UTF-8')) : '';
-                                    echo htmlspecialchars($pdf_pn, ENT_QUOTES, 'UTF-8') . ($pdf_va !== '' ? ' (' . htmlspecialchars($pdf_va, ENT_QUOTES, 'UTF-8') . ')' : '');
-                                    echo $pdf_det !== '' ? '<br>' . nl2br(htmlspecialchars($pdf_det, ENT_QUOTES, 'UTF-8')) : '';
-                                    ?>
+                                    <?= $row->product_name . ($row->variant ? ' (' . $row->variant . ')' : ''); ?>
+                                    <?= $row->details ? '<br>' . $row->details : ''; ?>
                                 </td>
                                 <td style="text-align:center; vertical-align:middle;">
                                     <?= $this->sma->formatQuantity($row->unit_quantity); ?>
@@ -299,8 +289,6 @@
                         
                                     echo '<td style="text-align:right; vertical-align:middle;">' . ($row->discount2 != 0 ?  $row->discount2  : '') . '</td>';
                                     echo '<td style="text-align:right; vertical-align:middle;">' . $this->sma->formatNumber($row->second_discount_value) . '</td>';
-                                    echo '<td style="text-align:right; vertical-align:middle;">' . ($row->deal_discount_percent != 0 ? number_format((float) $row->deal_discount_percent, 2) . '%' : '') . '</td>';
-                                    echo '<td style="text-align:right; vertical-align:middle;">' . ($row->deal_discount_value != 0 ? $this->sma->formatNumber($row->deal_discount_value) : '') . '</td>';
                                 }
                                 ?>
                                 <td style="text-align:right;vertical-align:middle;"><?= $this->sma->formatNumber($row->totalbeforevat, null); ?></td>
@@ -336,15 +324,9 @@
                                 <td><?php echo $this->sma->formatNumber($inv->total);?></td>
                             </tr>
                             <tr>
-                                <td>INV-DISC</td>
+                                <td>T-DISC</td>
                                 <td><?php echo $this->sma->formatNumber($inv->total_discount);?></td>
                             </tr>
-                            <?php if (!empty($inv->grand_deal_discount) && (float) $inv->grand_deal_discount > 0) { ?>
-                            <tr>
-                                <td><?= lang('Deal Discount'); ?></td>
-                                <td><?php echo $this->sma->formatNumber($inv->grand_deal_discount); ?></td>
-                            </tr>
-                            <?php } ?>
                             <tr>
                                 <td>Net Before VAT</td>
                                 <td><?php echo $this->sma->formatNumber($inv->total_net_purchase);?></td>
