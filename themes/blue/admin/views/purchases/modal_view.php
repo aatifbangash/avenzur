@@ -262,9 +262,8 @@
                                     <?= ($row->expiry && $row->expiry != '0000-00-00') ? '<br>' . lang('EX') . ': ' . $this->sma->hrsd($row->expiry) : ''; ?>
                                     <?= 'Item# '.$row->item_code ;?>
                                 </td>
-                                <td style="width: 8%;text-align:center; vertical-align:middle;"><?= $row->avz_item_code ?: ''; ?>
-                                <td style="width: 8%;text-align:center; vertical-align:middle;"><?= $row->batchno ?: ''; ?>
-                                </td>
+                                <td style="width: 8%;text-align:center; vertical-align:middle;"><?= $row->avz_item_code ?: ''; ?></td>
+                                <td style="width: 8%;text-align:center; vertical-align:middle;"><?= $row->batchno ?: ''; ?></td>
                                 <?php if ($Settings->indian_gst) {
                                     ?>
                                     <td style=" text-align:center; vertical-align:middle;"><?= $row->hsn_code ?: ''; ?></td>
@@ -500,19 +499,19 @@
                     </tr>
                     <tr>
                         <td>INV-DISC</td>
-                        <td><?php echo number_format($inv->total_discount - $inv->grand_deal_discount, 2); ?></td>
+                        <td><?php echo number_format((float) $inv->total_discount, 2); ?></td>
                     </tr>
                     <tr>
                         <td>Net Before VAT</td>
-                        <td><?php echo number_format($inv->total_net_purchase + $inv->grand_deal_discount, 2); ?></td>
+                        <td><?php echo number_format((float) $inv->total_net_purchase, 2); ?></td>
                     </tr>
                     <tr>
                         <td>Total VAT</td>
-                        <td><?php echo number_format($inv->total_tax, 2); ?></td>
+                        <td><?php echo number_format((float) $inv->total_tax, 2); ?></td>
                     </tr>
                     <tr>
                         <td>Total After VAT</td>
-                        <td><?php echo number_format($inv->grand_total + $inv->grand_deal_discount, 2); ?></td>
+                        <td><?php echo number_format((float) $inv->grand_total, 2); ?></td>
                     </tr>
                 </table>
             </div>
