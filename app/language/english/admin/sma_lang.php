@@ -679,3 +679,6 @@ $lang['express']                    = 'Express';
 $lang['abandoned_cart']             = 'Abandoned Cart';
 $lang['cart_total']                 = 'Cart Total';
 $lang['total_items']                = 'Total Items';
+$lang['Deal Discount']             = 'Deal Discount';
+$lang['Deal Disc %']                = 'Deal Disc %';
+$lang['Deal Disc Value']            = 'Deal Disc Value';

@@ -54,7 +54,12 @@
                         <th><?= lang('Bonus'); ?></th>
                         <th><?= lang('Dis1 %'); ?></th>
                         <th><?= lang('Dis2 %'); ?></th>
+                        <?php if ($Settings->product_discount && $inv->product_discount != 0) { ?>
+                        <th><?= lang('Deal Disc %'); ?></th>
+                        <th><?= lang('Deal Disc Value'); ?></th>
+                        <?php } else { ?>
                         <th><?= lang('Dis3 %'); ?></th>
+                        <?php } ?>
                         <th><?= lang('VAT %'); ?></th>
                         <th><?= lang('Total without VAT %'); ?></th>
                         <th><?= lang('Grand Total'); ?></th>
@@ -73,7 +78,7 @@
                         <tr>
                             <td style="text-align:center;vertical-align:middle;"><?= $r; ?></td>
                             <td style="vertical-align:middle;">
-                                <?= $row->product_name; ?>
+                                <?= htmlspecialchars(strip_tags((string) $row->product_name), ENT_QUOTES, 'UTF-8'); ?>
                                 
                             </td>
                             <td style="text-align:center; vertical-align:middle;">
@@ -91,9 +96,17 @@
                             <td style="text-align:right;">
                                 <?= $row->discount2; ?>
                             </td>
+                            <?php if ($Settings->product_discount && $inv->product_discount != 0) {
+                                $ddp = isset($row->deal_discount_percent) ? (float) $row->deal_discount_percent : 0;
+                                $ddv = isset($row->deal_discount_value) ? (float) $row->deal_discount_value : 0;
+                                ?>
+                            <td style="text-align:right;"><?= $ddp != 0 ? number_format($ddp, 2) . '%' : ''; ?></td>
+                            <td style="text-align:right;"><?= $ddv != 0 ? $this->sma->formatNumber($ddv) : ''; ?></td>
+                            <?php } else { ?>
                               <td style="text-align:right;">
                                 <?= $row->discount3; ?>
                             </td>
+                            <?php } ?>
                              <td style="text-align:right;">
                                 <?= $row->item_tax; ?>
                             </td>
