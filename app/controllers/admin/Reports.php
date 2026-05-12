@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
@@ -7698,7 +7698,7 @@ class Reports extends MY_Controller
         $salesman = $this->input->get('salesman') ? $this->input->get('salesman') : null;
         $item_code = $this->input->get('item_code') ? $this->input->get('item_code') : null;
         $category = $this->input->get('category') ? $this->input->get('category') : null;
-        
+        $export_excel = $this->input->get('export_excel');
         // Get sales men for dropdown
         $this->db->select('id, name');
         $this->db->from('sales_man');
@@ -7735,6 +7735,45 @@ class Reports extends MY_Controller
             // Format dates only if provided
             $formatted_start_date = $start_date ? $this->sma->fld($start_date) : null;
             $formatted_end_date = $end_date ? $this->sma->fld($end_date) : null;
+
+            if ($export_excel) {
+                @set_time_limit(600);
+                if (function_exists('ini_set')) {
+                    @ini_set('memory_limit', '256M');
+                }
+
+                if (function_exists('ob_get_level')) {
+                    while (ob_get_level() > 0) {
+                        @ob_end_clean();
+                    }
+                }
+
+                $filename = 'Sales_Per_Item_' . date('Y-m-d_H_i_s') . '.csv';
+                header('Content-Type: text/csv; charset=UTF-8');
+                header('Content-Disposition: attachment; filename="' . $filename . '"');
+                header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+                header('Pragma: public');
+                header('Expires: 0');
+
+                $out = fopen('php://output', 'w');
+                if ($out === false) {
+                    $this->session->set_flashdata('error', 'Could not start download.');
+                    redirect(admin_url('reports/sales_per_item'));
+                }
+
+                fwrite($out, "\xEF\xBB\xBF");
+                $this->reports_model->stream_sales_per_item_csv(
+                    $formatted_start_date,
+                    $formatted_end_date,
+                    $invoice_id,
+                    $salesman_name,
+                    $item_code,
+                    $category,
+                    $out
+                );
+                fclose($out);
+                exit;
+            }
 
             $per_page = 100;
             $spi_page = (int) $this->input->get('spi_page');

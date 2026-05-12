@@ -1,5 +1,9 @@
-<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
+<?php defined('BASEPATH') or exit('No direct script access allowed');
+$spi_export_q = $_GET;
+$spi_export_q['export_excel'] = '1';
+unset($spi_export_q['spi_page']);
+$spi_export_url = admin_url('reports/sales_per_item?' . http_build_query($spi_export_q));
+?>
 <style>
     .sales-pi-root .spi-table-block {
         min-width: 0;
@@ -63,15 +67,6 @@
         overflow-wrap: anywhere;
     }
 </style>
-<script>
-    function exportTableToExcel(tableId, filename = 'table.xlsx') {
-        const table = document.getElementById(tableId);
-        const wb = XLSX.utils.table_to_book(table, {
-            sheet: 'Sheet 1'
-        });
-        XLSX.writeFile(wb, filename);
-    }
-</script>
 
 <div class="box sales-pi-root">
     <div class="box-header">
@@ -79,7 +74,7 @@
         <div class="box-icon">
             <ul class="btn-tasks">
                 <li class="dropdown">
-                    <a href="javascript:void(0);" onclick="exportTableToExcel('salesItemTable', 'sales_per_item.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a>
+                    <a href="<?= $spi_export_url ?>" class="tip" title="<?= lang('download'); ?> CSV (<?= lang('all'); ?>)" id="xls"><i class="icon fa fa-file-excel-o"></i></a>
                 </li>
             </ul>
         </div>

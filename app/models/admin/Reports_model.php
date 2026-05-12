@@ -6192,25 +6192,12 @@ class Reports_model extends CI_Model
     }
 
     /**
-     * Get Sales Per Item Report Data
-     * Shows sales and returns with item details, profitability
+     * Build the UNION subquery used by Sales Per Item (sales + returns).
      *
-     * Large date ranges can return tens of thousands of rows; loading them all causes
-     * memory/time limit failures. Use $limit/$offset for server-side pagination.
-     *
-     * @param string $start_date - Start date (formatted)
-     * @param string $end_date - End date (formatted)
-     * @param string $invoice_id - Invoice ID or reference number
-     * @param string $salesman_name - Sales agent name
-     * @param string $item_code - Item code to filter
-     * @param string|null $category
-     * @param int $limit Max rows to return (0 = no limit, not recommended for UI)
-     * @param int $offset
-     * @return array{rows: array, total: int, totals: stdClass|null}
+     * @return string
      */
-    public function getSalesPerItem($start_date, $end_date, $invoice_id, $salesman_name, $item_code, $category = null, $limit = 100, $offset = 0)
+    protected function sales_per_item_union_inner_sql($start_date, $end_date, $invoice_id, $salesman_name, $item_code, $category)
     {
-        // Build WHERE clauses conditionally
         $where_clauses = [];
         
         // Date filter (optional - works with both dates or none)
@@ -6221,7 +6208,7 @@ class Reports_model extends CI_Model
         // Invoice filter
         if ($invoice_id) {
             if (is_numeric($invoice_id)) {
-                $where_clauses[] = "s.id = " . (int) $invoice_id;
+                $where_clauses[] = 's.id = ' . (int) $invoice_id;
             } else {
                 $where_clauses[] = "s.reference_no LIKE '" . $this->db->escape_like_str($invoice_id) . "%' ESCAPE '!'";
             }
@@ -6289,7 +6276,7 @@ class Reports_model extends CI_Model
         
         if ($invoice_id) {
             if (is_numeric($invoice_id)) {
-                $return_where_clauses[] = "s.id = " . (int) $invoice_id;
+                $return_where_clauses[] = 's.id = ' . (int) $invoice_id;
             } else {
                 $return_where_clauses[] = "s.reference_no LIKE '" . $this->db->escape_like_str($invoice_id) . "%' ESCAPE '!'";
             }
@@ -6346,9 +6333,173 @@ class Reports_model extends CI_Model
             {$return_where_sql}
         ";
 
-        // Outer parentheses required: MariaDB/MySQL parse "FROM (a) UNION ALL (b)"
-        // as FROM-clause ending at the first ")"; the UNION must be inside one subquery.
-        $union_inner = '((' . trim($sales_sql) . ') UNION ALL (' . trim($returns_sql) . '))';
+        return '((' . trim($sales_sql) . ') UNION ALL (' . trim($returns_sql) . '))';
+    }
+
+    /**
+     * Stream full Sales Per Item result as UTF-8 CSV (opens in Excel). Uses unbuffered MySQL read.
+     *
+     * @param resource $out
+     *
+     * @return bool
+     */
+    public function stream_sales_per_item_csv($start_date, $end_date, $invoice_id, $salesman_name, $item_code, $category, $out)
+    {
+        $union_inner = $this->sales_per_item_union_inner_sql($start_date, $end_date, $invoice_id, $salesman_name, $item_code, $category);
+
+        $agg_sql = "
+            SELECT
+                COALESCE(SUM(spi_union.qty), 0) AS sum_qty,
+                COALESCE(SUM(spi_union.bonus), 0) AS sum_bonus,
+                COALESCE(SUM(spi_union.sales), 0) AS sum_sales,
+                COALESCE(SUM(spi_union.discount), 0) AS sum_discount,
+                COALESCE(SUM(spi_union.net_sales), 0) AS sum_net_sales,
+                COALESCE(SUM(spi_union.vat), 0) AS sum_vat,
+                COALESCE(SUM(spi_union.receivable), 0) AS sum_receivable,
+                COALESCE(SUM(spi_union.cogs), 0) AS sum_cogs,
+                COALESCE(SUM(spi_union.profit), 0) AS sum_profit
+            FROM {$union_inner} AS spi_union
+        ";
+        $totals = $this->db->query($agg_sql)->row();
+        if (!$totals) {
+            $totals = (object) [
+                'sum_qty' => 0,
+                'sum_bonus' => 0,
+                'sum_sales' => 0,
+                'sum_discount' => 0,
+                'sum_net_sales' => 0,
+                'sum_vat' => 0,
+                'sum_receivable' => 0,
+                'sum_cogs' => 0,
+                'sum_profit' => 0,
+            ];
+        }
+
+        $headers = [
+            '#',
+            lang('Type'),
+            lang('Date'),
+            lang('Invoice'),
+            lang('Return Inv#'),
+            lang('Area'),
+            lang('Sales Man'),
+            lang('Agent'),
+            lang('Category'),
+            lang('Customer No'),
+            lang('Customer Name'),
+            lang('Item No'),
+            lang('Item Name'),
+            lang('QTY'),
+            lang('Bonus'),
+            lang('Unit Cost'),
+            lang('Unit Price'),
+            lang('Sales'),
+            lang('Discount'),
+            lang('Net Sales'),
+            lang('Vat'),
+            lang('Receivable'),
+            lang('COGS'),
+            lang('Profit'),
+        ];
+        fputcsv($out, $headers);
+
+        $sql = "
+            SELECT * FROM {$union_inner} AS spi_union
+            ORDER BY spi_union.date DESC, spi_union.invoice
+        ";
+
+        $mysqli = $this->db->conn_id;
+        if (!$mysqli instanceof \mysqli) {
+            return false;
+        }
+
+        $res = @mysqli_query($mysqli, $sql, MYSQLI_USE_RESULT);
+        if ($res === false) {
+            return false;
+        }
+
+        $n = 0;
+        while ($row = mysqli_fetch_assoc($res)) {
+            $n++;
+            fputcsv($out, [
+                $n,
+                $row['type'] ?? '',
+                $row['date'] ?? '',
+                $row['invoice'] ?? '',
+                $row['return_inv'] ?? '',
+                $row['area'] ?? '',
+                $row['sales_man'] ?? '',
+                $row['agent'] ?? '',
+                $row['category'] ?? '',
+                $row['customer_no'] ?? '',
+                $row['customer_name'] ?? '',
+                $row['item_no'] ?? '',
+                $row['item_name'] ?? '',
+                $row['qty'] ?? '',
+                $row['bonus'] ?? '',
+                $row['unit_cost'] ?? '',
+                $row['unit_price'] ?? '',
+                $row['sales'] ?? '',
+                $row['discount'] ?? '',
+                $row['net_sales'] ?? '',
+                $row['vat'] ?? '',
+                $row['receivable'] ?? '',
+                $row['cogs'] ?? '',
+                $row['profit'] ?? '',
+            ]);
+        }
+        mysqli_free_result($res);
+
+        fputcsv($out, [
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            lang('Grand Total') . ':',
+            $totals->sum_qty,
+            $totals->sum_bonus,
+            '',
+            '',
+            $totals->sum_sales,
+            $totals->sum_discount,
+            $totals->sum_net_sales,
+            $totals->sum_vat,
+            $totals->sum_receivable,
+            $totals->sum_cogs,
+            $totals->sum_profit,
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Get Sales Per Item Report Data
+     * Shows sales and returns with item details, profitability
+     *
+     * Large date ranges can return tens of thousands of rows; loading them all causes
+     * memory/time limit failures. Use $limit/$offset for server-side pagination.
+     *
+     * @param string $start_date - Start date (formatted)
+     * @param string $end_date - End date (formatted)
+     * @param string $invoice_id - Invoice ID or reference number
+     * @param string $salesman_name - Sales agent name
+     * @param string $item_code - Item code to filter
+     * @param string|null $category
+     * @param int|null $limit Max rows (100–5000 for UI). Pass null for no LIMIT (bulk export only).
+     * @param int $offset
+     * @return array{rows: array, total: int, totals: stdClass|null}
+     */
+    public function getSalesPerItem($start_date, $end_date, $invoice_id, $salesman_name, $item_code, $category = null, $limit = 100, $offset = 0)
+    {
+        $union_inner = $this->sales_per_item_union_inner_sql($start_date, $end_date, $invoice_id, $salesman_name, $item_code, $category);
 
         $count_sql = "SELECT COUNT(*) AS spi_cnt FROM {$union_inner} AS spi_union";
         $count_row = $this->db->query($count_sql)->row();
@@ -6382,22 +6533,28 @@ class Reports_model extends CI_Model
             ];
         }
 
-        $limit = (int) $limit;
-        $offset = (int) $offset;
-        if ($limit < 1) {
-            $limit = 100;
-        }
-        if ($limit > 5000) {
-            $limit = 5000;
-        }
-        if ($offset < 0) {
-            $offset = 0;
+        $unlimited = ($limit === null);
+        if (!$unlimited) {
+            $limit = (int) $limit;
+            $offset = (int) $offset;
+            if ($limit < 1) {
+                $limit = 100;
+            }
+            if ($limit > 5000) {
+                $limit = 5000;
+            }
+            if ($offset < 0) {
+                $offset = 0;
+            }
+            $limit_sql = "LIMIT {$limit} OFFSET {$offset}";
+        } else {
+            $limit_sql = '';
         }
 
         $sql = "
             SELECT * FROM {$union_inner} AS spi_union
             ORDER BY spi_union.date DESC, spi_union.invoice
-            LIMIT {$limit} OFFSET {$offset}
+            {$limit_sql}
         ";
         
         $query = $this->db->query($sql);
