@@ -2822,6 +2822,21 @@ class Purchases extends MY_Controller
             $html = preg_replace("'\<\?xml(.*)\?\>'", '', $html);
         }
 
+        $grand_deal = (float) (isset($inv->grand_deal_discount) ? $inv->grand_deal_discount : 0);
+        $inv_disc_amount = (float) $inv->total_discount - $grand_deal;
+        $net_before_vat_pdf = (float) $inv->total_net_purchase + $grand_deal;
+        $total_after_vat_pdf = (float) $inv->grand_total + $grand_deal;
+        $note_plain = htmlspecialchars(
+            strip_tags($this->sma->decode_html((string) ($inv->note ?? ''))),
+            ENT_QUOTES,
+            'UTF-8'
+        );
+        $deal_disc_label = $this->lang->line('Deal Discount');
+        if ($deal_disc_label === false) {
+            $deal_disc_label = 'Deal Discount';
+        }
+        $deal_disc_label_e = htmlspecialchars($deal_disc_label, ENT_QUOTES, 'UTF-8');
+
         // Generate QR code Base64 string
         if ($this->Settings->ksa_qrcode) {
             $payload = [
@@ -2838,13 +2853,14 @@ class Purchases extends MY_Controller
             //echo $qr_code;exit;
             $png_base64 = base64_encode($qr_code);
         } else {
-            //$qr_code = $this->sma->qrcode('link', urlencode(site_url('view/sale/' . $inv->hash)), 2);
+            // 1x1 transparent PNG placeholder so header markup stays valid
+            $png_base64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+lmWQAAAAASUVORK5CYII=';
         }
 
         // Now explicitly generate Base64 PNG
         //$qr_code = $this->inv_qrcode->generate_base64($qrtext, 150); // 150px size
 
-        if ($customer->gln != '') {
+        if (isset($supplier->gln) && $supplier->gln != '' && $supplier->gln != '-') {
             $customer_gln_text = 'GLN: ';
         } else {
             $customer_gln_text = '';
@@ -2880,7 +2896,7 @@ class Purchases extends MY_Controller
         <div style="float:left; width:55%;">
             <p style="margin:2px 0;"><strong>Purchase Invoice Ref. Number:</strong> PI-' . $inv->id . '</p>
             <p style="margin:2px 0;"><strong>Date:</strong> ' . $this->sma->hrld($inv->date) . '</p>
-            <p style="margin:2px 0;"><strong>Note:</strong> ' . $this->sma->decode_html($inv->note) . '</p>
+            <p style="margin:2px 0;"><strong>Note:</strong> ' . $note_plain . '</p>
         </div>
 
         <!-- Right: Barcode and QR -->
@@ -2900,7 +2916,7 @@ class Purchases extends MY_Controller
             <p style="margin:2px 0;"><strong>To:</strong> ' . $supplier->name . '</p>
             <p style="margin:2px 0;">Address: ' . $supplier->address . '</p>
             <p style="margin:2px 0;">City: ' . $supplier->city . '</p>
-            <p style="margin:2px 0;">VAT Number: ' . $customer->vat_no . '</p>
+            <p style="margin:2px 0;">VAT Number: ' . htmlspecialchars((string) ($supplier->vat_no ?? ''), ENT_QUOTES, 'UTF-8') . '</p>
             <p style="margin:2px 0;">Tel: ' . $supplier->phone . '</p>
             <p style="margin:2px 0;">Email: ' . $supplier->email . '</p>
         </div>
@@ -2922,9 +2938,12 @@ class Purchases extends MY_Controller
 
 
             $footer_table = '';
-            $footer_note = '';
+            $left_footer_block = '<div style="float:left; width:60%; text-align:left; padding-right:10px;">';
+            if ($grand_deal > 0) {
+                $left_footer_block .= '<div style="margin-bottom:8px;"><strong>' . $deal_disc_label_e . ':</strong> ' . htmlspecialchars($this->sma->formatNumber($grand_deal), ENT_QUOTES, 'UTF-8') . '</div>';
+            }
             if ($this->Settings->site_name != 'Hills Business Medical') {
-                $footer_table = '<div style="width:60%; float:left; text-align:left; margin-bottom:15px;">
+                $footer_table = '<div style="width:100%; text-align:left; margin-bottom:15px;">
             <table class="table-label" border="1"  cellspacing="0" cellpadding="10" width="100%" style="border-collapse:collapse; font-size: 10px">
                 <tr><td colspan="3" style="text-align: center; vertical-align: middle; background-color: #f2f2f2; font-size: 20px;">' . $inv->id . '</td> <td colspan="3">فريق التحضير</td></tr>
                 <tr><td colspan="3">تحضير بداية</td> <td colspan="3">تحضير نهاية</td></tr>
@@ -2932,31 +2951,27 @@ class Purchases extends MY_Controller
                 <tr><td colspan="2">عدد كرتون</td> <td colspan="2">ربطة الثلاجة</td> <td colspan="2">خطأ</td></tr>
             </table>
         </div>';
-            } else {
-                $footer_note = '<div style="float:left; width:60%; text-align:left; padding-right:10px;">
-            
-            <p style="margin:0;">
-            ' . $inv->note . '
-            </p>
-        </div>';
+                $left_footer_block .= $footer_table;
+                $footer_table = '';
             }
+            $left_footer_block .= '</div>';
 
             $mpdf->SetHTMLFooter('
     <hr style="margin-bottom:5px;">
 
     <div style="width:100%; font-size:12px; font-family: DejaVu Sans, sans-serif;">
 
-        <!-- Notes Section (Left) -->
-        ' . $footer_note . '
+        <!-- Notes / Deal discount (Left) -->
+        ' . $left_footer_block . '
 
         <!-- Totals Table -->
         <div style="width:35%; float:right; text-align:left; margin-bottom:15px;">
             <table border="1" cellpadding="4" cellspacing="0" width="100%" style="border-collapse:collapse;">
-                <tr><td>Total</td><td>' . $this->sma->formatNumber($inv->total) . '</td></tr>
-                <tr><td>T-DISC</td><td>' . $this->sma->formatNumber($inv->total_discount) . '</td></tr>
-                <tr><td>Net Before VAT</td><td>' . $this->sma->formatNumber($inv->total_net_purchase) . '</td></tr>
-                <tr><td>Total VAT</td><td>' . $this->sma->formatNumber($inv->total_tax) . '</td></tr>
-                <tr><td><strong>Total After VAT</strong></td><td><strong>' . $this->sma->formatNumber($inv->grand_total) . '</strong></td></tr>
+                <tr><td>Total</td><td>' . htmlspecialchars($this->sma->formatNumber($inv->total), ENT_QUOTES, 'UTF-8') . '</td></tr>
+                <tr><td>INV-DISC</td><td>' . htmlspecialchars($this->sma->formatNumber($inv_disc_amount), ENT_QUOTES, 'UTF-8') . '</td></tr>
+                <tr><td>Net Before VAT</td><td>' . htmlspecialchars($this->sma->formatNumber($net_before_vat_pdf), ENT_QUOTES, 'UTF-8') . '</td></tr>
+                <tr><td>Total VAT</td><td>' . htmlspecialchars($this->sma->formatNumber($inv->total_tax), ENT_QUOTES, 'UTF-8') . '</td></tr>
+                <tr><td><strong>Total After VAT</strong></td><td><strong>' . htmlspecialchars($this->sma->formatNumber($total_after_vat_pdf), ENT_QUOTES, 'UTF-8') . '</strong></td></tr>
             </table>
         </div>
 
