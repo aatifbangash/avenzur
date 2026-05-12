@@ -16,6 +16,18 @@ class Purchase_order_upload_model extends CI_Model
     }
 
     /**
+     * Look up a product by its barcode/code.
+     */
+    public function getProductByBarcode($barcode)
+    {
+        return $this->db
+            ->select('id, code, name, image, brand')
+            ->from('sma_products')
+            ->where('code', $barcode)
+            ->get()->row();
+    }
+
+    /**
      * Get expiry rule for a product from sma_expiry_category_rules.
      * Priority: product-level → subcategory-level → category-level.
      * Returns array ['months' => int, 'require_batch_number' => bool] or null.
@@ -223,14 +235,9 @@ class Purchase_order_upload_model extends CI_Model
 
             } else {
 
-                // update image/details/shelf_life for existing product
-                $this->purchase_order_model->updateProductImage($product_id, $image_link, $details, $shelf_life);
-
-                if (($product->image == '' || $product->image == null) && $image_link == '') {
-                    return [
-                        'success' => false,
-                        'error'   => 'Image link missing for existing product: ' . $item_code
-                    ];
+                // update image only if provided
+                if ($image_link !== '') {
+                    $this->db->update('products', ['image' => $image_link], ['id' => $product_id]);
                 }
 
                 if ($tax_percent == 15) {

@@ -106,7 +106,8 @@ class Purchase_order_upload extends MY_Controller
             $purchase_price      = isset($row[9]) ? (float)$row[9] : 0;
             $cost_price          = isset($row[10]) ? (float)$row[10] : 0;
 
-            $vat_percent         = isset($row[11]) ? (float)$row[11] : 0;
+            $vat_raw             = isset($row[11]) ? $row[11] : null;
+            $vat_percent         = ($vat_raw !== null && $vat_raw !== '') ? (float)$vat_raw : null;
 
             $discount1_percent   = isset($row[12]) ? (float)$row[12] : 0;
             $discount1_value     = isset($row[13]) ? (float)$row[13] : 0;
@@ -151,8 +152,7 @@ class Purchase_order_upload extends MY_Controller
 
             $errors = [];
 
-
-            // mandatory checks
+            // mandatory for all rows
             if ($item_barcode === '') {
                 $errors[] = 'Item barcode is required';
             }
@@ -161,32 +161,40 @@ class Purchase_order_upload extends MY_Controller
                 $errors[] = 'Item name is required';
             }
 
-            if ($image_link === '') {
-                $errors[] = 'Image link is required';
-            }
-
-            if ($brand_name === '') {
-                $errors[] = 'Brand name is required';
-            }
-
             if ($quantity <= 0) {
                 $errors[] = 'Quantity is required';
             }
 
-            if ($final_cost_price <= 0) {
-                $errors[] = 'Cost price is required';
+            if ($vat_percent === null) {
+                $errors[] = 'VAT % is required';
             }
 
-            if ($sale_price_inc_vat <= 0) {
-                $errors[] = 'Sale price is required';
+            // check if product exists in DB
+            $existing_product = null;
+            if ($item_barcode !== '') {
+                $existing_product = $this->pou->getProductByBarcode($item_barcode);
             }
-            if ($purchase_price <= 0) {
-                $errors[] = 'Purchase price is required';
+
+            $product_exists = !empty($existing_product);
+
+            // for existing product, fall back to DB brand if Excel cell is empty
+            if ($product_exists && $brand_name === '' && !empty($existing_product->brand)) {
+                $brand_name = $existing_product->brand;
             }
-            if ($description_en === '') {
-                $errors[] = 'Description is required';
+
+            if (!$product_exists) {
+                // new product requires brand, image, description
+                if ($brand_name === '') {
+                    $errors[] = 'Brand name is required for new product';
+                }
+                if ($image_link === '') {
+                    $errors[] = 'Image link is required for new product';
+                }
+                if ($description_en === '') {
+                    $errors[] = 'Description is required for new product';
+                }
             }
-            
+
             if (!empty($errors)) {
                 $has_errors = true;
             }
