@@ -7735,18 +7735,55 @@ class Reports extends MY_Controller
             // Format dates only if provided
             $formatted_start_date = $start_date ? $this->sma->fld($start_date) : null;
             $formatted_end_date = $end_date ? $this->sma->fld($end_date) : null;
-            
-            // Fetch data from model
-            $sales_data = $this->reports_model->getSalesPerItem(
-                $formatted_start_date, 
-                $formatted_end_date, 
+
+            $per_page = (int) $this->input->get('per_page');
+            if ($per_page < 100 || $per_page > 5000) {
+                $per_page = 500;
+            }
+            $spi_page = (int) $this->input->get('spi_page');
+            if ($spi_page < 1) {
+                $spi_page = 1;
+            }
+            $offset = ($spi_page - 1) * $per_page;
+
+            $sales_result = $this->reports_model->getSalesPerItem(
+                $formatted_start_date,
+                $formatted_end_date,
                 $invoice_id,
                 $salesman_name,
                 $item_code,
-                $category
+                $category,
+                $per_page,
+                $offset
             );
-            
-            $this->data['sales_data'] = $sales_data;
+
+            $total_rows = (int) $sales_result['total'];
+            if ($total_rows > 0 && $per_page > 0) {
+                $max_page = (int) ceil($total_rows / $per_page);
+                if ($max_page < 1) {
+                    $max_page = 1;
+                }
+                if ($spi_page > $max_page) {
+                    $spi_page = $max_page;
+                    $offset = ($spi_page - 1) * $per_page;
+                    $sales_result = $this->reports_model->getSalesPerItem(
+                        $formatted_start_date,
+                        $formatted_end_date,
+                        $invoice_id,
+                        $salesman_name,
+                        $item_code,
+                        $category,
+                        $per_page,
+                        $offset
+                    );
+                }
+            }
+
+            $this->data['sales_data'] = $sales_result['rows'];
+            $this->data['sales_data_total'] = $sales_result['total'];
+            $this->data['sales_data_totals'] = $sales_result['totals'];
+            $this->data['sales_per_page'] = $per_page;
+            $this->data['sales_page'] = $spi_page;
         }
         
         $bc = [

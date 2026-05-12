@@ -6194,15 +6194,21 @@ class Reports_model extends CI_Model
     /**
      * Get Sales Per Item Report Data
      * Shows sales and returns with item details, profitability
-     * 
+     *
+     * Large date ranges can return tens of thousands of rows; loading them all causes
+     * memory/time limit failures. Use $limit/$offset for server-side pagination.
+     *
      * @param string $start_date - Start date (formatted)
      * @param string $end_date - End date (formatted)
      * @param string $invoice_id - Invoice ID or reference number
      * @param string $salesman_name - Sales agent name
      * @param string $item_code - Item code to filter
-     * @return array - Sales per item data
+     * @param string|null $category
+     * @param int $limit Max rows to return (0 = no limit, not recommended for UI)
+     * @param int $offset
+     * @return array{rows: array, total: int, totals: stdClass|null}
      */
-    public function getSalesPerItem($start_date, $end_date, $invoice_id, $salesman_name, $item_code, $category = null)
+    public function getSalesPerItem($start_date, $end_date, $invoice_id, $salesman_name, $item_code, $category = null, $limit = 500, $offset = 0)
     {
         // Build WHERE clauses conditionally
         $where_clauses = [];
@@ -6215,25 +6221,26 @@ class Reports_model extends CI_Model
         // Invoice filter
         if ($invoice_id) {
             if (is_numeric($invoice_id)) {
-                $where_clauses[] = "s.id = {$invoice_id}";
+                $where_clauses[] = "s.id = " . (int) $invoice_id;
             } else {
-                $where_clauses[] = "s.reference_no LIKE '{$invoice_id}%'";
+                $where_clauses[] = "s.reference_no LIKE '" . $this->db->escape_like_str($invoice_id) . "%' ESCAPE '!'";
             }
         }
         
         // Salesman filter
         if ($salesman_name) {
-            $where_clauses[] = "c.sales_agent = '{$salesman_name}'";
+            $where_clauses[] = "c.sales_agent = '" . $this->db->escape_str($salesman_name) . "'";
         }
         
         // Item code filter
         if ($item_code) {
-            $where_clauses[] = "(p.code LIKE '%{$item_code}%' OR p.name LIKE '%{$item_code}%')";
+            $esc = $this->db->escape_like_str($item_code);
+            $where_clauses[] = "(p.code LIKE '%{$esc}%' ESCAPE '!' OR p.name LIKE '%{$esc}%' ESCAPE '!')";
         }
 
         // Category filter
         if ($category) {
-            $where_clauses[] = "c.category = '{$this->db->escape_str($category)}'";
+            $where_clauses[] = "c.category = '" . $this->db->escape_str($category) . "'";
         }
         
         $where_sql = !empty($where_clauses) ? 'AND ' . implode(' AND ', $where_clauses) : '';
@@ -6282,23 +6289,24 @@ class Reports_model extends CI_Model
         
         if ($invoice_id) {
             if (is_numeric($invoice_id)) {
-                $return_where_clauses[] = "s.id = {$invoice_id}";
+                $return_where_clauses[] = "s.id = " . (int) $invoice_id;
             } else {
-                $return_where_clauses[] = "s.reference_no LIKE '{$invoice_id}%'";
+                $return_where_clauses[] = "s.reference_no LIKE '" . $this->db->escape_like_str($invoice_id) . "%' ESCAPE '!'";
             }
         }
         
         if ($salesman_name) {
-            $return_where_clauses[] = "c.sales_agent = '{$salesman_name}'";
+            $return_where_clauses[] = "c.sales_agent = '" . $this->db->escape_str($salesman_name) . "'";
         }
         
         if ($item_code) {
-            $return_where_clauses[] = "(p.code LIKE '%{$item_code}%' OR p.name LIKE '%{$item_code}%')";
+            $escR = $this->db->escape_like_str($item_code);
+            $return_where_clauses[] = "(p.code LIKE '%{$escR}%' ESCAPE '!' OR p.name LIKE '%{$escR}%' ESCAPE '!')";
         }
         
         // Category filter for returns
         if ($category) {
-            $return_where_clauses[] = "c.category = '{$this->db->escape_str($category)}'";
+            $return_where_clauses[] = "c.category = '" . $this->db->escape_str($category) . "'";
         }
 
         $return_where_sql = !empty($return_where_clauses) ? 'AND ' . implode(' AND ', $return_where_clauses) : '';
@@ -6337,22 +6345,69 @@ class Reports_model extends CI_Model
             WHERE (r.status = 'completed' OR r.sale_id IS NULL)
             {$return_where_sql}
         ";
-        
-        // Combine both queries
+
+        // Outer parentheses required: MariaDB/MySQL parse "FROM (a) UNION ALL (b)"
+        // as FROM-clause ending at the first ")"; the UNION must be inside one subquery.
+        $union_inner = '((' . trim($sales_sql) . ') UNION ALL (' . trim($returns_sql) . '))';
+
+        $count_sql = "SELECT COUNT(*) AS spi_cnt FROM {$union_inner} AS spi_union";
+        $count_row = $this->db->query($count_sql)->row();
+        $total = $count_row ? (int) $count_row->spi_cnt : 0;
+
+        $agg_sql = "
+            SELECT
+                COALESCE(SUM(spi_union.qty), 0) AS sum_qty,
+                COALESCE(SUM(spi_union.bonus), 0) AS sum_bonus,
+                COALESCE(SUM(spi_union.sales), 0) AS sum_sales,
+                COALESCE(SUM(spi_union.discount), 0) AS sum_discount,
+                COALESCE(SUM(spi_union.net_sales), 0) AS sum_net_sales,
+                COALESCE(SUM(spi_union.vat), 0) AS sum_vat,
+                COALESCE(SUM(spi_union.receivable), 0) AS sum_receivable,
+                COALESCE(SUM(spi_union.cogs), 0) AS sum_cogs,
+                COALESCE(SUM(spi_union.profit), 0) AS sum_profit
+            FROM {$union_inner} AS spi_union
+        ";
+        $totals = $this->db->query($agg_sql)->row();
+        if (!$totals) {
+            $totals = (object) [
+                'sum_qty' => 0,
+                'sum_bonus' => 0,
+                'sum_sales' => 0,
+                'sum_discount' => 0,
+                'sum_net_sales' => 0,
+                'sum_vat' => 0,
+                'sum_receivable' => 0,
+                'sum_cogs' => 0,
+                'sum_profit' => 0,
+            ];
+        }
+
+        $limit = (int) $limit;
+        $offset = (int) $offset;
+        if ($limit < 1) {
+            $limit = 500;
+        }
+        if ($limit > 5000) {
+            $limit = 5000;
+        }
+        if ($offset < 0) {
+            $offset = 0;
+        }
+
         $sql = "
-            {$sales_sql}
-            UNION ALL
-            {$returns_sql}
-            ORDER BY date DESC, invoice
+            SELECT * FROM {$union_inner} AS spi_union
+            ORDER BY spi_union.date DESC, spi_union.invoice
+            LIMIT {$limit} OFFSET {$offset}
         ";
         
         $query = $this->db->query($sql);
-        
-        if ($query->num_rows() > 0) {
-            return $query->result();
-        }
-        
-        return [];
+        $rows = ($query && $query->num_rows() > 0) ? $query->result() : [];
+
+        return [
+            'rows' => $rows,
+            'total' => $total,
+            'totals' => $totals,
+        ];
     }
 
     public function getSalesPerInvoice($start_date, $end_date, $customer_id = null, $pharmacy_id = null, $salesman_name = null, $record_type = 'all')
