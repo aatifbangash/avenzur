@@ -6245,7 +6245,7 @@ class Reports_model extends CI_Model
                 COALESCE(c.category, '') AS category,
                 c.sequence_code AS customer_no,
                 c.name AS customer_name,
-                p.code AS item_no,
+                CAST(p.code AS CHAR) AS item_no,
                 p.name AS item_name,
                 si.quantity AS qty,
                 si.bonus AS bonus,
@@ -6311,7 +6311,7 @@ class Reports_model extends CI_Model
                 COALESCE(c.category, '') AS category,
                 c.sequence_code AS customer_no,
                 c.name AS customer_name,
-                p.code AS item_no,
+                CAST(p.code AS CHAR) AS item_no,
                 p.name AS item_name,
                 -ri.quantity AS qty,
                 0 AS bonus,
@@ -6334,6 +6334,55 @@ class Reports_model extends CI_Model
         ";
 
         return '((' . trim($sales_sql) . ') UNION ALL (' . trim($returns_sql) . '))';
+    }
+
+    /**
+     * CSV cell for Excel: long all-digit codes as ="value" so Excel does not use scientific notation.
+     */
+    protected function csv_excel_force_text_numeric_code($value): string
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+        $s = trim((string) $value);
+        if ($s === '' || !preg_match('/^\d+$/', $s)) {
+            return $s;
+        }
+        if (strlen($s) >= 11) {
+            return '="' . $s . '"';
+        }
+
+        return $s;
+    }
+
+    /**
+     * CSV numeric cell (unquoted float) so Excel treats column as number, not text.
+     */
+    protected function csv_excel_numeric($value, int $decimals = 4)
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+        if (!is_numeric($value)) {
+            return '';
+        }
+
+        return $decimals < 0 ? (float) $value : round((float) $value, $decimals);
+    }
+
+    /**
+     * CSV integer columns (invoice id, return id).
+     */
+    protected function csv_excel_int($value)
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+        if (!is_numeric($value)) {
+            return $value;
+        }
+
+        return (int) $value;
     }
 
     /**
@@ -6425,27 +6474,27 @@ class Reports_model extends CI_Model
                 $n,
                 $row['type'] ?? '',
                 $row['date'] ?? '',
-                $row['invoice'] ?? '',
-                $row['return_inv'] ?? '',
+                $this->csv_excel_int($row['invoice'] ?? ''),
+                $this->csv_excel_int($row['return_inv'] ?? ''),
                 $row['area'] ?? '',
                 $row['sales_man'] ?? '',
                 $row['agent'] ?? '',
                 $row['category'] ?? '',
-                $row['customer_no'] ?? '',
+                $this->csv_excel_force_text_numeric_code($row['customer_no'] ?? ''),
                 $row['customer_name'] ?? '',
-                $row['item_no'] ?? '',
+                $this->csv_excel_force_text_numeric_code($row['item_no'] ?? ''),
                 $row['item_name'] ?? '',
-                $row['qty'] ?? '',
-                $row['bonus'] ?? '',
-                $row['unit_cost'] ?? '',
-                $row['unit_price'] ?? '',
-                $row['sales'] ?? '',
-                $row['discount'] ?? '',
-                $row['net_sales'] ?? '',
-                $row['vat'] ?? '',
-                $row['receivable'] ?? '',
-                $row['cogs'] ?? '',
-                $row['profit'] ?? '',
+                $this->csv_excel_numeric($row['qty'] ?? '', 4),
+                $this->csv_excel_numeric($row['bonus'] ?? '', 4),
+                $this->csv_excel_numeric($row['unit_cost'] ?? '', 4),
+                $this->csv_excel_numeric($row['unit_price'] ?? '', 4),
+                $this->csv_excel_numeric($row['sales'] ?? '', 4),
+                $this->csv_excel_numeric($row['discount'] ?? '', 4),
+                $this->csv_excel_numeric($row['net_sales'] ?? '', 4),
+                $this->csv_excel_numeric($row['vat'] ?? '', 4),
+                $this->csv_excel_numeric($row['receivable'] ?? '', 4),
+                $this->csv_excel_numeric($row['cogs'] ?? '', 4),
+                $this->csv_excel_numeric($row['profit'] ?? '', 4),
             ]);
         }
         mysqli_free_result($res);
@@ -6464,17 +6513,17 @@ class Reports_model extends CI_Model
             '',
             '',
             lang('Grand Total') . ':',
-            $totals->sum_qty,
-            $totals->sum_bonus,
+            $this->csv_excel_numeric($totals->sum_qty, 4),
+            $this->csv_excel_numeric($totals->sum_bonus, 4),
             '',
             '',
-            $totals->sum_sales,
-            $totals->sum_discount,
-            $totals->sum_net_sales,
-            $totals->sum_vat,
-            $totals->sum_receivable,
-            $totals->sum_cogs,
-            $totals->sum_profit,
+            $this->csv_excel_numeric($totals->sum_sales, 4),
+            $this->csv_excel_numeric($totals->sum_discount, 4),
+            $this->csv_excel_numeric($totals->sum_net_sales, 4),
+            $this->csv_excel_numeric($totals->sum_vat, 4),
+            $this->csv_excel_numeric($totals->sum_receivable, 4),
+            $this->csv_excel_numeric($totals->sum_cogs, 4),
+            $this->csv_excel_numeric($totals->sum_profit, 4),
         ]);
 
         return true;
