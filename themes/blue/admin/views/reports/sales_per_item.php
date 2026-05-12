@@ -147,6 +147,25 @@
                         </div>
                         <div class="col-md-3">
                             <div class="form-group">
+                                <label><?= lang('rows_per_page'); ?></label>
+                                <?php
+                                $cur_pp = isset($_GET['per_page']) ? (int) $_GET['per_page'] : 500;
+                                if ($cur_pp < 100 || $cur_pp > 5000) {
+                                    $cur_pp = 500;
+                                }
+                                $pp_opts = [
+                                    '250' => '250',
+                                    '500' => '500',
+                                    '1000' => '1,000',
+                                    '2000' => '2,000',
+                                    '5000' => '5,000',
+                                ];
+                                echo form_dropdown('per_page', $pp_opts, (string) $cur_pp, 'class="form-control" id="per_page"');
+                                ?>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
                                 <label>&nbsp;</label><br>
                                 <button type="submit" style="margin-top: 0px;" class="btn btn-primary" id="load_report"><?= lang('Load Report') ?></button>
                             </div>
@@ -191,36 +210,20 @@
                                 </thead>
                                 <tbody>
                                     <?php
+                                    $spi_total_rows = isset($sales_data_total) ? (int) $sales_data_total : 0;
+                                    $spi_per_page = isset($sales_per_page) ? (int) $sales_per_page : 500;
+                                    $spi_page_num = isset($sales_page) ? (int) $sales_page : 1;
+                                    $spi_total_pages = $spi_per_page > 0 ? (int) ceil($spi_total_rows / $spi_per_page) : 1;
+                                    if ($spi_total_pages < 1) {
+                                        $spi_total_pages = 1;
+                                    }
+
                                     if (isset($sales_data) && !empty($sales_data)) {
-                                        $count = 0;
-                                        // Initialize grand totals
-                                        $grand_totals = [
-                                            'qty' => 0,
-                                            'bonus' => 0,
-                                            'sales' => 0,
-                                            'discount' => 0,
-                                            'net_sales' => 0,
-                                            'vat' => 0,
-                                            'receivable' => 0,
-                                            'cogs' => 0,
-                                            'profit' => 0
-                                        ];
+                                        $count = ($spi_page_num - 1) * $spi_per_page;
+                                        $use_sql_totals = !empty($sales_data_totals);
 
                                         foreach ($sales_data as $data) {
                                             $count++;
-                                            
-                                            // Accumulate totals
-                                            $grand_totals['qty'] += $data->qty;
-                                            $grand_totals['bonus'] += $data->bonus;
-                                            $grand_totals['sales'] += $data->sales;
-                                            $grand_totals['discount'] += $data->discount;
-                                            $grand_totals['net_sales'] += $data->net_sales;
-                                            $grand_totals['vat'] += $data->vat;
-                                            $grand_totals['receivable'] += $data->receivable;
-                                            $grand_totals['cogs'] += $data->cogs;
-                                            $grand_totals['profit'] += $data->profit;
-                                            
-                                            // Determine row class for returns (red)
                                             $row_class = ($data->type == 'Return') ? 'style="background-color: #ffe6e6;"' : '';
                                             ?>
                                             <tr class="spi-data-row" <?= $row_class ?>>
@@ -252,22 +255,24 @@
                                         <?php
                                         }
 
-                                        // Display grand totals row
-                                        ?>
+                                        if ($use_sql_totals) {
+                                            $t = $sales_data_totals;
+                                            ?>
                                         <tr style="background-color: #f0f0f0; font-weight: bold;">
                                             <td colspan="13" class="text-right"><strong><?= lang('Grand Total'); ?>:</strong></td>
-                                            <td class="text-right"><strong><?= $this->sma->formatQuantity($grand_totals['qty']) ?></strong></td>
-                                            <td class="text-right"><strong><?= $grand_totals['bonus'] ?></strong></td>
+                                            <td class="text-right"><strong><?= $this->sma->formatQuantity($t->sum_qty) ?></strong></td>
+                                            <td class="text-right"><strong><?= number_format((float) $t->sum_bonus, 2, '.', ',') ?></strong></td>
                                             <td colspan="2"></td>
-                                            <td class="text-right"><strong><?= number_format($grand_totals['sales'], 2, '.', ',') ?></strong></td>
-                                            <td class="text-right"><strong><?= number_format($grand_totals['discount'], 2, '.', ',') ?></strong></td>
-                                            <td class="text-right"><strong><?= number_format($grand_totals['net_sales'], 2, '.', ',') ?></strong></td>
-                                            <td class="text-right"><strong><?= number_format($grand_totals['vat'], 2, '.', ',') ?></strong></td>
-                                            <td class="text-right"><strong><?= number_format($grand_totals['receivable'], 2, '.', ',') ?></strong></td>
-                                            <td class="text-right"><strong><?= number_format($grand_totals['cogs'], 2, '.', ',') ?></strong></td>
-                                            <td class="text-right"><strong><?= number_format($grand_totals['profit'], 2, '.', ',') ?></strong></td>
+                                            <td class="text-right"><strong><?= number_format($t->sum_sales, 2, '.', ',') ?></strong></td>
+                                            <td class="text-right"><strong><?= number_format($t->sum_discount, 2, '.', ',') ?></strong></td>
+                                            <td class="text-right"><strong><?= number_format($t->sum_net_sales, 2, '.', ',') ?></strong></td>
+                                            <td class="text-right"><strong><?= number_format($t->sum_vat, 2, '.', ',') ?></strong></td>
+                                            <td class="text-right"><strong><?= number_format($t->sum_receivable, 2, '.', ',') ?></strong></td>
+                                            <td class="text-right"><strong><?= number_format($t->sum_cogs, 2, '.', ',') ?></strong></td>
+                                            <td class="text-right"><strong><?= number_format($t->sum_profit, 2, '.', ',') ?></strong></td>
                                         </tr>
-                                    <?php
+                                            <?php
+                                        }
                                     } else {
                                         ?>
                                         <tr>
@@ -279,6 +284,34 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        <?php
+                        if (!empty($sales_data_total) && (int) $sales_data_total > 0) {
+                            $spi_link = [];
+                            foreach (['start_date', 'end_date', 'invoice_id', 'salesman', 'item_code', 'category'] as $__k) {
+                                if (isset(${$__k}) && ${$__k} !== '' && ${$__k} !== null) {
+                                    $spi_link[$__k] = ${$__k};
+                                }
+                            }
+                            $spi_link['per_page'] = $spi_per_page;
+                            $spi_from = $spi_total_rows ? (($spi_page_num - 1) * $spi_per_page) + 1 : 0;
+                            $spi_to = min($spi_page_num * $spi_per_page, $spi_total_rows);
+                            ?>
+                        <div class="well well-sm" style="margin-top:10px;">
+                            <span class="text-muted">Rows <?= (int) $spi_from ?>–<?= (int) $spi_to ?> of <?= (int) $spi_total_rows ?> (page <?= (int) $spi_page_num ?> / <?= (int) $spi_total_pages ?>)</span>
+                            <?php if ($spi_total_pages > 1) {
+                                $spi_link['spi_page'] = max(1, $spi_page_num - 1);
+                                $prev_u = admin_url('reports/sales_per_item?' . http_build_query($spi_link));
+                                $spi_link['spi_page'] = min($spi_total_pages, $spi_page_num + 1);
+                                $next_u = admin_url('reports/sales_per_item?' . http_build_query($spi_link));
+                                ?>
+                            <div style="margin-top:8px;">
+                                <a class="btn btn-default btn-sm<?= $spi_page_num <= 1 ? ' disabled' : '' ?>" href="<?= $spi_page_num <= 1 ? '#' : $prev_u ?>" title="Previous page"><i class="fa fa-chevron-left"></i></a>
+                                <a class="btn btn-default btn-sm<?= $spi_page_num >= $spi_total_pages ? ' disabled' : '' ?>" href="<?= $spi_page_num >= $spi_total_pages ? '#' : $next_u ?>" title="Next page"><i class="fa fa-chevron-right"></i></a>
+                            </div>
+                            <?php } ?>
+                        </div>
+                        <?php } ?>
 
                         <!-- Pagination controls -->
                         <?php if (isset($sales_data) && !empty($sales_data)): ?>
