@@ -56,32 +56,36 @@
                         
                     </div>
 
+                    <div class="alert alert-info" style="padding:8px 12px;margin-bottom:10px;">
+                        <strong>*</strong> Required for all rows &nbsp;|&nbsp;
+                        <strong><span class="text-warning">&#8224;</span></strong> Required for new products only (not found in system)
+                    </div>
                     <div class="table-responsive">
                         <form action="<?php echo site_url('admin/purchase_order_upload/save_excel'); ?>" method="post">
                         <table class="table table-bordered table-hover table-striped">
                             <thead>
                             <tr>
                                 <th><?php echo $this->lang->line("row_id"); ?></th>
-                                <th><?php echo $this->lang->line("item_barcode"); ?></th>
-                                <th><?php echo $this->lang->line("item_name"); ?></th>
+                                <th><?php echo $this->lang->line("item_barcode"); ?> *</th>
+                                <th><?php echo $this->lang->line("item_name"); ?> *</th>
                                 <th><?php echo $this->lang->line("variant_barcode"); ?></th>
                                 <th><?php echo $this->lang->line("variant_name"); ?></th>
-                                <th><?php echo $this->lang->line("brand"); ?></th>
+                                <th><?php echo $this->lang->line("brand"); ?> <span class="text-warning" title="Required for new products">&#8224;</span></th>
                                 <th><?php echo $this->lang->line("batch_no"); ?></th>
                                 <th><?php echo $this->lang->line("expiry_date"); ?></th>
-                                <th><?php echo $this->lang->line("quantity"); ?></th>
+                                <th><?php echo $this->lang->line("quantity"); ?> *</th>
                                 <th><?php echo $this->lang->line("sale_price_inc_vat"); ?></th>
                                 <th><?php echo $this->lang->line("purchase_price"); ?></th>
                                 <th><?php echo $this->lang->line("cost_price"); ?></th>
-                                <th><?php echo $this->lang->line("tax_rate"); ?> (%)</th>
+                                <th><?php echo $this->lang->line("tax_rate"); ?> (%) *</th>
                                 <th><?php echo $this->lang->line("discount_1"); ?> (%)</th>
                                 <th><?php echo $this->lang->line("discount_1"); ?> <?php echo $this->lang->line("value"); ?></th>
                                 <th><?php echo $this->lang->line("discount_2"); ?> (%)</th>
                                 <th><?php echo $this->lang->line("discount_2"); ?> <?php echo $this->lang->line("value"); ?></th>
                                 <th><?php echo $this->lang->line("discount_3"); ?> (%)</th>
                                 <th><?php echo $this->lang->line("discount_3"); ?> <?php echo $this->lang->line("value"); ?></th>
-                                <th><?php echo $this->lang->line("description"); ?></th>
-                                <th><?php echo $this->lang->line("image"); ?></th>
+                                <th><?php echo $this->lang->line("description"); ?> <span class="text-warning" title="Required for new products">&#8224;</span></th>
+                                <th><?php echo $this->lang->line("image"); ?> <span class="text-warning" title="Required for new products">&#8224;</span></th>
                                 <th><?php echo $this->lang->line("Shelf Life"); ?></th>
                                 <th><?php echo $this->lang->line("subtotal"); ?></th>
                             </tr>

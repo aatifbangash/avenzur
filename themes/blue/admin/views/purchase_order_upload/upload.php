@@ -65,22 +65,22 @@
                                         <th>Item Name *</th>
                                         <th>Variant Barcode</th>
                                         <th>Variant Name</th>
-                                        <th>Brand Name*</th>
+                                        <th>Brand Name <span class="text-warning">&#8224;</span></th>
                                         <th>Batch Number</th>
                                         <th>Expiry Date</th>
                                         <th>Quantity *</th>
-                                        <th>Sale Price (without VAT) *</th>
-                                        <th>Purchase Price (without VAT)*</th>
-                                        <th>Cost Price (without VAT)*</th>
-                                        <th>VAT %*</th>
+                                        <th>Sale Price (without VAT)</th>
+                                        <th>Purchase Price (without VAT)</th>
+                                        <th>Cost Price (without VAT)</th>
+                                        <th>VAT % *</th>
                                         <th>Discount 1 (%)</th>
                                         <th>Discount 1 Value</th>
                                         <th>Discount 2 (%)</th>
                                         <th>Discount 2 Value</th>
                                         <th>Discount 3 (%)</th>
                                         <th>Discount 3 Value</th>
-                                        <th>Description*</th>
-                                        <th>Image URL *</th>
+                                        <th>Description <span class="text-warning">&#8224;</span></th>
+                                        <th>Image URL <span class="text-warning">&#8224;</span></th>
                                         <th>Shelf Life</th>
                                     </tr>
                                 </thead>
@@ -116,15 +116,13 @@
 
                         <div class="alert alert-info">
                             <strong>Important Notes:</strong>
-
                             <ul>
-                                <li>Fields marked with <strong>*</strong> are mandatory.</li>
-                                <li>Image URL must be a valid link.</li>
+                                <li>Fields marked with <strong>*</strong> are mandatory for all rows.</li>
+                                <li>Fields marked with <strong><span class="text-warning">&#8224;</span></strong> are required only for <strong>new products</strong> (not found in the system).</li>
+                                <li>For <strong>existing products</strong>, only quantity will be updated. Image will be updated if provided.</li>
                                 <li>Quantity must be greater than 0.</li>
-                                <li>Highlighted green cells in sample file are mandatory.</li>
                                 <li>Use the sample file if unsure about the format.</li>
                             </ul>
-
                         </div>
 
                     </div>
