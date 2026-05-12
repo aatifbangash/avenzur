@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
@@ -7736,10 +7736,7 @@ class Reports extends MY_Controller
             $formatted_start_date = $start_date ? $this->sma->fld($start_date) : null;
             $formatted_end_date = $end_date ? $this->sma->fld($end_date) : null;
 
-            $per_page = (int) $this->input->get('per_page');
-            if ($per_page < 100 || $per_page > 5000) {
-                $per_page = 500;
-            }
+            $per_page = 100;
             $spi_page = (int) $this->input->get('spi_page');
             if ($spi_page < 1) {
                 $spi_page = 1;

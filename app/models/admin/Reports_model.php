@@ -6208,7 +6208,7 @@ class Reports_model extends CI_Model
      * @param int $offset
      * @return array{rows: array, total: int, totals: stdClass|null}
      */
-    public function getSalesPerItem($start_date, $end_date, $invoice_id, $salesman_name, $item_code, $category = null, $limit = 500, $offset = 0)
+    public function getSalesPerItem($start_date, $end_date, $invoice_id, $salesman_name, $item_code, $category = null, $limit = 100, $offset = 0)
     {
         // Build WHERE clauses conditionally
         $where_clauses = [];
@@ -6385,7 +6385,7 @@ class Reports_model extends CI_Model
         $limit = (int) $limit;
         $offset = (int) $offset;
         if ($limit < 1) {
-            $limit = 500;
+            $limit = 100;
         }
         if ($limit > 5000) {
             $limit = 5000;
