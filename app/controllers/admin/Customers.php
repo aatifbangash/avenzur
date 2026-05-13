@@ -3336,10 +3336,19 @@ class Customers extends MY_Controller
         $this->load->library('datatables');
 
         $this->datatables
-            ->select('id, sequence_code, name, vat_no, gln, cr, short_address, address, credit_limit, payment_term, category')
+            ->select('id, category, sequence_code, name, vat_no, gln, cr, short_address, address, credit_limit, payment_term')
             ->from('companies')
-            ->where('group_name', 'customer')
-            ->add_column('Actions', $actions, 'id');
+            ->where('group_name', 'customer');
+
+        $category = $this->input->post('category', true);
+        if ($category !== false && $category !== null && $category !== '') {
+            $category = trim($category);
+            if ($category !== '') {
+                $this->datatables->where('category', $category);
+            }
+        }
+
+        $this->datatables->add_column('Actions', $actions, 'id');
         //->unset_column('id');
         echo $this->datatables->generate();
     }
@@ -3735,6 +3744,19 @@ class Customers extends MY_Controller
         $this->data['action'] = $action;
         $bc                   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('customers')]];
         $meta                 = ['page_title' => lang('customers'), 'bc' => $bc];
+
+        $customers = $this->site->getAllCompanies('customer');
+        $customer_categories = [];
+        if (!empty($customers)) {
+            foreach ($customers as $c) {
+                if (!empty($c->category) && !in_array($c->category, $customer_categories)) {
+                    $customer_categories[] = $c->category;
+                }
+            }
+            sort($customer_categories);
+        }
+        $this->data['customer_categories'] = $customer_categories;
+
         $this->page_construct('customers/index', $meta, $this->data);
     }
 

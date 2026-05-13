@@ -149,7 +149,7 @@
                         <input type="tel" name="phone" class="form-control" id="phone"/>
                     </div>
                     <div class="form-group">
-                        <?= lang('Cr', 'cr'); ?>
+                        <?= lang('cr', 'cr'); ?>
                         <?php echo form_input('cr', '', 'class="form-control" id="cr"'); ?>
                     </div>
                     <div class="form-group">
@@ -157,7 +157,7 @@
                         <?php echo form_input('cr_expiration', '', 'class="form-control" id="cr_expiration" placeholder="YYYY-MM-DD"'); ?>
                     </div>
                     <div class="form-group">
-                        <?= lang('Gln', 'gln'); ?>
+                        <?= lang('gln', 'gln'); ?>
                         <?php echo form_input('gln', '', 'class="form-control" id="gln"'); ?>
                     </div>    
                     <div class="form-group">
