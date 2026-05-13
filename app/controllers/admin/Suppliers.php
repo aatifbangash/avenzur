@@ -1647,7 +1647,7 @@ class Suppliers extends MY_Controller
     public function getChildSuppliers(){
         //$this->sma->checkPermissions('index');
 
-        $action = "<div class=\"text-center\">";
+        $actions = "<div class=\"text-center\">";
 
         if($this->Owner || $this->Admin || $this->GP['suppliers-edit']){
             $actions .= "<a class=\"tip\" title='" . $this->lang->line('edit_supplier') . "' href='" . admin_url('suppliers/edit/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-edit\"></i></a>";
@@ -1656,11 +1656,11 @@ class Suppliers extends MY_Controller
         if($this->Owner || $this->Admin || $this->GP['suppliers-delete']){
             $actions .= "<a href='#' class='tip po' title='<b>" . $this->lang->line('delete_supplier') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('suppliers/delete/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a>";
         }
-        $action .= "</div>";
+        $actions .= "</div>";
 
         $this->load->library('datatables');
         $this->datatables
-            ->select('id, sequence_code, name, vat_no, gln, cr, short_address, address, credit_limit, payment_term, category')
+            ->select('id, category, sequence_code, name, vat_no, gln, cr, short_address, credit_limit, payment_term')
             ->from('companies')
             ->where('group_name', 'supplier')
             ->where('level', 2)
