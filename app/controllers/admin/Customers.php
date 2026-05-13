@@ -2805,7 +2805,7 @@ class Customers extends MY_Controller
 
         $this->form_validation->set_rules('line1', lang('line1'), 'required');
         $this->form_validation->set_rules('city', lang('city'), 'required');
-        $this->form_validation->set_rules('state', lang('state'), 'required');
+        $this->form_validation->set_rules('state', lang('area'), 'required');
         $this->form_validation->set_rules('country', lang('country'), 'required');
         $this->form_validation->set_rules('phone', lang('phone'), 'required');
 
@@ -3209,7 +3209,7 @@ class Customers extends MY_Controller
 
         $this->form_validation->set_rules('line1', lang('line1'), 'required');
         $this->form_validation->set_rules('city', lang('city'), 'required');
-        $this->form_validation->set_rules('state', lang('state'), 'required');
+        $this->form_validation->set_rules('state', lang('area'), 'required');
         $this->form_validation->set_rules('country', lang('country'), 'required');
         $this->form_validation->set_rules('phone', lang('phone'), 'required');
 

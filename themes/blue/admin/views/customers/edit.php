@@ -83,7 +83,7 @@
                         <?php echo form_input('city', $customer->city, 'class="form-control" id="city" required="required"'); ?>
                     </div>
                     <div class="form-group">
-                        <?= lang('state', 'state'); ?>
+                        <?= lang('area', 'state'); ?>
                         <?php
                         if ($Settings->indian_gst) {
                             $states = $this->gst->getIndianStates(true);
