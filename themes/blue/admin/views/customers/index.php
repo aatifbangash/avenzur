@@ -26,7 +26,7 @@
             "aoColumns": [{
                 "bSortable": false,
                 "mRender": checkbox
-            }, null, null, null, null, null, null, null, null, null, null, {"bSortable": false}]
+            }, null, null, null, null, null, null, null, null, {"bSortable": false}]
         }).dtFilter([
             {column_number: 1, filter_default_label: "[<?=lang('category');?>]", filter_type: "text", data: []},
             {column_number: 2, filter_default_label: "[<?=lang('sequence_code');?>]", filter_type: "text", data: []},
@@ -34,10 +34,8 @@
             {column_number: 4, filter_default_label: "[<?=lang('vat_no');?>]", filter_type: "text", data: []},
             {column_number: 5, filter_default_label: "[<?=lang('gln');?>]", filter_type: "text", data: []},
             {column_number: 6, filter_default_label: "[<?=lang('cr');?>]", filter_type: "text", data: []},
-            {column_number: 7, filter_default_label: "[<?=lang('short_address');?>]", filter_type: "text", data: []},
-            {column_number: 8, filter_default_label: "[<?=lang('address');?>]", filter_type: "text", data: []},
-            {column_number: 9, filter_default_label: "[<?=lang('credit_limit');?>]", filter_type: "text", data: []},
-            {column_number: 10, filter_default_label: "[<?=lang('payment_term');?>]", filter_type: "text", data: []},
+            {column_number: 7, filter_default_label: "[<?=lang('credit_limit');?>]", filter_type: "text", data: []},
+            {column_number: 8, filter_default_label: "[<?=lang('payment_term');?>]", filter_type: "text", data: []},
         ], "footer");
         $('#customer_category_filter_btn').on('click', function () {
             cTable.fnDraw(false);
@@ -153,8 +151,6 @@
                             <th><?= lang('vat_no'); ?></th>
                             <th><?= lang('gln'); ?></th>
                             <th><?= lang('cr'); ?></th>
-                            <th><?= lang('short_address'); ?></th>
-                            <th><?= lang('address'); ?></th>
                             <th><?= lang('credit_limit'); ?></th>
                             <th><?= lang('payment_term'); ?></th>
                             <th style="min-width:135px !important;"><?= lang('actions'); ?></th>
@@ -162,7 +158,7 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <td colspan="12" class="dataTables_empty"><?= lang('loading_data_from_server') ?></td>
+                            <td colspan="10" class="dataTables_empty"><?= lang('loading_data_from_server') ?></td>
                         </tr>
                         </tbody>
                         <tfoot class="dtFilter">
@@ -170,7 +166,7 @@
                             <th style="min-width:30px; width: 30px; text-align: center;">
                                 <input class="checkbox checkft" type="checkbox" name="check"/>
                             </th>
-                            <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
+                            <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
                             <th style="min-width:135px !important;" class="text-center"><?= lang('actions'); ?></th>
                         </tr>
                         </tfoot>

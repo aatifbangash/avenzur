@@ -271,6 +271,7 @@ $lang['add_user']                                  = 'إضافة مستخدم';
 $lang['type']                                      = 'نوع';
 $lang['person']                                    = 'شخص';
 $lang['state']                                     = 'دولة';
+$lang['area']                                      = 'المنطقة';
 $lang['postal_code']                               = 'الرمز البريدي';
 $lang['id']                                        = 'الهوية';
 $lang['close']                                     = 'غلق';

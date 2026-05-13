@@ -289,6 +289,7 @@ $lang['add_user']                         = 'Add User';
 $lang['type']                             = 'Type';
 $lang['person']                           = 'Person';
 $lang['state']                            = 'State';
+$lang['area']                             = 'Area';
 $lang['postal_code']                      = 'Postal Code';
 $lang['id']                               = 'ID';
 $lang['close']                            = 'Close';

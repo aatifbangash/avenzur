@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
@@ -8700,7 +8700,7 @@ class Reports extends MY_Controller
         $this->data['customers']   = $this->site->getAllCompanies('customer');
         $this->data['salesmen']    = $this->db->select('id, name')->from('sales_man')->order_by('name', 'asc')->get()->result();
         $this->data['suppliers']   = [];
-        $this->data['form_action'] = admin_url('reports/unpaid_invoices_ar');
+        $this->data['form_action'] = 'reports/unpaid_invoices_ar';
 
         // AR report uses customer/sales sources only.
         $invoices = $this->get_unpaid_invoices_ar($at_date, $party_id, $ref_no, $salesman_id);
@@ -8743,7 +8743,7 @@ class Reports extends MY_Controller
         $this->data['customers']   = [];
         $this->data['salesmen']    = [];
         $this->data['suppliers']   = $this->site->getAllCompanies('supplier');
-        $this->data['form_action'] = admin_url('reports/unpaid_invoices_ap');
+        $this->data['form_action'] = 'reports/unpaid_invoices_ap';
 
         // AP report uses supplier/purchase sources only.
         $invoices = $this->get_unpaid_invoices_ap($at_date, $party_id, $ref_no);

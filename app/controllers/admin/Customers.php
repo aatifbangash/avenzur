@@ -2976,13 +2976,15 @@ class Customers extends MY_Controller
                     $this->excel->getActiveSheet()->SetCellValue('E1', lang('GLN NUMBER'));
                     $this->excel->getActiveSheet()->SetCellValue('F1', lang('SHORT ADDRESS'));
                     $this->excel->getActiveSheet()->SetCellValue('G1', lang('ADDRESS'));
-                    $this->excel->getActiveSheet()->SetCellValue('H1', lang('CREDIT LIMIT'));
-                    $this->excel->getActiveSheet()->SetCellValue('I1', lang('PAYMENT TERM'));
-                    $this->excel->getActiveSheet()->SetCellValue('J1', lang('CATEGORY'));
-                    $this->excel->getActiveSheet()->SetCellValue('K1', lang('CR EXPIRATION'));
-                    $this->excel->getActiveSheet()->SetCellValue('L1', lang('SFDA'));
-                    $this->excel->getActiveSheet()->SetCellValue('M1', lang('PROMESSORY NOTE AMOUNT'));
-                    $this->excel->getActiveSheet()->SetCellValue('N1', lang('SALES AGENT'));
+                    $this->excel->getActiveSheet()->SetCellValue('H1', lang('city'));
+                    $this->excel->getActiveSheet()->SetCellValue('I1', lang('area'));
+                    $this->excel->getActiveSheet()->SetCellValue('J1', lang('CREDIT LIMIT'));
+                    $this->excel->getActiveSheet()->SetCellValue('K1', lang('PAYMENT TERM'));
+                    $this->excel->getActiveSheet()->SetCellValue('L1', lang('CATEGORY'));
+                    $this->excel->getActiveSheet()->SetCellValue('M1', lang('CR EXPIRATION'));
+                    $this->excel->getActiveSheet()->SetCellValue('N1', lang('SFDA'));
+                    $this->excel->getActiveSheet()->SetCellValue('O1', lang('PROMESSORY NOTE AMOUNT'));
+                    $this->excel->getActiveSheet()->SetCellValue('P1', lang('SALES AGENT'));
 
                     $row = 2;
                     foreach ($_POST['val'] as $id) {
@@ -2997,16 +2999,18 @@ class Customers extends MY_Controller
                         
                         $this->excel->getActiveSheet()->SetCellValue('F' . $row, $customer->short_address);
                         $this->excel->getActiveSheet()->SetCellValue('G' . $row, $customer->address);
-                        $this->excel->getActiveSheet()->SetCellValue('H' . $row, $customer->credit_limit);
-                        $this->excel->getActiveSheet()->SetCellValue('I' . $row, $customer->payment_term);
-                        $this->excel->getActiveSheet()->SetCellValue('J' . $row, $customer->category);
-                        $this->excel->getActiveSheet()->SetCellValue('K' . $row, $customer->cr_expiration);
+                        $this->excel->getActiveSheet()->SetCellValue('H' . $row, $customer->city);
+                        $this->excel->getActiveSheet()->SetCellValue('I' . $row, $customer->state);
+                        $this->excel->getActiveSheet()->SetCellValue('J' . $row, $customer->credit_limit);
+                        $this->excel->getActiveSheet()->SetCellValue('K' . $row, $customer->payment_term);
+                        $this->excel->getActiveSheet()->SetCellValue('L' . $row, $customer->category);
+                        $this->excel->getActiveSheet()->SetCellValue('M' . $row, $customer->cr_expiration);
                         
                         // Set SFDA as TEXT as well (might be numeric)
-                        $this->excel->getActiveSheet()->setCellValueExplicit('L' . $row, $customer->sfda, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                        $this->excel->getActiveSheet()->setCellValueExplicit('N' . $row, $customer->sfda, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
                         
-                        $this->excel->getActiveSheet()->SetCellValue('M' . $row, $customer->promessory_note_amount);
-                        $this->excel->getActiveSheet()->SetCellValue('N' . $row, $customer->sales_agent);
+                        $this->excel->getActiveSheet()->SetCellValue('O' . $row, $customer->promessory_note_amount);
+                        $this->excel->getActiveSheet()->SetCellValue('P' . $row, $customer->sales_agent);
                         
                         $row++;
                     }
@@ -3336,7 +3340,7 @@ class Customers extends MY_Controller
         $this->load->library('datatables');
 
         $this->datatables
-            ->select('id, category, sequence_code, name, vat_no, gln, cr, short_address, address, credit_limit, payment_term')
+            ->select('id, category, sequence_code, name, vat_no, gln, cr, credit_limit, payment_term')
             ->from('companies')
             ->where('group_name', 'customer');
 
