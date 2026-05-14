@@ -174,7 +174,9 @@
                                 <?php } ?>
                                 <th><?= lang('date'); ?></th>
                                 <th><?= lang('type'); ?></th>
+                                <?php if ($viewtype != 'pdf' && $viewtype != 'pdf_new') { ?>
                                 <th data-xls-exclude="1"><?= lang('customer_statement_ledger'); ?></th>
+                                <?php } ?>
                                 <th><?= lang('Num'); ?></th>
                                 <th>Days</th>
                                 <!--<th><?= lang('name'); ?></th>-->
@@ -203,7 +205,6 @@
                                 <tr class="stmt-opening">
                                     <td></td>
                                     <td style="text-align:left;font-weight:bold;">Opening Balance</td>
-                                    <td data-xls-exclude="1"></td>
                                     <td></td>
                                     <td></td>
                                     <td></td>
@@ -283,7 +284,9 @@
                                                 <?php } ?>
                                                 <td><?= $statement->date; ?></td>
                                                 <td><a target="_blank" href="<?= $link; ?>"><?= $transaction_type; ?></a></td>
+                                                <?php if ($viewtype != 'pdf' && $viewtype != 'pdf_new') { ?>
                                                 <td data-xls-exclude="1"><?= htmlspecialchars($ledger_cell, ENT_QUOTES, 'UTF-8'); ?></td>
+                                                <?php } ?>
                                                 
                                                 <td><?= $transaction_id; ?></td>
                                                 <td><?= $sale_payment_term; ?></td>
@@ -325,7 +328,9 @@
                                 <?php } ?>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
+                                <?php if ($viewtype != 'pdf' && $viewtype != 'pdf_new') { ?>
                                 <th data-xls-exclude="1">&nbsp;</th>
+                                <?php } ?>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
