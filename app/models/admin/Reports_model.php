@@ -2028,6 +2028,15 @@ class Reports_model extends CI_Model
     public function get_customer_trial_balance($start_date, $end_date)
     {
         $response = array();
+        // Include receivable lines on current ledger_account and on comma-separated old_ledgers (same rule as customer statement).
+        $ledgerMatch = "(sma_accounts_entryitems.ledger_id = sma_companies.ledger_account
+                OR (
+                    NULLIF(TRIM(IFNULL(sma_companies.old_ledgers, '')), '') IS NOT NULL
+                    AND FIND_IN_SET(
+                        CAST(sma_accounts_entryitems.ledger_id AS CHAR),
+                        REPLACE(REPLACE(IFNULL(sma_companies.old_ledgers, ''), ' ', ''), ', ', ',')
+                    ) > 0
+                ))";
         $q = $this->db->query("SELECT 
                 sma_companies.id, 
                 sma_companies.name,
@@ -2046,7 +2055,7 @@ class Reports_model extends CI_Model
                 date(sma_accounts_entries.date) >= '{$start_date}' 
                 AND date(sma_accounts_entries.date) <= '{$end_date}' 
                 AND sma_accounts_entries.customer_id IS NOT NULL 
-                AND sma_accounts_entryitems.ledger_id = sma_companies.ledger_account 
+                AND {$ledgerMatch}
             GROUP BY 
                 sma_accounts_entries.customer_id, 
                 sma_companies.name");
@@ -2076,7 +2085,7 @@ class Reports_model extends CI_Model
                     sma_companies ON sma_accounts_entries.customer_id = sma_companies.id 
                     WHERE 
                     date(sma_accounts_entries.date) < '{$start_date}' 
-                    AND sma_accounts_entryitems.ledger_id = sma_companies.ledger_account 
+                    AND {$ledgerMatch}
                     AND sma_accounts_entries.customer_id IS NOT NULL 
                     GROUP BY 
                     sma_accounts_entries.customer_id, 
