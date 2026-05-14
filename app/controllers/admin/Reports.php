@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
@@ -4395,6 +4395,33 @@ class Reports extends MY_Controller
         }
     }
 
+    /**
+     * Ledger ids for customer statement: current receivable ledger plus comma-separated old_ledgers on company.
+     *
+     * @param object|null $supplier_details
+     * @return int[]
+     */
+    private function customerStatementLedgerIdList($supplier_details)
+    {
+        if (!$supplier_details) {
+            return [];
+        }
+        $parts = [];
+        if (!empty($supplier_details->ledger_account) && is_numeric($supplier_details->ledger_account)) {
+            $parts[] = $supplier_details->ledger_account;
+        }
+        if (!empty($supplier_details->old_ledgers)) {
+            foreach (explode(',', $supplier_details->old_ledgers) as $p) {
+                $p = trim($p);
+                if ($p !== '' && is_numeric($p)) {
+                    $parts[] = $p;
+                }
+            }
+        }
+
+        return $this->reports_model->normalizeCustomerStatementLedgerIds($parts);
+    }
+
     public function customer_statement()
     {
         //$this->sma->checkPermissions('customers');
@@ -4407,6 +4434,7 @@ class Reports extends MY_Controller
 
         $this->data['customers'] = $this->site->getAllCompanies('customer');
         $this->data['biller'] = $this->site->getDefaultBiller();
+        $this->data['statement_ledger_options'] = [];
 
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
@@ -4414,9 +4442,9 @@ class Reports extends MY_Controller
             $supplier_id = $this->input->post('customer');
 
             $supplier_details = $this->companies_model->getCompanyByID($supplier_id);
-            // print_r($supplier_details);exit;
-            $ledger_account = $supplier_details->ledger_account;
-            $supplier_statement = $this->reports_model->getCustomerStatement($start_date, $end_date, $supplier_id, $ledger_account);
+            $ledger_ids = $this->customerStatementLedgerIdList($supplier_details);
+            $supplier_statement = $this->reports_model->getCustomerStatement($start_date, $end_date, $supplier_id, $ledger_ids);
+            $this->data['statement_ledger_options'] = $this->reports_model->getStatementLedgerOptions($ledger_ids);
 
             // Get customer aging data
             $aging_data = $this->reports_model->getCustomerAgingNew(120, date('Y-m-d'), [$supplier_id]);
@@ -4483,6 +4511,8 @@ class Reports extends MY_Controller
         } else {
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customer_statement')]];
             $meta = ['page_title' => lang('customer_statement'), 'bc' => $bc];
+            $this->data['supplier_statement'] = [];
+            $this->data['total_ob'] = $this->sma->formatDecimal(0);
             $this->page_construct('reports/customers_statement', $meta, $this->data);
         }
     }
@@ -4502,6 +4532,7 @@ class Reports extends MY_Controller
 
         $this->data['customers'] = $this->site->getAllCompanies('customer');
         $this->data['biller'] = $this->site->getDefaultBiller();
+        $this->data['statement_ledger_options'] = [];
 
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
@@ -4509,8 +4540,9 @@ class Reports extends MY_Controller
             $supplier_id = $this->input->post('customer');
 
             $supplier_details = $this->companies_model->getCompanyByID($supplier_id);
-            $ledger_account = $supplier_details->ledger_account;
-            $supplier_statement = $this->reports_model->getCustomerStatement($start_date, $end_date, $supplier_id, $ledger_account);
+            $ledger_ids = $this->customerStatementLedgerIdList($supplier_details);
+            $supplier_statement = $this->reports_model->getCustomerStatement($start_date, $end_date, $supplier_id, $ledger_ids);
+            $this->data['statement_ledger_options'] = $this->reports_model->getStatementLedgerOptions($ledger_ids);
 
             // Get customer aging data
             $aging_data = $this->reports_model->getCustomerAgingNew(120, date('Y-m-d'), [$supplier_id]);
