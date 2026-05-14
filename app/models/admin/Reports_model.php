@@ -1039,23 +1039,71 @@ class Reports_model extends CI_Model
         return $response_array;
     }
 
+    /**
+     * @param int|int[]|null $ledger_account
+     * @return int[]
+     */
+    public function normalizeCustomerStatementLedgerIds($ledger_account)
+    {
+        $ledger_ids = [];
+        if (is_array($ledger_account)) {
+            foreach ($ledger_account as $lid) {
+                if ($lid !== null && $lid !== '' && is_numeric($lid)) {
+                    $i = (int) $lid;
+                    if ($i > 0 && !in_array($i, $ledger_ids, true)) {
+                        $ledger_ids[] = $i;
+                    }
+                }
+            }
+        } elseif ($ledger_account !== null && $ledger_account !== '' && is_numeric($ledger_account)) {
+            $i = (int) $ledger_account;
+            if ($i > 0) {
+                $ledger_ids[] = $i;
+            }
+        }
+
+        return $ledger_ids;
+    }
+
+    /**
+     * @param int[] $ledger_ids
+     * @return array<int, string> id => label
+     */
+    public function getStatementLedgerOptions(array $ledger_ids)
+    {
+        if (empty($ledger_ids)) {
+            return [];
+        }
+        $this->db->select('id, code, name');
+        $this->db->from('accounts_ledgers');
+        $this->db->where_in('id', $ledger_ids);
+        $this->db->order_by('id', 'ASC');
+        $q = $this->db->get();
+        $out = [];
+        if ($q->num_rows() > 0) {
+            foreach ($q->result() as $row) {
+                $out[(int) $row->id] = ($row->code ? $row->code . ' — ' : '') . $row->name;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param int|int[] $ledger_account Current ledger id, or list including old_ledgers ids
+     */
     public function getCustomerStatement($start_date, $end_date, $customer_id, $ledger_account)
     {
-        // $response = array();
-        // [entry_id] => 11
-        // [amount] => 102.5000
-        // [dc] => C
-        // [narration] => 
-        // [transaction_type] => creditmemo
-        // [date] => 2024-07-15
-        // [code] => 01-01-02-00-0001
-        // [openingAmount] => 
-        // [company] => 
+        $ledger_ids = $this->normalizeCustomerStatementLedgerIds($ledger_account);
+        if (empty($ledger_ids)) {
+            return ['ob' => [], 'report' => []];
+        }
 
         $this->db
             ->select('sma_accounts_entryitems.id as entry_id, COALESCE(sum(sma_accounts_entryitems.amount), 0) as amount, 
                     sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.date, 
-                    sma_accounts_ledgers.code, sma_companies.company, sma_accounts_entries.transaction_type, sma_accounts_entries.sid as sale_id, sma_accounts_entries.rid as return_id, sma_accounts_entries.memo_id as memo_id, sma_payment_reference.id as payment_id,
+                    sma_accounts_ledgers.code, sma_accounts_ledgers.id as statement_ledger_id, sma_accounts_ledgers.name as ledger_name,
+                    sma_companies.company, sma_accounts_entries.transaction_type, sma_accounts_entries.sid as sale_id, sma_accounts_entries.rid as return_id, sma_accounts_entries.memo_id as memo_id, sma_payment_reference.id as payment_id,
                     sma_sales.warning_note as sale_note, sma_returns.note as return_note, sma_memo.reference_no as memo_note, sma_sales.payment_term as sale_payment_term, sma_companies.payment_term as company_payment_term')
             ->from('sma_accounts_entryitems')
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
@@ -1069,7 +1117,7 @@ class Reports_model extends CI_Model
                 'sma_payment_reference.journal_id = sma_accounts_entries.id',
                 'left'
             )
-            ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
+            ->where_in('sma_accounts_entryitems.ledger_id', $ledger_ids)
             ->where('sma_accounts_entries.customer_id', $customer_id)
             ->where('sma_accounts_entries.date >=', $start_date)
             ->where('sma_accounts_entries.date <=', $end_date)
@@ -1077,6 +1125,7 @@ class Reports_model extends CI_Model
             ->group_by('sma_accounts_entries.date')
             ->group_by('sma_accounts_entries.transaction_type')
             ->group_by('sma_accounts_entryitems.entry_id')
+            ->group_by('sma_accounts_entryitems.ledger_id')
             ->order_by('sma_accounts_entries.date asc');
         $q = $this->db->get();
         //lq($this);
@@ -1097,7 +1146,7 @@ class Reports_model extends CI_Model
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
             ->join('sma_accounts_ledgers', 'sma_accounts_entryitems.ledger_id=sma_accounts_ledgers.id')
             ->join('sma_companies', 'sma_companies.id=sma_accounts_entries.customer_id')
-            ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
+            ->where_in('sma_accounts_entryitems.ledger_id', $ledger_ids)
             ->where('sma_accounts_entries.customer_id', $customer_id)
             ->where('sma_accounts_entries.date <', $start_date)
             ->group_by('sma_accounts_entryitems.dc');

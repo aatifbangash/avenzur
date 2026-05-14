@@ -3182,6 +3182,24 @@ class Customers extends MY_Controller
                 'sfda_certificate' => $this->input->post('sfda_certificate')
 
             ];
+
+            $posted_ledger = $this->input->post('ledger_account');
+            $prev_ledger = isset($company_details->ledger_account) ? (string) $company_details->ledger_account : '';
+            if ((string) $posted_ledger !== $prev_ledger && $prev_ledger !== '' && $prev_ledger !== '0') {
+                $existing = !empty($company_details->old_ledgers) ? trim((string) $company_details->old_ledgers) : '';
+                $parts = $existing === '' ? [] : array_map('trim', explode(',', $existing));
+                $parts = array_filter($parts, function ($p) {
+                    return $p !== '';
+                });
+                if (!in_array($prev_ledger, $parts, true)) {
+                    $parts[] = $prev_ledger;
+                }
+                $parts = array_values(array_filter(array_unique($parts), function ($p) use ($posted_ledger) {
+                    return (string) $p !== (string) $posted_ledger;
+                }));
+                $data['old_ledgers'] = implode(',', $parts);
+            }
+
         } elseif ($this->input->post('edit_customer')) {
             $this->session->set_flashdata('error', validation_errors());
             redirect($_SERVER['HTTP_REFERER']);
