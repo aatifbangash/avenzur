@@ -5602,73 +5602,114 @@ class Reports_model extends CI_Model
                          ELSE p.amount
                     END";
 
-        $sql = "SELECT 
-                    p.id as payment_id,
-                    ".$collectionDateExpr." AS collection_date,
-                    cm.external_id AS external_id,
-                    cm.sequence_code AS sequence_code,
-                    cm.id AS customer_id,
-                    cm.name AS customer_name,
-                    cm.sales_agent,
-                    CASE
-                        WHEN line_sums.sum_line_amount > 0.00001
-                        THEN pr.amount * (".$lineRaw." / line_sums.sum_line_amount)
-                        WHEN p.id = (
-                            SELECT MIN(p0.id) FROM sma_payments p0 WHERE p0.payment_id = pr.id
-                        )
-                        THEN pr.amount
-                        ELSE 0
-                    END AS paid_amount,
-                    p.paid_by,
-                    p.return_id,
-                    s.date AS sale_date,
-                    s.id as sale_id,
-                    s.grand_total,
-                    cm.city as area,
-                    pr.transfer_from_ledger,
-                    lg.name as ledger_name,
-                    pr.reference_no as payment_ref_id
+        // Part 1: sales (and other) payment lines — allocated share of receipt header when multiple lines exist.
+        // Part 2: receipts with no sma_payments rows (typical Rent Client / service-invoice collections).
+        $sql = "
+            SELECT 
+                p.id AS payment_id,
+                ".$collectionDateExpr." AS collection_date,
+                cm.external_id AS external_id,
+                cm.sequence_code AS sequence_code,
+                cm.id AS customer_id,
+                cm.name AS customer_name,
+                cm.sales_agent,
+                CASE
+                    WHEN line_sums.sum_line_amount > 0.00001
+                    THEN pr.amount * (".$lineRaw." / line_sums.sum_line_amount)
+                    WHEN p.id = (
+                        SELECT MIN(p0.id) FROM sma_payments p0 WHERE p0.payment_id = pr.id
+                    )
+                    THEN pr.amount
+                    ELSE 0
+                END AS paid_amount,
+                p.paid_by,
+                p.return_id,
+                s.date AS sale_date,
+                s.id AS sale_id,
+                s.grand_total,
+                cm.city AS area,
+                pr.transfer_from_ledger,
+                lg.name AS ledger_name,
+                pr.reference_no AS payment_ref_id,
+                'sale' AS collection_type
+            FROM sma_payments p
+            LEFT JOIN sma_sales s ON s.id = p.sale_id
+            INNER JOIN sma_payment_reference pr ON pr.id = p.payment_id
+            INNER JOIN (
+                SELECT
+                    p2.payment_id,
+                    SUM(
+                        CASE
+                            WHEN p2.original_amount IS NOT NULL AND p2.original_amount > 0 THEN p2.original_amount
+                            ELSE p2.amount
+                        END
+                    ) AS sum_line_amount
+                FROM sma_payments p2
+                INNER JOIN sma_payment_reference pr2 ON pr2.id = p2.payment_id
+                WHERE pr2.customer_id IS NOT NULL
+                    AND pr2.customer_id <> 0
+                    AND (pr2.added_via IS NULL OR pr2.added_via NOT IN ('customer_return_modu', 'credit_memo_module', 'auto_script'))
+                    AND (pr2.note IS NULL OR pr2.note NOT LIKE '%Reconciliation payment for sale ID%')
+                    ".$dateWherePr2."
+                GROUP BY p2.payment_id
+            ) line_sums ON line_sums.payment_id = pr.id
+            LEFT JOIN sma_companies cm ON cm.id = COALESCE(s.customer_id, pr.customer_id)
+            LEFT JOIN sma_accounts_ledgers lg ON lg.id = pr.transfer_from_ledger
+            WHERE pr.customer_id IS NOT NULL
+                AND pr.customer_id <> 0
+                AND (pr.added_via IS NULL OR pr.added_via NOT IN ('customer_return_modu', 'credit_memo_module', 'auto_script'))
+                AND (pr.note IS NULL OR pr.note NOT LIKE '%Reconciliation payment for sale ID%')
+                ".$dateWhere."
+            GROUP BY p.id
+            HAVING paid_amount > 0.001
 
-                FROM sma_payments p
-                LEFT JOIN sma_sales s
-                    ON s.id = p.sale_id
+            UNION ALL
 
-                INNER JOIN sma_payment_reference pr 
-                    ON pr.id = p.payment_id
+            SELECT
+                NULL AS payment_id,
+                DATE(pr.date) AS collection_date,
+                cm.external_id AS external_id,
+                cm.sequence_code AS sequence_code,
+                cm.id AS customer_id,
+                cm.name AS customer_name,
+                cm.sales_agent,
+                pr.amount AS paid_amount,
+                NULL AS paid_by,
+                NULL AS return_id,
+                m.date AS sale_date,
+                m.id AS sale_id,
+                COALESCE(m.payment_amount, pr.amount) AS grand_total,
+                cm.city AS area,
+                pr.transfer_from_ledger,
+                lg.name AS ledger_name,
+                pr.reference_no AS payment_ref_id,
+                'service_invoice' AS collection_type
+            FROM sma_payment_reference pr
+            LEFT JOIN sma_companies cm ON cm.id = pr.customer_id
+            LEFT JOIN sma_accounts_ledgers lg ON lg.id = pr.transfer_from_ledger
+            LEFT JOIN sma_memo m ON m.id = (
+                SELECT m2.id
+                FROM sma_memo m2
+                WHERE m2.customer_id = pr.customer_id
+                    AND m2.type = 'serviceinvoice'
+                    AND (
+                        ABS(m2.payment_amount - pr.amount) < 0.02
+                        OR ABS(COALESCE(m2.used_amount, 0) - pr.amount) < 0.02
+                    )
+                ORDER BY ABS(DATEDIFF(DATE(pr.date), DATE(m2.date))) ASC
+                LIMIT 1
+            )
+            WHERE pr.customer_id IS NOT NULL
+                AND pr.customer_id <> 0
+                AND (pr.added_via IS NULL OR pr.added_via NOT IN ('customer_return_modu', 'credit_memo_module', 'auto_script'))
+                AND (pr.note IS NULL OR pr.note NOT LIKE '%Reconciliation payment for sale ID%')
+                AND NOT EXISTS (
+                    SELECT 1 FROM sma_payments p0 WHERE p0.payment_id = pr.id
+                )
+                AND pr.amount > 0.01
+                ".$dateWhere."
 
-                INNER JOIN (
-                    SELECT
-                        p2.payment_id,
-                        SUM(
-                            CASE
-                                WHEN p2.original_amount IS NOT NULL AND p2.original_amount > 0 THEN p2.original_amount
-                                ELSE p2.amount
-                            END
-                        ) AS sum_line_amount
-                    FROM sma_payments p2
-                    INNER JOIN sma_payment_reference pr2 ON pr2.id = p2.payment_id
-                    WHERE pr2.customer_id IS NOT NULL
-                        AND pr2.customer_id <> 0
-                        AND (pr2.added_via IS NULL OR pr2.added_via NOT IN ('customer_return_modu', 'credit_memo_module', 'auto_script'))
-                        AND (pr2.note IS NULL OR pr2.note NOT LIKE '%Reconciliation payment for sale ID%')
-                        ".$dateWherePr2."
-                    GROUP BY p2.payment_id
-                ) line_sums ON line_sums.payment_id = pr.id
-
-                LEFT JOIN sma_companies cm 
-                    ON cm.id = COALESCE(s.customer_id, pr.customer_id)
-
-                LEFT JOIN sma_accounts_ledgers lg
-                    ON lg.id = pr.transfer_from_ledger
-                WHERE pr.customer_id IS NOT NULL
-                    AND pr.customer_id <> 0
-                    AND (pr.added_via IS NULL OR pr.added_via NOT IN ('customer_return_modu', 'credit_memo_module', 'auto_script'))
-                    AND (pr.note IS NULL OR pr.note NOT LIKE '%Reconciliation payment for sale ID%')
-                 ".$dateWhere."
-                    GROUP BY p.id
-                    HAVING paid_amount > 0.01
-                    ORDER BY 
-                    ".$collectionDateExpr."
+            ORDER BY collection_date
         ";
         $q = $this->db->query($sql);
         $data = array();
