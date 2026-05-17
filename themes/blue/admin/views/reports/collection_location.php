@@ -131,7 +131,7 @@
                                         ?>
                                             <tr>
                                                 <td><?= $count; ?></td>
-                                                <td>Collection</td>
+                                                <td><?= (!empty($data->collection_type) && $data->collection_type === 'service_invoice') ? lang('service_invoice') : lang('Collection'); ?></td>
                                                 <td><?= $data->area; ?></td>
                                                 <td><?= $data->sales_agent; ?></td>
                                                 <td><?= $data->sequence_code ?? $data->customer_id; ?></td>
