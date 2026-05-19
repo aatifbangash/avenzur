@@ -136,6 +136,7 @@
                                 <th><?= lang('Category'); ?></th>
                                 <th><?= lang('Salesman'); ?></th>
                                 <th><?= lang('Credit Term'); ?></th>
+                                <th><?= lang('Credit Limit'); ?></th>
                                 <?php
                                     $duration = $this->input->post('duration') ? $this->input->post('duration') : 120;
                                     $intervals = [30, 60, 90, 120, 150, 180, 210, 240];
@@ -191,7 +192,7 @@
 
                                         $total_sum = 0;
                                         foreach ($data as $k1 => $value) {
-                                            if ($k1 !== 'customer_id' && $k1 !== 'customer_name' && $k1 !== 'payment_term') {
+                                            if ($k1 !== 'customer_id' && $k1 !== 'customer_name' && $k1 !== 'payment_term' && $k1 !== 'credit_limit') {
                                                 $total_sum += (float) $value;
                                                 $totals[$k1] += (float) $value;
                                             }
@@ -206,6 +207,7 @@
                                                 <td><?= $data['category']; ?></td>
                                                 <td><?= $data['sales_agent'] ?? ''; ?></td>
                                                 <td><?= $data['payment_term']; ?></td>
+                                                <td><?= $data['credit_limit'] ? number_format($data['credit_limit'], 2, '.', ',') : '-'; ?></td>
                                                 <?php
                                                 $i=1;
                                                 $previous_limit = 0;
@@ -237,6 +239,7 @@
                             <tfoot style="text-align:center;">
                                 <tr>
                                     <td colspan="4"><strong></strong></td>
+                                    <td><strong></strong></td>
                                     <td><strong></strong></td>
                                     <?php
                                         $previous_limit = 0;
