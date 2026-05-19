@@ -688,7 +688,7 @@ class Reports_model extends CI_Model
                     'customer_code' => $inv->customer_code,
                     'sales_agent'   => $inv->sales_agent,
                     'payment_term'  => $inv->payment_term,
-                    //'credit_limit'  => $inv->credit_limit,
+                    'credit_limit'  => $inv->credit_limit,
                     'category'      => $inv->category
                 ];
                 foreach ($buckets as $b) {
