@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
@@ -6190,9 +6190,10 @@ class Reports extends MY_Controller
 
             foreach ($trial_balance_array['trs'] as $trans) {
                 $response_arr[$trans->id]["name"] = $trans->name;
-                $response_arr[$trans->id]["company"] = $trans->company;
                 $response_arr[$trans->id]["sequence_code"] = $trans->sequence_code;
                 $response_arr[$trans->id]["category"] = $trans->category;
+                $response_arr[$trans->id]["payment_term"] = $trans->payment_term;
+                $response_arr[$trans->id]["credit_limit"] = $trans->credit_limit;
                 $response_arr[$trans->id]["trsDebit"] = $trans->total_debit;
                 $response_arr[$trans->id]["trsCredit"] = $trans->total_credit;
             }
@@ -6200,9 +6201,10 @@ class Reports extends MY_Controller
 
             foreach ($trial_balance_array['ob'] as $trans) {
                 $response_arr[$trans->id]["name"] = $trans->name;
-                $response_arr[$trans->id]["company"] = $trans->company;
                 $response_arr[$trans->id]["sequence_code"] = $trans->sequence_code;
                 $response_arr[$trans->id]["category"] = $trans->category;
+                $response_arr[$trans->id]["payment_term"] = $trans->payment_term;
+                $response_arr[$trans->id]["credit_limit"] = $trans->credit_limit;
                 $response_arr[$trans->id]["obDebit"] = $trans->total_debit;
                 $response_arr[$trans->id]["obCredit"] = $trans->total_credit;
             }
