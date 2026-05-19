@@ -180,7 +180,10 @@
                                 <a href="<?= $entryTypeLabel == 'journal' ? admin_url('accounts/jl_entry_edit/' . $entry['id']) : admin_url('entries/edit/' . $entryTypeLabel . '/' . $entry['id']); ?>" class="no-hover" escape="false"><i class="fa fa-edit"></i><?= lang('entries_views_index_th_actions_edit_btn'); ?></a>
                                 <span class="link-pad"></span>
                                 <?php } ?>
+                                <?php if($Owner || $Admin){ ?>
+                                 <a href="<?= admin_url();?>entries/delete/<?= ($entryTypeLabel); ?>/<?= $entry['id']; ?>" class="no-hover" escape="false"><i class="fa fa-trash"></i><?= lang('entries_views_index_th_actions_delete_btn'); ?></a>
                                 <!--<a href="<?= admin_url();?>entries/delete/<?= ($entryTypeLabel); ?>/<?= $entry['id']; ?>" class="no-hover" escape="false"><i class="fa fa-trash"></i><?= lang('entries_views_index_th_actions_delete_btn'); ?></a>-->
+                                <?php } ?>
                                 
                             </td>
                         </tr>
