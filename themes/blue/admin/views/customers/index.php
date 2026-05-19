@@ -2,7 +2,7 @@
 <script>
     $(document).ready(function () {
         var cTable = $('#CusData').dataTable({
-            "aaSorting": [[1, "asc"]],
+            "aaSorting": [[2, "asc"]],
             "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?= lang('all') ?>"]],
             "iDisplayLength": <?= $Settings->rows_per_page ?>,
             'bProcessing': true, 'bServerSide': true,
@@ -11,6 +11,10 @@
                 aoData.push({
                     "name": "<?= $this->security->get_csrf_token_name() ?>",
                     "value": "<?= $this->security->get_csrf_hash() ?>"
+                });
+                aoData.push({
+                    "name": "category",
+                    "value": ($('#customer_list_category').length ? $('#customer_list_category').val() : '') || ''
                 });
                 $.ajax({'dataType': 'json', 'type': 'POST', 'url': sSource, 'data': aoData, 'success': fnCallback});
             },
@@ -22,19 +26,24 @@
             "aoColumns": [{
                 "bSortable": false,
                 "mRender": checkbox
-            }, null, null, null, null, null, null, null, null, null, null, {"bSortable": false}]
+            }, null, null, null, null, null, null, null, null, {"bSortable": false}]
         }).dtFilter([
-            {column_number: 1, filter_default_label: "[<?=lang('sequence_code');?>]", filter_type: "text", data: []},
-            {column_number: 2, filter_default_label: "[<?=lang('name');?>]", filter_type: "text", data: []},
-            {column_number: 3, filter_default_label: "[<?=lang('vat_no');?>]", filter_type: "text", data: []},
-            {column_number: 4, filter_default_label: "[<?=lang('gln');?>]", filter_type: "text", data: []},
-            {column_number: 5, filter_default_label: "[<?=lang('cr');?>]", filter_type: "text", data: []},
-            {column_number: 6, filter_default_label: "[<?=lang('short_address');?>]", filter_type: "text", data: []},
-            {column_number: 7, filter_default_label: "[<?=lang('address');?>]", filter_type: "text", data: []},
-            {column_number: 8, filter_default_label: "[<?=lang('credit_limit');?>]", filter_type: "text", data: []},
-            {column_number: 9, filter_default_label: "[<?=lang('payment_term');?>]", filter_type: "text", data: []},
-            {column_number: 10, filter_default_label: "[<?=lang('category');?>]", filter_type: "text", data: []},
+            {column_number: 1, filter_default_label: "[<?=lang('category');?>]", filter_type: "text", data: []},
+            {column_number: 2, filter_default_label: "[<?=lang('sequence_code');?>]", filter_type: "text", data: []},
+            {column_number: 3, filter_default_label: "[<?=lang('name');?>]", filter_type: "text", data: []},
+            {column_number: 4, filter_default_label: "[<?=lang('vat_no');?>]", filter_type: "text", data: []},
+            {column_number: 5, filter_default_label: "[<?=lang('gln');?>]", filter_type: "text", data: []},
+            {column_number: 6, filter_default_label: "[<?=lang('cr');?>]", filter_type: "text", data: []},
+            {column_number: 7, filter_default_label: "[<?=lang('credit_limit');?>]", filter_type: "text", data: []},
+            {column_number: 8, filter_default_label: "[<?=lang('payment_term');?>]", filter_type: "text", data: []},
         ], "footer");
+        $('#customer_category_filter_btn').on('click', function () {
+            cTable.fnDraw(false);
+        });
+        $('#customer_category_reset_btn').on('click', function () {
+            $('#customer_list_category').val('');
+            cTable.fnDraw(false);
+        });
         $('#myModal').on('hidden.bs.modal', function () {
             cTable.fnDraw( false );
         });
@@ -102,6 +111,30 @@
         <div class="row">
             <div class="col-lg-12">
 
+                <div class="row" style="margin-bottom:12px; padding: 10px 15px; background:#f9f9f9; border:1px solid #e0e0e0; border-radius:4px;">
+                    <div class="col-md-3">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label for="customer_list_category" style="font-size:12px; font-weight:600;"><?= lang('Category') ?></label>
+                            <select id="customer_list_category" class="form-control input-sm" style="width:100%;">
+                                <option value=""><?= lang('All Categories') ?></option>
+                                <?php
+                                $cats = (!empty($customer_categories) && is_array($customer_categories)) ? $customer_categories : [];
+                                foreach ($cats as $cat): ?>
+                                    <option value="<?= htmlspecialchars($cat) ?>"><?= htmlspecialchars($cat) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2" style="padding-top:22px;">
+                        <button type="button" id="customer_category_filter_btn" class="btn btn-primary btn-sm btn-block">
+                            <i class="fa fa-filter"></i> <?= lang('Filter') ?>
+                        </button>
+                        <button type="button" id="customer_category_reset_btn" class="btn btn-default btn-sm btn-block" style="margin-top:4px;">
+                            <i class="fa fa-times"></i> <?= lang('Reset') ?>
+                        </button>
+                    </div>
+                </div>
+
                 <p class="introtext"><?= lang('list_results'); ?></p>
 
                 <div class="table-responsive">
@@ -112,22 +145,20 @@
                             <th style="min-width:30px; width: 30px; text-align: center;">
                                 <input class="checkbox checkth" type="checkbox" name="check"/>
                             </th>
+                            <th><?= lang('category'); ?></th>
                             <th><?= lang('sequence_code'); ?></th>
                             <th><?= lang('name'); ?></th>
                             <th><?= lang('vat_no'); ?></th>
                             <th><?= lang('gln'); ?></th>
                             <th><?= lang('cr'); ?></th>
-                            <th><?= lang('short_address'); ?></th>
-                            <th><?= lang('address'); ?></th>
                             <th><?= lang('credit_limit'); ?></th>
                             <th><?= lang('payment_term'); ?></th>
-                            <th><?= lang('category'); ?></th>
                             <th style="min-width:135px !important;"><?= lang('actions'); ?></th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr>
-                            <td colspan="12" class="dataTables_empty"><?= lang('loading_data_from_server') ?></td>
+                            <td colspan="10" class="dataTables_empty"><?= lang('loading_data_from_server') ?></td>
                         </tr>
                         </tbody>
                         <tfoot class="dtFilter">
@@ -135,7 +166,7 @@
                             <th style="min-width:30px; width: 30px; text-align: center;">
                                 <input class="checkbox checkft" type="checkbox" name="check"/>
                             </th>
-                            <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
+                            <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
                             <th style="min-width:135px !important;" class="text-center"><?= lang('actions'); ?></th>
                         </tr>
                         </tfoot>

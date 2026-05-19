@@ -1039,23 +1039,71 @@ class Reports_model extends CI_Model
         return $response_array;
     }
 
+    /**
+     * @param int|int[]|null $ledger_account
+     * @return int[]
+     */
+    public function normalizeCustomerStatementLedgerIds($ledger_account)
+    {
+        $ledger_ids = [];
+        if (is_array($ledger_account)) {
+            foreach ($ledger_account as $lid) {
+                if ($lid !== null && $lid !== '' && is_numeric($lid)) {
+                    $i = (int) $lid;
+                    if ($i > 0 && !in_array($i, $ledger_ids, true)) {
+                        $ledger_ids[] = $i;
+                    }
+                }
+            }
+        } elseif ($ledger_account !== null && $ledger_account !== '' && is_numeric($ledger_account)) {
+            $i = (int) $ledger_account;
+            if ($i > 0) {
+                $ledger_ids[] = $i;
+            }
+        }
+
+        return $ledger_ids;
+    }
+
+    /**
+     * @param int[] $ledger_ids
+     * @return array<int, string> id => label
+     */
+    public function getStatementLedgerOptions(array $ledger_ids)
+    {
+        if (empty($ledger_ids)) {
+            return [];
+        }
+        $this->db->select('id, code, name');
+        $this->db->from('accounts_ledgers');
+        $this->db->where_in('id', $ledger_ids);
+        $this->db->order_by('id', 'ASC');
+        $q = $this->db->get();
+        $out = [];
+        if ($q->num_rows() > 0) {
+            foreach ($q->result() as $row) {
+                $out[(int) $row->id] = ($row->code ? $row->code . ' — ' : '') . $row->name;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param int|int[] $ledger_account Current ledger id, or list including old_ledgers ids
+     */
     public function getCustomerStatement($start_date, $end_date, $customer_id, $ledger_account)
     {
-        // $response = array();
-        // [entry_id] => 11
-        // [amount] => 102.5000
-        // [dc] => C
-        // [narration] => 
-        // [transaction_type] => creditmemo
-        // [date] => 2024-07-15
-        // [code] => 01-01-02-00-0001
-        // [openingAmount] => 
-        // [company] => 
+        $ledger_ids = $this->normalizeCustomerStatementLedgerIds($ledger_account);
+        if (empty($ledger_ids)) {
+            return ['ob' => [], 'report' => []];
+        }
 
         $this->db
             ->select('sma_accounts_entryitems.id as entry_id, COALESCE(sum(sma_accounts_entryitems.amount), 0) as amount, 
                     sma_accounts_entryitems.dc, sma_accounts_entryitems.narration, sma_accounts_entries.date, 
-                    sma_accounts_ledgers.code, sma_companies.company, sma_accounts_entries.transaction_type, sma_accounts_entries.sid as sale_id, sma_accounts_entries.rid as return_id, sma_accounts_entries.memo_id as memo_id, sma_payment_reference.id as payment_id,
+                    sma_accounts_ledgers.code, sma_accounts_ledgers.id as statement_ledger_id, sma_accounts_ledgers.name as ledger_name,
+                    sma_companies.company, sma_accounts_entries.transaction_type, sma_accounts_entries.sid as sale_id, sma_accounts_entries.rid as return_id, sma_accounts_entries.memo_id as memo_id, sma_payment_reference.id as payment_id,
                     sma_sales.warning_note as sale_note, sma_returns.note as return_note, sma_memo.reference_no as memo_note, sma_sales.payment_term as sale_payment_term, sma_companies.payment_term as company_payment_term')
             ->from('sma_accounts_entryitems')
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
@@ -1069,7 +1117,7 @@ class Reports_model extends CI_Model
                 'sma_payment_reference.journal_id = sma_accounts_entries.id',
                 'left'
             )
-            ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
+            ->where_in('sma_accounts_entryitems.ledger_id', $ledger_ids)
             ->where('sma_accounts_entries.customer_id', $customer_id)
             ->where('sma_accounts_entries.date >=', $start_date)
             ->where('sma_accounts_entries.date <=', $end_date)
@@ -1077,6 +1125,7 @@ class Reports_model extends CI_Model
             ->group_by('sma_accounts_entries.date')
             ->group_by('sma_accounts_entries.transaction_type')
             ->group_by('sma_accounts_entryitems.entry_id')
+            ->group_by('sma_accounts_entryitems.ledger_id')
             ->order_by('sma_accounts_entries.date asc');
         $q = $this->db->get();
         //lq($this);
@@ -1097,7 +1146,7 @@ class Reports_model extends CI_Model
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
             ->join('sma_accounts_ledgers', 'sma_accounts_entryitems.ledger_id=sma_accounts_ledgers.id')
             ->join('sma_companies', 'sma_companies.id=sma_accounts_entries.customer_id')
-            ->where('sma_accounts_entryitems.ledger_id', $ledger_account)
+            ->where_in('sma_accounts_entryitems.ledger_id', $ledger_ids)
             ->where('sma_accounts_entries.customer_id', $customer_id)
             ->where('sma_accounts_entries.date <', $start_date)
             ->group_by('sma_accounts_entryitems.dc');
@@ -1979,6 +2028,15 @@ class Reports_model extends CI_Model
     public function get_customer_trial_balance($start_date, $end_date)
     {
         $response = array();
+        // Include receivable lines on current ledger_account and on comma-separated old_ledgers (same rule as customer statement).
+        $ledgerMatch = "(sma_accounts_entryitems.ledger_id = sma_companies.ledger_account
+                OR (
+                    NULLIF(TRIM(IFNULL(sma_companies.old_ledgers, '')), '') IS NOT NULL
+                    AND FIND_IN_SET(
+                        CAST(sma_accounts_entryitems.ledger_id AS CHAR),
+                        REPLACE(REPLACE(IFNULL(sma_companies.old_ledgers, ''), ' ', ''), ', ', ',')
+                    ) > 0
+                ))";
         $q = $this->db->query("SELECT 
                 sma_companies.id, 
                 sma_companies.name,
@@ -1998,7 +2056,7 @@ class Reports_model extends CI_Model
                 date(sma_accounts_entries.date) >= '{$start_date}' 
                 AND date(sma_accounts_entries.date) <= '{$end_date}' 
                 AND sma_accounts_entries.customer_id IS NOT NULL 
-                AND sma_accounts_entryitems.ledger_id = sma_companies.ledger_account 
+                AND {$ledgerMatch}
             GROUP BY 
                 sma_accounts_entries.customer_id, 
                 sma_companies.name");
@@ -2029,7 +2087,7 @@ class Reports_model extends CI_Model
                     sma_companies ON sma_accounts_entries.customer_id = sma_companies.id 
                     WHERE 
                     date(sma_accounts_entries.date) < '{$start_date}' 
-                    AND sma_accounts_entryitems.ledger_id = sma_companies.ledger_account 
+                    AND {$ledgerMatch}
                     AND sma_accounts_entries.customer_id IS NOT NULL 
                     GROUP BY 
                     sma_accounts_entries.customer_id, 
@@ -5522,64 +5580,138 @@ class Reports_model extends CI_Model
 
     public function getCollectionsByLocation($start_date, $end_date, $warehouse)
     {
-        // Build date filter only if both dates are provided
+        // Receipt list (getPaymentReferences) filters on payment_reference.date only — match that for the period.
+        // Display column still uses line/header date when useful for reconciliation.
+        $dateFilterExpr = "DATE(pr.date)";
+        $collectionDateExpr = "DATE(COALESCE(p.date, pr.date))";
         $dateWhere = "";
-        
-        if ($start_date && $end_date) {
-            $dateWhere = " AND DATE(p.date) >= '".trim($start_date)."'
-                AND DATE(p.date) <= '".trim($end_date)."' ";
-        }else if($start_date) {
-            $dateWhere = " AND DATE(p.date) >= '".trim($start_date)."' ";
-        }else if($end_date) {
-            $dateWhere = " AND DATE(p.date) <= '".trim($end_date)."' ";
-        }
-        // Build warehouse filter only if provided
-        $warehouseWhere = "";
-        if ($warehouse) {
-            $warehouseWhere = " AND (s.warehouse_id = " . $warehouse . ")";
-        }
 
-         $sql = "SELECT 
-                    p.id as payment_id,
-                    DATE(p.date) AS collection_date,
-                    cm.external_id AS external_id,
-                    cm.sequence_code AS sequence_code,
-                    cm.id AS customer_id,
-                    cm.name AS customer_name,
-                    cm.sales_agent,
-                    CASE WHEN p.original_amount IS NOT NULL AND p.original_amount > 0
+        if ($start_date && $end_date) {
+            $dateWhere = " AND ".$dateFilterExpr." >= '".trim($start_date)."'
+                AND ".$dateFilterExpr." <= '".trim($end_date)."' ";
+        } elseif ($start_date) {
+            $dateWhere = " AND ".$dateFilterExpr." >= '".trim($start_date)."' ";
+        } elseif ($end_date) {
+            $dateWhere = " AND ".$dateFilterExpr." <= '".trim($end_date)."' ";
+        }
+        $dateWherePr2 = str_replace('DATE(pr.date)', 'DATE(pr2.date)', $dateWhere);
+
+        // Totals must match Customer Payments (sum of payment_reference.amount).. The list uses receipt headers, not raw line sums
+        // Allocate each receipt's pr.amount across its payment lines in proportion to line amounts so the report footer equals the list
+        // for the same date + added_via/note filters .. Warehouse is not applied here so totals match the list (which has no location filter).
+        $lineRaw = "CASE WHEN p.original_amount IS NOT NULL AND p.original_amount > 0
                          THEN p.original_amount
                          ELSE p.amount
-                    END AS paid_amount,
-                    p.paid_by,
-                    p.return_id,
-                    s.date AS sale_date,
-                    s.id as sale_id,
-                    s.grand_total,
-                    cm.city as area,
-                    pr.transfer_from_ledger,
-                    lg.name as ledger_name,
-                    pr.reference_no as payment_ref_id
+                    END";
 
-                FROM sma_payments p
-                LEFT JOIN sma_sales s
-                    ON s.id = p.sale_id
+        // Part 1: sales (and other) payment lines — allocated share of receipt header when multiple lines exist.
+        // Part 2: receipts with no sma_payments rows (typical Rent Client / service-invoice collections).
+        $sql = "
+            SELECT 
+                p.id AS payment_id,
+                ".$collectionDateExpr." AS collection_date,
+                cm.external_id AS external_id,
+                cm.sequence_code AS sequence_code,
+                cm.id AS customer_id,
+                cm.name AS customer_name,
+                cm.sales_agent,
+                CASE
+                    WHEN line_sums.sum_line_amount > 0.00001
+                    THEN pr.amount * (".$lineRaw." / line_sums.sum_line_amount)
+                    WHEN p.id = (
+                        SELECT MIN(p0.id) FROM sma_payments p0 WHERE p0.payment_id = pr.id
+                    )
+                    THEN pr.amount
+                    ELSE 0
+                END AS paid_amount,
+                p.paid_by,
+                p.return_id,
+                s.date AS sale_date,
+                s.id AS sale_id,
+                s.grand_total,
+                cm.city AS area,
+                pr.transfer_from_ledger,
+                lg.name AS ledger_name,
+                pr.reference_no AS payment_ref_id,
+                'sale' AS collection_type
+            FROM sma_payments p
+            LEFT JOIN sma_sales s ON s.id = p.sale_id
+            INNER JOIN sma_payment_reference pr ON pr.id = p.payment_id
+            INNER JOIN (
+                SELECT
+                    p2.payment_id,
+                    SUM(
+                        CASE
+                            WHEN p2.original_amount IS NOT NULL AND p2.original_amount > 0 THEN p2.original_amount
+                            ELSE p2.amount
+                        END
+                    ) AS sum_line_amount
+                FROM sma_payments p2
+                INNER JOIN sma_payment_reference pr2 ON pr2.id = p2.payment_id
+                WHERE pr2.customer_id IS NOT NULL
+                    AND pr2.customer_id <> 0
+                    AND (pr2.added_via IS NULL OR pr2.added_via NOT IN ('customer_return_modu', 'credit_memo_module', 'auto_script'))
+                    AND (pr2.note IS NULL OR pr2.note NOT LIKE '%Reconciliation payment for sale ID%')
+                    ".$dateWherePr2."
+                GROUP BY p2.payment_id
+            ) line_sums ON line_sums.payment_id = pr.id
+            LEFT JOIN sma_companies cm ON cm.id = COALESCE(s.customer_id, pr.customer_id)
+            LEFT JOIN sma_accounts_ledgers lg ON lg.id = pr.transfer_from_ledger
+            WHERE pr.customer_id IS NOT NULL
+                AND pr.customer_id <> 0
+                AND (pr.added_via IS NULL OR pr.added_via NOT IN ('customer_return_modu', 'credit_memo_module', 'auto_script'))
+                AND (pr.note IS NULL OR pr.note NOT LIKE '%Reconciliation payment for sale ID%')
+                ".$dateWhere."
+            GROUP BY p.id
+            HAVING paid_amount > 0.001
 
-                LEFT JOIN sma_companies cm 
-                    ON cm.id = s.customer_id
+            UNION ALL
 
-                INNER JOIN sma_payment_reference pr 
-                    ON pr.id = p.payment_id
+            SELECT
+                NULL AS payment_id,
+                DATE(pr.date) AS collection_date,
+                cm.external_id AS external_id,
+                cm.sequence_code AS sequence_code,
+                cm.id AS customer_id,
+                cm.name AS customer_name,
+                cm.sales_agent,
+                pr.amount AS paid_amount,
+                NULL AS paid_by,
+                NULL AS return_id,
+                m.date AS sale_date,
+                m.id AS sale_id,
+                COALESCE(m.payment_amount, pr.amount) AS grand_total,
+                cm.city AS area,
+                pr.transfer_from_ledger,
+                lg.name AS ledger_name,
+                pr.reference_no AS payment_ref_id,
+                'service_invoice' AS collection_type
+            FROM sma_payment_reference pr
+            LEFT JOIN sma_companies cm ON cm.id = pr.customer_id
+            LEFT JOIN sma_accounts_ledgers lg ON lg.id = pr.transfer_from_ledger
+            LEFT JOIN sma_memo m ON m.id = (
+                SELECT m2.id
+                FROM sma_memo m2
+                WHERE m2.customer_id = pr.customer_id
+                    AND m2.type = 'serviceinvoice'
+                    AND (
+                        ABS(m2.payment_amount - pr.amount) < 0.02
+                        OR ABS(COALESCE(m2.used_amount, 0) - pr.amount) < 0.02
+                    )
+                ORDER BY ABS(DATEDIFF(DATE(pr.date), DATE(m2.date))) ASC
+                LIMIT 1
+            )
+            WHERE pr.customer_id IS NOT NULL
+                AND pr.customer_id <> 0
+                AND (pr.added_via IS NULL OR pr.added_via NOT IN ('customer_return_modu', 'credit_memo_module', 'auto_script'))
+                AND (pr.note IS NULL OR pr.note NOT LIKE '%Reconciliation payment for sale ID%')
+                AND NOT EXISTS (
+                    SELECT 1 FROM sma_payments p0 WHERE p0.payment_id = pr.id
+                )
+                AND pr.amount > 0.01
+                ".$dateWhere."
 
-                LEFT JOIN sma_accounts_ledgers lg
-                    ON lg.id = pr.transfer_from_ledger
-                WHERE cm.group_name = 'customer' AND (p.paid_by NOT IN ('return', 'credit_memo')) AND (pr.added_via IS NULL OR pr.added_via NOT IN ('customer_return_module', 'credit_memo_module'))
-                 ".$dateWhere."
-                 ".$warehouseWhere."
-                    GROUP BY s.id
-                    HAVING paid_amount > 0.01
-                    ORDER BY 
-                    DATE(p.date)
+            ORDER BY collection_date
         ";
         $q = $this->db->query($sql);
         $data = array();
@@ -6161,19 +6293,12 @@ class Reports_model extends CI_Model
     }
 
     /**
-     * Get Sales Per Item Report Data
-     * Shows sales and returns with item details, profitability
-     * 
-     * @param string $start_date - Start date (formatted)
-     * @param string $end_date - End date (formatted)
-     * @param string $invoice_id - Invoice ID or reference number
-     * @param string $salesman_name - Sales agent name
-     * @param string $item_code - Item code to filter
-     * @return array - Sales per item data
+     * Build the UNION subquery used by Sales Per Item (sales + returns).
+     *
+     * @return string
      */
-    public function getSalesPerItem($start_date, $end_date, $invoice_id, $salesman_name, $item_code, $category = null)
+    protected function sales_per_item_union_inner_sql($start_date, $end_date, $invoice_id, $salesman_name, $item_code, $category)
     {
-        // Build WHERE clauses conditionally
         $where_clauses = [];
         
         // Date filter (optional - works with both dates or none)
@@ -6184,25 +6309,26 @@ class Reports_model extends CI_Model
         // Invoice filter
         if ($invoice_id) {
             if (is_numeric($invoice_id)) {
-                $where_clauses[] = "s.id = {$invoice_id}";
+                $where_clauses[] = 's.id = ' . (int) $invoice_id;
             } else {
-                $where_clauses[] = "s.reference_no LIKE '{$invoice_id}%'";
+                $where_clauses[] = "s.reference_no LIKE '" . $this->db->escape_like_str($invoice_id) . "%' ESCAPE '!'";
             }
         }
         
         // Salesman filter
         if ($salesman_name) {
-            $where_clauses[] = "c.sales_agent = '{$salesman_name}'";
+            $where_clauses[] = "c.sales_agent = '" . $this->db->escape_str($salesman_name) . "'";
         }
         
         // Item code filter
         if ($item_code) {
-            $where_clauses[] = "(p.code LIKE '%{$item_code}%' OR p.name LIKE '%{$item_code}%')";
+            $esc = $this->db->escape_like_str($item_code);
+            $where_clauses[] = "(p.code LIKE '%{$esc}%' ESCAPE '!' OR p.name LIKE '%{$esc}%' ESCAPE '!')";
         }
 
         // Category filter
         if ($category) {
-            $where_clauses[] = "c.category = '{$this->db->escape_str($category)}'";
+            $where_clauses[] = "c.category = '" . $this->db->escape_str($category) . "'";
         }
         
         $where_sql = !empty($where_clauses) ? 'AND ' . implode(' AND ', $where_clauses) : '';
@@ -6220,7 +6346,7 @@ class Reports_model extends CI_Model
                 COALESCE(c.category, '') AS category,
                 c.sequence_code AS customer_no,
                 c.name AS customer_name,
-                p.code AS item_no,
+                CAST(p.code AS CHAR) AS item_no,
                 p.name AS item_name,
                 si.quantity AS qty,
                 si.bonus AS bonus,
@@ -6251,23 +6377,24 @@ class Reports_model extends CI_Model
         
         if ($invoice_id) {
             if (is_numeric($invoice_id)) {
-                $return_where_clauses[] = "s.id = {$invoice_id}";
+                $return_where_clauses[] = 's.id = ' . (int) $invoice_id;
             } else {
-                $return_where_clauses[] = "s.reference_no LIKE '{$invoice_id}%'";
+                $return_where_clauses[] = "s.reference_no LIKE '" . $this->db->escape_like_str($invoice_id) . "%' ESCAPE '!'";
             }
         }
         
         if ($salesman_name) {
-            $return_where_clauses[] = "c.sales_agent = '{$salesman_name}'";
+            $return_where_clauses[] = "c.sales_agent = '" . $this->db->escape_str($salesman_name) . "'";
         }
         
         if ($item_code) {
-            $return_where_clauses[] = "(p.code LIKE '%{$item_code}%' OR p.name LIKE '%{$item_code}%')";
+            $escR = $this->db->escape_like_str($item_code);
+            $return_where_clauses[] = "(p.code LIKE '%{$escR}%' ESCAPE '!' OR p.name LIKE '%{$escR}%' ESCAPE '!')";
         }
         
         // Category filter for returns
         if ($category) {
-            $return_where_clauses[] = "c.category = '{$this->db->escape_str($category)}'";
+            $return_where_clauses[] = "c.category = '" . $this->db->escape_str($category) . "'";
         }
 
         $return_where_sql = !empty($return_where_clauses) ? 'AND ' . implode(' AND ', $return_where_clauses) : '';
@@ -6285,7 +6412,7 @@ class Reports_model extends CI_Model
                 COALESCE(c.category, '') AS category,
                 c.sequence_code AS customer_no,
                 c.name AS customer_name,
-                p.code AS item_no,
+                CAST(p.code AS CHAR) AS item_no,
                 p.name AS item_name,
                 -ri.quantity AS qty,
                 0 AS bonus,
@@ -6306,22 +6433,288 @@ class Reports_model extends CI_Model
             WHERE (r.status = 'completed' OR r.sale_id IS NULL)
             {$return_where_sql}
         ";
-        
-        // Combine both queries
+
+        return '((' . trim($sales_sql) . ') UNION ALL (' . trim($returns_sql) . '))';
+    }
+
+    /**
+     * CSV cell for Excel: long all-digit codes as ="value" so Excel does not use scientific notation.
+     */
+    protected function csv_excel_force_text_numeric_code($value): string
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+        $s = trim((string) $value);
+        if ($s === '' || !preg_match('/^\d+$/', $s)) {
+            return $s;
+        }
+        if (strlen($s) >= 11) {
+            return '="' . $s . '"';
+        }
+
+        return $s;
+    }
+
+    /**
+     * CSV numeric cell (unquoted float) so Excel treats column as number, not text.
+     */
+    protected function csv_excel_numeric($value, int $decimals = 4)
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+        if (!is_numeric($value)) {
+            return '';
+        }
+
+        return $decimals < 0 ? (float) $value : round((float) $value, $decimals);
+    }
+
+    /**
+     * CSV integer columns (invoice id, return id).
+     */
+    protected function csv_excel_int($value)
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+        if (!is_numeric($value)) {
+            return $value;
+        }
+
+        return (int) $value;
+    }
+
+    /**
+     * Stream full Sales Per Item result as UTF-8 CSV (opens in Excel). Uses unbuffered MySQL read.
+     *
+     * @param resource $out
+     *
+     * @return bool
+     */
+    public function stream_sales_per_item_csv($start_date, $end_date, $invoice_id, $salesman_name, $item_code, $category, $out)
+    {
+        $union_inner = $this->sales_per_item_union_inner_sql($start_date, $end_date, $invoice_id, $salesman_name, $item_code, $category);
+
+        $agg_sql = "
+            SELECT
+                COALESCE(SUM(spi_union.qty), 0) AS sum_qty,
+                COALESCE(SUM(spi_union.bonus), 0) AS sum_bonus,
+                COALESCE(SUM(spi_union.sales), 0) AS sum_sales,
+                COALESCE(SUM(spi_union.discount), 0) AS sum_discount,
+                COALESCE(SUM(spi_union.net_sales), 0) AS sum_net_sales,
+                COALESCE(SUM(spi_union.vat), 0) AS sum_vat,
+                COALESCE(SUM(spi_union.receivable), 0) AS sum_receivable,
+                COALESCE(SUM(spi_union.cogs), 0) AS sum_cogs,
+                COALESCE(SUM(spi_union.profit), 0) AS sum_profit
+            FROM {$union_inner} AS spi_union
+        ";
+        $totals = $this->db->query($agg_sql)->row();
+        if (!$totals) {
+            $totals = (object) [
+                'sum_qty' => 0,
+                'sum_bonus' => 0,
+                'sum_sales' => 0,
+                'sum_discount' => 0,
+                'sum_net_sales' => 0,
+                'sum_vat' => 0,
+                'sum_receivable' => 0,
+                'sum_cogs' => 0,
+                'sum_profit' => 0,
+            ];
+        }
+
+        $headers = [
+            '#',
+            lang('Type'),
+            lang('Date'),
+            lang('Invoice'),
+            lang('Return Inv#'),
+            lang('Area'),
+            lang('Sales Man'),
+            lang('Agent'),
+            lang('Category'),
+            lang('Customer No'),
+            lang('Customer Name'),
+            lang('Item No'),
+            lang('Item Name'),
+            lang('QTY'),
+            lang('Bonus'),
+            lang('Unit Cost'),
+            lang('Unit Price'),
+            lang('Sales'),
+            lang('Discount'),
+            lang('Net Sales'),
+            lang('Vat'),
+            lang('Receivable'),
+            lang('COGS'),
+            lang('Profit'),
+        ];
+        fputcsv($out, $headers);
+
         $sql = "
-            {$sales_sql}
-            UNION ALL
-            {$returns_sql}
-            ORDER BY date DESC, invoice
+            SELECT * FROM {$union_inner} AS spi_union
+            ORDER BY spi_union.date DESC, spi_union.invoice
+        ";
+
+        $mysqli = $this->db->conn_id;
+        if (!$mysqli instanceof \mysqli) {
+            return false;
+        }
+
+        $res = @mysqli_query($mysqli, $sql, MYSQLI_USE_RESULT);
+        if ($res === false) {
+            return false;
+        }
+
+        $n = 0;
+        while ($row = mysqli_fetch_assoc($res)) {
+            $n++;
+            fputcsv($out, [
+                $n,
+                $row['type'] ?? '',
+                $row['date'] ?? '',
+                $this->csv_excel_int($row['invoice'] ?? ''),
+                $this->csv_excel_int($row['return_inv'] ?? ''),
+                $row['area'] ?? '',
+                $row['sales_man'] ?? '',
+                $row['agent'] ?? '',
+                $row['category'] ?? '',
+                $this->csv_excel_force_text_numeric_code($row['customer_no'] ?? ''),
+                $row['customer_name'] ?? '',
+                $this->csv_excel_force_text_numeric_code($row['item_no'] ?? ''),
+                $row['item_name'] ?? '',
+                $this->csv_excel_numeric($row['qty'] ?? '', 4),
+                $this->csv_excel_numeric($row['bonus'] ?? '', 4),
+                $this->csv_excel_numeric($row['unit_cost'] ?? '', 4),
+                $this->csv_excel_numeric($row['unit_price'] ?? '', 4),
+                $this->csv_excel_numeric($row['sales'] ?? '', 4),
+                $this->csv_excel_numeric($row['discount'] ?? '', 4),
+                $this->csv_excel_numeric($row['net_sales'] ?? '', 4),
+                $this->csv_excel_numeric($row['vat'] ?? '', 4),
+                $this->csv_excel_numeric($row['receivable'] ?? '', 4),
+                $this->csv_excel_numeric($row['cogs'] ?? '', 4),
+                $this->csv_excel_numeric($row['profit'] ?? '', 4),
+            ]);
+        }
+        mysqli_free_result($res);
+
+        fputcsv($out, [
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            lang('Grand Total') . ':',
+            $this->csv_excel_numeric($totals->sum_qty, 4),
+            $this->csv_excel_numeric($totals->sum_bonus, 4),
+            '',
+            '',
+            $this->csv_excel_numeric($totals->sum_sales, 4),
+            $this->csv_excel_numeric($totals->sum_discount, 4),
+            $this->csv_excel_numeric($totals->sum_net_sales, 4),
+            $this->csv_excel_numeric($totals->sum_vat, 4),
+            $this->csv_excel_numeric($totals->sum_receivable, 4),
+            $this->csv_excel_numeric($totals->sum_cogs, 4),
+            $this->csv_excel_numeric($totals->sum_profit, 4),
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Get Sales Per Item Report Data
+     * Shows sales and returns with item details, profitability
+     *
+     * Large date ranges can return tens of thousands of rows; loading them all causes
+     * memory/time limit failures. Use $limit/$offset for server-side pagination.
+     *
+     * @param string $start_date - Start date (formatted)
+     * @param string $end_date - End date (formatted)
+     * @param string $invoice_id - Invoice ID or reference number
+     * @param string $salesman_name - Sales agent name
+     * @param string $item_code - Item code to filter
+     * @param string|null $category
+     * @param int|null $limit Max rows (100–5000 for UI). Pass null for no LIMIT (bulk export only).
+     * @param int $offset
+     * @return array{rows: array, total: int, totals: stdClass|null}
+     */
+    public function getSalesPerItem($start_date, $end_date, $invoice_id, $salesman_name, $item_code, $category = null, $limit = 100, $offset = 0)
+    {
+        $union_inner = $this->sales_per_item_union_inner_sql($start_date, $end_date, $invoice_id, $salesman_name, $item_code, $category);
+
+        $count_sql = "SELECT COUNT(*) AS spi_cnt FROM {$union_inner} AS spi_union";
+        $count_row = $this->db->query($count_sql)->row();
+        $total = $count_row ? (int) $count_row->spi_cnt : 0;
+
+        $agg_sql = "
+            SELECT
+                COALESCE(SUM(spi_union.qty), 0) AS sum_qty,
+                COALESCE(SUM(spi_union.bonus), 0) AS sum_bonus,
+                COALESCE(SUM(spi_union.sales), 0) AS sum_sales,
+                COALESCE(SUM(spi_union.discount), 0) AS sum_discount,
+                COALESCE(SUM(spi_union.net_sales), 0) AS sum_net_sales,
+                COALESCE(SUM(spi_union.vat), 0) AS sum_vat,
+                COALESCE(SUM(spi_union.receivable), 0) AS sum_receivable,
+                COALESCE(SUM(spi_union.cogs), 0) AS sum_cogs,
+                COALESCE(SUM(spi_union.profit), 0) AS sum_profit
+            FROM {$union_inner} AS spi_union
+        ";
+        $totals = $this->db->query($agg_sql)->row();
+        if (!$totals) {
+            $totals = (object) [
+                'sum_qty' => 0,
+                'sum_bonus' => 0,
+                'sum_sales' => 0,
+                'sum_discount' => 0,
+                'sum_net_sales' => 0,
+                'sum_vat' => 0,
+                'sum_receivable' => 0,
+                'sum_cogs' => 0,
+                'sum_profit' => 0,
+            ];
+        }
+
+        $unlimited = ($limit === null);
+        if (!$unlimited) {
+            $limit = (int) $limit;
+            $offset = (int) $offset;
+            if ($limit < 1) {
+                $limit = 100;
+            }
+            if ($limit > 5000) {
+                $limit = 5000;
+            }
+            if ($offset < 0) {
+                $offset = 0;
+            }
+            $limit_sql = "LIMIT {$limit} OFFSET {$offset}";
+        } else {
+            $limit_sql = '';
+        }
+
+        $sql = "
+            SELECT * FROM {$union_inner} AS spi_union
+            ORDER BY spi_union.date DESC, spi_union.invoice
+            {$limit_sql}
         ";
         
         $query = $this->db->query($sql);
-        
-        if ($query->num_rows() > 0) {
-            return $query->result();
-        }
-        
-        return [];
+        $rows = ($query && $query->num_rows() > 0) ? $query->result() : [];
+
+        return [
+            'rows' => $rows,
+            'total' => $total,
+            'totals' => $totals,
+        ];
     }
 
     public function getSalesPerInvoice($start_date, $end_date, $customer_id = null, $pharmacy_id = null, $salesman_name = null, $record_type = 'all')

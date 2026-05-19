@@ -4395,6 +4395,33 @@ class Reports extends MY_Controller
         }
     }
 
+    /**
+     * Ledger ids for customer statement: current receivable ledger plus comma-separated old_ledgers on company.
+     *
+     * @param object|null $supplier_details
+     * @return int[]
+     */
+    private function customerStatementLedgerIdList($supplier_details)
+    {
+        if (!$supplier_details) {
+            return [];
+        }
+        $parts = [];
+        if (!empty($supplier_details->ledger_account) && is_numeric($supplier_details->ledger_account)) {
+            $parts[] = $supplier_details->ledger_account;
+        }
+        if (!empty($supplier_details->old_ledgers)) {
+            foreach (explode(',', $supplier_details->old_ledgers) as $p) {
+                $p = trim($p);
+                if ($p !== '' && is_numeric($p)) {
+                    $parts[] = $p;
+                }
+            }
+        }
+
+        return $this->reports_model->normalizeCustomerStatementLedgerIds($parts);
+    }
+
     public function customer_statement()
     {
         //$this->sma->checkPermissions('customers');
@@ -4407,6 +4434,7 @@ class Reports extends MY_Controller
 
         $this->data['customers'] = $this->site->getAllCompanies('customer');
         $this->data['biller'] = $this->site->getDefaultBiller();
+        $this->data['statement_ledger_options'] = [];
 
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
@@ -4414,9 +4442,9 @@ class Reports extends MY_Controller
             $supplier_id = $this->input->post('customer');
 
             $supplier_details = $this->companies_model->getCompanyByID($supplier_id);
-            // print_r($supplier_details);exit;
-            $ledger_account = $supplier_details->ledger_account;
-            $supplier_statement = $this->reports_model->getCustomerStatement($start_date, $end_date, $supplier_id, $ledger_account);
+            $ledger_ids = $this->customerStatementLedgerIdList($supplier_details);
+            $supplier_statement = $this->reports_model->getCustomerStatement($start_date, $end_date, $supplier_id, $ledger_ids);
+            $this->data['statement_ledger_options'] = $this->reports_model->getStatementLedgerOptions($ledger_ids);
 
             // Get customer aging data
             $aging_data = $this->reports_model->getCustomerAgingNew(120, date('Y-m-d'), [$supplier_id]);
@@ -4483,6 +4511,8 @@ class Reports extends MY_Controller
         } else {
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customer_statement')]];
             $meta = ['page_title' => lang('customer_statement'), 'bc' => $bc];
+            $this->data['supplier_statement'] = [];
+            $this->data['total_ob'] = $this->sma->formatDecimal(0);
             $this->page_construct('reports/customers_statement', $meta, $this->data);
         }
     }
@@ -4502,6 +4532,7 @@ class Reports extends MY_Controller
 
         $this->data['customers'] = $this->site->getAllCompanies('customer');
         $this->data['biller'] = $this->site->getDefaultBiller();
+        $this->data['statement_ledger_options'] = [];
 
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
@@ -4509,8 +4540,9 @@ class Reports extends MY_Controller
             $supplier_id = $this->input->post('customer');
 
             $supplier_details = $this->companies_model->getCompanyByID($supplier_id);
-            $ledger_account = $supplier_details->ledger_account;
-            $supplier_statement = $this->reports_model->getCustomerStatement($start_date, $end_date, $supplier_id, $ledger_account);
+            $ledger_ids = $this->customerStatementLedgerIdList($supplier_details);
+            $supplier_statement = $this->reports_model->getCustomerStatement($start_date, $end_date, $supplier_id, $ledger_ids);
+            $this->data['statement_ledger_options'] = $this->reports_model->getStatementLedgerOptions($ledger_ids);
 
             // Get customer aging data
             $aging_data = $this->reports_model->getCustomerAgingNew(120, date('Y-m-d'), [$supplier_id]);
@@ -7700,7 +7732,7 @@ class Reports extends MY_Controller
         $salesman = $this->input->get('salesman') ? $this->input->get('salesman') : null;
         $item_code = $this->input->get('item_code') ? $this->input->get('item_code') : null;
         $category = $this->input->get('category') ? $this->input->get('category') : null;
-        
+        $export_excel = $this->input->get('export_excel');
         // Get sales men for dropdown
         $this->db->select('id, name');
         $this->db->from('sales_man');
@@ -7737,18 +7769,91 @@ class Reports extends MY_Controller
             // Format dates only if provided
             $formatted_start_date = $start_date ? $this->sma->fld($start_date) : null;
             $formatted_end_date = $end_date ? $this->sma->fld($end_date) : null;
-            
-            // Fetch data from model
-            $sales_data = $this->reports_model->getSalesPerItem(
-                $formatted_start_date, 
-                $formatted_end_date, 
+
+            if ($export_excel) {
+                @set_time_limit(600);
+                if (function_exists('ini_set')) {
+                    @ini_set('memory_limit', '256M');
+                }
+
+                if (function_exists('ob_get_level')) {
+                    while (ob_get_level() > 0) {
+                        @ob_end_clean();
+                    }
+                }
+
+                $filename = 'Sales_Per_Item_' . date('Y-m-d_H_i_s') . '.csv';
+                header('Content-Type: text/csv; charset=UTF-8');
+                header('Content-Disposition: attachment; filename="' . $filename . '"');
+                header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+                header('Pragma: public');
+                header('Expires: 0');
+
+                $out = fopen('php://output', 'w');
+                if ($out === false) {
+                    $this->session->set_flashdata('error', 'Could not start download.');
+                    redirect(admin_url('reports/sales_per_item'));
+                }
+
+                fwrite($out, "\xEF\xBB\xBF");
+                $this->reports_model->stream_sales_per_item_csv(
+                    $formatted_start_date,
+                    $formatted_end_date,
+                    $invoice_id,
+                    $salesman_name,
+                    $item_code,
+                    $category,
+                    $out
+                );
+                fclose($out);
+                exit;
+            }
+
+            $per_page = 100;
+            $spi_page = (int) $this->input->get('spi_page');
+            if ($spi_page < 1) {
+                $spi_page = 1;
+            }
+            $offset = ($spi_page - 1) * $per_page;
+
+            $sales_result = $this->reports_model->getSalesPerItem(
+                $formatted_start_date,
+                $formatted_end_date,
                 $invoice_id,
                 $salesman_name,
                 $item_code,
-                $category
+                $category,
+                $per_page,
+                $offset
             );
-            
-            $this->data['sales_data'] = $sales_data;
+
+            $total_rows = (int) $sales_result['total'];
+            if ($total_rows > 0 && $per_page > 0) {
+                $max_page = (int) ceil($total_rows / $per_page);
+                if ($max_page < 1) {
+                    $max_page = 1;
+                }
+                if ($spi_page > $max_page) {
+                    $spi_page = $max_page;
+                    $offset = ($spi_page - 1) * $per_page;
+                    $sales_result = $this->reports_model->getSalesPerItem(
+                        $formatted_start_date,
+                        $formatted_end_date,
+                        $invoice_id,
+                        $salesman_name,
+                        $item_code,
+                        $category,
+                        $per_page,
+                        $offset
+                    );
+                }
+            }
+
+            $this->data['sales_data'] = $sales_result['rows'];
+            $this->data['sales_data_total'] = $sales_result['total'];
+            $this->data['sales_data_totals'] = $sales_result['totals'];
+            $this->data['sales_per_page'] = $per_page;
+            $this->data['sales_page'] = $spi_page;
         }
         
         $bc = [
@@ -8629,7 +8734,7 @@ class Reports extends MY_Controller
         $this->data['customers']   = $this->site->getAllCompanies('customer');
         $this->data['salesmen']    = $this->db->select('id, name')->from('sales_man')->order_by('name', 'asc')->get()->result();
         $this->data['suppliers']   = [];
-        $this->data['form_action'] = admin_url('reports/unpaid_invoices_ar');
+        $this->data['form_action'] = 'reports/unpaid_invoices_ar';
 
         // AR report uses customer/sales sources only.
         $invoices = $this->get_unpaid_invoices_ar($at_date, $party_id, $ref_no, $salesman_id);
@@ -8672,7 +8777,7 @@ class Reports extends MY_Controller
         $this->data['customers']   = [];
         $this->data['salesmen']    = [];
         $this->data['suppliers']   = $this->site->getAllCompanies('supplier');
-        $this->data['form_action'] = admin_url('reports/unpaid_invoices_ap');
+        $this->data['form_action'] = 'reports/unpaid_invoices_ap';
 
         // AP report uses supplier/purchase sources only.
         $invoices = $this->get_unpaid_invoices_ap($at_date, $party_id, $ref_no);
@@ -9013,9 +9118,12 @@ class Reports extends MY_Controller
     {
         $this->load->admin_model('sales_model');
 
+        $from_date_in_query = array_key_exists('from_date', $_GET);
+
         $filters = [
             'customer_id' => $this->input->get('customer_id') ?: '',
-            'from_date'   => $this->input->get('from_date')   ?: '',
+            'sales_agent' => $this->input->get('sales_agent') ?: '',
+            'from_date'   => $from_date_in_query ? trim((string) $this->input->get('from_date')) : '',
             'to_date'     => $this->input->get('to_date')     ?: '',
         ];
 
@@ -9026,9 +9134,16 @@ class Reports extends MY_Controller
                 if ($d) { $filters[$f] = $d->format('Y-m-d'); }
             }
         }
+        // Default start of month only when from_date was not sent at all (first visit / clean URL)
+        if (!$from_date_in_query && empty($filters['from_date'])) {
+            $filters['from_date'] = date('Y-m-01');
+        }
 
         $page     = max(1, (int)($this->input->get('page') ?: 1));
         $per_page = 100;
+
+        $sm_query = $this->db->order_by('name', 'ASC')->get('sales_man');
+        $salesmen = ($sm_query->num_rows() > 0) ? $sm_query->result() : [];
 
         $payments = $this->sales_model->getPaymentReferences($filters);
         $total    = count($payments);
@@ -9044,6 +9159,7 @@ class Reports extends MY_Controller
         $this->data['page']            = $page;
         $this->data['per_page']        = $per_page;
         $this->data['customers']       = $this->site->getAllCompanies('customer');
+        $this->data['salesmen']        = $salesmen;
 
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => 'Customer Collections Report']];
         $meta = ['page_title' => 'Customer Collections Report', 'bc' => $bc];
@@ -9057,9 +9173,11 @@ class Reports extends MY_Controller
     {
         $this->load->admin_model('purchases_model');
 
+        $from_date_in_query = array_key_exists('from_date', $_GET);
+
         $filters = [
             'supplier_id' => $this->input->get('supplier_id') ?: '',
-            'from_date'   => $this->input->get('from_date')   ?: '',
+            'from_date'   => $from_date_in_query ? trim((string) $this->input->get('from_date')) : '',
             'to_date'     => $this->input->get('to_date')     ?: '',
         ];
 
@@ -9069,6 +9187,9 @@ class Reports extends MY_Controller
                 $d = DateTime::createFromFormat('d/m/Y', $filters[$f]);
                 if ($d) { $filters[$f] = $d->format('Y-m-d'); }
             }
+        }
+        if (!$from_date_in_query && empty($filters['from_date'])) {
+            $filters['from_date'] = date('Y-m-01');
         }
 
         $page     = max(1, (int)($this->input->get('page') ?: 1));

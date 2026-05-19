@@ -1,9 +1,19 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<?php $stmt_ledgers = isset($statement_ledger_options) && is_array($statement_ledger_options) ? $statement_ledger_options : []; ?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
 <script>
     function exportTableToExcel(tableId, filename = 'table.xlsx') {
         const table = document.getElementById(tableId);
-        const wb = XLSX.utils.table_to_book(table, {
+        if (!table) {
+            return;
+        }
+        const clone = table.cloneNode(true);
+        clone.querySelectorAll('[data-xls-exclude="1"]').forEach(function (el) {
+            if (el.parentNode) {
+                el.parentNode.removeChild(el);
+            }
+        });
+        const wb = XLSX.utils.table_to_book(clone, {
             sheet: 'Sheet 1'
         });
         XLSX.writeFile(wb, filename);
@@ -15,7 +25,16 @@
        $('.viewtype').val('');
     } 
     $(document).ready(function() {
-
+        $(document).on('change', '#statement_ledger_filter', function() {
+            var v = $(this).val();
+            $('#poTable tbody tr[data-stmt-row="1"]').each(function() {
+                if (!v) {
+                    $(this).show();
+                } else {
+                    $(this).toggle(String($(this).data('ledger-id')) === String(v));
+                }
+            });
+        });
     });
 </script>
 <?php if($viewtype=='pdf' || $viewtype=='pdf_new'){ ?>
@@ -131,6 +150,19 @@
                 <?php echo form_close(); 
                 } ?>
                 <hr />
+                <?php if ($viewtype != 'pdf' && $viewtype != 'pdf_new' && count($stmt_ledgers) > 1) { ?>
+                <div class="row" style="margin-bottom:12px;">
+                    <div class="col-md-4">
+                        <label class="control-label"><?= lang('customer_statement_ledger_filter'); ?></label>
+                        <select id="statement_ledger_filter" class="form-control input-tip">
+                            <option value=""><?= lang('all'); ?></option>
+                            <?php foreach ($stmt_ledgers as $lid => $label) { ?>
+                            <option value="<?= (int) $lid; ?>"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?></option>
+                            <?php } ?>
+                        </select>
+                    </div>
+                </div>
+                <?php } ?>
                 <div class="row">
                     <div class="controls table-controls" style="font-size: 12px !important;">
                         <table id="poTable"
@@ -142,6 +174,9 @@
                                 <?php } ?>
                                 <th><?= lang('date'); ?></th>
                                 <th><?= lang('type'); ?></th>
+                                <?php if ($viewtype != 'pdf' && $viewtype != 'pdf_new') { ?>
+                                <th data-xls-exclude="1"><?= lang('customer_statement_ledger'); ?></th>
+                                <?php } ?>
                                 <th><?= lang('Num'); ?></th>
                                 <th>Days</th>
                                 <!--<th><?= lang('name'); ?></th>-->
@@ -153,11 +188,31 @@
                             </tr>
                             </thead>
                             <tbody style="text-align:center;">
-                                <tr>
-                                    <td colspan="2">Opening Balance<td>
-                                    <td colspan="4">&nbsp;</td>
+                                <?php if ($viewtype != 'pdf' && $viewtype != 'pdf_new') { ?>
+                                <tr class="stmt-opening">
+                                    <td></td>
+                                    <td></td>
+                                    <td style="text-align:left;font-weight:bold;">Opening Balance</td>
+                                    <td data-xls-exclude="1"></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
                                     <td><?= $this->sma->formatNumber($total_ob); ?></td>
                                 </tr>
+                                <?php } else { ?>
+                                <tr class="stmt-opening">
+                                    <td></td>
+                                    <td style="text-align:left;font-weight:bold;">Opening Balance</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td><?= $this->sma->formatNumber($total_ob); ?></td>
+                                </tr>
+                                <?php } ?>
                                 <?php
                                     $count = 0;
                                     $balance = $total_ob;
@@ -167,7 +222,15 @@
                                     $totalBalance = 0;
                                     $openingBalance = $total_ob;
 
-                                    foreach($supplier_statement as $statement){
+                                    foreach (isset($supplier_statement) ? $supplier_statement : [] as $statement) {
+                                        $link = '#';
+                                        $stmt_lid = isset($statement->statement_ledger_id) ? (int) $statement->statement_ledger_id : 0;
+                                        $ledger_cell = '';
+                                        if (!empty($statement->ledger_name)) {
+                                            $ledger_cell = !empty($statement->code) ? $statement->code . ' — ' . $statement->ledger_name : $statement->ledger_name;
+                                        } elseif (!empty($statement->code)) {
+                                            $ledger_cell = $statement->code;
+                                        }
                                         
                                         if($statement->dc == 'C'){
                                             $balance =  $balance - $statement->amount;
@@ -215,12 +278,15 @@
                                         }
 
                                         ?>
-                                            <tr>
+                                            <tr data-stmt-row="1" data-ledger-id="<?= $stmt_lid; ?>">
                                                 <?php if($viewtype!='pdf' && $viewtype!='pdf_new'){ ?>
                                                 <td><?= $count; ?></td>
                                                 <?php } ?>
                                                 <td><?= $statement->date; ?></td>
                                                 <td><a target="_blank" href="<?= $link; ?>"><?= $transaction_type; ?></a></td>
+                                                <?php if ($viewtype != 'pdf' && $viewtype != 'pdf_new') { ?>
+                                                <td data-xls-exclude="1"><?= htmlspecialchars($ledger_cell, ENT_QUOTES, 'UTF-8'); ?></td>
+                                                <?php } ?>
                                                 
                                                 <td><?= $transaction_id; ?></td>
                                                 <td><?= $sale_payment_term; ?></td>
@@ -262,6 +328,9 @@
                                 <?php } ?>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
+                                <?php if ($viewtype != 'pdf' && $viewtype != 'pdf_new') { ?>
+                                <th data-xls-exclude="1">&nbsp;</th>
+                                <?php } ?>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>

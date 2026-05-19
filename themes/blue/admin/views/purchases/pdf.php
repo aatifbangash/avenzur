@@ -324,12 +324,15 @@
                                 <td><?php echo $this->sma->formatNumber($inv->total);?></td>
                             </tr>
                             <tr>
-                                <td>T-DISC</td>
-                                <td><?php echo $this->sma->formatNumber($inv->total_discount);?></td>
+                                <td>INV-DISC</td>
+                                <td><?php
+                                    $grand_deal_pdf = (float) (isset($inv->grand_deal_discount) ? $inv->grand_deal_discount : 0);
+                                    echo $this->sma->formatNumber($inv->total_discount - $grand_deal_pdf);
+                                ?></td>
                             </tr>
                             <tr>
                                 <td>Net Before VAT</td>
-                                <td><?php echo $this->sma->formatNumber($inv->total_net_purchase);?></td>
+                                <td><?php echo $this->sma->formatNumber($inv->total_net_purchase + $grand_deal_pdf); ?></td>
                             </tr>
                             <tr>
                                 <td>Total VAT</td>
@@ -337,7 +340,7 @@
                             </tr>
                             <tr>
                                 <td>Total After VAT</td>
-                                <td><?php echo $this->sma->formatNumber($inv->grand_total);?></td>
+                                <td><?php echo $this->sma->formatNumber($inv->grand_total + $grand_deal_pdf); ?></td>
                             </tr>
                 </table>
             </div>
@@ -348,16 +351,14 @@
 
             <div class="row">
                 <div class="col-xs-7 pull-left">
-                    <?php if ($inv->note || $inv->note != '') {
-                        ?>
-                        <div class="well well-sm">
-                            <p class="bold"><?=lang('note'); ?>:</p>
-
-                            <div><?=$this->sma->decode_html($inv->note); ?></div>
-                        </div>
                     <?php
-                    }
-                    ?>
+                    $grand_deal_pdf = (float) (isset($inv->grand_deal_discount) ? $inv->grand_deal_discount : 0);
+                    if ($grand_deal_pdf > 0): ?>
+                    <div style="margin-bottom:8px;">
+                        <strong><?= lang('Deal Discount'); ?>:</strong>
+                        <?php echo $this->sma->formatNumber($grand_deal_pdf); ?>
+                    </div>
+                    <?php endif; ?>
                 </div>
                 <!--<div class="col-xs-4 pull-right">
                     <p><?=lang('order_by');?>: <?=$created_by->first_name . ' ' . $created_by->last_name;?> </p>
@@ -369,6 +370,17 @@
                     <p><?=lang('stamp_sign');?></p>
                 </div>-->
             </div>
+
+            <?php if ($inv->note || $inv->note != '') { ?>
+            <div class="row">
+                <div class="col-xs-12">
+                    <div class="well well-sm">
+                        <p class="bold"><?= lang('note'); ?>:</p>
+                        <div><?= $this->sma->decode_html($inv->note); ?></div>
+                    </div>
+                </div>
+            </div>
+            <?php } ?>
 
         </div>
     </div>

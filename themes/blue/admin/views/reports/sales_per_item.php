@@ -1,81 +1,80 @@
-<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
+<?php defined('BASEPATH') or exit('No direct script access allowed');
+$spi_export_q = $_GET;
+$spi_export_q['export_excel'] = '1';
+unset($spi_export_q['spi_page']);
+$spi_export_url = admin_url('reports/sales_per_item?' . http_build_query($spi_export_q));
+?>
 <style>
-    #salesItemTable th,
-    #salesItemTable td {
+    .sales-pi-root .spi-table-block {
+        min-width: 0;
+        max-width: 100%;
+    }
+    .sales-pi-root .spi-table-block .table-responsive {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .sales-pi-root #salesItemTable {
+        margin-bottom: 0;
+    }
+    .sales-pi-root #salesItemTable th:nth-child(-n+5),
+    .sales-pi-root #salesItemTable td:nth-child(-n+5),
+    .sales-pi-root #salesItemTable th:nth-child(12),
+    .sales-pi-root #salesItemTable td:nth-child(12),
+    .sales-pi-root #salesItemTable th:nth-child(n+14),
+    .sales-pi-root #salesItemTable td:nth-child(n+14) {
         white-space: nowrap;
         font-size: 12px;
         padding: 4px 6px;
         vertical-align: middle;
     }
-    /* Allow wrapping only for long-text columns */
-    #salesItemTable th:nth-child(10),
-    #salesItemTable td:nth-child(10),
-    #salesItemTable th:nth-child(12),
-    #salesItemTable td:nth-child(12) {
+    .sales-pi-root #salesItemTable th:nth-child(n+6):nth-child(-n+11),
+    .sales-pi-root #salesItemTable td:nth-child(n+6):nth-child(-n+11) {
         white-space: normal;
-        min-width: 130px;
-        max-width: 200px;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        font-size: 12px;
+        padding: 4px 6px;
+        vertical-align: middle;
+        max-width: 9rem;
+    }
+    .sales-pi-root #salesItemTable th:nth-child(13),
+    .sales-pi-root #salesItemTable td:nth-child(13) {
+        white-space: normal;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        font-size: 12px;
+        padding: 4px 6px;
+        vertical-align: middle;
+        max-width: 16rem;
+    }
+    .sales-pi-root #salesItemTable th:nth-child(5),
+    .sales-pi-root #salesItemTable td:nth-child(5) {
+        min-width: 6.5rem;
+        max-width: 8.5rem;
+        width: 1%;
+        padding: 4px 5px;
+        font-size: 12px;
+    }
+    .sales-pi-root #salesItemTable th:nth-child(5) {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .sales-pi-root .spi-pager-well {
+        max-width: 100%;
+        overflow-wrap: anywhere;
     }
 </style>
-<script>
-    function exportTableToExcel(tableId, filename = 'table.xlsx') {
-        const table = document.getElementById(tableId);
-        const wb = XLSX.utils.table_to_book(table, {
-            sheet: 'Sheet 1'
-        });
-        XLSX.writeFile(wb, filename);
-    }
 
-    // ── Pagination ────────────────────────────────────────────────────
-    var SPI_PAGE_SIZE = 100;
-    var SPI_current   = 1;
-
-    function spiGetRows() {
-        return $('#salesItemTable tbody tr.spi-data-row');
-    }
-
-    function spiRender() {
-        var rows  = spiGetRows();
-        var total = rows.length;
-        var pages = Math.max(1, Math.ceil(total / SPI_PAGE_SIZE));
-        if (SPI_current > pages) SPI_current = pages;
-
-        rows.hide();
-        var start = (SPI_current - 1) * SPI_PAGE_SIZE;
-        rows.slice(start, start + SPI_PAGE_SIZE).show();
-
-        // Info
-        var from = total === 0 ? 0 : start + 1;
-        var to   = Math.min(start + SPI_PAGE_SIZE, total);
-        $('#spi-page-info').text('Showing ' + from + '\u2013' + to + ' of ' + total + ' rows');
-
-        // Buttons
-        $('#spi-prev').prop('disabled', SPI_current <= 1);
-        $('#spi-next').prop('disabled', SPI_current >= pages);
-        $('#spi-page-num').text('Page ' + SPI_current + ' of ' + pages);
-    }
-
-    $(document).ready(function () {
-        if ($('.spi-data-row').length) { spiRender(); }
-
-        $(document).on('click', '#spi-prev', function () {
-            if (SPI_current > 1) { SPI_current--; spiRender(); }
-        });
-        $(document).on('click', '#spi-next', function () {
-            var pages = Math.max(1, Math.ceil(spiGetRows().length / SPI_PAGE_SIZE));
-            if (SPI_current < pages) { SPI_current++; spiRender(); }
-        });
-    });
-</script>
-
-<div class="box">
+<div class="box sales-pi-root">
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-file-text"></i><?= lang('Sales Per Item'); ?></h2>
         <div class="box-icon">
             <ul class="btn-tasks">
                 <li class="dropdown">
-                    <a href="javascript:void(0);" onclick="exportTableToExcel('salesItemTable', 'sales_per_item.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a>
+                    <a href="<?= $spi_export_url ?>" class="tip" title="<?= lang('download'); ?> CSV (<?= lang('all'); ?>)" id="xls"><i class="icon fa fa-file-excel-o"></i></a>
                 </li>
             </ul>
         </div>
@@ -157,7 +156,7 @@
 
                 <hr />
 
-                <div class="row">
+                <div class="row spi-table-block">
                     <div class="col-lg-12">
                         <div class="table-responsive">
                             <table id="salesItemTable" class="table table-bordered table-striped table-condensed table-hover">
@@ -191,39 +190,23 @@
                                 </thead>
                                 <tbody>
                                     <?php
+                                    $spi_total_rows = isset($sales_data_total) ? (int) $sales_data_total : 0;
+                                    $spi_per_page = isset($sales_per_page) ? (int) $sales_per_page : 100;
+                                    $spi_page_num = isset($sales_page) ? (int) $sales_page : 1;
+                                    $spi_total_pages = $spi_per_page > 0 ? (int) ceil($spi_total_rows / $spi_per_page) : 1;
+                                    if ($spi_total_pages < 1) {
+                                        $spi_total_pages = 1;
+                                    }
+
                                     if (isset($sales_data) && !empty($sales_data)) {
-                                        $count = 0;
-                                        // Initialize grand totals
-                                        $grand_totals = [
-                                            'qty' => 0,
-                                            'bonus' => 0,
-                                            'sales' => 0,
-                                            'discount' => 0,
-                                            'net_sales' => 0,
-                                            'vat' => 0,
-                                            'receivable' => 0,
-                                            'cogs' => 0,
-                                            'profit' => 0
-                                        ];
+                                        $count = ($spi_page_num - 1) * $spi_per_page;
+                                        $use_sql_totals = !empty($sales_data_totals);
 
                                         foreach ($sales_data as $data) {
                                             $count++;
-                                            
-                                            // Accumulate totals
-                                            $grand_totals['qty'] += $data->qty;
-                                            $grand_totals['bonus'] += $data->bonus;
-                                            $grand_totals['sales'] += $data->sales;
-                                            $grand_totals['discount'] += $data->discount;
-                                            $grand_totals['net_sales'] += $data->net_sales;
-                                            $grand_totals['vat'] += $data->vat;
-                                            $grand_totals['receivable'] += $data->receivable;
-                                            $grand_totals['cogs'] += $data->cogs;
-                                            $grand_totals['profit'] += $data->profit;
-                                            
-                                            // Determine row class for returns (red)
                                             $row_class = ($data->type == 'Return') ? 'style="background-color: #ffe6e6;"' : '';
                                             ?>
-                                            <tr class="spi-data-row" <?= $row_class ?>>
+                                            <tr <?= $row_class ?>>
                                                 <td><?= $count ?></td>
                                                 <td><?= $data->type ?></td>
                                                 <td><?= $data->date ?></td>
@@ -252,22 +235,24 @@
                                         <?php
                                         }
 
-                                        // Display grand totals row
-                                        ?>
+                                        if ($use_sql_totals) {
+                                            $t = $sales_data_totals;
+                                            ?>
                                         <tr style="background-color: #f0f0f0; font-weight: bold;">
                                             <td colspan="13" class="text-right"><strong><?= lang('Grand Total'); ?>:</strong></td>
-                                            <td class="text-right"><strong><?= $this->sma->formatQuantity($grand_totals['qty']) ?></strong></td>
-                                            <td class="text-right"><strong><?= $grand_totals['bonus'] ?></strong></td>
+                                            <td class="text-right"><strong><?= $this->sma->formatQuantity($t->sum_qty) ?></strong></td>
+                                            <td class="text-right"><strong><?= number_format((float) $t->sum_bonus, 2, '.', ',') ?></strong></td>
                                             <td colspan="2"></td>
-                                            <td class="text-right"><strong><?= number_format($grand_totals['sales'], 2, '.', ',') ?></strong></td>
-                                            <td class="text-right"><strong><?= number_format($grand_totals['discount'], 2, '.', ',') ?></strong></td>
-                                            <td class="text-right"><strong><?= number_format($grand_totals['net_sales'], 2, '.', ',') ?></strong></td>
-                                            <td class="text-right"><strong><?= number_format($grand_totals['vat'], 2, '.', ',') ?></strong></td>
-                                            <td class="text-right"><strong><?= number_format($grand_totals['receivable'], 2, '.', ',') ?></strong></td>
-                                            <td class="text-right"><strong><?= number_format($grand_totals['cogs'], 2, '.', ',') ?></strong></td>
-                                            <td class="text-right"><strong><?= number_format($grand_totals['profit'], 2, '.', ',') ?></strong></td>
+                                            <td class="text-right"><strong><?= number_format($t->sum_sales, 2, '.', ',') ?></strong></td>
+                                            <td class="text-right"><strong><?= number_format($t->sum_discount, 2, '.', ',') ?></strong></td>
+                                            <td class="text-right"><strong><?= number_format($t->sum_net_sales, 2, '.', ',') ?></strong></td>
+                                            <td class="text-right"><strong><?= number_format($t->sum_vat, 2, '.', ',') ?></strong></td>
+                                            <td class="text-right"><strong><?= number_format($t->sum_receivable, 2, '.', ',') ?></strong></td>
+                                            <td class="text-right"><strong><?= number_format($t->sum_cogs, 2, '.', ',') ?></strong></td>
+                                            <td class="text-right"><strong><?= number_format($t->sum_profit, 2, '.', ',') ?></strong></td>
                                         </tr>
-                                    <?php
+                                            <?php
+                                        }
                                     } else {
                                         ?>
                                         <tr>
@@ -280,19 +265,30 @@
                             </table>
                         </div>
 
-                        <!-- Pagination controls -->
-                        <?php if (isset($sales_data) && !empty($sales_data)): ?>
-                        <div style="margin-top:10px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                            <button id="spi-prev" class="btn btn-default btn-sm" type="button">
-                                <i class="fa fa-chevron-left"></i> Prev
-                            </button>
-                            <span id="spi-page-num" style="font-size:13px;"></span>
-                            <button id="spi-next" class="btn btn-default btn-sm" type="button">
-                                Next <i class="fa fa-chevron-right"></i>
-                            </button>
-                            <span id="spi-page-info" class="text-muted" style="font-size:12px; margin-left:8px;"></span>
+                        <?php
+                        if (!empty($sales_data_total) && (int) $sales_data_total > 0) {
+                            $spi_link = [];
+                            foreach (['start_date', 'end_date', 'invoice_id', 'salesman', 'item_code', 'category'] as $__k) {
+                                if (isset(${$__k}) && ${$__k} !== '' && ${$__k} !== null) {
+                                    $spi_link[$__k] = ${$__k};
+                                }
+                            }
+                            $spi_from = $spi_total_rows ? (($spi_page_num - 1) * $spi_per_page) + 1 : 0;
+                            $spi_to = min($spi_page_num * $spi_per_page, $spi_total_rows);
+                            ?>
+                        <div class="well well-sm spi-pager-well" style="margin-top:10px; display:flex; align-items:center; flex-wrap:wrap; gap:10px;">
+                            <span class="text-muted">Rows <?= (int) $spi_from ?>–<?= (int) $spi_to ?> of <?= (int) $spi_total_rows ?> · Page <?= (int) $spi_page_num ?> / <?= (int) $spi_total_pages ?></span>
+                            <?php if ($spi_total_pages > 1) {
+                                $spi_link['spi_page'] = max(1, $spi_page_num - 1);
+                                $prev_u = admin_url('reports/sales_per_item?' . http_build_query($spi_link));
+                                $spi_link['spi_page'] = min($spi_total_pages, $spi_page_num + 1);
+                                $next_u = admin_url('reports/sales_per_item?' . http_build_query($spi_link));
+                                ?>
+                            <a class="btn btn-default btn-sm<?= $spi_page_num <= 1 ? ' disabled' : '' ?>" href="<?= $spi_page_num <= 1 ? '#' : $prev_u ?>"><i class="fa fa-chevron-left"></i> Prev</a>
+                            <a class="btn btn-default btn-sm<?= $spi_page_num >= $spi_total_pages ? ' disabled' : '' ?>" href="<?= $spi_page_num >= $spi_total_pages ? '#' : $next_u ?>">Next <i class="fa fa-chevron-right"></i></a>
+                            <?php } ?>
                         </div>
-                        <?php endif; ?>
+                        <?php } ?>
                     </div>
                 </div>
             </div>

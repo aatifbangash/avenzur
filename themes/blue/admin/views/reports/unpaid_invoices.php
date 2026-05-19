@@ -57,7 +57,7 @@
                     $export_params = $_GET;
                     $export_params['export_excel'] = 1;
                     ?>
-                    <a href="<?= ($form_action ?? admin_url('reports/unpaid_invoices')) . '?' . http_build_query($export_params) ?>"
+                    <a href="<?= admin_url($form_action ?? 'reports/unpaid_invoices') . '?' . http_build_query($export_params) ?>"
                        class="tip" title="Export (Server-side Excel)">
                         <i class="icon fa fa-download"></i>
                     </a>
