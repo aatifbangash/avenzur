@@ -80,8 +80,9 @@
                                 <th>#</th>
                                 <th><?= lang('Sequence Code'); ?></th>
                                 <th><?= lang('name'); ?></th>
-                                <th><?= lang('Company'); ?></th>
                                 <th><?= lang('Category'); ?></th>
+                                <th><?= lang('Payment Term'); ?></th>
+                                <th><?= lang('Credit Limit'); ?></th>
                                 <th><?= lang('OB Debit'); ?></th>
                                 <th><?= lang('OB Credit'); ?></th>
                                 <th><?= lang('Trs Debit'); ?></th>
@@ -140,8 +141,9 @@
                                                 <td><?= $count; ?></td>
                                                 <td><?= $data['sequence_code']; ?></td>
                                                 <td><?= $data['name']; ?></td>
-                                                <td><?= $data['company']; ?></td>
                                                 <td><?= $data['category']; ?></td>
+                                                <td><?= $data['payment_term'] ?? '-'; ?></td>
+                                                <td><?= $data['credit_limit'] ? number_format($data['credit_limit'], 2, '.', ',') : '-'; ?></td>
                                                 <td><?= $data['obDebit'] > 0 ? number_format($data['obDebit'], 2, '.', ',') : '0.00'; ?></td>
                                                 <td><?= $data['obCredit'] > 0 ? number_format($data['obCredit'], 2, '.', ',') : '0.00'; ?></td>
                                                 <td><?= $data['trsDebit'] > 0 ? number_format($data['trsDebit'], 2, '.', ',') : '0.00'; ?></td>
@@ -156,6 +158,7 @@
                             </tbody>
                             <tfoot>
                                 <tr>
+                                    <th>&nbsp;</th>
                                     <th>&nbsp;</th>
                                     <th>&nbsp;</th>
                                     <th>&nbsp;</th>

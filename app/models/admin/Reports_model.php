@@ -1982,9 +1982,10 @@ class Reports_model extends CI_Model
         $q = $this->db->query("SELECT 
                 sma_companies.id, 
                 sma_companies.name,
-                sma_companies.company, 
                 sma_companies.category,
-                sma_companies.sequence_code, 
+                sma_companies.sequence_code,
+                sma_companies.payment_term,
+                sma_companies.credit_limit,
                 SUM(CASE WHEN sma_accounts_entryitems.dc = 'D' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_debit, 
                 SUM(CASE WHEN sma_accounts_entryitems.dc = 'C' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_credit 
             FROM 
@@ -2014,9 +2015,10 @@ class Reports_model extends CI_Model
         $q = $this->db->query("SELECT 
                     sma_companies.id, 
                     sma_companies.name, 
-                    sma_companies.company, 
                     sma_companies.category,
-                    sma_companies.sequence_code, 
+                    sma_companies.sequence_code,
+                    sma_companies.payment_term,
+                    sma_companies.credit_limit,
                     SUM(CASE WHEN sma_accounts_entryitems.dc = 'D' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_debit, 
                     SUM(CASE WHEN sma_accounts_entryitems.dc = 'C' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_credit 
                     FROM 
