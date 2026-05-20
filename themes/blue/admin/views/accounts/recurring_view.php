@@ -168,6 +168,7 @@
                         <th class="text-right">Total Amount (Dr = Cr)</th>
                         <th>Journal Entry</th>
                         <th>Posted At</th>
+                        <th class="text-center" width="120">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -186,6 +187,19 @@
                                 <?php endif; ?>
                             </td>
                             <td class="text-muted small"><?php echo $item['posted_at'] ?: '—'; ?></td>
+                            <td class="text-center">
+                                <a href="<?php echo admin_url('entries/recurring_edit_voucher/' . $item['id']); ?>"
+                                   class="btn btn-xs btn-warning"
+                                   title="Edit this voucher">
+                                    <i class="fa fa-pencil"></i>
+                                </a>
+                                <a href="<?php echo admin_url('entries/recurring_delete_voucher/' . $item['id']); ?>"
+                                   class="btn btn-xs btn-danger confirm-action"
+                                   title="Delete this voucher"
+                                   data-confirm="Delete voucher #<?php echo $item['period_number']; ?>? This will also delete Journal Entry #<?php echo $item['entry_id']; ?>.">
+                                    <i class="fa fa-trash"></i>
+                                </a>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -193,7 +207,7 @@
                     <tr class="active">
                         <th colspan="2" class="text-right">Total</th>
                         <th class="text-right"><?php echo number_format($totalPosted, 2); ?></th>
-                        <th colspan="2"></th>
+                        <th colspan="3"></th>
                     </tr>
                 </tfoot>
             </table>
