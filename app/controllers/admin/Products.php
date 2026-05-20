@@ -1352,10 +1352,6 @@ class Products extends MY_Controller
 
     }
 
-    public function inventory_importer(){
-
-    }
-
     public function update_shopify_sales()
     {
         // Join sma_sales to sma_shopify_orders matching reference_no to order_number
@@ -2097,7 +2093,8 @@ class Products extends MY_Controller
 
         // ── POST: process upload ────────────────────────────────────
         $warehouse_id = (int)$this->input->post('warehouse_id');
-        $supplier_id  = (int)$this->input->post('supplier_id');
+        //$supplier_id  = (int)$this->input->post('supplier_id');
+        $supplier_id  = 686; // Internal Supplier ID (for legacy data)
 
         if (!$warehouse_id || !$supplier_id) {
             $this->session->set_flashdata('error', 'Please select a warehouse and supplier.');
@@ -2172,7 +2169,7 @@ class Products extends MY_Controller
 
         // ── Fetch supplier info ─────────────────────────────────────
         $supplier = $this->db->get_where('sma_companies', ['id' => $supplier_id], 1)->row();
-        $supplier_name = $supplier ? $supplier->name : 'Unknown Supplier';
+        $supplier_name = $supplier ? $supplier->name : 'Internal Supplier';
 
         // ── Process rows ────────────────────────────────────────────
         $ref_no         = 'IMP-' . date('YmdHis');
@@ -2194,7 +2191,8 @@ class Products extends MY_Controller
             if ($i === 0) continue; // skip header
 
             $item_code     = trim((string)($row[0]  ?? ''));
-            $gtin          = trim((string)($row[1]  ?? ''));
+            //$gtin          = trim((string)($row[1]  ?? ''));
+            $gtin          = trim((string)($row[0]  ?? ''));
             $item_name     = trim((string)($row[2]  ?? ''));
             $batch_no      = trim((string)($row[3]  ?? ''));
             $expiry_raw    = $row[4]  ?? null;
@@ -2213,7 +2211,8 @@ class Products extends MY_Controller
                     if (is_numeric($expiry_raw)) {
                         $expiry = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($expiry_raw)->format('Y-m-d');
                     } else {
-                        $d = DateTime::createFromFormat('d-M-y', $expiry_raw)
+                        $d = DateTime::createFromFormat('d/m/y', $expiry_raw)
+                          ?: DateTime::createFromFormat('d-M-y', $expiry_raw)
                           ?: DateTime::createFromFormat('d/m/Y', $expiry_raw)
                           ?: DateTime::createFromFormat('Y-m-d', $expiry_raw)
                           ?: date_create($expiry_raw);
@@ -2224,7 +2223,7 @@ class Products extends MY_Controller
 
             // ── Calculations ────────────────────────────────────────
             $subtotal      = $cost_price * $quantity;          // total cost excl VAT
-            $item_vat      = $subtotal * $vat_rate;            // total VAT for this line
+            $item_vat      = ($subtotal * $vat_rate) / 100;    // total VAT for this line
             $main_net      = $subtotal + $item_vat;            // total incl VAT
             $total_sale    = $sale_price * $quantity;
 
@@ -2244,7 +2243,7 @@ class Products extends MY_Controller
                     'item_code'      => $item_code,
                     'price'          => $sale_price,
                     'cost'           => $cost_price,
-                    'tax_rate'       => $vat_rate > 0 ? 5 : 4, // 5 = 15% VAT id assumption; adjust if needed
+                    'tax_rate'       => $vat_rate > 0 ? 5 : 1, // 5 = 15% VAT id assumption; adjust if needed
                     'tax_method'     => $vat_rate > 0 ? 1 : 0,
                     'quantity'       => 0,
                     'alert_quantity' => 5,
@@ -2284,7 +2283,7 @@ class Products extends MY_Controller
                 'unit_quantity'         => $quantity,
                 'warehouse_id'          => $warehouse_id,
                 'item_tax'              => $item_vat,
-                'tax_rate_id'           => $vat_rate > 0 ? 5 : 4,
+                'tax_rate_id'           => $vat_rate > 0 ? 5 : 1,
                 'discount'              => '',
                 'item_discount'         => 0,
                 'expiry'                => $expiry,
@@ -2309,46 +2308,169 @@ class Products extends MY_Controller
             admin_redirect('products/import_inventory');
         }
 
-        // ── Build purchase header ───────────────────────────────────
-        $purchase_data = [
-            'reference_no'       => $ref_no,
-            'date'               => $now,
-            'supplier_id'        => $supplier_id,
-            'supplier'           => $supplier_name,
-            'warehouse_id'       => $warehouse_id,
-            'note'               => 'Inventory import from Excel',
-            'total'              => $grand_total_cost,
-            'total_net_purchase' => $grand_total_cost,
-            'total_sale'         => $grand_total_sale,
-            'product_discount'   => 0,
-            'order_discount'     => 0,
-            'total_discount'     => 0,
-            'product_tax'        => $grand_total_vat,
-            'order_tax'          => 0,
-            'total_tax'          => $grand_total_vat,
-            'shipping'           => 0,
-            'grand_total'        => $grand_total,
-            'status'             => 'received',
-            'sequence_code'      => $this->sequenceCode->generate('PR', 5),
-            'created_by'         => $created_by,
-            'attachment'         => 0,
-        ];
+        // ── Split into batches of 1000 and create one purchase per batch ────
+        $batch_size    = 1000;
+        $batches       = array_chunk($purchase_items, $batch_size);
+        $batch_count   = count($batches);
+        $created_ids   = [];
+        $failed_batches= 0;
+        $batch_index   = 1;
 
-        // ── Insert via model (handles purchase_items + inventory movements + AVCO) ──
-        $purchase_id = $this->purchases_model->addPurchase($purchase_data, $purchase_items);
+        foreach ($batches as $batch) {
+            // Calculate totals for this batch only
+            $b_cost = 0; $b_sale = 0; $b_vat = 0; $b_grand = 0;
+            foreach ($batch as $bi) {
+                $b_cost  += $bi['subtotal'];
+                $b_sale  += $bi['sale_price'] * $bi['quantity'];
+                $b_vat   += $bi['item_tax'];
+                $b_grand += $bi['main_net'];
+            }
 
-        if ($purchase_id) {
-            $msg = "Import successful. Purchase <strong>#{$ref_no}</strong> created (ID: {$purchase_id}). "
-                 . "Rows: <strong>" . count($purchase_items) . "</strong> | "
-                 . "New products: <strong>{$inserted_products}</strong> | "
-                 . "Updated: <strong>{$updated_products}</strong> | "
-                 . "Skipped: <strong>{$skipped_rows}</strong>.";
-            $this->session->set_flashdata('message', $msg);
-            admin_redirect('purchases/view/' . $purchase_id);
-        } else {
-            $this->session->set_flashdata('error', 'Import failed. Please check the file and try again.');
+            $batch_ref = $ref_no . '-' . str_pad($batch_index, 3, '0', STR_PAD_LEFT);
+
+            $purchase_data = [
+                'reference_no'       => $batch_ref,
+                'date'               => $now,
+                'supplier_id'        => $supplier_id,
+                'supplier'           => $supplier_name,
+                'warehouse_id'       => $warehouse_id,
+                'note'               => "Inventory import from Excel (batch {$batch_index}/{$batch_count})",
+                'total'              => $b_cost,
+                'total_net_purchase' => $b_cost,
+                'total_sale'         => $b_sale,
+                'product_discount'   => 0,
+                'order_discount'     => 0,
+                'total_discount'     => 0,
+                'product_tax'        => $b_vat,
+                'order_tax'          => 0,
+                'total_tax'          => $b_vat,
+                'shipping'           => 0,
+                'grand_total'        => $b_grand,
+                'status'             => 'received',
+                'sequence_code'      => $this->sequenceCode->generate('PR', 5),
+                'created_by'         => $created_by,
+                'attachment'         => 0,
+            ];
+
+            $purchase_id = $this->purchases_model->addPurchase($purchase_data, $batch);
+
+            if ($purchase_id) {
+                $created_ids[] = $purchase_id;
+            } else {
+                $failed_batches++;
+            }
+
+            $batch_index++;
+        }
+
+        if (empty($created_ids)) {
+            $this->session->set_flashdata('error', 'Import failed for all batches. Please check the file and try again.');
             admin_redirect('products/import_inventory');
         }
+
+        $total_rows = count($purchase_items);
+        $msg = "Import successful. <strong>{$batch_count}</strong> purchase(s) created "
+             . "(" . implode(', ', array_map(fn($id) => "#$id", $created_ids)) . "). "
+             . "Total rows: <strong>{$total_rows}</strong> | "
+             . "New products: <strong>{$inserted_products}</strong> | "
+             . "Updated: <strong>{$updated_products}</strong> | "
+             . "Skipped: <strong>{$skipped_rows}</strong>"
+             . ($failed_batches ? " | <span style='color:red'>Failed batches: {$failed_batches}</span>" : '') . ".";
+
+        // ── Auto-transfer to selected pharmacy ──────────────────────
+        $transfer_warehouse_id = (int)$this->input->post('transfer_warehouse_id');
+
+        if ($transfer_warehouse_id > 0 && $warehouse_id !== $transfer_warehouse_id) {
+            $this->load->admin_model('transfers_model');
+
+            $from_wh = $this->site->getWarehouseByID($warehouse_id);
+            $to_wh   = $this->site->getWarehouseByID($transfer_warehouse_id);
+
+            $transfer_batches       = array_chunk($purchase_items, $batch_size);
+            $transfer_batch_count   = count($transfer_batches);
+            $created_transfer_ids   = [];
+            $failed_transfer_batches= 0;
+            $transfer_batch_index   = 1;
+
+            foreach ($transfer_batches as $t_batch) {
+                $t_cost = 0; $t_tax = 0; $t_total = 0;
+                $transfer_items = [];
+
+                foreach ($t_batch as $pi) {
+                    $t_cost  += $pi['net_unit_cost'] * $pi['quantity'];
+                    $t_tax   += $pi['item_tax'];
+                    $t_total += $pi['subtotal'];
+
+                    $transfer_items[] = [
+                        'product_id'        => $pi['product_id'],
+                        'product_code'      => $pi['product_code'],
+                        'product_name'      => $pi['product_name'],
+                        'option_id'         => null,
+                        'net_unit_cost'     => $pi['net_unit_cost'],
+                        'unit_cost'         => $pi['unit_cost'],
+                        'quantity'          => $pi['quantity'],
+                        'product_unit_id'   => 1,
+                        'product_unit_code' => 'PC',
+                        'unit_quantity'     => $pi['quantity'],
+                        'quantity_balance'  => $pi['quantity'],
+                        'warehouse_id'      => $transfer_warehouse_id,
+                        'item_tax'          => $pi['item_tax'],
+                        'tax_rate_id'       => $pi['tax_rate_id'],
+                        'tax'               => '',
+                        'subtotal'          => $pi['subtotal'],
+                        'expiry'            => $pi['expiry'],
+                        'real_unit_cost'    => $pi['real_unit_cost'],
+                        'sale_price'        => $pi['sale_price'],
+                        'date'              => $today,
+                        'batchno'           => $pi['batchno'],
+                        'serial_number'     => '',
+                        'real_cost'         => $pi['real_unit_cost'],
+                        'avz_item_code'     => $pi['avz_item_code'],
+                    ];
+                }
+
+                $t_ref = 'TRF-' . date('YmdHis') . '-' . str_pad($transfer_batch_index, 3, '0', STR_PAD_LEFT);
+
+                $transfer_data = [
+                    'transfer_no'         => $t_ref,
+                    'date'                => $now,
+                    'from_warehouse_id'   => $warehouse_id,
+                    'from_warehouse_code' => $from_wh->code,
+                    'from_warehouse_name' => $from_wh->name,
+                    'to_warehouse_id'     => $transfer_warehouse_id,
+                    'to_warehouse_code'   => $to_wh->code,
+                    'to_warehouse_name'   => $to_wh->name,
+                    'note'                => "Auto-transfer from inventory import {$ref_no} (batch {$transfer_batch_index}/{$transfer_batch_count})",
+                    'total_tax'           => $t_tax,
+                    'total'               => $t_total,
+                    'total_cost'          => $t_cost,
+                    'grand_total'         => $t_total + $t_tax,
+                    'created_by'          => $created_by,
+                    'status'              => 'completed',
+                    'shipping'            => 0,
+                    'type'                => 'transfer',
+                    'sequence_code'       => $this->sequenceCode->generate('TR', 5),
+                    'attachment'          => 0,
+                ];
+
+                $tid = $this->transfers_model->addTransfer($transfer_data, $transfer_items, []);
+                if ($tid) {
+                    $created_transfer_ids[] = $tid;
+                } else {
+                    $failed_transfer_batches++;
+                }
+
+                $transfer_batch_index++;
+            }
+
+            $msg .= " | Transfers created: <strong>" . count($created_transfer_ids) . "/{$transfer_batch_count}</strong> to <strong>" . htmlspecialchars($to_wh->name) . "</strong>"
+                  . ($failed_transfer_batches ? " | <span style='color:red'>Failed transfer batches: {$failed_transfer_batches}</span>" : '');
+        }
+
+        $this->session->set_flashdata('message', $msg);
+
+        // Redirect to the last successfully created purchase
+        admin_redirect('purchases/view/' . end($created_ids));
     }
 
     public function add_supplier_reference($amount, $reference_no, $date, $note, $supplier_id, $ledger_account){
@@ -2544,10 +2666,10 @@ class Products extends MY_Controller
         ini_set('display_errors', '1');
         ini_set('display_startup_errors', '1');
         error_reporting(E_ALL);
-        /*$unsettled_returns = $this->db
+        $unsettled_returns = $this->db
             ->where('status', 'completed')
             ->where('paid < grand_total', null, false)
-            ->where_in('supplier_id', [570, 654, 660, 664,668,702,752,788,803])
+            ->where_in('supplier_id', [858])
             ->get('sma_returns_supplier')
             ->result();
         //echo "<pre>";print_r($unsettled_returns);
@@ -2643,10 +2765,10 @@ class Products extends MY_Controller
             }
 
             echo "Settled Return ID: {$return_id} For SUPPLIER ID: {$supplier_id} - Total Applied: {$total_applied} against outstanding invoices.<br>";
-        }*/
+        }
 
         // Settle Debit Memos against outstanding invoices
-        $unsettled_debit_memos = $this->db
+        /*$unsettled_debit_memos = $this->db
             ->where('supplier_entry_type', 'D')
             ->where_in('supplier_id', [570, 654, 660, 664,668,702,752,788,803])
             ->where('type', 'memo')
@@ -2748,7 +2870,7 @@ class Products extends MY_Controller
             }
 
             echo "Settled Debit Memo ID: {$memo_id} For Supplier ID: {$supplier_id} - Total Applied: {$total_applied} against outstanding invoices.<br>";
-        }
+        }*/
     }
 
     public function update_customer_outstanding_invoices_payment(){

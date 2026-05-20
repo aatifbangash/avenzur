@@ -62,6 +62,22 @@
                             </div>
                         </div>
 
+                        <!-- Auto-Transfer to Pharmacy (Optional) -->
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="transfer_warehouse_id">
+                                Auto-Transfer To <small class="text-muted">(optional)</small>
+                            </label>
+                            <div class="col-sm-9">
+                                <select name="transfer_warehouse_id" id="transfer_warehouse_id" class="form-control select2">
+                                    <option value="">-- No Transfer (Purchase Only) --</option>
+                                    <?php foreach ($warehouses as $wh): ?>
+                                        <option value="<?= $wh->id ?>"><?= htmlspecialchars($wh->name) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <span class="help-block">If selected, inventory will be automatically transferred to this location after import (in batches of 1000).</span>
+                            </div>
+                        </div>
+
                         <!-- Supplier -->
                         <div class="form-group">
                             <label class="col-sm-3 control-label" for="supplier_id">
