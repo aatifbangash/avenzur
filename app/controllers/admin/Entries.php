@@ -2309,6 +2309,196 @@ error_reporting(E_ALL);
 		admin_redirect('entries/recurring_index');
 	}
 
+	/**
+	 * Delete a single posted voucher (schedule item + its journal entry).
+	 */
+	public function recurring_delete_voucher($itemId = null)
+	{
+		if (!$itemId) { admin_redirect('entries/recurring_index'); }
+
+		$item = $this->db->where('id', $itemId)->get('sma_jl_recurring_schedule_items')->row_array();
+		if (!$item) {
+			$this->session->set_flashdata('error', 'Voucher not found.');
+			admin_redirect('entries/recurring_index');
+		}
+
+		$scheduleId = $item['schedule_id'];
+
+		// Delete the journal entry items and the entry itself
+		if ($item['entry_id']) {
+			$this->db->where('entry_id', $item['entry_id'])->delete('sma_accounts_entryitems');
+			$this->db->where('id', $item['entry_id'])->delete('sma_accounts_entries');
+		}
+
+		// Delete the schedule item record
+		$this->db->where('id', $itemId)->delete('sma_jl_recurring_schedule_items');
+
+		$this->session->set_flashdata('message', 'Voucher deleted successfully.');
+		admin_redirect('entries/recurring_view/' . $scheduleId);
+	}
+
+	/**
+	 * Edit a posted voucher (schedule item + journal entry).
+	 * GET:  Shows pre-populated form.
+	 * POST: Validates balance, updates journal entry and schedule item.
+	 */
+	public function recurring_edit_voucher($itemId = null)
+	{
+		if (!$itemId) { admin_redirect('entries/recurring_index'); }
+
+		$item = $this->db->where('id', $itemId)->get('sma_jl_recurring_schedule_items')->row_array();
+		if (!$item) {
+			$this->session->set_flashdata('error', 'Voucher not found.');
+			admin_redirect('entries/recurring_index');
+		}
+
+		$scheduleId = $item['schedule_id'];
+		$schedule = $this->db->where('id', $scheduleId)->get('sma_jl_recurring_schedules')->row_array();
+		if (!$schedule) {
+			$this->session->set_flashdata('error', 'Template not found.');
+			admin_redirect('entries/recurring_index');
+		}
+
+		// Load template lines with ledger info
+		$lines = $this->db
+			->select('l.id, l.ledger_id, l.dc, l.display_order, l.notes, a.code as ledger_code, a.name as ledger_name')
+			->from('sma_jl_recurring_schedule_lines l')
+			->join('sma_accounts_ledgers a', 'a.id = l.ledger_id', 'left')
+			->where('l.schedule_id', $scheduleId)
+			->order_by('l.dc', 'ASC')
+			->order_by('l.display_order', 'ASC')
+			->get()->result_array();
+
+		$debitLines  = array_values(array_filter($lines, function($l){ return $l['dc'] === 'D'; }));
+		$creditLines = array_values(array_filter($lines, function($l){ return $l['dc'] === 'C'; }));
+
+		// Load existing journal entry for pre-population
+		$entry = $item['entry_id'] ? $this->db->where('id', $item['entry_id'])->get('sma_accounts_entries')->row_array() : null;
+
+		// Build a lookup: "ledger_id_dc" => amount from existing entry items
+		$entryItemsLookup = [];
+		if ($item['entry_id']) {
+			$rawItems = $this->db->where('entry_id', $item['entry_id'])->get('sma_accounts_entryitems')->result_array();
+			foreach ($rawItems as $ei) {
+				$entryItemsLookup[$ei['ledger_id'] . '_' . $ei['dc']] = $ei['amount'];
+			}
+		}
+
+		// Map amounts back to schedule line IDs
+		$itemAmounts = [];
+		foreach ($lines as $line) {
+			$key = $line['ledger_id'] . '_' . $line['dc'];
+			$itemAmounts[$line['id']] = $entryItemsLookup[$key] ?? '';
+		}
+
+		$errors = [];
+
+		if ($this->input->post()) {
+			$_rawDate    = $this->input->post('voucher_date');
+			$voucherDate = $this->functionscore->dateToSql($_rawDate);
+			if (!$voucherDate && preg_match('#^(\d{1,2})/(\d{1,2})/(\d{4})$#', $_rawDate, $_dm)) {
+				$voucherDate = $_dm[3] . '-' . str_pad($_dm[2], 2, '0', STR_PAD_LEFT) . '-' . str_pad($_dm[1], 2, '0', STR_PAD_LEFT);
+			}
+			$voucherMonth = trim($this->input->post('voucher_month'));
+			$narration    = trim($this->input->post('narration')) ?: ($schedule['narration'] ?: $schedule['name']);
+			$debitAmts    = $this->input->post('debit_amount')  ?: [];
+			$creditAmts   = $this->input->post('credit_amount') ?: [];
+
+			if (!$voucherDate) $errors[] = 'Voucher Date is required.';
+
+			$totalDebit  = 0;
+			$totalCredit = 0;
+			foreach ($debitLines  as $l) { $totalDebit  += (float)($debitAmts[$l['id']]  ?? 0); }
+			foreach ($creditLines as $l) { $totalCredit += (float)($creditAmts[$l['id']] ?? 0); }
+
+			if (abs($totalDebit - $totalCredit) > 0.005) {
+				$errors[] = sprintf(
+					'Entry is not balanced. Debit total (%s) must equal Credit total (%s). Difference: %s',
+					number_format($totalDebit, 2),
+					number_format($totalCredit, 2),
+					number_format(abs($totalDebit - $totalCredit), 2)
+				);
+			}
+
+			if (empty($errors)) {
+				$fullNarration = $narration . ($voucherMonth ? ' – ' . $voucherMonth : '');
+
+				// Update journal entry header
+				if ($item['entry_id']) {
+					$this->db->where('id', $item['entry_id'])->update('sma_accounts_entries', [
+						'date'     => $voucherDate,
+						'dr_total' => $totalDebit,
+						'cr_total' => $totalCredit,
+						'notes'    => $fullNarration,
+					]);
+
+					// Replace entry items
+					$this->db->where('entry_id', $item['entry_id'])->delete('sma_accounts_entryitems');
+					foreach ($debitLines as $line) {
+						$this->db->insert('sma_accounts_entryitems', [
+							'entry_id'  => $item['entry_id'],
+							'dc'        => 'D',
+							'ledger_id' => $line['ledger_id'],
+							'amount'    => (float)($debitAmts[$line['id']] ?? 0),
+							'narration' => $fullNarration,
+						]);
+					}
+					foreach ($creditLines as $line) {
+						$this->db->insert('sma_accounts_entryitems', [
+							'entry_id'  => $item['entry_id'],
+							'dc'        => 'C',
+							'ledger_id' => $line['ledger_id'],
+							'amount'    => (float)($creditAmts[$line['id']] ?? 0),
+							'narration' => $fullNarration,
+						]);
+					}
+				}
+
+				// Update schedule item
+				$this->db->where('id', $itemId)->update('sma_jl_recurring_schedule_items', [
+					'due_date' => $voucherDate,
+					'amount'   => $totalDebit,
+				]);
+
+				$this->session->set_flashdata('message', 'Voucher #' . $item['period_number'] . ' updated successfully.');
+				admin_redirect('entries/recurring_view/' . $scheduleId);
+			}
+
+			// Re-populate amounts from POST on validation failure
+			foreach ($debitLines as $line) {
+				$itemAmounts[$line['id']] = $debitAmts[$line['id']] ?? '';
+			}
+			foreach ($creditLines as $line) {
+				$itemAmounts[$line['id']] = $creditAmts[$line['id']] ?? '';
+			}
+		}
+
+		// Format existing date for the date picker — use only the first segment of
+		// date_format since it is a |-delimited string (e.g. "d-M-Y|dj-M-yy")
+		$fmt = !empty($this->mDateArray[0]) ? $this->mDateArray[0] : 'd/m/Y';
+		$rawDate     = ($entry && !empty($entry['date'])) ? $entry['date'] : $item['due_date'];
+		$displayDate = $rawDate ? date($fmt, strtotime($rawDate)) : '';
+
+		$this->data['schedule']          = $schedule;
+		$this->data['item']              = $item;
+		$this->data['entry']             = $entry;
+		$this->data['debit_lines']       = $debitLines;
+		$this->data['credit_lines']      = $creditLines;
+		$this->data['item_amounts']      = $itemAmounts;
+		$this->data['display_date']      = $displayDate;
+		$this->data['display_narration'] = $entry ? $entry['notes'] : ($schedule['narration'] ?: '');
+		$this->data['error']             = !empty($errors) ? implode('<br>', $errors) : null;
+
+		$bc   = [
+			['link' => base_url(), 'page' => lang('home')],
+			['link' => admin_url('entries/recurring_index'), 'page' => 'Recurring JV Templates'],
+			['link' => admin_url('entries/recurring_view/' . $scheduleId), 'page' => $schedule['name']],
+			['link' => '#', 'page' => 'Edit Voucher #' . $item['period_number']],
+		];
+		$meta = ['page_title' => 'Edit Voucher – ' . $schedule['name'], 'bc' => $bc];
+		$this->page_construct('accounts/recurring_edit_voucher', $meta, $this->data);
+	}
+
 	// =========================================================================
 	// SALARY RUNS
 	// =========================================================================
