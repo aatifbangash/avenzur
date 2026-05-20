@@ -2669,7 +2669,7 @@ class Products extends MY_Controller
         $unsettled_returns = $this->db
             ->where('status', 'completed')
             ->where('paid < grand_total', null, false)
-            ->where_in('supplier_id', [858])
+            //->where_in('supplier_id', [858])
             ->get('sma_returns_supplier')
             ->result();
         //echo "<pre>";print_r($unsettled_returns);
