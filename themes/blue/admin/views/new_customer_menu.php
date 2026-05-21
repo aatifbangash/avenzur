@@ -211,6 +211,9 @@
                         <?php if($Admin || $Owner || $this->GP['sales-view-invoice']){ ?>
                         <li><a href="<?= admin_url('sales/completed_sales'); ?>" class="newmenu-link"><i class="fa fa-calculator"></i> <?= lang('Sales Invoices'); ?></a></li>
                         <?php } ?>
+                        <?php if($Admin || $Owner || $this->sma->in_group('trademanager') || $this->sma->in_group('financemanager')){ ?>
+                        <li><a href="<?= admin_url('quotes/credit_hold'); ?>" class="newmenu-link"><i class="fa fa-lock"></i> <?= lang('Onhold Quotes'); ?></a></li>
+                        <?php } ?>
                     </ul>
                 </li>
 
