@@ -555,6 +555,47 @@ class Sales extends MY_Controller
             admin_redirect('quotes');
         }
 
+        // --- Credit Limit Check ---
+        $customer_obj   = $this->companies_model->getCompanyByID($quote->customer_id);
+        $creditLimit    = $customer_obj ? (float)($customer_obj->credit_limit ?? 0) : 0;
+        $currentBalance = (float)$this->companies_model->getCustomerBalance($quote->customer_id);
+
+        if ($creditLimit > 0 && $currentBalance >= $creditLimit) {
+            $canOverride = $this->Admin || $this->Owner
+                        || $this->sma->in_group('financemanager')
+                        || $this->sma->in_group('trademanager');
+
+            if (!$canOverride) {
+                $this->session->set_flashdata('error',
+                    sprintf('Cannot convert to sale order. Customer credit limit of %s has been exceeded (Outstanding: %s). This quote has been added to Credit Hold and requires approval.',
+                        number_format($creditLimit, 2), number_format($currentBalance, 2))
+                );
+                admin_redirect('quotes');
+                return;
+            }
+
+            // Authorized user (Admin / Finance Manager / Trade Manager): require a justification note
+            $trade_note = trim($this->input->post('trade_note'));
+            if (!$trade_note) {
+                $customerName = ($customer_obj->company && $customer_obj->company != '-')
+                    ? $customer_obj->company : $customer_obj->name;
+                $this->data['quote']          = $quote;
+                $this->data['customer_name']  = $customerName;
+                $this->data['credit_limit']   = $creditLimit;
+                $this->data['pending_amount'] = $currentBalance;
+                $bc   = [
+                    ['link' => base_url(),                             'page' => lang('home')],
+                    ['link' => admin_url('quotes/credit_hold'),        'page' => 'Credit Hold Quotes'],
+                    ['link' => '#',                                    'page' => 'Override'],
+                ];
+                $meta = ['page_title' => 'Credit Limit Override – Convert Quote to Sale', 'bc' => $bc];
+                $this->page_construct('quotes/credit_limit_bypass', $meta, $this->data);
+                return;
+            }
+            // Save justification note and continue with conversion
+            $this->db->where('id', $quote_id)->update('sma_quotes', ['trade_note' => $trade_note]);
+        }
+
         $quote_items = $this->quotes_model->getAllQuoteItems($quote_id, $quote);
 
         $date = date('Y-m-d H:i:s');

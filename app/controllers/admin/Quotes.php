@@ -2002,6 +2002,91 @@ class Quotes extends MY_Controller
         }
     }
 
+    public function credit_hold()
+    {
+        if (!$this->Admin && !$this->Owner
+            && !$this->sma->in_group('financemanager')
+            && !$this->sma->in_group('trademanager')) {
+            $this->session->set_flashdata('error', lang('access_denied'));
+            admin_redirect('quotes');
+            return;
+        }
+
+        // Fetch all approved quotes
+        $approved_quotes = $this->db
+            ->where('status', 'approved')
+            ->order_by('date', 'DESC')
+            ->get('sma_quotes')
+            ->result();
+
+        $exceeded = [];
+        foreach ($approved_quotes as $q) {
+            $customer_obj = $this->companies_model->getCompanyByID($q->customer_id);
+            if (!$customer_obj) continue;
+            $creditLimit = (float)($customer_obj->credit_limit ?? 0);
+            if ($creditLimit <= 0) continue;
+            $currentBalance = (float)$this->companies_model->getCustomerBalance($q->customer_id);
+            if ($currentBalance >= $creditLimit) {
+                $q->credit_limit     = $creditLimit;
+                $q->current_balance  = $currentBalance;
+                $q->overage          = $currentBalance - $creditLimit;
+                $exceeded[] = $q;
+            }
+        }
+
+        $this->data['exceeded_quotes'] = $exceeded;
+        $bc   = [
+            ['link' => base_url(),          'page' => lang('home')],
+            ['link' => admin_url('quotes'), 'page' => lang('quotes')],
+            ['link' => '#',                 'page' => 'Credit Hold Quotes'],
+        ];
+        $meta = ['page_title' => 'Credit Hold Quotes', 'bc' => $bc];
+        $this->page_construct('quotes/credit_hold', $meta, $this->data);
+    }
+
+    public function reject_credit_hold($quote_id)
+    {
+        if (!$this->Admin && !$this->Owner
+            && !$this->sma->in_group('financemanager')
+            && !$this->sma->in_group('trademanager')) {
+            $this->session->set_flashdata('error', lang('access_denied'));
+            admin_redirect('quotes/credit_hold');
+            return;
+        }
+
+        $rejection_reason = trim($this->input->post('rejection_reason'));
+
+        if (!$rejection_reason) {
+            // Show rejection reason form
+            $quote = $this->quotes_model->getQuoteByID($quote_id);
+            if (!$quote || $quote->status !== 'approved') {
+                $this->session->set_flashdata('error', 'Quote not found or no longer available for rejection.');
+                admin_redirect('quotes/credit_hold');
+                return;
+            }
+            $customer_obj = $this->companies_model->getCompanyByID($quote->customer_id);
+            $this->data['quote']          = $quote;
+            $this->data['customer_name']  = ($customer_obj->company && $customer_obj->company != '-')
+                                                ? $customer_obj->company : $customer_obj->name;
+            $this->data['credit_limit']   = $customer_obj ? (float)($customer_obj->credit_limit ?? 0) : 0;
+            $this->data['current_balance'] = (float)$this->companies_model->getCustomerBalance($quote->customer_id);
+            $bc   = [
+                ['link' => base_url(),                      'page' => lang('home')],
+                ['link' => admin_url('quotes/credit_hold'), 'page' => 'Credit Hold Quotes'],
+                ['link' => '#',                             'page' => 'Reject Quote'],
+            ];
+            $meta = ['page_title' => 'Reject Quote – Credit Hold', 'bc' => $bc];
+            $this->page_construct('quotes/credit_hold_reject', $meta, $this->data);
+            return;
+        }
+
+        // Save the rejection reason and update status
+        $this->db->where('id', $quote_id)->update('sma_quotes', ['trade_note' => $rejection_reason]);
+        $this->quotes_model->updateStatus($quote_id, 'rejected', 'Rejected – Credit Limit Exceeded');
+        $this->session->set_flashdata('message', 'Quote rejected successfully.');
+        admin_redirect('quotes/credit_hold');
+    }
+
     public function suggestions_old()
     {
         $term         = $this->input->get('term', true);
