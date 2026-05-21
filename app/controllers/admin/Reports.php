@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
@@ -6008,6 +6008,8 @@ class Reports extends MY_Controller
         //$this->sma->checkPermissions('suppliers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['suppliers'] = $this->site->getAllChildCompanies('supplier');
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
 
         $response_arr = array();
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
@@ -6168,6 +6170,8 @@ class Reports extends MY_Controller
     {
         //$this->sma->checkPermissions('customers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
 
         $response_arr = array();
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
