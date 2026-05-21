@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
@@ -569,6 +569,15 @@ class Reports extends MY_Controller
         $this->page_construct('reports/pharmacy_stock', $meta, $this->data);
     }
 
+    private function stockReportUnitCost($row, $use_inventory_cost)
+    {
+        if ($use_inventory_cost && isset($row->inventory_cost_price)) {
+            $inv = (float)($row->inventory_cost_price ?? 0);
+            return $inv > 0 ? $inv : (float)($row->cost_price ?? 0);
+        }
+        return (float)($row->cost_price ?? 0);
+    }
+
     public function stock_export_excel(){
         
         $data = array();
@@ -605,7 +614,8 @@ class Reports extends MY_Controller
 
             $row = 2;
             $total_quantity = $total_sale = $total_purchase = $total_cost = 0;
-            $use_inventory_cost = !empty($at_date) ? strtotime($at_date) >= strtotime('2026-01-01') : (time() >= strtotime('2026-01-01'));
+            $parsed_at_date = !empty($at_date) ? strtotime(substr($this->sma->fld($at_date), 0, 10)) : time();
+            $use_inventory_cost = $parsed_at_date >= strtotime('2026-01-01');
             foreach ($data as $data_row) {
                 $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->item_code);
                 $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->itm_code);
@@ -619,8 +629,8 @@ class Reports extends MY_Controller
                 $this->excel->getActiveSheet()->SetCellValue('J' . $row, ($data_row->sale_price * $data_row->quantity));
                 $this->excel->getActiveSheet()->SetCellValue('K' . $row, ($data_row->purchase_price));
                 $this->excel->getActiveSheet()->SetCellValue('L' . $row, ($data_row->purchase_price * $data_row->quantity));
-                $excel_cost_price = $use_inventory_cost ? $data_row->inventory_cost_price : $data_row->cost_price;
-                $excel_total_cost = $use_inventory_cost ? ($data_row->inventory_cost_price * $data_row->quantity) : $data_row->total_cost_price;
+                $excel_cost_price = $this->stockReportUnitCost($data_row, $use_inventory_cost);
+                $excel_total_cost = $excel_cost_price * $data_row->quantity;
                 $this->excel->getActiveSheet()->SetCellValue('M' . $row, $excel_cost_price);
                 $this->excel->getActiveSheet()->SetCellValue('N' . $row, $excel_total_cost);
                 
@@ -5998,6 +6008,8 @@ class Reports extends MY_Controller
         //$this->sma->checkPermissions('suppliers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['suppliers'] = $this->site->getAllChildCompanies('supplier');
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
 
         $response_arr = array();
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
@@ -6158,6 +6170,8 @@ class Reports extends MY_Controller
     {
         //$this->sma->checkPermissions('customers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
 
         $response_arr = array();
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;

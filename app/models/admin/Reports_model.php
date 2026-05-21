@@ -2805,8 +2805,9 @@ class Reports_model extends CI_Model
             inv.expiry_date as expiry,
             SUM(inv.quantity) as quantity,
             inv.net_unit_sale as sale_price,
+            inv.net_unit_cost as inventory_cost_price,
             (SELECT cost FROM sma_rawabi_product_price WHERE product_id = p.id LIMIT 1) as cost_price,
-            sum((SELECT cost FROM sma_rawabi_product_price WHERE product_id = p.id LIMIT 1) * inv.quantity) as total_cost_price,
+            sum(COALESCE(NULLIF(inv.net_unit_cost, 0), (SELECT cost FROM sma_rawabi_product_price WHERE product_id = p.id LIMIT 1)) * inv.quantity) as total_cost_price,
             inv.real_unit_cost as purchase_price  
             FROM `sma_inventory_movements` inv 
             INNER JOIN sma_products p on p.id=inv.product_id ";
@@ -2899,7 +2900,7 @@ class Reports_model extends CI_Model
                 SUM(inv.net_unit_sale * inv.quantity) AS total_sale_price,
 
                 SUM(
-                    COALESCE(rpp.cost, inv.net_unit_cost) * inv.quantity
+                    COALESCE(NULLIF(inv.net_unit_cost, 0), rpp.cost) * inv.quantity
                 ) AS total_cost_price,
 
                 SUM(inv.real_unit_cost * inv.quantity) AS purchase_price  
@@ -3026,7 +3027,7 @@ class Reports_model extends CI_Model
             inv.net_unit_sale as sale_price,
             inv.net_unit_cost as inventory_cost_price,
             (SELECT cost FROM sma_rawabi_product_price WHERE product_id = p.id LIMIT 1) as cost_price,
-            sum((SELECT cost FROM sma_rawabi_product_price WHERE product_id = p.id LIMIT 1) * inv.quantity) as total_cost_price,
+            sum(COALESCE(NULLIF(inv.net_unit_cost, 0), (SELECT cost FROM sma_rawabi_product_price WHERE product_id = p.id LIMIT 1)) * inv.quantity) as total_cost_price,
             inv.real_unit_cost as purchase_price,
             p.warehouse_shelf as shelf
             FROM `sma_inventory_movements` inv 
