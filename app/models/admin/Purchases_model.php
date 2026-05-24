@@ -1324,7 +1324,8 @@ class Purchases_model extends CI_Model
     }
 
     public function getSupplierInvoicesWithPayments($supplier_id) {
-        $this->db->select('p.id, p.date, p.reference_no, p.supplier_id, p.supplier, p.grand_total, 
+        $this->db->select('p.id, p.date, p.reference_no, p.supplier_id, p.supplier,
+                          (p.grand_total + COALESCE(p.grand_deal_discount, 0)) as grand_total,
                           COALESCE(SUM(pm.amount), 0) as total_paid,
                           p.payment_status, p.due_date', false);
         $this->db->from('purchases p');
