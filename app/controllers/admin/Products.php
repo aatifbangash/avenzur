@@ -2676,7 +2676,7 @@ class Products extends MY_Controller
         //echo "<pre>";print_r($unsettled_returns);
         //echo "</pre>";exit;
 
-        /*foreach ($unsettled_returns as $return) {
+        foreach ($unsettled_returns as $return) {
             $return_id    = (int) $return->id;
             $supplier_id  = (int) $return->supplier_id;
             $paid         = (float) ($return->paid ?? 0);
@@ -2777,7 +2777,7 @@ class Products extends MY_Controller
                 $this->purchases_model->update_return_paid($return_id, $paid + $total_applied);
                 echo "Settled Return ID: {$return_id} for Supplier ID: {$supplier_id} — Applied: {$total_applied} against outstanding invoices.<br>";
             }
-        }*/
+        }
 
         // Settle Debit Memos against outstanding invoices
         $unsettled_debit_memos = $this->db
