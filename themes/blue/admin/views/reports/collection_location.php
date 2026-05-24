@@ -97,6 +97,7 @@
                                 <th><?= lang('Customer Name'); ?></th>
                                 <th><?= lang('Invoice #'); ?></th>
                                 <th><?= lang('Invoice Date'); ?></th>
+                                <th><?= lang('payment_term'); ?></th>
                                 <th><?= lang('Invoice Amount'); ?></th>
                                 <th><?= lang('Receipt #'); ?></th>
                                 <th><?= lang('Collected Amount'); ?></th>
@@ -138,6 +139,7 @@
                                                 <td><?= $data->customer_name; ?></td>
                                                 <td><?= $data->sale_id; ?></td>
                                                 <td><?= $data->sale_date ? date('d-M-Y', strtotime($data->sale_date)) : '' ?></td>
+                                                <td><?= (!empty($data->payment_term) && $data->payment_term > 0) ? (int)$data->payment_term . 'd' : '-' ?></td>
                                                 <td><?= number_format($data->grand_total, 2); ?></td>
                                                 <td><?= $data->payment_ref_id; ?></td>
                                                 <td><?= number_format($data->paid_amount, 2); ?></td>
@@ -159,6 +161,7 @@
                                 ?>
                                 <tr>
                                     <td colspan="2"><strong>Totals: </strong></td>
+                                    <td colspan="1"><strong>-</strong></td>
                                     <td colspan="1"><strong>-</strong></td>
                                     <td colspan="1"><strong>-</strong></td>
                                     <td colspan="1"><strong>-</strong></td>
