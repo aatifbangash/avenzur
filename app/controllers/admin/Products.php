@@ -2668,31 +2668,33 @@ class Products extends MY_Controller
         error_reporting(E_ALL);*/
         $unsettled_returns = $this->db
             ->where('status', 'completed')
-            ->where('paid < grand_total', null, false)
+            ->where('(COALESCE(paid, 0) < grand_total)', null, false)
             //->where_in('supplier_id', [858])
+            ->order_by('date', 'asc')
             ->get('sma_returns_supplier')
             ->result();
         //echo "<pre>";print_r($unsettled_returns);
         //echo "</pre>";exit;
 
-        foreach ($unsettled_returns as $return) {
+        /*foreach ($unsettled_returns as $return) {
+            $return_id    = (int) $return->id;
+            $supplier_id  = (int) $return->supplier_id;
+            $paid         = (float) ($return->paid ?? 0);
+            $grand_total  = (float) $return->grand_total;
+            $remaining_amount = round($grand_total - $paid, 5);
 
-            $supplier_name = $return->supplier;
-            $supplier_id = $return->supplier_id;
-            $paid = $return->paid;
-            $grand_total = $return->grand_total;
-            $return_id = $return->id;
+            if ($return_id <= 0 || $supplier_id <= 0 || $remaining_amount <= 0) {
+                continue;
+            }
 
-            $Journal_details = $this->db
-                    ->where('rsid', $return_id) // exact match
-                    ->get('sma_accounts_entries')
-                    ->row();
-            // Remaining amount in return that can be allocated to invoices
-            $remaining_amount = $grand_total - $paid;
+            $journal_details = $this->db
+                ->where('rsid', $return_id)
+                ->get('sma_accounts_entries')
+                ->row();
 
             $pending_invoices = $this->purchases_model->getSupplierInvoicesWithPayments($supplier_id);
-            
             if (empty($pending_invoices)) {
+                echo "Skipped Return ID: {$return_id} — supplier {$supplier_id} has no outstanding purchase invoices.<br>";
                 continue;
             }
 
@@ -2708,7 +2710,8 @@ class Products extends MY_Controller
 
             $allocatable_amount = min($remaining_amount, $total_outstanding);
             if ($allocatable_amount <= 0) {
-                return false;
+                echo "Skipped Return ID: {$return_id} — nothing to allocate (return remaining: {$remaining_amount}, invoice outstanding: {$total_outstanding}).<br>";
+                continue;
             }
 
             $remaining_amount = $allocatable_amount;
@@ -2721,6 +2724,11 @@ class Products extends MY_Controller
                 $supplier_id,
                 null
             );
+
+            if (!$payment_reference_id) {
+                echo "Failed to create payment reference for Return ID: {$return_id}.<br>";
+                continue;
+            }
 
             $total_applied = 0;
             foreach ($pending_invoices as $invoice) {
@@ -2739,36 +2747,40 @@ class Products extends MY_Controller
                 $apply_amount = min($remaining_amount, $outstanding);
 
                 $payment = [
-                    'date'          => $return->date,
-                    'purchase_id'       => (int) $invoice->id,
-                    'supplier_return_id'     => $return_id,
-                    'reference_no'  => '',
-                    'amount'        => $apply_amount,
-                    'note'          => 'Auto-settled to supplier return #' . $return_id,
-                    'created_by'    => $this->session->userdata('user_id'),
-                    'paid_by'       => 'return',
-                    'type'          => 'received',
-                    'supplier_id'   => $supplier_id,
-                    'payment_id'    => $payment_reference_id,
+                    'date'                 => $return->date,
+                    'purchase_id'          => (int) $invoice->id,
+                    'supplier_return_id'   => $return_id,
+                    'reference_no'         => '',
+                    'amount'               => $apply_amount,
+                    'note'                 => 'Auto-settled to supplier return #' . $return_id,
+                    'created_by'           => $this->session->userdata('user_id'),
+                    'paid_by'              => 'return',
+                    'type'                 => 'received',
+                    'supplier_id'          => $supplier_id,
+                    'payment_id'           => $payment_reference_id,
                 ];
 
                 $this->purchases_model->addPayment($payment);
-                $this->purchases_model->update_purchase_paid_amount_new((int) $invoice->id, ((float) $invoice->total_paid + $apply_amount));
+                $this->purchases_model->update_purchase_paid_amount_new(
+                    (int) $invoice->id,
+                    ((float) $invoice->total_paid + $apply_amount)
+                );
 
                 $remaining_amount -= $apply_amount;
                 $total_applied += $apply_amount;
             }
 
-            if ($payment_reference_id) {
-                $this->purchases_model->update_payment_reference($payment_reference_id, $Journal_details->id);
-                $this->purchases_model->update_return_paid($return_id, $total_applied);
+            if ($total_applied > 0) {
+                if ($journal_details) {
+                    $this->purchases_model->update_payment_reference($payment_reference_id, $journal_details->id);
+                }
+                $this->purchases_model->update_return_paid($return_id, $paid + $total_applied);
+                echo "Settled Return ID: {$return_id} for Supplier ID: {$supplier_id} — Applied: {$total_applied} against outstanding invoices.<br>";
             }
-
-            echo "Settled Return ID: {$return_id} For SUPPLIER ID: {$supplier_id} - Total Applied: {$total_applied} against outstanding invoices.<br>";
-        }
+        }*/
 
         // Settle Debit Memos against outstanding invoices
-        /*$unsettled_debit_memos = $this->db
+        $unsettled_debit_memos = $this->db
             ->where('supplier_entry_type', 'D')
             //->where_in('supplier_id', [570, 654, 660, 664,668,702,752,788,803])
             ->where('type', 'memo')
@@ -2870,7 +2882,7 @@ class Products extends MY_Controller
             }
 
             echo "Settled Debit Memo ID: {$memo_id} For Supplier ID: {$supplier_id} - Total Applied: {$total_applied} against outstanding invoices.<br>";
-        }*/
+        }
     }
 
     public function update_customer_outstanding_invoices_payment(){
