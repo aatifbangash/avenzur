@@ -2663,10 +2663,10 @@ class Products extends MY_Controller
     }
 
     public function update_supplier_outstanding_invoices_payment(){
-        ini_set('display_errors', '1');
+        /*ini_set('display_errors', '1');
         ini_set('display_startup_errors', '1');
-        error_reporting(E_ALL);
-        /*$unsettled_returns = $this->db
+        error_reporting(E_ALL);*/
+        $unsettled_returns = $this->db
             ->where('status', 'completed')
             ->where('paid < grand_total', null, false)
             //->where_in('supplier_id', [858])
@@ -2765,10 +2765,10 @@ class Products extends MY_Controller
             }
 
             echo "Settled Return ID: {$return_id} For SUPPLIER ID: {$supplier_id} - Total Applied: {$total_applied} against outstanding invoices.<br>";
-        }*/
+        }
 
         // Settle Debit Memos against outstanding invoices
-        $unsettled_debit_memos = $this->db
+        /*$unsettled_debit_memos = $this->db
             ->where('supplier_entry_type', 'D')
             //->where_in('supplier_id', [570, 654, 660, 664,668,702,752,788,803])
             ->where('type', 'memo')
@@ -2870,7 +2870,7 @@ class Products extends MY_Controller
             }
 
             echo "Settled Debit Memo ID: {$memo_id} For Supplier ID: {$supplier_id} - Total Applied: {$total_applied} against outstanding invoices.<br>";
-        }
+        }*/
     }
 
     public function update_customer_outstanding_invoices_payment(){
