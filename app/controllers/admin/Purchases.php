@@ -372,6 +372,7 @@ class Purchases extends MY_Controller
             $i = sizeof($_POST['product']);
             $gst_data = [];
             $total_cgst = $total_sgst = $total_igst = 0;
+            $is_po_invoice = ($this->input->post('action') == 'create_invoice');
             for ($r = 0; $r < $i; $r++) {
                 $product_id = $_POST['product_id'][$r];
                 $item_code = $_POST['product'][$r];
@@ -472,6 +473,20 @@ class Purchases extends MY_Controller
                     $item_net_cost = ($main_net / ($item_quantity + $item_bonus));
                     $item_net_price = ($totalpurcahsesbeforevat) / ($item_quantity);
 
+                    $landed_cost = 0;
+                    $landed_per_unit = 0;
+                    if ($is_po_invoice) {
+                        $landed_cost = $this->sma->formatDecimal(isset($_POST['landed_cost'][$r]) ? $_POST['landed_cost'][$r] : 0, 5);
+                        if ($landed_cost < 0) {
+                            $landed_cost = 0;
+                        }
+                        $line_qty = $item_quantity + $item_bonus;
+                        $landed_per_unit = $line_qty > 0 ? $this->sma->formatDecimal($landed_cost / $line_qty, 5) : 0;
+                    }
+                    $final_net_unit_cost = $is_po_invoice
+                        ? $this->sma->formatDecimal($item_net_cost + $landed_per_unit, 5)
+                        : $_POST['item_unit_cost'][$r];
+
                     /**
                      * POST FIELDS
                      */
@@ -490,7 +505,7 @@ class Purchases extends MY_Controller
                         'product_code' => $item_code,
                         'product_name' => $product_details->name,
                         'option_id' => $item_option,
-                        'net_unit_cost' => $_POST['item_unit_cost'][$r], //item_net_cost,
+                        'net_unit_cost' => $final_net_unit_cost,
                         'unit_cost' => $_POST['net_cost'][$r], //+ $item_tax),
                         'quantity' => $item_quantity + $item_bonus,
                         'product_unit_id' => $item_unit,
@@ -506,7 +521,7 @@ class Purchases extends MY_Controller
                         'item_discount' => $new_item_first_discount,
                         'subtotal' => $_POST['item_total_purchase'][$r],
                         'expiry' => $item_expiry,
-                        'real_unit_cost' => $_POST['real_unit_cost'][$r],
+                        'real_unit_cost' => $is_po_invoice ? $final_net_unit_cost : $_POST['real_unit_cost'][$r],
                         'sale_price' => $item_sale_price,
                         'date' => date('Y-m-d', strtotime($date)),
                         'status' => $status,
@@ -528,14 +543,19 @@ class Purchases extends MY_Controller
 
                     ];
 
+                    if ($is_po_invoice) {
+                        $product['landed_cost'] = $landed_cost;
+                        $product['landed_cost_per_unit'] = $landed_per_unit;
+                    }
+
                     if ($avz_item_code) {
                         $product['avz_item_code'] = $avz_item_code;
                     }
 
                     if ($unit->id != $product_details->unit) {
-                        $product['base_unit_cost'] = $this->site->convertToBase($unit, $real_unit_cost);
+                        $product['base_unit_cost'] = $this->site->convertToBase($unit, $is_po_invoice ? $final_net_unit_cost : $real_unit_cost);
                     } else {
-                        $product['base_unit_cost'] = $real_unit_cost;
+                        $product['base_unit_cost'] = $is_po_invoice ? $final_net_unit_cost : $real_unit_cost;
                     }
 
                     $products[] = ($product + $gst_data);
@@ -641,6 +661,20 @@ class Purchases extends MY_Controller
             //$attachments = $this->attachments->upload();
             //$data['attachment'] = !empty($attachments);
             //$this->sma->print_arrays($data, $products);exit;
+        }
+
+        if ($this->form_validation->run() == true && !empty($products)) {
+            if ($this->input->post('action') == 'create_invoice') {
+                $total_landed_cost_check = 0;
+                foreach ($products as $p) {
+                    $total_landed_cost_check += (float) ($p['landed_cost'] ?? 0);
+                }
+                if ($total_landed_cost_check > 0 && !$this->getLandedCostLedgerId()) {
+                    $this->session->set_flashdata('error', lang('landed_cost_ledger_required'));
+                    $po_id = (int) $this->input->post('po_id');
+                    admin_redirect('purchases/add?action=create_invoice&po_number=' . base64_encode($po_id));
+                }
+            }
         }
 
         if ($this->form_validation->run() == true && $purchase_id = $this->purchases_model->addPurchase($data, $products, $attachments)) {
@@ -1987,6 +2021,17 @@ class Purchases extends MY_Controller
         echo $this->datatables->generate();
     }
 
+    private function getLandedCostLedgerId()
+    {
+        static $ledger_id = null;
+        if ($ledger_id !== null) {
+            return $ledger_id;
+        }
+        $row = $this->db->get_where('accounts_ledgers', ['code' => '1130100004'], 1)->row();
+        $ledger_id = $row ? (int) $row->id : false;
+        return $ledger_id;
+    }
+
     public function convert_purchse_invoice($pid)
     {
         if ($this->purchases_model->puchaseToInvoice($pid)) {
@@ -2000,14 +2045,20 @@ class Purchases extends MY_Controller
             $warehouse_id = $inv->warehouse_id;
             $warehouse_ledgers = $this->site->getWarehouseByID($warehouse_id);
 
+            $total_landed_cost = 0;
+            foreach ($inv_items as $item) {
+                $total_landed_cost += (float) ($item->landed_cost ?? 0);
+            }
+            $total_landed_cost = $this->sma->formatDecimal($total_landed_cost, 4);
+
             /*Accounts Entries*/
             $entry = array(
                 'entrytype_id' => 4,
                 'transaction_type' => 'purchaseorder',
                 'number' => 'PO-' . $inv->reference_no,
                 'date' => date('Y-m-d'),
-                'dr_total' => $inv->grand_total,
-                'cr_total' => $inv->grand_total,
+                'dr_total' => $this->sma->formatDecimal($inv->grand_total + $total_landed_cost, 4),
+                'cr_total' => $this->sma->formatDecimal($inv->grand_total + $total_landed_cost, 4),
                 'notes' => 'Purchase Reference: ' . $inv->reference_no . ' Date: ' . date('Y-m-d H:i:s'),
                 'pid' => $inv->id,
                 'supplier_id' => $inv->supplier_id
@@ -2058,10 +2109,25 @@ class Purchases extends MY_Controller
                     'dc' => 'D',
                     //'ledger_id' => $product->inventory_account,
                     'ledger_id' => $warehouse_ledgers->inventory_ledger,
-                    'amount' => $inv->total_net_purchase,
+                    'amount' => $this->sma->formatDecimal($inv->total_net_purchase + $total_landed_cost, 4),
                     'narration' => 'Inventory'
                 )
             );
+
+            if ($total_landed_cost > 0) {
+                $landed_cost_ledger_id = $this->getLandedCostLedgerId();
+                if ($landed_cost_ledger_id) {
+                    $entryitemdata[] = array(
+                        'Entryitem' => array(
+                            'entry_id' => $insert_id,
+                            'dc' => 'C',
+                            'ledger_id' => $landed_cost_ledger_id,
+                            'amount' => $total_landed_cost,
+                            'narration' => 'Goods in Transit (1130100004) - landed cost'
+                        )
+                    );
+                }
+            }
 
             if($inv->grand_deal_discount > 0){
                 // Purchase Discount
