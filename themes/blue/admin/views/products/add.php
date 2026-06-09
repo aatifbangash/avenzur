@@ -211,6 +211,14 @@ if (!empty($variants)) {
                         <?= form_input('warehouse_shelf', ($_POST['warehouse_shelf'] ?? ($product ? $product->warehouse_shelf : '')), 'class="form-control" id="warehouse_shelf"') ?>
                     </div>
 
+                    <?php if (!empty($canAccessOverseas) && !empty($overseasWarehouseId)) { ?>
+                    <div class="form-group">
+                        <input type="checkbox" class="checkbox" name="is_overseas_product" id="is_overseas_product" value="1"
+                            <?= (!empty($product) && (int) $product->warehouse === (int) $overseasWarehouseId) || !empty($_POST['is_overseas_product']) ? 'checked' : '' ?> />
+                        <label for="is_overseas_product" class="padding05"><?= lang('overseas_product_only'); ?></label>
+                    </div>
+                    <?php } ?>
+
                     <div class="form-group standard_combo">
                         <?= lang('weight', 'weight'); ?>
                         <?= form_input('weight', set_value('weight'), 'class="form-control tip" id="weight"'); ?>

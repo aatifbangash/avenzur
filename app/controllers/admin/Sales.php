@@ -90,6 +90,10 @@ class Sales extends MY_Controller
                 $date = date('Y-m-d H:i:s');
             }
             $warehouse_id     = $this->input->post('warehouse');
+            if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'))) {
+                $this->session->set_flashdata('error', $scope_error);
+                admin_redirect('sales/add');
+            }
             $customer_id      = $this->input->post('customer');
             $biller_id        = $this->input->post('biller');
             $total_items      = $this->input->post('total_items');
@@ -836,6 +840,10 @@ class Sales extends MY_Controller
                 $date = date('Y-m-d H:i:s');
             }
             $warehouse_id     = $this->input->post('warehouse');
+            if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'))) {
+                $this->session->set_flashdata('error', $scope_error);
+                redirect($_SERVER['HTTP_REFERER']);
+            }
             $customer_id      = $this->input->post('customer');
             $biller_id        = $this->input->post('biller');
             $total_items      = $this->input->post('total_items');
@@ -1846,6 +1854,10 @@ class Sales extends MY_Controller
                 $date = $inv->date;
             }
             $warehouse_id     = $this->input->post('warehouse');
+            if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'))) {
+                $this->session->set_flashdata('error', $scope_error);
+                admin_redirect('sales/edit/' . $id);
+            }
             $customer_id      = $this->input->post('customer');
             $biller_id        = $this->input->post('biller');
             $total_items      = $this->input->post('total_items');
@@ -2877,7 +2889,7 @@ class Sales extends MY_Controller
                 'Entryitem' => array(
                     'entry_id' => $insert_id,
                     'dc' => 'D',
-                    'ledger_id' => $customer->cogs_ledger,
+                    'ledger_id' => $this->site->usesWarehouseGL($warehouse_ledgers) ? $warehouse_ledgers->cogs_ledger : $customer->cogs_ledger,
                     //'amount' => $item->main_net,
                     'amount' => $inv->cost_goods_sold,
                     'narration' => 'cost of goods sold'
@@ -2923,7 +2935,7 @@ class Sales extends MY_Controller
                 'Entryitem' => array(
                     'entry_id' => $insert_id,
                     'dc' => 'C',
-                    'ledger_id' => $customer->sales_ledger,
+                    'ledger_id' => $this->site->usesWarehouseGL($warehouse_ledgers) ? $warehouse_ledgers->sales_ledger : $customer->sales_ledger,
                     'amount' => $inv->total,
                     'narration' => 'sale account'
                 )
@@ -6084,6 +6096,10 @@ if($inv->warning_note != ""){
                 $date = date('Y-m-d H:i:s');
             }
             $warehouse_id     = $this->input->post('warehouse');
+            if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'))) {
+                $this->session->set_flashdata('error', $scope_error);
+                admin_redirect('sales/sale_by_csv');
+            }
             $customer_id      = $this->input->post('customer');
             $biller_id        = $this->input->post('biller');
             $total_items      = $this->input->post('total_items');

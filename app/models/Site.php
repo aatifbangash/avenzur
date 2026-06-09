@@ -513,7 +513,16 @@ class Site extends CI_Model
 
     public function getMainWarehouse()
     {
-        $q = $this->db->get_where('warehouses', ['is_main' => 1]);
+        $this->db->group_start();
+        $this->db->where('is_main', 1);
+        if ($this->canAccessOverseasWarehouse()) {
+            $this->db->or_where('is_overseas', 1);
+        }
+        $this->db->group_end();
+        if (!$this->canAccessOverseasWarehouse()) {
+            $this->db->where('is_overseas', 0);
+        }
+        $q = $this->db->get('warehouses');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
@@ -523,8 +532,11 @@ class Site extends CI_Model
         return false;
     }
 
-    public function getAllWarehouses()
+    public function getAllWarehouses($include_overseas = null)
     {
+        if ($include_overseas !== true && !$this->canAccessOverseasWarehouse()) {
+            $this->db->where('is_overseas', 0);
+        }
         $q = $this->db->get('warehouses');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -533,6 +545,101 @@ class Site extends CI_Model
             return $data;
         }
         return false;
+    }
+
+    public function canAccessOverseasWarehouse()
+    {
+        $CI = get_instance();
+        return !empty($CI->Owner) || !empty($CI->Admin) || $CI->sma->in_group('financemanager');
+    }
+
+    public function getOverseasWarehouseId()
+    {
+        static $id = null;
+        if ($id === null) {
+            // Raw query — must not use query builder while a product search is being built
+            $q = $this->db->query(
+                'SELECT id FROM ' . $this->db->dbprefix('warehouses') . ' WHERE is_overseas = 1 LIMIT 1'
+            );
+            $id = ($q && $q->num_rows()) ? (int) $q->row()->id : 0;
+        }
+        return $id;
+    }
+
+    public function isOverseasWarehouse($warehouse_id)
+    {
+        if (!$warehouse_id) {
+            return false;
+        }
+        $osw_id = $this->getOverseasWarehouseId();
+        return $osw_id && (int) $warehouse_id === $osw_id;
+    }
+
+    public function isOverseasProduct($product_id)
+    {
+        $osw_id = $this->getOverseasWarehouseId();
+        if (!$osw_id || !$product_id) {
+            return false;
+        }
+        $p = $this->getProductByID($product_id);
+        return $p && (int) $p->warehouse === $osw_id;
+    }
+
+    public function usesWarehouseGL($warehouse)
+    {
+        return $warehouse && (!empty($warehouse->is_overseas) || $warehouse->warehouse_type == 'pharmacy');
+    }
+
+    public function applyProductScopeFilter($warehouse_id)
+    {
+        $osw_id = $this->getOverseasWarehouseId();
+        if (!$osw_id || !$warehouse_id) {
+            return;
+        }
+        $prefix = $this->db->dbprefix('products');
+        if ((int) $warehouse_id === $osw_id) {
+            $this->db->where($prefix . '.warehouse', $osw_id);
+        } else {
+            $this->db->where("({$prefix}.warehouse IS NULL OR {$prefix}.warehouse = 0 OR {$prefix}.warehouse != {$osw_id})", null, false);
+        }
+    }
+
+    public function validateProductWarehouseScope($warehouse_id, $product_ids)
+    {
+        if (empty($product_ids)) {
+            return false;
+        }
+        $osw_id = $this->getOverseasWarehouseId();
+        if (!$osw_id) {
+            return false;
+        }
+        $is_overseas_wh = $this->isOverseasWarehouse($warehouse_id);
+        foreach (array_unique(array_filter($product_ids)) as $pid) {
+            $is_overseas_prod = $this->isOverseasProduct($pid);
+            if ($is_overseas_wh && !$is_overseas_prod) {
+                return 'Overseas warehouse documents can only include overseas products.';
+            }
+            if (!$is_overseas_wh && $is_overseas_prod) {
+                return 'Local warehouse documents cannot include overseas products.';
+            }
+        }
+        return false;
+    }
+
+    public function validateOverseasTransfer($from_warehouse, $to_warehouse)
+    {
+        if ($this->isOverseasWarehouse($from_warehouse) xor $this->isOverseasWarehouse($to_warehouse)) {
+            return 'Transfers between overseas and local warehouses are not allowed.';
+        }
+        return false;
+    }
+
+    public function enforceOverseasRules($warehouse_id, $product_ids)
+    {
+        if ($this->isOverseasWarehouse($warehouse_id) && !$this->canAccessOverseasWarehouse()) {
+            return lang('access_denied');
+        }
+        return $this->validateProductWarehouseScope($warehouse_id, $product_ids);
     }
     public function getAvgCost($item_batchno, $item_id){
         $avgCostQuery = "SELECT 

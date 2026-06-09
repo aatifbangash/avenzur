@@ -110,6 +110,18 @@ class Transfers extends MY_Controller
             } 
             $to_warehouse           = $this->input->post('to_warehouse');
             $from_warehouse         = $this->input->post('from_warehouse');
+            if ($transfer_error = $this->site->validateOverseasTransfer($from_warehouse, $to_warehouse)) {
+                $this->session->set_flashdata('error', $transfer_error);
+                admin_redirect($_SERVER['HTTP_REFERER']);
+            }
+            if (!$this->site->canAccessOverseasWarehouse() && ($this->site->isOverseasWarehouse($from_warehouse) || $this->site->isOverseasWarehouse($to_warehouse))) {
+                $this->session->set_flashdata('error', lang('access_denied'));
+                admin_redirect($_SERVER['HTTP_REFERER']);
+            }
+            if ($scope_error = $this->site->validateProductWarehouseScope($from_warehouse, $this->input->post('product_id'))) {
+                $this->session->set_flashdata('error', $scope_error);
+                admin_redirect($_SERVER['HTTP_REFERER']);
+            }
             $note                   = $this->sma->clear_tags($this->input->post('note'));
             $shipping               = $this->input->post('shipping') ? $this->input->post('shipping') : 0;
             $status                 = $this->input->post('status');
@@ -323,6 +335,18 @@ class Transfers extends MY_Controller
             }
             $to_warehouse           = $this->input->post('to_warehouse');
             $from_warehouse         = $this->input->post('from_warehouse');
+            if ($transfer_error = $this->site->validateOverseasTransfer($from_warehouse, $to_warehouse)) {
+                $this->session->set_flashdata('error', $transfer_error);
+                admin_redirect($_SERVER['HTTP_REFERER']);
+            }
+            if (!$this->site->canAccessOverseasWarehouse() && ($this->site->isOverseasWarehouse($from_warehouse) || $this->site->isOverseasWarehouse($to_warehouse))) {
+                $this->session->set_flashdata('error', lang('access_denied'));
+                admin_redirect($_SERVER['HTTP_REFERER']);
+            }
+            if ($scope_error = $this->site->validateProductWarehouseScope($from_warehouse, $this->input->post('product_id'))) {
+                $this->session->set_flashdata('error', $scope_error);
+                admin_redirect($_SERVER['HTTP_REFERER']);
+            }
             $note                   = $this->sma->clear_tags($this->input->post('note'));
             $shipping               = $this->input->post('shipping') ? $this->input->post('shipping') : 0;
             $status                 = $this->input->post('status');
@@ -690,6 +714,18 @@ class Transfers extends MY_Controller
             }
             $to_warehouse           = $this->input->post('to_warehouse');
             $from_warehouse         = $this->input->post('from_warehouse');
+            if ($transfer_error = $this->site->validateOverseasTransfer($from_warehouse, $to_warehouse)) {
+                $this->session->set_flashdata('error', $transfer_error);
+                admin_redirect($_SERVER['HTTP_REFERER']);
+            }
+            if (!$this->site->canAccessOverseasWarehouse() && ($this->site->isOverseasWarehouse($from_warehouse) || $this->site->isOverseasWarehouse($to_warehouse))) {
+                $this->session->set_flashdata('error', lang('access_denied'));
+                admin_redirect($_SERVER['HTTP_REFERER']);
+            }
+            if ($scope_error = $this->site->validateProductWarehouseScope($from_warehouse, $this->input->post('product_id'))) {
+                $this->session->set_flashdata('error', $scope_error);
+                admin_redirect($_SERVER['HTTP_REFERER']);
+            }
             $note                   = $this->sma->clear_tags($this->input->post('note'));
             $shipping               = $this->input->post('shipping') ? $this->input->post('shipping') : 0;
             $status                 = $this->input->post('status');
@@ -1755,6 +1791,18 @@ class Transfers extends MY_Controller
             }
             $to_warehouse           = $this->input->post('to_warehouse');
             $from_warehouse         = $this->input->post('from_warehouse');
+            if ($transfer_error = $this->site->validateOverseasTransfer($from_warehouse, $to_warehouse)) {
+                $this->session->set_flashdata('error', $transfer_error);
+                admin_redirect($_SERVER['HTTP_REFERER']);
+            }
+            if (!$this->site->canAccessOverseasWarehouse() && ($this->site->isOverseasWarehouse($from_warehouse) || $this->site->isOverseasWarehouse($to_warehouse))) {
+                $this->session->set_flashdata('error', lang('access_denied'));
+                admin_redirect($_SERVER['HTTP_REFERER']);
+            }
+            if ($scope_error = $this->site->validateProductWarehouseScope($from_warehouse, $this->input->post('product_id'))) {
+                $this->session->set_flashdata('error', $scope_error);
+                admin_redirect($_SERVER['HTTP_REFERER']);
+            }
             $note                   = $this->sma->clear_tags($this->input->post('note'));
             $shipping               = $this->input->post('shipping') ? $this->input->post('shipping') : 0;
             $status                 = $this->input->post('status');

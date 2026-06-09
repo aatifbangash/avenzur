@@ -92,6 +92,10 @@ class Purchase_order extends MY_Controller
         $reference = $this->input->post('reference_no') ? $this->input->post('reference_no') : $this->site->getReference('po');
         $status = $this->input->post('status') ?? "pending";
         $warehouse_id = $this->input->post('warehouse');
+        if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'))) {
+            $this->session->set_flashdata('error', $scope_error);
+            admin_redirect($_SERVER['HTTP_REFERER']);
+        }
         $child_supplier_id = $this->input->post('childsupplier') ? $this->input->post('childsupplier') : 0;
         $supplier_id = $child_supplier_id ? $child_supplier_id : $this->input->post('supplier');
         $status = $this->input->post('status') ?? "pending";
@@ -279,6 +283,10 @@ class Purchase_order extends MY_Controller
 
         $date = $this->sma->fld($this->input->post('date'));
         $warehouse_id = $this->input->post('warehouse');
+        if ($this->site->isOverseasWarehouse($warehouse_id) && !$this->site->canAccessOverseasWarehouse()) {
+            $this->session->set_flashdata('error', lang('access_denied'));
+            redirect($_SERVER['HTTP_REFERER']);
+        }
         $supplier_id = $this->input->post('supplier');
 
         // Upload file to temp location
@@ -547,6 +555,10 @@ class Purchase_order extends MY_Controller
                 $date = date('Y-m-d H:i:s');
             }
             $warehouse_id = $this->input->post('warehouse');
+            if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'))) {
+                $this->session->set_flashdata('error', $scope_error);
+                admin_redirect($_SERVER['HTTP_REFERER']);
+            }
             $child_supplier_id = $this->input->post('childsupplier') ? $this->input->post('childsupplier') : 0;
             $supplier_id = $child_supplier_id ? $child_supplier_id : $this->input->post('supplier');
             $status = $this->input->post('status') ?? "pending";
@@ -870,6 +882,10 @@ class Purchase_order extends MY_Controller
                 $date = $inv->date;
             }
             $warehouse_id = $this->input->post('warehouse');
+            if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'))) {
+                $this->session->set_flashdata('error', $scope_error);
+                admin_redirect('purchase_order/edit/' . $id);
+            }
             $supplier_id = $this->input->post('supplier');
             // Preserve existing status if not provided in POST
             $status = $this->input->post('status') ? $this->input->post('status') : $inv->status;

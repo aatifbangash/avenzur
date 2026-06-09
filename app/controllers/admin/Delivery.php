@@ -342,11 +342,11 @@ class Delivery extends MY_Controller
 
             // Accounting entry lines
             $lines = [
-                ['dc' => 'D', 'ledger_id' => $customer->cogs_ledger,              'amount' => $inv->cost_goods_sold, 'narration' => 'cost of goods sold'],
+                ['dc' => 'D', 'ledger_id' => $this->site->usesWarehouseGL($warehouse_ledgers) ? $warehouse_ledgers->cogs_ledger : $customer->cogs_ledger, 'amount' => $inv->cost_goods_sold, 'narration' => 'cost of goods sold'],
                 ['dc' => 'C', 'ledger_id' => $warehouse_ledgers->inventory_ledger, 'amount' => $inv->cost_goods_sold, 'narration' => 'inventory account'],
                 ['dc' => 'D', 'ledger_id' => $customer->discount_ledger,           'amount' => $inv->total_discount,  'narration' => 'total discount'],
                 ['dc' => 'D', 'ledger_id' => $customer->ledger_account,            'amount' => $inv->grand_total,     'narration' => 'customer'],
-                ['dc' => 'C', 'ledger_id' => $customer->sales_ledger,              'amount' => $inv->total,           'narration' => 'sale account'],
+                ['dc' => 'C', 'ledger_id' => $this->site->usesWarehouseGL($warehouse_ledgers) ? $warehouse_ledgers->sales_ledger : $customer->sales_ledger, 'amount' => $inv->total, 'narration' => 'sale account'],
                 ['dc' => 'C', 'ledger_id' => $this->vat_on_sale,                   'amount' => $inv->total_tax,       'narration' => 'vat on sale'],
             ];
             foreach ($lines as $line) {

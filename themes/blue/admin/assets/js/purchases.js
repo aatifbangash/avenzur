@@ -1656,7 +1656,7 @@ function loadItems() {
 				new_calc.new_net_purchase +
 				"</span></td>";
 
-			if (typeof isPoInvoice !== "undefined" && isPoInvoice) {
+			if (typeof isPoInvoice !== "undefined" && isPoInvoice && (typeof canUseLandedCost === "undefined" || canUseLandedCost)) {
 				tr_html +=
 					'<td><input class="form-control text-center rlanded" name="landed_cost[]" type="text" data-id="' +
 					row_no +
@@ -1715,7 +1715,7 @@ function loadItems() {
 		if (site.settings.product_expiry == 1) {
 			col++;
 		}
-		if (typeof isPoInvoice !== "undefined" && isPoInvoice) {
+		if (typeof isPoInvoice !== "undefined" && isPoInvoice && (typeof canUseLandedCost === "undefined" || canUseLandedCost)) {
 			col++;
 		}
 		var tfoot =
@@ -1734,7 +1734,7 @@ function loadItems() {
 			'<th class="text-right">' + formatMoney(new_total_sale) + "</th>";
 
 		tfoot += '<th class="text-right">' + formatMoney(new_total_net_purchase) + "</th>";
-		if (typeof isPoInvoice !== "undefined" && isPoInvoice) {
+		if (typeof isPoInvoice !== "undefined" && isPoInvoice && (typeof canUseLandedCost === "undefined" || canUseLandedCost)) {
 			tfoot += "<th></th>";
 		}
 		tfoot += "<th></th>";

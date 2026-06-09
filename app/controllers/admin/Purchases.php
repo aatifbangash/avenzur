@@ -353,6 +353,10 @@ class Purchases extends MY_Controller
                 $date = date('Y-m-d H:i:s');
             }
             $warehouse_id = $this->input->post('warehouse');
+            if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'))) {
+                $this->session->set_flashdata('error', $scope_error);
+                admin_redirect('purchases/add');
+            }
             $child_supplier_id = $this->input->post('childsupplier') ? $this->input->post('childsupplier') : 0;
             $supplier_id = $child_supplier_id ? $child_supplier_id : $this->input->post('supplier');
             $status = $this->input->post('status');
@@ -475,7 +479,7 @@ class Purchases extends MY_Controller
 
                     $landed_cost = 0;
                     $landed_per_unit = 0;
-                    if ($is_po_invoice) {
+                    if ($is_po_invoice && $this->site->canAccessOverseasWarehouse()) {
                         $landed_cost = $this->sma->formatDecimal(isset($_POST['landed_cost'][$r]) ? $_POST['landed_cost'][$r] : 0, 5);
                         if ($landed_cost < 0) {
                             $landed_cost = 0;
@@ -666,8 +670,10 @@ class Purchases extends MY_Controller
         if ($this->form_validation->run() == true && !empty($products)) {
             if ($this->input->post('action') == 'create_invoice') {
                 $total_landed_cost_check = 0;
-                foreach ($products as $p) {
-                    $total_landed_cost_check += (float) ($p['landed_cost'] ?? 0);
+                if ($this->site->canAccessOverseasWarehouse()) {
+                    foreach ($products as $p) {
+                        $total_landed_cost_check += (float) ($p['landed_cost'] ?? 0);
+                    }
                 }
                 if ($total_landed_cost_check > 0 && !$this->getLandedCostLedgerId()) {
                     $this->session->set_flashdata('error', lang('landed_cost_ledger_required'));
@@ -834,6 +840,7 @@ class Purchases extends MY_Controller
             $this->data['categories'] = $this->site->getAllCategories();
             $this->data['tax_rates'] = $this->site->getAllTaxRates();
             $this->data['warehouses'] = $this->site->getAllWarehouses();
+            $this->data['canUseLandedCost'] = $this->site->canAccessOverseasWarehouse();
             $this->data['ponumber'] = ''; //$this->site->getReference('po');
             $this->load->helper('string');
             $value = random_string('alnum', 20);
@@ -3944,6 +3951,7 @@ class Purchases extends MY_Controller
     {
         $term = $this->input->get('term', true);
         $supplier_id = $this->input->get('supplier_id', true);
+        $warehouse_id = $this->input->get('warehouse_id', true);
 
         if (strlen($term) < 1 || !$term) {
             die("<script type='text/javascript'>setTimeout(function(){ window.top.location.href = '" . admin_url('welcome') . "'; }, 10);</script>");
@@ -3963,7 +3971,7 @@ class Purchases extends MY_Controller
         $qty = $strict ? null : $analyzed['quantity'] ?? null;
         $bprice = $strict ? null : $analyzed['price'] ?? null;
 
-        $rows = $this->purchases_model->getProductNames($sr);
+        $rows = $this->purchases_model->getProductNames($sr, $warehouse_id);
         $end_date = date('d/m/Y h:i');
         $start_date = date('d/m/Y h:i', strtotime('-3 month'));
 

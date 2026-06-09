@@ -882,9 +882,20 @@ class Purchases_model extends CI_Model
         return false;
     }
 
-    public function getProductNames($term, $limit = 20)
+    public function getProductNames($term, $warehouse_id = null, $limit = 20)
     {
+        $osw_id = $warehouse_id ? $this->site->getOverseasWarehouseId() : 0;
+        $is_overseas_wh = $osw_id && (int) $warehouse_id === $osw_id;
+
         $this->db->where("type = 'standard' AND (name LIKE '%" . $term . "%' OR item_code LIKE  '%" . $term . "%' OR code LIKE '%" . $term . "%' OR supplier1_part_no LIKE '%" . $term . "%' OR supplier2_part_no LIKE '%" . $term . "%' OR supplier3_part_no LIKE '%" . $term . "%' OR supplier4_part_no LIKE '%" . $term . "%' OR supplier5_part_no LIKE '%" . $term . "%' OR  concat(name, ' (', code, ')') LIKE '%" . $term . "%')");
+        if ($warehouse_id && $osw_id) {
+            if ($is_overseas_wh) {
+                $this->db->where($this->db->dbprefix('products') . '.warehouse', $osw_id);
+            } else {
+                $prefix = $this->db->dbprefix('products');
+                $this->db->where("({$prefix}.warehouse IS NULL OR {$prefix}.warehouse = 0 OR {$prefix}.warehouse != {$osw_id})", null, false);
+            }
+        }
         $this->db->limit($limit);
         $q = $this->db->get('products');
         if ($q->num_rows() > 0) {

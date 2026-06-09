@@ -55,6 +55,9 @@ class MY_Controller extends CI_Controller
             $this->data['Accountant']          = $this->Accountant;
             $this->WarehouseSupervisor         = $this->sma->in_group('warehousesupervisor') ? true : null;
             $this->data['WarehouseSupervisor'] = $this->WarehouseSupervisor;
+            $this->FinanceManager              = $this->sma->in_group('financemanager') ? true : null;
+            $this->data['FinanceManager']      = $this->FinanceManager;
+            $this->data['canAccessOverseas']   = $this->Owner || $this->Admin || $this->FinanceManager;
 
             if ($sd = $this->site->getDateFormat($this->Settings->dateformat)) {
                 $dateFormats = [
