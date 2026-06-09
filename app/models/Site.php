@@ -641,6 +641,18 @@ class Site extends CI_Model
         }
         return $this->validateProductWarehouseScope($warehouse_id, $product_ids);
     }
+
+    /**
+     * Document listings: "all warehouses" = local only; pick OSW001 explicitly for overseas.
+     */
+    public function applyListingWarehouseScope($builder, $warehouse_id, $column = 'warehouse_id')
+    {
+        $osw_id = $this->getOverseasWarehouseId();
+        if (!$osw_id || $warehouse_id) {
+            return $builder;
+        }
+        return $builder->where($column . ' !=', $osw_id);
+    }
     public function getAvgCost($item_batchno, $item_id){
         $avgCostQuery = "SELECT 
                     SUM(iv.quantity * iv.net_unit_cost) / SUM(iv.quantity) AS average_cost

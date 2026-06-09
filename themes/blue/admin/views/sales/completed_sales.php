@@ -61,9 +61,24 @@
     <div class="box-header">
         <h2 class="blue">
             <i class="fa-fw fa fa-check-circle"></i>
-            Completed Sales <?= $warehouse_id ? '(' . $warehouse->name . ')' : '(' . lang('all_warehouses') . ')' ?>
+            Completed Sales (<?= $warehouse_id ? $warehouse->name : (!empty($canAccessOverseas) ? 'All Local Warehouses' : lang('all_warehouses')) ?>)
         </h2>
-        <div class="box-icon"></div>
+        <div class="box-icon">
+            <ul class="btn-tasks">
+                <?php if (!empty($warehouses)) { ?>
+                <li class="dropdown">
+                    <a data-toggle="dropdown" class="dropdown-toggle" href="#"><i class="icon fa fa-building-o tip" data-placement="left" title="<?= lang('warehouses') ?>"></i></a>
+                    <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
+                        <li><a href="<?= admin_url('sales/completed_sales') ?>"><i class="fa fa-building-o"></i> <?= !empty($canAccessOverseas) ? 'All Local Warehouses' : lang('all_warehouses') ?></a></li>
+                        <li class="divider"></li>
+                        <?php foreach ($warehouses as $wh) {
+                            echo '<li ' . ($warehouse_id && $warehouse_id == $wh->id ? 'class="active"' : '') . '><a href="' . admin_url('sales/completed_sales/' . $wh->id) . '"><i class="fa fa-building"></i>' . $wh->name . '</a></li>';
+                        } ?>
+                    </ul>
+                </li>
+                <?php } ?>
+            </ul>
+        </div>
     </div>
     <div class="box-content">
         <div class="row">

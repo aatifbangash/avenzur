@@ -1335,7 +1335,7 @@ class Purchase_order extends MY_Controller
 
         $filters = [
             'supplier_id' => $this->input->get('supplier_id'),
-            'warehouse_id' => $this->input->get('warehouse_id'),
+            'warehouse_id' => $this->data['warehouse_id'] ?: $this->input->get('warehouse_id'),
             'status' => $this->input->get('status'),
             'from_date' => $this->input->get('from'),
             'to_date' => $this->input->get('to'),
@@ -1350,7 +1350,7 @@ class Purchase_order extends MY_Controller
         $total_rows = $this->purchase_order_model->count_purchases($filters);
 
 
-        $config['base_url'] = admin_url('purchase_order/index');
+        $config['base_url'] = admin_url('purchase_order' . ($this->data['warehouse_id'] ? '/' . $this->data['warehouse_id'] : ''));
         $config['total_rows'] = $total_rows;
         $config['per_page'] = $limit;
         $config['page_query_string'] = TRUE;

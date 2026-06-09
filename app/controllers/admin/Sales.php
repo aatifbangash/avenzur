@@ -3867,6 +3867,7 @@ class Sales extends MY_Controller
                 ->join('warehouses', 'warehouses.id = sales.pickup_location_id', 'left')
                 ->where('shop', 1);  
         }
+        $this->site->applyListingWarehouseScope($this->datatables, $warehouse_id);
  
         $subquery = "(SELECT COUNT(*) FROM sma_sale_items WHERE sma_sale_items.sale_id = sma_sales.id AND (sma_sale_items.product_code LIKE 'AM-%' OR sma_sale_items.product_code LIKE 'IH-%'))";
         $this->datatables
@@ -4062,6 +4063,7 @@ class Sales extends MY_Controller
                     ->where('shop', 0); 
             } 
         }  
+        $this->site->applyListingWarehouseScope($this->datatables, $warehouse_id);
         if(is_numeric($sid)) {
             //$this->datatables->where('id', $sid);
             $this->datatables->group_start()
@@ -4231,6 +4233,7 @@ class Sales extends MY_Controller
                     ->from('sales')
                     ->where('shop', 1); 
             } 
+            $this->site->applyListingWarehouseScope($this->datatables, $warehouse_id);
             if(is_numeric($sid)) {
                 //$this->datatables->where('id', $sid);
                 $this->datatables->group_start()
@@ -4412,6 +4415,8 @@ class Sales extends MY_Controller
                 ->from('sales')
                 ->where('shop', 0);
         }
+
+        $this->site->applyListingWarehouseScope($this->datatables, $warehouse_id);
 
         // Always filter to completed only
         $this->datatables->where('sale_status', 'completed');

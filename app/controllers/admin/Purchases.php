@@ -2265,6 +2265,7 @@ class Purchases extends MY_Controller
             $this->datatables
                 ->select("id, DATE_FORMAT(date, '%Y-%m-%d %T') as date, reference_no, sequence_code, supplier, status, grand_total, paid, (grand_total-paid) as balance, payment_status, attachment")
                 ->from('purchases');
+            $this->site->applyListingWarehouseScope($this->datatables, $warehouse_id);
         }
 
         if (!empty($pid) && is_numeric($pid)) {

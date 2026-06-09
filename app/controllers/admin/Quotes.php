@@ -1540,6 +1540,7 @@ class Quotes extends MY_Controller
             $this->datatables
                 ->select('id, date, reference_no, biller, customer, total, total_discount, total_tax, grand_total, status, attachment')
                 ->from('quotes');
+            $this->site->applyListingWarehouseScope($this->datatables, $warehouse_id);
         }
         if (!$this->Owner && !$this->Admin && !$this->GP['quotes-index']) {
             $this->datatables->where('created_by', $this->session->userdata('user_id'));
