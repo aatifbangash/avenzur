@@ -134,6 +134,8 @@
                 </div>
                 <?php endif; ?>
 
+                <?php $this->load->view($this->theme . 'reports/partials/warehouse_filter_field', ['wh_col' => 'col-md-2']); ?>
+
                 <div class="col-md-2">
                     <div class="form-group">
                         <button type="submit" style="margin-top: 28px;" class="btn btn-primary btn-block">

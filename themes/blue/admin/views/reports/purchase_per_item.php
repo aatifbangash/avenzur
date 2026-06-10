@@ -117,6 +117,8 @@
                                 <input type="hidden" name="product" value="<?= isset($_POST['product']) ? $_POST['product'] : 0 ?>" id="report_product_id2" />
                             </div>
                         </div>
+
+                        <?php $this->load->view($this->theme . 'reports/partials/warehouse_filter_field', ['wh_col' => 'col-md-3']); ?>
                     </div>
                 </div>
                 <div class="row">

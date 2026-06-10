@@ -5,6 +5,7 @@
 $filter_from        = '';
 $filter_to          = '';
 $filter_supplier_id = !empty($filters['supplier_id']) ? $filters['supplier_id'] : '';
+$filter_warehouse_id = !empty($filters['warehouse_id']) ? $filters['warehouse_id'] : '';
 if (!empty($filters['from_date'])) {
     $d = DateTime::createFromFormat('Y-m-d', $filters['from_date']);
     $filter_from = $d ? $d->format('d/m/Y') : $filters['from_date'];
@@ -19,7 +20,7 @@ $page_start   = $total_records > 0 ? (($page - 1) * $per_page) + 1 : 0;
 $page_end     = min($page * $per_page, $total_records);
 
 // Build pagination base URL (preserve all filters)
-$base_params = ['supplier_id' => $filter_supplier_id, 'from_date' => $filter_from, 'to_date' => $filter_to];
+$base_params = ['supplier_id' => $filter_supplier_id, 'from_date' => $filter_from, 'to_date' => $filter_to, 'warehouse_id' => $filter_warehouse_id];
 $base_qs     = http_build_query($base_params);
 $base_url    = admin_url('reports/supplier_payments_report') . ($base_qs ? '?' . $base_qs . '&' : '?');
 ?>
@@ -71,9 +72,11 @@ $base_url    = admin_url('reports/supplier_payments_report') . ($base_qs ? '?' .
                     </div>
                 </div>
 
-                <div class="col-md-3" style="padding-top:22px;">
+                <?php $this->load->view($this->theme . 'reports/partials/warehouse_filter_field', ['wh_col' => 'col-md-2', 'wh_val' => $filter_warehouse_id]); ?>
+
+                <div class="col-md-2" style="padding-top:22px;">
                     <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-filter"></i> Filter</button>
-                    <a href="<?= admin_url('reports/supplier_payments_report') ?>?from_date=&amp;to_date=&amp;supplier_id=" class="btn btn-default btn-sm"><i class="fa fa-times"></i> Reset</a>
+                    <a href="<?= admin_url('reports/supplier_payments_report') ?>?from_date=&amp;to_date=&amp;supplier_id=&amp;warehouse_id=" class="btn btn-default btn-sm"><i class="fa fa-times"></i> Reset</a>
                 </div>
 
             </div>

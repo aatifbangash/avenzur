@@ -1048,10 +1048,11 @@ class Suppliers extends MY_Controller
 
         // Build filters from GET
         $filters = [
-            'supplier_id' => $this->input->get('supplier_id') ?: $this->input->post('supplier_id'),
-            'category'    => $this->input->get('category')    ?: $this->input->post('category'),
-            'from_date'   => $this->input->get('from_date')   ?: $this->input->post('from_date'),
-            'to_date'     => $this->input->get('to_date')     ?: $this->input->post('to_date'),
+            'supplier_id'  => $this->input->get('supplier_id') ?: $this->input->post('supplier_id'),
+            'category'     => $this->input->get('category')    ?: $this->input->post('category'),
+            'warehouse_id' => $this->input->get('warehouse_id') ?: $this->input->post('warehouse_id'),
+            'from_date'    => $this->input->get('from_date')   ?: $this->input->post('from_date'),
+            'to_date'      => $this->input->get('to_date')     ?: $this->input->post('to_date'),
         ];
         // Convert display date (d/m/Y) to Y-m-d for the query
         foreach (['from_date', 'to_date'] as $f) {
@@ -1064,6 +1065,8 @@ class Suppliers extends MY_Controller
         $this->data['payments']   = $this->purchases_model->getPaymentReferences($filters);
         $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
         $this->data['filters']    = $filters;
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['warehouse_id'] = $filters['warehouse_id'];
 
         // Build distinct category list from suppliers
         $categories = [];

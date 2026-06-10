@@ -34,13 +34,15 @@
         const agent = document.getElementById('agent').value;
         const agent2 = document.getElementById('agent2').value;
         const supplier_id = document.getElementById('supplier_id').value;
+        const warehouse_id = document.getElementById('warehouse_id') ? document.getElementById('warehouse_id').value : '';
 
         const queryParams = new URLSearchParams({
             item: item,
             period: period,
             agent: agent,
             agent2: agent2,
-            supplier_id: supplier_id
+            supplier_id: supplier_id,
+            warehouse_id: warehouse_id
         }).toString();
 
         window.location.href = `<?php echo base_url('admin/reports/consumption_report_export_excel'); ?>?${queryParams}`;
@@ -125,6 +127,8 @@
                             echo form_dropdown('supplier_id', $sp, $supplier_id, 'id="supplier_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('supplier') . '" required="required" style="width:100%;" ', null); ?>
                         </div>
                     </div>
+
+                    <?php $this->load->view($this->theme . 'reports/partials/warehouse_filter_field', ['wh_col' => 'col-md-4']); ?>
 
                     <div class="col-md-4">
                         <div class="from-group">

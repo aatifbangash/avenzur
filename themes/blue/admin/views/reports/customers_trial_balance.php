@@ -60,6 +60,8 @@
                             </div>
                         </div>
 
+                        <?php $this->load->view($this->theme . 'reports/partials/warehouse_filter_field', ['wh_col' => 'col-md-4']); ?>
+
                         <div class="col-md-4">
                             <div class="from-group">
                                 <button type="submit" style="margin-top: 28px;" class="btn btn-primary" id="load_report"><?= lang('Load Report') ?></button>
@@ -68,7 +70,7 @@
                             
                     </div>
                 </div>
-              <?php echo form_close(); 
+              <?php echo form_close();
               } ?>
                 <hr />
                 <div class="row">

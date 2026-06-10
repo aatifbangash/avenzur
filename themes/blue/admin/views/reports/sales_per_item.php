@@ -132,6 +132,7 @@ $spi_export_url = admin_url('reports/sales_per_item?' . http_build_query($spi_ex
                 </div>
                 <div class="row">
                     <div class="col-lg-12">
+                        <?php $this->load->view($this->theme . 'reports/partials/warehouse_filter_field', ['wh_col' => 'col-md-3']); ?>
                         <div class="col-md-3">
                             <div class="form-group">
                                 <?= lang('Category', 'category'); ?>

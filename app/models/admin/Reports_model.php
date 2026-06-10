@@ -383,7 +383,7 @@ class Reports_model extends CI_Model
         return $response;
     }
 
-    public function getSupplierAgingNew($duration, $start_date, $supplier_id_array)
+    public function getSupplierAgingNew($duration, $start_date, $supplier_id_array, $warehouse_id = null)
     {
         // Aging buckets
         $intervals = [30, 60, 90, 120, 150, 180, 210, 240];
@@ -415,6 +415,8 @@ class Reports_model extends CI_Model
             $supplier_filter = " AND p.supplier_id IN ($ids)";
         }
 
+        $warehouse_filter = $this->site->reportWarehouseAndClause($warehouse_id, 'p');
+
         // Fetch invoices
         $sql = "
             SELECT 
@@ -422,6 +424,8 @@ class Reports_model extends CI_Model
                 p.date,
                 p.supplier_id,
                 c.name AS supplier_name,
+                c.sequence_code AS supplier_code,
+                c.category,
                 p.grand_total,
                 p.paid,
                 c.payment_term
@@ -429,6 +433,7 @@ class Reports_model extends CI_Model
             JOIN sma_companies c ON p.supplier_id = c.id
             WHERE p.grand_total > 0
             $supplier_filter
+            $warehouse_filter
         ";
 
         $invoices = $this->db->query($sql)->result();
@@ -480,6 +485,8 @@ class Reports_model extends CI_Model
                 $result[$inv->supplier_id] = [
                     'supplier_id'   => $inv->supplier_id,
                     'supplier_name' => $inv->supplier_name,
+                    'supplier_code' => $inv->supplier_code,
+                    'category'      => $inv->category,
                     'payment_term'  => $inv->payment_term,
                 ];
                 foreach ($buckets as $b) {
@@ -577,7 +584,7 @@ class Reports_model extends CI_Model
         return $data;
     }
 
-    public function getCustomerAgingNew($duration, $start_date, $customer_id_array, $salesman = null)
+    public function getCustomerAgingNew($duration, $start_date, $customer_id_array, $salesman = null, $warehouse_id = null)
     {
         // Aging buckets
         $intervals = [30, 60, 90, 120, 150, 180, 210, 240];
@@ -615,6 +622,8 @@ class Reports_model extends CI_Model
             $salesman_filter = " AND c.sales_agent = '" . $this->db->escape_str($salesman) . "'";
         }
 
+        $warehouse_filter = $this->site->reportWarehouseAndClause($warehouse_id, 's');
+
         // Fetch invoices
         $sql = "
             SELECT 
@@ -634,6 +643,7 @@ class Reports_model extends CI_Model
             WHERE s.grand_total > 0 AND s.sale_invoice = 1
             $customer_filter
             $salesman_filter
+            $warehouse_filter
         ";
 
         $invoices = $this->db->query($sql)->result();
@@ -935,7 +945,7 @@ class Reports_model extends CI_Model
         return $response_array;
     }
 
-    public function getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account)
+    public function getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account, $warehouse_id = null)
     {
         $response = array();
         $supplier_info = $this->companies_model->getCompanyByID($supplier_id);
@@ -945,6 +955,7 @@ class Reports_model extends CI_Model
         }
 
         $supplier_ledger = $supplier_info->ledger_account;
+        $warehouse_sql = $this->site->reportPurchaseLedgerWarehouseExistsSql($warehouse_id, 'e');
 
         $sql = "
             SELECT 
@@ -978,6 +989,7 @@ class Reports_model extends CI_Model
             WHERE e.supplier_id = ?
             AND e.date < ?
             AND ai.ledger_id = ?
+            {$warehouse_sql}
             ORDER BY e.date ASC
             ";
 
@@ -1021,6 +1033,7 @@ class Reports_model extends CI_Model
             AND e.date >= ?
             AND e.date <= ?
             AND ai.ledger_id = ?
+            {$warehouse_sql}
             ORDER BY e.date ASC
             ";
 
@@ -1092,7 +1105,7 @@ class Reports_model extends CI_Model
     /**
      * @param int|int[] $ledger_account Current ledger id, or list including old_ledgers ids
      */
-    public function getCustomerStatement($start_date, $end_date, $customer_id, $ledger_account)
+    public function getCustomerStatement($start_date, $end_date, $customer_id, $ledger_account, $warehouse_id = null)
     {
         $ledger_ids = $this->normalizeCustomerStatementLedgerIds($ledger_account);
         if (empty($ledger_ids)) {
@@ -1120,8 +1133,9 @@ class Reports_model extends CI_Model
             ->where_in('sma_accounts_entryitems.ledger_id', $ledger_ids)
             ->where('sma_accounts_entries.customer_id', $customer_id)
             ->where('sma_accounts_entries.date >=', $start_date)
-            ->where('sma_accounts_entries.date <=', $end_date)
-            ->group_by('sma_accounts_entryitems.dc')
+            ->where('sma_accounts_entries.date <=', $end_date);
+        $this->site->applyCustomerLedgerWarehouseScope($this->db, $warehouse_id);
+        $this->db->group_by('sma_accounts_entryitems.dc')
             ->group_by('sma_accounts_entries.date')
             ->group_by('sma_accounts_entries.transaction_type')
             ->group_by('sma_accounts_entryitems.entry_id')
@@ -1146,10 +1160,12 @@ class Reports_model extends CI_Model
             ->join('sma_accounts_entries', 'sma_accounts_entries.id=sma_accounts_entryitems.entry_id')
             ->join('sma_accounts_ledgers', 'sma_accounts_entryitems.ledger_id=sma_accounts_ledgers.id')
             ->join('sma_companies', 'sma_companies.id=sma_accounts_entries.customer_id')
+            ->join('sma_sales', 'sma_sales.id=sma_accounts_entries.sid', 'left')
             ->where_in('sma_accounts_entryitems.ledger_id', $ledger_ids)
             ->where('sma_accounts_entries.customer_id', $customer_id)
-            ->where('sma_accounts_entries.date <', $start_date)
-            ->group_by('sma_accounts_entryitems.dc');
+            ->where('sma_accounts_entries.date <', $start_date);
+        $this->site->applyCustomerLedgerWarehouseScope($this->db, $warehouse_id);
+        $this->db->group_by('sma_accounts_entryitems.dc');
         $q = $this->db->get();
         //lq($this);
         
@@ -1826,8 +1842,9 @@ class Reports_model extends CI_Model
     }
 
 
-    public function get_suppliers_trial_balance($start_date, $end_date, $supplier_ids)
+    public function get_suppliers_trial_balance($start_date, $end_date, $supplier_ids, $warehouse_id = null)
     {
+        $purchase_wh = $this->site->reportPurchaseLedgerWarehouseCondition($warehouse_id);
         // Calculate OB
         // $this->db->select('supplier_id, SUM(dr_total) as total_debit, SUM(cr_total) as total_credit');
         // $this->db->where('date <', $start_date);
@@ -1844,6 +1861,7 @@ class Reports_model extends CI_Model
         //$this->db->where('sma_companies.ledger_account=102');
         $this->db->where('sma_accounts_entryitems.ledger_id = sma_companies.ledger_account');
         $this->db->where('sma_accounts_entries.supplier_id IS NOT NULL', null, false);
+        $this->db->where($purchase_wh, null, false);
 
         // ✅ Filter by selected suppliers (if any)
         if (!empty($supplier_ids)) {
@@ -1868,6 +1886,7 @@ class Reports_model extends CI_Model
         $this->db->where('sma_accounts_entries.date <=', $end_date);
         $this->db->where('sma_accounts_entries.supplier_id IS NOT NULL', null, false);
         $this->db->where('sma_accounts_entryitems.ledger_id = sma_companies.ledger_account');
+        $this->db->where($purchase_wh, null, false);
 
         // ✅ Filter by selected suppliers (if any)
         if (!empty($supplier_ids)) {
@@ -2025,9 +2044,10 @@ class Reports_model extends CI_Model
         return $response;
     }
 
-    public function get_customer_trial_balance($start_date, $end_date)
+    public function get_customer_trial_balance($start_date, $end_date, $warehouse_id = null)
     {
         $response = array();
+        $warehouse_sql = $this->site->reportLedgerWarehouseExistsSql($warehouse_id);
         // Include receivable lines on current ledger_account and on comma-separated old_ledgers (same rule as customer statement).
         $ledgerMatch = "(sma_accounts_entryitems.ledger_id = sma_companies.ledger_account
                 OR (
@@ -2057,6 +2077,7 @@ class Reports_model extends CI_Model
                 AND date(sma_accounts_entries.date) <= '{$end_date}' 
                 AND sma_accounts_entries.customer_id IS NOT NULL 
                 AND {$ledgerMatch}
+                {$warehouse_sql}
             GROUP BY 
                 sma_accounts_entries.customer_id, 
                 sma_companies.name");
@@ -2089,6 +2110,7 @@ class Reports_model extends CI_Model
                     date(sma_accounts_entries.date) < '{$start_date}' 
                     AND {$ledgerMatch}
                     AND sma_accounts_entries.customer_id IS NOT NULL 
+                    {$warehouse_sql}
                     GROUP BY 
                     sma_accounts_entries.customer_id, 
                     sma_companies.name
@@ -2623,7 +2645,12 @@ class Reports_model extends CI_Model
         ";
 
         if ($warehouse_id) {
-            $consumption_query .= " AND inv.location_id = {$warehouse_id} ";
+            $consumption_query .= " AND inv.location_id = " . (int) $warehouse_id . " ";
+        } else {
+            $osw_id = $this->site->getOverseasWarehouseId();
+            if ($osw_id) {
+                $consumption_query .= " AND inv.location_id != {$osw_id} ";
+            }
         }
 
         if ($item) {
@@ -5597,6 +5624,14 @@ class Reports_model extends CI_Model
         }
         $dateWherePr2 = str_replace('DATE(pr.date)', 'DATE(pr2.date)', $dateWhere);
 
+        $warehouse_sale_sql = '';
+        if ($warehouse) {
+            $warehouse_sale_sql = ' AND s.warehouse_id = ' . (int) $warehouse;
+        } else {
+            $warehouse_sale_sql = $this->site->reportWarehouseAndClause(null, 's');
+        }
+        $include_service_union = !$warehouse;
+
         // Totals must match Customer Payments (sum of payment_reference.amount).. The list uses receipt headers, not raw line sums
         // Allocate each receipt's pr.amount across its payment lines in proportion to line amounts so the report footer equals the list
         // for the same date + added_via/note filters .. Warehouse is not applied here so totals match the list (which has no location filter).
@@ -5664,8 +5699,12 @@ class Reports_model extends CI_Model
                 AND (pr.added_via IS NULL OR pr.added_via NOT IN ('customer_return_modu', 'credit_memo_module', 'auto_script'))
                 AND (pr.note IS NULL OR pr.note NOT LIKE '%Reconciliation payment for sale ID%')
                 ".$dateWhere."
+                ".$warehouse_sale_sql."
             GROUP BY p.id
-            HAVING paid_amount > 0.001
+            HAVING paid_amount > 0.001";
+
+        if ($include_service_union) {
+            $sql .= "
 
             UNION ALL
 
@@ -5712,7 +5751,10 @@ class Reports_model extends CI_Model
                     SELECT 1 FROM sma_payments p0 WHERE p0.payment_id = pr.id
                 )
                 AND pr.amount > 0.01
-                ".$dateWhere."
+                ".$dateWhere;
+        }
+
+        $sql .= "
 
             ORDER BY collection_date
         ";
@@ -6300,7 +6342,7 @@ class Reports_model extends CI_Model
      *
      * @return string
      */
-    protected function sales_per_item_union_inner_sql($start_date, $end_date, $invoice_id, $salesman_name, $item_code, $category)
+    protected function sales_per_item_union_inner_sql($start_date, $end_date, $invoice_id, $salesman_name, $item_code, $category, $warehouse_id = null)
     {
         $where_clauses = [];
         
@@ -6332,6 +6374,11 @@ class Reports_model extends CI_Model
         // Category filter
         if ($category) {
             $where_clauses[] = "c.category = '" . $this->db->escape_str($category) . "'";
+        }
+
+        $wh_clause = trim($this->site->reportWarehouseAndClause($warehouse_id, 's'));
+        if ($wh_clause) {
+            $where_clauses[] = ltrim($wh_clause, ' AND ');
         }
         
         $where_sql = !empty($where_clauses) ? 'AND ' . implode(' AND ', $where_clauses) : '';
@@ -6398,6 +6445,11 @@ class Reports_model extends CI_Model
         // Category filter for returns
         if ($category) {
             $return_where_clauses[] = "c.category = '" . $this->db->escape_str($category) . "'";
+        }
+
+        $return_wh_clause = trim($this->site->reportWarehouseAndClause($warehouse_id, 's'));
+        if ($return_wh_clause) {
+            $return_where_clauses[] = ltrim($return_wh_clause, ' AND ');
         }
 
         $return_where_sql = !empty($return_where_clauses) ? 'AND ' . implode(' AND ', $return_where_clauses) : '';
@@ -6496,9 +6548,9 @@ class Reports_model extends CI_Model
      *
      * @return bool
      */
-    public function stream_sales_per_item_csv($start_date, $end_date, $invoice_id, $salesman_name, $item_code, $category, $out)
+    public function stream_sales_per_item_csv($start_date, $end_date, $invoice_id, $salesman_name, $item_code, $category, $out, $warehouse_id = null)
     {
-        $union_inner = $this->sales_per_item_union_inner_sql($start_date, $end_date, $invoice_id, $salesman_name, $item_code, $category);
+        $union_inner = $this->sales_per_item_union_inner_sql($start_date, $end_date, $invoice_id, $salesman_name, $item_code, $category, $warehouse_id);
 
         $agg_sql = "
             SELECT
@@ -6650,9 +6702,9 @@ class Reports_model extends CI_Model
      * @param int $offset
      * @return array{rows: array, total: int, totals: stdClass|null}
      */
-    public function getSalesPerItem($start_date, $end_date, $invoice_id, $salesman_name, $item_code, $category = null, $limit = 100, $offset = 0)
+    public function getSalesPerItem($start_date, $end_date, $invoice_id, $salesman_name, $item_code, $category = null, $limit = 100, $offset = 0, $warehouse_id = null)
     {
-        $union_inner = $this->sales_per_item_union_inner_sql($start_date, $end_date, $invoice_id, $salesman_name, $item_code, $category);
+        $union_inner = $this->sales_per_item_union_inner_sql($start_date, $end_date, $invoice_id, $salesman_name, $item_code, $category, $warehouse_id);
 
         $count_sql = "SELECT COUNT(*) AS spi_cnt FROM {$union_inner} AS spi_union";
         $count_row = $this->db->query($count_sql)->row();
@@ -6739,6 +6791,8 @@ class Reports_model extends CI_Model
         }
         if (!empty($pharmacy_id) && $pharmacy_id !== '' && $pharmacy_id !== '0') {
             $warehouse_condition = " AND s.warehouse_id = {$pharmacy_id}";
+        } else {
+            $warehouse_condition = $this->site->reportWarehouseAndClause(null, 's');
         }
         if (!empty($salesman_name)) {
             $salesman_condition = " AND c.sales_agent = '{$this->db->escape_str($salesman_name)}'";
@@ -6869,10 +6923,14 @@ class Reports_model extends CI_Model
      * @param string $item_code - Item code to filter
      * @return array - Purchase per item data
      */
-    public function getPurchasePerItem($start_date, $end_date, $purchase_ref, $supplier_id, $item_code, $record_type = 'all')
+    public function getPurchasePerItem($start_date, $end_date, $purchase_ref, $supplier_id, $item_code, $record_type = 'all', $warehouse_id = null)
     {
         // Build WHERE clauses conditionally for purchases
         $where_clauses = [];
+        $warehouse_filter = ltrim($this->site->reportWarehouseAndClause($warehouse_id, 'p'), ' AND ');
+        if ($warehouse_filter) {
+            $where_clauses[] = $warehouse_filter;
+        }
         
         // Date filter (optional - works with both dates or none)
         if ($start_date && $end_date) {
@@ -6953,6 +7011,10 @@ class Reports_model extends CI_Model
         
         // Build WHERE clauses for purchase returns
         $return_where_clauses = [];
+        $return_wh_filter = ltrim($this->site->reportWarehouseAndClause($warehouse_id, 'p'), ' AND ');
+        if ($return_wh_filter) {
+            $return_where_clauses[] = $return_wh_filter;
+        }
         
         if ($start_date && $end_date) {
             $return_where_clauses[] = "DATE(pr.date) BETWEEN '{$start_date}' AND '{$end_date}'";
@@ -7077,6 +7139,8 @@ class Reports_model extends CI_Model
         }
         if (!empty($pharmacy_id)) {
             $this->db->where('p.warehouse_id', $pharmacy_id);
+        } else {
+            $this->site->applyReportWarehouseScope($this->db, null, 'p.warehouse_id');
         }
         if (!empty($purchase_id)) {
             $this->db->where('p.id', $purchase_id);
@@ -7133,6 +7197,8 @@ class Reports_model extends CI_Model
 
         if (!empty($pharmacy_id)) {
             $this->db->where('p.warehouse_id', $pharmacy_id);
+        } else {
+            $this->site->applyReportWarehouseScope($this->db, null, 'p.warehouse_id');
         }
         
         if (!empty($purchase_id)) {
@@ -7190,6 +7256,8 @@ class Reports_model extends CI_Model
 
         if (!empty($pharmacy_id)) {
             $this->db->where('rs.warehouse_id', $pharmacy_id);
+        } else {
+            $this->site->applyReportWarehouseScope($this->db, null, 'rs.warehouse_id');
         }
         
         if (!empty($purchase_id)) {

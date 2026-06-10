@@ -91,7 +91,7 @@ echo admin_form_open('reports/sales_per_invoice', $attrib);
         <div class="form-group">
             <?= lang('warehouse', 'pharmacy_id'); ?>
             <select name="pharmacy_id" class="form-control select2" id="pharmacy_id" data-placeholder="<?= lang('select') . ' ' . lang('warehouse') ?>">
-                <option value=""><?= lang('all') ?></option>
+                <option value=""><?= !empty($canAccessOverseas) ? 'All Local Warehouses' : lang('all') ?></option>
                 <?php if (isset($warehouses) && is_array($warehouses)): ?>
                     <?php foreach ($warehouses as $warehouse): ?>
                         <option value="<?= $warehouse->id ?>" <?= (isset($pharmacy_id) && $pharmacy_id == $warehouse->id) ? 'selected' : '' ?>>

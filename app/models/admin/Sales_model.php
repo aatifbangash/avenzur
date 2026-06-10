@@ -694,8 +694,39 @@ class Sales_model extends CI_Model
             $this->db->where('payment_reference.date <=', $filters['to_date']);
         }
 
+        $warehouse_id = !empty($filters['warehouse_id']) ? (int) $filters['warehouse_id'] : null;
+        $dbp = $this->db->dbprefix;
+        $payments_tbl = $dbp . 'payments';
+        $sales_tbl = $dbp . 'sales';
+        $payment_ref_tbl = $dbp . 'payment_reference';
+        if ($warehouse_id) {
+            $this->db->where(
+                "EXISTS (SELECT 1 FROM {$payments_tbl} p
+                    INNER JOIN {$sales_tbl} s ON s.id = p.sale_id
+                    WHERE p.payment_id = {$payment_ref_tbl}.id
+                    AND p.sale_id IS NOT NULL AND p.sale_id > 0
+                    AND s.warehouse_id = {$warehouse_id})",
+                null,
+                false
+            );
+        } else {
+            $osw_id = $this->site->getOverseasWarehouseId();
+            if ($osw_id) {
+                $this->db->where(
+                    "NOT EXISTS (SELECT 1 FROM {$payments_tbl} p
+                        INNER JOIN {$sales_tbl} s ON s.id = p.sale_id
+                        WHERE p.payment_id = {$payment_ref_tbl}.id
+                        AND p.sale_id IS NOT NULL AND p.sale_id > 0
+                        AND s.warehouse_id = {$osw_id})",
+                    null,
+                    false
+                );
+            }
+        }
+
         $this->db->order_by('payment_reference.date', 'DESC');
         $q = $this->db->get('payment_reference');
+        $data = [];
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
