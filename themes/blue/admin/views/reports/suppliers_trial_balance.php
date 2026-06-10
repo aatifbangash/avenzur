@@ -64,6 +64,17 @@
 
                         <div class="col-md-4">
                             <div class="form-group">
+                                <?= lang('supplier_type', 'supplier_trade_type'); ?>
+                                <select name="supplier_trade_type" id="supplier_trade_type" class="form-control select" style="width:100%;">
+                                    <option value="trade" <?= (($supplier_trade_type ?? 'trade') === 'trade') ? 'selected' : ''; ?>><?= lang('trade_suppliers'); ?></option>
+                                    <option value="non_trade" <?= (($supplier_trade_type ?? '') === 'non_trade') ? 'selected' : ''; ?>><?= lang('non_trade_suppliers'); ?></option>
+                                    <option value="all" <?= (($supplier_trade_type ?? '') === 'all') ? 'selected' : ''; ?>><?= lang('all_suppliers'); ?></option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
                                 <?= lang('Suppliers', 'suppliers'); ?>
                                 <select name="supplier_ids[]" id="supplier_ids" class="form-control select2" multiple="multiple" data-placeholder="<?= lang('Select Suppliers'); ?>" style="width:100%;">
                                     <?php foreach ($suppliers as $supplier): ?>

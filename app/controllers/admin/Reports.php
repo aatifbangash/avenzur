@@ -6026,10 +6026,27 @@ class Reports extends MY_Controller
     {
         //$this->sma->checkPermissions('suppliers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
-        $this->data['suppliers'] = $this->site->getAllChildCompanies('supplier');
         $this->data['warehouses'] = $this->site->getAllWarehouses();
         $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
         $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
+
+        $supplier_trade_type = $this->input->post('supplier_trade_type') ?: 'trade';
+        if (!in_array($supplier_trade_type, ['trade', 'non_trade', 'all'], true)) {
+            $supplier_trade_type = 'trade';
+        }
+        $this->data['supplier_trade_type'] = $supplier_trade_type;
+
+        $all_suppliers = $this->site->getAllChildCompanies('supplier') ?: [];
+        $this->data['suppliers'] = array_values(array_filter($all_suppliers, function ($s) use ($supplier_trade_type) {
+            $is_service = stripos($s->category ?? '', 'خدمات') !== false || stripos($s->category ?? '', 'service') !== false;
+            if ($supplier_trade_type === 'non_trade') {
+                return $is_service;
+            }
+            if ($supplier_trade_type === 'trade') {
+                return !$is_service;
+            }
+            return true;
+        }));
 
         $response_arr = array();
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
@@ -6043,7 +6060,7 @@ class Reports extends MY_Controller
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
             //$trial_balance_array = $this->reports_model->getSuppliersTrialBalance($start_date, $end_date);
-            $response_arr = $this->reports_model->get_suppliers_trial_balance($start_date, $end_date, $supplier_ids, $warehouse_id);
+            $response_arr = $this->reports_model->get_suppliers_trial_balance($start_date, $end_date, $supplier_ids, $warehouse_id, $supplier_trade_type);
 
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;

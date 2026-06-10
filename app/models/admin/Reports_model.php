@@ -1842,7 +1842,19 @@ class Reports_model extends CI_Model
     }
 
 
-    public function get_suppliers_trial_balance($start_date, $end_date, $supplier_ids, $warehouse_id = null)
+    private function apply_supplier_trade_type_filter($trade_type, $category_col = 'sma_companies.category')
+    {
+        if ($trade_type === 'all') {
+            return;
+        }
+        if ($trade_type === 'non_trade') {
+            $this->db->where("({$category_col} LIKE '%خدمات%' OR {$category_col} LIKE '%service%')", null, false);
+            return;
+        }
+        $this->db->where("({$category_col} IS NULL OR ({$category_col} NOT LIKE '%خدمات%' AND {$category_col} NOT LIKE '%service%'))", null, false);
+    }
+
+    public function get_suppliers_trial_balance($start_date, $end_date, $supplier_ids, $warehouse_id = null, $trade_type = 'trade')
     {
         $purchase_wh = $this->site->reportPurchaseLedgerWarehouseCondition($warehouse_id);
         // Calculate OB
@@ -1867,6 +1879,7 @@ class Reports_model extends CI_Model
         if (!empty($supplier_ids)) {
             $this->db->where_in('sma_companies.id', $supplier_ids);
         }
+        $this->apply_supplier_trade_type_filter($trade_type);
 
         $this->db->group_by('sma_accounts_entries.supplier_id, sma_companies.name');
 
@@ -1892,6 +1905,7 @@ class Reports_model extends CI_Model
         if (!empty($supplier_ids)) {
             $this->db->where_in('sma_companies.id', $supplier_ids);
         }
+        $this->apply_supplier_trade_type_filter($trade_type);
 
         $this->db->group_by('sma_accounts_entries.supplier_id, sma_companies.name');
 
