@@ -92,7 +92,17 @@
                 </div>
 
                 <?php if ($type === 'ar'): ?>
-                <div class="col-md-3">
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label for="customer_rent_type"><?= lang('customer_type') ?></label>
+                        <select name="customer_rent_type" id="customer_rent_type" class="form-control select" style="width:100%;">
+                            <option value="non_rental" <?= (($customer_rent_type ?? 'non_rental') === 'non_rental') ? 'selected' : ''; ?>><?= lang('non_rental_customers'); ?></option>
+                            <option value="rental" <?= (($customer_rent_type ?? '') === 'rental') ? 'selected' : ''; ?>><?= lang('rental_customers'); ?></option>
+                            <option value="all" <?= (($customer_rent_type ?? '') === 'all') ? 'selected' : ''; ?>><?= lang('all_customers'); ?></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
                     <div class="form-group">
                         <label for="party_id"><?= lang('customer') ?></label>
                         <?php
@@ -105,7 +115,7 @@
                         ?>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <div class="form-group">
                         <label for="salesman_id">Salesman</label>
                         <?php
