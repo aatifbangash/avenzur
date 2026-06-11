@@ -33,10 +33,11 @@ class Entries extends MY_Controller
 		$this->pagination->initialize($config); 
         $this->data['pagination_links']=  $this->pagination->create_links();  
 		
-		$eid         = $this->input->get('eid');
-        $tran_number   = $this->input->get('tran_number');
-		$start_date     = $this->input->get('start_date');
-        $end_date     = $this->input->get('end_date');
+		$eid              = $this->input->get('eid');
+        $tran_number      = $this->input->get('tran_number');
+		$start_date       = $this->input->get('start_date');
+        $end_date         = $this->input->get('end_date');
+		$transaction_type = $this->input->get('transaction_type');
 
 		if ($start_date) {
 			$start_date = $this->sma->fld($start_date);
@@ -55,6 +56,9 @@ class Entries extends MY_Controller
 		if(!empty($tran_number)){
 			$this->db->where("number LIKE '%$tran_number%'");	
 		}
+		if (!empty($transaction_type)) {
+			$this->db->where('transaction_type', $transaction_type);
+		}
 
 		$this->db->where("transaction_type NOT IN ('purchase_invoice', 'sales_invoice')");
 
@@ -68,6 +72,7 @@ class Entries extends MY_Controller
 		 
 		// pass an array of all entries to view
 		$this->data['entries'] = $query->result_array();
+		$this->data['transaction_types'] = $this->get_entry_transaction_types();
 		
 		// render page
 		$bc  = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('Entries'), 'page' => lang('Entries')], ['link' => '#', 'page' => lang('Entries')]];
@@ -234,10 +239,11 @@ class Entries extends MY_Controller
 
 	public function count_entries(){
 
-		$eid         = $this->input->get('eid');
-        $tran_number   = $this->input->get('tran_number');
-		$start_date     = $this->input->get('start_date');
-        $end_date     = $this->input->get('end_date');
+		$eid              = $this->input->get('eid');
+        $tran_number      = $this->input->get('tran_number');
+		$start_date       = $this->input->get('start_date');
+        $end_date         = $this->input->get('end_date');
+		$transaction_type = $this->input->get('transaction_type');
 		
 		$this->db->select(' COUNT(id) as total_record');
 		$this->db->from('sma_accounts_entries');  
@@ -259,6 +265,9 @@ class Entries extends MY_Controller
 		if(!empty($tran_number)){
 			$this->db->where("number LIKE '%$tran_number%'");	
 		}
+		if (!empty($transaction_type)) {
+			$this->db->where('transaction_type', $transaction_type);
+		}
 
 		$this->db->where("transaction_type NOT IN ('purchase_invoice', 'sales_invoice')");
 
@@ -268,6 +277,17 @@ class Entries extends MY_Controller
 		$count = $row->total_record;
 		return $count;   
 
+	}
+
+	private function get_entry_transaction_types() {
+		return $this->db
+			->select('DISTINCT transaction_type', false)
+			->where("transaction_type NOT IN ('purchase_invoice', 'sales_invoice')")
+			->where('transaction_type IS NOT NULL', null, false)
+			->where("transaction_type != ''")
+			->order_by('transaction_type', 'ASC')
+			->get('accounts_entries')
+			->result_array();
 	}
 
 	public function ledgerList($entrytypeLabel, $searchTerm = null, $selectedLedgers = array()) {

@@ -103,6 +103,26 @@
                     <?php echo form_input('tran_number', (isset($_GET['tran_number']) ? $_GET['tran_number'] : ''), 'class="form-control" id="tran_number"'); ?>
                     </div>
                 </div>
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="control-label" for="transaction_type"><?= lang('entries_views_index_th_type'); ?></label>
+                        <?php
+                        $type_options = ['' => lang('all')];
+                        if (!empty($transaction_types)) {
+                            foreach ($transaction_types as $type_row) {
+                                $type_value = $type_row['transaction_type'];
+                                $type_options[$type_value] = $this->functionscore->transactionTypeLabel($type_value);
+                            }
+                        }
+                        echo form_dropdown(
+                            'transaction_type',
+                            $type_options,
+                            isset($_GET['transaction_type']) ? $_GET['transaction_type'] : '',
+                            'class="form-control skip" id="transaction_type"'
+                        );
+                        ?>
+                    </div>
+                </div>
             </div>
 
             <div class="row">
@@ -169,10 +189,10 @@
                             <td><?=  $this->functionscore->dateFromSql($entry['date']) ?></td>
                             <td><?= $entry['number'] ?></td>
                             <td><?= ($this->functionscore->entryLedgers($entry['id'])) ?></td>
-                            <td><?= ($entry['transaction_type']) ?></td>
+                            <td><?= $this->functionscore->transactionTypeLabel($entry['transaction_type']) ?></td>
                             <td><?= $this->functionscore->showTag($entry['tag_id']) ?></td>
-                            <td><?= $this->functionscore->toCurrency('D', $entry['dr_total']) ?></td>
-                            <td><?= $this->functionscore->toCurrency('C', $entry['cr_total']) ?></td>
+                            <td class="text-right entries-amount"><?= $this->functionscore->toCurrency('D', $entry['dr_total']) ?></td>
+                            <td class="text-right entries-amount"><?= $this->functionscore->toCurrency('C', $entry['cr_total']) ?></td>
                             <td>
                                 <a href="<?= admin_url();?>entries/view/<?= ($entryTypeLabel); ?>/<?= $entry['id']; ?>" class="no-hover" escape="false"><i class="fa fa-log-in"></i><?= lang('entries_views_index_th_actions_view_btn'); ?></a>
                                 <span class="link-pad"></span>

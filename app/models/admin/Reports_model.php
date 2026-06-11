@@ -2058,10 +2058,22 @@ class Reports_model extends CI_Model
         return $response;
     }
 
-    public function get_customer_trial_balance($start_date, $end_date, $warehouse_id = null)
+    private function apply_customer_rent_type_sql($rent_type, $category_col = 'sma_companies.category')
+    {
+        if ($rent_type === 'all') {
+            return '';
+        }
+        if ($rent_type === 'rental') {
+            return " AND {$category_col} LIKE '%Rent%'";
+        }
+        return " AND ({$category_col} IS NULL OR {$category_col} NOT LIKE '%Rent%')";
+    }
+
+    public function get_customer_trial_balance($start_date, $end_date, $warehouse_id = null, $rent_type = 'non_rental')
     {
         $response = array();
         $warehouse_sql = $this->site->reportLedgerWarehouseExistsSql($warehouse_id);
+        $rent_sql = $this->apply_customer_rent_type_sql($rent_type);
         // Include receivable lines on current ledger_account and on comma-separated old_ledgers (same rule as customer statement).
         $ledgerMatch = "(sma_accounts_entryitems.ledger_id = sma_companies.ledger_account
                 OR (
@@ -2092,6 +2104,7 @@ class Reports_model extends CI_Model
                 AND sma_accounts_entries.customer_id IS NOT NULL 
                 AND {$ledgerMatch}
                 {$warehouse_sql}
+                {$rent_sql}
             GROUP BY 
                 sma_accounts_entries.customer_id, 
                 sma_companies.name");
@@ -2125,6 +2138,7 @@ class Reports_model extends CI_Model
                     AND {$ledgerMatch}
                     AND sma_accounts_entries.customer_id IS NOT NULL 
                     {$warehouse_sql}
+                    {$rent_sql}
                     GROUP BY 
                     sma_accounts_entries.customer_id, 
                     sma_companies.name

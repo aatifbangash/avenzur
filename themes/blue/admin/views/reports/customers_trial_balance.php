@@ -60,6 +60,17 @@
                             </div>
                         </div>
 
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('customer_type', 'customer_rent_type'); ?>
+                                <select name="customer_rent_type" id="customer_rent_type" class="form-control select" style="width:100%;">
+                                    <option value="non_rental" <?= (($customer_rent_type ?? 'non_rental') === 'non_rental') ? 'selected' : ''; ?>><?= lang('non_rental_customers'); ?></option>
+                                    <option value="rental" <?= (($customer_rent_type ?? '') === 'rental') ? 'selected' : ''; ?>><?= lang('rental_customers'); ?></option>
+                                    <option value="all" <?= (($customer_rent_type ?? '') === 'all') ? 'selected' : ''; ?>><?= lang('all_customers'); ?></option>
+                                </select>
+                            </div>
+                        </div>
+
                         <?php $this->load->view($this->theme . 'reports/partials/warehouse_filter_field', ['wh_col' => 'col-md-4']); ?>
 
                         <div class="col-md-4">

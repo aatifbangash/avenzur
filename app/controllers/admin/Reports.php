@@ -6217,13 +6217,18 @@ class Reports extends MY_Controller
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
         $warehouse_id = $this->input->post('warehouse_id') ? (int) $this->input->post('warehouse_id') : null;
+        $customer_rent_type = $this->input->post('customer_rent_type') ?: 'non_rental';
+        if (!in_array($customer_rent_type, ['non_rental', 'rental', 'all'], true)) {
+            $customer_rent_type = 'non_rental';
+        }
         $this->data['warehouses'] = $this->site->getAllWarehouses();
         $this->data['warehouse_id'] = $warehouse_id;
+        $this->data['customer_rent_type'] = $customer_rent_type;
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
             //$trial_balance_array = $this->reports_model->getCustomersTrialBalance($start_date, $end_date);
-            $trial_balance_array = $this->reports_model->get_customer_trial_balance($start_date, $end_date, $warehouse_id);
+            $trial_balance_array = $this->reports_model->get_customer_trial_balance($start_date, $end_date, $warehouse_id, $customer_rent_type);
             // echo "<pre>";
             // print_r($trial_balance_array);
             // exit;
@@ -9988,6 +9993,10 @@ class Reports extends MY_Controller
         $ref_no      = $this->input->get('ref_no') ?: null;
         $salesman_id = $this->input->get('salesman_id') ?: null;
         $warehouse_id = $this->input->get('warehouse_id') ?: null;
+        $customer_rent_type = $this->input->get('customer_rent_type') ?: 'non_rental';
+        if (!in_array($customer_rent_type, ['non_rental', 'rental', 'all'], true)) {
+            $customer_rent_type = 'non_rental';
+        }
 
         $this->data['type']        = 'ar';
         $this->data['at_date']     = $at_date;
@@ -9995,14 +10004,16 @@ class Reports extends MY_Controller
         $this->data['ref_no']      = $ref_no;
         $this->data['salesman_id'] = $salesman_id;
         $this->data['warehouse_id'] = $warehouse_id;
+        $this->data['customer_rent_type'] = $customer_rent_type;
         $this->data['warehouses']  = $this->site->getAllWarehouses();
-        $this->data['customers']   = $this->site->getAllCompanies('customer');
+        $all_customers = $this->site->getAllCompanies('customer') ?: [];
+        $this->data['customers']   = $this->filter_customers_by_rent_type($all_customers, $customer_rent_type);
         $this->data['salesmen']    = $this->db->select('id, name')->from('sales_man')->order_by('name', 'asc')->get()->result();
         $this->data['suppliers']   = [];
         $this->data['form_action'] = 'reports/unpaid_invoices_ar';
 
         // AR report uses customer/sales sources only.
-        $invoices = $this->get_unpaid_invoices_ar($at_date, $party_id, $ref_no, $salesman_id, $warehouse_id);
+        $invoices = $this->get_unpaid_invoices_ar($at_date, $party_id, $ref_no, $salesman_id, $warehouse_id, $customer_rent_type);
         $this->data['invoices'] = $invoices;
 
         if ($this->input->get('export_excel')) {
@@ -10034,6 +10045,10 @@ class Reports extends MY_Controller
         $party_id = $this->input->get('party_id') ?: null;
         $ref_no   = $this->input->get('ref_no') ?: null;
         $warehouse_id = $this->input->get('warehouse_id') ?: null;
+        $supplier_trade_type = $this->input->get('supplier_trade_type') ?: 'trade';
+        if (!in_array($supplier_trade_type, ['trade', 'non_trade', 'all'], true)) {
+            $supplier_trade_type = 'trade';
+        }
 
         $this->data['type']        = 'ap';
         $this->data['at_date']     = $at_date;
@@ -10041,14 +10056,16 @@ class Reports extends MY_Controller
         $this->data['ref_no']      = $ref_no;
         $this->data['salesman_id'] = null;
         $this->data['warehouse_id'] = $warehouse_id;
+        $this->data['supplier_trade_type'] = $supplier_trade_type;
         $this->data['warehouses']  = $this->site->getAllWarehouses();
         $this->data['customers']   = [];
         $this->data['salesmen']    = [];
-        $this->data['suppliers']   = $this->site->getAllCompanies('supplier');
+        $all_suppliers = $this->site->getAllCompanies('supplier') ?: [];
+        $this->data['suppliers']   = $this->filter_suppliers_by_trade_type($all_suppliers, $supplier_trade_type);
         $this->data['form_action'] = 'reports/unpaid_invoices_ap';
 
         // AP report uses supplier/purchase sources only.
-        $invoices = $this->get_unpaid_invoices_ap($at_date, $party_id, $ref_no, $warehouse_id);
+        $invoices = $this->get_unpaid_invoices_ap($at_date, $party_id, $ref_no, $warehouse_id, $supplier_trade_type);
         $this->data['invoices'] = $invoices;
 
         if ($this->input->get('export_excel')) {
@@ -10066,7 +10083,33 @@ class Reports extends MY_Controller
         $this->page_construct('reports/unpaid_invoices', $meta, $this->data);
     }
 
-    private function get_unpaid_invoices_ar($at_date, $party_id, $ref_no, $salesman_id, $warehouse_id = null)
+    private function apply_customer_rent_type_where($rent_type, $category_col = 'c.category')
+    {
+        if ($rent_type === 'all') {
+            return;
+        }
+        if ($rent_type === 'rental') {
+            $this->db->where("({$category_col} LIKE '%Rent%')", null, false);
+            return;
+        }
+        $this->db->where("({$category_col} IS NULL OR {$category_col} NOT LIKE '%Rent%')", null, false);
+    }
+
+    private function filter_customers_by_rent_type($customers, $rent_type)
+    {
+        if (!$customers || $rent_type === 'all') {
+            return $customers ?: [];
+        }
+        return array_values(array_filter($customers, function ($c) use ($rent_type) {
+            $is_rental = stripos($c->category ?? '', 'rent') !== false;
+            if ($rent_type === 'rental') {
+                return $is_rental;
+            }
+            return !$is_rental;
+        }));
+    }
+
+    private function get_unpaid_invoices_ar($at_date, $party_id, $ref_no, $salesman_id, $warehouse_id = null, $rent_type = 'non_rental')
     {
         // AR data builder:
         // - Sales unpaid invoices
@@ -10134,6 +10177,7 @@ class Reports extends MY_Controller
         } else {
             $this->site->applyReportWarehouseScope($this->db, null, 's.warehouse_id');
         }
+        $this->apply_customer_rent_type_where($rent_type);
 
         $invoices = $this->db->get()->result();
         foreach ($invoices as $inv) {
@@ -10179,6 +10223,7 @@ class Reports extends MY_Controller
         if ($ref_no) {
             $this->db->like('m.reference_no', $ref_no, 'both');
         }
+        $this->apply_customer_rent_type_where($rent_type);
 
         $service_invoices = $this->db->get()->result();
         $invoices = array_merge($invoices, $service_invoices);
@@ -10189,7 +10234,33 @@ class Reports extends MY_Controller
         return $invoices;
     }
 
-    private function get_unpaid_invoices_ap($at_date, $party_id, $ref_no, $warehouse_id = null)
+    private function apply_supplier_trade_type_where($trade_type, $category_col = 'c.category')
+    {
+        if ($trade_type === 'all') {
+            return;
+        }
+        if ($trade_type === 'non_trade') {
+            $this->db->where("({$category_col} LIKE '%خدمات%' OR {$category_col} LIKE '%service%')", null, false);
+            return;
+        }
+        $this->db->where("({$category_col} IS NULL OR ({$category_col} NOT LIKE '%خدمات%' AND {$category_col} NOT LIKE '%service%'))", null, false);
+    }
+
+    private function filter_suppliers_by_trade_type($suppliers, $trade_type)
+    {
+        if (!$suppliers || $trade_type === 'all') {
+            return $suppliers ?: [];
+        }
+        return array_values(array_filter($suppliers, function ($s) use ($trade_type) {
+            $is_service = stripos($s->category ?? '', 'خدمات') !== false || stripos($s->category ?? '', 'service') !== false;
+            if ($trade_type === 'non_trade') {
+                return $is_service;
+            }
+            return !$is_service;
+        }));
+    }
+
+    private function get_unpaid_invoices_ap($at_date, $party_id, $ref_no, $warehouse_id = null, $trade_type = 'trade')
     {
         // AP data builder:
         // - Purchase unpaid invoices
@@ -10246,6 +10317,7 @@ class Reports extends MY_Controller
         } else {
             $this->site->applyReportWarehouseScope($this->db, null, 'p.warehouse_id');
         }
+        $this->apply_supplier_trade_type_where($trade_type);
 
         $invoices = $this->db->get()->result();
 
@@ -10287,6 +10359,7 @@ class Reports extends MY_Controller
         if ($ref_no) {
             $this->db->like('m.reference_no', $ref_no, 'both');
         }
+        $this->apply_supplier_trade_type_where($trade_type);
         $service_invoices = $this->db->get()->result();
 
         $this->db->select("
@@ -10327,6 +10400,7 @@ class Reports extends MY_Controller
         if ($ref_no) {
             $this->db->like('m.reference_no', $ref_no, 'both');
         }
+        $this->apply_supplier_trade_type_where($trade_type);
         $credit_memos = $this->db->get()->result();
 
         $invoices = array_merge($invoices, $service_invoices, $credit_memos);
