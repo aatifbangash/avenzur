@@ -10034,6 +10034,10 @@ class Reports extends MY_Controller
         $party_id = $this->input->get('party_id') ?: null;
         $ref_no   = $this->input->get('ref_no') ?: null;
         $warehouse_id = $this->input->get('warehouse_id') ?: null;
+        $supplier_trade_type = $this->input->get('supplier_trade_type') ?: 'trade';
+        if (!in_array($supplier_trade_type, ['trade', 'non_trade', 'all'], true)) {
+            $supplier_trade_type = 'trade';
+        }
 
         $this->data['type']        = 'ap';
         $this->data['at_date']     = $at_date;
@@ -10041,14 +10045,16 @@ class Reports extends MY_Controller
         $this->data['ref_no']      = $ref_no;
         $this->data['salesman_id'] = null;
         $this->data['warehouse_id'] = $warehouse_id;
+        $this->data['supplier_trade_type'] = $supplier_trade_type;
         $this->data['warehouses']  = $this->site->getAllWarehouses();
         $this->data['customers']   = [];
         $this->data['salesmen']    = [];
-        $this->data['suppliers']   = $this->site->getAllCompanies('supplier');
+        $all_suppliers = $this->site->getAllCompanies('supplier') ?: [];
+        $this->data['suppliers']   = $this->filter_suppliers_by_trade_type($all_suppliers, $supplier_trade_type);
         $this->data['form_action'] = 'reports/unpaid_invoices_ap';
 
         // AP report uses supplier/purchase sources only.
-        $invoices = $this->get_unpaid_invoices_ap($at_date, $party_id, $ref_no, $warehouse_id);
+        $invoices = $this->get_unpaid_invoices_ap($at_date, $party_id, $ref_no, $warehouse_id, $supplier_trade_type);
         $this->data['invoices'] = $invoices;
 
         if ($this->input->get('export_excel')) {
@@ -10189,7 +10195,33 @@ class Reports extends MY_Controller
         return $invoices;
     }
 
-    private function get_unpaid_invoices_ap($at_date, $party_id, $ref_no, $warehouse_id = null)
+    private function apply_supplier_trade_type_where($trade_type, $category_col = 'c.category')
+    {
+        if ($trade_type === 'all') {
+            return;
+        }
+        if ($trade_type === 'non_trade') {
+            $this->db->where("({$category_col} LIKE '%خدمات%' OR {$category_col} LIKE '%service%')", null, false);
+            return;
+        }
+        $this->db->where("({$category_col} IS NULL OR ({$category_col} NOT LIKE '%خدمات%' AND {$category_col} NOT LIKE '%service%'))", null, false);
+    }
+
+    private function filter_suppliers_by_trade_type($suppliers, $trade_type)
+    {
+        if (!$suppliers || $trade_type === 'all') {
+            return $suppliers ?: [];
+        }
+        return array_values(array_filter($suppliers, function ($s) use ($trade_type) {
+            $is_service = stripos($s->category ?? '', 'خدمات') !== false || stripos($s->category ?? '', 'service') !== false;
+            if ($trade_type === 'non_trade') {
+                return $is_service;
+            }
+            return !$is_service;
+        }));
+    }
+
+    private function get_unpaid_invoices_ap($at_date, $party_id, $ref_no, $warehouse_id = null, $trade_type = 'trade')
     {
         // AP data builder:
         // - Purchase unpaid invoices
@@ -10246,6 +10278,7 @@ class Reports extends MY_Controller
         } else {
             $this->site->applyReportWarehouseScope($this->db, null, 'p.warehouse_id');
         }
+        $this->apply_supplier_trade_type_where($trade_type);
 
         $invoices = $this->db->get()->result();
 
@@ -10287,6 +10320,7 @@ class Reports extends MY_Controller
         if ($ref_no) {
             $this->db->like('m.reference_no', $ref_no, 'both');
         }
+        $this->apply_supplier_trade_type_where($trade_type);
         $service_invoices = $this->db->get()->result();
 
         $this->db->select("
@@ -10327,6 +10361,7 @@ class Reports extends MY_Controller
         if ($ref_no) {
             $this->db->like('m.reference_no', $ref_no, 'both');
         }
+        $this->apply_supplier_trade_type_where($trade_type);
         $credit_memos = $this->db->get()->result();
 
         $invoices = array_merge($invoices, $service_invoices, $credit_memos);
