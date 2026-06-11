@@ -840,7 +840,8 @@ class Purchases extends MY_Controller
             $this->data['categories'] = $this->site->getAllCategories();
             $this->data['tax_rates'] = $this->site->getAllTaxRates();
             $this->data['warehouses'] = $this->site->getAllWarehouses();
-            $this->data['canUseLandedCost'] = $this->site->canAccessOverseasWarehouse();
+            $this->data['canUseLandedCost'] = $this->site->canAccessOverseasWarehouse() && (bool) $this->getLandedCostLedgerId();
+            $this->data['landed_cost_ledger_missing'] = $this->site->canAccessOverseasWarehouse() && !$this->getLandedCostLedgerId();
             $this->data['ponumber'] = ''; //$this->site->getReference('po');
             $this->load->helper('string');
             $value = random_string('alnum', 20);

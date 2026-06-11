@@ -277,6 +277,11 @@ if(isset($action) && $action == 'create_invoice' && $inv_items != null)  {
             <div class="col-lg-12">
 
                 <p class="introtext"><?php echo lang('enter_info'); ?></p>
+                <?php if (!empty($landed_cost_ledger_missing) && !empty($action) && $action === 'create_invoice') { ?>
+                    <div class="alert alert-warning">
+                        <?= lang('landed_cost_ledger_required'); ?>
+                    </div>
+                <?php } ?>
                 <?php
                 $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
                 echo admin_form_open_multipart('purchases/add', $attrib);
