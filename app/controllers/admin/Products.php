@@ -4850,6 +4850,9 @@ class Products extends MY_Controller
                 // 'sale_account'       => $this->input->post('sale_account'),
                 // 'inventory_account'  => $this->input->post('inventory_account'),
             ];
+            $data['warehouse'] = ($this->site->canAccessOverseasWarehouse() && $this->input->post('is_overseas_product'))
+                ? $this->site->getOverseasWarehouseId()
+                : null;
 
             if ($this->input->post('name_ar') != '') {
                 $data['name_ar'] = $this->input->post('name_ar');
@@ -5192,6 +5195,8 @@ class Products extends MY_Controller
             $this->data['brands'] = $this->site->getAllBrands();
             $this->data['base_units'] = $this->site->getAllBaseUnits();
             $this->data['warehouses'] = $warehouses;
+            $this->data['canAccessOverseas'] = $this->site->canAccessOverseasWarehouse();
+            $this->data['overseasWarehouseId'] = $this->site->getOverseasWarehouseId();
             $this->data['warehouses_products'] = $id ? $this->products_model->getAllWarehousesWithPQ($id) : null;
             $this->data['product'] = $id ? $this->products_model->getProductByID($id) : null;
             $this->data['variants'] = $this->products_model->getAllVariants();
@@ -7128,6 +7133,11 @@ error_reporting(E_ALL);
                 // 'sale_account'       => $this->input->post('sale_account'),
                 // 'inventory_account'       => $this->input->post('inventory_account'),
             ];
+            if ($this->site->canAccessOverseasWarehouse()) {
+                $data['warehouse'] = $this->input->post('is_overseas_product')
+                    ? $this->site->getOverseasWarehouseId()
+                    : null;
+            }
 
             if ($this->input->post('name_ar') != '') {
                 $data['name_ar'] = $this->input->post('name_ar');
@@ -7478,6 +7488,8 @@ error_reporting(E_ALL);
             $this->data['brands'] = $this->site->getAllBrands();
             $this->data['base_units'] = $this->site->getAllBaseUnits();
             $this->data['warehouses'] = $warehouses;
+            $this->data['canAccessOverseas'] = $this->site->canAccessOverseasWarehouse();
+            $this->data['overseasWarehouseId'] = $this->site->getOverseasWarehouseId();
             $this->data['warehouses_products'] = $warehouses_products;
             $this->data['product'] = $product;
             $this->data['country'] = $this->settings_model->getallCountry();

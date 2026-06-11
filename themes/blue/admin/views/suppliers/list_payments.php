@@ -6,6 +6,7 @@ $filter_from        = '';
 $filter_to          = '';
 $filter_supplier_id = !empty($filters['supplier_id']) ? $filters['supplier_id'] : '';
 $filter_category    = !empty($filters['category'])    ? $filters['category']    : '';
+$filter_warehouse_id = !empty($filters['warehouse_id']) ? $filters['warehouse_id'] : '';
 if (!empty($filters['from_date'])) {
     $d = DateTime::createFromFormat('Y-m-d', $filters['from_date']);
     $filter_from = $d ? $d->format('d/m/Y') : $filters['from_date'];
@@ -46,7 +47,7 @@ if (!empty($filters['to_date'])) {
                     </div>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <div class="form-group">
                         <label for="supplier_id" style="font-size:12px; font-weight:600;"><?= lang('Supplier') ?></label>
                         <select name="supplier_id" id="supplier_id" class="form-control input-sm select" style="width:100%;">
@@ -74,7 +75,9 @@ if (!empty($filters['to_date'])) {
                     </div>
                 </div>
 
-                <div class="col-md-3" style="padding-top:22px;">
+                <?php $this->load->view($this->theme . 'reports/partials/warehouse_filter_field', ['wh_col' => 'col-md-2', 'wh_val' => $filter_warehouse_id]); ?>
+
+                <div class="col-md-2" style="padding-top:22px;">
                     <button type="submit" class="btn btn-primary btn-sm">
                         <i class="fa fa-filter"></i> <?= lang('Filter') ?>
                     </button>
@@ -93,6 +96,7 @@ if (!empty($filters['to_date'])) {
                 $export_params = http_build_query([
                     'supplier_id'  => $filter_supplier_id,
                     'category'     => $filter_category,
+                    'warehouse_id' => $filter_warehouse_id,
                     'from_date'    => $filter_from,
                     'to_date'      => $filter_to,
                     'export_excel' => 1,

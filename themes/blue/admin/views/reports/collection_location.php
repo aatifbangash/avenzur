@@ -62,13 +62,14 @@
 
                         <div class="col-md-4">
                             <div class="form-group">
-                            <?= lang('Location', 'popharmacy'); ?>
+                            <?= lang('warehouse', 'pharmacy'); ?>
                             <?php
-                            $dp[''] = '';
+                            $wh_label = !empty($canAccessOverseas) ? 'All Local Warehouses' : lang('all_warehouses');
+                            $dp[''] = $wh_label;
                             foreach ($warehouses as $warehouse) {
                                 $dp[$warehouse->id] = $warehouse->name;
                             }
-                            echo form_dropdown('pharmacy', $dp, ($_GET['pharmacy'] ?? ''), 'id="warehouse_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('pharmacy') . '" style="width:100%;" ', null); ?>
+                            echo form_dropdown('pharmacy', $dp, ($_GET['pharmacy'] ?? ''), 'id="warehouse_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" style="width:100%;" ', null); ?>
                             </div>
                         </div>
 

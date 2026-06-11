@@ -111,7 +111,8 @@
                     dataType: "json",
                     data: {
                         term: request.term,
-                        supplier_id: $("#posupplier").val()
+                        supplier_id: $("#posupplier").val(),
+                        warehouse_id: $("#powarehouse").val()
                     },
                     success: function(data) {
                         $(this).removeClass('ui-autocomplete-loading');

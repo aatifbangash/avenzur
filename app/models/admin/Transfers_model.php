@@ -660,6 +660,7 @@ class Transfers_model extends CI_Model
             $this->db->where("products.type = 'standard' AND inventory_movements.location_id = '" . $warehouse_id . "' AND "
                 . "(name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR  concat(name, ' (', code, ')') LIKE '%" . $term . "%')");
         }
+        $this->site->applyProductScopeFilter($warehouse_id);
         $this->db->having("SUM(sma_inventory_movements.quantity)>0");
         $this->db->limit($limit);
         $q = $this->db->get('products');
@@ -708,6 +709,7 @@ class Transfers_model extends CI_Model
             $this->db->where("type = 'standard' AND warehouses_products.warehouse_id = '" . $warehouse_id . "' AND warehouses_products.quantity > 0 AND "
                 . "(name LIKE '%" . $term . "%' OR code LIKE '%" . $term . "%' OR  concat(name, ' (', code, ')') LIKE '%" . $term . "%')");
         }
+        $this->site->applyProductScopeFilter($warehouse_id);
         $this->db->limit($limit);
         $q = $this->db->get('products');
         if ($q->num_rows() > 0) {

@@ -79,6 +79,7 @@ class Quotes_model extends CI_Model
             } else {
                 $this->db->where("({$this->db->dbprefix('products')}.name LIKE '%" . $term . "%' OR {$this->db->dbprefix('products')}.code LIKE '%" . $term . "%' OR  concat({$this->db->dbprefix('products')}.name, ' (', {$this->db->dbprefix('products')}.code, ')') LIKE '%" . $term . "%')");
             }
+        $this->site->applyProductScopeFilter($warehouse_id);
         //$this->db->having("SUM(sma_inventory_movements.quantity)>0"); 
         $this->db->limit($limit);
         if ($pos) {

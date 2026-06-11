@@ -828,7 +828,7 @@ class Returns extends MY_Controller
 
         //echo '<pre>';print_r($warehouse_ledgers);exit;
 
-        if($warehouse_ledgers->warehouse_type == 'pharmacy'){
+        if($this->site->usesWarehouseGL($warehouse_ledgers)){
             // cost of goods sold
             $entryitemdata[] = array(
                 'Entryitem' => array(
@@ -917,7 +917,7 @@ class Returns extends MY_Controller
         }
 
     
-        if($warehouse_ledgers->warehouse_type == 'pharmacy'){
+        if($this->site->usesWarehouseGL($warehouse_ledgers)){
             // // sale account
             $entryitemdata[] = array(
                 'Entryitem' => array(

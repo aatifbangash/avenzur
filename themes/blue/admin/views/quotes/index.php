@@ -223,7 +223,7 @@ localStorage.removeItem('remove_slls');
 } ?>
 <div class="box">
     <div class="box-header">
-        <h2 class="blue"><i class="fa-fw fa fa-heart-o"></i><?= lang('quotes') . ' (' . ($warehouse_id ? $warehouse->name : lang('all_warehouses')) . ')'; ?></h2>
+        <h2 class="blue"><i class="fa-fw fa fa-heart-o"></i><?= lang('quotes') . ' (' . ($warehouse_id ? $warehouse->name : (!empty($canAccessOverseas) ? 'All Local Warehouses' : lang('all_warehouses'))) . ')'; ?></h2>
         <div class="box-icon">
             <ul class="btn-tasks">
                 <!--<li class="dropdown">
@@ -245,7 +245,7 @@ localStorage.removeItem('remove_slls');
                 <li class="dropdown">
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#"><i class="icon fa fa-building-o tip" data-placement="left" title="<?= lang('warehouses') ?>"></i></a>
                     <ul class="dropdown-menu pull-right" class="tasks-menus" role="menu" aria-labelledby="dLabel">
-                        <li><a href="<?= admin_url('quotes') ?>"><i class="fa fa-building-o"></i> <?= lang('all_warehouses') ?></a></li>
+                        <li><a href="<?= admin_url('quotes') ?>"><i class="fa fa-building-o"></i> <?= !empty($canAccessOverseas) ? 'All Local Warehouses' : lang('all_warehouses') ?></a></li>
                         <li class="divider"></li>
                         <?php foreach ($warehouses as $warehouse) {
                             echo '<li><a href="' . admin_url('quotes/' . $warehouse->id) . '"><i class="fa fa-building"></i>' . $warehouse->name . '</a></li>';

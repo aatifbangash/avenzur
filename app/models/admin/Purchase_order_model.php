@@ -1266,6 +1266,8 @@ class Purchase_order_model extends CI_Model{
 
             if (!empty($filters['warehouse_id'])) {
                 $this->db->where('warehouse_id', $filters['warehouse_id']);
+            } else {
+                $this->site->applyListingWarehouseScope($this->db, null);
             }
 
             if (!empty($filters['status'])) {
@@ -1276,6 +1278,8 @@ class Purchase_order_model extends CI_Model{
                 $this->db->where("DATE(date) >=", $filters['from_date']);
                 $this->db->where("DATE(date) <=", $filters['to_date']);
             }
+        } else {
+            $this->site->applyListingWarehouseScope($this->db, null);
         }
 
         // Pagination
@@ -1308,6 +1312,8 @@ class Purchase_order_model extends CI_Model{
 
             if (!empty($filters['warehouse_id'])) {
                 $this->db->where('warehouse_id', $filters['warehouse_id']);
+            } else {
+                $this->site->applyListingWarehouseScope($this->db, null);
             }
 
             if (!empty($filters['status'])) {
@@ -1318,6 +1324,8 @@ class Purchase_order_model extends CI_Model{
                 $this->db->where("DATE(date) >=", $filters['from_date']);
                 $this->db->where("DATE(date) <=", $filters['to_date']);
             }
+        } else {
+            $this->site->applyListingWarehouseScope($this->db, null);
         }
 
         return $this->db->count_all_results();

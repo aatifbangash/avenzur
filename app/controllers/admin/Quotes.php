@@ -83,6 +83,10 @@ class Quotes extends MY_Controller
                 $date = date('Y-m-d H:i:s');
             }
             $warehouse_id     = $this->input->post('warehouse');
+            if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'))) {
+                $this->session->set_flashdata('error', $scope_error);
+                admin_redirect('quotes/add');
+            }
             $customer_id      = $this->input->post('customer');
             $biller_id        = $this->input->post('biller');
             $total_items      = $this->input->post('total_items');
@@ -381,6 +385,10 @@ class Quotes extends MY_Controller
                 $date = date('Y-m-d H:i:s');
             }
             $warehouse_id     = $this->input->post('warehouse');
+            if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'))) {
+                $this->session->set_flashdata('error', $scope_error);
+                admin_redirect('quotes/add');
+            }
             $customer_id      = $this->input->post('customer');
             $biller_id        = $this->input->post('biller');
             $supplier_id      = $this->input->post('supplier');
@@ -653,6 +661,10 @@ class Quotes extends MY_Controller
                 $date = $inv->date;
             }
             $warehouse_id     = $this->input->post('warehouse');
+            if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'))) {
+                $this->session->set_flashdata('error', $scope_error);
+                admin_redirect('quotes/add');
+            }
             $customer_id      = $this->input->post('customer');
             $biller_id        = $this->input->post('biller');
             $total_items      = $this->input->post('total_items');
@@ -1138,6 +1150,10 @@ class Quotes extends MY_Controller
                 $date = date('Y-m-d H:i:s');
             }
             $warehouse_id     = $this->input->post('warehouse');
+            if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'))) {
+                $this->session->set_flashdata('error', $scope_error);
+                admin_redirect('quotes/add');
+            }
             $customer_id      = $this->input->post('customer');
             $biller_id        = $this->input->post('biller');
             $supplier_id      = $this->input->post('supplier');
@@ -1471,7 +1487,7 @@ class Quotes extends MY_Controller
     {
         //$this->sma->checkPermissions('index');
 
-        if ((!$this->Owner || !$this->Admin) && !$this->GP['quotes-index']) {
+        if (!$this->Owner && !$this->Admin && empty($this->GP['quotes-index']) && !$warehouse_id) {
             $user         = $this->site->getUser();
             $warehouse_id = $user->warehouse_id;
         }
@@ -1524,6 +1540,7 @@ class Quotes extends MY_Controller
             $this->datatables
                 ->select('id, date, reference_no, biller, customer, total, total_discount, total_tax, grand_total, status, attachment')
                 ->from('quotes');
+            $this->site->applyListingWarehouseScope($this->datatables, $warehouse_id);
         }
         if (!$this->Owner && !$this->Admin && !$this->GP['quotes-index']) {
             $this->datatables->where('created_by', $this->session->userdata('user_id'));

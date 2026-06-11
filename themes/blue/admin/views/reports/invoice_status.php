@@ -78,7 +78,8 @@
                             <div class="form-group">
                                 <?= lang('warehouse', 'warehouse'); ?>
                                 <?php
-                                $wh[''] = lang('select') . ' ' . lang('warehouse');
+                                $wh_label = !empty($canAccessOverseas) ? 'All Local Warehouses' : lang('all_warehouses');
+                                $wh = ['' => $wh_label];
                                 foreach ($warehouses as $warehouse_item) {
                                     $wh[$warehouse_item->id] = $warehouse_item->name;
                                 }

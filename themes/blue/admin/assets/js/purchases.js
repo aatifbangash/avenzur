@@ -861,6 +861,25 @@ $(document).ready(function () {
 			loadItems();
 		});
 
+	var old_row_landed;
+	$(document)
+		.on("focus", ".rlanded", function () {
+			old_row_landed = $(this).val();
+		})
+		.on("change", ".rlanded", function () {
+			var row = $(this).closest("tr");
+			if (!is_numeric($(this).val()) || parseFloat($(this).val()) < 0) {
+				$(this).val(old_row_landed);
+				bootbox.alert(lang.unexpected_value);
+				return;
+			}
+			var new_landed = parseFloat($(this).val()),
+				item_id = row.attr("data-item-id");
+			poitems[item_id].row.landed_cost = new_landed;
+			localStorage.setItem("poitems", JSON.stringify(poitems));
+			loadItems();
+		});
+
 	/* --------------------------
      * Edit Row Quantity Method rbonus
      -------------------------- */
@@ -1053,6 +1072,31 @@ function nsSupplier() {
 	});
 }
 var first_load = 1;
+
+function getLandedCostValues(row, baseUnitCost) {
+	if (typeof isPoInvoice === "undefined" || !isPoInvoice) {
+		return {
+			base_unit_cost: parseFloat(baseUnitCost),
+			landed_cost: 0,
+			landed_per_unit: 0,
+			final_unit_cost: parseFloat(baseUnitCost),
+		};
+	}
+	var landedCost = parseFloat(row.landed_cost);
+	if (isNaN(landedCost) || landedCost < 0) {
+		landedCost = 0;
+	}
+	var totalQty = parseFloat(row.qty || 0) + parseFloat(row.bonus || 0);
+	var landedPerUnit = totalQty > 0 ? landedCost / totalQty : 0;
+	var baseUnit = parseFloat(baseUnitCost);
+	return {
+		base_unit_cost: baseUnit,
+		landed_cost: landedCost,
+		landed_per_unit: landedPerUnit,
+		final_unit_cost: baseUnit + landedPerUnit,
+	};
+}
+
 function loadItems() {
 	if (localStorage.getItem("poitems")) {
 		total = 0;
@@ -1165,6 +1209,9 @@ function loadItems() {
 				item_name = item.row.name
 					.replace(/"/g, "&#034;")
 					.replace(/'/g, "&#039;");
+
+			var landedValues = getLandedCostValues(item.row, new_calc.new_unit_cost);
+			var posted_unit_cost = landedValues.final_unit_cost;
 
 			var qty_received =
 				item.row.received >= 0 ? item.row.received : item.row.qty;
@@ -1352,7 +1399,7 @@ function loadItems() {
 				'"><input name="item_total_sale[]" type="hidden" class="main_net" value="' +
 				new_calc.new_total_sale +
 				'"><input name="item_unit_cost[]" type="hidden" class="main_net" value="' +
-				new_calc.new_unit_cost +
+				posted_unit_cost +
 				'"><input name="item_third_discount[]" type="hidden" class="main_net" value="' +
 				new_calc.new_third_discount +
 				'"><input name="item_deal_discount[]" type="hidden" class="deal_discount_value" value="' +
@@ -1402,7 +1449,7 @@ function loadItems() {
 
 			tr_html +=
 				'<td class="text-right"><input class="rucost" name="unit_cost[]" type="hidden" value="' +
-				new_calc.new_unit_cost +
+				posted_unit_cost +
 				'"><input class="form-control realucost" name="real_unit_cost[]" type="hidden" value="' +
 				item.row.real_unit_cost +
 				'"><input class="form-control input-sm text-center rcost" type="text" name="net_cost[]" type="hidden" id="cost_' +
@@ -1609,12 +1656,35 @@ function loadItems() {
 				new_calc.new_net_purchase +
 				"</span></td>";
 
-			tr_html +=
-				'<td class="text-right"><span class="text-right ssubtotal" id="tes2_' +
-				row_no +
-				'">' +
-				new_calc.new_unit_cost+
-				"</span></td>";
+			if (typeof isPoInvoice !== "undefined" && isPoInvoice && (typeof canUseLandedCost === "undefined" || canUseLandedCost)) {
+				tr_html +=
+					'<td><input class="form-control text-center rlanded" name="landed_cost[]" type="text" data-id="' +
+					row_no +
+					'" data-item="' +
+					item_id +
+					'" id="landed_' +
+					row_no +
+					'" value="' +
+					formatDecimal(landedValues.landed_cost) +
+					'" onClick="this.select();"><input name="landed_cost_per_unit[]" type="hidden" value="' +
+					formatDecimal(landedValues.landed_per_unit) +
+					'"></td>';
+				tr_html +=
+					'<td class="text-right"><span class="text-right ssubtotal" id="tes2_' +
+					row_no +
+					'"><span style="color:#888;font-size:11px;">' +
+					formatDecimal(landedValues.base_unit_cost) +
+					'</span> &rarr; <strong>' +
+					formatDecimal(landedValues.final_unit_cost) +
+					"</strong></span></td>";
+			} else {
+				tr_html +=
+					'<td class="text-right"><span class="text-right ssubtotal" id="tes2_' +
+					row_no +
+					'">' +
+					new_calc.new_unit_cost+
+					"</span></td>";
+			}
 
 			tr_html +=
 				'<td class="text-center"><i class="fa fa-times tip podel" id="' +
@@ -1645,6 +1715,9 @@ function loadItems() {
 		if (site.settings.product_expiry == 1) {
 			col++;
 		}
+		if (typeof isPoInvoice !== "undefined" && isPoInvoice && (typeof canUseLandedCost === "undefined" || canUseLandedCost)) {
+			col++;
+		}
 		var tfoot =
 			'<tr id="tfoot" class="tfoot active"><th colspan="' +
 			col +
@@ -1661,6 +1734,9 @@ function loadItems() {
 			'<th class="text-right">' + formatMoney(new_total_sale) + "</th>";
 
 		tfoot += '<th class="text-right">' + formatMoney(new_total_net_purchase) + "</th>";
+		if (typeof isPoInvoice !== "undefined" && isPoInvoice && (typeof canUseLandedCost === "undefined" || canUseLandedCost)) {
+			tfoot += "<th></th>";
+		}
 		tfoot += "<th></th>";
 		tfoot += "<th>";
 		tfoot += '<input type="hidden" name="grand_total_purchase" value="' + new_total_purchase + '">';

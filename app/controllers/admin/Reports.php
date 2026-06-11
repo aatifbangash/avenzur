@@ -743,14 +743,13 @@ class Reports extends MY_Controller
 
     public function consumption_report()
     {
-        $warehouse_id = $this->session->userdata('warehouse_id');
+        $warehouse_id = $this->input->get('warehouse_id') ?: null;
         $item = $this->input->get('item') && $this->input->get('sgproduct') ? $this->input->get('item') : null;
         $supplier_id = $this->input->get('supplier_id') ? $this->input->get('supplier_id') : null;
         $period = $this->input->get('period') ? $this->input->get('period') : 1;
         // Load products for dropdown
         $products = $this->products_model->getAllProducts();
         $this->data['products'] = $products;
-        $this->data['product'] = $product_ids;
         $agent = $this->input->get('agent') ? $this->input->get('agent') : null;
         $agent2 = $this->input->get('agent2') ? $this->input->get('agent2') : null;
 
@@ -760,6 +759,8 @@ class Reports extends MY_Controller
         $this->data['agent2'] = $agent2;
         $this->data['agents'] = $this->reports_model->getDistinctAgents();
         $this->data['period'] = $period;
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['warehouse_id'] = $warehouse_id;
 
         // Load filtered stock consumption data
         $stock_array = $this->reports_model->getStockConsumption($warehouse_id, $item, $supplier_id, $agent, $agent2, $period);
@@ -771,7 +772,7 @@ class Reports extends MY_Controller
     }
 
     public function consumption_report_export_excel(){
-        $warehouse_id = $this->session->userdata('warehouse_id');
+        $warehouse_id = $this->input->get('warehouse_id') ?: null;
         $item = $this->input->get('item') ? $this->input->get('item') : null;
         $supplier_id = $this->input->get('supplier_id') ? $this->input->get('supplier_id') : null;
         $period = $this->input->get('period') ? $this->input->get('period') : 1;
@@ -4445,6 +4446,9 @@ class Reports extends MY_Controller
         $this->data['customers'] = $this->site->getAllCompanies('customer');
         $this->data['biller'] = $this->site->getDefaultBiller();
         $this->data['statement_ledger_options'] = [];
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $warehouse_id = $this->input->post('warehouse_id') ? (int) $this->input->post('warehouse_id') : null;
+        $this->data['warehouse_id'] = $warehouse_id;
 
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
@@ -4453,11 +4457,11 @@ class Reports extends MY_Controller
 
             $supplier_details = $this->companies_model->getCompanyByID($supplier_id);
             $ledger_ids = $this->customerStatementLedgerIdList($supplier_details);
-            $supplier_statement = $this->reports_model->getCustomerStatement($start_date, $end_date, $supplier_id, $ledger_ids);
+            $supplier_statement = $this->reports_model->getCustomerStatement($start_date, $end_date, $supplier_id, $ledger_ids, $warehouse_id);
             $this->data['statement_ledger_options'] = $this->reports_model->getStatementLedgerOptions($ledger_ids);
 
             // Get customer aging data
-            $aging_data = $this->reports_model->getCustomerAgingNew(120, date('Y-m-d'), [$supplier_id]);
+            $aging_data = $this->reports_model->getCustomerAgingNew(120, date('Y-m-d'), [$supplier_id], null, $warehouse_id);
 
             $total_ob = 0;
             $total_ob_credit = 0;
@@ -4543,6 +4547,9 @@ class Reports extends MY_Controller
         $this->data['customers'] = $this->site->getAllCompanies('customer');
         $this->data['biller'] = $this->site->getDefaultBiller();
         $this->data['statement_ledger_options'] = [];
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $warehouse_id = $this->input->post('warehouse_id') ? (int) $this->input->post('warehouse_id') : null;
+        $this->data['warehouse_id'] = $warehouse_id;
 
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
@@ -4551,11 +4558,11 @@ class Reports extends MY_Controller
 
             $supplier_details = $this->companies_model->getCompanyByID($supplier_id);
             $ledger_ids = $this->customerStatementLedgerIdList($supplier_details);
-            $supplier_statement = $this->reports_model->getCustomerStatement($start_date, $end_date, $supplier_id, $ledger_ids);
+            $supplier_statement = $this->reports_model->getCustomerStatement($start_date, $end_date, $supplier_id, $ledger_ids, $warehouse_id);
             $this->data['statement_ledger_options'] = $this->reports_model->getStatementLedgerOptions($ledger_ids);
 
             // Get customer aging data
-            $aging_data = $this->reports_model->getCustomerAgingNew(120, date('Y-m-d'), [$supplier_id]);
+            $aging_data = $this->reports_model->getCustomerAgingNew(120, date('Y-m-d'), [$supplier_id], null, $warehouse_id);
 
             $total_ob = 0;
             $total_ob_credit = 0;
@@ -4808,6 +4815,9 @@ class Reports extends MY_Controller
         $this->data['default_from_date'] = $default_from;
 
         $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $warehouse_id = $this->input->post('warehouse_id') ?: null;
+        $this->data['warehouse_id'] = $warehouse_id;
 
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
@@ -4817,7 +4827,7 @@ class Reports extends MY_Controller
 
             $supplier_details = $this->companies_model->getCompanyByID($supplier_id);
             $ledger_account = $supplier_details->ledger_account;
-            $supplier_statement = $this->reports_model->getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account);
+            $supplier_statement = $this->reports_model->getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account, $warehouse_id);
             
             $total_ob = 0;
             $total_ob_credit = 0;
@@ -5628,6 +5638,9 @@ class Reports extends MY_Controller
 
         $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
         $this->data['biller'] = $this->site->getDefaultBiller();
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $warehouse_id = $this->input->post('warehouse_id') ?: null;
+        $this->data['warehouse_id'] = $warehouse_id;
 
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
@@ -5641,7 +5654,7 @@ class Reports extends MY_Controller
 
             $supplier_details = $this->companies_model->getCompanyByID($supplier_id);
             $ledger_account = $supplier_details->ledger_account;
-            $supplier_statement = $this->reports_model->getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account);
+            $supplier_statement = $this->reports_model->getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account, $warehouse_id);
 
             $total_ob = 0;
             $total_ob_credit = 0;
@@ -5713,15 +5726,18 @@ class Reports extends MY_Controller
         }
 
         $this->data['customers'] = $this->site->getAllCompanies('customer');
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $warehouse_id = $this->input->post('warehouse_id') ?: null;
+        $this->data['warehouse_id'] = $warehouse_id;
         $response_arr = array();
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
         }
 
         if ($duration) {
-            $supplier_aging_array = $this->reports_model->getCustomerAgingNew($duration, $start_date, $customer_id_array, $salesman);
+            $supplier_aging_array = $this->reports_model->getCustomerAgingNew($duration, $start_date, $customer_id_array, $salesman, $warehouse_id);
         } else {
-            $supplier_aging_array = $this->reports_model->getCustomerAgingNew($duration = 120, $start_date, $customer_id_array, $salesman);
+            $supplier_aging_array = $this->reports_model->getCustomerAgingNew($duration = 120, $start_date, $customer_id_array, $salesman, $warehouse_id);
         }
 
         $this->data['customer_id_array'] = $customer_id_array;
@@ -5798,6 +5814,9 @@ class Reports extends MY_Controller
             $supplier_id_array = $this->input->post('supplier');
         }
         $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $warehouse_id = $this->input->post('warehouse_id') ?: null;
+        $this->data['warehouse_id'] = $warehouse_id;
         $response_arr = array();
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
@@ -5805,9 +5824,9 @@ class Reports extends MY_Controller
 
         if ($duration) {
 
-            $supplier_aging_array = $this->reports_model->getSupplierAging($duration, $start_date, $supplier_id_array);
+            $supplier_aging_array = $this->reports_model->getSupplierAgingNew($duration, $start_date, $supplier_id_array, $warehouse_id);
         } else {
-            $supplier_aging_array = $this->reports_model->getSupplierAging($duration = 120, $start_date, $supplier_id_array);
+            $supplier_aging_array = $this->reports_model->getSupplierAgingNew($duration = 120, $start_date, $supplier_id_array, $warehouse_id);
         }
         $this->data['supplier_id_array'] = $supplier_id_array;
         $this->data['start_date'] = $this->input->post('from_date');
@@ -6008,6 +6027,7 @@ class Reports extends MY_Controller
         //$this->sma->checkPermissions('suppliers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['suppliers'] = $this->site->getAllChildCompanies('supplier');
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
         $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
         $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
 
@@ -6016,12 +6036,14 @@ class Reports extends MY_Controller
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
         $supplier_ids = $this->input->post('supplier_ids') ?: [];
+        $warehouse_id = $this->input->post('warehouse_id') ?: null;
+        $this->data['warehouse_id'] = $warehouse_id;
 
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
             //$trial_balance_array = $this->reports_model->getSuppliersTrialBalance($start_date, $end_date);
-            $response_arr = $this->reports_model->get_suppliers_trial_balance($start_date, $end_date, $supplier_ids);
+            $response_arr = $this->reports_model->get_suppliers_trial_balance($start_date, $end_date, $supplier_ids, $warehouse_id);
 
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;
@@ -6177,11 +6199,14 @@ class Reports extends MY_Controller
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        $warehouse_id = $this->input->post('warehouse_id') ? (int) $this->input->post('warehouse_id') : null;
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['warehouse_id'] = $warehouse_id;
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
             //$trial_balance_array = $this->reports_model->getCustomersTrialBalance($start_date, $end_date);
-            $trial_balance_array = $this->reports_model->get_customer_trial_balance($start_date, $end_date);
+            $trial_balance_array = $this->reports_model->get_customer_trial_balance($start_date, $end_date, $warehouse_id);
             // echo "<pre>";
             // print_r($trial_balance_array);
             // exit;
@@ -7177,8 +7202,7 @@ class Reports extends MY_Controller
         //print_r($this->input->get());
     
         $this->data['warehouses'] = $this->site->getAllWarehouses();
-        
-        // Set filter values for form persistence (always set these)
+        $this->data['warehouse_id'] = $warehouse;
         $this->data['start_date'] = $from_date;
         $this->data['end_date'] = $to_date;
         $this->data['warehouse'] = $warehouse;
@@ -7715,6 +7739,8 @@ class Reports extends MY_Controller
             }
             if ($warehouse) {
                 $this->db->where('sales.warehouse_id', $warehouse);
+            } else {
+                $this->site->applyReportWarehouseScope($this->db, null, 'sales.warehouse_id');
             }
             
             $invoice_data = $this->db->get()->result();
@@ -7746,6 +7772,7 @@ class Reports extends MY_Controller
         $salesman = $this->input->get('salesman') ? $this->input->get('salesman') : null;
         $item_code = $this->input->get('item_code') ? $this->input->get('item_code') : null;
         $category = $this->input->get('category') ? $this->input->get('category') : null;
+        $warehouse_id = $this->input->get('warehouse_id') ?: null;
         $export_excel = $this->input->get('export_excel');
         // Get sales men for dropdown
         $this->db->select('id, name');
@@ -7759,6 +7786,7 @@ class Reports extends MY_Controller
             "SELECT DISTINCT category FROM sma_companies WHERE group_name = 'customer' AND category IS NOT NULL AND category != '' ORDER BY category"
         );
         $this->data['customer_categories'] = $cat_query->result();
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
         
         // Set filter values for form persistence (always set these)
         $this->data['start_date'] = $start_date;
@@ -7767,9 +7795,10 @@ class Reports extends MY_Controller
         $this->data['salesman'] = $salesman;
         $this->data['item_code'] = $item_code;
         $this->data['category'] = $category;
+        $this->data['warehouse_id'] = $warehouse_id;
         
         // If any filter submitted, fetch data
-        if ($start_date || $end_date || $invoice_id || $salesman || $item_code || $category) {
+        if ($start_date || $end_date || $invoice_id || $salesman || $item_code || $category || $warehouse_id !== null) {
             
             // Pre-fetch salesman name if needed
             $salesman_name = null;
@@ -7817,7 +7846,8 @@ class Reports extends MY_Controller
                     $salesman_name,
                     $item_code,
                     $category,
-                    $out
+                    $out,
+                    $warehouse_id
                 );
                 fclose($out);
                 exit;
@@ -7838,7 +7868,8 @@ class Reports extends MY_Controller
                 $item_code,
                 $category,
                 $per_page,
-                $offset
+                $offset,
+                $warehouse_id
             );
 
             $total_rows = (int) $sales_result['total'];
@@ -7858,7 +7889,8 @@ class Reports extends MY_Controller
                         $item_code,
                         $category,
                         $per_page,
-                        $offset
+                        $offset,
+                        $warehouse_id
                     );
                 }
             }
@@ -7893,6 +7925,7 @@ class Reports extends MY_Controller
         $purchase_ref = $this->input->get('purchase_ref') ?: null;
         $supplier     = $this->input->get('supplier')     ?: null;
         $record_type  = $this->input->get('record_type')  ?: 'all';
+        $warehouse_id = $this->input->get('warehouse_id') ?: null;
         //$item_code = $this->input->get('item_code') ? $this->input->get('item_code') : null;
         $sgproduct = $this->input->get('sgproduct') ? $this->input->get('sgproduct') : null;
         $pname = $this->input->get('product') ? $this->input->get('product') : null;
@@ -7927,6 +7960,8 @@ class Reports extends MY_Controller
         $this->data['record_type']  = $record_type;
         $this->data['sgproduct']    = $sgproduct;
         $this->data['item_code']    = $item_code;
+        $this->data['warehouses']   = $this->site->getAllWarehouses();
+        $this->data['warehouse_id'] = $warehouse_id;
         
         // If any filter submitted, fetch data
         if ($start_date || $end_date || $purchase_ref || $supplier || $item_code) {
@@ -7942,7 +7977,8 @@ class Reports extends MY_Controller
                 $purchase_ref,
                 $supplier,
                 $item_code,
-                $record_type
+                $record_type,
+                $warehouse_id
             );
             
             $this->data['purchase_data'] = $purchase_data;
@@ -9934,19 +9970,22 @@ class Reports extends MY_Controller
         $party_id    = $this->input->get('party_id') ?: null;
         $ref_no      = $this->input->get('ref_no') ?: null;
         $salesman_id = $this->input->get('salesman_id') ?: null;
+        $warehouse_id = $this->input->get('warehouse_id') ?: null;
 
         $this->data['type']        = 'ar';
         $this->data['at_date']     = $at_date;
         $this->data['party_id']    = $party_id;
         $this->data['ref_no']      = $ref_no;
         $this->data['salesman_id'] = $salesman_id;
+        $this->data['warehouse_id'] = $warehouse_id;
+        $this->data['warehouses']  = $this->site->getAllWarehouses();
         $this->data['customers']   = $this->site->getAllCompanies('customer');
         $this->data['salesmen']    = $this->db->select('id, name')->from('sales_man')->order_by('name', 'asc')->get()->result();
         $this->data['suppliers']   = [];
         $this->data['form_action'] = 'reports/unpaid_invoices_ar';
 
         // AR report uses customer/sales sources only.
-        $invoices = $this->get_unpaid_invoices_ar($at_date, $party_id, $ref_no, $salesman_id);
+        $invoices = $this->get_unpaid_invoices_ar($at_date, $party_id, $ref_no, $salesman_id, $warehouse_id);
         $this->data['invoices'] = $invoices;
 
         if ($this->input->get('export_excel')) {
@@ -9977,19 +10016,22 @@ class Reports extends MY_Controller
         $at_date  = $this->input->get('at_date') ?: date('d-m-Y');
         $party_id = $this->input->get('party_id') ?: null;
         $ref_no   = $this->input->get('ref_no') ?: null;
+        $warehouse_id = $this->input->get('warehouse_id') ?: null;
 
         $this->data['type']        = 'ap';
         $this->data['at_date']     = $at_date;
         $this->data['party_id']    = $party_id;
         $this->data['ref_no']      = $ref_no;
         $this->data['salesman_id'] = null;
+        $this->data['warehouse_id'] = $warehouse_id;
+        $this->data['warehouses']  = $this->site->getAllWarehouses();
         $this->data['customers']   = [];
         $this->data['salesmen']    = [];
         $this->data['suppliers']   = $this->site->getAllCompanies('supplier');
         $this->data['form_action'] = 'reports/unpaid_invoices_ap';
 
         // AP report uses supplier/purchase sources only.
-        $invoices = $this->get_unpaid_invoices_ap($at_date, $party_id, $ref_no);
+        $invoices = $this->get_unpaid_invoices_ap($at_date, $party_id, $ref_no, $warehouse_id);
         $this->data['invoices'] = $invoices;
 
         if ($this->input->get('export_excel')) {
@@ -10007,7 +10049,7 @@ class Reports extends MY_Controller
         $this->page_construct('reports/unpaid_invoices', $meta, $this->data);
     }
 
-    private function get_unpaid_invoices_ar($at_date, $party_id, $ref_no, $salesman_id)
+    private function get_unpaid_invoices_ar($at_date, $party_id, $ref_no, $salesman_id, $warehouse_id = null)
     {
         // AR data builder:
         // - Sales unpaid invoices
@@ -10070,12 +10112,18 @@ class Reports extends MY_Controller
         if ($salesman_name) {
             $this->db->where('c.sales_agent', $salesman_name);
         }
+        if ($warehouse_id) {
+            $this->db->where('s.warehouse_id', (int) $warehouse_id);
+        } else {
+            $this->site->applyReportWarehouseScope($this->db, null, 's.warehouse_id');
+        }
 
         $invoices = $this->db->get()->result();
         foreach ($invoices as $inv) {
             $inv->source = 'sale';
         }
 
+        if (!$warehouse_id) {
         $this->db->select("
             m.id            AS invoice_id,
             m.date,
@@ -10117,13 +10165,14 @@ class Reports extends MY_Controller
 
         $service_invoices = $this->db->get()->result();
         $invoices = array_merge($invoices, $service_invoices);
+        }
         usort($invoices, function ($a, $b) {
             return strcmp($a->date, $b->date);
         });
         return $invoices;
     }
 
-    private function get_unpaid_invoices_ap($at_date, $party_id, $ref_no)
+    private function get_unpaid_invoices_ap($at_date, $party_id, $ref_no, $warehouse_id = null)
     {
         // AP data builder:
         // - Purchase unpaid invoices
@@ -10175,9 +10224,15 @@ class Reports extends MY_Controller
         if ($ref_no) {
             $this->db->like('p.reference_no', $ref_no, 'both');
         }
+        if ($warehouse_id) {
+            $this->db->where('p.warehouse_id', (int) $warehouse_id);
+        } else {
+            $this->site->applyReportWarehouseScope($this->db, null, 'p.warehouse_id');
+        }
 
         $invoices = $this->db->get()->result();
 
+        if (!$warehouse_id) {
         $this->db->select("
             m.id                                                     AS invoice_id,
             m.date,
@@ -10258,6 +10313,7 @@ class Reports extends MY_Controller
         $credit_memos = $this->db->get()->result();
 
         $invoices = array_merge($invoices, $service_invoices, $credit_memos);
+        }
         usort($invoices, function ($a, $b) {
             return strcmp($a->date, $b->date);
         });
@@ -10332,6 +10388,7 @@ class Reports extends MY_Controller
         $filters = [
             'customer_id' => $this->input->get('customer_id') ?: '',
             'sales_agent' => $this->input->get('sales_agent') ?: '',
+            'warehouse_id' => $this->input->get('warehouse_id') ?: '',
             'from_date'   => $from_date_in_query ? trim((string) $this->input->get('from_date')) : '',
             'to_date'     => $this->input->get('to_date')     ?: '',
         ];
@@ -10342,10 +10399,6 @@ class Reports extends MY_Controller
                 $d = DateTime::createFromFormat('d/m/Y', $filters[$f]);
                 if ($d) { $filters[$f] = $d->format('Y-m-d'); }
             }
-        }
-        // Default start of month only when from_date was not sent at all (first visit / clean URL)
-        if (!$from_date_in_query && empty($filters['from_date'])) {
-            $filters['from_date'] = date('Y-m-01');
         }
 
         $page     = max(1, (int)($this->input->get('page') ?: 1));
@@ -10369,6 +10422,7 @@ class Reports extends MY_Controller
         $this->data['per_page']        = $per_page;
         $this->data['customers']       = $this->site->getAllCompanies('customer');
         $this->data['salesmen']        = $salesmen;
+        $this->data['warehouses']      = $this->site->getAllWarehouses();
 
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => 'Customer Collections Report']];
         $meta = ['page_title' => 'Customer Collections Report', 'bc' => $bc];
@@ -10385,9 +10439,10 @@ class Reports extends MY_Controller
         $from_date_in_query = array_key_exists('from_date', $_GET);
 
         $filters = [
-            'supplier_id' => $this->input->get('supplier_id') ?: '',
-            'from_date'   => $from_date_in_query ? trim((string) $this->input->get('from_date')) : '',
-            'to_date'     => $this->input->get('to_date')     ?: '',
+            'supplier_id'  => $this->input->get('supplier_id') ?: '',
+            'from_date'    => $from_date_in_query ? trim((string) $this->input->get('from_date')) : '',
+            'to_date'      => $this->input->get('to_date')     ?: '',
+            'warehouse_id' => $this->input->get('warehouse_id') ?: '',
         ];
 
         // Convert display date (d/m/Y) to Y-m-d
@@ -10396,9 +10451,6 @@ class Reports extends MY_Controller
                 $d = DateTime::createFromFormat('d/m/Y', $filters[$f]);
                 if ($d) { $filters[$f] = $d->format('Y-m-d'); }
             }
-        }
-        if (!$from_date_in_query && empty($filters['from_date'])) {
-            $filters['from_date'] = date('Y-m-01');
         }
 
         $page     = max(1, (int)($this->input->get('page') ?: 1));
@@ -10424,6 +10476,8 @@ class Reports extends MY_Controller
         $this->data['page']            = $page;
         $this->data['per_page']        = $per_page;
         $this->data['suppliers']       = $this->site->getAllCompanies('supplier');
+        $this->data['warehouses']      = $this->site->getAllWarehouses();
+        $this->data['warehouse_id']    = $filters['warehouse_id'];
 
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => 'Supplier Payments Report']];
         $meta = ['page_title' => 'Supplier Payments Report', 'bc' => $bc];

@@ -25,60 +25,28 @@
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i
-                class="fa-fw fa fa-star"></i><?= lang('purchases') . ' (' . ($warehouse_id ? $warehouse->name : lang('all_warehouses')) . ')'; ?>
+                class="fa-fw fa fa-star"></i><?= lang('purchases') . ' (' . ($warehouse_id ? $warehouse->name : (!empty($canAccessOverseas) ? 'All Local Warehouses' : lang('all_warehouses'))) . ')'; ?>
         </h2>
 
-        <!--<div class="box-icon">
+        <div class="box-icon">
             <ul class="btn-tasks">
+                <?php if (!empty($warehouses)) { ?>
                 <li class="dropdown">
-                    <a data-toggle="dropdown" class="dropdown-toggle" href="#"><i class="icon fa fa-tasks tip"
-                            data-placement="left" title="<?= lang('actions') ?>"></i></a>
+                    <a data-toggle="dropdown" class="dropdown-toggle" href="#"><i class="icon fa fa-building-o tip"
+                            data-placement="left" title="<?= lang('warehouses') ?>"></i></a>
                     <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
-                        <li>
-                            <a href="<?= admin_url('purchases/add') ?>">
-                                <i class="fa fa-plus-circle"></i> <?= lang('add_purchase') ?>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" id="excel" data-action="export_excel">
-                                <i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" id="combine" data-action="combine">
-                                <i class="fa fa-file-pdf-o"></i> <?= lang('combine_to_pdf') ?>
-                            </a>
-                        </li>
+                        <li><a href="<?= admin_url('purchases') ?>"><i class="fa fa-building-o"></i>
+                                <?= !empty($canAccessOverseas) ? 'All Local Warehouses' : lang('all_warehouses') ?></a></li>
                         <li class="divider"></li>
-                        <li>
-                            <a href="#" class="bpo" title="<b><?= lang('delete_purchases') ?></b>"
-                                data-content="<p><?= lang('r_u_sure') ?></p><button type='button' class='btn btn-danger' id='delete' data-action='delete'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button>"
-                                data-html="true" data-placement="left">
-                                <i class="fa fa-trash-o"></i> <?= lang('delete_purchases') ?>
-                            </a>
-                        </li>
+                        <?php
+                        foreach ($warehouses as $warehouse) {
+                            echo '<li ' . ($warehouse_id && $warehouse_id == $warehouse->id ? 'class="active"' : '') . '><a href="' . admin_url('purchases/' . $warehouse->id) . '"><i class="fa fa-building"></i>' . $warehouse->name . '</a></li>';
+                        } ?>
                     </ul>
                 </li>
-                <?php if (!empty($warehouses)) {
-                    ?>
-                    <li class="dropdown">
-                        <a data-toggle="dropdown" class="dropdown-toggle" href="#"><i class="icon fa fa-building-o tip"
-                                data-placement="left" title="<?= lang('warehouses') ?>"></i></a>
-                        <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
-                            <li><a href="<?= admin_url('purchases') ?>"><i class="fa fa-building-o"></i>
-                                    <?= lang('all_warehouses') ?></a></li>
-                            <li class="divider"></li>
-                            <?php
-                            foreach ($warehouses as $warehouse) {
-                                echo '<li ' . ($warehouse_id && $warehouse_id == $warehouse->id ? 'class="active"' : '') . '><a href="' . admin_url('purchases/' . $warehouse->id) . '"><i class="fa fa-building"></i>' . $warehouse->name . '</a></li>';
-                            } ?>
-                        </ul>
-                    </li>
-                    <?php
-                }
-                ?>
+                <?php } ?>
             </ul>
-        </div>-->
+        </div>
     </div>
     <div class="box-content">
         <div class="row">

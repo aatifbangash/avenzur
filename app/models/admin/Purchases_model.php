@@ -812,8 +812,39 @@ class Purchases_model extends CI_Model
             $this->db->where('payment_reference.date <=', $filters['to_date']);
         }
 
+        $warehouse_id = !empty($filters['warehouse_id']) ? (int) $filters['warehouse_id'] : null;
+        $dbp = $this->db->dbprefix;
+        $payments_tbl = $dbp . 'payments';
+        $purchases_tbl = $dbp . 'purchases';
+        $payment_ref_tbl = $dbp . 'payment_reference';
+        if ($warehouse_id) {
+            $this->db->where(
+                "EXISTS (SELECT 1 FROM {$payments_tbl} p
+                    INNER JOIN {$purchases_tbl} pu ON pu.id = p.purchase_id
+                    WHERE p.payment_id = {$payment_ref_tbl}.id
+                    AND p.purchase_id IS NOT NULL AND p.purchase_id > 0
+                    AND pu.warehouse_id = {$warehouse_id})",
+                null,
+                false
+            );
+        } else {
+            $osw_id = $this->site->getOverseasWarehouseId();
+            if ($osw_id) {
+                $this->db->where(
+                    "NOT EXISTS (SELECT 1 FROM {$payments_tbl} p
+                        INNER JOIN {$purchases_tbl} pu ON pu.id = p.purchase_id
+                        WHERE p.payment_id = {$payment_ref_tbl}.id
+                        AND p.purchase_id IS NOT NULL AND p.purchase_id > 0
+                        AND pu.warehouse_id = {$osw_id})",
+                    null,
+                    false
+                );
+            }
+        }
+
         $this->db->order_by('payment_reference.date', 'DESC');
         $q = $this->db->get('payment_reference');
+        $data = [];
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
@@ -882,9 +913,20 @@ class Purchases_model extends CI_Model
         return false;
     }
 
-    public function getProductNames($term, $limit = 20)
+    public function getProductNames($term, $warehouse_id = null, $limit = 20)
     {
+        $osw_id = $warehouse_id ? $this->site->getOverseasWarehouseId() : 0;
+        $is_overseas_wh = $osw_id && (int) $warehouse_id === $osw_id;
+
         $this->db->where("type = 'standard' AND (name LIKE '%" . $term . "%' OR item_code LIKE  '%" . $term . "%' OR code LIKE '%" . $term . "%' OR supplier1_part_no LIKE '%" . $term . "%' OR supplier2_part_no LIKE '%" . $term . "%' OR supplier3_part_no LIKE '%" . $term . "%' OR supplier4_part_no LIKE '%" . $term . "%' OR supplier5_part_no LIKE '%" . $term . "%' OR  concat(name, ' (', code, ')') LIKE '%" . $term . "%')");
+        if ($warehouse_id && $osw_id) {
+            if ($is_overseas_wh) {
+                $this->db->where($this->db->dbprefix('products') . '.warehouse', $osw_id);
+            } else {
+                $prefix = $this->db->dbprefix('products');
+                $this->db->where("({$prefix}.warehouse IS NULL OR {$prefix}.warehouse = 0 OR {$prefix}.warehouse != {$osw_id})", null, false);
+            }
+        }
         $this->db->limit($limit);
         $q = $this->db->get('products');
         if ($q->num_rows() > 0) {
@@ -1735,6 +1777,8 @@ class Purchases_model extends CI_Model
 
             if (!empty($filters['warehouse_id'])) {
                 $this->db->where('warehouse_id', $filters['warehouse_id']);
+            } else {
+                $this->site->applyListingWarehouseScope($this->db, null);
             }
 
             if (!empty($filters['status'])) {
@@ -1745,6 +1789,8 @@ class Purchases_model extends CI_Model
                 $this->db->where("DATE(date) >=", $filters['from_date']);
                 $this->db->where("DATE(date) <=", $filters['to_date']);
             }
+        } else {
+            $this->site->applyListingWarehouseScope($this->db, null);
         }
 
         // Pagination
@@ -1776,6 +1822,8 @@ class Purchases_model extends CI_Model
 
             if (!empty($filters['warehouse_id'])) {
                 $this->db->where('warehouse_id', $filters['warehouse_id']);
+            } else {
+                $this->site->applyListingWarehouseScope($this->db, null);
             }
 
             if (!empty($filters['status'])) {
@@ -1786,6 +1834,8 @@ class Purchases_model extends CI_Model
                 $this->db->where("DATE(date) >=", $filters['from_date']);
                 $this->db->where("DATE(date) <=", $filters['to_date']);
             }
+        } else {
+            $this->site->applyListingWarehouseScope($this->db, null);
         }
 
         return $this->db->count_all_results();

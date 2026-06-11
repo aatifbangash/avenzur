@@ -74,12 +74,20 @@ table#poTable td input.form-control {
 } ?>
 
 <?php
-if(isset($action) && $action = 'create_invoice' && $inv_items != null)  {
+if(isset($action) && $action == 'create_invoice' && $inv_items != null)  {
     $readonly = !empty($pr_data) ? 'readonly' : '';
     ?>
+  var isPoInvoice = true;
   //localStorage.setItem('posupplier', '<?= $purchase->supplier_id ?>');
   localStorage.setItem('poitems', JSON.stringify(<?= $inv_items; ?>));
- <?php } ?>   
+ <?php } else { ?>
+  var isPoInvoice = false;
+ <?php } ?>
+ <?php if (!empty($canUseLandedCost)) { ?>
+  var canUseLandedCost = true;
+ <?php } else { ?>
+  var canUseLandedCost = false;
+ <?php } ?>
 
     var count = 1, an = 1, po_edit = false, product_variant = 0, DT = <?= $Settings->default_tax_rate ?>, DC = '<?= $default_currency->code ?>', shipping = 0,
         product_tax = 0, invoice_tax = 0, total_discount = 0, total = 0,
@@ -131,7 +139,8 @@ if(isset($action) && $action = 'create_invoice' && $inv_items != null)  {
                     dataType: "json",
                     data: {
                         term: request.term,
-                        supplier_id: $("#posupplier").val()
+                        supplier_id: $("#posupplier").val(),
+                        warehouse_id: $("#powarehouse").val()
                     },
                     success: function (data) {
                         $(this).removeClass('ui-autocomplete-loading');
@@ -363,7 +372,7 @@ if(isset($action) && $action = 'create_invoice' && $inv_items != null)  {
 
                         <div class="col-md-12">
 
-                         <?php if(isset($action) && $action = 'create_invoice' && $inv_items != null)  { ?> 
+                         <?php if(isset($action) && $action == 'create_invoice' && $inv_items != null)  { ?> 
  <div class="col-md-4">
                                         <div class="form-group">
                                             
@@ -482,6 +491,9 @@ if(isset($action) && $action = 'create_invoice' && $inv_items != null)  {
                                             <th class="col-md-1">Total Purchases</th>
                                             <th class="col-md-1">Total Sales</th>
                                             <th class="col-md-1">Net Purchases</th>
+                                            <?php if (!empty($action) && $action == 'create_invoice' && !empty($canUseLandedCost)) { ?>
+                                            <th class="col-md-1"><?= lang('landed_cost'); ?></th>
+                                            <?php } ?>
                                             <th class="col-md-1">Unit Cost</th>
                                             
                                             <th style="width: 30px !important; text-align: center;"><i

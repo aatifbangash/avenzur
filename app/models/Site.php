@@ -513,7 +513,16 @@ class Site extends CI_Model
 
     public function getMainWarehouse()
     {
-        $q = $this->db->get_where('warehouses', ['is_main' => 1]);
+        $this->db->group_start();
+        $this->db->where('is_main', 1);
+        if ($this->canAccessOverseasWarehouse()) {
+            $this->db->or_where('is_overseas', 1);
+        }
+        $this->db->group_end();
+        if (!$this->canAccessOverseasWarehouse()) {
+            $this->db->where('is_overseas', 0);
+        }
+        $q = $this->db->get('warehouses');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
@@ -523,8 +532,11 @@ class Site extends CI_Model
         return false;
     }
 
-    public function getAllWarehouses()
+    public function getAllWarehouses($include_overseas = null)
     {
+        if ($include_overseas !== true && !$this->canAccessOverseasWarehouse()) {
+            $this->db->where('is_overseas', 0);
+        }
         $q = $this->db->get('warehouses');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -533,6 +545,269 @@ class Site extends CI_Model
             return $data;
         }
         return false;
+    }
+
+    public function canAccessOverseasWarehouse()
+    {
+        $CI = get_instance();
+        return !empty($CI->Owner) || !empty($CI->Admin) || $CI->sma->in_group('financemanager');
+    }
+
+    public function getOverseasWarehouseId()
+    {
+        static $id = null;
+        if ($id === null) {
+            // Raw query — must not use query builder while a product search is being built
+            $q = $this->db->query(
+                'SELECT id FROM ' . $this->db->dbprefix('warehouses') . ' WHERE is_overseas = 1 LIMIT 1'
+            );
+            $id = ($q && $q->num_rows()) ? (int) $q->row()->id : 0;
+        }
+        return $id;
+    }
+
+    public function isOverseasWarehouse($warehouse_id)
+    {
+        if (!$warehouse_id) {
+            return false;
+        }
+        $osw_id = $this->getOverseasWarehouseId();
+        return $osw_id && (int) $warehouse_id === $osw_id;
+    }
+
+    public function isOverseasProduct($product_id)
+    {
+        $osw_id = $this->getOverseasWarehouseId();
+        if (!$osw_id || !$product_id) {
+            return false;
+        }
+        $p = $this->getProductByID($product_id);
+        return $p && (int) $p->warehouse === $osw_id;
+    }
+
+    public function usesWarehouseGL($warehouse)
+    {
+        return $warehouse && (!empty($warehouse->is_overseas) || $warehouse->warehouse_type == 'pharmacy');
+    }
+
+    public function applyProductScopeFilter($warehouse_id)
+    {
+        $osw_id = $this->getOverseasWarehouseId();
+        if (!$osw_id || !$warehouse_id) {
+            return;
+        }
+        $prefix = $this->db->dbprefix('products');
+        if ((int) $warehouse_id === $osw_id) {
+            $this->db->where($prefix . '.warehouse', $osw_id);
+        } else {
+            $this->db->where("({$prefix}.warehouse IS NULL OR {$prefix}.warehouse = 0 OR {$prefix}.warehouse != {$osw_id})", null, false);
+        }
+    }
+
+    public function validateProductWarehouseScope($warehouse_id, $product_ids)
+    {
+        if (empty($product_ids)) {
+            return false;
+        }
+        $osw_id = $this->getOverseasWarehouseId();
+        if (!$osw_id) {
+            return false;
+        }
+        $is_overseas_wh = $this->isOverseasWarehouse($warehouse_id);
+        foreach (array_unique(array_filter($product_ids)) as $pid) {
+            $is_overseas_prod = $this->isOverseasProduct($pid);
+            if ($is_overseas_wh && !$is_overseas_prod) {
+                return 'Overseas warehouse documents can only include overseas products.';
+            }
+            if (!$is_overseas_wh && $is_overseas_prod) {
+                return 'Local warehouse documents cannot include overseas products.';
+            }
+        }
+        return false;
+    }
+
+    public function validateOverseasTransfer($from_warehouse, $to_warehouse)
+    {
+        if ($this->isOverseasWarehouse($from_warehouse) xor $this->isOverseasWarehouse($to_warehouse)) {
+            return 'Transfers between overseas and local warehouses are not allowed.';
+        }
+        return false;
+    }
+
+    public function enforceOverseasRules($warehouse_id, $product_ids)
+    {
+        if ($this->isOverseasWarehouse($warehouse_id) && !$this->canAccessOverseasWarehouse()) {
+            return lang('access_denied');
+        }
+        return $this->validateProductWarehouseScope($warehouse_id, $product_ids);
+    }
+
+    /**
+     * Document listings: "all warehouses" = local only; pick OSW001 explicitly for overseas.
+     */
+    public function applyListingWarehouseScope($builder, $warehouse_id, $column = 'warehouse_id')
+    {
+        $osw_id = $this->getOverseasWarehouseId();
+        if (!$osw_id || $warehouse_id) {
+            return $builder;
+        }
+        return $builder->where($column . ' !=', $osw_id);
+    }
+
+    /**
+     * Raw SQL AND clause for report queries on a sales (or purchases) alias.
+     */
+    public function reportWarehouseAndClause($warehouse_id, $alias = 's', $column = 'warehouse_id')
+    {
+        if ($warehouse_id) {
+            return ' AND ' . $alias . '.' . $column . ' = ' . (int) $warehouse_id;
+        }
+        $osw_id = $this->getOverseasWarehouseId();
+        return $osw_id ? ' AND ' . $alias . '.' . $column . ' != ' . (int) $osw_id : '';
+    }
+
+    /**
+     * Customer AR statement / trial balance warehouse scope (strict sid / rid / collection journals).
+     */
+    public function applyCustomerLedgerWarehouseScope($builder, $warehouse_id, $entries_alias = 'sma_accounts_entries')
+    {
+        $cond = $this->reportCustomerLedgerWarehouseCondition($warehouse_id, $entries_alias);
+        if ($cond === '1=1') {
+            return $builder;
+        }
+        return $builder->where($cond, null, false);
+    }
+
+    /**
+     * @deprecated Use applyCustomerLedgerWarehouseScope for customer AR; kept for reference.
+     */
+    public function applyStatementWarehouseScope($builder, $warehouse_id, $sid_col = 'sma_accounts_entries.sid', $wh_col = 'sma_sales.warehouse_id')
+    {
+        return $this->applyCustomerLedgerWarehouseScope($builder, $warehouse_id);
+    }
+
+    /** SQL fragment for trial balance / GL queries with sid on accounts_entries. */
+    public function reportLedgerWarehouseExistsSql($warehouse_id, $entries_alias = 'sma_accounts_entries')
+    {
+        return $this->reportCustomerLedgerWarehouseExistsSql($warehouse_id, $entries_alias);
+    }
+
+    /** Customer-side ledger scope (sid / rid / collection journals on accounts_entries). */
+    public function reportCustomerLedgerWarehouseCondition($warehouse_id, $entries_alias = 'sma_accounts_entries')
+    {
+        $dbp = $this->db->dbprefix;
+        $sales = $dbp . 'sales';
+        $returns = $dbp . 'returns';
+        $pr = $dbp . 'payment_reference';
+        $pay = $dbp . 'payments';
+        $sid = $entries_alias . '.sid';
+        $rid = $entries_alias . '.rid';
+        $eid = $entries_alias . '.id';
+
+        $paymentJournalSubquery = function ($wh_id) use ($pr, $pay, $sales) {
+            return "SELECT DISTINCT pr.journal_id
+                FROM {$pr} pr
+                INNER JOIN {$pay} pay ON pay.payment_id = pr.id AND pay.sale_id IS NOT NULL AND pay.sale_id > 0
+                INNER JOIN {$sales} s ON s.id = pay.sale_id
+                WHERE pr.journal_id IS NOT NULL AND s.warehouse_id = " . (int) $wh_id;
+        };
+
+        if ($warehouse_id) {
+            $wh = (int) $warehouse_id;
+            $journalSql = $paymentJournalSubquery($wh);
+            return "(
+                (NULLIF({$sid}, '') IS NOT NULL AND NULLIF({$sid}, 0) IS NOT NULL
+                    AND {$sid} IN (SELECT id FROM {$sales} WHERE warehouse_id = {$wh}))
+                OR (NULLIF({$rid}, '') IS NOT NULL AND NULLIF({$rid}, 0) IS NOT NULL
+                    AND {$rid} IN (SELECT id FROM {$returns} WHERE warehouse_id = {$wh}))
+                OR {$eid} IN ({$journalSql})
+            )";
+        }
+
+        $osw_id = $this->getOverseasWarehouseId();
+        if (!$osw_id) {
+            return '1=1';
+        }
+
+        $journalSql = $paymentJournalSubquery($osw_id);
+        return "(
+            (NULLIF({$sid}, '') IS NULL OR NULLIF({$sid}, 0) IS NULL OR {$sid} NOT IN (SELECT id FROM {$sales} WHERE warehouse_id = {$osw_id}))
+            AND (NULLIF({$rid}, '') IS NULL OR NULLIF({$rid}, 0) IS NULL OR {$rid} NOT IN (SELECT id FROM {$returns} WHERE warehouse_id = {$osw_id}))
+            AND NOT (
+                (NULLIF({$sid}, '') IS NULL OR NULLIF({$sid}, 0) IS NULL)
+                AND (NULLIF({$rid}, '') IS NULL OR NULLIF({$rid}, 0) IS NULL)
+                AND {$eid} IN ({$journalSql})
+            )
+        )";
+    }
+
+    public function reportCustomerLedgerWarehouseExistsSql($warehouse_id, $entries_alias = 'sma_accounts_entries')
+    {
+        $cond = $this->reportCustomerLedgerWarehouseCondition($warehouse_id, $entries_alias);
+        return $cond === '1=1' ? '' : ' AND ' . $cond;
+    }
+
+    /** Purchase-side ledger scope (pid / rsid / payment journals on accounts_entries). */
+    public function reportPurchaseLedgerWarehouseCondition($warehouse_id, $entries_alias = 'sma_accounts_entries')
+    {
+        $dbp = $this->db->dbprefix;
+        $purchases = $dbp . 'purchases';
+        $returns = $dbp . 'returns_supplier';
+        $pr = $dbp . 'payment_reference';
+        $pay = $dbp . 'payments';
+        $pid = $entries_alias . '.pid';
+        $rsid = $entries_alias . '.rsid';
+        $eid = $entries_alias . '.id';
+
+        $paymentJournalSubquery = function ($wh_id) use ($pr, $pay, $purchases) {
+            return "SELECT DISTINCT pr.journal_id
+                FROM {$pr} pr
+                INNER JOIN {$pay} pay ON pay.payment_id = pr.id AND pay.purchase_id IS NOT NULL AND pay.purchase_id > 0
+                INNER JOIN {$purchases} pu ON pu.id = pay.purchase_id
+                WHERE pr.journal_id IS NOT NULL AND pu.warehouse_id = " . (int) $wh_id;
+        };
+
+        if ($warehouse_id) {
+            $wh = (int) $warehouse_id;
+            $journalSql = $paymentJournalSubquery($wh);
+            return "(
+                (NULLIF({$pid}, '') IS NOT NULL AND NULLIF({$pid}, 0) IS NOT NULL
+                    AND {$pid} IN (SELECT id FROM {$purchases} WHERE warehouse_id = {$wh}))
+                OR (NULLIF({$rsid}, '') IS NOT NULL AND NULLIF({$rsid}, 0) IS NOT NULL
+                    AND {$rsid} IN (SELECT id FROM {$returns} WHERE warehouse_id = {$wh}))
+                OR {$eid} IN ({$journalSql})
+            )";
+        }
+
+        $osw_id = $this->getOverseasWarehouseId();
+        if (!$osw_id) {
+            return '1=1';
+        }
+
+        $journalSql = $paymentJournalSubquery($osw_id);
+        return "(
+            (NULLIF({$pid}, '') IS NULL OR NULLIF({$pid}, 0) IS NULL OR {$pid} NOT IN (SELECT id FROM {$purchases} WHERE warehouse_id = {$osw_id}))
+            AND (NULLIF({$rsid}, '') IS NULL OR NULLIF({$rsid}, 0) IS NULL OR {$rsid} NOT IN (SELECT id FROM {$returns} WHERE warehouse_id = {$osw_id}))
+            AND NOT (
+                (NULLIF({$pid}, '') IS NULL OR NULLIF({$pid}, 0) IS NULL)
+                AND (NULLIF({$rsid}, '') IS NULL OR NULLIF({$rsid}, 0) IS NULL)
+                AND {$eid} IN ({$journalSql})
+            )
+        )";
+    }
+
+    public function reportPurchaseLedgerWarehouseExistsSql($warehouse_id, $entries_alias = 'sma_accounts_entries')
+    {
+        $cond = $this->reportPurchaseLedgerWarehouseCondition($warehouse_id, $entries_alias);
+        return $cond === '1=1' ? '' : ' AND ' . $cond;
+    }
+
+    public function applyReportWarehouseScope($builder, $warehouse_id, $column = 'warehouse_id')
+    {
+        if ($warehouse_id) {
+            return $builder->where($column, (int) $warehouse_id);
+        }
+        return $this->applyListingWarehouseScope($builder, null, $column);
     }
     public function getAvgCost($item_batchno, $item_id){
         $avgCostQuery = "SELECT 
