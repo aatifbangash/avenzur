@@ -662,6 +662,7 @@ class Accounts extends MY_Controller
 		$this->load->admin_model('reports_model');
 		$this->load->admin_model('department_model');
 		$this->load->admin_model('employee_model');
+		$this->load->admin_model('entry_model');
 
 		// Handle POST submission
 		if ($this->input->method() == 'post') {
@@ -715,13 +716,7 @@ class Accounts extends MY_Controller
 				admin_redirect('accounts/jl_entry');
 			}
 
-			// Get next entry number
-			$q = $this->db->select_max('number')->get('sma_accounts_entries');
-			$next_number = 1;
-			if ($q->num_rows() > 0) {
-				$row = $q->row();
-				$next_number = ((int) $row->number) + 1;
-			}
+			$next_number = $this->entry_model->nextVoucherNumber(4, 'JV-', 5);
 
 			$entrydata = array(
 				'entrytype_id' => 4,
