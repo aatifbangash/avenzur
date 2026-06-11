@@ -929,7 +929,7 @@ class Suppliers extends MY_Controller
 
         // Get supplier balance (trial balance as of today)
         $today = date('Y-m-d');
-        $balances = $this->Reports_model->get_suppliers_trial_balance('2000-01-01', $today, [$supplier_id]);
+        $balances = $this->Reports_model->get_suppliers_trial_balance('2000-01-01', $today, [$supplier_id], null, 'all');
         
         $supplier_balance = 0;
         $total_due = 0;

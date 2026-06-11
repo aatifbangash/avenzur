@@ -513,13 +513,11 @@ class Site extends CI_Model
 
     public function getMainWarehouse()
     {
-        $this->db->group_start();
-        $this->db->where('is_main', 1);
+        $this->db->reset_query();
         if ($this->canAccessOverseasWarehouse()) {
-            $this->db->or_where('is_overseas', 1);
-        }
-        $this->db->group_end();
-        if (!$this->canAccessOverseasWarehouse()) {
+            $this->db->where('(is_main = 1 OR is_overseas = 1)', null, false);
+        } else {
+            $this->db->where('is_main', 1);
             $this->db->where('is_overseas', 0);
         }
         $q = $this->db->get('warehouses');
@@ -534,6 +532,7 @@ class Site extends CI_Model
 
     public function getAllWarehouses($include_overseas = null)
     {
+        $this->db->reset_query();
         if ($include_overseas !== true && !$this->canAccessOverseasWarehouse()) {
             $this->db->where('is_overseas', 0);
         }
@@ -1548,6 +1547,7 @@ public function logVisitor() {
         if (!$id) {
             $id = $this->session->userdata('user_id');
         }
+        $this->db->reset_query();
         $q = $this->db->get_where('users', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
