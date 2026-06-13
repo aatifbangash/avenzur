@@ -33,10 +33,11 @@ class Entries extends MY_Controller
 		$this->pagination->initialize($config); 
         $this->data['pagination_links']=  $this->pagination->create_links();  
 		
-		$eid         = $this->input->get('eid');
-        $tran_number   = $this->input->get('tran_number');
-		$start_date     = $this->input->get('start_date');
-        $end_date     = $this->input->get('end_date');
+		$eid              = $this->input->get('eid');
+        $tran_number      = $this->input->get('tran_number');
+		$start_date       = $this->input->get('start_date');
+        $end_date         = $this->input->get('end_date');
+		$transaction_type = $this->input->get('transaction_type');
 
 		if ($start_date) {
 			$start_date = $this->sma->fld($start_date);
@@ -55,6 +56,9 @@ class Entries extends MY_Controller
 		if(!empty($tran_number)){
 			$this->db->where("number LIKE '%$tran_number%'");	
 		}
+		if (!empty($transaction_type)) {
+			$this->db->where('transaction_type', $transaction_type);
+		}
 
 		$this->db->where("transaction_type NOT IN ('purchase_invoice', 'sales_invoice')");
 
@@ -68,6 +72,7 @@ class Entries extends MY_Controller
 		 
 		// pass an array of all entries to view
 		$this->data['entries'] = $query->result_array();
+		$this->data['transaction_types'] = $this->get_entry_transaction_types();
 		
 		// render page
 		$bc  = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('Entries'), 'page' => lang('Entries')], ['link' => '#', 'page' => lang('Entries')]];
@@ -234,10 +239,11 @@ class Entries extends MY_Controller
 
 	public function count_entries(){
 
-		$eid         = $this->input->get('eid');
-        $tran_number   = $this->input->get('tran_number');
-		$start_date     = $this->input->get('start_date');
-        $end_date     = $this->input->get('end_date');
+		$eid              = $this->input->get('eid');
+        $tran_number      = $this->input->get('tran_number');
+		$start_date       = $this->input->get('start_date');
+        $end_date         = $this->input->get('end_date');
+		$transaction_type = $this->input->get('transaction_type');
 		
 		$this->db->select(' COUNT(id) as total_record');
 		$this->db->from('sma_accounts_entries');  
@@ -259,6 +265,9 @@ class Entries extends MY_Controller
 		if(!empty($tran_number)){
 			$this->db->where("number LIKE '%$tran_number%'");	
 		}
+		if (!empty($transaction_type)) {
+			$this->db->where('transaction_type', $transaction_type);
+		}
 
 		$this->db->where("transaction_type NOT IN ('purchase_invoice', 'sales_invoice')");
 
@@ -268,6 +277,17 @@ class Entries extends MY_Controller
 		$count = $row->total_record;
 		return $count;   
 
+	}
+
+	private function get_entry_transaction_types() {
+		return $this->db
+			->select('DISTINCT transaction_type', false)
+			->where("transaction_type NOT IN ('purchase_invoice', 'sales_invoice')")
+			->where('transaction_type IS NOT NULL', null, false)
+			->where("transaction_type != ''")
+			->order_by('transaction_type', 'ASC')
+			->get('accounts_entries')
+			->result_array();
 	}
 
 	public function ledgerList($entrytypeLabel, $searchTerm = null, $selectedLedgers = array()) {
@@ -1733,9 +1753,8 @@ class Entries extends MY_Controller
 
 	public function export($entrytypeLabel, $id, $type='xls')
 	{
-		ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-error_reporting(E_ALL);
+		$this->load->admin_model('ledger_model');
+
 		/* Check for valid entry type */
 		if (empty($entrytypeLabel))
 		{
@@ -1820,10 +1839,17 @@ error_reporting(E_ALL);
 		}
 
 
-        if (!empty($data)) {
+        if (!empty($curEntryitems)) {
 			
 			// For PDF export, use Mpdf like customer_statement
 			if ($type == 'pdf') {
+				$mSettings = isset($this->mSettings)
+					? $this->mSettings
+					: $this->db->get('sma_accounts_settings_main')->row();
+				if (!$mSettings) {
+					$mSettings = (object) ['drcr_toby' => 'drcr'];
+				}
+
 				// Load JL Entry attachments
 				$jl_attachments = $this->db->where('entry_id', $entry['id'])
 				                            ->get('sma_accounts_entry_attachments')
@@ -1835,7 +1861,7 @@ error_reporting(E_ALL);
 					'entry' => $entry,
 					'curEntryitems' => $curEntryitems,
 					'Settings' => $this->Settings,
-					'mSettings' => $this->mSettings,
+					'mSettings' => $mSettings,
 					'jl_attachments' => $jl_attachments
 				);
 				
@@ -1845,6 +1871,11 @@ error_reporting(E_ALL);
 				// Load view and get HTML
 				$html = $this->load->view($this->theme . 'accounts/entries_export_pdf', $view_data, true);
 				
+				$mpdfTmpDir = FCPATH . 'assets/uploads/mpdf_tmp';
+				if (!is_dir($mpdfTmpDir)) {
+					@mkdir($mpdfTmpDir, 0777, true);
+				}
+
 				// Create PDF using Mpdf
 				$mpdf = new Mpdf([
 					'format' => 'A4',
@@ -1853,6 +1884,7 @@ error_reporting(E_ALL);
 					'margin_bottom' => 10,
 					'margin_left' => 10,
 					'margin_right' => 10,
+					'tempDir' => $mpdfTmpDir,
 				]);
 				
 				$mpdf->WriteHTML($html);
@@ -2207,6 +2239,8 @@ error_reporting(E_ALL);
 			}
 
 			if (empty($errors)) {
+				$this->load->admin_model('entry_model');
+
 				// Resolve entry type
 				$entrytypeId = $schedule['entrytype_id'];
 				if (!$entrytypeId) {
@@ -2214,9 +2248,8 @@ error_reporting(E_ALL);
 					$entrytypeId = $et ? $et['id'] : 1;
 				}
 
-				// Auto-number the journal entry
-				$maxNum  = $this->db->select('MAX(number) AS mx')->get('sma_accounts_entries')->row_array();
-				$nextNum = ($maxNum['mx'] ?? 0) + 1;
+				$prefix  = $this->entry_model->voucherPrefixForType($schedule['type']);
+				$nextNum = $this->entry_model->nextVoucherNumber($entrytypeId, $prefix, 5);
 
 				$fullNarration = $narration . ($voucherMonth ? ' – ' . $voucherMonth : '');
 
@@ -2277,8 +2310,10 @@ error_reporting(E_ALL);
 		$this->data['credit_lines']  = $creditLines;
 		$this->data['error']         = !empty($errors) ? implode('<br>', $errors) : null;
 		// Next voucher number preview
-		$maxNum = $this->db->select('MAX(number) AS mx')->get('sma_accounts_entries')->row_array();
-		$this->data['next_entry_num'] = ($maxNum['mx'] ?? 0) + 1;
+		$this->load->admin_model('entry_model');
+		$previewEntrytypeId = $schedule['entrytype_id'] ?: 4;
+		$previewPrefix      = $this->entry_model->voucherPrefixForType($schedule['type']);
+		$this->data['next_entry_num'] = $this->entry_model->nextVoucherNumber($previewEntrytypeId, $previewPrefix, 5);
 		$this->data['posted_count']   = $this->db->where('schedule_id', $scheduleId)->count_all_results('sma_jl_recurring_schedule_items');
 
 		$bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('entries/recurring_index'), 'page' => 'Recurring JV Templates'], ['link' => admin_url('entries/recurring_view/' . $scheduleId), 'page' => $schedule['name']], ['link' => '#', 'page' => 'Post Voucher']];
@@ -2678,8 +2713,8 @@ error_reporting(E_ALL);
 			$entrytypeId = $et ? $et['id'] : 1;
 		}
 
-		$maxNum  = $this->db->select('MAX(number) AS mx')->get('sma_accounts_entries')->row_array();
-		$nextNum = ($maxNum['mx'] ?? 0) + 1;
+		$this->load->admin_model('entry_model');
+		$nextNum = $this->entry_model->nextVoucherNumber($entrytypeId, 'SAL-', 5);
 
 		$months      = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 		$periodLabel = $months[$run['period_month']] . ' ' . $run['period_year'];

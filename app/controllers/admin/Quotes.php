@@ -53,18 +53,20 @@ class Quotes extends MY_Controller
         $this->form_validation->set_rules('quantity[]', lang('quantity'), 'required'); 
        // $this->form_validation->set_rules('batchno[]', lang('batchno'), 'required'); 
         
-        $product_id_arr= $this->input->post('product_id');  
-        foreach ($product_id_arr as $index => $prid) {
-            // Set validation rules for each quantity field
-            $this->form_validation->set_rules(
-                'quantity['.$index.']',
-                'Quantity for Product '.$_POST['product_name'][$index],  // Replace with actual product identifier
-                'required|greater_than[0]',
-                array(
-                    'required' => 'Quantity for Product '.$_POST['product_name'][$index].' is required.',
-                    'greater_than' => 'Quantity for Product '.$_POST['product_name'][$index].' must be greater than zero.'
-                )
-            );
+        $product_id_arr = $this->input->post('product_id');
+        if (is_array($product_id_arr)) {
+            foreach ($product_id_arr as $index => $prid) {
+                // Set validation rules for each quantity field
+                $this->form_validation->set_rules(
+                    'quantity['.$index.']',
+                    'Quantity for Product '.$_POST['product_name'][$index],  // Replace with actual product identifier
+                    'required|greater_than[0]',
+                    array(
+                        'required' => 'Quantity for Product '.$_POST['product_name'][$index].' is required.',
+                        'greater_than' => 'Quantity for Product '.$_POST['product_name'][$index].' must be greater than zero.'
+                    )
+                );
+            }
         }
 
         if ($this->form_validation->run() == true) {
