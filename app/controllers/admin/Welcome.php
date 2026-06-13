@@ -181,9 +181,6 @@ class Welcome extends MY_Controller
      */
     public function quick_search()
     {
-        ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-error_reporting(E_ALL);
         if ($this->Settings->version == '2.3') {
             $this->session->set_flashdata('warning', 'Please complete your update by synchronizing your database.');
             admin_redirect('sync');
