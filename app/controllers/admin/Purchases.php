@@ -479,7 +479,7 @@ class Purchases extends MY_Controller
 
                     $landed_cost = 0;
                     $landed_per_unit = 0;
-                    if ($is_po_invoice && $this->site->canAccessOverseasWarehouse()) {
+                    if ($is_po_invoice && $this->site->canUseLandedCostForWarehouse($warehouse_id)) {
                         $landed_cost = $this->sma->formatDecimal(isset($_POST['landed_cost'][$r]) ? $_POST['landed_cost'][$r] : 0, 5);
                         if ($landed_cost < 0) {
                             $landed_cost = 0;
@@ -670,12 +670,12 @@ class Purchases extends MY_Controller
         if ($this->form_validation->run() == true && !empty($products)) {
             if ($this->input->post('action') == 'create_invoice') {
                 $total_landed_cost_check = 0;
-                if ($this->site->canAccessOverseasWarehouse()) {
+                if ($this->site->canUseLandedCostForWarehouse($warehouse_id)) {
                     foreach ($products as $p) {
                         $total_landed_cost_check += (float) ($p['landed_cost'] ?? 0);
                     }
                 }
-                if ($total_landed_cost_check > 0 && !$this->getLandedCostLedgerId()) {
+                if ($total_landed_cost_check > 0 && !$this->site->getLandedCostLedgerId()) {
                     $this->session->set_flashdata('error', lang('landed_cost_ledger_required'));
                     $po_id = (int) $this->input->post('po_id');
                     admin_redirect('purchases/add?action=create_invoice&po_number=' . base64_encode($po_id));
@@ -840,8 +840,15 @@ class Purchases extends MY_Controller
             $this->data['categories'] = $this->site->getAllCategories();
             $this->data['tax_rates'] = $this->site->getAllTaxRates();
             $this->data['warehouses'] = $this->site->getAllWarehouses();
-            $this->data['canUseLandedCost'] = $this->site->canAccessOverseasWarehouse() && (bool) $this->getLandedCostLedgerId();
-            $this->data['landed_cost_ledger_missing'] = $this->site->canAccessOverseasWarehouse() && !$this->getLandedCostLedgerId();
+            $po_warehouse_id = (!empty($this->data['pr_data']->warehouse_id))
+                ? (int) $this->data['pr_data']->warehouse_id
+                : 0;
+            $this->data['canUseLandedCost'] = $po_warehouse_id
+                && $this->site->canUseLandedCostForWarehouse($po_warehouse_id);
+            $this->data['landed_cost_ledger_missing'] = $po_warehouse_id
+                && $this->site->isOverseasWarehouse($po_warehouse_id)
+                && $this->site->canAccessOverseasWarehouse()
+                && !$this->site->getLandedCostLedgerId();
             $this->data['ponumber'] = ''; //$this->site->getReference('po');
             $this->load->helper('string');
             $value = random_string('alnum', 20);
@@ -2029,17 +2036,6 @@ class Purchases extends MY_Controller
         echo $this->datatables->generate();
     }
 
-    private function getLandedCostLedgerId()
-    {
-        static $ledger_id = null;
-        if ($ledger_id !== null) {
-            return $ledger_id;
-        }
-        $row = $this->db->get_where('accounts_ledgers', ['code' => '1130100004'], 1)->row();
-        $ledger_id = $row ? (int) $row->id : false;
-        return $ledger_id;
-    }
-
     public function convert_purchse_invoice($pid)
     {
         if ($this->purchases_model->puchaseToInvoice($pid)) {
@@ -2054,8 +2050,10 @@ class Purchases extends MY_Controller
             $warehouse_ledgers = $this->site->getWarehouseByID($warehouse_id);
 
             $total_landed_cost = 0;
-            foreach ($inv_items as $item) {
-                $total_landed_cost += (float) ($item->landed_cost ?? 0);
+            if ($this->site->isOverseasWarehouse($warehouse_id)) {
+                foreach ($inv_items as $item) {
+                    $total_landed_cost += (float) ($item->landed_cost ?? 0);
+                }
             }
             $total_landed_cost = $this->sma->formatDecimal($total_landed_cost, 4);
 
@@ -2122,8 +2120,8 @@ class Purchases extends MY_Controller
                 )
             );
 
-            if ($total_landed_cost > 0) {
-                $landed_cost_ledger_id = $this->getLandedCostLedgerId();
+            if ($total_landed_cost > 0 && $this->site->isOverseasWarehouse($warehouse_id)) {
+                $landed_cost_ledger_id = $this->site->getLandedCostLedgerId();
                 if ($landed_cost_ledger_id) {
                     $entryitemdata[] = array(
                         'Entryitem' => array(
@@ -2131,7 +2129,7 @@ class Purchases extends MY_Controller
                             'dc' => 'C',
                             'ledger_id' => $landed_cost_ledger_id,
                             'amount' => $total_landed_cost,
-                            'narration' => 'Goods in Transit (1130100004) - landed cost'
+                            'narration' => 'Goods in Transit - landed cost'
                         )
                     );
                 }

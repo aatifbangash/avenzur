@@ -1636,6 +1636,44 @@ public function logVisitor() {
         return false;
     }
 
+    /**
+     * Goods in Transit ledger for overseas landed cost.
+     * Uses overseas warehouse landed_cost_ledger (ID).
+     * Falls back to the goods-in-transit warehouse inventory_ledger for legacy setups.
+     */
+    public function getLandedCostLedgerId()
+    {
+        static $ledger_id = null;
+        if ($ledger_id !== null) {
+            return $ledger_id ?: false;
+        }
+
+        $osw_id = $this->getOverseasWarehouseId();
+        if ($osw_id) {
+            $osw = $this->getWarehouseByID($osw_id);
+            if ($osw && !empty($osw->landed_cost_ledger)) {
+                $ledger_id = (int) $osw->landed_cost_ledger;
+                return $ledger_id;
+            }
+        }
+
+        $git_wh = $this->getGoodsTrasitWareHouse();
+        $ledger_id = ($git_wh && !empty($git_wh->inventory_ledger))
+            ? (int) $git_wh->inventory_ledger
+            : 0;
+
+        return $ledger_id ?: false;
+    }
+
+    /** Landed cost is only for purchase orders on the overseas warehouse. */
+    public function canUseLandedCostForWarehouse($warehouse_id)
+    {
+        if (!$this->isOverseasWarehouse($warehouse_id)) {
+            return false;
+        }
+        return $this->canAccessOverseasWarehouse() && (bool) $this->getLandedCostLedgerId();
+    }
+
     public function getWarehouseProduct($warehouse_id, $product_id)
     {
         $q = $this->db->get_where('warehouses_products', ['product_id' => $product_id, 'warehouse_id' => $warehouse_id], 1);

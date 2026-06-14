@@ -2219,6 +2219,11 @@ class system_settings extends MY_Controller
                     'country'        => $this->input->post('country'),
                     'inventory_ledger'    => $this->input->post('inventory_ledger'),
                 ];
+                if (!empty($wh_details->is_overseas)) {
+                    $data['sales_ledger'] = $this->input->post('sales_ledger');
+                    $data['cogs_ledger'] = $this->input->post('cogs_ledger');
+                    $data['landed_cost_ledger'] = $this->input->post('landed_cost_ledger');
+                }
             }else if($this->input->post('type') == 'pharmacy'){
                 $data = ['code'      => $this->input->post('code'),
                     'name'           => $this->input->post('name'),
