@@ -157,6 +157,7 @@ $lang['map_image']                                                   = 'Map Imag
 $lang['warehouse_map']                                               = 'Warehouse Map';
 $lang['warehouse_added']                                             = 'Warehouse successfully added';
 $lang['warehouse_updated']                                           = 'Warehouse successfully updated';
+$lang['landed_cost_git_ledger']                                      = 'Goods in Transit Account (Landed Cost)';
 $lang['warehouse_deleted']                                           = 'Warehouse successfully deleted';
 $lang['warehouses_deleted']                                          = 'Warehouse successfully deleted';
 $lang['mail_message']                                                = 'Mail Message';
