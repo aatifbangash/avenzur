@@ -8207,42 +8207,35 @@ error_reporting(E_ALL);
         $action .= '</ul>
         </div></div>';
         $this->load->library('datatables');
+        $osw_id = $this->site->getOverseasWarehouseId();
+        $is_overseas_wh = $osw_id && (int) $warehouse_id === (int) $osw_id;
         if ($warehouse_id) {
             // wp.rack as rack replaced with 1 as rack
             $this->datatables
                 ->select($this->db->dbprefix('products') . ".id as productid, {$this->db->dbprefix('products')}.image as image, {$this->db->dbprefix('products')}.code as code,{$this->db->dbprefix('products')}.sequence_code as sequence_code, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('brands')}.name as brand, {$this->db->dbprefix('categories')}.name as cname, cost as cost, price as price, SUM(wp.quantity) as quantity, {$this->db->dbprefix('units')}.code as unit, 1 as rack, alert_quantity", false)
                 ->from('products');
-            if ($this->Settings->display_all_products) {
+            if ($this->Settings->display_all_products || $is_overseas_wh) {
                 $this->datatables->join('inventory_movements wp', "wp.product_id=products.id AND wp.location_id={$warehouse_id}", 'left');
-                //$this->datatables->join('warehouses_products wp', "wp.product_id=products.id AND wp.warehouse_id={$warehouse_id}", 'left');
-                // $this->datatables->join("( SELECT product_id, quantity, rack from {$this->db->dbprefix('warehouses_products')} WHERE warehouse_id = {$warehouse_id}) wp", 'products.id=wp.product_id', 'left');
             } else {
                 $this->datatables->join('inventory_movements wp', "wp.product_id=products.id", 'left')
-                    ->where('wp.location_id', $warehouse_id)
-                ;
-                // $this->datatables->join('warehouses_products wp', 'products.id=wp.product_id', 'left')
-                // ->where('wp.warehouse_id', $warehouse_id)
-                // ->where('wp.quantity !=', 0);
+                    ->where('wp.location_id', $warehouse_id);
             }
             $this->datatables->join('categories', 'products.category_id=categories.id', 'left')
                 ->join('units', 'products.unit=units.id', 'left')
                 ->join('brands', 'products.brand=brands.id', 'left')
                 ->group_by("products.id");
+            $this->site->applyProductScopeToDatatables($this->datatables, $warehouse_id);
         } else {
             // wp.rack as rack replaced with 1 as rack
             $this->datatables
                 ->select($this->db->dbprefix('products') . ".id as productid, {$this->db->dbprefix('products')}.image as image, {$this->db->dbprefix('products')}.code as code,{$this->db->dbprefix('products')}.sequence_code as sequence_code, {$this->db->dbprefix('products')}.name as name, {$this->db->dbprefix('brands')}.name as brand, {$this->db->dbprefix('categories')}.name as cname, cost as cost, price as price, SUM(wp.quantity) as quantity, {$this->db->dbprefix('units')}.code as unit, 1 as rack, alert_quantity", false)
                 ->from('products');
             $this->datatables->join('inventory_movements wp', "wp.product_id=products.id", 'left');
-            if ($this->Settings->display_all_products) {
-                //  $this->datatables->join('warehouses_products wp', "wp.product_id=products.id", 'left'); 
-            } else {
-                //  $this->datatables->join('warehouses_products wp', 'products.id=wp.product_id', 'left')->where('wp.quantity !=', 0);     
-            }
             $this->datatables->join('categories', 'products.category_id=categories.id', 'left')
                 ->join('units', 'products.unit=units.id', 'left')
                 ->join('brands', 'products.brand=brands.id', 'left')
                 ->group_by("products.id");
+            $this->site->applyProductScopeToDatatables($this->datatables, null);
         }
         if (!$this->Owner && !$this->Admin) {
             if (!$this->session->userdata('show_cost')) {
