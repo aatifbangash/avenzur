@@ -582,7 +582,7 @@ class Reports extends MY_Controller
         
         $data = array();
         $at_date = $this->input->get('at_date') ? $this->input->get('at_date') : null;
-        $warehouse = $this->input->get('warehouse') ? $this->input->get('warehouse') : null;
+        $warehouse = $this->site->resolveReportWarehouseFilter('warehouse');
         $item_group = $this->input->get('item_group') ? $this->input->get('item_group') : null;
         $item = $this->input->get('item') ? $this->input->get('item') : null;
         $filterOnType = $this->input->get('filterOnType') ? $this->input->get('filterOnType') : null;
@@ -666,7 +666,7 @@ class Reports extends MY_Controller
     public function stock()
     {
         $at_date = $this->input->get('at_date') ? $this->input->get('at_date') : null;
-        $warehouse = $this->input->get('warehouse') ? $this->input->get('warehouse') : null;
+        $warehouse = $this->site->resolveReportWarehouseFilter('warehouse');
         $supplier_id = $this->input->get('supplier_id') ? $this->input->get('supplier_id') : null;
         $item_group = $this->input->get('item_group') ? $this->input->get('item_group') : null;
         $item = $this->input->get('item') ? $this->input->get('item') : null;
@@ -717,6 +717,7 @@ class Reports extends MY_Controller
 
         $this->data['at_date'] = $at_date;
 
+        $this->data['warehouse'] = $warehouse;
         $this->data['warehouses'] = $this->site->getAllWarehouses();
         //$this->data['suppliers'] = $this->deals_model->getAllSuppliersList();
         $this->data['categories'] = $this->site->getAllCategories();
@@ -743,7 +744,7 @@ class Reports extends MY_Controller
 
     public function consumption_report()
     {
-        $warehouse_id = $this->input->get('warehouse_id') ?: null;
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
         $item = $this->input->get('item') && $this->input->get('sgproduct') ? $this->input->get('item') : null;
         $supplier_id = $this->input->get('supplier_id') ? $this->input->get('supplier_id') : null;
         $period = $this->input->get('period') ? $this->input->get('period') : 1;
@@ -772,7 +773,7 @@ class Reports extends MY_Controller
     }
 
     public function consumption_report_export_excel(){
-        $warehouse_id = $this->input->get('warehouse_id') ?: null;
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
         $item = $this->input->get('item') ? $this->input->get('item') : null;
         $supplier_id = $this->input->get('supplier_id') ? $this->input->get('supplier_id') : null;
         $period = $this->input->get('period') ? $this->input->get('period') : 1;
@@ -4447,7 +4448,7 @@ class Reports extends MY_Controller
         $this->data['biller'] = $this->site->getDefaultBiller();
         $this->data['statement_ledger_options'] = [];
         $this->data['warehouses'] = $this->site->getAllWarehouses();
-        $warehouse_id = $this->input->post('warehouse_id') ? (int) $this->input->post('warehouse_id') : null;
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
         $this->data['warehouse_id'] = $warehouse_id;
 
         if ($from_date) {
@@ -4548,7 +4549,7 @@ class Reports extends MY_Controller
         $this->data['biller'] = $this->site->getDefaultBiller();
         $this->data['statement_ledger_options'] = [];
         $this->data['warehouses'] = $this->site->getAllWarehouses();
-        $warehouse_id = $this->input->post('warehouse_id') ? (int) $this->input->post('warehouse_id') : null;
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
         $this->data['warehouse_id'] = $warehouse_id;
 
         if ($from_date) {
@@ -4816,7 +4817,7 @@ class Reports extends MY_Controller
 
         $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
         $this->data['warehouses'] = $this->site->getAllWarehouses();
-        $warehouse_id = $this->input->post('warehouse_id') ?: null;
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
         $this->data['warehouse_id'] = $warehouse_id;
 
         if ($from_date) {
@@ -5639,7 +5640,7 @@ class Reports extends MY_Controller
         $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
         $this->data['biller'] = $this->site->getDefaultBiller();
         $this->data['warehouses'] = $this->site->getAllWarehouses();
-        $warehouse_id = $this->input->post('warehouse_id') ?: null;
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
         $this->data['warehouse_id'] = $warehouse_id;
 
         if ($from_date) {
@@ -5727,7 +5728,7 @@ class Reports extends MY_Controller
 
         $this->data['customers'] = $this->site->getAllCompanies('customer');
         $this->data['warehouses'] = $this->site->getAllWarehouses();
-        $warehouse_id = $this->input->post('warehouse_id') ?: null;
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
         $this->data['warehouse_id'] = $warehouse_id;
         $response_arr = array();
         if ($from_date) {
@@ -5815,7 +5816,7 @@ class Reports extends MY_Controller
         }
         $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
         $this->data['warehouses'] = $this->site->getAllWarehouses();
-        $warehouse_id = $this->input->post('warehouse_id') ?: null;
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
         $this->data['warehouse_id'] = $warehouse_id;
         $response_arr = array();
         if ($from_date) {
@@ -6053,7 +6054,7 @@ class Reports extends MY_Controller
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
         $supplier_ids = $this->input->post('supplier_ids') ?: [];
-        $warehouse_id = $this->input->post('warehouse_id') ?: null;
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
         $this->data['warehouse_id'] = $warehouse_id;
 
         if ($from_date) {
@@ -6216,7 +6217,7 @@ class Reports extends MY_Controller
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
-        $warehouse_id = $this->input->post('warehouse_id') ? (int) $this->input->post('warehouse_id') : null;
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
         $customer_rent_type = $this->input->post('customer_rent_type') ?: 'non_rental';
         if (!in_array($customer_rent_type, ['non_rental', 'rental', 'all'], true)) {
             $customer_rent_type = 'non_rental';
@@ -6490,7 +6491,8 @@ class Reports extends MY_Controller
         ];
         $this->data['filterOnTypeArr'] = $filterOnTypeArr;
         $user = $this->site->getUser();
-        $warehouse = $this->input->post('warehouse') ? $this->input->post('warehouse') : null;
+        $warehouse = $this->site->resolveReportWarehouseFilter('warehouse');
+        $this->data['warehouse'] = $warehouse;
 
         $response_arr = array();
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
@@ -6764,7 +6766,8 @@ class Reports extends MY_Controller
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
-        $warehouse_id = $this->input->post('warehouse_id') ? $this->input->post('warehouse_id') : null;
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+        $this->data['warehouse_id'] = $warehouse_id;
         $filterOnType = $this->input->post('filterOnType') ? $this->input->post('filterOnType') : null;
 
         if ($from_date && $to_date) {
@@ -6830,7 +6833,8 @@ class Reports extends MY_Controller
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
-        $warehouse_id = $this->input->post('warehouse_id') ? $this->input->post('warehouse_id') : null;
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+        $this->data['warehouse_id'] = $warehouse_id;
         $filterOnType = $this->input->post('filterOnType') ? $this->input->post('filterOnType') : null;
         if ($viewtype == 'pdf') {
             $this->data['viewtype'] = $viewtype;
@@ -6890,7 +6894,8 @@ class Reports extends MY_Controller
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
-        $warehouse_id = $this->input->post('warehouse_id') ? $this->input->post('warehouse_id') : null;
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+        $this->data['warehouse_id'] = $warehouse_id;
         $filterOnType = $this->input->post('filterOnType') ? $this->input->post('filterOnType') : null;
 
         if ($viewtype == 'pdf') {
@@ -7220,7 +7225,7 @@ class Reports extends MY_Controller
         $viewtype = $this->input->get('viewtype') ? $this->input->get('viewtype') : null;
         $from_date = $this->input->get('from_date') ? $this->input->get('from_date') : null;
         $to_date = $this->input->get('to_date') ? $this->input->get('to_date') : null;
-        $warehouse = $this->input->get('pharmacy') ? $this->input->get('pharmacy') : null;
+        $warehouse = $this->site->resolveReportWarehouseFilter('pharmacy');
         //print_r($this->input->get());
     
         $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -7230,7 +7235,7 @@ class Reports extends MY_Controller
         $this->data['warehouse'] = $warehouse;
         
         // If any filter submitted, fetch data
-        if ($from_date || $to_date || $warehouse) {
+        if ($from_date || $to_date || array_key_exists('pharmacy', $_GET)) {
             // Format dates only if provided
             $start_date = $from_date ? $this->sma->fld($from_date) : null;
             $end_date = $to_date ? $this->sma->fld($to_date) : null;
@@ -7263,10 +7268,12 @@ class Reports extends MY_Controller
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
-        $warehouse = $this->input->post('pharmacy') ? $this->input->post('pharmacy') : null;
+        $warehouse = $this->site->resolveReportWarehouseFilter('pharmacy');
         //print_r($this->input->post());
     
         $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['warehouse'] = $warehouse;
+        $this->data['warehouse_id'] = $warehouse;
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
@@ -7307,10 +7314,12 @@ class Reports extends MY_Controller
         $from_date  = $this->input->post('from_date')  ?: null;
         $to_date    = $this->input->post('to_date')    ?: null;
         $supplier   = $this->input->post('supplier')   ?: null;
-        $warehouse  = $this->input->post('pharmacy')   ?: null;
+        $warehouse  = $this->site->resolveReportWarehouseFilter('pharmacy');
 
         $this->data['warehouses'] = $this->site->getAllWarehouses();
         $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+        $this->data['warehouse']  = $warehouse;
+        $this->data['warehouse_id'] = $warehouse;
 
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
@@ -7342,13 +7351,11 @@ class Reports extends MY_Controller
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
-        $warehouse = $this->input->post('pharmacy') ? $this->input->post('pharmacy') : null;
+        $warehouse = $this->site->resolveReportWarehouseFilter('pharmacy');
         //print_r($this->input->post());
-        if( strtolower($warehouse) == 'all' || $warehouse  == '' )
-        {
-            $warehouse = '';
-        }
         $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['warehouse'] = $warehouse;
+        $this->data['warehouse_id'] = $warehouse;
         if ($from_date && $to_date ) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
@@ -7388,13 +7395,11 @@ class Reports extends MY_Controller
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
-        $warehouse = $this->input->post('pharmacy') ? $this->input->post('pharmacy') : null;
+        $warehouse = $this->site->resolveReportWarehouseFilter('pharmacy');
         //print_r($this->input->post());
-        if( strtolower($warehouse) == 'all' || $warehouse  == '' )
-        {
-            $warehouse = '';
-        }
         $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['warehouse'] = $warehouse;
+        $this->data['warehouse_id'] = $warehouse;
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
@@ -7433,11 +7438,13 @@ class Reports extends MY_Controller
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
-        $warehouse = $this->input->post('pharmacy') ? $this->input->post('pharmacy') : null;
+        $warehouse = $this->site->resolveReportWarehouseFilter('pharmacy');
         $pharmacist = $this->input->post('pharmacist') ? $this->input->post('pharmacist') : null;
         //print_r($this->input->post());
     
         $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['warehouse'] = $warehouse;
+        $this->data['warehouse_id'] = $warehouse;
         $this->data['pharmacists'] = $this->site->getAllPharmacists();
         if ($from_date && $to_date && $warehouse && $pharmacist) {
             $start_date = $this->sma->fld($from_date);
@@ -7552,7 +7559,7 @@ class Reports extends MY_Controller
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
-        $warehouse = $this->input->post('pharmacy') ? $this->input->post('pharmacy') : null;
+        $warehouse = $this->site->resolveReportWarehouseFilter('pharmacy');
         $pharmacist_id = $this->input->post('pharmacist_id') ? $this->input->post('pharmacist_id') : null;
         //print_r($this->input->post());
          //for testing purpose
@@ -7580,7 +7587,7 @@ class Reports extends MY_Controller
                 
             }
         }else{
-            $warehouse = $this->session->userdata('warehouse_id');
+            $warehouse = $this->session->userdata('warehouse_id') ?: $warehouse;
             if($pharmacist_id){
                 $user_id = $pharmacist_id;
             }else{
@@ -7591,6 +7598,7 @@ class Reports extends MY_Controller
         $this->data['warehouses'] = $this->site->getAllWarehouses();
         $this->data['user_group'] = $this->site->getUserGroupByName('pharmacist');
         $this->data['pharmacists'] = $this->site->getUsersByGroup($this->data['user_group']->id);
+        $this->data['warehouse_id'] = $warehouse;
         
         if ($from_date && $to_date && $warehouse) {
             $start_date = $this->sma->fld($from_date);
@@ -7686,7 +7694,7 @@ class Reports extends MY_Controller
         $invoice_id = $this->input->get('invoice_id') ? $this->input->get('invoice_id') : null;
         $customer = $this->input->get('customer') ? $this->input->get('customer') : null;
         $salesman = $this->input->get('salesman') ? $this->input->get('salesman') : null;
-        $warehouse = $this->input->get('warehouse') ? $this->input->get('warehouse') : null;
+        $warehouse = $this->site->resolveReportWarehouseFilter('warehouse');
         
         // Get sales men and warehouses for dropdowns
         $this->db->select('id, name');
@@ -7706,7 +7714,7 @@ class Reports extends MY_Controller
         $this->data['warehouse'] = $warehouse;
         
         // If form submitted, fetch data
-        if ($start_date || $end_date || $invoice_id || $customer || $salesman || $warehouse) {
+        if ($start_date || $end_date || $invoice_id || $customer || $salesman || array_key_exists('warehouse', $_GET)) {
             
             // Pre-fetch salesman name if needed
             $salesman_name = null;
@@ -7794,7 +7802,8 @@ class Reports extends MY_Controller
         $salesman = $this->input->get('salesman') ? $this->input->get('salesman') : null;
         $item_code = $this->input->get('item_code') ? $this->input->get('item_code') : null;
         $category = $this->input->get('category') ? $this->input->get('category') : null;
-        $warehouse_id = $this->input->get('warehouse_id') ?: null;
+        $warehouse_explicit = array_key_exists('warehouse_id', $_GET);
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
         $export_excel = $this->input->get('export_excel');
         // Get sales men for dropdown
         $this->db->select('id, name');
@@ -7820,7 +7829,7 @@ class Reports extends MY_Controller
         $this->data['warehouse_id'] = $warehouse_id;
         
         // If any filter submitted, fetch data
-        if ($start_date || $end_date || $invoice_id || $salesman || $item_code || $category || $warehouse_id !== null) {
+        if ($start_date || $end_date || $invoice_id || $salesman || $item_code || $category || $warehouse_explicit) {
             
             // Pre-fetch salesman name if needed
             $salesman_name = null;
@@ -7947,7 +7956,7 @@ class Reports extends MY_Controller
         $purchase_ref = $this->input->get('purchase_ref') ?: null;
         $supplier     = $this->input->get('supplier')     ?: null;
         $record_type  = $this->input->get('record_type')  ?: 'all';
-        $warehouse_id = $this->input->get('warehouse_id') ?: null;
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
         //$item_code = $this->input->get('item_code') ? $this->input->get('item_code') : null;
         $sgproduct = $this->input->get('sgproduct') ? $this->input->get('sgproduct') : null;
         $pname = $this->input->get('product') ? $this->input->get('product') : null;
@@ -8027,7 +8036,7 @@ class Reports extends MY_Controller
         $invoice_id = $this->input->post('invoice_id') ? $this->input->post('invoice_id') : $this->input->get('invoice_id');
         $customer = $this->input->post('customer') ? $this->input->post('customer') : $this->input->get('customer');
         $salesman = $this->input->post('salesman') ? $this->input->post('salesman') : $this->input->get('salesman');
-        $warehouse = $this->input->post('warehouse') ? $this->input->post('warehouse') : $this->input->get('warehouse');
+        $warehouse = $this->site->resolveReportWarehouseFilter('warehouse');
 
         if ($start_date) {
             $start_date = $this->sma->fld($start_date);
@@ -8219,7 +8228,7 @@ class Reports extends MY_Controller
 
         // Initialize default values
         $this->data['customer_id']  = null;
-        $this->data['pharmacy_id']  = null;
+        $this->data['pharmacy_id']  = $this->site->resolveReportWarehouseFilter('pharmacy_id');
         $this->data['start_date']   = null;
         $this->data['end_date']     = null;
         $this->data['salesman_id']  = null;
@@ -8232,7 +8241,7 @@ class Reports extends MY_Controller
         if ($from_date) {
             // Get filter parameters
             $customer_id = $this->input->post('customer_id');
-            $pharmacy_id = $this->input->post('pharmacy_id');
+            $pharmacy_id = $this->site->resolveReportWarehouseFilter('pharmacy_id');
             $salesman_id = $this->input->post('salesman');
             $record_type = $this->input->post('record_type') ?: 'all';
 
@@ -8311,7 +8320,7 @@ class Reports extends MY_Controller
 
         // Initialize default values
         $this->data['supplier_id'] = null;
-        $this->data['pharmacy_id'] = null;
+        $this->data['pharmacy_id'] = $this->site->resolveReportWarehouseFilter('pharmacy_id');
         $this->data['purchase_id'] = null;
         $this->data['start_date'] = null;
         $this->data['end_date'] = null;
@@ -8330,7 +8339,7 @@ class Reports extends MY_Controller
         if ($from_date) {
             // Get filter values from POST
             $supplier_id = $this->input->post('supplier_id');
-            $pharmacy_id = $this->input->post('pharmacy_id');
+            $pharmacy_id = $this->site->resolveReportWarehouseFilter('pharmacy_id');
             $purchase_id = $this->input->post('purchase_id');
 
             // Convert dates using sma->fld() like supplier_statement
@@ -9992,7 +10001,7 @@ class Reports extends MY_Controller
         $party_id    = $this->input->get('party_id') ?: null;
         $ref_no      = $this->input->get('ref_no') ?: null;
         $salesman_id = $this->input->get('salesman_id') ?: null;
-        $warehouse_id = $this->input->get('warehouse_id') ?: null;
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
         $customer_rent_type = $this->input->get('customer_rent_type') ?: 'non_rental';
         if (!in_array($customer_rent_type, ['non_rental', 'rental', 'all'], true)) {
             $customer_rent_type = 'non_rental';
@@ -10044,7 +10053,7 @@ class Reports extends MY_Controller
         $at_date  = $this->input->get('at_date') ?: date('d-m-Y');
         $party_id = $this->input->get('party_id') ?: null;
         $ref_no   = $this->input->get('ref_no') ?: null;
-        $warehouse_id = $this->input->get('warehouse_id') ?: null;
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
         $supplier_trade_type = $this->input->get('supplier_trade_type') ?: 'trade';
         if (!in_array($supplier_trade_type, ['trade', 'non_trade', 'all'], true)) {
             $supplier_trade_type = 'trade';
@@ -10479,7 +10488,7 @@ class Reports extends MY_Controller
         $filters = [
             'customer_id' => $this->input->get('customer_id') ?: '',
             'sales_agent' => $this->input->get('sales_agent') ?: '',
-            'warehouse_id' => $this->input->get('warehouse_id') ?: '',
+            'warehouse_id' => $this->site->resolveReportWarehouseFilter('warehouse_id'),
             'from_date'   => $from_date_in_query ? trim((string) $this->input->get('from_date')) : '',
             'to_date'     => $this->input->get('to_date')     ?: '',
         ];
@@ -10533,7 +10542,7 @@ class Reports extends MY_Controller
             'supplier_id'  => $this->input->get('supplier_id') ?: '',
             'from_date'    => $from_date_in_query ? trim((string) $this->input->get('from_date')) : '',
             'to_date'      => $this->input->get('to_date')     ?: '',
-            'warehouse_id' => $this->input->get('warehouse_id') ?: '',
+            'warehouse_id' => $this->site->resolveReportWarehouseFilter('warehouse_id'),
         ];
 
         // Convert display date (d/m/Y) to Y-m-d

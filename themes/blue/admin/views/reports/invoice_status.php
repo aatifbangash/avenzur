@@ -83,7 +83,7 @@
                                 foreach ($warehouses as $warehouse_item) {
                                     $wh[$warehouse_item->id] = $warehouse_item->name;
                                 }
-                                echo form_dropdown('warehouse', $wh, ($_GET['warehouse'] ?? ''), 'id="warehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" style="width:100%;"');
+                                echo form_dropdown('warehouse', $wh, ($warehouse ?? ''), 'id="warehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" style="width:100%;"');
                                 ?>
                             </div>
                         </div>

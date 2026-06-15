@@ -2169,6 +2169,7 @@ class Purchases extends MY_Controller
     public function getPurchases($warehouse_id = null)
     {
         //$this->sma->checkPermissions('index');
+        $warehouse_id = $this->site->resolveListingWarehouseId($warehouse_id);
 
         $pid = $this->input->get('pid');
         $pfromDate = $this->input->get('from');
@@ -2424,6 +2425,9 @@ class Purchases extends MY_Controller
     public function index($warehouse_id = null)
     {
         $this->sma->checkPermissions();
+
+        $this->site->redirectDefaultListingWarehouseIfNeeded($warehouse_id, 'purchases');
+
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
             $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -2442,9 +2446,13 @@ class Purchases extends MY_Controller
 
         //update index func
 
+        $wh_in_query = array_key_exists('warehouse_id', $_GET);
         $filters = [
             'supplier_id' => $this->input->get('supplier_id'),
-            'warehouse_id' => $this->input->get('warehouse_id') ?: $warehouse_id,
+            'warehouse_id' => $this->site->resolveFilterWarehouseId(
+                $wh_in_query ? $this->input->get('warehouse_id') : $warehouse_id,
+                $wh_in_query
+            ),
             'status' => $this->input->get('status'),
             'from_date' => $this->input->get('from'),
             'to_date' => $this->input->get('to'),

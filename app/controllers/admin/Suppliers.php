@@ -1050,7 +1050,7 @@ class Suppliers extends MY_Controller
         $filters = [
             'supplier_id'  => $this->input->get('supplier_id') ?: $this->input->post('supplier_id'),
             'category'     => $this->input->get('category')    ?: $this->input->post('category'),
-            'warehouse_id' => $this->input->get('warehouse_id') ?: $this->input->post('warehouse_id'),
+            'warehouse_id' => $this->site->resolveReportWarehouseFilter('warehouse_id'),
             'from_date'    => $this->input->get('from_date')   ?: $this->input->post('from_date'),
             'to_date'      => $this->input->get('to_date')     ?: $this->input->post('to_date'),
         ];

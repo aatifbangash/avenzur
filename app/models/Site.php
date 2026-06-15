@@ -530,6 +530,95 @@ class Site extends CI_Model
         return false;
     }
 
+    /** Default warehouse for listings/reports (Settings default, else main local warehouse). */
+    public function getDefaultListingWarehouseId()
+    {
+        if (!empty($this->Settings->default_warehouse)) {
+            return (int) $this->Settings->default_warehouse;
+        }
+        $this->db->reset_query();
+        $this->db->where('is_main', 1)->where('is_overseas', 0)->limit(1);
+        $q = $this->db->get('warehouses');
+        return ($q && $q->num_rows()) ? (int) $q->row()->id : 0;
+    }
+
+    /** @deprecated Use getDefaultListingWarehouseId() */
+    public function getDefaultProductListingWarehouseId()
+    {
+        return $this->getDefaultListingWarehouseId();
+    }
+
+    /** User chose combined local warehouses via ?all=1 */
+    public function listingShowsAllLocalWarehouses()
+    {
+        $CI = get_instance();
+        return $CI->input->get('all') == '1';
+    }
+
+    /**
+     * Resolve listing/report warehouse: default = Settings default warehouse (Al Rawabi).
+     * ?all=1 = all local warehouses (excludes overseas). $empty_means_all when user cleared filter.
+     */
+    public function resolveListingWarehouseId($warehouse_id = null, $empty_means_all = false)
+    {
+        if ($this->listingShowsAllLocalWarehouses()) {
+            return null;
+        }
+        if ($warehouse_id !== null && $warehouse_id !== '' && (int) $warehouse_id !== 0) {
+            return (int) $warehouse_id;
+        }
+        if ($empty_means_all) {
+            return null;
+        }
+        $CI = get_instance();
+        if (!empty($CI->Owner) || !empty($CI->Admin) || !$CI->session->userdata('warehouse_id')) {
+            return $this->getDefaultListingWarehouseId();
+        }
+        $user_wh = (int) $CI->session->userdata('warehouse_id');
+        return $user_wh ?: $this->getDefaultListingWarehouseId();
+    }
+
+    /** GET filter forms: pass whether warehouse_id was present in the query string. */
+    public function resolveFilterWarehouseId($warehouse_id = null, $warehouse_in_query = false)
+    {
+        $empty_means_all = $warehouse_in_query && ($warehouse_id === '' || $warehouse_id === null || (int) $warehouse_id === 0);
+        return $this->resolveListingWarehouseId($warehouse_id, $empty_means_all);
+    }
+
+    /** Report search forms (GET or POST): default to Settings warehouse unless field explicitly empty or ?all=1 */
+    public function resolveReportWarehouseFilter($field = 'warehouse_id')
+    {
+        $CI = get_instance();
+        if (array_key_exists($field, $_GET)) {
+            return $this->resolveFilterWarehouseId($CI->input->get($field), true);
+        }
+        if (array_key_exists($field, $_POST)) {
+            return $this->resolveFilterWarehouseId($CI->input->post($field), true);
+        }
+        return $this->resolveListingWarehouseId(null, false);
+    }
+
+    /** Redirect bare listing URLs to the default warehouse unless ?all=1 */
+    public function redirectDefaultListingWarehouseIfNeeded($warehouse_id, $route_base)
+    {
+        if ($warehouse_id || $this->listingShowsAllLocalWarehouses()) {
+            return;
+        }
+        $CI = get_instance();
+        if (!empty($CI->Owner) || !empty($CI->Admin) || !$CI->session->userdata('warehouse_id')) {
+            admin_redirect(rtrim($route_base, '/') . '/' . $this->getDefaultListingWarehouseId());
+        }
+    }
+
+    /** Path suffix for DataTables ajax: /32 or ?all=1 */
+    public function listingWarehouseUrlSuffix($warehouse_id = null)
+    {
+        if ($warehouse_id) {
+            return '/' . (int) $warehouse_id;
+        }
+        return $this->listingShowsAllLocalWarehouses() ? '?all=1' : '';
+    }
+
     public function getAllWarehouses($include_overseas = null)
     {
         $this->db->reset_query();
@@ -666,12 +755,16 @@ class Site extends CI_Model
     }
 
     /**
-     * Document listings: "all warehouses" = local only; pick OSW001 explicitly for overseas.
+     * Document listings: default warehouse or all local (?all=1); OSW001 only when explicitly selected.
      */
     public function applyListingWarehouseScope($builder, $warehouse_id, $column = 'warehouse_id')
     {
+        $warehouse_id = $this->resolveListingWarehouseId($warehouse_id);
+        if ($warehouse_id) {
+            return $builder->where($column, (int) $warehouse_id);
+        }
         $osw_id = $this->getOverseasWarehouseId();
-        if (!$osw_id || $warehouse_id) {
+        if (!$osw_id) {
             return $builder;
         }
         return $builder->where($column . ' !=', $osw_id);
@@ -682,6 +775,7 @@ class Site extends CI_Model
      */
     public function reportWarehouseAndClause($warehouse_id, $alias = 's', $column = 'warehouse_id')
     {
+        $warehouse_id = $this->resolveListingWarehouseId($warehouse_id);
         if ($warehouse_id) {
             return ' AND ' . $alias . '.' . $column . ' = ' . (int) $warehouse_id;
         }
@@ -718,6 +812,7 @@ class Site extends CI_Model
     /** Customer-side ledger scope (sid / rid / collection journals on accounts_entries). */
     public function reportCustomerLedgerWarehouseCondition($warehouse_id, $entries_alias = 'sma_accounts_entries')
     {
+        $warehouse_id = $this->resolveListingWarehouseId($warehouse_id);
         $dbp = $this->db->dbprefix;
         $sales = $dbp . 'sales';
         $returns = $dbp . 'returns';
@@ -773,6 +868,7 @@ class Site extends CI_Model
     /** Purchase-side ledger scope (pid / rsid / payment journals on accounts_entries). */
     public function reportPurchaseLedgerWarehouseCondition($warehouse_id, $entries_alias = 'sma_accounts_entries')
     {
+        $warehouse_id = $this->resolveListingWarehouseId($warehouse_id);
         $dbp = $this->db->dbprefix;
         $purchases = $dbp . 'purchases';
         $returns = $dbp . 'returns_supplier';
@@ -827,10 +923,7 @@ class Site extends CI_Model
 
     public function applyReportWarehouseScope($builder, $warehouse_id, $column = 'warehouse_id')
     {
-        if ($warehouse_id) {
-            return $builder->where($column, (int) $warehouse_id);
-        }
-        return $this->applyListingWarehouseScope($builder, null, $column);
+        return $this->applyListingWarehouseScope($builder, $warehouse_id, $column);
     }
     public function getAvgCost($item_batchno, $item_id){
         $avgCostQuery = "SELECT 

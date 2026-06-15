@@ -53,7 +53,7 @@
                             <div class="col-md-6">
                                 <div class="form-group"> 
                                     <?= lang('Warehouse', 'warehouse_id'); ?>
-                                    <?php echo form_dropdown('warehouse_id', $warehouses, set_value('warehouse_id', $_POST['warehouse_id']), array('class' => 'form-control', 'id' => 'warehouse_id'),array('none')); ?>
+                                    <?php echo form_dropdown('warehouse_id', $warehouses, set_value('warehouse_id', ($warehouse_id ?? '')), array('class' => 'form-control', 'id' => 'warehouse_id'),array('none')); ?>
 
                                 </div>
                             </div> 

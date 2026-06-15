@@ -25,7 +25,7 @@
                 "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?= lang('all') ?>"]],
                 "iDisplayLength": <?= $Settings->rows_per_page ?>,
                 'bProcessing': true, 'bServerSide': true,
-                'sAjaxSource': '<?= admin_url('products/getProducts' . ($warehouse_id ? '/' . $warehouse_id : '') . ($supplier ? '?supplier=' . $supplier->id : '')) ?>',
+                'sAjaxSource': '<?= $products_ajax_url ?>',
                 'fnServerData': function (sSource, aoData, fnCallback) {
                     aoData.push({
                         "name": "<?= $this->security->get_csrf_token_name() ?>",
@@ -171,7 +171,7 @@
                         <li class="dropdown">
                             <a data-toggle="dropdown" class="dropdown-toggle" href="#"><i class="icon fa fa-building-o tip" data-placement="left" title="<?= lang('warehouses') ?>"></i></a>
                             <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
-                                <li><a href="<?= admin_url('products') ?>"><i class="fa fa-building-o"></i> <?= lang('all_warehouses') ?></a></li>
+                                <li><a href="<?= admin_url('products/list_products?all=1') ?>"><i class="fa fa-building-o"></i> <?= lang('all_warehouses') ?></a></li>
                                 <li class="divider"></li>
                                 <?php
                                 foreach ($warehouses as $warehouse) {

@@ -8,7 +8,7 @@
             "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?=lang('all')?>"]],
             "iDisplayLength": <?=$Settings->rows_per_page?>,
             'bProcessing': true, 'bServerSide': true,
-            'sAjaxSource': '<?=admin_url((isset($is_shop_sales) && $is_shop_sales ? 'sales/getShopSales' : 'sales/getSales') . ($warehouse_id ? '/' . $warehouse_id : '') . '?sid='.$sid.'&v=1' . ($this->input->get('shop') ? '&shop=' . $this->input->get('shop') : '') . ($this->input->get('attachment') ? '&attachment=' . $this->input->get('attachment') : '') . ($this->input->get('delivery') ? '&delivery=' . $this->input->get('delivery') : '') . ($this->input->get('sale_status') ? '&sale_status=' . urlencode($this->input->get('sale_status')) : '') . ($this->input->get('from_date')  ? '&from_date='  . urlencode($this->input->get('from_date'))  : '') . ($this->input->get('to_date')    ? '&to_date='    . urlencode($this->input->get('to_date'))    : '')); ?>',
+            'sAjaxSource': '<?=admin_url((isset($is_shop_sales) && $is_shop_sales ? 'sales/getShopSales' : 'sales/getSales') . ($warehouse_id ? '/' . $warehouse_id . '?' : '?all=1&') . 'sid='.$sid.'&v=1' . ($this->input->get('shop') ? '&shop=' . $this->input->get('shop') : '') . ($this->input->get('attachment') ? '&attachment=' . $this->input->get('attachment') : '') . ($this->input->get('delivery') ? '&delivery=' . $this->input->get('delivery') : '') . ($this->input->get('sale_status') ? '&sale_status=' . urlencode($this->input->get('sale_status')) : '') . ($this->input->get('from_date')  ? '&from_date='  . urlencode($this->input->get('from_date'))  : '') . ($this->input->get('to_date')    ? '&to_date='    . urlencode($this->input->get('to_date'))    : '')); ?>',
             'fnServerData': function (sSource, aoData, fnCallback) {
                 aoData.push({
                     "name": "<?=$this->security->get_csrf_token_name()?>",
@@ -270,7 +270,7 @@
                 <li class="dropdown">
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#"><i class="icon fa fa-building-o tip" data-placement="left" title="<?= lang('warehouses') ?>"></i></a>
                     <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
-                        <li><a href="<?= admin_url('sales') ?>"><i class="fa fa-building-o"></i> <?= !empty($canAccessOverseas) ? 'All Local Warehouses' : lang('all_warehouses') ?></a></li>
+                        <li><a href="<?= admin_url('sales?all=1') ?>"><i class="fa fa-building-o"></i> <?= !empty($canAccessOverseas) ? 'All Local Warehouses' : lang('all_warehouses') ?></a></li>
                         <li class="divider"></li>
                         <?php foreach ($warehouses as $wh) {
                             echo '<li ' . ($warehouse_id && $warehouse_id == $wh->id ? 'class="active"' : '') . '><a href="' . admin_url('sales/' . $wh->id) . '"><i class="fa fa-building"></i>' . $wh->name . '</a></li>';

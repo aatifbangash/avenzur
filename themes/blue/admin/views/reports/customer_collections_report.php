@@ -6,7 +6,7 @@ $filter_from        = '';
 $filter_to          = '';
 $filter_customer_id = !empty($filters['customer_id']) ? $filters['customer_id'] : '';
 $filter_sales_agent = isset($filters['sales_agent']) ? (string) $filters['sales_agent'] : '';
-$filter_warehouse_id = !empty($filters['warehouse_id']) ? $filters['warehouse_id'] : '';
+$filter_warehouse_id = $filters['warehouse_id'] ?? '';
 if (!empty($filters['from_date'])) {
     $d = DateTime::createFromFormat('Y-m-d', $filters['from_date']);
     $filter_from = $d ? $d->format('d/m/Y') : $filters['from_date'];
@@ -94,7 +94,7 @@ $base_url    = admin_url('reports/customer_collections_report') . ($base_qs ? '?
                     </div>
                 </div>
 
-                <?php $this->load->view($this->theme . 'reports/partials/warehouse_filter_field', ['wh_col' => 'col-md-2']); ?>
+                <?php $this->load->view($this->theme . 'reports/partials/warehouse_filter_field', ['wh_col' => 'col-md-2', 'wh_val' => $filter_warehouse_id]); ?>
 
                 <div class="col-md-3" style="padding-top:22px;">
                     <button type="submit" class="btn btn-primary btn-sm"><i class="fa fa-filter"></i> Filter</button>
