@@ -603,6 +603,30 @@ class Site extends CI_Model
         }
     }
 
+    /**
+     * Product listing scope for DataTables (same rules as applyProductScopeFilter).
+     * Overseas warehouse: show tagged products even with zero stock.
+     * Local / all warehouses: hide overseas products unless user can access OSW001.
+     */
+    public function applyProductScopeToDatatables($datatables, $warehouse_id)
+    {
+        $osw_id = $this->getOverseasWarehouseId();
+        if (!$osw_id) {
+            return $datatables;
+        }
+        $prefix = $this->db->dbprefix('products');
+        if ($warehouse_id) {
+            if ((int) $warehouse_id === $osw_id) {
+                $datatables->where($prefix . '.warehouse', $osw_id);
+            } else {
+                $datatables->where("({$prefix}.warehouse IS NULL OR {$prefix}.warehouse = 0 OR {$prefix}.warehouse != {$osw_id})", null, false);
+            }
+        } elseif (!$this->canAccessOverseasWarehouse()) {
+            $datatables->where("({$prefix}.warehouse IS NULL OR {$prefix}.warehouse = 0 OR {$prefix}.warehouse != {$osw_id})", null, false);
+        }
+        return $datatables;
+    }
+
     public function validateProductWarehouseScope($warehouse_id, $product_ids)
     {
         if (empty($product_ids)) {
