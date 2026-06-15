@@ -8,7 +8,7 @@
         "iDisplayLength": <?= $Settings->rows_per_page ?>,
         'bProcessing': true, 
         'bServerSide': true,
-        'sAjaxSource': '<?= admin_url('quotes/getQuotes' . ($warehouse_id ? '/' . $warehouse_id : '')) ?>',
+        'sAjaxSource': '<?= admin_url('quotes/getQuotes' . ($warehouse_id ? '/' . $warehouse_id : '?all=1')) ?>',
         'fnServerData': function (sSource, aoData, fnCallback) {
             aoData.push({
                 "name": "<?= $this->security->get_csrf_token_name() ?>",
@@ -245,7 +245,7 @@ localStorage.removeItem('remove_slls');
                 <li class="dropdown">
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#"><i class="icon fa fa-building-o tip" data-placement="left" title="<?= lang('warehouses') ?>"></i></a>
                     <ul class="dropdown-menu pull-right" class="tasks-menus" role="menu" aria-labelledby="dLabel">
-                        <li><a href="<?= admin_url('quotes') ?>"><i class="fa fa-building-o"></i> <?= !empty($canAccessOverseas) ? 'All Local Warehouses' : lang('all_warehouses') ?></a></li>
+                        <li><a href="<?= admin_url('quotes?all=1') ?>"><i class="fa fa-building-o"></i> <?= !empty($canAccessOverseas) ? 'All Local Warehouses' : lang('all_warehouses') ?></a></li>
                         <li class="divider"></li>
                         <?php foreach ($warehouses as $warehouse) {
                             echo '<li><a href="' . admin_url('quotes/' . $warehouse->id) . '"><i class="fa fa-building"></i>' . $warehouse->name . '</a></li>';

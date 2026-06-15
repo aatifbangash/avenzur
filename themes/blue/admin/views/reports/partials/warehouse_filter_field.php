@@ -1,6 +1,12 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed');
 $wh_field = $wh_field ?? 'warehouse_id';
 $wh_val = $wh_val ?? ($warehouse_id ?? ($warehouse ?? ($pharmacy_id ?? '')));
+if (($wh_val === '' || $wh_val === null)
+    && !array_key_exists($wh_field, $_GET)
+    && !array_key_exists($wh_field, $_POST)
+    && !$this->site->listingShowsAllLocalWarehouses()) {
+    $wh_val = $this->site->getDefaultListingWarehouseId();
+}
 $wh_col = $wh_col ?? 'col-md-3';
 $wh_label = $wh_label ?? (!empty($canAccessOverseas) ? 'All Local Warehouses' : lang('all_warehouses'));
 if (empty($warehouses)) {

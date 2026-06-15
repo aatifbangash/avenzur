@@ -35,7 +35,7 @@
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#"><i class="icon fa fa-building-o tip"
                             data-placement="left" title="<?= lang('warehouses') ?>"></i></a>
                     <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
-                        <li><a href="<?= admin_url('purchases') ?>"><i class="fa fa-building-o"></i>
+                            <li><a href="<?= admin_url('purchases?all=1') ?>"><i class="fa fa-building-o"></i>
                                 <?= !empty($canAccessOverseas) ? 'All Local Warehouses' : lang('all_warehouses') ?></a></li>
                         <li class="divider"></li>
                         <?php

@@ -5,7 +5,7 @@
 $filter_from        = '';
 $filter_to          = '';
 $filter_supplier_id = !empty($filters['supplier_id']) ? $filters['supplier_id'] : '';
-$filter_warehouse_id = !empty($filters['warehouse_id']) ? $filters['warehouse_id'] : '';
+$filter_warehouse_id = $filters['warehouse_id'] ?? '';
 if (!empty($filters['from_date'])) {
     $d = DateTime::createFromFormat('Y-m-d', $filters['from_date']);
     $filter_from = $d ? $d->format('d/m/Y') : $filters['from_date'];

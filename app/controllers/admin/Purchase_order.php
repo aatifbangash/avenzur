@@ -1315,6 +1315,8 @@ class Purchase_order extends MY_Controller
         //ini_set('display_errors', 1); 
 
         //$this->sma->checkPermissions();
+        $this->site->redirectDefaultListingWarehouseIfNeeded($warehouse_id, 'purchase_order');
+
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
             $this->data['warehouses'] = $this->site->getAllWarehouses();

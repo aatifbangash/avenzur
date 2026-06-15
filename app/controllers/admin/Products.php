@@ -8156,15 +8156,30 @@ error_reporting(E_ALL);
         echo 'Rows found in database : ' . $total_found.'<br />';
     }
 
+    /**
+     * Product list warehouse: default = Settings default warehouse (Al Rawabi).
+     * Pass ?all=1 to keep the previous "all local warehouses" view.
+     */
+    private function resolveProductsListingWarehouseId($warehouse_id = null)
+    {
+        return $this->site->resolveListingWarehouseId($warehouse_id);
+    }
+
+    private function productsListingAjaxUrl($warehouse_id, $supplier = null)
+    {
+        $url = admin_url('products/getProducts') . $this->site->listingWarehouseUrlSuffix($warehouse_id);
+        if ($supplier) {
+            $url .= (strpos($url, '?') === false ? '?' : '&') . 'supplier=' . (int) $supplier->id;
+        }
+        return $url;
+    }
+
     public function getProducts($warehouse_id = null)
     {
         $this->sma->checkPermissions('index', true);
         $supplier = $this->input->get('supplier') ? $this->input->get('supplier') : null;
 
-        if ((!$this->Owner && !$this->Admin) && !$warehouse_id) {
-            $user = $this->site->getUser();
-            $warehouse_id = $user->warehouse_id;
-        }
+        $warehouse_id = $this->resolveProductsListingWarehouseId($warehouse_id);
         $detail_link = anchor('admin/products/view/$1', '<i class="fa fa-file-text-o"></i> ' . lang('product_details'));
         $delete_link = "<a href='#' class='tip po' title='<b>" . $this->lang->line('delete_product') . "</b>' data-content=\"<p>"
             . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete1' id='a__$1' href='" . admin_url('products/delete/$1') . "'>"
@@ -8761,6 +8776,12 @@ error_reporting(E_ALL);
     {
         //$this->sma->checkPermissions();
 
+        if (!$warehouse_id && $this->input->get('all') != '1') {
+            if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
+                admin_redirect('products/' . $this->site->getDefaultListingWarehouseId());
+            }
+        }
+
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
             $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -8773,6 +8794,7 @@ error_reporting(E_ALL);
         }
 
         $this->data['supplier'] = $this->input->get('supplier') ? $this->site->getCompanyByID($this->input->get('supplier')) : null;
+        $this->data['products_ajax_url'] = $this->productsListingAjaxUrl($this->data['warehouse_id'], $this->data['supplier']);
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('products')]];
         $meta = ['page_title' => lang('products'), 'bc' => $bc];
         $this->page_construct('products/index', $meta, $this->data);
@@ -8781,6 +8803,12 @@ error_reporting(E_ALL);
     {
         //$this->sma->checkPermissions();
 
+        if (!$warehouse_id && $this->input->get('all') != '1') {
+            if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
+                admin_redirect('products/list_products/' . $this->site->getDefaultListingWarehouseId());
+            }
+        }
+
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
             $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -8793,6 +8821,7 @@ error_reporting(E_ALL);
         }
 
         $this->data['supplier'] = $this->input->get('supplier') ? $this->site->getCompanyByID($this->input->get('supplier')) : null;
+        $this->data['products_ajax_url'] = $this->productsListingAjaxUrl($this->data['warehouse_id'], $this->data['supplier']);
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('products')]];
         $meta = ['page_title' => lang('products'), 'bc' => $bc];
         $this->page_construct('products/list_products', $meta, $this->data);

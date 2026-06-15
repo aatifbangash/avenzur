@@ -20,7 +20,7 @@
 <script>
     $(document).ready(function() {
 
-        $("#warehouse").select2().select2('val', <?= $warehouse; ?>);
+        $("#warehouse").select2().select2('val', <?= json_encode($warehouse ?? ''); ?>);
         $('#warehouse').select2().trigger('change');
     });
 </script>
@@ -94,7 +94,7 @@
                                 }
 
                                 ?>
-                                <?php echo form_dropdown('warehouse', $optionsWarehouse, set_value('warehouse'), array('class' => 'form-control disable-select'), array('none')); ?>
+                                <?php echo form_dropdown('warehouse', $optionsWarehouse, ($warehouse ?? ''), array('class' => 'form-control disable-select'), array('none')); ?>
 
                             </div>
                         </div>

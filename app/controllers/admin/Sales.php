@@ -3758,6 +3758,7 @@ class Sales extends MY_Controller
     public function getEcommerceSales($warehouse_id = null){
        
         //  echo '<pre>'; print_r($this->input->post()); exit; 
+        $warehouse_id = $this->site->resolveListingWarehouseId($warehouse_id);
         $keyword=  trim($this->input->post('keyword'));  
         $this->sma->checkPermissions('index');
 
@@ -3924,6 +3925,7 @@ class Sales extends MY_Controller
     public function getSales($warehouse_id = null)
     {
         $this->sma->checkPermissions('index');
+        $warehouse_id = $this->site->resolveListingWarehouseId($warehouse_id);
         $sid = $this->input->get('sid');
         if ((!$this->Owner && !$this->Admin && !$this->GP['sales-index']) && !$warehouse_id) {
             $user         = $this->site->getUser();
@@ -4117,6 +4119,7 @@ class Sales extends MY_Controller
         public function getShopSales($warehouse_id = null)
         {
             $this->sma->checkPermissions('index');
+            $warehouse_id = $this->site->resolveListingWarehouseId($warehouse_id);
             $sid = $this->input->get('sid');
             if ((!$this->Owner && !$this->Admin && !$this->GP['sales-index']) && !$warehouse_id) {
                 $user         = $this->site->getUser();
@@ -4335,6 +4338,8 @@ class Sales extends MY_Controller
     {
         //$this->sma->checkPermissions();
 
+        $this->site->redirectDefaultListingWarehouseIfNeeded($warehouse_id, 'sales');
+
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
             $this->data['warehouses']   = $this->site->getAllWarehouses();
@@ -4356,6 +4361,8 @@ class Sales extends MY_Controller
 
     public function completed_sales($warehouse_id = null)
     {
+        $this->site->redirectDefaultListingWarehouseIfNeeded($warehouse_id, 'sales/completed_sales');
+
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
             $this->data['warehouses']   = $this->site->getAllWarehouses();
@@ -4374,6 +4381,7 @@ class Sales extends MY_Controller
 
     public function getCompletedSales($warehouse_id = null)
     {
+        $warehouse_id = $this->site->resolveListingWarehouseId($warehouse_id);
         $sid = $this->input->get('sid');
 
         if (!$this->Owner && !$this->Admin) {
@@ -4454,6 +4462,8 @@ class Sales extends MY_Controller
     {
         //$this->sma->checkPermissions();
 
+        $this->site->redirectDefaultListingWarehouseIfNeeded($warehouse_id, 'sales/shop_sales');
+
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
             $this->data['warehouses']   = $this->site->getAllWarehouses();
@@ -4476,6 +4486,8 @@ class Sales extends MY_Controller
     public function ecommerce($warehouse_id = null)
     {
         //$this->sma->checkPermissions();
+
+        $this->site->redirectDefaultListingWarehouseIfNeeded($warehouse_id, 'sales/ecommerce');
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {

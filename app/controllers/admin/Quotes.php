@@ -1487,6 +1487,7 @@ class Quotes extends MY_Controller
 
     public function getQuotes($warehouse_id = null)
     {
+        $warehouse_id = $this->site->resolveListingWarehouseId($warehouse_id);
         //$this->sma->checkPermissions('index');
 
         if (!$this->Owner && !$this->Admin && empty($this->GP['quotes-index']) && !$warehouse_id) {
@@ -1556,6 +1557,8 @@ class Quotes extends MY_Controller
     public function index($warehouse_id = null)
     {
         //$this->sma->checkPermissions();
+
+        $this->site->redirectDefaultListingWarehouseIfNeeded($warehouse_id, 'quotes');
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
