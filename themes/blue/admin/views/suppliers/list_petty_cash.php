@@ -33,8 +33,9 @@
                             <tr>
                                 <th>#</th>
                                 <th><?php echo $this->lang->line('Reference No.'); ?></th>
-                                <th><?php echo $this->lang->line('Payment Amount') ?></th>
+                                <th><?php echo $this->lang->line('Amount') ?></th>
                                 <th><?php echo $this->lang->line('VAT Amount') ?></th>
+                                <th><?php echo $this->lang->line('Total') ?></th>
                                 <th><?php echo $this->lang->line('Date') ?></th>
                                 <th><?php echo $this->lang->line('Actions') ?></th>
                             </tr>
@@ -48,8 +49,9 @@
                                             <tr>
                                                 <td><?= $count; ?></td>
                                                 <td><?= $entry->reference_no; ?></td>
-                                                <td><?= number_format($entry->payment_amount - $entry->vat_value, 2); ?> SAR</td>
-                                                <td><?= number_format($entry->vat_value, 2); ?> SAR</td>
+                                                <td><?= number_format((float) $entry->lines_net_total, 2); ?> SAR</td>
+                                                <td><?= number_format((float) $entry->lines_vat_total, 2); ?> SAR</td>
+                                                <td><?= number_format((float) $entry->lines_grand_total, 2); ?> SAR</td>
                                                 <td><?= date('d/m/Y', strtotime($entry->date)); ?></td>
                                                 <td>
                                                     <a href="<?php echo admin_url('suppliers/petty_cash_pdf/' . $entry->id); ?>" class="tip" title="Download PDF">

@@ -15,9 +15,69 @@
 .add-service-btn {
     margin-bottom: 15px;
 }
+.petty-cash-vat-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+.petty-cash-vat-cell .vat-rate.form-control {
+    display: inline-block;
+    width: auto;
+    min-width: 3.75rem;
+    flex: 0 0 auto;
+    padding: 6px 2px 6px 4px;
+    height: 34px;
+    font-size: 12px;
+    line-height: 1.4;
+}
+.petty-cash-vat-cell .vat {
+    flex: 1;
+    min-width: 70px;
+    padding: 4px 8px;
+    font-size: 12px;
+}
+#pettyCashTable th.col-amount,
+#pettyCashTable td:nth-child(7),
+#pettyCashTable th.col-total,
+#pettyCashTable td:nth-child(9) {
+    min-width: 110px;
+    width: 110px;
+}
+#pettyCashTable .amount,
+#pettyCashTable .vat,
+#pettyCashTable .total {
+    min-width: 100px;
+    text-align: right;
+    font-size: 12px;
+    padding: 6px 8px;
+}
 </style>
 <script>
     $(document).ready(function () {
+        function refreshPettyCashReference() {
+            var dateVal = $('#podate').val();
+            if (!dateVal) {
+                return;
+            }
+            $.get('<?= admin_url('suppliers/next_petty_cash_reference'); ?>', { date: dateVal }, function (res) {
+                if (res && res.reference_no) {
+                    $('#poref').val(res.reference_no);
+                }
+            }, 'json');
+        }
+
+        $('#podate').on('change changeDate', refreshPettyCashReference);
+
+        function normalizePettyCashVatRate($context) {
+            $context.find('.vat-rate').addClass('skip').each(function () {
+                var $el = $(this);
+                if ($el.data('select2')) {
+                    $el.select2('destroy');
+                }
+            });
+        }
+
         // Initialize with one row
         if ($('#pettyCashTable tbody tr').length === 0) {
             addServiceRow();
@@ -134,7 +194,7 @@
                         <input type="text" class="form-control vat-number" name="vat_number[]" placeholder="VAT Number">
                     </td>
                     <td>
-                        <input type="text" class="form-control description" name="description[]" placeholder="Discretion">
+                        <input type="text" class="form-control description" name="description[]" placeholder="Description">
                     </td>
                     <td>
                         <select class="form-control ledger-account" name="ledger_account[]" required>
@@ -144,16 +204,12 @@
                     <td>
                         <input type="number" step="0.01" class="form-control amount" name="amount[]" placeholder="0.00" required>
                     </td>
-                    <td>
-                        <div style="margin-bottom: 5px;">
-                            <select class="form-control vat-rate" name="vat_rate[]" style="margin-bottom: 3px;">
-                                <option value="0">0%</option>
-                                <option value="15" selected>15%</option>
-                            </select>
-                        </div>
-                        <div>
-                            <input type="number" step="0.01" class="form-control vat" name="vat[]" placeholder="0.00" readonly style="font-size: 12px; padding: 4px 8px;">
-                        </div>
+                    <td class="petty-cash-vat-cell">
+                        <select class="form-control skip vat-rate" name="vat_rate[]">
+                            <option value="0">0%</option>
+                            <option value="15" selected>15%</option>
+                        </select>
+                        <input type="number" step="0.01" class="form-control vat" name="vat[]" placeholder="0.00" readonly>
                     </td>
                     <td>
                         <input type="number" step="0.01" class="form-control total" name="total[]" placeholder="0.00" readonly>
@@ -166,6 +222,7 @@
                 </tr>
             `;
             $('#pettyCashTable tbody').append(newRow);
+            normalizePettyCashVatRate($('#pettyCashTable tbody tr:last'));
             // Calculate totals for the new row
             calculateRowTotals($('#pettyCashTable tbody tr:last'));
             // Ensure VAT rate is set to 15 for new rows
@@ -247,7 +304,7 @@
                             <input type="text" class="form-control vat-number" name="vat_number[]" placeholder="VAT Number" value="${entry.vat_number || ''}">
                         </td>
                         <td>
-                            <input type="text" class="form-control description" name="description[]" placeholder="Discretion" value="${entry.description || ''}">
+                            <input type="text" class="form-control description" name="description[]" placeholder="Description" value="${entry.description || ''}">
                         </td>
                         <td>
                             <select class="form-control ledger-account" name="ledger_account[]" required>
@@ -257,16 +314,12 @@
                         <td>
                             <input type="number" step="0.01" class="form-control amount" name="amount[]" placeholder="0.00" value="${(entry.payment_amount - entry.vat).toFixed(2)}" required>
                         </td>
-                        <td>
-                            <div style="margin-bottom: 5px;">
-                                <select class="form-control vat-rate" name="vat_rate[]" required style="margin-bottom: 3px;">
-                                    <option value="0" ${vatRate === 0 ? 'selected' : ''}>0%</option>
-                                    <option value="15" ${vatRate !== 0 ? 'selected' : ''}>15%</option>
-                                </select>
-                            </div>
-                            <div>
-                                <input type="number" step="0.01" class="form-control vat" name="vat[]" placeholder="0.00" value="${entry.vat.toFixed(2)}" readonly style="font-size: 12px; padding: 4px 8px;">
-                            </div>
+                        <td class="petty-cash-vat-cell">
+                            <select class="form-control skip vat-rate" name="vat_rate[]" required>
+                                <option value="0" ${vatRate === 0 ? 'selected' : ''}>0%</option>
+                                <option value="15" ${vatRate !== 0 ? 'selected' : ''}>15%</option>
+                            </select>
+                            <input type="number" step="0.01" class="form-control vat" name="vat[]" placeholder="0.00" value="${entry.vat.toFixed(2)}" readonly>
                         </td>
                         <td>
                             <input type="number" step="0.01" class="form-control total" name="total[]" placeholder="0.00" value="${entry.payment_amount.toFixed(2)}" readonly>
@@ -279,12 +332,12 @@
                     </tr>
                 `;
                 $('#pettyCashTable tbody').append(newRow);
-                
-                // Set the VAT rate select value explicitly
                 var lastRow = $('#pettyCashTable tbody tr:last');
+                normalizePettyCashVatRate(lastRow);
                 lastRow.find('.vat-rate').val(vatRate);
             });
 
+            normalizePettyCashVatRate($('#pettyCashTable'));
             // Calculate totals for all existing rows
             $('#pettyCashTable tbody tr').each(function() {
                 calculateRowTotals($(this));
@@ -294,10 +347,16 @@
 
         // Calculate totals for initial row on page load
         $(document).ready(function() {
+            normalizePettyCashVatRate($('#pettyCashTable'));
             $('#pettyCashTable tbody tr').each(function() {
                 calculateRowTotals($(this));
             });
         });
+
+        // Run after global select2 init in core.js
+        setTimeout(function () {
+            normalizePettyCashVatRate($('#pettyCashTable'));
+        }, 0);
     });
 </script>
 
@@ -348,37 +407,41 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             <?= lang('reference_no', 'poref'); ?>
-                            <?php echo form_input('reference_no', ($memo_data->reference_no ?? ''), 'class="form-control input-tip" id="poref" required="required"'); ?>
+                            <?php
+                            $ref_value = $memo_data->reference_no ?? ($next_reference_no ?? '');
+                            echo form_input(
+                                'reference_no',
+                                $ref_value,
+                                'class="form-control input-tip" id="poref" readonly="readonly"'
+                            );
+                            ?>
                         </div>
                     </div>
                 </div>
 
-                <!-- Description Field -->
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <?= lang('description', 'description'); ?>
-                            <?php echo form_textarea('note', ($memo_data->description ?? ''), 'class="form-control" id="description" rows="3" placeholder="Enter description"'); ?>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Main Supplier Selection -->
+                <!-- Petty Cash ledger (supplier is fixed to Petty Cash SUP-00265) -->
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <?= lang('Main Supplier', 'main_supplier'); ?>
-                            <select class="form-control" name="main_supplier_id" id="main_supplier">
-                                <option value="">Select Main Supplier</option>
-                                <?php foreach ($suppliers as $supplier): ?>
-                                    <option value="<?= $supplier->id ?>" <?= (isset($memo_data->main_supplier_id) && $memo_data->main_supplier_id == $supplier->id) ? 'selected' : '' ?>>
-                                        <?= $supplier->name ?>
+                            <?= lang('ledger_account', 'petty_cash_ledger_id'); ?>
+                            <select class="form-control select" name="petty_cash_ledger_id" id="petty_cash_ledger_id" required="required">
+                                <option value=""><?= lang('select') . ' ' . lang('ledger_account'); ?></option>
+                                <?php
+                                $selected_petty_ledger = isset($memo_data->ledger_account) ? (int) $memo_data->ledger_account : 0;
+                                $petty_ledger_ids = array_map(function ($l) { return (int) $l->id; }, $petty_cash_ledgers ?? []);
+                                if ($selected_petty_ledger && !in_array($selected_petty_ledger, $petty_ledger_ids, true)) {
+                                    $selected_petty_ledger = 0;
+                                }
+                                foreach ($petty_cash_ledgers ?? [] as $ledger): ?>
+                                    <option value="<?= (int) $ledger->id ?>" <?= $selected_petty_ledger === (int) $ledger->id ? 'selected' : '' ?>>
+                                        <?= $ledger->code ? $ledger->code . ' — ' : '' ?><?= $ledger->name ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
                 </div>
+                <input type="hidden" name="main_supplier_id" value="<?= (int) ($petty_cash_supplier_id ?? 0) ?>">
 
                 <!-- Service Invoice Table -->
                 <div class="row">
@@ -397,11 +460,11 @@
                                         <th style="width: 12%;">Supplier Name</th>
                                         <th style="width: 10%;">Invoice No.</th>
                                         <th style="width: 10%;">VAT Number</th>
-                                        <th style="width: 12%;">Discretion</th>
+                                        <th style="width: 12%;">Description</th>
                                         <th style="width: 12%;">Ledger Account</th>
-                                        <th style="width: 8%;">Amount</th>
+                                        <th class="col-amount">Amount</th>
                                         <th style="width: 10%;">VAT Rate & Amount</th>
-                                        <th style="width: 8%;">Total</th>
+                                        <th class="col-total">Total</th>
                                         <th class="text-center" style="width: 5%;">Action</th>
                                     </tr>
                                 </thead>

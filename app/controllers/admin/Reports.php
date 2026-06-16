@@ -4596,14 +4596,14 @@ class Reports extends MY_Controller
             $html = $this->load->view($this->theme . 'reports/customers_statement', $this->data, true);
 
             // Use mPDF directly like sales/pdf_new
-            $mpdf = new Mpdf([
+            $mpdf = new Mpdf(mpdf_config([
                 'format' => 'A4',           // Portrait A4
                 'orientation' => 'P',       // Explicitly set Portrait
                 'margin_top' => 10,         // Smaller margins for statement
                 'margin_bottom' => 10,
                 'margin_left' => 10,
                 'margin_right' => 10,
-            ]);
+            ]));
 
             $mpdf->WriteHTML($html);
             $mpdf->Output($name, "D"); // Force download
@@ -4782,14 +4782,14 @@ class Reports extends MY_Controller
             $html = $this->load->view($this->theme . 'reports/general_ledger_statement', $this->data, true);
 
             // Use mPDF directly like sales/pdf_new
-            $mpdf = new Mpdf([
+            $mpdf = new Mpdf(mpdf_config([
                 'format' => 'A4',           // Portrait A4
                 'orientation' => 'P',       // Explicitly set Portrait
                 'margin_top' => 10,         // Smaller margins for statement
                 'margin_bottom' => 10,
                 'margin_left' => 10,
                 'margin_right' => 10,
-            ]);
+            ]));
 
             $mpdf->WriteHTML($html);
             $mpdf->Output($name, "D"); // Force download
@@ -7146,8 +7146,23 @@ class Reports extends MY_Controller
             $start_date = $from_date ? $this->sma->fld(explode(' ', trim($from_date))[0] . ' 00:00:00') : null;
             $end_date   = $to_date   ? $this->sma->fld(explode(' ', trim($to_date))[0]   . ' 23:59:59') : null;
 
-            $gl_report_array = $this->reports_model->getGLReport($start_date, $end_date);
-            $this->data['gl_report'] = $gl_report_array;
+            $bulk_export = ($export_excel || $viewtype == 'pdf');
+            if ($bulk_export) {
+                @set_time_limit(600);
+                if (function_exists('ini_set')) {
+                    @ini_set('memory_limit', '256M');
+                }
+                $gl_result = $this->reports_model->getGLReport($start_date, $end_date, null, 0);
+                $this->data['gl_report'] = $gl_result['rows'];
+                $this->data['gl_report_totals'] = $gl_result['totals'];
+            } else {
+                $gl_result = $this->reports_model->getGLReport($start_date, $end_date, 0, 0);
+                $this->data['gl_report_totals'] = $gl_result['totals'];
+                $this->data['gl_report_total'] = $gl_result['total'];
+                $this->data['gl_load_table'] = ($gl_result['total'] > 0);
+            }
+
+            $gl_report_array = isset($this->data['gl_report']) ? $this->data['gl_report'] : [];
 
             // ── Server-side Excel export (ALL rows, not just current page) ──
             if ($export_excel) {
@@ -7169,18 +7184,24 @@ class Reports extends MY_Controller
                 $sheet->SetCellValue('L1', lang('userid'));
 
                 $row         = 2;
-                $total_debit = 0;
-                $total_credit = 0;
+                $total_debit = (float) $gl_result['totals']->total_debit;
+                $total_credit = (float) $gl_result['totals']->total_credit;
                 $count       = 0;
+                $last_data_row = 1;
                 foreach ((array)$gl_report_array as $r) {
                     $count++;
-                    $total_debit  += $r->debit;
-                    $total_credit += $r->credit;
                     $sheet->SetCellValue('A' . $row, $count);
                     $sheet->SetCellValue('B' . $row, $r->voucher);
                     $sheet->SetCellValue('C' . $row, $r->voucher_id);
                     $sheet->SetCellValue('D' . $row, $r->trx_id);
-                    $sheet->SetCellValue('E' . $row, $r->date);
+                    if (!empty($r->entry_date)) {
+                        $sheet->SetCellValue(
+                            'E' . $row,
+                            \PhpOffice\PhpSpreadsheet\Shared\Date::PHPToExcel(new DateTime($r->entry_date))
+                        );
+                    } else {
+                        $sheet->SetCellValue('E' . $row, $r->date);
+                    }
                     $sheet->SetCellValue('F' . $row, $r->reference);
                     $sheet->SetCellValue('G' . $row, $r->account_number);
                     $sheet->SetCellValue('H' . $row, $r->account_name);
@@ -7188,7 +7209,13 @@ class Reports extends MY_Controller
                     $sheet->SetCellValue('J' . $row, $r->debit  > 0 ? (float)$r->debit  : 0);
                     $sheet->SetCellValue('K' . $row, $r->credit > 0 ? (float)$r->credit : 0);
                     $sheet->SetCellValue('L' . $row, $r->user_id);
+                    $last_data_row = $row;
                     $row++;
+                }
+                if ($last_data_row >= 2) {
+                    $sheet->getStyle('E2:E' . $last_data_row)
+                        ->getNumberFormat()
+                        ->setFormatCode('dd-mmm-yy');
                 }
                 // Totals row
                 $sheet->SetCellValue('A' . $row, '');
@@ -7216,6 +7243,81 @@ class Reports extends MY_Controller
         } else {
             $this->page_construct('reports/gl_report', $meta, $this->data);
         }
+    }
+
+    public function get_gl_report()
+    {
+        $from_date = $this->input->post('from_date') ?: $this->input->get('from_date');
+        $to_date = $this->input->post('to_date') ?: $this->input->get('to_date');
+        $start_date = $from_date ? $this->sma->fld(explode(' ', trim($from_date))[0] . ' 00:00:00') : null;
+        $end_date = $to_date ? $this->sma->fld(explode(' ', trim($to_date))[0] . ' 23:59:59') : null;
+
+        $offset = (int) $this->input->post('iDisplayStart');
+        $limit = (int) $this->input->post('iDisplayLength');
+        if ($limit <= 0) {
+            $limit = 100;
+        }
+        if ($limit > 500) {
+            $limit = 500;
+        }
+        $search = trim((string) $this->input->post('sSearch'));
+
+        $gl_result = $this->reports_model->getGLReport($start_date, $end_date, $limit, $offset, $search);
+
+        $aaData = [];
+        $row_num = $offset;
+        foreach ($gl_result['rows'] as $row) {
+            $row_num++;
+            $aaData[] = [
+                $row_num,
+                $row->voucher,
+                $this->gl_report_voucher_link($row),
+                '<a href="' . admin_url('entries/view/journal/' . $row->trx_id) . '" target="_blank">' . $row->trx_id . '</a>',
+                $row->date,
+                $row->reference,
+                $row->account_number,
+                $row->account_name,
+                $row->description,
+                $row->debit > 0 ? $this->sma->formatNumber($row->debit) : '0',
+                $row->credit > 0 ? $this->sma->formatNumber($row->credit) : '0',
+                $row->user_id,
+            ];
+        }
+
+        $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode([
+                'sEcho' => (int) $this->input->post('sEcho'),
+                'iTotalRecords' => (int) $gl_result['total'],
+                'iTotalDisplayRecords' => (int) $gl_result['filtered_total'],
+                'aaData' => $aaData,
+            ]));
+    }
+
+    private function gl_report_voucher_link($row)
+    {
+        $link = '';
+        if ($row->voucher == 'Sales Invoice') {
+            $link = admin_url('sales?sid=' . $row->voucher_id);
+        } elseif ($row->voucher == 'Purchase Invoice') {
+            $link = admin_url('purchases?pid=' . $row->voucher_id);
+        } elseif ($row->voucher == 'Sales Return') {
+            $link = admin_url('returns?rid=' . $row->voucher_id);
+        } elseif ($row->voucher == 'Credit Note') {
+            $link = admin_url('customers/view_credit_memo/' . $row->voucher_id);
+        } elseif ($row->voucher == 'Debit Note') {
+            $link = admin_url('suppliers/view_debit_memo/' . $row->voucher_id);
+        } elseif ($row->voucher == 'Supplier Payment') {
+            $link = admin_url('suppliers/view_payment/' . $row->voucher_id);
+        } elseif ($row->voucher == 'Collection' || $row->voucher == 'Customer Advance') {
+            $link = admin_url('customers/view_payment/' . $row->voucher_id);
+        }
+
+        if ($link) {
+            return '<a href="' . $link . '" target="_blank">' . $row->voucher_id . '</a>';
+        }
+
+        return $row->voucher_id;
     }
 
     public function collections_by_location(){

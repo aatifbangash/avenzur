@@ -5576,78 +5576,162 @@ class Reports_model extends CI_Model
         return false;
     }
 
-    public function getGLReport($start_date = null, $end_date = null){
-        $where = "";
+    /**
+     * General Ledger report rows.
+     *
+     * Large date ranges return tens of thousands of lines; pass $limit/$offset for UI pagination.
+     * Pass $limit = null for bulk export (Excel/PDF).
+     *
+     * Pass $limit = 0 to skip row fetch (totals/count only).
+     *
+     * @return array{rows: array, total: int, filtered_total: int, totals: stdClass}
+     */
+    public function getGLReport($start_date = null, $end_date = null, $limit = 100, $offset = 0, $search = null)
+    {
+        $where = '';
         if ($start_date && $end_date) {
-            $where = "WHERE DATE(ae.date) BETWEEN '$start_date' AND '$end_date'";
+            $where = 'WHERE ae.date >= ' . $this->db->escape($start_date) . ' AND ae.date <= ' . $this->db->escape($end_date);
         } elseif ($start_date) {
-            $where = "WHERE DATE(ae.date) >= '$start_date'";
+            $where = 'WHERE ae.date >= ' . $this->db->escape($start_date);
         } elseif ($end_date) {
-            $where = "WHERE DATE(ae.date) <= '$end_date'";
+            $where = 'WHERE ae.date <= ' . $this->db->escape($end_date);
         }
 
-        $sql = "SELECT
-                    ae.id as entry_id,
-                    CASE
-                        WHEN ae.pid IS NOT NULL AND ae.pid != '' THEN 'Purchase Invoice'
-                        WHEN ae.sid IS NOT NULL AND ae.sid != '' THEN 'Sales Invoice'
-                        WHEN ae.rid IS NOT NULL AND ae.rid != '' THEN 'Sales Return'
-                        WHEN ae.transaction_type = 'creditmemo' THEN 'Credit Note'
-                        WHEN ae.transaction_type = 'debitmemo' THEN 'Debit Note'
-                        WHEN ae.transaction_type = 'serviceinvoice' THEN 'Service Invoice'
-                        WHEN ae.transaction_type = 'pettycash' THEN 'Petty Cash'
-                        WHEN ae.transaction_type = 'supplierpayment' THEN 'Supplier Payment'
-                        WHEN ae.transaction_type = 'salaries' THEN 'Salaries Voucher'
-                        WHEN ae.transaction_type = 'customerpayment' THEN 'Collection'
-                        WHEN ae.transaction_type = 'customeradvance' THEN 'Customer Advance'
-                        ELSE ae.transaction_type
-                    END as voucher,
-                    CASE
-                        WHEN ae.pid IS NOT NULL AND ae.pid != '' THEN ae.pid
-                        WHEN ae.sid IS NOT NULL AND ae.sid != '' THEN ae.sid
-                        WHEN ae.rid IS NOT NULL AND ae.rid != '' THEN ae.rid
-                        WHEN ae.rsid IS NOT NULL AND ae.rsid != '' THEN ae.rsid
-                        WHEN ae.memo_id IS NOT NULL AND ae.memo_id != '' THEN ae.memo_id
-                        WHEN pr.id IS NOT NULL THEN pr.id
-                        ELSE ae.number
-                    END as voucher_id,
-                    CASE
-                        WHEN ae.pid IS NOT NULL AND ae.pid != '' THEN p.created_by
-                        WHEN ae.sid IS NOT NULL AND ae.sid != '' THEN s.created_by
-                        WHEN ae.rid IS NOT NULL AND ae.rid != '' THEN r.created_by
-                        WHEN ae.rsid IS NOT NULL AND ae.rsid != '' THEN rs.created_by
-                        WHEN pr.id IS NOT NULL THEN pr.created_by
-                        ELSE 0
-                    END as user_id,
-                    DATE_FORMAT(ae.date, '%d-%b-%y') as date,
-                    aei.id as reference,
-                    ae.id as trx_id,
-                    aei.ledger_id,
-                    l.code as account_number,
-                    l.name as account_name,
-                    aei.narration as description,
-                    CASE WHEN aei.dc = 'D' THEN aei.amount ELSE 0 END as debit,
-                    CASE WHEN aei.dc = 'C' THEN aei.amount ELSE 0 END as credit
-                FROM sma_accounts_entries ae
-                LEFT JOIN sma_accounts_entryitems aei ON ae.id = aei.entry_id
-                LEFT JOIN sma_accounts_ledgers l ON aei.ledger_id = l.id
-                LEFT JOIN sma_payment_reference pr ON pr.journal_id = ae.id
-                LEFT JOIN sma_purchases p ON p.id = ae.pid
-                LEFT JOIN sma_sales s ON s.id = ae.sid
-                LEFT JOIN sma_returns r ON r.id = ae.rid
-                LEFT JOIN sma_returns_supplier rs ON rs.id = ae.rsid
-                $where
-                ORDER BY ae.date ASC, ae.id ASC, aei.id ASC";
+        $search_sql = '';
+        if ($search !== null && trim($search) !== '') {
+            $like = '%' . $this->db->escape_like_str(trim($search)) . '%';
+            $search_sql = " AND (
+                l.code LIKE " . $this->db->escape($like) . "
+                OR l.name LIKE " . $this->db->escape($like) . "
+                OR aei.narration LIKE " . $this->db->escape($like) . "
+                OR CAST(ae.id AS CHAR) LIKE " . $this->db->escape($like) . "
+                OR CAST(aei.id AS CHAR) LIKE " . $this->db->escape($like) . "
+                OR ae.number LIKE " . $this->db->escape($like) . "
+            )";
+        }
 
-        $q = $this->db->query($sql);
-        $data = array();
-        if ($q->num_rows() > 0) {
-            foreach (($q->result()) as $row) {
-                $data[] = $row;
+        $count_from = "
+            FROM sma_accounts_entries ae
+            JOIN sma_accounts_entryitems aei ON ae.id = aei.entry_id
+            LEFT JOIN sma_accounts_ledgers l ON aei.ledger_id = l.id
+        ";
+
+        $count_sql = "SELECT COUNT(*) AS gl_cnt {$count_from} {$where}{$search_sql}";
+        $count_row = $this->db->query($count_sql)->row();
+        $filtered_total = $count_row ? (int) $count_row->gl_cnt : 0;
+
+        if ($search_sql !== '') {
+            $total_sql = "SELECT COUNT(*) AS gl_cnt {$count_from} {$where}";
+            $total_row = $this->db->query($total_sql)->row();
+            $total = $total_row ? (int) $total_row->gl_cnt : 0;
+        } else {
+            $total = $filtered_total;
+        }
+
+        $totals_sql = "
+            SELECT
+                COALESCE(SUM(CASE WHEN aei.dc = 'D' THEN aei.amount ELSE 0 END), 0) AS total_debit,
+                COALESCE(SUM(CASE WHEN aei.dc = 'C' THEN aei.amount ELSE 0 END), 0) AS total_credit
+            FROM sma_accounts_entries ae
+            JOIN sma_accounts_entryitems aei ON ae.id = aei.entry_id
+            {$where}
+        ";
+        $totals = $this->db->query($totals_sql)->row();
+        if (!$totals) {
+            $totals = (object) ['total_debit' => 0, 'total_credit' => 0];
+        }
+
+        $skip_rows = ($limit === 0);
+        $unlimited = ($limit === null);
+        $rows = [];
+        if (!$skip_rows) {
+            if (!$unlimited) {
+                $limit = (int) $limit;
+                $offset = (int) $offset;
+                if ($limit < 1) {
+                    $limit = 100;
+                }
+                if ($limit > 5000) {
+                    $limit = 5000;
+                }
+                if ($offset < 0) {
+                    $offset = 0;
+                }
+                $limit_sql = "LIMIT {$limit} OFFSET {$offset}";
+            } else {
+                $limit_sql = '';
             }
+
+            $sql = "SELECT
+                        ae.id as entry_id,
+                        CASE
+                            WHEN ae.pid IS NOT NULL AND ae.pid != '' THEN 'Purchase Invoice'
+                            WHEN ae.sid IS NOT NULL AND ae.sid != '' THEN 'Sales Invoice'
+                            WHEN ae.rid IS NOT NULL AND ae.rid != '' THEN 'Sales Return'
+                            WHEN ae.transaction_type = 'creditmemo' THEN 'Credit Note'
+                            WHEN ae.transaction_type = 'debitmemo' THEN 'Debit Note'
+                            WHEN ae.transaction_type = 'serviceinvoice' THEN 'Service Invoice'
+                            WHEN ae.transaction_type = 'pettycash' THEN 'Petty Cash'
+                            WHEN ae.transaction_type = 'supplierpayment' THEN 'Supplier Payment'
+                            WHEN ae.transaction_type = 'salaries' THEN 'Salaries Voucher'
+                            WHEN ae.transaction_type = 'customerpayment' THEN 'Collection'
+                            WHEN ae.transaction_type = 'customeradvance' THEN 'Customer Advance'
+                            ELSE ae.transaction_type
+                        END as voucher,
+                        CASE
+                            WHEN ae.pid IS NOT NULL AND ae.pid != '' THEN ae.pid
+                            WHEN ae.sid IS NOT NULL AND ae.sid != '' THEN ae.sid
+                            WHEN ae.rid IS NOT NULL AND ae.rid != '' THEN ae.rid
+                            WHEN ae.rsid IS NOT NULL AND ae.rsid != '' THEN ae.rsid
+                            WHEN ae.memo_id IS NOT NULL AND ae.memo_id != '' THEN ae.memo_id
+                            WHEN pr.id IS NOT NULL THEN pr.id
+                            ELSE ae.number
+                        END as voucher_id,
+                        CASE
+                            WHEN ae.pid IS NOT NULL AND ae.pid != '' THEN p.created_by
+                            WHEN ae.sid IS NOT NULL AND ae.sid != '' THEN s.created_by
+                            WHEN ae.rid IS NOT NULL AND ae.rid != '' THEN r.created_by
+                            WHEN ae.rsid IS NOT NULL AND ae.rsid != '' THEN rs.created_by
+                            WHEN pr.id IS NOT NULL THEN pr.created_by
+                            ELSE 0
+                        END as user_id,
+                        DATE_FORMAT(ae.date, '%d-%b-%y') as date,
+                        ae.date as entry_date,
+                        aei.id as reference,
+                        ae.id as trx_id,
+                        aei.ledger_id,
+                        l.code as account_number,
+                        l.name as account_name,
+                        aei.narration as description,
+                        CASE WHEN aei.dc = 'D' THEN aei.amount ELSE 0 END as debit,
+                        CASE WHEN aei.dc = 'C' THEN aei.amount ELSE 0 END as credit
+                    FROM sma_accounts_entries ae
+                    JOIN sma_accounts_entryitems aei ON ae.id = aei.entry_id
+                    LEFT JOIN sma_accounts_ledgers l ON aei.ledger_id = l.id
+                    LEFT JOIN (
+                        SELECT journal_id, MIN(id) AS id, MIN(created_by) AS created_by
+                        FROM sma_payment_reference
+                        WHERE journal_id IS NOT NULL
+                        GROUP BY journal_id
+                    ) pr ON pr.journal_id = ae.id
+                    LEFT JOIN sma_purchases p ON p.id = ae.pid
+                    LEFT JOIN sma_sales s ON s.id = ae.sid
+                    LEFT JOIN sma_returns r ON r.id = ae.rid
+                    LEFT JOIN sma_returns_supplier rs ON rs.id = ae.rsid
+                    {$where}{$search_sql}
+                    ORDER BY ae.date ASC, ae.id ASC, aei.id ASC
+                    {$limit_sql}";
+
+            $q = $this->db->query($sql);
+            $rows = ($q && $q->num_rows() > 0) ? $q->result() : [];
         }
 
-        return $data;
+        return [
+            'rows' => $rows,
+            'total' => $total,
+            'filtered_total' => $filtered_total,
+            'totals' => $totals,
+        ];
     }
 
     public function getCollectionsByLocation($start_date, $end_date, $warehouse)

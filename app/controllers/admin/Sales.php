@@ -4692,11 +4692,11 @@ class Sales extends MY_Controller
             $qr_code = $this->sma->qrcode('link', urlencode(site_url('view/sale/' . $inv->hash)), 2);
         }
 
-        $mpdf = new Mpdf([
+        $mpdf = new Mpdf(mpdf_config([
         'format' => 'A4',
         'margin_top' => 70,
         'margin_bottom' => 70,
-        ]);
+        ]));
 
         $mpdf->SetHTMLHeader('
 <div style="width:100%; font-family: DejaVu Sans, sans-serif; font-size:11px;">
@@ -4853,11 +4853,11 @@ if($inv->warning_note != ""){
            // return $this->sma->generate_pdf($html, $name, $save_bufffer, $this->data['biller']->invoice_footer);
         } else {
             
-            $mpdf = new Mpdf([
+            $mpdf = new Mpdf(mpdf_config([
             'format' => 'A4',
             'margin_top' => 80,
             'margin_bottom' => 70,
-            ]);
+            ]));
 
             $mpdf->SetHTMLHeader('
 <div style="width:100%; font-family: DejaVu Sans, sans-serif; font-size:11px;">
@@ -5082,11 +5082,11 @@ if($inv->warning_note != ""){
            // return $this->sma->generate_pdf($html, $name, $save_bufffer, $this->data['biller']->invoice_footer);
         } else {
             
-            $mpdf = new Mpdf([
+            $mpdf = new Mpdf(mpdf_config([
             'format' => 'A4',
             'margin_top' => 80,
             'margin_bottom' => 70,
-            ]);
+            ]));
 
             $mpdf->SetHTMLHeader('
 <div style="width:100%; font-family: DejaVu Sans, sans-serif; font-size:11px;">
@@ -5415,13 +5415,13 @@ if($inv->warning_note != ""){
             // Generate PDF using mPDF
             $html = $this->load->view($this->theme . 'sales/zatka_invoice_template', $invoice_data, true);
             
-            $mpdf = new Mpdf([
+            $mpdf = new Mpdf(mpdf_config([
                 'format' => 'A4',
                 'margin_top' => 10,
                 'margin_bottom' => 10,
                 'margin_left' => 10,
                 'margin_right' => 10,
-            ]);
+            ]));
 
             $mpdf->WriteHTML($html);
             $mpdf->Output($name, "D");
@@ -6897,14 +6897,14 @@ if($inv->warning_note != ""){
 
         $png_base64 = base64_encode($qr_code);
 
-        $mpdf = new Mpdf([
+        $mpdf = new Mpdf(mpdf_config([
             'mode'         => 'utf-8',
             'format'        => [150, 122], 
             'margin_top'    => 6,
             'margin_right'  => 6,
             'margin_bottom' => 6,
             'margin_left'   => 6,
-        ]);
+        ]));
 
         // Minimal CSS for label
         $css = "";

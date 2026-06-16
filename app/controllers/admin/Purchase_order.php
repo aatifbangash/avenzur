@@ -1457,11 +1457,11 @@ class Purchase_order extends MY_Controller
 
         $total_discount = 0;
 
-        $mpdf = new Mpdf([
+        $mpdf = new Mpdf(mpdf_config([
             'format' => 'A4',
             'margin_top' => 80,
             'margin_bottom' => 70,
-        ]);
+        ]));
 
         $mpdf->SetHTMLHeader('
 <div style="width:100%; font-family: DejaVu Sans, sans-serif; font-size:11px;">

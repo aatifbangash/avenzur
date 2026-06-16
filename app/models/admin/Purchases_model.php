@@ -1305,10 +1305,19 @@ class Purchases_model extends CI_Model
 
     public function getPettyCash($type)
     {
-        $this->db->order_by('date', 'asc');
-        $this->db->select('sma_memo.*');
+        $this->db->order_by('sma_memo.date', 'asc');
+        $this->db->order_by('sma_memo.id', 'asc');
+        $this->db->select(
+            'sma_memo.*,'
+            . ' COALESCE(SUM(sma_memo_entries.payment_amount), 0) AS lines_grand_total,'
+            . ' COALESCE(SUM(sma_memo_entries.vat), 0) AS lines_vat_total,'
+            . ' COALESCE(SUM(sma_memo_entries.payment_amount - sma_memo_entries.vat), 0) AS lines_net_total',
+            false
+        );
         $this->db->from('memo');
-        $this->db->where(['type' => $type]);
+        $this->db->join('memo_entries', 'memo_entries.memo_id = sma_memo.id', 'left');
+        $this->db->where(['sma_memo.type' => $type]);
+        $this->db->group_by('sma_memo.id');
         $query = $this->db->get();
 
         if ($query->num_rows() > 0) {
