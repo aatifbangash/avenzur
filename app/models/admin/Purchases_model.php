@@ -1305,8 +1305,7 @@ class Purchases_model extends CI_Model
 
     public function getPettyCash($type)
     {
-        $this->db->order_by('sma_memo.date', 'asc');
-        $this->db->order_by('sma_memo.id', 'asc');
+        $this->db->order_by('sma_memo.reference_no', 'asc');
         $this->db->select(
             'sma_memo.*,'
             . ' COALESCE(SUM(sma_memo_entries.payment_amount), 0) AS lines_grand_total,'
