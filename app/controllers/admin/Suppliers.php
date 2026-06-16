@@ -2245,6 +2245,8 @@ class Suppliers extends MY_Controller
         $this->data['memo_entries_data'] = $petty_cash_entries_data;
         $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
         $this->data['ledgers'] = $this->site->getCompanyLedgers();
+        $this->data['petty_cash_ledgers'] = $this->site->getPettyCashLedgers();
+        $this->data['petty_cash_supplier_id'] = $this->site->getPettyCashSupplierId();
 
         $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('suppliers/list_petty_cash'), 'page' => lang('Petty Cash List')], ['link' => '#', 'page' => lang('Edit Petty Cash')]];
         $meta = ['page_title' => lang('Edit Petty Cash'), 'bc' => $bc];
@@ -2271,7 +2273,6 @@ class Suppliers extends MY_Controller
 
     public function petty_cash(){
         //$this->sma->checkPermissions(false, true);
-        $this->form_validation->set_rules('reference_no', $this->lang->line('reference_no'), 'required');
         $this->form_validation->set_rules('date', $this->lang->line('date'), 'required');
         
 
@@ -2281,9 +2282,9 @@ class Suppliers extends MY_Controller
         if ($this->form_validation->run() == true) {
             $request_type = $this->input->post('request_type');
             $supplier_names = $this->input->post('supplier_name[]');
-            $main_supplier_id = $this->input->post('main_supplier_id');
-            $reference_no = $this->input->post('reference_no');
-            $description = $this->input->post('note');
+            $main_supplier_id = $this->site->getPettyCashSupplierId();
+            $petty_cash_ledger_id = (int) $this->input->post('petty_cash_ledger_id');
+            $description = $this->input->post('note') ?: '';
             $date_fmt = $this->input->post('date');
             $amounts = $this->input->post('amount[]');
             $vats = $this->input->post('vat[]');
@@ -2294,8 +2295,15 @@ class Suppliers extends MY_Controller
             $invoice_nos = $this->input->post('invoice_no[]');
             $vat_rates = $this->input->post('vat_rate[]');
 
-            if(empty($main_supplier_id) || $main_supplier_id == 0 || $main_supplier_id == '' || $main_supplier_id == null){
-                $this->session->set_flashdata('error', 'Please select a main supplier before submitting petty cash.');
+            if (!$main_supplier_id) {
+                $this->session->set_flashdata('error', 'Petty Cash supplier is not configured. Please set up supplier SUP-00265.');
+                admin_redirect('suppliers/petty_cash');
+                return;
+            }
+
+            $petty_cash_ledger_ids = array_map('intval', array_column($this->site->getPettyCashLedgers(), 'id'));
+            if (!$petty_cash_ledger_id || !in_array($petty_cash_ledger_id, $petty_cash_ledger_ids, true)) {
+                $this->session->set_flashdata('error', 'Please select a petty cash ledger account.');
                 admin_redirect('suppliers/petty_cash');
                 return;
             }
@@ -2353,6 +2361,8 @@ class Suppliers extends MY_Controller
                 $date = $formattedDate->format('Y-m-d');
             }
 
+            $reference_no = $this->sequenceCode->generatePettyCashReference($date);
+
             $payment_total = 0;
             $vat_charges = 0;
             $petty_cash_data = [];
@@ -2400,8 +2410,8 @@ class Suppliers extends MY_Controller
                 // Use main supplier from form for memo
                 $main_supplier_id = $main_supplier_id ?: 0;
                 $supplier_details = $this->companies_model->getCompanyByID($main_supplier_id);
-                $supplier_ledger_account = $supplier_details ? $supplier_details->ledger_account : 0; // Default to supplier ledger for service invoice
-                $vat_account = $this->Settings->vat_on_expense_ledger; // Default VAT account
+                $supplier_ledger_account = $supplier_details ? $supplier_details->ledger_account : 0;
+                $vat_account = $this->Settings->vat_on_expense_ledger;
 
                 $memoData = array(
                     'supplier_id' => $main_supplier_id,
@@ -2409,12 +2419,12 @@ class Suppliers extends MY_Controller
                     'reference_no' => $reference_no,
                     'payment_amount' => $payment_total,
                     'vat_value' => $vat_charges,
-                    'ledger_account' => $supplier_ledger_account,
+                    'ledger_account' => $petty_cash_ledger_id,
                     'vat_account' => $vat_account,
                     'type' => 'pettycash',
                     'date' => $date,
                     'description' => $description,
-                    'sequence_code' => $this->sequenceCode->generate('PCI', 5)
+                    'sequence_code' => $reference_no
                 );
                 //echo '<pre>';print_r($memoData);exit;
                 $this->db->insert('sma_memo' ,$memoData);
@@ -2443,16 +2453,34 @@ class Suppliers extends MY_Controller
                 $this->add_petty_cash($memoEntryData);
             }
 
-            $this->convert_petty_cash($memo_id, $main_supplier_id, $vat_account, $payment_total, $vat_charges, $reference_no, 'pettycash', $date, $memoEntryData);
+            $this->convert_petty_cash($memo_id, $main_supplier_id, $vat_account, $payment_total, $vat_charges, $reference_no, 'pettycash', $date, $memoEntryData, $petty_cash_ledger_id);
             $this->session->set_flashdata('message', lang($request_type == 'update' ? 'Petty Cash updated Successfully!' : 'Petty Cash added Successfully!'));
             admin_redirect('suppliers/list_petty_cash');
 
         } else {
             $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
-            $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
             $this->data['ledgers'] = $this->site->getCompanyLedgers();
+            $this->data['petty_cash_ledgers'] = $this->site->getPettyCashLedgers();
+            $this->data['petty_cash_supplier_id'] = $this->site->getPettyCashSupplierId();
+            $preview_date = date('Y-m-d');
+            $this->data['next_reference_no'] = $this->sequenceCode->generatePettyCashReference($preview_date);
             $this->page_construct('suppliers/petty_cash', $meta, $this->data);
         }
+    }
+
+    public function next_petty_cash_reference()
+    {
+        $date_fmt = $this->input->get('date');
+        $date = date('Y-m-d');
+        if ($date_fmt) {
+            $formattedDate = DateTime::createFromFormat('d/m/Y', $date_fmt);
+            if ($formattedDate) {
+                $date = $formattedDate->format('Y-m-d');
+            } elseif (DateTime::createFromFormat('Y-m-d', $date_fmt)) {
+                $date = $date_fmt;
+            }
+        }
+        $this->sma->send_json(['reference_no' => $this->sequenceCode->generatePettyCashReference($date)]);
     }
 
     public function service_invoice(){
@@ -2619,7 +2647,7 @@ class Suppliers extends MY_Controller
         }
     }
 
-    public function convert_petty_cash($memo_id, $supplier_id, $vat_account, $payment_amount, $vat_charges, $reference_no, $type, $date, $entry_data){
+    public function convert_petty_cash($memo_id, $supplier_id, $vat_account, $payment_amount, $vat_charges, $reference_no, $type, $date, $entry_data, $petty_cash_ledger_id = null){
         $this->load->admin_model('companies_model');
         $supplier = $this->companies_model->getCompanyByID($supplier_id);
 
@@ -2627,7 +2655,7 @@ class Suppliers extends MY_Controller
         $entry = array(
             'entrytype_id' => 4,
             'transaction_type' => $type,
-            'number'       => 'PCI-'.$reference_no,
+            'number'       => $reference_no,
             'date'         => date('Y-m-d', strtotime($date)),
             'dr_total'     => $payment_amount,
             'cr_total'     => $payment_amount,
@@ -2639,13 +2667,20 @@ class Suppliers extends MY_Controller
         $add  = $this->db->insert('sma_accounts_entries', $entry);
         $insert_id = $this->db->insert_id();
 
+        $credit_ledger_id = $petty_cash_ledger_id ?: $supplier->ledger_account;
+        $petty_cash_ledger_name = '';
+        if ($credit_ledger_id) {
+            $pc_ledger = $this->site->getLedgerByID($credit_ledger_id);
+            $petty_cash_ledger_name = $pc_ledger ? $pc_ledger->name : '';
+        }
+
         $entryitemdata[] = array(
             'Entryitem' => array(
                 'entry_id' => $insert_id,
                 'dc' => 'C',
-                'ledger_id' => $supplier->ledger_account,
+                'ledger_id' => $credit_ledger_id,
                 'amount' => $payment_amount,
-                'narration' => ''
+                'narration' => $petty_cash_ledger_name
             )
         );
 
@@ -2816,14 +2851,14 @@ class Suppliers extends MY_Controller
         //echo $html;exit;
         try {
             // Use mPDF directly like customer statement
-            $mpdf = new Mpdf([
+            $mpdf = new Mpdf(mpdf_config([
                 'format' => 'A4',
                 'orientation' => 'P',       // Portrait
                 'margin_top' => 10,
                 'margin_bottom' => 10,
                 'margin_left' => 10,
                 'margin_right' => 10,
-            ]);
+            ]));
 
             $mpdf->WriteHTML($html);
             $mpdf->Output($name, "D"); // Force download
@@ -2852,6 +2887,8 @@ class Suppliers extends MY_Controller
         $this->data['biller'] = $this->site->getDefaultBiller();
 
         $this->data['petty_cash'] = $petty_cash_data;
+        $petty_cash_ledger = $this->site->getLedgerByID($petty_cash_data->ledger_account);
+        $this->data['petty_cash_ledger_name'] = $petty_cash_ledger ? $petty_cash_ledger->name : '';
         $petty_cash_entries_data = $this->purchases_model->getDebitMemoEntriesData($id);
 
         // Add ledger names and supplier names to entries
@@ -2919,14 +2956,14 @@ class Suppliers extends MY_Controller
         //echo $html;exit;
         try {
             // Use mPDF directly like customer statement
-            $mpdf = new Mpdf([
+            $mpdf = new Mpdf(mpdf_config([
                 'format' => 'A4',
                 'orientation' => 'P',       // Portrait
                 'margin_top' => 10,
                 'margin_bottom' => 10,
                 'margin_left' => 10,
                 'margin_right' => 10,
-            ]);
+            ]));
 
             $mpdf->WriteHTML($html);
             $mpdf->Output($name, "D"); // Force download
@@ -3226,7 +3263,7 @@ class Suppliers extends MY_Controller
                 if ($applied > 0) {
                     $memo = $this->purchases_model->getDebitMemoData($memo_id);
                     if (!$memo) {
-                        $this->session->set_flashdata('error', 'Service invoice not found: ' . $memo_id);
+                        $this->session->set_flashdata('error', 'Service invoice or petty cash voucher not found: ' . $memo_id);
                         admin_redirect('suppliers/payment_to_supplier_new');
                     }
                     $available = $memo->payment_amount - ($memo->used_amount ?? 0);
@@ -3319,7 +3356,7 @@ class Suppliers extends MY_Controller
                     'supplier_id'  => $supplier_id,
                     'reference_no' => $reference_no,
                     'amount'       => $detail['paying'],
-                    'note'         => 'Service Invoice #' . $memo_id . ($note ? ' - ' . $note : ''),
+                    'note'         => (($memo->type ?? '') === 'pettycash' ? 'Petty Cash' : 'Service Invoice') . ' #' . $memo_id . ($note ? ' - ' . $note : ''),
                     'created_by'   => $this->session->userdata('user_id'),
                     'type'         => 'sent',
                     'payment_id'   => $payment_id,

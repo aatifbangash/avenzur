@@ -239,6 +239,9 @@
                                 }else if($statement->transaction_type == 'serviceinvoice'){
                                     $link = admin_url('customers/list_service_invoice');
                                     $transaction_type = 'Service Invoice';
+                                }else if($statement->transaction_type == 'pettycash'){
+                                    $link = !empty($statement->memo_id) ? admin_url('suppliers/petty_cash_pdf/' . $statement->memo_id) : null;
+                                    $transaction_type = 'Petty Cash';
                                 }else if($statement->transaction_type == 'returncustomerorder'){
                                     $link = admin_url('returns?rid=' . $statement->rid);
                                     $transaction_type = 'Customer Return';

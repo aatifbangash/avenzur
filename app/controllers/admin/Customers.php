@@ -2533,14 +2533,14 @@ class Customers extends MY_Controller
         $html = $this->load->view($this->theme . 'customers/service_invoice_pdf', $this->data, true);
         //echo $html;exit;
         // Use mPDF directly like customer statement
-        $mpdf = new Mpdf([
+        $mpdf = new Mpdf(mpdf_config([
             'format' => 'A4',
             'orientation' => 'P',       // Portrait
             'margin_top' => 10,
             'margin_bottom' => 10,
             'margin_left' => 10,
             'margin_right' => 10,
-        ]);
+        ]));
 
         $mpdf->WriteHTML($html);
         $mpdf->Output($name, "D"); // Force download

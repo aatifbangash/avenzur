@@ -1305,10 +1305,20 @@ class Purchases_model extends CI_Model
 
     public function getPettyCash($type)
     {
-        $this->db->order_by('date', 'asc');
-        $this->db->select('sma_memo.*');
+        $this->db->order_by('sma_memo.reference_no', 'asc');
+        $this->db->select(
+            'sma_memo.*,'
+            . ' COALESCE(SUM(sma_memo_entries.payment_amount), 0) AS lines_grand_total,'
+            . ' COALESCE(SUM(sma_memo_entries.vat), 0) AS lines_vat_total,'
+            . ' COALESCE(SUM(sma_memo_entries.payment_amount - sma_memo_entries.vat), 0) AS lines_net_total,'
+            . ' (SELECT MIN(e.id) FROM sma_accounts_entries e'
+            . '   WHERE e.memo_id = sma_memo.id AND e.transaction_type = \'pettycash\') AS journal_entry_id',
+            false
+        );
         $this->db->from('memo');
-        $this->db->where(['type' => $type]);
+        $this->db->join('memo_entries', 'memo_entries.memo_id = sma_memo.id', 'left');
+        $this->db->where(['sma_memo.type' => $type]);
+        $this->db->group_by('sma_memo.id');
         $query = $this->db->get();
 
         if ($query->num_rows() > 0) {
@@ -1508,10 +1518,10 @@ class Purchases_model extends CI_Model
 
     public function getSupplierServiceInvoicesForPayment($supplier_id)
     {
-        $this->db->select('id, date, reference_no, supplier_id, payment_amount, COALESCE(used_amount, 0) as used_amount');
+        $this->db->select('id, date, reference_no, supplier_id, type, payment_amount, COALESCE(used_amount, 0) as used_amount');
         $this->db->from('sma_memo');
         $this->db->where('supplier_id', (int)$supplier_id);
-        $this->db->where('type', 'serviceinvoice');
+        $this->db->where_in('type', ['serviceinvoice', 'pettycash']);
         $this->db->where('(payment_amount - COALESCE(used_amount, 0)) > 0', null, false);
         $this->db->order_by('date', 'asc');
         $q = $this->db->get();
@@ -1522,7 +1532,7 @@ class Purchases_model extends CI_Model
                 $inv->outstanding_amount = round($inv->payment_amount - $used, 5);
                 $inv->grand_total        = $inv->payment_amount;
                 $inv->total_paid         = $used;
-                $inv->type               = 'Service Invoice';
+                $inv->type               = ($inv->type === 'pettycash') ? 'Petty Cash' : 'Service Invoice';
             }
             return $invoices;
         }

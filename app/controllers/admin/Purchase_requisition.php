@@ -271,11 +271,11 @@ private function generate_pr_pdf($pr_id, $data, $items)
     $html = $this->load->view($this->theme . 'purchase_requisition/pdf_template', $this->data, true);
 
     // Generate PDF
-    $mpdf = new Mpdf([
+    $mpdf = new Mpdf(mpdf_config([
         'format' => 'A4',
         'margin_top' => 80,
         'margin_bottom' => 70,
-    ]);
+    ]));
 
     $mpdf->WriteHTML($html);
     $mpdf->Output($prFile, \Mpdf\Output\Destination::FILE);

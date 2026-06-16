@@ -35,8 +35,7 @@ class Tec_mpdf
             $margin_top = 20;
         }
 
-        // $mpdf = new Mpdf(['tempDir' => __DIR__ . '/custom/temp/dir/path']);
-        $mpdf                   = new Mpdf();
+        $mpdf                   = new Mpdf(mpdf_config());
         $mpdf->debug            = (ENVIRONMENT == 'development');
         $mpdf->autoScriptToLang = true;
         $mpdf->autoLangToFont   = true;

@@ -1871,21 +1871,15 @@ class Entries extends MY_Controller
 				// Load view and get HTML
 				$html = $this->load->view($this->theme . 'accounts/entries_export_pdf', $view_data, true);
 				
-				$mpdfTmpDir = FCPATH . 'assets/uploads/mpdf_tmp';
-				if (!is_dir($mpdfTmpDir)) {
-					@mkdir($mpdfTmpDir, 0777, true);
-				}
-
 				// Create PDF using Mpdf
-				$mpdf = new Mpdf([
+				$mpdf = new Mpdf(mpdf_config([
 					'format' => 'A4',
 					'orientation' => 'P',
 					'margin_top' => 10,
 					'margin_bottom' => 10,
 					'margin_left' => 10,
 					'margin_right' => 10,
-					'tempDir' => $mpdfTmpDir,
-				]);
+				]));
 				
 				$mpdf->WriteHTML($html);
 				$mpdf->Output($filename, "D"); // D for download

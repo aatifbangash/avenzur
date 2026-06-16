@@ -1633,6 +1633,27 @@ public function logVisitor() {
         return $data_res;
     }
 
+    public function getPettyCashLedgers()
+    {
+        return $this->getCompanyLedgersByGroupCode(['11104']);
+    }
+
+    /** Default Petty Cash supplier used for all petty cash vouchers (SUP-00265). */
+    public function getPettyCashSupplierId()
+    {
+        $this->db->select('id');
+        $this->db->from('companies');
+        $this->db->where('group_name', 'supplier');
+        $this->db->group_start();
+        $this->db->where('sequence_code', 'SUP-00265');
+        $this->db->or_where('company', 'Petty Cash');
+        $this->db->group_end();
+        $this->db->limit(1);
+        $q = $this->db->get();
+
+        return ($q && $q->num_rows() > 0) ? (int) $q->row()->id : 0;
+    }
+
     public function getCompanyLedgers()
     {
         $this->db

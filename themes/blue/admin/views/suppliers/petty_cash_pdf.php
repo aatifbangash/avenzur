@@ -39,6 +39,10 @@ th { background-color: #f5f5f5; font-weight: bold; }
             <strong>Date:</strong> <?= date('d/m/Y', strtotime($petty_cash->date)); ?>
             <br>
             <strong>Reference:</strong> <?= $petty_cash->reference_no; ?>
+            <?php if (!empty($petty_cash_ledger_name)): ?>
+            <br>
+            <strong>Petty Cash Account:</strong> <?= $petty_cash_ledger_name; ?>
+            <?php endif; ?>
         </div>
 
     </div>
@@ -55,7 +59,7 @@ th { background-color: #f5f5f5; font-weight: bold; }
             <th class="supplier-col">Supplier</th>
             <th class="invoice-no-col">Invoice No</th>
             <th class="vat-number-col">VAT Number</th>
-            <th class="description-col">Discrition</th>
+            <th class="description-col">Description</th>
             <th class="ledger-account">Ledger Account</th>
             <th class="amount-col text-right">Amount</th>
             <th class="vat-col text-right">VAT</th>
