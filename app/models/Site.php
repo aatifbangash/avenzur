@@ -876,6 +876,7 @@ class Site extends CI_Model
         $pay = $dbp . 'payments';
         $pid = $entries_alias . '.pid';
         $rsid = $entries_alias . '.rsid';
+        $memo_id = $entries_alias . '.memo_id';
         $eid = $entries_alias . '.id';
 
         $paymentJournalSubquery = function ($wh_id) use ($pr, $pay, $purchases) {
@@ -886,6 +887,9 @@ class Site extends CI_Model
                 WHERE pr.journal_id IS NOT NULL AND pu.warehouse_id = " . (int) $wh_id;
         };
 
+        // Petty cash, service invoices, and memos are not tied to a purchase/return warehouse.
+        $nonWarehouseLinked = "(NULLIF({$memo_id}, '') IS NOT NULL AND NULLIF({$memo_id}, 0) IS NOT NULL)";
+
         if ($warehouse_id) {
             $wh = (int) $warehouse_id;
             $journalSql = $paymentJournalSubquery($wh);
@@ -895,6 +899,7 @@ class Site extends CI_Model
                 OR (NULLIF({$rsid}, '') IS NOT NULL AND NULLIF({$rsid}, 0) IS NOT NULL
                     AND {$rsid} IN (SELECT id FROM {$returns} WHERE warehouse_id = {$wh}))
                 OR {$eid} IN ({$journalSql})
+                OR {$nonWarehouseLinked}
             )";
         }
 
