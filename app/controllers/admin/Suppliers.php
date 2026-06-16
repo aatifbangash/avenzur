@@ -3262,7 +3262,7 @@ class Suppliers extends MY_Controller
                 if ($applied > 0) {
                     $memo = $this->purchases_model->getDebitMemoData($memo_id);
                     if (!$memo) {
-                        $this->session->set_flashdata('error', 'Service invoice not found: ' . $memo_id);
+                        $this->session->set_flashdata('error', 'Service invoice or petty cash voucher not found: ' . $memo_id);
                         admin_redirect('suppliers/payment_to_supplier_new');
                     }
                     $available = $memo->payment_amount - ($memo->used_amount ?? 0);
@@ -3355,7 +3355,7 @@ class Suppliers extends MY_Controller
                     'supplier_id'  => $supplier_id,
                     'reference_no' => $reference_no,
                     'amount'       => $detail['paying'],
-                    'note'         => 'Service Invoice #' . $memo_id . ($note ? ' - ' . $note : ''),
+                    'note'         => (($memo->type ?? '') === 'pettycash' ? 'Petty Cash' : 'Service Invoice') . ' #' . $memo_id . ($note ? ' - ' . $note : ''),
                     'created_by'   => $this->session->userdata('user_id'),
                     'type'         => 'sent',
                     'payment_id'   => $payment_id,

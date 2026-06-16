@@ -1517,10 +1517,10 @@ class Purchases_model extends CI_Model
 
     public function getSupplierServiceInvoicesForPayment($supplier_id)
     {
-        $this->db->select('id, date, reference_no, supplier_id, payment_amount, COALESCE(used_amount, 0) as used_amount');
+        $this->db->select('id, date, reference_no, supplier_id, type, payment_amount, COALESCE(used_amount, 0) as used_amount');
         $this->db->from('sma_memo');
         $this->db->where('supplier_id', (int)$supplier_id);
-        $this->db->where('type', 'serviceinvoice');
+        $this->db->where_in('type', ['serviceinvoice', 'pettycash']);
         $this->db->where('(payment_amount - COALESCE(used_amount, 0)) > 0', null, false);
         $this->db->order_by('date', 'asc');
         $q = $this->db->get();
@@ -1531,7 +1531,7 @@ class Purchases_model extends CI_Model
                 $inv->outstanding_amount = round($inv->payment_amount - $used, 5);
                 $inv->grand_total        = $inv->payment_amount;
                 $inv->total_paid         = $used;
-                $inv->type               = 'Service Invoice';
+                $inv->type               = ($inv->type === 'pettycash') ? 'Petty Cash' : 'Service Invoice';
             }
             return $invoices;
         }

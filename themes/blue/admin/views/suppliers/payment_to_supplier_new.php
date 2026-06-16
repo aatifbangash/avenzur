@@ -341,7 +341,7 @@ $(document).ready(function () {
             });
             $('#serviceinvoice-section').show();
         } else {
-            tbody.append('<tr><td colspan="8" class="text-center">No pending service invoices for this supplier</td></tr>');
+            tbody.append('<tr><td colspan="8" class="text-center">No pending service invoices or petty cash vouchers for this supplier</td></tr>');
             $('#serviceinvoice-section').show();
         }
 
@@ -752,7 +752,7 @@ $(document).ready(function () {
                 <div id="serviceinvoice-section" style="display:none; margin-top:15px;">
                     <div class="box box-info">
                         <div class="box-header with-border">
-                            <h3 class="box-title"><i class="fa fa-file-text-o"></i> Pending Service Invoices</h3>
+                            <h3 class="box-title"><i class="fa fa-file-text-o"></i> Pending Service Invoices / Petty Cash</h3>
                         </div>
                         <div class="box-body">
                             <div class="table-responsive">
