@@ -1311,7 +1311,9 @@ class Purchases_model extends CI_Model
             'sma_memo.*,'
             . ' COALESCE(SUM(sma_memo_entries.payment_amount), 0) AS lines_grand_total,'
             . ' COALESCE(SUM(sma_memo_entries.vat), 0) AS lines_vat_total,'
-            . ' COALESCE(SUM(sma_memo_entries.payment_amount - sma_memo_entries.vat), 0) AS lines_net_total',
+            . ' COALESCE(SUM(sma_memo_entries.payment_amount - sma_memo_entries.vat), 0) AS lines_net_total,'
+            . ' (SELECT MIN(e.id) FROM sma_accounts_entries e'
+            . '   WHERE e.memo_id = sma_memo.id AND e.transaction_type = \'pettycash\') AS journal_entry_id',
             false
         );
         $this->db->from('memo');
