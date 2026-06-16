@@ -959,6 +959,7 @@ class Reports_model extends CI_Model
 
         $sql = "
             SELECT 
+                ai.id AS entryitem_id,
                 ai.entry_id,
                 ai.amount,
                 ai.dc,
@@ -972,7 +973,12 @@ class Reports_model extends CI_Model
                 e.rid,
                 al.code AS ledger_code,
                 CASE
-                    WHEN e.pid IS NOT NULL AND e.pid != '' THEN p.reference_no
+                    WHEN e.pid IS NOT NULL AND e.pid != '' AND e.pid != 0 THEN p.reference_no
+                    WHEN e.rsid IS NOT NULL AND e.rsid != '' AND e.rsid != 0 THEN
+                        CASE
+                            WHEN rs.reference_no IS NOT NULL AND rs.reference_no != '' AND rs.reference_no != '0' THEN rs.reference_no
+                            ELSE CAST(e.rsid AS CHAR)
+                        END
                     WHEN e.memo_id IS NOT NULL AND e.memo_id != '' THEN m.reference_no
                     ELSE pr.reference_no
                 END AS reference_no,
@@ -985,12 +991,14 @@ class Reports_model extends CI_Model
             LEFT JOIN sma_purchases p ON p.id = e.pid
             LEFT JOIN sma_returns_supplier rs ON rs.id = e.rsid
             LEFT JOIN sma_memo m ON m.id = e.memo_id
-            LEFT JOIN sma_payment_reference pr ON pr.journal_id = e.id
+            LEFT JOIN sma_payment_reference pr ON pr.id = (
+                SELECT MIN(pr2.id) FROM sma_payment_reference pr2 WHERE pr2.journal_id = e.id
+            )
             WHERE e.supplier_id = ?
             AND e.date < ?
             AND ai.ledger_id = ?
             {$warehouse_sql}
-            ORDER BY e.date ASC
+            ORDER BY e.date ASC, ai.id ASC
             ";
 
             // Execute the query with bindings to avoid SQL injection
@@ -1001,6 +1009,7 @@ class Reports_model extends CI_Model
         // Query for period transactions with reference_no
         $sql2 = "
             SELECT 
+                ai.id AS entryitem_id,
                 ai.entry_id,
                 ai.amount,
                 ai.dc,
@@ -1015,7 +1024,12 @@ class Reports_model extends CI_Model
                 al.code AS ledger_code,
                 pr.id as payment_reference,
                 CASE
-                    WHEN e.pid IS NOT NULL AND e.pid != '' THEN p.reference_no
+                    WHEN e.pid IS NOT NULL AND e.pid != '' AND e.pid != 0 THEN p.reference_no
+                    WHEN e.rsid IS NOT NULL AND e.rsid != '' AND e.rsid != 0 THEN
+                        CASE
+                            WHEN rs.reference_no IS NOT NULL AND rs.reference_no != '' AND rs.reference_no != '0' THEN rs.reference_no
+                            ELSE CAST(e.rsid AS CHAR)
+                        END
                     WHEN e.memo_id IS NOT NULL AND e.memo_id != '' THEN m.reference_no
                     ELSE pr.reference_no
                 END AS reference_no,
@@ -1028,13 +1042,15 @@ class Reports_model extends CI_Model
             LEFT JOIN sma_purchases p ON p.id = e.pid
             LEFT JOIN sma_returns_supplier rs ON rs.id = e.rsid
             LEFT JOIN sma_memo m ON m.id = e.memo_id
-            LEFT JOIN sma_payment_reference pr ON pr.journal_id = e.id
+            LEFT JOIN sma_payment_reference pr ON pr.id = (
+                SELECT MIN(pr2.id) FROM sma_payment_reference pr2 WHERE pr2.journal_id = e.id
+            )
             WHERE e.supplier_id = ?
             AND e.date >= ?
             AND e.date <= ?
             AND ai.ledger_id = ?
             {$warehouse_sql}
-            ORDER BY e.date ASC
+            ORDER BY e.date ASC, ai.id ASC
             ";
 
         $q = $this->db->query($sql2, [$supplier_id, $start_date, $end_date, $supplier_ledger]);
