@@ -956,6 +956,17 @@ class Reports_model extends CI_Model
 
         $supplier_ledger = $supplier_info->ledger_account;
         $warehouse_sql = $this->site->reportPurchaseLedgerWarehouseExistsSql($warehouse_id, 'e');
+        $ledger_scope_sql = "(
+            ai.ledger_id = ?
+            OR (
+                e.transaction_type = 'pettycash'
+                AND e.memo_id IS NOT NULL
+                AND e.memo_id != ''
+                AND e.memo_id != 0
+                AND ai.dc = 'C'
+                AND ai.ledger_id != ?
+            )
+        )";
 
         $sql = "
             SELECT 
@@ -963,7 +974,10 @@ class Reports_model extends CI_Model
                 ai.entry_id,
                 ai.amount,
                 ai.dc,
-                ai.narration,
+                CASE
+                    WHEN e.transaction_type = 'pettycash' THEN CONCAT('Petty Cash', IF(ai.narration IS NOT NULL AND ai.narration != '', CONCAT(' - ', ai.narration), ''))
+                    ELSE ai.narration
+                END AS narration,
                 e.transaction_type,
                 e.date,
                 e.sid,
@@ -983,7 +997,8 @@ class Reports_model extends CI_Model
                     ELSE pr.reference_no
                 END AS reference_no,
                 c.company,
-                pr.id as payment_reference
+                pr.id as payment_reference,
+                m.id as memo_id
             FROM sma_accounts_entryitems ai
             JOIN sma_accounts_entries e ON e.id = ai.entry_id
             JOIN sma_companies c ON c.id = e.supplier_id
@@ -996,13 +1011,13 @@ class Reports_model extends CI_Model
             )
             WHERE e.supplier_id = ?
             AND e.date < ?
-            AND ai.ledger_id = ?
+            AND {$ledger_scope_sql}
             {$warehouse_sql}
             ORDER BY e.date ASC, ai.id ASC
             ";
 
             // Execute the query with bindings to avoid SQL injection
-        $q = $this->db->query($sql, [$supplier_id, $start_date, $supplier_ledger]);
+        $q = $this->db->query($sql, [$supplier_id, $start_date, $supplier_ledger, $supplier_ledger]);
 
         $data_res = ($q->num_rows() > 0) ? $q->result() : [];
 
@@ -1013,7 +1028,10 @@ class Reports_model extends CI_Model
                 ai.entry_id,
                 ai.amount,
                 ai.dc,
-                ai.narration,
+                CASE
+                    WHEN e.transaction_type = 'pettycash' THEN CONCAT('Petty Cash', IF(ai.narration IS NOT NULL AND ai.narration != '', CONCAT(' - ', ai.narration), ''))
+                    ELSE ai.narration
+                END AS narration,
                 e.transaction_type,
                 e.date,
                 e.sid,
@@ -1048,12 +1066,12 @@ class Reports_model extends CI_Model
             WHERE e.supplier_id = ?
             AND e.date >= ?
             AND e.date <= ?
-            AND ai.ledger_id = ?
+            AND {$ledger_scope_sql}
             {$warehouse_sql}
             ORDER BY e.date ASC, ai.id ASC
             ";
 
-        $q = $this->db->query($sql2, [$supplier_id, $start_date, $end_date, $supplier_ledger]);
+        $q = $this->db->query($sql2, [$supplier_id, $start_date, $end_date, $supplier_ledger, $supplier_ledger]);
 
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {

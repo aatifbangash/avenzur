@@ -2667,9 +2667,10 @@ class Suppliers extends MY_Controller
         $add  = $this->db->insert('sma_accounts_entries', $entry);
         $insert_id = $this->db->insert_id();
 
+        $credit_ledger_id = $petty_cash_ledger_id ?: $supplier->ledger_account;
         $petty_cash_ledger_name = '';
-        if ($petty_cash_ledger_id) {
-            $pc_ledger = $this->site->getLedgerByID($petty_cash_ledger_id);
+        if ($credit_ledger_id) {
+            $pc_ledger = $this->site->getLedgerByID($credit_ledger_id);
             $petty_cash_ledger_name = $pc_ledger ? $pc_ledger->name : '';
         }
 
@@ -2677,7 +2678,7 @@ class Suppliers extends MY_Controller
             'Entryitem' => array(
                 'entry_id' => $insert_id,
                 'dc' => 'C',
-                'ledger_id' => $supplier->ledger_account,
+                'ledger_id' => $credit_ledger_id,
                 'amount' => $payment_amount,
                 'narration' => $petty_cash_ledger_name
             )

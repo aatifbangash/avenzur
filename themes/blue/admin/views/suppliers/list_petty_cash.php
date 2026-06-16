@@ -57,6 +57,11 @@
                                                     <a href="<?php echo admin_url('suppliers/petty_cash_pdf/' . $entry->id); ?>" class="tip" title="Download PDF">
                                                         <i class="fa fa-file-pdf-o"></i>
                                                     </a>
+                                                    <?php if (!empty($entry->journal_entry_id)) { ?>
+                                                    <a href="<?php echo admin_url('entries/view/journal/' . $entry->journal_entry_id); ?>" class="tip" title="<?= lang('Journal Entry'); ?>" target="_blank">
+                                                        <i class="fa fa-book"></i>
+                                                    </a>
+                                                    <?php } ?>
                                                     <!--<a href="<?php echo admin_url('suppliers/edit_petty_cash/' . $entry->id); ?>" class="tip" title="Edit Petty Cash">
                                                         <i class="fa fa-edit"></i>
                                                     </a>-->
