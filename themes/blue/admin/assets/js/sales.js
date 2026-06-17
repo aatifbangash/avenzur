@@ -1,6 +1,18 @@
 $(document).ready(function (e) {
 	$("body a, body button").attr("tabindex", -1);
 	check_add_item_val();
+
+	$(document).on("click", "#add_sale, #edit_sale", function (e) {
+		if ($(this).prop("disabled")) {
+			e.preventDefault();
+			return false;
+		}
+		if (!validateSaleLinesBeforeSubmit()) {
+			e.preventDefault();
+			return false;
+		}
+	});
+
 	if (site.settings.set_focus != 1) {
 		$("#add_item").focus();
 	}
@@ -1236,6 +1248,16 @@ $(document).ready(function (e) {
 			slitems[item_id].row.price = batchSalePrice;
 
 			slitems[item_id].row.batch_no = new_batchno;
+
+			if (isDuplicateSaleLine(slitems[item_id].row, item_id)) {
+				slitems[item_id].row.batch_no = old_row_batchno;
+				bootbox.alert(
+					"This product/batch is already on the invoice."
+				);
+				$(this).val(old_row_batchno);
+				return;
+			}
+
 			localStorage.setItem("slitems", JSON.stringify(slitems));
 			loadItems();
 		});
@@ -1593,6 +1615,31 @@ function loadItems() {
 						return [parseInt(o.order)];
 				  })
 				: slitems;
+
+		var saleLineTotals = {};
+		var saleDuplicateKeys = {};
+		var saleKeysSeen = {};
+		$.each(sortedItems, function () {
+			var row = this.row;
+			if (!row || row.type === "manual" || row.type === "digital") {
+				return;
+			}
+			var batch = (row.batch_no || "").toString().trim();
+			if (batch === "") {
+				return;
+			}
+			var lineKey = saleLineKey(row);
+			var lineQty =
+				parseFloat(row.qty || 0) + parseFloat(row.bonus || 0);
+			saleLineTotals[lineKey] = (saleLineTotals[lineKey] || 0) + lineQty;
+			if (saleKeysSeen[lineKey]) {
+				saleDuplicateKeys[lineKey] = true;
+			} else {
+				saleKeysSeen[lineKey] = true;
+			}
+		});
+
+		var saleLinesBlocked = false;
 		$("#add_sale, #edit_sale").attr("disabled", false);
 
 	    /**
@@ -2133,12 +2180,26 @@ function loadItems() {
             }*/
 			
 			// Thi will override all the above checks
+			var currentLineKey = saleLineKey(item.row);
+			var currentLineQty =
+				parseFloat(item_qty || 0) + parseFloat(item_bonus || 0);
+			var batchStock = parseFloat(item_batchQuantity);
+			var lineHasIssue = false;
+
+			if (saleDuplicateKeys[currentLineKey]) {
+				lineHasIssue = true;
+			}
 			if (
-				parseFloat(parseFloat(item_qty) + parseFloat(item_bonus)) > parseFloat(base_quantity)
+				site.settings.overselling != 1 &&
+				!isNaN(batchStock) &&
+				saleLineTotals[currentLineKey] > batchStock
 			) {
+				lineHasIssue = true;
+			}
+			if (lineHasIssue) {
 				$("#row_" + row_no).addClass("danger");
 				if (site.settings.overselling != 1) {
-					$("#add_sale, #edit_sale").attr("disabled", true);
+					saleLinesBlocked = true;
 				}
 			}
 
@@ -2179,6 +2240,10 @@ function loadItems() {
 		
 		tfoot += '</th></tr>';
 		$("#slTable tfoot").html(tfoot);
+
+		if (saleLinesBlocked) {
+			$("#add_sale, #edit_sale").attr("disabled", true);
+		}
 
 		// Order level discount calculations
 		if ((sldiscount = localStorage.getItem("sldiscount"))) {
@@ -2244,6 +2309,98 @@ function loadItems() {
 }
 
 /* -----------------------------
+ * Sale line helpers (duplicate + stock)
+ ----------------------------- */
+function saleLineKey(row) {
+	if (!row) {
+		return "";
+	}
+	var pid = row.id || "";
+	var batch = (row.batch_no || "").toString().trim();
+	var expiry = (row.expiry || "").toString().trim();
+	var avz = (row.avz_item_code || "").toString().trim();
+	return pid + "|" + batch + "|" + expiry + "|" + avz;
+}
+
+function isDuplicateSaleLine(row, excludeItemId) {
+	if (!row || row.type === "manual" || row.type === "digital") {
+		return false;
+	}
+	var batch = (row.batch_no || "").toString().trim();
+	if (batch === "") {
+		return false;
+	}
+	var key = saleLineKey(row);
+	var duplicate = false;
+	$.each(slitems, function (id, item) {
+		if (excludeItemId && id == excludeItemId) {
+			return;
+		}
+		if (item.row && saleLineKey(item.row) === key) {
+			duplicate = true;
+			return false;
+		}
+	});
+	return duplicate;
+}
+
+function validateSaleLinesBeforeSubmit() {
+	var totals = {};
+	var seen = {};
+	var duplicates = false;
+	var oversold = false;
+
+	$.each(slitems, function () {
+		var row = this.row;
+		if (!row || row.type === "manual" || row.type === "digital") {
+			return;
+		}
+		var batch = (row.batch_no || "").toString().trim();
+		if (batch === "") {
+			return;
+		}
+		var key = saleLineKey(row);
+		var qty = parseFloat(row.qty || 0) + parseFloat(row.bonus || 0);
+		totals[key] = (totals[key] || 0) + qty;
+		if (seen[key]) {
+			duplicates = true;
+		}
+		seen[key] = true;
+	});
+
+	if (duplicates) {
+		bootbox.alert(
+			"Duplicate product/batch lines found on this invoice. Remove or merge them before saving."
+		);
+		return false;
+	}
+
+	if (site.settings.overselling != 1) {
+		$.each(slitems, function () {
+			var row = this.row;
+			if (!row || row.type === "manual" || row.type === "digital") {
+				return;
+			}
+			var key = saleLineKey(row);
+			var batchStock = parseFloat(row.batchQuantity);
+			if (!isNaN(batchStock) && totals[key] > batchStock) {
+				oversold = true;
+				return false;
+			}
+		});
+	}
+
+	if (oversold) {
+		bootbox.alert(
+			"Insufficient stock for one or more lines. Reduce quantities or choose another batch."
+		);
+		return false;
+	}
+
+	return true;
+}
+
+/* -----------------------------
  * Add Sale Order Item Function
  * @param {json} item
  * @returns {Boolean}
@@ -2261,6 +2418,11 @@ function add_invoice_item(item) {
 		}
 	}
 	if (item == null) return;
+
+	if (item.row && isDuplicateSaleLine(item.row)) {
+		bootbox.alert("This product/batch is already on the invoice.");
+		return false;
+	}
 
 	var item_id = site.settings.item_addition == 1 ? item.item_id : item.id;
 	if (slitems[item_id]) {

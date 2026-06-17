@@ -330,6 +330,11 @@ class Sales extends MY_Controller
 
             $attachments        = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
+
+            if ($product_error = $this->_validateSaleProductLines($warehouse_id, $products, $sale_status)) {
+                $this->session->set_flashdata('error', $product_error);
+                redirect($_SERVER['HTTP_REFERER']);
+            }
         }
 
         if ($this->form_validation->run() == true && $this->sales_model->addSale($data, $products, $payment, [], $attachments)) {
@@ -521,6 +526,11 @@ class Sales extends MY_Controller
         ];
 
         $payment = [];
+
+        if ($product_error = $this->_validateSaleProductLines($warehouse_id, $products, 'ready')) {
+            $this->session->set_flashdata('error', $product_error);
+            admin_redirect('quotes');
+        }
 
         if ($sale_id = $this->sales_model->addSaleNew($data, $products, $payment, [])) {
 
@@ -767,6 +777,11 @@ class Sales extends MY_Controller
         ];
 
         $payment = [];
+
+        if ($product_error = $this->_validateSaleProductLines($warehouse_id, $products, 'ready')) {
+            $this->session->set_flashdata('error', $product_error);
+            admin_redirect('quotes');
+        }
 
         if ($sale_id = $this->sales_model->addSaleNew($data, $products, $payment, [])) {
 
@@ -1129,6 +1144,11 @@ class Sales extends MY_Controller
 
             $attachments        = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
+
+            if ($product_error = $this->_validateSaleProductLines($warehouse_id, $products, $sale_status)) {
+                $this->session->set_flashdata('error', $product_error);
+                redirect($_SERVER['HTTP_REFERER']);
+            }
             //$this->sma->print_arrays($data, $products, $payment, $attachments); exit; 
         }
         
@@ -2145,6 +2165,11 @@ class Sales extends MY_Controller
 
             $attachments        = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
+
+            if ($product_error = $this->_validateSaleProductLines($warehouse_id, $products, $sale_status, $id)) {
+                $this->session->set_flashdata('error', $product_error);
+                admin_redirect('sales/edit/' . $id);
+            }
             //$this->sma->print_arrays($data, $products);exit;
         }
         // echo "<pre>";
@@ -6326,6 +6351,11 @@ if($inv->warning_note != ""){
 
             $attachments        = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
+
+            if ($product_error = $this->_validateSaleProductLines($warehouse_id, $products, $sale_status)) {
+                $this->session->set_flashdata('error', $product_error);
+                redirect($_SERVER['HTTP_REFERER']);
+            }
             // $this->sma->print_arrays($data, $products, $payment);
         }
 
@@ -7474,6 +7504,30 @@ if($inv->warning_note != ""){
             $this->session->set_flashdata('error', lang('Could not delete request'));
             admin_redirect('sales/qty_onhold_requests');
         }
+    }
+
+    /**
+     * Block duplicate product/batch lines and overselling when saving sales.
+     *
+     * @return string|false Error message HTML or false when valid
+     */
+    private function _validateSaleProductLines($warehouse_id, $products, $sale_status, $exclude_sale_id = null)
+    {
+        if (empty($products)) {
+            return false;
+        }
+
+        $inventory_statuses = ['completed', 'ready'];
+        $result = $this->products_model->validateSaleProducts($warehouse_id, $products, [
+            'check_stock'     => in_array($sale_status, $inventory_statuses, true),
+            'exclude_sale_id' => $exclude_sale_id,
+        ]);
+
+        if ($result['valid']) {
+            return false;
+        }
+
+        return implode('<br>', $result['errors']);
     }
 
 }
