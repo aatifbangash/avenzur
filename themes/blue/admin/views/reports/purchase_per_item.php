@@ -87,14 +87,14 @@
                         <div class="col-md-2">
                             <div class="form-group">
                                 <?= lang('start_date', 'start_date'); ?>
-                                <?php echo form_input('start_date', ($_GET['start_date'] ?? ''), 'class="form-control input-tip date" id="start_date"'); ?>
+                                <?php echo form_input('start_date', ($start_date ?? ''), 'class="form-control input-tip date" id="start_date"'); ?>
                             </div>
                         </div>
 
                         <div class="col-md-2">
                             <div class="form-group">
                                 <?= lang('end_date', 'end_date'); ?>
-                                <?php echo form_input('end_date', ($_GET['end_date'] ?? ''), 'class="form-control input-tip date" id="end_date"'); ?>
+                                <?php echo form_input('end_date', ($end_date ?? ''), 'class="form-control input-tip date" id="end_date"'); ?>
                             </div>
                         </div>
 
