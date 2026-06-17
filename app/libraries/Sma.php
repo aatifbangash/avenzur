@@ -1004,4 +1004,35 @@ class Sma
             $zip->close();
         }
     }
+
+    /**
+     * Sites using new_customer_menu.php (Hills-style layout).
+     */
+    public function usesNewMenu($settings = null)
+    {
+        $settings = $settings ?? $this->Settings;
+        $legacy_new_menu_sites = [
+            'Hills Business Medical',
+            'Demo Company',
+            'Retaj Company',
+            'Abaad Company',
+            'Avnzor',
+        ];
+
+        return !empty($settings->use_new_menu)
+            || !empty($settings->pos_standalone)
+            || in_array($settings->site_name ?? '', $legacy_new_menu_sites, true);
+    }
+
+    /**
+     * Default admin landing page after login / dashboard icon.
+     */
+    public function adminHomePath($is_finance_user = false)
+    {
+        if ($is_finance_user && $this->usesNewMenu()) {
+            return 'cost_center/dashboard';
+        }
+
+        return 'welcome/quick_search';
+    }
 }
