@@ -8080,7 +8080,12 @@ class Reports extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         
         // Get filter parameters from GET
-        $start_date   = $this->input->get('start_date')   ?: null;
+        $start_date = $this->input->get('start_date');
+        if (($start_date === null || $start_date === '') && empty($_GET)) {
+            $start_date = date('d/m/Y', mktime(0, 0, 0, 1, 1, (int) date('Y')));
+        } elseif ($start_date === null || $start_date === '') {
+            $start_date = null;
+        }
         $end_date     = $this->input->get('end_date')     ?: null;
         $purchase_ref = $this->input->get('purchase_ref') ?: null;
         $supplier     = $this->input->get('supplier')     ?: null;
@@ -8124,7 +8129,7 @@ class Reports extends MY_Controller
         $this->data['warehouse_id'] = $warehouse_id;
         
         // If any filter submitted, fetch data
-        if ($start_date || $end_date || $purchase_ref || $supplier || $item_code || ($record_type && $record_type !== 'all')) {
+        if (!empty($_GET) && ($start_date || $end_date || $purchase_ref || $supplier || $item_code || ($record_type && $record_type !== 'all'))) {
             
             // Format dates only if provided
             $formatted_start_date = $start_date ? $this->sma->fld($start_date) : null;
