@@ -2141,4 +2141,133 @@ class Products_model extends CI_Model
     return false;
 }
 
+    /**
+     * On-hand quantity for a product/batch in a warehouse (inventory_movements ledger).
+     */
+    public function getBatchStockQuantity($warehouse_id, $product_id, $batch_no, $expiry = null, $avz_code = null, $exclude_sale_id = null)
+    {
+        $this->db->select('COALESCE(SUM(im.quantity), 0) AS total_quantity', false);
+        $this->db->from('inventory_movements im');
+        $this->db->where('im.location_id', (int) $warehouse_id);
+        $this->db->where('im.product_id', (int) $product_id);
+        $this->db->where('im.batch_number', (string) $batch_no);
+        if ($expiry) {
+            $this->db->where('im.expiry_date', $expiry);
+        }
+        $avz_code = trim((string) $avz_code);
+        if ($avz_code !== '' && strtolower($avz_code) !== 'null') {
+            $this->db->where('im.avz_item_code', $avz_code);
+        }
+        if ($exclude_sale_id) {
+            $this->db->where('NOT (im.type = \'sale\' AND im.reference_id = ' . (int) $exclude_sale_id . ')', null, false);
+        }
+        $row = $this->db->get()->row();
+        return $row ? (float) $row->total_quantity : 0.0;
+    }
+
+    /**
+     * Build a stable key for a sale line (product + batch + expiry + AVZ).
+     */
+    public function saleLineKey($product)
+    {
+        $expiry = $product['expiry'] ?? '';
+        if ($expiry && strpos($expiry, '/') !== false) {
+            $expiry = date('Y-m-d', strtotime(str_replace('/', '-', $expiry)));
+        } elseif ($expiry) {
+            $expiry = date('Y-m-d', strtotime($expiry));
+        }
+        return implode('|', [
+            (int) ($product['product_id'] ?? 0),
+            trim((string) ($product['batch_no'] ?? '')),
+            $expiry,
+            trim((string) ($product['avz_item_code'] ?? '')),
+        ]);
+    }
+
+    /**
+     * Validate sale lines: no duplicate product/batch rows; sufficient stock when posting inventory.
+     *
+     * @return array{valid:bool,errors:string[]}
+     */
+    public function validateSaleProducts($warehouse_id, $products, $options = [])
+    {
+        $errors      = [];
+        $seen        = [];
+        $aggregated  = [];
+        $check_stock = $options['check_stock'] ?? true;
+        $exclude_sale_id = $options['exclude_sale_id'] ?? null;
+
+        foreach ($products as $product) {
+            $type = $product['product_type'] ?? 'standard';
+            if (in_array($type, ['manual', 'digital'], true)) {
+                continue;
+            }
+
+            $batch_no = trim((string) ($product['batch_no'] ?? ''));
+            if ($batch_no === '') {
+                continue;
+            }
+
+            $key = $this->saleLineKey($product);
+            $name = $product['product_name'] ?? ('Product #' . ($product['product_id'] ?? ''));
+            $avz  = trim((string) ($product['avz_item_code'] ?? ''));
+
+            if (isset($seen[$key])) {
+                $errors[] = sprintf(
+                    'Duplicate line: %s (batch %s, AVZ %s) appears more than once on this invoice.',
+                    $name,
+                    $batch_no,
+                    $avz !== '' ? $avz : '—'
+                );
+            }
+            $seen[$key] = true;
+
+            $qty = isset($product['unit_quantity'])
+                ? (float) $product['unit_quantity'] + (float) ($product['bonus'] ?? 0)
+                : (float) ($product['quantity'] ?? 0);
+
+            if (!isset($aggregated[$key])) {
+                $aggregated[$key] = ['qty' => 0, 'product' => $product];
+            }
+            $aggregated[$key]['qty'] += $qty;
+        }
+
+        if ($check_stock && empty($this->Settings->overselling)) {
+            foreach ($aggregated as $agg) {
+                $product  = $agg['product'];
+                $required = $agg['qty'];
+                $expiry   = $product['expiry'] ?? null;
+                if ($expiry && strpos($expiry, '/') !== false) {
+                    $expiry = date('Y-m-d', strtotime(str_replace('/', '-', $expiry)));
+                } elseif ($expiry) {
+                    $expiry = date('Y-m-d', strtotime($expiry));
+                }
+
+                $available = $this->getBatchStockQuantity(
+                    $warehouse_id,
+                    $product['product_id'],
+                    $product['batch_no'],
+                    $expiry,
+                    $product['avz_item_code'] ?? null,
+                    $exclude_sale_id
+                );
+
+                if ($required > $available + 0.00001) {
+                    $name = $product['product_name'] ?? ('Product #' . $product['product_id']);
+                    $avz  = trim((string) ($product['avz_item_code'] ?? ''));
+                    $errors[] = sprintf(
+                        'Insufficient stock for %s (batch %s, AVZ %s): requested %s, available %s.',
+                        $name,
+                        $product['batch_no'],
+                        $avz !== '' ? $avz : '—',
+                        $this->sma->formatDecimal($required, 2),
+                        $this->sma->formatDecimal($available, 2)
+                    );
+                }
+            }
+        }
+
+        return ['valid' => empty($errors), 'errors' => $errors];
+    }
+
 }

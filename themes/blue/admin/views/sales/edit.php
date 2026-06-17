@@ -92,17 +92,9 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                                     $(this).removeClass('ui-autocomplete-loading');
                                     if(data){
                                         var avzItemCode = data[0].row.avz_item_code;
-                                        var found = false;
-
-                                        Object.keys(slitems).forEach(function (key) {
-                                            if (slitems[key].row && slitems[key].row.avz_item_code === avzItemCode) {
-                                                found = true;
-                                            }
-                                        });
-
-                                        if(found == true){
-                                            bootbox.alert('Row already exists for this code.');
-                                        }else{
+                                        if (data[0].row && isDuplicateSaleLine(data[0].row)) {
+                                            bootbox.alert('This product/batch is already on the invoice.');
+                                        } else {
                                             add_invoice_item(data[0]);
                                         }
                                     }else{
@@ -229,13 +221,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                         count++;
 
                         var avzItemCode = item.row.avz_item_code;
-                        var found = false;
-
-                        Object.keys(slitems).forEach(function (key) {
-                            if (slitems[key].row && slitems[key].row.avz_item_code === avzItemCode) {
-                                found = true;
-                            }
-                        });
+                        var found = isDuplicateSaleLine(item.row);
 
                         var tickOrCross = found ? '✔' : '✖';
 
@@ -285,7 +271,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                             if(!available){
                                 add_invoice_item(selectedItem);
                             }else{
-                                bootbox.alert('Row already added');
+                                bootbox.alert('This product/batch is already on the invoice.');
                             }
                         }else{
                             console.log('Item not found');
