@@ -1082,8 +1082,112 @@ class Reports_model extends CI_Model
         }
 
         $response_array = array('ob' => $data_res, 'report' => $data);
-        //        dd($response_array);
         return $response_array;
+    }
+
+    /**
+     * Cross-check supplier statement GL balance vs unpaid-invoices (AP) outstanding.
+     *
+     * @return array{gl_statement_balance: float, unpaid_ap_total: float, variance: float, per_invoice_mismatch_count: int}|null
+     */
+    public function getSupplierBalanceReconciliation($supplier_id, $at_date, $warehouse_id = null)
+    {
+        $supplier_info = $this->companies_model->getCompanyByID($supplier_id);
+        if (!$supplier_info) {
+            return null;
+        }
+
+        $supplier_ledger = (int) $supplier_info->ledger_account;
+        $pfx = $this->db->dbprefix;
+        $warehouse_sql = $this->site->reportPurchaseLedgerWarehouseExistsSql($warehouse_id, 'e');
+        $ledger_scope_sql = "(
+            ai.ledger_id = ?
+            OR (
+                e.transaction_type = 'pettycash'
+                AND e.memo_id IS NOT NULL
+                AND e.memo_id != ''
+                AND e.memo_id != 0
+                AND ai.dc = 'C'
+                AND ai.ledger_id != ?
+            )
+        )";
+
+        $gl = $this->db->query("
+            SELECT ROUND(SUM(CASE WHEN ai.dc = 'C' THEN ai.amount ELSE -ai.amount END), 2) AS gl_net_credit
+            FROM {$pfx}accounts_entries e
+            JOIN {$pfx}accounts_entryitems ai ON ai.entry_id = e.id
+            WHERE e.supplier_id = ?
+              AND DATE(e.date) <= ?
+              AND {$ledger_scope_sql}
+              {$warehouse_sql}
+        ", [$supplier_id, $at_date, $supplier_ledger, $supplier_ledger])->row();
+
+        $ap = $this->db->query("
+            SELECT ROUND(COALESCE(SUM(outstanding), 0), 2) AS unpaid_ap_total
+            FROM (
+                SELECT
+                    ROUND(
+                        (p.grand_total + COALESCE(p.grand_deal_discount, 0))
+                        - COALESCE((
+                            SELECT SUM(sp.amount)
+                            FROM {$pfx}payments sp
+                            WHERE sp.purchase_id = p.id AND DATE(sp.date) <= ?
+                        ), 0),
+                    2) AS outstanding
+                FROM {$pfx}purchases p
+                WHERE p.supplier_id = ?
+                  AND p.purchase_invoice = 1
+                  AND p.grand_total > 0
+                  AND p.note != 'import from excel'
+                  AND DATE(p.date) <= ?
+            ) x
+            WHERE outstanding > 0.01
+        ", [$at_date, $supplier_id, $at_date])->row();
+
+        $mismatch = $this->db->query("
+            SELECT COUNT(*) AS mismatch_count
+            FROM (
+                SELECT
+                    ROUND(
+                        (COALESCE(acc.acc_debit, 0) - COALESCE(acc.acc_credit, 0))
+                        - ((p.grand_total + COALESCE(p.grand_deal_discount, 0)) - COALESCE(pay.pay_total, 0)),
+                    2) AS diff
+                FROM {$pfx}purchases p
+                LEFT JOIN (
+                    SELECT e.pid,
+                           SUM(CASE WHEN ai.dc = 'D' THEN ai.amount ELSE 0 END) AS acc_debit,
+                           SUM(CASE WHEN ai.dc = 'C' THEN ai.amount ELSE 0 END) AS acc_credit
+                    FROM {$pfx}accounts_entries e
+                    JOIN {$pfx}accounts_entryitems ai ON ai.entry_id = e.id
+                    WHERE e.supplier_id = ?
+                      AND ai.ledger_id = ?
+                      AND e.pid IS NOT NULL AND e.pid != ''
+                      AND DATE(e.date) <= ?
+                    GROUP BY e.pid
+                ) acc ON acc.pid = p.id
+                LEFT JOIN (
+                    SELECT purchase_id, SUM(amount) AS pay_total
+                    FROM {$pfx}payments
+                    WHERE DATE(date) <= ?
+                    GROUP BY purchase_id
+                ) pay ON pay.purchase_id = p.id
+                WHERE p.supplier_id = ?
+                  AND p.purchase_invoice = 1
+                  AND p.grand_total > 0
+                  AND DATE(p.date) <= ?
+            ) inv
+            WHERE ABS(diff) > 1.00
+        ", [$supplier_id, $supplier_ledger, $at_date, $at_date, $supplier_id, $at_date])->row();
+
+        $gl_balance = (float) ($gl->gl_net_credit ?? 0);
+        $unpaid_ap = (float) ($ap->unpaid_ap_total ?? 0);
+
+        return [
+            'gl_statement_balance' => $gl_balance,
+            'unpaid_ap_total' => $unpaid_ap,
+            'variance' => round($gl_balance - $unpaid_ap, 2),
+            'per_invoice_mismatch_count' => (int) ($mismatch->mismatch_count ?? 0),
+        ];
     }
 
     /**

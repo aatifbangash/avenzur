@@ -887,18 +887,29 @@ class Site extends CI_Model
                 WHERE pr.journal_id IS NOT NULL AND pu.warehouse_id = " . (int) $wh_id;
         };
 
+        // Service-invoice / memo payments have pay.memo_id, not pay.purchase_id — must stay visible with their invoice.
+        $memoPaymentJournalSubquery = function () use ($pr, $pay) {
+            return "SELECT DISTINCT pr.journal_id
+                FROM {$pr} pr
+                INNER JOIN {$pay} pay ON pay.payment_id = pr.id
+                WHERE pr.journal_id IS NOT NULL
+                AND NULLIF(pay.memo_id, '') IS NOT NULL AND NULLIF(pay.memo_id, 0) IS NOT NULL";
+        };
+
         // Petty cash, service invoices, and memos are not tied to a purchase/return warehouse.
         $nonWarehouseLinked = "(NULLIF({$memo_id}, '') IS NOT NULL AND NULLIF({$memo_id}, 0) IS NOT NULL)";
 
         if ($warehouse_id) {
             $wh = (int) $warehouse_id;
             $journalSql = $paymentJournalSubquery($wh);
+            $memoJournalSql = $memoPaymentJournalSubquery();
             return "(
                 (NULLIF({$pid}, '') IS NOT NULL AND NULLIF({$pid}, 0) IS NOT NULL
                     AND {$pid} IN (SELECT id FROM {$purchases} WHERE warehouse_id = {$wh}))
                 OR (NULLIF({$rsid}, '') IS NOT NULL AND NULLIF({$rsid}, 0) IS NOT NULL
                     AND {$rsid} IN (SELECT id FROM {$returns} WHERE warehouse_id = {$wh}))
                 OR {$eid} IN ({$journalSql})
+                OR {$eid} IN ({$memoJournalSql})
                 OR {$nonWarehouseLinked}
             )";
         }
