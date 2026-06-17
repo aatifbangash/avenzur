@@ -8124,7 +8124,7 @@ class Reports extends MY_Controller
         $this->data['warehouse_id'] = $warehouse_id;
         
         // If any filter submitted, fetch data
-        if ($start_date || $end_date || $purchase_ref || $supplier || $item_code) {
+        if ($start_date || $end_date || $purchase_ref || $supplier || $item_code || ($record_type && $record_type !== 'all')) {
             
             // Format dates only if provided
             $formatted_start_date = $start_date ? $this->sma->fld($start_date) : null;
