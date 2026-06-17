@@ -3275,7 +3275,7 @@ class Reports_model extends CI_Model
             ";
         }
 
-        $stockQuery .= " GROUP BY inv.product_id, inv.avz_item_code ORDER BY p.id DESC";
+        $stockQuery .= " GROUP BY inv.product_id, inv.avz_item_code HAVING quantity != 0 ORDER BY p.id DESC";
         
         if($page != ''){
             $stockQuery .= " LIMIT {$per_page} OFFSET {$offset}";
@@ -7261,7 +7261,7 @@ class Reports_model extends CI_Model
         
         // Build WHERE clauses for purchase returns
         $return_where_clauses = [];
-        $return_wh_filter = ltrim($this->site->reportWarehouseAndClause($warehouse_id, 'p'), ' AND ');
+        $return_wh_filter = ltrim($this->site->reportWarehouseAndClause($warehouse_id, 'pr'), ' AND ');
         if ($return_wh_filter) {
             $return_where_clauses[] = $return_wh_filter;
         }
@@ -7271,11 +7271,11 @@ class Reports_model extends CI_Model
         }
         
         if ($purchase_ref) {
-            $return_where_clauses[] = "p.id LIKE '{$purchase_ref}%'";
+            $return_where_clauses[] = "(CAST(pr.id AS CHAR) LIKE '{$purchase_ref}%' OR CAST(pr.reference_no AS CHAR) LIKE '{$purchase_ref}%')";
         }
         
         if ($supplier_id) {
-            $return_where_clauses[] = "p.supplier_id = {$supplier_id}";
+            $return_where_clauses[] = "pr.supplier_id = {$supplier_id}";
         }
         
         if ($item_code) {

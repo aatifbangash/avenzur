@@ -54,6 +54,15 @@
         });
     });
 </script>
+<style>
+    /* Return rows: consistent tint (table-striped otherwise alternates gray on odd rows) */
+    #purchaseItemTable tbody tr.ppi-return-row > td {
+        background-color: #ffe6e6 !important;
+    }
+    #purchaseItemTable tbody tr.ppi-return-row:hover > td {
+        background-color: #ffd6d6 !important;
+    }
+</style>
 
 <div class="box">
     <div class="box-header">
@@ -75,17 +84,17 @@
                 ?>
                 <div class="row">
                     <div class="col-lg-12">
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <div class="form-group">
                                 <?= lang('start_date', 'start_date'); ?>
-                                <?php echo form_input('start_date', ($_GET['start_date'] ?? ''), 'class="form-control input-tip date" id="start_date"'); ?>
+                                <?php echo form_input('start_date', ($start_date ?? ''), 'class="form-control input-tip date" id="start_date"'); ?>
                             </div>
                         </div>
 
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <div class="form-group">
                                 <?= lang('end_date', 'end_date'); ?>
-                                <?php echo form_input('end_date', ($_GET['end_date'] ?? ''), 'class="form-control input-tip date" id="end_date"'); ?>
+                                <?php echo form_input('end_date', ($end_date ?? ''), 'class="form-control input-tip date" id="end_date"'); ?>
                             </div>
                         </div>
 
@@ -118,11 +127,6 @@
                             </div>
                         </div>
 
-                        <?php $this->load->view($this->theme . 'reports/partials/warehouse_filter_field', ['wh_col' => 'col-md-3']); ?>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-lg-12">
                         <div class="col-md-2">
                             <div class="form-group">
                                 <?= lang('Type', 'record_type'); ?>
@@ -133,6 +137,9 @@
                                 </select>
                             </div>
                         </div>
+
+                        <?php $this->load->view($this->theme . 'reports/partials/warehouse_filter_field', ['wh_col' => 'col-md-2']); ?>
+
                         <div class="col-md-2">
                             <div class="form-group">
                                 <label>&nbsp;</label><br>
@@ -201,9 +208,9 @@
                                             $grand_totals['vat']                  += $data->vat;
                                             $grand_totals['payable']              += $data->payable;
 
-                                            $row_class = ($data->type == 'Return') ? 'style="background-color: #ffe6e6;"' : '';
+                                            $row_class = ($data->type == 'Return') ? 'ppi-return-row' : '';
                                             ?>
-                                            <tr class="ppi-data-row" <?= $row_class ?>>
+                                            <tr class="ppi-data-row <?= $row_class ?>">
                                                 <td><?= $count ?></td>
                                                 <td><?= $data->type ?></td>
                                                 <td><?= $data->date ?></td>

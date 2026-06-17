@@ -22,27 +22,33 @@
     }*/
 
     function exportTableToExcel() {
-        // Get input values
-        const at_date = document.getElementById('at_date').value;
-        const warehouse = document.getElementById('warehouse').value;
-        const item_group = document.getElementById('item_group').value;
-        const item = document.getElementById('report_product_id2').value;
-        const filterOnType = document.getElementById('filterOnType').value;
-        const agent = document.getElementById('agent').value;
-        const agent2 = document.getElementById('agent2').value;
+        const form = document.getElementById('searchForm');
+        const params = new URLSearchParams(new FormData(form));
+        params.delete('viewtype');
+        params.delete('submit');
+        params.delete('sgproduct');
 
-        const queryParams = new URLSearchParams({
-            at_date: at_date,
-            warehouse: warehouse,
-            item_group: item_group,
-            item: item,
-            filterOnType: filterOnType,
-            agent: agent,
-            agent2: agent2
-        }).toString();
+        // Select2-backed dropdowns: prefer live widget value over stale FormData
+        const warehouse = $('#warehouse').val();
+        if (warehouse && warehouse !== '0') {
+            params.set('warehouse', warehouse);
+        } else {
+            params.delete('warehouse');
+        }
+        const itemGroup = $('#item_group').val();
+        if (itemGroup) {
+            params.set('item_group', itemGroup);
+        } else {
+            params.delete('item_group');
+        }
+        const supplierId = $('#supplier_id').val();
+        if (supplierId) {
+            params.set('supplier_id', supplierId);
+        } else {
+            params.delete('supplier_id');
+        }
 
-        //console.log(`<?php echo base_url('reports/stock_export_excel'); ?>?${queryParams}`);
-        window.location.href = `<?php echo base_url('admin/reports/stock_export_excel'); ?>?${queryParams}`;
+        window.location.href = `<?php echo base_url('admin/reports/stock_export_excel'); ?>?${params.toString()}`;
     }
 
     $(document).ready(function() {
