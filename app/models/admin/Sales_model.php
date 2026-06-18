@@ -2065,8 +2065,8 @@ class Sales_model extends CI_Model
             products.details as details, 
             products.hsn_code as hsn_code, 
             products.second_name as second_name, 
-            SUM(IFNULL(CASE WHEN sma_inventory_movements.customer_id = ' . $customer_id . ' THEN sma_inventory_movements.quantity ELSE 0 END, 0)) as total_quantity, 
-            SUM(IFNULL(CASE WHEN sma_inventory_movements.customer_id = ' . $customer_id . ' THEN sma_inventory_movements.bonus ELSE 0 END, 0)) as total_bonus
+            SUM(IFNULL(CASE WHEN sma_inventory_movements.customer_id = ' . $customer_id . ' AND sma_inventory_movements.product_id = sma_sale_items.product_id THEN sma_inventory_movements.quantity ELSE 0 END, 0)) as total_quantity,
+            SUM(IFNULL(CASE WHEN sma_inventory_movements.customer_id = ' . $customer_id . ' AND sma_inventory_movements.product_id = sma_sale_items.product_id THEN sma_inventory_movements.bonus ELSE 0 END, 0)) as total_bonus
         ')
         ->join('products', 'products.id=sale_items.product_id', 'left')
         ->join('inventory_movements', 'inventory_movements.avz_item_code=sale_items.avz_item_code', 'left')
