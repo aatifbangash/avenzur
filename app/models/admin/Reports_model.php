@@ -945,6 +945,48 @@ class Reports_model extends CI_Model
         return $response_array;
     }
 
+    /**
+     * Ledger scope for supplier statement queries.
+     * Petty cash supplier uses petty cash ledgers only (not Non-Trade Payable).
+     */
+    private function supplierStatementLedgerScopeSql($supplier_id, &$ledger_binds)
+    {
+        $petty_cash_supplier_id = (int) $this->site->getPettyCashSupplierId();
+        $petty_cash_ledger_ids = array_values(array_filter(array_map('intval', array_column($this->site->getPettyCashLedgers(), 'id'))));
+
+        if ($petty_cash_supplier_id > 0 && (int) $supplier_id === $petty_cash_supplier_id && !empty($petty_cash_ledger_ids)) {
+            $ledger_binds = [];
+            $ids = implode(',', $petty_cash_ledger_ids);
+            $pfx = $this->db->dbprefix;
+            return "(
+                (e.transaction_type = 'pettycash'
+                    AND e.memo_id IS NOT NULL AND e.memo_id != 0
+                    AND ai.dc = 'C' AND ai.ledger_id IN ({$ids}))
+                OR
+                (e.transaction_type = 'supplierpayment'
+                    AND ai.dc = 'D' AND ai.ledger_id IN ({$ids})
+                    AND EXISTS (
+                        SELECT 1 FROM {$pfx}payments pay
+                        INNER JOIN {$pfx}memo mm ON mm.id = pay.memo_id AND mm.type = 'pettycash'
+                        WHERE pay.payment_id = pr.id
+                    ))
+            )";
+        }
+
+        $ledger_binds = ['supplier_ledger', 'supplier_ledger_exclude'];
+        return "(
+            ai.ledger_id = ?
+            OR (
+                e.transaction_type = 'pettycash'
+                AND e.memo_id IS NOT NULL
+                AND e.memo_id != ''
+                AND e.memo_id != 0
+                AND ai.dc = 'C'
+                AND ai.ledger_id != ?
+            )
+        )";
+    }
+
     public function getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account, $warehouse_id = null)
     {
         $response = array();
@@ -956,17 +998,21 @@ class Reports_model extends CI_Model
 
         $supplier_ledger = $supplier_info->ledger_account;
         $warehouse_sql = $this->site->reportPurchaseLedgerWarehouseExistsSql($warehouse_id, 'e');
-        $ledger_scope_sql = "(
-            ai.ledger_id = ?
-            OR (
-                e.transaction_type = 'pettycash'
-                AND e.memo_id IS NOT NULL
-                AND e.memo_id != ''
-                AND e.memo_id != 0
-                AND ai.dc = 'C'
-                AND ai.ledger_id != ?
-            )
-        )";
+        $ledger_binds = [];
+        $ledger_scope_sql = $this->supplierStatementLedgerScopeSql($supplier_id, $ledger_binds);
+        $is_petty_cash_supplier = empty($ledger_binds);
+
+        $reference_case = "
+                CASE
+                    WHEN e.pid IS NOT NULL AND e.pid != '' AND e.pid != 0 THEN p.reference_no
+                    WHEN e.rsid IS NOT NULL AND e.rsid != '' AND e.rsid != 0 THEN
+                        CASE
+                            WHEN rs.reference_no IS NOT NULL AND rs.reference_no != '' AND rs.reference_no != '0' THEN rs.reference_no
+                            ELSE CAST(e.rsid AS CHAR)
+                        END
+                    WHEN e.memo_id IS NOT NULL AND e.memo_id != '' THEN m.reference_no
+                    ELSE pr.reference_no
+                END AS reference_no";
 
         $sql = "
             SELECT 
@@ -976,6 +1022,7 @@ class Reports_model extends CI_Model
                 ai.dc,
                 CASE
                     WHEN e.transaction_type = 'pettycash' THEN CONCAT('Petty Cash', IF(ai.narration IS NOT NULL AND ai.narration != '', CONCAT(' - ', ai.narration), ''))
+                    WHEN e.transaction_type = 'supplierpayment' AND ai.dc = 'D' THEN COALESCE(ai.narration, 'Petty Cash Replenishment')
                     ELSE ai.narration
                 END AS narration,
                 e.transaction_type,
@@ -986,16 +1033,7 @@ class Reports_model extends CI_Model
                 e.rsid,
                 e.rid,
                 al.code AS ledger_code,
-                CASE
-                    WHEN e.pid IS NOT NULL AND e.pid != '' AND e.pid != 0 THEN p.reference_no
-                    WHEN e.rsid IS NOT NULL AND e.rsid != '' AND e.rsid != 0 THEN
-                        CASE
-                            WHEN rs.reference_no IS NOT NULL AND rs.reference_no != '' AND rs.reference_no != '0' THEN rs.reference_no
-                            ELSE CAST(e.rsid AS CHAR)
-                        END
-                    WHEN e.memo_id IS NOT NULL AND e.memo_id != '' THEN m.reference_no
-                    ELSE pr.reference_no
-                END AS reference_no,
+                {$reference_case},
                 c.company,
                 pr.id as payment_reference,
                 m.id as memo_id
@@ -1016,12 +1054,15 @@ class Reports_model extends CI_Model
             ORDER BY e.date ASC, ai.id ASC
             ";
 
-            // Execute the query with bindings to avoid SQL injection
-        $q = $this->db->query($sql, [$supplier_id, $start_date, $supplier_ledger, $supplier_ledger]);
+        $ob_params = [$supplier_id, $start_date];
+        if (!$is_petty_cash_supplier) {
+            $ob_params[] = $supplier_ledger;
+            $ob_params[] = $supplier_ledger;
+        }
+        $q = $this->db->query($sql, $ob_params);
 
         $data_res = ($q->num_rows() > 0) ? $q->result() : [];
 
-        // Query for period transactions with reference_no
         $sql2 = "
             SELECT 
                 ai.id AS entryitem_id,
@@ -1030,6 +1071,7 @@ class Reports_model extends CI_Model
                 ai.dc,
                 CASE
                     WHEN e.transaction_type = 'pettycash' THEN CONCAT('Petty Cash', IF(ai.narration IS NOT NULL AND ai.narration != '', CONCAT(' - ', ai.narration), ''))
+                    WHEN e.transaction_type = 'supplierpayment' AND ai.dc = 'D' THEN COALESCE(ai.narration, 'Petty Cash Replenishment')
                     ELSE ai.narration
                 END AS narration,
                 e.transaction_type,
@@ -1041,16 +1083,7 @@ class Reports_model extends CI_Model
                 e.rid,
                 al.code AS ledger_code,
                 pr.id as payment_reference,
-                CASE
-                    WHEN e.pid IS NOT NULL AND e.pid != '' AND e.pid != 0 THEN p.reference_no
-                    WHEN e.rsid IS NOT NULL AND e.rsid != '' AND e.rsid != 0 THEN
-                        CASE
-                            WHEN rs.reference_no IS NOT NULL AND rs.reference_no != '' AND rs.reference_no != '0' THEN rs.reference_no
-                            ELSE CAST(e.rsid AS CHAR)
-                        END
-                    WHEN e.memo_id IS NOT NULL AND e.memo_id != '' THEN m.reference_no
-                    ELSE pr.reference_no
-                END AS reference_no,
+                {$reference_case},
                 c.company,
                 m.id as memo_id
             FROM sma_accounts_entryitems ai
@@ -1071,7 +1104,12 @@ class Reports_model extends CI_Model
             ORDER BY e.date ASC, ai.id ASC
             ";
 
-        $q = $this->db->query($sql2, [$supplier_id, $start_date, $end_date, $supplier_ledger, $supplier_ledger]);
+        $period_params = [$supplier_id, $start_date, $end_date];
+        if (!$is_petty_cash_supplier) {
+            $period_params[] = $supplier_ledger;
+            $period_params[] = $supplier_ledger;
+        }
+        $q = $this->db->query($sql2, $period_params);
 
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -1100,7 +1138,38 @@ class Reports_model extends CI_Model
         $supplier_ledger = (int) $supplier_info->ledger_account;
         $pfx = $this->db->dbprefix;
         $warehouse_sql = $this->site->reportPurchaseLedgerWarehouseExistsSql($warehouse_id, 'e');
-        $ledger_scope_sql = "(
+        $ledger_binds = [];
+        $ledger_scope_sql = $this->supplierStatementLedgerScopeSql($supplier_id, $ledger_binds);
+        $is_petty_cash_supplier = empty($ledger_binds);
+
+        $gl_params = [$supplier_id, $at_date];
+        if (!$is_petty_cash_supplier) {
+            $gl_params[] = $supplier_ledger;
+            $gl_params[] = $supplier_ledger;
+        }
+
+        $gl = $this->db->query("
+            SELECT ROUND(SUM(CASE WHEN ai.dc = 'C' THEN ai.amount ELSE -ai.amount END), 2) AS gl_net_credit
+            FROM {$pfx}accounts_entries e
+            JOIN {$pfx}accounts_entryitems ai ON ai.entry_id = e.id
+            LEFT JOIN {$pfx}payment_reference pr ON pr.journal_id = e.id
+            WHERE e.supplier_id = ?
+              AND DATE(e.date) <= ?
+              AND {$ledger_scope_sql}
+              {$warehouse_sql}
+        ", $gl_params)->row();
+
+        if ($is_petty_cash_supplier) {
+            $gl_net = $gl ? (float) $gl->gl_net_credit : 0.0;
+            return [
+                'gl_statement_balance' => $gl_net,
+                'unpaid_ap_total' => 0.0,
+                'variance' => $gl_net,
+                'per_invoice_mismatch_count' => 0,
+            ];
+        }
+
+        $ledger_scope_sql_ap = "(
             ai.ledger_id = ?
             OR (
                 e.transaction_type = 'pettycash'
@@ -1111,14 +1180,13 @@ class Reports_model extends CI_Model
                 AND ai.ledger_id != ?
             )
         )";
-
         $gl = $this->db->query("
             SELECT ROUND(SUM(CASE WHEN ai.dc = 'C' THEN ai.amount ELSE -ai.amount END), 2) AS gl_net_credit
             FROM {$pfx}accounts_entries e
             JOIN {$pfx}accounts_entryitems ai ON ai.entry_id = e.id
             WHERE e.supplier_id = ?
               AND DATE(e.date) <= ?
-              AND {$ledger_scope_sql}
+              AND {$ledger_scope_sql_ap}
               {$warehouse_sql}
         ", [$supplier_id, $at_date, $supplier_ledger, $supplier_ledger])->row();
 
