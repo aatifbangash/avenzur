@@ -251,6 +251,11 @@
                                     $transaction_type = 'Service Invoice';
                                     $transaction_id = $statement->memo_note;
                                     $note = strip_tags(html_entity_decode($statement->memo_note));
+                                }else if($statement->transaction_type == 'pettycash'){
+                                    $link = !empty($statement->memo_id) ? admin_url('suppliers/petty_cash_pdf/' . $statement->memo_id) : admin_url('entries/view/journal/' . $statement->entry_id);
+                                    $transaction_type = 'Petty Cash';
+                                    $transaction_id = $statement->memo_note ?: $statement->entry_id;
+                                    $note = $statement->narration ? strip_tags(html_entity_decode($statement->narration)) : ($statement->memo_note ?: '-');
                                 }else if($statement->transaction_type == 'returncustomerorder'){
                                     $link = admin_url('returns?rid=' . $statement->return_id);
                                     $transaction_type = 'Sales Return';

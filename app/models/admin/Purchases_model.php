@@ -819,11 +819,16 @@ class Purchases_model extends CI_Model
         $payment_ref_tbl = $dbp . 'payment_reference';
         if ($warehouse_id) {
             $this->db->where(
-                "EXISTS (SELECT 1 FROM {$payments_tbl} p
-                    INNER JOIN {$purchases_tbl} pu ON pu.id = p.purchase_id
-                    WHERE p.payment_id = {$payment_ref_tbl}.id
-                    AND p.purchase_id IS NOT NULL AND p.purchase_id > 0
-                    AND pu.warehouse_id = {$warehouse_id})",
+                "(
+                    EXISTS (SELECT 1 FROM {$payments_tbl} p
+                        INNER JOIN {$purchases_tbl} pu ON pu.id = p.purchase_id
+                        WHERE p.payment_id = {$payment_ref_tbl}.id
+                        AND p.purchase_id IS NOT NULL AND p.purchase_id > 0
+                        AND pu.warehouse_id = {$warehouse_id})
+                    OR EXISTS (SELECT 1 FROM {$payments_tbl} p
+                        WHERE p.payment_id = {$payment_ref_tbl}.id
+                        AND NULLIF(p.memo_id, '') IS NOT NULL AND NULLIF(p.memo_id, 0) IS NOT NULL)
+                )",
                 null,
                 false
             );

@@ -145,6 +145,36 @@
                 <hr/>
                 <?php echo form_close(); 
                 } ?>
+                <?php if (($Owner || $Admin) && !empty($reconciliation) && $viewtype != 'pdf' && $viewtype != 'pdf_new'): ?>
+                <div class="well well-sm" style="margin-bottom:15px;">
+                    <strong>Balance reconciliation</strong> <small class="text-muted">(as at <?= htmlspecialchars($end_date ?? ''); ?>)</small>
+                    <table class="table table-bordered table-condensed" style="margin-top:8px; margin-bottom:0; max-width:720px;">
+                        <tr>
+                            <td>Statement closing balance (GL)</td>
+                            <td class="text-right"><?= number_format((float) $reconciliation['gl_statement_balance'], 2, '.', ','); ?></td>
+                        </tr>
+                        <tr>
+                            <td>Unpaid invoices total (AP)</td>
+                            <td class="text-right"><?= number_format((float) $reconciliation['unpaid_ap_total'], 2, '.', ','); ?></td>
+                        </tr>
+                        <tr<?= abs((float) $reconciliation['variance']) > 0.01 ? ' class="danger"' : ''; ?>>
+                            <td><strong>Variance (GL − unpaid AP)</strong></td>
+                            <td class="text-right"><strong><?= number_format((float) $reconciliation['variance'], 2, '.', ','); ?></strong></td>
+                        </tr>
+                    </table>
+                    <?php if (abs((float) $reconciliation['variance']) > 0.01): ?>
+                    <p class="text-muted" style="margin:8px 0 0;">
+                        The statement is GL-based and may differ from unpaid-invoice outstanding when payment allocations and journals disagree.
+                        <?php if (!empty($supplier_id)): ?>
+                        <a href="<?= admin_url('reports/debug_supplier_balance/' . (int) $supplier_id . '?at_date=' . urlencode($end_date ?? '')); ?>" target="_blank">View per-invoice breakdown</a>
+                        <?php endif; ?>
+                        <?php if ((int) $reconciliation['per_invoice_mismatch_count'] > 0): ?>
+                        (<?= (int) $reconciliation['per_invoice_mismatch_count']; ?> invoice(s) with allocation mismatch &gt; 1 SAR)
+                        <?php endif; ?>
+                    </p>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
                 <div class="row">
                     <div class="controls table-controls" style="font-size: 12px !important;">
                         <table id="poTable"
@@ -236,9 +266,9 @@
                                 }else if($statement->transaction_type == 'creditmemo' || $statement->transaction_type == 'debitmemo'){
                                     $link = admin_url('customers/view_credit_memo/' . $statement->memo_id);
                                     $transaction_type = 'Memo';
-                                }else if($statement->transaction_type == 'serviceinvoice'){
-                                    $link = admin_url('customers/list_service_invoice');
-                                    $transaction_type = 'Service Invoice';
+                }else if($statement->transaction_type == 'serviceinvoice'){
+                    $link = !empty($statement->memo_id) ? admin_url('suppliers/edit_service_invoice/' . $statement->memo_id) : admin_url('suppliers/list_service_invoice');
+                    $transaction_type = 'Service Invoice';
                                 }else if($statement->transaction_type == 'pettycash'){
                                     $link = !empty($statement->memo_id) ? admin_url('suppliers/petty_cash_pdf/' . $statement->memo_id) : null;
                                     $transaction_type = 'Petty Cash';

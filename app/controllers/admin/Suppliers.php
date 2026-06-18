@@ -1054,6 +1054,10 @@ class Suppliers extends MY_Controller
             'from_date'    => $this->input->get('from_date')   ?: $this->input->post('from_date'),
             'to_date'      => $this->input->get('to_date')     ?: $this->input->post('to_date'),
         ];
+        // Default from_date to January 1st of the current year
+        if (empty($filters['from_date'])) {
+            $filters['from_date'] = date('d/m/Y', mktime(0, 0, 0, 1, 1, (int) date('Y')));
+        }
         // Convert display date (d/m/Y) to Y-m-d for the query
         foreach (['from_date', 'to_date'] as $f) {
             if (!empty($filters[$f])) {

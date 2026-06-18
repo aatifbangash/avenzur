@@ -4815,7 +4815,7 @@ class Reports extends MY_Controller
         $default_from = date('d/m/Y', mktime(0, 0, 0, 1, 1, (int)date('Y')));
         $this->data['default_from_date'] = $default_from;
 
-        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+        $this->data['suppliers'] = $this->site->getAllChildCompanies('supplier');
         $this->data['warehouses'] = $this->site->getAllWarehouses();
         $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
         $this->data['warehouse_id'] = $warehouse_id;
@@ -4853,6 +4853,11 @@ class Reports extends MY_Controller
             $this->data['total_ob_debit'] = $total_ob_debit;
             $this->data['total_ob'] = $this->sma->formatDecimal($total_ob);
             $this->data['supplier_statement'] = $supplier_statement['report'];
+            $this->data['reconciliation'] = $this->reports_model->getSupplierBalanceReconciliation(
+                $supplier_id,
+                $end_date,
+                $warehouse_id
+            );
 
             
 
@@ -4884,12 +4889,20 @@ class Reports extends MY_Controller
      * Diagnostic: compare Supplier Statement ledger balance vs Unpaid Invoices balance
      * for a single supplier.
      *
-     * Access: /admin/reports/debug_supplier_balance/674
-     * Outputs a plain-HTML dump — no layout, no auth check, direct browser output.
+     * Access: /admin/reports/debug_supplier_balance/{supplier_id}?at_date=2026-05-31
+     * Requires reports-supplier-statement permission (Owner/Admin bypass).
      */
-    public function debug_supplier_balance($supplier_id = 674)
+    public function debug_supplier_balance($supplier_id = null)
     {
-        $supplier_id = (int) $supplier_id;
+        if (!$this->Owner && !$this->Admin && empty($this->GP['reports-supplier-statement'])) {
+            show_error('Access denied', 403);
+        }
+
+        $supplier_id = (int) ($supplier_id ?: $this->input->get('supplier_id'));
+        if (!$supplier_id) {
+            show_error('Supplier ID required', 400);
+        }
+
         $pfx         = $this->db->dbprefix; // 'sma_'
 
         $this->db->reset_query();
@@ -4899,6 +4912,15 @@ class Reports extends MY_Controller
         $ledger_id = (int) $sup->ledger_account;
 
         $fmt = fn($v) => number_format((float)$v, 2, '.', ',');
+
+        $at_date_input = $this->input->get('at_date');
+        if ($at_date_input) {
+            $date_cut = strpos($at_date_input, '/') !== false
+                ? $this->sma->fld($at_date_input)
+                : $at_date_input;
+        } else {
+            $date_cut = date('Y-m-d');
+        }
 
         echo "<!doctype html><html><head><meta charset='utf-8'>
         <style>
@@ -4913,7 +4935,7 @@ class Reports extends MY_Controller
             .zero{color:#aaa}
         </style></head><body>";
 
-        $date_cut = '2026-03-31';
+        $date_cut = substr($date_cut, 0, 10);
 
         echo "<h1>Purchase vs Accounting vs Payments — Supplier ID: $supplier_id — {$sup->name}</h1>";
         echo "<p>Supplier Ledger Account ID: <b>$ledger_id</b> &nbsp;|&nbsp; Date filter: up to <b>{$date_cut}</b></p>";
@@ -5637,7 +5659,7 @@ class Reports extends MY_Controller
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
 
-        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+        $this->data['suppliers'] = $this->site->getAllChildCompanies('supplier');
         $this->data['biller'] = $this->site->getDefaultBiller();
         $this->data['warehouses'] = $this->site->getAllWarehouses();
         $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
@@ -5680,6 +5702,11 @@ class Reports extends MY_Controller
             $this->data['total_ob_debit'] = $total_ob_debit;
             $this->data['total_ob'] = $this->sma->formatDecimal($total_ob);
             $this->data['supplier_statement'] = $supplier_statement['report'];
+            $this->data['reconciliation'] = $this->reports_model->getSupplierBalanceReconciliation(
+                $supplier_id,
+                $end_date,
+                $warehouse_id
+            );
 
             // Set viewtype for PDF rendering
             $this->data['viewtype'] = 'pdf_new';
@@ -6037,7 +6064,7 @@ class Reports extends MY_Controller
         }
         $this->data['supplier_trade_type'] = $supplier_trade_type;
 
-        $all_suppliers = $this->site->getAllChildCompanies('supplier') ?: [];
+        $all_suppliers = $this->site->getAllCompanies('supplier') ?: [];
         $this->data['suppliers'] = array_values(array_filter($all_suppliers, function ($s) use ($supplier_trade_type) {
             $is_service = stripos($s->category ?? '', 'خدمات') !== false || stripos($s->category ?? '', 'service') !== false;
             if ($supplier_trade_type === 'non_trade') {
@@ -8053,7 +8080,12 @@ class Reports extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         
         // Get filter parameters from GET
-        $start_date   = $this->input->get('start_date')   ?: null;
+        $start_date = $this->input->get('start_date');
+        if (($start_date === null || $start_date === '') && empty($_GET)) {
+            $start_date = date('d/m/Y', mktime(0, 0, 0, 1, 1, (int) date('Y')));
+        } elseif ($start_date === null || $start_date === '') {
+            $start_date = null;
+        }
         $end_date     = $this->input->get('end_date')     ?: null;
         $purchase_ref = $this->input->get('purchase_ref') ?: null;
         $supplier     = $this->input->get('supplier')     ?: null;
@@ -8097,7 +8129,7 @@ class Reports extends MY_Controller
         $this->data['warehouse_id'] = $warehouse_id;
         
         // If any filter submitted, fetch data
-        if ($start_date || $end_date || $purchase_ref || $supplier || $item_code) {
+        if (!empty($_GET) && ($start_date || $end_date || $purchase_ref || $supplier || $item_code || ($record_type && $record_type !== 'all'))) {
             
             // Format dates only if provided
             $formatted_start_date = $start_date ? $this->sma->fld($start_date) : null;
