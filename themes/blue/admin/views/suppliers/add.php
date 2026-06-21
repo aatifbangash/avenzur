@@ -122,8 +122,10 @@
                     
                     <div class="form-group  ">
                         <?= lang('category', 'category'); ?>
-                        <?php $catogories_arr = [''=>'Please Select', 'خدمات ' => lang('خدمات'), 'مستودع' => lang('مستودع'), 'وكيل' => lang('وكيل')];
-                        echo form_dropdown('category', $catogories_arr, '', 'class="form-control select" id="category" name="category" required="required"'); ?>
+                        <?php
+                        $catogories_arr = $supplier_category_options ?? $this->site->getSupplierCategoryOptions();
+                        echo form_dropdown('category', $catogories_arr, '', 'class="form-control select" id="category" name="category" required="required"');
+                        ?>
                     </div>
 
                     <div class="form-group" id="parent_company_group" style="display: none;">
@@ -234,6 +236,28 @@
         });
         $('select.select').select2({minimumResultsForSearch: 7});
         $('select.ledger-dropdown').select2({minimumResultsForSearch: 7});
+
+        var supplierCategoryLedgers = <?= json_encode($supplier_category_ledgers ?? []) ?>;
+
+        function syncCategoryLedger() {
+            var cat = $('#category').val();
+            var ledgerId = supplierCategoryLedgers[cat];
+            if (ledgerId) {
+                $('#ledger_account').val(ledgerId).trigger('change');
+                $('#ledger_account').prop('disabled', true);
+                if (!$('#ledger_account_submit').length) {
+                    $('<input type="hidden" id="ledger_account_submit" name="ledger_account">').insertAfter('#ledger_account');
+                }
+                $('#ledger_account_submit').val(ledgerId);
+                $('#ledger_account').removeAttr('name');
+            } else {
+                $('#ledger_account').prop('disabled', false).attr('name', 'ledger_account');
+                $('#ledger_account_submit').remove();
+            }
+        }
+
+        $('#category').on('change', syncCategoryLedger);
+        syncCategoryLedger();
 
         // Show/hide parent company dropdown based on level selection
         $('#level').on('change', function() {

@@ -10,6 +10,7 @@ table#poTable td input.form-control {
 }
 </style>
 <script type="text/javascript">
+    window.overseasWarehouseId = <?= (int) ($overseas_warehouse_id ?? 0) ?>;
     localStorage.removeItem('poitems');
      if (localStorage.getItem('poitems')) {
         localStorage.removeItem('poitems');
