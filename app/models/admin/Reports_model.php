@@ -6765,7 +6765,7 @@ class Reports_model extends CI_Model
             $return_where_clauses[] = "c.category = '" . $this->db->escape_str($category) . "'";
         }
 
-        $return_wh_clause = trim($this->site->reportWarehouseAndClause($warehouse_id, 's'));
+        $return_wh_clause = trim($this->site->reportWarehouseAndClause($warehouse_id, 'r'));
         if ($return_wh_clause) {
             $return_where_clauses[] = ltrim($return_wh_clause, ' AND ');
         }
@@ -7080,16 +7080,8 @@ class Reports_model extends CI_Model
             {$limit_sql}
         ";
         
-        // #region agent log
-        @file_put_contents('/Applications/XAMPP/xamppfiles/htdocs/avenzur/.cursor/debug-cbde1b.log', json_encode(['sessionId' => 'cbde1b', 'runId' => 'pre-fix', 'hypothesisId' => 'A,B', 'location' => 'Reports_model.php:getSalesPerItem', 'message' => 'getSalesPerItem aggregate query result', 'data' => ['start_date' => $start_date, 'end_date' => $end_date, 'warehouse_id' => $warehouse_id, 'total_rows' => $total, 'limit' => $limit, 'offset' => $offset, 'sum_net_sales' => (float) $totals->sum_net_sales, 'sum_sales' => (float) $totals->sum_sales, 'rows_returned' => 0], 'timestamp' => round(microtime(true) * 1000)]) . "\n", FILE_APPEND);
-        // #endregion
-
         $query = $this->db->query($sql);
         $rows = ($query && $query->num_rows() > 0) ? $query->result() : [];
-
-        // #region agent log
-        @file_put_contents('/Applications/XAMPP/xamppfiles/htdocs/avenzur/.cursor/debug-cbde1b.log', json_encode(['sessionId' => 'cbde1b', 'runId' => 'pre-fix', 'hypothesisId' => 'B', 'location' => 'Reports_model.php:getSalesPerItem:after_query', 'message' => 'getSalesPerItem page rows fetched', 'data' => ['rows_returned' => count($rows), 'total_rows' => $total], 'timestamp' => round(microtime(true) * 1000)]) . "\n", FILE_APPEND);
-        // #endregion
 
         return [
             'rows' => $rows,
@@ -7188,7 +7180,7 @@ class Reports_model extends CI_Model
                 FROM sma_return_items 
                 GROUP BY return_id
             ) as return_items_cogs ON return_items_cogs.return_id = r.id
-            WHERE 1=1
+            WHERE r.status = 'completed'
         ";
 
         // Add date filter for returns
@@ -7207,6 +7199,11 @@ class Reports_model extends CI_Model
         // Add warehouse filter for returns
         if (!empty($pharmacy_id) && $pharmacy_id !== '' && $pharmacy_id !== '0') {
             $sql .= " AND r.warehouse_id = {$pharmacy_id}";
+        } else {
+            $return_wh_clause = trim($this->site->reportWarehouseAndClause(null, 'r'));
+            if ($return_wh_clause) {
+                $sql .= $return_wh_clause;
+            }
         }
 
         // Add salesman filter for returns
@@ -7225,6 +7222,7 @@ class Reports_model extends CI_Model
         }
 
         $query = $this->db->query($sql);
+        $rows = ($query && $query->num_rows() > 0) ? $query->result() : [];
 
         // Enhanced logging for debugging
         log_message('debug', '========== getSalesPerInvoice Debug ==========');
@@ -7232,10 +7230,10 @@ class Reports_model extends CI_Model
         log_message('debug', 'Customer ID: ' . var_export($customer_id, true) . ' (type: ' . gettype($customer_id) . ')');
         log_message('debug', 'Pharmacy ID: ' . var_export($pharmacy_id, true) . ' (type: ' . gettype($pharmacy_id) . ')');
         log_message('debug', 'SQL: ' . $sql);
-        log_message('debug', 'Result count: ' . $query->num_rows());
+        log_message('debug', 'Result count: ' . count($rows));
         log_message('debug', '================================================');
 
-        return $query->result();
+        return $rows;
     }
 
     /**
