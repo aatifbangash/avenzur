@@ -255,7 +255,7 @@
                                     $link = admin_url('sales?sid=' . $statement->sid);
                                     $transaction_type = 'Sales';
                                 }else if($statement->transaction_type == 'purchase_invoice' || $statement->transaction_type == 'purchaseorder'){
-                                    $link = admin_url('purchases?pid=' . $statement->pid);
+                                    $link = admin_url('purchases/32?pid=' . $statement->pid);
                                     $transaction_type = 'Purchase';
                                 }else if($statement->transaction_type == 'supplierpayment'){
                                     $link = admin_url('suppliers/view_payment/' . $statement->payment_reference);
