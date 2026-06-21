@@ -6066,7 +6066,9 @@ class Reports extends MY_Controller
 
         $all_suppliers = $this->site->getAllCompanies('supplier') ?: [];
         $this->data['suppliers'] = array_values(array_filter($all_suppliers, function ($s) use ($supplier_trade_type) {
-            $is_service = stripos($s->category ?? '', 'خدمات') !== false || stripos($s->category ?? '', 'service') !== false;
+            $is_service = strcasecmp(trim($s->category ?? ''), 'Services') === 0
+                || stripos($s->category ?? '', 'خدمات') !== false
+                || stripos($s->category ?? '', 'service') !== false;
             if ($supplier_trade_type === 'non_trade') {
                 return $is_service;
             }
@@ -10391,10 +10393,10 @@ class Reports extends MY_Controller
             return;
         }
         if ($trade_type === 'non_trade') {
-            $this->db->where("({$category_col} LIKE '%خدمات%' OR {$category_col} LIKE '%service%')", null, false);
+            $this->db->where("({$category_col} = 'Services' OR {$category_col} LIKE '%خدمات%' OR {$category_col} LIKE '%service%')", null, false);
             return;
         }
-        $this->db->where("({$category_col} IS NULL OR ({$category_col} NOT LIKE '%خدمات%' AND {$category_col} NOT LIKE '%service%'))", null, false);
+        $this->db->where("({$category_col} IS NULL OR ({$category_col} != 'Services' AND {$category_col} NOT LIKE '%خدمات%' AND {$category_col} NOT LIKE '%service%'))", null, false);
     }
 
     private function filter_suppliers_by_trade_type($suppliers, $trade_type)
@@ -10403,7 +10405,9 @@ class Reports extends MY_Controller
             return $suppliers ?: [];
         }
         return array_values(array_filter($suppliers, function ($s) use ($trade_type) {
-            $is_service = stripos($s->category ?? '', 'خدمات') !== false || stripos($s->category ?? '', 'service') !== false;
+            $is_service = strcasecmp(trim($s->category ?? ''), 'Services') === 0
+                || stripos($s->category ?? '', 'خدمات') !== false
+                || stripos($s->category ?? '', 'service') !== false;
             if ($trade_type === 'non_trade') {
                 return $is_service;
             }
@@ -10702,7 +10706,8 @@ class Reports extends MY_Controller
 
         // Exclude suppliers whose category contains خدمات
         $payments = array_values(array_filter($payments, function ($p) {
-            return stripos($p->supplier_group ?? '', 'خدمات') === false;
+            return strcasecmp(trim($p->supplier_group ?? ''), 'Services') !== 0
+                && stripos($p->supplier_group ?? '', 'خدمات') === false;
         }));
 
         $total    = count($payments);

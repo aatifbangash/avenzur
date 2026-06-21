@@ -2054,10 +2054,10 @@ class Reports_model extends CI_Model
             return;
         }
         if ($trade_type === 'non_trade') {
-            $this->db->where("({$category_col} LIKE '%خدمات%' OR {$category_col} LIKE '%service%')", null, false);
+            $this->db->where("({$category_col} = 'Services' OR {$category_col} LIKE '%خدمات%' OR {$category_col} LIKE '%service%')", null, false);
             return;
         }
-        $this->db->where("({$category_col} IS NULL OR ({$category_col} NOT LIKE '%خدمات%' AND {$category_col} NOT LIKE '%service%'))", null, false);
+        $this->db->where("({$category_col} IS NULL OR ({$category_col} != 'Services' AND {$category_col} NOT LIKE '%خدمات%' AND {$category_col} NOT LIKE '%service%'))", null, false);
     }
 
     public function get_suppliers_trial_balance($start_date, $end_date, $supplier_ids, $warehouse_id = null, $trade_type = 'trade')
