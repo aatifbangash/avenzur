@@ -1,93 +1,100 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <link href="<?= $assets ?>styles/pdf/pdf.css" rel="stylesheet">
+<style>
+body { padding: 0 15px 50px 15px !important; }
+body h2 { margin: 0 0 8px 0 !important; padding: 0 !important; }
+</style>
+
+<?php
+$logo_file = !empty($biller->logo) ? FCPATH . 'assets/uploads/logos/' . $biller->logo : '';
+$has_logo = $logo_file && file_exists($logo_file);
+$invoice_no = !empty($service_invoice->reference_no) && $service_invoice->reference_no !== '0'
+    ? $service_invoice->reference_no
+    : (!empty($service_invoice->sequence_code)
+        ? $service_invoice->sequence_code
+        : 'SI-' . $service_invoice->id);
+?>
 
 <!-- PDF Header -->
-<div style="width:100%; margin-bottom:15px; position:relative;">
+<div style="width:100%; margin-bottom:15px;">
 
-    <!-- RIGHT: Logo -->
-    <div style="position:absolute; top:0; right:0; text-align:right;">
-        <img src="<?= base_url('assets/uploads/logos/' . $biller->logo); ?>"
-             style="max-width:150px; max-height:60px;">
-        <div style="font-size: 12px; font-weight: bold; margin-top: 5px; color: #333;">
-            <?= $biller->name ?? ''; ?>
-        </div>
+    <div style="text-align:center; margin:0; padding:0;">
+        <h2 style="margin:0; color:#333; font-size:18px; line-height:1.2;">VAT INVOICE</h2>
     </div>
 
-    <!-- LEFT: Service Invoice details -->
-    <div style="width:45%; float:left;">
-
-        <div style="font-size:10px; color:#666; margin-bottom:6px;">
-            Printed on: <?= date('d/m/Y H:i:s'); ?>
+    <!-- Logo (left) and QR (right) below title -->
+    <div style="position:relative; width:100%; min-height:70px; margin-bottom:10px;">
+        <?php if ($has_logo): ?>
+        <div style="position:absolute; top:0; left:0; text-align:left;">
+            <img src="<?= base_url('assets/uploads/logos/' . $biller->logo); ?>"
+                 style="max-width:150px; max-height:60px;">
         </div>
+        <?php endif; ?>
 
-        <div style="font-size:13px; line-height:2.4;">
-            <strong>Service Invoice No:</strong> <?= $service_invoice->sequence_code; ?>
-            <br>
-            <strong>Date:</strong> <?= date('d/m/Y', strtotime($service_invoice->date)); ?>
-            <br>
-            <strong>Customer:</strong> <?= $customer->name; ?>
-            <?php if ($customer->sequence_code): ?>
-            <br>
-            <strong>Customer ID:</strong> <?= $customer->sequence_code; ?>
-            <?php endif; ?>
-            <?php if ($customer->vat_no): ?>
-            <br>
-            <strong>Customer VAT No:</strong> <?= $customer->vat_no; ?>
-            <?php endif; ?>
-            <?php if ($customer->cr): ?>
-            <br>
-            <strong>Customer CR No:</strong> <?= $customer->cr; ?>
-            <?php endif; ?>
-            <?php if ($customer->address): ?>
-            <br>
-            <strong>Customer Address:</strong> <?= $customer->address; ?>
-            <?php endif; ?>
+        <?php if (isset($qr_code_base64)): ?>
+        <div style="position:absolute; top:0; right:0; text-align:right;">
+            <img src="data:image/png;base64,<?= $qr_code_base64 ?>" width="70" height="70" alt="QR Code" />
         </div>
-
+        <?php endif; ?>
     </div>
 
-    <!-- RIGHT: Company Information -->
-    <div style="width:45%; float:right; padding:15px; background-color:#f9f9f9;">
-        <table style="width:100%; border:0;">
-            <tr>
-                <td style="vertical-align:top; padding:0 10px 0 0;border:none;">
-                    <div style="font-size:12px; line-height:3;">
+    <!-- Customer and company details -->
+    <table style="width:100%; border:0; border-collapse:collapse; margin-bottom:0;">
+        <tr>
+            <td style="width:50%; vertical-align:top; border:none; padding:0 12px 0 0;">
+                <div style="font-size:10px; color:#666; margin-bottom:10px;">
+                    Printed on: <?= date('d/m/Y H:i:s'); ?>
+                </div>
+
+                <div style="font-size:12px; line-height:2.2;">
+                    <strong>Service Invoice No:</strong> <?= $invoice_no; ?><br><br>
+                    <strong>Date:</strong> <?= date('d/m/Y', strtotime($service_invoice->date)); ?><br><br>
+                    <strong>Customer:</strong> <?= $customer->name; ?>
+                    <?php if ($customer->sequence_code): ?>
+                    <br><br>
+                    <strong>Customer ID:</strong> <?= $customer->sequence_code; ?>
+                    <?php endif; ?>
+                    <?php if ($customer->vat_no): ?>
+                    <br><br>
+                    <strong>Customer VAT No:</strong> <?= $customer->vat_no; ?>
+                    <?php endif; ?>
+                    <?php if ($customer->cr): ?>
+                    <br><br>
+                    <strong>Customer CR No:</strong> <?= $customer->cr; ?>
+                    <?php endif; ?>
+                    <?php if ($customer->address): ?>
+                    <br><br>
+                    <strong>Customer Address:</strong> <?= $customer->address; ?>
+                    <?php endif; ?>
+                </div>
+            </td>
+            <td style="width:50%; vertical-align:top; border:none; padding:0 0 0 12px;">
+                <div style="padding:15px; background-color:#f9f9f9;">
+                    <div style="font-size:12px; line-height:2.2;">
                         <strong>Company Information:</strong><br><br>
                         <?php if ($biller->name): ?>
-                        <strong style="line-height:3;">Name:</strong> <?= $biller->name; ?><br><br>
+                        <strong>Name:</strong> <?= $biller->name; ?><br><br>
                         <?php endif; ?>
                         <?php if ($biller->vat_no): ?>
-                        <strong style="line-height:3;">VAT No:</strong> <?= $biller->vat_no; ?><br><br>
+                        <strong>VAT No:</strong> <?= $biller->vat_no; ?><br><br>
                         <?php endif; ?>
                         <?php if ($biller->cr): ?>
-                        <strong style="line-height:3;">CR No:</strong> <?= $biller->cr; ?><br><br>
+                        <strong>CR No:</strong> <?= $biller->cr; ?><br><br>
                         <?php endif; ?>
                         <?php if ($biller->address): ?>
-                        <strong style="line-height:3;">Address:</strong> <?= $biller->address; ?>
+                        <strong>Address:</strong> <?= $biller->address; ?>
                         <?php endif; ?>
                     </div>
-                </td>
-                <?php if (isset($qr_code_base64)): ?>
-                <td style="vertical-align:top; text-align:right; padding:0; width:80px;border:none;">
-                    <img src="data:image/png;base64,<?= $qr_code_base64 ?>" width="70" height="70" />
-                </td>
-                <?php endif; ?>
-            </tr>
-        </table>
-    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
 
-    <!-- CLEAR -->
     <div style="clear:both;"></div>
-
-</div>
-
-<!-- Service Invoice Title -->
-<div style="text-align:center; margin-bottom:20px;">
-    <h2 style="margin:0; color:#333;">VAT INVOICE</h2>
 </div>
 
 <!-- Service Details Table -->
-<table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
+<table style="width:100%; border-collapse:collapse; margin-top:25px; margin-bottom:20px;">
     <thead>
         <tr style="background-color:#f5f5f5;">
             <th style="border:1px solid #ddd; padding:8px; text-align:left; font-weight:bold;">Service Type</th>
@@ -111,22 +118,30 @@
             $grand_total += $entry->payment_amount;
         ?>
         <tr>
-            <td style="border:1px solid #ddd; padding:8px;"><?= ucfirst(str_replace('_', ' ', $entry->service_type)); ?></td>
+            <td style="border:1px solid #ddd; padding:8px;">
+                <?php
+                $serviceLabel = ucfirst(str_replace('_', ' ', $entry->service_type));
+                if ($entry->service_type == 'transportation' && !empty($entry->name)) {
+                    $serviceLabel .= ' — ' . $entry->name;
+                }
+                echo $serviceLabel;
+                ?>
+            </td>
             <td style="border:1px solid #ddd; padding:8px;">
                 <?php
                 if ($entry->service_type == 'transportation') {
-                    echo $entry->from_val; // City
+                    echo $entry->from_val;
                 } else {
-                    echo date('d/m/Y', strtotime($entry->from_val)); // Date
+                    echo date('d/m/Y', strtotime($entry->from_val));
                 }
                 ?>
             </td>
             <td style="border:1px solid #ddd; padding:8px;">
                 <?php
                 if ($entry->service_type == 'transportation') {
-                    echo $entry->to_val; // City
+                    echo $entry->to_val;
                 } else {
-                    echo date('d/m/Y', strtotime($entry->to_val)); // Date
+                    echo date('d/m/Y', strtotime($entry->to_val));
                 }
                 ?>
             </td>
