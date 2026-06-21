@@ -2054,10 +2054,10 @@ class Reports_model extends CI_Model
             return;
         }
         if ($trade_type === 'non_trade') {
-            $this->db->where("({$category_col} LIKE '%خدمات%' OR {$category_col} LIKE '%service%')", null, false);
+            $this->db->where("({$category_col} = 'Services' OR {$category_col} LIKE '%خدمات%' OR {$category_col} LIKE '%service%')", null, false);
             return;
         }
-        $this->db->where("({$category_col} IS NULL OR ({$category_col} NOT LIKE '%خدمات%' AND {$category_col} NOT LIKE '%service%'))", null, false);
+        $this->db->where("({$category_col} IS NULL OR ({$category_col} != 'Services' AND {$category_col} NOT LIKE '%خدمات%' AND {$category_col} NOT LIKE '%service%'))", null, false);
     }
 
     public function get_suppliers_trial_balance($start_date, $end_date, $supplier_ids, $warehouse_id = null, $trade_type = 'trade')
@@ -7080,8 +7080,16 @@ class Reports_model extends CI_Model
             {$limit_sql}
         ";
         
+        // #region agent log
+        @file_put_contents('/Applications/XAMPP/xamppfiles/htdocs/avenzur/.cursor/debug-cbde1b.log', json_encode(['sessionId' => 'cbde1b', 'runId' => 'pre-fix', 'hypothesisId' => 'A,B', 'location' => 'Reports_model.php:getSalesPerItem', 'message' => 'getSalesPerItem aggregate query result', 'data' => ['start_date' => $start_date, 'end_date' => $end_date, 'warehouse_id' => $warehouse_id, 'total_rows' => $total, 'limit' => $limit, 'offset' => $offset, 'sum_net_sales' => (float) $totals->sum_net_sales, 'sum_sales' => (float) $totals->sum_sales, 'rows_returned' => 0], 'timestamp' => round(microtime(true) * 1000)]) . "\n", FILE_APPEND);
+        // #endregion
+
         $query = $this->db->query($sql);
         $rows = ($query && $query->num_rows() > 0) ? $query->result() : [];
+
+        // #region agent log
+        @file_put_contents('/Applications/XAMPP/xamppfiles/htdocs/avenzur/.cursor/debug-cbde1b.log', json_encode(['sessionId' => 'cbde1b', 'runId' => 'pre-fix', 'hypothesisId' => 'B', 'location' => 'Reports_model.php:getSalesPerItem:after_query', 'message' => 'getSalesPerItem page rows fetched', 'data' => ['rows_returned' => count($rows), 'total_rows' => $total], 'timestamp' => round(microtime(true) * 1000)]) . "\n", FILE_APPEND);
+        // #endregion
 
         return [
             'rows' => $rows,

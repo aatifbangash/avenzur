@@ -746,12 +746,163 @@ class Site extends CI_Model
         return false;
     }
 
-    public function enforceOverseasRules($warehouse_id, $product_ids)
+    public function getOverseasSupplierCategory()
+    {
+        return 'JASPN';
+    }
+
+    public function getSupplierCategoryOptions()
+    {
+        return [
+            ''        => 'Please Select',
+            'Agent'   => 'Agent',
+            'Warehouse' => 'Warehouse',
+            'Services'  => 'Services',
+            'JASPN'   => 'JASPN',
+        ];
+    }
+
+    public function normalizeSupplierCategory($category)
+    {
+        $cat = trim((string) ($category ?? ''));
+        $legacy = [
+            'وكيل'     => 'Agent',
+            'مستودع'   => 'Warehouse',
+            'خدمات'    => 'Services',
+            'خدمات '   => 'Services',
+            'service'  => 'Services',
+            'service ' => 'Services',
+            'trade'    => 'Agent',
+            'JASPN'    => 'JASPN',
+            'Agent'    => 'Agent',
+            'Warehouse' => 'Warehouse',
+            'Services' => 'Services',
+        ];
+        return $legacy[$cat] ?? $cat;
+    }
+
+    public function getSupplierCategoryLedgerId($category)
+    {
+        $cat = $this->normalizeSupplierCategory($category);
+        static $cache = [];
+        if (array_key_exists($cat, $cache)) {
+            return $cache[$cat] ?: false;
+        }
+        $config = [
+            'Agent' => [
+                'codes' => ['2110100001'],
+                'name'  => 'Agent Suppliers',
+            ],
+            'Warehouse' => [
+                'codes' => ['2110100002'],
+                'name'  => 'Warehouse Suppliers',
+            ],
+            'Services' => [
+                'codes' => ['2110200001'],
+                'name'  => 'Non-Trade Payable',
+            ],
+            'JASPN' => [
+                'codes' => ['2110300001', '211030001'],
+                'name'  => 'JASPEN Payable',
+            ],
+        ];
+        if (!isset($config[$cat])) {
+            $cache[$cat] = 0;
+            return false;
+        }
+        $prefix = $this->db->dbprefix('accounts_ledgers');
+        foreach ($config[$cat]['codes'] as $code) {
+            $q = $this->db->query(
+                'SELECT id FROM ' . $prefix . ' WHERE code = ' . $this->db->escape($code) . ' LIMIT 1'
+            );
+            if ($q && $q->num_rows()) {
+                $cache[$cat] = (int) $q->row()->id;
+                return $cache[$cat];
+            }
+        }
+        $this->db->reset_query();
+        $this->db->like('name', $config[$cat]['name'], 'both');
+        $this->db->limit(1);
+        $q = $this->db->get('accounts_ledgers');
+        $cache[$cat] = ($q && $q->num_rows()) ? (int) $q->row()->id : 0;
+        return $cache[$cat] ?: false;
+    }
+
+    public function getSupplierCategoryLedgerMap()
+    {
+        $map = [];
+        foreach (['Agent', 'Warehouse', 'Services', 'JASPN'] as $cat) {
+            $id = $this->getSupplierCategoryLedgerId($cat);
+            if ($id) {
+                $map[$cat] = (string) $id;
+            }
+        }
+        return $map;
+    }
+
+    public function getJaspenPayableLedgerId()
+    {
+        return $this->getSupplierCategoryLedgerId('JASPN');
+    }
+
+    public function isOverseasSupplier($supplier_id)
+    {
+        if (!$supplier_id) {
+            return false;
+        }
+        $company = $this->getCompanyByID($supplier_id);
+        if (!$company || !isset($company->category)) {
+            return false;
+        }
+        return strcasecmp($this->normalizeSupplierCategory($company->category), $this->getOverseasSupplierCategory()) === 0;
+    }
+
+    public function applySupplierScopeToQuery($warehouse_id)
+    {
+        $cat = $this->getOverseasSupplierCategory();
+        if ($this->isOverseasWarehouse($warehouse_id)) {
+            $this->db->where('category', $cat);
+        } else {
+            $this->db->group_start()
+                ->where('category !=', $cat)
+                ->or_where('category IS NULL', null, false)
+                ->or_where('category', '')
+                ->group_end();
+        }
+    }
+
+    public function validateSupplierWarehouseScope($warehouse_id, $supplier_id)
+    {
+        if (!$supplier_id) {
+            return false;
+        }
+        $osw_id = $this->getOverseasWarehouseId();
+        if (!$osw_id) {
+            return false;
+        }
+        $is_overseas_wh = $this->isOverseasWarehouse($warehouse_id);
+        $is_overseas_sup = $this->isOverseasSupplier($supplier_id);
+        if ($is_overseas_wh && !$is_overseas_sup) {
+            return 'Overseas warehouse documents can only use JASPN suppliers.';
+        }
+        if (!$is_overseas_wh && $is_overseas_sup) {
+            return 'Local warehouse documents cannot use JASPN suppliers.';
+        }
+        return false;
+    }
+
+    public function enforceOverseasRules($warehouse_id, $product_ids, $supplier_id = null)
     {
         if ($this->isOverseasWarehouse($warehouse_id) && !$this->canAccessOverseasWarehouse()) {
             return lang('access_denied');
         }
-        return $this->validateProductWarehouseScope($warehouse_id, $product_ids);
+        if ($err = $this->validateProductWarehouseScope($warehouse_id, $product_ids)) {
+            return $err;
+        }
+        if ($supplier_id && ($err = $this->validateSupplierWarehouseScope($warehouse_id, $supplier_id))) {
+            return $err;
+        }
+        return false;
     }
 
     /**

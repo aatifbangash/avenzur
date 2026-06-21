@@ -6066,7 +6066,9 @@ class Reports extends MY_Controller
 
         $all_suppliers = $this->site->getAllCompanies('supplier') ?: [];
         $this->data['suppliers'] = array_values(array_filter($all_suppliers, function ($s) use ($supplier_trade_type) {
-            $is_service = stripos($s->category ?? '', 'خدمات') !== false || stripos($s->category ?? '', 'service') !== false;
+            $is_service = strcasecmp(trim($s->category ?? ''), 'Services') === 0
+                || stripos($s->category ?? '', 'خدمات') !== false
+                || stripos($s->category ?? '', 'service') !== false;
             if ($supplier_trade_type === 'non_trade') {
                 return $is_service;
             }
@@ -8060,6 +8062,10 @@ class Reports extends MY_Controller
             $this->data['sales_data_totals'] = $sales_result['totals'];
             $this->data['sales_per_page'] = $per_page;
             $this->data['sales_page'] = $spi_page;
+
+            // #region agent log
+            @file_put_contents('/Applications/XAMPP/xamppfiles/htdocs/avenzur/.cursor/debug-cbde1b.log', json_encode(['sessionId' => 'cbde1b', 'runId' => 'pre-fix', 'hypothesisId' => 'A,C', 'location' => 'Reports.php:sales_per_item', 'message' => 'sales_per_item filters and totals', 'data' => ['start_date' => $start_date, 'end_date' => $end_date, 'warehouse_id_resolved' => $warehouse_id, 'warehouse_explicit_in_get' => $warehouse_explicit, 'warehouse_in_get' => array_key_exists('warehouse_id', $_GET) ? $this->input->get('warehouse_id') : null, 'spi_page' => $spi_page, 'total_rows' => $sales_result['total'], 'sum_net_sales' => isset($sales_result['totals']->sum_net_sales) ? (float) $sales_result['totals']->sum_net_sales : null, 'sum_sales' => isset($sales_result['totals']->sum_sales) ? (float) $sales_result['totals']->sum_sales : null, 'get_keys' => array_keys($_GET)], 'timestamp' => round(microtime(true) * 1000)]) . "\n", FILE_APPEND);
+            // #endregion
         }
         
         $bc = [
@@ -8431,6 +8437,10 @@ class Reports extends MY_Controller
             $this->data['record_type'] = $record_type;
             $this->data['start_date']  = $from_date;
             $this->data['end_date']    = $to_date;
+
+            // #region agent log
+            @file_put_contents('/Applications/XAMPP/xamppfiles/htdocs/avenzur/.cursor/debug-cbde1b.log', json_encode(['sessionId' => 'cbde1b', 'runId' => 'pre-fix', 'hypothesisId' => 'A,E', 'location' => 'Reports.php:sales_per_invoice', 'message' => 'sales_per_invoice filters and totals', 'data' => ['from_date' => $from_date, 'to_date' => $to_date, 'pharmacy_id_resolved' => $pharmacy_id, 'record_type' => $record_type, 'invoice_count' => count($invoices), 'total_net_sales' => $totals['total_net_sales'], 'total_sales' => $totals['total_sales'], 'total_receivable' => $totals['total_receivable']], 'timestamp' => round(microtime(true) * 1000)]) . "\n", FILE_APPEND);
+            // #endregion
         }
 
         // Page setup
@@ -10383,10 +10393,10 @@ class Reports extends MY_Controller
             return;
         }
         if ($trade_type === 'non_trade') {
-            $this->db->where("({$category_col} LIKE '%خدمات%' OR {$category_col} LIKE '%service%')", null, false);
+            $this->db->where("({$category_col} = 'Services' OR {$category_col} LIKE '%خدمات%' OR {$category_col} LIKE '%service%')", null, false);
             return;
         }
-        $this->db->where("({$category_col} IS NULL OR ({$category_col} NOT LIKE '%خدمات%' AND {$category_col} NOT LIKE '%service%'))", null, false);
+        $this->db->where("({$category_col} IS NULL OR ({$category_col} != 'Services' AND {$category_col} NOT LIKE '%خدمات%' AND {$category_col} NOT LIKE '%service%'))", null, false);
     }
 
     private function filter_suppliers_by_trade_type($suppliers, $trade_type)
@@ -10395,7 +10405,9 @@ class Reports extends MY_Controller
             return $suppliers ?: [];
         }
         return array_values(array_filter($suppliers, function ($s) use ($trade_type) {
-            $is_service = stripos($s->category ?? '', 'خدمات') !== false || stripos($s->category ?? '', 'service') !== false;
+            $is_service = strcasecmp(trim($s->category ?? ''), 'Services') === 0
+                || stripos($s->category ?? '', 'خدمات') !== false
+                || stripos($s->category ?? '', 'service') !== false;
             if ($trade_type === 'non_trade') {
                 return $is_service;
             }
@@ -10694,7 +10706,8 @@ class Reports extends MY_Controller
 
         // Exclude suppliers whose category contains خدمات
         $payments = array_values(array_filter($payments, function ($p) {
-            return stripos($p->supplier_group ?? '', 'خدمات') === false;
+            return strcasecmp(trim($p->supplier_group ?? ''), 'Services') !== 0
+                && stripos($p->supplier_group ?? '', 'خدمات') === false;
         }));
 
         $total    = count($payments);

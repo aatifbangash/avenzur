@@ -89,6 +89,10 @@ class Purchases extends MY_Controller
             $warehouse_id = $this->input->post('mwarehouse');
             $child_supplier_id = $this->input->post('mchildsupplier') ? $this->input->post('mchildsupplier') : 0;
             $supplier_id = $child_supplier_id ? $child_supplier_id : $this->input->post('msupplier');
+            if ($scope_error = $this->site->validateSupplierWarehouseScope($warehouse_id, $supplier_id)) {
+                $this->session->set_flashdata('error', $scope_error);
+                admin_redirect('purchases/purchase_by_csv');
+            }
             $status = 'pending';
             $shipping = $this->input->post('shipping') ? $this->input->post('shipping') : 0;
             $supplier_details = $this->site->getCompanyByID($supplier_id);
@@ -353,12 +357,12 @@ class Purchases extends MY_Controller
                 $date = date('Y-m-d H:i:s');
             }
             $warehouse_id = $this->input->post('warehouse');
-            if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'))) {
+            $child_supplier_id = $this->input->post('childsupplier') ? $this->input->post('childsupplier') : 0;
+            $supplier_id = $child_supplier_id ? $child_supplier_id : $this->input->post('supplier');
+            if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'), $supplier_id)) {
                 $this->session->set_flashdata('error', $scope_error);
                 admin_redirect('purchases/add');
             }
-            $child_supplier_id = $this->input->post('childsupplier') ? $this->input->post('childsupplier') : 0;
-            $supplier_id = $child_supplier_id ? $child_supplier_id : $this->input->post('supplier');
             $status = $this->input->post('status');
             $shipping = $this->input->post('shipping') ? $this->input->post('shipping') : 0;
             $supplier_details = $this->site->getCompanyByID($supplier_id);
@@ -840,6 +844,7 @@ class Purchases extends MY_Controller
             $this->data['categories'] = $this->site->getAllCategories();
             $this->data['tax_rates'] = $this->site->getAllTaxRates();
             $this->data['warehouses'] = $this->site->getAllWarehouses();
+            $this->data['overseas_warehouse_id'] = $this->site->getOverseasWarehouseId();
             $po_warehouse_id = (!empty($this->data['pr_data']->warehouse_id))
                 ? (int) $this->data['pr_data']->warehouse_id
                 : 0;
@@ -1246,6 +1251,10 @@ class Purchases extends MY_Controller
             }
             $warehouse_id = $this->input->post('warehouse');
             $supplier_id = $this->input->post('supplier');
+            if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'), $supplier_id)) {
+                $this->session->set_flashdata('error', $scope_error);
+                admin_redirect('purchases/edit/' . $id);
+            }
             $status = $this->input->post('status');
             $tempstatus = $this->input->post('tempstatus');
             //$lotnumber       = $this->input->post('lotnumber');
@@ -3179,6 +3188,10 @@ class Purchases extends MY_Controller
             }
             $warehouse_id = $this->input->post('warehouse');
             $supplier_id = $this->input->post('supplier');
+            if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'), $supplier_id)) {
+                $this->session->set_flashdata('error', $scope_error);
+                admin_redirect('purchases/purchase_by_csv');
+            }
             $status = $this->input->post('status');
             $shipping = $this->input->post('shipping') ? $this->input->post('shipping') : 0;
             $supplier_details = $this->site->getCompanyByID($supplier_id);

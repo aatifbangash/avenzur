@@ -92,12 +92,12 @@ class Purchase_order extends MY_Controller
         $reference = $this->input->post('reference_no') ? $this->input->post('reference_no') : $this->site->getReference('po');
         $status = $this->input->post('status') ?? "pending";
         $warehouse_id = $this->input->post('warehouse');
-        if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'))) {
+        $child_supplier_id = $this->input->post('childsupplier') ? $this->input->post('childsupplier') : 0;
+        $supplier_id = $child_supplier_id ? $child_supplier_id : $this->input->post('supplier');
+        if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'), $supplier_id)) {
             $this->session->set_flashdata('error', $scope_error);
             admin_redirect($_SERVER['HTTP_REFERER']);
         }
-        $child_supplier_id = $this->input->post('childsupplier') ? $this->input->post('childsupplier') : 0;
-        $supplier_id = $child_supplier_id ? $child_supplier_id : $this->input->post('supplier');
         $status = $this->input->post('status') ?? "pending";
         $shipping = $this->input->post('shipping') ? $this->input->post('shipping') : 0;
         $supplier_details = $this->site->getCompanyByID($supplier_id);
@@ -496,6 +496,12 @@ class Purchase_order extends MY_Controller
             @unlink($excelFile);
             redirect($_SERVER['HTTP_REFERER']);
         }
+        $product_ids = array_column($products, 'product_id');
+        if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $product_ids, $supplier_id)) {
+            $this->session->set_flashdata('error', $scope_error);
+            @unlink($excelFile);
+            redirect($_SERVER['HTTP_REFERER']);
+        }
         // Prepare PO data
         $data = [
             'date' => $date,
@@ -555,12 +561,12 @@ class Purchase_order extends MY_Controller
                 $date = date('Y-m-d H:i:s');
             }
             $warehouse_id = $this->input->post('warehouse');
-            if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'))) {
+            $child_supplier_id = $this->input->post('childsupplier') ? $this->input->post('childsupplier') : 0;
+            $supplier_id = $child_supplier_id ? $child_supplier_id : $this->input->post('supplier');
+            if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'), $supplier_id)) {
                 $this->session->set_flashdata('error', $scope_error);
                 admin_redirect($_SERVER['HTTP_REFERER']);
             }
-            $child_supplier_id = $this->input->post('childsupplier') ? $this->input->post('childsupplier') : 0;
-            $supplier_id = $child_supplier_id ? $child_supplier_id : $this->input->post('supplier');
             $status = $this->input->post('status') ?? "pending";
             $shipping = $this->input->post('shipping') ? $this->input->post('shipping') : 0;
             $supplier_details = $this->site->getCompanyByID($supplier_id);
@@ -710,6 +716,7 @@ class Purchase_order extends MY_Controller
         $this->data['quote_id'] = $quote_id;
         $this->data['suppliers'] = $this->site->getAllParentCompanies('supplier');
         $this->data['child_suppliers'] = $this->site->getAllChildCompanies('supplier');
+        $this->data['overseas_warehouse_id'] = $this->site->getOverseasWarehouseId();
         $this->data['categories'] = $this->site->getAllCategories();
         $this->data['tax_rates'] = $this->site->getAllTaxRates();
         $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -882,11 +889,11 @@ class Purchase_order extends MY_Controller
                 $date = $inv->date;
             }
             $warehouse_id = $this->input->post('warehouse');
-            if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'))) {
+            $supplier_id = $this->input->post('supplier');
+            if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'), $supplier_id)) {
                 $this->session->set_flashdata('error', $scope_error);
                 admin_redirect('purchase_order/edit/' . $id);
             }
-            $supplier_id = $this->input->post('supplier');
             // Preserve existing status if not provided in POST
             $status = $this->input->post('status') ? $this->input->post('status') : $inv->status;
             $tempstatus = $this->input->post('tempstatus');

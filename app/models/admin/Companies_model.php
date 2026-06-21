@@ -341,7 +341,8 @@ class Companies_model extends CI_Model
         return $this->db->count_all_results();
     }
 
-    public function getCompaniesByParentId($pid){
+    public function getCompaniesByParentId($pid, $warehouse_id = null)
+    {
         $this->db->select('parent_code, sequence_code');
         //$this->db->where(" (id LIKE '%" . $term . "%' OR name LIKE '%" . $term . "%' OR company LIKE '%" . $term . "%' OR sequence_code LIKE '%" . $term . "%' OR email LIKE '%" . $term . "%' OR phone LIKE '%" . $term . "%' OR vat_no LIKE '%" . $term . "%') ");
         $this->db->from('companies');
@@ -354,6 +355,9 @@ class Companies_model extends CI_Model
             $this->db->select('id, name as text', false);
             $this->db->from('companies');
             $this->db->where('parent_code', $parent_code);
+            if ($warehouse_id !== null && $warehouse_id !== '') {
+                $this->site->applySupplierScopeToQuery($warehouse_id);
+            }
             $company_query = $this->db->get();
             
             if ($company_query->num_rows() > 0) {
@@ -361,6 +365,13 @@ class Companies_model extends CI_Model
                     $data[] = $row;
                 }
                 return $data;
+            }
+            if ($warehouse_id !== null && $warehouse_id !== '' && $this->site->isOverseasWarehouse($warehouse_id)) {
+                $parent = $this->site->getCompanyByID($pid);
+                if ($parent && $this->site->isOverseasSupplier($pid)) {
+                    $data[] = (object) ['id' => $parent->id, 'text' => $parent->name];
+                    return $data;
+                }
             }
         }
 
@@ -400,11 +411,17 @@ class Companies_model extends CI_Model
         }
     }
 
-    public function getChildSupplierSuggestions($term, $limit = 10)
+    public function getChildSupplierSuggestions($term, $limit = 10, $warehouse_id = null)
     {
         //$this->db->select("id, (CASE WHEN company = '-' THEN name ELSE CONCAT(company, ' (', name,' - ', sequence_code, ')') END) as text", false);
         $this->db->select("id, name as text", false);
-        $this->db->where(" (id LIKE '%" . $term . "%' OR name LIKE '%" . $term . "%' OR company LIKE '%" . $term . "%' OR sequence_code LIKE '%" . $term . "%' OR email LIKE '%" . $term . "%' OR phone LIKE '%" . $term . "%' OR vat_no LIKE '%" . $term . "%') ");
+        $is_overseas = $warehouse_id !== null && $warehouse_id !== '' && $this->site->isOverseasWarehouse($warehouse_id);
+        if (!$is_overseas || trim($term) !== '') {
+            $this->db->where(" (id LIKE '%" . $term . "%' OR name LIKE '%" . $term . "%' OR company LIKE '%" . $term . "%' OR sequence_code LIKE '%" . $term . "%' OR email LIKE '%" . $term . "%' OR phone LIKE '%" . $term . "%' OR vat_no LIKE '%" . $term . "%') ");
+        }
+        if ($warehouse_id !== null && $warehouse_id !== '') {
+            $this->site->applySupplierScopeToQuery($warehouse_id);
+        }
         $q = $this->db->get_where('companies', ['group_name' => 'supplier', 'level' => 2], $limit);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -415,12 +432,21 @@ class Companies_model extends CI_Model
         }
     }
 
-    public function getSupplierSuggestions($term, $limit = 10)
+    public function getSupplierSuggestions($term, $limit = 10, $warehouse_id = null)
     {
         //$this->db->select("id, (CASE WHEN company = '-' THEN name ELSE CONCAT(company, ' (', name,' - ', sequence_code, ')') END) as text", false);
         $this->db->select("id, name as text", false);
         $this->db->where(" (id LIKE '%" . $term . "%' OR name LIKE '%" . $term . "%' OR company LIKE '%" . $term . "%' OR sequence_code LIKE '%" . $term . "%' OR email LIKE '%" . $term . "%' OR phone LIKE '%" . $term . "%' OR vat_no LIKE '%" . $term . "%') ");
-        $q = $this->db->get_where('companies', ['group_name' => 'supplier', 'level' => 1], $limit);
+        $where = ['group_name' => 'supplier'];
+        if ($warehouse_id !== null && $warehouse_id !== '') {
+            $this->site->applySupplierScopeToQuery($warehouse_id);
+            if (!$this->site->isOverseasWarehouse($warehouse_id)) {
+                $where['level'] = 1;
+            }
+        } else {
+            $where['level'] = 1;
+        }
+        $q = $this->db->get_where('companies', $where, $limit);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;

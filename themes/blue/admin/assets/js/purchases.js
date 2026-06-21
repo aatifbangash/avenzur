@@ -113,6 +113,26 @@ $(document).ready(function () {
 		$currency = $("#pocurrency");
 
 	var $childsupplierselectbox = $("#childsupplier");
+	var overseasWarehouseId = typeof window.overseasWarehouseId !== "undefined" ? window.overseasWarehouseId : 0;
+
+	function populateOverseasChildSuppliers() {
+		if (!overseasWarehouseId || parseInt($("#powarehouse").val(), 10) !== overseasWarehouseId) {
+			return;
+		}
+		$.ajax({
+			url: site.base_url + "suppliers/childsuggestions",
+			data: { term: "", limit: 50, warehouse_id: $("#powarehouse").val() },
+			dataType: "json",
+			success: function (data) {
+				$childsupplierselectbox.empty();
+				if (data.results && data.results.length) {
+					$.each(data.results, function (index, value) {
+						$childsupplierselectbox.append(new Option(value.text, value.id));
+					});
+				}
+			},
+		});
+	}
 
 	$("#poref").change(function (e) {
 		localStorage.setItem("poref", $(this).val());
@@ -122,10 +142,20 @@ $(document).ready(function () {
 	}
 	$("#powarehouse").change(function (e) {
 		localStorage.setItem("powarehouse", $(this).val());
+		localStorage.removeItem("posupplier");
+		localStorage.removeItem("childsupplier");
+		$childsupplierselectbox.empty();
+		if ($supplier.data("select2")) {
+			$supplier.select2("destroy");
+		}
+		$supplier.val("");
+		nsSupplier();
+		populateOverseasChildSuppliers();
 	});
 	if ((powarehouse = localStorage.getItem("powarehouse"))) {
 		$("#powarehouse").select2("val", powarehouse);
 	}
+	populateOverseasChildSuppliers();
 
 	$("#ponote").redactor("destroy");
 	$("#ponote").redactor({
@@ -177,13 +207,15 @@ $(document).ready(function () {
 	function populateChildSuppliers(pid) {
 		$.ajax({
 			url: site.base_url + "suppliers/getChildById",
-			data: { term: "", limit: 10, pid: pid },
+			data: { term: "", limit: 10, pid: pid, warehouse_id: $("#powarehouse").val() },
 			dataType: "json",
 			success: function (data) {
 				$childsupplierselectbox.empty();
-				$.each(data.results, function (index, value) {
-					$childsupplierselectbox.append(new Option(value.text, value.id));
-				});
+				if (data.results && data.results.length) {
+					$.each(data.results, function (index, value) {
+						$childsupplierselectbox.append(new Option(value.text, value.id));
+					});
+				}
 
 				if (localStorage.getItem("childsupplier")) {
 					$childsupplierselectbox
@@ -1035,6 +1067,7 @@ function nsChildSupplier() {
 				return {
 					term: term,
 					limit: 10,
+					warehouse_id: $("#powarehouse").val(),
 				};
 			},
 			results: function (data, page) {
@@ -1059,6 +1092,7 @@ function nsSupplier() {
 				return {
 					term: term,
 					limit: 10,
+					warehouse_id: $("#powarehouse").val(),
 				};
 			},
 			results: function (data, page) {
