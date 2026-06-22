@@ -5,11 +5,11 @@ if (!function_exists('gl_report_row_link')) {
     {
         $link = '';
         if ($row->voucher == 'Sales Invoice') {
-            $link = admin_url('sales?sid=' . $row->voucher_id);
+            $link = admin_url('sales/view/' . $row->voucher_id);
         } elseif ($row->voucher == 'Purchase Invoice') {
-            $link = admin_url('purchases?pid=' . $row->voucher_id);
+            $link = admin_url('purchases/view/' . $row->voucher_id);
         } elseif ($row->voucher == 'Sales Return') {
-            $link = admin_url('returns?rid=' . $row->voucher_id);
+            $link = admin_url('returns/view/' . $row->voucher_id);
         } elseif ($row->voucher == 'Credit Note') {
             $link = admin_url('customers/view_credit_memo/' . $row->voucher_id);
         } elseif ($row->voucher == 'Debit Note') {

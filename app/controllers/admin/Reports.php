@@ -4444,6 +4444,9 @@ class Reports extends MY_Controller
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
 
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
+
         $this->data['customers'] = $this->site->getAllCompanies('customer');
         $this->data['biller'] = $this->site->getDefaultBiller();
         $this->data['statement_ledger_options'] = [];
@@ -4623,6 +4626,9 @@ class Reports extends MY_Controller
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
 
         $this->data['ledgers'] = $this->reports_model->getCompanyLedgers();
         $this->data['biller'] = $this->site->getDefaultBiller();
@@ -4811,9 +4817,8 @@ class Reports extends MY_Controller
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
 
-        // Default from_date to January 1st of the current year
-        $default_from = date('d/m/Y', mktime(0, 0, 0, 1, 1, (int)date('Y')));
-        $this->data['default_from_date'] = $default_from;
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
 
         $this->data['suppliers'] = $this->site->getAllChildCompanies('supplier');
         $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -7337,11 +7342,11 @@ class Reports extends MY_Controller
     {
         $link = '';
         if ($row->voucher == 'Sales Invoice') {
-            $link = admin_url('sales?sid=' . $row->voucher_id);
+            $link = admin_url('sales/view/' . $row->voucher_id);
         } elseif ($row->voucher == 'Purchase Invoice') {
-            $link = admin_url('purchases?pid=' . $row->voucher_id);
+            $link = admin_url('purchases/view/' . $row->voucher_id);
         } elseif ($row->voucher == 'Sales Return') {
-            $link = admin_url('returns?rid=' . $row->voucher_id);
+            $link = admin_url('returns/view/' . $row->voucher_id);
         } elseif ($row->voucher == 'Credit Note') {
             $link = admin_url('customers/view_credit_memo/' . $row->voucher_id);
         } elseif ($row->voucher == 'Debit Note') {
