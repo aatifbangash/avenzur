@@ -3452,7 +3452,7 @@ class Suppliers extends MY_Controller
             $this->data['warehouses']             = $this->site->getAllWarehouses();
             $this->data['supplier_advance_ledger'] = isset($this->Settings->supplier_advance_ledger) && !empty($this->Settings->supplier_advance_ledger)
                 ? $this->Settings->supplier_advance_ledger : null;
-            $this->data['ledgers'] = $this->site->getCompanyLedgersByGroupCode(['11101', '11102']);
+            $this->data['ledgers'] = $this->site->getCompanyLedgersByGroupCode(['11101', '11102', '11402']);
             $this->page_construct('suppliers/payment_to_supplier_new', $meta, $this->data);
         }
     }
