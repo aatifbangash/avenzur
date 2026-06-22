@@ -7158,8 +7158,18 @@ class Reports extends MY_Controller
     public function GLReport(){
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $viewtype     = $this->input->get('viewtype')      ?: null;
-        $from_date    = $this->input->get('from_date')     ?: null;
-        $to_date      = $this->input->get('to_date')       ?: null;
+        $from_date    = $this->input->get('from_date');
+        if (($from_date === null || $from_date === '') && empty($_GET)) {
+            $from_date = $this->sma->hrsd(date('Y-01-01'));
+        } elseif ($from_date === null || $from_date === '') {
+            $from_date = null;
+        }
+        $to_date = $this->input->get('to_date');
+        if (($to_date === null || $to_date === '') && empty($_GET)) {
+            $to_date = $this->sma->hrsd(date('Y-m-d'));
+        } elseif ($to_date === null || $to_date === '') {
+            $to_date = null;
+        }
         $export_excel = $this->input->get('export_excel')  ?: null;
 
         // Set filter values for form persistence (always set these)
@@ -7171,7 +7181,7 @@ class Reports extends MY_Controller
         $meta = ['page_title' => lang('general_ledger_report'), 'bc' => $bc];
 
         // If any filter submitted, fetch data
-        if ($from_date || $to_date) {
+        if (!empty($_GET) && ($this->input->get('from_date') || $this->input->get('to_date'))) {
             $start_date = $from_date ? $this->sma->fld(explode(' ', trim($from_date))[0] . ' 00:00:00') : null;
             $end_date   = $to_date   ? $this->sma->fld(explode(' ', trim($to_date))[0]   . ' 23:59:59') : null;
 
@@ -7927,8 +7937,18 @@ class Reports extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         
         // Get filter parameters from GET
-        $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : null;
-        $end_date = $this->input->get('end_date') ? $this->input->get('end_date') : null;
+        $start_date = $this->input->get('start_date');
+        if (($start_date === null || $start_date === '') && empty($_GET)) {
+            $start_date = date('d/m/Y', mktime(0, 0, 0, 1, 1, (int) date('Y')));
+        } elseif ($start_date === null || $start_date === '') {
+            $start_date = null;
+        }
+        $end_date = $this->input->get('end_date');
+        if (($end_date === null || $end_date === '') && empty($_GET)) {
+            $end_date = date('d/m/Y');
+        } elseif ($end_date === null || $end_date === '') {
+            $end_date = null;
+        }
         $invoice_id = $this->input->get('invoice_id') ? $this->input->get('invoice_id') : null;
         $salesman = $this->input->get('salesman') ? $this->input->get('salesman') : null;
         $item_code = $this->input->get('item_code') ? $this->input->get('item_code') : null;
@@ -7960,7 +7980,7 @@ class Reports extends MY_Controller
         $this->data['warehouse_id'] = $warehouse_id;
         
         // If any filter submitted, fetch data
-        if ($start_date || $end_date || $invoice_id || $salesman || $item_code || $category || $warehouse_explicit) {
+        if (!empty($_GET) && ($start_date || $end_date || $invoice_id || $salesman || $item_code || $category || $warehouse_explicit)) {
             
             // Pre-fetch salesman name if needed
             $salesman_name = null;
@@ -8088,7 +8108,12 @@ class Reports extends MY_Controller
         } elseif ($start_date === null || $start_date === '') {
             $start_date = null;
         }
-        $end_date     = $this->input->get('end_date')     ?: null;
+        $end_date = $this->input->get('end_date');
+        if (($end_date === null || $end_date === '') && empty($_GET)) {
+            $end_date = date('d/m/Y');
+        } elseif ($end_date === null || $end_date === '') {
+            $end_date = null;
+        }
         $purchase_ref = $this->input->get('purchase_ref') ?: null;
         $supplier     = $this->input->get('supplier')     ?: null;
         $record_type  = $this->input->get('record_type')  ?: 'all';
@@ -8365,8 +8390,8 @@ class Reports extends MY_Controller
         // Initialize default values
         $this->data['customer_id']  = null;
         $this->data['pharmacy_id']  = $this->site->resolveReportWarehouseFilter('pharmacy_id');
-        $this->data['start_date']   = null;
-        $this->data['end_date']     = null;
+        $this->data['start_date']   = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date']     = $this->sma->hrsd(date('Y-m-d'));
         $this->data['salesman_id']  = null;
         $this->data['record_type']  = 'all';
 
