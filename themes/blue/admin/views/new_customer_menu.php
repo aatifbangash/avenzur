@@ -324,6 +324,9 @@
                         <?php if($Admin || $Owner || $this->GP['reports-customer-tb']){ ?>
                             <li><a href="<?= admin_url('reports/customers_trial_balance'); ?>" class="newmenu-link"><i class="fa fa-balance-scale"></i> <?= lang('receivable_tb'); ?></a></li>
                         <?php } ?>
+                        <?php if($Admin || $Owner || $this->GP['reports-customer-tb']){ ?>
+                            <li><a href="<?= admin_url('reports/customer_advances'); ?>" class="newmenu-link"><i class="fa fa-hand-o-up"></i> <?= lang('customer_advances_report'); ?></a></li>
+                        <?php } ?>
                         <?php if($Admin || $Owner || $this->GP['reports-customer-statement']){ ?>
                             <li><a href="<?= admin_url('reports/customer_statement'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Statement'); ?></a></li>
                         <?php } ?>
@@ -600,6 +603,9 @@
                     <ul class="newmenu-sub">
                         <?php if($Admin || $Owner || $this->GP['reports-supplier-tb']){ ?>
                         <li><a href="<?= admin_url('reports/suppliers_trial_balance'); ?>" class="newmenu-link"><i class="fa fa-balance-scale"></i> <?= lang('payable_tb'); ?></a></li>
+                        <?php } ?>
+                        <?php if($Admin || $Owner || $this->GP['reports-supplier-tb']){ ?>
+                        <li><a href="<?= admin_url('reports/supplier_advances'); ?>" class="newmenu-link"><i class="fa fa-hand-o-down"></i> <?= lang('supplier_advances_report'); ?></a></li>
                         <?php } ?>
                         <?php if($Admin || $Owner || $this->GP['reports-supplier-statement']){ ?>
                         <li><a href="<?= admin_url('reports/supplier_statement'); ?>" class="newmenu-link"><i class="fa fa-balance-scale"></i> <?= lang('Statement'); ?></a></li>

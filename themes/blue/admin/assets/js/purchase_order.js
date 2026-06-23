@@ -122,6 +122,12 @@ $(document).ready(function () {
 	}
 	$("#powarehouse").change(function (e) {
 		localStorage.setItem("powarehouse", $(this).val());
+		localStorage.removeItem("posupplier");
+		if ($("#posupplier").data("select2")) {
+			$("#posupplier").select2("destroy");
+		}
+		$("#posupplier").val("");
+		nsSupplier();
 	});
 	if ((powarehouse = localStorage.getItem("powarehouse"))) {
 		$("#powarehouse").select2("val", powarehouse);
@@ -177,7 +183,7 @@ $(document).ready(function () {
 	function populateChildSuppliers(pid) {
 		$.ajax({
 			url: site.base_url + "suppliers/getChildById",
-			data: { term: "", limit: 10, pid: pid },
+			data: { term: "", limit: 10, pid: pid, warehouse_id: $("#powarehouse").val() },
 			dataType: "json",
 			success: function (data) {
 				$childsupplierselectbox.empty();
@@ -217,6 +223,7 @@ $(document).ready(function () {
 					return {
 						term: term,
 						limit: 10,
+						warehouse_id: $("#powarehouse").val(),
 					};
 				},
 				results: function (data, page) {
@@ -1022,6 +1029,7 @@ function nsSupplier() {
 				return {
 					term: term,
 					limit: 10,
+					warehouse_id: $("#powarehouse").val(),
 				};
 			},
 			results: function (data, page) {

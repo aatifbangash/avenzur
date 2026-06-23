@@ -1430,6 +1430,23 @@ class Suppliers extends MY_Controller
         return false;
     }
 
+    private function applyOverseasSupplierCategoryRules(&$data)
+    {
+        $category = trim($data['category'] ?? '');
+        if ($category === '') {
+            return true;
+        }
+        $normalized = $this->site->normalizeSupplierCategory($category);
+        $data['category'] = $normalized;
+        $ledger_id = $this->site->getSupplierCategoryLedgerId($normalized);
+        if (!$ledger_id) {
+            $this->session->set_flashdata('error', 'Ledger account not found for supplier category: ' . $normalized);
+            return false;
+        }
+        $data['ledger_account'] = $ledger_id;
+        return true;
+    }
+
     public function add()
     {
         $parent_code = null;
@@ -1493,6 +1510,9 @@ class Suppliers extends MY_Controller
                 'parent_code'         => $parent_code,
                 'sequence_code'       => $this->sequenceCode->generate('SUP', 5)
             ];
+            if (!$this->applyOverseasSupplierCategoryRules($data)) {
+                admin_redirect($_SERVER['HTTP_REFERER'] ?? 'suppliers');
+            }
         } elseif ($this->input->post('add_supplier')) {
             $this->session->set_flashdata('error', validation_errors());
             admin_redirect('suppliers');
@@ -1506,6 +1526,9 @@ class Suppliers extends MY_Controller
             $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
             $this->data['modal_js'] = $this->site->modal_js();
             $this->data['parent_suppliers'] = $this->companies_model->getAllParentSuppliers();
+            $this->data['jaspen_payable_ledger_id'] = $this->site->getJaspenPayableLedgerId();
+            $this->data['supplier_category_options'] = $this->site->getSupplierCategoryOptions();
+            $this->data['supplier_category_ledgers'] = $this->site->getSupplierCategoryLedgerMap();
         
             $this->load->view($this->theme . 'suppliers/add', $this->data);
         }
@@ -1626,7 +1649,10 @@ class Suppliers extends MY_Controller
             ];
             if(empty($company_details->sequence_code)){
                 $data['sequence_code'] =$this->sequenceCode->generate('SUP', 5); 
-            } 
+            }
+            if (!$this->applyOverseasSupplierCategoryRules($data)) {
+                redirect($_SERVER['HTTP_REFERER']);
+            }
 
         } elseif ($this->input->post('edit_supplier')) {
             $this->session->set_flashdata('error', validation_errors());
@@ -1640,6 +1666,10 @@ class Suppliers extends MY_Controller
             $this->data['supplier'] = $company_details;
             $this->data['error']    = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
             $this->data['modal_js'] = $this->site->modal_js();
+            $this->data['jaspen_payable_ledger_id'] = $this->site->getJaspenPayableLedgerId();
+            $this->data['supplier_category_options'] = $this->site->getSupplierCategoryOptions();
+            $this->data['supplier_category_ledgers'] = $this->site->getSupplierCategoryLedgerMap();
+            $this->data['supplier_category_normalized'] = $this->site->normalizeSupplierCategory($company_details->category ?? '');
             $this->load->view($this->theme . 'suppliers/edit', $this->data);
         }
     }
@@ -2019,7 +2049,8 @@ class Suppliers extends MY_Controller
         }
         $term            = addslashes($term);
         $limit           = $this->input->get('limit', true);
-        $rows['results'] = $this->companies_model->getSupplierSuggestions($term, $limit);
+        $warehouse_id    = $this->input->get('warehouse_id', true);
+        $rows['results'] = $this->companies_model->getSupplierSuggestions($term, $limit, $warehouse_id);
         $this->sma->send_json($rows);
     }
 
@@ -2043,7 +2074,8 @@ class Suppliers extends MY_Controller
         //echo 'Pid: '.$pid.' and term '.$term;exit;
         $term            = addslashes($term);
         //$limit           = $this->input->get('limit', true);
-        $rows['results'] = $this->companies_model->getCompaniesByParentId($pid);
+        $warehouse_id    = $this->input->get('warehouse_id', true);
+        $rows['results'] = $this->companies_model->getCompaniesByParentId($pid, $warehouse_id);
         $this->sma->send_json($rows);  
     }
 
@@ -2055,7 +2087,8 @@ class Suppliers extends MY_Controller
         }
         $term            = addslashes($term);
         $limit           = $this->input->get('limit', true);
-        $rows['results'] = $this->companies_model->getChildSupplierSuggestions($term, $limit);
+        $warehouse_id    = $this->input->get('warehouse_id', true);
+        $rows['results'] = $this->companies_model->getChildSupplierSuggestions($term, $limit, $warehouse_id);
         $this->sma->send_json($rows);
     }
 
@@ -3419,7 +3452,7 @@ class Suppliers extends MY_Controller
             $this->data['warehouses']             = $this->site->getAllWarehouses();
             $this->data['supplier_advance_ledger'] = isset($this->Settings->supplier_advance_ledger) && !empty($this->Settings->supplier_advance_ledger)
                 ? $this->Settings->supplier_advance_ledger : null;
-            $this->data['ledgers'] = $this->site->getCompanyLedgersByGroupCode(['11101', '11102']);
+            $this->data['ledgers'] = $this->site->getCompanyLedgersByGroupCode(['11101', '11102', '11402']);
             $this->page_construct('suppliers/payment_to_supplier_new', $meta, $this->data);
         }
     }

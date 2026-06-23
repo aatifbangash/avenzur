@@ -61,6 +61,23 @@
             }, 1000);
         }
         ItemnTotals();
+
+        var overseasWarehouseId = <?= (int) ($overseas_warehouse_id ?? 0) ?>;
+        function filterExcelSuppliers() {
+            var whId = parseInt($('#excel_warehouse').val(), 10);
+            var isOverseas = overseasWarehouseId && whId === overseasWarehouseId;
+            $('#excel_supplier option').each(function () {
+                if (!$(this).val()) {
+                    return;
+                }
+                var isJaspn = $(this).data('jaspn') == 1;
+                $(this).prop('disabled', isOverseas ? !isJaspn : isJaspn);
+            });
+            $('#excel_supplier').val('').trigger('change');
+        }
+        $('#excel_warehouse').on('change', filterExcelSuppliers);
+        filterExcelSuppliers();
+
         $("#add_item").autocomplete({
             // source: '<?= admin_url('purchases/suggestions'); ?>',
             source: function(request, response) {
@@ -379,13 +396,18 @@
                     </div>
                     <div class="form-group">
                         <label for="excel_supplier">Supplier</label>
-                        <?php
-                        $sup[""] = "";
-                        foreach ($child_suppliers as $supplier) {
-                            $sup[$supplier->id] = $supplier->name;
-                        }
-                        echo form_dropdown('supplier', $sup, '', 'id="excel_supplier" class="form-control select" required style="width:100%;"');
-                        ?>
+                        <select name="supplier" id="excel_supplier" class="form-control select" required style="width:100%;">
+                            <option value=""></option>
+                            <?php
+                            $jaspn_cat = $this->site->getOverseasSupplierCategory();
+                            if (!empty($child_suppliers)) {
+                                foreach ($child_suppliers as $supplier) {
+                                    $is_jaspn = strcasecmp(trim($supplier->category ?? ''), $jaspn_cat) === 0 ? '1' : '0';
+                                    echo '<option value="' . (int) $supplier->id . '" data-jaspn="' . $is_jaspn . '">' . htmlspecialchars($supplier->name) . '</option>';
+                                }
+                            }
+                            ?>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="excel_file">Excel File</label>

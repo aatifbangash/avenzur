@@ -2428,7 +2428,7 @@ class Customers extends MY_Controller
         $entry = array(
             'entrytype_id' => 4,
             'transaction_type' => $type,
-            'number'       => 'SI-'.$reference_no,
+            'number'       => $reference_no,
             'date'         => date('Y-m-d', strtotime($date)),
             'dr_total'     => $payment_amount,
             'cr_total'     => $payment_amount,
@@ -2507,6 +2507,7 @@ class Customers extends MY_Controller
 
         $this->data['service_invoice'] = $service_invoice_data;
         $this->data['service_invoice_entries'] = $service_invoice_entries_data;
+        $this->data['transport_capacities'] = $this->getTransportCapacities();
 
         // Generate QR code for service invoice (similar to sales)
         if ($this->Settings->ksa_qrcode) {
@@ -2536,7 +2537,7 @@ class Customers extends MY_Controller
         $mpdf = new Mpdf(mpdf_config([
             'format' => 'A4',
             'orientation' => 'P',       // Portrait
-            'margin_top' => 10,
+            'margin_top' => 5,
             'margin_bottom' => 10,
             'margin_left' => 10,
             'margin_right' => 10,
@@ -2561,7 +2562,60 @@ class Customers extends MY_Controller
 
         $this->data['memo_entries_data'] = $service_invoice_entries_data;
         $this->data['customers']  = $this->site->getAllCompanies('customer');
+        $this->_loadTransportInvoiceViewData();
+        $preview_date = !empty($service_invoice_data->date)
+            ? date('Y-m-d', strtotime($service_invoice_data->date))
+            : date('Y-m-d');
+        $this->data['next_service_invoice_reference'] = ($service_invoice_data && !empty($service_invoice_data->reference_no)
+            && $service_invoice_data->reference_no !== '0')
+            ? $service_invoice_data->reference_no
+            : $this->sequenceCode->generateServiceInvoiceReference($preview_date);
         $this->page_construct('customers/service_invoice', $meta, $this->data);
+    }
+
+    private function _loadTransportInvoiceViewData()
+    {
+        $this->data['transport_rates'] = $this->getTransportRates();
+        $this->data['transport_regions'] = $this->getTransportRegions();
+        $this->data['transport_capacities'] = $this->getTransportCapacities();
+    }
+
+    private function getTransportRegions()
+    {
+        return ['Jeddah', 'Medina', 'Tabuk', 'Riyadh', 'Mecca', 'Taif', 'The South'];
+    }
+
+    private function getTransportCapacities()
+    {
+        return [
+            'full_van' => 'Full Van',
+            'dyna' => 'Dyna',
+            'cartons_1_10' => '1 - 10 Cartons / Boxes',
+            'pallet' => 'Pallet',
+        ];
+    }
+
+    private function getTransportRates()
+    {
+        return [
+            'Jeddah' => ['full_van' => 300, 'dyna' => 700, 'cartons_1_10' => 100, 'pallet' => 250],
+            'Medina' => ['full_van' => 800, 'dyna' => 1200, 'cartons_1_10' => 150, 'pallet' => 200],
+            'Tabuk' => ['full_van' => 1500, 'dyna' => 1500, 'cartons_1_10' => 150, 'pallet' => 250],
+            'Riyadh' => ['full_van' => 1500, 'dyna' => 1800, 'cartons_1_10' => 200, 'pallet' => 450],
+            'Mecca' => ['full_van' => 350, 'dyna' => 900, 'cartons_1_10' => 120, 'pallet' => 150],
+            'Taif' => ['full_van' => 400, 'dyna' => 850, 'cartons_1_10' => 150, 'pallet' => 350],
+            'The South' => ['full_van' => 1500, 'dyna' => 1500, 'cartons_1_10' => 200, 'pallet' => 300],
+        ];
+    }
+
+    private function getTransportPrice($toRegion, $capacity)
+    {
+        $rates = $this->getTransportRates();
+        if (!isset($rates[$toRegion][$capacity])) {
+            return null;
+        }
+
+        return (float) $rates[$toRegion][$capacity];
     }
 
     public function service_invoice(){
@@ -2577,7 +2631,6 @@ class Customers extends MY_Controller
         if ($this->form_validation->run() == true) {
             $request_type = $this->input->post('request_type');
             $customer_id = $this->input->post('customer');
-            $reference_no = $this->input->post('reference_no') ? $this->input->post('reference_no') : '0';
             $date_fmt = $this->input->post('date');
             $description = $this->input->post('description');
 
@@ -2592,6 +2645,9 @@ class Customers extends MY_Controller
             $vats = $this->input->post('vat[]');
             $totals = $this->input->post('total[]');
             $unit_prices = $this->input->post('unit_price[]');
+            $capacities = $this->input->post('capacity[]');
+            $capacityLabels = $this->getTransportCapacities();
+            $vatRate = 0.15;
 
             $formattedDate = DateTime::createFromFormat('Y-m-d', $date_fmt);
             $isDateValid = $formattedDate && $formattedDate->format('Y-m-d') === $date_fmt;
@@ -2600,42 +2656,81 @@ class Customers extends MY_Controller
                 $date = $date_fmt;
             }else{
                 $formattedDate = DateTime::createFromFormat('d/m/Y', $date_fmt);
+                if (!$formattedDate) {
+                    $formattedDate = DateTime::createFromFormat($this->dateFormats['php_sdate'], $date_fmt);
+                }
+                if (!$formattedDate) {
+                    $this->session->set_flashdata('error', 'Invalid invoice date.');
+                    admin_redirect('customers/service_invoice');
+                }
                 $date = $formattedDate->format('Y-m-d');
             }
 
-            // Calculate total amount from all service rows
+            if ($date < date('Y-m-d')) {
+                $this->session->set_flashdata('error', 'Invoice date cannot be earlier than today.');
+                admin_redirect('customers/service_invoice');
+            }
+
+            $reference_no = $this->sequenceCode->generateServiceInvoiceReference($date);
+
             $payment_total = 0;
             $vat_charges = 0;
             $service_data = [];
 
-            if (!empty($totals)) {
-                foreach ($totals as $total) {
-                    $payment_total += (float)$total;
-                }
-            }
-
-            if (!empty($vats)) {
-                foreach ($vats as $vat) {
-                    $vat_charges += (float)$vat;
-                }
-            }
-
-            // Prepare service data for storage
             if (!empty($service_types)) {
                 foreach ($service_types as $index => $service_type) {
-                    $service_data[] = [
-                        'service_type' => $service_type,
-                        'from_city' => $from_cities[$index] ?? '',
-                        'to_city' => $to_cities[$index] ?? '',
-                        'from_date' => $from_dates[$index] ?? '',
-                        'to_date' => $to_dates[$index] ?? '',
-                        'amount' => (float)($amounts[$index] ?? 0),
-                        'quantity' => (float)($quantities[$index] ?? 0),
-                        'vat' => (float)($vats[$index] ?? 0),
-                        'total' => (float)($totals[$index] ?? 0),
-                        'unit_price' => (float)($unit_prices[$index] ?? 0),
-                    ];
+                    $quantity = (float)($quantities[$index] ?? 0);
+
+                    if ($service_type === 'transportation') {
+                        $toCity = trim((string)($to_cities[$index] ?? ''));
+                        $capacity = trim((string)($capacities[$index] ?? ''));
+                        $unitPrice = $this->getTransportPrice($toCity, $capacity);
+
+                        if ($unitPrice === null || $quantity <= 0) {
+                            $this->session->set_flashdata('error', 'Invalid transportation pricing on row ' . ($index + 1));
+                            admin_redirect('customers/service_invoice');
+                        }
+
+                        $subtotal = $unitPrice * $quantity;
+                        $vatAmount = $subtotal * $vatRate;
+                        $total = $subtotal + $vatAmount;
+
+                        $service_data[] = [
+                            'service_type' => $service_type,
+                            'from_city' => $from_cities[$index] ?? '',
+                            'to_city' => $toCity,
+                            'from_date' => '',
+                            'to_date' => '',
+                            'capacity' => $capacity,
+                            'capacity_label' => $capacityLabels[$capacity] ?? $capacity,
+                            'amount' => $unitPrice,
+                            'quantity' => $quantity,
+                            'vat' => $vatAmount,
+                            'total' => $total,
+                            'unit_price' => $subtotal,
+                        ];
+                    } else {
+                        $service_data[] = [
+                            'service_type' => $service_type,
+                            'from_city' => $from_cities[$index] ?? '',
+                            'to_city' => $to_cities[$index] ?? '',
+                            'from_date' => $from_dates[$index] ?? '',
+                            'to_date' => $to_dates[$index] ?? '',
+                            'capacity' => '',
+                            'capacity_label' => '',
+                            'amount' => (float)($amounts[$index] ?? 0),
+                            'quantity' => $quantity,
+                            'vat' => (float)($vats[$index] ?? 0),
+                            'total' => (float)($totals[$index] ?? 0),
+                            'unit_price' => (float)($unit_prices[$index] ?? 0),
+                        ];
+                    }
                 }
+            }
+
+            foreach ($service_data as $row) {
+                $payment_total += (float)($row['total'] ?? 0);
+                $vat_charges += (float)($row['vat'] ?? 0);
             }
 
             if($payment_total > 0){
@@ -2657,7 +2752,8 @@ class Customers extends MY_Controller
                     'vat_account' => $vat_account,
                     'type' => 'serviceinvoice',
                     'date' => $date,
-                    'description' => $description
+                    'description' => $description,
+                    'sequence_code' => $reference_no,
                 );
 
                 $this->db->insert('sma_memo' ,$memoData);
@@ -2680,7 +2776,8 @@ class Customers extends MY_Controller
                             'quantity' => (float)($service_data_row['quantity'] ?? 0),
                             'unit_value' => (float)($service_data_row['unit_price'] ?? 0),
                             'vat' => (float)($service_data_row['vat'] ?? 0),
-                            'service_type' => $service_data_row['service_type'] ?? ''
+                            'service_type' => $service_data_row['service_type'] ?? '',
+                            'name' => $service_data_row['capacity_label'] ?? '',
                         ];
                     }
                 }
@@ -2705,6 +2802,15 @@ class Customers extends MY_Controller
             $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
             $this->data['customers']  = $this->site->getAllCompanies('customer');
             $this->data['warehouses'] = $this->site->getAllWarehouses();
+            $this->_loadTransportInvoiceViewData();
+            $preview_date = date('Y-m-d');
+            if (!empty($this->data['memo_data']->date)) {
+                $preview_date = date('Y-m-d', strtotime($this->data['memo_data']->date));
+            }
+            $this->data['next_service_invoice_reference'] = (isset($this->data['memo_data']) && !empty($this->data['memo_data']->reference_no)
+                && $this->data['memo_data']->reference_no !== '0')
+                ? $this->data['memo_data']->reference_no
+                : $this->sequenceCode->generateServiceInvoiceReference($preview_date);
             $this->page_construct('customers/service_invoice', $meta, $this->data);
         }
     }

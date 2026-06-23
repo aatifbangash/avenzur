@@ -174,4 +174,31 @@ class SequenceCode
 
         return $prefix . str_pad($next, 3, '0', STR_PAD_LEFT);
     }
+
+    /**
+     * Service invoice reference: SI-{YY}{###} e.g. SI-26001 (resets sequence each calendar year).
+     *
+     * @param string|null $date Y-m-d or strtotime-parsable date; defaults to today
+     */
+    public function generateServiceInvoiceReference($date = null)
+    {
+        $ts = $date ? strtotime($date) : time();
+        $year = date('y', $ts);
+        $prefix = 'SI-' . $year;
+
+        $this->_ci->db->select('reference_no');
+        $this->_ci->db->from('sma_memo');
+        $this->_ci->db->where('type', 'serviceinvoice');
+        $this->_ci->db->like('reference_no', $prefix, 'after');
+        $this->_ci->db->order_by('reference_no', 'DESC');
+        $this->_ci->db->limit(1);
+        $row = $this->_ci->db->get()->row();
+
+        $next = 1;
+        if ($row && preg_match('/^SI-' . preg_quote($year, '/') . '(\d{3})$/', $row->reference_no, $m)) {
+            $next = (int) $m[1] + 1;
+        }
+
+        return $prefix . str_pad($next, 3, '0', STR_PAD_LEFT);
+    }
 }

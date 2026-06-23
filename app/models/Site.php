@@ -746,12 +746,163 @@ class Site extends CI_Model
         return false;
     }
 
-    public function enforceOverseasRules($warehouse_id, $product_ids)
+    public function getOverseasSupplierCategory()
+    {
+        return 'JASPN';
+    }
+
+    public function getSupplierCategoryOptions()
+    {
+        return [
+            ''        => 'Please Select',
+            'Agent'   => 'Agent',
+            'Warehouse' => 'Warehouse',
+            'Services'  => 'Services',
+            'JASPN'   => 'JASPN',
+        ];
+    }
+
+    public function normalizeSupplierCategory($category)
+    {
+        $cat = trim((string) ($category ?? ''));
+        $legacy = [
+            'وكيل'     => 'Agent',
+            'مستودع'   => 'Warehouse',
+            'خدمات'    => 'Services',
+            'خدمات '   => 'Services',
+            'service'  => 'Services',
+            'service ' => 'Services',
+            'trade'    => 'Agent',
+            'JASPN'    => 'JASPN',
+            'Agent'    => 'Agent',
+            'Warehouse' => 'Warehouse',
+            'Services' => 'Services',
+        ];
+        return $legacy[$cat] ?? $cat;
+    }
+
+    public function getSupplierCategoryLedgerId($category)
+    {
+        $cat = $this->normalizeSupplierCategory($category);
+        static $cache = [];
+        if (array_key_exists($cat, $cache)) {
+            return $cache[$cat] ?: false;
+        }
+        $config = [
+            'Agent' => [
+                'codes' => ['2110100001'],
+                'name'  => 'Agent Suppliers',
+            ],
+            'Warehouse' => [
+                'codes' => ['2110100002'],
+                'name'  => 'Warehouse Suppliers',
+            ],
+            'Services' => [
+                'codes' => ['2110200001'],
+                'name'  => 'Non-Trade Payable',
+            ],
+            'JASPN' => [
+                'codes' => ['2110300001', '211030001'],
+                'name'  => 'JASPEN Payable',
+            ],
+        ];
+        if (!isset($config[$cat])) {
+            $cache[$cat] = 0;
+            return false;
+        }
+        $prefix = $this->db->dbprefix('accounts_ledgers');
+        foreach ($config[$cat]['codes'] as $code) {
+            $q = $this->db->query(
+                'SELECT id FROM ' . $prefix . ' WHERE code = ' . $this->db->escape($code) . ' LIMIT 1'
+            );
+            if ($q && $q->num_rows()) {
+                $cache[$cat] = (int) $q->row()->id;
+                return $cache[$cat];
+            }
+        }
+        $this->db->reset_query();
+        $this->db->like('name', $config[$cat]['name'], 'both');
+        $this->db->limit(1);
+        $q = $this->db->get('accounts_ledgers');
+        $cache[$cat] = ($q && $q->num_rows()) ? (int) $q->row()->id : 0;
+        return $cache[$cat] ?: false;
+    }
+
+    public function getSupplierCategoryLedgerMap()
+    {
+        $map = [];
+        foreach (['Agent', 'Warehouse', 'Services', 'JASPN'] as $cat) {
+            $id = $this->getSupplierCategoryLedgerId($cat);
+            if ($id) {
+                $map[$cat] = (string) $id;
+            }
+        }
+        return $map;
+    }
+
+    public function getJaspenPayableLedgerId()
+    {
+        return $this->getSupplierCategoryLedgerId('JASPN');
+    }
+
+    public function isOverseasSupplier($supplier_id)
+    {
+        if (!$supplier_id) {
+            return false;
+        }
+        $company = $this->getCompanyByID($supplier_id);
+        if (!$company || !isset($company->category)) {
+            return false;
+        }
+        return strcasecmp($this->normalizeSupplierCategory($company->category), $this->getOverseasSupplierCategory()) === 0;
+    }
+
+    public function applySupplierScopeToQuery($warehouse_id)
+    {
+        $cat = $this->getOverseasSupplierCategory();
+        if ($this->isOverseasWarehouse($warehouse_id)) {
+            $this->db->where('category', $cat);
+        } else {
+            $this->db->group_start()
+                ->where('category !=', $cat)
+                ->or_where('category IS NULL', null, false)
+                ->or_where('category', '')
+                ->group_end();
+        }
+    }
+
+    public function validateSupplierWarehouseScope($warehouse_id, $supplier_id)
+    {
+        if (!$supplier_id) {
+            return false;
+        }
+        $osw_id = $this->getOverseasWarehouseId();
+        if (!$osw_id) {
+            return false;
+        }
+        $is_overseas_wh = $this->isOverseasWarehouse($warehouse_id);
+        $is_overseas_sup = $this->isOverseasSupplier($supplier_id);
+        if ($is_overseas_wh && !$is_overseas_sup) {
+            return 'Overseas warehouse documents can only use JASPN suppliers.';
+        }
+        if (!$is_overseas_wh && $is_overseas_sup) {
+            return 'Local warehouse documents cannot use JASPN suppliers.';
+        }
+        return false;
+    }
+
+    public function enforceOverseasRules($warehouse_id, $product_ids, $supplier_id = null)
     {
         if ($this->isOverseasWarehouse($warehouse_id) && !$this->canAccessOverseasWarehouse()) {
             return lang('access_denied');
         }
-        return $this->validateProductWarehouseScope($warehouse_id, $product_ids);
+        if ($err = $this->validateProductWarehouseScope($warehouse_id, $product_ids)) {
+            return $err;
+        }
+        if ($supplier_id && ($err = $this->validateSupplierWarehouseScope($warehouse_id, $supplier_id))) {
+            return $err;
+        }
+        return false;
     }
 
     /**
@@ -820,6 +971,7 @@ class Site extends CI_Model
         $pay = $dbp . 'payments';
         $sid = $entries_alias . '.sid';
         $rid = $entries_alias . '.rid';
+        $memo_id = $entries_alias . '.memo_id';
         $eid = $entries_alias . '.id';
 
         $paymentJournalSubquery = function ($wh_id) use ($pr, $pay, $sales) {
@@ -830,15 +982,29 @@ class Site extends CI_Model
                 WHERE pr.journal_id IS NOT NULL AND s.warehouse_id = " . (int) $wh_id;
         };
 
+        // Memo payments and debit/credit memos are not tied to a sale/return warehouse.
+        $memoPaymentJournalSubquery = function () use ($pr, $pay) {
+            return "SELECT DISTINCT pr.journal_id
+                FROM {$pr} pr
+                INNER JOIN {$pay} pay ON pay.payment_id = pr.id
+                WHERE pr.journal_id IS NOT NULL
+                AND NULLIF(pay.memo_id, '') IS NOT NULL AND NULLIF(pay.memo_id, 0) IS NOT NULL";
+        };
+
+        $nonWarehouseLinked = "(NULLIF({$memo_id}, '') IS NOT NULL AND NULLIF({$memo_id}, 0) IS NOT NULL)";
+
         if ($warehouse_id) {
             $wh = (int) $warehouse_id;
             $journalSql = $paymentJournalSubquery($wh);
+            $memoJournalSql = $memoPaymentJournalSubquery();
             return "(
                 (NULLIF({$sid}, '') IS NOT NULL AND NULLIF({$sid}, 0) IS NOT NULL
                     AND {$sid} IN (SELECT id FROM {$sales} WHERE warehouse_id = {$wh}))
                 OR (NULLIF({$rid}, '') IS NOT NULL AND NULLIF({$rid}, 0) IS NOT NULL
                     AND {$rid} IN (SELECT id FROM {$returns} WHERE warehouse_id = {$wh}))
                 OR {$eid} IN ({$journalSql})
+                OR {$eid} IN ({$memoJournalSql})
+                OR {$nonWarehouseLinked}
             )";
         }
 

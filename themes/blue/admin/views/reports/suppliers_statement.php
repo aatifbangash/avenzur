@@ -107,7 +107,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('From Date', 'podate'); ?>
-                                <?php echo form_input('from_date', ($start_date ?? ($default_from_date ?? '')), 'class="form-control input-tip date" id="fromdate"'); ?>
+                                <?php echo form_input('from_date', ($start_date ?? ''), 'class="form-control input-tip date" id="fromdate"'); ?>
                             </div>
                         </div>
 
@@ -252,10 +252,10 @@
                                     $link = admin_url('entries/view/contra/' . $statement->entry_id);
                                     $transaction_type = 'Contra';
                                 }else if($statement->transaction_type == 'sales_invoice' || $statement->transaction_type == 'saleorder'){
-                                    $link = admin_url('sales?sid=' . $statement->sid);
+                                    $link = admin_url('sales/view/' . $statement->sid);
                                     $transaction_type = 'Sales';
                                 }else if($statement->transaction_type == 'purchase_invoice' || $statement->transaction_type == 'purchaseorder'){
-                                    $link = admin_url('purchases?pid=' . $statement->pid);
+                                    $link = admin_url('purchases/view/' . $statement->pid);
                                     $transaction_type = 'Purchase';
                                 }else if($statement->transaction_type == 'supplierpayment'){
                                     $link = admin_url('suppliers/view_payment/' . $statement->payment_reference);

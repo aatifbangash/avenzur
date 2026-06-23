@@ -4444,6 +4444,9 @@ class Reports extends MY_Controller
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
 
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
+
         $this->data['customers'] = $this->site->getAllCompanies('customer');
         $this->data['biller'] = $this->site->getDefaultBiller();
         $this->data['statement_ledger_options'] = [];
@@ -4623,6 +4626,9 @@ class Reports extends MY_Controller
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
 
         $this->data['ledgers'] = $this->reports_model->getCompanyLedgers();
         $this->data['biller'] = $this->site->getDefaultBiller();
@@ -4811,9 +4817,8 @@ class Reports extends MY_Controller
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
 
-        // Default from_date to January 1st of the current year
-        $default_from = date('d/m/Y', mktime(0, 0, 0, 1, 1, (int)date('Y')));
-        $this->data['default_from_date'] = $default_from;
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
 
         $this->data['suppliers'] = $this->site->getAllChildCompanies('supplier');
         $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -6066,7 +6071,9 @@ class Reports extends MY_Controller
 
         $all_suppliers = $this->site->getAllCompanies('supplier') ?: [];
         $this->data['suppliers'] = array_values(array_filter($all_suppliers, function ($s) use ($supplier_trade_type) {
-            $is_service = stripos($s->category ?? '', 'خدمات') !== false || stripos($s->category ?? '', 'service') !== false;
+            $is_service = strcasecmp(trim($s->category ?? ''), 'Services') === 0
+                || stripos($s->category ?? '', 'خدمات') !== false
+                || stripos($s->category ?? '', 'service') !== false;
             if ($supplier_trade_type === 'non_trade') {
                 return $is_service;
             }
@@ -7156,8 +7163,18 @@ class Reports extends MY_Controller
     public function GLReport(){
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $viewtype     = $this->input->get('viewtype')      ?: null;
-        $from_date    = $this->input->get('from_date')     ?: null;
-        $to_date      = $this->input->get('to_date')       ?: null;
+        $from_date    = $this->input->get('from_date');
+        if (($from_date === null || $from_date === '') && empty($_GET)) {
+            $from_date = $this->sma->hrsd(date('Y-01-01'));
+        } elseif ($from_date === null || $from_date === '') {
+            $from_date = null;
+        }
+        $to_date = $this->input->get('to_date');
+        if (($to_date === null || $to_date === '') && empty($_GET)) {
+            $to_date = $this->sma->hrsd(date('Y-m-d'));
+        } elseif ($to_date === null || $to_date === '') {
+            $to_date = null;
+        }
         $export_excel = $this->input->get('export_excel')  ?: null;
 
         // Set filter values for form persistence (always set these)
@@ -7169,7 +7186,7 @@ class Reports extends MY_Controller
         $meta = ['page_title' => lang('general_ledger_report'), 'bc' => $bc];
 
         // If any filter submitted, fetch data
-        if ($from_date || $to_date) {
+        if (!empty($_GET) && ($this->input->get('from_date') || $this->input->get('to_date'))) {
             $start_date = $from_date ? $this->sma->fld(explode(' ', trim($from_date))[0] . ' 00:00:00') : null;
             $end_date   = $to_date   ? $this->sma->fld(explode(' ', trim($to_date))[0]   . ' 23:59:59') : null;
 
@@ -7325,11 +7342,11 @@ class Reports extends MY_Controller
     {
         $link = '';
         if ($row->voucher == 'Sales Invoice') {
-            $link = admin_url('sales?sid=' . $row->voucher_id);
+            $link = admin_url('sales/view/' . $row->voucher_id);
         } elseif ($row->voucher == 'Purchase Invoice') {
-            $link = admin_url('purchases?pid=' . $row->voucher_id);
+            $link = admin_url('purchases/view/' . $row->voucher_id);
         } elseif ($row->voucher == 'Sales Return') {
-            $link = admin_url('returns?rid=' . $row->voucher_id);
+            $link = admin_url('returns/view/' . $row->voucher_id);
         } elseif ($row->voucher == 'Credit Note') {
             $link = admin_url('customers/view_credit_memo/' . $row->voucher_id);
         } elseif ($row->voucher == 'Debit Note') {
@@ -7925,8 +7942,18 @@ class Reports extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         
         // Get filter parameters from GET
-        $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : null;
-        $end_date = $this->input->get('end_date') ? $this->input->get('end_date') : null;
+        $start_date = $this->input->get('start_date');
+        if (($start_date === null || $start_date === '') && empty($_GET)) {
+            $start_date = date('d/m/Y', mktime(0, 0, 0, 1, 1, (int) date('Y')));
+        } elseif ($start_date === null || $start_date === '') {
+            $start_date = null;
+        }
+        $end_date = $this->input->get('end_date');
+        if (($end_date === null || $end_date === '') && empty($_GET)) {
+            $end_date = date('d/m/Y');
+        } elseif ($end_date === null || $end_date === '') {
+            $end_date = null;
+        }
         $invoice_id = $this->input->get('invoice_id') ? $this->input->get('invoice_id') : null;
         $salesman = $this->input->get('salesman') ? $this->input->get('salesman') : null;
         $item_code = $this->input->get('item_code') ? $this->input->get('item_code') : null;
@@ -7958,7 +7985,7 @@ class Reports extends MY_Controller
         $this->data['warehouse_id'] = $warehouse_id;
         
         // If any filter submitted, fetch data
-        if ($start_date || $end_date || $invoice_id || $salesman || $item_code || $category || $warehouse_explicit) {
+        if (!empty($_GET) && ($start_date || $end_date || $invoice_id || $salesman || $item_code || $category || $warehouse_explicit)) {
             
             // Pre-fetch salesman name if needed
             $salesman_name = null;
@@ -8086,7 +8113,12 @@ class Reports extends MY_Controller
         } elseif ($start_date === null || $start_date === '') {
             $start_date = null;
         }
-        $end_date     = $this->input->get('end_date')     ?: null;
+        $end_date = $this->input->get('end_date');
+        if (($end_date === null || $end_date === '') && empty($_GET)) {
+            $end_date = date('d/m/Y');
+        } elseif ($end_date === null || $end_date === '') {
+            $end_date = null;
+        }
         $purchase_ref = $this->input->get('purchase_ref') ?: null;
         $supplier     = $this->input->get('supplier')     ?: null;
         $record_type  = $this->input->get('record_type')  ?: 'all';
@@ -8363,8 +8395,8 @@ class Reports extends MY_Controller
         // Initialize default values
         $this->data['customer_id']  = null;
         $this->data['pharmacy_id']  = $this->site->resolveReportWarehouseFilter('pharmacy_id');
-        $this->data['start_date']   = null;
-        $this->data['end_date']     = null;
+        $this->data['start_date']   = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date']     = $this->sma->hrsd(date('Y-m-d'));
         $this->data['salesman_id']  = null;
         $this->data['record_type']  = 'all';
 
@@ -10383,10 +10415,10 @@ class Reports extends MY_Controller
             return;
         }
         if ($trade_type === 'non_trade') {
-            $this->db->where("({$category_col} LIKE '%خدمات%' OR {$category_col} LIKE '%service%')", null, false);
+            $this->db->where("({$category_col} = 'Services' OR {$category_col} LIKE '%خدمات%' OR {$category_col} LIKE '%service%')", null, false);
             return;
         }
-        $this->db->where("({$category_col} IS NULL OR ({$category_col} NOT LIKE '%خدمات%' AND {$category_col} NOT LIKE '%service%'))", null, false);
+        $this->db->where("({$category_col} IS NULL OR ({$category_col} != 'Services' AND {$category_col} NOT LIKE '%خدمات%' AND {$category_col} NOT LIKE '%service%'))", null, false);
     }
 
     private function filter_suppliers_by_trade_type($suppliers, $trade_type)
@@ -10395,7 +10427,9 @@ class Reports extends MY_Controller
             return $suppliers ?: [];
         }
         return array_values(array_filter($suppliers, function ($s) use ($trade_type) {
-            $is_service = stripos($s->category ?? '', 'خدمات') !== false || stripos($s->category ?? '', 'service') !== false;
+            $is_service = strcasecmp(trim($s->category ?? ''), 'Services') === 0
+                || stripos($s->category ?? '', 'خدمات') !== false
+                || stripos($s->category ?? '', 'service') !== false;
             if ($trade_type === 'non_trade') {
                 return $is_service;
             }
@@ -10694,7 +10728,8 @@ class Reports extends MY_Controller
 
         // Exclude suppliers whose category contains خدمات
         $payments = array_values(array_filter($payments, function ($p) {
-            return stripos($p->supplier_group ?? '', 'خدمات') === false;
+            return strcasecmp(trim($p->supplier_group ?? ''), 'Services') !== 0
+                && stripos($p->supplier_group ?? '', 'خدمات') === false;
         }));
 
         $total    = count($payments);
@@ -11254,6 +11289,194 @@ class Reports extends MY_Controller
         ", [$po_id])->result();
 
         $this->load->view($this->theme . 'reports/po_shelving_detail_modal', $this->data);
+    }
+
+    public function supplier_advances()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier') ?: [];
+        $this->data['advance_ledger'] = $this->Settings->supplier_advance_ledger ?? null;
+
+        $viewtype = $this->input->post('viewtype') ?: null;
+        $from_date = $this->input->post('from_date') ?: $this->data['start_date'];
+        $to_date = $this->input->post('to_date') ?: $this->data['end_date'];
+        $supplier_ids = $this->input->post('supplier_ids') ?: [];
+
+        $start_date = $this->sma->fld($from_date);
+        $end_date = $this->sma->fld($to_date);
+        $this->data['start_date'] = $from_date;
+        $this->data['end_date'] = $to_date;
+        $this->data['selected_suppliers'] = $supplier_ids;
+        $this->data['trial_balance'] = $this->reports_model->get_supplier_advances_trial_balance(
+            $start_date,
+            $end_date,
+            $this->data['advance_ledger'],
+            $supplier_ids
+        );
+
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('supplier_advances_report')]];
+        $meta = ['page_title' => lang('supplier_advances_report'), 'bc' => $bc];
+
+        if ($viewtype == 'pdf') {
+            $this->data['viewtype'] = $viewtype;
+            $name = lang('supplier_advances_report') . '.pdf';
+            $html = $this->load->view($this->theme . 'reports/supplier_advances', $this->data, true);
+            $this->sma->generate_pdf($html, $name, 'I', '', null, null, null, null, 'Pl');
+        } else {
+            $this->page_construct('reports/supplier_advances', $meta, $this->data);
+        }
+    }
+
+    public function supplier_advance_statement()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier') ?: [];
+        $advance_ledger = $this->Settings->supplier_advance_ledger ?? null;
+
+        $viewtype = $this->input->post('viewtype') ?: $this->input->get('viewtype');
+        $from_date = $this->input->post('from_date') ?: $this->input->get('from_date');
+        $to_date = $this->input->post('to_date') ?: $this->input->get('to_date');
+        $supplier_id = $this->input->post('supplier') ?: $this->input->get('supplier');
+
+        if ($from_date && $supplier_id) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $statement = $this->reports_model->getSupplierAdvanceStatement($start_date, $end_date, $supplier_id, $advance_ledger);
+
+            $total_ob_debit = 0;
+            $total_ob_credit = 0;
+            foreach ($statement['ob'] as $ob) {
+                if ($ob->dc == 'D') {
+                    $total_ob_debit += $ob->amount;
+                } else {
+                    $total_ob_credit += $ob->amount;
+                }
+            }
+            $total_ob = $total_ob_debit - $total_ob_credit;
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['supplier_id'] = $supplier_id;
+            $this->data['total_ob'] = $this->sma->formatDecimal($total_ob);
+            $this->data['advance_statement'] = $statement['report'];
+            $this->data['balance_type'] = 'supplier';
+
+            $bc = [
+                ['link' => base_url(), 'page' => lang('home')],
+                ['link' => admin_url('reports/supplier_advances'), 'page' => lang('supplier_advances_report')],
+                ['link' => '#', 'page' => lang('supplier_advance_statement')],
+            ];
+            $meta = ['page_title' => lang('supplier_advance_statement'), 'bc' => $bc];
+
+            if ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('supplier_advance_statement') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/advance_statement', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', null, null, null, null, 'Pl');
+            } else {
+                $this->page_construct('reports/advance_statement', $meta, $this->data);
+            }
+        } else {
+            redirect(admin_url('reports/supplier_advances'));
+        }
+    }
+
+    public function customer_advances()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
+        $this->data['customers'] = $this->site->getAllCompanies('customer') ?: [];
+        $this->data['advance_ledger'] = $this->Settings->customer_advance_ledger ?? null;
+
+        $viewtype = $this->input->post('viewtype') ?: null;
+        $from_date = $this->input->post('from_date') ?: $this->data['start_date'];
+        $to_date = $this->input->post('to_date') ?: $this->data['end_date'];
+        $customer_ids = $this->input->post('customer_ids') ?: [];
+
+        $start_date = $this->sma->fld($from_date);
+        $end_date = $this->sma->fld($to_date);
+        $this->data['start_date'] = $from_date;
+        $this->data['end_date'] = $to_date;
+        $this->data['selected_customers'] = $customer_ids;
+        $this->data['trial_balance'] = $this->reports_model->get_customer_advances_trial_balance(
+            $start_date,
+            $end_date,
+            $this->data['advance_ledger'],
+            $customer_ids
+        );
+
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customer_advances_report')]];
+        $meta = ['page_title' => lang('customer_advances_report'), 'bc' => $bc];
+
+        if ($viewtype == 'pdf') {
+            $this->data['viewtype'] = $viewtype;
+            $name = lang('customer_advances_report') . '.pdf';
+            $html = $this->load->view($this->theme . 'reports/customer_advances', $this->data, true);
+            $this->sma->generate_pdf($html, $name, 'I', '', null, null, null, null, 'Pl');
+        } else {
+            $this->page_construct('reports/customer_advances', $meta, $this->data);
+        }
+    }
+
+    public function customer_advance_statement()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
+        $this->data['customers'] = $this->site->getAllCompanies('customer') ?: [];
+        $advance_ledger = $this->Settings->customer_advance_ledger ?? null;
+
+        $viewtype = $this->input->post('viewtype') ?: $this->input->get('viewtype');
+        $from_date = $this->input->post('from_date') ?: $this->input->get('from_date');
+        $to_date = $this->input->post('to_date') ?: $this->input->get('to_date');
+        $customer_id = $this->input->post('customer') ?: $this->input->get('customer');
+
+        if ($from_date && $customer_id) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $statement = $this->reports_model->getCustomerAdvanceStatement($start_date, $end_date, $customer_id, $advance_ledger);
+
+            $total_ob_debit = 0;
+            $total_ob_credit = 0;
+            foreach ($statement['ob'] as $ob) {
+                if ($ob->dc == 'D') {
+                    $total_ob_debit += $ob->amount;
+                } else {
+                    $total_ob_credit += $ob->amount;
+                }
+            }
+            $total_ob = $total_ob_credit - $total_ob_debit;
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['customer_id'] = $customer_id;
+            $this->data['total_ob'] = $this->sma->formatDecimal($total_ob);
+            $this->data['advance_statement'] = $statement['report'];
+            $this->data['balance_type'] = 'customer';
+
+            $bc = [
+                ['link' => base_url(), 'page' => lang('home')],
+                ['link' => admin_url('reports/customer_advances'), 'page' => lang('customer_advances_report')],
+                ['link' => '#', 'page' => lang('customer_advance_statement')],
+            ];
+            $meta = ['page_title' => lang('customer_advance_statement'), 'bc' => $bc];
+
+            if ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('customer_advance_statement') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/advance_statement', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', null, null, null, null, 'Pl');
+            } else {
+                $this->page_construct('reports/advance_statement', $meta, $this->data);
+            }
+        } else {
+            redirect(admin_url('reports/customer_advances'));
+        }
     }
 
 }

@@ -676,11 +676,16 @@ class Purchase_order_model extends CI_Model{
         return false;
     }
 
-    public function getPaymentsForPurchase($purchase_id)
+    public function getPaymentsForPurchase($po_id)
     {
+        $po = $this->getPurchaseByID($po_id);
+        if (!$po || empty($po->purchase_id)) {
+            return false;
+        }
+
         $this->db->select('payments.date, payments.paid_by, payments.amount, payments.reference_no, users.first_name, users.last_name, type')
             ->join('users', 'users.id=payments.created_by', 'left');
-        $q = $this->db->get_where('payments', ['purchase_id' => $purchase_id]);
+        $q = $this->db->get_where('payments', ['purchase_id' => $po->purchase_id]);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;

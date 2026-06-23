@@ -219,12 +219,12 @@
                                     $transaction_id = $statement->code;
                                     $note = $statement->narration;
                                 }else if($statement->transaction_type == 'sales_invoice' || $statement->transaction_type == 'saleorder'){
-                                    $link = admin_url('sales/completed_sales?sid=' . $statement->sale_id);
+                                    $link = admin_url('sales/view/' . $statement->sale_id);
                                     $transaction_type = 'Sales Invoice';
                                     $transaction_id = $statement->sale_id;
                                     $note = strip_tags(html_entity_decode($statement->narration));
                                 }else if($statement->transaction_type == 'purchase_invoice' || $statement->transaction_type == 'purchaseorder'){
-                                    $link = admin_url('purchases?pid=' . $statement->purchase_id);
+                                    $link = admin_url('purchases/view/' . $statement->purchase_id);
                                     $transaction_type = 'Purchase Invoice';
                                     $transaction_id = $statement->purchase_id;
                                     $note = strip_tags(html_entity_decode($statement->narration));
@@ -257,7 +257,7 @@
                                     $transaction_id = $statement->memo_note ?: $statement->entry_id;
                                     $note = $statement->narration ? strip_tags(html_entity_decode($statement->narration)) : ($statement->memo_note ?: '-');
                                 }else if($statement->transaction_type == 'returncustomerorder'){
-                                    $link = admin_url('returns?rid=' . $statement->return_id);
+                                    $link = admin_url('returns/view/' . $statement->return_id);
                                     $transaction_type = 'Sales Return';
                                     $transaction_id = $statement->return_id;
                                     $note = strip_tags(html_entity_decode($statement->narration));
