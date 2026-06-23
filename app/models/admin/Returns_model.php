@@ -224,7 +224,7 @@ class Returns_model extends CI_Model
                 products.details as details,
                 products.hsn_code as hsn_code, 
                 products.second_name as second_name,
-                (SUM(CASE WHEN sma_inventory_movements.type = "customer_return" AND sma_inventory_movements.customer_id = '.$customer_id.' THEN -1*sma_inventory_movements.quantity ELSE 0 END) - SUM(CASE WHEN sma_inventory_movements.type IN ("sale","pos") AND sma_inventory_movements.customer_id = '.$customer_id.' THEN sma_inventory_movements.quantity ELSE 0 END) ) AS total_quantity
+                SUM(IFNULL(CASE WHEN sma_inventory_movements.customer_id = ' . $customer_id . ' AND sma_inventory_movements.product_id = sma_return_items.product_id THEN sma_inventory_movements.quantity ELSE 0 END, 0)) as total_quantity
                 '
             )
             ->join('products', 'products.id=return_items.product_id', 'left')
@@ -232,7 +232,7 @@ class Returns_model extends CI_Model
             ->join('tax_rates', 'tax_rates.id=return_items.tax_rate_id', 'left')
             ->where('return_id', $return_id)
             ->group_by('return_items.id, return_items.avz_item_code')
-            ->having('total_quantity >', 0)
+            ->having('total_quantity <>', 0)
             ->order_by('id', 'asc');
 
         $q = $this->db->get('return_items');
