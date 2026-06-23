@@ -971,6 +971,7 @@ class Site extends CI_Model
         $pay = $dbp . 'payments';
         $sid = $entries_alias . '.sid';
         $rid = $entries_alias . '.rid';
+        $memo_id = $entries_alias . '.memo_id';
         $eid = $entries_alias . '.id';
 
         $paymentJournalSubquery = function ($wh_id) use ($pr, $pay, $sales) {
@@ -981,15 +982,29 @@ class Site extends CI_Model
                 WHERE pr.journal_id IS NOT NULL AND s.warehouse_id = " . (int) $wh_id;
         };
 
+        // Memo payments and debit/credit memos are not tied to a sale/return warehouse.
+        $memoPaymentJournalSubquery = function () use ($pr, $pay) {
+            return "SELECT DISTINCT pr.journal_id
+                FROM {$pr} pr
+                INNER JOIN {$pay} pay ON pay.payment_id = pr.id
+                WHERE pr.journal_id IS NOT NULL
+                AND NULLIF(pay.memo_id, '') IS NOT NULL AND NULLIF(pay.memo_id, 0) IS NOT NULL";
+        };
+
+        $nonWarehouseLinked = "(NULLIF({$memo_id}, '') IS NOT NULL AND NULLIF({$memo_id}, 0) IS NOT NULL)";
+
         if ($warehouse_id) {
             $wh = (int) $warehouse_id;
             $journalSql = $paymentJournalSubquery($wh);
+            $memoJournalSql = $memoPaymentJournalSubquery();
             return "(
                 (NULLIF({$sid}, '') IS NOT NULL AND NULLIF({$sid}, 0) IS NOT NULL
                     AND {$sid} IN (SELECT id FROM {$sales} WHERE warehouse_id = {$wh}))
                 OR (NULLIF({$rid}, '') IS NOT NULL AND NULLIF({$rid}, 0) IS NOT NULL
                     AND {$rid} IN (SELECT id FROM {$returns} WHERE warehouse_id = {$wh}))
                 OR {$eid} IN ({$journalSql})
+                OR {$eid} IN ({$memoJournalSql})
+                OR {$nonWarehouseLinked}
             )";
         }
 

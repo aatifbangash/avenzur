@@ -6765,7 +6765,7 @@ class Reports_model extends CI_Model
             $return_where_clauses[] = "c.category = '" . $this->db->escape_str($category) . "'";
         }
 
-        $return_wh_clause = trim($this->site->reportWarehouseAndClause($warehouse_id, 's'));
+        $return_wh_clause = trim($this->site->reportWarehouseAndClause($warehouse_id, 'r'));
         if ($return_wh_clause) {
             $return_where_clauses[] = ltrim($return_wh_clause, ' AND ');
         }
@@ -7080,16 +7080,8 @@ class Reports_model extends CI_Model
             {$limit_sql}
         ";
         
-        // #region agent log
-        @file_put_contents('/Applications/XAMPP/xamppfiles/htdocs/avenzur/.cursor/debug-cbde1b.log', json_encode(['sessionId' => 'cbde1b', 'runId' => 'pre-fix', 'hypothesisId' => 'A,B', 'location' => 'Reports_model.php:getSalesPerItem', 'message' => 'getSalesPerItem aggregate query result', 'data' => ['start_date' => $start_date, 'end_date' => $end_date, 'warehouse_id' => $warehouse_id, 'total_rows' => $total, 'limit' => $limit, 'offset' => $offset, 'sum_net_sales' => (float) $totals->sum_net_sales, 'sum_sales' => (float) $totals->sum_sales, 'rows_returned' => 0], 'timestamp' => round(microtime(true) * 1000)]) . "\n", FILE_APPEND);
-        // #endregion
-
         $query = $this->db->query($sql);
         $rows = ($query && $query->num_rows() > 0) ? $query->result() : [];
-
-        // #region agent log
-        @file_put_contents('/Applications/XAMPP/xamppfiles/htdocs/avenzur/.cursor/debug-cbde1b.log', json_encode(['sessionId' => 'cbde1b', 'runId' => 'pre-fix', 'hypothesisId' => 'B', 'location' => 'Reports_model.php:getSalesPerItem:after_query', 'message' => 'getSalesPerItem page rows fetched', 'data' => ['rows_returned' => count($rows), 'total_rows' => $total], 'timestamp' => round(microtime(true) * 1000)]) . "\n", FILE_APPEND);
-        // #endregion
 
         return [
             'rows' => $rows,
@@ -7188,7 +7180,7 @@ class Reports_model extends CI_Model
                 FROM sma_return_items 
                 GROUP BY return_id
             ) as return_items_cogs ON return_items_cogs.return_id = r.id
-            WHERE 1=1
+            WHERE r.status = 'completed'
         ";
 
         // Add date filter for returns
@@ -7207,6 +7199,11 @@ class Reports_model extends CI_Model
         // Add warehouse filter for returns
         if (!empty($pharmacy_id) && $pharmacy_id !== '' && $pharmacy_id !== '0') {
             $sql .= " AND r.warehouse_id = {$pharmacy_id}";
+        } else {
+            $return_wh_clause = trim($this->site->reportWarehouseAndClause(null, 'r'));
+            if ($return_wh_clause) {
+                $sql .= $return_wh_clause;
+            }
         }
 
         // Add salesman filter for returns
@@ -7225,6 +7222,7 @@ class Reports_model extends CI_Model
         }
 
         $query = $this->db->query($sql);
+        $rows = ($query && $query->num_rows() > 0) ? $query->result() : [];
 
         // Enhanced logging for debugging
         log_message('debug', '========== getSalesPerInvoice Debug ==========');
@@ -7232,10 +7230,10 @@ class Reports_model extends CI_Model
         log_message('debug', 'Customer ID: ' . var_export($customer_id, true) . ' (type: ' . gettype($customer_id) . ')');
         log_message('debug', 'Pharmacy ID: ' . var_export($pharmacy_id, true) . ' (type: ' . gettype($pharmacy_id) . ')');
         log_message('debug', 'SQL: ' . $sql);
-        log_message('debug', 'Result count: ' . $query->num_rows());
+        log_message('debug', 'Result count: ' . count($rows));
         log_message('debug', '================================================');
 
-        return $query->result();
+        return $rows;
     }
 
     /**
@@ -7677,5 +7675,172 @@ class Reports_model extends CI_Model
 
         $query = $this->db->query($sql, $params);
         return $query->result_array();
+    }
+
+    /**
+     * Trial balance for supplier advances (control ledger + supplier_id sub-ledger).
+     */
+    public function get_supplier_advances_trial_balance($start_date, $end_date, $advance_ledger, $supplier_ids = [])
+    {
+        return $this->get_party_advances_trial_balance('supplier_id', 'supplier', $start_date, $end_date, $advance_ledger, $supplier_ids);
+    }
+
+    /**
+     * Trial balance for customer advances (control ledger + customer_id sub-ledger).
+     */
+    public function get_customer_advances_trial_balance($start_date, $end_date, $advance_ledger, $customer_ids = [])
+    {
+        return $this->get_party_advances_trial_balance('customer_id', 'customer', $start_date, $end_date, $advance_ledger, $customer_ids);
+    }
+
+    private function get_party_advances_trial_balance($party_field, $group_name, $start_date, $end_date, $advance_ledger, $party_ids = [])
+    {
+        if (!$advance_ledger) {
+            return [];
+        }
+
+        $pfx = $this->db->dbprefix;
+        $deleted_sql = $this->db->field_exists('deleted', 'accounts_entries') ? ' AND e.deleted = 0' : '';
+        $party_filter = '';
+        if (!empty($party_ids)) {
+            $party_filter = ' AND c.id IN (' . implode(',', array_map('intval', $party_ids)) . ')';
+        }
+
+        $ob_sql = "
+            SELECT c.id AS party_id, c.name, c.sequence_code,
+                SUM(CASE WHEN ei.dc = 'D' THEN ei.amount ELSE 0 END) AS total_debit,
+                SUM(CASE WHEN ei.dc = 'C' THEN ei.amount ELSE 0 END) AS total_credit
+            FROM {$pfx}accounts_entries e
+            JOIN {$pfx}accounts_entryitems ei ON e.id = ei.entry_id
+            JOIN {$pfx}companies c ON e.{$party_field} = c.id
+            WHERE c.group_name = " . $this->db->escape($group_name) . "
+              AND e.{$party_field} IS NOT NULL AND e.{$party_field} > 0
+              AND ei.ledger_id = " . (int) $advance_ledger . "
+              AND e.date < " . $this->db->escape($start_date) . "
+              {$deleted_sql}
+              {$party_filter}
+            GROUP BY c.id, c.name, c.sequence_code
+        ";
+
+        $period_sql = "
+            SELECT c.id AS party_id, c.name, c.sequence_code,
+                SUM(CASE WHEN ei.dc = 'D' THEN ei.amount ELSE 0 END) AS total_debit,
+                SUM(CASE WHEN ei.dc = 'C' THEN ei.amount ELSE 0 END) AS total_credit
+            FROM {$pfx}accounts_entries e
+            JOIN {$pfx}accounts_entryitems ei ON e.id = ei.entry_id
+            JOIN {$pfx}companies c ON e.{$party_field} = c.id
+            WHERE c.group_name = " . $this->db->escape($group_name) . "
+              AND e.{$party_field} IS NOT NULL AND e.{$party_field} > 0
+              AND ei.ledger_id = " . (int) $advance_ledger . "
+              AND e.date >= " . $this->db->escape($start_date) . "
+              AND e.date <= " . $this->db->escape($end_date) . "
+              {$deleted_sql}
+              {$party_filter}
+            GROUP BY c.id, c.name, c.sequence_code
+        ";
+
+        $balances = [];
+        foreach ($this->db->query($ob_sql)->result_array() as $ob) {
+            $party_id = (int) $ob['party_id'];
+            $ob_debit = (float) $ob['total_debit'];
+            $ob_credit = (float) $ob['total_credit'];
+            if ($ob_debit >= $ob_credit) {
+                $ob_debit -= $ob_credit;
+                $ob_credit = 0;
+            } else {
+                $ob_credit -= $ob_debit;
+                $ob_debit = 0;
+            }
+            $balances[$party_id] = [
+                'party_id' => $party_id,
+                'name' => $ob['name'],
+                'sequence_code' => $ob['sequence_code'],
+                'obDebit' => $ob_debit,
+                'obCredit' => $ob_credit,
+                'trsDebit' => 0,
+                'trsCredit' => 0,
+            ];
+        }
+
+        foreach ($this->db->query($period_sql)->result_array() as $period) {
+            $party_id = (int) $period['party_id'];
+            if (!isset($balances[$party_id])) {
+                $balances[$party_id] = [
+                    'party_id' => $party_id,
+                    'name' => $period['name'],
+                    'sequence_code' => $period['sequence_code'],
+                    'obDebit' => 0,
+                    'obCredit' => 0,
+                    'trsDebit' => (float) $period['total_debit'],
+                    'trsCredit' => (float) $period['total_credit'],
+                ];
+            } else {
+                $balances[$party_id]['trsDebit'] = (float) $period['total_debit'];
+                $balances[$party_id]['trsCredit'] = (float) $period['total_credit'];
+            }
+        }
+
+        return $balances;
+    }
+
+    public function getSupplierAdvanceStatement($start_date, $end_date, $supplier_id, $advance_ledger)
+    {
+        return $this->getPartyAdvanceStatement('supplier_id', $start_date, $end_date, $supplier_id, $advance_ledger);
+    }
+
+    public function getCustomerAdvanceStatement($start_date, $end_date, $customer_id, $advance_ledger)
+    {
+        return $this->getPartyAdvanceStatement('customer_id', $start_date, $end_date, $customer_id, $advance_ledger);
+    }
+
+    private function getPartyAdvanceStatement($party_field, $start_date, $end_date, $party_id, $advance_ledger)
+    {
+        if (!$advance_ledger || !$party_id) {
+            return ['ob' => [], 'report' => []];
+        }
+
+        $pfx = $this->db->dbprefix;
+        $deleted_sql = $this->db->field_exists('deleted', 'accounts_entries') ? ' AND e.deleted = 0' : '';
+        $reference_case = "
+            COALESCE(
+                m.reference_no,
+                (SELECT MIN(pr2.reference_no) FROM {$pfx}payment_reference pr2 WHERE pr2.journal_id = e.id),
+                NULLIF(e.number, ''),
+                CAST(e.id AS CHAR)
+            ) AS reference_no";
+        $payment_ref_case = "
+            (SELECT MIN(pr2.id) FROM {$pfx}payment_reference pr2 WHERE pr2.journal_id = e.id) AS payment_reference";
+
+        $base_sql = "
+            SELECT
+                ei.id AS entryitem_id,
+                ei.entry_id,
+                ei.amount,
+                ei.dc,
+                COALESCE(ei.narration, e.notes, '') AS narration,
+                e.transaction_type,
+                e.date,
+                e.memo_id,
+                {$reference_case},
+                {$payment_ref_case}
+            FROM {$pfx}accounts_entryitems ei
+            JOIN {$pfx}accounts_entries e ON e.id = ei.entry_id
+            LEFT JOIN {$pfx}memo m ON m.id = e.memo_id AND e.memo_id > 0
+            WHERE e.{$party_field} = ?
+              AND ei.ledger_id = ?
+              {$deleted_sql}
+        ";
+
+        $ob = $this->db->query(
+            $base_sql . " AND e.date < ? ORDER BY e.date ASC, ei.id ASC",
+            [(int) $party_id, (int) $advance_ledger, $start_date]
+        )->result();
+
+        $report = $this->db->query(
+            $base_sql . " AND e.date >= ? AND e.date <= ? ORDER BY e.date ASC, ei.id ASC",
+            [(int) $party_id, (int) $advance_ledger, $start_date, $end_date]
+        )->result();
+
+        return ['ob' => $ob ?: [], 'report' => $report ?: []];
     }
 }

@@ -248,7 +248,7 @@
                                         $sale_payment_term = $statement->company_payment_term;
                                         //$company_payment_term = $statement->company_payment_term;
                                         if($statement->transaction_type == 'sales_invoice' || $statement->transaction_type == 'saleorder'){
-                                            $link = admin_url('sales?sid=' . $statement->sale_id);
+                                            $link = admin_url('sales/view/' . $statement->sale_id);
                                             $transaction_type = 'Sales';
                                             $transaction_id = $statement->sale_id;
                                             $note = strip_tags(html_entity_decode($statement->sale_note));
@@ -273,7 +273,7 @@
                                             $transaction_id = $statement->memo_id;
                                             $note = strip_tags(html_entity_decode($statement->memo_note));
                                         }else if($statement->transaction_type == 'returncustomerorder'){
-                                            $link = admin_url('returns?rid=' . $statement->return_id);
+                                            $link = admin_url('returns/view/' . $statement->return_id);
                                             $transaction_type = 'Return';
                                             $transaction_id = $statement->return_id;
                                             $note = strip_tags(html_entity_decode($statement->return_note));
