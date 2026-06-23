@@ -11291,4 +11291,192 @@ class Reports extends MY_Controller
         $this->load->view($this->theme . 'reports/po_shelving_detail_modal', $this->data);
     }
 
+    public function supplier_advances()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier') ?: [];
+        $this->data['advance_ledger'] = $this->Settings->supplier_advance_ledger ?? null;
+
+        $viewtype = $this->input->post('viewtype') ?: null;
+        $from_date = $this->input->post('from_date') ?: $this->data['start_date'];
+        $to_date = $this->input->post('to_date') ?: $this->data['end_date'];
+        $supplier_ids = $this->input->post('supplier_ids') ?: [];
+
+        $start_date = $this->sma->fld($from_date);
+        $end_date = $this->sma->fld($to_date);
+        $this->data['start_date'] = $from_date;
+        $this->data['end_date'] = $to_date;
+        $this->data['selected_suppliers'] = $supplier_ids;
+        $this->data['trial_balance'] = $this->reports_model->get_supplier_advances_trial_balance(
+            $start_date,
+            $end_date,
+            $this->data['advance_ledger'],
+            $supplier_ids
+        );
+
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('supplier_advances_report')]];
+        $meta = ['page_title' => lang('supplier_advances_report'), 'bc' => $bc];
+
+        if ($viewtype == 'pdf') {
+            $this->data['viewtype'] = $viewtype;
+            $name = lang('supplier_advances_report') . '.pdf';
+            $html = $this->load->view($this->theme . 'reports/supplier_advances', $this->data, true);
+            $this->sma->generate_pdf($html, $name, 'I', '', null, null, null, null, 'Pl');
+        } else {
+            $this->page_construct('reports/supplier_advances', $meta, $this->data);
+        }
+    }
+
+    public function supplier_advance_statement()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier') ?: [];
+        $advance_ledger = $this->Settings->supplier_advance_ledger ?? null;
+
+        $viewtype = $this->input->post('viewtype') ?: $this->input->get('viewtype');
+        $from_date = $this->input->post('from_date') ?: $this->input->get('from_date');
+        $to_date = $this->input->post('to_date') ?: $this->input->get('to_date');
+        $supplier_id = $this->input->post('supplier') ?: $this->input->get('supplier');
+
+        if ($from_date && $supplier_id) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $statement = $this->reports_model->getSupplierAdvanceStatement($start_date, $end_date, $supplier_id, $advance_ledger);
+
+            $total_ob_debit = 0;
+            $total_ob_credit = 0;
+            foreach ($statement['ob'] as $ob) {
+                if ($ob->dc == 'D') {
+                    $total_ob_debit += $ob->amount;
+                } else {
+                    $total_ob_credit += $ob->amount;
+                }
+            }
+            $total_ob = $total_ob_debit - $total_ob_credit;
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['supplier_id'] = $supplier_id;
+            $this->data['total_ob'] = $this->sma->formatDecimal($total_ob);
+            $this->data['advance_statement'] = $statement['report'];
+            $this->data['balance_type'] = 'supplier';
+
+            $bc = [
+                ['link' => base_url(), 'page' => lang('home')],
+                ['link' => admin_url('reports/supplier_advances'), 'page' => lang('supplier_advances_report')],
+                ['link' => '#', 'page' => lang('supplier_advance_statement')],
+            ];
+            $meta = ['page_title' => lang('supplier_advance_statement'), 'bc' => $bc];
+
+            if ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('supplier_advance_statement') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/advance_statement', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', null, null, null, null, 'Pl');
+            } else {
+                $this->page_construct('reports/advance_statement', $meta, $this->data);
+            }
+        } else {
+            redirect(admin_url('reports/supplier_advances'));
+        }
+    }
+
+    public function customer_advances()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
+        $this->data['customers'] = $this->site->getAllCompanies('customer') ?: [];
+        $this->data['advance_ledger'] = $this->Settings->customer_advance_ledger ?? null;
+
+        $viewtype = $this->input->post('viewtype') ?: null;
+        $from_date = $this->input->post('from_date') ?: $this->data['start_date'];
+        $to_date = $this->input->post('to_date') ?: $this->data['end_date'];
+        $customer_ids = $this->input->post('customer_ids') ?: [];
+
+        $start_date = $this->sma->fld($from_date);
+        $end_date = $this->sma->fld($to_date);
+        $this->data['start_date'] = $from_date;
+        $this->data['end_date'] = $to_date;
+        $this->data['selected_customers'] = $customer_ids;
+        $this->data['trial_balance'] = $this->reports_model->get_customer_advances_trial_balance(
+            $start_date,
+            $end_date,
+            $this->data['advance_ledger'],
+            $customer_ids
+        );
+
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customer_advances_report')]];
+        $meta = ['page_title' => lang('customer_advances_report'), 'bc' => $bc];
+
+        if ($viewtype == 'pdf') {
+            $this->data['viewtype'] = $viewtype;
+            $name = lang('customer_advances_report') . '.pdf';
+            $html = $this->load->view($this->theme . 'reports/customer_advances', $this->data, true);
+            $this->sma->generate_pdf($html, $name, 'I', '', null, null, null, null, 'Pl');
+        } else {
+            $this->page_construct('reports/customer_advances', $meta, $this->data);
+        }
+    }
+
+    public function customer_advance_statement()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
+        $this->data['customers'] = $this->site->getAllCompanies('customer') ?: [];
+        $advance_ledger = $this->Settings->customer_advance_ledger ?? null;
+
+        $viewtype = $this->input->post('viewtype') ?: $this->input->get('viewtype');
+        $from_date = $this->input->post('from_date') ?: $this->input->get('from_date');
+        $to_date = $this->input->post('to_date') ?: $this->input->get('to_date');
+        $customer_id = $this->input->post('customer') ?: $this->input->get('customer');
+
+        if ($from_date && $customer_id) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $statement = $this->reports_model->getCustomerAdvanceStatement($start_date, $end_date, $customer_id, $advance_ledger);
+
+            $total_ob_debit = 0;
+            $total_ob_credit = 0;
+            foreach ($statement['ob'] as $ob) {
+                if ($ob->dc == 'D') {
+                    $total_ob_debit += $ob->amount;
+                } else {
+                    $total_ob_credit += $ob->amount;
+                }
+            }
+            $total_ob = $total_ob_credit - $total_ob_debit;
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['customer_id'] = $customer_id;
+            $this->data['total_ob'] = $this->sma->formatDecimal($total_ob);
+            $this->data['advance_statement'] = $statement['report'];
+            $this->data['balance_type'] = 'customer';
+
+            $bc = [
+                ['link' => base_url(), 'page' => lang('home')],
+                ['link' => admin_url('reports/customer_advances'), 'page' => lang('customer_advances_report')],
+                ['link' => '#', 'page' => lang('customer_advance_statement')],
+            ];
+            $meta = ['page_title' => lang('customer_advance_statement'), 'bc' => $bc];
+
+            if ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('customer_advance_statement') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/advance_statement', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', null, null, null, null, 'Pl');
+            } else {
+                $this->page_construct('reports/advance_statement', $meta, $this->data);
+            }
+        } else {
+            redirect(admin_url('reports/customer_advances'));
+        }
+    }
+
 }

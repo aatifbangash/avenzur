@@ -928,6 +928,12 @@
                                                 </a>
                                             </li>
 
+                                            <li id="reports_supplier_advances_report">
+                                                <a href="<?= admin_url('reports/supplier_advances') ?>">
+                                                    <i class="fa fa-hand-o-down"></i><span class="text"> <?= lang('supplier_advances_report'); ?></span>
+                                                </a>
+                                            </li>
+
                                             <li id="reports_vat_purchase_report">
                                                 <a href="<?= admin_url('reports/vat_purchase') ?>">
                                                     <i class="fa fa-users"></i><span class="text"> <?= lang('vat_purchase_report').' (Invoice)'; ?></span>
@@ -965,6 +971,12 @@
                                             <li id="reports_customer_trial_balance_report">
                                                 <a href="<?= admin_url('reports/customers_trial_balance') ?>">
                                                     <i class="fa fa-users"></i><span class="text"> <?= lang('customers_trial_balance_report'); ?></span>
+                                                </a>
+                                            </li>
+
+                                            <li id="reports_customer_advances_report">
+                                                <a href="<?= admin_url('reports/customer_advances') ?>">
+                                                    <i class="fa fa-hand-o-up"></i><span class="text"> <?= lang('customer_advances_report'); ?></span>
                                                 </a>
                                             </li>
 
