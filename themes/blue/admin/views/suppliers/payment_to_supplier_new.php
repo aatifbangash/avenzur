@@ -81,6 +81,33 @@
 }
 </style>
 <script>
+function fmtAcct(n, decimals) {
+    decimals = (decimals === undefined || decimals === null) ? 2 : decimals;
+    var num = parseFloat(n);
+    if (isNaN(num)) {
+        num = 0;
+    }
+    if (typeof accounting !== 'undefined' && accounting.formatNumber) {
+        return accounting.formatNumber(num, decimals, ',', '.');
+    }
+    return num.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
+function parseAcct(v) {
+    if (v === null || v === undefined || v === '') {
+        return 0;
+    }
+    if (typeof v === 'number') {
+        return v;
+    }
+    return parseFloat(String(v).replace(/,/g, '')) || 0;
+}
+
+function fmtAcctRaw(n, decimals) {
+    decimals = (decimals === undefined || decimals === null) ? 2 : decimals;
+    return parseAcct(n).toFixed(decimals);
+}
+
 $(document).ready(function () {
 
     // ── Date picker ──────────────────────────────────────────────────
@@ -108,15 +135,16 @@ $(document).ready(function () {
             dataType: 'json',
             success: function (response) {
                 var balance = parseFloat(response.advance_balance || 0);
-                $('#supplier-advance-balance').text(balance.toFixed(5));
-                $('#advance-balance-raw').val(balance.toFixed(5));
-                $('#advance-max-display').text(balance.toFixed(5));
+                $('#supplier-advance-balance').text(fmtAcct(balance));
+                $('#advance-balance-raw').val(fmtAcctRaw(balance));
+                $('#advance-max-display').text(fmtAcct(balance));
                 $('#supplier-info').show();
             },
             error: function () {
                 $('#supplier-info').show();
-                $('#supplier-advance-balance').text('0.00');
+                $('#supplier-advance-balance').text(fmtAcct(0));
                 $('#advance-balance-raw').val('0.00');
+                $('#advance-max-display').text(fmtAcct(0));
             }
         });
 
@@ -160,12 +188,12 @@ $(document).ready(function () {
                     '<td><input type="checkbox" class="invoice-checkbox" name="invoice_ids[]" value="' + inv.id + '" data-amount="' + outstanding + '"></td>' +
                     '<td>' + inv.date + '</td>' +
                     '<td>' + inv.reference_no + '</td>' +
-                    '<td class="text-right">' + parseFloat(inv.grand_total).toFixed(5) + '</td>' +
-                    '<td class="text-right">' + parseFloat(inv.paid || 0).toFixed(5) + '</td>' +
-                    '<td class="text-right">' + outstanding.toFixed(5) + '</td>' +
+                    '<td class="text-right">' + fmtAcct(inv.grand_total) + '</td>' +
+                    '<td class="text-right">' + fmtAcct(inv.paid || 0) + '</td>' +
+                    '<td class="text-right">' + fmtAcct(outstanding) + '</td>' +
                     '<td class="text-right">' +
-                        '<span id="inv-amount-display-' + inv.id + '">0.00000</span>' +
-                        '<input type="hidden" name="invoice_amounts[' + inv.id + ']" id="inv-amount-' + inv.id + '" value="0.00000">' +
+                        '<span id="inv-amount-display-' + inv.id + '">' + fmtAcct(0) + '</span>' +
+                        '<input type="hidden" name="invoice_amounts[' + inv.id + ']" id="inv-amount-' + inv.id + '" value="0.00">' +
                     '</td>' +
                     '</tr>';
                 tbody.append(row);
@@ -176,9 +204,9 @@ $(document).ready(function () {
             $('#invoices-section').show();
         }
 
-        $('#inv-total-grand').text(totalGrand.toFixed(5));
-        $('#inv-total-paid').text(totalPaid.toFixed(5));
-        $('#inv-total-outstanding').text(totalOut.toFixed(5));
+        $('#inv-total-grand').text(fmtAcct(totalGrand));
+        $('#inv-total-paid').text(fmtAcct(totalPaid));
+        $('#inv-total-outstanding').text(fmtAcct(totalOut));
     }
 
     // ── Load debit memos ─────────────────────────────────────────────
@@ -215,12 +243,12 @@ $(document).ready(function () {
                     '<td><input type="checkbox" class="debitmemo-checkbox" name="debitmemo_ids_ui[]" value="' + memo.id + '" data-amount="' + available + '"></td>' +
                     '<td>' + memo.date + '</td>' +
                     '<td>' + memo.reference_no + '</td>' +
-                    '<td class="text-right">' + parseFloat(memo.amount).toFixed(5) + '</td>' +
-                    '<td class="text-right">' + parseFloat(memo.used_amount || 0).toFixed(5) + '</td>' +
-                    '<td class="text-right">' + available.toFixed(5) + '</td>' +
+                    '<td class="text-right">' + fmtAcct(memo.amount) + '</td>' +
+                    '<td class="text-right">' + fmtAcct(memo.used_amount || 0) + '</td>' +
+                    '<td class="text-right">' + fmtAcct(available) + '</td>' +
                     '<td class="text-right">' +
-                        '<span id="dm-amount-display-' + memo.id + '">0.00000</span>' +
-                        '<input type="hidden" name="debit_memo_amounts[' + memo.id + ']" id="dm-amount-' + memo.id + '" value="0.00000">' +
+                        '<span id="dm-amount-display-' + memo.id + '">' + fmtAcct(0) + '</span>' +
+                        '<input type="hidden" name="debit_memo_amounts[' + memo.id + ']" id="dm-amount-' + memo.id + '" value="0.00">' +
                     '</td>' +
                     '</tr>';
                 tbody.append(row);
@@ -231,10 +259,10 @@ $(document).ready(function () {
             $('#debitmemo-section').show();
         }
 
-        $('#dm-total-amount').text(totalAmt.toFixed(5));
-        $('#dm-total-used').text(totalUsed.toFixed(5));
-        $('#dm-total-available').text(totalAvail.toFixed(5));
-        $('#dm-total-applied').text('0.00000');
+        $('#dm-total-amount').text(fmtAcct(totalAmt));
+        $('#dm-total-used').text(fmtAcct(totalUsed));
+        $('#dm-total-available').text(fmtAcct(totalAvail));
+        $('#dm-total-applied').text(fmtAcct(0));
     }
 
     // ── Load service invoices ────────────────────────────────────────
@@ -288,12 +316,12 @@ $(document).ready(function () {
                     '<td>' + memo.date + '</td>' +
                     '<td>' + memo.reference_no + '</td>' +
                     '<td>' + memo.type + '</td>' +
-                    '<td class="text-right">' + parseFloat(memo.grand_total).toFixed(5) + '</td>' +
-                    '<td class="text-right">' + parseFloat(memo.total_paid).toFixed(5) + '</td>' +
-                    '<td class="text-right">' + outstanding.toFixed(5) + '</td>' +
+                    '<td class="text-right">' + fmtAcct(memo.grand_total) + '</td>' +
+                    '<td class="text-right">' + fmtAcct(memo.total_paid) + '</td>' +
+                    '<td class="text-right">' + fmtAcct(outstanding) + '</td>' +
                     '<td class="text-right">' +
-                        '<span id="cm-amount-display-' + memo.id + '">0.00000</span>' +
-                        '<input type="hidden" name="credit_memo_amounts[' + memo.id + ']" id="cm-amount-' + memo.id + '" value="0.00000">' +
+                        '<span id="cm-amount-display-' + memo.id + '">' + fmtAcct(0) + '</span>' +
+                        '<input type="hidden" name="credit_memo_amounts[' + memo.id + ']" id="cm-amount-' + memo.id + '" value="0.00">' +
                     '</td>' +
                     '</tr>';
                 tbody.append(row);
@@ -304,10 +332,10 @@ $(document).ready(function () {
             $('#creditmemo-section').show();
         }
 
-        $('#cm-total-amount').text(totalAmt.toFixed(5));
-        $('#cm-total-paid').text(totalPaid.toFixed(5));
-        $('#cm-total-outstanding').text(totalOut.toFixed(5));
-        $('#cm-total-payment').text('0.00000');
+        $('#cm-total-amount').text(fmtAcct(totalAmt));
+        $('#cm-total-paid').text(fmtAcct(totalPaid));
+        $('#cm-total-outstanding').text(fmtAcct(totalOut));
+        $('#cm-total-payment').text(fmtAcct(0));
     }
 
     function displayServiceInvoices(invoices) {
@@ -329,12 +357,12 @@ $(document).ready(function () {
                     '<td>' + inv.date + '</td>' +
                     '<td>' + inv.reference_no + '</td>' +
                     '<td>' + inv.type + '</td>' +
-                    '<td class="text-right">' + parseFloat(inv.grand_total).toFixed(5) + '</td>' +
-                    '<td class="text-right">' + parseFloat(inv.total_paid).toFixed(5) + '</td>' +
-                    '<td class="text-right">' + outstanding.toFixed(5) + '</td>' +
+                    '<td class="text-right">' + fmtAcct(inv.grand_total) + '</td>' +
+                    '<td class="text-right">' + fmtAcct(inv.total_paid) + '</td>' +
+                    '<td class="text-right">' + fmtAcct(outstanding) + '</td>' +
                     '<td class="text-right">' +
-                        '<span id="si-amount-display-' + inv.id + '">0.00000</span>' +
-                        '<input type="hidden" name="service_invoice_amounts[' + inv.id + ']" id="si-amount-' + inv.id + '" value="0.00000">' +
+                        '<span id="si-amount-display-' + inv.id + '">' + fmtAcct(0) + '</span>' +
+                        '<input type="hidden" name="service_invoice_amounts[' + inv.id + ']" id="si-amount-' + inv.id + '" value="0.00">' +
                     '</td>' +
                     '</tr>';
                 tbody.append(row);
@@ -345,18 +373,18 @@ $(document).ready(function () {
             $('#serviceinvoice-section').show();
         }
 
-        $('#si-total-amount').text(totalAmt.toFixed(5));
-        $('#si-total-paid').text(totalPaid.toFixed(5));
-        $('#si-total-outstanding').text(totalOut.toFixed(5));
-        $('#si-total-payment').text('0.00000');
+        $('#si-total-amount').text(fmtAcct(totalAmt));
+        $('#si-total-paid').text(fmtAcct(totalPaid));
+        $('#si-total-outstanding').text(fmtAcct(totalOut));
+        $('#si-total-payment').text(fmtAcct(0));
     }
 
     // ── Invoice checkbox ─────────────────────────────────────────────
     $(document).on('change', '.invoice-checkbox', function () {
         if (!$(this).is(':checked')) {
             var invId = $(this).val();
-            $('#inv-amount-' + invId).val('0.00000');
-            $('#inv-amount-display-' + invId).text('0.00000');
+            $('#inv-amount-' + invId).val('0.00');
+            $('#inv-amount-display-' + invId).text(fmtAcct(0));
         }
         syncPaymentAmount();
         recalculate();
@@ -371,8 +399,8 @@ $(document).ready(function () {
     $(document).on('change', '.debitmemo-checkbox', function () {
         if (!$(this).is(':checked')) {
             var memoId = $(this).val();
-            $('#dm-amount-' + memoId).val('0.00000');
-            $('#dm-amount-display-' + memoId).text('0.00000');
+            $('#dm-amount-' + memoId).val('0.00');
+            $('#dm-amount-display-' + memoId).text(fmtAcct(0));
         }
         syncPaymentAmount();
         recalculate();
@@ -387,8 +415,8 @@ $(document).ready(function () {
     $(document).on('change', '.serviceinvoice-checkbox', function () {
         if (!$(this).is(':checked')) {
             var siId = $(this).val();
-            $('#si-amount-' + siId).val('0.00000');
-            $('#si-amount-display-' + siId).text('0.00000');
+            $('#si-amount-' + siId).val('0.00');
+            $('#si-amount-display-' + siId).text(fmtAcct(0));
         }
         syncPaymentAmount();
         recalculate();
@@ -403,8 +431,8 @@ $(document).ready(function () {
     $(document).on('change', '.creditmemo-checkbox', function () {
         if (!$(this).is(':checked')) {
             var cmId = $(this).val();
-            $('#cm-amount-' + cmId).val('0.00000');
-            $('#cm-amount-display-' + cmId).text('0.00000');
+            $('#cm-amount-' + cmId).val('0.00');
+            $('#cm-amount-display-' + cmId).text(fmtAcct(0));
         }
         syncPaymentAmount();
         recalculate();
@@ -429,7 +457,7 @@ $(document).ready(function () {
             totalDMCoverage += parseFloat($(this).data('amount')) || 0;
         });
         var needed = Math.max(0, totalChecked - totalDMCoverage);
-        $('#total_invoices_checked').val(needed.toFixed(5));
+        $('#total_invoices_checked').val(fmtAcctRaw(needed));
     }
 
     // ── Advance checkbox toggle ──────────────────────────────────────
@@ -437,26 +465,52 @@ $(document).ready(function () {
         if ($(this).is(':checked')) {
             $('#advance_amount').prop('disabled', false);
         } else {
-            $('#advance_amount').prop('disabled', true).val('0.00000');
+            $('#advance_amount').prop('disabled', true).val(fmtAcct(0));
         }
         recalculate();
     });
 
-    // ── Inputs that affect totals ────────────────────────────────────
-    $(document).on('input', '#payment_amount, #advance_amount', function () {
+    // ── Money inputs: accounting format on blur, plain number while typing ──
+    $(document).on('focus', '#payment_amount, #bank_charges, #advance_amount', function () {
+        var raw = parseAcct($(this).val());
+        $(this).val(raw === 0 ? '' : raw);
+    });
+
+    $(document).on('blur', '#payment_amount, #bank_charges', function () {
+        $(this).val(fmtAcct(parseAcct($(this).val())));
         recalculate();
+    });
+
+    $(document).on('blur', '#advance_amount', function () {
+        var advanceMax = parseAcct($('#advance-balance-raw').val());
+        var val = Math.min(parseAcct($(this).val()), advanceMax);
+        $(this).val(fmtAcct(val));
+        recalculate();
+    });
+
+    // ── Inputs that affect totals ────────────────────────────────────
+    $(document).on('input', '#payment_amount, #bank_charges, #advance_amount', function () {
+        recalculate();
+    });
+
+    $('form').on('submit', function () {
+        ['#payment_amount', '#bank_charges', '#advance_amount'].forEach(function (sel) {
+            var $el = $(sel);
+            if ($el.length) {
+                $el.val(fmtAcctRaw($el.val()));
+            }
+        });
     });
 
     // ── Main recalculate ─────────────────────────────────────────────
     // Auto-distributes available budget across checked invoices (greedy, DOM order).
     // Debit memos are applied at full available balance when checked.
     function recalculate() {
-        var cashPayment    = parseFloat($('#payment_amount').val()) || 0;
-        var advanceMax     = parseFloat($('#advance-balance-raw').val()) || 0;
+        var cashPayment    = parseAcct($('#payment_amount').val());
+        var advanceMax     = parseAcct($('#advance-balance-raw').val());
         var advanceApplied = 0;
         if ($('#use-advance').is(':checked')) {
-            advanceApplied = Math.min(parseFloat($('#advance_amount').val()) || 0, advanceMax);
-            $('#advance_amount').val(advanceApplied.toFixed(5));
+            advanceApplied = Math.min(parseAcct($('#advance_amount').val()), advanceMax);
         }
 
         // Debit memos: each checked memo applies its full available balance
@@ -466,14 +520,14 @@ $(document).ready(function () {
             if ($(this).is(':checked')) {
                 var amt = parseFloat($(this).data('amount')) || 0;
                 totalDMApplied += amt;
-                $('#dm-amount-' + memoId).val(amt.toFixed(5));
-                $('#dm-amount-display-' + memoId).text(amt.toFixed(5));
+                $('#dm-amount-' + memoId).val(fmtAcctRaw(amt));
+                $('#dm-amount-display-' + memoId).text(fmtAcct(amt));
             } else {
-                $('#dm-amount-' + memoId).val('0.00000');
-                $('#dm-amount-display-' + memoId).text('0.00000');
+                $('#dm-amount-' + memoId).val('0.00');
+                $('#dm-amount-display-' + memoId).text(fmtAcct(0));
             }
         });
-        $('#dm-total-applied').text(totalDMApplied.toFixed(5));
+        $('#dm-total-applied').text(fmtAcct(totalDMApplied));
 
         var totalSources = cashPayment + advanceApplied + totalDMApplied;
         var budgetLeft      = Math.round(totalSources * 1e5) / 1e5;
@@ -493,42 +547,42 @@ $(document).ready(function () {
                 totalInvApplied = Math.round((totalInvApplied + apply) * 1e5) / 1e5;
                 if (isServiceInv) {
                     totalSIPayment += apply;
-                    $('#si-amount-' + id).val(apply.toFixed(5));
-                    $('#si-amount-display-' + id).text(apply.toFixed(5));
+                    $('#si-amount-' + id).val(fmtAcctRaw(apply));
+                    $('#si-amount-display-' + id).text(fmtAcct(apply));
                 } else if (isCreditMemo) {
                     totalCMPayment += apply;
-                    $('#cm-amount-' + id).val(apply.toFixed(5));
-                    $('#cm-amount-display-' + id).text(apply.toFixed(5));
+                    $('#cm-amount-' + id).val(fmtAcctRaw(apply));
+                    $('#cm-amount-display-' + id).text(fmtAcct(apply));
                 } else {
-                    $('#inv-amount-' + id).val(apply.toFixed(5));
-                    $('#inv-amount-display-' + id).text(apply.toFixed(5));
+                    $('#inv-amount-' + id).val(fmtAcctRaw(apply));
+                    $('#inv-amount-display-' + id).text(fmtAcct(apply));
                 }
             } else {
                 if (isServiceInv) {
-                    $('#si-amount-' + id).val('0.00000');
-                    $('#si-amount-display-' + id).text('0.00000');
+                    $('#si-amount-' + id).val('0.00');
+                    $('#si-amount-display-' + id).text(fmtAcct(0));
                 } else if (isCreditMemo) {
-                    $('#cm-amount-' + id).val('0.00000');
-                    $('#cm-amount-display-' + id).text('0.00000');
+                    $('#cm-amount-' + id).val('0.00');
+                    $('#cm-amount-display-' + id).text(fmtAcct(0));
                 } else {
-                    $('#inv-amount-' + id).val('0.00000');
-                    $('#inv-amount-display-' + id).text('0.00000');
+                    $('#inv-amount-' + id).val('0.00');
+                    $('#inv-amount-display-' + id).text(fmtAcct(0));
                 }
             }
         });
-        $('#si-total-payment').text(totalSIPayment.toFixed(5));
-        $('#cm-total-payment').text(totalCMPayment.toFixed(5));
+        $('#si-total-payment').text(fmtAcct(totalSIPayment));
+        $('#cm-total-payment').text(fmtAcct(totalCMPayment));
 
         // diff < 0: excess cash (sources > invoices applied) — orange
         // diff > 0: impossible with greedy fill, but guard anyway
         // diff = 0: balanced — green, enable submit
         var diff = totalInvApplied - totalSources;
 
-        $('#summary-inv-applied').text(totalInvApplied.toFixed(5));
-        $('#summary-cash').text(cashPayment.toFixed(5));
-        $('#summary-dm-applied').text(totalDMApplied.toFixed(5));
-        $('#summary-advance').text(advanceApplied.toFixed(5));
-        $('#summary-remaining').text(diff.toFixed(5));
+        $('#summary-inv-applied').text(fmtAcct(totalInvApplied));
+        $('#summary-cash').text(fmtAcct(cashPayment));
+        $('#summary-dm-applied').text(fmtAcct(totalDMApplied));
+        $('#summary-advance').text(fmtAcct(advanceApplied));
+        $('#summary-remaining').text(fmtAcct(diff));
 
         var $summaryRem = $('#summary-remaining');
         if (Math.abs(diff) < 0.01) {
@@ -550,14 +604,15 @@ $(document).ready(function () {
         $('#debitmemo-section').hide();
         $('#serviceinvoice-section').hide();
         $('#creditmemo-section').hide();
-        $('#inv-total-grand, #inv-total-paid, #inv-total-outstanding').text('0.00000');
-        $('#dm-total-amount, #dm-total-used, #dm-total-available, #dm-total-applied').text('0.00000');
-        $('#si-total-amount, #si-total-paid, #si-total-outstanding, #si-total-payment').text('0.00000');
-        $('#cm-total-amount, #cm-total-paid, #cm-total-outstanding, #cm-total-payment').text('0.00000');
-        $('#summary-inv-applied, #summary-cash, #summary-dm-applied, #summary-advance, #summary-remaining').text('0.00000');
-        $('#payment_amount').val('0.00000');
+        $('#inv-total-grand, #inv-total-paid, #inv-total-outstanding').text(fmtAcct(0));
+        $('#dm-total-amount, #dm-total-used, #dm-total-available, #dm-total-applied').text(fmtAcct(0));
+        $('#si-total-amount, #si-total-paid, #si-total-outstanding, #si-total-payment').text(fmtAcct(0));
+        $('#cm-total-amount, #cm-total-paid, #cm-total-outstanding, #cm-total-payment').text(fmtAcct(0));
+        $('#summary-inv-applied, #summary-cash, #summary-dm-applied, #summary-advance, #summary-remaining').text(fmtAcct(0));
+        $('#payment_amount').val(fmtAcct(0));
+        $('#bank_charges').val(fmtAcct(0));
         $('#use-advance').prop('checked', false);
-        $('#advance_amount').prop('disabled', true).val('0.00');
+        $('#advance_amount').prop('disabled', true).val(fmtAcct(0));
         $('#advance-balance-raw').val('0.00');
         $('#summary-remaining').css('color', '#333');
         $('#submit-btn').prop('disabled', true);
@@ -626,14 +681,14 @@ $(document).ready(function () {
                     <div class="col-md-3">
                         <div class="form-group">
                             <?= lang('payment_amount', 'payment_amount'); ?>
-                            <?= form_input('payment_amount', '0.00', 'class="form-control" id="payment_amount" type="number" step="0.01" min="0" placeholder="0.00"'); ?>
-                            <input type="hidden" id="total_invoices_checked" value="0.00000">
+                            <?= form_input('payment_amount', '0.00', 'class="form-control text-right acct-money" id="payment_amount" type="text" inputmode="decimal" autocomplete="off" placeholder="0.00"'); ?>
+                            <input type="hidden" id="total_invoices_checked" value="0.00">
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="form-group">
                             <label for="bank_charges"><?= lang('bank_charges') ?></label>
-                            <?= form_input('bank_charges', '0.00', 'class="form-control" id="bank_charges" type="number" step="0.01" min="0" placeholder="0.00"'); ?>
+                            <?= form_input('bank_charges', '0.00', 'class="form-control text-right acct-money" id="bank_charges" type="text" inputmode="decimal" autocomplete="off" placeholder="0.00"'); ?>
                         </div>
                     </div>
                     <div class="col-md-3">
@@ -660,9 +715,9 @@ $(document).ready(function () {
                                         <input type="checkbox" id="use-advance" style="margin-right:5px;">
                                         Use advance balance
                                     </label><br>
-                                    <input type="number" id="advance_amount" name="advance_amount"
-                                           class="form-control" style="width:160px; display:inline-block;"
-                                           value="0.00" step="0.01" min="0" placeholder="0.00" disabled>
+                                    <input type="text" id="advance_amount" name="advance_amount"
+                                           class="form-control text-right acct-money" style="width:160px; display:inline-block;"
+                                           value="0.00" inputmode="decimal" autocomplete="off" placeholder="0.00" disabled>
                                     <small class="text-muted d-block">Max available: <span id="advance-max-display">0.00</span></small>
                                 </div>
                                 <div class="col-md-4">

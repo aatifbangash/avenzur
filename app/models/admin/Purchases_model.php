@@ -793,11 +793,23 @@ class Purchases_model extends CI_Model
 
     public function getPaymentReferences($filters = [])
     {
-        $this->db->select('payment_reference.*, companies.name as company, companies.sequence_code, companies.category as supplier_group, al.name as ledger_name, (CASE WHEN EXISTS(SELECT 1 FROM sma_payments p WHERE p.payment_id = sma_payment_reference.id AND p.type = "advance") THEN "advance" ELSE "standard" END) as payment_type', false)
+        $dbp = $this->db->dbprefix;
+        $payments_tbl = $dbp . 'payments';
+        $payment_ref_tbl = $dbp . 'payment_reference';
+        $advance_ref_sql = "(
+            {$payment_ref_tbl}.added_via = 'advance'
+            OR EXISTS (SELECT 1 FROM {$payments_tbl} p WHERE p.payment_id = {$payment_ref_tbl}.id AND p.type = 'advance')
+        )";
+
+        $this->db->select(
+            'payment_reference.*, companies.name as company, companies.sequence_code, companies.category as supplier_group, al.name as ledger_name, '
+            . '(CASE WHEN ' . $advance_ref_sql . ' THEN "advance" ELSE "standard" END) as payment_type',
+            false
+        )
             ->join('companies', 'companies.id=payment_reference.supplier_id', 'left')
             ->join('accounts_ledgers al', 'al.id = payment_reference.transfer_from_ledger', 'left')
             ->where('supplier_id <>', NULL)
-            ->where('(payment_reference.added_via IS NULL OR payment_reference.added_via NOT IN ("auto_script"))');
+            ->where('(payment_reference.added_via IS NULL OR payment_reference.added_via NOT IN ("auto_script", "advance_settlement"))');
 
         if (!empty($filters['supplier_id'])) {
             $this->db->where('payment_reference.supplier_id', $filters['supplier_id']);
@@ -813,14 +825,12 @@ class Purchases_model extends CI_Model
         }
 
         $warehouse_id = !empty($filters['warehouse_id']) ? (int) $filters['warehouse_id'] : null;
-        $dbp = $this->db->dbprefix;
-        $payments_tbl = $dbp . 'payments';
         $purchases_tbl = $dbp . 'purchases';
-        $payment_ref_tbl = $dbp . 'payment_reference';
         if ($warehouse_id) {
             $this->db->where(
                 "(
-                    EXISTS (SELECT 1 FROM {$payments_tbl} p
+                    {$advance_ref_sql}
+                    OR EXISTS (SELECT 1 FROM {$payments_tbl} p
                         INNER JOIN {$purchases_tbl} pu ON pu.id = p.purchase_id
                         WHERE p.payment_id = {$payment_ref_tbl}.id
                         AND p.purchase_id IS NOT NULL AND p.purchase_id > 0
@@ -836,11 +846,14 @@ class Purchases_model extends CI_Model
             $osw_id = $this->site->getOverseasWarehouseId();
             if ($osw_id) {
                 $this->db->where(
-                    "NOT EXISTS (SELECT 1 FROM {$payments_tbl} p
-                        INNER JOIN {$purchases_tbl} pu ON pu.id = p.purchase_id
-                        WHERE p.payment_id = {$payment_ref_tbl}.id
-                        AND p.purchase_id IS NOT NULL AND p.purchase_id > 0
-                        AND pu.warehouse_id = {$osw_id})",
+                    "(
+                        {$advance_ref_sql}
+                        OR NOT EXISTS (SELECT 1 FROM {$payments_tbl} p
+                            INNER JOIN {$purchases_tbl} pu ON pu.id = p.purchase_id
+                            WHERE p.payment_id = {$payment_ref_tbl}.id
+                            AND p.purchase_id IS NOT NULL AND p.purchase_id > 0
+                            AND pu.warehouse_id = {$osw_id})
+                    )",
                     null,
                     false
                 );
