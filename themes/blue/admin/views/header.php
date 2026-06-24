@@ -120,8 +120,12 @@
                     </li>
                 </ul>
                 <ul class="nav navbar-nav pull-right">
+                <?php
+                    $admin_home_path = $this->sma->adminHomePath($Owner || $Admin || !empty($GP['accountant']));
+                    $admin_home_title = ($admin_home_path === 'cost_center/dashboard') ? lang('dashboard') : lang('Quick Search');
+                ?>
                 <li class="dropdown hidden-xs"><a class="btn tip" title="<?= lang('Print Barcode') ?>" data-placement="bottom" href="<?= admin_url('products/print_barcodes') ?>"><i class="fa fa-barcode"></i></a></li>
-                    <li class="dropdown hidden-xs"><a class="btn tip" title="<?= lang('Quick Search') ?>" data-placement="bottom" href="<?= admin_url('welcome/quick_search') ?>"><i class="fa fa-dashboard"></i></a></li>
+                    <li class="dropdown hidden-xs"><a class="btn tip" title="<?= $admin_home_title ?>" data-placement="bottom" href="<?= admin_url($admin_home_path) ?>"><i class="fa fa-dashboard"></i></a></li>
                     <?php if (0){//(SHOP) {
                         ?>
                     <li class="dropdown hidden-xs"><a class="btn tip" title="<?= lang('shop') ?>" data-placement="bottom" href="<?= base_url() ?>"><i class="fa fa-shopping-cart"></i></a></li>
@@ -374,10 +378,11 @@
         <table class="lt"><tr><td class="sidebar-con">
             <div id="sidebar-left">
                 <div class="sidebar-nav nav-collapse collapse navbar-collapse" id="sidebar_menu">
-                    <?php 
-                        if((isset($Settings->pos_standalone) && $Settings->pos_standalone) || ($this->Settings->site_name == 'Hills Business Medical' || $this->Settings->site_name == 'Demo Company' || $this->Settings->site_name == 'Retaj Company' || $this->Settings->site_name == 'Abaad Company' || $this->Settings->site_name == 'Avnzor')){
+                    <?php
+                        $use_new_menu = $this->sma->usesNewMenu();
+                        if ($use_new_menu) {
                             include 'new_customer_menu.php';
-                        }else{
+                        } else {
                     ?>
                     
                     <ul class="nav main-menu">

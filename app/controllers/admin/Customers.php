@@ -2885,6 +2885,9 @@ class Customers extends MY_Controller
                 'cr_expiration'  => $this->input->post('cr_expiration'),
                 'sfda_certificate' => $this->input->post('sfda_certificate')
             ];
+            if (!$this->applyCustomerCategoryLedgerRules($data)) {
+                admin_redirect($_SERVER['HTTP_REFERER'] ?? 'customers');
+            }
         } elseif ($this->input->post('add_customer')) {
             $this->session->set_flashdata('error', validation_errors());
             admin_redirect('customers');
@@ -3304,6 +3307,10 @@ class Customers extends MY_Controller
                     return (string) $p !== (string) $posted_ledger;
                 }));
                 $data['old_ledgers'] = implode(',', $parts);
+            }
+
+            if (!$this->applyCustomerCategoryLedgerRules($data)) {
+                redirect($_SERVER['HTTP_REFERER']);
             }
 
         } elseif ($this->input->post('edit_customer')) {
@@ -3899,7 +3906,8 @@ class Customers extends MY_Controller
         }
         $term   = addslashes($term);
         $limit  = $this->input->get('limit', true);
-        $result = $this->companies_model->getCustomerSuggestions($term, $limit);
+        $warehouse_id = $this->input->get('warehouse_id', true);
+        $result = $this->companies_model->getCustomerSuggestions($term, $limit, $warehouse_id);
         if ($a) {
             $this->sma->send_json($result);
         }
@@ -4126,6 +4134,23 @@ class Customers extends MY_Controller
             return;
         }
 
+        $ledgers = $this->site->getCustomerCategoryLedgers($category);
+        if ($ledgers) {
+            echo json_encode([
+                'success' => true,
+                'ledgers' => $ledgers,
+            ]);
+            return;
+        }
+
+        if (strcasecmp($this->site->normalizeCustomerCategory($category), $this->site->getOverseasCustomerCategory()) === 0) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'JASPN ledger accounts are not configured in the chart of accounts',
+            ]);
+            return;
+        }
+
         // Get the most recent customer with this category that has ledger data
         $this->db->select('ledger_account, sales_ledger, cogs_ledger, discount_ledger, return_ledger');
         $this->db->from('sma_companies');
@@ -4156,6 +4181,28 @@ class Customers extends MY_Controller
                 'message' => 'No existing customer found with this category'
             ]);
         }
+    }
+
+    private function applyCustomerCategoryLedgerRules(&$data)
+    {
+        $category = trim($data['category'] ?? '');
+        if ($category === '') {
+            return true;
+        }
+        $normalized = $this->site->normalizeCustomerCategory($category);
+        $data['category'] = $normalized;
+        $ledgers = $this->site->getCustomerCategoryLedgers($normalized);
+        if (!$ledgers) {
+            if (strcasecmp($normalized, $this->site->getOverseasCustomerCategory()) === 0) {
+                $this->session->set_flashdata('error', 'Ledger accounts not found for JASPN customer category.');
+                return false;
+            }
+            return true;
+        }
+        foreach ($ledgers as $field => $ledger_id) {
+            $data[$field] = $ledger_id;
+        }
+        return true;
     }
 
     private function createCustomerAdvance($customer_id, $amount, $payment_id, $date, $reference_no) {

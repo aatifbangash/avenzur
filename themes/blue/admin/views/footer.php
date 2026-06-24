@@ -53,12 +53,178 @@ $s2_file_date = $this->parser->parse_string($s2_lang_file, $s2_data, true);
 <?= ( ($m == 'purchases') && ($v == 'add' || $v == 'edit' || $v == 'purchase_by_csv')) ? '<script type="text/javascript" src="' . $assets . 'js/purchases.js"></script>' : ''; ?>
 <?= ( $m == 'purchase_order' && ($v == 'add' || $v == 'edit')) ? '<script type="text/javascript" src="' . $assets . 'js/purchase_order.js"></script>' : ''; ?>
 <?= ($m == 'transfers' && ($v == 'add' || $v == 'edit')) ? '<script type="text/javascript" src="' . $assets . 'js/transfers.js"></script>' : ''; ?>
-<?= ($m == 'sales' && ($v == 'add' || $v == 'edit')) ? '<script type="text/javascript" src="' . $assets . 'js/sales.js"></script>' : ''; ?>
 <?= ($m == 'returns' && ($v == 'add' || $v == 'edit')) ? '<script type="text/javascript" src="' . $assets . 'js/returns.js"></script>' : ''; ?>
 
 <?= ($m == 'returns_supplier' && ($v == 'add' || $v == 'edit')) ? '<script type="text/javascript" src="' . $assets . 'js/returns_supplier.js"></script>' : ''; ?>
 
-<?= ($m == 'quotes' && ($v == 'add' || $v == 'edit')) ? '<script type="text/javascript" src="' . $assets . 'js/quotes.js"></script>' : ''; ?>
+<?php
+$quotes_js = 'themes/blue/admin/assets/js/quotes.js';
+$quotes_js_v = file_exists(FCPATH . $quotes_js) ? filemtime(FCPATH . $quotes_js) : time();
+$sales_js = 'themes/blue/admin/assets/js/sales.js';
+$sales_js_v = file_exists(FCPATH . $sales_js) ? filemtime(FCPATH . $sales_js) : time();
+?>
+<?= ($m == 'quotes' && ($v == 'add' || $v == 'edit')) ? '<script type="text/javascript" src="' . $assets . 'js/quotes.js?v=' . $quotes_js_v . '"></script>' : ''; ?>
+<?= ($m == 'sales' && ($v == 'add' || $v == 'edit')) ? '<script type="text/javascript" src="' . $assets . 'js/sales.js?v=' . $sales_js_v . '"></script>' : ''; ?>
+<?php if ($m == 'sales' && ($v == 'add' || $v == 'edit')): ?>
+<script type="text/javascript">
+$(function () {
+    function getSaleWarehouseId() {
+        var wh = $('#slwarehouse').val();
+        if (!wh && $('#slwarehouse').data('select2')) {
+            wh = $('#slwarehouse').select2('val');
+        }
+        return wh;
+    }
+
+    function applySaleCustomerWarehouseScope() {
+        var $customer = $('#slcustomer');
+        if (!$customer.length) {
+            return;
+        }
+
+        var savedCustomer = localStorage.getItem('slcustomer');
+        if ($customer.data('select2')) {
+            $customer.select2('destroy');
+        }
+
+        var opts = {
+            minimumInputLength: 1,
+            ajax: {
+                url: site.base_url + 'customers/suggestions',
+                dataType: 'json',
+                quietMillis: 15,
+                data: function (term) {
+                    return {
+                        term: term,
+                        limit: 10,
+                        warehouse_id: getSaleWarehouseId()
+                    };
+                },
+                results: function (data) {
+                    if (data.results != null) {
+                        return { results: data.results };
+                    }
+                    return { results: [{ id: '', text: 'No Match Found' }] };
+                }
+            }
+        };
+
+        if (savedCustomer) {
+            $customer.val(savedCustomer);
+            opts.data = [];
+            opts.initSelection = function (element, callback) {
+                $.ajax({
+                    type: 'get',
+                    async: false,
+                    url: site.base_url + 'customers/getCustomer/' + $(element).val(),
+                    dataType: 'json',
+                    success: function (data) {
+                        if (data && data[0]) {
+                            callback(data[0]);
+                        }
+                    }
+                });
+            };
+        }
+
+        $customer.select2(opts);
+    }
+
+    if ((slwarehouse = localStorage.getItem('slwarehouse'))) {
+        $('#slwarehouse').select2('val', slwarehouse);
+    }
+
+    applySaleCustomerWarehouseScope();
+
+    $('#slwarehouse').off('change.saleCustomerScope').on('change.saleCustomerScope', function () {
+        localStorage.setItem('slwarehouse', $(this).val());
+        localStorage.removeItem('slcustomer');
+        applySaleCustomerWarehouseScope();
+    });
+});
+</script>
+<?php endif; ?>
+<?php if ($m == 'quotes' && ($v == 'add' || $v == 'edit')): ?>
+<script type="text/javascript">
+$(function () {
+    function getQuoteWarehouseId() {
+        var wh = $('#slwarehouse').val();
+        if (!wh && $('#slwarehouse').data('select2')) {
+            wh = $('#slwarehouse').select2('val');
+        }
+        return wh;
+    }
+
+    function applyQuoteCustomerWarehouseScope() {
+        var $customer = $('#qtcustomer');
+        if (!$customer.length) {
+            return;
+        }
+
+        var savedCustomer = localStorage.getItem('qtcustomer');
+        if ($customer.data('select2')) {
+            $customer.select2('destroy');
+        }
+
+        var opts = {
+            minimumInputLength: 1,
+            ajax: {
+                url: site.base_url + 'customers/suggestions',
+                dataType: 'json',
+                quietMillis: 15,
+                data: function (term) {
+                    return {
+                        term: term,
+                        limit: 10,
+                        warehouse_id: getQuoteWarehouseId()
+                    };
+                },
+                results: function (data) {
+                    if (data.results != null) {
+                        return { results: data.results };
+                    }
+                    return { results: [{ id: '', text: 'No Match Found' }] };
+                }
+            }
+        };
+
+        if (savedCustomer) {
+            $customer.val(savedCustomer);
+            opts.data = [];
+            opts.initSelection = function (element, callback) {
+                $.ajax({
+                    type: 'get',
+                    async: false,
+                    url: site.base_url + 'customers/getCustomer/' + $(element).val(),
+                    dataType: 'json',
+                    success: function (data) {
+                        if (data && data[0]) {
+                            localStorage.setItem('slpayment_term', data[0].payment_term);
+                            $('#payment_term').val(data[0].payment_term).trigger('change');
+                            callback(data[0]);
+                        }
+                    }
+                });
+            };
+        }
+
+        $customer.select2(opts);
+    }
+
+    if ((slwarehouse = localStorage.getItem('slwarehouse'))) {
+        $('#slwarehouse').select2('val', slwarehouse);
+    }
+
+    applyQuoteCustomerWarehouseScope();
+
+    $('#slwarehouse').off('change.quoteCustomerScope').on('change.quoteCustomerScope', function () {
+        localStorage.setItem('slwarehouse', $(this).val());
+        localStorage.removeItem('qtcustomer');
+        applyQuoteCustomerWarehouseScope();
+    });
+});
+</script>
+<?php endif; ?>
 <?= ($m == 'products' && ($v == 'add_adjustment' || $v == 'edit_adjustment')) ? '<script type="text/javascript" src="' . $assets . 'js/adjustments.js"></script>' : ''; 
 if($m == 'deals')
 {

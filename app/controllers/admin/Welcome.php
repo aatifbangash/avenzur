@@ -103,21 +103,11 @@ class Welcome extends MY_Controller
             admin_redirect('sync');
         }
 
-        if($this->Admin || $this->Owner || $this->GP['accountant']){
-            if($this->Settings->site_name == 'Hills Business Medical' || $this->Settings->site_name == 'Demo Company'){
-                // Redirect to Cost Center Dashboard
-                admin_redirect('cost_center/dashboard');
-                //admin_redirect('welcome/quick_search');
-            }else{
-                admin_redirect('welcome/quick_search');
-            }
-            
-        }else{
-            //echo 'here';exit;
-            // Redirect to Cost Center Dashboard
-            admin_redirect('welcome/quick_search');
+        if ($this->Admin || $this->Owner || !empty($this->GP['accountant'])) {
+            admin_redirect($this->sma->adminHomePath(true));
         }
-        
+
+        admin_redirect('welcome/quick_search');
     }
 
 
