@@ -284,11 +284,14 @@ class Companies_model extends CI_Model
         return $this->db->count_all_results();
     }
 
-    public function getCustomerSuggestions($term, $limit = 10)
+    public function getCustomerSuggestions($term, $limit = 10, $warehouse_id = null)
     {
         //$this->db->select("id, (CASE WHEN company = '-' THEN name ELSE CONCAT(company, ' (', name, ' - ', sequence_code ,')') END) as text, (CASE WHEN company = '-' THEN name ELSE CONCAT(company, ' (', name, ' - ', sequence_code ,')') END) as value, phone", false);
         $this->db->select("id, name as text, name as value, phone, payment_term", false);
         $this->db->where(" (id LIKE '%" . $term . "%' OR name LIKE '%" . $term . "%' OR company LIKE '%" . $term . "%' OR sequence_code LIKE '%" . $term . "%' OR external_id LIKE '%" . $term . "%' OR email LIKE '%" . $term . "%' OR phone LIKE '%" . $term . "%' OR vat_no LIKE '%" . $term . "%') ");
+        if ($warehouse_id !== null && $warehouse_id !== '') {
+            $this->site->applyCustomerScopeToQuery($warehouse_id);
+        }
         $q = $this->db->get_where('companies', ['group_name' => 'customer'], $limit);
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {

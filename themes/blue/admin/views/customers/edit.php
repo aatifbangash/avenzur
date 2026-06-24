@@ -116,7 +116,7 @@
                 </div>
                 <div class="col-md-6">
                     <?php
-                        $categories = array('Pharmacy Client' => 'Pharmacy Client', 'Clinic Client' => 'Clinic Client', 'Hospital Client' => 'Hospital Client', 'Rent Client' => 'Rent Client', 'Warehouse Client' => 'Warehouse Client');
+                        $categories = array('Pharmacy Client' => 'Pharmacy Client', 'Clinic Client' => 'Clinic Client', 'Hospital Client' => 'Hospital Client', 'Rent Client' => 'Rent Client', 'Warehouse Client' => 'Warehouse Client', 'JASPN' => 'JASPN');
                     ?>
                     <div class="form-group">
                         <?= lang('Category', 'category'); ?>
