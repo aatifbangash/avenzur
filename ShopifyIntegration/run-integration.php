@@ -11,7 +11,7 @@
  */
 
 // Load the application
-require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/autoload.php';
 
 use App\Services\OrderEntityExtractor;
 use App\Services\DatabaseService;
