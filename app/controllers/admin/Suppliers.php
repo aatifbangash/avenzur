@@ -3107,10 +3107,10 @@ class Suppliers extends MY_Controller
      * Build payable-side debit lines for supplier payment journal.
      * Petty cash replenishments debit the memo petty cash ledger; other settlements debit supplier AP.
      */
-    private function buildSupplierPaymentPayableDebitLines($supplier, $invoice_details, $service_invoice_details, $debit_memo_details, $credit_memo_details, $advance_amount)
+    private function buildSupplierPaymentPayableDebitLines($supplier, $invoice_details, $service_invoice_details, $debit_memo_details, $credit_memo_details)
     {
         $lines = [];
-        $supplier_payable = (float) $advance_amount;
+        $supplier_payable = 0.0;
 
         foreach ($invoice_details as $detail) {
             $supplier_payable += (float) $detail['total_paying'];
@@ -3510,8 +3510,7 @@ class Suppliers extends MY_Controller
                 $invoice_details,
                 $service_invoice_details,
                 $debit_memo_details,
-                $credit_memo_details,
-                $advance_amount
+                $credit_memo_details
             );
             $journal_id = $this->convert_supplier_payment_multiple_invoice_new(
                 $supplier_id, $ledger_account, $bank_charges_account,

@@ -1169,6 +1169,8 @@ class Site extends CI_Model
         $pid = $entries_alias . '.pid';
         $rsid = $entries_alias . '.rsid';
         $memo_id = $entries_alias . '.memo_id';
+        $supplier_id_col = $entries_alias . '.supplier_id';
+        $txn_type = $entries_alias . '.transaction_type';
         $eid = $entries_alias . '.id';
 
         $paymentJournalSubquery = function ($wh_id) use ($pr, $pay, $purchases) {
@@ -1188,8 +1190,15 @@ class Site extends CI_Model
                 AND NULLIF(pay.memo_id, '') IS NOT NULL AND NULLIF(pay.memo_id, 0) IS NOT NULL";
         };
 
-        // Petty cash, service invoices, and memos are not tied to a purchase/return warehouse.
+        // Petty cash, service invoices, memos, and orphan AP uploads are not tied to a purchase warehouse.
         $nonWarehouseLinked = "(NULLIF({$memo_id}, '') IS NOT NULL AND NULLIF({$memo_id}, 0) IS NOT NULL)";
+        $orphanSupplierAp = "(
+            NULLIF({$supplier_id_col}, '') IS NOT NULL AND NULLIF({$supplier_id_col}, 0) IS NOT NULL
+            AND (NULLIF({$pid}, '') IS NULL OR NULLIF({$pid}, 0) IS NULL)
+            AND (NULLIF({$rsid}, '') IS NULL OR NULLIF({$rsid}, 0) IS NULL)
+            AND (NULLIF({$memo_id}, '') IS NULL OR NULLIF({$memo_id}, 0) IS NULL)
+            AND {$txn_type} IN ('purchase_invoice', 'service_invoice')
+        )";
 
         if ($warehouse_id) {
             $wh = (int) $warehouse_id;
@@ -1203,6 +1212,7 @@ class Site extends CI_Model
                 OR {$eid} IN ({$journalSql})
                 OR {$eid} IN ({$memoJournalSql})
                 OR {$nonWarehouseLinked}
+                OR {$orphanSupplierAp}
             )";
         }
 

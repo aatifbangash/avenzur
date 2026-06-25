@@ -693,6 +693,7 @@ $lang['customer_advance_statement'] = 'Customer Advance Statement';
 $lang['supplier_advance_ledger_not_configured'] = 'Supplier advance ledger is not configured in settings.';
 $lang['customer_advance_ledger_not_configured'] = 'Customer advance ledger is not configured in settings.';
 $lang['click_to_view_history']      = 'Click to view advance history';
+$lang['click_to_view_supplier_statement'] = 'Click to view supplier statement';
 $lang['customer_advance']           = 'Customer Advance';
 $lang['back']                       = 'Back';
 $lang['customer_payments']          = 'Customer Payments';
