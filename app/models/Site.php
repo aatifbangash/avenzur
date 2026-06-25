@@ -891,7 +891,130 @@ class Site extends CI_Model
         return false;
     }
 
-    public function enforceOverseasRules($warehouse_id, $product_ids, $supplier_id = null)
+    public function getOverseasCustomerCategory()
+    {
+        return 'JASPN';
+    }
+
+    public function getCustomerCategoryOptions()
+    {
+        return [
+            'Pharmacy Client'  => 'Pharmacy Client',
+            'Clinic Client'    => 'Clinic Client',
+            'Hospital Client'  => 'Hospital Client',
+            'Rent Client'      => 'Rent Client',
+            'Warehouse Client' => 'Warehouse Client',
+            'JASPN'            => 'JASPN',
+        ];
+    }
+
+    public function normalizeCustomerCategory($category)
+    {
+        $cat = trim((string) ($category ?? ''));
+        $legacy = [
+            'JASPN' => 'JASPN',
+        ];
+        return $legacy[$cat] ?? $cat;
+    }
+
+    public function lookupAccountsLedgerId($codes, $name)
+    {
+        $prefix = $this->db->dbprefix('accounts_ledgers');
+        foreach ((array) $codes as $code) {
+            $q = $this->db->query(
+                'SELECT id FROM ' . $prefix . ' WHERE code = ' . $this->db->escape($code) . ' LIMIT 1'
+            );
+            if ($q && $q->num_rows()) {
+                return (int) $q->row()->id;
+            }
+        }
+        $this->db->reset_query();
+        $this->db->like('name', $name, 'both');
+        $this->db->limit(1);
+        $q = $this->db->get('accounts_ledgers');
+        return ($q && $q->num_rows()) ? (int) $q->row()->id : 0;
+    }
+
+    public function getCustomerCategoryLedgers($category)
+    {
+        $cat = $this->normalizeCustomerCategory($category);
+        static $cache = [];
+        if (array_key_exists($cat, $cache)) {
+            return $cache[$cat] ?: false;
+        }
+        $fields = [
+            'JASPN' => [
+                'ledger_account'  => ['codes' => ['1120400001'], 'name' => 'JASPN Receivable'],
+                'sales_ledger'    => ['codes' => ['4110500001'], 'name' => 'JASPN Revenue'],
+                'cogs_ledger'     => ['codes' => ['5110200010'], 'name' => 'JASPN Cost of Sales'],
+                'discount_ledger' => ['codes' => ['5110200010'], 'name' => 'JASPN Cost of Sales'],
+                'return_ledger'   => ['codes' => ['4110500001'], 'name' => 'JASPN Revenue'],
+            ],
+        ];
+        if (!isset($fields[$cat])) {
+            $cache[$cat] = false;
+            return false;
+        }
+        $result = [];
+        foreach ($fields[$cat] as $field => $spec) {
+            $id = $this->lookupAccountsLedgerId($spec['codes'], $spec['name']);
+            if (!$id) {
+                $cache[$cat] = false;
+                return false;
+            }
+            $result[$field] = (string) $id;
+        }
+        $cache[$cat] = $result;
+        return $result;
+    }
+
+    public function isOverseasCustomer($customer_id)
+    {
+        if (!$customer_id) {
+            return false;
+        }
+        $company = $this->getCompanyByID($customer_id);
+        if (!$company || !isset($company->category)) {
+            return false;
+        }
+        return strcasecmp($this->normalizeCustomerCategory($company->category), $this->getOverseasCustomerCategory()) === 0;
+    }
+
+    public function applyCustomerScopeToQuery($warehouse_id)
+    {
+        $cat = $this->getOverseasCustomerCategory();
+        if ($this->isOverseasWarehouse($warehouse_id)) {
+            $this->db->where('category', $cat);
+        } else {
+            $this->db->group_start()
+                ->where('category !=', $cat)
+                ->or_where('category IS NULL', null, false)
+                ->or_where('category', '')
+                ->group_end();
+        }
+    }
+
+    public function validateCustomerWarehouseScope($warehouse_id, $customer_id)
+    {
+        if (!$customer_id) {
+            return false;
+        }
+        $osw_id = $this->getOverseasWarehouseId();
+        if (!$osw_id) {
+            return false;
+        }
+        $is_overseas_wh = $this->isOverseasWarehouse($warehouse_id);
+        $is_overseas_cust = $this->isOverseasCustomer($customer_id);
+        if ($is_overseas_wh && !$is_overseas_cust) {
+            return 'Overseas warehouse documents can only use JASPN customers.';
+        }
+        if (!$is_overseas_wh && $is_overseas_cust) {
+            return 'Local warehouse documents cannot use JASPN customers.';
+        }
+        return false;
+    }
+
+    public function enforceOverseasRules($warehouse_id, $product_ids, $supplier_id = null, $customer_id = null)
     {
         if ($this->isOverseasWarehouse($warehouse_id) && !$this->canAccessOverseasWarehouse()) {
             return lang('access_denied');
@@ -900,6 +1023,9 @@ class Site extends CI_Model
             return $err;
         }
         if ($supplier_id && ($err = $this->validateSupplierWarehouseScope($warehouse_id, $supplier_id))) {
+            return $err;
+        }
+        if ($customer_id && ($err = $this->validateCustomerWarehouseScope($warehouse_id, $customer_id))) {
             return $err;
         }
         return false;
@@ -1043,6 +1169,8 @@ class Site extends CI_Model
         $pid = $entries_alias . '.pid';
         $rsid = $entries_alias . '.rsid';
         $memo_id = $entries_alias . '.memo_id';
+        $supplier_id_col = $entries_alias . '.supplier_id';
+        $txn_type = $entries_alias . '.transaction_type';
         $eid = $entries_alias . '.id';
 
         $paymentJournalSubquery = function ($wh_id) use ($pr, $pay, $purchases) {
@@ -1062,8 +1190,15 @@ class Site extends CI_Model
                 AND NULLIF(pay.memo_id, '') IS NOT NULL AND NULLIF(pay.memo_id, 0) IS NOT NULL";
         };
 
-        // Petty cash, service invoices, and memos are not tied to a purchase/return warehouse.
+        // Petty cash, service invoices, memos, and orphan AP uploads are not tied to a purchase warehouse.
         $nonWarehouseLinked = "(NULLIF({$memo_id}, '') IS NOT NULL AND NULLIF({$memo_id}, 0) IS NOT NULL)";
+        $orphanSupplierAp = "(
+            NULLIF({$supplier_id_col}, '') IS NOT NULL AND NULLIF({$supplier_id_col}, 0) IS NOT NULL
+            AND (NULLIF({$pid}, '') IS NULL OR NULLIF({$pid}, 0) IS NULL)
+            AND (NULLIF({$rsid}, '') IS NULL OR NULLIF({$rsid}, 0) IS NULL)
+            AND (NULLIF({$memo_id}, '') IS NULL OR NULLIF({$memo_id}, 0) IS NULL)
+            AND {$txn_type} IN ('purchase_invoice', 'service_invoice')
+        )";
 
         if ($warehouse_id) {
             $wh = (int) $warehouse_id;
@@ -1077,6 +1212,7 @@ class Site extends CI_Model
                 OR {$eid} IN ({$journalSql})
                 OR {$eid} IN ({$memoJournalSql})
                 OR {$nonWarehouseLinked}
+                OR {$orphanSupplierAp}
             )";
         }
 

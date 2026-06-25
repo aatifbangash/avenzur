@@ -161,6 +161,7 @@ $(document).ready(function (e) {
 					return {
 						term: term,
 						limit: 10,
+						warehouse_id: $("#slwarehouse").val(),
 					};
 				},
 				results: function (data, page) {
@@ -517,6 +518,12 @@ $(document).ready(function (e) {
 
 	$("#slwarehouse").change(function (e) {
 		localStorage.setItem("slwarehouse", $(this).val());
+		localStorage.removeItem("qtcustomer");
+		if ($("#qtcustomer").data("select2")) {
+			$("#qtcustomer").select2("destroy");
+		}
+		$("#qtcustomer").val("");
+		nsCustomer();
 	});
 	if ((slwarehouse = localStorage.getItem("slwarehouse"))) {
 		$("#slwarehouse").select2("val", slwarehouse);
@@ -1675,6 +1682,7 @@ function nsCustomer() {
 				return {
 					term: term,
 					limit: 10,
+					warehouse_id: $("#slwarehouse").val(),
 				};
 			},
 			results: function (data, page) {

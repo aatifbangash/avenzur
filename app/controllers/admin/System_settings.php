@@ -3092,6 +3092,7 @@ class system_settings extends MY_Controller
                 'weight_chars'         => $this->input->post('weight_chars'),
                 'weight_divide_by'     => $this->input->post('weight_divide_by'),
                 'ksa_qrcode'           => $this->input->post('ksa_qrcode'),
+                'use_new_menu'         => $this->input->post('use_new_menu') ? 1 : 0,
             ];
             if ($this->input->post('smtp_pass')) {
                 $data['smtp_pass'] = $this->input->post('smtp_pass');

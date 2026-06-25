@@ -90,11 +90,11 @@ class Sales extends MY_Controller
                 $date = date('Y-m-d H:i:s');
             }
             $warehouse_id     = $this->input->post('warehouse');
-            if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'))) {
+            $customer_id      = $this->input->post('customer');
+            if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'), null, $customer_id)) {
                 $this->session->set_flashdata('error', $scope_error);
                 admin_redirect('sales/add');
             }
-            $customer_id      = $this->input->post('customer');
             $biller_id        = $this->input->post('biller');
             $total_items      = $this->input->post('total_items');
             $sale_status      = 'pending';
@@ -855,11 +855,11 @@ class Sales extends MY_Controller
                 $date = date('Y-m-d H:i:s');
             }
             $warehouse_id     = $this->input->post('warehouse');
-            if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'))) {
+            $customer_id      = $this->input->post('customer');
+            if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'), null, $customer_id)) {
                 $this->session->set_flashdata('error', $scope_error);
                 redirect($_SERVER['HTTP_REFERER']);
             }
-            $customer_id      = $this->input->post('customer');
             $biller_id        = $this->input->post('biller');
             $total_items      = $this->input->post('total_items');
             $sale_status      = $this->input->post('sale_status');
@@ -1874,11 +1874,11 @@ class Sales extends MY_Controller
                 $date = $inv->date;
             }
             $warehouse_id     = $this->input->post('warehouse');
-            if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'))) {
+            $customer_id      = $this->input->post('customer');
+            if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'), null, $customer_id)) {
                 $this->session->set_flashdata('error', $scope_error);
                 admin_redirect('sales/edit/' . $id);
             }
-            $customer_id      = $this->input->post('customer');
             $biller_id        = $this->input->post('biller');
             $total_items      = $this->input->post('total_items');
             $sale_status      = $this->input->post('sale_status');
@@ -6138,11 +6138,11 @@ if($inv->warning_note != ""){
                 $date = date('Y-m-d H:i:s');
             }
             $warehouse_id     = $this->input->post('warehouse');
-            if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'))) {
+            $customer_id      = $this->input->post('customer');
+            if ($scope_error = $this->site->enforceOverseasRules($warehouse_id, $this->input->post('product_id'), null, $customer_id)) {
                 $this->session->set_flashdata('error', $scope_error);
                 admin_redirect('sales/sale_by_csv');
             }
-            $customer_id      = $this->input->post('customer');
             $biller_id        = $this->input->post('biller');
             $total_items      = $this->input->post('total_items');
             $sale_status      = $this->input->post('sale_status');

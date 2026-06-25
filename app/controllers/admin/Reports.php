@@ -4813,9 +4813,9 @@ class Reports extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
-        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
-        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
-        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        $viewtype = $this->input->post('viewtype') ?: $this->input->get('viewtype');
+        $from_date = $this->input->post('from_date') ?: $this->input->get('from_date');
+        $to_date = $this->input->post('to_date') ?: $this->input->get('to_date');
 
         $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
         $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
@@ -4828,7 +4828,7 @@ class Reports extends MY_Controller
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
-            $supplier_id = $this->input->post('supplier');
+            $supplier_id = $this->input->post('supplier') ?: $this->input->get('supplier');
 
 
             $supplier_details = $this->companies_model->getCompanyByID($supplier_id);
