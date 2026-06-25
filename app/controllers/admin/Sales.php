@@ -4271,7 +4271,7 @@ class Sales extends MY_Controller
             }
             // $this->datatables->join("{$this->db->dbprefix('aramex_shipment')}", 'sales.id');
             if ($this->input->get('shop') == 'yes') {
-                $this->datatables->where('shop', 1);
+                $this->datatables->where('pos', 1);
             } elseif ($this->input->get('shop') == 'no') {
                 $this->datatables->where('shop !=', 1);
             }
@@ -4283,7 +4283,7 @@ class Sales extends MY_Controller
             if ($this->input->get('attachment') == 'yes') {
                 $this->datatables->where('payment_status !=', 'paid')->where('attachment !=', null);
             }
-            $this->datatables->where('pos !=', 1); // ->where('sale_status !=', 'returned');
+            //$this->datatables->where('pos !=', 1); // ->where('sale_status !=', 'returned');
             if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->Admin && !$this->GP['sales-index']) {
                 $this->datatables->where('created_by', $this->session->userdata('user_id'));
             } elseif ($this->Customer) {
