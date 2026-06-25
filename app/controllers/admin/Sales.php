@@ -4253,13 +4253,13 @@ class Sales extends MY_Controller
                     ->select("{$this->db->dbprefix('sales')}.id as id, {$this->db->dbprefix('sales')}.id as number,DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, CONCAT('SL-', {$this->db->dbprefix('sales')}.id) as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, CONCAT('files/', {$this->db->dbprefix('sales')}.attachment) as attachment, return_id")
                     ->from('sales')
                     ->where('warehouse_id', $warehouse_id)
-                    ->where('shop', 1);
+                    ->where('pos', 1);
                     //->join('aramex_shipment', 'aramex_shipment.salesid=sales.id');
             } else {
                 $this->datatables
                     ->select("{$this->db->dbprefix('sales')}.id as id, {$this->db->dbprefix('sales')}.id as number, DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, CONCAT('SL-', {$this->db->dbprefix('sales')}.id) as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, CONCAT('files/', {$this->db->dbprefix('sales')}.attachment) as attachment, return_id")
                     ->from('sales')
-                    ->where('shop', 1); 
+                    ->where('pos', 1); 
             } 
             $this->site->applyListingWarehouseScope($this->datatables, $warehouse_id);
             if(is_numeric($sid)) {
