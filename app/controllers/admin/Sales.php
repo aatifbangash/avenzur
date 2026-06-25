@@ -4230,7 +4230,8 @@ class Sales extends MY_Controller
                 }
                 
                 $action .=  '<li>' . $pdf_link . '</li>
-                    <li>' . $zatka_invoice_link . '</li>';
+                    <li>' . $zatka_invoice_link . '</li>
+                    <li>' . $journal_entry_link . '</li>';
 
                 if($Admin || $Owner || $this->GP['returns-add']){
                     $action .=  '<li>' . $return_link . '</li>';
