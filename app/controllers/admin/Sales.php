@@ -4261,19 +4261,19 @@ class Sales extends MY_Controller
                     ->from('sales')
                     ->where('pos', 1); 
             } 
-            $this->site->applyListingWarehouseScope($this->datatables, $warehouse_id);
-            if(is_numeric($sid)) {
+            //$this->site->applyListingWarehouseScope($this->datatables, $warehouse_id);
+            /*if(is_numeric($sid)) {
                 //$this->datatables->where('id', $sid);
                 $this->datatables->group_start()
                     ->where('id', $sid)
                     ->or_where('reference_no', $sid)
                 ->group_end();
-            }
+            }*/
             // $this->datatables->join("{$this->db->dbprefix('aramex_shipment')}", 'sales.id');
             if ($this->input->get('shop') == 'yes') {
                 $this->datatables->where('pos', 1);
             } elseif ($this->input->get('shop') == 'no') {
-                $this->datatables->where('shop !=', 1);
+                //$this->datatables->where('shop !=', 1);
             }
             if ($this->input->get('delivery') == 'no') {
                 $this->datatables->join('deliveries', 'deliveries.sale_id=sales.id', 'left')
