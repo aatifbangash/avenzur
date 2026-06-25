@@ -434,7 +434,7 @@ class Suppliers extends MY_Controller
         }
     }
 
-    public function add_supplier_reference($amount, $reference_no, $date, $note, $supplier_id, $bank_charges, $bank_charges_account, $ledger_account){
+    public function add_supplier_reference($amount, $reference_no, $date, $note, $supplier_id, $bank_charges, $bank_charges_account, $ledger_account, $added_via = null){
         // Calculate VAT on bank charges (15%)
         $bank_charge_vat = 0;
         if ($bank_charges > 0) {
@@ -452,8 +452,11 @@ class Suppliers extends MY_Controller
             'bank_charge_vat' => $bank_charge_vat,
             'bank_charges_ledger' => $bank_charges_account,
             'transfer_from_ledger' => $ledger_account,
-            'created_by'    => $this->session->userdata('user_id')
+            'created_by'    => $this->session->userdata('user_id'),
         ];
+        if ($added_via !== null && $added_via !== '') {
+            $payment_reference['added_via'] = $added_via;
+        }
 
         $payment_id = $this->purchases_model->addPaymentReference($payment_reference);
         
@@ -1201,7 +1204,7 @@ class Suppliers extends MY_Controller
                 
                 if ($payment_total > 0) {
                     // Create payment reference using supplier advance ledger
-                    $payment_id = $this->add_supplier_reference($payment_total, $reference_no, $date, $note . ' (Advance Only)', $supplier_id, $bank_charges, $bank_charges_account, $supplier_advance_ledger);
+                    $payment_id = $this->add_supplier_reference($payment_total, $reference_no, $date, $note . ' (Advance Only)', $supplier_id, $bank_charges, $bank_charges_account, $supplier_advance_ledger, 'advance');
                     
                     if (!$payment_id) {
                         $this->session->set_flashdata('error', 'Failed to create advance payment reference. Please check system configuration.');
@@ -1239,7 +1242,7 @@ class Suppliers extends MY_Controller
                 
                 if($payment_total > 0 && $supplier_advance_ledger){
                     // Create payment reference using supplier advance ledger (NOT regular ledger_account)
-                    $payment_id = $this->add_supplier_reference($payment_total, $reference_no, $date, $note . ' (Pure Advance)', $supplier_id, $bank_charges, $bank_charges_account, $supplier_advance_ledger);
+                    $payment_id = $this->add_supplier_reference($payment_total, $reference_no, $date, $note . ' (Pure Advance)', $supplier_id, $bank_charges, $bank_charges_account, $supplier_advance_ledger, 'advance');
                     
                     // Verify payment reference was created successfully
                     if (!$payment_id) {
@@ -3101,8 +3104,52 @@ class Suppliers extends MY_Controller
     }
 
     /**
+     * Build payable-side debit lines for supplier payment journal.
+     * Petty cash replenishments debit the memo petty cash ledger; other settlements debit supplier AP.
+     */
+    private function buildSupplierPaymentPayableDebitLines($supplier, $invoice_details, $service_invoice_details, $debit_memo_details, $credit_memo_details, $advance_amount)
+    {
+        $lines = [];
+        $supplier_payable = (float) $advance_amount;
+
+        foreach ($invoice_details as $detail) {
+            $supplier_payable += (float) $detail['total_paying'];
+        }
+        foreach ($debit_memo_details as $detail) {
+            $supplier_payable += (float) $detail['paying'];
+        }
+        foreach ($credit_memo_details as $detail) {
+            $supplier_payable += (float) $detail['paying'];
+        }
+
+        foreach ($service_invoice_details as $memo_id => $detail) {
+            $memo = $this->purchases_model->getDebitMemoData($memo_id);
+            $paying = (float) $detail['paying'];
+            if ($memo && ($memo->type ?? '') === 'pettycash' && (int) $memo->ledger_account > 0) {
+                $lines[] = [
+                    'ledger_id' => (int) $memo->ledger_account,
+                    'amount'    => $paying,
+                    'narration' => 'Petty Cash Replenishment - ' . $memo->reference_no,
+                ];
+            } else {
+                $supplier_payable += $paying;
+            }
+        }
+
+        if ($supplier_payable > 0) {
+            $lines[] = [
+                'ledger_id' => (int) $supplier->ledger_account,
+                'amount'    => $supplier_payable,
+                'narration' => 'Supplier Payable Settlement',
+            ];
+        }
+
+        return $lines;
+    }
+
+    /**
      * Journal entry for new-style supplier invoice payment.
-     * Dr  Supplier Payable  = cash_payment + advance_amount
+     * Dr  Supplier Payable / Petty Cash ledger(s)  = cash_payment + advance_amount
      * Dr  Bank Charges      = bank_charges  (if any)
      * Dr  VAT on charges    = bank_charge_vat  (if any)
      * Cr  Bank/Cash ledger  = cash_payment + bank_charges + bank_charge_vat
@@ -3111,7 +3158,8 @@ class Suppliers extends MY_Controller
     public function convert_supplier_payment_multiple_invoice_new(
         $supplier_id, $ledger_account, $bank_charges_account,
         $payment_amount, $bank_charges, $reference_no, $type, $date,
-        $supplier_advance_ledger = null, $advance_amount = 0
+        $supplier_advance_ledger = null, $advance_amount = 0,
+        $payable_debit_lines = null
     ) {
         $this->load->admin_model('companies_model');
         $supplier = $this->companies_model->getCompanyByID($supplier_id);
@@ -3137,8 +3185,25 @@ class Suppliers extends MY_Controller
 
         $items = [];
 
-        // Dr Supplier Payable
-        $items[] = ['entry_id' => $insert_id, 'dc' => 'D', 'ledger_id' => $supplier->ledger_account, 'amount' => $total_payable_dr, 'narration' => 'Supplier Payable Settlement'];
+        if (!empty($payable_debit_lines)) {
+            foreach ($payable_debit_lines as $line) {
+                $items[] = [
+                    'entry_id'  => $insert_id,
+                    'dc'        => 'D',
+                    'ledger_id' => (int) $line['ledger_id'],
+                    'amount'    => (float) $line['amount'],
+                    'narration' => $line['narration'] ?? '',
+                ];
+            }
+        } else {
+            $items[] = [
+                'entry_id'  => $insert_id,
+                'dc'        => 'D',
+                'ledger_id' => $supplier->ledger_account,
+                'amount'    => $total_payable_dr,
+                'narration' => 'Supplier Payable Settlement',
+            ];
+        }
 
         // Dr Bank Charges
         if ($bank_charges > 0 && $bank_charges_account > 0) {
@@ -3358,10 +3423,16 @@ class Suppliers extends MY_Controller
                 admin_redirect('suppliers/payment_to_supplier_new');
             }
 
-            // Create payment reference (matches pattern used throughout add_payment())
+            // Cash/bank leg only — advance settlement is tracked on the advance ledger, not the payments list.
+            $bank_charge_vat = ($bank_charges > 0) ? round($bank_charges * 0.15, 4) : 0;
+            $cash_leg_amount = $payment_amount + $bank_charges + $bank_charge_vat;
+            $is_advance_settlement_only = ($advance_amount > 0 && $cash_leg_amount <= 0.00001);
+            $reference_amount = $is_advance_settlement_only ? $advance_amount : $cash_leg_amount;
+            $added_via = $is_advance_settlement_only ? 'advance_settlement' : null;
+
             $payment_id = $this->add_supplier_reference(
-                $total_sources, $reference_no, $date, $note,
-                $supplier_id, $bank_charges, $bank_charges_account, $ledger_account
+                $reference_amount, $reference_no, $date, $note,
+                $supplier_id, $bank_charges, $bank_charges_account, $ledger_account, $added_via
             );
 
             if (!$payment_id) {
@@ -3434,12 +3505,28 @@ class Suppliers extends MY_Controller
             }
 
             // Create journal entry
+            $payable_debit_lines = $this->buildSupplierPaymentPayableDebitLines(
+                $supplier,
+                $invoice_details,
+                $service_invoice_details,
+                $debit_memo_details,
+                $credit_memo_details,
+                $advance_amount
+            );
             $journal_id = $this->convert_supplier_payment_multiple_invoice_new(
                 $supplier_id, $ledger_account, $bank_charges_account,
                 $payment_amount, $bank_charges, $reference_no,
-                'supplierpayment', $date, $supplier_advance_ledger, $advance_amount
+                'supplierpayment', $date, $supplier_advance_ledger, $advance_amount,
+                $payable_debit_lines
             );
             $this->purchases_model->update_payment_reference($payment_id, $journal_id);
+
+            if ($is_advance_settlement_only) {
+                $this->session->set_flashdata('message', 'Advance applied to invoices successfully. See Supplier Advances Balance for details.');
+                admin_redirect('reports/supplier_advance_statement?supplier=' . (int) $supplier_id
+                    . '&from_date=' . urlencode(date('d/m/Y', strtotime(date('Y') . '-01-01')))
+                    . '&to_date=' . urlencode(date('d/m/Y')));
+            }
 
             $this->session->set_flashdata('message', 'Payment processed successfully.');
             admin_redirect('suppliers/view_payment/' . $payment_id);

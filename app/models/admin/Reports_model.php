@@ -7283,14 +7283,6 @@ class Reports_model extends CI_Model
         
         $where_sql = !empty($where_clauses) ? 'AND ' . implode(' AND ', $where_clauses) : '';
         
-        $deal_discount_value_sql = "CASE
-                    WHEN COALESCE(pi.deal_discount_value, 0) <> 0 THEN pi.deal_discount_value
-                    WHEN COALESCE(pi.deal_discount, 0) >= 100      THEN COALESCE(pi.totalbeforevat, 0)
-                    WHEN COALESCE(pi.deal_discount, 0) > 0         THEN pi.deal_discount / (100 - pi.deal_discount) * COALESCE(pi.totalbeforevat, 0)
-                    ELSE 0
-                END";
-        $line_discount_sql = "COALESCE(pi.item_discount, 0) + COALESCE(pi.second_discount_value, 0) + COALESCE(pi.third_discount_value, 0)";
-
         // Query for PURCHASES
         $purchase_sql = "
             SELECT 
@@ -7305,17 +7297,32 @@ class Reports_model extends CI_Model
                 prod.name AS item_name,
                 pi.quantity AS qty,
                 pi.bonus AS bonus,
-                (pi.subtotal - {$line_discount_sql} - ({$deal_discount_value_sql})) / NULLIF(pi.quantity, 0) AS unit_cost,
+                pi.net_unit_cost AS unit_cost,
                 (pi.discount + pi.discount2) AS discount_percent,
-                {$line_discount_sql} AS total_discount_value,
+                COALESCE(pi.item_discount, 0) + COALESCE(pi.second_discount_value, 0) + COALESCE(pi.third_discount_value, 0) AS total_discount_value,
                 COALESCE(pi.deal_discount, 0) AS deal_discount_percent,
-                ({$deal_discount_value_sql}) AS deal_discount_value,
+                CASE
+                    WHEN COALESCE(pi.deal_discount_value, 0) <> 0 THEN pi.deal_discount_value
+                    WHEN COALESCE(pi.deal_discount, 0) >= 100      THEN COALESCE(pi.totalbeforevat, 0)
+                    WHEN COALESCE(pi.deal_discount, 0) > 0         THEN pi.deal_discount / (100 - pi.deal_discount) * COALESCE(pi.totalbeforevat, 0)
+                    ELSE 0
+                END AS deal_discount_value,
                 COALESCE((SELECT SUM(quantity) FROM {$this->db->dbprefix('inventory_movements')} WHERE product_id = prod.id), 0) AS current_stock,
                 pi.sale_price AS public_price,
                 (pi.subtotal) AS purchase,
-                (pi.totalbeforevat + ({$deal_discount_value_sql})) AS net_purchase,
+                (pi.totalbeforevat + CASE
+                    WHEN COALESCE(pi.deal_discount_value, 0) <> 0 THEN pi.deal_discount_value
+                    WHEN COALESCE(pi.deal_discount, 0) >= 100      THEN COALESCE(pi.totalbeforevat, 0)
+                    WHEN COALESCE(pi.deal_discount, 0) > 0         THEN pi.deal_discount / (100 - pi.deal_discount) * COALESCE(pi.totalbeforevat, 0)
+                    ELSE 0
+                END) AS net_purchase,
                 pi.item_tax AS vat,
-                (pi.totalbeforevat + pi.item_tax + ({$deal_discount_value_sql})) AS payable,
+                (pi.totalbeforevat + pi.item_tax + CASE
+                    WHEN COALESCE(pi.deal_discount_value, 0) <> 0 THEN pi.deal_discount_value
+                    WHEN COALESCE(pi.deal_discount, 0) >= 100      THEN COALESCE(pi.totalbeforevat, 0)
+                    WHEN COALESCE(pi.deal_discount, 0) > 0         THEN pi.deal_discount / (100 - pi.deal_discount) * COALESCE(pi.totalbeforevat, 0)
+                    ELSE 0
+                END) AS payable,
                 0 AS payment
             FROM {$this->db->dbprefix('purchase_items')} pi
             LEFT JOIN {$this->db->dbprefix('purchases')} p ON p.id = pi.purchase_id
