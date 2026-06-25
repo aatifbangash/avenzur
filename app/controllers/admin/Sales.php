@@ -4252,7 +4252,7 @@ class Sales extends MY_Controller
                 $this->datatables
                     ->select("{$this->db->dbprefix('sales')}.id as id, {$this->db->dbprefix('sales')}.id as number,DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%Y-%m-%d %T') as date, reference_no, CONCAT('SL-', {$this->db->dbprefix('sales')}.id) as code, biller, {$this->db->dbprefix('sales')}.customer, sale_status, grand_total, paid, (grand_total-paid) as balance, payment_status, CONCAT('files/', {$this->db->dbprefix('sales')}.attachment) as attachment, return_id")
                     ->from('sales')
-                    ->where('warehouse_id', $warehouse_id)
+                    //->where('warehouse_id', $warehouse_id)
                     ->where('pos', 1);
                     //->join('aramex_shipment', 'aramex_shipment.salesid=sales.id');
             } else {
@@ -4285,9 +4285,9 @@ class Sales extends MY_Controller
             }
             //$this->datatables->where('pos !=', 1); // ->where('sale_status !=', 'returned');
             if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->Admin && !$this->GP['sales-index']) {
-                $this->datatables->where('created_by', $this->session->userdata('user_id'));
+                //$this->datatables->where('created_by', $this->session->userdata('user_id'));
             } elseif ($this->Customer) {
-                $this->datatables->where('customer_id', $this->session->userdata('user_id'));
+                //$this->datatables->where('customer_id', $this->session->userdata('user_id'));
             }
             $this->datatables->add_column('Actions', $action, 'id');
             echo $this->datatables->generate();
