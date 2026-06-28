@@ -918,6 +918,14 @@ public function get_hierarchical_analytics($period_type = 'today', $target_month
             $result = $this->db->query($query, [$period]);
         }
 
+        if($result === false) {
+            // Log the error for debugging
+            $error = $this->db->error();
+            error_log('[Cost_center_model] get_profit_margins_both_types query failed: ' . $error['message']);
+            return ['gross_margin' => 0, 'net_margin' => 0];
+
+        }
+        
         $row = $result->row_array();
 
         if (!$row || $row['total_revenue'] == 0) {
