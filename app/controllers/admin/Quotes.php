@@ -1557,10 +1557,13 @@ class Quotes extends MY_Controller
     public function index($warehouse_id = null)
     {
         //$this->sma->checkPermissions();
-
-        $this->site->redirectDefaultListingWarehouseIfNeeded($warehouse_id, 'quotes');
-
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        if(empty($this->data['error'])){
+            $this->data['error'] = $this->session->flashdata('error');
+            //$this->session->set_flashdata('error', $this->session->flashdata('error'));
+
+        }
+        $this->site->redirectDefaultListingWarehouseIfNeeded($warehouse_id, 'quotes', $this->data['error']);
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
             $this->data['warehouses']   = $this->site->getAllWarehouses();
             $this->data['warehouse_id'] = $warehouse_id;
@@ -1570,7 +1573,8 @@ class Quotes extends MY_Controller
             $this->data['warehouse_id'] = $this->session->userdata('warehouse_id');
             $this->data['warehouse']    = $this->session->userdata('warehouse_id') ? $this->site->getWarehouseByID($this->session->userdata('warehouse_id')) : null;
         }
-
+        //echo '<pre>';print_r($this->data['error']);exit;
+        //echo '<pre>';print_r($this->session->flashdata());exit;
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('quotes')]];
         $meta = ['page_title' => lang('quotes'), 'bc' => $bc];
         $this->page_construct('quotes/index', $meta, $this->data);
