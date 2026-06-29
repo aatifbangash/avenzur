@@ -599,13 +599,16 @@ class Site extends CI_Model
     }
 
     /** Redirect bare listing URLs to the default warehouse unless ?all=1 */
-    public function redirectDefaultListingWarehouseIfNeeded($warehouse_id, $route_base)
+    public function redirectDefaultListingWarehouseIfNeeded($warehouse_id, $route_base, $error = null)
     {
         if ($warehouse_id || $this->listingShowsAllLocalWarehouses()) {
             return;
         }
         $CI = get_instance();
         if (!empty($CI->Owner) || !empty($CI->Admin) || !$CI->session->userdata('warehouse_id')) {
+            if ($error) {
+                $CI->session->set_flashdata('error', $error);
+            }
             admin_redirect(rtrim($route_base, '/') . '/' . $this->getDefaultListingWarehouseId());
         }
     }

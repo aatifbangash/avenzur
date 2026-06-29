@@ -331,10 +331,10 @@ class Sales extends MY_Controller
             $attachments        = $this->attachments->upload();
             $data['attachment'] = !empty($attachments);
 
-            /*if ($product_error = $this->_validateSaleProductLines($warehouse_id, $products, $sale_status)) {
+            if ($product_error = $this->_validateSaleProductLines($warehouse_id, $products, $sale_status)) {
                 $this->session->set_flashdata('error', $product_error);
                 redirect($_SERVER['HTTP_REFERER']);
-            }*/
+            }
         }
 
         if ($this->form_validation->run() == true && $this->sales_model->addSale($data, $products, $payment, [], $attachments)) {
@@ -681,16 +681,15 @@ class Sales extends MY_Controller
             if(!$inventoryObj){
                 $this->session->set_flashdata('error', 'Quote cannot be converted to sale order. The item: '.$item_code.'-'.$item_name.' has no stock in Warehouse');
                 admin_redirect('quotes');
-                return;
             }else{
                 $totalInventoryCheck = $this->products_model->getTotalInventoryQuantity($warehouse_id, $item_id);
                 if(!$totalInventoryCheck || $totalInventoryCheck < $item_quantity){
                     $this->session->set_flashdata('error', 'Quote cannot be converted to sale order. The item: '.$item_code.'-'.$item_name.' has insufficient stock in Warehouse');
                     admin_redirect('quotes');
-                    return;
+
                 }
             }
-            
+
             $product = [
                 'product_id'        => $item_id,
                 'product_code'      => $item_code,
@@ -782,7 +781,6 @@ class Sales extends MY_Controller
         if ($product_error = $this->_validateSaleProductLines($warehouse_id, $products, 'ready')) {
             $this->session->set_flashdata('error', $product_error);
             admin_redirect('quotes');
-            return;
         }
 
         if ($sale_id = $this->sales_model->addSaleNew($data, $products, $payment, [])) {
@@ -791,11 +789,9 @@ class Sales extends MY_Controller
 
             $this->session->set_flashdata('message', lang('Sale Order Added'));
             admin_redirect('sales?lastInsertedId='.$sale_id);
-            return;
         }else{
             $this->session->set_flashdata('error', lang('Failed Adding Sale Order'));
             admin_redirect('quotes');
-            return;
         }
 
     }  
