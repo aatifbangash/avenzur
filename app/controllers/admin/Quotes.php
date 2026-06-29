@@ -627,7 +627,7 @@ class Quotes extends MY_Controller
 
         $inv = $this->quotes_model->getQuoteByID($id);
         
-        if($inv->status == 'approved' || $inv->status == 'converted_to_sale'){
+        if($inv->status == 'converted_to_sale'){
             $this->session->set_flashdata('error', 'Cannot edit completed or converted quotes');
 
             admin_redirect('quotes');

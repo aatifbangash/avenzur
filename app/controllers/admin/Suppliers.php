@@ -1455,7 +1455,7 @@ class Suppliers extends MY_Controller
         $parent_code = null;
         //$this->sma->checkPermissions(false, true);
 
-        $this->form_validation->set_rules('email', $this->lang->line('email_address'), 'is_unique[companies.email]');
+        //$this->form_validation->set_rules('email', $this->lang->line('email_address'), 'is_unique[companies.email]');
 
         if ($this->form_validation->run('companies/add') == true) {
               
