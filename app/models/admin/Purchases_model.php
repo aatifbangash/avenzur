@@ -738,7 +738,7 @@ class Purchases_model extends CI_Model
         ->where('payments.purchase_id IS NULL')
         ->where('payments.type', 'sent')
         ->like('payments.note', 'Credit Memo #');
-
+        
         $credit_memo_payment_query = $this->db->get('payments');
         $credit_memo_payments = [];
 
@@ -1555,6 +1555,56 @@ class Purchases_model extends CI_Model
             return $invoices;
         }
         return [];
+    }
+
+    public function getAllInvoicesBySupplier($supplier_id)
+    {
+        // Fetch purchase invoices
+        $this->db->order_by('date', 'asc');
+        $this->db->where('supplier_id', $supplier_id);
+        $this->db->where('purchase_invoice', 1);
+        //$this->db->where_in('payment_status', ['pending', 'due', 'partial']);
+        $q = $this->db->get('purchases');
+
+        $purchase_invoices = [];
+        if ($q->num_rows() > 0) {
+            $purchase_invoices = $q->result();
+        }
+
+        // Fetch service invoices from sma_memo
+        $this->db->select('
+            id,
+            date,
+            reference_no,
+            payment_amount as grand_total,
+            COALESCE(used_amount, 0) as paid,
+            "service" as invoice_type
+        ');
+        $this->db->where('type', 'serviceinvoice');
+        $this->db->where('supplier_id', $supplier_id);
+        $this->db->where('supplier_id !=', 0);
+        $this->db->where('supplier_id IS NOT NULL');
+        
+        // Only include service invoices with outstanding balance
+        //$this->db->where('(payment_amount - COALESCE(used_amount, 0)) > 0');
+        
+        $this->db->order_by('date', 'asc');
+        $service_q = $this->db->get('sma_memo');
+
+        $service_invoices = [];
+        if ($service_q->num_rows() > 0) {
+            $service_invoices = $service_q->result();
+        }
+
+        // Merge both arrays
+        $all_invoices = array_merge($purchase_invoices, $service_invoices);
+
+        // Sort by date (ascending)
+        usort($all_invoices, function($a, $b) {
+            return strtotime($a->date) - strtotime($b->date);
+        });
+
+        return $all_invoices;
     }
 
     public function getPendingInvoicesBySupplier($supplier_id)

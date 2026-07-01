@@ -837,78 +837,537 @@ class Suppliers extends MY_Controller
     }
 
     public function edit_payment($id = null){
-        //$this->sma->checkPermissions(false, true);
-        $this->form_validation->set_rules('payment_id', $this->lang->line('payment_id'), 'required');
-        $this->form_validation->set_rules('amount', $this->lang->line('amount'), 'required');
-
-        if ($this->form_validation->run() == true) {
-            $payment_id      = $this->input->post('payment_id');
-            $amount          = $this->input->post('amount');
-
-            $payment_detail  = $this->purchases_model->getPaymentByID($payment_id);
-            $purchase_detail = $this->purchases_model->getPurchaseByID($payment_detail->purchase_id);
-            
-            $old_amount = $payment_detail->amount;
-
-            $difference = $amount - $old_amount;
-            $accounts_reference_no = 'PM-'.$payment_detail->reference_no;
-            $accounts_entry = $this->purchases_model->getAccountsEntryByReferenceNo($accounts_reference_no);
-            $entry_id = $accounts_entry->id;
-            $dr_total = $accounts_entry->dr_total;
-            $cr_total = $accounts_entry->cr_total;
-
-            $new_dr_total = $dr_total + $difference;
-            $new_cr_total = $cr_total + $difference;
-
-            $updated_price_for_purchase = $purchase_detail->paid + $difference;
-
-            $debit_entry = null;
-            $credit_entry = null;
-
-            $this->db->update('payments', ['amount' => $amount], ['id' => $payment_id]);
-            $this->db->update('purchases', ['paid' => $updated_price_for_purchase], ['id' => $payment_detail->purchase_id]);
-
-            $this->db->update('sma_accounts_entries', ['dr_total' => $new_dr_total, 'cr_total' => $new_cr_total], ['id' => $entry_id]);
-
-            // Debit Entry
-            $this->db->select('*');
-            $this->db->from('sma_accounts_entryitems');
-            $this->db->where('entry_id', $entry_id);
-            $this->db->where('dc', 'D');
-            $this->db->order_by('amount', 'DESC');
-            $this->db->limit(1);
-
-            $query = $this->db->get();
-
-            if ($query->num_rows() > 0) {
-                $debit_entry = $query->row();
-            }
-
-            // Credit Entry
-            $q = $this->db->get_where('sma_accounts_entryitems', ['entry_id' => $entry_id, 'dc' => 'C'], 1);
-            if ($q->num_rows() > 0) {
-                $credit_entry = $q->row();
-            }
-
-            if($debit_entry != null){
-                $debit_entry_amount = $debit_entry->amount + $difference;
-                $this->db->update('sma_accounts_entryitems', ['amount' => $debit_entry_amount], ['id' => $debit_entry->id]);
-            }
-
-            if($credit_entry != null){
-                $credit_entry_amount = $credit_entry->amount + $difference;
-                $this->db->update('sma_accounts_entryitems', ['amount' => $credit_entry_amount], ['id' => $credit_entry->id]);
-            }
-
-            admin_redirect('suppliers/list_payments');
-        }else{
-            if ($this->input->get('id')) {
-                $id = $this->input->get('id');
-            }
-    
-            $this->data['payment']  = $this->purchases_model->getPaymentByID($id);
-            $this->page_construct('suppliers/edit_payment', $meta, $this->data);
+        if ($this->input->get('id')) {
+            $id = $this->input->get('id');
         }
+        // Also check for POST data (when form is submitted)
+        if ($this->input->post('payment_id')) {
+            $id = $this->input->post('payment_id');
+        }
+        
+        $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('suppliers/list_payments'), 'page' => lang('Supplier Payments')], ['link' => '#', 'page' => lang('Edit Payment')]];
+        $meta = ['page_title' => lang('Edit Supplier Payment'), 'bc' => $bc];
+
+        // Load payment reference
+        $payment_ref = $this->purchases_model->getPaymentReferenceByID($id);
+        
+        if (!$payment_ref) {
+            $this->session->set_flashdata('error', 'Payment reference not found');
+            admin_redirect('suppliers/list_payments');
+            return;
+        }
+
+        // Get supplier
+        $supplier = $this->companies_model->getCompanyByID($payment_ref->supplier_id);
+        if (!$supplier) {
+            $this->session->set_flashdata('error', 'Supplier not found');
+            admin_redirect('suppliers/list_payments');
+            return;
+        }
+        
+        // Get payment line items (shows what was paid)
+        $existing_payments = $this->purchases_model->getPaymentByReferenceID($id);
+        
+        // Handle form submission (Edit form POSTed)
+        if ($this->input->post('edit_supplier_payment')) {
+            // Validate form
+            $this->form_validation->set_rules('supplier',      lang('supplier'),     'required');
+            $this->form_validation->set_rules('reference_no',  lang('reference_no'), 'required');
+            $this->form_validation->set_rules('date',          lang('date'),         'required');
+
+            if ($this->form_validation->run() == true) {
+                // Get new form data
+                $supplier_id_new    = $this->input->post('supplier');
+                $reference_no_new   = $this->input->post('reference_no');
+                $ledger_account     = $this->input->post('ledger');
+                $date_raw           = $this->input->post('date');
+                $note               = $this->input->post('note');
+                $bank_charges       = (float)($this->input->post('bank_charges') ?: 0);
+                $payment_amount     = (float)($this->input->post('payment_amount') ?: 0);
+                $advance_amount     = (float)($this->input->post('advance_amount') ?: 0);
+
+                // Parse date
+                $fmt = DateTime::createFromFormat('d/m/Y', $date_raw);
+                if ($fmt === false) {
+                    $this->session->set_flashdata('error', 'Invalid date format. Use DD/MM/YYYY.');
+                    admin_redirect('suppliers/edit_payment?id=' . $id);
+                    return;
+                }
+                $date = $fmt->format('Y-m-d');
+
+                // Collect selected invoices/memos from form
+                $invoice_ids     = $this->input->post('invoice_ids') ?: [];
+                $invoice_amounts = $this->input->post('invoice_amounts') ?: [];
+                $debit_memo_amounts = $this->input->post('debit_memo_amounts') ?: [];
+                $service_invoice_amounts = $this->input->post('service_invoice_amounts') ?: [];
+                $credit_memo_amounts = $this->input->post('credit_memo_amounts') ?: [];
+
+                if (empty($invoice_ids) && empty($service_invoice_amounts) && empty($credit_memo_amounts)) {
+                    $this->session->set_flashdata('error', 'Please select at least one invoice to settle.');
+                    admin_redirect('suppliers/edit_payment?id=' . $id);
+                    return;
+                }
+
+                // ── DELETE OLD PAYMENT ──────────────────────────────────────
+                // 1. Reverse used amounts in debit/service/credit memos
+                // 2. Delete payment records
+                // 3. Delete journal entries
+                // 4. Delete payment reference
+
+                // Reverse old payment line items
+                $old_payments = $this->purchases_model->getPaymentByReferenceID($id);
+                if (!empty($old_payments)) {
+                    foreach ($old_payments as $old_payment) {
+                        // Reverse purchase invoice paid amount
+                        if (!empty($old_payment->purchase_id)) {
+                            $this->purchases_model->update_purchase_paid_amount($old_payment->purchase_id, -(float)$old_payment->amount);
+                        }
+                        // Reverse memo used amount
+                        if (!empty($old_payment->memo_id)) {
+                            $this->db->where('id', $old_payment->memo_id);
+                            $existing_memo = $this->db->get('sma_memo', 1)->row();
+                            if ($existing_memo) {
+                                $new_used = max(0, ($existing_memo->used_amount ?? 0) - (float)$old_payment->amount);
+                                $this->db->update('sma_memo', ['used_amount' => $new_used], ['id' => $old_payment->memo_id]);
+                            }
+                        }
+                    }
+                }
+                //exit;
+                // Delete payment records
+                $this->db->delete('sma_payments', ['payment_id' => $id]);
+
+                // Delete associated journal entry
+                $old_journal = $this->db->get_where('sma_accounts_entries', ['id' => $payment_ref->journal_id], 1)->row();
+                if ($old_journal) {
+                    $this->db->delete('sma_accounts_entryitems', ['entry_id' => $old_journal->id]);
+                    $this->db->delete('sma_accounts_entries', ['id' => $old_journal->id]);
+                }
+
+                // Delete payment reference
+                $this->db->delete('sma_payment_reference', ['id' => $id]);
+
+                // ── CREATE NEW PAYMENT ──────────────────────────────────────
+                // Now use the same logic as payment_to_supplier_new to recreate
+
+                $bank_charges_account = $this->Settings->bank_fees_ledger ?? null;
+                $supplier_advance_ledger = isset($this->Settings->supplier_advance_ledger) && !empty($this->Settings->supplier_advance_ledger)
+                    ? $this->Settings->supplier_advance_ledger : null;
+
+                // Validate advance
+                if ($advance_amount > 0) {
+                    $available_advance = $this->getSupplierAdvanceBalance($supplier_id_new, $supplier_advance_ledger);
+                    if ($advance_amount > $available_advance) {
+                        $this->session->set_flashdata('error', 'Applied advance amount exceeds available supplier advance balance.');
+                        admin_redirect('suppliers/edit_payment?id=' . $id);
+                        return;
+                    }
+                }
+
+                // Collect invoice details (from form POST)
+                $invoice_details = [];
+                $total_payments_from_invoices = 0;
+                foreach ($invoice_amounts as $inv_id => $applied) {
+                    $applied = (float)$applied;
+                    if ($applied > 0) {
+                        $purchase = $this->purchases_model->getPurchaseByID($inv_id);
+                        if (!$purchase) {
+                            $this->session->set_flashdata('error', 'Purchase invoice not found: ' . $inv_id);
+                            admin_redirect('suppliers/edit_payment?id=' . $id);
+                            return;
+                        }
+                        $total_payments_from_invoices += $applied;
+                        $invoice_details[$inv_id] = [
+                            'grand_total'   => $purchase->grand_total,
+                            'total_paid'    => $purchase->paid ?? 0,
+                            'total_paying'  => $applied,
+                        ];
+                    }
+                }
+
+                // Collect debit-memo details
+                $debit_memo_details = [];
+                $total_applied_debit_memos = 0;
+                foreach ($debit_memo_amounts as $memo_id => $applied) {
+                    $applied = (float)$applied;
+                    if ($applied > 0) {
+                        $memo = $this->purchases_model->getDebitMemoData($memo_id);
+                        if (!$memo) {
+                            $this->session->set_flashdata('error', 'Debit memo not found: ' . $memo_id);
+                            admin_redirect('suppliers/edit_payment?id=' . $id);
+                            return;
+                        }
+                        $vat_pct      = isset($memo->vat_percent) ? (float)$memo->vat_percent : 0;
+                        $gross_amount = $memo->payment_amount * (1 + $vat_pct / 100);
+                        $available    = $gross_amount - ($memo->used_amount ?? 0);
+                        if ($applied > $available) {
+                            $this->session->set_flashdata('error', 'Applied debit-memo amount exceeds available balance.');
+                            admin_redirect('suppliers/edit_payment?id=' . $id);
+                            return;
+                        }
+                        $total_applied_debit_memos += $applied;
+                        $debit_memo_details[$memo_id] = [
+                            'used'   => $memo->used_amount ?? 0,
+                            'paying' => $applied,
+                        ];
+                    }
+                }
+
+                // Collect service-invoice details
+                $service_invoice_details = [];
+                $total_service_inv_payments = 0;
+                foreach ($service_invoice_amounts as $memo_id => $applied) {
+                    $applied = (float)$applied;
+                    if ($applied > 0) {
+                        $memo = $this->purchases_model->getDebitMemoData($memo_id);
+                        if (!$memo) {
+                            $this->session->set_flashdata('error', 'Service invoice not found: ' . $memo_id);
+                            admin_redirect('suppliers/edit_payment?id=' . $id);
+                            return;
+                        }
+                        $available = $memo->payment_amount - ($memo->used_amount ?? 0);
+                        if ($applied > $available) {
+                            $this->session->set_flashdata('error', 'Applied service invoice amount exceeds available balance.');
+                            admin_redirect('suppliers/edit_payment?id=' . $id);
+                            return;
+                        }
+                        $total_service_inv_payments += $applied;
+                        $service_invoice_details[$memo_id] = [
+                            'used'   => $memo->used_amount ?? 0,
+                            'paying' => $applied,
+                        ];
+                    }
+                }
+
+                // Collect credit-memo details
+                $credit_memo_details = [];
+                $total_credit_memo_payments = 0;
+                foreach ($credit_memo_amounts as $memo_id => $applied) {
+                    $applied = (float)$applied;
+                    if ($applied > 0) {
+                        $memo = $this->purchases_model->getDebitMemoData($memo_id);
+                        if (!$memo) {
+                            $this->session->set_flashdata('error', 'Credit memo not found: ' . $memo_id);
+                            admin_redirect('suppliers/edit_payment?id=' . $id);
+                            return;
+                        }
+                        $available = $memo->payment_amount - ($memo->used_amount ?? 0);
+                        if ($applied > $available) {
+                            $this->session->set_flashdata('error', 'Applied credit memo amount exceeds available balance.');
+                            admin_redirect('suppliers/edit_payment?id=' . $id);
+                            return;
+                        }
+                        $total_credit_memo_payments += $applied;
+                        $credit_memo_details[$memo_id] = [
+                            'used'   => $memo->used_amount ?? 0,
+                            'paying' => $applied,
+                        ];
+                    }
+                }
+
+                // Verify totals
+                $total_sources = $payment_amount + $advance_amount + $total_applied_debit_memos;
+                $total_invoices_to_settle = $total_payments_from_invoices + $total_service_inv_payments + $total_credit_memo_payments;
+
+                if (($total_invoices_to_settle - $total_sources) > 0.01) {
+                    $this->session->set_flashdata('error', 'Total payment sources are insufficient to cover applied amounts.');
+                    admin_redirect('suppliers/edit_payment?id=' . $id);
+                    return;
+                }
+
+                // Create new payment reference
+                $bank_charge_vat = ($bank_charges > 0) ? round($bank_charges * 0.15, 4) : 0;
+                $is_advance_settlement_only = ($advance_amount > 0 && $payment_amount <= 0.00001);
+                $reference_amount = $is_advance_settlement_only ? $advance_amount : $payment_amount;
+                $added_via = $is_advance_settlement_only ? 'advance_settlement' : null;
+
+                $new_payment_id = $this->add_supplier_reference(
+                    ($reference_amount + $bank_charge_vat + $bank_charges), $reference_no_new, $date, $note,
+                    $supplier_id_new, $bank_charges, $bank_charges_account, $ledger_account, $added_via
+                );
+
+                if (!$new_payment_id) {
+                    $this->session->set_flashdata('error', 'Failed to create new payment reference.');
+                    admin_redirect('suppliers/edit_payment?id=' . $id);
+                    return;
+                }
+
+                // Record payments for invoices
+                foreach ($invoice_details as $purchase_id => $detail) {
+                    $this->purchases_model->addPayment([
+                        'date'         => $date,
+                        'purchase_id'  => $purchase_id,
+                        'supplier_id'  => $supplier_id_new,
+                        'reference_no' => $reference_no_new,
+                        'amount'       => $detail['total_paying'],
+                        'note'         => $note,
+                        'created_by'   => $this->session->userdata('user_id'),
+                        'type'         => 'sent',
+                        'payment_id'   => $new_payment_id,
+                    ]);
+                    $this->purchases_model->update_purchase_paid_amount($purchase_id, $detail['total_paying']);
+                }
+
+                // Record payments for service invoices
+                foreach ($service_invoice_details as $memo_id => $detail) {
+                    $memo = $this->purchases_model->getDebitMemoData($memo_id);
+                    $this->purchases_model->addPayment([
+                        'date'         => $date,
+                        'memo_id'      => $memo_id,
+                        'supplier_id'  => $supplier_id_new,
+                        'reference_no' => $reference_no_new,
+                        'amount'       => $detail['paying'],
+                        'note'         => (($memo->type ?? '') === 'pettycash' ? 'Petty Cash' : 'Service Invoice') . ' #' . $memo_id . ($note ? ' - ' . $note : ''),
+                        'created_by'   => $this->session->userdata('user_id'),
+                        'type'         => 'sent',
+                        'payment_id'   => $new_payment_id,
+                    ]);
+                }
+
+                // Record payments for credit memos
+                foreach ($credit_memo_details as $memo_id => $detail) {
+                    $this->purchases_model->addPayment([
+                        'date'         => $date,
+                        'memo_id'      => $memo_id,
+                        'supplier_id'  => $supplier_id_new,
+                        'reference_no' => $reference_no_new,
+                        'amount'       => $detail['paying'],
+                        'note'         => 'Credit Memo #' . $memo_id . ($note ? ' - ' . $note : ''),
+                        'created_by'   => $this->session->userdata('user_id'),
+                        'type'         => 'sent',
+                        'payment_id'   => $new_payment_id,
+                    ]);
+                }
+
+                // Update memo used amounts
+                foreach ($debit_memo_details as $memo_id => $detail) {
+                    $this->db->where('id', $memo_id);
+                    $this->db->update('sma_memo', ['used_amount' => $detail['used'] + $detail['paying']]);
+                }
+
+                foreach ($service_invoice_details as $memo_id => $detail) {
+                    $this->purchases_model->update_service_invoice_used_amount($memo_id, $detail['paying']);
+                }
+
+                foreach ($credit_memo_details as $memo_id => $detail) {
+                    $new_used = $detail['used'] + $detail['paying'];
+                    $this->db->where('id', $memo_id);
+                    $this->db->update('sma_memo', ['used_amount' => $new_used]);
+                }
+
+                // Create new journal entry
+                $payable_debit_lines = $this->buildSupplierPaymentPayableDebitLines(
+                    $supplier,
+                    $invoice_details,
+                    $service_invoice_details,
+                    $debit_memo_details,
+                    $credit_memo_details
+                );
+                $journal_id = $this->convert_supplier_payment_multiple_invoice_new(
+                    $supplier_id_new, $ledger_account, $bank_charges_account,
+                    $payment_amount, $bank_charges, $reference_no_new,
+                    'supplierpayment', $date, $supplier_advance_ledger, $advance_amount,
+                    $payable_debit_lines
+                );
+                $this->purchases_model->update_payment_reference($new_payment_id, $journal_id);
+
+                $this->session->set_flashdata('message', 'Payment updated successfully.');
+                admin_redirect('suppliers/view_payment/' . $new_payment_id);
+                return;
+            }
+        }
+
+        $payment_ref->amount = ($payment_ref->amount - $payment_ref->bank_charges - $payment_ref->bank_charge_vat ?? 0);
+
+        // Load form for display (GET request)
+        $this->data['payment_ref']  = $payment_ref;
+        $this->data['existing_payments'] = $existing_payments;
+        $this->data['suppliers']    = $this->site->getAllChildCompanies('supplier');
+        $this->data['warehouses']   = $this->site->getAllWarehouses();
+        
+        // Load pending invoices for the supplier
+        $pending_invoices = $this->purchases_model->getPendingInvoicesBySupplier($payment_ref->supplier_id);
+        
+        // Create a map of how much was paid for each invoice in THIS payment
+        $paid_in_this_payment = [];
+        if (!empty($existing_payments)) {
+            foreach ($existing_payments as $payment) {
+                if (!empty($payment->purchase_id)) {
+                    if (!isset($paid_in_this_payment[$payment->purchase_id])) {
+                        $paid_in_this_payment[$payment->purchase_id] = 0;
+                    }
+                    $paid_in_this_payment[$payment->purchase_id] += (float)$payment->amount;
+                }
+            }
+        }
+        
+        // Adjust pending invoices to show paid excluding this payment
+        // and store the amount paid in this payment for defaults
+        if (!empty($pending_invoices)) {
+            foreach ($pending_invoices as &$invoice) {
+                // Store original paid amount
+                $invoice->total_paid_all_payments = $invoice->paid ?? 0;
+                
+                // Amount paid in THIS payment (the one being edited)
+                $invoice->paid_in_this_payment = isset($paid_in_this_payment[$invoice->id]) 
+                    ? $paid_in_this_payment[$invoice->id] 
+                    : 0;
+                
+                // Paid amount to show (excluding this payment)
+                $invoice->paid = max(0, ($invoice->paid ?? 0) - $invoice->paid_in_this_payment);
+                
+                // Due amount excluding this payment
+                $invoice->due_amount_adjusted = $invoice->grand_total - $invoice->paid;
+            }
+        }
+        
+        $this->data['pending_invoices'] = $pending_invoices;
+        $this->data['paid_in_this_payment'] = $paid_in_this_payment;
+        
+        // For blue theme: prepare data about what was paid in this payment
+        // This will be used to pre-populate form fields
+        $this->data['payment_invoices_map'] = []; // Maps invoice_id => amount paid in this payment
+        $this->data['payment_service_invoices_map'] = []; // Maps memo_id => amount paid in this payment
+        $this->data['payment_credit_memos_map'] = []; // Maps memo_id => amount paid in this payment
+        
+        if (!empty($existing_payments)) {
+            foreach ($existing_payments as $payment) {
+                if (!empty($payment->purchase_id)) {
+                    if (!isset($this->data['payment_invoices_map'][$payment->purchase_id])) {
+                        $this->data['payment_invoices_map'][$payment->purchase_id] = 0;
+                    }
+                    $this->data['payment_invoices_map'][$payment->purchase_id] += (float)$payment->amount;
+                } elseif (!empty($payment->memo_id)) {
+                    // Determine if it's a service invoice or credit memo
+                    $memo = $this->purchases_model->getDebitMemoData($payment->memo_id);
+                    if ($memo) {
+                        // Credit memo: type='memo' AND supplier_entry_type='C'
+                        if (($memo->type ?? '') === 'memo' && ($memo->supplier_entry_type ?? '') === 'C') {
+                            if (!isset($this->data['payment_credit_memos_map'][$payment->memo_id])) {
+                                $this->data['payment_credit_memos_map'][$payment->memo_id] = 0;
+                            }
+                            $this->data['payment_credit_memos_map'][$payment->memo_id] += (float)$payment->amount;
+                        } else {
+                            // Service invoice or other memo type
+                            if (!isset($this->data['payment_service_invoices_map'][$payment->memo_id])) {
+                                $this->data['payment_service_invoices_map'][$payment->memo_id] = 0;
+                            }
+                            $this->data['payment_service_invoices_map'][$payment->memo_id] += (float)$payment->amount;
+                        }
+                    }
+                }
+            }
+        }
+        
+        $supplier_advance_ledger = isset($this->Settings->supplier_advance_ledger) && !empty($this->Settings->supplier_advance_ledger)
+            ? $this->Settings->supplier_advance_ledger : null;
+        $this->data['supplier_advance_ledger'] = $supplier_advance_ledger;
+        $this->data['advance_balance'] = $this->getSupplierAdvanceBalance($payment_ref->supplier_id, $supplier_advance_ledger);
+        $this->data['ledgers'] = $this->site->getCompanyLedgersByGroupCode(['11101', '11102', '11402']);
+        $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
+        $this->page_construct('suppliers/edit_payment', $meta, $this->data);
+    }
+
+    /**
+     * Close Payment - Prevents further editing (Finance Manager Only)
+     */
+    public function close_payment()
+    {
+        // Check permission - Finance Manager role
+        if ($this->sma->in_group('finance_manager') === false) {
+            $this->session->set_flashdata('error', 'You do not have permission to close payments.');
+            admin_redirect($_SERVER['HTTP_REFERER']);
+            return;
+        }
+
+        $payment_id = $this->input->post('payment_id');
+        
+        if (!$payment_id) {
+            $this->session->set_flashdata('error', 'Payment ID not provided.');
+            admin_redirect('suppliers/list_payments');
+            return;
+        }
+
+        $payment_ref = $this->purchases_model->getPaymentReferenceByID($payment_id);
+        
+        if (!$payment_ref) {
+            $this->session->set_flashdata('error', 'Payment not found.');
+            admin_redirect('suppliers/list_payments');
+            return;
+        }
+
+        if ($payment_ref->status === 'closed') {
+            $this->session->set_flashdata('warning', 'This payment is already closed.');
+            admin_redirect('suppliers/edit_payment?id=' . $payment_id);
+            return;
+        }
+
+        // Close the payment
+        $update_data = [
+            'status' => 'closed',
+            'closed_by' => $this->loggedIn,
+            'closed_at' => date('Y-m-d H:i:s')
+        ];
+
+        $this->db->where('id', $payment_id);
+        if ($this->db->update('sma_payment_reference', $update_data)) {
+            $this->session->set_flashdata('success', 'Payment has been closed and locked from further editing.');
+        } else {
+            $this->session->set_flashdata('error', 'Failed to close payment.');
+        }
+
+        admin_redirect('suppliers/list_payments');
+    }
+
+    /**
+     * Open Payment - Allows editing again (Admin/Finance Manager Only)
+     */
+    public function open_payment()
+    {
+        // Check permission - Admin or Finance Manager
+        if (!$this->session->has_userdata('admin') && !($this->Staff->can_close_payment ?? false)) {
+            $this->session->set_flashdata('error', 'You do not have permission to reopen payments.');
+            admin_redirect($_SERVER['HTTP_REFERER']);
+            return;
+        }
+
+        $payment_id = $this->input->post('payment_id');
+        
+        if (!$payment_id) {
+            $this->session->set_flashdata('error', 'Payment ID not provided.');
+            admin_redirect('suppliers/list_payments');
+            return;
+        }
+
+        $payment_ref = $this->purchases_model->getPaymentReferenceByID($payment_id);
+        
+        if (!$payment_ref) {
+            $this->session->set_flashdata('error', 'Payment not found.');
+            admin_redirect('suppliers/list_payments');
+            return;
+        }
+
+        if ($payment_ref->status !== 'closed') {
+            $this->session->set_flashdata('warning', 'This payment is not closed.');
+            admin_redirect('suppliers/edit_payment?id=' . $payment_id);
+            return;
+        }
+
+        // Reopen the payment
+        $update_data = [
+            'status' => 'open',
+            'closed_by' => null,
+            'closed_at' => null
+        ];
+
+        $this->db->where('id', $payment_id);
+        if ($this->db->update('sma_payment_reference', $update_data)) {
+            $this->session->set_flashdata('success', 'Payment has been reopened and is now editable.');
+        } else {
+            $this->session->set_flashdata('error', 'Failed to reopen payment.');
+        }
+
+        admin_redirect('suppliers/edit_payment?id=' . $payment_id);
     }
 
     public function print_payment_pdf($id = null)
@@ -1069,7 +1528,14 @@ class Suppliers extends MY_Controller
             }
         }
 
+        // For finance managers, only show open (not closed) payments
+        $is_finance_manager = $this->sma->in_group('finance_manager');
+        if ($is_finance_manager) {
+            $filters['status'] = 'open';
+        }
+
         $this->data['payments']   = $this->purchases_model->getPaymentReferences($filters);
+        $this->data['is_finance_manager'] = $is_finance_manager;
         $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
         $this->data['filters']    = $filters;
         $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -3043,20 +3509,7 @@ class Suppliers extends MY_Controller
 
     // ─── SUPPLIER INVOICE PAYMENT (NEW) ────────────────────────────────────────
 
-    /**
-     * AJAX: Return pending purchase invoices for a supplier.
-     * GET param: supplier_id
-     */
-    public function get_supplier_invoices_for_payment()
-    {
-        $supplier_id = $this->input->get('supplier_id');
-        if (!$supplier_id) {
-            echo json_encode([]);
-            return;
-        }
-        $invoices = $this->purchases_model->getPendingPurchaseInvoicesForPayment($supplier_id);
-        echo json_encode($invoices);
-    }
+
 
     /**
      * AJAX: Return available debit memos for a supplier.
@@ -3073,35 +3526,10 @@ class Suppliers extends MY_Controller
         echo json_encode($memos);
     }
 
-    public function get_supplier_service_invoices()
-    {
-        $supplier_id = $this->input->get('supplier_id');
-        if (!$supplier_id) {
-            header('Content-Type: application/json');
-            echo json_encode([]);
-            return;
-        }
-        $invoices = $this->purchases_model->getSupplierServiceInvoicesForPayment((int)$supplier_id);
-        header('Content-Type: application/json');
-        echo json_encode($invoices);
-    }
-
     /**
      * AJAX: Return credit memos payable to a supplier.
      * GET param: supplier_id
      */
-    public function get_supplier_credit_memos_for_payment()
-    {
-        $supplier_id = $this->input->get('supplier_id');
-        if (!$supplier_id) {
-            header('Content-Type: application/json');
-            echo json_encode([]);
-            return;
-        }
-        $memos = $this->purchases_model->getSupplierCreditMemosForPayment((int)$supplier_id);
-        header('Content-Type: application/json');
-        echo json_encode($memos);
-    }
 
     /**
      * Build payable-side debit lines for supplier payment journal.
@@ -3541,6 +3969,347 @@ class Suppliers extends MY_Controller
             $this->data['ledgers'] = $this->site->getCompanyLedgersByGroupCode(['11101', '11102', '11402']);
             $this->page_construct('suppliers/payment_to_supplier_new', $meta, $this->data);
         }
+    }
+
+    /**
+     * AJAX: Get supplier invoices for payment (for edit_payment view)
+     * Shows invoices with paid amount EXCLUDING current payment being edited
+     */
+
+    public function get_all_supplier_invoices_for_payment() {
+        $supplier_id = $this->input->get('supplier_id');
+        $payment_id = $this->input->get('payment_id'); // Current payment being edited (if any)
+
+        if (!$supplier_id) {
+            echo json_encode([]);
+            return;
+        }
+
+        // Get all pending invoices for supplier
+        $invoices = $this->purchases_model->getAllInvoicesBySupplier($supplier_id);
+        if (empty($invoices)) {
+            echo json_encode([]);
+            return;
+        }
+
+        // If editing a payment, get how much was paid in THIS payment
+        $paid_in_this_payment = [];
+        if (!empty($payment_id)) {
+            $existing_payments = $this->purchases_model->getPaymentByReferenceID($payment_id);
+            if (!empty($existing_payments)) {
+                foreach ($existing_payments as $payment) {
+                    if (!empty($payment->purchase_id)) {
+                        if (!isset($paid_in_this_payment[$payment->purchase_id])) {
+                            $paid_in_this_payment[$payment->purchase_id] = 0;
+                        }
+                        $paid_in_this_payment[$payment->purchase_id] += (float)$payment->amount;
+                    }
+                }
+            }
+        }
+
+        // Adjust invoices data
+        $result = [];
+        foreach ($invoices as $inv) {
+            $total_paid_all = (float)($inv->paid ?? 0);
+            $paid_in_this = isset($paid_in_this_payment[$inv->id]) ? $paid_in_this_payment[$inv->id] : 0;
+            
+
+
+            // Paid amount showing: Total Paid - Paid In This Payment
+            $paid_excluding_this = max(0, $total_paid_all - $paid_in_this);
+            
+            // Outstanding amount
+            $outstanding = $inv->grand_total - $paid_excluding_this;
+            
+            if($outstanding <= 0 || $paid_excluding_this >= $inv->grand_total) {
+                // Skip fully paid invoices
+                continue;
+
+            }
+
+            $result[] = [
+                'id' => $inv->id,
+                'date' => $inv->date,
+                'reference_no' => $inv->reference_no,
+                'grand_total' => (float)$inv->grand_total,
+                'paid' => (float)$paid_excluding_this,  // Paid excluding this payment
+                'paid_in_this_payment' => (float)$paid_in_this, // Amount paid in this payment
+                'outstanding_amount' => (float)$outstanding,
+                'total_paid_all_payments' => (float)$total_paid_all,
+            ];
+        }
+
+        echo json_encode($result);
+    }
+
+    public function get_supplier_invoices_for_payment() {
+        $supplier_id = $this->input->get('supplier_id');
+        $payment_id = $this->input->get('payment_id'); // Current payment being edited (if any)
+
+        if (!$supplier_id) {
+            echo json_encode([]);
+            return;
+        }
+
+        // Get all pending invoices for supplier
+        $invoices = $this->purchases_model->getPendingInvoicesBySupplier($supplier_id);
+        if (empty($invoices)) {
+            echo json_encode([]);
+            return;
+        }
+
+        // If editing a payment, get how much was paid in THIS payment
+        $paid_in_this_payment = [];
+        if (!empty($payment_id)) {
+            $existing_payments = $this->purchases_model->getPaymentByReferenceID($payment_id);
+            if (!empty($existing_payments)) {
+                foreach ($existing_payments as $payment) {
+                    if (!empty($payment->purchase_id)) {
+                        if (!isset($paid_in_this_payment[$payment->purchase_id])) {
+                            $paid_in_this_payment[$payment->purchase_id] = 0;
+                        }
+                        $paid_in_this_payment[$payment->purchase_id] += (float)$payment->amount;
+                    }
+                }
+            }
+        }
+
+        // Adjust invoices data
+        $result = [];
+        foreach ($invoices as $inv) {
+            $total_paid_all = (float)($inv->paid ?? 0);
+            $paid_in_this = isset($paid_in_this_payment[$inv->id]) ? $paid_in_this_payment[$inv->id] : 0;
+            
+            // Paid amount showing: Total Paid - Paid In This Payment
+            $paid_excluding_this = max(0, $total_paid_all - $paid_in_this);
+            
+            // Outstanding amount
+            $outstanding = $inv->grand_total - $paid_excluding_this;
+            
+            $result[] = [
+                'id' => $inv->id,
+                'date' => $inv->date,
+                'reference_no' => $inv->reference_no,
+                'grand_total' => (float)$inv->grand_total,
+                'paid' => (float)$paid_excluding_this,  // Paid excluding this payment
+                'paid_in_this_payment' => (float)$paid_in_this, // Amount paid in this payment
+                'outstanding_amount' => (float)$outstanding,
+                'total_paid_all_payments' => (float)$total_paid_all,
+            ];
+        }
+
+        echo json_encode($result);
+    }
+
+    /**
+     * AJAX: Get supplier service invoices for payment
+     */
+
+    public function get_all_supplier_service_invoices() {
+        $supplier_id = $this->input->get('supplier_id');
+        $payment_id = $this->input->get('payment_id'); // Current payment being edited (if any)
+
+        if (!$supplier_id) {
+            echo json_encode([]);
+            return;
+        }
+
+        // Get service invoices (memos with type='service')
+        $this->db->select('
+            m.id, m.reference_no, m.date, m.payment_amount as grand_total,
+            m.used_amount, 
+            "Service Invoice" as type
+        ')
+        ->from('sma_memo m')
+        ->where('m.supplier_id', $supplier_id)
+        ->where('m.type', 'serviceinvoice');
+        //->where('m.payment_amount > COALESCE(m.used_amount, 0)');
+
+        $memos = $this->db->get()->result();
+
+        // Get amounts paid in this payment (if editing existing payment)
+        $paid_in_this_payment = [];
+        if (!empty($payment_id)) {
+            $existing_payments = $this->purchases_model->getPaymentByReferenceID($payment_id);
+            if (!empty($existing_payments)) {
+                foreach ($existing_payments as $payment) {
+                    if (!empty($payment->memo_id)) {
+                        // Only count if it's a service invoice (NOT a credit memo)
+                        $memo = $this->purchases_model->getDebitMemoData($payment->memo_id);
+                        if ($memo && ($memo->type ?? '') === 'service') {
+                            if (!isset($paid_in_this_payment[$payment->memo_id])) {
+                                $paid_in_this_payment[$payment->memo_id] = 0;
+                            }
+                            $paid_in_this_payment[$payment->memo_id] += (float)$payment->amount;
+                        }
+                    }
+                }
+            }
+        }
+
+        $result = [];
+        foreach ($memos as $memo) {
+            $outstanding = $memo->grand_total - ($memo->used_amount ?? 0);
+            $paid_in_this = isset($paid_in_this_payment[$memo->id]) ? $paid_in_this_payment[$memo->id] : 0;
+            
+            $result[] = [
+                'id' => $memo->id,
+                'date' => $memo->date,
+                'reference_no' => $memo->reference_no,
+                'grand_total' => (float)$memo->grand_total,
+                'used_amount' => (float)($memo->used_amount ?? 0),
+                'outstanding_amount' => (float)$outstanding,
+                'type' => $memo->type,
+                'paid_in_this_payment' => (float)$paid_in_this, // Amount paid in this payment
+            ];
+        }
+
+        echo json_encode($result);
+    }
+
+    public function get_supplier_service_invoices() {
+        $supplier_id = $this->input->get('supplier_id');
+
+        if (!$supplier_id) {
+            echo json_encode([]);
+            return;
+        }
+
+        // Get service invoices (memos with type='service')
+        $this->db->select('
+            m.id, m.reference_no, m.date, m.payment_amount as grand_total,
+            m.used_amount, 
+            "Service Invoice" as type
+        ')
+        ->from('sma_memo m')
+        ->where('m.supplier_id', $supplier_id)
+        ->where('m.type', 'serviceinvoice')
+        ->where('m.payment_amount > COALESCE(m.used_amount, 0)');
+
+        $memos = $this->db->get()->result();
+
+        $result = [];
+        foreach ($memos as $memo) {
+            $outstanding = $memo->grand_total - ($memo->used_amount ?? 0);
+            $result[] = [
+                'id' => $memo->id,
+                'date' => $memo->date,
+                'reference_no' => $memo->reference_no,
+                'grand_total' => (float)$memo->grand_total,
+                'total_paid' => (float)($memo->used_amount ?? 0),
+                'outstanding_amount' => (float)$outstanding,
+                'type' => $memo->type,
+            ];
+        }
+
+        echo json_encode($result);
+    }
+
+    /**
+     * AJAX: Get supplier credit memos for payment (for edit_payment)
+     * Shows credit memos with amounts paid IN THIS PAYMENT
+     */
+
+    public function get_all_supplier_credit_memos_for_payment() {
+        $supplier_id = $this->input->get('supplier_id');
+        $payment_id = $this->input->get('payment_id'); // Current payment being edited (if any)
+
+        if (!$supplier_id) {
+            echo json_encode([]);
+            return;
+        }
+
+        // Get credit memos (memos with type='memo' and supplier_entry_type='C')
+        $this->db->select('
+            m.id, m.reference_no, m.date, m.payment_amount as grand_total,
+            m.used_amount,
+            "Credit Memo" as type
+        ')
+        ->from('sma_memo m')
+        ->where('m.supplier_id', $supplier_id)
+        ->where('m.type', 'memo')
+        ->where('m.supplier_entry_type', 'C');
+
+        $memos = $this->db->get()->result();
+        // If editing a payment, get how much was paid in THIS payment for each memo
+        $paid_in_this_payment = [];
+        if (!empty($payment_id)) {
+            $existing_payments = $this->purchases_model->getPaymentByReferenceID($payment_id);
+            if (!empty($existing_payments)) {
+                foreach ($existing_payments as $payment) {
+                    if (!empty($payment->memo_id)) {
+                        if (!isset($paid_in_this_payment[$payment->memo_id])) {
+                            $paid_in_this_payment[$payment->memo_id] = 0;
+                        }
+                        $paid_in_this_payment[$payment->memo_id] += (float)$payment->amount;
+                    }
+                }
+            }
+        }
+        
+        $result = [];
+        foreach ($memos as $memo) {
+            $total_used = (float)($memo->used_amount ?? 0);
+            $paid_in_this = isset($paid_in_this_payment[$memo->id]) ? $paid_in_this_payment[$memo->id] : 0;
+            
+            // Used amount excluding this payment
+            $used_excluding_this = max(0, $total_used - $paid_in_this);
+            
+            // Outstanding amount
+            $outstanding = $memo->grand_total - $used_excluding_this;
+
+            $result[] = [
+                'id' => $memo->id,
+                'date' => $memo->date,
+                'reference_no' => $memo->reference_no,
+                'grand_total' => (float)$memo->grand_total,
+                'used_amount' => (float)$used_excluding_this,  // Used excluding this payment
+                'paid_in_this_payment' => (float)$paid_in_this, // Amount paid in this payment
+                'outstanding_amount' => (float)$outstanding,
+                'total_used_all_payments' => (float)$total_used,
+            ];
+        }
+        echo json_encode($result);
+    }
+
+    public function get_supplier_credit_memos_for_payment() {
+        $supplier_id = $this->input->get('supplier_id');
+
+        if (!$supplier_id) {
+            echo json_encode([]);
+            return;
+        }
+
+        // Get credit memos (memos with type='credit')
+        $this->db->select('
+            m.id, m.reference_no, m.date, m.payment_amount as grand_total,
+            m.used_amount,
+            "Credit Memo" as type
+        ')
+        ->from('sma_memo m')
+        ->where('m.supplier_id', $supplier_id)
+        ->where('m.type', 'memo')
+        ->where('m.supplier_entry_type', 'C')
+        ->where('m.payment_amount > COALESCE(m.used_amount, 0)');
+
+        $memos = $this->db->get()->result();
+
+        $result = [];
+        foreach ($memos as $memo) {
+            $outstanding = $memo->grand_total - ($memo->used_amount ?? 0);
+            $result[] = [
+                'id' => $memo->id,
+                'date' => $memo->date,
+                'reference_no' => $memo->reference_no,
+                'grand_total' => (float)$memo->grand_total,
+                'total_paid' => (float)($memo->used_amount ?? 0),
+                'outstanding_amount' => (float)$outstanding,
+                'type' => $memo->type,
+            ];
+        }
+
+        echo json_encode($result);
     }
 
 }
