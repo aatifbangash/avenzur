@@ -1,5 +1,18 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <style>
+/* Hide supplier hidden input and any associated dropdown */
+#supplier {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    position: absolute !important;
+    left: -9999px !important;
+}
+
 #invoices-table td, #invoices-table th,
 #debitmemo-table td, #debitmemo-table th {
     padding: 3px 6px !important;
@@ -112,11 +125,13 @@
                             <?= lang('supplier', 'supplier'); ?>
                             <?php
                             $supplier_display = '';
+                            $supplier_id = '';
                             if (isset($payment_ref)) {
                                 // Find the supplier in the array
                                 foreach ($suppliers as $s) {
                                     if ($s->id == $payment_ref->supplier_id) {
                                         $supplier_display = $s->company . ' (' . $s->name . ')';
+                                        $supplier_id = $s->id;
                                         if (isset($s->sequence_code)) {
                                             $supplier_display .= ' - ' . $s->sequence_code;
                                         }
@@ -125,8 +140,10 @@
                                 }
                             }
                             ?>
-                            <input type="text" class="form-control" id="supplier_display" disabled value="<?= $supplier_display; ?>">
-                            <input type="hidden" name="supplier" id="supplier" value="<?= isset($payment_ref) ? $payment_ref->supplier_id : ''; ?>">
+                            <div style="position: relative;">
+                                <input type="text" class="form-control" readonly value="<?= htmlspecialchars($supplier_display); ?>" style="background-color: #f5f5f5; cursor: default;">
+                                <input type="hidden" name="supplier" id="supplier" value="<?= $supplier_id; ?>">
+                            </div>
                         </div>
                     </div>
                 </div>
