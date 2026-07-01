@@ -77,6 +77,21 @@ if (!empty($filters['to_date'])) {
 
                 <?php $this->load->view($this->theme . 'reports/partials/warehouse_filter_field', ['wh_col' => 'col-md-2', 'wh_val' => $filter_warehouse_id]); ?>
 
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label for="status" style="font-size:12px; font-weight:600;"><?= lang('Status') ?></label>
+                        <select name="status" id="status" class="form-control input-sm" style="width:100%;">
+                            <option value=""><?= lang('All Payments') ?></option>
+                            <option value="open" <?= ($filters['status'] ?? '') === 'open' ? 'selected' : '' ?>>
+                                <i class="fa fa-unlock-alt"></i> <?= lang('Open') ?>
+                            </option>
+                            <option value="closed" <?= ($filters['status'] ?? '') === 'closed' ? 'selected' : '' ?>>
+                                <i class="fa fa-lock"></i> <?= lang('Closed') ?>
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="col-md-2" style="padding-top:22px;">
                     <button type="submit" class="btn btn-primary btn-sm">
                         <i class="fa fa-filter"></i> <?= lang('Filter') ?>
@@ -183,7 +198,7 @@ if (!empty($filters['to_date'])) {
                                             <i class="fa fa-edit"></i>
                                         </a>
                                     <?php endif; ?>
-                                    <?php if ($this->sma->in_group('finance_manager') && ($payment->status ?? 'open') !== 'closed'): ?>
+                                    <?php if ($this->sma->in_group('financemanager') && ($payment->status ?? 'open') !== 'closed'): ?>
                                         <form method="POST" action="<?= admin_url('suppliers/close_payment') ?>" style="display:inline;">
                                             <input type="hidden" name="payment_id" value="<?= $payment->id ?>">
                                             <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">

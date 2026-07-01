@@ -823,6 +823,9 @@ class Purchases_model extends CI_Model
         if (!empty($filters['to_date'])) {
             $this->db->where('payment_reference.date <=', $filters['to_date']);
         }
+        if (!empty($filters['status'])) {
+            $this->db->where('payment_reference.status', $filters['status']);
+        }
 
         $warehouse_id = !empty($filters['warehouse_id']) ? (int) $filters['warehouse_id'] : null;
         $purchases_tbl = $dbp . 'purchases';
