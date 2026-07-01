@@ -126,6 +126,7 @@ if (!empty($filters['to_date'])) {
                                 <th class="text-right"><?= lang('Payment Amount') ?></th>
                                 <th><?= lang('Bank') ?></th>
                                 <th><?= lang('Type') ?></th>
+                                <th><?= lang('Status') ?></th>
                                 <th><?= lang('Actions') ?></th>
                             </tr>
                         </thead>
@@ -163,10 +164,35 @@ if (!empty($filters['to_date'])) {
                                     <?php endif; ?>
                                 </td>
                                 <td>
+                                    <?php if (($payment->status ?? 'open') === 'closed'): ?>
+                                        <span class="label label-danger">
+                                            <i class="fa fa-lock"></i> Locked
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="label label-info">Open</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td style="min-width: 150px;">
                                     <a href="<?= admin_url('suppliers/view_payment/' . $payment->id) ?>"
                                        class="tip btn btn-xs btn-default" title="<?= lang('View Payment') ?>">
                                         <i class="fa fa-eye"></i>
                                     </a>
+                                    <?php if (($payment->status ?? 'open') !== 'closed'): ?>
+                                        <a href="<?= admin_url('suppliers/edit_payment?id=' . $payment->id) ?>"
+                                           class="tip btn btn-xs btn-warning" title="<?= lang('Edit Payment') ?>">
+                                            <i class="fa fa-edit"></i>
+                                        </a>
+                                    <?php endif; ?>
+                                    <?php if ($is_finance_manager && ($payment->status ?? 'open') !== 'closed'): ?>
+                                        <form method="POST" action="<?= admin_url('suppliers/close_payment') ?>" style="display:inline;">
+                                            <input type="hidden" name="payment_id" value="<?= $payment->id ?>">
+                                            <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
+                                            <button type="submit" class="tip btn btn-xs btn-danger" title="Close Payment" 
+                                                    onclick="return confirm('Close this payment? It will be locked from further edits.');">
+                                                <i class="fa fa-lock"></i>
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                             <?php endforeach; endif; ?>
