@@ -183,7 +183,7 @@ if (!empty($filters['to_date'])) {
                                             <i class="fa fa-edit"></i>
                                         </a>
                                     <?php endif; ?>
-                                    <?php if ($is_finance_manager && ($payment->status ?? 'open') !== 'closed'): ?>
+                                    <?php if ($this->sma->in_group('finance_manager') && ($payment->status ?? 'open') !== 'closed'): ?>
                                         <form method="POST" action="<?= admin_url('suppliers/close_payment') ?>" style="display:inline;">
                                             <input type="hidden" name="payment_id" value="<?= $payment->id ?>">
                                             <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
