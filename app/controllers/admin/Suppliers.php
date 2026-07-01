@@ -1274,7 +1274,7 @@ class Suppliers extends MY_Controller
     public function close_payment()
     {
         // Check permission - Finance Manager role
-        if ($this->sma->in_group('finance_manager') === false) {
+        if ($this->sma->in_group('financemanager') === false) {
             $this->session->set_flashdata('error', 'You do not have permission to close payments.');
             admin_redirect($_SERVER['HTTP_REFERER']);
             return;
@@ -1325,7 +1325,7 @@ class Suppliers extends MY_Controller
     public function open_payment()
     {
         // Check permission - Admin or Finance Manager
-        if (!$this->session->has_userdata('admin') && !($this->Staff->can_close_payment ?? false)) {
+        if (!$this->session->has_userdata('admin') && !$this->sma->in_group('financemanager')) {
             $this->session->set_flashdata('error', 'You do not have permission to reopen payments.');
             admin_redirect($_SERVER['HTTP_REFERER']);
             return;
@@ -1515,6 +1515,7 @@ class Suppliers extends MY_Controller
             'warehouse_id' => $this->site->resolveReportWarehouseFilter('warehouse_id'),
             'from_date'    => $this->input->get('from_date')   ?: $this->input->post('from_date'),
             'to_date'      => $this->input->get('to_date')     ?: $this->input->post('to_date'),
+            'status'       => $this->input->get('status')      ?: $this->input->post('status'),
         ];
         // Default from_date to January 1st of the current year
         if (empty($filters['from_date'])) {
@@ -1528,14 +1529,7 @@ class Suppliers extends MY_Controller
             }
         }
 
-        // For finance managers, only show open (not closed) payments
-        $is_finance_manager = $this->sma->in_group('finance_manager');
-        if ($is_finance_manager) {
-            $filters['status'] = 'open';
-        }
-
         $this->data['payments']   = $this->purchases_model->getPaymentReferences($filters);
-        $this->data['is_finance_manager'] = $is_finance_manager;
         $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
         $this->data['filters']    = $filters;
         $this->data['warehouses'] = $this->site->getAllWarehouses();
