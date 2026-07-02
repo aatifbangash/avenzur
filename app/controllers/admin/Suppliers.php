@@ -1370,6 +1370,88 @@ class Suppliers extends MY_Controller
         admin_redirect('suppliers/edit_payment?id=' . $payment_id);
     }
 
+    /**
+     * Delete Payment - Permanently delete payment reference and all related records (Finance Manager Only)
+     * Reverses all amounts to invoices/memos and deletes GL entries
+     * Returns JSON response for AJAX handling
+     */
+    public function delete_payment()
+    {
+        // Check permission - Finance Manager role only
+        if (!$this->sma->in_group('financemanager')) {
+            echo json_encode(['success' => false, 'message' => 'You do not have permission to delete payments.']);
+            return;
+        }
+
+        $payment_id = $this->input->post('payment_id');
+        
+        if (!$payment_id) {
+            echo json_encode(['success' => false, 'message' => 'Payment ID not provided.']);
+            return;
+        }
+
+        // Get payment reference
+        $payment_ref = $this->purchases_model->getPaymentReferenceByID($payment_id);
+        
+        if (!$payment_ref) {
+            echo json_encode(['success' => false, 'message' => 'Payment not found.']);
+            return;
+        }
+
+        // Start transaction
+        $this->db->trans_begin();
+
+        try {
+            // ── REVERSE OLD PAYMENT ──────────────────────────────────────
+            // Reverse payment line items
+            $old_payments = $this->purchases_model->getPaymentByReferenceID($payment_id);
+            if (!empty($old_payments)) {
+                foreach ($old_payments as $old_payment) {
+                    // Reverse purchase invoice paid amount
+                    if (!empty($old_payment->purchase_id)) {
+                        $this->purchases_model->update_purchase_paid_amount($old_payment->purchase_id, -(float)$old_payment->amount);
+                    }
+                    // Reverse memo used amount
+                    if (!empty($old_payment->memo_id)) {
+                        $this->db->where('id', $old_payment->memo_id);
+                        $existing_memo = $this->db->get('sma_memo', 1)->row();
+                        if ($existing_memo) {
+                            $new_used = max(0, ($existing_memo->used_amount ?? 0) - (float)$old_payment->amount);
+                            $this->db->update('sma_memo', ['used_amount' => $new_used], ['id' => $old_payment->memo_id]);
+                        }
+                    }
+                }
+            }
+
+            // Delete payment records
+            $this->db->delete('sma_payments', ['payment_id' => $payment_id]);
+
+            // Delete associated journal entry
+            if (!empty($payment_ref->journal_id)) {
+                $old_journal = $this->db->get_where('sma_accounts_entries', ['id' => $payment_ref->journal_id], 1)->row();
+                if ($old_journal) {
+                    $this->db->delete('sma_accounts_entryitems', ['entry_id' => $old_journal->id]);
+                    $this->db->delete('sma_accounts_entries', ['id' => $old_journal->id]);
+                }
+            }
+
+            // Delete payment reference
+            $this->db->delete('sma_payment_reference', ['id' => $payment_id]);
+
+            // Commit transaction
+            $this->db->trans_commit();
+
+            echo json_encode(['success' => true, 'message' => 'Payment deleted successfully and all amounts reversed.']);
+            return;
+
+        } catch (Exception $e) {
+            // Rollback on error
+            $this->db->trans_rollback();
+            echo json_encode(['success' => false, 'message' => 'Error deleting payment: ' . $e->getMessage()]);
+            return;
+        }
+    }
+
     public function print_payment_pdf($id = null)
     {
         if ($this->input->get('id')) {
