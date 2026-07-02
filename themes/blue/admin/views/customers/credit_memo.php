@@ -13,7 +13,7 @@
 
 <div class="box">
     <div class="box-header">
-        <h2 class="blue"><i class="fa-fw fa fa-info-circle"></i><?= lang('credit_memo'); ?></h2>
+        <h2 class="blue"><i class="fa-fw fa fa-info-circle"></i><?= lang('Customer Memo'); ?></h2>
 
         <div class="box-icon">
             <ul class="btn-tasks">
@@ -28,10 +28,17 @@
             echo admin_form_open_multipart('customers/credit_memo', $attrib)
             ?>
             <div class="col-lg-12">
+
+                <?php if (isset($error) && $error) { ?>
+                    <div class="alert alert-danger">
+                        <button data-dismiss="alert" class="close" type="button">×</button>
+                        <?= $error; ?>
+                    </div>
+                <?php } ?>
                 
                 <div class="row">
                     <div class="col-lg-12">
-                        <?php if ($Owner || $Admin) {
+                        <?php //if ($Owner || $Admin) {
                             ?>
                                 <div class="col-md-4">
                                     <div class="form-group">
@@ -40,7 +47,7 @@
                                     </div>
                                 </div>
                             <?php
-                        } ?>
+                        //} ?>
 
                         <div class="col-md-4">
                             <div class="form-group">
@@ -92,13 +99,31 @@
 
                         <div class="col-md-4">
                             <div class="form-group">
-                                <?= lang('Vat', 'poref'); ?>
-                                <?php echo form_input('vat_charges', ($memo_data->bank_charges ?? $memo_data->bank_charges), 'class="form-control input-tip" id="vat_charges"'); ?>
+                                <?= lang('VAT %', 'vat_percent'); ?>
+                                <?php 
+                                    $vat_options = array(
+                                        '0' => '0%',
+                                        '15' => '15%'
+                                    );
+                                    echo form_dropdown('vat_percent', $vat_options, ($memo_data->vat_percent ?? '0'), 'id="vat_percent" class="form-control" required="required"');
+                                ?>
                             </div>
                         </div>
 
-                        <div class="col-md-4">
-                            <div class="from-group">
+                        <div class="col-md-4">                            
+                            <div class="form-group">
+                            <?= lang('Voucher Type', 'entry_type'); ?>
+                            <?php 
+                                $entry_types = array(
+                                    'C' => 'Credit (Default)',
+                                    'D' => 'Debit'
+                                );
+                                echo form_dropdown('customer_entry_type', $entry_types, ($memo_data->customer_entry_type ?? 'C'), 'id="customer_entry_type" class="form-control" required="required"');  
+                            ?>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">                            <div class="from-group">
                                 <button type="submit" style="margin-top: 28px;" class="btn btn-primary" id="add_payment"><?= lang('Add Payments') ?></button>
                             </div>
                         </div>

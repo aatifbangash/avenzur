@@ -117,19 +117,29 @@ class Gst
         return $code;
     }
 
-    public function taxSummary($rows = [], $onCost = false)
+    public function taxSummary($rows = [], $onCost = false, $page=null)
     {
         $tax_summary = [];
         if (!empty($rows)) {
             foreach ($rows as $row) {
                 if (isset($tax_summary[$row->tax_code])) {
                     $tax_summary[$row->tax_code]['items'] += $row->unit_quantity;
-                    $tax_summary[$row->tax_code]['tax']   += $row->item_tax;
+                    $tax_summary[$row->tax_code]['tax']   += $row->item_tax; 
+                   if($page=='return'){  // get called from return supplier page
+                      $tax_summary[$row->tax_code]['amt']   += ($row->unit_quantity * $row->cost_price); 
+                   }else{
                     $tax_summary[$row->tax_code]['amt']   += ($row->unit_quantity * ($onCost ? $row->net_unit_cost : $row->net_unit_price));
+                   }
+                    
                 } else {
                     $tax_summary[$row->tax_code]['items'] = $row->unit_quantity;
                     $tax_summary[$row->tax_code]['tax']   = $row->item_tax;
-                    $tax_summary[$row->tax_code]['amt']   = ($row->unit_quantity * ($onCost ? $row->net_unit_cost : $row->net_unit_price));
+                   
+                    if($page=='return'){  // get called from return supplier page
+                        $tax_summary[$row->tax_code]['amt']   += ($row->unit_quantity * $row->cost_price); 
+                     }else{
+                        $tax_summary[$row->tax_code]['amt']   = ($row->unit_quantity * ($onCost ? $row->net_unit_cost : $row->net_unit_price));
+                     }
                     $tax_summary[$row->tax_code]['name']  = $row->tax_name;
                     $tax_summary[$row->tax_code]['code']  = $row->tax_code;
                     $tax_summary[$row->tax_code]['rate']  = $row->tax_rate;
@@ -138,4 +148,21 @@ class Gst
         }
         return $tax_summary;
     }
+
+    public function summary_returns($rows = [], $return_rows = [], $product_tax = 0, $onCost = false)
+    {
+        $code = '';
+        if ($this->Settings->invoice_view > 0 && !empty($rows)) {
+            $tax_summary = $this->taxSummary($rows, $onCost,$page="return");
+            if (!empty($return_rows)) {
+                $return_tax_summary = $this->taxSummary($return_rows, $onCost, $page="return");
+                foreach ($return_tax_summary as $arg) {
+                    $tax_summary[] = $arg;
+                }
+            }
+            $code = $this->genHTML($tax_summary, $product_tax);
+        }
+        return $code;
+    }
+
 }

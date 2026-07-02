@@ -25,7 +25,7 @@ class Datatables
     private $like = [];
 
     private $or_where = [];
-
+ private $having = [];
     private $select = [];
 
     private $table;
@@ -194,6 +194,14 @@ class Datatables
     {
         $this->or_where[] = [$key_condition, $val, $backtick_protect];
         $this->ci->db->or_where($key_condition, $val, $backtick_protect);
+        return $this;
+    }
+
+
+    public function having($key_condition, $val = null, $backtick_protect = true)
+    {
+        $this->having[] = [$key_condition, $val, $backtick_protect];
+        $this->ci->db->having($key_condition, $val, $backtick_protect);
         return $this;
     }
 
@@ -523,7 +531,9 @@ class Datatables
         foreach ($this->group_by as $val) {
             $this->ci->db->group_by($val);
         }
-
+        foreach ($this->having as $val) {
+            $this->ci->db->having($val[0], $val[1], $val[2]);
+        }
         foreach ($this->like as $val) {
             $this->ci->db->like($val[0], $val[1], $val[2]);
         }

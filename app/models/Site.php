@@ -7,6 +7,7 @@ class Site extends CI_Model
     public function __construct()
     {
         parent::__construct();
+        $this->load->admin_model('Inventory_model');
     }
 
     public function calculateAVCost($product_id, $warehouse_id, $batch_no, $net_unit_price, $unit_price, $quantity, $product_name, $option_id, $item_quantity)
@@ -85,16 +86,22 @@ class Site extends CI_Model
                 break;
             }
         }
-        if ($quantity > 0) {
-            $this->session->set_flashdata('error', sprintf(lang('quantity_out_of_stock_for_%s'), ($pi->product_name ?? $product_name)));
-            redirect($_SERVER['HTTP_REFERER']);
-        }
+        // get quantity from inventory movement
+       
+        // $quantity = $this->Inventory_model->get_current_stock($product_id, $warehouse_id);
+       
+        // if ($quantity <= 0) {
+        //     $this->session->set_flashdata('error', sprintf(lang('quantity_out_of_stock_for_%s'), ($pi->product_name ?? $product_name)));
+        //     redirect($_SERVER['HTTP_REFERER']);
+        // }
+
         return $cost;
     }
 
     public function calculateDiscount($discount = null, $amount = 0, $order = null)
     {
         if ($discount && ($order || $this->Settings->product_discount)) {
+            $discount = $discount.'%';
             $dpos = strpos($discount, '%');
             if ($dpos !== false) {
                 $pds = explode('%', $discount);
@@ -277,9 +284,9 @@ class Site extends CI_Model
         }
         // $this->sma->print_arrays($combo_items, $citems);
         $cost = [];
-        foreach ($citems as $item) {
+        foreach ($citems as $item) {  
             $item['aquantity'] = $citems['p' . $item['product_id'] . 'o' . $item['option_id']]['aquantity'];
-            $cost[]            = $this->item_costing($item, true);
+            $cost[] = $this->item_costing($item, true); 
         }
         
         return $cost;
@@ -383,6 +390,43 @@ class Site extends CI_Model
         return false;
     }
 
+    public function getAllParentCompanies($group_name)
+    {
+        $q = $this->db->get_where('companies', ['group_name' => $group_name, 'level' => 1]);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+    public function getParentCompanyByGroupAndId($group_name, $id)
+{
+    $this->db->where('group_name', $group_name);
+    $this->db->where('id', $id);
+    $q = $this->db->get('companies');
+
+    if ($q->num_rows() > 0) {
+        return $q->row(); // single record since id is unique
+    }
+
+    return false;
+}
+
+
+    public function getAllChildCompanies($group_name)
+    {
+        $q = $this->db->get_where('companies', ['group_name' => $group_name, 'level' => 2]);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
     public function getAllCurrencies()
     {
         $q = $this->db->get('currencies');
@@ -467,8 +511,15 @@ class Site extends CI_Model
         return false;
     }
 
-    public function getAllWarehouses()
+    public function getMainWarehouse()
     {
+        $this->db->reset_query();
+        if ($this->canAccessOverseasWarehouse()) {
+            $this->db->where('(is_main = 1 OR is_overseas = 1)', null, false);
+        } else {
+            $this->db->where('is_main', 1);
+            $this->db->where('is_overseas', 0);
+        }
         $q = $this->db->get('warehouses');
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -477,6 +528,763 @@ class Site extends CI_Model
             return $data;
         }
         return false;
+    }
+
+    /** Default warehouse for listings/reports (Settings default, else main local warehouse). */
+    public function getDefaultListingWarehouseId()
+    {
+        if (!empty($this->Settings->default_warehouse)) {
+            return (int) $this->Settings->default_warehouse;
+        }
+        $this->db->reset_query();
+        $this->db->where('is_main', 1)->where('is_overseas', 0)->limit(1);
+        $q = $this->db->get('warehouses');
+        return ($q && $q->num_rows()) ? (int) $q->row()->id : 0;
+    }
+
+    /** @deprecated Use getDefaultListingWarehouseId() */
+    public function getDefaultProductListingWarehouseId()
+    {
+        return $this->getDefaultListingWarehouseId();
+    }
+
+    /** User chose combined local warehouses via ?all=1 */
+    public function listingShowsAllLocalWarehouses()
+    {
+        $CI = get_instance();
+        return $CI->input->get('all') == '1';
+    }
+
+    /**
+     * Resolve listing/report warehouse: default = Settings default warehouse (Al Rawabi).
+     * ?all=1 = all local warehouses (excludes overseas). $empty_means_all when user cleared filter.
+     */
+    public function resolveListingWarehouseId($warehouse_id = null, $empty_means_all = false)
+    {
+        if ($this->listingShowsAllLocalWarehouses()) {
+            return null;
+        }
+        if ($warehouse_id !== null && $warehouse_id !== '' && (int) $warehouse_id !== 0) {
+            return (int) $warehouse_id;
+        }
+        if ($empty_means_all) {
+            return null;
+        }
+        $CI = get_instance();
+        if (!empty($CI->Owner) || !empty($CI->Admin) || !$CI->session->userdata('warehouse_id')) {
+            return $this->getDefaultListingWarehouseId();
+        }
+        $user_wh = (int) $CI->session->userdata('warehouse_id');
+        return $user_wh ?: $this->getDefaultListingWarehouseId();
+    }
+
+    /** GET filter forms: pass whether warehouse_id was present in the query string. */
+    public function resolveFilterWarehouseId($warehouse_id = null, $warehouse_in_query = false)
+    {
+        $empty_means_all = $warehouse_in_query && ($warehouse_id === '' || $warehouse_id === null || (int) $warehouse_id === 0);
+        return $this->resolveListingWarehouseId($warehouse_id, $empty_means_all);
+    }
+
+    /** Report search forms (GET or POST): default to Settings warehouse unless field explicitly empty or ?all=1 */
+    public function resolveReportWarehouseFilter($field = 'warehouse_id')
+    {
+        $CI = get_instance();
+        if (array_key_exists($field, $_GET)) {
+            return $this->resolveFilterWarehouseId($CI->input->get($field), true);
+        }
+        if (array_key_exists($field, $_POST)) {
+            return $this->resolveFilterWarehouseId($CI->input->post($field), true);
+        }
+        return $this->resolveListingWarehouseId(null, false);
+    }
+
+    /** Redirect bare listing URLs to the default warehouse unless ?all=1 */
+    public function redirectDefaultListingWarehouseIfNeeded($warehouse_id, $route_base, $error = null)
+    {
+        if ($warehouse_id || $this->listingShowsAllLocalWarehouses()) {
+            return;
+        }
+        $CI = get_instance();
+        if (!empty($CI->Owner) || !empty($CI->Admin) || !$CI->session->userdata('warehouse_id')) {
+            if ($error) {
+                $CI->session->set_flashdata('error', $error);
+            }
+            admin_redirect(rtrim($route_base, '/') . '/' . $this->getDefaultListingWarehouseId());
+        }
+    }
+
+    /** Path suffix for DataTables ajax: /32 or ?all=1 */
+    public function listingWarehouseUrlSuffix($warehouse_id = null)
+    {
+        if ($warehouse_id) {
+            return '/' . (int) $warehouse_id;
+        }
+        return $this->listingShowsAllLocalWarehouses() ? '?all=1' : '';
+    }
+
+    public function getAllWarehouses($include_overseas = null)
+    {
+        $this->db->reset_query();
+        if ($include_overseas !== true && !$this->canAccessOverseasWarehouse()) {
+            $this->db->where('is_overseas', 0);
+        }
+        $q = $this->db->get('warehouses');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
+    public function canAccessOverseasWarehouse()
+    {
+        $CI = get_instance();
+        return !empty($CI->Owner) || !empty($CI->Admin) || $CI->sma->in_group('financemanager');
+    }
+
+    public function getOverseasWarehouseId()
+    {
+        static $id = null;
+        if ($id === null) {
+            // Raw query — must not use query builder while a product search is being built
+            $q = $this->db->query(
+                'SELECT id FROM ' . $this->db->dbprefix('warehouses') . ' WHERE is_overseas = 1 LIMIT 1'
+            );
+            $id = ($q && $q->num_rows()) ? (int) $q->row()->id : 0;
+        }
+        return $id;
+    }
+
+    public function isOverseasWarehouse($warehouse_id)
+    {
+        if (!$warehouse_id) {
+            return false;
+        }
+        $osw_id = $this->getOverseasWarehouseId();
+        return $osw_id && (int) $warehouse_id === $osw_id;
+    }
+
+    public function isOverseasProduct($product_id)
+    {
+        $osw_id = $this->getOverseasWarehouseId();
+        if (!$osw_id || !$product_id) {
+            return false;
+        }
+        $p = $this->getProductByID($product_id);
+        return $p && (int) $p->warehouse === $osw_id;
+    }
+
+    public function usesWarehouseGL($warehouse)
+    {
+        return $warehouse && (!empty($warehouse->is_overseas) || $warehouse->warehouse_type == 'pharmacy');
+    }
+
+    public function applyProductScopeFilter($warehouse_id)
+    {
+        $osw_id = $this->getOverseasWarehouseId();
+        if (!$osw_id || !$warehouse_id) {
+            return;
+        }
+        $prefix = $this->db->dbprefix('products');
+        if ((int) $warehouse_id === $osw_id) {
+            $this->db->where($prefix . '.warehouse', $osw_id);
+        } else {
+            $this->db->where("({$prefix}.warehouse IS NULL OR {$prefix}.warehouse = 0 OR {$prefix}.warehouse != {$osw_id})", null, false);
+        }
+    }
+
+    /**
+     * Product listing scope for DataTables (same rules as applyProductScopeFilter).
+     * Overseas warehouse: show tagged products even with zero stock.
+     * Local / all warehouses: hide overseas products unless user can access OSW001.
+     */
+    public function applyProductScopeToDatatables($datatables, $warehouse_id)
+    {
+        $osw_id = $this->getOverseasWarehouseId();
+        if (!$osw_id) {
+            return $datatables;
+        }
+        $prefix = $this->db->dbprefix('products');
+        if ($warehouse_id) {
+            if ((int) $warehouse_id === $osw_id) {
+                $datatables->where($prefix . '.warehouse', $osw_id);
+            } else {
+                $datatables->where("({$prefix}.warehouse IS NULL OR {$prefix}.warehouse = 0 OR {$prefix}.warehouse != {$osw_id})", null, false);
+            }
+        } elseif (!$this->canAccessOverseasWarehouse()) {
+            $datatables->where("({$prefix}.warehouse IS NULL OR {$prefix}.warehouse = 0 OR {$prefix}.warehouse != {$osw_id})", null, false);
+        }
+        return $datatables;
+    }
+
+    public function validateProductWarehouseScope($warehouse_id, $product_ids)
+    {
+        if (empty($product_ids)) {
+            return false;
+        }
+        $osw_id = $this->getOverseasWarehouseId();
+        if (!$osw_id) {
+            return false;
+        }
+        $is_overseas_wh = $this->isOverseasWarehouse($warehouse_id);
+        foreach (array_unique(array_filter($product_ids)) as $pid) {
+            $is_overseas_prod = $this->isOverseasProduct($pid);
+            if ($is_overseas_wh && !$is_overseas_prod) {
+                return 'Overseas warehouse documents can only include overseas products.';
+            }
+            if (!$is_overseas_wh && $is_overseas_prod) {
+                return 'Local warehouse documents cannot include overseas products.';
+            }
+        }
+        return false;
+    }
+
+    public function validateOverseasTransfer($from_warehouse, $to_warehouse)
+    {
+        if ($this->isOverseasWarehouse($from_warehouse) xor $this->isOverseasWarehouse($to_warehouse)) {
+            return 'Transfers between overseas and local warehouses are not allowed.';
+        }
+        return false;
+    }
+
+    public function getOverseasSupplierCategory()
+    {
+        return 'JASPN';
+    }
+
+    public function getSupplierCategoryOptions()
+    {
+        return [
+            ''        => 'Please Select',
+            'Agent'   => 'Agent',
+            'Warehouse' => 'Warehouse',
+            'Services'  => 'Services',
+            'JASPN'   => 'JASPN',
+        ];
+    }
+
+    public function normalizeSupplierCategory($category)
+    {
+        $cat = trim((string) ($category ?? ''));
+        $legacy = [
+            'وكيل'     => 'Agent',
+            'مستودع'   => 'Warehouse',
+            'خدمات'    => 'Services',
+            'خدمات '   => 'Services',
+            'service'  => 'Services',
+            'service ' => 'Services',
+            'trade'    => 'Agent',
+            'JASPN'    => 'JASPN',
+            'Agent'    => 'Agent',
+            'Warehouse' => 'Warehouse',
+            'Services' => 'Services',
+        ];
+        return $legacy[$cat] ?? $cat;
+    }
+
+    public function getSupplierCategoryLedgerId($category)
+    {
+        $cat = $this->normalizeSupplierCategory($category);
+        static $cache = [];
+        if (array_key_exists($cat, $cache)) {
+            return $cache[$cat] ?: false;
+        }
+        $config = [
+            'Agent' => [
+                'codes' => ['2110100001'],
+                'name'  => 'Agent Suppliers',
+            ],
+            'Warehouse' => [
+                'codes' => ['2110100002'],
+                'name'  => 'Warehouse Suppliers',
+            ],
+            'Services' => [
+                'codes' => ['2110200001'],
+                'name'  => 'Non-Trade Payable',
+            ],
+            'JASPN' => [
+                'codes' => ['2110300001', '211030001'],
+                'name'  => 'JASPEN Payable',
+            ],
+        ];
+        if (!isset($config[$cat])) {
+            $cache[$cat] = 0;
+            return false;
+        }
+        $prefix = $this->db->dbprefix('accounts_ledgers');
+        foreach ($config[$cat]['codes'] as $code) {
+            $q = $this->db->query(
+                'SELECT id FROM ' . $prefix . ' WHERE code = ' . $this->db->escape($code) . ' LIMIT 1'
+            );
+            if ($q && $q->num_rows()) {
+                $cache[$cat] = (int) $q->row()->id;
+                return $cache[$cat];
+            }
+        }
+        $this->db->reset_query();
+        $this->db->like('name', $config[$cat]['name'], 'both');
+        $this->db->limit(1);
+        $q = $this->db->get('accounts_ledgers');
+        $cache[$cat] = ($q && $q->num_rows()) ? (int) $q->row()->id : 0;
+        return $cache[$cat] ?: false;
+    }
+
+    public function getSupplierCategoryLedgerMap()
+    {
+        $map = [];
+        foreach (['Agent', 'Warehouse', 'Services', 'JASPN'] as $cat) {
+            $id = $this->getSupplierCategoryLedgerId($cat);
+            if ($id) {
+                $map[$cat] = (string) $id;
+            }
+        }
+        return $map;
+    }
+
+    public function getJaspenPayableLedgerId()
+    {
+        return $this->getSupplierCategoryLedgerId('JASPN');
+    }
+
+    public function isOverseasSupplier($supplier_id)
+    {
+        if (!$supplier_id) {
+            return false;
+        }
+        $company = $this->getCompanyByID($supplier_id);
+        if (!$company || !isset($company->category)) {
+            return false;
+        }
+        return strcasecmp($this->normalizeSupplierCategory($company->category), $this->getOverseasSupplierCategory()) === 0;
+    }
+
+    public function applySupplierScopeToQuery($warehouse_id)
+    {
+        $cat = $this->getOverseasSupplierCategory();
+        if ($this->isOverseasWarehouse($warehouse_id)) {
+            $this->db->where('category', $cat);
+        } else {
+            $this->db->group_start()
+                ->where('category !=', $cat)
+                ->or_where('category IS NULL', null, false)
+                ->or_where('category', '')
+                ->group_end();
+        }
+    }
+
+    public function validateSupplierWarehouseScope($warehouse_id, $supplier_id)
+    {
+        if (!$supplier_id) {
+            return false;
+        }
+        $osw_id = $this->getOverseasWarehouseId();
+        if (!$osw_id) {
+            return false;
+        }
+        $is_overseas_wh = $this->isOverseasWarehouse($warehouse_id);
+        $is_overseas_sup = $this->isOverseasSupplier($supplier_id);
+        if ($is_overseas_wh && !$is_overseas_sup) {
+            return 'Overseas warehouse documents can only use JASPN suppliers.';
+        }
+        if (!$is_overseas_wh && $is_overseas_sup) {
+            return 'Local warehouse documents cannot use JASPN suppliers.';
+        }
+        return false;
+    }
+
+    public function getOverseasCustomerCategory()
+    {
+        return 'JASPN';
+    }
+
+    public function getCustomerCategoryOptions()
+    {
+        return [
+            'Pharmacy Client'  => 'Pharmacy Client',
+            'Clinic Client'    => 'Clinic Client',
+            'Hospital Client'  => 'Hospital Client',
+            'Rent Client'      => 'Rent Client',
+            'Warehouse Client' => 'Warehouse Client',
+            'JASPN'            => 'JASPN',
+        ];
+    }
+
+    public function normalizeCustomerCategory($category)
+    {
+        $cat = trim((string) ($category ?? ''));
+        $legacy = [
+            'JASPN' => 'JASPN',
+        ];
+        return $legacy[$cat] ?? $cat;
+    }
+
+    public function lookupAccountsLedgerId($codes, $name)
+    {
+        $prefix = $this->db->dbprefix('accounts_ledgers');
+        foreach ((array) $codes as $code) {
+            $q = $this->db->query(
+                'SELECT id FROM ' . $prefix . ' WHERE code = ' . $this->db->escape($code) . ' LIMIT 1'
+            );
+            if ($q && $q->num_rows()) {
+                return (int) $q->row()->id;
+            }
+        }
+        $this->db->reset_query();
+        $this->db->like('name', $name, 'both');
+        $this->db->limit(1);
+        $q = $this->db->get('accounts_ledgers');
+        return ($q && $q->num_rows()) ? (int) $q->row()->id : 0;
+    }
+
+    public function getCustomerCategoryLedgers($category)
+    {
+        $cat = $this->normalizeCustomerCategory($category);
+        static $cache = [];
+        if (array_key_exists($cat, $cache)) {
+            return $cache[$cat] ?: false;
+        }
+        $fields = [
+            'JASPN' => [
+                'ledger_account'  => ['codes' => ['1120400001'], 'name' => 'JASPN Receivable'],
+                'sales_ledger'    => ['codes' => ['4110500001'], 'name' => 'JASPN Revenue'],
+                'cogs_ledger'     => ['codes' => ['5110200010'], 'name' => 'JASPN Cost of Sales'],
+                'discount_ledger' => ['codes' => ['5110200010'], 'name' => 'JASPN Cost of Sales'],
+                'return_ledger'   => ['codes' => ['4110500001'], 'name' => 'JASPN Revenue'],
+            ],
+        ];
+        if (!isset($fields[$cat])) {
+            $cache[$cat] = false;
+            return false;
+        }
+        $result = [];
+        foreach ($fields[$cat] as $field => $spec) {
+            $id = $this->lookupAccountsLedgerId($spec['codes'], $spec['name']);
+            if (!$id) {
+                $cache[$cat] = false;
+                return false;
+            }
+            $result[$field] = (string) $id;
+        }
+        $cache[$cat] = $result;
+        return $result;
+    }
+
+    public function isOverseasCustomer($customer_id)
+    {
+        if (!$customer_id) {
+            return false;
+        }
+        $company = $this->getCompanyByID($customer_id);
+        if (!$company || !isset($company->category)) {
+            return false;
+        }
+        return strcasecmp($this->normalizeCustomerCategory($company->category), $this->getOverseasCustomerCategory()) === 0;
+    }
+
+    public function applyCustomerScopeToQuery($warehouse_id)
+    {
+        $cat = $this->getOverseasCustomerCategory();
+        if ($this->isOverseasWarehouse($warehouse_id)) {
+            $this->db->where('category', $cat);
+        } else {
+            $this->db->group_start()
+                ->where('category !=', $cat)
+                ->or_where('category IS NULL', null, false)
+                ->or_where('category', '')
+                ->group_end();
+        }
+    }
+
+    public function validateCustomerWarehouseScope($warehouse_id, $customer_id)
+    {
+        if (!$customer_id) {
+            return false;
+        }
+        $osw_id = $this->getOverseasWarehouseId();
+        if (!$osw_id) {
+            return false;
+        }
+        $is_overseas_wh = $this->isOverseasWarehouse($warehouse_id);
+        $is_overseas_cust = $this->isOverseasCustomer($customer_id);
+        if ($is_overseas_wh && !$is_overseas_cust) {
+            return 'Overseas warehouse documents can only use JASPN customers.';
+        }
+        if (!$is_overseas_wh && $is_overseas_cust) {
+            return 'Local warehouse documents cannot use JASPN customers.';
+        }
+        return false;
+    }
+
+    public function enforceOverseasRules($warehouse_id, $product_ids, $supplier_id = null, $customer_id = null)
+    {
+        if ($this->isOverseasWarehouse($warehouse_id) && !$this->canAccessOverseasWarehouse()) {
+            return lang('access_denied');
+        }
+        if ($err = $this->validateProductWarehouseScope($warehouse_id, $product_ids)) {
+            return $err;
+        }
+        if ($supplier_id && ($err = $this->validateSupplierWarehouseScope($warehouse_id, $supplier_id))) {
+            return $err;
+        }
+        if ($customer_id && ($err = $this->validateCustomerWarehouseScope($warehouse_id, $customer_id))) {
+            return $err;
+        }
+        return false;
+    }
+
+    /**
+     * Document listings: default warehouse or all local (?all=1); OSW001 only when explicitly selected.
+     */
+    public function applyListingWarehouseScope($builder, $warehouse_id, $column = 'warehouse_id')
+    {
+        $warehouse_id = $this->resolveListingWarehouseId($warehouse_id);
+        if ($warehouse_id) {
+            return $builder->where($column, (int) $warehouse_id);
+        }
+        $osw_id = $this->getOverseasWarehouseId();
+        if (!$osw_id) {
+            return $builder;
+        }
+        return $builder->where($column . ' !=', $osw_id);
+    }
+
+    /**
+     * Raw SQL AND clause for report queries on a sales (or purchases) alias.
+     */
+    public function reportWarehouseAndClause($warehouse_id, $alias = 's', $column = 'warehouse_id')
+    {
+        $warehouse_id = $this->resolveListingWarehouseId($warehouse_id);
+        if ($warehouse_id) {
+            return ' AND ' . $alias . '.' . $column . ' = ' . (int) $warehouse_id;
+        }
+        $osw_id = $this->getOverseasWarehouseId();
+        return $osw_id ? ' AND ' . $alias . '.' . $column . ' != ' . (int) $osw_id : '';
+    }
+
+    /**
+     * Customer AR statement / trial balance warehouse scope (strict sid / rid / collection journals).
+     */
+    public function applyCustomerLedgerWarehouseScope($builder, $warehouse_id, $entries_alias = 'sma_accounts_entries')
+    {
+        $cond = $this->reportCustomerLedgerWarehouseCondition($warehouse_id, $entries_alias);
+        if ($cond === '1=1') {
+            return $builder;
+        }
+        return $builder->where($cond, null, false);
+    }
+
+    /**
+     * @deprecated Use applyCustomerLedgerWarehouseScope for customer AR; kept for reference.
+     */
+    public function applyStatementWarehouseScope($builder, $warehouse_id, $sid_col = 'sma_accounts_entries.sid', $wh_col = 'sma_sales.warehouse_id')
+    {
+        return $this->applyCustomerLedgerWarehouseScope($builder, $warehouse_id);
+    }
+
+    /** SQL fragment for trial balance / GL queries with sid on accounts_entries. */
+    public function reportLedgerWarehouseExistsSql($warehouse_id, $entries_alias = 'sma_accounts_entries')
+    {
+        return $this->reportCustomerLedgerWarehouseExistsSql($warehouse_id, $entries_alias);
+    }
+
+    /** Customer-side ledger scope (sid / rid / collection journals on accounts_entries). */
+    public function reportCustomerLedgerWarehouseCondition($warehouse_id, $entries_alias = 'sma_accounts_entries')
+    {
+        $warehouse_id = $this->resolveListingWarehouseId($warehouse_id);
+        $dbp = $this->db->dbprefix;
+        $sales = $dbp . 'sales';
+        $returns = $dbp . 'returns';
+        $pr = $dbp . 'payment_reference';
+        $pay = $dbp . 'payments';
+        $sid = $entries_alias . '.sid';
+        $rid = $entries_alias . '.rid';
+        $memo_id = $entries_alias . '.memo_id';
+        $eid = $entries_alias . '.id';
+
+        $paymentJournalSubquery = function ($wh_id) use ($pr, $pay, $sales) {
+            return "SELECT DISTINCT pr.journal_id
+                FROM {$pr} pr
+                INNER JOIN {$pay} pay ON pay.payment_id = pr.id AND pay.sale_id IS NOT NULL AND pay.sale_id > 0
+                INNER JOIN {$sales} s ON s.id = pay.sale_id
+                WHERE pr.journal_id IS NOT NULL AND s.warehouse_id = " . (int) $wh_id;
+        };
+
+        // Memo payments and debit/credit memos are not tied to a sale/return warehouse.
+        $memoPaymentJournalSubquery = function () use ($pr, $pay) {
+            return "SELECT DISTINCT pr.journal_id
+                FROM {$pr} pr
+                INNER JOIN {$pay} pay ON pay.payment_id = pr.id
+                WHERE pr.journal_id IS NOT NULL
+                AND NULLIF(pay.memo_id, '') IS NOT NULL AND NULLIF(pay.memo_id, 0) IS NOT NULL";
+        };
+
+        $nonWarehouseLinked = "(NULLIF({$memo_id}, '') IS NOT NULL AND NULLIF({$memo_id}, 0) IS NOT NULL)";
+
+        if ($warehouse_id) {
+            $wh = (int) $warehouse_id;
+            $journalSql = $paymentJournalSubquery($wh);
+            $memoJournalSql = $memoPaymentJournalSubquery();
+            return "(
+                (NULLIF({$sid}, '') IS NOT NULL AND NULLIF({$sid}, 0) IS NOT NULL
+                    AND {$sid} IN (SELECT id FROM {$sales} WHERE warehouse_id = {$wh}))
+                OR (NULLIF({$rid}, '') IS NOT NULL AND NULLIF({$rid}, 0) IS NOT NULL
+                    AND {$rid} IN (SELECT id FROM {$returns} WHERE warehouse_id = {$wh}))
+                OR {$eid} IN ({$journalSql})
+                OR {$eid} IN ({$memoJournalSql})
+                OR {$nonWarehouseLinked}
+            )";
+        }
+
+        $osw_id = $this->getOverseasWarehouseId();
+        if (!$osw_id) {
+            return '1=1';
+        }
+
+        $journalSql = $paymentJournalSubquery($osw_id);
+        return "(
+            (NULLIF({$sid}, '') IS NULL OR NULLIF({$sid}, 0) IS NULL OR {$sid} NOT IN (SELECT id FROM {$sales} WHERE warehouse_id = {$osw_id}))
+            AND (NULLIF({$rid}, '') IS NULL OR NULLIF({$rid}, 0) IS NULL OR {$rid} NOT IN (SELECT id FROM {$returns} WHERE warehouse_id = {$osw_id}))
+            AND NOT (
+                (NULLIF({$sid}, '') IS NULL OR NULLIF({$sid}, 0) IS NULL)
+                AND (NULLIF({$rid}, '') IS NULL OR NULLIF({$rid}, 0) IS NULL)
+                AND {$eid} IN ({$journalSql})
+            )
+        )";
+    }
+
+    public function reportCustomerLedgerWarehouseExistsSql($warehouse_id, $entries_alias = 'sma_accounts_entries')
+    {
+        $cond = $this->reportCustomerLedgerWarehouseCondition($warehouse_id, $entries_alias);
+        return $cond === '1=1' ? '' : ' AND ' . $cond;
+    }
+
+    /** Purchase-side ledger scope (pid / rsid / payment journals on accounts_entries). */
+    public function reportPurchaseLedgerWarehouseCondition($warehouse_id, $entries_alias = 'sma_accounts_entries')
+    {
+        $warehouse_id = $this->resolveListingWarehouseId($warehouse_id);
+        $dbp = $this->db->dbprefix;
+        $purchases = $dbp . 'purchases';
+        $returns = $dbp . 'returns_supplier';
+        $pr = $dbp . 'payment_reference';
+        $pay = $dbp . 'payments';
+        $pid = $entries_alias . '.pid';
+        $rsid = $entries_alias . '.rsid';
+        $memo_id = $entries_alias . '.memo_id';
+        $supplier_id_col = $entries_alias . '.supplier_id';
+        $txn_type = $entries_alias . '.transaction_type';
+        $eid = $entries_alias . '.id';
+
+        $paymentJournalSubquery = function ($wh_id) use ($pr, $pay, $purchases) {
+            return "SELECT DISTINCT pr.journal_id
+                FROM {$pr} pr
+                INNER JOIN {$pay} pay ON pay.payment_id = pr.id AND pay.purchase_id IS NOT NULL AND pay.purchase_id > 0
+                INNER JOIN {$purchases} pu ON pu.id = pay.purchase_id
+                WHERE pr.journal_id IS NOT NULL AND pu.warehouse_id = " . (int) $wh_id;
+        };
+
+        // Service-invoice / memo payments have pay.memo_id, not pay.purchase_id — must stay visible with their invoice.
+        $memoPaymentJournalSubquery = function () use ($pr, $pay) {
+            return "SELECT DISTINCT pr.journal_id
+                FROM {$pr} pr
+                INNER JOIN {$pay} pay ON pay.payment_id = pr.id
+                WHERE pr.journal_id IS NOT NULL
+                AND NULLIF(pay.memo_id, '') IS NOT NULL AND NULLIF(pay.memo_id, 0) IS NOT NULL";
+        };
+
+        // Petty cash, service invoices, memos, and orphan AP uploads are not tied to a purchase warehouse.
+        $nonWarehouseLinked = "(NULLIF({$memo_id}, '') IS NOT NULL AND NULLIF({$memo_id}, 0) IS NOT NULL)";
+        $orphanSupplierAp = "(
+            NULLIF({$supplier_id_col}, '') IS NOT NULL AND NULLIF({$supplier_id_col}, 0) IS NOT NULL
+            AND (NULLIF({$pid}, '') IS NULL OR NULLIF({$pid}, 0) IS NULL)
+            AND (NULLIF({$rsid}, '') IS NULL OR NULLIF({$rsid}, 0) IS NULL)
+            AND (NULLIF({$memo_id}, '') IS NULL OR NULLIF({$memo_id}, 0) IS NULL)
+            AND {$txn_type} IN ('purchase_invoice', 'service_invoice')
+        )";
+
+        if ($warehouse_id) {
+            $wh = (int) $warehouse_id;
+            $journalSql = $paymentJournalSubquery($wh);
+            $memoJournalSql = $memoPaymentJournalSubquery();
+            return "(
+                (NULLIF({$pid}, '') IS NOT NULL AND NULLIF({$pid}, 0) IS NOT NULL
+                    AND {$pid} IN (SELECT id FROM {$purchases} WHERE warehouse_id = {$wh}))
+                OR (NULLIF({$rsid}, '') IS NOT NULL AND NULLIF({$rsid}, 0) IS NOT NULL
+                    AND {$rsid} IN (SELECT id FROM {$returns} WHERE warehouse_id = {$wh}))
+                OR {$eid} IN ({$journalSql})
+                OR {$eid} IN ({$memoJournalSql})
+                OR {$nonWarehouseLinked}
+                OR {$orphanSupplierAp}
+            )";
+        }
+
+        $osw_id = $this->getOverseasWarehouseId();
+        if (!$osw_id) {
+            return '1=1';
+        }
+
+        $journalSql = $paymentJournalSubquery($osw_id);
+        return "(
+            (NULLIF({$pid}, '') IS NULL OR NULLIF({$pid}, 0) IS NULL OR {$pid} NOT IN (SELECT id FROM {$purchases} WHERE warehouse_id = {$osw_id}))
+            AND (NULLIF({$rsid}, '') IS NULL OR NULLIF({$rsid}, 0) IS NULL OR {$rsid} NOT IN (SELECT id FROM {$returns} WHERE warehouse_id = {$osw_id}))
+            AND NOT (
+                (NULLIF({$pid}, '') IS NULL OR NULLIF({$pid}, 0) IS NULL)
+                AND (NULLIF({$rsid}, '') IS NULL OR NULLIF({$rsid}, 0) IS NULL)
+                AND {$eid} IN ({$journalSql})
+            )
+        )";
+    }
+
+    public function reportPurchaseLedgerWarehouseExistsSql($warehouse_id, $entries_alias = 'sma_accounts_entries')
+    {
+        $cond = $this->reportPurchaseLedgerWarehouseCondition($warehouse_id, $entries_alias);
+        return $cond === '1=1' ? '' : ' AND ' . $cond;
+    }
+
+    public function applyReportWarehouseScope($builder, $warehouse_id, $column = 'warehouse_id')
+    {
+        return $this->applyListingWarehouseScope($builder, $warehouse_id, $column);
+    }
+    public function getAvgCost($item_batchno, $item_id){
+        $avgCostQuery = "SELECT 
+                    SUM(iv.quantity * iv.net_unit_cost) / SUM(iv.quantity) AS average_cost
+                 FROM 
+                    sma_inventory_movements iv
+                 WHERE 
+                    iv.product_id = '{$item_id}' 
+                    AND iv.batch_number = '{$item_batchno}' 
+                    AND iv.type IN ('purchase', 'adjustment_increase')";
+        $avgCost = $this->db->query($avgCostQuery);
+        //echo $this->db->last_query(); exit;
+        $avgObj = $avgCost->row();
+        if($avgObj){
+            $average_cost = $avgObj->average_cost;
+        }else{
+            $average_cost = 0;
+        }
+        
+        return $average_cost;
+    }
+
+    public function getRealAvgCost($item_batchno, $item_id){
+        $avgCostQuery = "SELECT 
+                    SUM(iv.quantity * iv.real_unit_cost) / SUM(iv.quantity) AS real_average_cost
+                 FROM 
+                    sma_inventory_movements iv
+                 WHERE 
+                    iv.product_id = '{$item_id}' 
+                    AND iv.batch_number = '{$item_batchno}' 
+                    AND iv.type IN ('purchase', 'adjustment_increase')";
+        $avgCost = $this->db->query($avgCostQuery);
+        $avgObj = $avgCost->row();
+        if($avgObj){
+            $average_cost = $avgObj->real_average_cost;
+        }else{
+            $average_cost = 0;
+        }
+        
+        return $average_cost;
     }
 
     public function getAllCouriers()
@@ -502,6 +1310,7 @@ class Site extends CI_Model
 
 public function getallCountry()
 {
+    $this->db->order_by('name', 'ASC');
     $q = $this->db->get('countries');
     if ($q->num_rows() > 0) {
         foreach (($q->result()) as $row) {
@@ -510,6 +1319,55 @@ public function getallCountry()
         return $data;
     }
     return false;
+}
+
+public function logVisitor() {
+    if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+        $ip = $_SERVER['HTTP_CLIENT_IP'];
+    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+    } else {
+        $ip = $_SERVER['REMOTE_ADDR'];
+    }
+    
+    if ($ip == '::1') {
+        $ip = '127.0.0.1';
+    }
+
+    $userAgent = $_SERVER['HTTP_USER_AGENT'];
+    $bots = [
+        'Googlebot', 'Bingbot', 'Slurp', 'DuckDuckBot', 'Baiduspider',
+        'YandexBot', 'Sogou', 'Exabot', 'facebot', 'ia_archiver'
+    ];
+
+    $isBot = false;
+    
+    foreach ($bots as $bot) {
+        if (stripos($userAgent, $bot) !== false) {
+            $isBot = true;
+        }
+    }
+
+    $location = @file_get_contents("http://ip-api.com/json/{$ip}");
+    
+    if ($location) {
+        $locationData = json_decode($location, true);
+        $location = $locationData['city'] . ', ' . $locationData['regionName'] . ', ' . $locationData['country'];
+    }else{
+        $location = 'Unknown';
+    }
+    
+    $landingUrl = $_SERVER['REQUEST_URI'];
+    $accessTime = date('Y-m-d H:i:s');
+
+    $this->db->insert('user_logs', [
+        'ip_address' => $ip,
+        'location' => $location,
+        'is_bot' => $isBot,
+        'user_agent' => $userAgent,
+        'landing_url' => $landingUrl,
+        'access_time' => $accessTime,
+    ]);
 }
 
  public function getallWCountry()
@@ -531,6 +1389,15 @@ public function getallCountry()
     public function getBrandByID($id)
     {
         $q = $this->db->get_where('brands', ['id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getSMSServiceByName($name)
+    {
+        $q = $this->db->get_where('sms_services', ['name' => $name], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -570,6 +1437,14 @@ public function getallCountry()
     public function getCompanyByID($id)
     {
         $q = $this->db->get_where('companies', ['id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getDefaultBiller(){
+        $q = $this->db->get_where('companies', ['group_name' => 'biller'], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -767,10 +1642,12 @@ public function getallCountry()
     public function getPurchasedItems($product_id, $warehouse_id, $option_id = null, $nonPurchased = false)
     {
         $orderby = empty($this->Settings->accounting_method) ? 'asc' : 'desc';
-        $this->db->select('id, purchase_id, transfer_id, quantity, quantity_balance, batchno, net_unit_cost, unit_cost, item_tax, base_unit_cost,expiry');
+        $this->db->select('id, purchase_id, transfer_id, quantity, quantity_balance, serial_number, batchno, net_unit_cost, unit_cost, item_tax, base_unit_cost,expiry');
         $this->db->where('product_id', $product_id)
         //->where('warehouse_id', $warehouse_id)
-        ->where('quantity_balance !=', 0); 
+        ->where('quantity_balance !=', 0)
+        ->where('quantity >', 0)
+        ->where("batchno !=", null);
         /*if (!isset($option_id) || empty($option_id)) {
             $this->db->group_start()->where('option_id', null)->or_where('option_id', 0)->group_end();
         } else {
@@ -785,6 +1662,8 @@ public function getallCountry()
         $this->db->order_by('expiry', $orderby);
         $this->db->order_by('purchase_id', $orderby);
         $q = $this->db->get('purchase_items');
+        //echo $this->db->last_query();exit;
+
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
@@ -935,6 +1814,30 @@ public function getallCountry()
         }
         return false;
     }
+    public function getSubSpecialities($parent_id)
+    {
+        $this->db->where('parent_id', $parent_id)->order_by('name');
+        $q = $this->db->get('specialities');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+    public function getSubTopics($parent_id)
+    {
+        $this->db->where('parent_id', $parent_id)->order_by('name');
+        $q = $this->db->get('topics');
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
 
     public function getTaxRateByID($id)
     {
@@ -987,14 +1890,162 @@ public function getallCountry()
         return false;
     }
 
+    public function getUserFromCompany($id = null)
+    {
+        if (!$id) {
+            $id = $this->session->userdata('company_id');
+        }
+        $q = $this->db->get_where('companies', ['id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getUserByWarehouseID($id = null)
+    {
+        $q = $this->db->get_where('users', ['warehouse_id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getAdjustmentStore($id = null)
+    {
+        $q = $this->db->get_where('warehouses', ['code' => 'adj'], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getCompanyLedgersByGroupCode($group_code_arr)
+    {
+        $group_ids = [];
+        if (!empty($group_code_arr)) {
+            $this->db->where_in('code', $group_code_arr);
+            $q = $this->db->get('accounts_groups');
+
+            if ($q->num_rows() > 0) {
+                $group_id = $q->result(); // multiple rows
+                $group_ids = array_column($group_id, 'id'); // extract ids
+            }
+        }
+        $this->db
+            ->select('sma_accounts_ledgers.*')
+            ->from('sma_accounts_ledgers')
+            ->where_in('sma_accounts_ledgers.group_id', $group_ids)
+            ->order_by('sma_accounts_ledgers.name asc');
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data_res[] = $row;
+            }
+        } else {
+            $data_res = array();
+        }
+
+        return $data_res;
+    }
+
+    public function getPettyCashLedgers()
+    {
+        return $this->getCompanyLedgersByGroupCode(['11104']);
+    }
+
+    /** Default Petty Cash supplier used for all petty cash vouchers (SUP-00265). */
+    public function getPettyCashSupplierId()
+    {
+        $this->db->select('id');
+        $this->db->from('companies');
+        $this->db->where('group_name', 'supplier');
+        $this->db->group_start();
+        $this->db->where('sequence_code', 'SUP-00265');
+        $this->db->or_where('company', 'Petty Cash');
+        $this->db->group_end();
+        $this->db->limit(1);
+        $q = $this->db->get();
+
+        return ($q && $q->num_rows() > 0) ? (int) $q->row()->id : 0;
+    }
+
+    public function getCompanyLedgers()
+    {
+        $this->db
+            ->select('sma_accounts_ledgers.*')
+            ->from('sma_accounts_ledgers')
+            ->order_by('sma_accounts_ledgers.name asc');
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data_res[] = $row;
+            }
+        } else {
+            $data_res = array();
+        }
+
+        return $data_res;
+    }
+
+    public function getLedgerByID($id)
+    {
+        $this->db
+            ->select('sma_accounts_ledgers.*')
+            ->from('sma_accounts_ledgers')
+            ->where('sma_accounts_ledgers.id', $id);
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
     public function getUser($id = null)
     {
         if (!$id) {
             $id = $this->session->userdata('user_id');
         }
+        $this->db->reset_query();
         $q = $this->db->get_where('users', ['id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
+        }
+        return false;
+    }
+
+    public function getUsersByGroupAndLocation($warehouse,$pharmacist_group){
+        $q = $this->db->get_where('users', ['warehouse_id' => $warehouse, 'group_id' => $pharmacist_group]);
+        if ($q->num_rows() > 0) {
+            $ids = [];
+            foreach (($q->result()) as $row) {
+                $ids[] = $row->id;
+            }
+            return implode(',', $ids);
+        }
+        return false;
+    }
+
+    public function getUserGroupByName($name)
+    {
+        if($name){
+            $q = $this->db->get_where('groups', ['name' => $name]);
+        }
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getUsersByGroup($group_id){
+        if($group_id){
+            $q = $this->db->get_where('users', ['group_id' => $group_id]);
+        }
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
         }
         return false;
     }
@@ -1044,6 +2095,44 @@ public function getallCountry()
         return false;
     }
 
+    /**
+     * Goods in Transit ledger for overseas landed cost.
+     * Uses overseas warehouse landed_cost_ledger (ID).
+     * Falls back to the goods-in-transit warehouse inventory_ledger for legacy setups.
+     */
+    public function getLandedCostLedgerId()
+    {
+        static $ledger_id = null;
+        if ($ledger_id !== null) {
+            return $ledger_id ?: false;
+        }
+
+        $osw_id = $this->getOverseasWarehouseId();
+        if ($osw_id) {
+            $osw = $this->getWarehouseByID($osw_id);
+            if ($osw && !empty($osw->landed_cost_ledger)) {
+                $ledger_id = (int) $osw->landed_cost_ledger;
+                return $ledger_id;
+            }
+        }
+
+        $git_wh = $this->getGoodsTrasitWareHouse();
+        $ledger_id = ($git_wh && !empty($git_wh->inventory_ledger))
+            ? (int) $git_wh->inventory_ledger
+            : 0;
+
+        return $ledger_id ?: false;
+    }
+
+    /** Landed cost is only for purchase orders on the overseas warehouse. */
+    public function canUseLandedCostForWarehouse($warehouse_id)
+    {
+        if (!$this->isOverseasWarehouse($warehouse_id)) {
+            return false;
+        }
+        return $this->canAccessOverseasWarehouse() && (bool) $this->getLandedCostLedgerId();
+    }
+
     public function getWarehouseProduct($warehouse_id, $product_id)
     {
         $q = $this->db->get_where('warehouses_products', ['product_id' => $product_id, 'warehouse_id' => $warehouse_id], 1);
@@ -1089,6 +2178,7 @@ public function getallCountry()
 
     public function item_costing($item, $pi = null)
     {
+
         $item_quantity = $pi ? $item['aquantity'] : $item['quantity'];
         if (!isset($item['option_id']) || empty($item['option_id']) || $item['option_id'] == 'null') {
             $item['option_id'] = null;
@@ -1178,7 +2268,7 @@ public function getallCountry()
         return '<script type="text/javascript">' . file_get_contents($this->data['assets'] . 'js/modal.js') . '</script>';
     }
 
-    public function setAdjustmentPurchaseItem($clause, $qty){
+    public function setAdjustmentPurchaseItem($clause, $qty, $avz_item_code){
         if ($product = $this->getProductByID($clause['product_id'])) {
             $vat = $clause['vat'];
             unset($clause['vat']);
@@ -1203,6 +2293,7 @@ public function getallCountry()
             $clause['net_unit_cost']     = $clause['real_unit_cost']     = $clause['unit_cost'];
             $clause['quantity_balance']  = $clause['quantity']  = $clause['unit_quantity']  = $clause['quantity_received']  = $qty;
             $clause['subtotal']          = ($clause['net_unit_cost'] * $qty);
+            $clause['avz_item_code']     = $avz_item_code;
             
             if (isset($vat) && $vat != 0) {
                 $tax_details           = $this->site->getTaxRateByID($vat);
@@ -1360,6 +2451,16 @@ public function getallCountry()
         if(isset($items) && !empty($items)) {
 
             foreach ($items as $item) {
+                $virtual_pharmacy = 0;
+                $query = $this->db->select('warehouses_products.*')
+                        ->from('warehouses_products')
+                        ->where('warehouses_products.warehouse_id', 6)
+                        ->where('warehouses_products.product_id', $item->product_id);
+                $result = $query->get();
+                if ($result->num_rows() > 0) {
+                    $virtual_pharmacy = 1;
+                }
+                
                 $this->db->insert('product_qty_onhold_request',
                  ['sale_id' => $sale_id, 
                  'product_id' => $item->product_id, 
@@ -1369,7 +2470,8 @@ public function getallCountry()
                  'customer_id' => $item->customer_id,
                  'customer_name' => $item->customer_name,
                  'status' => 'onhold',
-                 'date_created' => NOW()
+                 'virtual_pharmacy' => $virtual_pharmacy,
+                 'date_created' => date('Y-m-d H:i:s')
                 ]);
             }
         }
@@ -1684,9 +2786,110 @@ public function getallCountry()
         return 0;
     }
 
-    public function getProductBatchesData($product_id, $warehouse)
+    public function getProductSupplierBatchesData($product_id, $warehouse, $supplier_id)
+    {  
+         
+        $this->db->select(' inv.product_id, inv.batch_number as batchno ,SUM(inv.quantity) as quantity, 
+        inv.location_id as warehouse_id, inv.net_unit_cost, inv.real_unit_cost, inv.expiry_date as expiry,item.expiry,
+        item.unit_cost,item.real_unit_cost,item.sale_price,item.discount, item.discount1, item.discount2, item.main_net,
+         item.tax_rate_id, item.tax
+
+        ');
+        $this->db->from('sma_inventory_movements inv'); 
+        $this->db->join('sma_purchase_items item', 'item.batchno=inv.batch_number AND item.product_id=inv.product_id');  
+        $this->db->join('purchases po', 'po.id=item.purchase_id  AND po.supplier_id='.$supplier_id);   
+        $this->db->where('inv.location_id',$warehouse);
+        $this->db->where('inv.product_id',$product_id); 
+        $this->db->group_by('inv.batch_number'); 
+        $this->db->having('SUM(inv.quantity)>=0'); 
+	    $query = $this->db->get();
+        // echo $this->db->last_query(); exit; 
+        if($query->num_rows() > 0){
+            foreach (($query->result()) as $row) {
+
+                $query = $this->db->get_where('sma_purchase_items', ['product_id' => $product_id, 'warehouse_id' => $warehouse, 'batchno' => $row->batchno, 'sale_price >' => 0], 1);
+                if ($query->num_rows() > 0) {
+                    $rowp = $query->row();
+                    $batch_sale_price = $rowp->sale_price;
+                }else{
+                    $batch_sale_price = 0;
+                }
+                $row->batch_sale_price = $batch_sale_price;
+                $data[] = $row; 
+            }
+          //  echo '<pre>'; print_r($data); exit;  
+          return $data; 
+         }  
+        return false;
+    } 
+
+    public function getProductSupplierBatchesData_BK($product_id, $warehouse, $supplier_id)
+    {  
+         
+        $this->db->select(' inv.product_id, inv.batch_number as batchno ,SUM(inv.quantity) as quantity, inv.location_id as warehouse_id, inv.net_unit_cost, inv.real_unit_cost, wp.rack, wp.avg_cost, inv.expiry_date as expiry, wp.purchase_cost');
+        $this->db->from('sma_inventory_movements inv');
+        $this->db->join('warehouses_products wp', 'wp.batchno=inv.batch_number AND  wp.product_id= inv.product_id and wp.warehouse_id=inv.location_id', 'LEFT'); 
+        $this->db->join('purchases po', 'po.id=inv.reference_id AND inv.type="purchase" AND  po.supplier_id='.$supplier_id);   
+        $this->db->where('inv.location_id',$warehouse);
+        $this->db->where('inv.product_id',$product_id); 
+        $this->db->group_by('inv.batch_number'); 
+        $this->db->having('SUM(inv.quantity)>=0'); 
+	    $query = $this->db->get();
+        //echo $this->db->last_query(); exit; 
+        if($query->num_rows() > 0){
+            foreach (($query->result()) as $row) {
+
+                $query = $this->db->get_where('sma_purchase_items', ['product_id' => $product_id, 'warehouse_id' => $warehouse, 'batchno' => $row->batchno, 'sale_price >' => 0], 1);
+                if ($query->num_rows() > 0) {
+                    $rowp = $query->row();
+                    $batch_sale_price = $rowp->sale_price;
+                }else{
+                    $batch_sale_price = 0;
+                }
+                $row->batch_sale_price = $batch_sale_price;
+                $data[] = $row; 
+            }
+          //  echo '<pre>'; print_r($data); exit;  
+          return $data; 
+         }  
+        return false;
+    } 
+
+     public function getProductBatchesData($product_id, $warehouse)
+    {  
+         
+        $this->db->select(' inv.product_id, inv.batch_number as batchno ,SUM(inv.quantity) as quantity, inv.net_unit_cost, inv.location_id as warehouse_id, wp.rack, wp.avg_cost, inv.expiry_date as expiry, wp.purchase_cost');
+        $this->db->from('sma_inventory_movements inv');
+        $this->db->join('warehouses_products wp', 'wp.batchno=inv.batch_number AND  wp.product_id= inv.product_id and wp.warehouse_id=inv.location_id', 'LEFT');   
+        $this->db->where('inv.location_id',$warehouse);
+        $this->db->where('inv.product_id',$product_id); 
+        $this->db->group_by('inv.batch_number, inv.expiry_date'); 
+        $this->db->having('SUM(inv.quantity)>=0'); 
+	    $query = $this->db->get();
+        // echo $this->db->last_query();exit; 
+        if($query->num_rows() > 0){
+            foreach (($query->result()) as $row) {
+
+                $query = $this->db->get_where('sma_purchase_items', ['product_id' => $product_id, 'warehouse_id' => $warehouse, 'batchno' => $row->batchno, 'sale_price >' => 0], 1);
+                if ($query->num_rows() > 0) {
+                    $rowp = $query->row();
+                    $batch_sale_price = $rowp->sale_price;
+                }else{
+                    $batch_sale_price = 0;
+                }
+                $row->batch_sale_price = $batch_sale_price;
+                $data[] = $row; 
+            }
+          //  echo '<pre>'; print_r($data); exit;  
+          return $data; 
+         }  
+        return false;
+    } 
+
+    public function getProductBatchesData__BK($product_id, $warehouse)
     {
-        $q = $this->db->get_where('warehouses_products', ['product_id' => $product_id, 'warehouse_id' => $warehouse]);
+        //$q = $this->db->get_where('warehouses_products', ['product_id' => $product_id, 'warehouse_id' => $warehouse]);
+        $q = $this->db->get_where('warehouses_products', ['product_id' => $product_id, 'warehouse_id' => $warehouse]);  
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
 
@@ -1698,10 +2901,15 @@ public function getallCountry()
                     $batch_sale_price = 0;
                 }
 
+                //if($this->db->platform == 'pharma'){
+                   $total_batch_quantity = $this->Inventory_model->get_current_stock( $product_id, $warehouse, $row->batchno);
+                   $row->quantity = $total_batch_quantity;
+                // }
+
                 $row->batch_sale_price = $batch_sale_price;
                 $data[] = $row;
             }
-        
+            // echo '<pre>'; print_r($data); exit; 
             return $data;
         }
         return false;
@@ -1730,4 +2938,154 @@ public function getallCountry()
         }
         return false;
     }
+
+    public function getCompanyBySequenceCode($parent_id)
+    {
+        $q = $this->db->get_where('companies', ['sequence_code' => $parent_id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getCompanyByParentCode($parent_id)
+    {
+        $q = $this->db->get_where('companies', ['parent_code' => $parent_id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getParentCompanyByCode($parent_id)
+    {
+        $q = $this->db->get_where('companies', ['sequence_code' => $parent_id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function deleteAccountingEntry($id, $type){
+
+        if($type == 'purchase'){ 
+            $q = $this->db->get_where('sma_accounts_entries', ['pid' => $id], 1);
+        }else if($type == 'sale'){
+            $q = $this->db->get_where('sma_accounts_entries', ['sid' => $id], 1);
+        }else if($type == 'transfer'){
+            $q = $this->db->get_where('sma_accounts_entries', ['tid' => $id], 1);
+        }else if($type == 'return_supplier'){
+            $q = $this->db->get_where('sma_accounts_entries', ['rsid' => $id], 1);
+        }else if($type == 'return_customer'){
+            $q = $this->db->get_where('sma_accounts_entries', ['rid' => $id], 1);
+        }
+
+        if ($q->num_rows() > 0) {
+            $result = $q->row();
+
+            if ($this->db->delete('sma_accounts_entries', ['id' => $result->id])) {
+                $this->db->delete('sma_accounts_entryitems', ['entry_id' => $result->id]);
+                return true;
+            }
+        }else{
+            return false;
+        }
+        
+    }
+
+    public function getJournalEntryByTypeId($type='', $type_id)
+    {
+        if($type == '' || $type_id == '') {
+            return false;
+        }
+        if($type == 'purchase') {
+            $this->db->where('pid',$type_id); 
+            $q = $this->db->get_where('sma_accounts_entries', ['pid' => $type_id], 1);
+        }
+        if($type == 'return_supplier') {
+            $this->db->where('rsid',$type_id); 
+            $q = $this->db->get_where('sma_accounts_entries', ['rsid' => $type_id], 1);
+        }
+        
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getAllPharmacists(){
+        $q = $this->db->get_where('users', ['group_id' => 8]);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
+    public function getPrePorcessPurchaseItems($inv_items=[])
+    {
+    
+        // krsort($inv_items);
+            $c = rand(100000, 9999999);
+            $pItems = [];
+            foreach ($inv_items as $item) {
+                $row = $this->site->getProductByID($item->product_id);
+                if (!$row) {
+                    $this->session->set_flashdata('error', lang('product_deleted_x_edit'));
+                    redirect($_SERVER['HTTP_REFERER']);
+                }
+                $row->expiry = (($item->expiry && $item->expiry != '0000-00-00') ? $this->sma->hrsd($item->expiry) : '');
+                $row->base_quantity = $item->quantity;
+                $row->base_unit = $row->unit ? $row->unit : $item->product_unit_id;
+                $row->base_unit_cost = $row->cost ? $row->cost : $item->unit_cost;
+                $row->sale_price = $item->sale_price;
+                $row->unit = $item->product_unit_id;
+                $row->qty =$item->quantity; // $item->unit_quantity;
+                $row->oqty = $item->quantity;
+                $row->supplier_part_no = $item->supplier_part_no;
+                $row->received = $item->quantity_received ? $item->quantity_received : $item->quantity;
+                $row->quantity_balance = $item->quantity_balance + ($item->quantity - $row->received);
+                $row->discount = $item->discount ? $item->discount : '0';
+                $options = [];//$this->purchases_model->getProductOptions($row->id);
+                $row->option = $item->option_id;
+                $row->real_unit_cost = $item->real_unit_cost;
+                //$row->cost             = $this->sma->formatDecimal($item->net_unit_cost + ($item->item_discount / $item->quantity));
+                $row->cost = $item->unit_cost;
+                $row->tax_rate = $item->tax_rate_id;
+                $row->bonus = $item->bonus;
+                $row->dis1 = isset($item->discount1) ? $item->discount1 : '0';
+                $row->dis2 = isset($item->discount2) ? $item->discount2 : '0';
+                $row->totalbeforevat = $item->totalbeforevat;
+                $row->main_net = $item->main_net;
+                $row->batchno = $item->batchno;
+                $row->avz_item_code = isset($item->avz_item_code) && !empty($item->avz_item_code) ? $item->avz_item_code : '';
+                $row->serial_number = $item->serial_number;
+                $row->get_supplier_discount = isset($item->get_supplier_discount) ? $item->get_supplier_discount : '0';
+                //$row->three_month_sale = $this->purchases_model->getThreeMonthSale($item->product_id, $start_date, $end_date);
+                $row->warehouse_shelf = $item->warehouse_shelf;
+                unset($row->details, $row->product_details, $row->price, $row->file, $row->product_group_id);
+                $units = $this->getUnitsByBUID($row->base_unit);
+                $tax_rate = $this->getTaxRateByID($row->tax_rate);
+                $ri = $this->Settings->item_addition ? $row->id : $c;
+                $row->dis3 = $item->discount3;
+                $row->item_third_discount = $item->third_discount_value;
+                $row->deal_discount = isset($item->deal_discount) ? $item->deal_discount : '0';
+
+                $pItems[$ri] = [
+                    'id' => $c,
+                    'item_id' => $row->id,
+                    'label' => $row->name . ' (' . $row->code . ')',
+                    'row' => $row,
+                    'tax_rate' => $tax_rate,
+                    'units' => $units,
+                    'options' => $options,
+                ];
+                $c++;
+            }
+
+        return $pItems;
+    }
+        
 }

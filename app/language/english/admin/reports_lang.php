@@ -30,6 +30,7 @@ $lang['profit_loss']              = 'Profit and/or Loss';
 $lang['daily_sales_report']       = 'Daily Sales Report';
 $lang['reports_calendar_text']    = 'You can change the month by clicking the >> (next) or << (previous)';
 $lang['monthly_sales_report']     = 'Monthly Sales Report';
+$lang['promo_code_sale']           = 'Promo Code Report';
 $lang['product_qty']              = 'Product (Qty)';
 $lang['payment_ref']              = 'Payment Reference';
 $lang['sale_ref']                 = 'Sale Reference';
@@ -106,3 +107,16 @@ $lang['total_product_tax']        = 'Product Tax Amount';
 $lang['total_order_tax']          = 'Order Tax Amount';
 $lang['refund']                   = 'Refund';
 $lang['net_returns']              = 'Net Returns';
+$lang['Purchase ID']              = 'Purchase ID';
+$lang['Enter Purchase ID']        = 'Enter Purchase ID';
+
+// GL Report Language Keys
+$lang['general_ledger_report']    = 'General Ledger Report';
+$lang['voucher']                  = 'Voucher';
+$lang['voucher_id']               = 'Voucher ID';
+$lang['trx_id']                   = 'Trx. ID';
+$lang['account_number']           = 'Account Number';
+$lang['account_name']             = 'Account Name';
+$lang['debit']                    = 'Debit';
+$lang['credit']                   = 'Credit';
+$lang['user_id']                  = 'User ID';

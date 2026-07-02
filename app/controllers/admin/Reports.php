@@ -2,6 +2,8 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
+use Mpdf\Mpdf;
+
 class Reports extends MY_Controller
 {
     public function __construct()
@@ -17,6 +19,7 @@ class Reports extends MY_Controller
         $this->load->library('form_validation');
         $this->load->admin_model('reports_model');
         $this->load->admin_model('companies_model');
+        $this->load->admin_model('products_model');
         $this->data['pb'] = [
             'cash' => lang('cash'),
             'CC' => lang('CC'),
@@ -29,11 +32,11 @@ class Reports extends MY_Controller
         ];
 
         $this->load->admin_model('deals_model');
+        $this->load->admin_model('pos_model');
     }
-
     public function adjustments($warehouse_id = null)
     {
-        $this->sma->checkPermissions('products');
+        //$this->sma->checkPermissions('products');
 
         $this->data['users'] = $this->reports_model->getStaff();
         $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -46,7 +49,7 @@ class Reports extends MY_Controller
 
     public function best_sellers($warehouse_id = null)
     {
-        $this->sma->checkPermissions('products');
+        //$this->sma->checkPermissions('products');
 
         $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
         $y1 = date('Y', strtotime('-1 month'));
@@ -113,7 +116,7 @@ class Reports extends MY_Controller
 
     public function customer_report($user_id = null)
     {
-        $this->sma->checkPermissions('customers', true);
+        //$this->sma->checkPermissions('customers', true);
         if (!$user_id) {
             $this->session->set_flashdata('error', lang('no_customer_selected'));
             admin_redirect('reports/customers');
@@ -134,18 +137,384 @@ class Reports extends MY_Controller
         $this->page_construct('reports/customer_report', $meta, $this->data);
     }
 
-    public function pharmacy_stock(){
+    public function transfer_report()
+    {
+        //$this->sma->checkPermissions('reports');
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        // dropdown lists
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['products'] = $this->products_model->getAllProducts();
+
+        // gather filters
+        $filters = [
+            'from_wh'    => $this->input->post('from_wh') ?: null,
+            'to_wh'      => $this->input->post('to_wh') ?: null,
+            'product_id' => $this->input->post('product_id') ?: null,
+            'invoice_no' => $this->input->post('invoice_no') ?: null,
+            'period'     => $this->input->post('period') ?: 'today', // today/month/ytd
+            'by'         => $this->input->post('by') ?: 'invoice', // invoice or item
+            'start_date' => null,
+            'end_date'   => null
+        ];
+
+        // derive date range from period
+        $today = date('Y-m-d');
+        if ($filters['period'] == 'month') {
+            $filters['start_date'] = date('Y-m-01');
+            $filters['end_date']   = date('Y-m-t');
+        } elseif ($filters['period'] == 'ytd') {
+            $filters['start_date'] = date('Y-01-01');
+            $filters['end_date']   = $today;
+        } else { // default today
+            $filters['start_date'] = $today;
+            $filters['end_date']   = $today;
+        }
+
+        $this->data['filters'] = $filters;
+
+        // get report only when user submits (or you can always load)
+        $this->data['reportData'] = [];
+        if ($this->input->post('period') || $this->input->post('export_excel')) {
+            $this->data['reportData'] = $this->reports_model->get_transfer_report($filters);
+        }
+
+        // Excel export
+        if ($this->input->post('export_excel')) {
+            // Prepare Excel file depending on mode
+            $report = $this->data['reportData'];
+
+            $this->load->library('excel');
+            $sheet = $this->excel->setActiveSheetIndex(0);
+            $sheet->setTitle('Transfer Report');
+
+            if ($filters['by'] == 'invoice') {
+                // Header
+                $sheet->SetCellValue('A1', lang('Date'));
+                $sheet->SetCellValue('B1', lang('Invoice #'));
+                $sheet->SetCellValue('C1', lang('From Warehouse'));
+                $sheet->SetCellValue('D1', lang('To Warehouse'));
+                $sheet->SetCellValue('E1', lang('Total Sale Price'));
+                $sheet->SetCellValue('F1', lang('Total Cost Price'));
+                $sheet->SetCellValue('G1', lang('Profit Amt'));
+                $sheet->SetCellValue('H1', lang('Profit Margin %'));
+
+                $row = 2;
+                foreach ($report as $r) {
+                    $sheet->SetCellValue('A' . $row, $r['date']);
+                    $sheet->SetCellValue('B' . $row, $r['invoice_no']);
+                    $sheet->SetCellValue('C' . $row, $r['from_wh_name']);
+                    $sheet->SetCellValue('D' . $row, $r['to_wh_name']);
+                    $sheet->SetCellValue('E' . $row, $this->sma->formatMoney($r['total_sale'], 'none'));
+                    $sheet->SetCellValue('F' . $row, $this->sma->formatMoney($r['total_cost'], 'none'));
+                    $sheet->SetCellValue('G' . $row, $this->sma->formatMoney($r['total_profit'], 'none'));
+                    $sheet->SetCellValue('H' . $row, $r['total_margin_percent']);
+                    $row++;
+                }
+
+                $cols = ['A'=>20,'B'=>20,'C'=>25,'D'=>25,'E'=>18,'F'=>18,'G'=>18,'H'=>15];
+                foreach ($cols as $c => $w) $sheet->getColumnDimension($c)->setWidth($w);
+            } else {
+                // By item
+                $sheet->SetCellValue('A1', lang('Date'));
+                $sheet->SetCellValue('B1', lang('Invoice #'));
+                $sheet->SetCellValue('C1', lang('Item'));
+                $sheet->SetCellValue('D1', lang('Qty'));
+                $sheet->SetCellValue('E1', lang('Cost Price'));
+                $sheet->SetCellValue('F1', lang('Sale Price'));
+                $sheet->SetCellValue('G1', lang('Profit Amt'));
+                $sheet->SetCellValue('H1', lang('Profit Margin %'));
+                $sheet->SetCellValue('I1', lang('From Warehouse'));
+                $sheet->SetCellValue('J1', lang('To Warehouse'));
+
+                $row = 2;
+                foreach ($report as $r) {
+                    $sheet->SetCellValue("A{$row}", $r['date']);
+                    $sheet->SetCellValue("B{$row}", $r['invoice_no']);
+                    $sheet->SetCellValue("C{$row}", $r['product_name']);
+                    $sheet->SetCellValue("D{$row}", $r['quantity']);
+                    $sheet->SetCellValue("E{$row}", $this->sma->formatMoney($r['cost_price'], 'none'));
+                    $sheet->SetCellValue("F{$row}", $this->sma->formatMoney($r['sale_price'], 'none'));
+                    $sheet->SetCellValue("G{$row}", $this->sma->formatMoney($r['profit_amt'], 'none'));
+                    $sheet->SetCellValue("H{$row}", $r['margin_percent']);
+                    $sheet->SetCellValue("I{$row}", $r['from_wh_name']);
+                    $sheet->SetCellValue("J{$row}", $r['to_wh_name']);
+                    $row++;
+                }
+
+                $cols = ['A'=>20,'B'=>20,'C'=>30,'D'=>8,'E'=>15,'F'=>15,'G'=>18,'H'=>15,'I'=>25,'J'=>25];
+                foreach ($cols as $c => $w) $sheet->getColumnDimension($c)->setWidth($w);
+            }
+
+            $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+            $filename = 'Transfer_Report_' . date('Y-m-d_H_i_s');
+            $this->load->helper('excel');
+            create_excel($this->excel, $filename);
+            return;
+        }
+
+        // normal page render
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('transfer_report')]];
+        $meta = ['page_title' => lang('transfer_report'), 'bc' => $bc];
+        $this->page_construct('reports/transfer_report', $meta, $this->data);
+    }
+
+
+    public function purchase_report()
+    {
+        //$this->sma->checkPermissions('reports');
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        // Fetch dropdown data
+        $this->data['warehouses'] = $this->site->getAllWarehouses(); // Pharmacies
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+        $this->data['products'] = $this->products_model->getAllProducts();
+        
+        $filters = [
+            'supplier_ids' => $this->input->post('supplier_ids') ?: [],
+            'pharmacy_ids' => $this->input->post('pharmacy_ids') ?: [],
+            'invoice_no'   => $this->input->post('invoice_no') ?: '',
+            'product_id'   => $this->input->post('product_id') ?: '',
+            'period'       => $this->input->post('period') ?: 'today',
+            'group_by'     => $this->input->post('group_by') ?: 'item',
+            'start_date'   => null,
+            'end_date'     => null
+        ];
+
+        // Determine dates
+        if ($filters['period'] == 'today') {
+            $filters['start_date'] = $filters['end_date'] = date('Y-m-d');
+        } elseif ($filters['period'] == 'month') {
+            $filters['start_date'] = date('Y-m-01');
+            $filters['end_date'] = date('Y-m-t');
+        } elseif ($filters['period'] == 'ytd') {
+            $filters['start_date'] = date('Y-01-01');
+            $filters['end_date'] = date('Y-m-d');
+        }
+
+        // Get report data
+        $this->data['reportData'] = $this->reports_model->get_purchase_report($filters);
+        $this->data['filters'] = $filters;
+
+        // Handle Excel export
+        if ($this->input->post('export_excel')) {
+
+            $report = $this->reports_model->get_purchase_report($filters);
+
+            $this->load->library('excel');
+            $sheet = $this->excel->setActiveSheetIndex(0);
+            $sheet->setTitle('Purchase Report');
+
+            // =============================
+            // EXPORT FOR GROUP BY ITEM
+            // =============================
+            if ($filters['group_by'] == 'item') {
+
+                // Header row
+                $sheet->SetCellValue('A1', lang('Date'));
+                $sheet->SetCellValue('B1', lang('Invoice #'));
+                $sheet->SetCellValue('C1', lang('Product'));
+                $sheet->SetCellValue('D1', lang('Qty'));
+                $sheet->SetCellValue('E1', lang('Batch #'));
+                $sheet->SetCellValue('F1', lang('Sale Price'));
+                $sheet->SetCellValue('G1', lang('Purchase Price'));
+                $sheet->SetCellValue('H1', lang('Discount'));
+                $sheet->SetCellValue('I1', lang('Cost Price'));
+                $sheet->SetCellValue('J1', lang('Margin %'));
+                $sheet->SetCellValue('K1', lang('Supplier'));
+                $sheet->SetCellValue('L1', lang('Pharmacy'));
+
+                $row = 2;
+
+                foreach ($report as $r) {
+
+                    $sheet->SetCellValue("A{$row}", $r['date']);
+                    $sheet->SetCellValue("B{$row}", $r['invoice_no']);
+                    $sheet->SetCellValue("C{$row}", $r['product_name']);
+                    $sheet->SetCellValue("D{$row}", $r['quantity']);
+                    $sheet->SetCellValue("E{$row}", $r['batch_no']);
+                    $sheet->SetCellValue("F{$row}", $this->sma->formatMoney($r['sale_price'], 'none'));
+                    $sheet->SetCellValue("G{$row}", $this->sma->formatMoney($r['purchase_price'], 'none'));
+                    $sheet->SetCellValue("H{$row}", $this->sma->formatMoney($r['discount'], 'none'));
+                    $sheet->SetCellValue("I{$row}", $this->sma->formatMoney($r['cost_price'], 'none'));
+                    $sheet->SetCellValue("J{$row}", $r['margin_percent']);
+                    $sheet->SetCellValue("K{$row}", $r['supplier_name']);
+                    $sheet->SetCellValue("L{$row}", $r['pharmacy_name']);
+
+                    $row++;
+                }
+
+                // Set column widths
+                $widths = [
+                    'A'=>20,'B'=>15,'C'=>25,'D'=>8,'E'=>15,'F'=>15,'G'=>15,
+                    'H'=>15,'I'=>15,'J'=>12,'K'=>25,'L'=>20
+                ];
+
+                foreach ($widths as $col => $w) {
+                    $sheet->getColumnDimension($col)->setWidth($w);
+                }
+            }
+
+            // =============================
+            // EXPORT FOR GROUP BY SUPPLIER
+            // =============================
+            else {
+
+                // Header row
+                $sheet->SetCellValue('A1', lang('Supplier'));
+                $sheet->SetCellValue('B1', lang('Total Sale Price'));
+                $sheet->SetCellValue('C1', lang('Total Purchase'));
+                $sheet->SetCellValue('D1', lang('Total Discount'));
+                $sheet->SetCellValue('E1', lang('Total Cost Price'));
+                $sheet->SetCellValue('F1', lang('Total Margin %'));
+                $sheet->SetCellValue('G1', lang('Total Margin Amount'));
+
+                $row = 2;
+
+                foreach ($report as $r) {
+
+                    $sheet->SetCellValue("A{$row}", $r['supplier_name']);
+                    $sheet->SetCellValue("B{$row}", $this->sma->formatMoney($r['total_sale_price'], 'none'));
+                    $sheet->SetCellValue("C{$row}", $this->sma->formatMoney($r['total_purchase'], 'none'));
+                    $sheet->SetCellValue("D{$row}", $this->sma->formatMoney($r['total_discount'], 'none'));
+                    $sheet->SetCellValue("E{$row}", $this->sma->formatMoney($r['total_cost_price'], 'none'));
+                    $sheet->SetCellValue("F{$row}", $r['total_margin_percent']);
+                    $sheet->SetCellValue("G{$row}", $this->sma->formatMoney($r['total_margin_amount'], 'none'));
+
+                    $row++;
+                }
+
+                // Column widths
+                $widths = [
+                    'A'=>25,'B'=>18,'C'=>18,'D'=>18,'E'=>18,'F'=>15,'G'=>18
+                ];
+
+                foreach ($widths as $col => $w) {
+                    $sheet->getColumnDimension($col)->setWidth($w);
+                }
+            }
+
+            // Vertical alignment
+            $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+
+            // Export file
+            $filename = 'Purchase_Report_' . date('Y-m-d_H_i_s');
+            $this->load->helper('excel');
+            create_excel($this->excel, $filename);
+        }
+
+
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('purchase_report')]];
+        $meta = ['page_title' => lang('purchase_report'), 'bc' => $bc];
+        $this->page_construct('reports/purchase_report', $meta, $this->data);
+    }
+
+
+    public function daily_purchase_report(){
+        //$this->sma->checkPermissions();
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $supplier = $this->input->post('supplier') ? $this->input->post('supplier') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+
+        if ($from_date || $to_date || $supplier) {
+            $response_arr = $this->reports_model->get_daily_purchase($supplier, $from_date, $to_date);
+        }
+
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+        $this->data['start_date'] = $from_date;
+        $this->data['end_date'] = $to_date;
+        $this->data['supplier_id'] = $supplier;
+        $this->data['daily_purchase_data'] = $response_arr;
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('daily_purchase_report')]];
+        $meta = ['page_title' => lang('daily_purchase_report'), 'bc' => $bc];
+        if ($viewtype == 'pdf') {
+            $this->data['viewtype'] = $viewtype;
+            $name = lang('daily_purchase_report') . '.pdf';
+            $html = $this->load->view($this->theme . 'reports/daily_purchase_report', $this->data, true);
+            $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+        } else {
+            $this->page_construct('reports/daily_purchase_report', $meta, $this->data);
+        }
+    }
+
+    public function total_income(){
+        //$this->sma->checkPermissions();
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $supplier = $this->input->post('supplier') != 'All'? $this->input->post('supplier') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+
+        if ($from_date || $to_date || $supplier) {
+            $response_arr = $this->reports_model->get_total_income($supplier, $from_date, $to_date);
+        }
+
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+        $this->data['start_date'] = $from_date;
+        $this->data['end_date'] = $to_date;
+        $this->data['supplier_id'] = $supplier;
+        $this->data['income_data'] = $response_arr;
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('total_income_report')]];
+        $meta = ['page_title' => lang('total_income_report'), 'bc' => $bc];
+        if ($viewtype == 'pdf') {
+            $this->data['viewtype'] = $viewtype;
+            $name = lang('total_income_report') . '.pdf';
+            $html = $this->load->view($this->theme . 'reports/total_income_report', $this->data, true);
+            $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+        } else {
+            $this->page_construct('reports/total_income_report', $meta, $this->data);
+        }
+    }
+
+    public function supplier_stock(){
+        $response_arr = array();
+        $supplier = $this->input->post('supplier') ? $this->input->post('supplier') : '';
+        $warehouse = $this->input->post('warehouse') ? $this->input->post('warehouse') : '';
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : '';
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : '';
+
+        if (isset($_POST['submit'])) {
+            $response_arr = $this->reports_model->getSupplierStockData($supplier, $warehouse, $from_date, $to_date);
+            //echo '<pre>';print_r($response_arr);exit;
+        }
+
+        $this->data['warehouse_id'] = $warehouse;
+        $this->data['supplier_id'] = $supplier;
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+        $this->data['start_date'] = $from_date;
+        $this->data['end_date'] = $to_date;
+        $this->data['stock_data'] = $response_arr;
+
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => '#', 'page' => lang('supplier_stock_report')]
+        ];
+
+        $meta = [
+            'page_title' => lang('supplier_stock_report'),
+            'bc' => $bc
+        ];
+        $this->page_construct('reports/supplier_stock', $meta, $this->data);
+    }
+
+    public function pharmacy_stock()
+    {
         $item = $this->input->post('item') ? $this->input->post('item') : null;
 
-        if(isset($_POST['submit'])){
+        if (isset($_POST['submit'])) {
             $rows = $this->reports_model->getPharmacyStockData($item);
 
-        }else{
+        } else {
             $rows = $this->reports_model->getPharmacyStockData();
         }
 
         $this->data['warehouses'] = $this->site->getAllWarehouses();
-        
+
         foreach ($rows as $row) {
             $productId = $row->id;
             $productCode = $row->item_code;
@@ -154,19 +523,19 @@ class Reports extends MY_Controller
             $batchNo = $row->batch_no;
             $quantity = $row->quantity;
             $expiry = $row->expiry;
-        
+
             // Check if the product is already in the organized array
-            if (!isset($organizedResults[$productId.$batchNo])) {
+            if (!isset($organizedResults[$productId . $batchNo])) {
                 // If not, initialize the product information
-                $organizedResults[$productId.$batchNo] = [
+                $organizedResults[$productId . $batchNo] = [
                     'id' => $productId,
                     'product_name' => $productName,
                     'product_code' => $productCode,
                     'warehouses' => [],
                 ];
 
-                foreach($this->data['warehouses'] as $ware_house){
-                    $organizedResults[$productId.$batchNo]['warehouses'][] = [
+                foreach ($this->data['warehouses'] as $ware_house) {
+                    $organizedResults[$productId . $batchNo]['warehouses'][] = [
                         'warehouse_name' => $ware_house->name,
                         'batch_no' => '-',
                         'quantity' => '-',
@@ -175,14 +544,14 @@ class Reports extends MY_Controller
                 }
             }
 
-            foreach ($organizedResults[$productId.$batchNo]['warehouses'] as $key => $ware_house) {
+            foreach ($organizedResults[$productId . $batchNo]['warehouses'] as $key => $ware_house) {
                 if ($ware_house['warehouse_name'] == $warehouseName) {
-                    $organizedResults[$productId.$batchNo]['warehouses'][$key]['batch_no'] = $batchNo;
-                    $organizedResults[$productId.$batchNo]['warehouses'][$key]['quantity'] = $quantity;
-                    $organizedResults[$productId.$batchNo]['warehouses'][$key]['expiry'] = $expiry;
+                    $organizedResults[$productId . $batchNo]['warehouses'][$key]['batch_no'] = $batchNo;
+                    $organizedResults[$productId . $batchNo]['warehouses'][$key]['quantity'] = $quantity;
+                    $organizedResults[$productId . $batchNo]['warehouses'][$key]['expiry'] = $expiry;
                 }
             }
-        
+
         }
 
         $this->data['stock_data'] = $organizedResults;
@@ -200,26 +569,157 @@ class Reports extends MY_Controller
         $this->page_construct('reports/pharmacy_stock', $meta, $this->data);
     }
 
+    private function stockReportUnitCost($row, $use_inventory_cost)
+    {
+        if ($use_inventory_cost && isset($row->inventory_cost_price)) {
+            $inv = (float)($row->inventory_cost_price ?? 0);
+            return $inv > 0 ? $inv : (float)($row->cost_price ?? 0);
+        }
+        return (float)($row->cost_price ?? 0);
+    }
+
+    public function stock_export_excel(){
+        
+        $data = array();
+        $at_date = $this->input->get('at_date') ? $this->input->get('at_date') : null;
+        $warehouse = $this->site->resolveReportWarehouseFilter('warehouse');
+        $item_group = $this->input->get('item_group') ? $this->input->get('item_group') : null;
+        $item = $this->input->get('item') ? $this->input->get('item') : null;
+        $filterOnType = $this->input->get('filterOnType') ? $this->input->get('filterOnType') : null;
+        $agent = $this->input->get('agent') ? $this->input->get('agent') : null;
+        $agent2 = $this->input->get('agent2') ? $this->input->get('agent2') : null;
+
+        $supplier_id = $this->input->get('supplier_id') ? $this->input->get('supplier_id') : null;
+
+        $data = $this->reports_model->getStockData($at_date, $warehouse, $item_group, $filterOnType, $item, '', '', $supplier_id, $agent, $agent2);
+
+        if (!empty($data)) {
+            $this->load->library('excel');
+            $this->excel->setActiveSheetIndex(0);
+            $this->excel->getActiveSheet()->setTitle(lang('stock_report'));
+            $this->excel->getActiveSheet()->SetCellValue('A1', lang('Item Code'));
+            $this->excel->getActiveSheet()->SetCellValue('B1', lang('Old Code'));
+            $this->excel->getActiveSheet()->SetCellValue('C1', lang('Avz Code'));
+            $this->excel->getActiveSheet()->SetCellValue('D1', lang('Item Name'));
+            $this->excel->getActiveSheet()->SetCellValue('E1', lang('Shelf'));
+            $this->excel->getActiveSheet()->SetCellValue('F1', lang('Batch'));
+            $this->excel->getActiveSheet()->SetCellValue('G1', lang('Expiry'));
+            $this->excel->getActiveSheet()->SetCellValue('H1', lang('Quantity'));
+            $this->excel->getActiveSheet()->SetCellValue('I1', lang('Sale Price'));
+            $this->excel->getActiveSheet()->SetCellValue('J1', lang('Total Sale'));
+            $this->excel->getActiveSheet()->SetCellValue('K1', lang('Purchase Price'));
+            $this->excel->getActiveSheet()->SetCellValue('L1', lang('Total Purchase'));
+            $this->excel->getActiveSheet()->SetCellValue('M1', lang('Cost Price'));
+            $this->excel->getActiveSheet()->SetCellValue('N1', lang('Total Cost'));
+
+            $row = 2;
+            $total_quantity = $total_sale = $total_purchase = $total_cost = 0;
+            $parsed_at_date = !empty($at_date) ? strtotime(substr($this->sma->fld($at_date), 0, 10)) : time();
+            $use_inventory_cost = $parsed_at_date >= strtotime('2026-01-01');
+            foreach ($data as $data_row) {
+                $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->item_code);
+                $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->itm_code);
+                $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->avz_item_code);
+                $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->name);
+                $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->shelf ?? '');
+                $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data_row->batch_no);
+                $this->excel->getActiveSheet()->SetCellValue('G' . $row, $data_row->expiry);
+                $this->excel->getActiveSheet()->SetCellValue('H' . $row, $data_row->quantity);
+                $this->excel->getActiveSheet()->SetCellValue('I' . $row, ($data_row->sale_price));
+                $this->excel->getActiveSheet()->SetCellValue('J' . $row, ($data_row->sale_price * $data_row->quantity));
+                $this->excel->getActiveSheet()->SetCellValue('K' . $row, ($data_row->purchase_price));
+                $this->excel->getActiveSheet()->SetCellValue('L' . $row, ($data_row->purchase_price * $data_row->quantity));
+                $excel_cost_price = $this->stockReportUnitCost($data_row, $use_inventory_cost);
+                $excel_total_cost = $excel_cost_price * $data_row->quantity;
+                $this->excel->getActiveSheet()->SetCellValue('M' . $row, $excel_cost_price);
+                $this->excel->getActiveSheet()->SetCellValue('N' . $row, $excel_total_cost);
+                
+                $total_quantity += $data_row->quantity;
+                $row++;
+            }
+            $this->excel->getActiveSheet()->getStyle('E' . $row . ':J' . $row)->getBorders()
+                ->getTop()->setBorderStyle('medium');
+            //$this->excel->getActiveSheet()->SetCellValue('E' . $row, $this->sma->formatDecimal($igst));
+            //$this->excel->getActiveSheet()->SetCellValue('F' . $row, $this->sma->formatDecimal($cgst));
+            //$this->excel->getActiveSheet()->SetCellValue('G' . $row, $this->sma->formatDecimal($sgst));
+            //$this->excel->getActiveSheet()->SetCellValue('H' . $row, $this->sma->formatDecimal($product_tax));
+            //$this->excel->getActiveSheet()->SetCellValue('I' . $row, $this->sma->formatDecimal($order_tax));
+            //$this->excel->getActiveSheet()->SetCellValue('J' . $row, $this->sma->formatDecimal($total));
+
+            //$this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(20);
+            //$this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
+            //$this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(20);
+            //$this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(15);
+            //$this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
+            //$this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(15);
+            //$this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(15);
+            //$this->excel->getActiveSheet()->getColumnDimension('H')->setWidth(15);
+            //$this->excel->getActiveSheet()->getColumnDimension('I')->setWidth(20);
+            $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+            $this->excel->getActiveSheet()->getStyle('E2:E' . $row)->getAlignment()->setWrapText(true);
+            $filename = 'stock_report';
+            $this->load->helper('excel');
+            create_excel($this->excel, $filename);
+        }
+    }
+
     public function stock()
     {
+        $at_date = $this->input->get('at_date') ? $this->input->get('at_date') : null;
+        $warehouse = $this->site->resolveReportWarehouseFilter('warehouse');
+        $supplier_id = $this->input->get('supplier_id') ? $this->input->get('supplier_id') : null;
+        $item_group = $this->input->get('item_group') ? $this->input->get('item_group') : null;
+        $item = $this->input->get('item') ? $this->input->get('item') : null;
+        $filterOnType = $this->input->get('filterOnType') ? $this->input->get('filterOnType') : null;
+        $viewtype = $this->input->get('viewtype') ? $this->input->get('viewtype') : null;
+        $agent = $this->input->get('agent') ? $this->input->get('agent') : null;
+        $agent2 = $this->input->get('agent2') ? $this->input->get('agent2') : null;
 
+        $this->data['supplier_id'] = $supplier_id;
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+        $this->data['agent'] = $agent;
+        $this->data['agent2'] = $agent2;
+        $this->data['agents'] = $this->reports_model->getDistinctAgents();
 
-        $at_date = $this->input->post('at_date') ? $this->input->post('at_date') : null;
-        $warehouse = $this->input->post('warehouse') ? $this->input->post('warehouse') : null;
-        $supplier = $this->input->post('supplier') ? $this->input->post('supplier') : null;
-        $item_group = $this->input->post('item_group') ? $this->input->post('item_group') : null;
-        $item = $this->input->post('item') ? $this->input->post('item') : null;
+        $filterOnTypeArr = [
+            "" => "-- ALL --",
+            "purchase" => "Purchases",
+            "sale" => "Sales",
+            "pos" => "Pos",
+            "customer_return" => "Return Customer",
+            "return_to_supplier" => "Return Supplier",
+            "transfer_in" => "Transfer In",
+            "transfer_out" => "Transfer Out",
+            "adjustment_increase" => "Inventory Increase",
+            "adjustment_decrease" => "Inventory Decrease"
+        ];
+        $this->data['filterOnTypeArr'] = $filterOnTypeArr;
+        $this->data['filterOnType'] = $filterOnType;
 
-        if(isset($_POST['submit'])){
-            $this->data['stock_data'] = $this->reports_model->getStockData($at_date, $warehouse, $supplier, $item_group, $item);
-        }else{
+        if (isset($_GET['submit'])) {
+            $this->load->library('pagination'); 
+            $config['per_page'] = 100; 
+            $page = ($this->uri->segment(4)) ? $this->uri->segment(4) : 0;
+            $this->data['stock_data'] = $this->reports_model->getStockData($at_date, $warehouse, $item_group, $filterOnType, $item, $page, $config['per_page'], $supplier_id, $agent, $agent2);
+            $this->data['stock_data_totals'] = $this->reports_model->getStockDataTotals($at_date, $warehouse, $item_group, $filterOnType, $item, $supplier_id, $agent, $agent2);
+            $grand = $this->reports_model->getStockDataGrandTotals($at_date, $warehouse, $item_group, $filterOnType, $item, $supplier_id, $agent, $agent2);
+            $this->data['new_grand_total'] = $grand[0];
+            $this->data['offset'] = $page;
+
+            $config['base_url'] = admin_url('reports/stock');
+            $config['total_rows'] = sizeof($this->data['stock_data_totals']);
+            $config['reuse_query_string'] = TRUE;
+            $this->pagination->initialize($config); 
+            $this->data['pagination_links']=  $this->pagination->create_links();
+        } else {
             $this->data['stock_data'] = [];
         }
-        
+
         $this->data['at_date'] = $at_date;
 
+        $this->data['warehouse'] = $warehouse;
         $this->data['warehouses'] = $this->site->getAllWarehouses();
-        $this->data['suppliers'] = $this->deals_model->getAllSuppliersList();
+        //$this->data['suppliers'] = $this->deals_model->getAllSuppliersList();
         $this->data['categories'] = $this->site->getAllCategories();
         $bc = [
             ['link' => base_url(), 'page' => lang('home')],
@@ -231,12 +731,107 @@ class Reports extends MY_Controller
             'page_title' => lang('stock_report'),
             'bc' => $bc
         ];
-        $this->page_construct('reports/stock', $meta, $this->data);
+        if ($viewtype == 'pdf') {
+            $this->data['viewtype'] = $viewtype;
+            $name = lang('stock') . '.pdf';
+            $html = $this->load->view($this->theme . 'reports/stock', $this->data, true);
+            $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+        } else {
+            $this->page_construct('reports/stock', $meta, $this->data);
+        }
+
+    }
+
+    public function consumption_report()
+    {
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+        $item = $this->input->get('item') && $this->input->get('sgproduct') ? $this->input->get('item') : null;
+        $supplier_id = $this->input->get('supplier_id') ? $this->input->get('supplier_id') : null;
+        $period = $this->input->get('period') ? $this->input->get('period') : 1;
+        // Load products for dropdown
+        $products = $this->products_model->getAllProducts();
+        $this->data['products'] = $products;
+        $agent = $this->input->get('agent') ? $this->input->get('agent') : null;
+        $agent2 = $this->input->get('agent2') ? $this->input->get('agent2') : null;
+
+        $this->data['supplier_id'] = $supplier_id;
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+        $this->data['agent'] = $agent;
+        $this->data['agent2'] = $agent2;
+        $this->data['agents'] = $this->reports_model->getDistinctAgents();
+        $this->data['period'] = $period;
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['warehouse_id'] = $warehouse_id;
+
+        // Load filtered stock consumption data
+        $stock_array = $this->reports_model->getStockConsumption($warehouse_id, $item, $supplier_id, $agent, $agent2, $period);
+        $this->data['stock_array'] = $stock_array;
+
+        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Stock Consumption Report')]];
+        $meta = ['page_title' => lang('Stock Consumption Report'), 'bc' => $bc];
+        $this->page_construct('reports/consumption_report', $meta, $this->data);
+    }
+
+    public function consumption_report_export_excel(){
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+        $item = $this->input->get('item') ? $this->input->get('item') : null;
+        $supplier_id = $this->input->get('supplier_id') ? $this->input->get('supplier_id') : null;
+        $period = $this->input->get('period') ? $this->input->get('period') : 1;
+        $agent = $this->input->get('agent') ? $this->input->get('agent') : null;
+        $agent2 = $this->input->get('agent2') ? $this->input->get('agent2') : null;
+
+        $data = $this->reports_model->getStockConsumption($warehouse_id, $item, $supplier_id, $agent, $agent2, $period);
+
+        if (!empty($data)) {
+            $this->load->library('excel');
+            $this->excel->setActiveSheetIndex(0);
+            $this->excel->getActiveSheet()->setTitle(lang('consumption_report'));
+            $this->excel->getActiveSheet()->SetCellValue('A1', lang('code'));
+            $this->excel->getActiveSheet()->SetCellValue('B1', lang('name'));
+            $this->excel->getActiveSheet()->SetCellValue('C1', lang('Available Quantity'));
+            $this->excel->getActiveSheet()->SetCellValue('D1', lang('Sale'));
+            $this->excel->getActiveSheet()->SetCellValue('E1', lang('Avg Sale'));
+            $this->excel->getActiveSheet()->SetCellValue('F1', lang('Required Stock'));
+            $this->excel->getActiveSheet()->SetCellValue('G1', lang('Months'));
+
+            $row = 2;
+            foreach ($data as $data_row) {
+                $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->code);
+                $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->name);
+                $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->available_stock);
+                $this->excel->getActiveSheet()->SetCellValue('D' . $row, isset($data_row->avg_stock) ? $data_row->avg_stock : ($data_row->avg_last_3_months_sales / $period));
+                $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->avg_last_3_months_sales);
+                $required_stock = isset($data_row->required_stock) ? $data_row->required_stock : (($data_row->avg_last_3_months_sales / $period) - $data_row->available_stock > 0 ? ($data_row->avg_last_3_months_sales / $period) - $data_row->available_stock : 0);
+                $this->excel->getActiveSheet()->SetCellValue('F' . $row, $required_stock);
+                $this->excel->getActiveSheet()->SetCellValue('G' . $row, $period . ' months');
+                $row++;
+            }
+
+            $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+            $filename = 'consumption_report';
+            $this->load->helper('excel');
+            create_excel($this->excel, $filename);
+        }
+    }
+
+    public function get_agent2_by_main_agent()
+    {
+        $main_agent = $this->input->post('main_agent');
+        if ($main_agent) {
+            $agent2_list = $this->reports_model->getAgent2ByMainAgent($main_agent);
+            $options = '<option value="">Select Agent 2</option>';
+            foreach ($agent2_list as $agent) {
+                $options .= '<option value="' . $agent->agent2 . '">' . $agent->agent2 . '</option>';
+            }
+            echo $options;
+        } else {
+            echo '<option value="">Select Agent 2</option>';
+        }
     }
 
     public function getStock()
     {
-//        $this->sma->checkPermissions('customers', true);
+        //        $this->sma->checkPermissions('customers', true);
 
         $this->load->library('datatables');
         $this->datatables
@@ -253,7 +848,7 @@ class Reports extends MY_Controller
             ->join('sma_warehouses_products wp', ' wp.`product_id` = p.`id`', 'left')
             ->where('wp.warehouse_id', 32)
             ->where('p.`type`', 'standard');
-//            ->group_by('companies.id')
+        //            ->group_by('companies.id')
 //            ->add_column('Actions', "<div class='text-center'><a class=\"tip\" title='" . lang('view_report') . "' href='" . admin_url('reports/customer_report/$1') . "'><span class='label label-primary'>" . lang('view_report') . '</span></a></div>', 'id')
 //            ->unset_column('id');
         echo $this->datatables->generate();
@@ -261,7 +856,7 @@ class Reports extends MY_Controller
 
     public function customers()
     {
-        $this->sma->checkPermissions('customers');
+        //$this->sma->checkPermissions('customers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customers_report')]];
@@ -271,7 +866,7 @@ class Reports extends MY_Controller
 
     public function daily_purchases($warehouse_id = null, $year = null, $month = null, $pdf = null, $user_id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         if (!$this->Owner && !$this->Admin && $this->session->userdata('warehouse_id')) {
             $warehouse_id = $this->session->userdata('warehouse_id');
         }
@@ -348,7 +943,7 @@ class Reports extends MY_Controller
 
     public function daily_sales($warehouse_id = null, $year = null, $month = null, $pdf = null, $user_id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         if (!$this->Owner && !$this->Admin && $this->session->userdata('warehouse_id')) {
             $warehouse_id = $this->session->userdata('warehouse_id');
         }
@@ -425,7 +1020,7 @@ class Reports extends MY_Controller
 
     public function expenses($id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['warehouses'] = $this->site->getAllWarehouses();
         $this->data['users'] = $this->reports_model->getStaff();
@@ -437,7 +1032,7 @@ class Reports extends MY_Controller
 
     public function expiry_alerts($warehouse_id = null)
     {
-        $this->sma->checkPermissions('expiry_alerts');
+        //$this->sma->checkPermissions('expiry_alerts');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
@@ -458,7 +1053,7 @@ class Reports extends MY_Controller
 
     public function get_deposits($company_id = null)
     {
-        $this->sma->checkPermissions('customers', true);
+        //$this->sma->checkPermissions('customers', true);
         $this->load->library('datatables');
         $this->datatables
             ->select("date, amount, paid_by, CONCAT({$this->db->dbprefix('users')}.first_name, ' ', {$this->db->dbprefix('users')}.last_name) as created_by, note", false)
@@ -470,7 +1065,7 @@ class Reports extends MY_Controller
 
     public function get_purchase_taxes($pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('tax', true);
+        //$this->sma->checkPermissions('tax', true);
         $supplier = $this->input->get('supplier') ? $this->input->get('supplier') : null;
         $warehouse = $this->input->get('warehouse') ? $this->input->get('warehouse') : null;
         $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : null;
@@ -591,7 +1186,7 @@ class Reports extends MY_Controller
 
     public function get_sale_taxes($pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('tax', true);
+        //$this->sma->checkPermissions('tax', true);
         $biller = $this->input->get('biller') ? $this->input->get('biller') : null;
         $warehouse = $this->input->get('warehouse') ? $this->input->get('warehouse') : null;
         $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : null;
@@ -711,7 +1306,7 @@ class Reports extends MY_Controller
 
     public function getAdjustmentReport($pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('products', true);
+        //$this->sma->checkPermissions('products', true);
 
         $product = $this->input->get('product') ? $this->input->get('product') : null;
         $warehouse = $this->input->get('warehouse') ? $this->input->get('warehouse') : null;
@@ -851,7 +1446,7 @@ class Reports extends MY_Controller
 
     public function getBrandsReport($pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('products', true);
+        //$this->sma->checkPermissions('products', true);
         $warehouse = $this->input->get('warehouse') ? $this->input->get('warehouse') : null;
         $brand = $this->input->get('brand') ? $this->input->get('brand') : null;
         $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : null;
@@ -989,7 +1584,7 @@ class Reports extends MY_Controller
 
     public function getCategoriesReport($pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('products', true);
+        //$this->sma->checkPermissions('products', true);
         $warehouse = $this->input->get('warehouse') ? $this->input->get('warehouse') : null;
         $category = $this->input->get('category') ? $this->input->get('category') : null;
         $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : null;
@@ -1159,7 +1754,7 @@ class Reports extends MY_Controller
 
     public function getCustomers($pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('customers', true);
+        //$this->sma->checkPermissions('customers', true);
 
         if ($pdf || $xls) {
             $this->db
@@ -1237,7 +1832,7 @@ class Reports extends MY_Controller
 
     public function getExpensesReport($pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('expenses');
+        //$this->sma->checkPermissions('expenses');
 
         $reference_no = $this->input->get('reference_no') ? $this->input->get('reference_no') : null;
         $category = $this->input->get('category') ? $this->input->get('category') : null;
@@ -1373,7 +1968,7 @@ class Reports extends MY_Controller
         $month = $this->input->get('month') ? $this->input->get('month') : null;
 
         $monthNumber = '+' . $month . 'months';
-        $this->sma->checkPermissions('expiry_alerts', true);
+        //$this->sma->checkPermissions('expiry_alerts', true);
         $date = date('Y-m-d', strtotime($monthNumber));
 
         if (!$this->Owner && !$warehouse_id) {
@@ -1411,7 +2006,7 @@ class Reports extends MY_Controller
 
     public function getPaymentsReport($pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('payments', true);
+        //$this->sma->checkPermissions('payments', true);
 
         $user = $this->input->get('user') ? $this->input->get('user') : null;
         $supplier = $this->input->get('supplier') ? $this->input->get('supplier') : null;
@@ -1595,7 +2190,7 @@ class Reports extends MY_Controller
 
     public function getProductsReport($pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('products', true);
+        //$this->sma->checkPermissions('products', true);
 
         $product = $this->input->get('product') ? $this->input->get('product') : null;
         $user = $this->input->get('user') ? $this->input->get('user') : null;
@@ -1810,7 +2405,7 @@ class Reports extends MY_Controller
 
     public function getPurchasesReport($pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('purchases', true);
+        //$this->sma->checkPermissions('purchases', true);
 
         $product = $this->input->get('product') ? $this->input->get('product') : null;
         $user = $this->input->get('user') ? $this->input->get('user') : null;
@@ -1961,7 +2556,7 @@ class Reports extends MY_Controller
 
     public function getQuantityAlerts($warehouse_id = null, $pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('quantity_alerts', true);
+        //$this->sma->checkPermissions('quantity_alerts', true);
         if (!$this->Owner && !$warehouse_id) {
             $user = $this->site->getUser();
             $warehouse_id = $user->warehouse_id;
@@ -2220,7 +2815,7 @@ class Reports extends MY_Controller
 
     public function getRrgisterlogs($pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('register', true);
+        //$this->sma->checkPermissions('register', true);
         if ($this->input->get('user')) {
             $user = $this->input->get('user');
         } else {
@@ -2340,7 +2935,7 @@ class Reports extends MY_Controller
 
     public function getSalesReport($pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('sales', true);
+        //$this->sma->checkPermissions('sales', true);
         $product = $this->input->get('product') ? $this->input->get('product') : null;
         $user = $this->input->get('user') ? $this->input->get('user') : null;
         $customer = $this->input->get('customer') ? $this->input->get('customer') : null;
@@ -2512,7 +3107,7 @@ class Reports extends MY_Controller
 
     public function getSuppliers($pdf = null, $xls = null)
     {
-        $this->sma->checkPermissions('suppliers', true);
+        //$this->sma->checkPermissions('suppliers', true);
 
         if ($pdf || $xls) {
             $this->db
@@ -2771,7 +3366,7 @@ class Reports extends MY_Controller
 
     public function index()
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['monthly_sales'] = $this->reports_model->getChartData();
         $this->data['stock'] = $this->reports_model->getStockValue();
@@ -2805,7 +3400,7 @@ class Reports extends MY_Controller
 
     public function monthly_purchases($warehouse_id = null, $year = null, $pdf = null, $user_id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         if (!$this->Owner && !$this->Admin && $this->session->userdata('warehouse_id')) {
             $warehouse_id = $this->session->userdata('warehouse_id');
         }
@@ -2835,7 +3430,7 @@ class Reports extends MY_Controller
 
     public function monthly_sales($warehouse_id = null, $year = null, $pdf = null, $user_id = null)
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         if (!$this->Owner && !$this->Admin && $this->session->userdata('warehouse_id')) {
             $warehouse_id = $this->session->userdata('warehouse_id');
         }
@@ -2865,7 +3460,7 @@ class Reports extends MY_Controller
 
     public function payments()
     {
-        $this->sma->checkPermissions('payments');
+        //$this->sma->checkPermissions('payments');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['users'] = $this->reports_model->getStaff();
         $this->data['billers'] = $this->site->getAllCompanies('biller');
@@ -2877,7 +3472,7 @@ class Reports extends MY_Controller
 
     public function products()
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
         $this->data['categories'] = $this->site->getAllCategories();
         $this->data['brands'] = $this->site->getAllBrands();
@@ -2918,7 +3513,7 @@ class Reports extends MY_Controller
 
     public function profit_loss($start_date = null, $end_date = null)
     {
-        $this->sma->checkPermissions('profit_loss');
+        //$this->sma->checkPermissions('profit_loss');
         if (!$start_date) {
             $start = $this->db->escape(date('Y-m') . '-1');
             $start_date = date('Y-m') . '-1';
@@ -2971,7 +3566,7 @@ class Reports extends MY_Controller
 
     public function profit_loss_pdf($start_date = null, $end_date = null)
     {
-        $this->sma->checkPermissions('profit_loss');
+        //$this->sma->checkPermissions('profit_loss');
         if (!$start_date) {
             $start = $this->db->escape(date('Y-m') . '-1');
             $start_date = date('Y-m') . '-1';
@@ -3018,7 +3613,7 @@ class Reports extends MY_Controller
 
     public function purchases()
     {
-        $this->sma->checkPermissions('purchases');
+        //$this->sma->checkPermissions('purchases');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['users'] = $this->reports_model->getStaff();
         $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -3029,7 +3624,7 @@ class Reports extends MY_Controller
 
     public function quantity_alerts($warehouse_id = null)
     {
-        $this->sma->checkPermissions('quantity_alerts');
+        //$this->sma->checkPermissions('quantity_alerts');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
@@ -3050,7 +3645,7 @@ class Reports extends MY_Controller
 
     public function register()
     {
-        $this->sma->checkPermissions('register');
+        //$this->sma->checkPermissions('register');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['users'] = $this->reports_model->getStaff();
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('register_report')]];
@@ -3058,9 +3653,439 @@ class Reports extends MY_Controller
         $this->page_construct('reports/register', $meta, $this->data);
     }
 
+    public function out_of_stock_dashboard()
+    {
+        //$this->sma->checkPermissions(); //'sales'
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        // $this->data['users'] = $this->reports_model->getStaff(); 
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('out_of_stock_dashboard')]];
+        $meta = ['page_title' => lang('out_of_stock_dashboard'), 'bc' => $bc];
+        $this->page_construct('reports/out_of_stock_dashboard', $meta, $this->data);
+    }
+    public function get_out_of_stock_products($pdf = null, $xls = null)
+    {
+
+        //$this->sma->checkPermissions('sales', true);
+        // $product = $this->input->get('product') ? $this->input->get('product') : null;  
+        if (!$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
+            $user = $this->session->userdata('user_id');
+        }
+        $status = $this->input->post('status') ? $this->input->post('status') : null;
+
+        if ($pdf || $xls) {
+            $keyword = $this->input->get('keyword') ? $this->input->get('keyword') : null;
+            $status = $this->input->get('status') ? $this->input->get('status') : null;
+            $this->db
+                ->select(" {$this->db->dbprefix('products')}.code, 
+            {$this->db->dbprefix('products')}.name,  
+            {$this->db->dbprefix('products')}.alert_quantity, 
+            SUM({$this->db->dbprefix('inventory_movements')}.quantity) as total_quantity
+            ", false)
+                ->from('inventory_movements');
+            $this->db->join('products', 'products.id=inventory_movements.product_id')
+                ->group_by("inventory_movements.product_id");
+            if ($status == 'out_of_stock') {
+                $this->db->having("sum({$this->db->dbprefix('inventory_movements')}.quantity)<=0");
+            } else {
+                $this->db->having("sum({$this->db->dbprefix('inventory_movements')}.quantity)<={$this->db->dbprefix('products')}.alert_quantity");
+            }
+            $keyword = trim($this->input->post('keyword'));
+            if (!empty($keyword)) {
+                $this->db->group_start();
+                $this->db->where("{$this->db->dbprefix('products')}.code", $keyword);
+                $this->db->or_like("{$this->db->dbprefix('products')}.name", $keyword, 'both');
+                $this->db->group_end();
+            }
+            $q = $this->db->get();
+            //echo $this->db->last_query(); exit; 
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $data[] = $row;
+                }
+            } else {
+                $data = null;
+            }
+
+            if (!empty($data)) {
+                $this->load->library('excel');
+                $this->excel->setActiveSheetIndex(0);
+                $this->excel->getActiveSheet()->setTitle(lang('Stock_dashboard'));
+                $this->excel->getActiveSheet()->SetCellValue('A1', lang('product_code'));
+                $this->excel->getActiveSheet()->SetCellValue('B1', lang('product_name'));
+                $this->excel->getActiveSheet()->SetCellValue('C1', lang('alert_quantity'));
+                $this->excel->getActiveSheet()->SetCellValue('D1', lang('quantity'));
+                $row = 2;
+                foreach ($data as $data_row) {         //  $row, $this->sma->hrld($data_row->code) // 
+                    $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->code);
+                    $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->name);
+                    $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->alert_quantity);
+                    $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->total_quantity);
+                    $row++;
+                }
+                $this->excel->getActiveSheet()->getStyle('G' . $row . ':H' . $row)->getBorders()
+                    ->getTop()->setBorderStyle('medium');
+
+                // $this->excel->getActiveSheet()->SetCellValue('H' . $row, $balance); 
+                $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20);
+                $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+                $this->excel->getActiveSheet()->getStyle('E2:E' . $row)->getAlignment()->setWrapText(true);
+                $filename = 'Stock_dashboard';
+                $this->load->helper('excel');
+                create_excel($this->excel, $filename);
+
+            }
+            $this->session->set_flashdata('error', lang('nothing_found'));
+            redirect($_SERVER['HTTP_REFERER']);
+        } else {
+
+            $this->load->library('datatables');
+            $this->datatables
+                ->select("{$this->db->dbprefix('products')}.image, {$this->db->dbprefix('products')}.code, 
+                {$this->db->dbprefix('products')}.name,  
+                {$this->db->dbprefix('products')}.alert_quantity, 
+                SUM({$this->db->dbprefix('inventory_movements')}.quantity) as total_quantity
+                ", false)
+                ->from('inventory_movements');
+            $this->datatables->join('products', 'products.id=inventory_movements.product_id')
+                ->group_by("inventory_movements.product_id");
+            if ($status == 'out_of_stock') {
+                $this->datatables->having("sum({$this->db->dbprefix('inventory_movements')}.quantity)<=0");
+            } else {
+                $this->datatables->having("sum({$this->db->dbprefix('inventory_movements')}.quantity)<={$this->db->dbprefix('products')}.alert_quantity");
+            }
+
+
+            $keyword = trim($this->input->post('keyword'));
+            if (!empty($keyword)) {
+                $this->db->group_start();
+                $this->datatables->where("{$this->db->dbprefix('products')}.code", $keyword);
+                $this->db->or_like("{$this->db->dbprefix('products')}.name", $keyword, 'both');
+                // $this->db->or_like("{$this->db->dbprefix('brands')}.name",$keyword,'both');   
+                // $this->db->or_like("{$this->db->dbprefix('categories')}.name",$keyword,'both'); 
+                $this->db->group_end();
+            }
+
+            // $this->db->order_by("total_pieces",'DESC');  
+            echo $this->datatables->generate();
+        }
+    }
+    public function promotion_items_report()
+    {
+        //$this->sma->checkPermissions(); //'sales'
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['users'] = $this->reports_model->getStaff();
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('promotion_items_report')]];
+        $meta = ['page_title' => lang('promotion_items_report'), 'bc' => $bc];
+        $this->page_construct('reports/promotion_items_report', $meta, $this->data);
+    }
+    public function get_promotion_items($pdf = null, $xls = null)
+    {
+
+        //$this->sma->checkPermissions('sales', true);
+        // $product = $this->input->get('product') ? $this->input->get('product') : null; 
+        $start_date = $this->input->post('start_date') ? $this->input->post('start_date') : null;
+        $end_date = $this->input->post('end_date') ? $this->input->post('end_date') : null;
+
+        if ($start_date) {
+            $start_date = $this->sma->fld($start_date);
+            $end_date = $this->sma->fld($end_date);
+        }
+        if (!$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
+            $user = $this->session->userdata('user_id');
+        }
+
+        if ($pdf || $xls) {
+
+            $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : null;
+            $end_date = $this->input->get('end_date') ? $this->input->get('end_date') : null;
+            $keyword = $this->input->get('keyword') ? $this->input->get('keyword') : null;
+
+            if ($start_date) {
+                $start_date = $this->sma->fld($start_date);
+                $end_date = $this->sma->fld($end_date);
+            }
+            $this->db
+                ->select("{$this->db->dbprefix('products')}.code, {$this->db->dbprefix('products')}.name,  
+                {$this->db->dbprefix('products')}.start_date,  {$this->db->dbprefix('products')}.end_date,  
+                {$this->db->dbprefix('brands')}.name as brand, {$this->db->dbprefix('categories')}.name as cname,
+                {$this->db->dbprefix('products')}.promo_price,
+                {$this->db->dbprefix('products')}.price,
+                ", false)
+                ->from('products');
+            $this->db->join('categories', 'products.category_id=categories.id', 'left')
+                ->join('brands', 'products.brand=brands.id', 'left')
+                ->group_by("products.id");
+            $this->db->where("{$this->db->dbprefix('products')}.promotion", 1);
+            $keyword = trim($this->input->post('keyword'));
+            if (!empty($keyword)) {
+                $this->db->group_start();
+                $this->db->where("{$this->db->dbprefix('products')}.code", $keyword);
+                $this->db->or_like("{$this->db->dbprefix('products')}.name", $keyword, 'both');
+                $this->db->or_like("{$this->db->dbprefix('brands')}.name", $keyword, 'both');
+                $this->db->or_like("{$this->db->dbprefix('categories')}.name", $keyword, 'both');
+                $this->db->group_end();
+            }
+            if ($start_date) {
+                $this->db->where($this->db->dbprefix('products') . '.start_date BETWEEN "' . $start_date . '" and "' . $end_date . '"');
+            }
+
+            $q = $this->db->get();
+            //echo $this->db->last_query(); exit; 
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $data[] = $row;
+                }
+            } else {
+                $data = null;
+            }
+
+            if (!empty($data)) {
+                $this->load->library('excel');
+                $this->excel->setActiveSheetIndex(0);
+                $this->excel->getActiveSheet()->setTitle(lang('promo_items'));
+                $this->excel->getActiveSheet()->SetCellValue('A1', lang('product_code'));
+                $this->excel->getActiveSheet()->SetCellValue('B1', lang('product_name'));
+                $this->excel->getActiveSheet()->SetCellValue('C1', lang('start_date'));
+                $this->excel->getActiveSheet()->SetCellValue('D1', lang('end_date'));
+                $this->excel->getActiveSheet()->SetCellValue('E1', lang('brand'));
+                $this->excel->getActiveSheet()->SetCellValue('F1', lang('category'));
+                $this->excel->getActiveSheet()->SetCellValue('G1', lang('promo_price'));
+                $this->excel->getActiveSheet()->SetCellValue('H1', lang('Price'));
+                $row = 2;
+                $gtotal_promo_price = 0;
+                $gtotal_Price = 0;
+
+                foreach ($data as $data_row) {         //  $row, $this->sma->hrld($data_row->code) // 
+                    $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->code);
+                    $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->name);
+                    $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->start_date);
+                    $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->end_date);
+                    $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->brand);
+                    $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data_row->cname);
+                    $this->excel->getActiveSheet()->SetCellValue('G' . $row, $data_row->promo_price);
+                    $this->excel->getActiveSheet()->SetCellValue('H' . $row, $data_row->price);
+
+                    $gtotal_promo_price += $data_row->promo_price;
+                    $gtotal_Price += $data_row->price;
+                    $row++;
+                }
+                $this->excel->getActiveSheet()->getStyle('G' . $row . ':H' . $row)->getBorders()
+                    ->getTop()->setBorderStyle('medium');
+                $this->excel->getActiveSheet()->SetCellValue('G' . $row, $gtotal_promo_price);
+                $this->excel->getActiveSheet()->SetCellValue('H' . $row, $gtotal_Price);
+                // $this->excel->getActiveSheet()->SetCellValue('H' . $row, $balance); 
+                $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20);
+                $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+                $this->excel->getActiveSheet()->getStyle('E2:E' . $row)->getAlignment()->setWrapText(true);
+                $filename = 'promotion_items_report';
+                $this->load->helper('excel');
+                create_excel($this->excel, $filename);
+
+            }
+            $this->session->set_flashdata('error', lang('nothing_found'));
+            redirect($_SERVER['HTTP_REFERER']);
+        } else {
+
+            $this->load->library('datatables');
+            $this->datatables
+                ->select("{$this->db->dbprefix('products')}.image, {$this->db->dbprefix('products')}.code, 
+                {$this->db->dbprefix('products')}.name,  
+                {$this->db->dbprefix('products')}.start_date,  {$this->db->dbprefix('products')}.end_date,  
+                {$this->db->dbprefix('brands')}.name as brand, {$this->db->dbprefix('categories')}.name as cname,
+                {$this->db->dbprefix('products')}.promo_price,
+                {$this->db->dbprefix('products')}.price,
+                ", false)
+                ->from('products');
+            $this->datatables->join('categories', 'products.category_id=categories.id', 'left')
+                ->join('brands', 'products.brand=brands.id', 'left')
+                ->group_by("products.id");
+            $this->datatables->where("{$this->db->dbprefix('products')}.promotion", 1);
+            $keyword = trim($this->input->post('keyword'));
+            if (!empty($keyword)) {
+                $this->db->group_start();
+                $this->datatables->where("{$this->db->dbprefix('products')}.code", $keyword);
+                $this->db->or_like("{$this->db->dbprefix('products')}.name", $keyword, 'both');
+                $this->db->or_like("{$this->db->dbprefix('brands')}.name", $keyword, 'both');
+                $this->db->or_like("{$this->db->dbprefix('categories')}.name", $keyword, 'both');
+                $this->db->group_end();
+            }
+            if (!empty($start_date) and !empty($end_date)) {
+                $this->datatables->where($this->db->dbprefix('products') . '.start_date BETWEEN "' . $start_date . '" and "' . $end_date . '"');
+            }
+            // $this->db->order_by("total_pieces",'DESC');  
+            echo $this->datatables->generate();
+        }
+    }
+    public function fast_moving_items()
+    {
+        //$this->sma->checkPermissions('sales');
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['users'] = $this->reports_model->getStaff();
+        // $this->data['warehouses'] = $this->site->getAllWarehouses();
+        // $this->data['billers'] = $this->site->getAllCompanies('biller');
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('fast_moving_items')]];
+        $meta = ['page_title' => lang('fast_moving_items'), 'bc' => $bc];
+        $this->page_construct('reports/fast_moving_items', $meta, $this->data);
+    }
+
+    public function ecommerce_fast_moving_items($pdf = null, $xls = null)
+    {
+        //$this->sma->checkPermissions('sales', true);
+        // $product = $this->input->get('product') ? $this->input->get('product') : null; 
+        $start_date = $this->input->post('start_date') ? $this->input->post('start_date') : null;
+        $end_date = $this->input->post('end_date') ? $this->input->post('end_date') : null;
+
+        if ($start_date) {
+            $start_date = $this->sma->fld($start_date);
+            $end_date = $this->sma->fld($end_date);
+        }
+        if (!$this->Owner && !$this->Admin && !$this->session->userdata('view_right')) {
+            $user = $this->session->userdata('user_id');
+        }
+
+        if ($pdf || $xls) {
+
+            $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : null;
+            $end_date = $this->input->get('end_date') ? $this->input->get('end_date') : null;
+            $keyword = $this->input->get('keyword') ? $this->input->get('keyword') : null;
+
+            if ($start_date) {
+                $start_date = $this->sma->fld($start_date);
+                $end_date = $this->sma->fld($end_date);
+            }
+            $this->db
+                ->select(" {$this->db->dbprefix('products')}.code, {$this->db->dbprefix('products')}.name,  
+            SUM({$this->db->dbprefix('sale_items')}.quantity) as total_pieces, SUM({$this->db->dbprefix('sale_items')}.subtotal) as total_amount 
+            ", false)
+                ->from('sale_items')
+                ->join('sales', 'sales.id=sale_items.sale_id', 'left')
+                ->join('products', 'products.id=sale_items.product_id', 'left')
+                ->group_by('sale_items.product_id')
+                ->order_by("total_pieces", 'DESC')
+            ;
+            $this->db->where("{$this->db->dbprefix('sales')}.shop", 1);
+            $this->db->where("{$this->db->dbprefix('sales')}.sale_status", "Completed");
+
+            if (!empty($keyword)) {
+                $this->db->group_start();
+                $this->db->where("{$this->db->dbprefix('products')}.code", $keyword);
+                $this->db->or_like("{$this->db->dbprefix('products')}.name", $keyword, 'both');
+                $this->db->group_end();
+            }
+            // if ($product) {
+            //     $this->db->where('sale_items.product_id', $product);
+            // }  
+            if ($start_date) {
+                $this->db->where('DATE(' . $this->db->dbprefix('sales') . '.date) BETWEEN "' . $start_date . '" and "' . $end_date . '"');
+            }
+
+            $q = $this->db->get();
+            //echo $this->db->last_query(); exit; 
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $data[] = $row;
+                }
+            } else {
+                $data = null;
+            }
+
+            if (!empty($data)) {
+                $this->load->library('excel');
+                $this->excel->setActiveSheetIndex(0);
+                $this->excel->getActiveSheet()->setTitle(lang('ecommerce_fast_moving_items'));
+                $this->excel->getActiveSheet()->SetCellValue('A1', lang('product_code'));
+                $this->excel->getActiveSheet()->SetCellValue('B1', lang('product_name'));
+                $this->excel->getActiveSheet()->SetCellValue('C1', lang('quantities_sold'));
+                $this->excel->getActiveSheet()->SetCellValue('D1', lang('total_amount'));
+                $row = 2;
+                $gtotal_pieces = 0;
+                $gtotal_amount = 0;
+
+                foreach ($data as $data_row) {         //  $row, $this->sma->hrld($data_row->code) // 
+                    $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->code);
+                    $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->name);
+                    $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->total_pieces);
+                    $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->total_amount);
+                    $gtotal_pieces += $data_row->total_pieces;
+                    $gtotal_amount += $data_row->total_amount;
+                    $row++;
+                }
+                $this->excel->getActiveSheet()->getStyle('C' . $row . ':D' . $row)->getBorders()
+                    ->getTop()->setBorderStyle('medium');
+                $this->excel->getActiveSheet()->SetCellValue('C' . $row, $gtotal_pieces);
+                $this->excel->getActiveSheet()->SetCellValue('D' . $row, $gtotal_amount);
+                // $this->excel->getActiveSheet()->SetCellValue('H' . $row, $balance); 
+                $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20);
+                $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+                $this->excel->getActiveSheet()->getStyle('E2:E' . $row)->getAlignment()->setWrapText(true);
+                $filename = 'ecomerce_fast_moving_report';
+                $this->load->helper('excel');
+                create_excel($this->excel, $filename);
+            }
+            $this->session->set_flashdata('error', lang('nothing_found'));
+            redirect($_SERVER['HTTP_REFERER']);
+        } else {
+
+            $si = "( SELECT sale_id, product_id, serial_no, GROUP_CONCAT(CONCAT({$this->db->dbprefix('sale_items')}.product_name, '__', {$this->db->dbprefix('sale_items')}.quantity) SEPARATOR '___') as item_nane from {$this->db->dbprefix('sale_items')} ";
+            if ($product || $serial) {
+                $si .= ' WHERE ';
+            }
+            if ($product) {
+                $si .= " {$this->db->dbprefix('sale_items')}.product_id = {$product} ";
+            }
+            if ($product && $serial) {
+                $si .= ' AND ';
+            }
+            if ($serial) {
+                $si .= " {$this->db->dbprefix('sale_items')}.serial_no LIKe '%{$serial}%' ";
+            }
+            $si .= " GROUP BY {$this->db->dbprefix('sale_items')}.sale_id ) FSI";
+            $this->load->library('datatables');
+            $this->datatables
+                ->select("{$this->db->dbprefix('products')}.image, {$this->db->dbprefix('products')}.code, {$this->db->dbprefix('products')}.name,  
+                SUM({$this->db->dbprefix('sale_items')}.quantity) as total_pieces, SUM({$this->db->dbprefix('sale_items')}.subtotal) as total_amount 
+                ", false)
+                ->from('sale_items')
+                ->join('sales', 'sales.id=sale_items.sale_id', 'left')
+                ->join('products', 'products.id=sale_items.product_id', 'left')
+                ->group_by('sale_items.product_id')
+                // ->order_by("{$this->db->dbprefix('sale_items')}.product_code",'DESC')
+            ;
+            //->join($si, 'FSI.sale_id=sales.id', 'left')
+            //->join('warehouses', 'warehouses.id=sales.warehouse_id', 'left')   
+            $this->datatables->where("{$this->db->dbprefix('sales')}.shop", 1);
+            $this->db->where("{$this->db->dbprefix('sales')}.sale_status", "Completed");
+            $keyword = trim($this->input->post('keyword'));
+            if (!empty($keyword)) {
+                $this->db->group_start();
+                $this->datatables->where("{$this->db->dbprefix('products')}.code", $keyword);
+                $this->db->or_like("{$this->db->dbprefix('products')}.name", $keyword, 'both');
+                $this->db->group_end();
+            }
+
+            if ($start_date) {
+                $this->datatables->where('DATE(' . $this->db->dbprefix('sales') . '.date) BETWEEN "' . $start_date . '" and "' . $end_date . '"');
+            }
+            // $this->db->order_by("total_pieces",'DESC');  
+            $action = '';
+            $action .= '<li><a href="' . base_url() . 'assets/uploads/$2" data-type="image" data-toggle="lightbox"><i class="fa fa-file-photo-o"></i> '
+                . lang('view_image') . '</a></li>';
+            echo $this->datatables->generate();
+        }
+    }
+
     public function sales()
     {
-        $this->sma->checkPermissions('sales');
+        //$this->sma->checkPermissions('sales');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['users'] = $this->reports_model->getStaff();
         $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -3072,7 +4097,7 @@ class Reports extends MY_Controller
 
     public function staff_report($user_id = null, $year = null, $month = null, $pdf = null, $cal = 0)
     {
-        $this->sma->checkPermissions('staff', true);
+        //$this->sma->checkPermissions('staff', true);
         if (!$user_id) {
             $this->session->set_flashdata('error', lang('no_user_selected'));
             admin_redirect('reports/users');
@@ -3169,9 +4194,25 @@ class Reports extends MY_Controller
         }
     }
 
+    public function get_product_by_id()
+    {
+        $id = $this->input->get('id', true);
+        if ($id) {
+            $product = $this->reports_model->getProductById($id);
+            if ($product) {
+                $response = ['id' => $product->id, 'label' => $product->name . ' (' . $product->code . ')'];
+                $this->sma->send_json($response);
+            } else {
+                echo json_encode(['id' => '', 'label' => '']);
+            }
+        } else {
+            echo json_encode(['id' => '', 'label' => '']);
+        }
+    }
+
     public function supplier_report($user_id = null)
     {
-        $this->sma->checkPermissions('suppliers', true);
+        //$this->sma->checkPermissions('suppliers', true);
         if (!$user_id) {
             $this->session->set_flashdata('error', lang('no_supplier_selected'));
             admin_redirect('reports/suppliers');
@@ -3192,7 +4233,7 @@ class Reports extends MY_Controller
 
     public function suppliers()
     {
-        $this->sma->checkPermissions('suppliers');
+        //$this->sma->checkPermissions('suppliers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('suppliers_report')]];
@@ -3200,17 +4241,41 @@ class Reports extends MY_Controller
         $this->page_construct('reports/suppliers', $meta, $this->data);
     }
 
+    public function daily_stats(){
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $date = $this->input->post('date') ? $this->input->post('date') : null;
+
+        if ($date) {
+            $response = $this->reports_model->getUserStats($date);
+            $this->data['date'] = $date;
+            $this->data['user_stats'] = $response['user_stats'];
+            $this->data['daily_stats'] = $response['daily_stats'];
+            $this->data['order_stats'] = $response['order_stats'];
+            $this->data['social_stats'] = $response['social_stats'];
+        }
+
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('daily_stats')]];
+        $meta = ['page_title' => lang('daily_stats'), 'bc' => $bc];
+        $this->page_construct('reports/daily_stats', $meta, $this->data);  
+    }
+
     public function general_ledger_trial_balance()
     {
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        $department = $this->input->post('department') ? $this->input->post('department') : null;
+        $employee = $this->input->post('employee') ? $this->input->post('employee') : null;
+
+        $this->data['employees'] = $this->site->getAllEmployees();
+        $this->data['departments'] = $this->site->getAllDepartments();
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
-            $trial_balance_array = $this->reports_model->getGeneralLedgerTrialBalance($start_date, $end_date);
+            $trial_balance_array = $this->reports_model->getGeneralLedgerTrialBalance($start_date, $end_date, $department, $employee);
 
             foreach ($trial_balance_array['trs'] as $supplier_data) {
 
@@ -3219,9 +4284,9 @@ class Reports extends MY_Controller
                     if ($response_item->id == $supplier_data->id) {
                         $idExists = true;
                         if ($supplier_data->dc == 'D') {
-                            $response_item->trs_debit = $this->sma->formatDecimal($response_item->trs_debit + $supplier_data->total_amount);
+                            $response_item->trs_debit = $response_item->trs_debit + $supplier_data->total_amount; //$this->sma->formatDecimal($response_item->trs_debit + $supplier_data->total_amount);
                         } else if ($supplier_data->dc == 'C') {
-                            $response_item->trs_credit = $this->sma->formatDecimal($response_item->trs_credit + $supplier_data->total_amount);
+                            $response_item->trs_credit = $response_item->trs_credit + $supplier_data->total_amount; //$this->sma->formatDecimal($response_item->trs_credit + $supplier_data->total_amount);
                         }
                         break;
                     }
@@ -3237,33 +4302,103 @@ class Reports extends MY_Controller
                     $obj->trs_credit = 0;
                     $obj->ob_debit = 0;
                     $obj->ob_credit = 0;
+                    $obj->total_trs_credit = 0;
+                    $obj->total_trs_debit = 0;
                     if ($supplier_data->dc == 'D') {
-                        $obj->trs_debit = $this->sma->formatDecimal($supplier_data->total_amount);
+                        $obj->trs_debit = $supplier_data->total_amount; //$this->sma->formatDecimal($supplier_data->total_amount);
                     } else if ($supplier_data->dc == 'C') {
-                        $obj->trs_credit = $this->sma->formatDecimal($supplier_data->total_amount);
+                        $obj->trs_credit = $supplier_data->total_amount; //$this->sma->formatDecimal($supplier_data->total_amount);
                     }
                     array_push($response_arr, $obj);
                 }
             }
 
             foreach ($trial_balance_array['ob'] as $supplier_data) {
+                $idExists = false;
                 foreach ($response_arr as $response_item) {
                     if ($response_item->id == $supplier_data->id) {
+                        $idExists = true;
                         if ($supplier_data->dc == 'D') {
-                            $response_item->ob_debit = $this->sma->formatDecimal($supplier_data->total_amount);
+                            $response_item->ob_debit = $supplier_data->total_amount;//$this->sma->formatDecimal($supplier_data->total_amount);
                         } else if ($supplier_data->dc == 'C') {
-                            $response_item->ob_credit = $this->sma->formatDecimal($supplier_data->total_amount);
+                            $response_item->ob_credit = $supplier_data->total_amount; //$this->sma->formatDecimal($supplier_data->total_amount);
                         }
+                        break;
                     }
+                }
+
+                // check object exists or not
+                if (!$idExists) {
+                    $obj = new stdClass();
+                    $obj->id = $supplier_data->id;
+                    $obj->name = $supplier_data->name;
+                    $obj->code = $supplier_data->code;
+                    $obj->notes = $supplier_data->notes;
+                    $obj->trs_debit = 0;
+                    $obj->trs_credit = 0;
+                    $obj->ob_debit = 0;
+                    $obj->ob_credit = 0;
+                    $obj->total_trs_credit = 0;
+                    $obj->total_trs_debit = 0;
+                    if ($supplier_data->dc == 'D') {
+                        $obj->ob_debit = $supplier_data->total_amount; //$this->sma->formatDecimal($supplier_data->total_amount);
+                    } else if ($supplier_data->dc == 'C') {
+                        $obj->ob_credit = $supplier_data->total_amount; //$this->sma->formatDecimal($supplier_data->total_amount);
+                    }
+                    array_push($response_arr, $obj);
+                }
+            }
+
+            // Final Response array
+            foreach ($response_arr as $resp_arr) {
+                if ($resp_arr->ob_debit >= $resp_arr->ob_credit) {
+                    $resp_arr->ob_debit = $resp_arr->ob_debit - $resp_arr->ob_credit;
+                    $resp_arr->ob_credit = 0;
+                } else if ($resp_arr->ob_credit > $resp_arr->ob_debit) {
+                    $resp_arr->ob_credit = $resp_arr->ob_credit - $resp_arr->ob_debit;
+                    $resp_arr->ob_debit = 0;
+                }
+
+                if ($resp_arr->trs_debit >= $resp_arr->trs_credit) {
+                    $resp_arr->total_trs_debit = $resp_arr->trs_debit - $resp_arr->trs_credit;
+                    //$resp_arr->trs_credit = 0;
+                } else if ($resp_arr->trs_credit > $resp_arr->trs_debit) {
+                    $resp_arr->total_trs_credit = $resp_arr->trs_credit - $resp_arr->trs_debit;
+                    //$resp_arr->trs_debit = 0;
+                }
+
+                $resp_arr->eb_debit = $resp_arr->ob_debit + $resp_arr->total_trs_debit;
+                $resp_arr->eb_credit = $resp_arr->ob_credit + $resp_arr->total_trs_credit;
+
+                if ($resp_arr->eb_debit >= $resp_arr->eb_credit) {
+                    $resp_arr->eb_debit = $resp_arr->eb_debit - $resp_arr->eb_credit;
+                    $resp_arr->eb_credit = 0;
+                } else if ($resp_arr->eb_credit > $resp_arr->eb_debit) {
+                    $resp_arr->eb_credit = $resp_arr->eb_credit - $resp_arr->eb_debit;
+                    $resp_arr->eb_debit = 0;
                 }
             }
 
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;
+            $this->data['department'] = $department;
+            $this->data['employee'] = $employee;
             $this->data['trial_balance'] = $response_arr;
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('general_ledger_report')]];
             $meta = ['page_title' => lang('general_ledger_report'), 'bc' => $bc];
-            $this->page_construct('reports/general_ledger_trial_balance', $meta, $this->data);
+
+            if ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('general_ledger_trial_balance') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/general_ledger_trial_balance', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            } else {
+                $this->page_construct('reports/general_ledger_trial_balance', $meta, $this->data);
+            }
+
+
+
+
         } else {
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('general_ledger_report')]];
@@ -3272,16 +4407,52 @@ class Reports extends MY_Controller
         }
     }
 
+    /**
+     * Ledger ids for customer statement: current receivable ledger plus comma-separated old_ledgers on company.
+     *
+     * @param object|null $supplier_details
+     * @return int[]
+     */
+    private function customerStatementLedgerIdList($supplier_details)
+    {
+        if (!$supplier_details) {
+            return [];
+        }
+        $parts = [];
+        if (!empty($supplier_details->ledger_account) && is_numeric($supplier_details->ledger_account)) {
+            $parts[] = $supplier_details->ledger_account;
+        }
+        if (!empty($supplier_details->old_ledgers)) {
+            foreach (explode(',', $supplier_details->old_ledgers) as $p) {
+                $p = trim($p);
+                if ($p !== '' && is_numeric($p)) {
+                    $parts[] = $p;
+                }
+            }
+        }
+
+        return $this->reports_model->normalizeCustomerStatementLedgerIds($parts);
+    }
+
     public function customer_statement()
     {
-        $this->sma->checkPermissions('customers');
+        //$this->sma->checkPermissions('customers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
 
-        $this->data['suppliers'] = $this->site->getAllCompanies('customer');
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
+
+        $this->data['customers'] = $this->site->getAllCompanies('customer');
+        $this->data['biller'] = $this->site->getDefaultBiller();
+        $this->data['statement_ledger_options'] = [];
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+        $this->data['warehouse_id'] = $warehouse_id;
 
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
@@ -3289,8 +4460,12 @@ class Reports extends MY_Controller
             $supplier_id = $this->input->post('customer');
 
             $supplier_details = $this->companies_model->getCompanyByID($supplier_id);
-            $ledger_account = $supplier_details->ledger_account;
-            $supplier_statement = $this->reports_model->getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account);
+            $ledger_ids = $this->customerStatementLedgerIdList($supplier_details);
+            $supplier_statement = $this->reports_model->getCustomerStatement($start_date, $end_date, $supplier_id, $ledger_ids, $warehouse_id);
+            $this->data['statement_ledger_options'] = $this->reports_model->getStatementLedgerOptions($ledger_ids);
+
+            // Get customer aging data
+            $aging_data = $this->reports_model->getCustomerAgingNew(120, date('Y-m-d'), [$supplier_id], null, $warehouse_id);
 
             $total_ob = 0;
             $total_ob_credit = 0;
@@ -3298,28 +4473,148 @@ class Reports extends MY_Controller
             $ob_type = '';
             foreach ($supplier_statement['ob'] as $ob) {
                 if ($ob->dc == 'D') {
-                    $total_ob_debit = $ob->total_amount;
+                    $total_ob_debit = $ob->amount;
                 } else if ($ob->dc == 'C') {
-                    $total_ob_credit = $ob->total_amount;
+                    $total_ob_credit = $ob->amount;
                 }
             }
 
-            $total_ob = $total_ob_credit - $total_ob_debit;
+            $total_ob = $total_ob_debit - $total_ob_credit;
 
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;
             $this->data['customer_id'] = $supplier_id;
+            $this->data['customer_details'] = $supplier_details;
+            $this->data['aging_data'] = $aging_data;
             $this->data['ob_type'] = $ob_type;
             $this->data['total_ob'] = $this->sma->formatDecimal($total_ob);
             $this->data['supplier_statement'] = $supplier_statement['report'];
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customer_statement')]];
             $meta = ['page_title' => lang('customer_statement'), 'bc' => $bc];
-            $this->page_construct('reports/customers_statement', $meta, $this->data);
+
+            if ($viewtype == 'pdf_new') {
+                // Use new mPDF method for better portrait control
+                $this->customer_statement_pdf_new();
+                return;
+            } elseif ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
+
+                $name = lang('customers_statement_report') . '.pdf';
+
+                $html = $this->load->view(
+                    $this->theme . 'reports/customers_statement',
+                    $this->data,
+                    true
+                );
+
+                // FORCE PORTRAIT ONLY HERE
+                $this->sma->generate_pdf(
+                    $html,
+                    $name,
+                    null,   // path
+                    'I',    // display in browser
+                    null,   // footer
+                    null,   // margin bottom
+                    null,   // header
+                    null,   // margin top
+                    'P'     // ORIENTATION PORTRAIT
+                );
+            } else {
+                $this->page_construct('reports/customers_statement', $meta, $this->data);
+            }
+
+
+
         } else {
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customer_statement')]];
             $meta = ['page_title' => lang('customer_statement'), 'bc' => $bc];
+            $this->data['supplier_statement'] = [];
+            $this->data['total_ob'] = $this->sma->formatDecimal(0);
             $this->page_construct('reports/customers_statement', $meta, $this->data);
+        }
+    }
+
+    /**
+     * Generate Customer Statement PDF using mPDF (Portrait)
+     * Alternative method using the same logic as sales/pdf_new
+     */
+    public function customer_statement_pdf_new()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+
+        $this->data['customers'] = $this->site->getAllCompanies('customer');
+        $this->data['biller'] = $this->site->getDefaultBiller();
+        $this->data['statement_ledger_options'] = [];
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+        $this->data['warehouse_id'] = $warehouse_id;
+
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $supplier_id = $this->input->post('customer');
+
+            $supplier_details = $this->companies_model->getCompanyByID($supplier_id);
+            $ledger_ids = $this->customerStatementLedgerIdList($supplier_details);
+            $supplier_statement = $this->reports_model->getCustomerStatement($start_date, $end_date, $supplier_id, $ledger_ids, $warehouse_id);
+            $this->data['statement_ledger_options'] = $this->reports_model->getStatementLedgerOptions($ledger_ids);
+
+            // Get customer aging data
+            $aging_data = $this->reports_model->getCustomerAgingNew(120, date('Y-m-d'), [$supplier_id], null, $warehouse_id);
+
+            $total_ob = 0;
+            $total_ob_credit = 0;
+            $total_ob_debit = 0;
+            $ob_type = '';
+            foreach ($supplier_statement['ob'] as $ob) {
+                if ($ob->dc == 'D') {
+                    $total_ob_debit = $ob->amount;
+                } else if ($ob->dc == 'C') {
+                    $total_ob_credit = $ob->amount;
+                }
+            }
+
+            $total_ob = $total_ob_debit - $total_ob_credit;
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['customer_id'] = $supplier_id;
+            $this->data['customer_details'] = $supplier_details;
+            $this->data['aging_data'] = $aging_data;
+            $this->data['ob_type'] = $ob_type;
+            $this->data['total_ob'] = $this->sma->formatDecimal($total_ob);
+            $this->data['supplier_statement'] = $supplier_statement['report'];
+
+            // Set viewtype for PDF rendering
+            $this->data['viewtype'] = 'pdf_new';
+
+            // Generate PDF using mPDF (same as sales/pdf_new)
+            $name = lang('customers_statement_report') . '.pdf';
+            $html = $this->load->view($this->theme . 'reports/customers_statement', $this->data, true);
+
+            // Use mPDF directly like sales/pdf_new
+            $mpdf = new Mpdf(mpdf_config([
+                'format' => 'A4',           // Portrait A4
+                'orientation' => 'P',       // Explicitly set Portrait
+                'margin_top' => 10,         // Smaller margins for statement
+                'margin_bottom' => 10,
+                'margin_left' => 10,
+                'margin_right' => 10,
+            ]));
+
+            $mpdf->WriteHTML($html);
+            $mpdf->Output($name, "D"); // Force download
+
+        } else {
+            // If no dates provided, redirect back or show error
+            $this->session->set_flashdata('error', 'Please select date range for customer statement');
+            redirect($_SERVER['HTTP_REFERER']);
         }
     }
 
@@ -3328,10 +4623,15 @@ class Reports extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
 
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
+
         $this->data['ledgers'] = $this->reports_model->getCompanyLedgers();
+        $this->data['biller'] = $this->site->getDefaultBiller();
 
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
@@ -3346,14 +4646,205 @@ class Reports extends MY_Controller
             $supplier_statement = $this->reports_model->getGeneralLedgerStatement($start_date, $end_date, '', $ledger_id);
 
             $total_ob = 0;
+            $ob_type = '';
+            if (!empty($supplier_statement['ob'])) {
+                $has_dc = false;
+                $total_ob_credit = 0;
+                $total_ob_debit = 0;
+
+                foreach ($supplier_statement['ob'] as $ob) {
+                    if (isset($ob->dc) && ($ob->dc === 'D' || $ob->dc === 'C')) {
+                        $has_dc = true;
+                        if ($ob->dc === 'D') {
+                            $total_ob_debit += (float) $ob->total_amount;
+                        } elseif ($ob->dc === 'C') {
+                            $total_ob_credit += (float) $ob->total_amount;
+                        }
+                    }
+                }
+
+                if ($has_dc) {
+                    $total_ob = $total_ob_debit - $total_ob_credit;
+                } else {
+                    $total_ob = isset($supplier_statement['ob'][0]->total_amount) ? (float) $supplier_statement['ob'][0]->total_amount : 0;
+                }
+            }
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['supplier_id'] = $supplier_id;
+            $this->data['ob_type'] = $ob_type;
+            $this->data['ledger_id'] = $ledger_id;
+            $this->data['total_ob'] = $this->sma->formatDecimal($total_ob);
+            $this->data['supplier_statement'] = $supplier_statement['report'];
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('general_ledger_statement')]];
+            $meta = ['page_title' => lang('general_ledger_statement'), 'bc' => $bc];
+
+            if ($viewtype == 'pdf_new') {
+                // Use new mPDF method for better portrait control
+                $this->general_ledger_statement_pdf_new();
+                return;
+            } elseif ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
+
+                $name = lang('general_ledger_statement') . '.pdf';
+
+                $html = $this->load->view(
+                    $this->theme . 'reports/general_ledger_statement',
+                    $this->data,
+                    true
+                );
+
+                // FORCE PORTRAIT ONLY HERE
+                $this->sma->generate_pdf(
+                    $html,
+                    $name,
+                    null,   // path
+                    'I',    // display in browser
+                    null,   // footer
+                    null,   // margin bottom
+                    null,   // header
+                    null,   // margin top
+                    'P'     // ORIENTATION PORTRAIT
+                );
+            } else {
+                $this->page_construct('reports/general_ledger_statement', $meta, $this->data);
+            }
+
+        } else {
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('general_ledger_statement')]];
+            $meta = ['page_title' => lang('general_ledger_statement'), 'bc' => $bc];
+            $this->page_construct('reports/general_ledger_statement', $meta, $this->data);
+        }
+    }
+
+    /**
+     * Generate General Ledger Statement PDF using mPDF (Portrait)
+     * Alternative method using the same logic as sales/pdf_new
+     */
+    public function general_ledger_statement_pdf_new()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+
+        $this->data['ledgers'] = $this->reports_model->getCompanyLedgers();
+        $this->data['biller'] = $this->site->getDefaultBiller();
+
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $ledger_id = $this->input->post('ledger');
+
+            if (!$ledger_id) {
+                $this->session->set_flashdata('error', lang('No ledger is selected.'));
+                redirect($_SERVER['HTTP_REFERER']);
+            }
+
+            $supplier_statement = $this->reports_model->getGeneralLedgerStatement($start_date, $end_date, '', $ledger_id);
+
+            $total_ob = 0;
+            $ob_type = '';
+            if (!empty($supplier_statement['ob'])) {
+                $has_dc = false;
+                $total_ob_credit = 0;
+                $total_ob_debit = 0;
+
+                foreach ($supplier_statement['ob'] as $ob) {
+                    if (isset($ob->dc) && ($ob->dc === 'D' || $ob->dc === 'C')) {
+                        $has_dc = true;
+                        if ($ob->dc === 'D') {
+                            $total_ob_debit += (float) $ob->total_amount;
+                        } elseif ($ob->dc === 'C') {
+                            $total_ob_credit += (float) $ob->total_amount;
+                        }
+                    }
+                }
+
+                if ($has_dc) {
+                    $total_ob = $total_ob_debit - $total_ob_credit;
+                } else {
+                    $total_ob = isset($supplier_statement['ob'][0]->total_amount) ? (float) $supplier_statement['ob'][0]->total_amount : 0;
+                }
+            }
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['supplier_id'] = '';
+            $this->data['ob_type'] = $ob_type;
+            $this->data['ledger_id'] = $ledger_id;
+            $this->data['total_ob'] = $this->sma->formatDecimal($total_ob);
+            $this->data['supplier_statement'] = $supplier_statement['report'];
+
+            // Set viewtype for PDF rendering
+            $this->data['viewtype'] = 'pdf_new';
+
+            // Generate PDF using mPDF (same as sales/pdf_new)
+            $name = lang('general_ledger_statement') . '.pdf';
+            $html = $this->load->view($this->theme . 'reports/general_ledger_statement', $this->data, true);
+
+            // Use mPDF directly like sales/pdf_new
+            $mpdf = new Mpdf(mpdf_config([
+                'format' => 'A4',           // Portrait A4
+                'orientation' => 'P',       // Explicitly set Portrait
+                'margin_top' => 10,         // Smaller margins for statement
+                'margin_bottom' => 10,
+                'margin_left' => 10,
+                'margin_right' => 10,
+            ]));
+
+            $mpdf->WriteHTML($html);
+            $mpdf->Output($name, "D"); // Force download
+
+        } else {
+            // If no dates provided, redirect back or show error
+            $this->session->set_flashdata('error', 'Please select date range for general ledger statement');
+            redirect($_SERVER['HTTP_REFERER']);
+        }
+    }
+
+    public function supplier_statement()
+    {
+        //$this->sma->checkPermissions('suppliers');
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ?: $this->input->get('viewtype');
+        $from_date = $this->input->post('from_date') ?: $this->input->get('from_date');
+        $to_date = $this->input->post('to_date') ?: $this->input->get('to_date');
+
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
+
+        $this->data['suppliers'] = $this->site->getAllChildCompanies('supplier');
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+        $this->data['warehouse_id'] = $warehouse_id;
+
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $supplier_id = $this->input->post('supplier') ?: $this->input->get('supplier');
+
+
+            $supplier_details = $this->companies_model->getCompanyByID($supplier_id);
+            $ledger_account = $supplier_details->ledger_account;
+            $supplier_statement = $this->reports_model->getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account, $warehouse_id);
+            
+            $total_ob = 0;
             $total_ob_credit = 0;
             $total_ob_debit = 0;
             $ob_type = '';
+
             foreach ($supplier_statement['ob'] as $ob) {
                 if ($ob->dc == 'D') {
-                    $total_ob_debit = $ob->total_amount;
+                    $total_ob_debit += $ob->amount;
                 } else if ($ob->dc == 'C') {
-                    $total_ob_credit = $ob->total_amount;
+                    $total_ob_credit += $ob->amount;
                 }
             }
 
@@ -3363,49 +4854,846 @@ class Reports extends MY_Controller
             $this->data['end_date'] = $to_date;
             $this->data['supplier_id'] = $supplier_id;
             $this->data['ob_type'] = $ob_type;
+            $this->data['total_ob_credit'] = $total_ob_credit;
+            $this->data['total_ob_debit'] = $total_ob_debit;
             $this->data['total_ob'] = $this->sma->formatDecimal($total_ob);
             $this->data['supplier_statement'] = $supplier_statement['report'];
+            $this->data['reconciliation'] = $this->reports_model->getSupplierBalanceReconciliation(
+                $supplier_id,
+                $end_date,
+                $warehouse_id
+            );
 
-            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('general_ledger_statement')]];
-            $meta = ['page_title' => lang('general_ledger_statement'), 'bc' => $bc];
-            $this->page_construct('reports/general_ledger_statement', $meta, $this->data);
+            
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('supplier_statement')]];
+            $meta = ['page_title' => lang('supplier_statement'), 'bc' => $bc];
+
+            if ($viewtype == 'pdf_new') {
+                // Use new mPDF method for better portrait control
+                $this->supplier_statement_pdf_new();
+                return;
+            } elseif ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('suppliers_statement_report') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/suppliers_statement', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'P');
+            } else {
+                $this->page_construct('reports/suppliers_statement', $meta, $this->data);
+            }
+
+
         } else {
-            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('general_ledger_statement')]];
-            $meta = ['page_title' => lang('general_ledger_statement'), 'bc' => $bc];
-            $this->page_construct('reports/general_ledger_statement', $meta, $this->data);
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('supplier_statement')]];
+            $meta = ['page_title' => lang('supplier_statement'), 'bc' => $bc];
+            $this->page_construct('reports/suppliers_statement', $meta, $this->data);
         }
     }
 
-    public function supplier_statement()
+    /**
+     * Diagnostic: compare Supplier Statement ledger balance vs Unpaid Invoices balance
+     * for a single supplier.
+     *
+     * Access: /admin/reports/debug_supplier_balance/{supplier_id}?at_date=2026-05-31
+     * Requires reports-supplier-statement permission (Owner/Admin bypass).
+     */
+    public function debug_supplier_balance($supplier_id = null)
     {
-        $this->sma->checkPermissions('suppliers');
+        if (!$this->Owner && !$this->Admin && empty($this->GP['reports-supplier-statement'])) {
+            show_error('Access denied', 403);
+        }
+
+        $supplier_id = (int) ($supplier_id ?: $this->input->get('supplier_id'));
+        if (!$supplier_id) {
+            show_error('Supplier ID required', 400);
+        }
+
+        $pfx         = $this->db->dbprefix; // 'sma_'
+
+        $this->db->reset_query();
+
+        $sup = $this->db->query("SELECT * FROM {$pfx}companies WHERE id = ?", [$supplier_id])->row();
+        if (!$sup) { echo "<b>Supplier ID $supplier_id not found.</b>"; die; }
+        $ledger_id = (int) $sup->ledger_account;
+
+        $fmt = fn($v) => number_format((float)$v, 2, '.', ',');
+
+        $at_date_input = $this->input->get('at_date');
+        if ($at_date_input) {
+            $date_cut = strpos($at_date_input, '/') !== false
+                ? $this->sma->fld($at_date_input)
+                : $at_date_input;
+        } else {
+            $date_cut = date('Y-m-d');
+        }
+
+        echo "<!doctype html><html><head><meta charset='utf-8'>
+        <style>
+            body{font-family:Arial,sans-serif;font-size:13px;padding:20px}
+            table{border-collapse:collapse;width:100%;margin-bottom:30px}
+            th,td{border:1px solid #ccc;padding:5px 10px;white-space:nowrap}
+            th{background:#dde;text-align:center}
+            .num{text-align:right}
+            .red{color:red;font-weight:bold}
+            .grn{color:green}
+            .yel{background:#fffbe6}
+            .zero{color:#aaa}
+        </style></head><body>";
+
+        $date_cut = substr($date_cut, 0, 10);
+
+        echo "<h1>Purchase vs Accounting vs Payments — Supplier ID: $supplier_id — {$sup->name}</h1>";
+        echo "<p>Supplier Ledger Account ID: <b>$ledger_id</b> &nbsp;|&nbsp; Date filter: up to <b>{$date_cut}</b></p>";
+
+        // ── Single query: purchases LEFT JOIN accounting entries LEFT JOIN payments ─
+        $rows = $this->db->query("
+            SELECT
+                p.id                                                        AS pid,
+                p.date                                                      AS p_date,
+                p.reference_no                                              AS p_ref,
+                ROUND(p.grand_total, 2)                                     AS grand_total,
+                ROUND(COALESCE(p.grand_deal_discount, 0), 2)               AS deal_disc,
+                ROUND(p.grand_total + COALESCE(p.grand_deal_discount,0),2) AS invoice_total,
+
+                /* Accounting: debit (purchase booked) on this supplier ledger */
+                ROUND(COALESCE(acc.acc_debit,  0), 2)                      AS acc_debit,
+                /* Accounting: credit (payment/return posted) on this supplier ledger */
+                ROUND(COALESCE(acc.acc_credit, 0), 2)                      AS acc_credit,
+                /* Net still owed per accounting ledger */
+                ROUND(COALESCE(acc.acc_debit,0) - COALESCE(acc.acc_credit,0), 2) AS acc_net_owed,
+
+                /* Payments table: sum of payments recorded against this purchase */
+                ROUND(COALESCE(pay.pay_total, 0), 2)                       AS pay_total,
+
+                /* Outstanding per unpaid-invoices logic */
+                ROUND(
+                    (p.grand_total + COALESCE(p.grand_deal_discount,0))
+                    - COALESCE(pay.pay_total, 0),
+                2)                                                          AS outstanding
+
+            FROM {$pfx}purchases p
+
+            /* Accounting side: sum entryitems for this purchase on the supplier ledger */
+            LEFT JOIN (
+                SELECT
+                    e.pid,
+                    SUM(CASE WHEN ai.dc = 'D' THEN ai.amount ELSE 0 END) AS acc_debit,
+                    SUM(CASE WHEN ai.dc = 'C' THEN ai.amount ELSE 0 END) AS acc_credit
+                FROM {$pfx}accounts_entries e
+                JOIN {$pfx}accounts_entryitems ai ON ai.entry_id = e.id
+                WHERE e.supplier_id = ?
+                  AND ai.ledger_id  = ?
+                  AND e.pid IS NOT NULL AND e.pid != ''
+                  AND DATE(e.date) <= ?
+                GROUP BY e.pid
+            ) acc ON acc.pid = p.id
+
+            /* Payments side */
+            LEFT JOIN (
+                SELECT purchase_id, SUM(amount) AS pay_total
+                FROM {$pfx}payments
+                WHERE DATE(date) <= ?
+                GROUP BY purchase_id
+            ) pay ON pay.purchase_id = p.id
+
+            WHERE p.supplier_id      = ?
+              AND p.purchase_invoice = 1
+              AND p.grand_total      > 0
+              AND DATE(p.date)       <= ?
+            ORDER BY p.date
+        ", [$supplier_id, $ledger_id, $date_cut, $date_cut, $supplier_id, $date_cut])->result();
+
+        // ── Totals ────────────────────────────────────────────────────────────────
+        $t_invoice = $t_acc_debit = $t_acc_credit = $t_acc_net = $t_pay = $t_out = 0.0;
+
+        echo "<table>
+            <thead><tr>
+                <th>#</th>
+                <th>purchase_id</th>
+                <th>date</th>
+                <th>reference_no</th>
+                <th>grand_total</th>
+                <th>deal_disc</th>
+                <th>invoice_total<br><small>(grand+deal)</small></th>
+                <th>acc_debit<br><small>(purchase entry)</small></th>
+                <th>acc_credit<br><small>(payment/return entry)</small></th>
+                <th>acc_net_owed<br><small>(debit−credit)</small></th>
+                <th>payments_tbl<br><small>(sma_payments SUM)</small></th>
+                <th>outstanding<br><small>(invoice_total−payments)</small></th>
+                <th>DIFF<br><small>(acc_net − outstanding)</small></th>
+            </tr></thead><tbody>";
+
+        foreach ($rows as $i => $r) {
+            $t_invoice   += (float)$r->invoice_total;
+            $t_acc_debit += (float)$r->acc_debit;
+            $t_acc_credit+= (float)$r->acc_credit;
+            $t_acc_net   += (float)$r->acc_net_owed;
+            $t_pay       += (float)$r->pay_total;
+            $t_out       += (float)$r->outstanding;
+
+            $diff = round((float)$r->acc_net_owed - (float)$r->outstanding, 2);
+            $row_cls = ($diff != 0) ? 'yel' : '';
+            $diff_cls = ($diff != 0) ? 'red' : 'zero';
+
+            echo "<tr class='{$row_cls}'>
+                <td>" . ($i+1) . "</td>
+                <td>{$r->pid}</td>
+                <td>{$r->p_date}</td>
+                <td>{$r->p_ref}</td>
+                <td class='num'>{$fmt($r->grand_total)}</td>
+                <td class='num'>" . ($r->deal_disc != 0 ? $fmt($r->deal_disc) : "<span class='zero'>0.00</span>") . "</td>
+                <td class='num'>{$fmt($r->invoice_total)}</td>
+                <td class='num'>{$fmt($r->acc_debit)}</td>
+                <td class='num'>" . ($r->acc_credit != 0 ? $fmt($r->acc_credit) : "<span class='zero'>0.00</span>") . "</td>
+                <td class='num'>{$fmt($r->acc_net_owed)}</td>
+                <td class='num'>" . ($r->pay_total != 0 ? $fmt($r->pay_total) : "<span class='zero'>0.00</span>") . "</td>
+                <td class='num'>{$fmt($r->outstanding)}</td>
+                <td class='num {$diff_cls}'>{$fmt($diff)}</td>
+            </tr>";
+        }
+
+        $total_diff = round($t_acc_net - $t_out, 2);
+        echo "<tr style='background:#dde;font-weight:bold'>
+            <td colspan='4'>TOTALS</td>
+            <td class='num'>{$fmt($t_invoice)}</td>
+            <td></td>
+            <td class='num'>{$fmt($t_invoice)}</td>
+            <td class='num'>{$fmt($t_acc_debit)}</td>
+            <td class='num'>{$fmt($t_acc_credit)}</td>
+            <td class='num'>{$fmt($t_acc_net)}</td>
+            <td class='num'>{$fmt($t_pay)}</td>
+            <td class='num'>{$fmt($t_out)}</td>
+            <td class='num " . ($total_diff != 0 ? 'red' : 'grn') . "'>{$fmt($total_diff)}</td>
+        </tr>";
+
+        echo "</tbody></table>";
+
+        echo "<p><b>DIFF column</b> = acc_net_owed − outstanding.
+              A non-zero value means the accounting ledger and the payments table disagree on what is owed for that purchase.</p>";
+
+        // ══════════════════════════════════════════════════════════════════════════
+        // TABLE 2A: sma_payment_reference — payment vouchers for this supplier
+        // Each row is one payment voucher, joined to its accounting entry + items
+        // ══════════════════════════════════════════════════════════════════════════
+        echo "<h2 style='margin-top:40px;border-bottom:2px solid #333'>Payment Vouchers (sma_payment_reference) — up to {$date_cut}</h2>";
+
+        $pr_rows = $this->db->query("
+            SELECT
+                pr.id                                   AS pr_id,
+                DATE(pr.date)                           AS pr_date,
+                pr.reference_no                         AS pr_ref,
+                pr.amount                               AS pr_amount,
+                pr.note                                 AS pr_note,
+                pr.added_via,
+                pr.journal_id,
+
+                /* Accounting entry linked to this voucher */
+                e.transaction_type,
+                e.pid,
+                e.memo_id                               AS e_memo_id,
+                e.rsid,
+
+                /* What is this voucher linked to? */
+                p.reference_no                          AS purchase_ref,
+                m.reference_no                          AS memo_ref,
+                m.type                                  AS memo_type,
+                m.supplier_entry_type,
+
+                /* Accounting amounts on the supplier ledger — pre-aggregated via JOIN */
+                ROUND(COALESCE(ai_agg.acc_debit,  0), 2) AS acc_debit,
+                ROUND(COALESCE(ai_agg.acc_credit, 0), 2) AS acc_credit
+
+            FROM {$pfx}payment_reference pr
+            LEFT JOIN {$pfx}accounts_entries e  ON e.id  = pr.journal_id
+            LEFT JOIN {$pfx}purchases p          ON p.id  = e.pid
+            LEFT JOIN {$pfx}memo m               ON m.id  = e.memo_id
+            LEFT JOIN (
+                SELECT
+                    ai.entry_id,
+                    SUM(CASE WHEN ai.dc = 'D' THEN ai.amount ELSE 0 END) AS acc_debit,
+                    SUM(CASE WHEN ai.dc = 'C' THEN ai.amount ELSE 0 END) AS acc_credit
+                FROM {$pfx}accounts_entryitems ai
+                WHERE ai.ledger_id = {$ledger_id}
+                GROUP BY ai.entry_id
+            ) ai_agg ON ai_agg.entry_id = e.id
+            WHERE pr.supplier_id = {$supplier_id}
+              AND DATE(pr.date)  <= '{$date_cut}'
+            ORDER BY pr.date, pr.id
+        ", [])->result();
+
+        $pr_total_amount = $pr_total_acc_debit = $pr_total_acc_credit = 0.0;
+
+        echo "<table>
+            <thead><tr>
+                <th>#</th>
+                <th>pr.id</th>
+                <th>date</th>
+                <th>pr.reference_no</th>
+                <th>pr.amount</th>
+                <th>journal_id</th>
+                <th>transaction_type</th>
+                <th>linked_to</th>
+                <th>detail</th>
+                <th>acc_debit<br><small>(on supplier ledger)</small></th>
+                <th>acc_credit<br><small>(on supplier ledger)</small></th>
+                <th>note / added_via</th>
+            </tr></thead><tbody>";
+
+        foreach ($pr_rows as $i => $r) {
+            $pr_total_amount     += (float)$r->pr_amount;
+            $pr_total_acc_debit  += (float)$r->acc_debit;
+            $pr_total_acc_credit += (float)$r->acc_credit;
+
+            // Determine what this voucher is linked to
+            if (!empty($r->pid)) {
+                $linked = 'Purchase';
+                $detail = "pid={$r->pid} ({$r->purchase_ref})";
+            } elseif (!empty($r->e_memo_id)) {
+                $mtype  = $r->memo_type === 'memo' ? 'Memo (' . $r->supplier_entry_type . ')' : ucfirst($r->memo_type);
+                $linked = $mtype;
+                $detail = "memo_id={$r->e_memo_id} ({$r->memo_ref})";
+            } elseif (!empty($r->rsid)) {
+                $linked = 'Return';
+                $detail = "rsid={$r->rsid}";
+            } else {
+                $linked = $r->transaction_type ?: '—';
+                $detail = '—';
+            }
+
+            $acc_diff = round((float)$r->acc_credit - (float)$r->pr_amount, 2);
+            $diff_cls = ($acc_diff != 0) ? 'red' : 'zero';
+
+            echo "<tr>
+                <td>" . ($i + 1) . "</td>
+                <td>{$r->pr_id}</td>
+                <td>{$r->pr_date}</td>
+                <td>{$r->pr_ref}</td>
+                <td class='num'>{$fmt($r->pr_amount)}</td>
+                <td>" . ($r->journal_id ?: '<span class="red">NO ENTRY</span>') . "</td>
+                <td>" . ($r->transaction_type ?: '<span class="red">—</span>') . "</td>
+                <td><b>{$linked}</b></td>
+                <td>{$detail}</td>
+                <td class='num'>" . ($r->acc_debit != 0 ? $fmt($r->acc_debit) : "<span class='zero'>0.00</span>") . "</td>
+                <td class='num'>" . ($r->acc_credit != 0 ? $fmt($r->acc_credit) : "<span class='zero'>0.00</span>") . "</td>
+                <td>" . htmlspecialchars((string)$r->pr_note) . " <small class='zero'>" . htmlspecialchars((string)$r->added_via) . "</small></td>
+            </tr>";
+        }
+
+        echo "<tr style='background:#dde;font-weight:bold'>
+            <td colspan='4'>TOTALS</td>
+            <td class='num'>{$fmt($pr_total_amount)}</td>
+            <td colspan='4'></td>
+            <td class='num'>{$fmt($pr_total_acc_debit)}</td>
+            <td class='num'>{$fmt($pr_total_acc_credit)}</td>
+            <td></td>
+        </tr>";
+        echo "</tbody></table>";
+
+        // ══════════════════════════════════════════════════════════════════════════
+        // TABLE 2B: sma_payments — individual payment lines for this supplier
+        // ══════════════════════════════════════════════════════════════════════════
+        echo "<h2 style='margin-top:40px;border-bottom:2px solid #333'>Payment Lines (sma_payments) — up to {$date_cut}</h2>";
+
+        $sp_rows = $this->db->query("
+            SELECT
+                sp.id,
+                DATE(sp.date)           AS sp_date,
+                sp.reference_no         AS sp_ref,
+                sp.type                 AS pay_type,
+                sp.paid_by,
+                sp.amount,
+                sp.purchase_id,
+                sp.memo_id,
+                sp.return_id,
+                sp.note,
+
+                p.reference_no          AS purchase_ref,
+                m.reference_no          AS memo_ref,
+                m.type                  AS memo_type,
+                m.supplier_entry_type
+
+            FROM {$pfx}payments sp
+            LEFT JOIN {$pfx}purchases p ON p.id = sp.purchase_id
+            LEFT JOIN {$pfx}memo m       ON m.id = sp.memo_id
+            WHERE sp.supplier_id = {$supplier_id}
+              AND DATE(sp.date)  <= '{$date_cut}'
+            ORDER BY sp.date, sp.id
+        ", [])->result();
+
+        $sp_total = 0.0;
+
+        echo "<table>
+            <thead><tr>
+                <th>#</th>
+                <th>pay.id</th>
+                <th>date</th>
+                <th>reference_no</th>
+                <th>pay_type</th>
+                <th>paid_by</th>
+                <th>amount</th>
+                <th>linked_to</th>
+                <th>detail</th>
+                <th>note</th>
+            </tr></thead><tbody>";
+
+        foreach ($sp_rows as $i => $r) {
+            $sp_total += (float)$r->amount;
+
+            if (!empty($r->purchase_id)) {
+                $linked = 'Purchase';
+                $detail = "pid={$r->purchase_id} ({$r->purchase_ref})";
+            } elseif (!empty($r->memo_id)) {
+                $mtype  = $r->memo_type === 'memo' ? 'Memo (' . $r->supplier_entry_type . ')' : ucfirst((string)$r->memo_type);
+                $linked = $mtype;
+                $detail = "memo_id={$r->memo_id} ({$r->memo_ref})";
+            } elseif (!empty($r->return_id)) {
+                $linked = 'Return';
+                $detail = "return_id={$r->return_id}";
+            } else {
+                $linked = '—';
+                $detail = '—';
+            }
+
+            echo "<tr>
+                <td>" . ($i + 1) . "</td>
+                <td>{$r->id}</td>
+                <td>{$r->sp_date}</td>
+                <td>{$r->sp_ref}</td>
+                <td>{$r->pay_type}</td>
+                <td>{$r->paid_by}</td>
+                <td class='num'>{$fmt($r->amount)}</td>
+                <td><b>{$linked}</b></td>
+                <td>{$detail}</td>
+                <td>" . htmlspecialchars((string)$r->note) . "</td>
+            </tr>";
+        }
+
+        echo "<tr style='background:#dde;font-weight:bold'>
+            <td colspan='6'>TOTAL</td>
+            <td class='num'>{$fmt($sp_total)}</td>
+            <td colspan='3'></td>
+        </tr>";
+        echo "</tbody></table>";
+
+        // ── Grand comparison ──────────────────────────────────────────────────────
+        echo "<h2 style='margin-top:40px;border-bottom:2px solid #333'>Summary</h2>";
+        echo "<table style='width:auto'>
+            <tr><th>Item</th><th>Amount</th></tr>
+            <tr><td>Total outstanding (purchases table)</td><td class='num'>{$fmt($t_out)}</td></tr>
+            <tr><td>Total acc_net_owed (accounting ledger)</td><td class='num'>{$fmt($t_acc_net)}</td></tr>
+            <tr><td>Payment vouchers total (sma_payment_reference)</td><td class='num'>{$fmt($pr_total_amount)}</td></tr>
+            <tr><td>Payment vouchers acc_credit (on supplier ledger)</td><td class='num'>{$fmt($pr_total_acc_credit)}</td></tr>
+            <tr><td>sma_payments total</td><td class='num'>{$fmt($sp_total)}</td></tr>
+            <tr class='yel'><td><b>Diff: payment_reference vs sma_payments</b></td>
+                <td class='num " . (round($pr_total_amount - $sp_total, 2) != 0 ? 'red' : 'grn') . "'><b>{$fmt(round($pr_total_amount - $sp_total, 2))}</b></td></tr>
+        </table>";
+
+        echo "</body></html>";
+        die;
+    }
+
+    /**
+     * Generate Supplier Statement PDF using mPDF (Portrait)
+     * Alternative method using the same logic as sales/pdf_new
+     */
+    /*public function supplier_statement_pdf_new(){
+        // ── helper ────────────────────────────────────────────────────────────────
+        $h  = fn($t) => "<h2 style='margin-top:30px;color:#333;border-bottom:2px solid #333'>$t</h2>";
+        $fmt = fn($v) => number_format((float)$v, 2, '.', ',');
+
+        echo "<!doctype html><html><head><meta charset='utf-8'>
+              <style>
+                body{font-family:monospace;font-size:13px;padding:20px}
+                table{border-collapse:collapse;width:100%;margin-bottom:20px}
+                th,td{border:1px solid #ccc;padding:4px 8px;white-space:nowrap}
+                th{background:#eee}
+                .red{color:red;font-weight:bold}
+                .grn{color:green}
+                .yel{background:#fffbe6}
+              </style></head><body>";
+
+        echo "<h1>Supplier Balance Diagnostic — ID: $supplier_id — {$sup->name}</h1>";
+        echo "<p>Ledger Account ID: <b>$ledger_id</b></p>";
+
+        // ══════════════════════════════════════════════════════════════════════════
+        // SECTION A: ACCOUNTING LEDGER (all-time) — exactly what the statement uses
+        // ══════════════════════════════════════════════════════════════════════════
+        echo $h('A. Accounting Ledger Entries (all-time, ledger_id=' . $ledger_id . ')');
+
+        $sql_ledger = "
+            SELECT
+                e.id          AS entry_id,
+                e.date,
+                e.transaction_type,
+                e.pid,
+                e.rsid,
+                e.memo_id,
+                ai.dc,
+                ai.amount,
+                ai.narration,
+                CASE
+                    WHEN e.pid IS NOT NULL AND e.pid != ''         THEN p.reference_no
+                    WHEN e.memo_id IS NOT NULL AND e.memo_id != '' THEN m.reference_no
+                    ELSE pr.reference_no
+                END AS ref_no
+            FROM {$pfx}accounts_entryitems ai
+            JOIN {$pfx}accounts_entries e  ON e.id  = ai.entry_id
+            LEFT JOIN {$pfx}purchases p    ON p.id  = e.pid
+            LEFT JOIN {$pfx}memo m         ON m.id  = e.memo_id
+            LEFT JOIN {$pfx}payment_reference pr ON pr.journal_id = e.id
+            WHERE e.supplier_id = ?
+              AND ai.ledger_id  = ?
+            ORDER BY e.date, e.id
+        ";
+        $ledger_rows = $this->db->query($sql_ledger, [$supplier_id, $ledger_id])->result();
+
+        $ledger_total_debit  = 0.0;
+        $ledger_total_credit = 0.0;
+        $ledger_by_pid       = [];   // pid  → sum of debit entries
+        $ledger_by_type      = [];   // transaction_type → [debit,credit]
+
+        echo "<table>
+            <tr><th>#</th><th>entry_id</th><th>date</th><th>type</th>
+                <th>pid</th><th>ref_no</th><th>D/C</th><th>amount</th></tr>";
+        foreach ($ledger_rows as $i => $r) {
+            $amt = (float)$r->amount;
+            if ($r->dc === 'D') {
+                $ledger_total_debit += $amt;
+                if ($r->pid) $ledger_by_pid[$r->pid]['debit'] = ($ledger_by_pid[$r->pid]['debit'] ?? 0) + $amt;
+            } else {
+                $ledger_total_credit += $amt;
+                if ($r->pid) $ledger_by_pid[$r->pid]['credit'] = ($ledger_by_pid[$r->pid]['credit'] ?? 0) + $amt;
+            }
+            $ledger_by_type[$r->transaction_type][$r->dc] = ($ledger_by_type[$r->transaction_type][$r->dc] ?? 0) + $amt;
+
+            $cls = ($r->dc === 'D') ? '' : 'grn';
+            echo "<tr class='$cls'>
+                <td>" . ($i+1) . "</td>
+                <td>{$r->entry_id}</td><td>{$r->date}</td>
+                <td>{$r->transaction_type}</td><td>" . ($r->pid ?: '-') . "</td>
+                <td>" . ($r->ref_no ?: '-') . "</td>
+                <td><b>{$r->dc}</b></td>
+                <td style='text-align:right'>{$fmt($amt)}</td>
+            </tr>";
+        }
+        echo "</table>";
+
+        $ledger_net = $ledger_total_credit - $ledger_total_debit;  // positive = we owe supplier
+        echo "<p><b>Total Debit: {$fmt($ledger_total_debit)} | Total Credit: {$fmt($ledger_total_credit)} | Net (credit−debit = amount owed): <span class='red'>{$fmt($ledger_net)}</span></b></p>";
+
+        // ── breakdown by transaction type ─────────────────────────────────────────
+        echo $h('A1. Ledger Breakdown by Transaction Type');
+        echo "<table><tr><th>transaction_type</th><th>total_debit</th><th>total_credit</th><th>net</th></tr>";
+        foreach ($ledger_by_type as $tt => $dc) {
+            $d = $dc['D'] ?? 0;
+            $c = $dc['C'] ?? 0;
+            $n = $c - $d;
+            echo "<tr><td>$tt</td><td style='text-align:right'>{$fmt($d)}</td>
+                      <td style='text-align:right'>{$fmt($c)}</td>
+                      <td style='text-align:right;color:" . ($n < 0 ? 'red' : 'green') . "'>{$fmt($n)}</td></tr>";
+        }
+        echo "</table>";
+
+        // ══════════════════════════════════════════════════════════════════════════
+        // SECTION B: UNPAID INVOICES — purchases table
+        // ══════════════════════════════════════════════════════════════════════════
+        echo $h('B. Purchases (unpaid invoices source — purchase_invoice=1)');
+
+        $purch_rows = $this->db->query("
+            SELECT
+                p.id, p.date, p.reference_no,
+                p.grand_total,
+                COALESCE(p.grand_deal_discount, 0) AS deal_disc,
+                ROUND(p.grand_total + COALESCE(p.grand_deal_discount, 0), 2) AS invoice_total,
+                COALESCE(p.paid, 0) AS stored_paid,
+                COALESCE((SELECT SUM(sp.amount) FROM {$pfx}payments sp WHERE sp.purchase_id = p.id), 0) AS payments_table_paid,
+                ROUND((p.grand_total + COALESCE(p.grand_deal_discount,0)) - COALESCE(p.paid,0), 2) AS outstanding_stored,
+                ROUND((p.grand_total + COALESCE(p.grand_deal_discount,0))
+                      - COALESCE((SELECT SUM(sp.amount) FROM {$pfx}payments sp WHERE sp.purchase_id = p.id), 0), 2) AS outstanding_live
+            FROM {$pfx}purchases p
+            WHERE p.supplier_id = ?
+              AND p.purchase_invoice = 1
+              AND p.grand_total > 0
+              AND (p.note != 'import from excel' OR p.note IS NULL)
+            ORDER BY p.date
+        ", [$supplier_id])->result();
+
+        $purch_total_invoice  = 0.0;
+        $purch_total_paid     = 0.0;
+        $purch_total_out_live = 0.0;
+        $purch_ids            = [];
+
+        echo "<table>
+            <tr><th>p.id</th><th>date</th><th>ref_no</th>
+                <th>grand_total</th><th>deal_disc</th><th>invoice_total</th>
+                <th>p.paid(stored)</th><th>payments_tbl_paid</th>
+                <th>outstanding(stored)</th><th>outstanding(live)</th><th>diff(stored vs live)</th></tr>";
+        foreach ($purch_rows as $r) {
+            $purch_ids[] = $r->id;
+            $purch_total_invoice  += (float)$r->invoice_total;
+            $purch_total_paid     += (float)$r->payments_table_paid;
+            $purch_total_out_live += (float)$r->outstanding_live;
+            $diff = round((float)$r->outstanding_stored - (float)$r->outstanding_live, 2);
+            $cls  = ($diff != 0) ? 'yel' : '';
+            echo "<tr class='$cls'>
+                <td>{$r->id}</td><td>{$r->date}</td><td>{$r->reference_no}</td>
+                <td style='text-align:right'>{$fmt($r->grand_total)}</td>
+                <td style='text-align:right'>{$fmt($r->deal_disc)}</td>
+                <td style='text-align:right'>{$fmt($r->invoice_total)}</td>
+                <td style='text-align:right'>{$fmt($r->stored_paid)}</td>
+                <td style='text-align:right'>{$fmt($r->payments_table_paid)}</td>
+                <td style='text-align:right'>{$fmt($r->outstanding_stored)}</td>
+                <td style='text-align:right'>{$fmt($r->outstanding_live)}</td>
+                <td style='text-align:right" . ($diff != 0 ? ";color:red' class='red'" : "'") . ">$diff</td>
+            </tr>";
+        }
+        echo "</table>";
+        echo "<p><b>Total invoice_total: {$fmt($purch_total_invoice)} | Total paid (payments tbl): {$fmt($purch_total_paid)} | Total outstanding (live): <span class='red'>{$fmt($purch_total_out_live)}</span></b></p>";
+
+        // ── purchases with no accounting entry ────────────────────────────────────
+        echo $h('B1. Purchases that have NO accounting entry in the supplier ledger');
+        $ledger_pids = array_keys($ledger_by_pid);
+        $missing = array_diff($purch_ids, $ledger_pids);
+        if ($missing) {
+            echo "<p class='red'>Purchase IDs with no ledger entry: " . implode(', ', $missing) . "</p>";
+        } else {
+            echo "<p class='grn'>All invoiced purchases have at least one ledger entry.</p>";
+        }
+
+        // ── accounting entries for purchases with mismatch ────────────────────────
+        echo $h('B2. Accounting debit vs Payments-table paid — per purchase');
+        echo "<table>
+            <tr><th>p.id</th><th>ref_no</th>
+                <th>invoice_total</th><th>ledger_debit</th><th>ledger_credit</th>
+                <th>payments_tbl_paid</th>
+                <th>ledger_net_owed</th><th>unpaid_outstanding</th><th>DIFF</th></tr>";
+        $section_b2_total_diff = 0.0;
+        foreach ($purch_rows as $r) {
+            $l_debit  = $ledger_by_pid[$r->id]['debit']  ?? 0;
+            $l_credit = $ledger_by_pid[$r->id]['credit'] ?? 0;
+            $l_net    = $l_debit - $l_credit;                 // amount still owed per ledger
+            $unpaid   = (float)$r->outstanding_live;
+            $diff     = round($l_net - $unpaid, 2);
+            $section_b2_total_diff += $diff;
+            $cls = ($diff != 0) ? 'yel' : '';
+            echo "<tr class='$cls'>
+                <td>{$r->id}</td><td>{$r->reference_no}</td>
+                <td style='text-align:right'>{$fmt($r->invoice_total)}</td>
+                <td style='text-align:right'>{$fmt($l_debit)}</td>
+                <td style='text-align:right'>{$fmt($l_credit)}</td>
+                <td style='text-align:right'>{$fmt($r->payments_table_paid)}</td>
+                <td style='text-align:right'>{$fmt($l_net)}</td>
+                <td style='text-align:right'>{$fmt($unpaid)}</td>
+                <td style='text-align:right" . ($diff != 0 ? ";color:red'" : "'") . ">$diff</td>
+            </tr>";
+        }
+        echo "</table>";
+        echo "<p><b>Sum of DIFF across all purchases: <span class='red'>{$fmt($section_b2_total_diff)}</span></b></p>";
+
+        // ══════════════════════════════════════════════════════════════════════════
+        // SECTION C: PAYMENTS — sma_payments table
+        // ══════════════════════════════════════════════════════════════════════════
+        echo $h('C. Payments Table (sma_payments) for this supplier');
+
+        $pay_rows = $this->db->query("
+            SELECT sp.id, sp.date, sp.purchase_id, sp.amount, sp.note,
+                   p.reference_no AS purchase_ref
+            FROM {$pfx}payments sp
+            LEFT JOIN {$pfx}purchases p ON p.id = sp.purchase_id
+            WHERE sp.purchase_id IN (
+                SELECT id FROM {$pfx}purchases WHERE supplier_id = ?
+            )
+            ORDER BY sp.date
+        ", [$supplier_id])->result();
+
+        $pay_total = 0.0;
+        echo "<table>
+            <tr><th>pay.id</th><th>date</th><th>purchase_id</th><th>purchase_ref</th><th>amount</th><th>note</th></tr>";
+        foreach ($pay_rows as $r) {
+            $pay_total += (float)$r->amount;
+            echo "<tr>
+                <td>{$r->id}</td><td>{$r->date}</td>
+                <td>{$r->purchase_id}</td><td>" . ($r->purchase_ref ?: '-') . "</td>
+                <td style='text-align:right'>{$fmt($r->amount)}</td>
+                <td>" . htmlspecialchars((string)$r->note) . "</td>
+            </tr>";
+        }
+        echo "</table>";
+        echo "<p><b>Total payments recorded (payments table): {$fmt($pay_total)}</b></p>";
+
+        // ── accounting payment entries vs payments table ───────────────────────────
+        echo $h('C1. Accounting entries with transaction_type=supplierpayment (credits in ledger)');
+        $acc_pay_credit = $ledger_by_type['supplierpayment']['C'] ?? 0;
+        $acc_pay_debit  = $ledger_by_type['supplierpayment']['D'] ?? 0;
+        echo "<p>Ledger: supplierpayment Credit = <b>{$fmt($acc_pay_credit)}</b> | Debit = <b>{$fmt($acc_pay_debit)}</b></p>";
+        echo "<p>Payments table total: <b>{$fmt($pay_total)}</b></p>";
+        $diff_pay = round($acc_pay_credit - $pay_total, 2);
+        $cls = ($diff_pay != 0) ? 'red' : 'grn';
+        echo "<p class='$cls'>Difference (ledger credit − payments tbl): <b>{$fmt($diff_pay)}</b></p>";
+
+        // ══════════════════════════════════════════════════════════════════════════
+        // SECTION D: SUPPLIER RETURNS (returns_supplier)
+        // ══════════════════════════════════════════════════════════════════════════
+        echo $h('D. Supplier Returns (sma_returns_supplier)');
+
+        $ret_rows = $this->db->query("
+            SELECT rs.id, rs.date, rs.reference_no,
+                   rs.grand_total
+            FROM {$pfx}returns_supplier rs
+            WHERE rs.supplier_id = ?
+            ORDER BY rs.date
+        ", [$supplier_id])->result();
+
+        $ret_total = 0.0;
+        echo "<table>
+            <tr><th>rs.id</th><th>date</th><th>ref_no</th><th>grand_total</th></tr>";
+        foreach ($ret_rows as $r) {
+            $ret_total += (float)$r->grand_total;
+            echo "<tr>
+                <td>{$r->id}</td><td>{$r->date}</td><td>{$r->reference_no}</td>
+                <td style='text-align:right'>{$fmt($r->grand_total)}</td>
+            </tr>";
+        }
+        echo "</table>";
+        echo "<p><b>Total returns: {$fmt($ret_total)}</b></p>";
+
+        $acc_ret_credit = $ledger_by_type['returnorder']['C'] ?? 0;
+        $diff_ret = round($acc_ret_credit - $ret_total, 2);
+        $cls = ($diff_ret != 0) ? 'red' : 'grn';
+        echo "<p>Accounting returnorder credits in ledger: <b>{$fmt($acc_ret_credit)}</b></p>";
+        echo "<p class='$cls'>Difference (ledger − returns tbl): <b>{$fmt($diff_ret)}</b></p>";
+
+        // ══════════════════════════════════════════════════════════════════════════
+        // SECTION E: MEMO ITEMS (service invoices + credit memos)
+        // ══════════════════════════════════════════════════════════════════════════
+        echo $h('E. Memo table entries for this supplier');
+
+        $memo_rows = $this->db->query("
+            SELECT m.id, m.date, m.reference_no, m.type, m.supplier_entry_type,
+                   m.payment_amount, COALESCE(m.used_amount, 0) AS used_amount,
+                   ROUND(m.payment_amount - COALESCE(m.used_amount, 0), 2) AS outstanding
+            FROM {$pfx}memo m
+            WHERE m.supplier_id = ?
+            ORDER BY m.date
+        ", [$supplier_id])->result();
+
+        $memo_total_out = 0.0;
+        echo "<table>
+            <tr><th>m.id</th><th>date</th><th>ref_no</th><th>type</th><th>supplier_entry_type</th>
+                <th>payment_amount</th><th>used_amount</th><th>outstanding</th></tr>";
+        foreach ($memo_rows as $r) {
+            $memo_total_out += (float)$r->outstanding;
+            echo "<tr>
+                <td>{$r->id}</td><td>{$r->date}</td><td>{$r->reference_no}</td>
+                <td>{$r->type}</td><td>" . ($r->supplier_entry_type ?: '-') . "</td>
+                <td style='text-align:right'>{$fmt($r->payment_amount)}</td>
+                <td style='text-align:right'>{$fmt($r->used_amount)}</td>
+                <td style='text-align:right'>{$fmt($r->outstanding)}</td>
+            </tr>";
+        }
+        echo "</table>";
+        echo "<p><b>Total memo outstanding: {$fmt($memo_total_out)}</b></p>";
+
+        // ══════════════════════════════════════════════════════════════════════════
+        // SECTION F: ACCOUNTING ENTRIES NOT LINKED TO ANY PURCHASE
+        // (journals, direct entries, etc. that still affect this ledger)
+        // ══════════════════════════════════════════════════════════════════════════
+        echo $h('F. Accounting entries with NO pid (journals, manual entries, etc.)');
+
+        $no_pid_debit  = 0.0;
+        $no_pid_credit = 0.0;
+        $no_pid_rows   = array_filter($ledger_rows, fn($r) => empty($r->pid));
+        echo "<table>
+            <tr><th>entry_id</th><th>date</th><th>type</th><th>D/C</th><th>amount</th><th>narration</th></tr>";
+        foreach ($no_pid_rows as $r) {
+            $amt = (float)$r->amount;
+            $r->dc === 'D' ? $no_pid_debit += $amt : $no_pid_credit += $amt;
+            echo "<tr>
+                <td>{$r->entry_id}</td><td>{$r->date}</td><td>{$r->transaction_type}</td>
+                <td><b>{$r->dc}</b></td>
+                <td style='text-align:right'>{$fmt($amt)}</td>
+                <td>" . htmlspecialchars((string)$r->narration) . "</td>
+            </tr>";
+        }
+        echo "</table>";
+        echo "<p><b>No-pid entries: Debit = {$fmt($no_pid_debit)} | Credit = {$fmt($no_pid_credit)}</b></p>";
+
+        // ══════════════════════════════════════════════════════════════════════════
+        // SECTION G: SUMMARY — THE MISMATCH
+        // ══════════════════════════════════════════════════════════════════════════
+        echo $h('G. SUMMARY — Where the difference comes from');
+
+        $unpaid_total = $purch_total_out_live + $memo_total_out;
+
+        echo "<table>
+            <tr><th>Source</th><th>Amount</th></tr>
+            <tr><td>Ledger net owed (Credit − Debit)</td>
+                <td style='text-align:right'><b>{$fmt($ledger_net)}</b></td></tr>
+            <tr><td>Unpaid invoices total (purchases outstanding)</td>
+                <td style='text-align:right'>{$fmt($purch_total_out_live)}</td></tr>
+            <tr><td>Unpaid invoices total (memo outstanding)</td>
+                <td style='text-align:right'>{$fmt($memo_total_out)}</td></tr>
+            <tr><td>Unpaid invoices TOTAL (purchases + memos)</td>
+                <td style='text-align:right'><b>{$fmt($unpaid_total)}</b></td></tr>
+            <tr class='yel'><td><b>DIFFERENCE (ledger − unpaid)</b></td>
+                <td style='text-align:right'><b class='red'>{$fmt($ledger_net - $unpaid_total)}</b></td></tr>
+        </table>";
+
+        echo "<br><h3>Likely suspects:</h3><ul>
+            <li>Return orders NOT reducing p.paid  → diff in Section D</li>
+            <li>Payments in accounting NOT in sma_payments → diff in Section C1</li>
+            <li>Journal entries shifting ledger   → Section F</li>
+            <li>Purchases with deal_discount      → Section B (invoice_total vs grand_total)</li>
+            <li>Stored p.paid vs live payments    → Section B (stored vs live columns)</li>
+        </ul>";
+
+        echo "</body></html>";
+        die;
+    }*/
+
+    /**
+     * Generate Supplier Statement PDF using mPDF (Portrait)
+     * Alternative method using the same logic as sales/pdf_new
+     */
+    public function supplier_statement_pdf_new()
+    {
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
 
-        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+        $this->data['suppliers'] = $this->site->getAllChildCompanies('supplier');
+        $this->data['biller'] = $this->site->getDefaultBiller();
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+        $this->data['warehouse_id'] = $warehouse_id;
 
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
             $supplier_id = $this->input->post('supplier');
 
+            if (!$supplier_id) {
+                $this->session->set_flashdata('error', lang('No supplier is selected.'));
+                redirect($_SERVER['HTTP_REFERER']);
+            }
 
             $supplier_details = $this->companies_model->getCompanyByID($supplier_id);
             $ledger_account = $supplier_details->ledger_account;
-            $supplier_statement = $this->reports_model->getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account);
-//dd($supplier_statement);
+            $supplier_statement = $this->reports_model->getSupplierStatement($start_date, $end_date, $supplier_id, $ledger_account, $warehouse_id);
+
             $total_ob = 0;
             $total_ob_credit = 0;
             $total_ob_debit = 0;
             $ob_type = '';
+
             foreach ($supplier_statement['ob'] as $ob) {
                 if ($ob->dc == 'D') {
-                    $total_ob_debit = $ob->total_amount;
+                    $total_ob_debit += $ob->amount;
                 } else if ($ob->dc == 'C') {
-                    $total_ob_credit = $ob->total_amount;
+                    $total_ob_credit += $ob->amount;
                 }
             }
 
@@ -3415,102 +5703,417 @@ class Reports extends MY_Controller
             $this->data['end_date'] = $to_date;
             $this->data['supplier_id'] = $supplier_id;
             $this->data['ob_type'] = $ob_type;
+            $this->data['total_ob_credit'] = $total_ob_credit;
+            $this->data['total_ob_debit'] = $total_ob_debit;
             $this->data['total_ob'] = $this->sma->formatDecimal($total_ob);
             $this->data['supplier_statement'] = $supplier_statement['report'];
+            $this->data['reconciliation'] = $this->reports_model->getSupplierBalanceReconciliation(
+                $supplier_id,
+                $end_date,
+                $warehouse_id
+            );
 
-            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('supplier_statement')]];
-            $meta = ['page_title' => lang('supplier_statement'), 'bc' => $bc];
-            $this->page_construct('reports/suppliers_statement', $meta, $this->data);
+            // Set viewtype for PDF rendering
+            $this->data['viewtype'] = 'pdf_new';
+
+            // Generate PDF using mPDF (same as sales/pdf_new)
+            $name = lang('suppliers_statement_report') . '.pdf';
+            $html = $this->load->view($this->theme . 'reports/suppliers_statement', $this->data, true);
+
+            // Use mPDF directly like sales/pdf_new
+            $mpdf = new \Mpdf\Mpdf([
+                'format' => 'A4',           // Portrait A4
+                'orientation' => 'P',       // Explicitly set Portrait
+                'margin_top' => 10,         // Smaller margins for statement
+                'margin_bottom' => 10,
+                'margin_left' => 10,
+                'margin_right' => 10,
+            ]);
+
+            $mpdf->WriteHTML($html);
+            $mpdf->Output($name, "I"); // Display in browser
+
         } else {
-            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('supplier_statement')]];
-            $meta = ['page_title' => lang('supplier_statement'), 'bc' => $bc];
-            $this->page_construct('reports/suppliers_statement', $meta, $this->data);
+            // If no dates provided, redirect back or show error
+            $this->session->set_flashdata('error', 'Please select date range for supplier statement');
+            redirect($_SERVER['HTTP_REFERER']);
         }
     }
 
     public function customer_aging()
     {
-        $this->sma->checkPermissions('customers');
+        //$this->sma->checkPermissions('customers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
-
-        $response_arr = array();
-        $supplier_aging_array = $this->reports_model->getCustomerAging($duration = 30);
-        foreach ($supplier_aging_array as $key => $supplier_aging) {
-            $response_arr[$key] = array('Current' => 0, '1-30' => 0, '31-60' => 0, '61-90' => 0, '91-120' => 0, '>120' => 0);
-            foreach ($supplier_aging as $key2 => $record) {
-                foreach ($record as $rec) {
-                    if ($rec->dc == 'D') {
-                        $response_arr[$key][$key2] -= $rec->total_amount;
-                    } else if ($rec->dc == 'C') {
-                        $response_arr[$key][$key2] += $rec->total_amount;
-                    }
-                }
-            }
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
+        $duration = $this->input->post('duration') ? $this->input->post('duration') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $salesman = $this->input->post('salesman');
+        if ($salesman === '' || $salesman === null) {
+            $salesman = null;
         }
-        $this->data['supplier_aging'] = $response_arr;
+        $response_arr = array();
+
+        $customer_id_array = array();
+        if (!empty($this->input->post('customer'))) {
+            $customer_id_array = $this->input->post('customer');
+        }
+
+        $this->data['customers'] = $this->site->getAllCompanies('customer');
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+        $this->data['warehouse_id'] = $warehouse_id;
+        $response_arr = array();
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+        }
+
+        if ($duration) {
+            $supplier_aging_array = $this->reports_model->getCustomerAgingNew($duration, $start_date, $customer_id_array, $salesman, $warehouse_id);
+        } else {
+            $supplier_aging_array = $this->reports_model->getCustomerAgingNew($duration = 120, $start_date, $customer_id_array, $salesman, $warehouse_id);
+        }
+
+        $this->data['customer_id_array'] = $customer_id_array;
+        $this->data['start_date'] = $this->input->post('from_date');
+        $this->data['salesman'] = $salesman;
+        $this->data['selected_salesman'] = $salesman; // Add this for clarity
+
+        $this->data['supplier_aging'] = $supplier_aging_array;
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customers_aging')]];
         $meta = ['page_title' => lang('customers_aging'), 'bc' => $bc];
-        $this->page_construct('reports/customers_aging', $meta, $this->data);
+        if ($viewtype == 'pdf') {
+            $this->data['viewtype'] = $viewtype;
+            $name = lang('customers_aging_report') . '.pdf';
+            $html = $this->load->view($this->theme . 'reports/customers_aging', $this->data, true);
+            $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+        } else {
+            $this->page_construct('reports/customers_aging', $meta, $this->data);
+        }
+
+    }
+
+    public function customer_aging_old()
+    {
+        //$this->sma->checkPermissions('customers');
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
+        $duration = $this->input->post('duration') ? $this->input->post('duration') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $response_arr = array();
+
+        $customer_id_array = array();
+        if (!empty($this->input->post('customer'))) {
+            $customer_id_array = $this->input->post('customer');
+        }
+
+        $this->data['customers'] = $this->site->getAllCompanies('customer');
+        $response_arr = array();
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+        }
+
+        if ($duration) {
+            $supplier_aging_array = $this->reports_model->getCustomerAging($duration, $start_date, $customer_id_array);
+        } else {
+            $supplier_aging_array = $this->reports_model->getCustomerAging($duration = 120, $start_date, $customer_id_array);
+        }
+
+        $this->data['customer_id_array'] = $customer_id_array;
+        $this->data['start_date'] = $this->input->post('from_date');
+
+        $this->data['supplier_aging'] = $supplier_aging_array;
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customers_aging')]];
+        $meta = ['page_title' => lang('customers_aging'), 'bc' => $bc];
+        if ($viewtype == 'pdf') {
+            $this->data['viewtype'] = $viewtype;
+            $name = lang('customers_aging_report') . '.pdf';
+            $html = $this->load->view($this->theme . 'reports/customers_aging', $this->data, true);
+            $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+        } else {
+            $this->page_construct('reports/customers_aging', $meta, $this->data);
+        }
+
     }
 
     public function supplier_aging()
     {
-        $this->sma->checkPermissions('suppliers');
+        //$this->sma->checkPermissions('suppliers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
-
-        $response_arr = array();
-        $supplier_aging_array = $this->reports_model->getSupplierAging($start_date, $end_date);
-        foreach ($supplier_aging_array as $key => $supplier_aging) {
-            $response_arr[$key] = array('Current' => 0, '1-30' => 0, '31-60' => 0, '61-90' => 0, '91-120' => 0, '>120' => 0);
-            foreach ($supplier_aging as $key2 => $record) {
-                foreach ($record as $rec) {
-                    if ($rec->dc == 'D') {
-                        $response_arr[$key][$key2] -= $rec->total_amount;
-                    } else if ($rec->dc == 'C') {
-                        $response_arr[$key][$key2] += $rec->total_amount;
-                    }
-                }
-            }
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
+        $duration = $this->input->post('duration') ? $this->input->post('duration') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $supplier_id_array = array();
+        if (!empty($this->input->post('supplier'))) {
+            $supplier_id_array = $this->input->post('supplier');
         }
-        $this->data['supplier_aging'] = $this->sma->formatDecimal($response_arr);
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+        $this->data['warehouse_id'] = $warehouse_id;
+        $response_arr = array();
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+        }
+
+        if ($duration) {
+
+            $supplier_aging_array = $this->reports_model->getSupplierAgingNew($duration, $start_date, $supplier_id_array, $warehouse_id);
+        } else {
+            $supplier_aging_array = $this->reports_model->getSupplierAgingNew($duration = 120, $start_date, $supplier_id_array, $warehouse_id);
+        }
+        $this->data['supplier_id_array'] = $supplier_id_array;
+        $this->data['start_date'] = $this->input->post('from_date');
+        $this->data['supplier_aging'] = $supplier_aging_array;
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('suppliers_aging')]];
         $meta = ['page_title' => lang('suppliers_aging'), 'bc' => $bc];
-        $this->page_construct('reports/suppliers_aging', $meta, $this->data);
+        if ($viewtype == 'pdf') {
+            $this->data['viewtype'] = $viewtype;
+            $name = lang('suppliers_aging') . '.pdf';
+            $html = $this->load->view($this->theme . 'reports/suppliers_aging', $this->data, true);
+            $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+        } else {
+            $this->page_construct('reports/suppliers_aging', $meta, $this->data);
+        }
     }
 
-    public function suppliers_trial_balance()
-    {
-        $this->sma->checkPermissions('suppliers');
+    public function daily_sales_with_promo_code_by_order(){
+
+        //$this->sma->checkPermissions('suppliers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+      
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
-            $trial_balance_array = $this->reports_model->getSuppliersTrialBalance($start_date, $end_date);
+            
+            $response_arr = $this->reports_model->get_sales_report_with_promocode_by_order($start_date, $end_date);
+            
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['coupon_data']  =  $response_arr;
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('promo_code_report')]];
+            $meta = ['page_title' => lang('promo_code_report'), 'bc' => $bc];
+            if ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('promo_sale_report') . '.pdf';
+                $html = $this->load->view($this->theme . 'r', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            } else {
+                $this->page_construct('reports/promo_sale_report_by_order', $meta, $this->data);
+            }
+        }else{
+                    
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('promo_code_report')]];
+            $meta = ['page_title' => lang('promo_code_report'), 'bc' => $bc];
+            $this->page_construct('reports/promo_sale_report_by_order', $meta, $this->data);
+        }
+    }
 
-            $response_arr = array();
-            foreach ($trial_balance_array['trs'] as $trans) {
-                $response_arr[$trans->id]["id"] = $trans->id;
-                $response_arr[$trans->id]["sequence_code"] = $trans->sequence_code;
-                $response_arr[$trans->id]["name"] = $trans->name;
-                $response_arr[$trans->id]["trsDebit"] = $trans->totalPayment + $trans->totalReturn + $trans->totalMemo;
-                $response_arr[$trans->id]["trsCredit"] = $trans->totalPurchases + $trans->totalTaxes;
+    public function daily_sales_with_promo_code(){
+
+        //$this->sma->checkPermissions('suppliers');
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+      
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            
+            $response_arr = $this->reports_model->get_sales_report_with_promocode($start_date, $end_date);
+            
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['coupon_data']  =  $response_arr;
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('promo_code_report')]];
+            $meta = ['page_title' => lang('promo_code_report'), 'bc' => $bc];
+            if ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('promo_sale_report') . '.pdf';
+                $html = $this->load->view($this->theme . 'r', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            } else {
+                $this->page_construct('reports/promo_sale_report', $meta, $this->data);
             }
-            foreach ($trial_balance_array['ob'] as $trans) {
-                $response_arr[$trans->id]["obDebit"] = $trans->totalPayment + $trans->totalReturn + $trans->totalMemo;
-                $response_arr[$trans->id]["obCredit"] = $trans->totalPurchases + $trans->totalTaxes;
+        }else{
+                    
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('promo_code_report')]];
+            $meta = ['page_title' => lang('promo_code_report'), 'bc' => $bc];
+            $this->page_construct('reports/promo_sale_report', $meta, $this->data);
+        }
+    }
+
+    public function revenue_report()
+    {
+        //$this->sma->checkPermissions('reports', TRUE);
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+        $this->data['customers'] = $this->site->getAllCompanies('customer');
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        // Collect filters
+        $filters = [
+            'pharmacy'     => $this->input->post('pharmacy') ?: null,
+            'invoice_no'   => $this->input->post('invoice_no') ?: null,
+            'product'      => $this->input->post('product') ?: null,
+            'supplier_ids' => $this->input->post('supplier_ids') ?: [],
+            'customer_id'  => $this->input->post('customer_id') ?: null,
+            'period'       => $this->input->post('period') ?: 'today',
+            'group_by'     => $this->input->post('group_by') ?: 'invoice',
+        ];
+
+        // Derive date range from period
+        switch ($filters['period']) {
+            case 'month':
+                $start_date = date('Y-m-01');
+                $end_date   = date('Y-m-t');
+                break;
+            case 'ytd':
+                $start_date = date('Y-01-01');
+                $end_date   = date('Y-m-d');
+                break;
+            default:
+                $start_date = date('Y-m-d');
+                $end_date   = date('Y-m-d');
+                break;
+        }
+
+        $filters['start_date'] = $start_date;
+        $filters['end_date']   = $end_date;
+        // Get report data
+        $this->data['report_data'] = [];
+        if ($this->input->post('period')) {
+            $this->data['report_data'] = $this->reports_model->get_revenue_report($filters);
+        }
+
+        $this->data['filters'] = $filters;
+
+        // Handle Excel export
+        if ($this->input->post('export_excel')) {
+            $revenues = $this->reports_model->get_revenue_report($filters);
+            $this->load->library('excel');
+            $this->excel->setActiveSheetIndex(0);
+            $this->excel->getActiveSheet()->setTitle('Revenue Report');
+
+            // Header row
+            $this->excel->getActiveSheet()->SetCellValue('A1', lang('Date'));
+            $this->excel->getActiveSheet()->SetCellValue('B1', lang('Pharmacy'));
+            $this->excel->getActiveSheet()->SetCellValue('C1', lang('Invoice #'));
+            $this->excel->getActiveSheet()->SetCellValue('D1', lang('Product'));
+            $this->excel->getActiveSheet()->SetCellValue('E1', lang('Sale Price'));
+            $this->excel->getActiveSheet()->SetCellValue('F1', lang('Cost Price'));
+            $this->excel->getActiveSheet()->SetCellValue('G1', lang('Profit Amt'));
+            $this->excel->getActiveSheet()->SetCellValue('H1', lang('Margin %'));
+            $this->excel->getActiveSheet()->SetCellValue('I1', lang('Supplier'));
+            $this->excel->getActiveSheet()->SetCellValue('J1', lang('Customer'));
+
+            // Start writing data from row 2
+            $row = 2;
+            foreach ($revenues as $r) {
+                $this->excel->getActiveSheet()->SetCellValue('A' . $row, $r['sale_date']);
+                $this->excel->getActiveSheet()->SetCellValue('B' . $row, $r['pharmacy']);
+                $this->excel->getActiveSheet()->SetCellValue('C' . $row, $r['invoice_no']);
+                $this->excel->getActiveSheet()->SetCellValue('D' . $row, $r['product_name']);
+                $this->excel->getActiveSheet()->SetCellValue('E' . $row, $this->sma->formatMoney($r['sale_price'], 'none'));
+                $this->excel->getActiveSheet()->SetCellValue('F' . $row, $this->sma->formatMoney($r['cost_price'], 'none'));
+                $this->excel->getActiveSheet()->SetCellValue('G' . $row, $this->sma->formatMoney($r['profit_amount'], 'none'));
+                $this->excel->getActiveSheet()->SetCellValue('H' . $row, $r['margin_percent']);
+                $this->excel->getActiveSheet()->SetCellValue('I' . $row, $r['supplier_name']);
+                $this->excel->getActiveSheet()->SetCellValue('J' . $row, $r['customer_name']);
+                $row++;
             }
+
+            // Set column widths
+            $columns = ['A'=>20,'B'=>25,'C'=>20,'D'=>30,'E'=>15,'F'=>15,'G'=>15,'H'=>12,'I'=>25,'J'=>25];
+            foreach ($columns as $col => $width) {
+                $this->excel->getActiveSheet()->getColumnDimension($col)->setWidth($width);
+            }
+
+            // Center vertical alignment
+            $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+
+            // Export file
+            $filename = 'Revenue_Report_' . date('Y-m-d_H_i_s');
+            $this->load->helper('excel');
+            create_excel($this->excel, $filename);
+
+        }
+
+        $bc   = [['link' => base_url(), 'page' => lang('home')],
+                ['link' => admin_url('reports'), 'page' => lang('reports')],
+                ['link' => '#', 'page' => 'Revenue Report']];
+        $meta = ['page_title' => 'Revenue Report', 'bc' => $bc];
+
+        $this->page_construct('reports/revenue_report', $meta, $this->data);
+    }
+
+
+    public function suppliers_trial_balance()
+    {
+        //$this->sma->checkPermissions('suppliers');
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
+
+        $supplier_trade_type = $this->input->post('supplier_trade_type') ?: 'trade';
+        if (!in_array($supplier_trade_type, ['trade', 'non_trade', 'all'], true)) {
+            $supplier_trade_type = 'trade';
+        }
+        $this->data['supplier_trade_type'] = $supplier_trade_type;
+
+        $all_suppliers = $this->site->getAllCompanies('supplier') ?: [];
+        $this->data['suppliers'] = array_values(array_filter($all_suppliers, function ($s) use ($supplier_trade_type) {
+            $is_service = strcasecmp(trim($s->category ?? ''), 'Services') === 0
+                || stripos($s->category ?? '', 'خدمات') !== false
+                || stripos($s->category ?? '', 'service') !== false;
+            if ($supplier_trade_type === 'non_trade') {
+                return $is_service;
+            }
+            if ($supplier_trade_type === 'trade') {
+                return !$is_service;
+            }
+            return true;
+        }));
+
+        $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        $supplier_ids = $this->input->post('supplier_ids') ?: [];
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+        $this->data['warehouse_id'] = $warehouse_id;
+
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            //$trial_balance_array = $this->reports_model->getSuppliersTrialBalance($start_date, $end_date);
+            $response_arr = $this->reports_model->get_suppliers_trial_balance($start_date, $end_date, $supplier_ids, $warehouse_id, $supplier_trade_type);
 
             $this->data['start_date'] = $from_date;
             $this->data['end_date'] = $to_date;
-            $this->data['customer_data'] = $trial_balance_array;
+            $this->data['customer_data'] = $response_arr;
             $this->data['trial_balance'] = $response_arr;
+            $this->data['selected_suppliers'] = $supplier_ids;
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('suppliers_report')]];
             $meta = ['page_title' => lang('suppliers_report'), 'bc' => $bc];
-            $this->page_construct('reports/suppliers_trial_balance', $meta, $this->data);
+
+            if ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('suppliers_trial_balance_report') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/suppliers_trial_balance', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            } else {
+                $this->page_construct('reports/suppliers_trial_balance', $meta, $this->data);
+            }
+
         } else {
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('suppliers_report')]];
@@ -3570,6 +6173,7 @@ class Reports extends MY_Controller
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $date = $this->input->post('date') ? $this->input->post('date') : null;
         if ($date) {
             $ledger_groups = $this->reports_model->getLedgerGroups();
@@ -3611,42 +6215,96 @@ class Reports extends MY_Controller
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('balance_sheet')]];
             $meta = ['page_title' => lang('balance_sheet'), 'bc' => $bc];
-            $this->page_construct('reports/balance_sheet', $meta, $this->data);
+
+            if ($viewtype == 'pdf') {  // pdf generation 
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('balance_sheet') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/balance_sheet', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            } else {
+                $this->page_construct('reports/balance_sheet', $meta, $this->data);
+            }
         } else {
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('balance_sheet')]];
             $meta = ['page_title' => lang('balance_sheet'), 'bc' => $bc];
-            $this->page_construct('reports/balance_sheet', $meta, $this->data);
+            if ($viewtype == 'pdf') {  // pdf generation 
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('balance_sheet') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/balance_sheet', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            } else {
+                $this->page_construct('reports/balance_sheet', $meta, $this->data);
+            }
+
         }
     }
 
     public function customers_trial_balance()
     {
-        $this->sma->checkPermissions('customers');
+        //$this->sma->checkPermissions('customers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
 
         $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+        $customer_rent_type = $this->input->post('customer_rent_type') ?: 'non_rental';
+        if (!in_array($customer_rent_type, ['non_rental', 'rental', 'all'], true)) {
+            $customer_rent_type = 'non_rental';
+        }
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['warehouse_id'] = $warehouse_id;
+        $this->data['customer_rent_type'] = $customer_rent_type;
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
-            $trial_balance_array = $this->reports_model->getCustomersTrialBalance($start_date, $end_date);
-
+            //$trial_balance_array = $this->reports_model->getCustomersTrialBalance($start_date, $end_date);
+            $trial_balance_array = $this->reports_model->get_customer_trial_balance($start_date, $end_date, $warehouse_id, $customer_rent_type);
+            // echo "<pre>";
+            // print_r($trial_balance_array);
+            // exit;
             $response_arr = array();
+            /**OLD LOGIC */
+            // foreach ($trial_balance_array['trs'] as $trans) {
+            //     $response_arr[$trans->id]["name"] = $trans->name;
+            //     $response_arr[$trans->id]["company"] = $trans->company;
+            //     $response_arr[$trans->id]["sequence_code"] = $trans->sequence_code;
+            //     $response_arr[$trans->id]["trsDebit"] = $trans->payment_total + $trans->sale_total;
+            //     $response_arr[$trans->id]["trsCredit"] =  $trans->return_total + $trans->memo_total;
+            // }
+
+
+            // foreach ($trial_balance_array['ob'] as $trans) {
+            //     $response_arr[$trans->id]["obDebit"] = $trans->payment_total + $trans->sale_total;
+            //     $response_arr[$trans->id]["obCredit"] =  $trans->return_total + $trans->memo_total;
+            // }
+            /**END OLD LOGIC */
+
             foreach ($trial_balance_array['trs'] as $trans) {
                 $response_arr[$trans->id]["name"] = $trans->name;
-                $response_arr[$trans->id]["company"] = $trans->company;
                 $response_arr[$trans->id]["sequence_code"] = $trans->sequence_code;
-                $response_arr[$trans->id]["trsDebit"] = $trans->payment_total + $trans->sale_total;
-                $response_arr[$trans->id]["trsCredit"] =  $trans->return_total + $trans->memo_total;
+                $response_arr[$trans->id]["category"] = $trans->category;
+                $response_arr[$trans->id]["payment_term"] = $trans->payment_term;
+                $response_arr[$trans->id]["credit_limit"] = $trans->credit_limit;
+                $response_arr[$trans->id]["trsDebit"] = $trans->total_debit;
+                $response_arr[$trans->id]["trsCredit"] = $trans->total_credit;
             }
 
 
             foreach ($trial_balance_array['ob'] as $trans) {
-                $response_arr[$trans->id]["obDebit"] = $trans->payment_total + $trans->sale_total;
-                $response_arr[$trans->id]["obCredit"] =  $trans->return_total + $trans->memo_total;
+                $response_arr[$trans->id]["name"] = $trans->name;
+                $response_arr[$trans->id]["sequence_code"] = $trans->sequence_code;
+                $response_arr[$trans->id]["category"] = $trans->category;
+                $response_arr[$trans->id]["payment_term"] = $trans->payment_term;
+                $response_arr[$trans->id]["credit_limit"] = $trans->credit_limit;
+                $response_arr[$trans->id]["obDebit"] = $trans->total_debit;
+                $response_arr[$trans->id]["obCredit"] = $trans->total_credit;
             }
+
             //dd($response_arr);
 
 
@@ -3702,7 +6360,16 @@ class Reports extends MY_Controller
             $this->data['trial_balance'] = $response_arr;
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customers_report')]];
             $meta = ['page_title' => lang('customers_report'), 'bc' => $bc];
-            $this->page_construct('reports/customers_trial_balance', $meta, $this->data);
+
+            if ($viewtype == 'pdf') {  // for download pdf 
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('customers_trial_balance') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/customers_trial_balance', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+
+            } else {
+                $this->page_construct('reports/customers_trial_balance', $meta, $this->data);
+            }
         } else {
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customers_report')]];
@@ -3714,7 +6381,7 @@ class Reports extends MY_Controller
     public function item_movement_report_xls($productId, $type, $startDate, $endDate, $xls)
     {
 
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
 
@@ -3757,9 +6424,9 @@ class Reports extends MY_Controller
                 $this->excel->getActiveSheet()->SetCellValue('G' . $row, '');
                 $this->excel->getActiveSheet()->SetCellValue('H' . $row, '');
                 $this->excel->getActiveSheet()->SetCellValue('I' . $row, '');
-                $this->excel->getActiveSheet()->SetCellValue('J' . $row, $this->sma->formatMoney($itemOpenings->unitPrice,'none'));
+                $this->excel->getActiveSheet()->SetCellValue('J' . $row, $this->sma->formatMoney($itemOpenings->unitPrice, 'none'));
                 $this->excel->getActiveSheet()->SetCellValue('K' . $row, $this->sma->formatQuantity(($itemOpenings->openingBalance > 0 ? $itemOpenings->openingBalance : 0.00)));
-                $this->excel->getActiveSheet()->SetCellValue('L' . $row, $this->sma->formatMoney(($itemOpenings->openingBalance > 0 && $itemOpenings->unitPrice > 0 ? $itemOpenings->openingBalance * $itemOpenings->unitPrice : 0.00),'none'));
+                $this->excel->getActiveSheet()->SetCellValue('L' . $row, $this->sma->formatMoney(($itemOpenings->openingBalance > 0 && $itemOpenings->unitPrice > 0 ? $itemOpenings->openingBalance * $itemOpenings->unitPrice : 0.00), 'none'));
 
 
                 $balanceQantity = $itemOpenings->openingBalance;
@@ -3788,12 +6455,12 @@ class Reports extends MY_Controller
                     $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->name_of);
                     $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->expiry_date);
                     $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data_row->batch_no);
-                    $this->excel->getActiveSheet()->SetCellValue('G' . $row, $this->sma->formatMoney(($data_row->sale_price ? $data_row->sale_price : 0.0),'none'));
-                    $this->excel->getActiveSheet()->SetCellValue('H' . $row, $this->sma->formatMoney(($data_row->purchase_price ? $data_row->purchase_price : 0.0),'none'));
+                    $this->excel->getActiveSheet()->SetCellValue('G' . $row, $this->sma->formatMoney(($data_row->sale_price ? $data_row->sale_price : 0.0), 'none'));
+                    $this->excel->getActiveSheet()->SetCellValue('H' . $row, $this->sma->formatMoney(($data_row->purchase_price ? $data_row->purchase_price : 0.0), 'none'));
                     $this->excel->getActiveSheet()->SetCellValue('I' . $row, $this->sma->formatQuantity($data_row->quantity ? $data_row->quantity : 0.0));
-                    $this->excel->getActiveSheet()->SetCellValue('J' . $row, $this->sma->formatMoney(($data_row->unit_cost ? $data_row->unit_cost : 0.0),'none'));
+                    $this->excel->getActiveSheet()->SetCellValue('J' . $row, $this->sma->formatMoney(($data_row->unit_cost ? $data_row->unit_cost : 0.0), 'none'));
                     $this->excel->getActiveSheet()->SetCellValue('K' . $row, $this->sma->formatQuantity($balanceQantity ? $balanceQantity : 0.0));
-                    $this->excel->getActiveSheet()->SetCellValue('L' . $row, $this->sma->formatMoney(($balanceQantity * $data_row->unit_cost),'none'));
+                    $this->excel->getActiveSheet()->SetCellValue('L' . $row, $this->sma->formatMoney(($balanceQantity * $data_row->unit_cost), 'none'));
 
                     $row++;
                 }
@@ -3809,7 +6476,7 @@ class Reports extends MY_Controller
                 $this->excel->getActiveSheet()->SetCellValue('I' . $row, '');
                 $this->excel->getActiveSheet()->SetCellValue('J' . $row, '');
                 $this->excel->getActiveSheet()->SetCellValue('K' . $row, $this->sma->formatQuantity($balanceQantity));
-                $this->excel->getActiveSheet()->SetCellValue('L' . $row, $this->sma->formatMoney($balanceQantity * $itemOpenings->unitPrice,'none'));
+                $this->excel->getActiveSheet()->SetCellValue('L' . $row, $this->sma->formatMoney($balanceQantity * $itemOpenings->unitPrice, 'none'));
 
 
 
@@ -3844,46 +6511,58 @@ class Reports extends MY_Controller
     public function item_movement_report()
     {
 
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $filterOnTypeArr = [
             "" => "-- ALL --",
-            "purchases" => "Purchases",
-            "sales" => "Sales",
-            "returnCustomer" => "Return Customer",
-            "returnSupplier" => "Return Supplier",
-            "transfer" => "Transfer"
+            "purchase" => "Purchases",
+            "sale" => "Sales",
+            "customer_return" => "Return Customer",
+            "return_to_supplier" => "Return Supplier",
+            "transfer_in" => "Transfer In",
+            "transfer_out" => "Transfer Out"
         ];
         $this->data['filterOnTypeArr'] = $filterOnTypeArr;
         $user = $this->site->getUser();
-        $defaultWareHouseId = ($user->warehouse_id ? $user->warehouse_id : $this->site->Settings->default_warehouse);
+        $warehouse = $this->site->resolveReportWarehouseFilter('warehouse');
+        $this->data['warehouse'] = $warehouse;
 
         $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
         $productId = $this->input->post('product') ? $this->input->post('product') : 0;
         $filterOnType = $this->input->post('filterOnType') ? $this->input->post('filterOnType') : null;
-
+        $document_number = $this->input->post('document_number') ? $this->input->post('document_number') : null;
+        $this->data['start_date'] = $from_date;
+        $this->data['end_date'] = $to_date;
+        $this->data['product'] = $productId;
+        $this->data['filterOnType'] = $filterOnType;
+        $this->data['document_number'] = $document_number;
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
         if ($productId && $from_date && $to_date) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
 
-            $itemOpenings = $this->reports_model->getItemOpeningBalance($productId, $start_date, $defaultWareHouseId);
+            $itemOpenings = $this->reports_model->getItemOpeningBalance($productId, $start_date, $warehouse);
+
+            $reportData = $this->reports_model->getItemMovementRecords($productId, $start_date, $end_date, $warehouse, $filterOnType, $document_number);
+
             
-            $reportData = $this->reports_model->getItemMovementRecords($productId, $start_date, $end_date, $defaultWareHouseId, $filterOnType);
-
-            $this->data['start_date'] = $from_date;
-            $this->data['end_date'] = $to_date;
-            $this->data['product'] = $productId;
-            $this->data['filterOnType'] = $filterOnType;
-
             $this->data['itemOpenings'] = $itemOpenings;
             $this->data['reportData'] = $reportData;
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('item_movement_report')]];
             $meta = ['page_title' => lang('item_movement_report'), 'bc' => $bc];
-            $this->page_construct('reports/item_movement_report', $meta, $this->data);
+            if ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('item_movement_report') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/item_movement_report', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            } else {
+                $this->page_construct('reports/item_movement_report', $meta, $this->data);
+            }
 
         } else {
 
@@ -3896,13 +6575,14 @@ class Reports extends MY_Controller
     public function inventory_trial_balance()
     {
 
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $user = $this->site->getUser();
         $defaultWareHouseId = ($user->warehouse_id ? $user->warehouse_id : $this->site->Settings->default_warehouse);
 
         $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
         $from_warehouse_id = $this->input->post('from_warehouse_id') ? $this->input->post('from_warehouse_id') : 0;
@@ -3924,59 +6604,59 @@ class Reports extends MY_Controller
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
 
-            if($from_warehouse_id == 0){
-                $from_warehouse_id =  $defaultWareHouseId; 
+            if ($from_warehouse_id == 0) {
+                $from_warehouse_id = $defaultWareHouseId;
             }
 
             $inventryReportData = [];
-            $productOpeningsData = $this->reports_model->getProductsQuantityUnitCost($start_date,$from_warehouse_id);
+            //$productOpeningsData = $this->reports_model->getProductsQuantityUnitCost($start_date,$from_warehouse_id);
 
-            $productInOutData = $this->reports_model->getInventoryTrialBalanceData($start_date, $end_date, $from_warehouse_id, $to_warehouse_id);
-            
-            foreach($productInOutData as $prdId => $row){
+            $productInOutData = $this->reports_model->getInventoryTrialBalance($start_date, $end_date, $from_warehouse_id, $to_warehouse_id);
 
-                $productCost = 1;
-                if(count($productOpeningsData) > 0&& array_key_exists($prdId, $productOpeningsData)){
+            // foreach($productInOutData as $prdId => $row){
 
-                    $productOpenQty      = $productOpeningsData[$prdId]['total_opening_qty'];
-                    $productOpenUnitCost = $productOpeningsData[$prdId]['avg_unit_cost'];
-                    $productOpenValue    = $productOpenQty * $productOpenUnitCost;
-                }else{
+            //     $productCost = 1;
+            //     if(count($productOpeningsData) > 0&& array_key_exists($prdId, $productOpeningsData)){
 
-                    $productOpenQty      = 0.00;
-                    $productOpenUnitCost = 0.00;
-                    $productOpenValue    = 0.00;
-                }
+            //         $productOpenQty      = $productOpeningsData[$prdId]['total_opening_qty'];
+            //         $productOpenUnitCost = $productOpeningsData[$prdId]['avg_unit_cost'];
+            //         $productOpenValue    = $productOpenQty * $productOpenUnitCost;
+            //     }else{
 
-                if($productOpenUnitCost){
-                    //$productCost = $productOpenUnitCost;
-                    $productCost = $row->movement_out_cost;
-                }else{
-                    //$productCost = $row->movement_in_cost;
-                    $productCost = $row->movement_out_cost;
-                }
+            //         $productOpenQty      = 0.00;
+            //         $productOpenUnitCost = 0.00;
+            //         $productOpenValue    = 0.00;
+            //     }
 
-                $inventryReportData[] = [
-                    'product_id'          =>  $row->product_id,
-                    'product_name'        =>  $row->product_name,
-                    'product_code'        =>  $row->product_code,
-                    'openning_qty'        =>  $productOpenQty,
-                    'openning_cost'       =>  $productOpenUnitCost,
-                    'openning_ttl'        =>  $productOpenValue,
-                    'movement_in_qty'     =>  $row->movement_in_quantity,
-                    'movement_in_cost'    =>  $row->movement_in_cost,
-                    'movement_in_ttl'     =>  $row->movement_in_quantity * $row->movement_in_cost,
-                    'movement_out_qty'    =>  $row->movement_out_quantity,
-                    'movement_out_cost'   =>  $row->movement_out_cost,
-                    'movement_out_ttl'    =>  $row->movement_out_quantity * $row->movement_out_cost,
+            //     if($productOpenUnitCost){
+            //         //$productCost = $productOpenUnitCost;
+            //         $productCost = $row->movement_out_cost;
+            //     }else{
+            //         //$productCost = $row->movement_in_cost;
+            //         $productCost = $row->movement_out_cost;
+            //     }
 
-                    'closing_qty'        =>  ($productOpenQty + $row->movement_in_quantity) - $row->movement_out_quantity,
-                    'closing_cost'       =>  $productCost,
-                    'closing_ttl'        =>  (($productOpenQty + $row->movement_in_quantity) - $row->movement_out_quantity) * $productCost
-                    
-                ];
-            }
-            
+            //     $inventryReportData[] = [
+            //         'product_id'          =>  $row->product_id,
+            //         'product_name'        =>  $row->product_name,
+            //         'product_code'        =>  $row->product_code,
+            //         'openning_qty'        =>  $productOpenQty,
+            //         'openning_cost'       =>  $productOpenUnitCost,
+            //         'openning_ttl'        =>  $productOpenValue,
+            //         'movement_in_qty'     =>  $row->movement_in_quantity,
+            //         'movement_in_cost'    =>  $row->movement_in_cost,
+            //         'movement_in_ttl'     =>  $row->movement_in_quantity * $row->movement_in_cost,
+            //         'movement_out_qty'    =>  $row->movement_out_quantity,
+            //         'movement_out_cost'   =>  $row->movement_out_cost,
+            //         'movement_out_ttl'    =>  $row->movement_out_quantity * $row->movement_out_cost,
+
+            //         'closing_qty'        =>  ($productOpenQty + $row->movement_in_quantity) - $row->movement_out_quantity,
+            //         'closing_cost'       =>  $productCost,
+            //         'closing_ttl'        =>  (($productOpenQty + $row->movement_in_quantity) - $row->movement_out_quantity) * $productCost
+
+            //     ];
+            // }
+
             // echo '<pre>', print_r($inventryReportData), '</pre>';
             // $reportData = $this->reports_model->getInventoryTrialBalance($start_date, $end_date, $from_warehouse_id, $to_warehouse_id);
 
@@ -3984,12 +6664,19 @@ class Reports extends MY_Controller
             $this->data['end_date'] = $to_date;
             $this->data['from_warehouse_id'] = $from_warehouse_id;
             $this->data['to_warehouse_id'] = $to_warehouse_id;
-            $this->data['inventryReportData'] = $inventryReportData;
+            $this->data['inventryReportData'] = $productInOutData;
 
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('inventory_trial_balance')]];
             $meta = ['page_title' => lang('inventory_trial_balance'), 'bc' => $bc];
-            $this->page_construct('reports/inventory_trial_balance', $meta, $this->data);
+            if ($viewtype == 'pdf') { // for generating PDF
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('inventory_trial_balance') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/inventory_trial_balance', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            } else {
+                $this->page_construct('reports/inventory_trial_balance', $meta, $this->data);
+            }
         } else {
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('inventory_trial_balance')]];
@@ -4001,10 +6688,11 @@ class Reports extends MY_Controller
 
     public function inventory_movement()
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
 
@@ -4021,7 +6709,16 @@ class Reports extends MY_Controller
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('inventory_movement_report')]];
             $meta = ['page_title' => lang('inventory_movement_report'), 'bc' => $bc];
-            $this->page_construct('reports/inventory_movement_report', $meta, $this->data);
+
+            if ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('inventory_movement_report') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/inventory_movement_report', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'L');
+            } else {
+                $this->page_construct('reports/inventory_movement_report', $meta, $this->data);
+            }
+
         } else {
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('inventory_movement_report')]];
@@ -4032,7 +6729,7 @@ class Reports extends MY_Controller
 
     public function inventory_movementBK()
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
@@ -4077,13 +6774,13 @@ class Reports extends MY_Controller
 
     public function vat_purchase()
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
 
         $filterOnTypeArr = [
             "" => "-- Select Type --",
-            "purchases" => "Purchases",         
+            "purchases" => "Purchases",
             "returnSupplier" => "Return to Supplier",
             "serviceInvoice" => "Service Invoice"
         ];
@@ -4093,16 +6790,18 @@ class Reports extends MY_Controller
         $filteredWareHouses = [];
         $filteredWareHouses[] = '-- All --';
         foreach ($allWareHouses as $warehouse) {
-            
+
             $filteredWareHouses[$warehouse->id] = $warehouse->name . ' (' . $warehouse->code . ')';
-        
+
         }
         $this->data['warehouses'] = $filteredWareHouses;
 
         $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
-        $warehouse_id = $this->input->post('warehouse_id') ? $this->input->post('warehouse_id') : null;
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+        $this->data['warehouse_id'] = $warehouse_id;
         $filterOnType = $this->input->post('filterOnType') ? $this->input->post('filterOnType') : null;
 
         if ($from_date && $to_date) {
@@ -4115,24 +6814,40 @@ class Reports extends MY_Controller
             $this->data['vat_purchase'] = $vat_purchase_array;
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('vat_purchase_report')]];
             $meta = ['page_title' => lang('vat_purchase_report'), 'bc' => $bc];
-            $this->page_construct('reports/vat_purchase_report', $meta, $this->data);
+
+            if ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('vat_purchase_report') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/vat_purchase_report', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            } else {
+                $this->page_construct('reports/vat_purchase_report', $meta, $this->data);
+            }
         } else {
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('vat_purchase_report')]];
             $meta = ['page_title' => lang('vat_purchase_report'), 'bc' => $bc];
-            $this->page_construct('reports/vat_purchase_report', $meta, $this->data);
+            if ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('vat_purchase_report') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/vat_purchase_report', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            } else {
+                $this->page_construct('reports/vat_purchase_report', $meta, $this->data);
+            }
+
         }
     }
 
     public function vat_sale()
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
 
         $filterOnTypeArr = [
             "" => "-- Select Type --",
-            "sale" => "Sale",         
+            "sale" => "Sale",
             "returnCustomer" => "Return From Customer",
             "serviceInvoice" => "Service Invoice"
         ];
@@ -4142,18 +6857,22 @@ class Reports extends MY_Controller
         $filteredWareHouses = [];
         $filteredWareHouses[] = '-- All --';
         foreach ($allWareHouses as $warehouse) {
-            
+
             $filteredWareHouses[$warehouse->id] = $warehouse->name . ' (' . $warehouse->code . ')';
-        
+
         }
         $this->data['warehouses'] = $filteredWareHouses;
 
         $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
-        $warehouse_id = $this->input->post('warehouse_id') ? $this->input->post('warehouse_id') : null;
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+        $this->data['warehouse_id'] = $warehouse_id;
         $filterOnType = $this->input->post('filterOnType') ? $this->input->post('filterOnType') : null;
-
+        if ($viewtype == 'pdf') {
+            $this->data['viewtype'] = $viewtype;
+        }
         if ($from_date && $to_date) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
@@ -4164,22 +6883,95 @@ class Reports extends MY_Controller
             $this->data['vat_purchase'] = $vat_purchase_array;
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('Vat Sale Report')]];
             $meta = ['page_title' => lang('Vat Sale Report'), 'bc' => $bc];
-            $this->page_construct('reports/vat_sale_report', $meta, $this->data);
+
+            if ($viewtype == 'pdf') {
+                $name = lang('vat') . '_' . 'sale_report' . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/vat_sale_report', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            } else {
+                $this->page_construct('reports/vat_sale_report', $meta, $this->data);
+            }
         } else {
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('Vat Sale Report')]];
             $meta = ['page_title' => lang('Vat Sale Report'), 'bc' => $bc];
             $this->page_construct('reports/vat_sale_report', $meta, $this->data);
         }
+
+
+    }
+    public function vat_sale_pdf()
+    {
+        //$this->sma->checkPermissions();
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+
+        $filterOnTypeArr = [
+            "" => "-- Select Type --",
+            "sale" => "Sale",
+            "returnCustomer" => "Return From Customer",
+            "serviceInvoice" => "Service Invoice"
+        ];
+        $this->data['filterOnTypeArr'] = $filterOnTypeArr;
+
+        $allWareHouses = $this->site->getAllWarehouses();
+        $filteredWareHouses = [];
+        $filteredWareHouses[] = '-- All --';
+        foreach ($allWareHouses as $warehouse) {
+
+            $filteredWareHouses[$warehouse->id] = $warehouse->name . ' (' . $warehouse->code . ')';
+
+        }
+        $this->data['warehouses'] = $filteredWareHouses;
+
+        $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+        $this->data['warehouse_id'] = $warehouse_id;
+        $filterOnType = $this->input->post('filterOnType') ? $this->input->post('filterOnType') : null;
+
+        if ($viewtype == 'pdf') {
+            $this->data['viewtype'] = $viewtype;
+        }
+        if ($from_date && $to_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $vat_purchase_array = $this->reports_model->getVatSaleReport($start_date, $end_date, $warehouse_id, $filterOnType);
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['vat_purchase'] = $vat_purchase_array;
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('Vat Sale Report')]];
+            $meta = ['page_title' => lang('Vat Sale Report'), 'bc' => $bc];
+            // $this->page_construct('reports/vat_sale_report', $meta, $this->data);
+        } else {
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('Vat Sale Report')]];
+            $meta = ['page_title' => lang('Vat Sale Report'), 'bc' => $bc];
+            // $this->page_construct('reports/vat_sale_report', $meta, $this->data);
+        }
+
+        $name = lang('vat') . '_' . 'sale_report' . '.pdf';
+        $html = $this->load->view($this->theme . 'reports/vat_sale_report', $this->data, true);
+        //echo $html;exit;
+        if (!$this->Settings->barcode_img) {
+            $html = preg_replace("'\<\?xml(.*)\?\>'", '', $html);
+        }
+        $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+        // generate_pdf($content, $name = 'download.pdf', $output_type = null, $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'P')
+
     }
 
 
     public function vat_purchase_ledger()
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
         $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
         if ($from_date) {
@@ -4192,7 +6984,15 @@ class Reports extends MY_Controller
             $this->data['vat_purchase'] = $vat_purchase_array;
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('vat_purchase_report')]];
             $meta = ['page_title' => lang('vat_purchase_report'), 'bc' => $bc];
-            $this->page_construct('reports/vat_purchase_ledger_report', $meta, $this->data);
+
+            if ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('vat_purchase_ledger_report') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/vat_purchase_ledger_report', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', $footer = null, $margin_bottom = null, $header = null, $margin_top = null, $orientation = 'Pl');
+            } else {
+                $this->page_construct('reports/vat_purchase_ledger_report', $meta, $this->data);
+            }
         } else {
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('vat_purchase_report')]];
@@ -4203,7 +7003,7 @@ class Reports extends MY_Controller
 
     public function tax()
     {
-        $this->sma->checkPermissions();
+        //$this->sma->checkPermissions();
         $start_date = $this->input->post('start_date') ? $this->input->post('start_date') : null;
         $end_date = $this->input->post('end_date') ? $this->input->post('end_date') : null;
         if ($start_date) {
@@ -4222,7 +7022,7 @@ class Reports extends MY_Controller
 
     public function users()
     {
-        $this->sma->checkPermissions('staff');
+        //$this->sma->checkPermissions('staff');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('staff_report')]];
         $meta = ['page_title' => lang('staff_report'), 'bc' => $bc];
@@ -4246,7 +7046,7 @@ class Reports extends MY_Controller
     {
         $this->data['incentives'] = "incentive-screen";
 
-        $this->sma->checkPermissions('sales');
+        //$this->sma->checkPermissions('sales');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['users'] = $this->reports_model->getStaff();
         $this->data['warehouses'] = $this->site->getAllWarehouses();
@@ -4344,7 +7144,7 @@ class Reports extends MY_Controller
 
     public function warehouse_stock($warehouse = null)
     {
-        $this->sma->checkPermissions('index', true);
+        //$this->sma->checkPermissions('index', true);
         $data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if ($this->input->get('warehouse')) {
             $warehouse = $this->input->get('warehouse');
@@ -4359,4 +7159,4324 @@ class Reports extends MY_Controller
         $meta = ['page_title' => lang('reports'), 'bc' => $bc];
         $this->page_construct('reports/warehouse_stock', $meta, $this->data);
     }
+
+    public function GLReport(){
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $viewtype     = $this->input->get('viewtype')      ?: null;
+        $from_date    = $this->input->get('from_date');
+        if (($from_date === null || $from_date === '') && empty($_GET)) {
+            $from_date = $this->sma->hrsd(date('Y-01-01'));
+        } elseif ($from_date === null || $from_date === '') {
+            $from_date = null;
+        }
+        $to_date = $this->input->get('to_date');
+        if (($to_date === null || $to_date === '') && empty($_GET)) {
+            $to_date = $this->sma->hrsd(date('Y-m-d'));
+        } elseif ($to_date === null || $to_date === '') {
+            $to_date = null;
+        }
+        $export_excel = $this->input->get('export_excel')  ?: null;
+
+        // Set filter values for form persistence (always set these)
+        $this->data['start_date'] = $from_date;
+        $this->data['end_date']   = $to_date;
+        $this->data['viewtype']   = $viewtype;
+
+        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('general_ledger_report')]];
+        $meta = ['page_title' => lang('general_ledger_report'), 'bc' => $bc];
+
+        // If any filter submitted, fetch data
+        if (!empty($_GET) && ($this->input->get('from_date') || $this->input->get('to_date'))) {
+            $start_date = $from_date ? $this->sma->fld(explode(' ', trim($from_date))[0] . ' 00:00:00') : null;
+            $end_date   = $to_date   ? $this->sma->fld(explode(' ', trim($to_date))[0]   . ' 23:59:59') : null;
+
+            $bulk_export = ($export_excel || $viewtype == 'pdf');
+            if ($bulk_export) {
+                @set_time_limit(600);
+                if (function_exists('ini_set')) {
+                    @ini_set('memory_limit', '256M');
+                }
+                $gl_result = $this->reports_model->getGLReport($start_date, $end_date, null, 0);
+                $this->data['gl_report'] = $gl_result['rows'];
+                $this->data['gl_report_totals'] = $gl_result['totals'];
+            } else {
+                $gl_result = $this->reports_model->getGLReport($start_date, $end_date, 0, 0);
+                $this->data['gl_report_totals'] = $gl_result['totals'];
+                $this->data['gl_report_total'] = $gl_result['total'];
+                $this->data['gl_load_table'] = ($gl_result['total'] > 0);
+            }
+
+            $gl_report_array = isset($this->data['gl_report']) ? $this->data['gl_report'] : [];
+
+            // ── Server-side Excel export (ALL rows, not just current page) ──
+            if ($export_excel) {
+                $this->load->library('excel');
+                $sheet = $this->excel->setActiveSheetIndex(0);
+                $sheet->setTitle('GL Report');
+
+                $sheet->SetCellValue('A1', '#');
+                $sheet->SetCellValue('B1', lang('voucher'));
+                $sheet->SetCellValue('C1', lang('voucher_id'));
+                $sheet->SetCellValue('D1', lang('trx_id'));
+                $sheet->SetCellValue('E1', lang('date'));
+                $sheet->SetCellValue('F1', lang('reference'));
+                $sheet->SetCellValue('G1', lang('account_number'));
+                $sheet->SetCellValue('H1', lang('account_name'));
+                $sheet->SetCellValue('I1', lang('description'));
+                $sheet->SetCellValue('J1', lang('debit'));
+                $sheet->SetCellValue('K1', lang('credit'));
+                $sheet->SetCellValue('L1', lang('userid'));
+
+                $row         = 2;
+                $total_debit = (float) $gl_result['totals']->total_debit;
+                $total_credit = (float) $gl_result['totals']->total_credit;
+                $count       = 0;
+                $last_data_row = 1;
+                foreach ((array)$gl_report_array as $r) {
+                    $count++;
+                    $sheet->SetCellValue('A' . $row, $count);
+                    $sheet->SetCellValue('B' . $row, $r->voucher);
+                    $sheet->SetCellValue('C' . $row, $r->voucher_id);
+                    $sheet->SetCellValue('D' . $row, $r->trx_id);
+                    if (!empty($r->entry_date)) {
+                        $sheet->SetCellValue(
+                            'E' . $row,
+                            \PhpOffice\PhpSpreadsheet\Shared\Date::PHPToExcel(new DateTime($r->entry_date))
+                        );
+                    } else {
+                        $sheet->SetCellValue('E' . $row, $r->date);
+                    }
+                    $sheet->SetCellValue('F' . $row, $r->reference);
+                    $sheet->SetCellValue('G' . $row, $r->account_number);
+                    $sheet->SetCellValue('H' . $row, $r->account_name);
+                    $sheet->SetCellValue('I' . $row, $r->description);
+                    $sheet->SetCellValue('J' . $row, $r->debit  > 0 ? (float)$r->debit  : 0);
+                    $sheet->SetCellValue('K' . $row, $r->credit > 0 ? (float)$r->credit : 0);
+                    $sheet->SetCellValue('L' . $row, $r->user_id);
+                    $last_data_row = $row;
+                    $row++;
+                }
+                if ($last_data_row >= 2) {
+                    $sheet->getStyle('E2:E' . $last_data_row)
+                        ->getNumberFormat()
+                        ->setFormatCode('dd-mmm-yy');
+                }
+                // Totals row
+                $sheet->SetCellValue('A' . $row, '');
+                $sheet->SetCellValue('I' . $row, lang('total'));
+                $sheet->SetCellValue('J' . $row, $total_debit);
+                $sheet->SetCellValue('K' . $row, $total_credit);
+
+                $cols = ['A'=>5,'B'=>20,'C'=>12,'D'=>10,'E'=>14,'F'=>12,'G'=>18,'H'=>30,'I'=>35,'J'=>14,'K'=>14,'L'=>10];
+                foreach ($cols as $c => $w) { $this->excel->getActiveSheet()->getColumnDimension($c)->setWidth($w); }
+                $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+
+                $filename = 'GL_Report_' . date('Y-m-d_H_i_s');
+                $this->load->helper('excel');
+                create_excel($this->excel, $filename);
+                return;
+            }
+
+            if ($viewtype == 'pdf') {
+                $this->load->library('pdf');
+                $html = $this->load->view('reports/gl_report', $this->data, true);
+                $this->pdf->generate($html, 'GL_Report_' . date('Y_m_d_H_i_s'), true);
+            }
+
+            $this->page_construct('reports/gl_report', $meta, $this->data);
+        } else {
+            $this->page_construct('reports/gl_report', $meta, $this->data);
+        }
+    }
+
+    public function get_gl_report()
+    {
+        $from_date = $this->input->post('from_date') ?: $this->input->get('from_date');
+        $to_date = $this->input->post('to_date') ?: $this->input->get('to_date');
+        $start_date = $from_date ? $this->sma->fld(explode(' ', trim($from_date))[0] . ' 00:00:00') : null;
+        $end_date = $to_date ? $this->sma->fld(explode(' ', trim($to_date))[0] . ' 23:59:59') : null;
+
+        $offset = (int) $this->input->post('iDisplayStart');
+        $limit = (int) $this->input->post('iDisplayLength');
+        if ($limit <= 0) {
+            $limit = 100;
+        }
+        if ($limit > 500) {
+            $limit = 500;
+        }
+        $search = trim((string) $this->input->post('sSearch'));
+
+        $gl_result = $this->reports_model->getGLReport($start_date, $end_date, $limit, $offset, $search);
+
+        $aaData = [];
+        $row_num = $offset;
+        foreach ($gl_result['rows'] as $row) {
+            $row_num++;
+            $aaData[] = [
+                $row_num,
+                $row->voucher,
+                $this->gl_report_voucher_link($row),
+                '<a href="' . admin_url('entries/view/journal/' . $row->trx_id) . '" target="_blank">' . $row->trx_id . '</a>',
+                $row->date,
+                $row->reference,
+                $row->account_number,
+                $row->account_name,
+                $row->description,
+                $row->debit > 0 ? $this->sma->formatNumber($row->debit) : '0',
+                $row->credit > 0 ? $this->sma->formatNumber($row->credit) : '0',
+                $row->user_id,
+            ];
+        }
+
+        $this->output
+            ->set_content_type('application/json')
+            ->set_output(json_encode([
+                'sEcho' => (int) $this->input->post('sEcho'),
+                'iTotalRecords' => (int) $gl_result['total'],
+                'iTotalDisplayRecords' => (int) $gl_result['filtered_total'],
+                'aaData' => $aaData,
+            ]));
+    }
+
+    private function gl_report_voucher_link($row)
+    {
+        $link = '';
+        if ($row->voucher == 'Sales Invoice') {
+            $link = admin_url('sales/view/' . $row->voucher_id);
+        } elseif ($row->voucher == 'Purchase Invoice') {
+            $link = admin_url('purchases/view/' . $row->voucher_id);
+        } elseif ($row->voucher == 'Sales Return') {
+            $link = admin_url('returns/view/' . $row->voucher_id);
+        } elseif ($row->voucher == 'Credit Note') {
+            $link = admin_url('customers/view_credit_memo/' . $row->voucher_id);
+        } elseif ($row->voucher == 'Debit Note') {
+            $link = admin_url('suppliers/view_debit_memo/' . $row->voucher_id);
+        } elseif ($row->voucher == 'Supplier Payment') {
+            $link = admin_url('suppliers/view_payment/' . $row->voucher_id);
+        } elseif ($row->voucher == 'Collection' || $row->voucher == 'Customer Advance') {
+            $link = admin_url('customers/view_payment/' . $row->voucher_id);
+        }
+
+        if ($link) {
+            return '<a href="' . $link . '" target="_blank">' . $row->voucher_id . '</a>';
+        }
+
+        return $row->voucher_id;
+    }
+
+    public function collections_by_location(){
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $viewtype = $this->input->get('viewtype') ? $this->input->get('viewtype') : null;
+        $from_date = $this->input->get('from_date') ? $this->input->get('from_date') : null;
+        $to_date = $this->input->get('to_date') ? $this->input->get('to_date') : null;
+        $warehouse = $this->site->resolveReportWarehouseFilter('pharmacy');
+        //print_r($this->input->get());
+    
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['warehouse_id'] = $warehouse;
+        $this->data['start_date'] = $from_date;
+        $this->data['end_date'] = $to_date;
+        $this->data['warehouse'] = $warehouse;
+        
+        // If any filter submitted, fetch data
+        if ($from_date || $to_date || array_key_exists('pharmacy', $_GET)) {
+            // Format dates only if provided
+            $start_date = $from_date ? $this->sma->fld($from_date) : null;
+            $end_date = $to_date ? $this->sma->fld($to_date) : null;
+            
+            $collections_data = $this->reports_model->getCollectionsByLocation($start_date, $end_date, $warehouse);
+
+            $this->data['collections_data'] = $collections_data;
+            
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('collection_location')]];
+            $meta = ['page_title' => lang('collection_location'), 'bc' => $bc];
+
+          
+            $this->page_construct('reports/collection_location', $meta, $this->data);
+         
+        } else {
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('reports')]];
+           $meta = ['page_title' => lang('reports'), 'bc' => $bc];
+           $this->page_construct('reports/collection_location', $meta, $this->data);
+
+
+        }
+    }
+
+    public function collections_by_pharmacy(){
+      
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        $warehouse = $this->site->resolveReportWarehouseFilter('pharmacy');
+        //print_r($this->input->post());
+    
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['warehouse'] = $warehouse;
+        $this->data['warehouse_id'] = $warehouse;
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $collections_data = $this->reports_model->getCollectionsByPharmacy($start_date, $end_date, $warehouse);
+            //echo "<pre>";
+            //print_r($collections_data);exit;
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['warehouse'] = $warehouse;
+            $this->data['collections_data'] = $collections_data;
+            $this->data['register_id'] = $this->input->post('registerId');
+            $this->data['register_open_date_time'] = $this->input->post('register_open_date_time');
+            $this->data['register_close_date_time'] = $this->input->post('register_close_date_time');
+            $this->data['registerIds'] = $this->pos_model->search_register_ids($warehouse, 0, $from_date, $to_date);
+            
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('collection_pharmacy')]];
+            $meta = ['page_title' => lang('collection_pharmacy'), 'bc' => $bc];
+
+          
+            $this->page_construct('reports/collection_pharmacy', $meta, $this->data);
+         
+        } else {
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('reports')]];
+           $meta = ['page_title' => lang('reports'), 'bc' => $bc];
+           $this->page_construct('reports/collection_pharmacy', $meta, $this->data);
+
+
+        }
+
+    }
+
+    public function payments_by_supplier(){
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $from_date  = $this->input->post('from_date')  ?: null;
+        $to_date    = $this->input->post('to_date')    ?: null;
+        $supplier   = $this->input->post('supplier')   ?: null;
+        $warehouse  = $this->site->resolveReportWarehouseFilter('pharmacy');
+
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+        $this->data['warehouse']  = $warehouse;
+        $this->data['warehouse_id'] = $warehouse;
+
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date   = $this->sma->fld($to_date);
+            $payments_data = $this->reports_model->getPaymentsBySupplier($start_date, $end_date, $supplier, $warehouse);
+
+            $this->data['start_date']    = $from_date;
+            $this->data['end_date']      = $to_date;
+            $this->data['warehouse']     = $warehouse;
+            $this->data['supplier']      = $supplier;
+            $this->data['payments_data'] = $payments_data;
+
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('Payments by Supplier')]];
+            $meta = ['page_title' => lang('Payments by Supplier'), 'bc' => $bc];
+            $this->page_construct('reports/payment_by_supplier', $meta, $this->data);
+        } else {
+            $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('reports')]];
+            $meta = ['page_title' => lang('reports'), 'bc' => $bc];
+            $this->page_construct('reports/payment_by_supplier', $meta, $this->data);
+        }
+
+    }
+
+    public function sales_by_category(){
+      
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        $warehouse = $this->site->resolveReportWarehouseFilter('pharmacy');
+        //print_r($this->input->post());
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['warehouse'] = $warehouse;
+        $this->data['warehouse_id'] = $warehouse;
+        if ($from_date && $to_date ) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $sales_data = $this->reports_model->getSalesByCategory($start_date, $end_date, $warehouse);
+           // echo "<pre>"; print_r($sales_data);exit;
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['warehouse'] = $warehouse;
+            $this->data['sales_data'] = $sales_data;
+
+            $this->data['register_id'] = $this->input->post('registerId');
+            $this->data['register_open_date_time'] = $this->input->post('register_open_date_time');
+            $this->data['register_close_date_time'] = $this->input->post('register_close_date_time');
+            $this->data['registerIds'] = $this->pos_model->search_register_ids($warehouse, 0, $from_date, $to_date);
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('sales_by_category')]];
+            $meta = ['page_title' => lang('sales_by_category'), 'bc' => $bc];
+
+          
+            $this->page_construct('reports/sales_by_category', $meta, $this->data);
+         
+        } else {
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('reports')]];
+           $meta = ['page_title' => lang('reports'), 'bc' => $bc];
+           $this->page_construct('reports/sales_by_category', $meta, $this->data);
+
+
+        }
+
+    }
+
+    public function sales_by_item(){
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        $warehouse = $this->site->resolveReportWarehouseFilter('pharmacy');
+        //print_r($this->input->post());
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['warehouse'] = $warehouse;
+        $this->data['warehouse_id'] = $warehouse;
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $response_data = $this->reports_model->getSalesByItems($start_date, $end_date, $warehouse);
+            //echo "<pre>"; print_r($sales_data);exit;
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['warehouse'] = $warehouse;
+            $this->data['response_data'] = $response_data;
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('sales_by_category')]];
+            $meta = ['page_title' => lang('sales_by_item'), 'bc' => $bc];
+
+            $this->data['register_id'] = $this->input->post('registerId');
+            $this->data['register_open_date_time'] = $this->input->post('register_open_date_time');
+            $this->data['register_close_date_time'] = $this->input->post('register_close_date_time');
+            $this->data['registerIds'] = $this->pos_model->search_register_ids($warehouse, 0, $from_date, $to_date);
+            
+          
+            $this->page_construct('reports/sales_by_item', $meta, $this->data);
+         
+        } else {
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('reports')]];
+           $meta = ['page_title' => lang('reports'), 'bc' => $bc];
+           $this->page_construct('reports/sales_by_item', $meta, $this->data);
+
+
+        }
+
+    }
+
+    public function pharmacist_comission(){
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        $warehouse = $this->site->resolveReportWarehouseFilter('pharmacy');
+        $pharmacist = $this->input->post('pharmacist') ? $this->input->post('pharmacist') : null;
+        //print_r($this->input->post());
+    
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['warehouse'] = $warehouse;
+        $this->data['warehouse_id'] = $warehouse;
+        $this->data['pharmacists'] = $this->site->getAllPharmacists();
+        if ($from_date && $to_date && $warehouse && $pharmacist) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $commission_data = $this->reports_model->getPharmacistsCommission($start_date, $end_date, $warehouse, $pharmacist);
+           // echo "<pre>"; print_r($commission_data);exit;
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['warehouse'] = $warehouse;
+            $this->data['pharmacist'] = $pharmacist;
+            $this->data['commission_data'] = $commission_data;
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('pharmacist_commission')]];
+            $meta = ['page_title' => lang(''), 'bc' => $bc];
+
+          
+            $this->page_construct('reports/pharmacist_comission', $meta, $this->data);
+         
+        } else {
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('reports')]];
+           $meta = ['page_title' => lang('reports'), 'bc' => $bc];
+           $this->page_construct('reports/pharmacist_comission', $meta, $this->data);
+
+
+        }
+
+    }
+
+    public function transfer_items_monthly_wise(){
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        $from_pharmacy = $this->input->post('frompharmacy') ? $this->input->post('frompharmacy') : null;
+        $to_pharmacy = $this->input->post('topharmacy') ? $this->input->post('topharmacy') : null;
+        //print_r($this->input->post());
+    
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        if ($from_date && $to_date && $from_pharmacy && $to_pharmacy) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $response_data = $this->reports_model->getTransferItemsMonthlyWise($start_date, $end_date, $from_pharmacy, $to_pharmacy);
+            //echo "<pre>"; print_r($response_data);exit;
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['from_pharmacy'] = $from_pharmacy;
+            $this->data['to_pharmacy'] = $to_pharmacy;
+            $this->data['response_data'] = $response_data;
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('Tranfer Items Monthly Wise')]];
+            $meta = ['page_title' => lang(''), 'bc' => $bc];
+
+          
+            $this->page_construct('reports/transfer_items_monthly_wise', $meta, $this->data);
+         
+        } else {
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('reports')]];
+           $meta = ['page_title' => lang('reports'), 'bc' => $bc];
+           $this->page_construct('reports/transfer_items_monthly_wise', $meta, $this->data);
+
+
+        }
+
+    }
+
+    public function get_item_deatils(){
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $viewtype = $this->input->get('viewtype') ? $this->input->get('viewtype') : null;
+        $year = $this->input->get('year') ? $this->input->get('year') : null;
+        $month = $this->input->get('month') ? $this->input->get('month') : null;
+        $from_date = $this->input->get('from_date') ? $this->input->get('from_date') : null;
+        $to_date = $this->input->get('to_date') ? $this->input->get('to_date') : null;
+        $from_pharmacy = $this->input->get('from_pharmacy') ? $this->input->get('from_pharmacy') : null;
+        $to_pharmacy = $this->input->get('to_pharmacy') ? $this->input->get('to_pharmacy') : null;
+        //print_r( $this->input->get());
+        if ($from_date && $to_date && $from_pharmacy && $to_pharmacy) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $response_data = $this->reports_model->getTransferItemsDetailsMonthlyWise($year, $month, $start_date, $end_date, $from_pharmacy, $to_pharmacy);
+            //echo "<pre>response"; print_r($response_data);exit;
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['from_pharmacy'] = $from_pharmacy;
+            $this->data['to_pharmacy'] = $to_pharmacy;
+            $this->data['response_data'] = $response_data;
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('Tranfer Items Monthly Wise')]];
+            $meta = ['page_title' => lang(''), 'bc' => $bc];
+
+          
+            $this->load->view($this->theme . 'reports/items_transfer_details', $this->data);
+         
+        } else {
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('reports')]];
+           $meta = ['page_title' => lang('reports'), 'bc' => $bc];
+           $this->load->view($this->theme . 'reports/items_transfer_details', $this->data);
+
+        }
+
+    }
+
+    public function close_register_details(){
+        // error_reporting(-1);
+		// ini_set('display_errors', 1);
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+        $warehouse = $this->site->resolveReportWarehouseFilter('pharmacy');
+        $pharmacist_id = $this->input->post('pharmacist_id') ? $this->input->post('pharmacist_id') : null;
+        //print_r($this->input->post());
+         //for testing purpose
+         /*$user_id ='';
+         if($warehouse == 34) {
+            $user_id = 6653 ;
+         } else if($warehouse == 37) {
+            $user_id = 6655 ;
+         }*/
+
+        if ($this->Owner || $this->Admin || $this->PurchaseManager) {
+            if($warehouse != null){
+                $user_data = $this->site->getUserByWarehouseID($warehouse);
+                if($pharmacist_id){
+                    if($pharmacist_id != 'all'){
+                        $user_id = $pharmacist_id;
+                    }else{
+                        $pharmacist_group = $this->site->getUserGroupByName('pharmacist')->id;
+                        $all_pharmacy_pharmacists = $this->site->getUsersByGroupAndLocation($warehouse,$pharmacist_group);
+                        $user_id = $all_pharmacy_pharmacists;
+                    }
+                }else{
+                    $user_id = $user_data->id;
+                }
+                
+            }
+        }else{
+            $warehouse = $this->session->userdata('warehouse_id') ?: $warehouse;
+            if($pharmacist_id){
+                $user_id = $pharmacist_id;
+            }else{
+                $user_id = $this->session->userdata('user_id');
+            }
+        }   
+
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['user_group'] = $this->site->getUserGroupByName('pharmacist');
+        $this->data['pharmacists'] = $this->site->getUsersByGroup($this->data['user_group']->id);
+        $this->data['warehouse_id'] = $warehouse;
+        
+        if ($from_date && $to_date && $warehouse) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+
+            if ($this->Owner || $this->Admin) {
+                $user_register                    = $user_id ? $this->pos_model->registerData($user_id) : null;
+                $register_open_time               = $user_register ? $user_register->date : null;
+                $this->data['cash_in_hand']       = $user_register ? $user_register->cash_in_hand : null;
+                $this->data['register_open_time'] = $user_register ? $register_open_time : null;
+            } else {
+                $register_open_time               = $this->session->userdata('register_open_time');
+                $this->data['cash_in_hand']       = null;
+                $this->data['register_open_time'] = null;
+            }
+            $register_open_time = $start_date;
+            $register_end_time = $end_date;
+
+            //$response_data = $this->reports_model->getCloseRegisterDetails($start_date, $end_date, $warehouse);
+            //$this->data['chsales']         = $this->pos_model->getRegisterChSales($register_open_time, $user_id);
+            //$this->data['gcsales']         = $this->pos_model->getRegisterGCSales($register_open_time);
+            //$this->data['pppsales']        = $this->pos_model->getRegisterPPPSales($register_open_time, $user_id);
+            //$this->data['stripesales']     = $this->pos_model->getRegisterStripeSales($register_open_time, $user_id);
+             //$this->data['refunds']         = $this->pos_model->getRegisterRefunds($register_open_time, $user_id);
+            //$this->data['returns']         = $this->pos_model->getRegisterReturns($register_open_time, $user_id);
+            //$this->data['cashrefunds']     = $this->pos_model->getRegisterCashRefunds($register_open_time, $user_id);
+            //$this->data['expenses']        = $this->pos_model->getRegisterExpenses($register_open_time, $user_id);
+            //$this->data['users']           = $this->pos_model->getUsers($user_id);
+            //$this->data['suspended_bills'] = $this->pos_model->getSuspendedsales($user_id);
+              //$this->data['authorizesales']  = $this->pos_model->getRegisterAuthorizeSales($register_open_time, $user_id);
+
+
+            
+            $this->data['ccsales']         = $this->pos_model->getRegisterCCSales($register_open_time, $user_id, $register_end_time);
+            $this->data['cashsales']       = $this->pos_model->getRegisterCashSales($register_open_time, $user_id, $register_end_time);
+            $this->data['othersales']      = $this->pos_model->getRegisterOtherSales($register_open_time);
+            $this->data['totalsales']      = $this->pos_model->getRegisterSales($register_open_time, $user_id, $register_end_time);
+            $this->data['totalreturns']    = $this->pos_model->getRegisterReturnsNew($register_open_time, $user_id, $register_end_time);
+           
+            $this->data['user_id']         = $user_id;
+            //echo "<pre>"; print_r($response_data);exit;
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['warehouse_id'] = $warehouse;
+            $this->data['register_id'] = $this->input->post('registerId');
+            $this->data['register_open_date_time'] = $this->input->post('register_open_date_time');
+            $this->data['register_close_date_time'] = $this->input->post('register_close_date_time');
+            $this->data['registerIds'] = $this->pos_model->search_register_ids($warehouse, $pharmacist_id, $from_date, $to_date);
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('Close Register Details')]];
+            $meta = ['page_title' => lang(''), 'bc' => $bc];
+
+          
+            $this->page_construct('reports/close_register_details', $meta, $this->data);
+         
+        } else {
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('reports')]];
+           $meta = ['page_title' => lang('reports'), 'bc' => $bc];
+           $this->page_construct('reports/close_register_details', $meta, $this->data);
+        }
+    }
+
+     public function get_register_ids() {
+        $pharmacy_id = $this->input->get('pharmacyId');
+        $pharmacist_id = $this->input->get('closedBy');
+        $from_date = $this->input->get('fromDate');
+        $to_date = $this->input->get('toDate');
+
+        $registers = $this->pos_model->search_register_ids($pharmacy_id, $pharmacist_id, $from_date, $to_date);
+
+        echo json_encode($registers);
+    }
+
+     public function get_register_id_dates() {
+        $register_id = $this->input->get('register_id');
+
+        $registers = $this->pos_model->get_register_id_dates($register_id);
+
+        echo json_encode($registers[0]);
+    }
+
+    /**
+     * Invoice Status Report
+     * Shows invoice details with returns, discounts, payments and outstanding amounts
+     */
+    public function invoice_status()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        
+        // Get filter parameters from GET (changed from POST to match stock report pattern)
+        $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : null;
+        $end_date = $this->input->get('end_date') ? $this->input->get('end_date') : null;
+        $invoice_id = $this->input->get('invoice_id') ? $this->input->get('invoice_id') : null;
+        $customer = $this->input->get('customer') ? $this->input->get('customer') : null;
+        $salesman = $this->input->get('salesman') ? $this->input->get('salesman') : null;
+        $warehouse = $this->site->resolveReportWarehouseFilter('warehouse');
+        
+        // Get sales men and warehouses for dropdowns
+        $this->db->select('id, name');
+        $this->db->from('sales_man');
+        $this->db->order_by('name', 'asc');
+        $query = $this->db->get();
+        $this->data['salesmen'] = $query->result();
+        
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        
+        // Set filter values for form persistence (always set these)
+        $this->data['start_date'] = $start_date;
+        $this->data['end_date'] = $end_date;
+        $this->data['invoice_id'] = $invoice_id;
+        $this->data['customer'] = $customer;
+        $this->data['salesman'] = $salesman;
+        $this->data['warehouse'] = $warehouse;
+        
+        // If form submitted, fetch data
+        if ($start_date || $end_date || $invoice_id || $customer || $salesman || array_key_exists('warehouse', $_GET)) {
+            
+            // Pre-fetch salesman name if needed
+            $salesman_name = null;
+            if ($salesman) {
+                $sm_query = $this->db->select('name')->from('sales_man')->where('id', $salesman)->get();
+                if ($sm_query->num_rows() > 0) {
+                    $salesman_name = $sm_query->row()->name;
+                }
+            }
+            
+            // Build query
+            $this->db->select("DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%d-%b-%y') as date,
+                {$this->db->dbprefix('sales')}.id as sale_id,
+                {$this->db->dbprefix('sales')}.reference_no as invoice,
+                {$this->db->dbprefix('companies')}.city as area,
+                COALESCE({$this->db->dbprefix('companies')}.sales_agent, '') as sales_man,
+                {$this->db->dbprefix('companies')}.company as customer_no,
+                {$this->db->dbprefix('companies')}.name as customer_name,
+                {$this->db->dbprefix('sales')}.total as invoice_total,
+                COALESCE((SELECT SUM(grand_total) FROM {$this->db->dbprefix('returns')} WHERE sale_id = {$this->db->dbprefix('sales')}.id), 0) as return_amount,
+                {$this->db->dbprefix('sales')}.total_discount as discount,
+                ({$this->db->dbprefix('sales')}.paid) as paid,
+                (({$this->db->dbprefix('sales')}.total - {$this->db->dbprefix('sales')}.total_discount) - {$this->db->dbprefix('sales')}.paid) as outstanding", false)
+                ->from('sales')
+                ->join('companies', 'companies.id = sales.customer_id', 'left')
+                ->order_by('sales.date', 'desc');
+            
+            // Apply date filter (only if provided)
+            if ($start_date && $end_date) {
+                $formatted_start_date = $this->sma->fld($start_date) . ' 00:00:00';
+                $formatted_end_date = $this->sma->fld($end_date) . ' 23:59:59';
+                $this->db->where("{$this->db->dbprefix('sales')}.date >= '{$formatted_start_date}' AND {$this->db->dbprefix('sales')}.date <= '{$formatted_end_date}'");
+            }
+            
+            // Apply filters
+            if ($invoice_id) {
+                // Search by sales.id (exact match for numeric ID)
+                if (is_numeric($invoice_id)) {
+                    $this->db->where('sales.id', $invoice_id);
+                } else {
+                    // If not numeric, search in reference_no
+                    $this->db->like('sales.reference_no', $invoice_id, 'after');
+                }
+            }
+            if ($customer) {
+                $this->db->group_start();
+                $this->db->like("{$this->db->dbprefix('companies')}.id", $customer, 'both');
+                $this->db->group_end();
+            }
+            if ($salesman_name) {
+                $this->db->where('companies.sales_agent', $salesman_name);
+            }
+            if ($warehouse) {
+                $this->db->where('sales.warehouse_id', $warehouse);
+            } else {
+                $this->site->applyReportWarehouseScope($this->db, null, 'sales.warehouse_id');
+            }
+            
+            $invoice_data = $this->db->get()->result();
+            
+            $this->data['invoice_data'] = $invoice_data;
+        }
+        
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')], 
+            ['link' => admin_url('reports'), 'page' => lang('reports')], 
+            ['link' => '#', 'page' => lang('invoice_status_report')]
+        ];
+        $meta = ['page_title' => lang('invoice_status_report'), 'bc' => $bc];
+        $this->page_construct('reports/invoice_status', $meta, $this->data);
+    }
+
+    /**
+     * Sales Per Item Report
+     * Shows detailed sales and returns per item with profitability
+     */
+    public function sales_per_item()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        
+        // Get filter parameters from GET
+        $start_date = $this->input->get('start_date');
+        if (($start_date === null || $start_date === '') && empty($_GET)) {
+            $start_date = date('d/m/Y', mktime(0, 0, 0, 1, 1, (int) date('Y')));
+        } elseif ($start_date === null || $start_date === '') {
+            $start_date = null;
+        }
+        $end_date = $this->input->get('end_date');
+        if (($end_date === null || $end_date === '') && empty($_GET)) {
+            $end_date = date('d/m/Y');
+        } elseif ($end_date === null || $end_date === '') {
+            $end_date = null;
+        }
+        $invoice_id = $this->input->get('invoice_id') ? $this->input->get('invoice_id') : null;
+        $salesman = $this->input->get('salesman') ? $this->input->get('salesman') : null;
+        $item_code = $this->input->get('item_code') ? $this->input->get('item_code') : null;
+        $category = $this->input->get('category') ? $this->input->get('category') : null;
+        $warehouse_explicit = array_key_exists('warehouse_id', $_GET);
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+        $export_excel = $this->input->get('export_excel');
+        // Get sales men for dropdown
+        $this->db->select('id, name');
+        $this->db->from('sales_man');
+        $this->db->order_by('name', 'asc');
+        $query = $this->db->get();
+        $this->data['salesmen'] = $query->result();
+
+        // Get distinct customer categories for dropdown
+        $cat_query = $this->db->query(
+            "SELECT DISTINCT category FROM sma_companies WHERE group_name = 'customer' AND category IS NOT NULL AND category != '' ORDER BY category"
+        );
+        $this->data['customer_categories'] = $cat_query->result();
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        
+        // Set filter values for form persistence (always set these)
+        $this->data['start_date'] = $start_date;
+        $this->data['end_date'] = $end_date;
+        $this->data['invoice_id'] = $invoice_id;
+        $this->data['salesman'] = $salesman;
+        $this->data['item_code'] = $item_code;
+        $this->data['category'] = $category;
+        $this->data['warehouse_id'] = $warehouse_id;
+        
+        // If any filter submitted, fetch data
+        if (!empty($_GET) && ($start_date || $end_date || $invoice_id || $salesman || $item_code || $category || $warehouse_explicit)) {
+            
+            // Pre-fetch salesman name if needed
+            $salesman_name = null;
+            if ($salesman) {
+                $sm_query = $this->db->select('name')->from('sales_man')->where('id', $salesman)->get();
+                if ($sm_query->num_rows() > 0) {
+                    $salesman_name = $sm_query->row()->name;
+                }
+            }
+            
+            // Format dates only if provided
+            $formatted_start_date = $start_date ? $this->sma->fld($start_date) : null;
+            $formatted_end_date = $end_date ? $this->sma->fld($end_date) : null;
+
+            if ($export_excel) {
+                @set_time_limit(600);
+                if (function_exists('ini_set')) {
+                    @ini_set('memory_limit', '256M');
+                }
+
+                if (function_exists('ob_get_level')) {
+                    while (ob_get_level() > 0) {
+                        @ob_end_clean();
+                    }
+                }
+
+                $filename = 'Sales_Per_Item_' . date('Y-m-d_H_i_s') . '.csv';
+                header('Content-Type: text/csv; charset=UTF-8');
+                header('Content-Disposition: attachment; filename="' . $filename . '"');
+                header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+                header('Pragma: public');
+                header('Expires: 0');
+
+                $out = fopen('php://output', 'w');
+                if ($out === false) {
+                    $this->session->set_flashdata('error', 'Could not start download.');
+                    redirect(admin_url('reports/sales_per_item'));
+                }
+
+                fwrite($out, "\xEF\xBB\xBF");
+                $this->reports_model->stream_sales_per_item_csv(
+                    $formatted_start_date,
+                    $formatted_end_date,
+                    $invoice_id,
+                    $salesman_name,
+                    $item_code,
+                    $category,
+                    $out,
+                    $warehouse_id
+                );
+                fclose($out);
+                exit;
+            }
+
+            $per_page = 100;
+            $spi_page = (int) $this->input->get('spi_page');
+            if ($spi_page < 1) {
+                $spi_page = 1;
+            }
+            $offset = ($spi_page - 1) * $per_page;
+
+            $sales_result = $this->reports_model->getSalesPerItem(
+                $formatted_start_date,
+                $formatted_end_date,
+                $invoice_id,
+                $salesman_name,
+                $item_code,
+                $category,
+                $per_page,
+                $offset,
+                $warehouse_id
+            );
+
+            $total_rows = (int) $sales_result['total'];
+            if ($total_rows > 0 && $per_page > 0) {
+                $max_page = (int) ceil($total_rows / $per_page);
+                if ($max_page < 1) {
+                    $max_page = 1;
+                }
+                if ($spi_page > $max_page) {
+                    $spi_page = $max_page;
+                    $offset = ($spi_page - 1) * $per_page;
+                    $sales_result = $this->reports_model->getSalesPerItem(
+                        $formatted_start_date,
+                        $formatted_end_date,
+                        $invoice_id,
+                        $salesman_name,
+                        $item_code,
+                        $category,
+                        $per_page,
+                        $offset,
+                        $warehouse_id
+                    );
+                }
+            }
+
+            $this->data['sales_data'] = $sales_result['rows'];
+            $this->data['sales_data_total'] = $sales_result['total'];
+            $this->data['sales_data_totals'] = $sales_result['totals'];
+            $this->data['sales_per_page'] = $per_page;
+            $this->data['sales_page'] = $spi_page;
+        }
+        
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')], 
+            ['link' => admin_url('reports'), 'page' => lang('reports')], 
+            ['link' => '#', 'page' => lang('Sales Per Item')]
+        ];
+        $meta = ['page_title' => lang('Sales Per Item'), 'bc' => $bc];
+        $this->page_construct('reports/sales_per_item', $meta, $this->data);
+    }
+
+    /**
+     * Purchase Per Item Report
+     * Shows detailed purchase and purchase returns per item
+     */
+    public function purchase_per_item()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        
+        // Get filter parameters from GET
+        $start_date = $this->input->get('start_date');
+        if (($start_date === null || $start_date === '') && empty($_GET)) {
+            $start_date = date('d/m/Y', mktime(0, 0, 0, 1, 1, (int) date('Y')));
+        } elseif ($start_date === null || $start_date === '') {
+            $start_date = null;
+        }
+        $end_date = $this->input->get('end_date');
+        if (($end_date === null || $end_date === '') && empty($_GET)) {
+            $end_date = date('d/m/Y');
+        } elseif ($end_date === null || $end_date === '') {
+            $end_date = null;
+        }
+        $purchase_ref = $this->input->get('purchase_ref') ?: null;
+        $supplier     = $this->input->get('supplier')     ?: null;
+        $record_type  = $this->input->get('record_type')  ?: 'all';
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+        //$item_code = $this->input->get('item_code') ? $this->input->get('item_code') : null;
+        $sgproduct = $this->input->get('sgproduct') ? $this->input->get('sgproduct') : null;
+        $pname = $this->input->get('product') ? $this->input->get('product') : null;
+        //echo "<pre>"; print_r($this->input->get());exit;
+        //$product_details = $this->reports_model->getProductByName($sgproduct);
+        if($sgproduct){
+            $product_details = $this->reports_model->getProductById($pname);
+            if($product_details) {
+                $sgproduct = $product_details->name;
+                $item_code = $product_details->id; 
+            } else {
+                $sgproduct = null;
+                $item_code = null;
+            }
+        }else{
+            $item_code = null;
+        }
+
+        // Get suppliers for dropdown
+        $this->db->select('id, name');
+        $this->db->from('companies');
+        $this->db->where('group_name', 'supplier');
+        $this->db->order_by('name', 'asc');
+        $query = $this->db->get();
+        $this->data['suppliers'] = $query->result();
+        
+        // Set filter values for form persistence (always set these)
+        $this->data['start_date']   = $start_date;
+        $this->data['end_date']     = $end_date;
+        $this->data['purchase_ref'] = $purchase_ref;
+        $this->data['supplier']     = $supplier;
+        $this->data['record_type']  = $record_type;
+        $this->data['sgproduct']    = $sgproduct;
+        $this->data['item_code']    = $item_code;
+        $this->data['warehouses']   = $this->site->getAllWarehouses();
+        $this->data['warehouse_id'] = $warehouse_id;
+        
+        // If any filter submitted, fetch data
+        if (!empty($_GET) && ($start_date || $end_date || $purchase_ref || $supplier || $item_code || ($record_type && $record_type !== 'all'))) {
+            
+            // Format dates only if provided
+            $formatted_start_date = $start_date ? $this->sma->fld($start_date) : null;
+            $formatted_end_date = $end_date ? $this->sma->fld($end_date) : null;
+            
+            // Fetch data from model
+            $purchase_data = $this->reports_model->getPurchasePerItem(
+                $formatted_start_date,
+                $formatted_end_date,
+                $purchase_ref,
+                $supplier,
+                $item_code,
+                $record_type,
+                $warehouse_id
+            );
+            
+            $this->data['purchase_data'] = $purchase_data;
+        }
+        
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')], 
+            ['link' => admin_url('reports'), 'page' => lang('reports')], 
+            ['link' => '#', 'page' => lang('Purchase Per Item')]
+        ];
+        $meta = ['page_title' => lang('Purchase Per Item'), 'bc' => $bc];
+        $this->page_construct('reports/purchase_per_item', $meta, $this->data);
+    }
+
+    /**
+     * Get Invoice Status Data for DataTables (AJAX)
+     * Filters: date range, invoice id, customer name, sales man
+     */
+    public function getInvoiceStatusReport($pdf = null, $xls = null)
+    {
+        // Get filter parameters - POST has priority for DataTables AJAX
+        $start_date = $this->input->post('start_date') ? $this->input->post('start_date') : $this->input->get('start_date');
+        $end_date = $this->input->post('end_date') ? $this->input->post('end_date') : $this->input->get('end_date');
+        $invoice_id = $this->input->post('invoice_id') ? $this->input->post('invoice_id') : $this->input->get('invoice_id');
+        $customer = $this->input->post('customer') ? $this->input->post('customer') : $this->input->get('customer');
+        $salesman = $this->input->post('salesman') ? $this->input->post('salesman') : $this->input->get('salesman');
+        $warehouse = $this->site->resolveReportWarehouseFilter('warehouse');
+
+        if ($start_date) {
+            $start_date = $this->sma->fld($start_date);
+            $end_date = $this->sma->fld($end_date);
+        }
+
+        // Pre-fetch salesman name to avoid query interference
+        $salesman_name = null;
+        if ($salesman) {
+            $sm_query = $this->db->select('name')->from('sales_man')->where('id', $salesman)->get();
+            if ($sm_query->num_rows() > 0) {
+                $salesman_name = $sm_query->row()->name;
+            }
+        }
+
+        if ($pdf || $xls) {
+            // Export to Excel/PDF
+            $this->db
+                ->select("DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%d-%b-%y') as date,
+                    {$this->db->dbprefix('sales')}.reference_no as invoice,
+                    {$this->db->dbprefix('companies')}.city as area,
+                    COALESCE({$this->db->dbprefix('companies')}.sales_agent, '') as sales_man,
+                    {$this->db->dbprefix('companies')}.company as customer_no,
+                    {$this->db->dbprefix('companies')}.name as customer_name,
+                    {$this->db->dbprefix('sales')}.total as invoice_total,
+                    COALESCE((SELECT SUM(grand_total) FROM {$this->db->dbprefix('returns')} WHERE sale_id = {$this->db->dbprefix('sales')}.id), 0) as return_amount,
+                    {$this->db->dbprefix('sales')}.total_discount as discount,
+                    ({$this->db->dbprefix('sales')}.paid) as paid,
+                    (({$this->db->dbprefix('sales')}.total - {$this->db->dbprefix('sales')}.total_discount) - {$this->db->dbprefix('sales')}.paid) as outstanding", false)
+                ->from('sales')
+                ->join('companies', 'companies.id = sales.customer_id', 'left')
+                ->order_by('sales.date', 'desc');
+
+            if ($start_date) {
+                $this->db->where("{$this->db->dbprefix('sales')}.date BETWEEN '{$start_date}' AND '{$end_date}'");
+            }
+            if ($invoice_id) {
+                $this->db->like('sales.reference_no', $invoice_id, 'both');
+            }
+            if ($customer) {
+                $this->db->group_start();
+                $this->db->like('companies.id', $customer, 'both');
+                $this->db->group_end();
+            }
+            if ($salesman_name) {
+                $this->db->where('companies.sales_agent', $salesman_name);
+            }
+            if ($warehouse) {
+                $this->db->where('sales.warehouse_id', $warehouse);
+            }
+
+            $q = $this->db->get();
+            if ($q->num_rows() > 0) {
+                foreach (($q->result()) as $row) {
+                    $data[] = $row;
+                }
+            } else {
+                $data = null;
+            }
+
+            if (!empty($data)) {
+                $this->load->library('excel');
+                $this->excel->setActiveSheetIndex(0);
+                $this->excel->getActiveSheet()->setTitle(lang('invoice_status_report'));
+                
+                // Set headers
+                $this->excel->getActiveSheet()->SetCellValue('A1', lang('date'));
+                $this->excel->getActiveSheet()->SetCellValue('B1', lang('invoice'));
+                $this->excel->getActiveSheet()->SetCellValue('C1', lang('area'));
+                $this->excel->getActiveSheet()->SetCellValue('D1', lang('sales_man'));
+                $this->excel->getActiveSheet()->SetCellValue('E1', lang('customer_no'));
+                $this->excel->getActiveSheet()->SetCellValue('F1', lang('customer_name'));
+                $this->excel->getActiveSheet()->SetCellValue('G1', lang('invoice'));
+                $this->excel->getActiveSheet()->SetCellValue('H1', lang('return'));
+                $this->excel->getActiveSheet()->SetCellValue('I1', lang('discount'));
+                $this->excel->getActiveSheet()->SetCellValue('J1', lang('paid'));
+                $this->excel->getActiveSheet()->SetCellValue('K1', lang('outstanding'));
+
+                $row = 2;
+                $total_invoice = 0;
+                $total_return = 0;
+                $total_discount = 0;
+                $total_paid = 0;
+                $total_outstanding = 0;
+
+                foreach ($data as $data_row) {
+                    $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->date);
+                    $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->invoice);
+                    $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->area);
+                    $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->sales_man);
+                    $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->customer_no);
+                    $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data_row->customer_name);
+                    $this->excel->getActiveSheet()->SetCellValue('G' . $row, $this->sma->formatMoney($data_row->invoice_total));
+                    $this->excel->getActiveSheet()->SetCellValue('H' . $row, $this->sma->formatMoney($data_row->return_amount));
+                    $this->excel->getActiveSheet()->SetCellValue('I' . $row, $this->sma->formatMoney($data_row->discount));
+                    $this->excel->getActiveSheet()->SetCellValue('J' . $row, $this->sma->formatMoney($data_row->paid));
+                    $this->excel->getActiveSheet()->SetCellValue('K' . $row, $this->sma->formatMoney($data_row->outstanding));
+
+                    $total_invoice += $data_row->invoice_total;
+                    $total_return += $data_row->return_amount;
+                    $total_discount += $data_row->discount;
+                    $total_paid += $data_row->paid;
+                    $total_outstanding += $data_row->outstanding;
+                    $row++;
+                }
+
+                // Add totals row
+                $this->excel->getActiveSheet()->SetCellValue('F' . $row, lang('total'));
+                $this->excel->getActiveSheet()->SetCellValue('G' . $row, $this->sma->formatMoney($total_invoice));
+                $this->excel->getActiveSheet()->SetCellValue('H' . $row, $this->sma->formatMoney($total_return));
+                $this->excel->getActiveSheet()->SetCellValue('I' . $row, $this->sma->formatMoney($total_discount));
+                $this->excel->getActiveSheet()->SetCellValue('J' . $row, $this->sma->formatMoney($total_paid));
+                $this->excel->getActiveSheet()->SetCellValue('K' . $row, $this->sma->formatMoney($total_outstanding));
+
+                // Set column widths
+                $this->excel->getActiveSheet()->getColumnDimension('A')->setWidth(15);
+                $this->excel->getActiveSheet()->getColumnDimension('B')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('C')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('D')->setWidth(20);
+                $this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(15);
+                $this->excel->getActiveSheet()->getColumnDimension('F')->setWidth(30);
+                $this->excel->getActiveSheet()->getColumnDimension('G')->setWidth(15);
+                $this->excel->getActiveSheet()->getColumnDimension('H')->setWidth(15);
+                $this->excel->getActiveSheet()->getColumnDimension('I')->setWidth(15);
+                $this->excel->getActiveSheet()->getColumnDimension('J')->setWidth(15);
+                $this->excel->getActiveSheet()->getColumnDimension('K')->setWidth(15);
+
+                $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+                
+                // Bold the header and totals
+                $this->excel->getActiveSheet()->getStyle('A1:K1')->getFont()->setBold(true);
+                $this->excel->getActiveSheet()->getStyle('F' . $row . ':K' . $row)->getFont()->setBold(true);
+
+                $filename = 'invoice_status_report';
+                $this->load->helper('excel');
+                create_excel($this->excel, $filename);
+            }
+            $this->session->set_flashdata('error', lang('nothing_found'));
+            redirect($_SERVER['HTTP_REFERER']);
+        } else {
+            // DataTables AJAX response
+            $this->load->library('datatables');
+            $this->datatables
+                ->select("DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%d-%b-%y') as date,
+                    {$this->db->dbprefix('sales')}.reference_no as invoice,
+                    {$this->db->dbprefix('companies')}.city as area,
+                    COALESCE({$this->db->dbprefix('companies')}.sales_agent, '') as sales_man,
+                    {$this->db->dbprefix('companies')}.company as customer_no,
+                    {$this->db->dbprefix('companies')}.name as customer_name,
+                    {$this->db->dbprefix('sales')}.total as invoice_total,
+                    COALESCE((SELECT SUM(grand_total) FROM {$this->db->dbprefix('returns')} WHERE sale_id = {$this->db->dbprefix('sales')}.id), 0) as return_amount,
+                    {$this->db->dbprefix('sales')}.total_discount as discount,
+                    ({$this->db->dbprefix('sales')}.paid) as paid,
+                    (({$this->db->dbprefix('sales')}.total - {$this->db->dbprefix('sales')}.total_discount) - {$this->db->dbprefix('sales')}.paid) as outstanding", false)
+                ->from('sales')
+                ->join('companies', 'companies.id = sales.customer_id', 'left');
+
+            if ($start_date) {
+                $this->datatables->where("{$this->db->dbprefix('sales')}.date BETWEEN '{$start_date}' AND '{$end_date}'");
+            }
+            if ($invoice_id) {
+                $this->datatables->like('sales.reference_no', $invoice_id, 'both');
+            }
+            if ($customer) {
+                $this->datatables->group_start();
+                $this->datatables->like('companies.id', $customer, 'both');
+                $this->datatables->group_end();
+            }
+            if ($salesman_name) {
+                $this->datatables->where('companies.sales_agent', $salesman_name);
+            }
+            if ($warehouse) {
+                $this->datatables->where('sales.warehouse_id', $warehouse);
+            }
+
+            echo $this->datatables->generate();
+        }
+    }
+
+    public function sales_per_invoice()
+    {
+        // Load necessary data for filters
+        $this->data['customers'] = $this->site->getAllCompanies('customer');
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+
+        // Salesmen dropdown
+        $sm_q = $this->db->select('id, name')->from('sales_man')->order_by('name', 'asc')->get();
+        $this->data['salesmen'] = $sm_q->result();
+
+        // Initialize default values
+        $this->data['customer_id']  = null;
+        $this->data['pharmacy_id']  = $this->site->resolveReportWarehouseFilter('pharmacy_id');
+        $this->data['start_date']   = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date']     = $this->sma->hrsd(date('Y-m-d'));
+        $this->data['salesman_id']  = null;
+        $this->data['record_type']  = 'all';
+
+        // Check if form is submitted
+        $from_date = $this->input->post('from_date');
+        $to_date   = $this->input->post('to_date');
+
+        if ($from_date) {
+            // Get filter parameters
+            $customer_id = $this->input->post('customer_id');
+            $pharmacy_id = $this->site->resolveReportWarehouseFilter('pharmacy_id');
+            $salesman_id = $this->input->post('salesman');
+            $record_type = $this->input->post('record_type') ?: 'all';
+
+            // Pre-fetch salesman name
+            $salesman_name = null;
+            if ($salesman_id) {
+                $sm_name_q = $this->db->select('name')->from('sales_man')->where('id', $salesman_id)->get();
+                if ($sm_name_q->num_rows() > 0) {
+                    $salesman_name = $sm_name_q->row()->name;
+                }
+            }
+
+            // Convert dates using sma->fld() like supplier_statement
+            $start_date = $this->sma->fld($from_date);
+            $end_date   = $this->sma->fld($to_date);
+
+            // Get sales data from model
+            $invoices = $this->reports_model->getSalesPerInvoice($start_date, $end_date, $customer_id, $pharmacy_id, $salesman_name, $record_type);
+
+            // Calculate totals
+            $totals = [
+                'total_sales' => 0,
+                'total_discount' => 0,
+                'total_net_sales' => 0,
+                'total_cogs' => 0,
+                'total_profit' => 0,
+                'total_vat' => 0,
+                'total_receivable' => 0,
+                'total_invoices' => 0,
+                'total_items' => 0
+            ];
+
+            if (!empty($invoices)) {
+                foreach ($invoices as $invoice) {
+                    $totals['total_sales'] += isset($invoice->sales) ? $invoice->sales : 0;
+                    $totals['total_discount'] += isset($invoice->discount) ? $invoice->discount : 0;
+                    $totals['total_net_sales'] += isset($invoice->net_sales) ? $invoice->net_sales : 0;
+                    $totals['total_cogs'] += isset($invoice->cogs) ? $invoice->cogs : 0;
+                    $totals['total_profit'] += isset($invoice->profit) ? $invoice->profit : 0;
+                    $totals['total_vat'] += isset($invoice->vat) ? $invoice->vat : 0;
+                    $totals['total_receivable'] += isset($invoice->receivable) ? $invoice->receivable : 0;
+                    $totals['total_items'] += isset($invoice->total_items) ? $invoice->total_items : 0;
+                }
+                $totals['total_invoices'] = count($invoices);
+            }
+
+            // Pass data to view
+            $this->data['invoices'] = $invoices;
+            $this->data['totals'] = $totals;
+            $this->data['customer_id'] = $customer_id;
+            $this->data['pharmacy_id'] = $pharmacy_id;
+            $this->data['salesman_id'] = $salesman_id;
+            $this->data['record_type'] = $record_type;
+            $this->data['start_date']  = $from_date;
+            $this->data['end_date']    = $to_date;
+        }
+
+        // Page setup
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => '#', 'page' => lang('sales_per_invoice_report')]
+        ];
+        $meta = ['page_title' => lang('sales_per_invoice_report'), 'bc' => $bc];
+        $this->page_construct('reports/sales_per_invoice', $meta, $this->data);
+    }
+
+    public function purchase_per_invoice()
+    {
+        //$this->sma->checkPermissions('reports');
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        // Fetch dropdown data
+        $this->data['warehouses'] = $this->site->getAllWarehouses(); // Pharmacies
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+
+        // Initialize default values
+        $this->data['supplier_id'] = null;
+        $this->data['pharmacy_id'] = $this->site->resolveReportWarehouseFilter('pharmacy_id');
+        $this->data['purchase_id'] = null;
+        $this->data['start_date'] = null;
+        $this->data['end_date'] = null;
+        $this->data['invoices'] = null;
+        $this->data['totals'] = [
+            'total_amount' => 0,
+            'total_invoices' => 0,
+            'total_items' => 0,
+            'total_quantity' => 0
+        ];
+
+        // Check if form submitted
+        $from_date = $this->input->post('from_date');
+        $to_date = $this->input->post('to_date');
+
+        if ($from_date) {
+            // Get filter values from POST
+            $supplier_id = $this->input->post('supplier_id');
+            $pharmacy_id = $this->site->resolveReportWarehouseFilter('pharmacy_id');
+            $purchase_id = $this->input->post('purchase_id');
+
+            // Convert dates using sma->fld() like supplier_statement
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+
+            // Pass values to view
+            $this->data['supplier_id'] = $supplier_id;
+            $this->data['pharmacy_id'] = $pharmacy_id;
+            $this->data['purchase_id'] = $purchase_id;
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+
+            // Fetch from model - use get_purchase_per_invoice_data to include purchases and payments
+            $invoices_array = $this->reports_model->get_purchase_per_invoice_data($start_date, $end_date, $supplier_id, $pharmacy_id, $purchase_id);
+
+            // Convert arrays to objects for the view
+            $invoices_data = [];
+            if ($invoices_array && is_array($invoices_array)) {
+                foreach ($invoices_array as $inv) {
+                    $invoices_data[] = (object) $inv;
+                }
+            }
+
+            $this->data['invoices'] = $invoices_data;
+
+            // Calculate totals
+            $total_purchase = 0;
+            $total_vat = 0;
+            $total_payable = 0;
+            $total_payment = 0;
+            $total_return = 0;
+            $total_invoices = 0;
+            $total_items = 0;
+            $total_quantity = 0;
+            $total_invoice_discount = 0;
+            $total_deal_discount = 0;
+
+            if ($invoices_data && is_array($invoices_data)) {
+                foreach ($invoices_data as $inv) {
+                    // Sum purchases
+                    $total_purchase += isset($inv->purchase) ? floatval($inv->purchase) : 0;
+                    $total_vat += isset($inv->vat) ? floatval($inv->vat) : 0;
+                    $total_payable += isset($inv->payable) ? floatval($inv->payable) : 0;
+
+                    // Sum payments
+                    $total_payment += isset($inv->payment) ? floatval($inv->payment) : 0;
+
+                    // Sum returns
+                    $total_return += isset($inv->return_amount) ? floatval($inv->return_amount) : 0;
+
+                    // Sum discounts
+                    $total_invoice_discount += isset($inv->invoice_discount) ? floatval($inv->invoice_discount) : 0;
+                    $total_deal_discount += isset($inv->deal_discount) ? floatval($inv->deal_discount) : 0;
+
+                    // Count invoices (only count purchase type, not payment or return type)
+                    if (isset($inv->type) && $inv->type == 'Purchase') {
+                        $total_invoices++;
+                        $total_items += isset($inv->item_count) ? intval($inv->item_count) : 0;
+                        $total_quantity += isset($inv->total_quantity) ? floatval($inv->total_quantity) : 0;
+                    }
+                }
+            }
+
+            $this->data['totals'] = [
+                'total_purchase' => $total_purchase,
+                'total_vat' => $total_vat,
+                'total_payable' => $total_payable,
+                'total_payment' => $total_payment,
+                'total_return' => $total_return,
+                'total_amount' => $total_payable,
+                'total_invoices' => $total_invoices,
+                'total_items' => $total_items,
+                'total_quantity' => $total_quantity,
+                'total_invoice_discount' => $total_invoice_discount,
+                'total_deal_discount' => $total_deal_discount,
+            ];
+
+            log_message('debug', 'Totals calculated - Purchase: ' . $total_purchase . ', Payment: ' . $total_payment . ', Return: ' . $total_return . ', Invoices: ' . $total_invoices);
+            log_message('debug', '=========================================================');
+        }
+
+        // Handle Excel export
+        if ($this->input->post('export_excel') && isset($this->data['invoices']) && !empty($this->data['invoices'])) {
+            $report = $this->data['invoices'];
+
+            $this->load->library('excel');
+            $sheet = $this->excel->setActiveSheetIndex(0);
+            $sheet->setTitle('Purchase Per Invoice');
+
+            // Header row
+            $sheet->SetCellValue('A1', 'Type');
+            $sheet->SetCellValue('B1', 'Date');
+            $sheet->SetCellValue('C1', 'Invoice');
+            $sheet->SetCellValue('D1', 'Return Inv#');
+            $sheet->SetCellValue('E1', 'Agent Name');
+            $sheet->SetCellValue('F1', 'Supplier No');
+            $sheet->SetCellValue('G1', 'Supplier Name');
+            $sheet->SetCellValue('H1', 'Purchase');
+            $sheet->SetCellValue('I1', 'Vat');
+            $sheet->SetCellValue('J1', 'Payable');
+            $sheet->SetCellValue('K1', 'Payment');
+            $sheet->SetCellValue('L1', 'Return');
+
+            $row = 2;
+            $total_purchase = 0;
+            $total_vat = 0;
+            $total_payable = 0;
+            $total_payment = 0;
+            $total_return = 0;
+
+            foreach ($report as $r) {
+                $sheet->SetCellValue("A{$row}", isset($r->type) ? $r->type : 'Purchase');
+                $sheet->SetCellValue("B{$row}", isset($r->date) ? $r->date : '');
+                $sheet->SetCellValue("C{$row}", isset($r->invoice) ? $r->invoice : '');
+                $sheet->SetCellValue("D{$row}", isset($r->return_inv) ? $r->return_inv : '');
+                $sheet->SetCellValue("E{$row}", isset($r->agent_name) ? $r->agent_name : '');
+                $sheet->SetCellValue("F{$row}", isset($r->supplier_no) ? $r->supplier_no : '');
+                $sheet->SetCellValue("G{$row}", isset($r->supplier_name) ? $r->supplier_name : '');
+                $sheet->SetCellValue("H{$row}", $this->sma->formatMoney(isset($r->purchase) ? $r->purchase : 0, 'none'));
+                $sheet->SetCellValue("I{$row}", $this->sma->formatMoney(isset($r->vat) ? $r->vat : 0, 'none'));
+                $sheet->SetCellValue("J{$row}", $this->sma->formatMoney(isset($r->payable) ? $r->payable : 0, 'none'));
+                $sheet->SetCellValue("K{$row}", $this->sma->formatMoney(isset($r->payment) ? $r->payment : 0, 'none'));
+                $sheet->SetCellValue("L{$row}", $this->sma->formatMoney(isset($r->return_amount) ? $r->return_amount : 0, 'none'));
+
+                $total_purchase += isset($r->purchase) ? $r->purchase : 0;
+                $total_vat += isset($r->vat) ? $r->vat : 0;
+                $total_payable += isset($r->payable) ? $r->payable : 0;
+                $total_payment += isset($r->payment) ? $r->payment : 0;
+                $total_return += isset($r->return_amount) ? $r->return_amount : 0;
+
+                $row++;
+            }
+
+            // Add totals row
+            $sheet->SetCellValue("A{$row}", 'TOTAL');
+            $sheet->SetCellValue("H{$row}", $this->sma->formatMoney($total_purchase, 'none'));
+            $sheet->SetCellValue("I{$row}", $this->sma->formatMoney($total_vat, 'none'));
+            $sheet->SetCellValue("J{$row}", $this->sma->formatMoney($total_payable, 'none'));
+            $sheet->SetCellValue("K{$row}", $this->sma->formatMoney($total_payment, 'none'));
+            $sheet->SetCellValue("L{$row}", $this->sma->formatMoney($total_return, 'none'));
+
+            // Set column widths
+            $widths = [
+                'A' => 12, 'B' => 15, 'C' => 15, 'D' => 12, 'E' => 20,
+                'F' => 12, 'G' => 25, 'H' => 15, 'I' => 12, 'J' => 15, 'K' => 15, 'L' => 15
+            ];
+
+            foreach ($widths as $col => $w) {
+                $sheet->getColumnDimension($col)->setWidth($w);
+            }
+
+            // Vertical alignment
+            $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+
+
+            // Export file
+            $filename = 'Purchase_Per_Invoice_' . date('Y-m-d_H_i_s');
+            $this->load->helper('excel');
+            create_excel($this->excel, $filename);
+        }
+
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => '#', 'page' => 'Purchase Per Invoice']
+        ];
+        $meta = ['page_title' => 'Purchase Per Invoice', 'bc' => $bc];
+        $this->page_construct('reports/purchase_per_invoice', $meta, $this->data);
+    }
+
+    /* -----------------------------------------------------------------------
+     * TEMPORARY DIAGNOSTIC — remove after investigation
+     * URL: admin/reports/debug_trial_balance_diff?from=YYYY-MM-DD&to=YYYY-MM-DD
+     * ----------------------------------------------------------------------- */
+    public function debug_trial_balance_diff()
+    {
+        $from = $this->input->get('from') ?: date('Y-01-01');
+        $to   = $this->input->get('to')   ?: date('Y-m-d');
+
+        // Basic sanity
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $from) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $to)) {
+            show_error('Invalid date format. Use YYYY-MM-DD in the URL: ?from=YYYY-MM-DD&to=YYYY-MM-DD');
+        }
+
+        $db = $this->db;
+
+        // ── 1. Customer map ──────────────────────────────────────────────
+        $customers = [];
+        $ledger_to_customer = [];
+        foreach ($db->query("SELECT id, name, company, sequence_code, ledger_account FROM sma_companies WHERE ledger_account IS NOT NULL AND ledger_account > 0 AND group_name = 'customer' ORDER BY name")->result_array() as $row) {
+            $customers[$row['id']] = $row;
+            $ledger_to_customer[$row['ledger_account']] = $row['id'];
+        }
+        $customer_ledger_ids = array_keys($ledger_to_customer);
+
+        // ── 2. Customer Trial Balance (period) ───────────────────────────
+        $ctb = [];
+        foreach ($db->query("
+            SELECT c.id,
+                   SUM(CASE WHEN ei.dc='D' THEN ei.amount ELSE 0 END) AS total_debit,
+                   SUM(CASE WHEN ei.dc='C' THEN ei.amount ELSE 0 END) AS total_credit
+            FROM sma_accounts_entries e
+            JOIN sma_accounts_entryitems ei ON e.id = ei.entry_id
+            JOIN sma_companies c ON e.customer_id = c.id
+            WHERE DATE(e.date) >= '{$from}' AND DATE(e.date) <= '{$to}'
+              AND e.customer_id IS NOT NULL
+              AND ei.ledger_id = c.ledger_account
+            GROUP BY e.customer_id")->result_array() as $r) {
+            $ctb[$r['id']] = $r;
+        }
+
+        // ── 3. GL amounts for customer ledgers only ───────────────────────
+        $gl = [];
+        if (!empty($customer_ledger_ids)) {
+            $in = implode(',', array_map('intval', $customer_ledger_ids));
+            foreach ($db->query("
+                SELECT ei.ledger_id,
+                       SUM(CASE WHEN ei.dc='D' THEN ei.amount ELSE 0 END) AS total_debit,
+                       SUM(CASE WHEN ei.dc='C' THEN ei.amount ELSE 0 END) AS total_credit
+                FROM sma_accounts_entryitems ei
+                JOIN sma_accounts_entries e ON e.id = ei.entry_id
+                WHERE DATE(e.date) >= '{$from}' AND DATE(e.date) <= '{$to}'
+                  AND ei.ledger_id IN ({$in})
+                GROUP BY ei.ledger_id")->result_array() as $r) {
+                $gl[$r['ledger_id']] = $r;
+            }
+        }
+
+        // ── 4. Comparison ────────────────────────────────────────────────
+        $comparison = [];
+        $grand_diff_dr = $grand_diff_cr = 0;
+        foreach ($customers as $cid => $c) {
+            $lid    = $c['ledger_account'];
+            $ctb_dr = isset($ctb[$cid]) ? (float)$ctb[$cid]['total_debit']  : 0;
+            $ctb_cr = isset($ctb[$cid]) ? (float)$ctb[$cid]['total_credit'] : 0;
+            $gl_dr  = isset($gl[$lid])  ? (float)$gl[$lid]['total_debit']   : 0;
+            $gl_cr  = isset($gl[$lid])  ? (float)$gl[$lid]['total_credit']  : 0;
+            $diff_dr = round($gl_dr - $ctb_dr, 4);
+            $diff_cr = round($gl_cr - $ctb_cr, 4);
+            $comparison[] = compact('cid','c','lid','ctb_dr','ctb_cr','gl_dr','gl_cr','diff_dr','diff_cr');
+            $grand_diff_dr += $diff_dr;
+            $grand_diff_cr += $diff_cr;
+        }
+        usort($comparison, fn($a,$b) => (($b['diff_dr']!=0||$b['diff_cr']!=0)?1:0) - (($a['diff_dr']!=0||$a['diff_cr']!=0)?1:0));
+
+        // ── 5. Orphan entries (customer_id IS NULL on entry header) ──────
+        $orphan_rows = [];
+        $orphan_dr = $orphan_cr = 0;
+        if (!empty($customer_ledger_ids)) {
+            $in = implode(',', array_map('intval', $customer_ledger_ids));
+            foreach ($db->query("
+                SELECT e.id AS entry_id, e.date, e.number as ref_no, e.notes, al.name AS ledger_name,
+                       ei.ledger_id, ei.dc, ei.amount
+                FROM sma_accounts_entryitems ei
+                JOIN sma_accounts_entries e ON e.id = ei.entry_id
+                JOIN sma_accounts_ledgers al ON al.id = ei.ledger_id
+                WHERE DATE(e.date) >= '{$from}' AND DATE(e.date) <= '{$to}'
+                  AND ei.ledger_id IN ({$in})
+                  AND (e.customer_id IS NULL OR e.customer_id = 0)
+                ORDER BY e.date, e.id")->result_array() as $r) {
+                $orphan_rows[] = $r;
+                if ($r['dc']==='D') $orphan_dr += (float)$r['amount'];
+                else                $orphan_cr += (float)$r['amount'];
+            }
+        }
+
+        // ── 6. Cross-customer items ───────────────────────────────────────
+        $silent_rows = [];
+        if (!empty($customer_ledger_ids)) {
+            $in = implode(',', array_map('intval', $customer_ledger_ids));
+            $silent_rows = $db->query("
+                SELECT e.id AS entry_id, e.date, e.number as ref_no, e.notes,
+                       e.customer_id, c.name AS customer_name, c.ledger_account AS customer_ledger,
+                       ei.ledger_id AS item_ledger_id, al.name AS item_ledger_name, ei.dc, ei.amount
+                FROM sma_accounts_entryitems ei
+                JOIN sma_accounts_entries e ON e.id = ei.entry_id
+                JOIN sma_accounts_ledgers al ON al.id = ei.ledger_id
+                JOIN sma_companies c ON c.id = e.customer_id
+                WHERE DATE(e.date) >= '{$from}' AND DATE(e.date) <= '{$to}'
+                  AND e.customer_id IS NOT NULL
+                  AND ei.ledger_id IN ({$in})
+                  AND ei.ledger_id <> c.ledger_account
+                ORDER BY e.date, e.id")->result_array();
+        }
+
+        // ── 7. Customers with no ledger_account ───────────────────────────
+        $no_ledger = $db->query("SELECT id, name, company, sequence_code FROM sma_companies WHERE group_name = 'customer' AND (ledger_account IS NULL OR ledger_account = 0)")->result_array();
+
+        // ── HTML output ──────────────────────────────────────────────────
+        $fmt = fn($n) => number_format((float)$n, 2);
+        ?>
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="utf-8">
+        <title>Trial Balance Diff <?= htmlspecialchars($from) ?> → <?= htmlspecialchars($to) ?></title>
+        <style>
+          body{font-family:Arial,sans-serif;font-size:13px;margin:20px}
+          h2{border-bottom:2px solid #333;padding-bottom:6px}
+          h3{margin-top:32px;color:#444}
+          table{border-collapse:collapse;width:100%;margin-top:10px}
+          th,td{border:1px solid #ccc;padding:5px 8px;white-space:nowrap}
+          th{background:#2c3e50;color:#fff;text-align:center}
+          tr:nth-child(even){background:#f9f9f9}
+          .diff{background:#fff3cd!important;font-weight:bold}
+          .red{color:#c0392b;font-weight:bold}
+          .green{color:#27ae60}
+          .muted{color:#888}
+          .num{text-align:right}
+          .badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px}
+          .ok{background:#d4edda;color:#155724}
+          .bad{background:#f8d7da;color:#721c24}
+          .box{background:#eef4fb;border:1px solid #b0c8e8;padding:12px 18px;border-radius:4px;margin-bottom:20px}
+          .info{background:#fffbe6;border:1px solid #ffe066;padding:10px 16px;border-radius:4px;margin-bottom:10px;font-size:12px}
+        </style>
+        </head>
+        <body>
+        <h2>🔍 Trial Balance Difference: Customer TB vs GL TB</h2>
+        <div class="box">
+          <strong>Period:</strong> <?= htmlspecialchars($from) ?> → <?= htmlspecialchars($to) ?><br>
+          <strong>Customers with ledger:</strong> <?= count($customers) ?><br>
+          <strong>Grand diff (GL − CTB) Debit:</strong>
+            <span class="<?= abs($grand_diff_dr)>0.01?'red':'green' ?>"><?= $fmt($grand_diff_dr) ?></span>
+          &nbsp;|&nbsp;<strong>Credit:</strong>
+            <span class="<?= abs($grand_diff_cr)>0.01?'red':'green' ?>"><?= $fmt($grand_diff_cr) ?></span>
+        </div>
+
+        <h3>Section 1 — Customer-by-Customer Comparison</h3>
+        <div class="info">GL Debit/Credit = all entry items on the customer ledger (no customer_id filter).<br>
+        CTB Debit/Credit = same but only where entry.customer_id = this customer.<br>
+        Diff = GL − CTB (positive = GL has more).</div>
+        <table>
+          <thead><tr>
+            <th>#</th><th>Seq Code</th><th>Customer</th><th>Ledger ID</th>
+            <th>CTB Debit</th><th>CTB Credit</th>
+            <th>GL Debit</th><th>GL Credit</th>
+            <th>Diff Debit</th><th>Diff Credit</th><th>Status</th>
+          </tr></thead>
+          <tbody>
+          <?php $n=0; foreach($comparison as $row): $n++; $hasDiff=($row['diff_dr']!=0||$row['diff_cr']!=0); ?>
+          <tr class="<?= $hasDiff?'diff':'' ?>">
+            <td class="num"><?= $n ?></td>
+            <td><?= htmlspecialchars($row['c']['sequence_code']??'') ?></td>
+            <td><?= htmlspecialchars($row['c']['name']?:$row['c']['company']) ?></td>
+            <td class="num"><?= $row['lid'] ?></td>
+            <td class="num"><?= $fmt($row['ctb_dr']) ?></td>
+            <td class="num"><?= $fmt($row['ctb_cr']) ?></td>
+            <td class="num"><?= $fmt($row['gl_dr']) ?></td>
+            <td class="num"><?= $fmt($row['gl_cr']) ?></td>
+            <td class="num <?= $row['diff_dr']!=0?'red':'muted' ?>"><?= $fmt($row['diff_dr']) ?></td>
+            <td class="num <?= $row['diff_cr']!=0?'red':'muted' ?>"><?= $fmt($row['diff_cr']) ?></td>
+            <td><span class="badge <?= $hasDiff?'bad':'ok' ?>"><?= $hasDiff?'DIFF':'OK' ?></span></td>
+          </tr>
+          <?php endforeach; ?>
+          <tr style="background:#2c3e50;color:#fff;font-weight:bold">
+            <td colspan="8" class="num">Grand Total Differences</td>
+            <td class="num"><?= $fmt($grand_diff_dr) ?></td>
+            <td class="num"><?= $fmt($grand_diff_cr) ?></td>
+            <td></td>
+          </tr>
+          </tbody>
+        </table>
+
+        <h3>Section 2 — Orphan Entry Items (Cause A)</h3>
+        <p>Entry items on a customer ledger where the entry's <code>customer_id</code> is NULL/0. GL counts them; Customer TB ignores them.</p>
+        <p>Count: <strong><?= count($orphan_rows) ?></strong> &nbsp;|&nbsp; Debit total: <strong class="red"><?= $fmt($orphan_dr) ?></strong> &nbsp;|&nbsp; Credit total: <strong class="red"><?= $fmt($orphan_cr) ?></strong></p>
+        <?php if($orphan_rows): ?>
+        <table>
+          <thead><tr><th>Entry ID</th><th>Date</th><th>Ref</th><th>Note</th><th>Ledger ID</th><th>Ledger Name</th><th>D/C</th><th>Amount</th></tr></thead>
+          <tbody>
+          <?php foreach($orphan_rows as $r): ?>
+          <tr>
+            <td class="num"><?= $r['entry_id'] ?></td>
+            <td><?= htmlspecialchars($r['date']) ?></td>
+            <td><?= htmlspecialchars($r['ref_no']) ?></td>
+            <td><?= htmlspecialchars($r['note']) ?></td>
+            <td class="num"><?= $r['ledger_id'] ?></td>
+            <td><?= htmlspecialchars($r['ledger_name']) ?></td>
+            <td style="text-align:center;color:<?= $r['dc']==='D'?'#1565c0':'#b71c1c' ?>"><?= $r['dc'] ?></td>
+            <td class="num"><?= $fmt($r['amount']) ?></td>
+          </tr>
+          <?php endforeach; ?>
+          </tbody>
+        </table>
+        <?php else: ?><p class="green">✔ No orphan entries found.</p><?php endif; ?>
+
+        <h3>Section 3 — Cross-Customer Entry Items (Cause B)</h3>
+        <p>Entries with a <code>customer_id</code> but the line-item ledger belongs to a <em>different</em> customer's ledger account.</p>
+        <p>Count: <strong><?= count($silent_rows) ?></strong></p>
+        <?php if($silent_rows): ?>
+        <table>
+          <thead><tr><th>Entry ID</th><th>Date</th><th>Ref</th><th>Entry Customer</th><th>Entry Customer Ledger</th><th>Item Ledger ID</th><th>Item Ledger Name</th><th>D/C</th><th>Amount</th></tr></thead>
+          <tbody>
+          <?php foreach($silent_rows as $r): ?>
+          <tr>
+            <td class="num"><?= $r['entry_id'] ?></td>
+            <td><?= htmlspecialchars($r['date']) ?></td>
+            <td><?= htmlspecialchars($r['ref_no']) ?></td>
+            <td><?= htmlspecialchars($r['customer_name']) ?> (#<?= $r['customer_id'] ?>)</td>
+            <td class="num"><?= $r['customer_ledger'] ?></td>
+            <td class="num"><?= $r['item_ledger_id'] ?></td>
+            <td><?= htmlspecialchars($r['item_ledger_name']) ?></td>
+            <td style="text-align:center;color:<?= $r['dc']==='D'?'#1565c0':'#b71c1c' ?>"><?= $r['dc'] ?></td>
+            <td class="num"><?= $fmt($r['amount']) ?></td>
+          </tr>
+          <?php endforeach; ?>
+          </tbody>
+        </table>
+        <?php else: ?><p class="green">✔ No cross-customer ledger mismatches.</p><?php endif; ?>
+
+        <h3>Section 4 — Customers Without a Ledger Account</h3>
+        <p>Count: <strong><?= count($no_ledger) ?></strong></p>
+        <?php if($no_ledger): ?>
+        <table>
+          <thead><tr><th>ID</th><th>Name</th><th>Company</th><th>Seq Code</th></tr></thead>
+          <tbody>
+          <?php foreach($no_ledger as $r): ?>
+          <tr>
+            <td class="num"><?= $r['id'] ?></td>
+            <td><?= htmlspecialchars($r['name']) ?></td>
+            <td><?= htmlspecialchars($r['company']) ?></td>
+            <td><?= htmlspecialchars($r['sequence_code']) ?></td>
+          </tr>
+          <?php endforeach; ?>
+          </tbody>
+        </table>
+        <?php else: ?><p class="green">✔ All customers have a ledger account.</p><?php endif; ?>
+
+        <hr style="margin-top:40px">
+        <p class="muted" style="font-size:11px">Generated <?= date('Y-m-d H:i:s') ?> | Period: <?= htmlspecialchars($from) ?> → <?= htmlspecialchars($to) ?></p>
+        </body></html>
+        <?php
+    }
+
+    /**
+     * Diagnostic: Payable TB EB Credit vs Unpaid AP outstanding (by supplier).
+     * Uses the app's active DB (production when run on production).
+     *
+     * URL: admin/reports/debug_ap_tb_vs_unpaid?from=YYYY-MM-DD&to=YYYY-MM-DD
+     *      &export=csv|detail_csv
+     *      &code=SUP-00098  OR  &supplier_id=680
+     */
+    public function debug_ap_tb_vs_unpaid()
+    {
+        if (!$this->Owner && !$this->Admin) {
+            $this->session->set_flashdata('error', lang('access_denied'));
+            admin_redirect('reports');
+        }
+
+        $from = $this->input->get('from') ?: date('Y-01-01');
+        $to   = $this->input->get('to') ?: date('Y-m-d');
+        $code_filter = trim((string)$this->input->get('code'));
+        $supplier_id = (int)$this->input->get('supplier_id');
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $from) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $to)) {
+            show_error('Invalid date. Use: ?from=YYYY-MM-DD&to=YYYY-MM-DD');
+        }
+
+        if (!$supplier_id && $code_filter !== '') {
+            $row = $this->db->select('id')->from('companies')->where('sequence_code', $code_filter)->limit(1)->get()->row();
+            $supplier_id = $row ? (int)$row->id : 0;
+        }
+
+        $result = $this->compute_ap_tb_vs_unpaid_diffs($from, $to, $code_filter);
+        $grouped_categories = [];
+        $detail_lines = [];
+        $unlinked_payments = [];
+        $detail_rollup = [];
+        $supplier_row = null;
+
+        if ($supplier_id > 0) {
+            $detail_lines = $this->get_ap_reconciliation_detail_lines($from, $to, $supplier_id);
+            $unlinked_payments = $this->get_ap_unlinked_payment_lines($from, $to, $supplier_id);
+            foreach ($detail_lines as $ln) {
+                $t = $ln['line_type'];
+                if (!isset($detail_rollup[$t])) {
+                    $detail_rollup[$t] = ['lines' => 0, 'amount' => 0, 'impact_unpaid' => 0, 'impact_tb' => 0, 'gap_effect' => 0];
+                }
+                $detail_rollup[$t]['lines']++;
+                $detail_rollup[$t]['amount'] += (float)$ln['amount'];
+                $detail_rollup[$t]['impact_unpaid'] += (float)$ln['impact_unpaid'];
+                $detail_rollup[$t]['impact_tb'] += (float)$ln['impact_tb'];
+                $detail_rollup[$t]['gap_effect'] += (float)$ln['gap_effect'];
+            }
+            foreach ($result['diffs'] as $d) {
+                if ((int)$d['id'] === $supplier_id) {
+                    $supplier_row = $d;
+                    break;
+                }
+            }
+            if (!$supplier_row) {
+                $supplier_row = $this->get_ap_supplier_summary_row($from, $to, $supplier_id);
+            }
+            if (empty($supplier_row['issue'])) {
+                $supplier_row['issue'] = $this->classify_ap_reconciliation_issue($supplier_row);
+            }
+        } else {
+            $grouped_categories = $this->group_ap_reconciliation_diffs_by_category($result['diffs']);
+        }
+
+        $export = $this->input->get('export');
+        if ($export === 'csv') {
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename="ap_tb_vs_unpaid_' . $to . '.csv"');
+            $out = fopen('php://output', 'w');
+            fputcsv($out, [
+                'issue_category', 'issue_priority', 'recommended_action',
+                'supplier_id', 'sequence_code', 'supplier_name', 'tb_eb_credit', 'unpaid_purchases',
+                'open_purchase_count', 'unpaid_memos_svc_credit', 'open_memo_count', 'unpaid_total',
+                'unsettled_returns', 'unsettled_debit_memos', 'ledger_credits_no_pid',
+                'difference_tb_minus_unpaid', 'likely_cause',
+            ]);
+            foreach ($result['diffs'] as $d) {
+                $issue = $d['issue'] ?? $this->classify_ap_reconciliation_issue($d);
+                fputcsv($out, [
+                    $issue['label'], $issue['priority'], $issue['action'],
+                    $d['id'], $d['code'], $d['name'], $d['tb'],
+                    $d['unpaid_purchases'] ?? '', $d['open_purchase_count'] ?? '',
+                    $d['unpaid_memos'] ?? '', $d['open_memo_count'] ?? '', $d['unpaid'],
+                    $d['unsettled_returns'] ?? '', $d['unsettled_debit_memos'] ?? '',
+                    $d['ledger_credits_no_pid'] ?? '', $d['diff'], $d['likely_cause'] ?? '',
+                ]);
+            }
+            fclose($out);
+            return;
+        }
+
+        if ($export === 'detail_csv' && $supplier_id > 0) {
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename="ap_tb_detail_' . $supplier_id . '_' . $to . '.csv"');
+            $out = fopen('php://output', 'w');
+            fputcsv($out, [
+                'line_type', 'doc_id', 'db_table', 'doc_date', 'reference_no', 'amount',
+                'impact_unpaid', 'impact_tb', 'gap_effect', 'app_screen', 'note',
+            ]);
+            foreach ($detail_lines as $ln) {
+                fputcsv($out, [
+                    $ln['line_type'], $ln['doc_id'], $ln['db_table'], $ln['doc_date'], $ln['reference_no'],
+                    $ln['amount'], $ln['impact_unpaid'], $ln['impact_tb'], $ln['gap_effect'],
+                    $ln['app_screen'], $ln['note'],
+                ]);
+            }
+            fclose($out);
+            return;
+        }
+
+        $fmt = fn($n) => number_format((float)$n, 2);
+        $db_name = $this->db->database;
+        $base_qs = 'from=' . urlencode($from) . '&to=' . urlencode($to);
+        ?>
+        <!DOCTYPE html>
+        <html lang="en"><head><meta charset="utf-8">
+        <title>AP TB vs Unpaid — <?= htmlspecialchars($from) ?> → <?= htmlspecialchars($to) ?></title>
+        <style>
+          body{font-family:Arial,sans-serif;font-size:13px;margin:20px;max-width:1400px}
+          h2,h3{border-bottom:2px solid #333;padding-bottom:6px;margin-top:28px}
+          table{border-collapse:collapse;width:100%;margin-top:12px;font-size:12px}
+          th,td{border:1px solid #ccc;padding:5px 7px;vertical-align:top}
+          th{background:#2c3e50;color:#fff;position:sticky;top:0}
+          tr:nth-child(even){background:#f9f9f9}
+          tr.neg td.gap{background:#fdecea}
+          tr.pos td.gap{background:#eafaf1}
+          .num{text-align:right;white-space:nowrap}
+          .red{color:#c0392b;font-weight:bold}
+          .green{color:#27ae60}
+          .box{background:#eef4fb;border:1px solid #b0c8e8;padding:12px 18px;border-radius:4px;margin-bottom:16px}
+          .box-warn{background:#fff8e6;border-color:#e6c200}
+          .muted{color:#666;font-size:12px}
+          a.btn{display:inline-block;padding:6px 12px;background:#2980b9;color:#fff;text-decoration:none;border-radius:3px;margin-right:8px;margin-bottom:6px}
+          a.btn-sm{padding:3px 8px;font-size:11px}
+          a.btn-ghost{background:#7f8c8d}
+          .type-tag{font-size:10px;background:#ecf0f1;padding:2px 5px;border-radius:3px;white-space:nowrap}
+          .scroll{overflow-x:auto}
+          .cat-section{margin:24px 0 32px;border:1px solid #ddd;border-radius:6px;overflow:hidden}
+          .cat-head{padding:12px 16px;background:#ecf0f1;border-bottom:1px solid #ddd}
+          .cat-head h3{margin:0 0 6px;font-size:15px;border:none;padding:0}
+          .cat-head p{margin:4px 0;font-size:12px;color:#444}
+          .cat-head .meta{font-size:11px;color:#666}
+          .prio-high .cat-head{background:#fdecea;border-color:#e74c3c}
+          .prio-medium .cat-head{background:#fff8e6}
+          .prio-low .cat-head{background:#eafaf1}
+          .prio-ignore .cat-head{background:#f5f5f5;color:#888}
+          .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:bold;margin-right:6px}
+          .badge-high{background:#e74c3c;color:#fff}
+          .badge-medium{background:#f39c12;color:#fff}
+          .badge-low{background:#27ae60;color:#fff}
+          .badge-ignore{background:#95a5a6;color:#fff}
+          .jump-nav a{margin-right:12px;font-size:12px}
+          .issue-box{border-left:4px solid #2980b9;padding-left:12px;margin:8px 0}
+        </style></head><body>
+        <h2>Payable TB EB Credit vs Unpaid AP Outstanding</h2>
+        <div class="box">
+          <strong>Database:</strong> <?= htmlspecialchars($db_name) ?><br>
+          <strong>TB period:</strong> <?= htmlspecialchars($from) ?> → <?= htmlspecialchars($to) ?><br>
+          <strong>Unpaid as-of:</strong> <?= htmlspecialchars($to) ?><br>
+          <strong>Grand TB EB Credit:</strong> <?= $fmt($result['grand_tb']) ?><br>
+          <strong>Grand Unpaid Outstanding:</strong> <?= $fmt($result['grand_unpaid']) ?><br>
+          <strong>Difference (TB − Unpaid):</strong>
+            <span class="<?= abs($result['grand_diff']) > 0.01 ? 'red' : 'green' ?>"><?= $fmt($result['grand_diff']) ?></span><br>
+          <strong>Suppliers with differences:</strong> <?= count($result['diffs']) ?>
+          <?php if ($code_filter): ?><br><strong>Code filter:</strong> <?= htmlspecialchars($code_filter) ?><?php endif; ?>
+          <?php if ($supplier_id): ?><br><strong>Drill-down supplier_id:</strong> <?= $supplier_id ?><?php endif; ?>
+        </div>
+        <p>
+          <a class="btn" href="<?= admin_url('reports/debug_ap_tb_vs_unpaid?' . $base_qs . ($code_filter ? '&code=' . urlencode($code_filter) : '') . '&export=csv') ?>">Download summary CSV</a>
+          <?php if ($supplier_id): ?>
+          <a class="btn" href="<?= admin_url('reports/debug_ap_tb_vs_unpaid?' . $base_qs . '&supplier_id=' . $supplier_id . '&export=detail_csv') ?>">Download detail CSV</a>
+          <a class="btn btn-ghost" href="<?= admin_url('reports/debug_ap_tb_vs_unpaid?' . $base_qs . ($code_filter ? '&code=' . urlencode($code_filter) : '')) ?>">← All suppliers</a>
+          <?php endif; ?>
+          <span class="muted">Params: ?from=&amp;to=&amp;code=SUP-00098 or &amp;supplier_id=680</span>
+        </p>
+
+        <?php if ($supplier_id && $supplier_row): ?>
+        <h3>Supplier breakdown — <?= htmlspecialchars($supplier_row['code'] . ' ' . $supplier_row['name']) ?></h3>
+        <?php $si = $supplier_row['issue'] ?? []; ?>
+        <div class="issue-box">
+          <?php
+          $prio = $si['priority'] ?? 'medium';
+          $badgeCls = 'badge-' . ($prio === 'high' ? 'high' : ($prio === 'ignore' ? 'ignore' : ($prio === 'low' ? 'low' : 'medium')));
+          ?>
+          <span class="badge <?= $badgeCls ?>"><?= htmlspecialchars($si['label'] ?? 'Category') ?></span>
+          <span class="muted"><?= htmlspecialchars($si['description'] ?? '') ?></span><br>
+          <strong>Recommended:</strong> <?= htmlspecialchars($si['action'] ?? '') ?>
+        </div>
+        <div class="box box-warn">
+          <strong>TB EB Credit:</strong> <?= $fmt($supplier_row['tb']) ?> &nbsp;|&nbsp;
+          <strong>Unpaid total:</strong> <?= $fmt($supplier_row['unpaid']) ?> &nbsp;|&nbsp;
+          <strong>Difference:</strong> <span class="<?= abs($supplier_row['diff']) > 0.01 ? 'red' : '' ?>"><?= $fmt($supplier_row['diff']) ?></span><br>
+          <strong>Open purchases:</strong> <?= $fmt($supplier_row['unpaid_purchases'] ?? 0) ?>
+            (<?= (int)($supplier_row['open_purchase_count'] ?? 0) ?> docs) &nbsp;|&nbsp;
+          <strong>Open memos/service:</strong> <?= $fmt($supplier_row['unpaid_memos'] ?? 0) ?>
+            (<?= (int)($supplier_row['open_memo_count'] ?? 0) ?> docs)<br>
+          <strong>Unsettled returns (not in Unpaid):</strong> <?= $fmt($supplier_row['unsettled_returns'] ?? 0) ?> &nbsp;|&nbsp;
+          <strong>Unsettled debit memos:</strong> <?= $fmt($supplier_row['unsettled_debit_memos'] ?? 0) ?> &nbsp;|&nbsp;
+          <strong>Ledger credits w/o purchase pid:</strong> <?= $fmt($supplier_row['ledger_credits_no_pid'] ?? 0) ?><br>
+          <strong>Likely cause:</strong> <?= htmlspecialchars($supplier_row['likely_cause'] ?? '') ?>
+        </div>
+
+        <?php if ($detail_rollup): ?>
+        <h3>Roll-up by line type</h3>
+        <div class="scroll"><table>
+          <thead><tr>
+            <th>Line type</th><th>Lines</th><th>Amount</th><th>Impact Unpaid</th><th>Impact TB</th><th>Gap effect</th>
+          </tr></thead><tbody>
+          <?php foreach ($detail_rollup as $type => $r): ?>
+          <tr>
+            <td><span class="type-tag"><?= htmlspecialchars($type) ?></span></td>
+            <td class="num"><?= (int)$r['lines'] ?></td>
+            <td class="num"><?= $fmt($r['amount']) ?></td>
+            <td class="num"><?= $fmt($r['impact_unpaid']) ?></td>
+            <td class="num"><?= $fmt($r['impact_tb']) ?></td>
+            <td class="num gap <?= $r['gap_effect'] < -0.01 ? 'neg' : ($r['gap_effect'] > 0.01 ? 'pos' : '') ?>"><?= $fmt($r['gap_effect']) ?></td>
+          </tr>
+          <?php endforeach; ?>
+          </tbody>
+        </table></div>
+        <?php endif; ?>
+
+        <h3>Line detail (IDs + tables)</h3>
+        <p class="muted">gap_effect &gt; 0 pushes Unpaid above TB; negative pushes TB above Unpaid.</p>
+        <div class="scroll"><table>
+          <thead><tr>
+            <th>Type</th><th>doc_id</th><th>Table</th><th>Date</th><th>Reference</th>
+            <th>Amount</th><th>Unpaid</th><th>TB</th><th>Gap</th><th>Note</th><th>Open</th>
+          </tr></thead><tbody>
+          <?php foreach ($detail_lines as $ln):
+              $gap = (float)$ln['gap_effect'];
+              $doc_url = $this->ap_reconciliation_doc_url($ln['line_type'], (int)$ln['doc_id']);
+          ?>
+          <tr class="<?= $gap < -0.01 ? 'neg' : ($gap > 0.01 ? 'pos' : '') ?>">
+            <td><span class="type-tag"><?= htmlspecialchars($ln['line_type']) ?></span></td>
+            <td class="num"><?= (int)$ln['doc_id'] ?></td>
+            <td><?= htmlspecialchars($ln['db_table']) ?></td>
+            <td><?= htmlspecialchars($ln['doc_date']) ?></td>
+            <td><?= htmlspecialchars($ln['reference_no']) ?></td>
+            <td class="num"><?= $fmt($ln['amount']) ?></td>
+            <td class="num"><?= $fmt($ln['impact_unpaid']) ?></td>
+            <td class="num"><?= $fmt($ln['impact_tb']) ?></td>
+            <td class="num gap"><?= $fmt($ln['gap_effect']) ?></td>
+            <td><?= htmlspecialchars($ln['note']) ?></td>
+            <td><?php if ($doc_url): ?><a class="btn btn-sm" href="<?= $doc_url ?>" target="_blank">View</a><?php endif; ?></td>
+          </tr>
+          <?php endforeach; ?>
+          </tbody>
+        </table></div>
+
+        <?php if ($unlinked_payments): ?>
+        <h3>Payments without purchase_id (Unpaid may not see these)</h3>
+        <div class="scroll"><table>
+          <thead><tr>
+            <th>payment id</th><th>Date</th><th>Reference</th><th>Amount</th><th>payment_reference id</th>
+          </tr></thead><tbody>
+          <?php foreach ($unlinked_payments as $p): ?>
+          <tr>
+            <td class="num"><?= (int)$p['payment_row_id'] ?></td>
+            <td><?= htmlspecialchars($p['date']) ?></td>
+            <td><?= htmlspecialchars($p['reference_no']) ?></td>
+            <td class="num"><?= $fmt($p['amount']) ?></td>
+            <td class="num"><?= (int)$p['payment_reference_id'] ?></td>
+          </tr>
+          <?php endforeach; ?>
+          </tbody>
+        </table></div>
+        <?php endif; ?>
+
+        <?php else: ?>
+
+        <h3>Issues by category</h3>
+        <p class="jump-nav muted">
+          Jump to:
+          <?php foreach ($grouped_categories as $gc): ?>
+          <a href="#cat-<?= htmlspecialchars($gc['key']) ?>"><?= htmlspecialchars($gc['label']) ?> (<?= (int)$gc['count'] ?>)</a>
+          <?php endforeach; ?>
+        </p>
+        <div class="scroll"><table>
+          <thead><tr>
+            <th>Category</th><th>Priority</th><th>Suppliers</th><th>Sum |Diff|</th><th>Net Diff</th>
+          </tr></thead><tbody>
+          <?php foreach ($grouped_categories as $gc):
+              $prio = $gc['priority'];
+              $badgeCls = 'badge-' . ($prio === 'high' ? 'high' : ($prio === 'ignore' ? 'ignore' : ($prio === 'low' ? 'low' : 'medium')));
+          ?>
+          <tr>
+            <td><a href="#cat-<?= htmlspecialchars($gc['key']) ?>"><?= htmlspecialchars($gc['label']) ?></a></td>
+            <td><span class="badge <?= $badgeCls ?>"><?= htmlspecialchars(ucfirst($prio)) ?></span></td>
+            <td class="num"><?= (int)$gc['count'] ?></td>
+            <td class="num"><?= $fmt($gc['sum_abs_diff']) ?></td>
+            <td class="num"><?= $fmt($gc['sum_diff']) ?></td>
+          </tr>
+          <?php endforeach; ?>
+          </tbody>
+        </table></div>
+
+        <?php
+        $render_supplier_rows = function ($suppliers, $fmt, $base_qs) {
+            $n = 0;
+            foreach ($suppliers as $d) {
+                $n++;
+                $issue = $d['issue'] ?? [];
+                ?>
+          <tr>
+            <td class="num"><?= $n ?></td>
+            <td class="num"><?= (int)$d['id'] ?></td>
+            <td><?= htmlspecialchars($d['code']) ?></td>
+            <td><?= htmlspecialchars($d['name']) ?></td>
+            <td class="num"><?= $fmt($d['tb']) ?></td>
+            <td class="num"><?= $fmt($d['unpaid_purchases'] ?? 0) ?></td>
+            <td class="num"><?= (int)($d['open_purchase_count'] ?? 0) ?></td>
+            <td class="num"><?= $fmt($d['unpaid_memos'] ?? 0) ?></td>
+            <td class="num"><?= (int)($d['open_memo_count'] ?? 0) ?></td>
+            <td class="num"><?= $fmt($d['unpaid']) ?></td>
+            <td class="num"><?= $fmt($d['unsettled_returns'] ?? 0) ?></td>
+            <td class="num"><?= $fmt($d['unsettled_debit_memos'] ?? 0) ?></td>
+            <td class="num"><?= $fmt($d['ledger_credits_no_pid'] ?? 0) ?></td>
+            <td class="num <?= abs($d['diff']) > 0.01 ? 'red' : '' ?>"><?= $fmt($d['diff']) ?></td>
+            <td><a class="btn btn-sm" href="<?= admin_url('reports/debug_ap_tb_vs_unpaid?' . $base_qs . '&supplier_id=' . (int)$d['id']) ?>">Breakdown</a></td>
+          </tr>
+                <?php
+            }
+        };
+        ?>
+
+        <?php foreach ($grouped_categories as $gc):
+            $prio = $gc['priority'];
+            $sectionCls = 'prio-' . (in_array($prio, ['high', 'medium', 'low', 'ignore'], true) ? $prio : 'medium');
+        ?>
+        <div id="cat-<?= htmlspecialchars($gc['key']) ?>" class="cat-section <?= $sectionCls ?>">
+          <div class="cat-head">
+            <h3><?= htmlspecialchars($gc['label']) ?></h3>
+            <p><?= htmlspecialchars($gc['description']) ?></p>
+            <p class="meta">
+              <strong><?= (int)$gc['count'] ?></strong> supplier(s) &nbsp;|&nbsp;
+              Sum |Diff|: <strong><?= $fmt($gc['sum_abs_diff']) ?></strong> &nbsp;|&nbsp;
+              Priority: <strong><?= htmlspecialchars(ucfirst($prio)) ?></strong>
+            </p>
+            <p><strong>What to do:</strong> <?= htmlspecialchars($gc['action']) ?></p>
+          </div>
+          <div class="scroll"><table>
+            <thead><tr>
+              <th>#</th><th>ID</th><th>Code</th><th>Supplier</th>
+              <th>TB EB</th><th>Unpaid Purch.</th><th>#PI</th><th>Unpaid Memos</th><th>#M</th>
+              <th>Unpaid Total</th><th>Returns*</th><th>Deb.Memo*</th><th>GL no pid*</th>
+              <th>Diff</th><th>Detail</th>
+            </tr></thead>
+            <tbody>
+            <?php $render_supplier_rows($gc['suppliers'], $fmt, $base_qs); ?>
+            </tbody>
+          </table></div>
+        </div>
+        <?php endforeach; ?>
+
+        <p class="muted">*Returns, debit memos, and GL-without-pid are not in the Unpaid AP total but help explain TB vs documents.</p>
+        <?php endif; ?>
+
+        <p class="muted">Generated <?= date('Y-m-d H:i:s') ?></p>
+        </body></html>
+        <?php
+    }
+
+    /**
+     * Charset/collation for UNION text columns (local utf8 vs production utf8mb4).
+     *
+     * @return array{0: string, 1: string} [character set, collation]
+     */
+    private function ap_reconciliation_text_charset()
+    {
+        static $cache = null;
+        if ($cache !== null) {
+            return $cache;
+        }
+        $row = $this->db->query('SELECT @@character_set_database AS cs')->row();
+        $cs = isset($row->cs) ? strtolower((string)$row->cs) : 'utf8';
+        $cache = (strpos($cs, 'utf8mb4') !== false)
+            ? ['utf8mb4', 'utf8mb4_unicode_ci']
+            : ['utf8', 'utf8_unicode_ci'];
+        return $cache;
+    }
+
+    /**
+     * Admin URL for a reconciliation detail row (when known).
+     */
+    private function ap_reconciliation_doc_url($line_type, $doc_id)
+    {
+        if ($doc_id <= 0) {
+            return '';
+        }
+        switch ($line_type) {
+            case 'OPEN_PURCHASE':
+            case 'PURCHASE_GL_CREDIT_EXCEEDS_PAYMENTS':
+                return admin_url('purchases/view/' . $doc_id);
+            case 'UNSETTLED_RETURN':
+                return admin_url('returns_supplier/view/' . $doc_id);
+            case 'UNSETTLED_DEBIT_MEMO':
+                return admin_url('suppliers/view_debit_memo/' . $doc_id);
+            case 'LEDGER_CREDIT_NO_PID':
+                return admin_url('entries/view/journal/' . $doc_id);
+            default:
+                return '';
+        }
+    }
+
+    /**
+     * Line-level reconciliation (PART 2 of sql/debug_ap_tb_unpaid_detail.sql).
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function get_ap_reconciliation_detail_lines($start_date, $end_date, $supplier_id)
+    {
+        $supplier_id = (int)$supplier_id;
+        if ($supplier_id <= 0) {
+            return [];
+        }
+
+        $pfx = $this->db->dbprefix;
+        $sql_at = $end_date . ' 23:59:59';
+        [$charset, $ci] = $this->ap_reconciliation_text_charset();
+        $cs = $charset;
+
+        $sql = "
+            SELECT * FROM (
+                SELECT
+                    CAST('OPEN_PURCHASE' AS CHAR(40) CHARACTER SET {$cs}) COLLATE {$ci} AS line_type,
+                    CAST('sma_purchases' AS CHAR(64) CHARACTER SET {$cs}) COLLATE {$ci} AS db_table,
+                    CAST('Purchases - open invoice' AS CHAR(128) CHARACTER SET {$cs}) COLLATE {$ci} AS app_screen,
+                    p.id AS doc_id,
+                    DATE(p.date) AS doc_date,
+                    CAST(COALESCE(p.reference_no, '') AS CHAR(100) CHARACTER SET {$cs}) COLLATE {$ci} AS reference_no,
+                    ROUND((p.grand_total + COALESCE(p.grand_deal_discount, 0))
+                        - COALESCE((SELECT SUM(sp.amount) FROM {$pfx}payments sp
+                            WHERE sp.purchase_id = p.id AND sp.date <= '{$sql_at}'), 0), 2) AS amount,
+                    ROUND((p.grand_total + COALESCE(p.grand_deal_discount, 0))
+                        - COALESCE((SELECT SUM(sp.amount) FROM {$pfx}payments sp
+                            WHERE sp.purchase_id = p.id AND sp.date <= '{$sql_at}'), 0), 2) AS impact_unpaid,
+                    0.00 AS impact_tb,
+                    ROUND((p.grand_total + COALESCE(p.grand_deal_discount, 0))
+                        - COALESCE((SELECT SUM(sp.amount) FROM {$pfx}payments sp
+                            WHERE sp.purchase_id = p.id AND sp.date <= '{$sql_at}'), 0), 2) AS gap_effect,
+                    CAST(CONCAT('Paid sma_payments: ',
+                        ROUND(COALESCE((SELECT SUM(sp.amount) FROM {$pfx}payments sp
+                            WHERE sp.purchase_id = p.id AND sp.date <= '{$sql_at}'), 0), 2)) AS CHAR(255) CHARACTER SET {$cs}) COLLATE {$ci} AS note
+                FROM {$pfx}purchases p
+                WHERE p.supplier_id = {$supplier_id}
+                  AND p.purchase_invoice = 1 AND p.note != 'import from excel'
+                  AND p.grand_total > 0 AND p.date <= '{$sql_at}'
+                HAVING amount > 0.01
+
+                UNION ALL
+
+                SELECT
+                    CAST('OPEN_SERVICE_INVOICE' AS CHAR(40) CHARACTER SET {$cs}) COLLATE {$ci},
+                    CAST('sma_memo' AS CHAR(64) CHARACTER SET {$cs}) COLLATE {$ci},
+                    CAST('Service invoice (memo)' AS CHAR(128) CHARACTER SET {$cs}) COLLATE {$ci},
+                    m.id, m.date,
+                    CAST(COALESCE(m.reference_no, '') AS CHAR(100) CHARACTER SET {$cs}) COLLATE {$ci},
+                    ROUND(m.payment_amount - COALESCE(m.used_amount, 0), 2),
+                    ROUND(m.payment_amount - COALESCE(m.used_amount, 0), 2),
+                    0.00,
+                    ROUND(m.payment_amount - COALESCE(m.used_amount, 0), 2),
+                    CAST(CONCAT('used_amount=', COALESCE(m.used_amount, 0)) AS CHAR(255) CHARACTER SET {$cs}) COLLATE {$ci}
+                FROM {$pfx}memo m
+                WHERE m.supplier_id = {$supplier_id} AND m.type = 'serviceinvoice'
+                  AND m.date <= '{$end_date}'
+                  AND (m.payment_amount - COALESCE(m.used_amount, 0)) > 0.01
+
+                UNION ALL
+
+                SELECT
+                    CAST('OPEN_CREDIT_MEMO' AS CHAR(40) CHARACTER SET {$cs}) COLLATE {$ci},
+                    CAST('sma_memo' AS CHAR(64) CHARACTER SET {$cs}) COLLATE {$ci},
+                    CAST('Credit memo (memo, entry C)' AS CHAR(128) CHARACTER SET {$cs}) COLLATE {$ci},
+                    m.id, m.date,
+                    CAST(COALESCE(m.reference_no, '') AS CHAR(100) CHARACTER SET {$cs}) COLLATE {$ci},
+                    ROUND(m.payment_amount - COALESCE(m.used_amount, 0), 2),
+                    ROUND(m.payment_amount - COALESCE(m.used_amount, 0), 2),
+                    0.00,
+                    ROUND(m.payment_amount - COALESCE(m.used_amount, 0), 2),
+                    CAST(CONCAT('supplier_entry_type=C, used=', COALESCE(m.used_amount, 0)) AS CHAR(255) CHARACTER SET {$cs}) COLLATE {$ci}
+                FROM {$pfx}memo m
+                WHERE m.supplier_id = {$supplier_id}
+                  AND m.type = 'memo' AND m.supplier_entry_type = 'C'
+                  AND m.date <= '{$end_date}'
+                  AND (m.payment_amount - COALESCE(m.used_amount, 0)) > 0.01
+
+                UNION ALL
+
+                SELECT
+                    CAST('UNSETTLED_RETURN' AS CHAR(40) CHARACTER SET {$cs}) COLLATE {$ci},
+                    CAST('sma_returns_supplier' AS CHAR(64) CHARACTER SET {$cs}) COLLATE {$ci},
+                    CAST('Supplier returns' AS CHAR(128) CHARACTER SET {$cs}) COLLATE {$ci},
+                    rs.id, DATE(rs.date),
+                    CAST(COALESCE(rs.reference_no, '') AS CHAR(100) CHARACTER SET {$cs}) COLLATE {$ci},
+                    ROUND(rs.grand_total - COALESCE(rs.paid, 0), 2),
+                    0.00, 0.00, 0.00,
+                    CAST(CONCAT('NOT in Unpaid AP; paid=', COALESCE(rs.paid, 0)) AS CHAR(255) CHARACTER SET {$cs}) COLLATE {$ci}
+                FROM {$pfx}returns_supplier rs
+                WHERE rs.supplier_id = {$supplier_id}
+                  AND (rs.grand_total - COALESCE(rs.paid, 0)) > 0.01
+
+                UNION ALL
+
+                SELECT
+                    CAST('UNSETTLED_DEBIT_MEMO' AS CHAR(40) CHARACTER SET {$cs}) COLLATE {$ci},
+                    CAST('sma_memo' AS CHAR(64) CHARACTER SET {$cs}) COLLATE {$ci},
+                    CAST('Debit memo (entry D)' AS CHAR(128) CHARACTER SET {$cs}) COLLATE {$ci},
+                    m.id, m.date,
+                    CAST(COALESCE(m.reference_no, '') AS CHAR(100) CHARACTER SET {$cs}) COLLATE {$ci},
+                    ROUND(m.payment_amount - COALESCE(m.used_amount, 0), 2),
+                    0.00, 0.00, 0.00,
+                    CAST(CONCAT('NOT in Unpaid AP; used=', COALESCE(m.used_amount, 0)) AS CHAR(255) CHARACTER SET {$cs}) COLLATE {$ci}
+                FROM {$pfx}memo m
+                WHERE m.supplier_id = {$supplier_id}
+                  AND m.type = 'memo' AND m.supplier_entry_type = 'D'
+                  AND (m.payment_amount - COALESCE(m.used_amount, 0)) > 0.01
+
+                UNION ALL
+
+                SELECT
+                    CAST('LEDGER_CREDIT_NO_PID' AS CHAR(40) CHARACTER SET {$cs}) COLLATE {$ci},
+                    CAST('sma_accounts_entries' AS CHAR(64) CHARACTER SET {$cs}) COLLATE {$ci},
+                    CAST('Journal entry (no pid)' AS CHAR(128) CHARACTER SET {$cs}) COLLATE {$ci},
+                    e.id, DATE(e.date),
+                    CAST(COALESCE(NULLIF(TRIM(e.number), ''), CAST(e.id AS CHAR(20) CHARACTER SET {$cs})) AS CHAR(100) CHARACTER SET {$cs}) COLLATE {$ci},
+                    ROUND(ei.amount, 2),
+                    0.00,
+                    ROUND(ei.amount, 2),
+                    ROUND(-ei.amount, 2),
+                    CAST(CONCAT('transaction_type=', COALESCE(e.transaction_type, ''),
+                        ' rsid=', COALESCE(CAST(e.rsid AS CHAR(20) CHARACTER SET {$cs}), ''),
+                        ' | ', LEFT(REPLACE(REPLACE(COALESCE(e.notes, ''), '<p>', ''), '</p>', ''), 80)) AS CHAR(500) CHARACTER SET {$cs}) COLLATE {$ci}
+                FROM {$pfx}accounts_entries e
+                JOIN {$pfx}accounts_entryitems ei ON e.id = ei.entry_id
+                JOIN {$pfx}companies sc ON e.supplier_id = sc.id AND ei.ledger_id = sc.ledger_account
+                WHERE e.supplier_id = {$supplier_id} AND ei.dc = 'C'
+                  AND DATE(e.date) <= '{$end_date}'
+                  AND (e.pid IS NULL OR e.pid = '' OR e.pid = 0)
+
+                UNION ALL
+
+                SELECT
+                    CAST('PURCHASE_GL_CREDIT_EXCEEDS_PAYMENTS' AS CHAR(40) CHARACTER SET {$cs}) COLLATE {$ci},
+                    CAST('sma_purchases' AS CHAR(64) CHARACTER SET {$cs}) COLLATE {$ci},
+                    CAST('GL credit > sma_payments on purchase' AS CHAR(128) CHARACTER SET {$cs}) COLLATE {$ci},
+                    p.id, DATE(p.date),
+                    CAST(COALESCE(p.reference_no, '') AS CHAR(100) CHARACTER SET {$cs}) COLLATE {$ci},
+                    ROUND(COALESCE(gl.gl_cred, 0) - COALESCE(pay.pay_tbl, 0), 2),
+                    0.00,
+                    ROUND(COALESCE(gl.gl_cred, 0) - COALESCE(pay.pay_tbl, 0), 2),
+                    ROUND(-(COALESCE(gl.gl_cred, 0) - COALESCE(pay.pay_tbl, 0)), 2),
+                    CAST(CONCAT('GL credit=', ROUND(COALESCE(gl.gl_cred, 0), 2),
+                        ' sma_payments=', ROUND(COALESCE(pay.pay_tbl, 0), 2)) AS CHAR(255) CHARACTER SET {$cs}) COLLATE {$ci}
+                FROM {$pfx}purchases p
+                JOIN (
+                    SELECT e.pid AS purchase_id,
+                        SUM(CASE WHEN ei.dc = 'C' THEN ei.amount ELSE 0 END) AS gl_cred
+                    FROM {$pfx}accounts_entries e
+                    JOIN {$pfx}accounts_entryitems ei ON e.id = ei.entry_id
+                    JOIN {$pfx}companies sc ON e.supplier_id = sc.id AND ei.ledger_id = sc.ledger_account
+                    WHERE e.supplier_id = {$supplier_id}
+                      AND e.pid IS NOT NULL AND e.pid != '' AND e.pid != 0
+                      AND DATE(e.date) <= '{$end_date}'
+                    GROUP BY e.pid
+                ) gl ON gl.purchase_id = p.id
+                LEFT JOIN (
+                    SELECT purchase_id, SUM(amount) AS pay_tbl
+                    FROM {$pfx}payments WHERE date <= '{$sql_at}' GROUP BY purchase_id
+                ) pay ON pay.purchase_id = p.id
+                WHERE p.supplier_id = {$supplier_id}
+                  AND p.purchase_invoice = 1 AND p.date <= '{$sql_at}'
+                  AND (COALESCE(gl.gl_cred, 0) - COALESCE(pay.pay_tbl, 0)) > 0.01
+            ) detail
+            ORDER BY line_type, doc_date, doc_id
+        ";
+
+        $rows = [];
+        foreach ($this->db->query($sql)->result_array() as $row) {
+            $rows[] = [
+                'line_type'     => $row['line_type'],
+                'db_table'      => $row['db_table'],
+                'app_screen'    => $row['app_screen'],
+                'doc_id'        => $row['doc_id'],
+                'doc_date'      => $row['doc_date'],
+                'reference_no'  => $row['reference_no'],
+                'amount'        => (float)$row['amount'],
+                'impact_unpaid' => (float)$row['impact_unpaid'],
+                'impact_tb'     => (float)$row['impact_tb'],
+                'gap_effect'    => (float)$row['gap_effect'],
+                'note'          => $row['note'],
+            ];
+        }
+        return $rows;
+    }
+
+    /**
+     * Payments not linked to a purchase (PART 3).
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function get_ap_unlinked_payment_lines($start_date, $end_date, $supplier_id)
+    {
+        $supplier_id = (int)$supplier_id;
+        if ($supplier_id <= 0) {
+            return [];
+        }
+        $pfx = $this->db->dbprefix;
+        $sql_at = $end_date . ' 23:59:59';
+
+        $sql = "
+            SELECT sp.id AS payment_row_id, sp.date, sp.reference_no, sp.amount,
+                sp.payment_id AS payment_reference_id
+            FROM {$pfx}payments sp
+            INNER JOIN {$pfx}payment_reference pr ON pr.id = sp.payment_id
+            WHERE pr.supplier_id = {$supplier_id}
+              AND sp.type IN ('sent', 'advance')
+              AND (sp.purchase_id IS NULL OR sp.purchase_id = 0)
+              AND sp.date <= '{$sql_at}'
+              AND sp.amount > 0
+            ORDER BY sp.date DESC, sp.id DESC
+            LIMIT 200
+        ";
+        $rows = [];
+        foreach ($this->db->query($sql)->result_array() as $row) {
+            $rows[] = [
+                'payment_row_id'       => $row['payment_row_id'],
+                'date'                 => $row['date'],
+                'reference_no'         => $row['reference_no'],
+                'amount'               => (float)$row['amount'],
+                'payment_reference_id' => $row['payment_reference_id'],
+            ];
+        }
+        return $rows;
+    }
+
+    /**
+     * @return array{diffs: array, grand_tb: float, grand_unpaid: float, grand_diff: float}
+     */
+    private function compute_ap_tb_vs_unpaid_diffs($start_date, $end_date, $code_filter = '')
+    {
+        $db = $this->db;
+        $pfx = $db->dbprefix;
+        $sql_at = $end_date . ' 23:59:59';
+        $sql_at_day = $end_date;
+
+        $code_sql = '';
+        if ($code_filter !== '') {
+            $code_esc = $db->escape($code_filter);
+            $code_sql = " AND c.sequence_code = {$code_esc}";
+        }
+
+        $tb = [];
+        $sql_tb = "
+            SELECT
+                c.id AS supplier_id,
+                c.sequence_code,
+                c.name,
+                COALESCE(ob.total_debit, 0) AS ob_debit,
+                COALESCE(ob.total_credit, 0) AS ob_credit,
+                COALESCE(pr.total_debit, 0) AS trs_debit,
+                COALESCE(pr.total_credit, 0) AS trs_credit
+            FROM {$pfx}companies c
+            LEFT JOIN (
+                SELECT e.supplier_id,
+                    SUM(CASE WHEN ei.dc = 'D' THEN ei.amount ELSE 0 END) AS total_debit,
+                    SUM(CASE WHEN ei.dc = 'C' THEN ei.amount ELSE 0 END) AS total_credit
+                FROM {$pfx}accounts_entries e
+                JOIN {$pfx}accounts_entryitems ei ON e.id = ei.entry_id
+                JOIN {$pfx}companies sc ON e.supplier_id = sc.id AND ei.ledger_id = sc.ledger_account
+                WHERE e.supplier_id IS NOT NULL AND DATE(e.date) < '{$start_date}'
+                GROUP BY e.supplier_id
+            ) ob ON ob.supplier_id = c.id
+            LEFT JOIN (
+                SELECT e.supplier_id,
+                    SUM(CASE WHEN ei.dc = 'D' THEN ei.amount ELSE 0 END) AS total_debit,
+                    SUM(CASE WHEN ei.dc = 'C' THEN ei.amount ELSE 0 END) AS total_credit
+                FROM {$pfx}accounts_entries e
+                JOIN {$pfx}accounts_entryitems ei ON e.id = ei.entry_id
+                JOIN {$pfx}companies sc ON e.supplier_id = sc.id AND ei.ledger_id = sc.ledger_account
+                WHERE e.supplier_id IS NOT NULL
+                  AND DATE(e.date) >= '{$start_date}' AND DATE(e.date) <= '{$end_date}'
+                GROUP BY e.supplier_id
+            ) pr ON pr.supplier_id = c.id
+            WHERE c.group_name = 'supplier'
+              AND c.ledger_account IS NOT NULL AND c.ledger_account > 0
+              {$code_sql}
+        ";
+        foreach ($db->query($sql_tb)->result_array() as $row) {
+            $obD = (float)$row['ob_debit'];
+            $obC = (float)$row['ob_credit'];
+            if ($obD >= $obC) {
+                $obD -= $obC;
+                $obC = 0;
+            } else {
+                $obC -= $obD;
+                $obD = 0;
+            }
+            $ebC = $obC + (float)$row['trs_credit'];
+            $ebD = $obD + (float)$row['trs_debit'];
+            $eb_credit = $eb_debit = 0.0;
+            if ($ebC >= $ebD) {
+                $eb_credit = $ebC - $ebD;
+            } else {
+                $eb_debit = $ebD - $ebC;
+            }
+            if ($eb_credit == 0 && $eb_debit == 0
+                && (float)$row['trs_debit'] == 0 && (float)$row['trs_credit'] == 0
+                && $obD == 0 && $obC == 0) {
+                continue;
+            }
+            $tb[(int)$row['supplier_id']] = [
+                'code'      => $row['sequence_code'],
+                'name'      => $row['name'],
+                'eb_credit' => round($eb_credit, 2),
+            ];
+        }
+
+        $unpaid = [];
+        $supplier_filter = '';
+        if ($code_filter !== '') {
+            $code_esc = $db->escape($code_filter);
+            $supplier_filter = " AND p.supplier_id IN (SELECT id FROM {$pfx}companies WHERE sequence_code = {$code_esc})";
+        }
+
+        $sql_p = "
+            SELECT supplier_id, ROUND(SUM(outstanding), 2) AS outstanding
+            FROM (
+                SELECT p.supplier_id,
+                    ROUND(
+                        (p.grand_total + COALESCE(p.grand_deal_discount, 0))
+                        - COALESCE((
+                            SELECT SUM(sp.amount) FROM {$pfx}payments sp
+                            WHERE sp.purchase_id = p.id AND sp.date <= '{$sql_at}'
+                        ), 0),
+                    2) AS outstanding
+                FROM {$pfx}purchases p
+                WHERE p.purchase_invoice = 1
+                  AND p.note != 'import from excel'
+                  AND p.grand_total > 0
+                  AND p.date <= '{$sql_at}'
+                  {$supplier_filter}
+            ) inv
+            WHERE outstanding > 0
+            GROUP BY supplier_id
+        ";
+        foreach ($db->query($sql_p)->result() as $r) {
+            $sid = (int)$r->supplier_id;
+            $unpaid[$sid] = ($unpaid[$sid] ?? 0) + (float)$r->outstanding;
+        }
+
+        $memo_filter = $supplier_filter ? str_replace('p.supplier_id', 'm.supplier_id', $supplier_filter) : '';
+        foreach ([
+            "m.type = 'serviceinvoice'",
+            "m.type = 'memo' AND m.supplier_entry_type = 'C'",
+        ] as $i => $memo_where) {
+            $sql_m = "
+                SELECT m.supplier_id,
+                    ROUND(SUM(m.payment_amount - COALESCE(m.used_amount, 0)), 2) AS outstanding
+                FROM {$pfx}memo m
+                WHERE {$memo_where} AND m.supplier_id > 0
+                  AND m.date <= '{$sql_at_day}'
+                  {$memo_filter}
+                GROUP BY m.supplier_id
+                HAVING outstanding > 0
+            ";
+            foreach ($db->query($sql_m)->result() as $r) {
+                $sid = (int)$r->supplier_id;
+                $unpaid[$sid] = ($unpaid[$sid] ?? 0) + (float)$r->outstanding;
+            }
+        }
+
+        $all_ids = array_unique(array_merge(array_keys($tb), array_keys($unpaid)));
+        $diffs = [];
+        $grand_tb = $grand_unpaid = 0.0;
+
+        foreach ($all_ids as $sid) {
+            $tb_cr = $tb[$sid]['eb_credit'] ?? 0;
+            $unp = round($unpaid[$sid] ?? 0, 2);
+            $grand_tb += $tb_cr;
+            $grand_unpaid += $unp;
+            $diff = round($tb_cr - $unp, 2);
+            if (abs($diff) >= 0.01) {
+                $name = $tb[$sid]['name'] ?? null;
+                if ($name === null) {
+                    $row = $db->select('name, sequence_code')->from('companies')->where('id', $sid)->get()->row();
+                    $name = $row->name ?? ('Supplier #' . $sid);
+                    $code = $row->sequence_code ?? '';
+                } else {
+                    $code = $tb[$sid]['code'] ?? '';
+                }
+                $diffs[] = [
+                    'id'     => $sid,
+                    'code'   => $code,
+                    'name'   => $name,
+                    'tb'     => $tb_cr,
+                    'unpaid' => $unp,
+                    'diff'   => $diff,
+                ];
+            }
+        }
+
+        $buckets = $this->fetch_ap_reconciliation_buckets($start_date, $end_date, $code_filter);
+        foreach ($diffs as &$d) {
+            $sid = (int)$d['id'];
+            $bp = $buckets['purchases'][$sid] ?? ['amt' => 0, 'cnt' => 0];
+            $bm = $buckets['memos'][$sid] ?? ['amt' => 0, 'cnt' => 0];
+            $d['unpaid_purchases'] = $bp['amt'];
+            $d['open_purchase_count'] = $bp['cnt'];
+            $d['unpaid_memos'] = $bm['amt'];
+            $d['open_memo_count'] = $bm['cnt'];
+            $d['unsettled_returns'] = $buckets['returns'][$sid] ?? 0;
+            $d['unsettled_debit_memos'] = $buckets['debit_memos'][$sid] ?? 0;
+            $d['ledger_credits_no_pid'] = $buckets['gl_no_pid'][$sid] ?? 0;
+            $d['likely_cause'] = $this->ap_reconciliation_likely_cause(
+                $d['tb'],
+                $d['unpaid'],
+                $d['ledger_credits_no_pid'],
+                $d['unsettled_returns']
+            );
+            $d['issue'] = $this->classify_ap_reconciliation_issue($d);
+        }
+        unset($d);
+
+        usort($diffs, fn($a, $b) => abs($b['diff']) <=> abs($a['diff']));
+
+        return [
+            'diffs'        => $diffs,
+            'grand_tb'     => $grand_tb,
+            'grand_unpaid' => $grand_unpaid,
+            'grand_diff'   => $grand_tb - $grand_unpaid,
+        ];
+    }
+
+    /**
+     * Per-supplier bucket totals for AP reconciliation summary.
+     *
+     * @return array{purchases: array, memos: array, returns: array, debit_memos: array, gl_no_pid: array}
+     */
+    private function fetch_ap_reconciliation_buckets($start_date, $end_date, $code_filter = '')
+    {
+        $db = $this->db;
+        $pfx = $db->dbprefix;
+        $sql_at = $end_date . ' 23:59:59';
+        $code_sub = '';
+        if ($code_filter !== '') {
+            $code_esc = $db->escape($code_filter);
+            $code_sub = "SELECT id FROM {$pfx}companies WHERE sequence_code = {$code_esc}";
+        }
+        $sf_p = $code_sub ? " AND p.supplier_id IN ({$code_sub})" : '';
+        $sf_m = $code_sub ? " AND m.supplier_id IN ({$code_sub})" : '';
+        $sf_rs = $code_sub ? " AND supplier_id IN ({$code_sub})" : '';
+        $sf_dm = $code_sub ? " AND supplier_id IN ({$code_sub})" : '';
+        $sf_e = $code_sub ? " AND e.supplier_id IN ({$code_sub})" : '';
+
+        $purchases = [];
+        foreach ($db->query("
+            SELECT supplier_id,
+                ROUND(SUM(outstanding), 2) AS amt,
+                COUNT(*) AS cnt
+            FROM (
+                SELECT p.supplier_id,
+                    ROUND((p.grand_total + COALESCE(p.grand_deal_discount, 0))
+                        - COALESCE((SELECT SUM(sp.amount) FROM {$pfx}payments sp
+                            WHERE sp.purchase_id = p.id AND sp.date <= '{$sql_at}'), 0), 2) AS outstanding
+                FROM {$pfx}purchases p
+                WHERE p.purchase_invoice = 1 AND p.note != 'import from excel'
+                  AND p.grand_total > 0 AND p.date <= '{$sql_at}'
+                  {$sf_p}
+            ) x
+            WHERE outstanding > 0.01
+            GROUP BY supplier_id
+        ")->result() as $r) {
+            $purchases[(int)$r->supplier_id] = ['amt' => (float)$r->amt, 'cnt' => (int)$r->cnt];
+        }
+
+        $memos = [];
+        foreach ($db->query("
+            SELECT m.supplier_id,
+                ROUND(SUM(m.payment_amount - COALESCE(m.used_amount, 0)), 2) AS amt,
+                COUNT(*) AS cnt
+            FROM {$pfx}memo m
+            WHERE m.supplier_id > 0 AND m.date <= '{$end_date}'
+              AND (m.type = 'serviceinvoice' OR (m.type = 'memo' AND m.supplier_entry_type = 'C'))
+              AND (m.payment_amount - COALESCE(m.used_amount, 0)) > 0.01
+              {$sf_m}
+            GROUP BY m.supplier_id
+        ")->result() as $r) {
+            $memos[(int)$r->supplier_id] = ['amt' => (float)$r->amt, 'cnt' => (int)$r->cnt];
+        }
+
+        $returns = [];
+        foreach ($db->query("
+            SELECT supplier_id, ROUND(SUM(grand_total - COALESCE(paid, 0)), 2) AS amt
+            FROM {$pfx}returns_supplier
+            WHERE (grand_total - COALESCE(paid, 0)) > 0.01
+              {$sf_rs}
+            GROUP BY supplier_id
+        ")->result() as $r) {
+            $returns[(int)$r->supplier_id] = (float)$r->amt;
+        }
+
+        $debit_memos = [];
+        foreach ($db->query("
+            SELECT supplier_id, ROUND(SUM(payment_amount - COALESCE(used_amount, 0)), 2) AS amt
+            FROM {$pfx}memo
+            WHERE type = 'memo' AND supplier_entry_type = 'D'
+              AND (payment_amount - COALESCE(used_amount, 0)) > 0.01
+              {$sf_dm}
+            GROUP BY supplier_id
+        ")->result() as $r) {
+            $debit_memos[(int)$r->supplier_id] = (float)$r->amt;
+        }
+
+        $gl_no_pid = [];
+        foreach ($db->query("
+            SELECT e.supplier_id, ROUND(SUM(ei.amount), 2) AS amt
+            FROM {$pfx}accounts_entries e
+            JOIN {$pfx}accounts_entryitems ei ON e.id = ei.entry_id
+            JOIN {$pfx}companies sc ON e.supplier_id = sc.id AND ei.ledger_id = sc.ledger_account
+            WHERE e.supplier_id IS NOT NULL AND ei.dc = 'C'
+              AND DATE(e.date) <= '{$end_date}'
+              AND (e.pid IS NULL OR e.pid = '' OR e.pid = 0)
+              {$sf_e}
+            GROUP BY e.supplier_id
+        ")->result() as $r) {
+            $gl_no_pid[(int)$r->supplier_id] = (float)$r->amt;
+        }
+
+        return [
+            'purchases'   => $purchases,
+            'memos'       => $memos,
+            'returns'     => $returns,
+            'debit_memos' => $debit_memos,
+            'gl_no_pid'   => $gl_no_pid,
+        ];
+    }
+
+    /**
+     * One supplier summary (includes suppliers with zero TB−Unpaid diff).
+     *
+     * @return array<string, mixed>
+     */
+    private function get_ap_supplier_summary_row($start_date, $end_date, $supplier_id)
+    {
+        $supplier_id = (int)$supplier_id;
+        $c = $this->db->select('name, sequence_code')->from('companies')->where('id', $supplier_id)->get()->row();
+        $code = $c->sequence_code ?? '';
+        $one = $this->compute_ap_tb_vs_unpaid_diffs($start_date, $end_date, $code);
+        foreach ($one['diffs'] as $d) {
+            if ((int)$d['id'] === $supplier_id) {
+                return $d;
+            }
+        }
+
+        $buckets = $this->fetch_ap_reconciliation_buckets($start_date, $end_date, $code);
+        $bp = $buckets['purchases'][$supplier_id] ?? ['amt' => 0, 'cnt' => 0];
+        $bm = $buckets['memos'][$supplier_id] ?? ['amt' => 0, 'cnt' => 0];
+        $unpaid = round($bp['amt'] + $bm['amt'], 2);
+
+        $pfx = $this->db->dbprefix;
+        $tb_cr = 0.0;
+        $row = $this->db->query("
+            SELECT COALESCE(ob.d, 0) AS ob_d, COALESCE(ob.c, 0) AS ob_c,
+                COALESCE(ptr.d, 0) AS tr_d, COALESCE(ptr.c, 0) AS tr_c
+            FROM {$pfx}companies c
+            LEFT JOIN (
+                SELECT e.supplier_id,
+                    SUM(CASE WHEN ei.dc = 'D' THEN ei.amount ELSE 0 END) AS d,
+                    SUM(CASE WHEN ei.dc = 'C' THEN ei.amount ELSE 0 END) AS c
+                FROM {$pfx}accounts_entries e
+                JOIN {$pfx}accounts_entryitems ei ON e.id = ei.entry_id
+                JOIN {$pfx}companies sc ON e.supplier_id = sc.id AND ei.ledger_id = sc.ledger_account
+                WHERE e.supplier_id = {$supplier_id} AND DATE(e.date) < '{$start_date}'
+                GROUP BY e.supplier_id
+            ) ob ON ob.supplier_id = c.id
+            LEFT JOIN (
+                SELECT e.supplier_id,
+                    SUM(CASE WHEN ei.dc = 'D' THEN ei.amount ELSE 0 END) AS d,
+                    SUM(CASE WHEN ei.dc = 'C' THEN ei.amount ELSE 0 END) AS c
+                FROM {$pfx}accounts_entries e
+                JOIN {$pfx}accounts_entryitems ei ON e.id = ei.entry_id
+                JOIN {$pfx}companies sc ON e.supplier_id = sc.id AND ei.ledger_id = sc.ledger_account
+                WHERE e.supplier_id = {$supplier_id}
+                  AND DATE(e.date) BETWEEN '{$start_date}' AND '{$end_date}'
+                GROUP BY e.supplier_id
+            ) ptr ON ptr.supplier_id = c.id
+            WHERE c.id = {$supplier_id}
+        ")->row();
+        if ($row) {
+            $obD = (float)$row->ob_d;
+            $obC = (float)$row->ob_c;
+            if ($obD >= $obC) {
+                $obD -= $obC;
+                $obC = 0;
+            } else {
+                $obC -= $obD;
+                $obD = 0;
+            }
+            $ebC = $obC + (float)$row->tr_c;
+            $ebD = $obD + (float)$row->tr_d;
+            if ($ebC >= $ebD) {
+                $tb_cr = round($ebC - $ebD, 2);
+            }
+        }
+
+        $gl = $buckets['gl_no_pid'][$supplier_id] ?? 0;
+        $ret = $buckets['returns'][$supplier_id] ?? 0;
+
+        $row = [
+            'id'                     => $supplier_id,
+            'code'                   => $code,
+            'name'                   => $c->name ?? ('Supplier #' . $supplier_id),
+            'tb'                     => $tb_cr,
+            'unpaid'                 => $unpaid,
+            'diff'                   => round($tb_cr - $unpaid, 2),
+            'unpaid_purchases'       => $bp['amt'],
+            'open_purchase_count'    => $bp['cnt'],
+            'unpaid_memos'           => $bm['amt'],
+            'open_memo_count'        => $bm['cnt'],
+            'unsettled_returns'      => $ret,
+            'unsettled_debit_memos'  => $buckets['debit_memos'][$supplier_id] ?? 0,
+            'ledger_credits_no_pid'  => $gl,
+            'likely_cause'           => $this->ap_reconciliation_likely_cause($tb_cr, $unpaid, $gl, $ret),
+        ];
+        $row['issue'] = $this->classify_ap_reconciliation_issue($row);
+        return $row;
+    }
+
+    private function ap_reconciliation_likely_cause($tb_credit, $unpaid_total, $gl_no_pid, $unsettled_returns)
+    {
+        $tb_credit = (float)$tb_credit;
+        $unpaid_total = (float)$unpaid_total;
+        if ($unpaid_total == 0 && $tb_credit > 0) {
+            return 'TB only (no open invoices in Unpaid report)';
+        }
+        if ($tb_credit == 0 && $unpaid_total > 0) {
+            return 'Unpaid only (no TB credit balance)';
+        }
+        if ($gl_no_pid > 100) {
+            return 'Likely: ledger payments not on sma_payments';
+        }
+        if ($unsettled_returns > 0) {
+            return 'Has unsettled returns (not in Unpaid AP)';
+        }
+        return 'Mix: open invoices/memos vs ledger';
+    }
+
+    /**
+     * Classify one supplier row for grouped UI / CSV.
+     *
+     * @param array<string, mixed> $d
+     * @return array{key: string, label: string, description: string, priority: string, action: string}
+     */
+    private function classify_ap_reconciliation_issue(array $d)
+    {
+        $diff = (float)($d['diff'] ?? 0);
+        $tb = (float)($d['tb'] ?? 0);
+        $unpaid = (float)($d['unpaid'] ?? 0);
+        $gl = (float)($d['ledger_credits_no_pid'] ?? 0);
+        $returns = (float)($d['unsettled_returns'] ?? 0);
+        $unpaidPurch = (float)($d['unpaid_purchases'] ?? 0);
+        $absDiff = abs($diff);
+
+        if ($absDiff <= 0.05) {
+            return [
+                'key'         => 'rounding',
+                'label'       => 'F — Rounding / already matched',
+                'description' => 'TB and Unpaid totals agree within a few halalas on large balances.',
+                'priority'    => 'ignore',
+                'action'      => 'No fix required.',
+            ];
+        }
+
+        if ($tb < 0.01 && $unpaid > 0.01) {
+            return [
+                'key'         => 'unpaid_only',
+                'label'       => 'B — Unpaid only (no TB credit)',
+                'description' => 'Open purchases/memos in Unpaid AP, but Payable TB shows no ending credit balance.',
+                'priority'    => 'high',
+                'action'      => 'Post or review supplier invoices in GL; check wrong supplier ledger or net debit balance.',
+            ];
+        }
+
+        if ($unpaid < 0.01 && $tb > 0.01) {
+            return [
+                'key'         => 'tb_only',
+                'label'       => 'A — TB only (no Unpaid lines)',
+                'description' => 'Ledger shows payable credit, but no open purchase/memo rows in Unpaid AP.',
+                'priority'    => 'high',
+                'action'      => 'Review journal credits without purchase link (GL no pid) and opening balance.',
+            ];
+        }
+
+        if ($gl > 100 || stripos((string)($d['likely_cause'] ?? ''), 'ledger payments') !== false) {
+            return [
+                'key'         => 'gl_payments',
+                'label'       => 'C — GL paid, not on sma_payments',
+                'description' => 'Accounting credits on the supplier ledger exceed what Unpaid AP sees on purchase payment lines.',
+                'priority'    => 'high',
+                'action'      => 'Link Pay Supplier payments to purchase_id or update memo used_amount; check PURCHASE_GL_CREDIT_EXCEEDS in breakdown.',
+            ];
+        }
+
+        if ($diff > 0.01 && $unpaidPurch > 0.01) {
+            return [
+                'key'         => 'tb_gt_unpaid',
+                'label'       => 'D — TB higher than Unpaid (open purchases)',
+                'description' => 'Payable TB credit is greater than sum of open purchase outstanding.',
+                'priority'    => 'medium',
+                'action'      => 'Per purchase: compare GL credits vs sma_payments on each open PI.',
+            ];
+        }
+
+        if ($returns > 0.01 && $absDiff <= 1.0) {
+            return [
+                'key'         => 'returns',
+                'label'       => 'E — Unsettled returns (informational)',
+                'description' => 'Supplier returns exist but are not included in Unpaid AP totals (small TB vs Unpaid gap).',
+                'priority'    => 'low',
+                'action'      => 'Optional: settle returns if you want operational reports aligned with returns.',
+            ];
+        }
+
+        return [
+            'key'         => 'mixed',
+            'label'       => 'Other — Mixed / review',
+            'description' => 'Open documents and ledger activity do not align; review breakdown line types.',
+            'priority'    => 'medium',
+            'action'      => 'Open Breakdown and fix dominant line_type rows.',
+        ];
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $diffs
+     * @return array<int, array<string, mixed>>
+     */
+    private function group_ap_reconciliation_diffs_by_category(array $diffs)
+    {
+        $order = ['tb_only', 'unpaid_only', 'gl_payments', 'tb_gt_unpaid', 'mixed', 'returns', 'rounding'];
+        $groups = [];
+        foreach ($order as $key) {
+            $groups[$key] = [
+                'key'         => $key,
+                'label'       => '',
+                'description' => '',
+                'priority'    => '',
+                'action'      => '',
+                'suppliers'   => [],
+                'count'       => 0,
+                'sum_abs_diff'=> 0.0,
+                'sum_diff'    => 0.0,
+            ];
+        }
+
+        foreach ($diffs as $d) {
+            $issue = $d['issue'] ?? $this->classify_ap_reconciliation_issue($d);
+            $key = $issue['key'];
+            if (!isset($groups[$key])) {
+                $groups[$key] = [
+                    'key' => $key, 'label' => $issue['label'], 'description' => $issue['description'],
+                    'priority' => $issue['priority'], 'action' => $issue['action'],
+                    'suppliers' => [], 'count' => 0, 'sum_abs_diff' => 0.0, 'sum_diff' => 0.0,
+                ];
+            }
+            $g = &$groups[$key];
+            if ($g['label'] === '') {
+                $g['label'] = $issue['label'];
+                $g['description'] = $issue['description'];
+                $g['priority'] = $issue['priority'];
+                $g['action'] = $issue['action'];
+            }
+            $g['suppliers'][] = $d;
+            $g['count']++;
+            $g['sum_abs_diff'] += abs((float)$d['diff']);
+            $g['sum_diff'] += (float)$d['diff'];
+            unset($g);
+        }
+
+        usort($groups, function ($a, $b) use ($order) {
+            $ia = array_search($a['key'], $order, true);
+            $ib = array_search($b['key'], $order, true);
+            return ($ia === false ? 99 : $ia) <=> ($ib === false ? 99 : $ib);
+        });
+
+        foreach ($groups as &$g) {
+            usort($g['suppliers'], fn($a, $b) => abs($b['diff']) <=> abs($a['diff']));
+        }
+        unset($g);
+
+        return array_values(array_filter($groups, fn($g) => $g['count'] > 0));
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    //  UNPAID INVOICES REPORTS (split AR / AP)
+    // ─────────────────────────────────────────────────────────────────
+    public function unpaid_invoices()
+    {
+        // Backward compatibility for old links.
+        // Legacy endpoint: /reports/unpaid_invoices?type=ar|ap
+        // New endpoints: /reports/unpaid_invoices_ar and /reports/unpaid_invoices_ap
+        $params = $this->input->get();
+        $target = (!empty($params['type']) && $params['type'] === 'ap')
+            ? 'reports/unpaid_invoices_ap'
+            : 'reports/unpaid_invoices_ar';
+        unset($params['type']);
+        $query = http_build_query($params);
+        admin_redirect($query ? $target . '?' . $query : $target);
+    }
+
+    public function unpaid_invoices_ar()
+    {
+        $this->data['error'] = $this->session->flashdata('error');
+        // AR access is controlled independently from AP through group permissions.
+        $can_view_ar = ($this->Owner || $this->Admin || !empty($this->GP['reports-unpaid-invoices-ar']));
+        if (!$can_view_ar) {
+            $this->session->set_flashdata('error', lang('access_denied'));
+            admin_redirect('reports');
+        }
+
+        $at_date     = $this->input->get('at_date') ?: date('d-m-Y');
+        $party_id    = $this->input->get('party_id') ?: null;
+        $ref_no      = $this->input->get('ref_no') ?: null;
+        $salesman_id = $this->input->get('salesman_id') ?: null;
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+        $customer_rent_type = $this->input->get('customer_rent_type') ?: 'non_rental';
+        if (!in_array($customer_rent_type, ['non_rental', 'rental', 'all'], true)) {
+            $customer_rent_type = 'non_rental';
+        }
+
+        $this->data['type']        = 'ar';
+        $this->data['at_date']     = $at_date;
+        $this->data['party_id']    = $party_id;
+        $this->data['ref_no']      = $ref_no;
+        $this->data['salesman_id'] = $salesman_id;
+        $this->data['warehouse_id'] = $warehouse_id;
+        $this->data['customer_rent_type'] = $customer_rent_type;
+        $this->data['warehouses']  = $this->site->getAllWarehouses();
+        $all_customers = $this->site->getAllCompanies('customer') ?: [];
+        $this->data['customers']   = $this->filter_customers_by_rent_type($all_customers, $customer_rent_type);
+        $this->data['salesmen']    = $this->db->select('id, name')->from('sales_man')->order_by('name', 'asc')->get()->result();
+        $this->data['suppliers']   = [];
+        $this->data['form_action'] = 'reports/unpaid_invoices_ar';
+
+        // AR report uses customer/sales sources only.
+        $invoices = $this->get_unpaid_invoices_ar($at_date, $party_id, $ref_no, $salesman_id, $warehouse_id, $customer_rent_type);
+        $this->data['invoices'] = $invoices;
+
+        if ($this->input->get('export_excel')) {
+            $this->export_unpaid_invoices_excel($invoices, 'ar');
+            return;
+        }
+
+        $label = 'Unpaid AR Invoices (Sales)';
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => '#', 'page' => $label],
+        ];
+        $meta = ['page_title' => $label, 'bc' => $bc];
+        $this->page_construct('reports/unpaid_invoices', $meta, $this->data);
+    }
+
+    public function unpaid_invoices_ap()
+    {
+        $this->data['error'] = $this->session->flashdata('error');
+        // AP access is controlled independently from AR through group permissions.
+        $can_view_ap = ($this->Owner || $this->Admin || !empty($this->GP['reports-unpaid-invoices-ap']));
+        if (!$can_view_ap) {
+            $this->session->set_flashdata('error', lang('access_denied'));
+            admin_redirect('reports');
+        }
+
+        $at_date  = $this->input->get('at_date') ?: date('d-m-Y');
+        $party_id = $this->input->get('party_id') ?: null;
+        $ref_no   = $this->input->get('ref_no') ?: null;
+        $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+        $supplier_trade_type = $this->input->get('supplier_trade_type') ?: 'trade';
+        if (!in_array($supplier_trade_type, ['trade', 'non_trade', 'all'], true)) {
+            $supplier_trade_type = 'trade';
+        }
+
+        $this->data['type']        = 'ap';
+        $this->data['at_date']     = $at_date;
+        $this->data['party_id']    = $party_id;
+        $this->data['ref_no']      = $ref_no;
+        $this->data['salesman_id'] = null;
+        $this->data['warehouse_id'] = $warehouse_id;
+        $this->data['supplier_trade_type'] = $supplier_trade_type;
+        $this->data['warehouses']  = $this->site->getAllWarehouses();
+        $this->data['customers']   = [];
+        $this->data['salesmen']    = [];
+        $all_suppliers = $this->site->getAllCompanies('supplier') ?: [];
+        $this->data['suppliers']   = $this->filter_suppliers_by_trade_type($all_suppliers, $supplier_trade_type);
+        $this->data['form_action'] = 'reports/unpaid_invoices_ap';
+
+        // AP report uses supplier/purchase sources only.
+        $invoices = $this->get_unpaid_invoices_ap($at_date, $party_id, $ref_no, $warehouse_id, $supplier_trade_type);
+        $this->data['invoices'] = $invoices;
+
+        if ($this->input->get('export_excel')) {
+            $this->export_unpaid_invoices_excel($invoices, 'ap');
+            return;
+        }
+
+        $label = 'Unpaid AP Invoices (Purchases)';
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => '#', 'page' => $label],
+        ];
+        $meta = ['page_title' => $label, 'bc' => $bc];
+        $this->page_construct('reports/unpaid_invoices', $meta, $this->data);
+    }
+
+    private function apply_customer_rent_type_where($rent_type, $category_col = 'c.category')
+    {
+        if ($rent_type === 'all') {
+            return;
+        }
+        if ($rent_type === 'rental') {
+            $this->db->where("({$category_col} LIKE '%Rent%')", null, false);
+            return;
+        }
+        $this->db->where("({$category_col} IS NULL OR {$category_col} NOT LIKE '%Rent%')", null, false);
+    }
+
+    private function filter_customers_by_rent_type($customers, $rent_type)
+    {
+        if (!$customers || $rent_type === 'all') {
+            return $customers ?: [];
+        }
+        return array_values(array_filter($customers, function ($c) use ($rent_type) {
+            $is_rental = stripos($c->category ?? '', 'rent') !== false;
+            if ($rent_type === 'rental') {
+                return $is_rental;
+            }
+            return !$is_rental;
+        }));
+    }
+
+    private function get_unpaid_invoices_ar($at_date, $party_id, $ref_no, $salesman_id, $warehouse_id = null, $rent_type = 'non_rental')
+    {
+        // AR data builder:
+        // - Sales unpaid invoices
+        // - Customer service invoices from memo
+        $sql_at = $at_date ? $this->sma->fld($at_date) . ' 23:59:59' : null;
+        $salesman_name = null;
+        if ($salesman_id) {
+            $sm_row = $this->db->select('name')->from('sales_man')->where('id', (int)$salesman_id)->get()->row();
+            if ($sm_row) {
+                $salesman_name = $sm_row->name;
+            }
+        }
+
+        $paid_subquery = "(SELECT COALESCE(SUM(sp.amount), 0)
+                        FROM {$this->db->dbprefix('payments')} sp
+                        WHERE sp.sale_id = s.id" .
+                        ($sql_at ? " AND sp.date <= '{$sql_at}'" : "") .
+                        ")";
+
+        $this->db->select("
+            s.id            AS invoice_id,
+            s.date,
+            s.reference_no,
+            c.name          AS party_name,
+            c.company       AS party_code,
+            c.sequence_code AS sequence_code,
+            al.name         AS ledger_name,
+            c.city          AS area,
+            c.sales_agent   AS sales_man,
+            w.name          AS warehouse_name,
+            s.grand_total   AS invoice_total,
+            s.total_discount AS discount,
+            COALESCE((SELECT SUM(grand_total)
+                    FROM {$this->db->dbprefix('returns')}
+                    WHERE sale_id = s.id), 0) AS return_amount,
+            {$paid_subquery} AS paid,
+            ROUND((s.grand_total - {$paid_subquery}), 2) AS outstanding,
+            COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) AS payment_term_days,
+            DATE_ADD(DATE(s.date), INTERVAL COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY) AS due_date_calc,
+            DATEDIFF(CURDATE(), DATE_ADD(DATE(s.date), INTERVAL COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY)) AS days_overdue
+        ", false)
+        ->from('sales s')
+        ->join('companies c', 'c.id = s.customer_id', 'left')
+        ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
+        ->join('warehouses w', 'w.id = s.warehouse_id', 'left')
+        ->where('s.sale_invoice', 1)
+        ->where('s.grand_total >', 0)
+        ->having('outstanding >', 0)
+        ->order_by('s.date', 'asc');
+
+        if ($sql_at) {
+            $this->db->where("s.date <= '{$sql_at}'");
+        }
+        if ($party_id) {
+            $this->db->where('s.customer_id', (int)$party_id);
+        }
+        if ($ref_no) {
+            $this->db->like('s.reference_no', $ref_no, 'both');
+        }
+        if ($salesman_name) {
+            $this->db->where('c.sales_agent', $salesman_name);
+        }
+        if ($warehouse_id) {
+            $this->db->where('s.warehouse_id', (int) $warehouse_id);
+        } else {
+            $this->site->applyReportWarehouseScope($this->db, null, 's.warehouse_id');
+        }
+        $this->apply_customer_rent_type_where($rent_type);
+
+        $invoices = $this->db->get()->result();
+        foreach ($invoices as $inv) {
+            $inv->source = 'sale';
+        }
+
+        if (!$warehouse_id) {
+        $this->db->select("
+            m.id            AS invoice_id,
+            m.date,
+            m.reference_no,
+            c.name          AS party_name,
+            c.company       AS party_code,
+            c.sequence_code AS sequence_code,
+            al.name         AS ledger_name,
+            c.city          AS area,
+            NULL            AS warehouse_name,
+            m.payment_amount AS invoice_total,
+            0               AS discount,
+            0               AS return_amount,
+            COALESCE(m.used_amount, 0)                               AS paid,
+            ROUND(m.payment_amount - COALESCE(m.used_amount, 0), 2) AS outstanding,
+            0               AS payment_term_days,
+            NULL            AS due_date_calc,
+            0               AS days_overdue,
+            'service'       AS source
+        ", false)
+        ->from('memo m')
+        ->join('companies c', 'c.id = m.customer_id', 'left')
+        ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
+        ->where('m.type', 'serviceinvoice')
+        ->where('m.customer_id >', 0)
+        ->having('outstanding >', 0)
+        ->order_by('m.date', 'asc');
+
+        if ($sql_at) {
+            $sql_date_only = explode(' ', $sql_at)[0];
+            $this->db->where("m.date <= '{$sql_date_only}'");
+        }
+        if ($party_id) {
+            $this->db->where('m.customer_id', (int)$party_id);
+        }
+        if ($ref_no) {
+            $this->db->like('m.reference_no', $ref_no, 'both');
+        }
+        $this->apply_customer_rent_type_where($rent_type);
+
+        $service_invoices = $this->db->get()->result();
+        $invoices = array_merge($invoices, $service_invoices);
+        }
+        usort($invoices, function ($a, $b) {
+            return strcmp($a->date, $b->date);
+        });
+        return $invoices;
+    }
+
+    private function apply_supplier_trade_type_where($trade_type, $category_col = 'c.category')
+    {
+        if ($trade_type === 'all') {
+            return;
+        }
+        if ($trade_type === 'non_trade') {
+            $this->db->where("({$category_col} = 'Services' OR {$category_col} LIKE '%خدمات%' OR {$category_col} LIKE '%service%')", null, false);
+            return;
+        }
+        $this->db->where("({$category_col} IS NULL OR ({$category_col} != 'Services' AND {$category_col} NOT LIKE '%خدمات%' AND {$category_col} NOT LIKE '%service%'))", null, false);
+    }
+
+    private function filter_suppliers_by_trade_type($suppliers, $trade_type)
+    {
+        if (!$suppliers || $trade_type === 'all') {
+            return $suppliers ?: [];
+        }
+        return array_values(array_filter($suppliers, function ($s) use ($trade_type) {
+            $is_service = strcasecmp(trim($s->category ?? ''), 'Services') === 0
+                || stripos($s->category ?? '', 'خدمات') !== false
+                || stripos($s->category ?? '', 'service') !== false;
+            if ($trade_type === 'non_trade') {
+                return $is_service;
+            }
+            return !$is_service;
+        }));
+    }
+
+    private function get_unpaid_invoices_ap($at_date, $party_id, $ref_no, $warehouse_id = null, $trade_type = 'trade')
+    {
+        // AP data builder:
+        // - Purchase unpaid invoices
+        // - Supplier service invoices from memo
+        // - Supplier credit memos from memo
+        $sql_at = $at_date ? $this->sma->fld($at_date) . ' 23:59:59' : null;
+        $ap_paid_expr = $sql_at
+            ? "(SELECT COALESCE(SUM(sp.amount), 0)
+                FROM {$this->db->dbprefix('payments')} sp
+                WHERE sp.purchase_id = p.id
+                AND sp.date <= '{$sql_at}')"
+            : "p.paid";
+
+        $this->db->select("
+            p.id            AS invoice_id,
+            p.date,
+            p.reference_no,
+            c.name          AS party_name,
+            c.company       AS party_code,
+            c.sequence_code AS sequence_code,
+            al.name         AS ledger_name,
+            w.name          AS warehouse_name,
+            ROUND(((p.grand_total + COALESCE(p.grand_deal_discount, 0))), 2) AS invoice_total,
+            0               AS discount,
+            0               AS return_amount,
+            ({$ap_paid_expr})                                    AS paid,
+            ROUND(((p.grand_total + COALESCE(p.grand_deal_discount, 0)) - ({$ap_paid_expr})), 2) AS outstanding,
+            COALESCE(NULLIF(p.payment_term, 0), NULLIF(c.payment_term, 0), 0) AS payment_term_days,
+            DATE_ADD(DATE(p.date), INTERVAL COALESCE(NULLIF(p.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY) AS due_date_calc,
+            DATEDIFF(CURDATE(), DATE_ADD(DATE(p.date), INTERVAL COALESCE(NULLIF(p.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY)) AS days_overdue,
+            'purchase'      AS source
+        ", false)
+        ->from('purchases p')
+        ->join('companies c', 'c.id = p.supplier_id', 'left')
+        ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
+        ->join('warehouses w', 'w.id = p.warehouse_id', 'left')
+        ->where('p.purchase_invoice', 1)
+        ->where('p.note !=', 'import from excel')
+        ->where('p.grand_total >', 0)
+        ->having('outstanding >', 0)
+        ->order_by('p.date', 'asc');
+
+        if ($sql_at) {
+            $this->db->where("p.date <= '{$sql_at}'");
+        }
+        if ($party_id) {
+            $this->db->where('p.supplier_id', (int)$party_id);
+        }
+        if ($ref_no) {
+            $this->db->like('p.reference_no', $ref_no, 'both');
+        }
+        if ($warehouse_id) {
+            $this->db->where('p.warehouse_id', (int) $warehouse_id);
+        } else {
+            $this->site->applyReportWarehouseScope($this->db, null, 'p.warehouse_id');
+        }
+        $this->apply_supplier_trade_type_where($trade_type);
+
+        $invoices = $this->db->get()->result();
+
+        if (!$warehouse_id) {
+        $this->db->select("
+            m.id                                                     AS invoice_id,
+            m.date,
+            m.reference_no,
+            c.name                                                   AS party_name,
+            c.company                                                AS party_code,
+            c.sequence_code                                          AS sequence_code,
+            al.name                                                  AS ledger_name,
+            NULL                                                     AS warehouse_name,
+            m.payment_amount                                         AS invoice_total,
+            0                                                        AS discount,
+            0                                                        AS return_amount,
+            COALESCE(m.used_amount, 0)                               AS paid,
+            ROUND(m.payment_amount - COALESCE(m.used_amount, 0), 2) AS outstanding,
+            0                                                        AS payment_term_days,
+            NULL                                                     AS due_date_calc,
+            0                                                        AS days_overdue,
+            'service'                                                AS source
+        ", false)
+        ->from('memo m')
+        ->join('companies c', 'c.id = m.supplier_id', 'left')
+        ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
+        ->where('m.type', 'serviceinvoice')
+        ->where('m.supplier_id >', 0)
+        ->having('outstanding >', 0)
+        ->order_by('m.date', 'asc');
+
+        if ($sql_at) {
+            $sql_date_only = explode(' ', $sql_at)[0];
+            $this->db->where("m.date <= '{$sql_date_only}'");
+        }
+        if ($party_id) {
+            $this->db->where('m.supplier_id', (int)$party_id);
+        }
+        if ($ref_no) {
+            $this->db->like('m.reference_no', $ref_no, 'both');
+        }
+        $this->apply_supplier_trade_type_where($trade_type);
+        $service_invoices = $this->db->get()->result();
+
+        $this->db->select("
+            m.id                                                     AS invoice_id,
+            m.date,
+            m.reference_no,
+            c.name                                                   AS party_name,
+            c.company                                                AS party_code,
+            c.sequence_code                                          AS sequence_code,
+            al.name                                                  AS ledger_name,
+            NULL                                                     AS warehouse_name,
+            m.payment_amount                                         AS invoice_total,
+            0                                                        AS discount,
+            0                                                        AS return_amount,
+            COALESCE(m.used_amount, 0)                               AS paid,
+            ROUND(m.payment_amount - COALESCE(m.used_amount, 0), 2) AS outstanding,
+            0                                                        AS payment_term_days,
+            NULL                                                     AS due_date_calc,
+            0                                                        AS days_overdue,
+            'credit_memo'                                            AS source
+        ", false)
+        ->from('memo m')
+        ->join('companies c', 'c.id = m.supplier_id', 'left')
+        ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
+        ->where('m.type', 'memo')
+        ->where('m.supplier_id >', 0)
+        ->where('m.supplier_entry_type', 'C')
+        ->having('outstanding >', 0)
+        ->order_by('m.date', 'asc');
+
+        if ($sql_at) {
+            $sql_date_only = explode(' ', $sql_at)[0];
+            $this->db->where("m.date <= '{$sql_date_only}'");
+        }
+        if ($party_id) {
+            $this->db->where('m.supplier_id', (int)$party_id);
+        }
+        if ($ref_no) {
+            $this->db->like('m.reference_no', $ref_no, 'both');
+        }
+        $this->apply_supplier_trade_type_where($trade_type);
+        $credit_memos = $this->db->get()->result();
+
+        $invoices = array_merge($invoices, $service_invoices, $credit_memos);
+        }
+        usort($invoices, function ($a, $b) {
+            return strcmp($a->date, $b->date);
+        });
+        return $invoices;
+    }
+
+    private function export_unpaid_invoices_excel($invoices, $type)
+    {
+        $this->load->library('excel');
+        $sheet = $this->excel->setActiveSheetIndex(0);
+        $title = ($type === 'ar') ? 'Unpaid AR Invoices' : 'Unpaid AP Invoices';
+        $sheet->setTitle($title);
+
+        $sheet->SetCellValue('A1', '#');
+        $sheet->SetCellValue('B1', lang('date'));
+        $sheet->SetCellValue('C1', lang('reference_no'));
+        $sheet->SetCellValue('D1', ($type === 'ar') ? lang('customer') : lang('supplier'));
+        $sheet->SetCellValue('E1', lang('Invoice Total'));
+        if ($type === 'ar') {
+            $sheet->SetCellValue('F1', lang('Discount'));
+            $sheet->SetCellValue('G1', lang('Returns'));
+            $sheet->SetCellValue('H1', lang('paid'));
+            $sheet->SetCellValue('I1', lang('outstanding'));
+            $sheet->SetCellValue('J1', lang('Due Date'));
+            $sheet->SetCellValue('K1', lang('Days Overdue'));
+        } else {
+            $sheet->SetCellValue('F1', lang('paid'));
+            $sheet->SetCellValue('G1', lang('outstanding'));
+            $sheet->SetCellValue('H1', lang('Due Date'));
+            $sheet->SetCellValue('I1', lang('Days Overdue'));
+        }
+
+        $row = 2;
+        foreach ($invoices as $i => $inv) {
+            $sheet->SetCellValue("A{$row}", $i + 1);
+            $sheet->SetCellValue("B{$row}", date('d-M-Y', strtotime($inv->date)));
+            $sheet->SetCellValue("C{$row}", $inv->reference_no);
+            $sheet->SetCellValue("D{$row}", $inv->party_name);
+            $sheet->SetCellValue("E{$row}", $inv->invoice_total);
+            if ($type === 'ar') {
+                $sheet->SetCellValue("F{$row}", $inv->discount);
+                $sheet->SetCellValue("G{$row}", $inv->return_amount);
+                $sheet->SetCellValue("H{$row}", $inv->paid);
+                $sheet->SetCellValue("I{$row}", $inv->outstanding);
+                $sheet->SetCellValue("J{$row}", $inv->due_date_calc ? date('d-M-Y', strtotime($inv->due_date_calc)) : '-');
+                $sheet->SetCellValue("K{$row}", $inv->days_overdue);
+            } else {
+                $sheet->SetCellValue("F{$row}", $inv->paid);
+                $sheet->SetCellValue("G{$row}", $inv->outstanding);
+                $sheet->SetCellValue("H{$row}", $inv->due_date_calc ? date('d-M-Y', strtotime($inv->due_date_calc)) : '-');
+                $sheet->SetCellValue("I{$row}", $inv->days_overdue);
+            }
+            $row++;
+        }
+
+        $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+        $filename = ($type === 'ar' ? 'Unpaid_AR_Invoices_' : 'Unpaid_AP_Invoices_') . date('Y-m-d_H_i_s');
+        $this->load->helper('excel');
+        create_excel($this->excel, $filename);
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────
+    //  CUSTOMER COLLECTIONS REPORT
+    // ─────────────────────────────────────────────────────────────────
+    public function customer_collections_report()
+    {
+        $this->load->admin_model('sales_model');
+
+        $from_date_in_query = array_key_exists('from_date', $_GET);
+
+        $filters = [
+            'customer_id' => $this->input->get('customer_id') ?: '',
+            'sales_agent' => $this->input->get('sales_agent') ?: '',
+            'warehouse_id' => $this->site->resolveReportWarehouseFilter('warehouse_id'),
+            'from_date'   => $from_date_in_query ? trim((string) $this->input->get('from_date')) : '',
+            'to_date'     => $this->input->get('to_date')     ?: '',
+        ];
+
+        // Convert display date (d/m/Y) to Y-m-d
+        foreach (['from_date', 'to_date'] as $f) {
+            if (!empty($filters[$f])) {
+                $d = DateTime::createFromFormat('d/m/Y', $filters[$f]);
+                if ($d) { $filters[$f] = $d->format('Y-m-d'); }
+            }
+        }
+
+        $page     = max(1, (int)($this->input->get('page') ?: 1));
+        $per_page = 100;
+
+        $sm_query = $this->db->order_by('name', 'ASC')->get('sales_man');
+        $salesmen = ($sm_query->num_rows() > 0) ? $sm_query->result() : [];
+
+        $payments = $this->sales_model->getPaymentReferences($filters);
+        $total    = count($payments);
+        $offset   = ($page - 1) * $per_page;
+        $paged    = array_slice($payments, $offset, $per_page);
+
+        $grand_total_sum = array_sum(array_column($payments, 'amount'));
+
+        $this->data['payments']        = $paged;
+        $this->data['total_records']   = $total;
+        $this->data['grand_total_sum'] = $grand_total_sum;
+        $this->data['filters']         = $filters;
+        $this->data['page']            = $page;
+        $this->data['per_page']        = $per_page;
+        $this->data['customers']       = $this->site->getAllCompanies('customer');
+        $this->data['salesmen']        = $salesmen;
+        $this->data['warehouses']      = $this->site->getAllWarehouses();
+
+        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => 'Customer Collections Report']];
+        $meta = ['page_title' => 'Customer Collections Report', 'bc' => $bc];
+        $this->page_construct('reports/customer_collections_report', $meta, $this->data);
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    //  SUPPLIER PAYMENTS REPORT
+    // ─────────────────────────────────────────────────────────────────
+    public function supplier_payments_report()
+    {
+        $this->load->admin_model('purchases_model');
+
+        $from_date_in_query = array_key_exists('from_date', $_GET);
+
+        $filters = [
+            'supplier_id'  => $this->input->get('supplier_id') ?: '',
+            'from_date'    => $from_date_in_query ? trim((string) $this->input->get('from_date')) : '',
+            'to_date'      => $this->input->get('to_date')     ?: '',
+            'warehouse_id' => $this->site->resolveReportWarehouseFilter('warehouse_id'),
+        ];
+
+        // Convert display date (d/m/Y) to Y-m-d
+        foreach (['from_date', 'to_date'] as $f) {
+            if (!empty($filters[$f])) {
+                $d = DateTime::createFromFormat('d/m/Y', $filters[$f]);
+                if ($d) { $filters[$f] = $d->format('Y-m-d'); }
+            }
+        }
+
+        $page     = max(1, (int)($this->input->get('page') ?: 1));
+        $per_page = 100;
+
+        $payments = $this->purchases_model->getPaymentReferences($filters);
+
+        // Exclude suppliers whose category contains خدمات
+        $payments = array_values(array_filter($payments, function ($p) {
+            return strcasecmp(trim($p->supplier_group ?? ''), 'Services') !== 0
+                && stripos($p->supplier_group ?? '', 'خدمات') === false;
+        }));
+
+        $total    = count($payments);
+        $offset   = ($page - 1) * $per_page;
+        $paged    = array_slice($payments, $offset, $per_page);
+
+        $grand_total_sum = array_sum(array_column($payments, 'amount'));
+
+        $this->data['payments']        = $paged;
+        $this->data['total_records']   = $total;
+        $this->data['grand_total_sum'] = $grand_total_sum;
+        $this->data['filters']         = $filters;
+        $this->data['page']            = $page;
+        $this->data['per_page']        = $per_page;
+        $this->data['suppliers']       = $this->site->getAllCompanies('supplier');
+        $this->data['warehouses']      = $this->site->getAllWarehouses();
+        $this->data['warehouse_id']    = $filters['warehouse_id'];
+
+        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => 'Supplier Payments Report']];
+        $meta = ['page_title' => 'Supplier Payments Report', 'bc' => $bc];
+        $this->page_construct('reports/supplier_payments_report', $meta, $this->data);
+    }
+
+    //  UNIFIED VAT REPORT  (Sales + Purchases + Returns)
+    //  Optimised: date & warehouse filters pushed into each UNION branch
+    //  so MySQL can use indexes on the date column directly.
+    // ─────────────────────────────────────────────────────────────────
+    public function vat_report()
+    {
+        $this->data['error'] = $this->session->flashdata('error');
+
+        // ── filters (GET – shareable URL) ──────────────────────────
+        $type         = $this->input->get('type')         ?: 'all';      // all | sales | purchases | journals
+        $start_date   = $this->input->get('start_date')   ?: date('Y-m-01');
+        $end_date     = $this->input->get('end_date')     ?: date('Y-m-d');
+        $warehouse_id = (int)$this->input->get('warehouse_id');          // 0 = all
+
+        $this->data['type']         = $type;
+        $this->data['start_date']   = $start_date;
+        $this->data['end_date']     = $end_date;
+        $this->data['warehouse_id'] = $warehouse_id;
+        $this->data['warehouses']   = $this->site->getAllWarehouses();
+
+        // ── safe SQL values ────────────────────────────────────────
+        // fld() converts from the user's local display format (e.g. dd-mm-yyyy) to SQL Y-m-d.
+        // Only apply it when the value actually came from user input (GET).
+        // Default values are generated by date() and are already in Y-m-d SQL format.
+        $raw_start = $this->input->get('start_date')   ?: date('Y-m-01');
+        $raw_end   = $this->input->get('end_date')     ?: date('Y-m-d');
+        $sql_start = $raw_start;
+        $sql_end   = $raw_end;
+        //$sql_start = $this->db->escape($raw_start ? $this->sma->fld($raw_start) : date('Y-m-01'));
+        //$sql_end   = $this->db->escape($raw_end   ? $this->sma->fld($raw_end)   : date('Y-m-d'));
+        $wh_clause_s  = $warehouse_id ? "AND s.warehouse_id  = {$warehouse_id}" : '';
+        $wh_clause_r  = $warehouse_id ? "AND r.warehouse_id  = {$warehouse_id}" : '';
+        $wh_clause_p  = $warehouse_id ? "AND p.warehouse_id  = {$warehouse_id}" : '';
+        $wh_clause_rs = $warehouse_id ? "AND rs.warehouse_id = {$warehouse_id}" : '';
+
+        $sales_rows    = [];
+        $purchase_rows = [];
+
+        // ── SALES  (invoices + customer returns) ───────────────────
+        if (in_array($type, ['all', 'sales'])) {
+            $sql = "
+                SELECT
+                    s.id            AS trans_id,
+                    'sale'          AS trans_type,
+                    DATE(s.date)    AS trans_date,
+                    s.reference_no,
+                    s.customer      AS party_name,
+                    c.vat_no        AS party_vat_no,
+                    COALESCE(w.name, '')  AS warehouse,
+                    s.warehouse_id,
+                    s.total                                         AS total_invoice,
+                    s.total_discount                                AS total_discount,
+                    ROUND(s.grand_total - s.total_tax, 4)           AS total_net,
+                    s.total_tax                                     AS total_tax,
+                    s.grand_total                                   AS grand_total
+                FROM sma_sales AS s
+                JOIN sma_companies AS c  ON c.id = s.customer_id
+                LEFT JOIN sma_warehouses AS w ON w.id = s.warehouse_id
+                WHERE DATE(s.date) BETWEEN '{$sql_start}' AND '{$sql_end}'
+                  {$wh_clause_s}
+
+                UNION ALL
+
+                SELECT
+                    r.id                 AS trans_id,
+                    'returnCustomer'     AS trans_type,
+                    DATE(r.date)         AS trans_date,
+                    r.reference_no,
+                    r.customer           AS party_name,
+                    c.vat_no             AS party_vat_no,
+                    COALESCE(w.name, '') AS warehouse,
+                    r.warehouse_id,
+                    -(r.total)                                       AS total_invoice,
+                    -(r.total_discount)                              AS total_discount,
+                    -ROUND(r.grand_total - r.total_tax, 4)           AS total_net,
+                    -(r.total_tax)                                   AS total_tax,
+                    -(r.grand_total)                                 AS grand_total
+                FROM sma_returns AS r
+                JOIN sma_companies AS c  ON c.id = r.customer_id
+                LEFT JOIN sma_warehouses AS w ON w.id = r.warehouse_id
+                WHERE DATE(r.date) BETWEEN '{$sql_start}' AND '{$sql_end}'
+                  {$wh_clause_r}
+
+                ORDER BY trans_date ASC, trans_id ASC
+            ";
+            $q = $this->db->query($sql);
+            $sales_rows = $q->num_rows()
+                ? array_values(array_filter($q->result(), function ($r) { return abs((float)$r->total_tax) > 0.001; }))
+                : [];
+        }
+
+        // ── PURCHASES  (invoices + supplier returns) ───────────────
+        if (in_array($type, ['all', 'purchases'])) {
+            $sql = "
+                SELECT
+                    p.id            AS trans_id,
+                    'purchase'      AS trans_type,
+                    DATE(p.date)    AS trans_date,
+                    p.reference_no,
+                    p.supplier      AS party_name,
+                    c.vat_no        AS party_vat_no,
+                    COALESCE(w.name, '')  AS warehouse,
+                    p.warehouse_id,
+                    p.total                                         AS total_invoice,
+                    p.total_discount                                AS total_discount,
+                    ROUND(p.grand_total - p.total_tax, 4)           AS total_net,
+                    p.total_tax                                     AS total_tax,
+                    p.grand_total                                   AS grand_total
+                FROM sma_purchases AS p
+                JOIN sma_companies AS c  ON c.id = p.supplier_id
+                LEFT JOIN sma_warehouses AS w ON w.id = p.warehouse_id
+                WHERE DATE(p.date) BETWEEN '{$sql_start}' AND '{$sql_end}'
+                  {$wh_clause_p}
+
+                UNION ALL
+
+                SELECT
+                    rs.id                AS trans_id,
+                    'returnSupplier'     AS trans_type,
+                    DATE(rs.date)        AS trans_date,
+                    rs.reference_no,
+                    rs.supplier          AS party_name,
+                    c.vat_no             AS party_vat_no,
+                    COALESCE(w.name, '') AS warehouse,
+                    rs.warehouse_id,
+                    -(rs.total)                                      AS total_invoice,
+                    -(rs.total_discount)                             AS total_discount,
+                    -ROUND(rs.grand_total - rs.total_tax, 4)         AS total_net,
+                    -(rs.total_tax)                                  AS total_tax,
+                    -(rs.grand_total)                                AS grand_total
+                FROM sma_returns_supplier AS rs
+                JOIN sma_companies AS c  ON c.id = rs.supplier_id
+                LEFT JOIN sma_warehouses AS w ON w.id = rs.warehouse_id
+                WHERE DATE(rs.date) BETWEEN '{$sql_start}' AND '{$sql_end}' 
+                  {$wh_clause_rs}
+
+                ORDER BY trans_date ASC, trans_id ASC
+            ";
+            //echo $sql;exit;
+            $q = $this->db->query($sql);
+            $purchase_rows = $q->num_rows()
+                ? array_values(array_filter($q->result(), function ($r) { return abs((float)$r->total_tax) > 0.001; }))
+                : [];
+        }
+
+        // ── MEMOS  (service invoice · petty cash · credit/debit/general memo) ──
+        $memo_sql = "
+            SELECT
+                m.id                                                    AS trans_id,
+                m.type                                                  AS trans_type,
+                DATE(m.date)                                            AS trans_date,
+                m.reference_no,
+                CASE WHEN m.customer_id > 0
+                     THEN IFNULL(c_cust.company, '')
+                     ELSE IFNULL(c_supp.company, '')
+                END                                                     AS party_name,
+                CASE WHEN m.customer_id > 0
+                     THEN IFNULL(c_cust.vat_no, '')
+                     ELSE IFNULL(c_supp.vat_no, '')
+                END                                                     AS party_vat_no,
+                ''                                                      AS warehouse,
+                0                                                       AS warehouse_id,
+                0                                                       AS total_discount,
+                -- For serviceinvoice/pettycash: payment_amount is grand_total (VAT-inclusive)
+                -- For memo/creditmemo/debitmemo: payment_amount is net (ex-VAT), so gross = net + vat
+                CASE
+                    WHEN m.type IN ('serviceinvoice','pettycash')
+                        THEN m.payment_amount
+                    ELSE
+                        ROUND(m.payment_amount
+                            * (1 + CAST(IFNULL(m.vat_percent,'0') AS DECIMAL(15,4)) / 100), 4)
+                END                                                     AS raw_gross,
+                CASE
+                    WHEN m.type IN ('serviceinvoice','pettycash')
+                        THEN IFNULL(m.vat_value, 0)
+                    ELSE
+                        -- payment_amount is net, so VAT = net * rate / 100
+                        ROUND(m.payment_amount
+                            * CAST(IFNULL(m.vat_percent,'0') AS DECIMAL(15,4))
+                            / 100, 4)
+                END                                                     AS raw_vat,
+                CASE WHEN m.customer_id > 0
+                     THEN m.customer_entry_type
+                     ELSE m.supplier_entry_type
+                END                                                     AS entry_type,
+                CASE WHEN m.customer_id > 0 THEN 'customer' ELSE 'supplier' END AS party_side
+            FROM sma_memo m
+            LEFT JOIN sma_companies c_cust ON c_cust.id = m.customer_id AND m.customer_id > 0
+            LEFT JOIN sma_companies c_supp ON c_supp.id = m.supplier_id AND m.supplier_id > 0
+            WHERE DATE(m.date) BETWEEN '{$sql_start}' AND '{$sql_end}'
+              AND m.type IN ('serviceinvoice','pettycash','creditmemo','debitmemo','memo')
+              AND (m.customer_id > 0 OR m.supplier_id > 0)
+            ORDER BY m.date ASC, m.id ASC
+        ";
+        $memo_q = $this->db->query($memo_sql);
+        if ($memo_q->num_rows() > 0) {
+            foreach ($memo_q->result() as $row) {
+                // Sign: credit on customer side or debit on supplier side = reduction (negative amounts)
+                $is_reduction = ($row->party_side === 'customer' && $row->entry_type === 'C')
+                             || ($row->party_side === 'supplier' && $row->entry_type === 'D');
+                // Petty cash and service invoices are always real outgoing expenses/income — never reductions
+                if (in_array($row->trans_type, ['pettycash', 'serviceinvoice'])) {
+                    $is_reduction = false;
+                }
+                $sign = $is_reduction ? -1 : 1;
+
+                $raw_vat   = (float)$row->raw_vat;
+                $raw_gross = (float)$row->raw_gross;
+                $row->total_tax    = round($sign * $raw_vat, 4);
+                $row->total_net    = round($sign * ($raw_gross - $raw_vat), 4);
+                $row->grand_total  = round($sign * $raw_gross, 4);
+                $row->total_invoice = $row->grand_total;
+
+                // Skip zero-VAT memo rows
+                if (abs($row->total_tax) < 0.001) continue;
+
+                if ($row->party_side === 'customer' && in_array($type, ['all', 'sales'])) {
+                    $sales_rows[] = $row;
+                } elseif ($row->party_side === 'supplier' && in_array($type, ['all', 'purchases'])) {
+                    $purchase_rows[] = $row;
+                }
+            }
+            // Re-sort after appending memos
+            usort($sales_rows,    function ($a, $b) {
+                return strcmp($a->trans_date, $b->trans_date) ?: ($a->trans_id - $b->trans_id);
+            });
+            usort($purchase_rows, function ($a, $b) {
+                return strcmp($a->trans_date, $b->trans_date) ?: ($a->trans_id - $b->trans_id);
+            });
+        }
+
+        // ── PAYMENT BANK CHARGES WITH VAT (sma_payment_reference) ─
+        // Payments that have bank_charge_vat > 0 must appear in the VAT report
+        // as a purchase-side or sale-side expense depending on supplier/customer presence.
+        {
+            $pr_sql = "
+                SELECT
+                    pr.id                                               AS trans_id,
+                    'payment_bankcharge'                                AS trans_type,
+                    DATE(pr.date)                                       AS trans_date,
+                    pr.reference_no,
+                    CASE WHEN pr.customer_id > 0
+                         THEN IFNULL(c_cust.company, '')
+                         ELSE IFNULL(c_supp.company, '')
+                    END                                                 AS party_name,
+                    CASE WHEN pr.customer_id > 0
+                         THEN IFNULL(c_cust.vat_no, '')
+                         ELSE IFNULL(c_supp.vat_no, '')
+                    END                                                 AS party_vat_no,
+                    ''                                                  AS warehouse,
+                    0                                                   AS warehouse_id,
+                    0                                                   AS total_discount,
+                    ROUND(pr.bank_charges, 4)                           AS total_net,
+                    ROUND(pr.bank_charge_vat, 4)                        AS total_tax,
+                    ROUND(pr.bank_charges + pr.bank_charge_vat, 4)      AS grand_total,
+                    CASE WHEN pr.customer_id > 0 THEN 'customer' ELSE 'supplier' END AS party_side
+                FROM sma_payment_reference pr
+                LEFT JOIN sma_companies c_cust ON c_cust.id = pr.customer_id AND pr.customer_id > 0
+                LEFT JOIN sma_companies c_supp ON c_supp.id = pr.supplier_id AND pr.supplier_id > 0
+                WHERE DATE(pr.date) BETWEEN '{$sql_start}' AND '{$sql_end}'
+                  AND COALESCE(pr.bank_charge_vat, 0) > 0
+                ORDER BY pr.date ASC, pr.id ASC
+            ";
+            $pr_q = $this->db->query($pr_sql);
+            if ($pr_q->num_rows() > 0) {
+                foreach ($pr_q->result() as $row) {
+                    $row->total_invoice = $row->grand_total;
+                    if ($row->party_side === 'customer' && in_array($type, ['all', 'sales'])) {
+                        $sales_rows[] = $row;
+                    } elseif ($row->party_side === 'supplier' && in_array($type, ['all', 'purchases'])) {
+                        $purchase_rows[] = $row;
+                    }
+                }
+                usort($sales_rows,    function ($a, $b) {
+                    return strcmp($a->trans_date, $b->trans_date) ?: ($a->trans_id - $b->trans_id);
+                });
+                usort($purchase_rows, function ($a, $b) {
+                    return strcmp($a->trans_date, $b->trans_date) ?: ($a->trans_id - $b->trans_id);
+                });
+            }
+        }
+
+        // ── JOURNAL VOUCHERS with VAT on Expense ──────────────────
+        // Include only journal entries that have a line item on the "vat on expense" ledger.
+        if (in_array($type, ['all', 'purchases', 'journals'])) {
+            $journal_sql = "
+                SELECT
+                    ae.id                                       AS trans_id,
+                    'journal'                                   AS trans_type,
+                    DATE(ae.date)                               AS trans_date,
+                    ae.number                                   AS reference_no,
+                    IFNULL(NULLIF(ae.notes,''), ae.number)      AS party_name,
+                    ''                                          AS party_vat_no,
+                    ''                                          AS warehouse,
+                    0                                           AS warehouse_id,
+                    0                                           AS total_discount,
+                    SUM(aei.amount)                             AS total_tax,
+                    (ae.dr_total - SUM(aei.amount))             AS total_net,
+                    ae.dr_total                                 AS grand_total,
+                    ae.dr_total                                 AS total_invoice
+                FROM sma_accounts_entries ae
+                JOIN sma_accounts_entryitems aei ON aei.entry_id = ae.id
+                JOIN sma_accounts_ledgers al     ON al.id = aei.ledger_id
+                WHERE ae.transaction_type = 'journal'
+                  AND LOWER(al.name) LIKE '%vat%expense%'
+                  AND DATE(ae.date) BETWEEN '{$sql_start}' AND '{$sql_end}'
+                GROUP BY ae.id
+                ORDER BY ae.date ASC, ae.id ASC
+            ";
+            $jq = $this->db->query($journal_sql);
+            if ($jq->num_rows() > 0) {
+                foreach ($jq->result() as $row) {
+                    if (abs((float)$row->total_tax) < 0.001) continue;
+                    $row->party_side  = 'supplier';
+                    $row->entry_type  = 'D';
+                    $purchase_rows[]  = $row;
+                }
+                usort($purchase_rows, function ($a, $b) {
+                    return strcmp($a->trans_date, $b->trans_date) ?: ($a->trans_id - $b->trans_id);
+                });
+            }
+        }
+
+        // ── summary totals ─────────────────────────────────────────
+        $sum = [
+            'sales_net'        => 0.0,
+            'sales_vat'        => 0.0,
+            'sales_gross'      => 0.0,
+            'purchase_net'     => 0.0,
+            'purchase_vat'     => 0.0,
+            'purchase_gross'   => 0.0,
+        ];
+        foreach ($sales_rows as $r) {
+            $sum['sales_net']   += (float)$r->total_net;
+            $sum['sales_vat']   += (float)$r->total_tax;
+            $sum['sales_gross'] += (float)$r->grand_total;
+        }
+        foreach ($purchase_rows as $r) {
+            $sum['purchase_net']   += (float)$r->total_net;
+            $sum['purchase_vat']   += (float)$r->total_tax;
+            $sum['purchase_gross'] += (float)$r->grand_total;
+        }
+        $sum['net_vat_position'] = $sum['sales_vat'] - $sum['purchase_vat'];
+
+        $this->data['sales_rows']    = $sales_rows;
+        $this->data['purchase_rows'] = $purchase_rows;
+        $this->data['summary']       = $sum;
+
+        // ── Excel export ───────────────────────────────────────────
+        if ($this->input->get('export_excel')) {
+            $this->load->library('excel');
+            $sheet = $this->excel->setActiveSheetIndex(0);
+            $sheet->setTitle('VAT Report');
+
+            $sheet->SetCellValue('A1', '#');
+            $sheet->SetCellValue('B1', lang('date'));
+            $sheet->SetCellValue('C1', lang('reference_no'));
+            $sheet->SetCellValue('D1', 'Type');
+            $sheet->SetCellValue('E1', 'Party');
+            $sheet->SetCellValue('F1', 'VAT No');
+            $sheet->SetCellValue('G1', 'Net (ex-VAT)');
+            $sheet->SetCellValue('H1', 'VAT Amount');
+            $sheet->SetCellValue('I1', 'Grand Total');
+
+            $type_labels = [
+                'sale'           => 'Sales Invoice',
+                'returnCustomer' => 'Sales Return',
+                'purchase'       => 'Purchase Invoice',
+                'returnSupplier' => 'Purchase Return',
+                'serviceinvoice' => 'Service Invoice',
+                'pettycash'      => 'Petty Cash',
+                'creditmemo'     => 'Credit Memo',
+                'debitmemo'      => 'Debit Memo',
+                'memo'           => 'Memo',
+                'journal'        => 'Journal Voucher',
+                'payment_bankcharge' => 'Payment',
+            ];
+
+            $get_memo_label = function ($r) use ($type_labels) {
+                $memoTypes = ['serviceinvoice', 'pettycash', 'creditmemo', 'debitmemo', 'memo'];
+                if (!in_array($r->trans_type, $memoTypes)) {
+                    return $type_labels[$r->trans_type] ?? $r->trans_type;
+                }
+                $side   = $r->party_side ?? '';
+                $entry  = $r->entry_type ?? '';
+                $prefix = ($side === 'supplier') ? 'Supplier' : (($side === 'customer') ? 'Customer' : '');
+                $p      = $prefix ? "{$prefix} " : '';
+                switch ($r->trans_type) {
+                    case 'serviceinvoice': return "{$p}Service Invoice";
+                    case 'pettycash':      return "{$p}Petty Cash";
+                    case 'creditmemo':     return "{$p}Credit Memo";
+                    case 'debitmemo':      return "{$p}Debit Memo";
+                    case 'memo':
+                        if ($entry === 'C') return "{$p}Credit Memo";
+                        if ($entry === 'D') return "{$p}Debit Memo";
+                        return "{$p}Memo";
+                    default:
+                        return $type_labels[$r->trans_type] ?? $r->trans_type;
+                }
+            };
+
+            $all_rows = [];
+            foreach ($sales_rows    as $r) { $all_rows[] = $r; }
+            foreach ($purchase_rows as $r) { $all_rows[] = $r; }
+            usort($all_rows, function ($a, $b) {
+                return strcmp($a->trans_date, $b->trans_date) ?: ($a->trans_id - $b->trans_id);
+            });
+
+            $row = 2;
+            foreach ($all_rows as $i => $r) {
+                $ref_display = in_array($r->trans_type, ['returnCustomer', 'returnSupplier'])
+                    ? $r->trans_id
+                    : (($r->reference_no && $r->reference_no !== '0') ? $r->reference_no : $r->trans_id);
+                $sheet->SetCellValue("A{$row}", $i + 1);
+                $sheet->SetCellValue("B{$row}", date('d-M-Y', strtotime($r->trans_date)));
+                $sheet->SetCellValue("C{$row}", $ref_display);
+                $sheet->SetCellValue("D{$row}", $get_memo_label($r));
+                $sheet->SetCellValue("E{$row}", $r->party_name);
+                $sheet->SetCellValue("F{$row}", $r->party_vat_no);
+                $sheet->SetCellValue("G{$row}", round((float)$r->total_net,   2));
+                $sheet->SetCellValue("H{$row}", round((float)$r->total_tax,   2));
+                $sheet->SetCellValue("I{$row}", round((float)$r->grand_total, 2));
+                $row++;
+            }
+
+            $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
+            $filename = 'VAT_Report_' . date('Y-m-d');
+            $this->load->helper('excel');
+            create_excel($this->excel, $filename);
+            return;
+        }
+
+        $bc = [
+            ['link' => base_url(),           'page' => lang('home')],
+            ['link' => admin_url('reports'),  'page' => lang('reports')],
+            ['link' => '#',                   'page' => 'VAT Report'],
+        ];
+        $meta = ['page_title' => 'VAT Report', 'bc' => $bc];
+        $this->page_construct('reports/vat_report', $meta, $this->data);
+    }
+
+    public function po_shelving_report()
+    {
+        //$this->sma->checkPermissions('purchases');
+
+        $sql = "
+            SELECT 
+                po.id AS po_id,
+                po.reference_no,
+                po.date,
+                po.supplier_id,
+                po.supplier AS supplier_name,
+                COALESCE(poi.total_qty, 0)   AS ordered_qty,
+                COALESCE(s.shelved_qty, 0)   AS shelved_qty,
+                COALESCE(poi.sku_ordered, 0) AS sku_ordered,
+                COALESCE(s.sku_received, 0)  AS sku_received,
+                COALESCE(poi.total_value, 0) AS po_value
+            FROM sma_purchase_orders po
+            LEFT JOIN (
+                SELECT 
+                    purchase_id,
+                    SUM(quantity)                  AS total_qty,
+                    SUM(quantity * unit_cost)       AS total_value,
+                    COUNT(DISTINCT CONVERT(TRIM(LEADING '0' FROM product_code) USING utf8mb4)) AS sku_ordered
+                FROM sma_purchase_order_items
+                GROUP BY purchase_id
+            ) poi ON poi.purchase_id = po.id
+            LEFT JOIN (
+                SELECT 
+                    pos.po_id,
+                    SUM(CASE WHEN posi.status IN ('active','restock') THEN posi.qty ELSE 0 END) AS shelved_qty,
+                    COUNT(DISTINCT CASE WHEN posi.status IN ('active','restock') THEN CONVERT(TRIM(LEADING '0' FROM posi.product_code) USING utf8mb4) END) AS sku_received
+                FROM sma_purchase_order_shelving pos
+                JOIN sma_purchase_order_shelving_items posi ON pos.id = posi.shelving_id
+                GROUP BY pos.po_id
+            ) s ON s.po_id = po.id
+            ORDER BY po.date DESC
+        ";
+
+        $this->data['rows'] = $this->db->query($sql)->result();
+
+        $bc   = [
+            ['link' => base_url(),          'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => '#',                  'page' => 'PO Shelving Report'],
+        ];
+        $meta = ['page_title' => 'PO Shelving Report', 'bc' => $bc];
+        $this->page_construct('reports/po_shelving_report', $meta, $this->data);
+    }
+
+    public function po_shelving_detail($po_id = null)
+    {
+        if (!$po_id || !is_numeric($po_id)) {
+            show_error('Invalid PO ID', 400);
+        }
+        $po_id = (int) $po_id;
+
+        // PO header
+        $this->data['po'] = $this->db->query(
+            "SELECT id, reference_no, date, supplier FROM sma_purchase_orders WHERE id = ?",
+            [$po_id]
+        )->row();
+
+        if (!$this->data['po']) {
+            show_error('PO not found', 404);
+        }
+
+        // Ordered items
+        $this->data['ordered'] = $this->db->query("
+            SELECT 
+                TRIM(LEADING '0' FROM product_code) AS product_code,
+                product_name,
+                SUM(quantity)               AS ordered_qty,
+                unit_cost,
+                SUM(quantity * unit_cost)   AS line_value
+            FROM sma_purchase_order_items
+            WHERE purchase_id = ?
+            GROUP BY product_code, product_name, unit_cost
+            ORDER BY product_name
+        ", [$po_id])->result();
+
+        // Shelved items
+        $this->data['shelved'] = $this->db->query("
+            SELECT 
+                TRIM(LEADING '0' FROM posi.product_code) AS product_code,
+                (SELECT name FROM sma_products WHERE TRIM(LEADING '0' FROM code) = TRIM(LEADING '0' FROM posi.product_code) LIMIT 1) AS product_name,
+                posi.status,
+                SUM(posi.qty) AS shelved_qty
+            FROM sma_purchase_order_shelving pos
+            JOIN sma_purchase_order_shelving_items posi ON pos.id = posi.shelving_id
+            WHERE pos.po_id = ? AND posi.status IN ('active','restock')
+            GROUP BY posi.product_code, posi.status
+            ORDER BY product_name
+        ", [$po_id])->result();
+
+        $this->load->view($this->theme . 'reports/po_shelving_detail_modal', $this->data);
+    }
+
+    public function supplier_advances()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier') ?: [];
+        $this->data['advance_ledger'] = $this->Settings->supplier_advance_ledger ?? null;
+
+        $viewtype = $this->input->post('viewtype') ?: null;
+        $from_date = $this->input->post('from_date') ?: $this->data['start_date'];
+        $to_date = $this->input->post('to_date') ?: $this->data['end_date'];
+        $supplier_ids = $this->input->post('supplier_ids') ?: [];
+
+        $start_date = $this->sma->fld($from_date);
+        $end_date = $this->sma->fld($to_date);
+        $this->data['start_date'] = $from_date;
+        $this->data['end_date'] = $to_date;
+        $this->data['selected_suppliers'] = $supplier_ids;
+        $this->data['trial_balance'] = $this->reports_model->get_supplier_advances_trial_balance(
+            $start_date,
+            $end_date,
+            $this->data['advance_ledger'],
+            $supplier_ids
+        );
+
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('supplier_advances_report')]];
+        $meta = ['page_title' => lang('supplier_advances_report'), 'bc' => $bc];
+
+        if ($viewtype == 'pdf') {
+            $this->data['viewtype'] = $viewtype;
+            $name = lang('supplier_advances_report') . '.pdf';
+            $html = $this->load->view($this->theme . 'reports/supplier_advances', $this->data, true);
+            $this->sma->generate_pdf($html, $name, 'I', '', null, null, null, null, 'Pl');
+        } else {
+            $this->page_construct('reports/supplier_advances', $meta, $this->data);
+        }
+    }
+
+    public function supplier_advance_statement()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier') ?: [];
+        $advance_ledger = $this->Settings->supplier_advance_ledger ?? null;
+
+        $viewtype = $this->input->post('viewtype') ?: $this->input->get('viewtype');
+        $from_date = $this->input->post('from_date') ?: $this->input->get('from_date');
+        $to_date = $this->input->post('to_date') ?: $this->input->get('to_date');
+        $supplier_id = $this->input->post('supplier') ?: $this->input->get('supplier');
+
+        if ($from_date && $supplier_id) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $statement = $this->reports_model->getSupplierAdvanceStatement($start_date, $end_date, $supplier_id, $advance_ledger);
+
+            $total_ob_debit = 0;
+            $total_ob_credit = 0;
+            foreach ($statement['ob'] as $ob) {
+                if ($ob->dc == 'D') {
+                    $total_ob_debit += $ob->amount;
+                } else {
+                    $total_ob_credit += $ob->amount;
+                }
+            }
+            $total_ob = $total_ob_debit - $total_ob_credit;
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['supplier_id'] = $supplier_id;
+            $this->data['total_ob'] = $this->sma->formatDecimal($total_ob);
+            $this->data['advance_statement'] = $statement['report'];
+            $this->data['balance_type'] = 'supplier';
+
+            $bc = [
+                ['link' => base_url(), 'page' => lang('home')],
+                ['link' => admin_url('reports/supplier_advances'), 'page' => lang('supplier_advances_report')],
+                ['link' => '#', 'page' => lang('supplier_advance_statement')],
+            ];
+            $meta = ['page_title' => lang('supplier_advance_statement'), 'bc' => $bc];
+
+            if ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('supplier_advance_statement') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/advance_statement', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', null, null, null, null, 'Pl');
+            } else {
+                $this->page_construct('reports/advance_statement', $meta, $this->data);
+            }
+        } else {
+            redirect(admin_url('reports/supplier_advances'));
+        }
+    }
+
+    public function customer_advances()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
+        $this->data['customers'] = $this->site->getAllCompanies('customer') ?: [];
+        $this->data['advance_ledger'] = $this->Settings->customer_advance_ledger ?? null;
+
+        $viewtype = $this->input->post('viewtype') ?: null;
+        $from_date = $this->input->post('from_date') ?: $this->data['start_date'];
+        $to_date = $this->input->post('to_date') ?: $this->data['end_date'];
+        $customer_ids = $this->input->post('customer_ids') ?: [];
+
+        $start_date = $this->sma->fld($from_date);
+        $end_date = $this->sma->fld($to_date);
+        $this->data['start_date'] = $from_date;
+        $this->data['end_date'] = $to_date;
+        $this->data['selected_customers'] = $customer_ids;
+        $this->data['trial_balance'] = $this->reports_model->get_customer_advances_trial_balance(
+            $start_date,
+            $end_date,
+            $this->data['advance_ledger'],
+            $customer_ids
+        );
+
+        $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('customer_advances_report')]];
+        $meta = ['page_title' => lang('customer_advances_report'), 'bc' => $bc];
+
+        if ($viewtype == 'pdf') {
+            $this->data['viewtype'] = $viewtype;
+            $name = lang('customer_advances_report') . '.pdf';
+            $html = $this->load->view($this->theme . 'reports/customer_advances', $this->data, true);
+            $this->sma->generate_pdf($html, $name, 'I', '', null, null, null, null, 'Pl');
+        } else {
+            $this->page_construct('reports/customer_advances', $meta, $this->data);
+        }
+    }
+
+    public function customer_advance_statement()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
+        $this->data['customers'] = $this->site->getAllCompanies('customer') ?: [];
+        $advance_ledger = $this->Settings->customer_advance_ledger ?? null;
+
+        $viewtype = $this->input->post('viewtype') ?: $this->input->get('viewtype');
+        $from_date = $this->input->post('from_date') ?: $this->input->get('from_date');
+        $to_date = $this->input->post('to_date') ?: $this->input->get('to_date');
+        $customer_id = $this->input->post('customer') ?: $this->input->get('customer');
+
+        if ($from_date && $customer_id) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $statement = $this->reports_model->getCustomerAdvanceStatement($start_date, $end_date, $customer_id, $advance_ledger);
+
+            $total_ob_debit = 0;
+            $total_ob_credit = 0;
+            foreach ($statement['ob'] as $ob) {
+                if ($ob->dc == 'D') {
+                    $total_ob_debit += $ob->amount;
+                } else {
+                    $total_ob_credit += $ob->amount;
+                }
+            }
+            $total_ob = $total_ob_credit - $total_ob_debit;
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['customer_id'] = $customer_id;
+            $this->data['total_ob'] = $this->sma->formatDecimal($total_ob);
+            $this->data['advance_statement'] = $statement['report'];
+            $this->data['balance_type'] = 'customer';
+
+            $bc = [
+                ['link' => base_url(), 'page' => lang('home')],
+                ['link' => admin_url('reports/customer_advances'), 'page' => lang('customer_advances_report')],
+                ['link' => '#', 'page' => lang('customer_advance_statement')],
+            ];
+            $meta = ['page_title' => lang('customer_advance_statement'), 'bc' => $bc];
+
+            if ($viewtype == 'pdf') {
+                $this->data['viewtype'] = $viewtype;
+                $name = lang('customer_advance_statement') . '.pdf';
+                $html = $this->load->view($this->theme . 'reports/advance_statement', $this->data, true);
+                $this->sma->generate_pdf($html, $name, 'I', '', null, null, null, null, 'Pl');
+            } else {
+                $this->page_construct('reports/advance_statement', $meta, $this->data);
+            }
+        } else {
+            redirect(admin_url('reports/customer_advances'));
+        }
+    }
+
 }

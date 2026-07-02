@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Wasfaty JavaScript Test</title>
+		<link
+			rel="stylesheet"
+			href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+		/>
+		<link
+			rel="stylesheet"
+			href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
+		/>
+		<link href="assets/css/wasfaty.css" rel="stylesheet" />
+	</head>
+	<body>
+		<div class="container" style="margin-top: 50px">
+			<h1>Wasfaty Modal Test</h1>
+			<button
+				class="btn btn-primary"
+				data-toggle="modal"
+				data-target="#wasfatyModal"
+			>
+				Open Wasfaty Modal
+			</button>
+		</div>
+
+		<!-- Copy the modal HTML from add.php -->
+		<div class="modal fade" id="wasfatyModal" tabindex="-1" role="dialog">
+			<div class="modal-dialog modal-lg" role="document">
+				<div class="modal-content">
+					<div
+						class="modal-header"
+						style="
+							background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+							color: white;
+						"
+					>
+						<button
+							type="button"
+							class="close"
+							data-dismiss="modal"
+							style="color: white"
+						>
+							<span>&times;</span>
+						</button>
+						<h4 class="modal-title">
+							<i class="fa fa-heartbeat"></i> Wasfaty Prescription Lookup
+						</h4>
+					</div>
+					<div class="modal-body">
+						<div class="row">
+							<!-- Left Column -->
+							<div class="col-md-5" id="wasfaty-left-column">
+								<h5 style="color: #2196f3; margin-top: 0">
+									<i class="fa fa-search"></i> Search Prescription
+								</h5>
+								<hr style="border-color: #2196f3" />
+
+								<form id="wasfaty-lookup-form">
+									<div class="form-group">
+										<label>Patient Phone *</label>
+										<input
+											type="text"
+											class="form-control input-lg"
+											id="patient-phone"
+											placeholder="05XXXXXXXX"
+											maxlength="10"
+										/>
+									</div>
+									<div class="form-group">
+										<label>Prescription Code *</label>
+										<input
+											type="text"
+											class="form-control input-lg"
+											id="prescription-code"
+											placeholder="6-digit code"
+											maxlength="6"
+										/>
+									</div>
+									<div class="form-group">
+										<button
+											type="submit"
+											class="btn btn-primary btn-lg btn-block"
+											id="fetch-prescription-btn"
+										>
+											<i class="fa fa-search"></i> Fetch Prescription
+										</button>
+									</div>
+								</form>
+
+								<div
+									id="wasfaty-error"
+									class="alert alert-danger"
+									style="display: none"
+								></div>
+							</div>
+
+							<!-- Right Column -->
+							<div class="col-md-7" id="wasfaty-right-column">
+								<div
+									id="wasfaty-loading"
+									style="display: none; text-align: center; padding: 60px 20px"
+								>
+									<i
+										class="fa fa-spinner fa-spin fa-4x"
+										style="color: #2196f3"
+									></i>
+									<p class="text-muted" style="margin-top: 20px">Fetching...</p>
+								</div>
+
+								<div
+									id="prescription-empty-state"
+									style="text-align: center; padding: 60px 20px"
+								>
+									<i
+										class="fa fa-file-text-o"
+										style="font-size: 80px; color: #ddd"
+									></i>
+									<h4 style="color: #999">No Prescription Loaded</h4>
+									<p class="text-muted">Enter phone and code to fetch</p>
+								</div>
+
+								<div id="prescription-details" style="display: none">
+									<h5 style="color: #2196f3">Prescription Details</h5>
+									<div class="alert alert-info">
+										<p>Phone: <span id="modal-phone"></span></p>
+										<p>Code: <span id="modal-prescription-code"></span></p>
+										<p>Type: <span id="modal-customer-type"></span></p>
+									</div>
+									<table class="table table-bordered">
+										<thead style="background: #2196f3; color: white">
+											<tr>
+												<th>Medicine</th>
+												<th>Qty</th>
+												<th>Total</th>
+											</tr>
+										</thead>
+										<tbody id="modal-medications-list"></tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">
+							Cancel
+						</button>
+						<button
+							type="button"
+							class="btn btn-success btn-lg"
+							id="convert-to-order-btn"
+							style="display: none"
+						>
+							Add to Cart
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<script>
+			// Mock site object
+			var site = {
+				base_url: "http://localhost:8080/avenzur/admin/",
+			};
+		</script>
+		<script src="assets/js/wasfaty.js"></script>
+
+		<script>
+			$(document).ready(function () {
+				console.log("Test page ready");
+				console.log("WasfatyModule:", typeof WasfatyModule);
+			});
+		</script>
+	</body>
+</html>

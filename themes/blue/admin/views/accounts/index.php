@@ -30,7 +30,8 @@
       if ($account->id <= 4) {
         echo '<td class="td-actions"></td>';
       } else {
-        echo '<td class="td-actions">';
+        echo '<td class="td-actions"></td>';
+        /*echo '<td class="td-actions">';
         echo anchor('admin/groups/edit/'.$account->id, '<i class="fa fa-edit"></i>'.lang('accounts_index_edit_btn'), array('class' => 'no-hover font-normal', 'escape' => false));
         echo "<span class='link-pad'></span>";
 
@@ -40,7 +41,7 @@
                   'confirm' => lang('accounts_index_delete_group_alert'))
         );
 
-        echo '</td>';
+        echo '</td>';*/
       }
       echo '</tr>';
     }
@@ -112,6 +113,11 @@
                         <i class="icon fa fa-tasks tip" data-placement="left" title="<?= lang('actions') ?>"></i>
                     </a>
                     <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
+                        <li>
+                            <a href="<?= admin_url('accounts/import_excel') ?>" data-toggle="modal" data-target="#myModal">
+                                <i class="fa fa-plus-circle"></i> <?= lang('import_chart_excel') ?>
+                            </a>
+                        </li>
                         <li>
                             <a href="<?= admin_url('groups/add') ?>">
                                 <i class="fa fa-plus-circle"></i> <?= lang('accounts_index_add_group_btn') ?>

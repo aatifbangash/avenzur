@@ -2,7 +2,7 @@
 <script>
     $(document).ready(function () {
         var cTable = $('#CusData').dataTable({
-            "aaSorting": [[1, "asc"]],
+            "aaSorting": [[2, "asc"]],
             "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?= lang('all') ?>"]],
             "iDisplayLength": <?= $Settings->rows_per_page ?>,
             'bProcessing': true, 'bServerSide': true,
@@ -11,6 +11,10 @@
                 aoData.push({
                     "name": "<?= $this->security->get_csrf_token_name() ?>",
                     "value": "<?= $this->security->get_csrf_hash() ?>"
+                });
+                aoData.push({
+                    "name": "category",
+                    "value": ($('#customer_list_category').length ? $('#customer_list_category').val() : '') || ''
                 });
                 $.ajax({'dataType': 'json', 'type': 'POST', 'url': sSource, 'data': aoData, 'success': fnCallback});
             },
@@ -22,26 +26,30 @@
             "aoColumns": [{
                 "bSortable": false,
                 "mRender": checkbox
-            }, null, null, null, null, null, null, null, null, null, {"mRender": currencyFormat}, null, {"bSortable": false}]
+            }, null, null, null, null, null, null, null, null, {"bSortable": false}]
         }).dtFilter([
-            {column_number: 1, filter_default_label: "[<?=lang('company');?>]", filter_type: "text", data: []},
+            {column_number: 1, filter_default_label: "[<?=lang('category');?>]", filter_type: "text", data: []},
             {column_number: 2, filter_default_label: "[<?=lang('sequence_code');?>]", filter_type: "text", data: []},
             {column_number: 3, filter_default_label: "[<?=lang('name');?>]", filter_type: "text", data: []},
-            {column_number: 4, filter_default_label: "[<?=lang('email_address');?>]", filter_type: "text", data: []},
-            {column_number: 5, filter_default_label: "[<?=lang('phone');?>]", filter_type: "text", data: []},
-            {column_number: 6, filter_default_label: "[<?=lang('price_group');?>]", filter_type: "text", data: []},
-            {column_number: 7, filter_default_label: "[<?=lang('customer_group');?>]", filter_type: "text", data: []},
-            {column_number: 8, filter_default_label: "[<?=lang('vat_no');?>]", filter_type: "text", data: []},
-            {column_number: 9, filter_default_label: "[<?=lang('gst_no');?>]", filter_type: "text", data: []},
-            {column_number: 10, filter_default_label: "[<?=lang('deposit');?>]", filter_type: "text", data: []},
-            {column_number: 11, filter_default_label: "[<?=lang('award_points');?>]", filter_type: "text", data: []},
+            {column_number: 4, filter_default_label: "[<?=lang('vat_no');?>]", filter_type: "text", data: []},
+            {column_number: 5, filter_default_label: "[<?=lang('gln');?>]", filter_type: "text", data: []},
+            {column_number: 6, filter_default_label: "[<?=lang('cr');?>]", filter_type: "text", data: []},
+            {column_number: 7, filter_default_label: "[<?=lang('credit_limit');?>]", filter_type: "text", data: []},
+            {column_number: 8, filter_default_label: "[<?=lang('payment_term');?>]", filter_type: "text", data: []},
         ], "footer");
+        $('#customer_category_filter_btn').on('click', function () {
+            cTable.fnDraw(false);
+        });
+        $('#customer_category_reset_btn').on('click', function () {
+            $('#customer_list_category').val('');
+            cTable.fnDraw(false);
+        });
         $('#myModal').on('hidden.bs.modal', function () {
             cTable.fnDraw( false );
         });
     });
 </script>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner || $this->Admin || ($GP && ($GP['bulk_actions'] || $GP['customers-index']))) {
     echo admin_form_open('customers/customer_actions', 'id="action-form"');
 } ?>
 <div class="box">
@@ -55,17 +63,30 @@
                         <i class="icon fa fa-tasks tip" data-placement="left" title="<?= lang('actions') ?>"></i>
                     </a>
                     <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
+                        <?php 
+                        if($this->Owner || $this->Admin || $this->GP['customers-add']){
+                        ?>
                         <li>
                             <a href="<?= admin_url('customers/add'); ?>" data-toggle="modal" data-target="#myModal" id="add">
                                 <i class="fa fa-plus-circle"></i> <?= lang('add_customer'); ?>
                             </a>
                         </li>
-                        <li>
+                        <?php } ?>
+                        <!--<li>
                             <a href="<?= admin_url('customers/import_csv'); ?>" data-toggle="modal" data-target="#myModal">
                                 <i class="fa fa-plus-circle"></i> <?= lang('import_by_csv'); ?>
                             </a>
+                        </li>-->
+                        <?php 
+                        if($this->Owner || $this->Admin || $this->GP['customers-add']){
+                        ?>
+                        <li>
+                            <a href="<?= admin_url('customers/import_excel'); ?>" data-toggle="modal" data-target="#myModal">
+                                <i class="fa fa-plus-circle"></i> <?= lang('import_by_excel'); ?>
+                            </a>
                         </li>
-                        <?php if ($Owner) {
+                        <?php } ?>
+                        <?php if ($Owner || $this->Admin || $this->GP['customers-index']) {
                             ?>
                         <li>
                             <a href="#" id="excel" data-action="export_excel">
@@ -73,12 +94,12 @@
                             </a>
                         </li>
                         <li class="divider"></li>
-                        <li>
+                        <!--<li>
                             <a href="#" class="bpo" title="<b><?= $this->lang->line('delete_customers') ?></b>"
                                 data-content="<p><?= lang('r_u_sure') ?></p><button type='button' class='btn btn-danger' id='delete' data-action='delete'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button>" data-html="true" data-placement="left">
                                 <i class="fa fa-trash-o"></i> <?= lang('delete_customers') ?>
                             </a>
-                        </li>
+                        </li>-->
                             <?php
                         } ?>
                     </ul>
@@ -90,6 +111,30 @@
         <div class="row">
             <div class="col-lg-12">
 
+                <div class="row" style="margin-bottom:12px; padding: 10px 15px; background:#f9f9f9; border:1px solid #e0e0e0; border-radius:4px;">
+                    <div class="col-md-3">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label for="customer_list_category" style="font-size:12px; font-weight:600;"><?= lang('Category') ?></label>
+                            <select id="customer_list_category" class="form-control input-sm" style="width:100%;">
+                                <option value=""><?= lang('All Categories') ?></option>
+                                <?php
+                                $cats = (!empty($customer_categories) && is_array($customer_categories)) ? $customer_categories : [];
+                                foreach ($cats as $cat): ?>
+                                    <option value="<?= htmlspecialchars($cat) ?>"><?= htmlspecialchars($cat) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2" style="padding-top:22px;">
+                        <button type="button" id="customer_category_filter_btn" class="btn btn-primary btn-sm btn-block">
+                            <i class="fa fa-filter"></i> <?= lang('Filter') ?>
+                        </button>
+                        <button type="button" id="customer_category_reset_btn" class="btn btn-default btn-sm btn-block" style="margin-top:4px;">
+                            <i class="fa fa-times"></i> <?= lang('Reset') ?>
+                        </button>
+                    </div>
+                </div>
+
                 <p class="introtext"><?= lang('list_results'); ?></p>
 
                 <div class="table-responsive">
@@ -100,23 +145,20 @@
                             <th style="min-width:30px; width: 30px; text-align: center;">
                                 <input class="checkbox checkth" type="checkbox" name="check"/>
                             </th>
-                            <th><?= lang('company'); ?></th>
+                            <th><?= lang('category'); ?></th>
                             <th><?= lang('sequence_code'); ?></th>
                             <th><?= lang('name'); ?></th>
-                            <th><?= lang('email_address'); ?></th>
-                            <th><?= lang('phone'); ?></th>
-                            <th><?= lang('price_group'); ?></th>
-                            <th><?= lang('customer_group'); ?></th>
                             <th><?= lang('vat_no'); ?></th>
-                            <th><?= lang('gst_no'); ?></th>
-                            <th><?= lang('deposit'); ?></th>
-                            <th><?= lang('award_points'); ?></th>
+                            <th><?= lang('gln'); ?></th>
+                            <th><?= lang('cr'); ?></th>
+                            <th><?= lang('credit_limit'); ?></th>
+                            <th><?= lang('payment_term'); ?></th>
                             <th style="min-width:135px !important;"><?= lang('actions'); ?></th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr>
-                            <td colspan="12" class="dataTables_empty"><?= lang('loading_data_from_server') ?></td>
+                            <td colspan="10" class="dataTables_empty"><?= lang('loading_data_from_server') ?></td>
                         </tr>
                         </tbody>
                         <tfoot class="dtFilter">
@@ -124,7 +166,7 @@
                             <th style="min-width:30px; width: 30px; text-align: center;">
                                 <input class="checkbox checkft" type="checkbox" name="check"/>
                             </th>
-                            <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
+                            <th></th><th></th><th></th><th></th><th></th><th></th><th></th><th></th>
                             <th style="min-width:135px !important;" class="text-center"><?= lang('actions'); ?></th>
                         </tr>
                         </tfoot>
@@ -134,7 +176,7 @@
         </div>
     </div>
 </div>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner || $this->Admin || ($GP && ($GP['bulk_actions'] || $GP['customers-index']))) {
     ?>
     <div style="display: none;">
         <input type="hidden" name="form_action" value="" id="form_action"/>

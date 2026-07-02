@@ -7,6 +7,7 @@ class Pos_model extends CI_Model
     public function __construct()
     {
         parent::__construct();
+        $this->load->admin_model('Inventory_model');
     }
 
     public function addOptionQuantity($option_id, $quantity)
@@ -20,20 +21,56 @@ class Pos_model extends CI_Model
         return false;
     }
 
+    public function addSerialsBatch($data) {
+        // Validate and check if $data is a non-empty array
+        if (!empty($data) && is_array($data)) {
+            // Extract serial numbers from the input data
+            $serial_numbers = array_column($data, 'serial_number');
+    
+            // Check which serial numbers already exist in the database
+            $this->db->select('serial_number');
+            $this->db->from('sma_serial_numbers');
+            $this->db->where_in('serial_number', $serial_numbers);
+            $query = $this->db->get();
+            $existing_serials = array_column($query->result_array(), 'serial_number');
+    
+            // Filter out records with existing serial numbers
+            $filtered_data = array_filter($data, function ($item) use ($existing_serials) {
+                return !in_array($item['serial_number'], $existing_serials);
+            });
+    
+            // Check if there is any data left to insert
+            if (!empty($filtered_data)) {
+                // Insert the filtered batch of records
+                if ($this->db->insert_batch('sma_serial_numbers', $filtered_data)) {
+                    return true; // Return success
+                } else {
+                    // Debugging: Get the database error if insertion fails
+                    $error = $this->db->error();
+                    print_r($error);
+                    return false;
+                }
+            }
+        }
+    
+        // If $data is not valid or no new serials to insert, return an error
+        return false;
+    }    
+
     public function addPayment($payment = [], $customer_id = null)
     {
         if (isset($payment['sale_id']) && isset($payment['paid_by']) && isset($payment['amount'])) {
             $payment['pos_paid'] = $payment['amount'];
-            $inv                 = $this->getInvoiceByID($payment['sale_id']);
-            $paid                = $inv->paid + $payment['amount'];
+            $inv = $this->getInvoiceByID($payment['sale_id']);
+            $paid = $inv->paid + $payment['amount'];
             if ($payment['paid_by'] == 'ppp') {
                 $card_info = ['number' => $payment['cc_no'], 'exp_month' => $payment['cc_month'], 'exp_year' => $payment['cc_year'], 'cvc' => $payment['cc_cvv2'], 'type' => $payment['cc_type']];
-                $result    = $this->paypal($payment['amount'], $card_info, '', $payment['sale_id']);
+                $result = $this->paypal($payment['amount'], $card_info, '', $payment['sale_id']);
                 if (!isset($result['error'])) {
                     $payment['transaction_id'] = $result['transaction_id'];
-                    $payment['date']           = $this->sma->fld($result['created_at']);
-                    $payment['amount']         = $result['amount'];
-                    $payment['currency']       = $result['currency'];
+                    $payment['date'] = $this->sma->fld($result['created_at']);
+                    $payment['amount'] = $result['amount'];
+                    $payment['currency'] = $result['currency'];
                     unset($payment['cc_cvv2']);
                     $this->db->insert('payments', $payment);
                     $paid += $payment['amount'];
@@ -49,12 +86,12 @@ class Pos_model extends CI_Model
                 }
             } elseif ($payment['paid_by'] == 'stripe') {
                 $card_info = ['number' => $payment['cc_no'], 'exp_month' => $payment['cc_month'], 'exp_year' => $payment['cc_year'], 'cvc' => $payment['cc_cvv2'], 'type' => $payment['cc_type']];
-                $result    = $this->stripe($payment['amount'], $card_info);
+                $result = $this->stripe($payment['amount'], $card_info);
                 if (!isset($result['error'])) {
                     $payment['transaction_id'] = $result['transaction_id'];
-                    $payment['date']           = $this->sma->fld($result['created_at']);
-                    $payment['amount']         = $result['amount'];
-                    $payment['currency']       = $result['currency'];
+                    $payment['date'] = $this->sma->fld($result['created_at']);
+                    $payment['amount'] = $result['amount'];
+                    $payment['currency'] = $result['currency'];
                     unset($payment['cc_cvv2']);
                     $this->db->insert('payments', $payment);
                     $paid += $payment['amount'];
@@ -63,15 +100,15 @@ class Pos_model extends CI_Model
                     $msg[] = '<p class="text-danger">' . $result['code'] . ': ' . $result['message'] . '</p>';
                 }
             } elseif ($payment['paid_by'] == 'authorize') {
-                $authorize_arr                 = ['x_card_num' => $payment['cc_no'], 'x_exp_date' => ($payment['cc_month'] . '/' . $payment['cc_year']), 'x_card_code' => $payment['cc_cvv2'], 'x_amount' => $payment['amount'], 'x_invoice_num' => $inv->id, 'x_description' => 'Sale Ref ' . $inv->reference_no . ' and Payment Ref ' . $payment['reference_no']];
-                list($first_name, $last_name)  = explode(' ', $payment['cc_holder'], 2);
+                $authorize_arr = ['x_card_num' => $payment['cc_no'], 'x_exp_date' => ($payment['cc_month'] . '/' . $payment['cc_year']), 'x_card_code' => $payment['cc_cvv2'], 'x_amount' => $payment['amount'], 'x_invoice_num' => $inv->id, 'x_description' => 'Sale Ref ' . $inv->reference_no . ' and Payment Ref ' . $payment['reference_no']];
+                list($first_name, $last_name) = explode(' ', $payment['cc_holder'], 2);
                 $authorize_arr['x_first_name'] = $first_name;
-                $authorize_arr['x_last_name']  = $last_name;
-                $result                        = $this->authorize($authorize_arr);
+                $authorize_arr['x_last_name'] = $last_name;
+                $result = $this->authorize($authorize_arr);
                 if (!isset($result['error'])) {
                     $payment['transaction_id'] = $result['transaction_id'];
-                    $payment['approval_code']  = $result['approval_code'];
-                    $payment['date']           = $this->sma->fld($result['created_at']);
+                    $payment['approval_code'] = $result['approval_code'];
+                    $payment['date'] = $this->sma->fld($result['created_at']);
                     unset($payment['cc_cvv2']);
                     $this->db->insert('payments', $payment);
                     $paid += $payment['amount'];
@@ -128,7 +165,20 @@ class Pos_model extends CI_Model
         return false;
     }
 
-    public function addSale($data = [], $items = [], $payments = [],$sid = null)
+    public function getUnprocessedSerials(){
+        $this->db->select('sma_serial_numbers.*, sma_sales.warehouse_id, sma_warehouses.gln as pharmacy_gln, sma_warehouses.rasd_user, sma_warehouses.rasd_pass');
+        $this->db->from('sma_serial_numbers');
+        $this->db->join('sma_sales', 'sma_serial_numbers.sale_id = sma_sales.id');
+        $this->db->join('sma_warehouses', 'sma_warehouses.id = sma_sales.warehouse_id');
+        $this->db->where('sma_serial_numbers.date_created >=', date('Y-m-d H:i:s', strtotime('-4 days')));
+        $this->db->where('sma_serial_numbers.is_pushed', 0);
+
+        $notification_serials = $this->db->get();
+        return $notification_serials;
+        
+    }
+
+    public function addSale($data = [], $items = [], $payments = [], $sid = null)
     {
         // Sequence-Code
         $this->load->library('SequenceCode');
@@ -144,11 +194,13 @@ class Pos_model extends CI_Model
             foreach ($items as $item) {
 
                 $item['sale_id'] = $sale_id;
+                $real_cost = $item['real_cost'];
+                unset($item['real_cost']);
                 $this->db->insert('sale_items', $item);
                 // Code for serials here
                 $serials_quantity = $item['quantity'];
                 $serials_gtin = $item['product_code'];
-                
+
                 $this->db->select('sma_invoice_serials.*');
                 $this->db->from('sma_invoice_serials');
                 $this->db->join('sma_transfers', 'sma_invoice_serials.tid = sma_transfers.id');
@@ -157,12 +209,13 @@ class Pos_model extends CI_Model
                 $this->db->where('sma_invoice_serials.rsid', 0);
                 $this->db->where('sma_invoice_serials.pid !=', 0);
                 $this->db->where('sma_invoice_serials.tid !=', 0);
+                $this->db->where('sma_invoice_serials.batch_no =', $item['batch_no']);
                 $this->db->where('sma_transfers.to_warehouse_id', $item['warehouse_id']);
                 $this->db->where('sma_transfers.status', 'completed');
                 $this->db->limit($serials_quantity);
 
                 $notification_serials = $this->db->get();
-                
+
                 if ($notification_serials->num_rows() > 0) {
                     foreach (($notification_serials->result()) as $row) {
                         $this->db->update('sma_invoice_serials', ['sid' => $sale_id], ['serial_number' => $row->serial_number, 'batch_no' => $row->batch_no, 'gtin' => $row->gtin]);
@@ -173,32 +226,36 @@ class Pos_model extends CI_Model
                 $rsd['OperationType'] = 'DISPATCH';
                 $rsd['TransactionNumber'] = 0;
                 $rsd['FromID'] = $sale_id;
-                $rsd['ToID']   = 0;
+                $rsd['ToID'] = 0;
                 $rsd['GTIN'] = $item['product_code'];
                 $rsd['BatchNumber'] = 0;
                 $rsd['ExpiryDate'] = 0;
                 $rsd['SerialNo'] = $item['serial_no'];
                 $item_unit_quantity = $item['unit_quantity'];
                 for ($k = 0; $k < $item_unit_quantity; $k++) {
-                   $this->db->insert('sma_rsd' ,$rsd);
+                    $this->db->insert('sma_rsd', $rsd);
                 }
 
                 $sale_item_id = $this->db->insert_id();
                 if ($data['sale_status'] == 'completed' && $this->site->getProductByID($item['product_id'])) {
+
+                     //handle inventory movement function
+                $this->Inventory_model->add_movement($item['product_id'], $item['batch_no'], 'pos', $item['quantity'], $item['warehouse_id'], $sale_id, $item['net_cost'], $item['expiry'], $item['net_unit_price'], $real_cost, $item['avz_item_code'], NULL, $data['customer_id'], $item['net_unit_price'], $data['date']);
+
                     $item_costs = $this->site->item_costing($item);
                     foreach ($item_costs as $item_cost) {
                         if (isset($item_cost['date']) || isset($item_cost['pi_overselling'])) {
                             $item_cost['sale_item_id'] = $sale_item_id;
-                            $item_cost['sale_id']      = $sale_id;
-                            $item_cost['date']         = date('Y-m-d', strtotime($data['date']));
+                            $item_cost['sale_id'] = $sale_id;
+                            $item_cost['date'] = date('Y-m-d', strtotime($data['date']));
                             if (!isset($item_cost['pi_overselling'])) {
                                 $this->db->insert('costing', $item_cost);
                             }
                         } else {
                             foreach ($item_cost as $ic) {
                                 $ic['sale_item_id'] = $sale_item_id;
-                                $ic['sale_id']      = $sale_id;
-                                $ic['date']         = date('Y-m-d', strtotime($data['date']));
+                                $ic['sale_id'] = $sale_id;
+                                $ic['date'] = date('Y-m-d', strtotime($data['date']));
                                 if (!isset($ic['pi_overselling'])) {
                                     $this->db->insert('costing', $ic);
                                 }
@@ -227,16 +284,16 @@ class Pos_model extends CI_Model
                 $paid = 0;
                 foreach ($payments as $payment) {
                     if (!empty($payment) && isset($payment['amount']) && $payment['amount'] != 0) {
-                        $payment['sale_id']      = $sale_id;
+                        $payment['sale_id'] = $sale_id;
                         $payment['reference_no'] = $this->site->getReference('pay');
                         if ($payment['paid_by'] == 'ppp') {
                             $card_info = ['number' => $payment['cc_no'], 'exp_month' => $payment['cc_month'], 'exp_year' => $payment['cc_year'], 'cvc' => $payment['cc_cvv2'], 'type' => $payment['cc_type']];
-                            $result    = $this->paypal($payment['amount'], $card_info, '', $sale_id);
+                            $result = $this->paypal($payment['amount'], $card_info, '', $sale_id);
                             if (!isset($result['error'])) {
                                 $payment['transaction_id'] = $result['transaction_id'];
-                                $payment['date']           = $this->sma->fld($result['created_at']);
-                                $payment['amount']         = $result['amount'];
-                                $payment['currency']       = $result['currency'];
+                                $payment['date'] = $this->sma->fld($result['created_at']);
+                                $payment['amount'] = $result['amount'];
+                                $payment['currency'] = $result['currency'];
                                 unset($payment['cc_cvv2']);
                                 $this->db->insert('payments', $payment);
                                 $this->site->updateReference('pay');
@@ -253,12 +310,12 @@ class Pos_model extends CI_Model
                             }
                         } elseif ($payment['paid_by'] == 'stripe') {
                             $card_info = ['number' => $payment['cc_no'], 'exp_month' => $payment['cc_month'], 'exp_year' => $payment['cc_year'], 'cvc' => $payment['cc_cvv2'], 'type' => $payment['cc_type']];
-                            $result    = $this->stripe($payment['amount'], $card_info);
+                            $result = $this->stripe($payment['amount'], $card_info);
                             if (!isset($result['error'])) {
                                 $payment['transaction_id'] = $result['transaction_id'];
-                                $payment['date']           = $this->sma->fld($result['created_at']);
-                                $payment['amount']         = $result['amount'];
-                                $payment['currency']       = $result['currency'];
+                                $payment['date'] = $this->sma->fld($result['created_at']);
+                                $payment['amount'] = $result['amount'];
+                                $payment['currency'] = $result['currency'];
                                 unset($payment['cc_cvv2']);
                                 $this->db->insert('payments', $payment);
                                 $this->site->updateReference('pay');
@@ -268,15 +325,15 @@ class Pos_model extends CI_Model
                                 $msg[] = '<p class="text-danger">' . $result['code'] . ': ' . $result['message'] . '</p>';
                             }
                         } elseif ($payment['paid_by'] == 'authorize') {
-                            $authorize_arr                 = ['x_card_num' => $payment['cc_no'], 'x_exp_date' => ($payment['cc_month'] . '/' . $payment['cc_year']), 'x_card_code' => $payment['cc_cvv2'], 'x_amount' => $payment['amount'], 'x_invoice_num' => $sale_id, 'x_description' => 'Sale Ref ' . $data['reference_no'] . ' and Payment Ref ' . $payment['reference_no']];
-                            list($first_name, $last_name)  = explode(' ', $payment['cc_holder'], 2);
+                            $authorize_arr = ['x_card_num' => $payment['cc_no'], 'x_exp_date' => ($payment['cc_month'] . '/' . $payment['cc_year']), 'x_card_code' => $payment['cc_cvv2'], 'x_amount' => $payment['amount'], 'x_invoice_num' => $sale_id, 'x_description' => 'Sale Ref ' . $data['reference_no'] . ' and Payment Ref ' . $payment['reference_no']];
+                            list($first_name, $last_name) = explode(' ', $payment['cc_holder'], 2);
                             $authorize_arr['x_first_name'] = $first_name;
-                            $authorize_arr['x_last_name']  = $last_name;
-                            $result                        = $this->authorize($authorize_arr);
+                            $authorize_arr['x_last_name'] = $last_name;
+                            $result = $this->authorize($authorize_arr);
                             if (!isset($result['error'])) {
                                 $payment['transaction_id'] = $result['transaction_id'];
-                                $payment['approval_code']  = $result['approval_code'];
-                                $payment['date']           = $this->sma->fld($result['created_at']);
+                                $payment['approval_code'] = $result['approval_code'];
+                                $payment['date'] = $this->sma->fld($result['created_at']);
                                 unset($payment['cc_cvv2']);
                                 $this->db->insert('payments', $payment);
                                 $this->site->updateReference('pay');
@@ -316,8 +373,8 @@ class Pos_model extends CI_Model
         if ($this->authorize_net->authorizeAndCapture()) {
             $result = [
                 'transaction_id' => $this->authorize_net->getTransactionId(),
-                'approval_code'  => $this->authorize_net->getApprovalCode(),
-                'created_at'     => date($this->dateFormats['php_ldate']),
+                'approval_code' => $this->authorize_net->getApprovalCode(),
+                'created_at' => date($this->dateFormats['php_ldate']),
             ];
             return $result;
         }
@@ -455,19 +512,19 @@ class Pos_model extends CI_Model
     {
         if ($this->pos_settings->item_order == 0) {
             $this->db->select('sale_items.*, tax_rates.code as tax_code, tax_rates.name as tax_name, tax_rates.rate as tax_rate, product_variants.name as variant, products.details as details, products.hsn_code as hsn_code, products.second_name as second_name')
-            ->join('products', 'products.id=sale_items.product_id', 'left')
-            ->join('tax_rates', 'tax_rates.id=sale_items.tax_rate_id', 'left')
-            ->join('product_variants', 'product_variants.id=sale_items.option_id', 'left')
-            ->group_by('sale_items.id')
-            ->order_by('id', 'asc');
+                ->join('products', 'products.id=sale_items.product_id', 'left')
+                ->join('tax_rates', 'tax_rates.id=sale_items.tax_rate_id', 'left')
+                ->join('product_variants', 'product_variants.id=sale_items.option_id', 'left')
+                ->group_by('sale_items.id')
+                ->order_by('id', 'asc');
         } elseif ($this->pos_settings->item_order == 1) {
             $this->db->select('sale_items.*, tax_rates.code as tax_code, tax_rates.name as tax_name, tax_rates.rate as tax_rate, product_variants.name as variant, categories.id as category_id, categories.name as category_name, products.details as details, products.hsn_code as hsn_code, products.second_name as second_name')
-            ->join('tax_rates', 'tax_rates.id=sale_items.tax_rate_id', 'left')
-            ->join('product_variants', 'product_variants.id=sale_items.option_id', 'left')
-            ->join('products', 'products.id=sale_items.product_id', 'left')
-            ->join('categories', 'categories.id=products.category_id', 'left')
-            ->group_by('sale_items.id')
-            ->order_by('categories.id', 'asc');
+                ->join('tax_rates', 'tax_rates.id=sale_items.tax_rate_id', 'left')
+                ->join('product_variants', 'product_variants.id=sale_items.option_id', 'left')
+                ->join('products', 'products.id=sale_items.product_id', 'left')
+                ->join('categories', 'categories.id=products.category_id', 'left')
+                ->group_by('sale_items.id')
+                ->order_by('categories.id', 'asc');
         }
 
         $q = $this->db->get_where('sale_items', ['sale_id' => $sale_id]);
@@ -705,9 +762,38 @@ class Pos_model extends CI_Model
         return false;
     }
 
-    public function getProductQuantityWithNearestExpiry($product_id, $warehouse)
+    public function getProductQuantityWithNearestExpiry_old($product_id, $item_code, $warehouse)
     {
         $now = date('Y-m-d');  // Current date in the format 'YYYY-MM-DD'
+
+        $this->db->select('batch_no');
+        $this->db->from('invoice_serials');
+        $this->db->where('gtin', $item_code);
+        $this->db->where('tid >', 0);
+        $this->db->where('sid =', 0);
+        $q = $this->db->get();
+
+        $batch_details = $q->result_array();
+
+        if (!empty($batch_details)) {
+            $batch_nos = array_column($batch_details, 'batch_no');
+
+            $this->db->select('*');
+            $this->db->from('warehouses_products');
+            $this->db->where('product_id', $product_id);
+            $this->db->where('warehouse_id', $warehouse);
+            $this->db->where('quantity >', 0);
+            $this->db->where('expiry >=', $now);  // Select products with expiry greater than or equal to the current date
+            $this->db->where_in('batchno', $batch_nos); // Check for batch numbers in the serials
+            $this->db->order_by('expiry', 'ASC'); // Order by expiry in ascending order
+            $this->db->limit(1);
+            $q = $this->db->get();
+
+            if ($q->num_rows() > 0) {
+                return $q->row_array();
+            }
+        }
+
 
         $this->db->select('*');
         $this->db->from('warehouses_products');
@@ -722,6 +808,60 @@ class Pos_model extends CI_Model
         if ($q->num_rows() > 0) {
             return $q->row_array(); //$q->row();
         }
+
+        return false;
+    }
+    public function getProductQuantityWithNearestExpiry($product_id, $item_code, $warehouse)
+    {
+        $now = date('Y-m-d');  // Current date in the format 'YYYY-MM-DD'
+
+        $this->db->select('batch_no');
+        $this->db->from('invoice_serials');
+        $this->db->where('gtin', $item_code);
+        $this->db->where('tid >', 0);
+        $this->db->where('sid =', 0);
+        $q = $this->db->get();
+
+        $batch_details = $q->result_array();
+
+        if (!empty($batch_details)) {
+            $batch_nos = array_column($batch_details, 'batch_no');
+            $this->db->select(' inv.product_id, inv.batch_number as batchno ,SUM(inv.quantity) as quantity, inv.location_id as warehouse_id, inv.expiry_date as expiry');
+            $this->db->from('inventory_movements inv');
+            $this->db->where('inv.location_id', $warehouse);
+            $this->db->where('inv.product_id', $product_id);
+            $this->db->where('inv.expiry_date >=', $now);  // Select products with expiry greater than or equal to the current date
+            $this->db->where_in('inv.batch_number', $batch_nos);
+            $this->db->group_by('inv.batch_number');
+            $this->db->having('SUM(inv.quantity)>=0');
+            $this->db->order_by('inv.expiry_date', 'ASC');
+            $this->db->limit(1);
+            $q = $this->db->get();
+            //echo $this->db->last_query(); 
+            if ($q->num_rows() > 0) {
+                $rs = $q->row_array();
+                //echo 'aa <pre>';print_r($rs); exit;
+                return $rs;
+            }
+        }
+
+        $this->db->select(' inv.product_id, inv.batch_number as batchno ,SUM(inv.quantity) as quantity, inv.location_id as warehouse_id, inv.expiry_date as expiry');
+        $this->db->from('inventory_movements inv');
+        $this->db->where('inv.location_id', $warehouse);
+        $this->db->where('inv.product_id', $product_id);
+        $this->db->where('inv.expiry_date >=', $now);  // Select products with expiry greater than or equal to the current date             
+        $this->db->group_by('inv.batch_number');
+        $this->db->having('SUM(inv.quantity)>=0');
+        $this->db->order_by('inv.expiry_date', 'ASC');
+        $this->db->limit(1);
+        $q = $this->db->get();
+        //echo $this->db->last_query(); 
+        if ($q->num_rows() > 0) {
+            $rs = $q->row_array(); //$q->row();
+            //echo 'bb <pre>';print_r($rs); exit; 
+            return $rs;
+        }
+
         return false;
     }
 
@@ -760,7 +900,7 @@ class Pos_model extends CI_Model
         $this->db->where('payments.created_by', $user_id)->group_by('payments.sale_id');
 
         $qu = $this->db->get_compiled_select('payments');
-        $q  = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
+        $q = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -781,14 +921,98 @@ class Pos_model extends CI_Model
         $this->db->where('payments.created_by', $user_id)->group_by('payments.sale_id');
 
         $qu = $this->db->get_compiled_select('payments');
-        $q  = $this->db->select('SUM(sp.total) as total, SUM(sp.returned) as returned')->from("({$qu}) sp")->get();
+        $q = $this->db->select('SUM(sp.total) as total, SUM(sp.returned) as returned')->from("({$qu}) sp")->get();
         if ($q->num_rows() > 0) {
             return $q->row();
         }
         return false;
     }
 
-    public function getRegisterCashSales($date, $user_id = null)
+    public function getRegisterCashSales($date, $user_id = null, $end_date=null)
+    {
+        if (!$date) {
+            $date = $this->session->userdata('register_open_time');
+        }
+        if (!$end_date) {
+            $end_date = date('Y-m-d H:i:s');
+        }
+        if (!$user_id) {
+            $user_id = $this->session->userdata('user_id');
+        }
+        // $this->db->select('COALESCE( grand_total, 0 ) AS total, SUM( COALESCE( amount, 0 ) ) AS paid', false)
+        //     ->join('sales', 'sales.id=payments.sale_id', 'left')
+        //     ->where('type', 'received')->where('date(payments.date) =', $date)->where('paid_by', 'cash');
+        // $this->db->where('payments.created_by', $user_id)->group_by('payments.sale_id');
+
+        // $qu = $this->db->get_compiled_select('payments');
+        // $q  = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
+        // if ($q->num_rows() > 0) {
+        //     return $q->row();
+        // }
+
+    //    $sql = "
+    //     SELECT 
+    //         SUM( CASE
+    //             WHEN MOD(amount, 1) > 0.50 THEN FLOOR(amount) + 1
+    //             ELSE FLOOR(amount)
+    //             END 
+    //         ) AS total
+    //     FROM 
+    //         sma_payments payments
+    //     LEFT JOIN 
+    //         sma_sales sales ON sales.id = payments.sale_id
+    //     WHERE 
+    //         payments.type = 'received' 
+    //         AND payments.paid_by = 'cash'
+    //         AND DATE(payments.date) = '".trim($date)."'
+    //         AND payments.created_by IN (".$user_id.")
+    //    ;
+    // ";
+
+       $dateWhere =  " AND DATE(payments.date) >= '".trim($date)."'
+            AND DATE(payments.date) <= '".trim($end_date)."' " ;
+        if( !empty($this->input->post('registerId'))  && $this->input->post('registerId') > 0 )
+        {
+            $dateWhere =  " AND payments.date >= '".trim($this->input->post('register_open_date_time'))."'
+            AND payments.date <= '".trim($this->input->post('register_close_date_time'))."' " ;
+        } 
+
+      $sql = "
+        SELECT 
+            SUM( CASE
+                WHEN MOD(amount, 1) > 0.50 THEN FLOOR(amount) + 1
+                ELSE FLOOR(amount)
+                END 
+            ) AS total,
+             
+               SUM(amount)
+             AS total_with_halala
+        FROM 
+            sma_payments payments
+        LEFT JOIN 
+            sma_sales sales ON sales.id = payments.sale_id
+        WHERE 
+            payments.type = 'received' 
+            AND payments.paid_by = 'cash'
+            ".$dateWhere."
+            AND payments.created_by IN (".$user_id.")
+       ;
+    ";
+
+        $q = $this->db->query($sql);
+        $result = array();
+        //echo $this->db->last_query();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $result = $row;
+            }
+            return $result;
+        }
+
+        return false;
+    }
+
+    public function getRegisterCCSales($date, $user_id = null, $end_date = null)
     {
         if (!$date) {
             $date = $this->session->userdata('register_open_time');
@@ -796,37 +1020,53 @@ class Pos_model extends CI_Model
         if (!$user_id) {
             $user_id = $this->session->userdata('user_id');
         }
-        $this->db->select('COALESCE( grand_total, 0 ) AS total, SUM( COALESCE( amount, 0 ) ) AS paid', false)
-            ->join('sales', 'sales.id=payments.sale_id', 'left')
-            ->where('type', 'received')->where('payments.date >', $date)->where('paid_by', 'cash');
-        $this->db->where('payments.created_by', $user_id)->group_by('payments.sale_id');
+         if (!$end_date) {
+            $end_date = date('Y-m-d');
+        }
+        // $this->db->select('COUNT(' . $this->db->dbprefix('payments') . '.id) as total_cc_slips, COALESCE( grand_total, 0 ) AS total, SUM( COALESCE( amount, 0 ) ) AS paid', false)
+        //     ->join('sales', 'sales.id=payments.sale_id', 'left')
+        //     ->where('type', 'received')->where('payments.date >', $date)->where('paid_by', 'CC');
+        // $this->db->where('payments.created_by', $user_id)->group_by('payments.sale_id');
 
-        $qu = $this->db->get_compiled_select('payments');
-        $q  = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
+        // $qu = $this->db->get_compiled_select('payments');
+        // $q = $this->db->select('SUM(sp.total_cc_slips) as total_cc_slips, SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
+        // if ($q->num_rows() > 0) {
+        //     return $q->row();
+        // }
+        
+        
+        $dateWhere =  " AND DATE(payments.date) >= '".trim($date)."'
+            AND DATE(payments.date) <= '".trim($end_date)."' " ;
+        if( !empty($this->input->post('registerId'))  && $this->input->post('registerId') > 0 )
+        {
+            $dateWhere =  " AND payments.date >= '".trim($this->input->post('register_open_date_time'))."'
+            AND payments.date <= '".trim($this->input->post('register_close_date_time'))."' " ;
+        } 
+
+        $sql = "
+        SELECT 
+            SUM( COALESCE(payments.amount, 0) ) AS total
+        FROM 
+            sma_payments payments
+        LEFT JOIN 
+            sma_sales sales ON sales.id = payments.sale_id
+        WHERE 
+            payments.type = 'received' 
+            AND payments.paid_by = 'card'
+           ".$dateWhere."
+            AND payments.created_by IN (".$user_id.")
+    ";
+
+        $q = $this->db->query($sql);
+        $result = array();
+       //cho $this->db->last_query();
         if ($q->num_rows() > 0) {
-            return $q->row();
+            foreach (($q->result()) as $row) {
+                $result = $row;
+            }
+            return $result;
         }
-        return false;
-    }
 
-    public function getRegisterCCSales($date, $user_id = null)
-    {
-        if (!$date) {
-            $date = $this->session->userdata('register_open_time');
-        }
-        if (!$user_id) {
-            $user_id = $this->session->userdata('user_id');
-        }
-        $this->db->select('COUNT(' . $this->db->dbprefix('payments') . '.id) as total_cc_slips, COALESCE( grand_total, 0 ) AS total, SUM( COALESCE( amount, 0 ) ) AS paid', false)
-            ->join('sales', 'sales.id=payments.sale_id', 'left')
-            ->where('type', 'received')->where('payments.date >', $date)->where('paid_by', 'CC');
-        $this->db->where('payments.created_by', $user_id)->group_by('payments.sale_id');
-
-        $qu = $this->db->get_compiled_select('payments');
-        $q  = $this->db->select('SUM(sp.total_cc_slips) as total_cc_slips, SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
-        if ($q->num_rows() > 0) {
-            return $q->row();
-        }
         return false;
     }
 
@@ -842,10 +1082,13 @@ class Pos_model extends CI_Model
             ->join('sales', 'sales.id=payments.sale_id', 'left')
             ->where('type', 'received')->where('payments.date >', $date)->where('paid_by', 'Cheque');
 
-        $this->db->where('payments.created_by', $user_id)->group_by('payments.sale_id');
+        $user_ids = explode(',', $user_id);
+        $user_ids = array_map('trim', $user_ids);
+        $this->db->where_in('payments.created_by', $user_ids);
+        $this->db->group_by('payments.sale_id');
 
         $qu = $this->db->get_compiled_select('payments');
-        $q  = $this->db->select('SUM(sp.total_cheques) as total_cheques, SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
+        $q = $this->db->select('SUM(sp.total_cheques) as total_cheques, SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -884,7 +1127,7 @@ class Pos_model extends CI_Model
         $this->db->where('payments.created_by', $user_id)->group_by('payments.sale_id');
 
         $qu = $this->db->get_compiled_select('payments');
-        $q  = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
+        $q = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -905,7 +1148,7 @@ class Pos_model extends CI_Model
         $this->db->where('payments.created_by', $user_id)->group_by('payments.sale_id');
 
         $qu = $this->db->get_compiled_select('payments');
-        $q  = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
+        $q = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -926,7 +1169,7 @@ class Pos_model extends CI_Model
         $this->db->where('payments.created_by', $user_id)->group_by('payments.sale_id');
 
         $qu = $this->db->get_compiled_select('payments');
-        $q  = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
+        $q = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -947,7 +1190,7 @@ class Pos_model extends CI_Model
         $this->db->where('payments.created_by', $user_id)->group_by('payments.sale_id');
 
         $qu = $this->db->get_compiled_select('payments');
-        $q  = $this->db->select('SUM(sp.total) as total, SUM(sp.returned) as returned')->from("({$qu}) sp")->get();
+        $q = $this->db->select('SUM(sp.total) as total, SUM(sp.returned) as returned')->from("({$qu}) sp")->get();
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -963,8 +1206,8 @@ class Pos_model extends CI_Model
             $user_id = $this->session->userdata('user_id');
         }
         $this->db->select('SUM( COALESCE( grand_total, 0 ) ) AS total', false)
-        ->where('date >', $date)
-        ->where('returns.created_by', $user_id);
+            ->where('date >', $date)
+            ->where('returns.created_by', $user_id);
 
         $q = $this->db->get('returns');
         if ($q->num_rows() > 0) {
@@ -973,7 +1216,55 @@ class Pos_model extends CI_Model
         return false;
     }
 
-    public function getRegisterSales($date, $user_id = null)
+    public function getRegisterReturnsNew($date, $user_id = null, $end_date = null){
+        if (!$date) {
+            $date = $this->session->userdata('register_open_time');
+        }
+        if (!$user_id) {
+            $user_id = $this->session->userdata('user_id');
+        }
+        if (!$end_date) {
+            $end_date = date('Y-m-d');
+        }
+
+        $dateWhere =  "   AND DATE(payments.date) >= '".trim($date)."'  
+        AND DATE(payments.date) <= '".trim($end_date)."' " ;
+        if( !empty($this->input->post('registerId'))  && $this->input->post('registerId') > 0 )
+        {
+            $dateWhere =  " AND payments.date >= '".trim($this->input->post('register_open_date_time'))."'
+            AND payments.date <= '".trim($this->input->post('register_close_date_time'))."' " ;
+        } 
+
+        $sql = "SELECT 
+            SUM(sp.total) AS total, 
+            SUM(sp.paid) AS paid,
+            COUNT(sp.id) AS total_returns
+        FROM (
+            SELECT 
+                COALESCE(returns.total, 0) AS total, 
+                SUM(COALESCE(payments.amount, 0)) AS paid,
+                returns.id
+            FROM 
+                sma_payments payments
+            LEFT JOIN 
+                sma_returns returns ON returns.id = payments.return_id
+            WHERE 
+                payments.type = 'completed' 
+                ".$dateWhere."
+                AND payments.created_by IN (".$user_id.")
+            GROUP BY 
+                payments.return_id
+        ) AS sp;
+        ";
+       
+        $q = $this->db->query($sql);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function getRegisterSales($date, $user_id = null, $end_date = null)
     {
         if (!$date) {
             $date = $this->session->userdata('register_open_time');
@@ -981,13 +1272,47 @@ class Pos_model extends CI_Model
         if (!$user_id) {
             $user_id = $this->session->userdata('user_id');
         }
-        $this->db->select('COALESCE( grand_total, 0 ) AS total, SUM( COALESCE( amount, 0 ) ) AS paid', false)
-            ->join('sales', 'sales.id=payments.sale_id', 'left')
-            ->where('type', 'received')->where('payments.date >', $date);
-        $this->db->where('payments.created_by', $user_id)->group_by('payments.sale_id');
+        if (!$end_date) {
+            $end_date = date('Y-m-d');
+        }
+        // $this->db->select('COALESCE( grand_total, 0 ) AS total, SUM( COALESCE( amount, 0 ) ) AS paid', false)
+        //     ->join('sales', 'sales.id=payments.sale_id', 'left')
+        //     ->where('type', 'received')->where(DATE(`payments.date`), $date);
+        // $this->db->where('payments.created_by', $user_id)->group_by('payments.sale_id');
+        // $qu = $this->db->get_compiled_select('payments');
+        // $q = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
 
-        $qu = $this->db->get_compiled_select('payments');
-        $q  = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
+      $dateWhere =  "   AND DATE(payments.date) >= '".trim($date)."'  
+        AND DATE(payments.date) <= '".trim($end_date)."' " ;
+        if( !empty($this->input->post('registerId'))  && $this->input->post('registerId') > 0 )
+        {
+            $dateWhere =  " AND payments.date >= '".trim($this->input->post('register_open_date_time'))."'
+            AND payments.date <= '".trim($this->input->post('register_close_date_time'))."' " ;
+        } 
+
+        $sql = "SELECT 
+                    SUM(sp.total) AS total, 
+                    SUM(sp.paid) AS paid,
+                    COUNT(sp.id) AS total_sales
+                FROM (
+                    SELECT 
+                        COALESCE(sales.grand_total, 0) AS total, 
+                        SUM(COALESCE(payments.amount, 0)) AS paid,
+                        sales.id
+                    FROM 
+                        sma_payments payments
+                    LEFT JOIN 
+                        sma_sales sales ON sales.id = payments.sale_id
+                    WHERE 
+                        payments.type = 'received' 
+                    ".$dateWhere."
+                        AND payments.created_by IN (".$user_id.")
+                    GROUP BY 
+                        payments.sale_id
+                ) AS sp;
+                ";
+
+$q = $this->db->query($sql);
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -1008,7 +1333,7 @@ class Pos_model extends CI_Model
         $this->db->where('payments.created_by', $user_id)->group_by('payments.sale_id');
 
         $qu = $this->db->get_compiled_select('payments');
-        $q  = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
+        $q = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -1077,10 +1402,10 @@ class Pos_model extends CI_Model
         $this->db->select('COALESCE( grand_total, 0 ) AS total, SUM( COALESCE( amount, 0 ) ) AS paid', false)
             ->join('sales', 'sales.id=payments.sale_id', 'left')
             ->where('type', 'received')->where('payments.date >', $date)->where('paid_by', 'authorize')
-             ->group_by('payments.sale_id');
+            ->group_by('payments.sale_id');
 
         $qu = $this->db->get_compiled_select('payments');
-        $q  = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
+        $q = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -1096,7 +1421,7 @@ class Pos_model extends CI_Model
             ->group_by('payments.sale_id');
 
         $qu = $this->db->get_compiled_select('payments');
-        $q  = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
+        $q = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -1112,7 +1437,7 @@ class Pos_model extends CI_Model
             ->group_by('payments.sale_id');
 
         $qu = $this->db->get_compiled_select('payments');
-        $q  = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
+        $q = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -1128,7 +1453,7 @@ class Pos_model extends CI_Model
             ->group_by('payments.sale_id');
 
         $qu = $this->db->get_compiled_select('payments');
-        $q  = $this->db->select('SUM(sp.total_cc_slips) as total_cc_slips, SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
+        $q = $this->db->select('SUM(sp.total_cc_slips) as total_cc_slips, SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -1144,7 +1469,7 @@ class Pos_model extends CI_Model
             ->group_by('payments.sale_id');
 
         $qu = $this->db->get_compiled_select('payments');
-        $q  = $this->db->select('SUM(sp.total_cheques) as total_cheques, SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
+        $q = $this->db->select('SUM(sp.total_cheques) as total_cheques, SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -1173,7 +1498,7 @@ class Pos_model extends CI_Model
             ->group_by('payments.sale_id');
 
         $qu = $this->db->get_compiled_select('payments');
-        $q  = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
+        $q = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -1189,7 +1514,7 @@ class Pos_model extends CI_Model
             ->group_by('payments.sale_id');
 
         $qu = $this->db->get_compiled_select('payments');
-        $q  = $this->db->select('SUM(sp.total) as total, SUM(sp.returned) as returned')->from("({$qu}) sp")->get();
+        $q = $this->db->select('SUM(sp.total) as total, SUM(sp.returned) as returned')->from("({$qu}) sp")->get();
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -1219,7 +1544,7 @@ class Pos_model extends CI_Model
             ->group_by('sales.id');
 
         $qu = $this->db->get_compiled_select('sales');
-        $q  = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
+        $q = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -1235,7 +1560,7 @@ class Pos_model extends CI_Model
             ->group_by('payments.sale_id');
 
         $qu = $this->db->get_compiled_select('payments');
-        $q  = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
+        $q = $this->db->select('SUM(sp.total) as total, SUM(sp.paid) as paid')->from("({$qu}) sp")->get();
         if ($q->num_rows() > 0) {
             return $q->row();
         }
@@ -1269,7 +1594,7 @@ class Pos_model extends CI_Model
         return false;
     }
 
-    public function getWHProductById($id, $warehouse_id)
+    /*public function getWHProductById($id, $warehouse_id)
     {
         $this->db->select('products.*, warehouses_products.quantity, categories.id as category_id, categories.name as category_name')
             ->join('warehouses_products', 'warehouses_products.product_id=products.id', 'left')
@@ -1281,6 +1606,29 @@ class Pos_model extends CI_Model
         }
 
         return false;
+    }*/
+
+    public function getWHProductById($id, $warehouse_id)
+    {
+        $this->db->select("im.net_unit_sale, 
+                            im.net_unit_cost, 
+                            im.real_unit_cost,
+                            im.customer_id,
+                            im.product_id,
+                            pr.name as product_name, im.batch_number as batchno, im.expiry_date as expiry,
+                            pr.tax_rate, pr.type, pr.unit, pr.code as product_code, im.avz_item_code,
+                            SUM(IFNULL(im.quantity, 0)) as total_quantity
+                            ");
+        $this->db->from('sma_inventory_movements im');
+        $this->db->join('sma_products pr', 'pr.id = im.product_id', 'left');
+        $this->db->where('im.location_id', $warehouse_id);
+        $this->db->where('im.product_id', $id);
+
+        $this->db->group_by(['im.product_id', 'im.location_id']);
+        $this->db->having('total_quantity !=', 0);
+        $query = $this->db->get();
+        //echo $this->db->last_query();exit;
+        return $query->result();
     }
 
     public function insertQuantity($product_id, $warehouse_id, $quantity)
@@ -1307,10 +1655,11 @@ class Pos_model extends CI_Model
         if ($amount && !empty($card_info)) {
             $data = $this->paypal_payments->Do_direct_payment($amount, $this->default_currency->code, $card_info, $desc, $sale_id);
             if (!isset($data['error'])) {
-                $result = ['transaction_id' => $data['TRANSACTIONID'],
-                    'created_at'            => date($this->dateFormats['php_ldate'], strtotime($data['TIMESTAMP'])),
-                    'amount'                => $data['AMT'],
-                    'currency'              => strtoupper($data['CURRENCYCODE']),
+                $result = [
+                    'transaction_id' => $data['TRANSACTIONID'],
+                    'created_at' => date($this->dateFormats['php_ldate'], strtotime($data['TIMESTAMP'])),
+                    'amount' => $data['AMT'],
+                    'currency' => strtoupper($data['CURRENCYCODE']),
                 ];
                 return $result;
             }
@@ -1363,12 +1712,13 @@ class Pos_model extends CI_Model
             $token_info = $this->stripe_payments->create_card_token($card_info);
             if (!isset($token_info['error'])) {
                 $token = $token_info->id;
-                $data  = $this->stripe_payments->insert($token, $desc, $amount, $this->default_currency->code);
+                $data = $this->stripe_payments->insert($token, $desc, $amount, $this->default_currency->code);
                 if (!isset($data['error'])) {
-                    $result = ['transaction_id' => $data->id,
-                        'created_at'            => date($this->dateFormats['php_ldate'], $data->created),
-                        'amount'                => ($data->amount / 100),
-                        'currency'              => strtoupper($data->currency),
+                    $result = [
+                        'transaction_id' => $data->id,
+                        'created_at' => date($this->dateFormats['php_ldate'], $data->created),
+                        'amount' => ($data->amount / 100),
+                        'currency' => strtoupper($data->currency),
                     ];
                     return $result;
                 }
@@ -1382,17 +1732,17 @@ class Pos_model extends CI_Model
     public function suspendSale($data = [], $items = [], $did = null)
     {
         $sData = [
-            'count'             => $data['total_items'],
-            'biller_id'         => $data['biller_id'],
-            'customer_id'       => $data['customer_id'],
-            'warehouse_id'      => $data['warehouse_id'],
-            'customer'          => $data['customer'],
-            'date'              => $data['date'],
-            'suspend_note'      => $data['suspend_note'],
-            'total'             => $data['grand_total'],
-            'order_tax_id'      => $data['order_tax_id'],
+            'count' => $data['total_items'],
+            'biller_id' => $data['biller_id'],
+            'customer_id' => $data['customer_id'],
+            'warehouse_id' => $data['warehouse_id'],
+            'customer' => $data['customer'],
+            'date' => $data['date'],
+            'suspend_note' => $data['suspend_note'],
+            'total' => $data['grand_total'],
+            'order_tax_id' => $data['order_tax_id'],
             'order_discount_id' => $data['order_discount_id'],
-            'created_by'        => $this->session->userdata('user_id'),
+            'created_by' => $this->session->userdata('user_id'),
         ];
 
         if ($did) {
@@ -1409,7 +1759,7 @@ class Pos_model extends CI_Model
         } else {
             if ($this->db->insert('suspended_bills', $sData)) {
                 $suspend_id = $this->db->insert_id();
-                $addOn      = ['suspend_id' => $suspend_id];
+                $addOn = ['suspend_id' => $suspend_id];
                 end($addOn);
                 foreach ($items as &$var) {
                     $var = array_merge($addOn, $var);
@@ -1494,6 +1844,18 @@ class Pos_model extends CI_Model
         return false;
     }
 
+    public function getPaymentTypes($id)
+    {
+        $q = $this->db->get_where('payments', ['sale_id' => $id]);
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+            return $data;
+        }
+        return false;
+    }
+
     // public function deleteBill($id)
     // {
     //     if ($this->db->delete('sma_suspended_bills', ['id' => $id])) {
@@ -1502,8 +1864,80 @@ class Pos_model extends CI_Model
     //     }
     //     return false;
     // }
-    
 
+    public function getSalesByDateRange($selected_date, $sale_id='')
+    {
+        /**get grand discount */
+        $where = '';
+        if($this->session->userdata('warehouse_id') != 32) {
+            $where .= ' AND s.warehouse_id = ' . $this->session->userdata('warehouse_id');
+        }
+        if($sale_id != '') {
+            $where .= ' AND s.id = ' . $sale_id;
+        }
+       echo $sql = " SELECT
+        id
+          FROM  
+        sma_sales s 
+                            
+        WHERE 
+            DATE(s.date) = '" . trim($selected_date) . "' ".$where ;
+        $q = $this->db->query($sql);
+        //echo $this->db->last_query();
+        $sales_id = array();
+        //echo $q->num_rows();
+        if ($q->num_rows() > 0) {
+            foreach($q->result_array() as $row){
+                $sales_id[] = $row['id'];
+            }
+          return $sales_id;  
+        }
+        
+        
+        return false;
+
+
+
+
+    }
+
+    public function search_register_ids($pharmacy_id, $pharmacist_id, $from_date, $to_date) {
+        $this->db->select('id,register_id, date as open_date_time, closed_at as close_date_time');
+        $this->db->from('sma_pos_register');
+
+        if (!empty($pharmacy_id) ) {
+            $this->db->where('pharmacy_id', $pharmacy_id);
+        }
+        if (!empty($pharmacist_id) && $pharmacist_id > 0) {
+            $this->db->where('closed_by', $pharmacist_id);
+        }
+        if (!empty($from_date) && !empty($to_date)) {
+            $from_date = DateTime::createFromFormat('d/m/Y', $from_date)->format('Y-m-d');
+            $to_date   = DateTime::createFromFormat('d/m/Y', $to_date)->format('Y-m-d');
+            
+            $this->db->where('DATE(closed_at) >=', $from_date);
+            $this->db->where('DATE(closed_at) <=', $to_date);
+        }
+
+        $query = $this->db->get();
+        //echo $this->db->last_query();
+        return $query->result();
+    }
+
+     public function get_register_id_dates($register_id) {
+        $this->db->select('id,register_id, date as open_date_time, closed_at as close_date_time');
+        $this->db->from('sma_pos_register');
+
+       
+            $this->db->where('id', $register_id);
+       
+
+        $query = $this->db->get();
+        //echo $this->db->last_query();
+        return $query->result();
+    }
+
+    
 
 
 }

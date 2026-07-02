@@ -84,6 +84,7 @@
                     success: function (data) {
                         $(this).removeClass('ui-autocomplete-loading');
                         response(data);
+                         
                     }
                 });
             },
@@ -185,7 +186,7 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <?= lang('date', 'todate'); ?>
-                                    <?php echo form_input('date', ($_POST['date'] ?? ''), 'class="form-control input-tip datetime" id="todate" required="required"'); ?>
+                                    <?php echo form_input('date', ($_POST['date'] ?? date("d/m/Y H:i")), 'class="form-control input-tip datetime" id="todate" required="required"'); ?>
                                 </div>
                             </div>
                         <?php
@@ -203,7 +204,7 @@
                                 <?php
                                 $wh[''] = '';
                                 foreach ($warehouses as $warehouse) {
-                                    $wh[$warehouse->id] = $warehouse->name;
+                                    $wh[$warehouse->id] = $warehouse->name.' ('.$warehouse->code.')';
                                 }
                                 echo form_dropdown('to_warehouse', $wh, ($_POST['to_warehouse'] ?? ''), 'id="to_warehouse" class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('to_warehouse') . '" required="required" style="width:100%;" ');
                                 ?>
@@ -214,7 +215,7 @@
                             <div class="form-group">
                                 <?= lang('status', 'tostatus'); ?>
                                 <?php
-                                $post = ['save' => lang('save'), 'completed' => lang('completed'), 'sent' => lang('sent')];
+                                $post = ['save' => lang('save'), 'completed' => lang('completed')];
                                 echo form_dropdown('status', $post, ($_POST['status'] ?? ''), 'id="tostatus" class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . '" required="required" style="width:100%;" ');
                                 ?>
                             </div>
@@ -339,7 +340,7 @@
 
                 <div id="bottom-total" class="well well-sm" style="margin-bottom: 0;">
                     <table class="table table-bordered table-condensed totals" style="margin-bottom:0;">
-                        <tr class="warning">
+                        <tr class="warning"> 
                             <td><?= lang('items') ?> <span class="totals_val pull-right" id="titems">0</span></td>
                             <td><?= lang('total') ?> <span class="totals_val pull-right" id="total">0.00</span></td>
                             <td><?= lang('shipping') ?> <span class="totals_val pull-right" id="tship">0.00</span></td>

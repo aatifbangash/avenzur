@@ -10,7 +10,7 @@
             var rounding = parseFloat(b[1]);
             var paid = parseFloat(b[2]);
             if (number == 'number') {
-                return formatDecimals(total+rounding-paid);
+                return formatDecimal(total+rounding-paid);
             }
             return currencyFormat(total+rounding-paid);
         }
@@ -19,7 +19,7 @@
             "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?= lang('all') ?>"]],
             "iDisplayLength": <?= $Settings->rows_per_page ?>,
             'bProcessing': true, 'bServerSide': true,
-            'sAjaxSource': '<?= admin_url('pos/getSales' . ($warehouse_id ? '/' . $warehouse_id : '')) ?>',
+            'sAjaxSource': '<?= admin_url('pos/getSales'. ($warehouse_id ? '/' . $warehouse_id : '') . '?sid='.$sid. '&from=' .$sfromDate. '&to=' .$stoDate. '&warehouse=' .$swarehouse. '&v=1') ?>',
             'fnServerData': function (sSource, aoData, fnCallback) {
                 aoData.push({
                     "name": "<?= $this->security->get_csrf_token_name() ?>",
@@ -36,7 +36,7 @@
             "aoColumns": [{
                 "bSortable": false,
                 "mRender": checkbox
-            }, {"mRender": fld}, null, null, null, null, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": balance}, {"mRender": row_status}, {"mRender": pay_status}, {"bSortable": false}],
+            }, {"mRender": fld}, null, null, null, null, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": balance}, {"mRender": row_status}, {"mRender": pay_status}, {"bSortable": false}, {"bSortable": false}],
             "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                 var gtotal = 0, paid = 0, bal = 0;
                 for (var i = 0; i < aaData.length; i++) {
@@ -96,6 +96,31 @@
         });
     });
 
+    function generatePDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+            orientation: 'p',
+            unit: 'pt',
+            format: 'a4'
+        }); 
+        // add image - logo
+        // Adjust these to manage left and top margins
+        var elementHTML = document.querySelector('#POSData');
+        var div = document.getElementById("POSData");
+        var width = div.offsetWidth; 
+
+        doc.html(elementHTML, {
+            callback: function (doc) {
+                doc.save('pos-document.pdf');
+            },
+            margin: [10, 10, 10, 10],
+            x: 0, // Left margin
+            y: 0, // Top margin
+            width: 500, // Adjust width to manage the right margin
+            windowWidth: 775
+        });
+    } 
+
 </script>
 
 <?php if ($Owner || ($GP && $GP['bulk_actions'])) {
@@ -105,16 +130,20 @@
     <div class="box-header">
         <h2 class="blue"><i
                 class="fa-fw fa fa-barcode"></i><?= lang('pos_sales') . ' (' . ($warehouse_id ? $warehouse->name : lang('all_warehouses')) . ')'; ?>
-        </h2>
+            
+            </h2>
 
         <div class="box-icon">
+        
             <ul class="btn-tasks">
+            <button type="button" class="btn btn-primary btn-sm mt-2 " onclick="generatePDF()" style="margin-top:5px; margin-right:5px; " > <?= lang('Generate PDF') ?></button> 
                 <li class="dropdown">
+                
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#"><i class="icon fa fa-tasks tip"  data-placement="left" title="<?= lang('actions') ?>"></i></a>
                     <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
                         <li><a href="<?= admin_url('pos') ?>"><i class="fa fa-plus-circle"></i> <?= lang('add_sale') ?></a></li>
                         <li><a href="#" id="excel" data-action="export_excel"><i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?></a></li>
-                        <li class="divider"></li>
+                        <li class="divider"></li> 
                         <li><a href="#" class="bpo" title="<b><?= $this->lang->line('delete_sales') ?></b>" data-content="<p><?= lang('r_u_sure') ?></p><button type='button' class='btn btn-danger' id='delete' data-action='delete'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button>" data-html="true" data-placement="left"><i class="fa fa-trash-o"></i> <?= lang('delete_sales') ?></a></li>
                     </ul>
                 </li>
@@ -139,9 +168,51 @@
     <div class="box-content">
         <div class="row">
             <div class="col-lg-12">
-                <p class="introtext"><?= lang('list_results'); ?></p>
+                <!--<p class="introtext"><?= lang('list_results'); ?></p>-->
 
-                <div class="table-responsive">
+                <?php 
+                    // MARK: Filter
+                ?>
+                <div class="row" style="margin: 25px 0; display: flex; align-items: center;">
+                    <div style="flex: 1; margin-right: 20px;">
+                        <input type="text" id="sid" name="sid" class="form-control input-tip" placeholder="Serial Number">
+                    </div>
+
+                    <div style="flex: 1;">
+                        <input type="date" name="date" class="form-control input-tip" id="sfromDate" placeholder="From Date">
+                    </div>
+
+                    <div style="flex: 0; margin: 0 10px; font-size: 18px; font-weight: bold;">
+                        -
+                    </div>
+
+                    <div style="flex: 1; margin-right: 20px;">
+                        <input type="date" name="date" class="form-control input-tip" id="stoDate" placeholder="To Date">
+                    </div>
+
+                    <div style="flex: 1; margin-right: 20px;">
+                        <div class="controls">
+                            <?php
+                                $wh[''] = '';
+                                foreach ($warehouses as $warehouse) {
+                                    $wh[$warehouse->id] = $warehouse->name;
+                                }
+
+                                echo form_dropdown('warehouse', $wh, ' ', 'id="swarehouse" class="form-control input-tip select" data-placeholder="' . $this->lang->line('Select warehouse') . '" style="width:100%;"'
+                                );
+                            ?>
+                        </div>
+                    </div>
+
+                    <div style="flex: 0;">
+                        <input type="button" id="searchByNumber" class="btn btn-primary" value="Search">
+                    </div>
+                </div>
+
+                <?php 
+                    // MARK: Table
+                ?>
+                <div class="table-responsive" id="pdfcontent">
                     <table id="POSData" class="table table-bordered table-hover table-striped">
                         <thead>
                         <tr>
@@ -158,6 +229,7 @@
                             <th><?= lang('balance'); ?></th>
                             <th><?= lang('sale_status'); ?></th>
                             <th><?= lang('payment_status'); ?></th>
+                            <th><?= lang('pickup'); ?></th>
                             <th style="width:80px; text-align:center;"><?= lang('actions'); ?></th>
                         </tr>
                         </thead>
@@ -180,6 +252,7 @@
                             <th><?= lang('balance'); ?></th>
                             <th class="defaul-color"></th>
                             <th class="defaul-color"></th>
+                            <th class="defaul-color"></th>
                             <th style="width:80px; text-align:center;"><?= lang('actions'); ?></th>
                         </tr>
                         </tfoot>
@@ -198,3 +271,30 @@
     <?= form_close() ?>
     <?php
 } ?>
+
+<script>
+    document.getElementById('searchByNumber').addEventListener('click', function() {
+        var paramValues = [document.getElementById('sid').value, 
+                   document.getElementById('sfromDate').value, 
+                   document.getElementById('stoDate').value, 
+                   document.getElementById('swarehouse').value]
+
+        var paramNames = ['sid', 'from', 'to', 'warehouse'];
+
+        if (is_numeric(paramValues[0]) || paramValues[0] == ''){
+            var baseUrl = window.location.href.split('?')[0];
+            var queryParams = [];
+
+            for (let index = 0; index < paramValues.length; index++) {
+                if(paramValues[index]){
+                    queryParams.push(paramNames[index] + '=' + encodeURIComponent(paramValues[index]));
+                }
+            }
+
+            var newUrl = baseUrl + '?' + queryParams.join('&');
+            window.location.href = newUrl;
+        } else {
+            alert("Please enter a valid Serial number."); 
+        }
+    });
+</script>

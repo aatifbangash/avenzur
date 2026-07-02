@@ -49,7 +49,10 @@
                                                 <td><?= $memo->reference_no; ?></td>
                                                 <td><?= $memo->company; ?></td>
                                                 <td><?= $memo->payment_amount; ?></td>
-                                                <td><a href="<?php echo admin_url('customers/edit_credit_memo/' . $memo->id); ?>" class="tip" title="Edit Credit Memo"><i class="fa fa-edit"></i></a></td>
+                                                <td>
+                                                    <a href="<?php echo admin_url('customers/view_credit_memo/' . $memo->id); ?>" class="tip" title="View Credit Memo"><i class="fa fa-eye"></i></a>
+                                                    <a href="<?php echo admin_url('customers/delete_credit_memo/' . $memo->id); ?>" class="tip" title="Delete Credit Memo" onclick="return confirm('Are you sure you want to delete this credit memo?');"><i class="fa fa-trash"></i></a>
+                                                </td>
                                             </tr>
                                         <?php
                                     }

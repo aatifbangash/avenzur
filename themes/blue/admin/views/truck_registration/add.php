@@ -39,30 +39,7 @@
                                 <?= lang('Time', 'potime'); ?>
                                 <input type="time" value="<?php time(); ?>" class="form-control input-tip" name="truck_time" id="truck_time" required>
                             </div>
-                        </div>
-
-
-                           <div class="col-md-6">
-                            <div class="form-group">
-                                <?= lang('Reference No', 'poreference'); ?>
-                                <select id="reference_no" name="reference_no" class="form-control input-tip select" required="required">
-                                <option value="">Select (Reference / Supplier / Date)</option>
-                                <?php
-                                $sp[''] = '';
-                                foreach ($purchase as $purchase) {
-                                $purchaseId = $purchase->reference_no.'@/'.$purchase->id;
-                                $reference_no = $purchase->reference_no;
-                                   echo "<option value='$purchaseId'>$reference_no / $purchase->supplier / $purchase->date</option>";
-                              
-                                }
-                                ?>
-                                </select>
-                                <!-- echo form_dropdown('reference_no', $sp, ($_POST['reference_no'] ?? ''), 'id="reference_no" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('reference') . '" required="required"'); ?> -->
-                            
-                                </div>
-                            </div>
-
-                         
+                        </div>     
                         
                             <div class="col-md-12">
                             <div

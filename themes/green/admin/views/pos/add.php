@@ -253,7 +253,7 @@
                                         <?php
                                             $wh[''] = '';
                                         foreach ($pharmacies as $warehouse) {
-                                            $wh[$warehouse->id] = $warehouse->name;
+                                            $wh[$warehouse->id] = $warehouse->name.' ('.$warehouse->code.')';
                                         }
                                         echo form_dropdown('warehouse', $wh, ($_POST['warehouse'] ?? $Settings->default_warehouse), 'id="poswarehouse" class="form-control pos-input-tip" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('warehouse') . '" required="required" style="width:100%;" '); ?>
                                     </div>
@@ -299,6 +299,7 @@
                                         <tr>
                                             <th width="40%"><?=lang('product');?></th>
                                             <th width="15%"><?=lang('price');?></th>
+                                            <th width="15%"><?=lang('VAT');?></th>
                                             <th width="15%"><?=lang('qty');?></th>
                                             <th width="15%"><?=lang('Nearest Expiry');?></th>
                                             <th width="20%"><?=lang('subtotal');?></th>

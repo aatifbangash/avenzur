@@ -13,7 +13,7 @@
 
 <div class="box">
     <div class="box-header">
-        <h2 class="blue"><i class="fa-fw fa fa-info-circle"></i><?= lang('Service Invoice'); ?></h2>
+        <h2 class="blue"><i class="fa-fw fa fa-info-circle"></i><?= lang('Customer Service Invoices'); ?></h2>
 
         <div class="box-icon">
             <ul class="btn-tasks">
@@ -33,7 +33,7 @@
                             <tr>
                                 <th>#</th>
                                 <th><?php echo $this->lang->line('Reference No.'); ?></th>
-                                <th><?php echo $this->lang->line('Supplier') ?></th>
+                                <th><?php echo $this->lang->line('Customer') ?></th>
                                 <th><?php echo $this->lang->line('Payment Amount') ?></th>
                                 <th><?php echo $this->lang->line('Actions') ?></th>
                             </tr>
@@ -49,7 +49,7 @@
                                                 <td><?= $invoice->reference_no; ?></td>
                                                 <td><?= $invoice->company; ?></td>
                                                 <td><?= $invoice->payment_amount; ?></td>
-                                                <td><a href="<?php echo admin_url('customers/edit_service_invoice/' . $invoice->id); ?>" class="tip" title="Edit Service Invoice"><i class="fa fa-edit"></i></a></td>
+                                                <td><a href="<?php echo admin_url('customers/service_invoice_pdf/' . $invoice->id); ?>" class="tip" title="Download PDF"><i class="fa fa-file-pdf-o"></i></a></td>
                                             </tr>
                                         <?php
                                     }

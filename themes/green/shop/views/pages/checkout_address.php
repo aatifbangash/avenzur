@@ -99,15 +99,15 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
 <section class=" py-1 ">
     <div class="container container-max-width">
         <div class=" my-4">
-            <div class="addressbar rounded-0">
-                <div class="w-100 addtitle">
-                    <h5><i class="bi bi-map-fill me-2"></i>
+            <div class="addressbar">
+                <div class="w-100">
+                    <h3 class=" fw-bold pb-2">
                         <?= lang('address'); ?>
-                    </h5>
+                    </h3>
                 </div>
-                <div class="px-3 py-2">
-                    <div class="py-3">
-                        <h6 class="m-0 fw-semibold">
+                <div>
+                    <div class="pb-4">
+                        <h6 class="m-0">
                             <?php
                             if ($action_type == 'editaddress') {
                                 echo lang('Update address details');
@@ -124,7 +124,7 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                             $istates = $this->gst->getIndianStates();
                         }
                         ?>
-                        <div class="col-md-6 mb-4" id="<?= $address->id; ?>" style="margin-right:25px;">
+                        <div class="col-md-6 mb-4 pe-4" id="<?= $address->id; ?>" >
                             <div class="card" id="map-container">
                                 <input id="autocomplete_search" type="text" class="form-control bg-white border-0 py-2"
                                     style="box-shadow: 0px 1px 5px #b2b2b2;" placeholder="Type for the address..."
@@ -137,7 +137,7 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                             </div>
                         </div>
 
-                        <div class="col-md-5 mb-4" id="<?= $address->id; ?>">
+                        <div class="col-md-6 mb-4 " id="<?= $address->id; ?>">
                             <div class="card" style="border:none">
                                 <span class="text-bold padding-bottom-md fw-bold mb-3"
                                     style="font-size:20px;font-weight: bold;color: #662d91;">
@@ -169,59 +169,68 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                                     <input type="hidden" id="action_type" name="action_type"
                                         value="<?= $action_type; ?>">
 
-                                    <span class=" padding-bottom-md fw-bold" style="font-size:17px;">
+                                    <div class=" padding-bottom-md fw-bold mb-2 " style="font-size:17px;">
                                         LOCATION INFORMATION
-                                    </span>
-                                    <div class="form-row">
-                                        <div class="form-group col-md-8">
+                                </div>
+                               
+                                        <div class="form-group mb-4">
                                             <label for="exampleFormControlInput1" class=" fw-bold fs-6">Additional
                                                 Address Details</label>
-                                            <input type="text" class="form-control checkout_address ps-0"
+                                            <input type="text" class="form-control checkout_address ps-1"
                                                 name="address_line_2" id="exampleFormControlInput1"
                                                 placeholder="Building No, Floor, Flate No etc"
                                                 value="<?= $address_line_2; ?>">
                                         </div>
-                                    </div>
+                                 
 
-                                    <div class="form-row">
-                                        <div class="form-group col-md-4 col-12" style="float: left">
-                                            <label for="mobile_number" class=" fw-bold fs-6">Mobile Number *</label>
+                                    <div class="row mb-4">
+                                    <label for="mobile_number" class=" fw-bold fs-6">Mobile Number *</label>
+                                        <div class="col-md-3 col-12">
+                                        <div class="form-group" >
+                                  
                                             <select class="form-control checkout_address py-1 px-0"
                                                 id="exampleFormControlSelect1">
                                                 <option>+966</option>
                                             </select>
                                         </div>
-                                        <div class="form-group col-md-4 col-12 ms-md-4" style="float: left;">
-                                            <label for="mobile_number" class=" fw-bold fs-6">&nbsp;</label>
-                                            <input type="text" class="form-control required checkout_address px-0 pt-1 "
+                                      </div>
+                                      <div class="col-md-9 col-12">
+                                        <div class="form-group ">
+                                           <!-- <label for="mobile_number" class=" fw-bold fs-6">&nbsp;</label> -->
+                                            <input type="text" class="form-control required checkout_address px-1 pt-1 "
                                                 id="mobile_number" name="mobile_number" placeholder="Mobile Number"
                                                 value="<?= $mobile_number; ?>">
                                         </div>
+                                     </div>
                                     </div>
 
-                                    <div class=" padding-bottom-md fw-bold fs-6" style="clear:both">
+                                    <div class=" padding-bottom-md fw-bold fs-6 mb-2" style="clear:both">
                                         PERSONAL INFORMATION
                                     </div>
 
-                                    <div class="form-row">
-                                        <div class="form-group col-md-4 col-12" style="float: left">
+                                    <div class="form-row row mb-4">
+                                     <div class="col-md-6 col-12">
+                                        <div class="form-group " >
                                             <label for="first_name" class=" fw-bold fs-6">First Name *</label>
-                                            <input type="text" class="form-control checkout_address ps-0"
+                                            <input type="text" class="form-control checkout_address ps-1"
                                                 id="first_name" name="first_name" placeholder="Enter First Name"
                                                 value="<?= $first_name; ?>">
-                                        </div>
-                                        <div class="form-group col-md-4 col-12 ms-md-4" style="float: left;">
+                                        </div> </div>
+                                     <div class="col-md-6 col-12">
+                                        <div class="form-group " >
                                             <label for="last_name" class=" fw-bold fs-6">Last Name *</label>
-                                            <input type="text" class="form-control checkout_address ps-0" id="last_name"
+                                            <input type="text" class="form-control checkout_address ps-1" id="last_name"
                                                 name="last_name" placeholder="Enter Last Name"
                                                 value="<?= $last_name; ?>">
                                         </div>
+                                     </div> 
+                                </div>
                                         <?php if (!$email_address) {
                                             ?>
                                             <div class="form-row">
-                                                <div class="form-group col-md-8">
-                                                    <label for="emailAddress" class=" fw-bold fs-6">Email Address</label>
-                                                    <input type="text" class="form-control checkout_address ps-0"
+                                                <div class="form-group col-md-6">
+                                                    <label for="emailAddress" class=" fw-bold fs-6">Email Address *</label>
+                                                    <input type="text" class="form-control checkout_address ps-1"
                                                         name="email" id="emailAddress"
                                                         placeholder="" >
                                                 </div>
@@ -229,24 +238,22 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                                         <?php
                                         }
                                         ?>
-                                    </div>
 
-                                    <div class="custom-control custom-switch" style="clear: both">
 
-                                        <!-- <div class="form-check form-switch d-flex align-items-center  ps-0 pe-3 w-100">
-                                        <label class="form-check-label  mt-2" for="flexSwitchCheckDefault"  style="width: 200px; font-size: 18px;">Set as default address</label>
-                                        <input class="form-check-input fs-5 " type="checkbox" role="switch" id="flexSwitchCheckDefault" checked="checked" name="is_default" style="margin-top:12px; margin-left: 12px;">
-                                    
-                                    </div> -->
-                                    </div>
 
-                                    <div>
+<div>
                                         <button type="submit" class="btn primary-buttonAV  rounded-1 pb-2"
                                             style="margin-top:25px;">
                                             <?= lang('Confirm_&_Save_Address'); ?>
                                         </button>
                                     </div>
                                     <?= form_close(); ?>
+
+
+                                    </div>
+
+                                    
+                                  
 
                             </div>
                         </div>
@@ -273,18 +280,18 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                                         echo form_open('verify_phone_otp', $attrib);
                                         ?>
                                         <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2">
-                                            <input class="m-1 text-center form-control rounded" type="text"
-                                                name="opt_part1" id="checkout_login_1" maxlength="1" />
-                                            <input class="m-1 text-center form-control rounded" type="text"
-                                                name="opt_part2" id="checkout_login_2" maxlength="1" />
-                                            <input class="m-1 text-center form-control rounded" type="text"
-                                                name="opt_part3" id="checkout_login_3" maxlength="1" />
-                                            <input class="m-1 text-center form-control rounded" type="text"
-                                                name="opt_part4" id="checkout_login_4" maxlength="1" />
-                                            <input class="m-1 text-center form-control rounded" type="text"
-                                                name="opt_part5" id="checkout_login_5" maxlength="1" />
-                                            <input class="m-1 text-center form-control rounded" type="text"
-                                                name="opt_part6" id="checkout_login_6" maxlength="1" />
+                                            <input class="m-1 text-center form-control rounded ap-otp-input-checkout" type="tel"
+                                                name="opt_part1" id="checkout_login_1"  data-index="0" maxlength="1" />
+                                            <input class="m-1 text-center form-control rounded ap-otp-input-checkout" type="tel"
+                                                name="opt_part2" id="checkout_login_2"  data-index="1" maxlength="1" />
+                                            <input class="m-1 text-center form-control rounded ap-otp-input-checkout" type="tel"
+                                                name="opt_part3" id="checkout_login_3"  data-index="2" maxlength="1" />
+                                            <input class="m-1 text-center form-control rounded ap-otp-input-checkout" type="tel"
+                                                name="opt_part4" id="checkout_login_4"  data-index="3" maxlength="1" />
+                                            <input class="m-1 text-center form-control rounded ap-otp-input-checkout" type="tel"
+                                                name="opt_part5" id="checkout_login_5"  data-index="4" maxlength="1" />
+                                            <input class="m-1 text-center form-control rounded ap-otp-input-checkout" type="tel"
+                                                name="opt_part6" id="checkout_login_6"  data-index="5" maxlength="1" />
                                             <input type="hidden" id="identifier_input" name="identifier_input"
                                                 value="" />
                                         </div>
@@ -360,6 +367,11 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
             last_name.removeClass('error');
         });
 
+        const emailAddress = $('#emailAddress');
+        emailAddress.focus(function () {
+            emailAddress.removeClass('error');
+        });
+
 
         $('#checkoutAddress').submit(function (event) {
             // Remove previous error highlights
@@ -396,6 +408,14 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
             if (last_name.val() === '') {
                 // Highlight the input field with an error
                 last_name.addClass('error');
+                event.preventDefault(); // Prevent form submission
+            }
+
+            var emailAddress = $('#emailAddress');
+
+            if (emailAddress.val() === '') {
+                // Highlight the input field with an error
+                emailAddress.addClass('error');
                 event.preventDefault(); // Prevent form submission
             }
 
@@ -538,6 +558,82 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
             center: { lat: 23.8859, lng: 45.0792 },
             zoom: 18,
         });
+
+        const input = document.getElementById("autocomplete_search");
+        const searchBox = new google.maps.places.SearchBox(input);
+
+        map.addListener("bounds_changed", function () {
+            searchBox.setBounds(map.getBounds());
+        });
+
+        let markers = [];
+
+        searchBox.addListener("places_changed", function () {
+            const places = searchBox.getPlaces();
+
+            if (places.length === 0) {
+                return;
+            }
+
+            markers.forEach(function (marker) {
+                marker.setMap(null);
+            });
+            markers = [];
+
+            function updateLocation(newPosition) {
+                console.log('dragend', newPosition);
+                //   document.getElementById("manual-shipping-check-2").checked = false;
+                //   document.getElementById("manual-shipping-address-2").style.display =
+                //     "none";
+
+                document.getElementById("latitude").value = newPosition.lat();
+                document.getElementById("longitude").value = newPosition.lng();
+                console.log('dragend', newPosition);
+                const userNewLocation = {
+                    lat: newPosition.lat(),
+                    lng: newPosition.lng(),
+                };
+                geocodeLatLng2(userNewLocation);
+            }
+
+            const bounds = new google.maps.LatLngBounds();
+            places.forEach(function (place) {
+                if (!place.geometry) {
+                    console.log("Returned place contains no geometry");
+                    return;
+                }
+
+                markers.push(
+                    new google.maps.Marker({
+                        map: map,
+                        title: place.name,
+                        position: place.geometry.location,
+                        draggable: true
+                    })
+
+                );
+
+                const marker = markers[markers.length - 1];
+
+                marker.addListener("dragend", function () {
+                    updateLocation(marker.getPosition());
+                });
+
+                if (place.geometry.viewport) {
+                    bounds.union(place.geometry.viewport);
+                } else {
+                    bounds.extend(place.geometry.location);
+                }
+            });
+
+            map.fitBounds(bounds);
+            console.log('markers', markers.length);
+            if (markers.length > 0) {
+                updateLocation(markers[0].getPosition());
+                //geocodeLatLng2(userLocation);
+            }
+        });
+
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 function (position) {
@@ -605,65 +701,6 @@ if (isset($selected_address_info) & !empty($selected_address_info)) {
                                     enableHighAccuracy: true
                                 }
                             );
-                        }
-                    });
-
-                    const input = document.getElementById("autocomplete_search");
-                    const searchBox = new google.maps.places.SearchBox(input);
-
-                    map.addListener("bounds_changed", function () {
-                        searchBox.setBounds(map.getBounds());
-                    });
-
-                    let markers = [];
-
-                    searchBox.addListener("places_changed", function () {
-                        const places = searchBox.getPlaces();
-
-                        if (places.length === 0) {
-                            return;
-                        }
-
-                        markers.forEach(function (marker) {
-                            marker.setMap(null);
-                        });
-                        markers = [];
-
-                        const bounds = new google.maps.LatLngBounds();
-                        places.forEach(function (place) {
-                            if (!place.geometry) {
-                                console.log("Returned place contains no geometry");
-                                return;
-                            }
-
-                            markers.push(
-                                new google.maps.Marker({
-                                    map: map,
-                                    title: place.name,
-                                    position: place.geometry.location,
-                                    draggable: true
-                                })
-
-                            );
-
-                            const marker = markers[markers.length - 1];
-
-                            marker.addListener("dragend", function () {
-                                updateLocation(marker.getPosition());
-                            });
-
-                            if (place.geometry.viewport) {
-                                bounds.union(place.geometry.viewport);
-                            } else {
-                                bounds.extend(place.geometry.location);
-                            }
-                        });
-
-                        map.fitBounds(bounds);
-                        console.log('markers', markers.length);
-                        if (markers.length > 0) {
-                            updateLocation(markers[0].getPosition());
-                            //geocodeLatLng2(userLocation);
                         }
                     });
 

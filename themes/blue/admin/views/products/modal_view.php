@@ -282,12 +282,28 @@
                     <span class="hidden-sm hidden-xs"><?= lang('pdf') ?></span>
                 </a>
             </div>
+
+<!--            edit_new product lines-->
             <div class="btn-group">
-                <a href="<?= admin_url('products/edit/' . $product->id) ?>" class="tip btn btn-warning tip" title="<?= lang('edit_product') ?>">
-                    <i class="fa fa-edit"></i>
-                    <span class="hidden-sm hidden-xs"><?= lang('edit') ?></span>
-                </a>
+                <?php if($this->Settings->site_name == 'Avnzor'): ?>
+                    <a href="<?= admin_url('products/edit_new/' . $product->id) ?>" class="tip btn btn-warning tip" title="<?= lang('edit_product') ?>">
+                        <i class="fa fa-edit"></i>
+                        <span class="hidden-sm hidden-xs"><?= lang('edit') ?></span>
+                    </a>
+                <?php else: ?>
+                    <a href="<?= admin_url('products/edit/' . $product->id) ?>" class="tip btn btn-warning tip" title="<?= lang('edit_product') ?>">
+                        <i class="fa fa-edit"></i>
+                        <span class="hidden-sm hidden-xs"><?= lang('edit') ?></span>
+                    </a>
+                <?php endif; ?>
             </div>
+<!--            old logic direct way -->
+<!--            <div class="btn-group">-->
+<!--                <a href="--><?php //= admin_url('products/edit/' . $product->id) ?><!--" class="tip btn btn-warning tip" title="--><?php //= lang('edit_product') ?><!--">-->
+<!--                    <i class="fa fa-edit"></i>-->
+<!--                    <span class="hidden-sm hidden-xs">--><?php //= lang('edit') ?><!--</span>-->
+<!--                </a>-->
+<!--            </div>-->
             <div class="btn-group">
                 <a href="#" class="tip btn btn-danger bpo" title="<b><?= lang('delete_product') ?></b>"
                     data-content="<div style='width:150px;'><p><?= lang('r_u_sure') ?></p><a class='btn btn-danger' href='<?= admin_url('products/delete/' . $product->id) ?>'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button></div>"

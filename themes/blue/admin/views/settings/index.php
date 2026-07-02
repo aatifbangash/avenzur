@@ -208,6 +208,21 @@ $ps = ['0' => lang('disable'), '1' => lang('enable')];
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
+                            <label class="control-label" for="use_new_menu">New admin menu layout</label>
+                            <div class="controls">
+                                <?php
+                                echo form_dropdown(
+                                    'use_new_menu',
+                                    $wm,
+                                    isset($Settings->use_new_menu) ? $Settings->use_new_menu : 0,
+                                    'class="form-control tip" id="use_new_menu" required="required" style="width:100%;"'
+                                );
+                                ?>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
                             <label class="control-label" for="rtl"><?= lang('rtl_support'); ?></label>
 
                             <div class="controls">

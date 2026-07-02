@@ -1,0 +1,3 @@
+[2025-12-07 14:56:10] [INFO] Order processing request received
+[2025-12-07 14:56:10] [INFO] Entities extracted for order: #9999
+[2025-12-07 14:56:11] [SUCCESS] Order processed successfully: #9999 (Sale ID: 28)

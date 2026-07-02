@@ -11,6 +11,7 @@
     <link href="<?= base_url('assets/custom/custom.css') ?>" rel="stylesheet"/>
     <script type="text/javascript" src="<?= $assets ?>js/jquery-2.0.3.min.js"></script>
     <script type="text/javascript" src="<?= $assets ?>js/jquery-migrate-1.2.1.min.js"></script>
+    <script type="text/javascript" src="<?= $assets ?>js/echarts.min.js"></script>
     <!--[if lt IE 9]>
     <script src="<?= $assets ?>js/jquery.js"></script>
     <![endif]-->
@@ -739,6 +740,11 @@
                                                 <i class="fa fa-building-o"></i><span class="text"> <?= lang('warehouses'); ?></span>
                                             </a>
                                         </li>
+                                        <li id="organization_setup_pharmacy_hierarchy">
+                                            <a href="<?= admin_url('organization_setup/pharmacy_hierarchy') ?>">
+                                                <i class="fa fa-hospital-o"></i><span class="text"> <?= lang('pharmacy_hierarchy_setup'); ?></span>
+                                            </a>
+                                        </li>
                                         <li id="system_settings_email_templates">
                                             <a href="<?= admin_url('system_settings/email_templates') ?>">
                                                 <i class="fa fa-envelope"></i><span class="text"> <?= lang('email_templates'); ?></span>
@@ -900,6 +906,7 @@
                                     </li>
                                 </ul>
                             </li>
+                            
                             <?php if ($Owner && file_exists(APPPATH . 'controllers' . DIRECTORY_SEPARATOR . 'shop' . DIRECTORY_SEPARATOR . 'Shop.php')) {
                                 ?>
                             <li class="mm_shop_settings mm_api_settings">

@@ -73,7 +73,7 @@
                         <div class="col-md-12">
                             <div class="form-group">
                                 <?= lang('description', 'description'); ?>
-                                <?= form_input('description', set_value('description'), 'class="form-control" id="description" required="" data-fv-notempty-message="' . lang('description_required') . '"'); ?>
+                                <?= form_textarea('description', set_value('description'), 'class="form-control body" id="description" required="" data-fv-notempty-message="' . lang('description_required') . '"'); ?>
                             </div>
                             <div class="form-group">
                                 <?= lang('body', 'body'); ?>

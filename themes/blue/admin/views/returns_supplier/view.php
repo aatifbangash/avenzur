@@ -140,7 +140,7 @@
                             <?php
                         } ?>
                         <th><?= lang('quantity'); ?></th>
-                        <th><?= lang('unit_price'); ?></th>
+                        <th><?= lang('cost_price'); // unit_price ?></th>
                         <?php
                         if ($Settings->tax1 && $inv->product_tax > 0) {
                             echo '<th>' . lang('tax') . '</th>';
@@ -173,7 +173,7 @@
                                 <?php
                             } ?>
                             <td style="width: 80px; text-align:center; vertical-align:middle;"><?= $this->sma->formatQuantity($row->unit_quantity) . ' ' . $row->product_unit_code; ?></td>
-                            <td style="text-align:right; width:100px;"><?= $this->sma->formatMoney($row->unit_price); ?></td>
+                            <td style="text-align:right; width:100px;"><?= $this->sma->formatMoney($row->cost_price); //$row->unit_price ?></td>
                             <?php
                             if ($Settings->tax1 && $inv->product_tax > 0) {
                                 echo '<td style="width: 100px; text-align:right; vertical-align:middle;">' . ($row->item_tax != 0 ? '<small>(' . ($Settings->indian_gst ? $row->tax : $row->tax_code) . ')</small>' : '') . ' ' . $this->sma->formatMoney($row->item_tax) . '</td>';
@@ -281,9 +281,8 @@
 
                     </tfoot>
                 </table>
-            </div>
-
-            <?= $Settings->invoice_view > 0 ? $this->gst->summary($rows, null, ($inv->product_tax)) : ''; ?>
+            </div> 
+            <?=  $Settings->invoice_view > 0 ? $this->gst->summary_returns($rows, null, ($inv->product_tax)) : ''; ?>
 
             <div class="row">
                 <div class="col-xs-12">
