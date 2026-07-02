@@ -192,13 +192,13 @@ if (!empty($filters['to_date'])) {
                                        class="tip btn btn-xs btn-default" title="<?= lang('View Payment') ?>">
                                         <i class="fa fa-eye"></i>
                                     </a>
-                                    <?php if (($payment->status ?? 'open') !== 'closed'): ?>
+                                    <?php if (($payment->status ?? 'open') !== 'closed' && 1 != 1): ?>
                                         <a href="<?= admin_url('suppliers/edit_payment?id=' . $payment->id) ?>"
                                            class="tip btn btn-xs btn-warning" title="<?= lang('Edit Payment') ?>">
                                             <i class="fa fa-edit"></i>
                                         </a>
                                     <?php endif; ?>
-                                    <?php if ($this->sma->in_group('financemanager') && ($payment->status ?? 'open') !== 'closed'): ?>
+                                    <?php if ($this->sma->in_group('financemanager') && ($payment->status ?? 'open') !== 'closed' && 1 != 1) : ?>
                                         <form method="POST" action="<?= admin_url('suppliers/close_payment') ?>" style="display:inline;">
                                             <input type="hidden" name="payment_id" value="<?= $payment->id ?>">
                                             <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
@@ -207,6 +207,9 @@ if (!empty($filters['to_date'])) {
                                                 <i class="fa fa-lock"></i>
                                             </button>
                                         </form>
+                                        <button type="button" class="tip btn btn-xs btn-danger" title="<?= lang('Delete Payment') ?>" data-toggle="modal" data-target="#deletePaymentModal" onclick="setDeletePaymentId(<?= $payment->id ?>);">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
                                     <?php endif; ?>
                                 </td>
                             </tr>
@@ -234,7 +237,79 @@ if (!empty($filters['to_date'])) {
     </div><!-- /.box-content -->
 </div><!-- /.box -->
 
+<!-- Delete Payment Modal -->
+<div class="modal fade" id="deletePaymentModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background:#f8f9fa; border-bottom:1px solid #dee2e6;">
+                <h5 class="modal-title" style="color:#dc3545;">
+                    <i class="fa fa-warning" style="color:#dc3545;"></i>
+                    <?= lang('Delete Payment') ?>
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p><strong><?= lang('This action will permanently delete this payment and cannot be undone.') ?></strong></p>
+                <p><?= lang('The following will occur:') ?></p>
+                <ul style="margin-left:20px;">
+                    <li><?= lang('Delete this payment record') ?></li>
+                    <li><?= lang('Reverse all paid invoice amounts') ?></li>
+                    <li><?= lang('Reverse all memo usage') ?></li>
+                    <li><?= lang('Delete all associated journal entries') ?></li>
+                </ul>
+                <p style="color:#dc3545; font-weight:bold;"><?= lang('This action cannot be reversed!') ?></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fa fa-times"></i> <?= lang('Cancel') ?>
+                </button>
+                <button type="button" class="btn btn-danger" onclick="deletePaymentConfirmed();">
+                    <i class="fa fa-trash"></i> <?= lang('Delete Payment') ?>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+var g_delete_payment_id = null;
+
+function setDeletePaymentId(paymentId) {
+    g_delete_payment_id = paymentId;
+}
+
+function deletePaymentConfirmed() {
+    if (!g_delete_payment_id) {
+        alert('<?= lang("Payment ID not found") ?>');
+        return;
+    }
+
+    var csrfTokenName = '<?= $this->security->get_csrf_token_name() ?>';
+    var csrfTokenValue = '<?= $this->security->get_csrf_hash() ?>';
+    var data = { payment_id: g_delete_payment_id };
+    data[csrfTokenName] = csrfTokenValue;
+
+    $.ajax({
+        url: '<?= admin_url("suppliers/delete_payment") ?>',
+        type: 'POST',
+        data: data,
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                alert(response.message || '<?= lang("Payment deleted successfully") ?>');
+                window.location.href = '<?= admin_url("suppliers/list_payments") ?>';
+            } else {
+                alert(response.message || '<?= lang("Failed to delete payment") ?>');
+            }
+        },
+        error: function() {
+            alert('<?= lang("Error deleting payment") ?>');
+        }
+    });
+}
+
 $(document).ready(function () {
     // Date pickers
     $('.date-picker-filter').datetimepicker({

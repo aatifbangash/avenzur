@@ -300,6 +300,43 @@ class Sales_model extends CI_Model
         }
     }
 
+    public function getAllCustomerInvoicesWithPayments($customer_id){
+        $this->db->select('s.id, s.date, s.reference_no, s.customer_id, s.customer, s.grand_total, 
+                          COALESCE(SUM(p.amount), 0) as total_paid,
+                          s.payment_status, s.due_date', false);
+        $this->db->from('sales s');
+        $this->db->join('payments p', 'p.sale_id = s.id', 'left');
+        $this->db->where('s.customer_id', $customer_id);
+        $this->db->where('s.sale_invoice', 1);
+        $this->db->group_by('s.id');
+        $this->db->order_by('s.date', 'asc');
+        $q = $this->db->get();
+    
+        if ($q->num_rows() > 0) {
+            $invoices = $q->result();
+            
+            // Add calculated fields
+            foreach ($invoices as $key => $invoice) {
+                $invoice->outstanding_amount = round(
+                    round($invoice->grand_total, 2) - round($invoice->total_paid, 2),
+                    2
+                );
+                $invoice->type = 'Sales Invoice';
+
+                // Remove invoice if outstanding is zero or less
+                if ($invoice->outstanding_amount == 0) {
+                //    unset($invoices[$key]);
+                }
+            }
+
+            $invoices = array_values($invoices);
+            //echo '<pre>';print_r($invoices);exit;
+            return $invoices;
+        } else {
+            return [];
+        }
+    }
+
     public function getCustomerInvoicesWithPayments($customer_id) {
         $this->db->select('s.id, s.date, s.reference_no, s.customer_id, s.customer, s.grand_total, 
                           COALESCE(SUM(p.amount), 0) as total_paid,
@@ -692,6 +729,9 @@ class Sales_model extends CI_Model
         }
         if (!empty($filters['to_date'])) {
             $this->db->where('payment_reference.date <=', $filters['to_date']);
+        }
+        if (!empty($filters['status'])) {
+            $this->db->where('payment_reference.status', $filters['status']);
         }
 
         $warehouse_id = !empty($filters['warehouse_id']) ? (int) $filters['warehouse_id'] : null;

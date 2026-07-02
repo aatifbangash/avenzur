@@ -1111,8 +1111,7 @@
                     </div>
                 </div>
 
-                <!-- Customer Returns Section -->
-                <div id="returns-section" class="row" style="display: none; margin-top: 20px;">
+                <!--<div id="returns-section" class="row" style="display: none; margin-top: 20px;">
                     <div class="col-md-12">
                         <div class="box box-warning">
                             <div class="box-header with-border">
@@ -1143,17 +1142,17 @@
                                             </tr>
                                         </tfoot>
                                         <tbody>
-                                            <!-- Returns will be loaded here -->
+                                            
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>-->
 
                 <!-- Customer Credit Memo Section -->
-                <div id="creditmemo-section" class="row" style="display: none; margin-top: 20px;">
+                <!--<div id="creditmemo-section" class="row" style="display: none; margin-top: 20px;">
                     <div class="col-md-12">
                         <div class="box box-success">
                             <div class="box-header with-border">
@@ -1184,14 +1183,14 @@
                                             </tr>
                                         </tfoot>
                                         <tbody>
-                                            <!-- Credit memos will be loaded here -->
+                                            
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>-->
 
                 <div class="row">
                     <div class="col-md-12">

@@ -463,6 +463,338 @@ class Customers extends MY_Controller
         echo json_encode($response);
     }
 
+    /**
+     * ========== EDIT PAYMENT VERSIONS ==========
+     * These load ALL items (including fully paid) for editing existing payments
+     */
+
+    /**
+     * Get all customer invoices for editing payment (including fully paid invoices)
+     */
+    public function get_all_customer_invoices_for_payment() {
+        $customer_id = $this->input->get('customer_id');
+        $payment_id = $this->input->get('payment_id'); // Current payment being edited (if any)
+
+        if (!$customer_id) {
+            echo json_encode([]);
+            return;
+        }
+
+        // Get all pending invoices for customer
+        $invoices = $this->sales_model->getAllCustomerInvoicesWithPayments($customer_id);
+        if (empty($invoices)) {
+            echo json_encode([]);
+            return;
+        }
+
+        // If editing a payment, get how much was paid in THIS payment
+        $paid_in_this_payment = [];
+        if (!empty($payment_id)) {
+            $existing_payments = $this->sales_model->getPaymentByReferenceID($payment_id);
+            if (!empty($existing_payments)) {
+                foreach ($existing_payments as $payment) {
+                    if (!empty($payment->sale_id)) {
+                        if (!isset($paid_in_this_payment[$payment->sale_id])) {
+                            $paid_in_this_payment[$payment->sale_id] = 0;
+                        }
+                        $paid_in_this_payment[$payment->sale_id] += (float)$payment->amount;
+                    }
+                }
+            }
+        }
+
+        // Adjust invoices data
+        $result = [];
+        foreach ($invoices as $inv) {
+            $total_paid_all = (float)($inv->paid ?? 0);
+            $paid_in_this = isset($paid_in_this_payment[$inv->id]) ? $paid_in_this_payment[$inv->id] : 0;
+            
+            // Paid amount showing: Total Paid - Paid In This Payment
+            $paid_excluding_this = max(0, $total_paid_all - $paid_in_this);
+            
+            // Outstanding amount
+            $outstanding = $inv->grand_total - $paid_excluding_this;
+            
+            $result[] = [
+                'id' => $inv->id,
+                'date' => $inv->date,
+                'reference_no' => $inv->reference_no,
+                'grand_total' => (float)$inv->grand_total,
+                'paid' => (float)$paid_excluding_this,  // Paid excluding this payment
+                'paid_in_this_payment' => (float)$paid_in_this, // Amount paid in this payment
+                'outstanding_amount' => (float)$outstanding,
+                'total_paid_all_payments' => (float)$total_paid_all,
+            ];
+        }
+
+        echo json_encode($result);
+    }
+
+    /**
+     * Get all customer returns for editing payment
+     */
+    public function get_all_customer_returns_for_payment() {
+        $customer_id = $this->input->get('customer_id');
+        $payment_id = $this->input->get('payment_id');
+
+        if (!$customer_id) {
+            echo json_encode([]);
+            return;
+        }
+
+        $returns = $this->sales_model->getCustomerReturnsWithPayments($customer_id);
+        if (empty($returns)) {
+            echo json_encode([]);
+            return;
+        }
+
+        // Get amounts used in this payment
+        $used_in_this_payment = [];
+        if (!empty($payment_id)) {
+            $existing_payments = $this->sales_model->getPaymentByReferenceID($payment_id);
+            if (!empty($existing_payments)) {
+                foreach ($existing_payments as $payment) {
+                    if (!empty($payment->return_id)) {
+                        if (!isset($used_in_this_payment[$payment->return_id])) {
+                            $used_in_this_payment[$payment->return_id] = 0;
+                        }
+                        $used_in_this_payment[$payment->return_id] += (float)$payment->amount;
+                    }
+                }
+            }
+        }
+
+        $result = [];
+        foreach ($returns as $ret) {
+            $total_used_all = (float)($ret->used_amount ?? 0);
+            $used_in_this = isset($used_in_this_payment[$ret->id]) ? $used_in_this_payment[$ret->id] : 0;
+            
+            // Used amount excluding this payment
+            $used_excluding_this = max(0, $total_used_all - $used_in_this);
+            
+            // Outstanding amount
+            $outstanding = $ret->grand_total - $used_excluding_this;
+
+            $result[] = [
+                'id' => $ret->id,
+                'date' => $ret->date,
+                'reference_no' => $ret->reference_no,
+                'grand_total' => (float)$ret->grand_total,
+                'used_amount' => (float)$used_excluding_this,  // Used excluding this payment
+                'used_in_this_payment' => (float)$used_in_this, // Amount used in this payment
+                'outstanding_amount' => (float)$outstanding,
+                'total_used_all_payments' => (float)$total_used_all,
+                'type' => $ret->type ?? 'return',
+            ];
+        }
+
+        echo json_encode($result);
+    }
+
+    /**
+     * Get all customer credit memos for editing payment
+     */
+    public function get_all_customer_credit_memos_for_payment() {
+        $customer_id = $this->input->get('customer_id');
+        $payment_id = $this->input->get('payment_id');
+
+        if (!$customer_id) {
+            echo json_encode([]);
+            return;
+        }
+
+        $this->db->select('
+            m.id, m.reference_no, m.date, m.payment_amount as grand_total,
+            m.used_amount,
+            "Credit Memo" as type
+        ')
+        ->from('sma_memo m')
+        ->where('m.customer_id', $customer_id)
+        ->where('m.type !=', 'serviceinvoice')
+        ->where('m.customer_entry_type', 'C');
+            
+        $memos = $this->db->get()->result();
+        //echo $this->db->last_query();exit;
+        //echo '<pre>'; print_r($memos); echo '</pre>';exit;
+        // Get amounts used in this payment
+        $used_in_this_payment = [];
+        if (!empty($payment_id)) {
+            $existing_payments = $this->sales_model->getPaymentByReferenceID($payment_id);
+            if (!empty($existing_payments)) {
+                foreach ($existing_payments as $payment) {
+                    if (!empty($payment->memo_id)) {
+                        if (!isset($used_in_this_payment[$payment->memo_id])) {
+                            $used_in_this_payment[$payment->memo_id] = 0;
+                        }
+                        $used_in_this_payment[$payment->memo_id] += (float)$payment->amount;
+                    }
+                }
+            }
+        }
+        
+        $result = [];
+        foreach ($memos as $memo) {
+            $total_used = (float)($memo->used_amount ?? 0);
+            $used_in_this = isset($used_in_this_payment[$memo->id]) ? $used_in_this_payment[$memo->id] : 0;
+            
+            // Used amount excluding this payment
+            $used_excluding_this = max(0, $total_used - $used_in_this);
+            
+            // Outstanding amount
+            $outstanding = $memo->grand_total - $used_excluding_this;
+
+            $result[] = [
+                'id' => $memo->id,
+                'date' => $memo->date,
+                'reference_no' => $memo->reference_no,
+                'grand_total' => (float)$memo->grand_total,
+                'used_amount' => (float)$used_excluding_this,  // Used excluding this payment
+                'used_in_this_payment' => (float)$used_in_this, // Amount used in this payment
+                'outstanding_amount' => (float)$outstanding,
+                'total_used_all_payments' => (float)$total_used,
+                'type' => 'credit_memo',
+            ];
+        }
+        echo json_encode($result);
+    }
+
+    /**
+     * Get all customer service invoices for editing payment
+     */
+    public function get_all_customer_service_invoices_for_payment() {
+        $customer_id = $this->input->get('customer_id');
+        $payment_id = $this->input->get('payment_id');
+
+        if (!$customer_id) {
+            echo json_encode([]);
+            return;
+        }
+
+        // Get service invoices (memos with type='service')
+        $this->db->select('
+            m.id, m.reference_no, m.date, m.payment_amount as grand_total,
+            m.used_amount, 
+            "Service Invoice" as type
+        ')
+        ->from('sma_memo m')
+        ->where('m.customer_id', $customer_id)
+        ->where('m.type', 'serviceinvoice');
+
+        $memos = $this->db->get()->result();
+
+        // Get amounts used in this payment
+        $used_in_this_payment = [];
+        if (!empty($payment_id)) {
+            $existing_payments = $this->sales_model->getPaymentByReferenceID($payment_id);
+            if (!empty($existing_payments)) {
+                foreach ($existing_payments as $payment) {
+                    if (!empty($payment->memo_id)) {
+                        // Only count if it's a service invoice (NOT a credit memo)
+                        $memo = $this->db->select('type, customer_entry_type')
+                                       ->from('sma_memo')
+                                       ->where('id', $payment->memo_id)
+                                       ->get()
+                                       ->row();
+                        if ($memo && ($memo->type ?? '') === 'serviceinvoice') {
+                            if (!isset($used_in_this_payment[$payment->memo_id])) {
+                                $used_in_this_payment[$payment->memo_id] = 0;
+                            }
+                            $used_in_this_payment[$payment->memo_id] += (float)$payment->amount;
+                        }
+                    }
+                }
+            }
+        }
+
+        $result = [];
+        foreach ($memos as $memo) {
+            $total_used = (float)($memo->used_amount ?? 0);
+            $used_in_this = isset($used_in_this_payment[$memo->id]) ? $used_in_this_payment[$memo->id] : 0;
+            
+            // Used amount excluding this payment
+            $used_excluding_this = max(0, $total_used - $used_in_this);
+            
+            // Outstanding amount
+            $outstanding = $memo->grand_total - $used_excluding_this;
+            
+            $result[] = [
+                'id' => $memo->id,
+                'date' => $memo->date,
+                'reference_no' => $memo->reference_no,
+                'grand_total' => (float)$memo->grand_total,
+                'used_amount' => (float)$used_excluding_this,  // Used excluding this payment
+                'used_in_this_payment' => (float)$used_in_this, // Amount used in this payment
+                'outstanding_amount' => (float)$outstanding,
+                'total_used_all_payments' => (float)$total_used,
+                'type' => $memo->type,
+            ];
+        }
+
+        echo json_encode($result);
+    }
+
+    /**
+     * Get all customer advances for editing payment
+     */
+    public function get_all_customer_advances_for_payment() {
+        $customer_id = $this->input->get('customer_id');
+        $payment_id = $this->input->get('payment_id');
+
+        if (!$customer_id) {
+            echo json_encode([]);
+            return;
+        }
+
+        // Get advances using the existing model method
+        $advances = $this->sales_model->getCustomerAdvancesWithUsage($customer_id);
+        if (empty($advances)) {
+            echo json_encode([]);
+            return;
+        }
+
+        // Get amounts used in this payment
+        $used_in_this_payment = [];
+        if (!empty($payment_id)) {
+            $existing_payments = $this->sales_model->getPaymentByReferenceID($payment_id);
+            if (!empty($existing_payments)) {
+                foreach ($existing_payments as $payment) {
+                    if (!empty($payment->memo_id)) {
+                        if (!isset($used_in_this_payment[$payment->memo_id])) {
+                            $used_in_this_payment[$payment->memo_id] = 0;
+                        }
+                        $used_in_this_payment[$payment->memo_id] += (float)$payment->amount;
+                    }
+                }
+            }
+        }
+
+        $result = [];
+        foreach ($advances as $adv) {
+            $total_used = (float)($adv->used_amount ?? 0);
+            $used_in_this = isset($used_in_this_payment[$adv->id]) ? $used_in_this_payment[$adv->id] : 0;
+            
+            // Used amount excluding this payment
+            $used_excluding_this = max(0, $total_used - $used_in_this);
+            
+            // Available balance (excluding what's used in this payment)
+            $available_balance = $adv->amount - $used_excluding_this;
+
+            $result[] = [
+                'id' => $adv->id,
+                'date' => $adv->date,
+                'reference_no' => $adv->reference_no ?? 'ADV',
+                'amount' => (float)$adv->amount,
+                'used_amount' => (float)$used_excluding_this,  // Used excluding this payment
+                'used_in_this_payment' => (float)$used_in_this, // Amount used in this payment
+                'available_balance' => (float)$available_balance,
+                'total_used_all_payments' => (float)$total_used,
+                'type' => 'advance',
+            ];
+        }
+
+        echo json_encode($result);
+    }
+
     public function get_customer_discount_ledger(){
         try {
             $customer_id = isset($_GET['customer_id']) ? $_GET['customer_id'] : null;
@@ -765,6 +1097,7 @@ class Customers extends MY_Controller
             'sales_agent' => $this->input->get('sales_agent') ?: $this->input->post('sales_agent'),
             'from_date'   => $this->input->get('from_date')   ?: $this->input->post('from_date'),
             'to_date'     => $this->input->get('to_date')     ?: $this->input->post('to_date'),
+            'status'      => $this->input->get('status')      ?: $this->input->post('status'),
         ];
         // Convert display date (d/m/Y) to Y-m-d for the query
         foreach (['from_date', 'to_date'] as $f) {
@@ -842,6 +1175,497 @@ class Customers extends MY_Controller
         }
 
         $this->page_construct('customers/list_payments', $meta, $this->data);
+    }
+
+    public function edit_payment_reference($id = null)
+    {
+        if (empty($id)) {
+            admin_redirect('customers/list_payments');
+        }
+
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('customers/list_payments'), 'page' => lang('Customer Payments')],
+            ['link' => '#', 'page' => lang('Edit Payment')]
+        ];
+        $meta = ['page_title' => lang('Edit Customer Payment'), 'bc' => $bc];
+
+        // Fetch payment reference
+        $this->db->where('id', $id);
+        $payment_ref = $this->db->get('payment_reference')->row();
+
+        if (empty($payment_ref)) {
+            $this->session->set_flashdata('error', 'Payment not found');
+            admin_redirect('customers/list_payments');
+        }
+
+        // Check if payment is closed
+        $is_closed = ($payment_ref->status ?? 'open') === 'closed';
+
+        // Fetch existing payment line items (invoices, returns, credits, advances, service invoices)
+        $existing_payments = [];
+        $this->db->where('payment_id', $id);
+        $payment_lines = $this->db->get('payments')->result();
+
+        $payment_invoices_map = [];
+        $payment_service_invoices_map = [];
+        $payment_credit_memos_map = [];
+        $payment_returns_map = [];
+        $payment_advances_map = [];
+
+        foreach ($payment_lines as $line) {
+            if (!empty($line->sale_id) && $line->sale_id > 0) {
+                if (empty($payment_invoices_map[$line->sale_id])) {
+                    $payment_invoices_map[$line->sale_id] = 0;
+                }
+                $payment_invoices_map[$line->sale_id] += (float)($line->amount ?? 0);
+            } elseif (!empty($line->memo_id) && $line->memo_id > 0) {
+                // Check if it's a credit memo or service invoice
+                $memo = $this->db->where('id', $line->memo_id)->get('memo')->row();
+                if ($memo && ($memo->type ?? '') === 'memo' && ($memo->customer_entry_type ?? '') === 'C') {
+                    // Credit memo
+                    if (empty($payment_credit_memos_map[$line->memo_id])) {
+                        $payment_credit_memos_map[$line->memo_id] = 0;
+                    }
+                    $payment_credit_memos_map[$line->memo_id] += (float)($line->amount ?? 0);
+                } elseif ($memo && ($memo->type ?? '') === 'service') {
+                    // Service invoice
+                    if (empty($payment_service_invoices_map[$line->memo_id])) {
+                        $payment_service_invoices_map[$line->memo_id] = 0;
+                    }
+                    $payment_service_invoices_map[$line->memo_id] += (float)($line->amount ?? 0);
+                }
+            } elseif (!empty($line->return_id) && $line->return_id > 0) {
+                if (empty($payment_returns_map[$line->return_id])) {
+                    $payment_returns_map[$line->return_id] = 0;
+                }
+                $payment_returns_map[$line->return_id] += (float)($line->amount ?? 0);
+            }
+        }
+
+        $this->data['payment_ref'] = $payment_ref;
+        $this->data['is_closed'] = $is_closed;
+        $this->data['existing_payments'] = $existing_payments;
+        $this->data['paymentInvoicesMap'] = $payment_invoices_map;
+        $this->data['paymentServiceInvoicesMap'] = $payment_service_invoices_map;
+        $this->data['paymentCreditMemosMap'] = $payment_credit_memos_map;
+        $this->data['paymentReturnsMap'] = $payment_returns_map;
+        $this->data['paymentAdvancesMap'] = $payment_advances_map;
+        $this->data['customers'] = $this->site->getAllCompanies('customer');
+        
+        // Get all active ledger accounts for dropdown
+        $ledgers_query = $this->db->order_by('name', 'ASC')
+                                  ->get('sma_accounts_ledgers');
+        $this->data['ledgers'] = $ledgers_query->result();
+
+        $this->page_construct('customers/edit_payment_reference', $meta, $this->data);
+    }
+
+    public function close_payment()
+    {
+        if (!$this->sma->in_group('financemanager')) {
+            echo json_encode(['success' => false, 'message' => 'Permission denied']);
+            return;
+        }
+
+        $payment_id = $this->input->post('payment_id');
+        $loggedIn = $this->session->user_id;
+
+        if (!$payment_id) {
+            echo json_encode(['success' => false, 'message' => 'Invalid payment ID']);
+            return;
+        }
+
+        $data = [
+            'status' => 'closed',
+            'closed_by' => $loggedIn,
+            'closed_at' => date('Y-m-d H:i:s')
+        ];
+
+        if ($this->db->update('payment_reference', $data, ['id' => $payment_id])) {
+            echo json_encode(['success' => true, 'message' => 'Payment closed successfully']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to close payment']);
+        }
+
+        admin_redirect('customers/list_payments');
+    }
+
+    public function open_payment()
+    {
+        if (!$this->sma->in_group('finance_manager')) {
+            echo json_encode(['success' => false, 'message' => 'Permission denied']);
+            return;
+        }
+
+        $payment_id = $this->input->post('payment_id');
+
+        if (!$payment_id) {
+            echo json_encode(['success' => false, 'message' => 'Invalid payment ID']);
+            return;
+        }
+
+        $data = [
+            'status' => 'open',
+            'closed_by' => null,
+            'closed_at' => null
+        ];
+
+        if ($this->db->update('payment_reference', $data, ['id' => $payment_id])) {
+            echo json_encode(['success' => true, 'message' => 'Payment reopened successfully']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to reopen payment']);
+        }
+    }
+
+    /**
+     * Delete Customer Payment - Finance Manager Only
+     * Deletes payment record and reverses all accounting entries
+     * Does NOT create a new transaction (fully reverses the original)
+     */
+    public function delete_payment()
+    {
+        // Check permission - Finance Manager role only
+        if (!$this->sma->in_group('financemanager')) {
+            echo json_encode(['success' => false, 'message' => 'You do not have permission to delete payments.']);
+            return;
+        }
+
+        $payment_id = $this->input->post('payment_id');
+        
+        if (!$payment_id) {
+            echo json_encode(['success' => false, 'message' => 'Payment ID not provided.']);
+            return;
+        }
+
+        // Fetch payment reference
+        $payment_ref = $this->db->get_where('payment_reference', ['id' => $payment_id], 1)->row();
+        if (!$payment_ref) {
+            echo json_encode(['success' => false, 'message' => 'Payment not found.']);
+            return;
+        }
+
+        // Start transaction for data integrity
+        $this->db->trans_begin();
+
+        try {
+            // ── REVERSE ALL PAID AMOUNTS ──
+            $old_payments = $this->db->get_where('payments', ['payment_id' => $payment_id])->result();
+            if (!empty($old_payments)) {
+                foreach ($old_payments as $old_payment) {
+                    // Reverse paid amounts in sales invoices
+                    if (!empty($old_payment->sale_id)) {
+                        $this->sales_model->update_sale_paid_amount($old_payment->sale_id, -(float)$old_payment->amount);
+                    }
+                    // Reverse used amounts in returns
+                    if (!empty($old_payment->return_id)) {
+                        $this->db->where('id', $old_payment->return_id);
+                        $existing_return = $this->db->get('sma_sales_returns', 1)->row();
+                        if ($existing_return) {
+                            $new_used = max(0, ($existing_return->used_amount ?? 0) - (float)$old_payment->amount);
+                            $this->db->update('sma_sales_returns', ['used_amount' => $new_used], ['id' => $old_payment->return_id]);
+                        }
+                    }
+                    // Reverse used amounts in credit memos and service invoices
+                    if (!empty($old_payment->memo_id)) {
+                        $this->db->where('id', $old_payment->memo_id);
+                        $existing_memo = $this->db->get('sma_memo', 1)->row();
+                        if ($existing_memo) {
+                            $new_used = max(0, ($existing_memo->used_amount ?? 0) - (float)$old_payment->amount);
+                            $this->db->update('sma_memo', ['used_amount' => $new_used], ['id' => $old_payment->memo_id]);
+                        }
+                    }
+                }
+            }
+
+            // ── DELETE PAYMENT LINE ITEMS ──
+            $this->db->delete('payments', ['payment_id' => $payment_id]);
+
+            // ── DELETE OLD JOURNAL ENTRY ──
+            $old_journal_id = $payment_ref->journal_id;
+            if ($old_journal_id) {
+                $this->db->delete('sma_accounts_entryitems', ['entry_id' => $old_journal_id]);
+                $this->db->delete('sma_accounts_entries', ['id' => $old_journal_id]);
+            }
+
+            // ── DELETE PAYMENT REFERENCE ──
+            $this->db->delete('payment_reference', ['id' => $payment_id]);
+
+            // Commit transaction
+            if ($this->db->trans_status() === false) {
+                $this->db->trans_rollback();
+                echo json_encode(['success' => false, 'message' => 'Failed to delete payment. Transaction rolled back.']);
+                return;
+            } else {
+                $this->db->trans_commit();
+            }
+
+            echo json_encode(['success' => true, 'message' => 'Payment has been deleted and all related transactions have been reversed.']);
+
+        } catch (Exception $e) {
+            $this->db->trans_rollback();
+            echo json_encode(['success' => false, 'message' => 'An error occurred while deleting the payment: ' . $e->getMessage()]);
+        }
+    }
+
+    public function edit_payment_save()
+    {
+        if ($this->input->post('edit_customer_payment')) {
+            $payment_id = $this->input->post('payment_id');
+            
+            // Check if payment exists and is not closed
+            $payment_ref = $this->db->get_where('payment_reference', ['id' => $payment_id], 1)->row();
+            if (!$payment_ref) {
+                $this->session->set_flashdata('error', 'Payment not found');
+                admin_redirect('customers/list_payments');
+                return;
+            }
+            
+            if ($payment_ref->status === 'closed') {
+                $this->session->set_flashdata('error', 'Cannot edit a closed payment');
+                admin_redirect('customers/list_payments');
+                return;
+            }
+
+            // Get new form data
+            $date_raw = $this->input->post('date');
+            $reference_no = $this->input->post('reference_no');
+            $ledger_account = $this->input->post('ledger');
+            $payment_amount = (float)str_replace(',', '', $this->input->post('payment_amount') ?: 0);
+            $note = $this->input->post('note');
+
+            // Parse date
+            $fmt = DateTime::createFromFormat('d/m/Y', $date_raw);
+            if ($fmt === false) {
+                $this->session->set_flashdata('error', 'Invalid date format. Use DD/MM/YYYY.');
+                admin_redirect('customers/edit_payment_reference/' . $payment_id);
+                return;
+            }
+            $date = $fmt->format('Y-m-d');
+
+            // Collect selected line items from form
+            $invoice_ids     = $this->input->post('invoice_ids') ?: [];
+            $invoice_amounts = $this->input->post('invoice_amounts') ?: [];
+            $return_ids      = $this->input->post('return_ids') ?: [];
+            $return_amounts  = $this->input->post('return_amounts') ?: [];
+            $creditmemo_ids  = $this->input->post('creditmemo_ids') ?: [];
+            $creditmemo_amounts = $this->input->post('creditmemo_amounts') ?: [];
+            $service_invoice_ids = $this->input->post('service_invoice_ids') ?: [];
+            $service_invoice_amounts = $this->input->post('service_invoice_amounts') ?: [];
+            $advance_ids     = $this->input->post('advance_ids') ?: [];
+            $advance_amounts = $this->input->post('advance_amounts') ?: [];
+
+            // Validate at least one item selected
+            if (empty($invoice_ids) && empty($return_ids) && empty($creditmemo_ids) && 
+                empty($service_invoice_ids) && empty($advance_ids)) {
+                $this->session->set_flashdata('error', 'Please select at least one item to apply payment.');
+                admin_redirect('customers/edit_payment_reference/' . $payment_id);
+                return;
+            }
+
+            // ── DELETE OLD PAYMENT LINE ITEMS ──
+            $old_payments = $this->db->get_where('payments', ['payment_id' => $payment_id])->result();
+            if (!empty($old_payments)) {
+                foreach ($old_payments as $old_payment) {
+                    // Reverse paid amounts in sales
+                    if (!empty($old_payment->sale_id)) {
+                        $this->sales_model->update_sale_paid_amount($old_payment->sale_id, -(float)$old_payment->amount);
+                    }
+                    // Reverse used amounts in returns
+                    if (!empty($old_payment->return_id)) {
+                        $this->db->where('id', $old_payment->return_id);
+                        $existing_return = $this->db->get('sma_sales_returns', 1)->row();
+                        if ($existing_return) {
+                            $new_used = max(0, ($existing_return->used_amount ?? 0) - (float)$old_payment->amount);
+                            $this->db->update('sma_sales_returns', ['used_amount' => $new_used], ['id' => $old_payment->return_id]);
+                        }
+                    }
+                    // Reverse used amounts in credit memos and service invoices
+                    if (!empty($old_payment->memo_id)) {
+                        $this->db->where('id', $old_payment->memo_id);
+                        $existing_memo = $this->db->get('sma_memo', 1)->row();
+                        if ($existing_memo) {
+                            $new_used = max(0, ($existing_memo->used_amount ?? 0) - (float)$old_payment->amount);
+                            $this->db->update('sma_memo', ['used_amount' => $new_used], ['id' => $old_payment->memo_id]);
+                        }
+                    }
+                }
+            }
+
+            // Delete old payment records
+            $this->db->delete('payments', ['payment_id' => $payment_id]);
+
+            // ── DELETE OLD JOURNAL ENTRY ──
+            $old_journal_id = $payment_ref->journal_id;
+            if ($old_journal_id) {
+                $this->db->delete('sma_accounts_entryitems', ['entry_id' => $old_journal_id]);
+                $this->db->delete('sma_accounts_entries', ['id' => $old_journal_id]);
+            }
+
+            // ── CREATE NEW PAYMENT LINE ITEMS ──
+            
+            // Process invoices
+            foreach ($invoice_ids as $idx => $sale_id) {
+                $applied = (float)str_replace(',', '', $invoice_amounts[$sale_id] ?? 0);
+                if ($applied > 0) {
+                    // Create payment record
+                    $payment_data = [
+                        'payment_id' => $payment_id,
+                        'sale_id' => $sale_id,
+                        'amount' => $applied,
+                        'date' => $date
+                    ];
+                    $this->db->insert('payments', $payment_data);
+                    
+                    // Update sale paid amount
+                    $this->sales_model->update_sale_paid_amount($sale_id, $applied);
+                }
+            }
+
+            // Process returns
+            foreach ($return_ids as $idx => $return_id) {
+                $applied = (float)str_replace(',', '', $return_amounts[$return_id] ?? 0);
+                if ($applied > 0) {
+                    // Create payment record
+                    $payment_data = [
+                        'payment_id' => $payment_id,
+                        'return_id' => $return_id,
+                        'amount' => $applied,
+                        'date' => $date
+                    ];
+                    $this->db->insert('payments', $payment_data);
+                    
+                    // Update return used amount
+                    $this->db->where('id', $return_id);
+                    $return_row = $this->db->get('sma_sales_returns', 1)->row();
+                    if ($return_row) {
+                        $new_used = ($return_row->used_amount ?? 0) + $applied;
+                        $this->db->update('sma_sales_returns', ['used_amount' => $new_used], ['id' => $return_id]);
+                    }
+                }
+            }
+
+            // Process credit memos
+            foreach ($creditmemo_ids as $idx => $memo_id) {
+                $applied = (float)str_replace(',', '', $creditmemo_amounts[$memo_id] ?? 0);
+                if ($applied > 0) {
+                    // Create payment record
+                    $payment_data = [
+                        'payment_id' => $payment_id,
+                        'memo_id' => $memo_id,
+                        'amount' => $applied,
+                        'date' => $date
+                    ];
+                    $this->db->insert('payments', $payment_data);
+                    
+                    // Update memo used amount
+                    $this->db->where('id', $memo_id);
+                    $memo_row = $this->db->get('sma_memo', 1)->row();
+                    if ($memo_row) {
+                        $new_used = ($memo_row->used_amount ?? 0) + $applied;
+                        $this->db->update('sma_memo', ['used_amount' => $new_used], ['id' => $memo_id]);
+                    }
+                }
+            }
+
+            // Process service invoices
+            foreach ($service_invoice_ids as $idx => $memo_id) {
+                $applied = (float)str_replace(',', '', $service_invoice_amounts[$memo_id] ?? 0);
+                if ($applied > 0) {
+                    // Create payment record
+                    $payment_data = [
+                        'payment_id' => $payment_id,
+                        'memo_id' => $memo_id,
+                        'amount' => $applied,
+                        'date' => $date
+                    ];
+                    $this->db->insert('payments', $payment_data);
+                    
+                    // Update memo used amount
+                    $this->db->where('id', $memo_id);
+                    $memo_row = $this->db->get('sma_memo', 1)->row();
+                    if ($memo_row) {
+                        $new_used = ($memo_row->used_amount ?? 0) + $applied;
+                        $this->db->update('sma_memo', ['used_amount' => $new_used], ['id' => $memo_id]);
+                    }
+                }
+            }
+
+            // Process advances
+            foreach ($advance_ids as $idx => $advance_id) {
+                $applied = (float)str_replace(',', '', $advance_amounts[$advance_id] ?? 0);
+                if ($applied > 0) {
+                    // Create payment record (memo_id points to advance record)
+                    $payment_data = [
+                        'payment_id' => $payment_id,
+                        'memo_id' => $advance_id,
+                        'amount' => $applied,
+                        'date' => $date
+                    ];
+                    $this->db->insert('payments', $payment_data);
+                }
+            }
+
+            // ── CREATE NEW JOURNAL ENTRY ──
+            $customer_id = $payment_ref->customer_id;
+            $customer_advance_ledger = isset($this->Settings->customer_advance_ledger) && !empty($this->Settings->customer_advance_ledger)
+                ? $this->Settings->customer_advance_ledger : null;
+
+            $applied_advance_total = 0;
+            foreach ($advance_amounts as $amt) {
+                $applied_advance_total += (float)str_replace(',', '', $amt);
+            }
+            $applied_returns_total = 0;
+            foreach ($return_amounts as $amt) {
+                $applied_returns_total += (float)str_replace(',', '', $amt);
+            }
+            $applied_creditmemos_total = 0;
+            foreach ($creditmemo_amounts as $amt) {
+                $applied_creditmemos_total += (float)str_replace(',', '', $amt);
+            }
+
+            // Journal total = cash + advances + returns + credit memos (mirrors add-payment logic)
+            $total_payment_for_journal = $payment_amount + $applied_advance_total + $applied_returns_total + $applied_creditmemos_total;
+            $new_journal_id = null;
+            if ($total_payment_for_journal > 0) {
+                $new_journal_id = $this->convert_customer_payment_multiple_invoice_new(
+                    $customer_id, $ledger_account, $total_payment_for_journal, $reference_no,
+                    'customerpayment', 0, null, $date, $customer_advance_ledger, $applied_advance_total, 0
+                );
+            }
+
+            // Calculate total applied
+            $total_applied = 0;
+            foreach ($invoice_amounts as $amt) {
+                $total_applied += (float)str_replace(',', '', $amt);
+            }
+            foreach ($return_amounts as $amt) {
+                $total_applied += (float)str_replace(',', '', $amt);
+            }
+            foreach ($creditmemo_amounts as $amt) {
+                $total_applied += (float)str_replace(',', '', $amt);
+            }
+            foreach ($service_invoice_amounts as $amt) {
+                $total_applied += (float)str_replace(',', '', $amt);
+            }
+            foreach ($advance_amounts as $amt) {
+                $total_applied += (float)str_replace(',', '', $amt);
+            }
+
+            // Update payment reference total amount + new journal entry link
+            $update_data = [
+                'amount' => $total_applied,
+                'reference_no' => $reference_no,
+                'date' => $date,
+                'transfer_from_ledger' => $ledger_account,
+                'note' => $note,
+                'journal_id' => $new_journal_id
+            ];
+            $this->db->update('payment_reference', $update_data, ['id' => $payment_id]);
+
+            $this->session->set_flashdata('message', 'Payment updated successfully');
+            admin_redirect('customers/view_payment/' . $payment_id);
+        }
     }
 
     public function add_advance(){
