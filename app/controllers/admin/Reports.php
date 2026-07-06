@@ -7210,6 +7210,12 @@ class Reports extends MY_Controller
 
             // ── Server-side Excel export (ALL rows, not just current page) ──
             if ($export_excel) {
+                if (count((array) $gl_report_array) > 10000) {
+                    $filename = 'GL_Report_' . date('Y-m-d_H_i_s') . '.csv';
+                    $this->stream_gl_report_csv($gl_report_array, $gl_result['totals'], $filename);
+                    return;
+                }
+
                 $this->load->library('excel');
                 $sheet = $this->excel->setActiveSheetIndex(0);
                 $sheet->setTitle('GL Report');
@@ -7287,6 +7293,79 @@ class Reports extends MY_Controller
         } else {
             $this->page_construct('reports/gl_report', $meta, $this->data);
         }
+    }
+
+    private function stream_gl_report_csv($gl_report_array, $totals, $filename)
+    {
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+        header('Pragma: public');
+        header('Expires: 0');
+
+        $out = fopen('php://output', 'w');
+        if ($out === false) {
+            show_error('Could not start GL report download.', 500);
+        }
+
+        fwrite($out, "\xEF\xBB\xBF");
+        fputcsv($out, [
+            '#',
+            lang('voucher'),
+            lang('voucher_id'),
+            lang('trx_id'),
+            lang('date'),
+            lang('reference'),
+            lang('account_number'),
+            lang('account_name'),
+            lang('description'),
+            lang('debit'),
+            lang('credit'),
+            lang('userid'),
+        ]);
+
+        $count = 0;
+        foreach ((array) $gl_report_array as $r) {
+            $count++;
+            $entry_date = !empty($r->entry_date) ? date('d-M-y', strtotime($r->entry_date)) : $r->date;
+
+            fputcsv($out, [
+                $count,
+                $r->voucher,
+                $r->voucher_id,
+                $r->trx_id,
+                $entry_date,
+                $r->reference,
+                $r->account_number,
+                $r->account_name,
+                $r->description,
+                $r->debit > 0 ? (float) $r->debit : 0,
+                $r->credit > 0 ? (float) $r->credit : 0,
+                $r->user_id,
+            ]);
+        }
+
+        fputcsv($out, [
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            lang('total'),
+            (float) $totals->total_debit,
+            (float) $totals->total_credit,
+            '',
+        ]);
+
+        fclose($out);
+        exit;
     }
 
     public function get_gl_report()
