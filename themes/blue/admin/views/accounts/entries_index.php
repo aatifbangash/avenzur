@@ -123,6 +123,23 @@
                         ?>
                     </div>
                 </div>
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="control-label" for="status"><?= lang('Status'); ?></label>
+                        <?php
+                        echo form_dropdown(
+                            'status',
+                            [
+                                ''       => lang('All Entries'),
+                                'open'   => lang('Open'),
+                                'closed' => lang('Closed'),
+                            ],
+                            isset($_GET['status']) ? $_GET['status'] : '',
+                            'class="form-control skip" id="status"'
+                        );
+                        ?>
+                    </div>
+                </div>
             </div>
 
             <div class="row">
@@ -170,6 +187,7 @@
                         <th><?= lang('entries_views_index_th_tag'); ?></th>
                         <th><?= lang('entries_views_index_th_debit_amount'); ?></th>
                         <th><?= lang('entries_views_index_th_credit_amount'); ?></th>
+                        <th><?= lang('Status'); ?></th>
                         <th><?= lang('entries_views_index_th_actions'); ?></th>
                     </tr>
                 </thead>
@@ -182,6 +200,10 @@
                     $q = $this->db->get('sma_accounts_entrytypes')->row();
                     $entryTypeName = $q->name;
                     $entryTypeLabel = $q->label;
+                    $is_closed = ($entry['status'] ?? 'open') === 'closed';
+                    if($entry['transaction_type'] != 'journal'){
+                        $is_closed = 'closed';
+                    }
                     $counter++;
                     ?>
                         <tr>
@@ -194,16 +216,40 @@
                             <td class="text-right entries-amount"><?= $this->functionscore->toCurrency('D', $entry['dr_total']) ?></td>
                             <td class="text-right entries-amount"><?= $this->functionscore->toCurrency('C', $entry['cr_total']) ?></td>
                             <td>
+                                <?php if ($is_closed): ?>
+                                    <span class="label label-danger">
+                                        <i class="fa fa-lock"></i> Locked
+                                    </span>
+                                <?php else: ?>
+                                    <span class="label label-info">Open</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
                                 <a href="<?= admin_url();?>entries/view/<?= ($entryTypeLabel); ?>/<?= $entry['id']; ?>" class="no-hover" escape="false"><i class="fa fa-log-in"></i><?= lang('entries_views_index_th_actions_view_btn'); ?></a>
                                 <span class="link-pad"></span>
-                                <?php if($Owner || $Admin || $this->GP['jl-entry-edit']){ ?>
-                                <a href="<?= $entryTypeLabel == 'journal' ? admin_url('accounts/jl_entry_edit/' . $entry['id']) : admin_url('entries/edit/' . $entryTypeLabel . '/' . $entry['id']); ?>" class="no-hover" escape="false"><i class="fa fa-edit"></i><?= lang('entries_views_index_th_actions_edit_btn'); ?></a>
-                                <span class="link-pad"></span>
+                                <?php if($Owner || $Admin || ($this->GP['jl-entry-edit'])){ ?>
+                                    <?php if($entry['transaction_type'] == 'journal' && !$is_closed){ ?>
+                                    <a href="<?= $entryTypeLabel == 'journal' ? admin_url('accounts/jl_entry_edit/' . $entry['id']) : admin_url('entries/edit/' . $entryTypeLabel . '/' . $entry['id']); ?>" class="no-hover" escape="false"><i class="fa fa-edit"></i><?= lang('entries_views_index_th_actions_edit_btn'); ?></a>
+                                    <span class="link-pad"></span>
+                                    <?php } ?>
                                 <?php } ?>
-                                <?php if($Owner || $Admin){ ?>
-                                 <a href="<?= admin_url();?>entries/delete/<?= ($entryTypeLabel); ?>/<?= $entry['id']; ?>" class="no-hover" escape="false"><i class="fa fa-trash"></i><?= lang('entries_views_index_th_actions_delete_btn'); ?></a>
-                                <!--<a href="<?= admin_url();?>entries/delete/<?= ($entryTypeLabel); ?>/<?= $entry['id']; ?>" class="no-hover" escape="false"><i class="fa fa-trash"></i><?= lang('entries_views_index_th_actions_delete_btn'); ?></a>-->
+                                <?php if($Owner || $Admin || ($this->GP['jl-entry-edit'])){ ?>
+                                    <?php if($entry['transaction_type'] == 'journal' && !$is_closed){ ?>
+                                    <a href="<?= admin_url();?>entries/delete/<?= ($entryTypeLabel); ?>/<?= $entry['id']; ?>" class="no-hover" escape="false"><i class="fa fa-trash"></i><?= lang('entries_views_index_th_actions_delete_btn'); ?></a>
+                                    <!--<a href="<?= admin_url();?>entries/delete/<?= ($entryTypeLabel); ?>/<?= $entry['id']; ?>" class="no-hover" escape="false"><i class="fa fa-trash"></i><?= lang('entries_views_index_th_actions_delete_btn'); ?></a>-->
+                                    <?php } ?>
                                 <?php } ?>
+                                <?php if ($this->sma->in_group('financemanager') && $entry['transaction_type'] == 'journal' && !$is_closed): ?>
+                                    <span class="link-pad"></span>
+                                    <form method="POST" action="<?= admin_url('entries/close_entry') ?>" style="display:inline;">
+                                        <input type="hidden" name="entry_id" value="<?= $entry['id'] ?>">
+                                        <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
+                                        <button type="submit" class="btn btn-xs btn-danger" title="Close JL Entry"
+                                                onclick="return confirm('Close this JL entry? It will be locked from further edits.');">
+                                            <i class="fa fa-lock"></i>
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
                                 
                             </td>
                         </tr>

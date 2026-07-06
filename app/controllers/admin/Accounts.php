@@ -769,6 +769,8 @@ class Accounts extends MY_Controller
 
 	public function jl_entry_edit($id = null)
 	{
+		$this->ensure_jl_lock_columns();
+
 		if (!$id) {
 			$this->session->set_flashdata('error', 'Invalid entry ID');
 			admin_redirect('entries');
@@ -782,6 +784,11 @@ class Accounts extends MY_Controller
 		$entry = $this->db->get_where('sma_accounts_entries', array('id' => $id))->row();
 		if (!$entry) {
 			$this->session->set_flashdata('error', 'Entry not found');
+			admin_redirect('entries');
+		}
+
+		if (($entry->status ?? 'open') === 'closed') {
+			$this->session->set_flashdata('error', 'This JL entry is locked and cannot be edited.');
 			admin_redirect('entries');
 		}
 
@@ -902,6 +909,33 @@ class Accounts extends MY_Controller
 		$bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('accounts'), 'page' => lang('accounts')], ['link' => '#', 'page' => lang('Edit JL Entry')]];
 		$meta = ['page_title' => lang('Edit JL Entry'), 'bc' => $bc];
 		$this->page_construct('accounts/jl_entry', $meta, $this->data);
+	}
+
+	private function ensure_jl_lock_columns()
+	{
+		if ($this->db->field_exists('status', 'accounts_entries')) {
+			return;
+		}
+
+		$this->load->dbforge();
+		$this->dbforge->add_column('accounts_entries', [
+			'status' => [
+				'type'       => 'ENUM',
+				'constraint' => ['open', 'closed'],
+				'default'    => 'open',
+				'comment'    => 'JL entry status: open (editable) or closed (locked)',
+			],
+			'closed_by' => [
+				'type'    => 'INT',
+				'null'    => true,
+				'comment' => 'User ID who closed the JL entry',
+			],
+			'closed_at' => [
+				'type'    => 'DATETIME',
+				'null'    => true,
+				'comment' => 'Timestamp when JL entry was closed',
+			],
+		]);
 	}
 
 	/**
