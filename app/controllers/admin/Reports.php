@@ -7210,77 +7210,100 @@ class Reports extends MY_Controller
 
             // ── Server-side Excel export (ALL rows, not just current page) ──
             if ($export_excel) {
-                if (count((array) $gl_report_array) > 10000) {
-                    $filename = 'GL_Report_' . date('Y-m-d_H_i_s') . '.csv';
-                    $this->stream_gl_report_csv($gl_report_array, $gl_result['totals'], $filename);
-                    return;
+                @set_time_limit(1200);
+                if (function_exists('ini_set')) {
+                    @ini_set('memory_limit', '768M');
                 }
 
                 $this->load->library('excel');
                 $sheet = $this->excel->setActiveSheetIndex(0);
                 $sheet->setTitle('GL Report');
 
-                $sheet->SetCellValue('A1', '#');
-                $sheet->SetCellValue('B1', lang('voucher'));
-                $sheet->SetCellValue('C1', lang('voucher_id'));
-                $sheet->SetCellValue('D1', lang('trx_id'));
-                $sheet->SetCellValue('E1', lang('date'));
-                $sheet->SetCellValue('F1', lang('reference'));
-                $sheet->SetCellValue('G1', lang('account_number'));
-                $sheet->SetCellValue('H1', lang('account_name'));
-                $sheet->SetCellValue('I1', lang('description'));
-                $sheet->SetCellValue('J1', lang('debit'));
-                $sheet->SetCellValue('K1', lang('credit'));
-                $sheet->SetCellValue('L1', lang('userid'));
+                $sheet->fromArray([[
+                    '#',
+                    lang('voucher'),
+                    lang('voucher_id'),
+                    lang('trx_id'),
+                    lang('date'),
+                    lang('reference'),
+                    lang('account_number'),
+                    lang('account_name'),
+                    lang('description'),
+                    lang('debit'),
+                    lang('credit'),
+                    lang('userid'),
+                ]], null, 'A1');
 
-                $row         = 2;
+                $row = 2;
+                $count = 0;
+                $chunk = [];
+                $chunkSize = 1000;
                 $total_debit = (float) $gl_result['totals']->total_debit;
                 $total_credit = (float) $gl_result['totals']->total_credit;
-                $count       = 0;
-                $last_data_row = 1;
-                foreach ((array)$gl_report_array as $r) {
+
+                foreach ((array) $gl_report_array as $r) {
                     $count++;
-                    $sheet->SetCellValue('A' . $row, $count);
-                    $sheet->SetCellValue('B' . $row, $r->voucher);
-                    $sheet->SetCellValue('C' . $row, $r->voucher_id);
-                    $sheet->SetCellValue('D' . $row, $r->trx_id);
-                    if (!empty($r->entry_date)) {
-                        $sheet->SetCellValue(
-                            'E' . $row,
-                            \PhpOffice\PhpSpreadsheet\Shared\Date::PHPToExcel(new DateTime($r->entry_date))
-                        );
-                    } else {
-                        $sheet->SetCellValue('E' . $row, $r->date);
+                    $chunk[] = [
+                        $count,
+                        $r->voucher,
+                        $r->voucher_id,
+                        $r->trx_id,
+                        !empty($r->entry_date) ? date('d-M-y', strtotime($r->entry_date)) : $r->date,
+                        $r->reference,
+                        $r->account_number,
+                        $r->account_name,
+                        $r->description,
+                        $r->debit > 0 ? (float) $r->debit : 0,
+                        $r->credit > 0 ? (float) $r->credit : 0,
+                        $r->user_id,
+                    ];
+
+                    if (count($chunk) === $chunkSize) {
+                        $sheet->fromArray($chunk, null, 'A' . $row);
+                        $row += count($chunk);
+                        $chunk = [];
                     }
-                    $sheet->SetCellValue('F' . $row, $r->reference);
-                    $sheet->SetCellValue('G' . $row, $r->account_number);
-                    $sheet->SetCellValue('H' . $row, $r->account_name);
-                    $sheet->SetCellValue('I' . $row, $r->description);
-                    $sheet->SetCellValue('J' . $row, $r->debit  > 0 ? (float)$r->debit  : 0);
-                    $sheet->SetCellValue('K' . $row, $r->credit > 0 ? (float)$r->credit : 0);
-                    $sheet->SetCellValue('L' . $row, $r->user_id);
-                    $last_data_row = $row;
-                    $row++;
                 }
-                if ($last_data_row >= 2) {
-                    $sheet->getStyle('E2:E' . $last_data_row)
-                        ->getNumberFormat()
-                        ->setFormatCode('dd-mmm-yy');
+
+                if (!empty($chunk)) {
+                    $sheet->fromArray($chunk, null, 'A' . $row);
+                    $row += count($chunk);
                 }
-                // Totals row
-                $sheet->SetCellValue('A' . $row, '');
-                $sheet->SetCellValue('I' . $row, lang('total'));
-                $sheet->SetCellValue('J' . $row, $total_debit);
-                $sheet->SetCellValue('K' . $row, $total_credit);
+
+                $sheet->fromArray([[
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    lang('total'),
+                    $total_debit,
+                    $total_credit,
+                    '',
+                ]], null, 'A' . $row);
 
                 $cols = ['A'=>5,'B'=>20,'C'=>12,'D'=>10,'E'=>14,'F'=>12,'G'=>18,'H'=>30,'I'=>35,'J'=>14,'K'=>14,'L'=>10];
                 foreach ($cols as $c => $w) { $this->excel->getActiveSheet()->getColumnDimension($c)->setWidth($w); }
                 $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
 
-                $filename = 'GL_Report_' . date('Y-m-d_H_i_s');
-                $this->load->helper('excel');
-                create_excel($this->excel, $filename);
-                return;
+                while (ob_get_level()) {
+                    ob_end_clean();
+                }
+
+                header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+                header('Content-Disposition: attachment;filename="GL_Report_' . date('Y-m-d_H_i_s') . '.xlsx"');
+                header('Cache-Control: max-age=0');
+                header('Pragma: public');
+
+                $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($this->excel, 'Xlsx');
+                $writer->setPreCalculateFormulas(false);
+                $writer->save('php://output');
+                $this->excel->disconnectWorksheets();
+                unset($writer);
+                exit;
             }
 
             if ($viewtype == 'pdf') {
@@ -7293,79 +7316,6 @@ class Reports extends MY_Controller
         } else {
             $this->page_construct('reports/gl_report', $meta, $this->data);
         }
-    }
-
-    private function stream_gl_report_csv($gl_report_array, $totals, $filename)
-    {
-        while (ob_get_level()) {
-            ob_end_clean();
-        }
-
-        header('Content-Type: text/csv; charset=UTF-8');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
-        header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
-        header('Pragma: public');
-        header('Expires: 0');
-
-        $out = fopen('php://output', 'w');
-        if ($out === false) {
-            show_error('Could not start GL report download.', 500);
-        }
-
-        fwrite($out, "\xEF\xBB\xBF");
-        fputcsv($out, [
-            '#',
-            lang('voucher'),
-            lang('voucher_id'),
-            lang('trx_id'),
-            lang('date'),
-            lang('reference'),
-            lang('account_number'),
-            lang('account_name'),
-            lang('description'),
-            lang('debit'),
-            lang('credit'),
-            lang('userid'),
-        ]);
-
-        $count = 0;
-        foreach ((array) $gl_report_array as $r) {
-            $count++;
-            $entry_date = !empty($r->entry_date) ? date('d-M-y', strtotime($r->entry_date)) : $r->date;
-
-            fputcsv($out, [
-                $count,
-                $r->voucher,
-                $r->voucher_id,
-                $r->trx_id,
-                $entry_date,
-                $r->reference,
-                $r->account_number,
-                $r->account_name,
-                $r->description,
-                $r->debit > 0 ? (float) $r->debit : 0,
-                $r->credit > 0 ? (float) $r->credit : 0,
-                $r->user_id,
-            ]);
-        }
-
-        fputcsv($out, [
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            lang('total'),
-            (float) $totals->total_debit,
-            (float) $totals->total_credit,
-            '',
-        ]);
-
-        fclose($out);
-        exit;
     }
 
     public function get_gl_report()
