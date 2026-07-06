@@ -2877,6 +2877,10 @@ class Sales extends MY_Controller
             $inv_items = $this->sales_model->getAllSaleItems($sid);
             $warehouse_id = $inv->warehouse_id;
             $warehouse_ledgers = $this->site->getWarehouseByID($warehouse_id);
+            $vat_ledger_id = $this->site->getVatOnSaleLedgerId($warehouse_ledgers);
+            if (!$vat_ledger_id && (float) $inv->total_tax > 0) {
+                log_message('error', 'convert_sale_invoice: VAT on sale ledger not configured (sale_id=' . (int) $sid . ')');
+            }
 
             /*Accounts Entries*/
             $entry = array(
@@ -2967,21 +2971,18 @@ class Sales extends MY_Controller
             );
           
           
-             // //vat on sale
-             $entryitemdata[] = array(
-                         'Entryitem' => array(
-                             'entry_id' => $insert_id,
-                             'dc' => 'C',
-                             'ledger_id' => $this->vat_on_sale,
-                             'amount' => $inv->total_tax,
-                             'narration' => 'vat on sale'
-                         )
-                     );
- 
- 
+            if ($vat_ledger_id) {
+                $entryitemdata[] = array(
+                    'Entryitem' => array(
+                        'entry_id' => $insert_id,
+                        'dc' => 'C',
+                        'ledger_id' => $vat_ledger_id,
+                        'amount' => $inv->total_tax,
+                        'narration' => 'vat on sale'
+                    )
+                );
+            }
 
-           
-                     
             //   /*Accounts Entry Items*/
             foreach ($entryitemdata as $row => $itemdata)
             {
