@@ -7905,6 +7905,113 @@ class Reports extends MY_Controller
         echo json_encode($registers[0]);
     }
 
+    public function onhold_sales()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        
+        // Get filter parameters from GET (changed from POST to match stock report pattern)
+        $start_date = $this->input->get('start_date') ? $this->input->get('start_date') : null;
+        $end_date = $this->input->get('end_date') ? $this->input->get('end_date') : null;
+        $invoice_id = $this->input->get('invoice_id') ? $this->input->get('invoice_id') : null;
+        $customer = $this->input->get('customer') ? $this->input->get('customer') : null;
+        $salesman = $this->input->get('salesman') ? $this->input->get('salesman') : null;
+        $warehouse = $this->site->resolveReportWarehouseFilter('warehouse');
+        
+        // Get sales men and warehouses for dropdowns
+        $this->db->select('id, name');
+        $this->db->from('sales_man');
+        $this->db->order_by('name', 'asc');
+        $query = $this->db->get();
+        $this->data['salesmen'] = $query->result();
+        
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        
+        // Set filter values for form persistence (always set these)
+        $this->data['start_date'] = $start_date;
+        $this->data['end_date'] = $end_date;
+        $this->data['invoice_id'] = $invoice_id;
+        $this->data['customer'] = $customer;
+        $this->data['salesman'] = $salesman;
+        $this->data['warehouse'] = $warehouse;
+        
+        // If form submitted, fetch data
+        if ($start_date || $end_date || $invoice_id || $customer || $salesman || array_key_exists('warehouse', $_GET)) {
+            
+            // Pre-fetch salesman name if needed
+            $salesman_name = null;
+            if ($salesman) {
+                $sm_query = $this->db->select('name')->from('sales_man')->where('id', $salesman)->get();
+                if ($sm_query->num_rows() > 0) {
+                    $salesman_name = $sm_query->row()->name;
+                }
+            }
+            
+            // Build query
+            $this->db->select("DATE_FORMAT({$this->db->dbprefix('quotes')}.date, '%d-%b-%y') as date,
+                {$this->db->dbprefix('sales')}.id as sale_id,
+                {$this->db->dbprefix('quotes')}.id as quote_id,
+                {$this->db->dbprefix('quotes')}.reference_no as invoice,
+                {$this->db->dbprefix('quotes')}.trade_note as trade_note,
+                {$this->db->dbprefix('quotes')}.warehouse_id as warehouse_id,
+                {$this->db->dbprefix('companies')}.city as area,
+                COALESCE({$this->db->dbprefix('companies')}.sales_agent, '') as sales_man,
+                {$this->db->dbprefix('companies')}.company as customer_no,
+                {$this->db->dbprefix('companies')}.name as customer_name,
+                {$this->db->dbprefix('quotes')}.total as invoice_total,
+                COALESCE((SELECT SUM(grand_total) FROM {$this->db->dbprefix('returns')} WHERE sale_id = {$this->db->dbprefix('quotes')}.id), 0) as return_amount,
+                {$this->db->dbprefix('quotes')}.total_discount as discount", false)
+                ->from('quotes')
+                ->join('companies', 'companies.id = quotes.customer_id', 'left')
+                ->join('sales', 'sales.sale_id = quotes.id', 'left')
+                ->order_by('quotes.date', 'desc');
+            
+            // Apply date filter (only if provided)
+            if ($start_date && $end_date) {
+                $formatted_start_date = $this->sma->fld($start_date) . ' 00:00:00';
+                $formatted_end_date = $this->sma->fld($end_date) . ' 23:59:59';
+                $this->db->where("{$this->db->dbprefix('quotes')}.date >= '{$formatted_start_date}' AND {$this->db->dbprefix('quotes')}.date <= '{$formatted_end_date}'");
+            }
+            
+            $this->db->where('quotes.trade_note IS NOT NULL AND quotes.trade_note != ""');
+
+            // Apply filters
+            if ($invoice_id) {
+                // Search by quotes.id (exact match for numeric ID)
+                if (is_numeric($invoice_id)) {
+                    $this->db->where('quotes.id', $invoice_id);
+                } else {
+                    // If not numeric, search in reference_no
+                    $this->db->like('quotes.reference_no', $invoice_id, 'after');
+                }
+            }
+            if ($customer) {
+                $this->db->group_start();
+                $this->db->like("{$this->db->dbprefix('companies')}.id", $customer, 'both');
+                $this->db->group_end();
+            }
+            if ($salesman_name) {
+                $this->db->where('companies.sales_agent', $salesman_name);
+            }
+            if ($warehouse) {
+                $this->db->where('quotes.warehouse_id', $warehouse);
+            } else {
+                $this->site->applyReportWarehouseScope($this->db, null, 'quotes.warehouse_id');
+            }
+            
+            $invoice_data = $this->db->get()->result();
+            
+            $this->data['invoice_data'] = $invoice_data;
+        }
+        
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')], 
+            ['link' => admin_url('reports'), 'page' => lang('reports')], 
+            ['link' => '#', 'page' => lang('onhold_sales_report')]
+        ];
+        $meta = ['page_title' => lang('onhold_sales_report'), 'bc' => $bc];
+        $this->page_construct('reports/onhold_sales', $meta, $this->data);
+    }
+
     /**
      * Invoice Status Report
      * Shows invoice details with returns, discounts, payments and outstanding amounts
