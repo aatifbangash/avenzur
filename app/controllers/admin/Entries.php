@@ -25,6 +25,7 @@ class Entries extends MY_Controller
     
 	public function index() {
 
+		$this->ensure_jl_lock_columns();
 		$this->load->library('pagination'); 
 		$config['base_url'] = admin_url('entries'); 
 		$config['total_rows'] = $this->count_entries();
@@ -36,8 +37,9 @@ class Entries extends MY_Controller
 		$eid              = $this->input->get('eid');
         $tran_number      = $this->input->get('tran_number');
 		$start_date       = $this->input->get('start_date');
-        $end_date         = $this->input->get('end_date');
+		$end_date         = $this->input->get('end_date');
 		$transaction_type = $this->input->get('transaction_type');
+		$status           = $this->input->get('status');
 
 		if ($start_date) {
 			$start_date = $this->sma->fld($start_date);
@@ -58,6 +60,13 @@ class Entries extends MY_Controller
 		}
 		if (!empty($transaction_type)) {
 			$this->db->where('transaction_type', $transaction_type);
+		}
+		if (!empty($status)) {
+			if ($status === 'closed') {
+				$this->db->where('status', 'closed');
+			} elseif ($status === 'open') {
+				$this->db->where("(status IS NULL OR status = 'open')", null, false);
+			}
 		}
 
 		$this->db->where("transaction_type NOT IN ('purchase_invoice', 'sales_invoice')");
@@ -239,11 +248,13 @@ class Entries extends MY_Controller
 
 	public function count_entries(){
 
+		$this->ensure_jl_lock_columns();
 		$eid              = $this->input->get('eid');
         $tran_number      = $this->input->get('tran_number');
 		$start_date       = $this->input->get('start_date');
         $end_date         = $this->input->get('end_date');
 		$transaction_type = $this->input->get('transaction_type');
+		$status           = $this->input->get('status');
 		
 		$this->db->select(' COUNT(id) as total_record');
 		$this->db->from('sma_accounts_entries');  
@@ -268,6 +279,13 @@ class Entries extends MY_Controller
 		if (!empty($transaction_type)) {
 			$this->db->where('transaction_type', $transaction_type);
 		}
+		if (!empty($status)) {
+			if ($status === 'closed') {
+				$this->db->where('status', 'closed');
+			} elseif ($status === 'open') {
+				$this->db->where("(status IS NULL OR status = 'open')", null, false);
+			}
+		}
 
 		$this->db->where("transaction_type NOT IN ('purchase_invoice', 'sales_invoice')");
 
@@ -277,6 +295,80 @@ class Entries extends MY_Controller
 		$count = $row->total_record;
 		return $count;   
 
+	}
+
+	private function ensure_jl_lock_columns()
+	{
+		if ($this->db->field_exists('status', 'accounts_entries')) {
+			return;
+		}
+
+		$this->load->dbforge();
+		$fields = [
+			'status' => [
+				'type'       => 'ENUM',
+				'constraint' => ['open', 'closed'],
+				'default'    => 'open',
+				'comment'    => 'JL entry status: open (editable) or closed (locked)',
+			],
+			'closed_by' => [
+				'type'    => 'INT',
+				'null'    => true,
+				'comment' => 'User ID who closed the JL entry',
+			],
+			'closed_at' => [
+				'type'    => 'DATETIME',
+				'null'    => true,
+				'comment' => 'Timestamp when JL entry was closed',
+			],
+		];
+		$this->dbforge->add_column('accounts_entries', $fields);
+	}
+
+	public function close_entry()
+	{
+		$this->ensure_jl_lock_columns();
+
+		if ($this->sma->in_group('financemanager') === false) {
+			$this->session->set_flashdata('error', 'You do not have permission to close JL entries.');
+			admin_redirect($_SERVER['HTTP_REFERER']);
+			return;
+		}
+
+		$entry_id = $this->input->post('entry_id');
+
+		if (!$entry_id) {
+			$this->session->set_flashdata('error', 'Entry ID not provided.');
+			admin_redirect('entries');
+			return;
+		}
+
+		$entry = $this->db->where('id', $entry_id)->get('sma_accounts_entries')->row();
+
+		if (!$entry) {
+			$this->session->set_flashdata('error', 'JL entry not found.');
+			admin_redirect('entries');
+			return;
+		}
+
+		if (($entry->status ?? 'open') === 'closed') {
+			$this->session->set_flashdata('warning', 'This JL entry is already closed.');
+			admin_redirect('entries');
+			return;
+		}
+
+		$this->db->where('id', $entry_id);
+		if ($this->db->update('sma_accounts_entries', [
+			'status'    => 'closed',
+			'closed_by' => $this->session->userdata('user_id'),
+			'closed_at' => date('Y-m-d H:i:s'),
+		])) {
+			$this->session->set_flashdata('success', 'JL entry has been closed and locked from further editing.');
+		} else {
+			$this->session->set_flashdata('error', 'Failed to close JL entry.');
+		}
+
+		admin_redirect('entries');
 	}
 
 	private function get_entry_transaction_types() {
@@ -803,6 +895,7 @@ class Entries extends MY_Controller
 	*/
 	public function edit($entrytypeLabel = null, $id = null)
 	{
+		$this->ensure_jl_lock_columns();
 		// load model - entry_model
 		$this->load->admin_model('entry_model');
 
@@ -847,6 +940,10 @@ class Entries extends MY_Controller
 		$this->form_validation->set_rules('employee_id', 'Employee ID', 'callback_at_least_one_selected');
 
 		$q = $this->db->get_where('sma_accounts_entries', array('id' => $id))->row();
+		if ($q && ($q->status ?? 'open') === 'closed') {
+			$this->session->set_flashdata('error', 'This JL entry is locked and cannot be edited.');
+			admin_redirect('entries');
+		}
 		if ($this->input->post('number') != $q->number) {
 			$this->form_validation->set_rules('number', lang('entries_cntrler_add_form_validation_number_label'), 'is_db1_unique[sma_accounts_entries.number]');
 			$this->form_validation->set_message('is_db1_unique', lang('form_validation_is_db_unique'));
@@ -1414,6 +1511,7 @@ class Entries extends MY_Controller
 	*/
 	public function delete($entrytypeLabel = null, $id = null)
 	{
+		$this->ensure_jl_lock_columns();
 		/* Check for valid entry type */
 		if (empty($entrytypeLabel))
 		{
@@ -1453,6 +1551,11 @@ class Entries extends MY_Controller
 			// set error alert
 			$this->session->set_flashdata('error', lang('entries_cntrler_edit_entry_not_found_error'));
 			// redirect to index page
+			admin_redirect('entries');
+		}
+
+		if (($entry['status'] ?? 'open') === 'closed') {
+			$this->session->set_flashdata('error', 'This JL entry is locked and cannot be deleted.');
 			admin_redirect('entries');
 		}
 
