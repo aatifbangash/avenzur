@@ -1,7 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <style>
 /* Hide supplier hidden input and any associated dropdown */
-#supplier {
+#supplierps {
     display: none !important;
     visibility: hidden !important;
     height: 0 !important;
@@ -142,7 +142,7 @@
                             ?>
                             <div style="position: relative;">
                                 <input type="text" class="form-control" readonly value="<?= htmlspecialchars($supplier_display); ?>" style="background-color: #f5f5f5; cursor: default;">
-                                <input type="hidden" name="supplier" id="supplier" value="<?= $supplier_id; ?>">
+                                <input type="hidden" name="supplier" id="supplierps" value="<?= $supplier_id; ?>">
                             </div>
                         </div>
                     </div>
@@ -478,7 +478,7 @@ $(document).ready(function () {
     }
 
     // ── Supplier change ──────────────────────────────────────────────
-    $('#supplier').change(function () {
+    $('#supplierps').change(function () {
         var supplier_id = $(this).val();
         resetAll();
 
@@ -943,7 +943,7 @@ $(document).ready(function () {
 
     // Load initial supplier if page is in edit mode
     // Save field values BEFORE triggering change (which calls resetAll and zeroes them out)
-    var initial_supplier = $('#supplier').val();
+    var initial_supplier = $('#supplierps').val();
     if (initial_supplier) {
         var saved_payment_amount = $('#payment_amount').val();
         var saved_bank_charges   = $('#bank_charges').val();
@@ -952,7 +952,7 @@ $(document).ready(function () {
         var saved_advance_amount = $('#advance_amount').val();
         var is_edit_mode = true;
 
-        $('#supplier').trigger('change');
+        $('#supplierps').trigger('change');
 
         // Restore values that resetAll() wiped out
         $('#payment_amount').val(saved_payment_amount);

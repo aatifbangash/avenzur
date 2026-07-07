@@ -192,13 +192,13 @@ if (!empty($filters['to_date'])) {
                                        class="tip btn btn-xs btn-default" title="<?= lang('View Payment') ?>">
                                         <i class="fa fa-eye"></i>
                                     </a>
-                                    <?php if (($payment->status ?? 'open') !== 'closed' && 1 != 1): ?>
+                                    <?php if (($payment->status ?? 'open') !== 'closed'): ?>
                                         <a href="<?= admin_url('suppliers/edit_payment?id=' . $payment->id) ?>"
                                            class="tip btn btn-xs btn-warning" title="<?= lang('Edit Payment') ?>">
                                             <i class="fa fa-edit"></i>
                                         </a>
                                     <?php endif; ?>
-                                    <?php if ($this->sma->in_group('financemanager') && ($payment->status ?? 'open') !== 'closed' && 1 != 1) : ?>
+                                    <?php if ($this->sma->in_group('financemanager') && ($payment->status ?? 'open') !== 'closed'): ?>
                                         <form method="POST" action="<?= admin_url('suppliers/close_payment') ?>" style="display:inline;">
                                             <input type="hidden" name="payment_id" value="<?= $payment->id ?>">
                                             <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
