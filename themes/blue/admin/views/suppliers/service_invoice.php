@@ -18,6 +18,15 @@
 </style>
 <script>
     $(document).ready(function () {
+        // Check if service invoice is locked
+        <?php if(isset($memo_data) && ($memo_data->status ?? 'open') === 'locked'): ?>
+            // Disable all form inputs and buttons
+            $('input, select, textarea').prop('disabled', true);
+            $('.remove-row').prop('disabled', true);
+            $('#addRowBtn').prop('disabled', true);
+            $('#add_payment').prop('disabled', true);
+        <?php endif; ?>
+
         // Initialize with one row
         if ($('#serviceTable tbody tr').length === 0) {
             <?php if(isset($memo_entries_data) && !empty($memo_entries_data)): ?>
@@ -28,7 +37,8 @@
                     var vatAmount = entry.vat_amount || entry.vat || 0;
                     var amount = entry.amount || (entry.payment_amount - vatAmount);
                     var total = entry.total || entry.payment_amount || 0;
-                    addServiceRow(entry.ledger_account_id, amount, vatRate, vatAmount, total, true);
+                    // Use ledger_account field (not ledger_account_id) as that's what's in the database
+                    addServiceRow(entry.ledger_account, amount, vatRate, vatAmount, total, true);
                 }
             <?php else: ?>
                 addServiceRow();
@@ -187,6 +197,17 @@
             ?>
             <div class="col-lg-12">
 
+                <?php 
+                // Show lock warning if memo is locked
+                if (isset($memo_data) && ($memo_data->status ?? 'open') === 'locked'): 
+                ?>
+                    <div class="alert alert-warning alert-dismissible">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                        <h4><i class="icon fa fa-lock"></i> <?= lang('Locked Service Invoice') ?></h4>
+                        <?= lang('This service invoice is locked and cannot be edited.') ?>
+                    </div>
+                <?php endif; ?>
+
                 <?php if ($error) { ?>
                     <div class="alert alert-danger">
                         <button data-dismiss="alert" class="close" type="button">×</button>
@@ -237,7 +258,8 @@
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="form-group">
-                            <button type="button" id="addRowBtn" class="btn btn-success btn-sm">
+                            <button type="button" id="addRowBtn" class="btn btn-success btn-sm" 
+                                    <?php if(isset($memo_data) && ($memo_data->status ?? 'open') === 'locked'): ?>disabled<?php endif; ?>>
                                 <i class="fa fa-plus"></i> Add Service Row
                             </button>
                         </div>
@@ -266,9 +288,19 @@
                 <div class="row">
                     <div class="col-md-12">
                         <div class="form-group">
-                            <button type="submit" class="btn btn-primary" id="add_payment">
-                                <?= lang('Add Service Invoice') ?>
+                            <?php 
+                            $isLocked = isset($memo_data) && ($memo_data->status ?? 'open') === 'locked';
+                            $buttonText = isset($memo_data) ? lang('Update Service Invoice') : lang('Add Service Invoice');
+                            ?>
+                            <button type="submit" class="btn btn-primary" id="add_payment" 
+                                    <?php if($isLocked): ?>disabled<?php endif; ?>>
+                                <?= $buttonText ?>
                             </button>
+                            <?php if (!$isLocked): ?>
+                                <a href="<?= admin_url('suppliers/list_service_invoice') ?>" class="btn btn-default">
+                                    <?= lang('Cancel') ?>
+                                </a>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>

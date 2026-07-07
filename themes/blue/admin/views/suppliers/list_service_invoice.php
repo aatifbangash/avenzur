@@ -99,6 +99,7 @@ if (!empty($filters['to_date'])) {
                                 <th class="text-right"><?= lang('Amount (ex-VAT)') ?></th>
                                 <th class="text-right"><?= lang('VAT Amount') ?></th>
                                 <th class="text-right"><?= lang('Total') ?></th>
+                                <th><?= lang('Status') ?></th>
                                 <th><?= lang('Actions') ?></th>
                             </tr>
                         </thead>
@@ -125,15 +126,42 @@ if (!empty($filters['to_date'])) {
                                     <td class="text-right"><?= number_format($vat, 2) ?></td>
                                     <td class="text-right"><?= number_format($amount, 2) ?></td>
                                     <td>
+                                        <?php if (($invoice->status ?? 'open') === 'locked'): ?>
+                                            <span class="label label-danger"><i class="fa fa-lock"></i> Locked</span>
+                                        <?php else: ?>
+                                            <span class="label label-info">Open</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
                                         <a href="<?= admin_url('suppliers/service_invoice_pdf/' . $invoice->id) ?>"
-                                           class="tip" title="Download PDF">
+                                           class="tip btn btn-xs btn-default" title="Download PDF">
                                             <i class="fa fa-file-pdf-o"></i>
                                         </a>
-                                        &nbsp;
-                                        <a href="<?= admin_url('suppliers/edit_service_invoice/' . $invoice->id) ?>"
-                                           class="tip" title="Edit">
-                                            <i class="fa fa-edit"></i>
-                                        </a>
+                                        <?php if (($invoice->status ?? 'open') !== 'locked'): ?>
+                                            <a href="<?= admin_url('suppliers/edit_service_invoice/' . $invoice->id) ?>"
+                                               class="tip btn btn-xs btn-warning" title="Edit">
+                                                <i class="fa fa-edit"></i>
+                                            </a>
+                                        <?php endif; ?>
+                                        <?php if ($this->sma->in_group('financemanager')): ?>
+                                            <?php if (($invoice->status ?? 'open') === 'locked'): ?>
+                                                <form method="POST" action="<?= admin_url('suppliers/unlock_service_invoice') ?>" style="display:inline;">
+                                                    <input type="hidden" name="memo_id" value="<?= $invoice->id ?>">
+                                                    <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
+                                                    <button type="submit" class="tip btn btn-xs btn-success" title="Unlock" onclick="return confirm('Unlock this service invoice? It will be editable again.');">
+                                                        <i class="fa fa-unlock-alt"></i>
+                                                    </button>
+                                                </form>
+                                            <?php else: ?>
+                                                <form method="POST" action="<?= admin_url('suppliers/lock_service_invoice') ?>" style="display:inline;">
+                                                    <input type="hidden" name="memo_id" value="<?= $invoice->id ?>">
+                                                    <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
+                                                    <button type="submit" class="tip btn btn-xs btn-danger" title="Lock" onclick="return confirm('Lock this service invoice? It will no longer be editable.');">
+                                                        <i class="fa fa-lock"></i>
+                                                    </button>
+                                                </form>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -145,12 +173,13 @@ if (!empty($filters['to_date'])) {
                                     <td class="text-right"><?= number_format($total_vat, 2) ?></td>
                                     <td class="text-right"><?= number_format($total_amount, 2) ?></td>
                                     <td></td>
+                                    <td></td>
                                 </tr>
                             </tfoot>
                             <?php else: ?>
                             <tbody>
                                 <tr>
-                                    <td colspan="9" class="text-center text-muted"><?= lang('no_records_found') ?></td>
+                                    <td colspan="10" class="text-center text-muted"><?= lang('no_records_found') ?></td>
                                 </tr>
                             </tbody>
                             <tfoot></tfoot>

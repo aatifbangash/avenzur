@@ -1452,6 +1452,108 @@ class Suppliers extends MY_Controller
         }
     }
 
+    /**
+     * Lock Service Invoice - Finance Manager Only
+     */
+    public function lock_service_invoice()
+    {
+        // Check permission - Finance Manager role only
+        if (!$this->sma->in_group('financemanager')) {
+            $this->session->set_flashdata('error', 'You do not have permission to lock service invoices.');
+            admin_redirect($_SERVER['HTTP_REFERER']);
+            return;
+        }
+
+        $memo_id = $this->input->post('memo_id');
+        
+        if (!$memo_id) {
+            $this->session->set_flashdata('error', 'Service Invoice ID not provided.');
+            admin_redirect('suppliers/list_service_invoice');
+            return;
+        }
+
+        $memo = $this->db->get_where('sma_memo', ['id' => $memo_id], 1)->row();
+        
+        if (!$memo) {
+            $this->session->set_flashdata('error', 'Service Invoice not found.');
+            admin_redirect('suppliers/list_service_invoice');
+            return;
+        }
+
+        if (($memo->status ?? 'open') === 'locked') {
+            $this->session->set_flashdata('warning', 'This service invoice is already locked.');
+            admin_redirect('suppliers/list_service_invoice');
+            return;
+        }
+
+        // Lock the service invoice
+        $update_data = [
+            'status' => 'locked',
+            'locked_by' => $this->loggedIn,
+            'locked_at' => date('Y-m-d H:i:s')
+        ];
+
+        $this->db->where('id', $memo_id);
+        if ($this->db->update('sma_memo', $update_data)) {
+            $this->session->set_flashdata('success', 'Service Invoice has been locked.');
+        } else {
+            $this->session->set_flashdata('error', 'Failed to lock service invoice.');
+        }
+
+        admin_redirect('suppliers/list_service_invoice');
+    }
+
+    /**
+     * Unlock Service Invoice - Finance Manager Only
+     */
+    public function unlock_service_invoice()
+    {
+        // Check permission - Finance Manager role only
+        if (!$this->sma->in_group('financemanager')) {
+            $this->session->set_flashdata('error', 'You do not have permission to unlock service invoices.');
+            admin_redirect($_SERVER['HTTP_REFERER']);
+            return;
+        }
+
+        $memo_id = $this->input->post('memo_id');
+        
+        if (!$memo_id) {
+            $this->session->set_flashdata('error', 'Service Invoice ID not provided.');
+            admin_redirect('suppliers/list_service_invoice');
+            return;
+        }
+
+        $memo = $this->db->get_where('sma_memo', ['id' => $memo_id], 1)->row();
+        
+        if (!$memo) {
+            $this->session->set_flashdata('error', 'Service Invoice not found.');
+            admin_redirect('suppliers/list_service_invoice');
+            return;
+        }
+
+        if (($memo->status ?? 'open') !== 'locked') {
+            $this->session->set_flashdata('warning', 'This service invoice is not locked.');
+            admin_redirect('suppliers/list_service_invoice');
+            return;
+        }
+
+        // Unlock the service invoice
+        $update_data = [
+            'status' => 'open',
+            'locked_by' => null,
+            'locked_at' => null
+        ];
+
+        $this->db->where('id', $memo_id);
+        if ($this->db->update('sma_memo', $update_data)) {
+            $this->session->set_flashdata('success', 'Service Invoice has been unlocked and is now editable.');
+        } else {
+            $this->session->set_flashdata('error', 'Failed to unlock service invoice.');
+        }
+
+        admin_redirect('suppliers/list_service_invoice');
+    }
+
     public function print_payment_pdf($id = null)
     {
         if ($this->input->get('id')) {
@@ -2845,11 +2947,24 @@ class Suppliers extends MY_Controller
         $service_invoice_data = $this->purchases_model->getDebitMemoData($id);
         $service_invoice_entries_data = $this->purchases_model->getDebitMemoEntriesData($id);
 
+        if (!$service_invoice_data) {
+            $this->session->set_flashdata('error', 'Service Invoice not found.');
+            admin_redirect('suppliers/list_service_invoice');
+            return;
+        }
+
+        // Check if locked
+        if (($service_invoice_data->status ?? 'open') === 'locked') {
+            $this->session->set_flashdata('warning', 'This service invoice is locked and cannot be edited.');
+            admin_redirect('suppliers/list_service_invoice');
+            return;
+        }
+
         $data = [];
         $this->data['memo_data'] = $service_invoice_data;
-
         $this->data['memo_entries_data'] = $service_invoice_entries_data;
         $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
+        $this->data['ledgers'] = $this->site->getCompanyLedgers();
         $this->page_construct('suppliers/service_invoice', $meta, $this->data);
     }
 
