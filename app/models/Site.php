@@ -681,6 +681,21 @@ class Site extends CI_Model
         return $warehouse && (!empty($warehouse->is_overseas) || $warehouse->warehouse_type == 'pharmacy');
     }
 
+    /**
+     * VAT output ledger for sale invoices (settings first, then warehouse fallback).
+     */
+    public function getVatOnSaleLedgerId($warehouse = null)
+    {
+        $settings = $this->get_setting();
+        if ($settings && !empty($settings->vat_on_sale_ledger)) {
+            return (int) $settings->vat_on_sale_ledger;
+        }
+        if ($warehouse && !empty($warehouse->vat_on_sales_ledger)) {
+            return (int) $warehouse->vat_on_sales_ledger;
+        }
+        return 0;
+    }
+
     public function applyProductScopeFilter($warehouse_id)
     {
         $osw_id = $this->getOverseasWarehouseId();
