@@ -354,13 +354,8 @@ class Transfers_model extends CI_Model
                     $item['date'] = date('Y-m-d');
                     $item['warehouse_id'] = $data['to_warehouse_id'];
                     $item['status'] = 'received';
-                    //$this->db->insert('purchase_items', $item);
+                    $this->db->insert('purchase_items', $item);
                 } else {
-                    //$this->db->insert('transfer_items', $item);
-                }
-
-                $this->db->insert('purchase_items', $item);
-                if ($status != 'completed') {
                     $this->db->insert('transfer_items', $item);
                 }
 
@@ -475,18 +470,9 @@ class Transfers_model extends CI_Model
 
     public function getAllTransferItemsForModule($transfer_id, $status, $warehouse_id=null)
     {
-        if ($status == 'completed' || $status == 'save' || $status == 'sent') {
-            // $this->db->select('purchase_items.*, product_variants.name as variant, products.unit, products.hsn_code as hsn_code, products.second_name as second_name')
-            //     ->from('purchase_items')
-            //     ->join('products', 'products.id=purchase_items.product_id', 'left')
-            //     ->join('product_variants', 'product_variants.id=purchase_items.option_id', 'left')
-            //     ->group_by('purchase_items.id')
-            //     ->where('transfer_id', $transfer_id)
-            //     ->order_by('purchase_items.id', 'DESC');
-
+        if ($status == 'completed') {
             $sql = "SELECT 
                         pi.*,
-                       
                         p.unit,
                         p.hsn_code AS hsn_code,
                         p.second_name AS second_name,
@@ -494,7 +480,6 @@ class Transfers_model extends CI_Model
                     FROM sma_purchase_items pi
                     LEFT JOIN sma_products p 
                         ON p.id = pi.product_id
-                    
                     JOIN (
                     SELECT 
                         avz_item_code,
@@ -505,14 +490,43 @@ class Transfers_model extends CI_Model
                         real_unit_cost,
                         SUM(quantity) AS current_quantity
                     FROM sma_inventory_movements
-                    WHERE location_id = " . $warehouse_id . " 
-
+                    WHERE location_id = " . (int) $warehouse_id . "
                     GROUP BY avz_item_code, batch_number, expiry_date
                 ) im_summary
                     ON im_summary.avz_item_code = pi.avz_item_code and im_summary.batch_number=pi.batchno and im_summary.expiry_date=pi.expiry
-                    WHERE pi.transfer_id = $transfer_id
+                    WHERE pi.transfer_id = " . (int) $transfer_id . "
                     GROUP BY pi.id
                     ORDER BY pi.id DESC
+                    ";
+            $q = $this->db->query($sql);
+
+        } else if ($status == 'save' || $status == 'sent') {
+            $sql = "SELECT 
+                        ti.*,
+                        p.unit,
+                        p.hsn_code AS hsn_code,
+                        p.second_name AS second_name,
+                        im_summary.current_quantity
+                    FROM sma_transfer_items ti
+                    LEFT JOIN sma_products p 
+                        ON p.id = ti.product_id
+                    JOIN (
+                    SELECT 
+                        avz_item_code,
+                        batch_number,
+                        expiry_date,
+                        net_unit_sale,
+                        net_unit_cost,
+                        real_unit_cost,
+                        SUM(quantity) AS current_quantity
+                    FROM sma_inventory_movements
+                    WHERE location_id = " . (int) $warehouse_id . "
+                    GROUP BY avz_item_code, batch_number, expiry_date
+                ) im_summary
+                    ON im_summary.avz_item_code = ti.avz_item_code and im_summary.batch_number=ti.batchno and im_summary.expiry_date=ti.expiry
+                    WHERE ti.transfer_id = " . (int) $transfer_id . "
+                    GROUP BY ti.id
+                    ORDER BY ti.id DESC
                     ";
             $q = $this->db->query($sql);
 
@@ -538,43 +552,25 @@ class Transfers_model extends CI_Model
 
     public function getAllTransferItems($transfer_id, $status)
     {
+        $table = ($status == 'completed') ? 'purchase_items' : 'transfer_items';
 
-        $this->db->select('purchase_items.*, product_variants.name as variant, products.unit, products.hsn_code as hsn_code, products.second_name as second_name')
-            ->from('purchase_items')
-            ->join('products', 'products.id=purchase_items.product_id', 'left')
-            ->join('product_variants', 'product_variants.id=purchase_items.option_id', 'left')
-            ->group_by('purchase_items.id')
-            ->order_by('purchase_items.id', 'ASC')
+        $this->db->select($table . '.*, product_variants.name as variant, products.unit, products.hsn_code as hsn_code, products.second_name as second_name')
+            ->from($table)
+            ->join('products', 'products.id=' . $table . '.product_id', 'left')
+            ->join('product_variants', 'product_variants.id=' . $table . '.option_id', 'left')
+            ->group_by($table . '.id')
+            ->order_by($table . '.id', 'ASC')
             ->where('transfer_id', $transfer_id);
 
         $q = $this->db->get();
-        //echo $this->db->last_query();exit;
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;
             }
             return $data;
-        } else {
-            $this->db->select('transfer_items.*, SUM(IFNULL(im.quantity, 0)) as base_quantity, im.avz_item_code, product_variants.name as variant, products.unit, products.hsn_code as hsn_code, products.second_name as second_name')
-                ->from('transfer_items')
-                ->join('products', 'products.id=transfer_items.product_id', 'left')
-                ->join('product_variants', 'product_variants.id=transfer_items.option_id', 'left')
-                ->join('inventory_movements im', 'transfer_items.avz_item_code = im.avz_item_code', 'left')
-                ->group_by(['transfer_items.id', 'im.avz_item_code'])
-                ->order_by('transfer_items.id', 'ASC')
-                ->where('transfer_id', $transfer_id);
-
-            $q = $this->db->get();
-            //echo $this->db->last_query();exit;
-            if ($q->num_rows() > 0) {
-                foreach (($q->result()) as $row) {
-                    $data[] = $row;
-                }
-                return $data;
-            }
-
         }
 
+        return false;
     }
 
     public function getProductByCategoryID($id)
@@ -1111,11 +1107,10 @@ class Transfers_model extends CI_Model
                     $item['date'] = date('Y-m-d');
                     $item['warehouse_id'] = $data['to_warehouse_id'];
                     $item['status'] = 'received';
-                    //$this->db->insert('purchase_items', $item);
+                    $this->db->insert('purchase_items', $item);
                 } else {
                     $this->db->insert('transfer_items', $item);
                 }
-                $this->db->insert('purchase_items', $item);
 
                 if ($ostatus == 'save' && $data['status'] == 'sent') {
                     //Inventory Movement - Transfer Out
