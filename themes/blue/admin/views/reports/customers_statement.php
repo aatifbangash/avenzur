@@ -257,6 +257,10 @@
                                             $link = admin_url('customers/view_payment/' . $statement->payment_id);
                                             $transaction_type = 'Payment';
                                             $transaction_id = $statement->payment_id;
+                                        }else if($statement->transaction_type == 'customeradvance'){
+                                            $link = admin_url('customers/view_payment/' . $statement->payment_id);
+                                            $transaction_type = 'Advance Payment';
+                                            $transaction_id = $statement->payment_id;
                                         }else if($statement->transaction_type == 'creditmemo'){
                                             $link = admin_url('customers/view_credit_memo/' . $statement->memo_id);
                                             $transaction_type = 'Memo';
