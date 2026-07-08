@@ -109,8 +109,8 @@
                                     <th><?= lang('sales_man'); ?></th>
                                     <th><?= lang('customer_no'); ?></th>
                                     <th><?= lang('customer_name'); ?></th>
-                                    <th><?= lang('invoice'); ?></th>
-                                    <th><?= lang('discount'); ?></th>
+                                    <th><?= lang('invoice_total'); ?></th>
+                                    <th><?= lang('sale_status'); ?></th>
                                     <th><?= lang('trade note'); ?></th>
                                 </tr>
                             </thead>
@@ -140,9 +140,9 @@
                                             <td><?= $data->sales_man; ?></td>
                                             <td><?= $data->customer_no; ?></td>
                                             <td><?= $data->customer_name; ?></td>
-                                            <td><?= $this->sma->formatMoney($data->invoice_total); ?></td>
+                                            <td><?= $this->sma->formatMoney($data->invoice_grand_total); ?></td>
+                                            <td><?= $data->sale_status; ?></td>
                                             
-                                            <td><?= $this->sma->formatMoney($data->discount); ?></td>
                                             <td><?= $data->trade_note; ?></td>
                                         </tr>
                                 <?php
@@ -152,7 +152,7 @@
                                         <td colspan="7" style="text-align: right;"><?= lang('total'); ?></td>
                                         <td><?= $this->sma->formatMoney($grand_invoice_total); ?></td>
                                         
-                                        <td><?= $this->sma->formatMoney($grand_discount); ?></td>
+                                        <td></td>
                                         <td></td>
                                     </tr>
                                 <?php
