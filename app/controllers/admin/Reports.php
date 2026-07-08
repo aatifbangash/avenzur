@@ -7899,15 +7899,17 @@ class Reports extends MY_Controller
             // Build query
             $this->db->select("DATE_FORMAT({$this->db->dbprefix('quotes')}.date, '%d-%b-%y') as date,
                 {$this->db->dbprefix('sales')}.id as sale_id,
+                {$this->db->dbprefix('sales')}.sale_status,
                 {$this->db->dbprefix('quotes')}.id as quote_id,
                 {$this->db->dbprefix('quotes')}.reference_no as invoice,
                 {$this->db->dbprefix('quotes')}.trade_note as trade_note,
                 {$this->db->dbprefix('quotes')}.warehouse_id as warehouse_id,
                 {$this->db->dbprefix('companies')}.city as area,
                 COALESCE({$this->db->dbprefix('companies')}.sales_agent, '') as sales_man,
-                {$this->db->dbprefix('companies')}.company as customer_no,
+                {$this->db->dbprefix('companies')}.sequence_code as customer_no,
                 {$this->db->dbprefix('companies')}.name as customer_name,
                 {$this->db->dbprefix('quotes')}.total as invoice_total,
+                {$this->db->dbprefix('quotes')}.grand_total as invoice_grand_total,
                 COALESCE((SELECT SUM(grand_total) FROM {$this->db->dbprefix('returns')} WHERE sale_id = {$this->db->dbprefix('quotes')}.id), 0) as return_amount,
                 {$this->db->dbprefix('quotes')}.total_discount as discount", false)
                 ->from('quotes')
