@@ -11617,4 +11617,32 @@ class Reports extends MY_Controller
         }
     }
 
+    public function pos_shop_sales($warehouse_id = null)
+    {
+        $this->site->redirectDefaultListingWarehouseIfNeeded($warehouse_id, 'reports/pos_shop_sales');
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        if ($this->Owner || $this->Admin || !$this->session->userdata('warehouse_id')) {
+            $this->data['warehouses']   = $this->site->getAllWarehouses();
+            $this->data['warehouse_id'] = $warehouse_id;
+            $this->data['warehouse']    = $warehouse_id ? $this->site->getWarehouseByID($warehouse_id) : null;
+        } else {
+            $this->data['warehouses']   = null;
+            $this->data['warehouse_id'] = $this->session->userdata('warehouse_id');
+            $this->data['warehouse']    = $this->session->userdata('warehouse_id') ? $this->site->getWarehouseByID($this->session->userdata('warehouse_id')) : null;
+        }
+
+        $this->data['lastInsertedId'] = $this->input->get('lastInsertedId');
+        $this->data['is_shop_sales']  = true;
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => '#', 'page' => lang('pos_reports')],
+            ['link' => '#', 'page' => lang('shop_sales')],
+        ];
+        $meta = ['page_title' => lang('shop_sales'), 'bc' => $bc];
+        $this->data['sid'] = $this->input->get('sid');
+        $this->page_construct('sales/index', $meta, $this->data);
+    }
+
 }
