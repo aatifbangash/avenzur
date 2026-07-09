@@ -1617,7 +1617,19 @@ class Purchases_model extends CI_Model
         $this->db->where('supplier_id', $supplier_id);
         $this->db->where('purchase_invoice', 1);
         $this->db->where_in('payment_status', ['pending', 'due', 'partial']);
-        $q = $this->db->get('purchases');
+        $q = $this->db->get('sma_purchases');
+
+        $this->db->select("
+            sma_purchases.*,
+            (sma_purchases.grand_total + COALESCE(sma_purchases.grand_deal_discount, 0)) AS grand_total
+        ", false);
+
+        $this->db->order_by('date', 'asc');
+        $this->db->where('supplier_id', $supplier_id);
+        $this->db->where('purchase_invoice', 1);
+        $this->db->where_in('payment_status', ['pending', 'due', 'partial']);
+
+        $q = $this->db->get('sma_purchases');
 
         $purchase_invoices = [];
         if ($q->num_rows() > 0) {
