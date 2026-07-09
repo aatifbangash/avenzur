@@ -7406,6 +7406,47 @@ class Reports extends MY_Controller
         }
     }
 
+
+    public function payment_by_invoice(){
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+
+        $response_arr = array();
+        $viewtype = $this->input->get('viewtype') ? $this->input->get('viewtype') : null;
+        $from_date = $this->input->get('from_date') ? $this->input->get('from_date') : null;
+        $to_date = $this->input->get('to_date') ? $this->input->get('to_date') : null;
+        $warehouse = $this->site->resolveReportWarehouseFilter('pharmacy');
+        //print_r($this->input->get());
+    
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['warehouse_id'] = $warehouse;
+        $this->data['start_date'] = $from_date;
+        $this->data['end_date'] = $to_date;
+        $this->data['warehouse'] = $warehouse;
+        
+        // If any filter submitted, fetch data
+        if ($from_date || $to_date || array_key_exists('pharmacy', $_GET)) {
+            // Format dates only if provided
+            $start_date = $from_date ? $this->sma->fld($from_date) : null;
+            $end_date = $to_date ? $this->sma->fld($to_date) : null;
+            
+            $this->data['payments_data'] = $this->reports_model->getPaymentsByLocation($start_date, $end_date, $warehouse);
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('collection_location')]];
+            $meta = ['page_title' => lang('collection_location'), 'bc' => $bc];
+
+          
+            $this->page_construct('reports/payment_by_invoice', $meta, $this->data);
+         
+        } else {
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('reports')]];
+           $meta = ['page_title' => lang('reports'), 'bc' => $bc];
+           $this->page_construct('reports/payment_by_invoice', $meta, $this->data);
+
+
+        }
+    }
+
     public function collections_by_pharmacy(){
       
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');

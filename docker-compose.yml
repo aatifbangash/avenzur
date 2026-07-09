@@ -1,54 +1,67 @@
 services:
-  web:
-    build: .
-    container_name: avenzur_web
+  mysql:
+    image: mysql:8.0
     ports:
-      - "8080:80"
-    volumes:
-      - .:/var/www/html/avenzur
-    # depends_on:
-    #   - db  # Commented out - using local MySQL instead of Docker MySQL
+      - "${MYSQL_PORT:-3306}:3306"
     environment:
-      - APACHE_RUN_USER=www-data
-      - APACHE_RUN_GROUP=www-data
-    # Use extra_hosts to allow container to access host's MySQL
-    # 'host.docker.internal' resolves to host machine IP
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root123}
+      MYSQL_DATABASE: ${DB_NAME:-rawabi_jeddah}
+    command:
+      - --default-authentication-plugin=mysql_native_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./db/pharmacy.sql:/docker-entrypoint-initdb.d/01-pharmacy.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-proot123"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
 
-  # MySQL Database Service - COMMENTED OUT (Using local MySQL at localhost:3306)
-  # Uncomment below to use Docker MySQL instead of local MySQL
-  # db:
-  #   image: mysql:8
-  #   container_name: avenzur_db
-  #   restart: always
-  #   environment:
-  #     MYSQL_ROOT_PASSWORD: pass123
-  #     MYSQL_DATABASE: avenzur
-  #     MYSQL_USER: avenzur
-  #     MYSQL_PASSWORD: 123456
-  #   ports:
-  #     - "3310:3310"
-  #   volumes:
-  #     - db_data:/var/lib/mysql
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${AVNZOR_WMS_PORT:-8090}:80"
+    volumes:
+      - .:/var/www/html
+      - avnzor_wms_vendor:/var/www/html/vendor
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    environment:
+      APACHE_RUN_USER: www-data
+      APACHE_RUN_GROUP: www-data
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8090/}
+      DB_HOST: ${DB_HOST:-mysql}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: ${DB_NAME:-rawabi_jeddah}
+      DB_USER: ${DB_USER:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-root123}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
 
-  # PHPMyAdmin - COMMENTED OUT (Not needed with local MySQL)
-  # Uncomment below to use PHPMyAdmin with Docker MySQL
-  # phpmyadmin:
-  #   image: phpmyadmin/phpmyadmin
-  #   container_name: avenzur_phpmyadmin
-  #   restart: always
-  #   ports:
-  #     - "8081:80"
-  #   environment:
-  #     PMA_HOST: db
-  #     MYSQL_ROOT_PASSWORD: pass123
-  #     UPLOAD_LIMIT: 64M
-  #     MEMORY_LIMIT: 128M
-  #     MAX_EXECUTION_TIME: 600
-  #   depends_on:
-  #     - db
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    ports:
+      - "${PHPMYADMIN_PORT:-8091}:80"
+    environment:
+      PMA_HOST: ${DB_HOST:-mysql}
+      PMA_PORT: ${DB_PORT:-3306}
+      PMA_USER: ${DB_USER:-root}
+      PMA_PASSWORD: ${DB_PASSWORD:-root123}
+      UPLOAD_LIMIT: 64M
+      MEMORY_LIMIT: 256M
+      MAX_EXECUTION_TIME: 600
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
 
-# Volumes - COMMENTED OUT (Not needed without Docker MySQL)
-# volumes:
-#   db_data:
+volumes:
+  avnzor_wms_vendor:
+  mysql_data:
