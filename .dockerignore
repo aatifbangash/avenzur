@@ -1,7 +1,0 @@
-.git
-.github
-.idea
-.DS_Store
-.dockerignore
-docker-compose.yml
-vendor_bk
