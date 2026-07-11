@@ -22,7 +22,7 @@
   <?php  } ?>
 <div class="box">
     <div class="box-header">
-        <h2 class="blue"><i class="fa-fw fa fa-users"></i><?= lang('Sales_Per_Invoice'); ?></h2>
+        <h2 class="blue"><i class="fa-fw fa fa-users"></i>Payment by Invoice</h2>
     </div>
     <div class="box-content">
         <div class="row">
@@ -81,15 +81,18 @@
                             <thead>
                             <tr>
                                 <th>#</th>
-                                <th><?= lang('Type'); ?></th>
                                 <th><?= lang('Area'); ?></th>
                                 <th><?= lang('Sales Man'); ?></th>
                                 <th><?= lang('Customer No.'); ?></th>
                                 <th><?= lang('Customer Name'); ?></th>
                                 <th><?= lang('Sale #'); ?></th>
                                 <th><?= lang('Invoice Date'); ?></th>
+                                <th><?= lang('payment_term'); ?></th>
+                                <th><?= lang('due_date'); ?></th>
                                 <th><?= lang('Invoice Amount'); ?></th>
-                                <th><?= lang('Sale Amount'); ?></th>
+                                <th><?= lang('payments'); ?></th>
+                                <th><?= lang('balance'); ?></th>
+                                <th>Last Payment Date</th>
                             </tr>
                             </thead>
                             <tbody style="text-align:center;">
@@ -105,29 +108,28 @@
                                         ?>
                                             <tr>
                                                 <td><?= $count; ?></td>
-                                                <td><?= (!empty($data->collection_type) && $data->collection_type === 'service_invoice') ? lang('service_invoice') : lang('Sale'); ?></td>
                                                 <td><?= $data->area; ?></td>
                                                 <td><?= $data->sales_agent; ?></td>
                                                 <td><?= $data->sequence_code ?? $data->customer_id; ?></td>
                                                 <td><?= $data->customer_name; ?></td>
-                                                <td><?= $data->sale_id; ?></td>
+                                                <td><?= $data->invoice_no ?: $data->sale_id; ?></td>
                                                 <td><?= $data->sale_date ? date('d-M-Y', strtotime($data->sale_date)) : '' ?></td>
+                                                <td><?= (int) $data->payment_term; ?></td>
+                                                <td><?= $data->due_date ? date('d-M-Y', strtotime($data->due_date)) : '' ?></td>
                                                 <td><?= number_format($data->grand_total, 2); ?></td>
                                                 <td><?= number_format($data->paid_amount, 2); ?></td>
+                                                <td><?= number_format($data->balance_amount, 2); ?></td>
+                                                <td><?= $data->last_payment_date ? date('d-M-Y', strtotime($data->last_payment_date)) : '' ?></td>
                                             </tr>
                                         <?php
                                     }
                                 ?>
                                 <tr>
-                                    <td colspan="2"><strong>Totals: </strong></td>
-                                    <td colspan="1"><strong>-</strong></td>
-                                    <td colspan="1"><strong>-</strong></td>
-                                    <td colspan="1"><strong>-</strong></td>
-                                    <td colspan="1"><strong>-</strong></td>
-                                    <td colspan="1"><strong>-</strong></td>
-                                    <td colspan="1"><strong>-</strong></td>
-                                    <td colspan="1"><strong>-</strong></td>
+                                    <td colspan="9"><strong>Totals: </strong></td>
+                                    <td colspan="1"><strong><?= number_format($grand_total_sale, 2); ?></strong></td>
                                     <td colspan="1"><strong><?= number_format($grand_total_payment, 2); ?></strong></td>
+                                    <td colspan="1"><strong><?= number_format($grand_total_sale - $grand_total_payment, 2); ?></strong></td>
+                                    <td colspan="1"><strong>-</strong></td>
                                 </tr>
                             </tbody>
                             <tfoot></tfoot>

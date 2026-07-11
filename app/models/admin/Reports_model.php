@@ -6090,10 +6090,8 @@ class Reports_model extends CI_Model
 
     public function getPaymentsByLocation($start_date, $end_date, $warehouse)
     {
-        // Receipt list (getPaymentReferences) filters on payment_reference.date only — match that for the period.
-        // Display column still uses line/header date when useful for reconciliation.
-        $dateFilterExpr = "DATE(pr.date)";
-        $collectionDateExpr = "DATE(COALESCE(p.date, pr.date))";
+        // True invoice-based report: filter invoices by sale date and show payment status per invoice.
+        $dateFilterExpr = "DATE(s.date)";
         $dateWhere = "";
 
         if ($start_date && $end_date) {
@@ -6104,7 +6102,6 @@ class Reports_model extends CI_Model
         } elseif ($end_date) {
             $dateWhere = " AND ".$dateFilterExpr." <= '".trim($end_date)."' ";
         }
-        $dateWherePr2 = str_replace('DATE(pr.date)', 'DATE(pr2.date)', $dateWhere);
 
         $warehouse_sale_sql = '';
         if ($warehouse) {
@@ -6112,63 +6109,59 @@ class Reports_model extends CI_Model
         } else {
             $warehouse_sale_sql = $this->site->reportWarehouseAndClause(null, 's');
         }
-        $include_service_union = !$warehouse;
+
+        $validPaymentAmountExpr = "CASE
+            WHEN pr.id IS NOT NULL THEN
+                CASE
+                    WHEN p.original_amount IS NOT NULL AND p.original_amount > 0 THEN p.original_amount
+                    ELSE p.amount
+                END
+            ELSE 0
+        END";
 
         $sql = "
             SELECT
-      s.id AS sale_id,
-      s.reference_no AS invoice_no,
-      DATE(s.date) AS sale_date,
-      cm.external_id AS external_id,
-      cm.sequence_code AS sequence_code,
-      cm.id AS customer_id,
-      cm.name AS customer_name,
-      cm.sales_agent,
-      cm.city AS area,
-      s.grand_total,
-      COALESCE(NULLIF(s.payment_term, 0), NULLIF(cm.payment_term, 0), 0) AS payment_term,
-      DATE_ADD(DATE(s.date), INTERVAL COALESCE(NULLIF(s.payment_term, 0), NULLIF(cm.payment_term, 0), 0) DAY) AS due_date,
-      SUM(
-          CASE
-              WHEN p.original_amount IS NOT NULL AND p.original_amount > 0
-                  THEN p.original_amount
-              ELSE p.amount
-          END
-      ) AS paid_amount,
-      ROUND(
-          s.grand_total - SUM(
-              CASE
-                  WHEN p.original_amount IS NOT NULL AND p.original_amount > 0
-                      THEN p.original_amount
-                  ELSE p.amount
-              END
-          ),
-          2
-      ) AS balance_amount,
-      MAX(DATE(COALESCE(p.date, pr.date))) AS last_payment_date,
-      'sale' AS collection_type
-  FROM sma_sales s
-  LEFT JOIN sma_payments p
-      ON p.sale_id = s.id
-  LEFT JOIN sma_payment_reference pr
-      ON pr.id = p.payment_id
-  LEFT JOIN sma_companies cm
-      ON cm.id = s.customer_id
-  WHERE s.warehouse_id = 32
-    AND pr.customer_id IS NOT NULL
-    AND pr.customer_id <> 0
-    AND (pr.added_via IS NULL OR pr.added_via NOT IN ('customer_return_modu', 'credit_memo_module', 'auto_script'))
-    AND (pr.note IS NULL OR pr.note NOT LIKE '%Reconciliation payment for sale ID%')
-    ".$dateWhere."
-    ".$warehouse_sale_sql."
-  GROUP BY s.id
-  HAVING paid_amount > 0.001";
+                s.id AS sale_id,
+                s.reference_no AS invoice_no,
+                DATE(s.date) AS sale_date,
+                cm.external_id AS external_id,
+                cm.sequence_code AS sequence_code,
+                cm.id AS customer_id,
+                cm.name AS customer_name,
+                cm.sales_agent,
+                cm.city AS area,
+                s.grand_total,
+                COALESCE(NULLIF(s.payment_term, 0), NULLIF(cm.payment_term, 0), 0) AS payment_term,
+                DATE_ADD(DATE(s.date), INTERVAL COALESCE(NULLIF(s.payment_term, 0), NULLIF(cm.payment_term, 0), 0) DAY) AS due_date,
+                ROUND(SUM(".$validPaymentAmountExpr."), 2) AS paid_amount,
+                ROUND(s.grand_total - SUM(".$validPaymentAmountExpr."), 2) AS balance_amount,
+                MAX(
+                    CASE
+                        WHEN pr.id IS NOT NULL THEN DATE(COALESCE(p.date, pr.date))
+                        ELSE NULL
+                    END
+                ) AS last_payment_date,
+                'sale' AS collection_type
+            FROM sma_sales s
+            LEFT JOIN sma_payments p
+                ON p.sale_id = s.id
+            LEFT JOIN sma_payment_reference pr
+                ON pr.id = p.payment_id
+                AND pr.customer_id IS NOT NULL
+                AND pr.customer_id <> 0
+                AND (pr.added_via IS NULL OR pr.added_via NOT IN ('customer_return_modu', 'credit_memo_module', 'auto_script'))
+                AND (pr.note IS NULL OR pr.note NOT LIKE '%Reconciliation payment for sale ID%')
+            LEFT JOIN sma_companies cm
+                ON cm.id = s.customer_id
+            WHERE 1=1
+                ".$dateWhere."
+                ".$warehouse_sale_sql."
+            GROUP BY s.id";
         $sql .= "
-             ORDER BY last_payment_date;
+             ORDER BY sale_date, invoice_no;
         ";
         $q = $this->db->query($sql);
         $data = array();
-        //echo $this->db->last_query();exit;
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
                 $data[] = $row;

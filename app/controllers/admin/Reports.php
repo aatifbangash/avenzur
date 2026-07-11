@@ -7459,8 +7459,8 @@ class Reports extends MY_Controller
             
             $this->data['payments_data'] = $this->reports_model->getPaymentsByLocation($start_date, $end_date, $warehouse);
 
-            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => lang('collection_location')]];
-            $meta = ['page_title' => lang('collection_location'), 'bc' => $bc];
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => 'Payment by Invoice']];
+            $meta = ['page_title' => 'Payment by Invoice', 'bc' => $bc];
 
           
             $this->page_construct('reports/payment_by_invoice', $meta, $this->data);
