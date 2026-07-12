@@ -3300,6 +3300,7 @@ class system_settings extends MY_Controller
                 'reports-supplier-statement' => $this->input->post('reports-supplier-statement'),
                 'reports-supplier-aging'     => $this->input->post('reports-supplier-aging'),
                 'reports-unpaid-invoices-ap' => $this->input->post('reports-unpaid-invoices-ap'),
+                'reports-payment_by_invoice' => $this->input->post('reports-payment_by_invoice'),
                 'reports-consumption'        => $this->input->post('reports-consumption'),
                 'reports-purchase-per-item'  => $this->input->post('reports-purchase-per-item'),
                 'reports-purchase-per-invoice'  => $this->input->post('reports-purchase-per-invoice'),
