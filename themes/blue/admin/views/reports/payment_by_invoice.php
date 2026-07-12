@@ -17,12 +17,33 @@
 
     });
 </script>
+<?php if (!isset($viewtype) || $viewtype != 'pdf') { ?>
+<script>
+    $(function () {
+        if ($.fn.datetimepicker) {
+            $('.date-picker-filter').datetimepicker({
+                format: 'dd/mm/yyyy',
+                autoclose: true,
+                todayHighlight: true,
+                minView: 2
+            });
+        }
+        if ($.fn.select2) {
+            $('#supplier_id').select2({
+                width: '100%',
+                allowClear: true,
+                placeholder: '<?= addslashes(lang('All Suppliers')) ?>'
+            });
+        }
+    });
+</script>
+<?php } ?>
 <?php if($viewtype=='pdf'){ ?>
     <link href="<?= $assets ?>styles/pdf/pdf.css" rel="stylesheet"> 
   <?php  } ?>
 <div class="box">
     <div class="box-header">
-        <h2 class="blue"><i class="fa-fw fa fa-users"></i>Payment by Invoice</h2>
+        <h2 class="blue"><i class="fa-fw fa fa-truck"></i>Supplier Payment by Invoice</h2>
     </div>
     <div class="box-content">
         <div class="row">
@@ -39,14 +60,29 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('From Date', 'podate'); ?>
-                                <?php echo form_input('from_date', ($_GET['from_date'] ?? ''), 'class="form-control input-tip date" id="fromdate"'); ?>
+                                <?php echo form_input('from_date', ($_GET['from_date'] ?? ''), 'class="form-control input-tip input-sm date-picker-filter" id="fromdate" autocomplete="off"'); ?>
                             </div>
                         </div>
 
                         <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('To Date', 'podate'); ?>
-                                <?php echo form_input('to_date', ($_GET['to_date'] ?? ''), 'class="form-control input-tip date" id="todate"'); ?>
+                                <?php echo form_input('to_date', ($_GET['to_date'] ?? ''), 'class="form-control input-tip input-sm date-picker-filter" id="todate" autocomplete="off"'); ?>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('Supplier', 'supplier'); ?>
+                                <?php
+                                $sup_dp = ['' => '-- ' . lang('All Suppliers') . ' --'];
+                                foreach (($suppliers ?? []) as $s) {
+                                    $label_name = !empty($s->name) ? $s->name : ($s->company ?? '');
+                                    $label_code = !empty($s->sequence_code) ? ' (' . $s->sequence_code . ')' : '';
+                                    $sup_dp[$s->id] = $s->id . ' - ' . $label_name . $label_code;
+                                }
+                                echo form_dropdown('supplier', $sup_dp, ($_GET['supplier'] ?? ($supplier ?? '')), 'id="supplier_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('supplier') . '" style="width:100%;"');
+                                ?>
                             </div>
                         </div>
 
@@ -81,17 +117,19 @@
                             <thead>
                             <tr>
                                 <th>#</th>
-                                <th><?= lang('Area'); ?></th>
-                                <th><?= lang('Sales Man'); ?></th>
-                                <th><?= lang('Customer No.'); ?></th>
-                                <th><?= lang('Customer Name'); ?></th>
-                                <th><?= lang('Sale #'); ?></th>
+                                <th><?= lang('warehouse'); ?></th>
+                                <th><?= lang('Supplier No.'); ?></th>
+                                <th><?= lang('Supplier Name'); ?></th>
+                                <th><?= lang('Purchase #'); ?></th>
+                                <th><?= lang('Invoice ID'); ?></th>
+                                <th><?= lang('Invoice Type'); ?></th>
                                 <th><?= lang('Invoice Date'); ?></th>
                                 <th><?= lang('payment_term'); ?></th>
                                 <th><?= lang('due_date'); ?></th>
                                 <th><?= lang('Invoice Amount'); ?></th>
                                 <th><?= lang('payments'); ?></th>
                                 <th><?= lang('balance'); ?></th>
+                                <th><?= lang('payment_status'); ?></th>
                                 <th>Last Payment Date</th>
                             </tr>
                             </thead>
@@ -99,36 +137,39 @@
                                 <?php
                                     $count = 0;
                                     
-                                    $grand_total_sale = 0;
+                                    $grand_total_purchase = 0;
                                     $grand_total_payment = 0;
                                     foreach (($payments_data ?? []) as $data){
                                         $count ++ ;
-                                        $grand_total_sale += $data->grand_total;
+                                        $grand_total_purchase += $data->grand_total;
                                         $grand_total_payment += $data->paid_amount;
                                         ?>
                                             <tr>
                                                 <td><?= $count; ?></td>
-                                                <td><?= $data->area; ?></td>
-                                                <td><?= $data->sales_agent; ?></td>
-                                                <td><?= $data->sequence_code ?? $data->customer_id; ?></td>
-                                                <td><?= $data->customer_name; ?></td>
-                                                <td><?= $data->invoice_no ?: $data->sale_id; ?></td>
-                                                <td><?= $data->sale_date ? date('d-M-Y', strtotime($data->sale_date)) : '' ?></td>
+                                                <td><?= $data->warehouse_name; ?></td>
+                                                <td><?= $data->sequence_code ?? $data->supplier_id; ?></td>
+                                                <td><?= $data->supplier_name; ?></td>
+                                                <td><?= $data->invoice_no ?: $data->purchase_id; ?></td>
+                                                <td><?= $data->purchase_id; ?></td>
+                                                <td><?= 'Purchase Invoice'; ?></td>
+                                                <td><?= $data->purchase_date ? date('d-M-Y', strtotime($data->purchase_date)) : '' ?></td>
                                                 <td><?= (int) $data->payment_term; ?></td>
                                                 <td><?= $data->due_date ? date('d-M-Y', strtotime($data->due_date)) : '' ?></td>
                                                 <td><?= number_format($data->grand_total, 2); ?></td>
                                                 <td><?= number_format($data->paid_amount, 2); ?></td>
                                                 <td><?= number_format($data->balance_amount, 2); ?></td>
+                                                <td><?= $data->payment_status; ?></td>
                                                 <td><?= $data->last_payment_date ? date('d-M-Y', strtotime($data->last_payment_date)) : '' ?></td>
                                             </tr>
                                         <?php
                                     }
                                 ?>
                                 <tr>
-                                    <td colspan="9"><strong>Totals: </strong></td>
-                                    <td colspan="1"><strong><?= number_format($grand_total_sale, 2); ?></strong></td>
+                                    <td colspan="10"><strong>Totals: </strong></td>
+                                    <td colspan="1"><strong><?= number_format($grand_total_purchase, 2); ?></strong></td>
                                     <td colspan="1"><strong><?= number_format($grand_total_payment, 2); ?></strong></td>
-                                    <td colspan="1"><strong><?= number_format($grand_total_sale - $grand_total_payment, 2); ?></strong></td>
+                                    <td colspan="1"><strong><?= number_format($grand_total_purchase - $grand_total_payment, 2); ?></strong></td>
+                                    <td colspan="1"><strong>-</strong></td>
                                     <td colspan="1"><strong>-</strong></td>
                                 </tr>
                             </tbody>

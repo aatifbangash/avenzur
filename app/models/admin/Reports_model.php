@@ -6088,77 +6088,73 @@ class Reports_model extends CI_Model
         return $data;
     }
 
-    public function getPaymentsByLocation($start_date, $end_date, $warehouse)
+    public function getPaymentsByLocation($start_date, $end_date, $warehouse, $supplier_id = null)
     {
-        // True invoice-based report: filter invoices by sale date and show payment status per invoice.
-        $dateFilterExpr = "DATE(s.date)";
+        // Supplier invoice payment report: filter by payment date so it matches
+        // the supplier payments list and show invoice-level payment totals.
+        $dateFilterExpr = "DATE(pr.date)";
         $dateWhere = "";
 
         if ($start_date && $end_date) {
-            $dateWhere = " AND ".$dateFilterExpr." >= '".trim($start_date)."'
-                AND ".$dateFilterExpr." <= '".trim($end_date)."' ";
+            $dateWhere = " AND " . $dateFilterExpr . " >= '" . trim($start_date) . "'
+                AND " . $dateFilterExpr . " <= '" . trim($end_date) . "' ";
         } elseif ($start_date) {
-            $dateWhere = " AND ".$dateFilterExpr." >= '".trim($start_date)."' ";
+            $dateWhere = " AND " . $dateFilterExpr . " >= '" . trim($start_date) . "' ";
         } elseif ($end_date) {
-            $dateWhere = " AND ".$dateFilterExpr." <= '".trim($end_date)."' ";
+            $dateWhere = " AND " . $dateFilterExpr . " <= '" . trim($end_date) . "' ";
         }
 
-        $warehouse_sale_sql = '';
+        $warehouse_purchase_sql = '';
         if ($warehouse) {
-            $warehouse_sale_sql = ' AND s.warehouse_id = ' . (int) $warehouse;
+            $warehouse_purchase_sql = ' AND pu.warehouse_id = ' . (int) $warehouse;
         } else {
-            $warehouse_sale_sql = $this->site->reportWarehouseAndClause(null, 's');
+            $warehouse_purchase_sql = $this->site->reportWarehouseAndClause(null, 'pu');
         }
 
-        $validPaymentAmountExpr = "CASE
-            WHEN pr.id IS NOT NULL THEN
-                CASE
-                    WHEN p.original_amount IS NOT NULL AND p.original_amount > 0 THEN p.original_amount
-                    ELSE p.amount
-                END
-            ELSE 0
-        END";
+        $supplierWhere = '';
+        if (!empty($supplier_id)) {
+            $supplierWhere = ' AND pu.supplier_id = ' . (int) $supplier_id;
+        }
 
         $sql = "
             SELECT
-                s.id AS sale_id,
-                s.reference_no AS invoice_no,
-                DATE(s.date) AS sale_date,
-                cm.external_id AS external_id,
-                cm.sequence_code AS sequence_code,
-                cm.id AS customer_id,
-                cm.name AS customer_name,
-                cm.sales_agent,
-                cm.city AS area,
-                s.grand_total,
-                COALESCE(NULLIF(s.payment_term, 0), NULLIF(cm.payment_term, 0), 0) AS payment_term,
-                DATE_ADD(DATE(s.date), INTERVAL COALESCE(NULLIF(s.payment_term, 0), NULLIF(cm.payment_term, 0), 0) DAY) AS due_date,
-                ROUND(SUM(".$validPaymentAmountExpr."), 2) AS paid_amount,
-                ROUND(s.grand_total - SUM(".$validPaymentAmountExpr."), 2) AS balance_amount,
-                MAX(
-                    CASE
-                        WHEN pr.id IS NOT NULL THEN DATE(COALESCE(p.date, pr.date))
-                        ELSE NULL
-                    END
-                ) AS last_payment_date,
-                'sale' AS collection_type
-            FROM sma_sales s
-            LEFT JOIN sma_payments p
-                ON p.sale_id = s.id
-            LEFT JOIN sma_payment_reference pr
+                pu.id AS purchase_id,
+                pu.reference_no AS invoice_no,
+                DATE(pu.date) AS purchase_date,
+                sup.sequence_code AS sequence_code,
+                sup.id AS supplier_id,
+                sup.name AS supplier_name,
+                wh.name AS warehouse_name,
+                pu.grand_total,
+                COALESCE(NULLIF(pu.payment_term, 0), NULLIF(sup.payment_term, 0), 0) AS payment_term,
+                COALESCE(
+                    pu.due_date,
+                    DATE_ADD(DATE(pu.date), INTERVAL COALESCE(NULLIF(pu.payment_term, 0), NULLIF(sup.payment_term, 0), 0) DAY)
+                ) AS due_date,
+                ROUND(SUM(COALESCE(p.amount, 0)), 2) AS paid_amount,
+                ROUND(pu.grand_total - COALESCE(pu.paid, 0), 2) AS balance_amount,
+                MAX(DATE(COALESCE(p.date, pr.date))) AS last_payment_date,
+                pu.payment_status
+            FROM sma_purchases pu
+            INNER JOIN sma_payments p
+                ON p.purchase_id = pu.id
+            INNER JOIN sma_payment_reference pr
                 ON pr.id = p.payment_id
-                AND pr.customer_id IS NOT NULL
-                AND pr.customer_id <> 0
-                AND (pr.added_via IS NULL OR pr.added_via NOT IN ('customer_return_modu', 'credit_memo_module', 'auto_script'))
-                AND (pr.note IS NULL OR pr.note NOT LIKE '%Reconciliation payment for sale ID%')
-            LEFT JOIN sma_companies cm
-                ON cm.id = s.customer_id
+                AND pr.supplier_id IS NOT NULL
+                AND pr.supplier_id <> 0
+                AND (pr.added_via IS NULL OR pr.added_via NOT IN ('auto_script', 'advance_settlement'))
+            LEFT JOIN sma_companies sup
+                ON sup.id = pu.supplier_id
+            LEFT JOIN sma_warehouses wh
+                ON wh.id = pu.warehouse_id
             WHERE 1=1
-                ".$dateWhere."
-                ".$warehouse_sale_sql."
-            GROUP BY s.id";
+                " . $dateWhere . "
+                " . $warehouse_purchase_sql . "
+                " . $supplierWhere . "
+            GROUP BY pu.id
+            HAVING ROUND(SUM(COALESCE(p.amount, 0)), 2) > 0";
         $sql .= "
-             ORDER BY sale_date, invoice_no;
+             ORDER BY last_payment_date, invoice_no;
         ";
         $q = $this->db->query($sql);
         $data = array();
