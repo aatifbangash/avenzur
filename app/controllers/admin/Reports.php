@@ -10636,7 +10636,7 @@ class Reports extends MY_Controller
 
         $invoices = $this->db->get()->result();
 
-        if (!$warehouse_id) {
+        if ($warehouse_id == 32) {
         $this->db->select("
             m.id                                                     AS invoice_id,
             m.date,
