@@ -6088,6 +6088,85 @@ class Reports_model extends CI_Model
         return $data;
     }
 
+    public function getPaymentsByLocation($start_date, $end_date, $warehouse, $supplier_id = null)
+    {
+        // Supplier invoice payment report: filter by payment date so it matches
+        // the supplier payments list and show invoice-level payment totals.
+        $dateFilterExpr = "DATE(pr.date)";
+        $dateWhere = "";
+
+        if ($start_date && $end_date) {
+            $dateWhere = " AND " . $dateFilterExpr . " >= '" . trim($start_date) . "'
+                AND " . $dateFilterExpr . " <= '" . trim($end_date) . "' ";
+        } elseif ($start_date) {
+            $dateWhere = " AND " . $dateFilterExpr . " >= '" . trim($start_date) . "' ";
+        } elseif ($end_date) {
+            $dateWhere = " AND " . $dateFilterExpr . " <= '" . trim($end_date) . "' ";
+        }
+
+        $warehouse_purchase_sql = '';
+        if ($warehouse) {
+            $warehouse_purchase_sql = ' AND pu.warehouse_id = ' . (int) $warehouse;
+        } else {
+            $warehouse_purchase_sql = $this->site->reportWarehouseAndClause(null, 'pu');
+        }
+
+        $supplierWhere = '';
+        if (!empty($supplier_id)) {
+            $supplierWhere = ' AND pu.supplier_id = ' . (int) $supplier_id;
+        }
+
+        $sql = "
+            SELECT
+                pu.id AS purchase_id,
+                pu.reference_no AS invoice_no,
+                DATE(pu.date) AS purchase_date,
+                sup.sequence_code AS sequence_code,
+                sup.id AS supplier_id,
+                sup.name AS supplier_name,
+                wh.name AS warehouse_name,
+                pu.grand_total,
+                COALESCE(NULLIF(pu.payment_term, 0), NULLIF(sup.payment_term, 0), 0) AS payment_term,
+                COALESCE(
+                    pu.due_date,
+                    DATE_ADD(DATE(pu.date), INTERVAL COALESCE(NULLIF(pu.payment_term, 0), NULLIF(sup.payment_term, 0), 0) DAY)
+                ) AS due_date,
+                ROUND(SUM(COALESCE(p.amount, 0)), 2) AS paid_amount,
+                ROUND(pu.grand_total - COALESCE(pu.paid, 0), 2) AS balance_amount,
+                MAX(DATE(COALESCE(p.date, pr.date))) AS last_payment_date,
+                pu.payment_status
+            FROM sma_purchases pu
+            INNER JOIN sma_payments p
+                ON p.purchase_id = pu.id
+            INNER JOIN sma_payment_reference pr
+                ON pr.id = p.payment_id
+                AND pr.supplier_id IS NOT NULL
+                AND pr.supplier_id <> 0
+                AND (pr.added_via IS NULL OR pr.added_via NOT IN ('auto_script', 'advance_settlement'))
+            LEFT JOIN sma_companies sup
+                ON sup.id = pu.supplier_id
+            LEFT JOIN sma_warehouses wh
+                ON wh.id = pu.warehouse_id
+            WHERE 1=1
+                " . $dateWhere . "
+                " . $warehouse_purchase_sql . "
+                " . $supplierWhere . "
+            GROUP BY pu.id
+            HAVING ROUND(SUM(COALESCE(p.amount, 0)), 2) > 0";
+        $sql .= "
+             ORDER BY last_payment_date, invoice_no;
+        ";
+        $q = $this->db->query($sql);
+        $data = array();
+        if ($q->num_rows() > 0) {
+            foreach (($q->result()) as $row) {
+                $data[] = $row;
+            }
+        }
+
+        return $data;
+    }
+
     public function getCollectionsByPharmacy($start_date, $end_date, $warehouse)
     {
         // error_reporting(-1);
