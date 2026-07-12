@@ -2662,6 +2662,101 @@ class Products extends MY_Controller
         }
     }
 
+    public function reverse_wrong_supplier_invoices()
+    {
+        $this->db->trans_start();
+
+        $payments = $this->db
+            ->select("
+                pay.*,
+                pr.id as payment_reference_id,
+                pr.added_via,
+                p.id as purchase_id,
+                p.reference_no,
+                p.grand_total,
+                p.paid
+            ")
+            ->from('sma_payments pay')
+            ->join('sma_payment_reference pr', 'pr.id = pay.payment_id')
+            ->join('sma_purchases p', 'p.id = pay.purchase_id')
+            ->where('pr.added_via', 'auto_script')
+            ->where('p.supplier_id >', 0)
+            ->where('p.paid > (p.grand_total + 0.01)', null, false)
+            ->order_by('pay.purchase_id')
+            ->get()
+            ->result();
+        //echo "<pre>";print_r($payments);echo "</pre>";exit;
+        foreach ($payments as $payment) {
+            //echo '<pre>';print_r($payment);echo '</pre>';exit;
+            /*
+            |--------------------------------------------------------------------------
+            | Reverse purchase paid amount
+            |--------------------------------------------------------------------------
+            */
+
+            $this->db
+                ->set('paid', 'paid - '.$payment->amount, false)
+                ->where('id', $payment->purchase_id)
+                ->update('sma_purchases');
+
+            /*
+            |--------------------------------------------------------------------------
+            | Reverse memo usage
+            |--------------------------------------------------------------------------
+            */
+
+            if (!empty($payment->memo_id) && $payment->memo_id > 0) {
+
+                $this->db
+                    ->set('used_amount', 'used_amount - '.$payment->amount, false)
+                    ->where('id', $payment->memo_id)
+                    ->update('sma_memo');
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Reverse supplier return usage
+            |--------------------------------------------------------------------------
+            */
+
+            if (!empty($payment->supplier_return_id) && $payment->supplier_return_id > 0) {
+
+                $this->db
+                    ->set('paid', 'paid - '.$payment->amount, false)
+                    ->where('id', $payment->supplier_return_id)
+                    ->update('sma_returns_supplier');
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Delete payment reference
+            |--------------------------------------------------------------------------
+            */
+
+            $this->db
+                ->where('id', $payment->payment_reference_id)
+                ->delete('sma_payment_reference');
+
+            /*
+            |--------------------------------------------------------------------------
+            | Delete payment
+            |--------------------------------------------------------------------------
+            */
+
+            $this->db
+                ->where('id', $payment->id)
+                ->delete('sma_payments');
+        }
+
+        $this->db->trans_complete();
+
+        if ($this->db->trans_status() === false) {
+            return false;
+        }
+
+        return true;
+    }
+
     public function update_supplier_outstanding_invoices_payment(){
         /*ini_set('display_errors', '1');
         ini_set('display_startup_errors', '1');
@@ -2702,7 +2797,7 @@ class Products extends MY_Controller
             foreach ($pending_invoices as $invoice) {
                 $invoice_outstanding = isset($invoice->outstanding_amount)
                     ? (float) $invoice->outstanding_amount
-                    : ((float) $invoice->grand_total - (float) $invoice->total_paid);
+                    : ((float) $invoice->grand_total + (float) ($invoice->grand_deal_discount ?? 0) - (float) $invoice->total_paid);
                 if ($invoice_outstanding > 0) {
                     $total_outstanding += $invoice_outstanding;
                 }
@@ -2738,7 +2833,7 @@ class Products extends MY_Controller
 
                 $outstanding = isset($invoice->outstanding_amount)
                     ? (float) $invoice->outstanding_amount
-                    : ((float) $invoice->grand_total - (float) $invoice->total_paid);
+                    : ((float) $invoice->grand_total + (float) ($invoice->grand_deal_discount ?? 0) - (float) $invoice->total_paid);
 
                 if ($outstanding <= 0) {
                     continue;
@@ -2811,7 +2906,7 @@ class Products extends MY_Controller
             foreach ($pending_invoices as $invoice) {
                 $invoice_outstanding = isset($invoice->outstanding_amount)
                     ? (float) $invoice->outstanding_amount
-                    : ((float) $invoice->grand_total - (float) $invoice->total_paid);
+                    : ((float) $invoice->grand_total + (float) ($invoice->grand_deal_discount ?? 0) - (float) $invoice->total_paid);
                 if ($invoice_outstanding > 0) {
                     $total_outstanding += $invoice_outstanding;
                 }
@@ -2840,7 +2935,7 @@ class Products extends MY_Controller
 
                 $outstanding = isset($invoice->outstanding_amount)
                     ? (float) $invoice->outstanding_amount
-                    : ((float) $invoice->grand_total - (float) $invoice->total_paid);
+                    : ((float) $invoice->grand_total + (float) ($invoice->grand_deal_discount ?? 0) - (float) $invoice->total_paid);
 
                 if ($outstanding <= 0) {
                     continue;
