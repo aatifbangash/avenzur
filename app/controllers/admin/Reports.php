@@ -10536,7 +10536,9 @@ class Reports extends MY_Controller
             $inv->source = 'sale';
         }
 
-        if (!$warehouse_id) {
+        $sql_date_only = $sql_at ? explode(' ', $sql_at)[0] : null;
+
+        // Open service invoices (customer-level; always include so WH unpaid mirrors TB SI debits).
         $this->db->select("
             m.id            AS invoice_id,
             m.date,
@@ -10546,6 +10548,7 @@ class Reports extends MY_Controller
             c.sequence_code AS sequence_code,
             al.name         AS ledger_name,
             c.city          AS area,
+            c.sales_agent   AS sales_man,
             NULL            AS warehouse_name,
             m.payment_amount AS invoice_total,
             0               AS discount,
@@ -10565,8 +10568,7 @@ class Reports extends MY_Controller
         ->having('outstanding >', 0)
         ->order_by('m.date', 'asc');
 
-        if ($sql_at) {
-            $sql_date_only = explode(' ', $sql_at)[0];
+        if ($sql_date_only) {
             $this->db->where("m.date <= '{$sql_date_only}'");
         }
         if ($party_id) {
@@ -10575,11 +10577,337 @@ class Reports extends MY_Controller
         if ($ref_no) {
             $this->db->like('m.reference_no', $ref_no, 'both');
         }
-        $this->apply_customer_rent_type_where($rent_type);
-
-        $service_invoices = $this->db->get()->result();
-        $invoices = array_merge($invoices, $service_invoices);
+        if ($salesman_name) {
+            $this->db->where('c.sales_agent', $salesman_name);
         }
+        $this->apply_customer_rent_type_where($rent_type);
+        $invoices = array_merge($invoices, $this->db->get()->result());
+
+        // Open debit memos (increase AR).
+        $this->db->select("
+            m.id            AS invoice_id,
+            m.date,
+            m.reference_no,
+            c.name          AS party_name,
+            c.company       AS party_code,
+            c.sequence_code AS sequence_code,
+            al.name         AS ledger_name,
+            c.city          AS area,
+            c.sales_agent   AS sales_man,
+            NULL            AS warehouse_name,
+            m.payment_amount AS invoice_total,
+            0               AS discount,
+            0               AS return_amount,
+            COALESCE(m.used_amount, 0)                               AS paid,
+            ROUND(m.payment_amount - COALESCE(m.used_amount, 0), 2) AS outstanding,
+            0               AS payment_term_days,
+            NULL            AS due_date_calc,
+            0               AS days_overdue,
+            'debit_memo'    AS source
+        ", false)
+        ->from('memo m')
+        ->join('companies c', 'c.id = m.customer_id', 'left')
+        ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
+        ->where('m.type', 'debitmemo')
+        ->where('m.customer_id >', 0)
+        ->having('outstanding >', 0)
+        ->order_by('m.date', 'asc');
+
+        if ($sql_date_only) {
+            $this->db->where("m.date <= '{$sql_date_only}'");
+        }
+        if ($party_id) {
+            $this->db->where('m.customer_id', (int)$party_id);
+        }
+        if ($ref_no) {
+            $this->db->like('m.reference_no', $ref_no, 'both');
+        }
+        if ($salesman_name) {
+            $this->db->where('c.sales_agent', $salesman_name);
+        }
+        $this->apply_customer_rent_type_where($rent_type);
+        $invoices = array_merge($invoices, $this->db->get()->result());
+
+        // Open credit memos (reduce AR).
+        $this->db->select("
+            m.id            AS invoice_id,
+            m.date,
+            m.reference_no,
+            c.name          AS party_name,
+            c.company       AS party_code,
+            c.sequence_code AS sequence_code,
+            al.name         AS ledger_name,
+            c.city          AS area,
+            c.sales_agent   AS sales_man,
+            NULL            AS warehouse_name,
+            m.payment_amount AS invoice_total,
+            0               AS discount,
+            0               AS return_amount,
+            COALESCE(m.used_amount, 0)                               AS paid,
+            ROUND(-(m.payment_amount - COALESCE(m.used_amount, 0)), 2) AS outstanding,
+            0               AS payment_term_days,
+            NULL            AS due_date_calc,
+            0               AS days_overdue,
+            'credit_memo'   AS source
+        ", false)
+        ->from('memo m')
+        ->join('companies c', 'c.id = m.customer_id', 'left')
+        ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
+        ->where('m.type', 'creditmemo')
+        ->where('m.customer_id >', 0)
+        ->having('outstanding <', 0)
+        ->order_by('m.date', 'asc');
+
+        if ($sql_date_only) {
+            $this->db->where("m.date <= '{$sql_date_only}'");
+        }
+        if ($party_id) {
+            $this->db->where('m.customer_id', (int)$party_id);
+        }
+        if ($ref_no) {
+            $this->db->like('m.reference_no', $ref_no, 'both');
+        }
+        if ($salesman_name) {
+            $this->db->where('c.sales_agent', $salesman_name);
+        }
+        $this->apply_customer_rent_type_where($rent_type);
+        $invoices = array_merge($invoices, $this->db->get()->result());
+
+        // Customer-level unsettled returns: return GL credit not yet applied as paid_by=return on WH sales.
+        if ($warehouse_id) {
+            $wh = (int) $warehouse_id;
+            $at_esc = $sql_at ? $this->db->escape($sql_at) : null;
+            $date_esc = $sql_date_only ? $this->db->escape($sql_date_only) : null;
+            $lm = "(ei.ledger_id = c.ledger_account
+                OR (NULLIF(TRIM(IFNULL(c.old_ledgers,'')),'') IS NOT NULL
+                AND FIND_IN_SET(CAST(ei.ledger_id AS CHAR),
+                REPLACE(REPLACE(IFNULL(c.old_ledgers,''),' ',''),', ',',') ) > 0))";
+            $ret_date = $date_esc ? " AND DATE(e.date) <= {$date_esc}" : '';
+            $pay_date = $at_esc ? " AND pay.date <= {$at_esc}" : '';
+            $party_sql = $party_id ? ' AND c.id = ' . (int) $party_id : '';
+            $sm_sql = $salesman_name ? ' AND c.sales_agent = ' . $this->db->escape($salesman_name) : '';
+            $rent_sql = '';
+            if ($rent_type === 'rental') {
+                $rent_sql = " AND (c.category LIKE '%Rent%')";
+            } elseif ($rent_type !== 'all') {
+                $rent_sql = " AND (c.category IS NULL OR c.category NOT LIKE '%Rent%')";
+            }
+            $ref_sql = $ref_no ? ' AND 1=0' : ''; // ref filter not applicable to synthetic return rows
+
+            $q = $this->db->query("
+                SELECT c.id AS customer_id, c.name AS party_name, c.company AS party_code,
+                       c.sequence_code, al.name AS ledger_name, c.city AS area, c.sales_agent AS sales_man,
+                       ROUND(COALESCE(rg.gl_amt, 0) - COALESCE(rp.ret_paid, 0), 2) AS unsettled
+                FROM {$this->db->dbprefix('companies')} c
+                LEFT JOIN {$this->db->dbprefix('accounts_ledgers')} al ON al.id = c.ledger_account
+                LEFT JOIN (
+                    SELECT e.customer_id,
+                           ROUND(ABS(SUM(CASE WHEN ei.dc = 'D' THEN ei.amount ELSE -ei.amount END)), 2) AS gl_amt
+                    FROM {$this->db->dbprefix('accounts_entries')} e
+                    JOIN {$this->db->dbprefix('accounts_entryitems')} ei ON ei.entry_id = e.id
+                    JOIN {$this->db->dbprefix('companies')} c2 ON c2.id = e.customer_id
+                    WHERE e.transaction_type = 'returncustomerorder'
+                      AND ei.ledger_id = c2.ledger_account
+                      AND e.rid IN (SELECT id FROM {$this->db->dbprefix('returns')} WHERE warehouse_id = {$wh})
+                      {$ret_date}
+                    GROUP BY e.customer_id
+                ) rg ON rg.customer_id = c.id
+                LEFT JOIN (
+                    SELECT s.customer_id, ROUND(SUM(pay.amount), 2) AS ret_paid
+                    FROM {$this->db->dbprefix('payments')} pay
+                    JOIN {$this->db->dbprefix('sales')} s ON s.id = pay.sale_id AND s.warehouse_id = {$wh}
+                    WHERE pay.paid_by = 'return'
+                      {$pay_date}
+                    GROUP BY s.customer_id
+                ) rp ON rp.customer_id = c.id
+                WHERE c.group_name = 'customer'
+                  AND ROUND(COALESCE(rg.gl_amt, 0) - COALESCE(rp.ret_paid, 0), 2) > 0.01
+                  {$party_sql}{$sm_sql}{$rent_sql}{$ref_sql}
+            ");
+            if ($q) {
+                foreach ($q->result() as $row) {
+                    $amt = (float) $row->unsettled;
+                    $invoices[] = (object) [
+                        'invoice_id' => 0,
+                        'date' => $sql_date_only ?: date('Y-m-d'),
+                        'reference_no' => 'Unsettled returns',
+                        'party_name' => $row->party_name,
+                        'party_code' => $row->party_code,
+                        'sequence_code' => $row->sequence_code,
+                        'ledger_name' => $row->ledger_name,
+                        'area' => $row->area,
+                        'sales_man' => $row->sales_man,
+                        'warehouse_name' => null,
+                        'invoice_total' => $amt,
+                        'discount' => 0,
+                        'return_amount' => $amt,
+                        'paid' => 0,
+                        'outstanding' => -$amt,
+                        'payment_term_days' => 0,
+                        'due_date_calc' => null,
+                        'days_overdue' => 0,
+                        'source' => 'unsettled_return',
+                    ];
+                }
+            }
+        }
+
+        // Customer advances (GL net) — credit when negative, debit when positive.
+        $lm = "(ei.ledger_id = c.ledger_account
+            OR (NULLIF(TRIM(IFNULL(c.old_ledgers,'')),'') IS NOT NULL
+            AND FIND_IN_SET(CAST(ei.ledger_id AS CHAR),
+            REPLACE(REPLACE(IFNULL(c.old_ledgers,''),' ',''),', ',',') ) > 0))";
+        $date_esc = $sql_date_only ? $this->db->escape($sql_date_only) : null;
+        $adv_date = $date_esc ? " AND DATE(e.date) <= {$date_esc}" : '';
+        $party_sql = $party_id ? ' AND e.customer_id = ' . (int) $party_id : '';
+        $sm_sql = $salesman_name ? ' AND c.sales_agent = ' . $this->db->escape($salesman_name) : '';
+        $rent_sql = '';
+        if ($rent_type === 'rental') {
+            $rent_sql = " AND (c.category LIKE '%Rent%')";
+        } elseif ($rent_type !== 'all') {
+            $rent_sql = " AND (c.category IS NULL OR c.category NOT LIKE '%Rent%')";
+        }
+        $ref_sql = $ref_no ? ' AND 1=0' : '';
+        $q = $this->db->query("
+            SELECT e.id AS entry_id, e.date, e.number, e.customer_id,
+                   c.name AS party_name, c.company AS party_code, c.sequence_code,
+                   al.name AS ledger_name, c.city AS area, c.sales_agent AS sales_man,
+                   ROUND(SUM(CASE WHEN ei.dc = 'D' THEN ei.amount ELSE -ei.amount END), 2) AS outstanding
+            FROM {$this->db->dbprefix('accounts_entries')} e
+            JOIN {$this->db->dbprefix('accounts_entryitems')} ei ON ei.entry_id = e.id
+            JOIN {$this->db->dbprefix('companies')} c ON c.id = e.customer_id AND c.group_name = 'customer'
+            LEFT JOIN {$this->db->dbprefix('accounts_ledgers')} al ON al.id = c.ledger_account
+            WHERE e.transaction_type = 'customeradvance'
+              AND {$lm}
+              {$adv_date}{$party_sql}{$sm_sql}{$rent_sql}{$ref_sql}
+            GROUP BY e.id, e.date, e.number, e.customer_id, c.name, c.company, c.sequence_code, al.name, c.city, c.sales_agent
+            HAVING ABS(outstanding) > 0.01
+        ");
+        if ($q) {
+            foreach ($q->result() as $row) {
+                $amt = (float) $row->outstanding;
+                $invoices[] = (object) [
+                    'invoice_id' => (int) $row->entry_id,
+                    'date' => $row->date,
+                    'reference_no' => $row->number ?: 'Advance',
+                    'party_name' => $row->party_name,
+                    'party_code' => $row->party_code,
+                    'sequence_code' => $row->sequence_code,
+                    'ledger_name' => $row->ledger_name,
+                    'area' => $row->area,
+                    'sales_man' => $row->sales_man,
+                    'warehouse_name' => null,
+                    'invoice_total' => abs($amt),
+                    'discount' => 0,
+                    'return_amount' => 0,
+                    'paid' => 0,
+                    'outstanding' => $amt,
+                    'payment_term_days' => 0,
+                    'due_date_calc' => null,
+                    'days_overdue' => 0,
+                    'source' => 'advance',
+                ];
+            }
+        }
+
+        // Narrow orphan/partial payment credits: GL credit exceeds ops allocations on WH sale payments
+        // only when deleted-sale orphan exists or tiny residual (<20).
+        if ($warehouse_id) {
+            $wh = (int) $warehouse_id;
+            $at_esc = $sql_at ? $this->db->escape($sql_at) : null;
+            $date_esc = $sql_date_only ? $this->db->escape($sql_date_only) : null;
+            $pay_date = $at_esc ? " AND pay.date <= {$at_esc}" : '';
+            $entry_date = $date_esc ? " AND DATE(e.date) <= {$date_esc}" : '';
+            $party_sql = $party_id ? ' AND e.customer_id = ' . (int) $party_id : '';
+            $sm_sql = $salesman_name ? ' AND c.sales_agent = ' . $this->db->escape($salesman_name) : '';
+            $rent_sql = '';
+            if ($rent_type === 'rental') {
+                $rent_sql = " AND (c.category LIKE '%Rent%')";
+            } elseif ($rent_type !== 'all') {
+                $rent_sql = " AND (c.category IS NULL OR c.category NOT LIKE '%Rent%')";
+            }
+            $ref_sql = $ref_no ? ' AND 1=0' : '';
+            $q = $this->db->query("
+                SELECT e.id AS entry_id, e.date, e.number, e.customer_id,
+                       c.name AS party_name, c.company AS party_code, c.sequence_code,
+                       al.name AS ledger_name, c.city AS area, c.sales_agent AS sales_man,
+                       ROUND(SUM(CASE WHEN ei.dc = 'C' THEN ei.amount ELSE -ei.amount END), 2) AS gl_amt,
+                       ROUND(COALESCE((
+                           SELECT SUM(pay.amount)
+                           FROM {$this->db->dbprefix('payment_reference')} pr2
+                           JOIN {$this->db->dbprefix('payments')} pay ON pay.payment_id = pr2.id
+                           WHERE pr2.journal_id = e.id
+                       ), 0), 2) AS ops_amt,
+                       MAX(pr.amount) AS pr_amt,
+                       (SELECT COUNT(*)
+                        FROM {$this->db->dbprefix('payment_reference')} pr2
+                        JOIN {$this->db->dbprefix('payments')} pay ON pay.payment_id = pr2.id
+                        WHERE pr2.journal_id = e.id AND pay.amount = 0) AS zero_rows,
+                       EXISTS (
+                           SELECT 1 FROM {$this->db->dbprefix('accounts_entries')} e2
+                           WHERE e2.customer_id = e.customer_id
+                             AND e2.sid > 0
+                             AND e2.transaction_type IN ('saleorder', 'sales_invoice')
+                             AND e2.sid NOT IN (SELECT id FROM {$this->db->dbprefix('sales')})
+                       ) AS has_orphan_sale
+                FROM {$this->db->dbprefix('accounts_entries')} e
+                JOIN {$this->db->dbprefix('accounts_entryitems')} ei ON ei.entry_id = e.id
+                JOIN {$this->db->dbprefix('companies')} c ON c.id = e.customer_id AND c.group_name = 'customer'
+                LEFT JOIN {$this->db->dbprefix('accounts_ledgers')} al ON al.id = c.ledger_account
+                JOIN {$this->db->dbprefix('payment_reference')} pr ON pr.journal_id = e.id
+                WHERE e.transaction_type = 'customerpayment'
+                  AND ei.ledger_id = c.ledger_account
+                  {$entry_date}{$party_sql}{$sm_sql}{$rent_sql}{$ref_sql}
+                  AND e.id IN (
+                      SELECT DISTINCT prx.journal_id
+                      FROM {$this->db->dbprefix('payment_reference')} prx
+                      JOIN {$this->db->dbprefix('payments')} pay ON pay.payment_id = prx.id AND pay.sale_id > 0
+                      JOIN {$this->db->dbprefix('sales')} s ON s.id = pay.sale_id
+                      WHERE prx.journal_id IS NOT NULL AND s.warehouse_id = {$wh}
+                        {$pay_date}
+                  )
+                GROUP BY e.id, e.date, e.number, e.customer_id, c.name, c.company, c.sequence_code, al.name, c.city, c.sales_agent
+            ");
+            if ($q) {
+                foreach ($q->result() as $row) {
+                    $gap = round((float) $row->gl_amt - (float) $row->ops_amt, 2);
+                    if ((float) $row->ops_amt <= 0.01 || $gap <= 0.01) {
+                        continue;
+                    }
+                    if (abs((float) $row->gl_amt - (float) $row->pr_amt) >= 0.05) {
+                        continue;
+                    }
+                    if ((int) $row->zero_rows !== 0) {
+                        continue;
+                    }
+                    if (!(int) $row->has_orphan_sale && $gap >= 20) {
+                        continue;
+                    }
+                    $invoices[] = (object) [
+                        'invoice_id' => (int) $row->entry_id,
+                        'date' => $row->date,
+                        'reference_no' => ($row->number ?: 'Payment') . ' (partial)',
+                        'party_name' => $row->party_name,
+                        'party_code' => $row->party_code,
+                        'sequence_code' => $row->sequence_code,
+                        'ledger_name' => $row->ledger_name,
+                        'area' => $row->area,
+                        'sales_man' => $row->sales_man,
+                        'warehouse_name' => null,
+                        'invoice_total' => $gap,
+                        'discount' => 0,
+                        'return_amount' => 0,
+                        'paid' => $gap,
+                        'outstanding' => -$gap,
+                        'payment_term_days' => 0,
+                        'due_date_calc' => null,
+                        'days_overdue' => 0,
+                        'source' => 'orphan_payment',
+                    ];
+                }
+            }
+        }
+
         usort($invoices, function ($a, $b) {
             return strcmp($a->date, $b->date);
         });

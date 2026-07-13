@@ -254,8 +254,8 @@
                         } else {
                             $detail_url = admin_url('purchases/view/' . $inv->invoice_id);
                         }
-                    } elseif (!empty($inv->source) && $inv->source === 'service') {
-                        $detail_url = null; // service memo — no direct sales link
+                    } elseif (!empty($inv->source) && in_array($inv->source, ['service', 'debit_memo', 'credit_memo', 'unsettled_return', 'advance', 'orphan_payment'], true)) {
+                        $detail_url = null; // memo / synthetic AR rows — no direct sales link
                     } else {
                         $detail_url = admin_url('sales/completed_sales?sid=' . $inv->invoice_id);
                     }
@@ -264,8 +264,16 @@
                     $source_badge = '';
                     if (!empty($inv->source) && $inv->source === 'service') {
                         $source_badge = '<span class="label label-default" style="margin-left:4px;">Service</span>';
+                    } elseif (!empty($inv->source) && $inv->source === 'debit_memo') {
+                        $source_badge = '<span class="label label-warning" style="margin-left:4px;">Debit Memo</span>';
                     } elseif (!empty($inv->source) && $inv->source === 'credit_memo') {
                         $source_badge = '<span class="label label-info" style="margin-left:4px;">Credit Memo</span>';
+                    } elseif (!empty($inv->source) && $inv->source === 'unsettled_return') {
+                        $source_badge = '<span class="label label-primary" style="margin-left:4px;">Return Credit</span>';
+                    } elseif (!empty($inv->source) && $inv->source === 'advance') {
+                        $source_badge = '<span class="label label-success" style="margin-left:4px;">Advance</span>';
+                    } elseif (!empty($inv->source) && $inv->source === 'orphan_payment') {
+                        $source_badge = '<span class="label label-default" style="margin-left:4px;">Payment Adj</span>';
                     }
                 ?>
                     <tr class="<?= $row_class ?>">

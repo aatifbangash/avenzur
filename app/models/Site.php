@@ -1151,6 +1151,21 @@ class Site extends CI_Model
         // Customer advances are customer-level only
         $customerAdvance = "({$transType} = 'customeradvance')";
 
+        // Service-invoice collections are posted as customerpayment with no sale/memo link.
+        // Include them whenever the customer has a serviceinvoice memo so WH TB credits match SI debits.
+        $memo = $dbp . 'memo';
+        $custId = $entries_alias . '.customer_id';
+        $serviceInvoicePayment = "(
+            {$transType} = 'customerpayment'
+            AND (NULLIF({$sid}, '') IS NULL OR NULLIF({$sid}, 0) IS NULL)
+            AND (NULLIF({$memo_id}, '') IS NULL OR NULLIF({$memo_id}, 0) IS NULL)
+            AND EXISTS (
+                SELECT 1 FROM {$memo} m
+                WHERE m.customer_id = {$custId}
+                  AND m.type = 'serviceinvoice'
+            )
+        )";
+
         if ($warehouse_id) {
 
             $wh = (int)$warehouse_id;
@@ -1184,6 +1199,8 @@ class Site extends CI_Model
                 OR {$nonWarehouseLinked}
 
                 OR {$customerAdvance}
+
+                OR {$serviceInvoicePayment}
             )";
         }
 
