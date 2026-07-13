@@ -630,6 +630,9 @@
                         <?php if($Admin || $Owner || !empty($this->GP['reports-unpaid-invoices-ap'])){ ?>
                         <li><a href="<?= admin_url('reports/unpaid_invoices_ap'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Unpaid Invoices Report'); ?> (AP)</a></li>
                         <?php } ?>
+                         <?php if($Admin || $Owner || !empty($this->GP['reports-payment_by_invoice'])){ ?>
+                        <li><a href="<?= admin_url('reports/payment_by_invoice'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Supplier Payment by Invoice'); ?></a></li>
+                        <?php } ?>
                         <li><a href="<?= admin_url('reports/consumption_report'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Consumption Report'); ?></a></li>
                         <li><a href="<?= admin_url('reports/purchase_per_item'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Purchase Per Item'); ?></a></li>
                         <li><a href="<?= admin_url('reports/purchase_per_invoice'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Purchase Per Invoice'); ?></a></li>
