@@ -10653,7 +10653,7 @@ class Reports extends MY_Controller
         ->join('warehouses w', 'w.id = p.warehouse_id', 'left')
         ->where('p.purchase_invoice', 1)
         ->where('p.note !=', 'import from excel')
-        ->where('p.grand_total >', 0)
+        ->where('(p.grand_total + COALESCE(p.grand_deal_discount, 0)) > 0', null, false)
         ->having('outstanding >', 0)
         ->order_by('p.date', 'asc');
 
