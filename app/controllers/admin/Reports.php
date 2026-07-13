@@ -10536,7 +10536,7 @@ class Reports extends MY_Controller
             $inv->source = 'sale';
         }
 
-        if (!$warehouse_id) {
+        if ($warehouse_id) {
         $this->db->select("
             m.id            AS invoice_id,
             m.date,
