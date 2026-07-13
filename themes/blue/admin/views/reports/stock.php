@@ -173,7 +173,7 @@
                                     }
 
                                     ?>
-                                    <?php echo form_dropdown('warehouse', $optionsWarehouse, ($warehouse ?? ''), array('class' => 'form-control disable-select', 'id' => 'warehouse'), array('none')); ?>
+                                    <?php echo form_dropdown('warehouse', $optionsWarehouse, set_value('warehouse', $_GET['warehouse']), array('class' => 'form-control disable-select', 'id' => 'warehouse'), array('none')); ?>
 
                                 </div>
                             </div>

@@ -44,6 +44,27 @@
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-truck"></i>Supplier Payment by Invoice</h2>
+        <div class="box-icon">
+            <ul class="btn-tasks">
+                <li>
+                    <a href="javascript:void(0);"
+                       onclick="exportTableToExcel('paymentTable', '<?= ($type === 'ar') ? 'Supplier Payment by Invoice' : 'supplier_payment_by_invoice' ?>.xlsx')"
+                       class="tip" title="<?= lang('download_xls') ?>">
+                        <i class="icon fa fa-file-excel-o"></i>
+                    </a>
+                </li>
+                <li>
+                    <?php
+                    $export_params = $_GET;
+                    $export_params['export_excel'] = 1;
+                    ?>
+                    <a href="<?= admin_url($form_action ?? 'reports/payment_by_invoice') . '?' . http_build_query($export_params) ?>"
+                       class="tip" title="Export (Server-side Excel)">
+                        <i class="icon fa fa-download"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
     </div>
     <div class="box-content">
         <div class="row">
@@ -112,25 +133,23 @@
                 <hr />
                 <div class="row">
                     <div class="controls table-controls" style="font-size: 12px !important;">
-                        <table id="poTable"
+                        <table id="paymentTable"
                                 class="table items table-striped table-bordered table-condensed table-hover sortable_table tbl_pdf">
                             <thead>
                             <tr>
                                 <th>#</th>
+                                <th><?= lang('Purchase #'); ?></th>
+                                <th><?= lang('Invoice #'); ?></th>
                                 <th><?= lang('warehouse'); ?></th>
                                 <th><?= lang('Supplier No.'); ?></th>
                                 <th><?= lang('Supplier Name'); ?></th>
-                                <th><?= lang('Purchase #'); ?></th>
-                                <th><?= lang('Invoice ID'); ?></th>
-                                <th><?= lang('Invoice Type'); ?></th>
                                 <th><?= lang('Invoice Date'); ?></th>
-                                <th><?= lang('payment_term'); ?></th>
                                 <th><?= lang('due_date'); ?></th>
+                                <th><?= lang('Status'); ?></th>
+                                <th><?= lang('Date'); ?></th>
                                 <th><?= lang('Invoice Amount'); ?></th>
                                 <th><?= lang('payments'); ?></th>
                                 <th><?= lang('balance'); ?></th>
-                                <th><?= lang('payment_status'); ?></th>
-                                <th>Last Payment Date</th>
                             </tr>
                             </thead>
                             <tbody style="text-align:center;">
@@ -146,31 +165,30 @@
                                         ?>
                                             <tr>
                                                 <td><?= $count; ?></td>
+                                                <td><?= $data->invoice_no ?: $data->purchase_id; ?></td>
+                                                <td><?= $data->purchase_id; ?></td>
                                                 <td><?= $data->warehouse_name; ?></td>
                                                 <td><?= $data->sequence_code ?? $data->supplier_id; ?></td>
                                                 <td><?= $data->supplier_name; ?></td>
-                                                <td><?= $data->invoice_no ?: $data->purchase_id; ?></td>
-                                                <td><?= $data->purchase_id; ?></td>
-                                                <td><?= 'Purchase Invoice'; ?></td>
                                                 <td><?= $data->purchase_date ? date('d-M-Y', strtotime($data->purchase_date)) : '' ?></td>
-                                                <td><?= (int) $data->payment_term; ?></td>
                                                 <td><?= $data->due_date ? date('d-M-Y', strtotime($data->due_date)) : '' ?></td>
+                                                <td><?= $data->payment_status; ?></td>
+                                                <td><?= $data->last_payment_date ? date('d-M-Y', strtotime($data->last_payment_date)) : '' ?></td>
                                                 <td><?= number_format($data->grand_total, 2); ?></td>
                                                 <td><?= number_format($data->paid_amount, 2); ?></td>
                                                 <td><?= number_format($data->balance_amount, 2); ?></td>
-                                                <td><?= $data->payment_status; ?></td>
-                                                <td><?= $data->last_payment_date ? date('d-M-Y', strtotime($data->last_payment_date)) : '' ?></td>
                                             </tr>
                                         <?php
                                     }
                                 ?>
                                 <tr>
-                                    <td colspan="10"><strong>Totals: </strong></td>
+                                    
+                                    <td colspan="1"><strong>-</strong></td>
+                                    <td colspan="1"><strong>-</strong></td>
+                                    <td colspan="8" align="right"><strong>Total: </strong></td>
                                     <td colspan="1"><strong><?= number_format($grand_total_purchase, 2); ?></strong></td>
                                     <td colspan="1"><strong><?= number_format($grand_total_payment, 2); ?></strong></td>
                                     <td colspan="1"><strong><?= number_format($grand_total_purchase - $grand_total_payment, 2); ?></strong></td>
-                                    <td colspan="1"><strong>-</strong></td>
-                                    <td colspan="1"><strong>-</strong></td>
                                 </tr>
                             </tbody>
                             <tfoot></tfoot>

@@ -10387,7 +10387,7 @@ class Reports extends MY_Controller
     {
         $this->data['error'] = $this->session->flashdata('error');
         // AP access is controlled independently from AR through group permissions.
-        $can_view_ap = ($this->Owner || $this->Admin || !empty($this->GP['reports-unpaid-invoices-ap']));
+        $can_view_ap = ($this->Owner || $this->Admin || !empty($this->GP['reports-payment_by_invoice']));
         if (!$can_view_ap) {
             $this->session->set_flashdata('error', lang('access_denied'));
             admin_redirect('reports');
