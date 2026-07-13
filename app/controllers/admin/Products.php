@@ -2757,6 +2757,682 @@ class Products extends MY_Controller
         return true;
     }
 
+    public function supplier_balance_descrepencies()
+    {
+        $supplier_id = 680;
+
+        $purchase_invoices = $this->db
+            ->select('id, reference_no, date, grand_total, grand_deal_discount, paid')
+            ->where('supplier_id', $supplier_id)
+            ->where('purchase_invoice', 1)
+            ->order_by('date', 'asc')
+            ->get('sma_purchases')
+            ->result();
+
+        echo '<table border="1" cellpadding="5" cellspacing="0">';
+        echo '<tr style="background:#eee;font-weight:bold;">
+                <td>Purchase ID</td>
+                <td>Reference</td>
+                <td>Grand Total</td>
+                <td>Purchase Paid</td>
+                <td>Paid by Cash/Bank</td>
+                <td>Paid by Memo</td>
+                <td>Paid by Supplier Return</td>
+                <td>Untracked</td>
+                <td>Total Payments</td>
+                <td>Difference</td>
+            </tr>';
+
+        $invoice_total = 0;
+        $purchase_paid_total = 0;
+        $cash_total = 0;
+        $memo_total = 0;
+        $return_total = 0;
+        $untracked_total = 0;
+        $payments_total = 0;
+
+        foreach ($purchase_invoices as $invoice) {
+
+            $payments = $this->db
+                ->select('amount, memo_id, supplier_return_id')
+                ->where('purchase_id', $invoice->id)
+                ->get('sma_payments')
+                ->result();
+
+            $cash = 0;
+            $memo = 0;
+            $supplier_return = 0;
+            $untracked = 0;
+
+            foreach ($payments as $payment) {
+
+                if (!empty($payment->memo_id) && $payment->memo_id > 0) {
+                    $memo += $payment->amount;
+
+                } elseif (!empty($payment->supplier_return_id) && $payment->supplier_return_id > 0) {
+                    $supplier_return += $payment->amount;
+
+                } else {
+                    $cash += $payment->amount;
+                }
+            }
+
+            $total_payments = $cash + $memo + $supplier_return;
+
+            // Anything recorded on purchase but not represented by payments
+            $untracked = round($invoice->paid - $total_payments, 2);
+
+            $difference = round($invoice->grand_total + $invoice->grand_deal_discount - $invoice->paid, 2);
+
+            $invoice_total += $invoice->grand_total + $invoice->grand_deal_discount;
+            $purchase_paid_total += $invoice->paid;
+            $cash_total += $cash;
+            $memo_total += $memo;
+            $return_total += $supplier_return;
+            $untracked_total += $untracked;
+            $payments_total += $total_payments;
+
+            echo '<tr>';
+            echo '<td>'.$invoice->id.'</td>';
+            echo '<td>'.$invoice->reference_no.'</td>';
+            echo '<td align="right">'.number_format($invoice->grand_total + $invoice->grand_deal_discount,2).'</td>';
+            echo '<td align="right">'.number_format($invoice->paid,2).'</td>';
+            echo '<td align="right">'.number_format($cash,2).'</td>';
+            echo '<td align="right">'.number_format($memo,2).'</td>';
+            echo '<td align="right">'.number_format($supplier_return,2).'</td>';
+            echo '<td align="right">'.number_format($untracked,2).'</td>';
+            echo '<td align="right">'.number_format($total_payments,2).'</td>';
+            echo '<td align="right">'.number_format($difference,2).'</td>';
+            echo '</tr>';
+        }
+
+        echo '<tr style="font-weight:bold;background:#ffffcc;">';
+        echo '<td colspan="2">TOTAL</td>';
+        echo '<td align="right">'.number_format($invoice_total,2).'</td>';
+        echo '<td align="right">'.number_format($purchase_paid_total,2).'</td>';
+        echo '<td align="right">'.number_format($cash_total,2).'</td>';
+        echo '<td align="right">'.number_format($memo_total,2).'</td>';
+        echo '<td align="right">'.number_format($return_total,2).'</td>';
+        echo '<td align="right">'.number_format($untracked_total,2).'</td>';
+        echo '<td align="right">'.number_format($payments_total,2).'</td>';
+        echo '<td align="right">'.number_format($invoice_total - $purchase_paid_total,2).'</td>';
+        echo '</tr>';
+
+        echo '</table>';
+
+        $total_memo_amount = $this->db
+        ->select_sum('payment_amount')
+        ->where('supplier_id', $supplier_id)
+        ->where('supplier_entry_type', 'D')
+        ->where('type', 'memo')
+        ->get('sma_memo')
+        ->row()
+        ->payment_amount;
+
+        $total_used_amount = $this->db
+        ->select_sum('used_amount') 
+        ->where('supplier_id', $supplier_id)
+        ->where('supplier_entry_type', 'D')
+        ->where('type', 'memo')
+        ->get('sma_memo')
+        ->row()
+        ->used_amount;
+
+        echo '<br><br>';
+        echo '<table border="1" cellpadding="5" cellspacing="0">';
+        echo '<tr style="background:#eee;font-weight:bold;">
+                <td>Total Memo Amount</td>
+                <td>Total Used Amount</td>
+                <td>Difference</td>
+            </tr>'; 
+
+        echo '<tr>';
+        echo '<td align="right">'.number_format($total_memo_amount,2).'</td>';
+        echo '<td align="right">'.number_format($total_used_amount,2).'</td>';
+        echo '<td align="right">'.number_format($total_memo_amount - $total_used_amount,2).'</td>';
+        echo '</tr>';
+        echo '</table>';
+
+        $total_return_amount = $this->db
+            ->select_sum('grand_total')
+            ->where('supplier_id', $supplier_id)
+            ->get('sma_returns_supplier')
+            ->row()
+            ->grand_total;
+
+        $total_return_used = $this->db
+            ->select_sum('paid')
+            ->where('supplier_id', $supplier_id)
+            ->get('sma_returns_supplier')
+            ->row()
+            ->paid;
+
+        echo '<br><br>';
+        echo '<table border="1" cellpadding="5" cellspacing="0">';
+        echo '<tr style="background:#eee;font-weight:bold;">
+                <td>Total Supplier Return Amount</td>
+                <td>Total Used Amount</td>
+                <td>Difference</td>
+            </tr>';
+
+        echo '<tr>';
+        echo '<td align="right">'.number_format($total_return_amount,2).'</td>';
+        echo '<td align="right">'.number_format($total_return_used,2).'</td>';
+        echo '<td align="right">'.number_format($total_return_amount - $total_return_used,2).'</td>';
+        echo '</tr>';
+
+        echo '</table>';
+        
+        // ============================================================
+        // GL BALANCE VERIFICATION
+        // ============================================================
+        
+        echo '<br><br><hr><h3 style="color:#d9534f;">🔍 GENERAL LEDGER (GL) BALANCE VERIFICATION</h3>';
+        
+        // Get supplier ledger account ID from sma_companies
+        $supplier = $this->db->get_where('sma_companies', ['id' => $supplier_id])->row();
+        $supplier_ledger_id = $supplier->ledger_account ?? null;
+        
+        if (!$supplier_ledger_id) {
+            echo '<div style="background:#f5f5f5;padding:10px;margin:10px 0;border-left:4px solid #d9534f;">';
+            echo '<strong>⚠️ WARNING:</strong> Supplier does not have a linked ledger account. Cannot verify GL entries.';
+            echo '</div>';
+            return;
+        }
+        
+        // ============================================================
+        // 1. CHECK GL ENTRIES FOR PURCHASE INVOICES
+        // ============================================================
+        echo '<br><h4 style="background:#f0f0f0;padding:8px;">📋 GL ENTRIES FOR PURCHASE INVOICES</h4>';
+        echo '<table border="1" cellpadding="5" cellspacing="0">';
+        echo '<tr style="background:#e8e8e8;font-weight:bold;">';
+        echo '<td>Purchase ID</td>';
+        echo '<td>Reference</td>';
+        echo '<td>Purchase Total</td>';
+        echo '<td>GL Supplier Debit</td>';
+        echo '<td>GL Supplier Credit</td>';
+        echo '<td>GL Net Amount</td>';
+        echo '<td>Match Status</td>';
+        echo '</tr>';
+        
+        $gl_invoice_mismatches = 0;
+        $gl_invoice_total_expected = 0;
+        $gl_invoice_total_found = 0;
+        
+        foreach ($purchase_invoices as $invoice) {
+            $invoice_id = (int)$invoice->id;
+            $invoice_amount = (float)($invoice->grand_total + $invoice->grand_deal_discount);
+            $gl_invoice_total_expected += $invoice_amount;
+            
+            // Get GL entries for this purchase invoice
+            $gl_entries = $this->db
+                ->select('ei.amount, ei.dc')
+                ->from('sma_accounts_entries e')
+                ->join('sma_accounts_entryitems ei', 'ei.entry_id = e.id', 'inner')
+                ->where('e.pid', $invoice_id)
+                ->where('ei.ledger_id', $supplier_ledger_id)
+                ->get()
+                ->result();
+            
+            $gl_debit = 0;
+            $gl_credit = 0;
+            
+            foreach ($gl_entries as $entry) {
+                if ($entry->dc === 'D') {
+                    $gl_debit += (float)$entry->amount;
+                } else {
+                    $gl_credit += (float)$entry->amount;
+                }
+            }
+            
+            $gl_net = $gl_debit - $gl_credit;
+            $gl_invoice_total_found += $gl_net;
+            
+            // Check for mismatch
+            $tolerance = 0.01;
+            $is_match = abs($invoice_amount - abs($gl_net)) < $tolerance;
+            
+            if (!$is_match) {
+                $gl_invoice_mismatches++;
+            }
+            
+            $status = $is_match ? '<span style="color:green;">✓ MATCH</span>' : '<span style="color:red;">✗ MISMATCH</span>';
+            $status_color = $is_match ? '#fff8f8' : '#ffe6e6';
+            
+            echo '<tr style="background:' . $status_color . ';">';
+            echo '<td>' . $invoice_id . '</td>';
+            echo '<td>' . $invoice->reference_no . '</td>';
+            echo '<td align="right">' . number_format($invoice_amount, 2) . '</td>';
+            echo '<td align="right">' . number_format($gl_debit, 2) . '</td>';
+            echo '<td align="right">' . number_format($gl_credit, 2) . '</td>';
+            echo '<td align="right">' . number_format($gl_net, 2) . '</td>';
+            echo '<td>' . $status . '</td>';
+            echo '</tr>';
+        }
+        
+        echo '<tr style="background:#ffffcc;font-weight:bold;">';
+        echo '<td colspan="2">PURCHASE INVOICE TOTAL</td>';
+        echo '<td align="right">' . number_format($gl_invoice_total_expected, 2) . '</td>';
+        echo '<td colspan="3" align="right">GL Total: ' . number_format($gl_invoice_total_found, 2) . '</td>';
+        echo '<td>Variance: ' . number_format($gl_invoice_total_expected - $gl_invoice_total_found, 2) . '</td>';
+        echo '</tr>';
+        echo '</table>';
+        
+        // ============================================================
+        // 2. CHECK GL ENTRIES FOR MEMOS (DEBIT MEMOS)
+        // ============================================================
+        echo '<br><h4 style="background:#f0f0f0;padding:8px;">📋 GL ENTRIES FOR MEMOS (DEBIT MEMOS)</h4>';
+        echo '<table border="1" cellpadding="5" cellspacing="0">';
+        echo '<tr style="background:#e8e8e8;font-weight:bold;">';
+        echo '<td>Memo ID</td>';
+        echo '<td>Reference</td>';
+        echo '<td>Memo Amount</td>';
+        echo '<td>GL Supplier Debit</td>';
+        echo '<td>GL Supplier Credit</td>';
+        echo '<td>GL Net Amount</td>';
+        echo '<td>Match Status</td>';
+        echo '</tr>';
+        
+        $memos = $this->db
+            ->select('id, reference_no, payment_amount, vat_percent')
+            ->where('supplier_id', $supplier_id)
+            ->where('supplier_entry_type', 'D')
+            ->where('type', 'memo')
+            ->get('sma_memo')
+            ->result();
+        
+        $gl_memo_mismatches = 0;
+        $gl_memo_total_expected = 0;
+        $gl_memo_total_found = 0;
+        
+        foreach ($memos as $memo) {
+            $memo_id = (int)$memo->id;
+            $memo_vat_percent = (float)$memo->vat_percent; 
+            $memo_amount = (float)$memo->payment_amount;
+            $vat_amount = $memo_amount * ($memo_vat_percent / 100);
+            $gl_memo_total_expected += $memo_amount + $vat_amount;
+            
+            // Get GL entries for this memo
+            $gl_entries = $this->db
+                ->select('ei.amount, ei.dc')
+                ->from('sma_accounts_entries e')
+                ->join('sma_accounts_entryitems ei', 'ei.entry_id = e.id', 'inner')
+                ->where('e.memo_id', $memo_id)
+                ->where('ei.ledger_id', $supplier_ledger_id)
+                ->get()
+                ->result();
+            
+            $gl_debit = 0;
+            $gl_credit = 0;
+            
+            foreach ($gl_entries as $entry) {
+                if ($entry->dc === 'D') {
+                    $gl_debit += (float)$entry->amount;
+                } else {
+                    $gl_credit += (float)$entry->amount;
+                }
+            }
+            
+            $gl_net = $gl_debit - $gl_credit;
+            $gl_memo_total_found += $gl_net;
+            
+            // Check for mismatch
+            $tolerance = 0.01;
+            $is_match = abs(($memo_amount + $vat_amount) - abs($gl_net)) < $tolerance;
+            
+            if (!$is_match) {
+                $gl_memo_mismatches++;
+            }
+            
+            $status = $is_match ? '<span style="color:green;">✓ MATCH</span>' : '<span style="color:red;">✗ MISMATCH</span>';
+            $status_color = $is_match ? '#fff8f8' : '#ffe6e6';
+            
+            echo '<tr style="background:' . $status_color . ';">';
+            echo '<td>' . $memo_id . '</td>';
+            echo '<td>' . $memo->reference_no . '</td>';
+            echo '<td align="right">' . number_format($memo_amount, 2) . '</td>';
+            echo '<td align="right">' . number_format($gl_debit, 2) . '</td>';
+            echo '<td align="right">' . number_format($gl_credit, 2) . '</td>';
+            echo '<td align="right">' . number_format($gl_net, 2) . '</td>';
+            echo '<td>' . $status . '</td>';
+            echo '</tr>';
+        }
+        
+        echo '<tr style="background:#ffffcc;font-weight:bold;">';
+        echo '<td colspan="2">MEMO TOTAL</td>';
+        echo '<td align="right">' . number_format($gl_memo_total_expected, 2) . '</td>';
+        echo '<td colspan="3" align="right">GL Total: ' . number_format($gl_memo_total_found, 2) . '</td>';
+        echo '<td>Variance: ' . number_format($gl_memo_total_expected - $gl_memo_total_found, 2) . '</td>';
+        echo '</tr>';
+        echo '</table>';
+        
+        // ============================================================
+        // 3. CHECK GL ENTRIES FOR SUPPLIER RETURNS
+        // ============================================================
+        echo '<br><h4 style="background:#f0f0f0;padding:8px;">📋 GL ENTRIES FOR SUPPLIER RETURNS</h4>';
+        echo '<table border="1" cellpadding="5" cellspacing="0">';
+        echo '<tr style="background:#e8e8e8;font-weight:bold;">';
+        echo '<td>Return ID</td>';
+        echo '<td>Reference</td>';
+        echo '<td>Return Amount</td>';
+        echo '<td>GL Supplier Debit</td>';
+        echo '<td>GL Supplier Credit</td>';
+        echo '<td>GL Net Amount</td>';
+        echo '<td>Match Status</td>';
+        echo '</tr>';
+        
+        $returns = $this->db
+            ->select('id, reference_no, grand_total')
+            ->where('supplier_id', $supplier_id)
+            ->get('sma_returns_supplier')
+            ->result();
+        
+        $gl_return_mismatches = 0;
+        $gl_return_total_expected = 0;
+        $gl_return_total_found = 0;
+        
+        foreach ($returns as $return) {
+            $return_id = (int)$return->id;
+            $return_amount = (float)$return->grand_total;
+            $gl_return_total_expected += $return_amount;
+            
+            // Get GL entries for this return
+            $gl_entries = $this->db
+                ->select('ei.amount, ei.dc')
+                ->from('sma_accounts_entries e')
+                ->join('sma_accounts_entryitems ei', 'ei.entry_id = e.id', 'inner')
+                ->where('e.rsid', $return_id)
+                ->where('ei.ledger_id', $supplier_ledger_id)
+                ->get()
+                ->result();
+            
+            $gl_debit = 0;
+            $gl_credit = 0;
+            
+            foreach ($gl_entries as $entry) {
+                if ($entry->dc === 'D') {
+                    $gl_debit += (float)$entry->amount;
+                } else {
+                    $gl_credit += (float)$entry->amount;
+                }
+            }
+            
+            $gl_net = $gl_debit - $gl_credit;
+            $gl_return_total_found += $gl_net;
+            
+            // Check for mismatch
+            $tolerance = 0.01;
+            $is_match = abs($return_amount - abs($gl_net)) < $tolerance;
+            
+            if (!$is_match) {
+                $gl_return_mismatches++;
+            }
+            
+            $status = $is_match ? '<span style="color:green;">✓ MATCH</span>' : '<span style="color:red;">✗ MISMATCH</span>';
+            $status_color = $is_match ? '#fff8f8' : '#ffe6e6';
+            
+            echo '<tr style="background:' . $status_color . ';">';
+            echo '<td>' . $return_id . '</td>';
+            echo '<td>' . $return->reference_no . '</td>';
+            echo '<td align="right">' . number_format($return_amount, 2) . '</td>';
+            echo '<td align="right">' . number_format($gl_debit, 2) . '</td>';
+            echo '<td align="right">' . number_format($gl_credit, 2) . '</td>';
+            echo '<td align="right">' . number_format($gl_net, 2) . '</td>';
+            echo '<td>' . $status . '</td>';
+            echo '</tr>';
+        }
+        
+        echo '<tr style="background:#ffffcc;font-weight:bold;">';
+        echo '<td colspan="2">RETURN TOTAL</td>';
+        echo '<td align="right">' . number_format($gl_return_total_expected, 2) . '</td>';
+        echo '<td colspan="3" align="right">GL Total: ' . number_format($gl_return_total_found, 2) . '</td>';
+        echo '<td>Variance: ' . number_format($gl_return_total_expected - $gl_return_total_found, 2) . '</td>';
+        echo '</tr>';
+        echo '</table>';
+        
+        // ============================================================
+        // 4. CHECK GL ENTRIES FOR PAYMENTS (CASH/BANK)
+        // ============================================================
+        echo '<br><h4 style="background:#f0f0f0;padding:8px;">💳 GL ENTRIES FOR PAYMENTS (CASH/BANK)</h4>';
+        echo '<table border="1" cellpadding="5" cellspacing="0">';
+        echo '<tr style="background:#e8e8e8;font-weight:bold;">';
+        echo '<td>Payment Reference ID</td>';
+        echo '<td>Reference No</td>';
+        echo '<td>Payment Amount</td>';
+        echo '<td>GL Entry ID</td>';
+        echo '<td>GL Supplier Amount</td>';
+        echo '<td>Match Status</td>';
+        echo '</tr>';
+        
+        $payment_refs = $this->db
+            ->select('pr.id, pr.reference_no, pr.amount, pr.journal_id, pr.added_via')
+            ->from('sma_payment_reference pr')
+            ->where('pr.supplier_id', $supplier_id)
+            ->where('pr.journal_id >', 0)
+            ->get()
+            ->result();
+        
+        $gl_payment_mismatches = 0;
+        $gl_payment_total_expected = 0;
+        $gl_payment_total_found = 0;
+        
+        foreach ($payment_refs as $payment) {
+            $payment_id = (int)$payment->id;
+            $payment_amount = (float)$payment->amount;
+            $journal_id = (int)$payment->journal_id;
+            $gl_payment_total_expected += $payment_amount;
+            
+            // Get GL entry amount for this payment
+            $gl_entry = $this->db
+                ->select('ei.amount')
+                ->from('sma_accounts_entries e')
+                ->join('sma_accounts_entryitems ei', 'ei.entry_id = e.id', 'inner')
+                ->where('e.id', $journal_id)
+                ->where('ei.ledger_id', $supplier_ledger_id)
+                ->limit(1)
+                ->get()
+                ->row();
+            
+            $gl_amount = $gl_entry ? (float)$gl_entry->amount : 0;
+            $gl_payment_total_found += $gl_amount;
+            
+            // Check for mismatch
+            $tolerance = 0.01;
+            $is_match = abs($payment_amount - $gl_amount) < $tolerance;
+            
+            if (!$is_match) {
+                $gl_payment_mismatches++;
+            }
+
+            if($payment->added_via === 'auto_script') {
+                $is_match = true; // Ignore auto_script entries for mismatch
+                
+            }
+            
+            $status = $is_match ? '<span style="color:green;">✓ MATCH</span>' : '<span style="color:red;">✗ MISMATCH</span>';
+            $status_color = $is_match ? '#fff8f8' : '#ffe6e6';
+            
+            echo '<tr style="background:' . $status_color . ';">';
+            echo '<td>' . $payment_id . '</td>';
+            echo '<td>' . $payment->reference_no . '</td>';
+            echo '<td align="right">' . number_format($payment_amount, 2) . '</td>';
+            echo '<td>' . ($journal_id ?: '<span style="color:red;">NULL</span>') . '</td>';
+            echo '<td align="right">' . number_format($gl_amount, 2) . '</td>';
+            echo '<td>' . $status . '</td>';
+            echo '</tr>';
+        }
+        
+        echo '<tr style="background:#ffffcc;font-weight:bold;">';
+        echo '<td colspan="2">PAYMENT TOTAL</td>';
+        echo '<td align="right">' . number_format($gl_payment_total_expected, 2) . '</td>';
+        echo '<td colspan="2" align="right">GL Total: ' . number_format($gl_payment_total_found, 2) . '</td>';
+        echo '<td>Variance: ' . number_format($gl_payment_total_expected - $gl_payment_total_found, 2) . '</td>';
+        echo '</tr>';
+        echo '</table>';
+        
+        // ============================================================
+        // 5. FIND ORPHAN GL ENTRIES (Not matched to any transaction)
+        // ============================================================
+        echo '<br><h4 style="background:#f0f0f0;padding:8px;">🔴 ORPHAN GL ENTRIES (Unmatched)</h4>';
+        
+        // Get all GL entries for this supplier
+        $all_gl_entries = $this->db
+            ->select('e.id, e.pid, e.memo_id, e.rsid, e.date as entry_date, SUM(ei.amount) as total_amount')
+            ->from('sma_accounts_entries e')
+            ->join('sma_accounts_entryitems ei', 'ei.entry_id = e.id', 'inner')
+            ->where('ei.ledger_id', $supplier_ledger_id)
+            ->group_by('e.id')
+            ->get()
+            ->result();
+        
+        $orphan_entries = [];
+        
+        foreach ($all_gl_entries as $gl_entry) {
+            $has_purchase = !empty($gl_entry->pid) && $gl_entry->pid > 0;
+            $has_memo = !empty($gl_entry->memo_id) && $gl_entry->memo_id > 0;
+            $has_return = !empty($gl_entry->rsid) && $gl_entry->rsid > 0;
+            
+            // If GL entry doesn't point to any transaction, check if it's linked to payment
+            if (!$has_purchase && !$has_memo && !$has_return) {
+                // Check if it's linked to a payment via journal_id in sma_payment_reference
+                $has_payment = $this->db
+                    ->select('id')
+                    ->from('sma_payment_reference')
+                    ->where('journal_id', $gl_entry->id)
+                    ->get()
+                    ->num_rows() > 0;
+                
+                // Only add to orphan list if it's not linked to any payment either
+                if (!$has_payment) {
+                    $orphan_entries[] = $gl_entry;
+                }
+            }
+        }
+        
+        if (empty($orphan_entries)) {
+            echo '<div style="background:#e8f5e9;padding:10px;border-left:4px solid #4caf50;">';
+            echo '<strong>✓ NO ORPHAN ENTRIES:</strong> All GL entries are properly linked to transactions.';
+            echo '</div>';
+        } else {
+            echo '<table border="1" cellpadding="5" cellspacing="0">';
+            echo '<tr style="background:#e8e8e8;font-weight:bold;">';
+            echo '<td>Entry ID</td>';
+            echo '<td>Date</td>';
+            echo '<td>Amount</td>';
+            echo '<td>Notes</td>';
+            echo '</tr>';
+            
+            $orphan_total = 0;
+            foreach ($orphan_entries as $orphan) {
+                $orphan_total += (float)$orphan->total_amount;
+                echo '<tr style="background:#ffe6e6;">';
+                echo '<td>' . $orphan->id . '</td>';
+                echo '<td>' . date('Y-m-d', strtotime($orphan->entry_date)) . '</td>';
+                echo '<td align="right">' . number_format($orphan->total_amount, 2) . '</td>';
+                echo '<td><span style="color:#d9534f;">⚠️ Unlinked GL Entry</span></td>';
+                echo '</tr>';
+            }
+            
+            echo '<tr style="background:#ffffcc;font-weight:bold;">';
+            echo '<td colspan="2">ORPHAN TOTAL</td>';
+            echo '<td align="right">' . number_format($orphan_total, 2) . '</td>';
+            echo '<td>Needs Investigation</td>';
+            echo '</tr>';
+            echo '</table>';
+        }
+        
+        // ============================================================
+        // SUMMARY REPORT
+        // ============================================================
+        echo '<br><hr>';
+        echo '<h3 style="color:#555;">📊 GL VERIFICATION SUMMARY</h3>';
+        echo '<table border="1" cellpadding="8" cellspacing="0" style="width:100%;background:#f9f9f9;">';
+        echo '<tr style="background:#333;color:white;font-weight:bold;">';
+        echo '<td>Category</td>';
+        echo '<td align="center">Total Items</td>';
+        echo '<td align="center">Mismatches Found</td>';
+        echo '<td align="center">Expected Total</td>';
+        echo '<td align="center">GL Total</td>';
+        echo '<td align="center">Variance</td>';
+        echo '</tr>';
+        
+        $total_items = count($purchase_invoices) + count($memos) + count($returns) + count($payment_refs);
+        $total_mismatches = $gl_invoice_mismatches + $gl_memo_mismatches + $gl_return_mismatches + $gl_payment_mismatches + count($orphan_entries);
+        
+        echo '<tr>';
+        echo '<td><strong>Purchase Invoices</strong></td>';
+        echo '<td align="center">' . count($purchase_invoices) . '</td>';
+        echo '<td align="center" style="background:' . ($gl_invoice_mismatches > 0 ? '#ffe6e6' : '#e8f5e9') . ';">' . $gl_invoice_mismatches . '</td>';
+        echo '<td align="right">' . number_format($gl_invoice_total_expected, 2) . '</td>';
+        echo '<td align="right">' . number_format($gl_invoice_total_found, 2) . '</td>';
+        echo '<td align="right" style="background:' . (abs($gl_invoice_total_expected - $gl_invoice_total_found) > 0.01 ? '#ffe6e6' : '#e8f5e9') . ';">' . number_format($gl_invoice_total_expected - $gl_invoice_total_found, 2) . '</td>';
+        echo '</tr>';
+        
+        echo '<tr>';
+        echo '<td><strong>Debit Memos</strong></td>';
+        echo '<td align="center">' . count($memos) . '</td>';
+        echo '<td align="center" style="background:' . ($gl_memo_mismatches > 0 ? '#ffe6e6' : '#e8f5e9') . ';">' . $gl_memo_mismatches . '</td>';
+        echo '<td align="right">' . number_format($gl_memo_total_expected, 2) . '</td>';
+        echo '<td align="right">' . number_format($gl_memo_total_found, 2) . '</td>';
+        echo '<td align="right" style="background:' . (abs($gl_memo_total_expected - $gl_memo_total_found) > 0.01 ? '#ffe6e6' : '#e8f5e9') . ';">' . number_format($gl_memo_total_expected - $gl_memo_total_found, 2) . '</td>';
+        echo '</tr>';
+        
+        echo '<tr>';
+        echo '<td><strong>Supplier Returns</strong></td>';
+        echo '<td align="center">' . count($returns) . '</td>';
+        echo '<td align="center" style="background:' . ($gl_return_mismatches > 0 ? '#ffe6e6' : '#e8f5e9') . ';">' . $gl_return_mismatches . '</td>';
+        echo '<td align="right">' . number_format($gl_return_total_expected, 2) . '</td>';
+        echo '<td align="right">' . number_format($gl_return_total_found, 2) . '</td>';
+        echo '<td align="right" style="background:' . (abs($gl_return_total_expected - $gl_return_total_found) > 0.01 ? '#ffe6e6' : '#e8f5e9') . ';">' . number_format($gl_return_total_expected - $gl_return_total_found, 2) . '</td>';
+        echo '</tr>';
+        
+        echo '<tr>';
+        echo '<td><strong>Payments (Cash/Bank)</strong></td>';
+        echo '<td align="center">' . count($payment_refs) . '</td>';
+        echo '<td align="center" style="background:' . ($gl_payment_mismatches > 0 ? '#ffe6e6' : '#e8f5e9') . ';">' . $gl_payment_mismatches . '</td>';
+        echo '<td align="right">' . number_format($gl_payment_total_expected, 2) . '</td>';
+        echo '<td align="right">' . number_format($gl_payment_total_found, 2) . '</td>';
+        echo '<td align="right" style="background:' . (abs($gl_payment_total_expected - $gl_payment_total_found) > 0.01 ? '#ffe6e6' : '#e8f5e9') . ';">' . number_format($gl_payment_total_expected - $gl_payment_total_found, 2) . '</td>';
+        echo '</tr>';
+        
+        echo '<tr>';
+        echo '<td><strong>Orphan Entries</strong></td>';
+        echo '<td align="center">' . count($orphan_entries) . '</td>';
+        echo '<td align="center" style="background:' . (count($orphan_entries) > 0 ? '#ffe6e6' : '#e8f5e9') . ';">' . count($orphan_entries) . '</td>';
+        echo '<td colspan="3" style="color:#d9534f;"><strong>⚠️ Unlinked GL Entries Detected</strong></td>';
+        echo '</tr>';
+        
+        echo '<tr style="background:#f0f0f0;font-weight:bold;font-size:14px;">';
+        echo '<td>OVERALL STATUS</td>';
+        echo '<td align="center">' . $total_items . '</td>';
+        echo '<td align="center" style="background:' . ($total_mismatches > 0 ? '#ffcdd2' : '#c8e6c9') . ';">' . $total_mismatches . '</td>';
+        $grand_expected = $gl_invoice_total_expected + $gl_memo_total_expected + $gl_return_total_expected + $gl_payment_total_expected;
+        $grand_found = $gl_invoice_total_found + $gl_memo_total_found + $gl_return_total_found + $gl_payment_total_found;
+        echo '<td align="right">' . number_format($grand_expected, 2) . '</td>';
+        echo '<td align="right">' . number_format($grand_found, 2) . '</td>';
+        echo '<td align="right" style="background:' . (abs($grand_expected - $grand_found) > 0.01 ? '#ffcdd2' : '#c8e6c9') . ';"><strong>' . number_format($grand_expected - $grand_found, 2) . '</strong></td>';
+        echo '</tr>';
+        echo '</table>';
+        
+        // Final Status
+        echo '<br><div style="padding:15px;border:2px solid #333;border-radius:5px;font-size:14px;">';
+        if ($total_mismatches === 0 && count($orphan_entries) === 0 && abs($grand_expected - $grand_found) < 0.01) {
+            echo '<div style="color:#4caf50;"><strong>✅ ALL GL ENTRIES VERIFIED:</strong> Supplier ledger is balanced and all transactions are properly recorded.</div>';
+        } else {
+            echo '<div style="color:#d9534f;"><strong>❌ GL DISCREPANCIES FOUND:</strong></div>';
+            echo '<ul style="margin:10px 0 0 20px;">';
+            if ($gl_invoice_mismatches > 0) echo '<li>Purchase Invoice GL Mismatches: ' . $gl_invoice_mismatches . '</li>';
+            if ($gl_memo_mismatches > 0) echo '<li>Debit Memo GL Mismatches: ' . $gl_memo_mismatches . '</li>';
+            if ($gl_return_mismatches > 0) echo '<li>Supplier Return GL Mismatches: ' . $gl_return_mismatches . '</li>';
+            if ($gl_payment_mismatches > 0) echo '<li>Payment GL Mismatches: ' . $gl_payment_mismatches . '</li>';
+            if (count($orphan_entries) > 0) echo '<li>Orphan GL Entries (Unlinked): ' . count($orphan_entries) . '</li>';
+            echo '</ul>';
+            echo '<p style="margin-top:10px;"><strong>Total Variance:</strong> ' . number_format(abs($grand_expected - $grand_found), 2) . ' SAR</p>';
+        }
+        echo '</div>';
+        
+    }
+
     public function update_supplier_outstanding_invoices_payment(){
         /*ini_set('display_errors', '1');
         ini_set('display_startup_errors', '1');
@@ -2876,17 +3552,20 @@ class Products extends MY_Controller
 
         // Settle Debit Memos against outstanding invoices
         $unsettled_debit_memos = $this->db
-            ->where('supplier_entry_type', 'D')
-            //->where_in('supplier_id', [570, 654, 660, 664,668,702,752,788,803])
-            ->where('type', 'memo')
-            ->where('(used_amount IS NULL OR used_amount < payment_amount)', null, false)
-            ->get('sma_memo')
-            ->result();
+        ->where('supplier_entry_type', 'D')
+        ->where('type', 'memo')
+        ->where('(used_amount IS NULL OR used_amount < (payment_amount * (1 + (vat_percent / 100))))', null, false)
+        ->get('sma_memo')
+        ->result();
         //echo "<pre>";print_r($unsettled_debit_memos);echo "</pre>";exit;
         foreach ($unsettled_debit_memos as $debit_memo) {
             $memo_id = $debit_memo->id;
             $supplier_id = $debit_memo->supplier_id;
-            $remaining_amount = $debit_memo->payment_amount - $debit_memo->used_amount;
+            
+            $memo_vat_percent = $debit_memo->vat_percent ?? 0;
+            $memo_vat_amount = $debit_memo->payment_amount * ($memo_vat_percent / 100);
+
+            $remaining_amount = ($debit_memo->payment_amount + $memo_vat_amount) - $debit_memo->used_amount;
 
             if ($memo_id <= 0 || $supplier_id <= 0 || $remaining_amount <= 0) {
                 continue;
