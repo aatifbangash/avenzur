@@ -10676,12 +10676,13 @@ class Reports extends MY_Controller
         $invoices = $this->db->get()->result();
 
         if ($warehouse_id == 32) {
-        $ap_memo_paid_expr = $sql_at
-            ? "(SELECT COALESCE(SUM(sp.amount), 0)
+        $ap_memo_paid_expr = "CASE
+            WHEN m.date < '2026-06-20' THEN COALESCE(m.used_amount, 0)
+            ELSE COALESCE((SELECT COALESCE(SUM(sp.amount), 0)
                 FROM {$this->db->dbprefix('payments')} sp
                 WHERE sp.memo_id = m.id
-                AND sp.date <= '{$sql_at}')"
-            : "COALESCE(m.used_amount, 0)";
+                AND sp.date <= " . ($sql_at ? "'{$sql_at}'" : "NOW()") . "), 0)
+        END";
             
         $this->db->select("
             m.id                                                     AS invoice_id,
@@ -10723,12 +10724,13 @@ class Reports extends MY_Controller
         $this->apply_supplier_trade_type_where($trade_type);
         $service_invoices = $this->db->get()->result();
         
-        $ap_memo_credit_paid_expr = $sql_at
-            ? "(SELECT COALESCE(SUM(sp.amount), 0)
+        $ap_memo_credit_paid_expr = "CASE
+            WHEN m.date < '2026-06-20' THEN COALESCE(m.used_amount, 0)
+            ELSE COALESCE((SELECT COALESCE(SUM(sp.amount), 0)
                 FROM {$this->db->dbprefix('payments')} sp
                 WHERE sp.memo_id = m.id
-                AND sp.date <= '{$sql_at}')"
-            : "COALESCE(m.used_amount, 0)";
+                AND sp.date <= " . ($sql_at ? "'{$sql_at}'" : "NOW()") . "), 0)
+        END";
             
         $this->db->select("
             m.id                                                     AS invoice_id,
