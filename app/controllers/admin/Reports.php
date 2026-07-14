@@ -10689,7 +10689,16 @@ class Reports extends MY_Controller
             0                                                        AS discount,
             0                                                        AS return_amount,
             COALESCE(m.used_amount, 0)                               AS paid,
-            ROUND(m.payment_amount - COALESCE(m.used_amount, 0), 2) AS outstanding,
+            ROUND(
+                m.payment_amount -
+                COALESCE((
+                    SELECT SUM(p.amount)
+                    FROM sma_payments p
+                    WHERE p.memo_id = m.id
+                    AND p.date <= '2026-06-30'
+                ),0),
+                2
+            ) AS outstanding,
             0                                                        AS payment_term_days,
             NULL                                                     AS due_date_calc,
             0                                                        AS days_overdue,
@@ -10715,7 +10724,7 @@ class Reports extends MY_Controller
         }
         $this->apply_supplier_trade_type_where($trade_type);
         $service_invoices = $this->db->get()->result();
-
+        //echo $this->db->last_query(); exit;
         $this->db->select("
             m.id                                                     AS invoice_id,
             m.date,
