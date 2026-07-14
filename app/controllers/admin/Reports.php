@@ -10695,7 +10695,7 @@ class Reports extends MY_Controller
                     SELECT SUM(p.amount)
                     FROM sma_payments p
                     WHERE p.memo_id = m.id
-                    AND p.date <= '2026-06-30'
+                    AND p.date <= '{$sql_at}'
                 ),0),
                 2
             ) AS outstanding,
