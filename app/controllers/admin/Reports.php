@@ -10537,6 +10537,12 @@ class Reports extends MY_Controller
         }
 
         if ($warehouse_id) {
+        $memo_paid_subquery = "(SELECT COALESCE(SUM(sp.amount), 0)
+                            FROM {$this->db->dbprefix('payments')} sp
+                            WHERE sp.memo_id = m.id" .
+                            ($sql_at ? " AND sp.date <= '{$sql_at}'" : "") .
+                            ")";
+                            
         $this->db->select("
             m.id            AS invoice_id,
             m.date,
@@ -10550,8 +10556,8 @@ class Reports extends MY_Controller
             m.payment_amount AS invoice_total,
             0               AS discount,
             0               AS return_amount,
-            COALESCE(m.used_amount, 0)                               AS paid,
-            ROUND(m.payment_amount - COALESCE(m.used_amount, 0), 2) AS outstanding,
+            {$memo_paid_subquery}                                    AS paid,
+            ROUND(m.payment_amount - ({$memo_paid_subquery}), 2)    AS outstanding,
             0               AS payment_term_days,
             NULL            AS due_date_calc,
             0               AS days_overdue,
