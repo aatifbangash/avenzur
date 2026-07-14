@@ -416,8 +416,10 @@ class Reports_model extends CI_Model
         }
 
         $warehouse_filter = $this->site->reportWarehouseAndClause($warehouse_id, 'p');
+        
+        $sql_at = $start_date . ' 23:59:59';
 
-        // Fetch invoices
+        // ====== PURCHASE INVOICES (with date-filtered payments) ======
         $sql = "
             SELECT 
                 p.id AS purchase_id,
@@ -426,12 +428,18 @@ class Reports_model extends CI_Model
                 c.name AS supplier_name,
                 c.sequence_code AS supplier_code,
                 c.category,
-                p.grand_total,
-                p.paid,
+                ROUND(((p.grand_total + COALESCE(p.grand_deal_discount, 0))), 2) AS invoice_total,
+                (SELECT COALESCE(SUM(sp.amount), 0)
+                 FROM {$this->db->dbprefix('payments')} sp
+                 WHERE sp.purchase_id = p.id
+                 AND sp.date <= '{$sql_at}') AS paid,
                 c.payment_term
             FROM sma_purchases p
             JOIN sma_companies c ON p.supplier_id = c.id
-            WHERE p.grand_total > 0
+            WHERE p.purchase_invoice = 1
+            AND p.note != 'import from excel'
+            AND (p.grand_total + COALESCE(p.grand_deal_discount, 0)) > 0
+            AND p.date <= '{$sql_at}'
             $supplier_filter
             $warehouse_filter
         ";
@@ -439,20 +447,15 @@ class Reports_model extends CI_Model
         $invoices = $this->db->query($sql)->result();
 
         $result = [];
-        //echo '<pre>';print_r($invoices);exit;
+        
+        // Process purchase invoices
         foreach ($invoices as $inv) {
-            
-           
             $paid = $inv->paid ? $inv->paid : 0;
-            $outstanding = round($inv->grand_total - $paid, 2);
-            //echo 'Invoice'. $inv->purchase_id . ' Outstanding: '.$outstanding.'<br />';
+            $outstanding = round($inv->invoice_total - $paid, 2);
+            
             if ($outstanding <= 0) {
                 continue;
             }
-            //echo 'Invoice'. $inv->purchase_id . ' Outstanding: '.$outstanding.'<br />';
-            /* ============================
-            🔥 FIX STARTS HERE
-            ============================ */
 
             $invoiceDt = new DateTime(date('Y-m-d', strtotime($inv->date)));
             $reportDt  = new DateTime($start_date);
@@ -463,13 +466,6 @@ class Reports_model extends CI_Model
             }
 
             $days = (int)$invoiceDt->diff($reportDt)->days;
-            /*if($inv->sale_id == 4175) {
-                echo "Invoice Date: " . $inv->date . " | Report Date: " . $start_date . "Paid: ". $paid . " | Days: " . $days . "\n";
-                exit;
-            }*/
-            /* ============================
-            🔥 FIX ENDS HERE
-            ============================ */
 
             // Determine bucket
             $bucket_label = '>' . $duration;
@@ -479,7 +475,7 @@ class Reports_model extends CI_Model
                     break;
                 }
             }
-            //echo 'Bucket Label: '. $bucket_label . '<br />';
+
             // Group by supplier
             if (!isset($result[$inv->supplier_id])) {
                 $result[$inv->supplier_id] = [
@@ -495,10 +491,151 @@ class Reports_model extends CI_Model
             }
             
             $result[$inv->supplier_id][$bucket_label] += $outstanding;
-            //echo 'Outstanding adding: '. $result[$inv->supplier_id][$bucket_label] . '<br /><br />';
+        }
+
+        // ====== SERVICE INVOICES (with hybrid payment logic) ======
+        $sql = "
+            SELECT 
+                m.id AS purchase_id,
+                m.date,
+                m.supplier_id,
+                c.name AS supplier_name,
+                c.sequence_code AS supplier_code,
+                c.category,
+                m.payment_amount AS invoice_total,
+                CASE
+                    WHEN m.date < '2026-06-20' THEN COALESCE(m.used_amount, 0)
+                    ELSE COALESCE((SELECT COALESCE(SUM(sp.amount), 0)
+                        FROM {$this->db->dbprefix('payments')} sp
+                        WHERE sp.memo_id = m.id
+                        AND sp.date <= '{$sql_at}'), 0)
+                END AS paid,
+                0 AS payment_term
+            FROM sma_memo m
+            JOIN sma_companies c ON m.supplier_id = c.id
+            WHERE m.type = 'serviceinvoice'
+            AND m.supplier_id > 0
+            AND m.payment_amount > 0
+            AND m.date <= '{$sql_at}'
+            $supplier_filter
+        ";
+
+        $service_invoices = $this->db->query($sql)->result();
+
+        // Process service invoices
+        foreach ($service_invoices as $inv) {
+            $paid = $inv->paid ? $inv->paid : 0;
+            $outstanding = round($inv->invoice_total - $paid, 2);
+            
+            if ($outstanding <= 0) {
+                continue;
+            }
+
+            $invoiceDt = new DateTime(date('Y-m-d', strtotime($inv->date)));
+            $reportDt  = new DateTime($start_date);
+
+            if ($invoiceDt > $reportDt) {
+                continue;
+            }
+
+            $days = (int)$invoiceDt->diff($reportDt)->days;
+
+            $bucket_label = '>' . $duration;
+            foreach ($buckets as $b) {
+                if ($days >= $b['from'] && $days <= $b['to']) {
+                    $bucket_label = $b['label'];
+                    break;
+                }
+            }
+
+            if (!isset($result[$inv->supplier_id])) {
+                $result[$inv->supplier_id] = [
+                    'supplier_id'   => $inv->supplier_id,
+                    'supplier_name' => $inv->supplier_name,
+                    'supplier_code' => $inv->supplier_code,
+                    'category'      => $inv->category,
+                    'payment_term'  => $inv->payment_term,
+                ];
+                foreach ($buckets as $b) {
+                    $result[$inv->supplier_id][$b['label']] = 0;
+                }
+            }
+            
+            $result[$inv->supplier_id][$bucket_label] += $outstanding;
+        }
+
+        // ====== CREDIT MEMOS (with hybrid payment logic) ======
+        $sql = "
+            SELECT 
+                m.id AS purchase_id,
+                m.date,
+                m.supplier_id,
+                c.name AS supplier_name,
+                c.sequence_code AS supplier_code,
+                c.category,
+                m.payment_amount AS invoice_total,
+                CASE
+                    WHEN m.date < '2026-06-20' THEN COALESCE(m.used_amount, 0)
+                    ELSE COALESCE((SELECT COALESCE(SUM(sp.amount), 0)
+                        FROM {$this->db->dbprefix('payments')} sp
+                        WHERE sp.memo_id = m.id
+                        AND sp.date <= '{$sql_at}'), 0)
+                END AS paid,
+                0 AS payment_term
+            FROM sma_memo m
+            JOIN sma_companies c ON m.supplier_id = c.id
+            WHERE m.type = 'memo'
+            AND m.supplier_id > 0
+            AND m.supplier_entry_type = 'C'
+            AND m.payment_amount > 0
+            AND m.date <= '{$sql_at}'
+            $supplier_filter
+        ";
+
+        $credit_memos = $this->db->query($sql)->result();
+
+        // Process credit memos
+        foreach ($credit_memos as $inv) {
+            $paid = $inv->paid ? $inv->paid : 0;
+            $outstanding = round($inv->invoice_total - $paid, 2);
+            
+            if ($outstanding <= 0) {
+                continue;
+            }
+
+            $invoiceDt = new DateTime(date('Y-m-d', strtotime($inv->date)));
+            $reportDt  = new DateTime($start_date);
+
+            if ($invoiceDt > $reportDt) {
+                continue;
+            }
+
+            $days = (int)$invoiceDt->diff($reportDt)->days;
+
+            $bucket_label = '>' . $duration;
+            foreach ($buckets as $b) {
+                if ($days >= $b['from'] && $days <= $b['to']) {
+                    $bucket_label = $b['label'];
+                    break;
+                }
+            }
+
+            if (!isset($result[$inv->supplier_id])) {
+                $result[$inv->supplier_id] = [
+                    'supplier_id'   => $inv->supplier_id,
+                    'supplier_name' => $inv->supplier_name,
+                    'supplier_code' => $inv->supplier_code,
+                    'category'      => $inv->category,
+                    'payment_term'  => $inv->payment_term,
+                ];
+                foreach ($buckets as $b) {
+                    $result[$inv->supplier_id][$b['label']] = 0;
+                }
+            }
+            
+            $result[$inv->supplier_id][$bucket_label] += $outstanding;
         }
         
-        //echo '<pre>';print_r($result);exit;
         return $result;
     }
 
