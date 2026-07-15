@@ -760,8 +760,10 @@ class Reports_model extends CI_Model
         }
 
         $warehouse_filter = $this->site->reportWarehouseAndClause($warehouse_id, 's');
+        
+        $sql_at = $start_date . ' 23:59:59';
 
-        // Fetch invoices
+        // ====== SALES INVOICES (with date-filtered payments) ======
         $sql = "
             SELECT 
                 s.id AS sale_id,
@@ -771,13 +773,17 @@ class Reports_model extends CI_Model
                 c.sequence_code AS customer_code,
                 c.sales_agent,
                 s.grand_total,
-                s.paid,
+                (SELECT COALESCE(SUM(sp.amount), 0)
+                 FROM {$this->db->dbprefix('payments')} sp
+                 WHERE sp.sale_id = s.id
+                 AND sp.date <= '{$sql_at}') AS paid,
                 c.payment_term,
                 c.category,
                 c.credit_limit
             FROM sma_sales s
             JOIN sma_companies c ON s.customer_id = c.id
             WHERE s.grand_total > 0 AND s.sale_invoice = 1
+            AND s.date <= '{$sql_at}'
             $customer_filter
             $salesman_filter
             $warehouse_filter
@@ -786,20 +792,15 @@ class Reports_model extends CI_Model
         $invoices = $this->db->query($sql)->result();
 
         $result = [];
-        //echo '<pre>';print_r($invoices);exit;
+        
+        // Process sales invoices
         foreach ($invoices as $inv) {
-            
-           
             $paid = $inv->paid ? $inv->paid : 0;
             $outstanding = round($inv->grand_total - $paid, 2);
-            //echo 'Invoice'. $inv->sale_id . ' Outstanding: '.$outstanding.'<br />';
+            
             if ($outstanding <= 0) {
                 continue;
             }
-
-            /* ============================
-            🔥 FIX STARTS HERE
-            ============================ */
 
             $invoiceDt = new DateTime(date('Y-m-d', strtotime($inv->date)));
             $reportDt  = new DateTime($start_date);
@@ -810,13 +811,6 @@ class Reports_model extends CI_Model
             }
 
             $days = (int)$invoiceDt->diff($reportDt)->days;
-            /*if($inv->sale_id == 4175) {
-                echo "Invoice Date: " . $inv->date . " | Report Date: " . $start_date . "Paid: ". $paid . " | Days: " . $days . "\n";
-                exit;
-            }*/
-            /* ============================
-            🔥 FIX ENDS HERE
-            ============================ */
 
             // Determine bucket
             $bucket_label = '>' . $duration;
@@ -826,7 +820,7 @@ class Reports_model extends CI_Model
                     break;
                 }
             }
-            //echo 'Bucket Label: '. $bucket_label . '<br />';
+
             // Group by customer
             if (!isset($result[$inv->customer_id])) {
                 $result[$inv->customer_id] = [
@@ -844,10 +838,83 @@ class Reports_model extends CI_Model
             }
             
             $result[$inv->customer_id][$bucket_label] += $outstanding;
-            //echo 'Outstanding adding: '. $result[$inv->customer_id][$bucket_label] . '<br /><br />';
+        }
+
+        // ====== SERVICE INVOICES (with date-filtered payments) ======
+        if ($warehouse_id) {
+            $sql = "
+                SELECT 
+                    m.id AS sale_id,
+                    m.date,
+                    m.customer_id,
+                    c.name AS customer_name,
+                    c.sequence_code AS customer_code,
+                    c.sales_agent,
+                    m.payment_amount AS grand_total,
+                    (SELECT COALESCE(SUM(sp.amount), 0)
+                     FROM {$this->db->dbprefix('payments')} sp
+                     WHERE sp.memo_id = m.id
+                     AND sp.date <= '{$sql_at}') AS paid,
+                    0 AS payment_term,
+                    c.category,
+                    c.credit_limit
+                FROM sma_memo m
+                JOIN sma_companies c ON m.customer_id = c.id
+                WHERE m.type = 'serviceinvoice'
+                AND m.customer_id > 0
+                AND m.payment_amount > 0
+                AND m.date <= '{$sql_at}'
+                $customer_filter
+                $salesman_filter
+            ";
+
+            $service_invoices = $this->db->query($sql)->result();
+
+            // Process service invoices
+            foreach ($service_invoices as $inv) {
+                $paid = $inv->paid ? $inv->paid : 0;
+                $outstanding = round($inv->grand_total - $paid, 2);
+                
+                if ($outstanding <= 0) {
+                    continue;
+                }
+
+                $invoiceDt = new DateTime(date('Y-m-d', strtotime($inv->date)));
+                $reportDt  = new DateTime($start_date);
+
+                if ($invoiceDt > $reportDt) {
+                    continue;
+                }
+
+                $days = (int)$invoiceDt->diff($reportDt)->days;
+
+                $bucket_label = '>' . $duration;
+                foreach ($buckets as $b) {
+                    if ($days >= $b['from'] && $days <= $b['to']) {
+                        $bucket_label = $b['label'];
+                        break;
+                    }
+                }
+
+                if (!isset($result[$inv->customer_id])) {
+                    $result[$inv->customer_id] = [
+                        'customer_id'   => $inv->customer_id,
+                        'customer_name' => $inv->customer_name,
+                        'customer_code' => $inv->customer_code,
+                        'sales_agent'   => $inv->sales_agent,
+                        'payment_term'  => $inv->payment_term,
+                        'credit_limit'  => $inv->credit_limit,
+                        'category'      => $inv->category
+                    ];
+                    foreach ($buckets as $b) {
+                        $result[$inv->customer_id][$b['label']] = 0;
+                    }
+                }
+                
+                $result[$inv->customer_id][$bucket_label] += $outstanding;
+            }
         }
         
-        //echo '<pre>';print_r($result);exit;
         return array_values($result);
     }
 
