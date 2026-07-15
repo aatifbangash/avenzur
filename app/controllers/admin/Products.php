@@ -2759,7 +2759,7 @@ class Products extends MY_Controller
 
     public function supplier_balance_descrepencies()
     {
-        $supplier_id = 680;
+        $supplier_id = 855;
 
         $purchase_invoices = $this->db
             ->select('id, reference_no, date, grand_total, grand_deal_discount, paid')
@@ -3245,7 +3245,7 @@ class Products extends MY_Controller
             }
 
             if($payment->added_via === 'auto_script') {
-                $is_match = true; // Ignore auto_script entries for mismatch
+                //$is_match = true; // Ignore auto_script entries for mismatch
                 
             }
             
@@ -3660,18 +3660,19 @@ class Products extends MY_Controller
     }
 
     public function update_customer_outstanding_invoices_payment(){
-        ini_set('display_errors', '1');
+        /*ini_set('display_errors', '1');
         ini_set('display_startup_errors', '1');
-        error_reporting(E_ALL);
+        error_reporting(E_ALL);*/
 
         // Settle customer returns against outstanding invoices
         $unsettled_returns = $this->db
             ->where('status', 'completed')
             ->where('paid < grand_total', null, false)
-            ->where_in('customer_id', [570, 654, 660, 664,668,702,752,788,803])
+            ->where('date >=', '2026-04-10')
+            //->where_in('customer_id', [570, 654, 660, 664,668,702,752,788,803])
             ->get('sma_returns')
             ->result();
-        echo "<pre>";print_r($unsettled_returns);echo "</pre>";exit;
+        //echo "<pre>";print_r($unsettled_returns);echo "</pre>";exit;
         foreach ($unsettled_returns as $return) {
 
             $customer_name = $return->customer;
@@ -3713,7 +3714,7 @@ class Products extends MY_Controller
             $payment_reference_id = $this->add_customer_reference(
                 $allocatable_amount,
                 $return_id,
-                date('Y-m-d H:i:s'),
+                $return->date,
                 'Return settlement against outstanding invoices',
                 $customer_id,
                 null
@@ -3736,7 +3737,7 @@ class Products extends MY_Controller
                 $apply_amount = min($remaining_amount, $outstanding);
 
                 $payment = [
-                    'date'          => date('Y-m-d H:i:s'),
+                    'date'          => $return->date,
                     'sale_id'       => (int) $invoice->id,
                     'return_id'     => $return_id,
                     'reference_no'  => '',
@@ -3758,6 +3759,7 @@ class Products extends MY_Controller
 
             if ($payment_reference_id) {
                 $this->sales_model->update_payment_reference($payment_reference_id, $Journal_details->id);
+                $this->sales_model->update_return_paid($return_id, $total_applied);
             }
 
             echo "Settled Return ID: {$return_id} For Customer ID: {$customer_id} - Total Applied: {$total_applied} against outstanding invoices.<br>";
@@ -3776,6 +3778,10 @@ class Products extends MY_Controller
             $customer_id = $credit_memo->customer_id;
             $remaining_amount = $credit_memo->payment_amount - $credit_memo->used_amount;
 
+            if($credit_memo->type == 'serviceinvoice'){
+                continue;
+            }
+    
             if ($memo_id <= 0 || $customer_id <= 0 || $remaining_amount <= 0) {
                 return false;
             }
@@ -3809,7 +3815,7 @@ class Products extends MY_Controller
             $payment_reference_id = $this->add_customer_reference(
                 $allocatable_amount,
                 $memo_id,
-                date('Y-m-d H:i:s'),
+                $credit_memo->date,
                 'Auto settlement from credit memo #' . $memo_id,
                 $customer_id,
                 null
@@ -3832,7 +3838,7 @@ class Products extends MY_Controller
                 $apply_amount = min($remaining_amount, $outstanding);
 
                 $payment = [
-                    'date'         => date('Y-m-d H:i:s'),
+                    'date'         => $credit_memo->date,
                     'sale_id'      => (int) $invoice->id,
                     'reference_no' => $memo_id,
                     'amount'       => $apply_amount,
