@@ -746,11 +746,18 @@ class Reports_model extends CI_Model
         }
         $buckets[] = ['from' => $prev + 1, 'to' => 99999, 'label' => '>' . $duration];
 
-        // Customer filter
-        $customer_filter = '';
+        // Customer filter (for sales invoices using 's' alias)
+        $customer_filter_sales = '';
         if (!empty($customer_id_array)) {
             $ids = implode(',', array_map('intval', $customer_id_array));
-            $customer_filter = " AND s.customer_id IN ($ids)";
+            $customer_filter_sales = " AND s.customer_id IN ($ids)";
+        }
+
+        // Customer filter (for service invoices using 'm' alias)
+        $customer_filter_memo = '';
+        if (!empty($customer_id_array)) {
+            $ids = implode(',', array_map('intval', $customer_id_array));
+            $customer_filter_memo = " AND m.customer_id IN ($ids)";
         }
 
         // Salesman filter
@@ -784,7 +791,7 @@ class Reports_model extends CI_Model
             JOIN sma_companies c ON s.customer_id = c.id
             WHERE s.grand_total > 0 AND s.sale_invoice = 1
             AND s.date <= '{$sql_at}'
-            $customer_filter
+            $customer_filter_sales
             $salesman_filter
             $warehouse_filter
         ";
@@ -864,7 +871,7 @@ class Reports_model extends CI_Model
                 AND m.customer_id > 0
                 AND m.payment_amount > 0
                 AND m.date <= '{$sql_at}'
-                $customer_filter
+                $customer_filter_memo
                 $salesman_filter
             ";
 

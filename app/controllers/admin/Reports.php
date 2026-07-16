@@ -4463,7 +4463,7 @@ class Reports extends MY_Controller
             $ledger_ids = $this->customerStatementLedgerIdList($supplier_details);
             $supplier_statement = $this->reports_model->getCustomerStatement($start_date, $end_date, $supplier_id, $ledger_ids, $warehouse_id);
             $this->data['statement_ledger_options'] = $this->reports_model->getStatementLedgerOptions($ledger_ids);
-
+            
             // Get customer aging data
             $aging_data = $this->reports_model->getCustomerAgingNew(120, date('Y-m-d'), [$supplier_id], null, $warehouse_id);
 
