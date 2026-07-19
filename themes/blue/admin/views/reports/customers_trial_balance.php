@@ -105,91 +105,96 @@
                             </tr>
                             </thead>
                             <tbody style="text-align:center;">
-                                <?php
-                                    $count = 0;
+<?php
+$count = 0;
 
-                                    $totalObDebit = 0;
-                                    $totalObCredit = 0;
-                                    $totalTrsDebit = 0;
-                                    $totalTrsCredit = 0;
-                                    $totalFinalEndDebit = 0;
-                                    $totalFinalEndCredit = 0;
+$totalObDebit = 0;
+$totalObCredit = 0;
+$totalTrsDebit = 0;
+$totalTrsCredit = 0;
+$totalFinalEndDebit = 0;
+$totalFinalEndCredit = 0;
 
+foreach ($trial_balance as $data) {
 
-                                    foreach ($trial_balance as $data){
-                                        if ($data['trsDebit'] == 0 && $data['trsCredit'] == 0 && $data['obDebit'] == 0 && $data['obCredit'] == 0) continue;
-                                        //sale_total + payment_total
+    $trsDebit  = isset($data['trsDebit']) ? (float)$data['trsDebit'] : 0;
+    $trsCredit = isset($data['trsCredit']) ? (float)$data['trsCredit'] : 0;
+    $obDebit   = isset($data['obDebit']) ? (float)$data['obDebit'] : 0;
+    $obCredit  = isset($data['obCredit']) ? (float)$data['obCredit'] : 0;
 
-                                        // $ob_debit = $data->ob_debit > $data->ob_credit ? $data->ob_debit - $data->ob_credit : 0;
-                                        // $ob_credit = $data->ob_credit > $data->ob_debit ? $data->ob_credit - $data->ob_debit : 0;
+    if ($trsDebit == 0 && $trsCredit == 0 && $obDebit == 0 && $obCredit == 0) {
+        continue;
+    }
 
-                                        // $eb_debit = $ob_debit - $data->trs_credit + $data->trs_debit;
-                                         $eb_credit = $data['obCredit'] + $data['trsCredit'];
-                                         $eb_debit = $data['obDebit'] + $data['trsDebit'];
+    // Net Opening Balance
+    if ($obDebit >= $obCredit) {
+        $openingDebit = $obDebit - $obCredit;
+        $openingCredit = 0;
+    } else {
+        $openingDebit = 0;
+        $openingCredit = $obCredit - $obDebit;
+    }
 
-                                         $finalEndDebit = "0.00";
-                                         $finalEndCredit = "0.00";
-                                         if( $eb_credit >= $eb_debit){
-                                            $finalEndCredit = $eb_credit - $eb_debit;
-                                         }else{
-                                            $finalEndDebit = $eb_debit - $eb_credit;
-                                         }
+    // Ending Balance
+    $endingDebit = $openingDebit + $trsDebit;
+    $endingCredit = $openingCredit + $trsCredit;
 
-                                         $totalObDebit += $data['obDebit'];
-                                         $totalObCredit += $data['obCredit'];
-                                         $totalTrsDebit += $data['trsDebit'];
-                                         $totalTrsCredit += $data['trsCredit'];
-//                                         $totalFinalEndDebit += $finalEndDebit;
-//                                         $totalFinalEndCredit += $finalEndCredit;
+    if ($endingDebit >= $endingCredit) {
+        $finalEndDebit = $endingDebit - $endingCredit;
+        $finalEndCredit = 0;
+    } else {
+        $finalEndDebit = 0;
+        $finalEndCredit = $endingCredit - $endingDebit;
+    }
 
-                                        if (gettype($finalEndDebit) != 'string')
-                                            $totalFinalEndDebit += $finalEndDebit;
+    // Totals
+    $totalObDebit += $openingDebit;
+    $totalObCredit += $openingCredit;
 
-                                        if (gettype($finalEndCredit) != 'string')
-                                            $totalFinalEndCredit += $finalEndCredit;
+    $totalTrsDebit += $trsDebit;
+    $totalTrsCredit += $trsCredit;
 
-                                        $count++;
-                                        ?>
-                                            <tr>
-                                                <td><?= $count; ?></td>
-                                                <td><?= $data['sequence_code']; ?></td>
-                                                <td><?= $data['name']; ?></td>
-                                                <td><?= $data['category']; ?></td>
-                                                <td><?= $data['payment_term'] ?? '-'; ?></td>
-                                                <td><?= $data['credit_limit'] ? number_format($data['credit_limit'], 2, '.', ',') : '-'; ?></td>
-                                                <td><?= $data['obDebit'] > 0 ? number_format($data['obDebit'], 2, '.', ',') : '0.00'; ?></td>
-                                                <td><?= $data['obCredit'] > 0 ? number_format($data['obCredit'], 2, '.', ',') : '0.00'; ?></td>
-                                                <td><?= $data['trsDebit'] > 0 ? number_format($data['trsDebit'], 2, '.', ',') : '0.00'; ?></td>
-                                                <td><?= $data['trsCredit'] >0 ? number_format($data['trsCredit'], 2, '.', ',') : '0.00'; ?></td>
-                                                <td><?= $finalEndDebit > 0 ? number_format($finalEndDebit, 2, '.', ',') : '0.00'; ?></td>
-                                                <td><?= $finalEndCredit > 0 ? number_format($finalEndCredit, 2, '.', ',') : '0.00'; ?></td>
-                                            </tr>
-                                        <?php
-                                    }
-                                ?>
-                                
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <th>&nbsp;</th>
-                                    <th>&nbsp;</th>
-                                    <th>&nbsp;</th>
-                                    <th>&nbsp;</th>
-                                    <th>&nbsp;</th>
-                                    <th>&nbsp;</th>
+    $totalFinalEndDebit += $finalEndDebit;
+    $totalFinalEndCredit += $finalEndCredit;
 
-                                 
-                                    <th class="text-center"><?=number_format($totalObDebit, 2, '.', ',')?></th>
-                                    <th class="text-center"><?=number_format($totalObCredit, 2, '.', ',')?></th>
+    $count++;
+?>
+<tr>
+    <td><?= $count; ?></td>
+    <td><?= $data['sequence_code']; ?></td>
+    <td><?= $data['name']; ?></td>
+    <td><?= $data['category']; ?></td>
+    <td><?= $data['payment_term'] ?? '-'; ?></td>
+    <td><?= !empty($data['credit_limit']) ? number_format($data['credit_limit'], 2, '.', ',') : '-'; ?></td>
 
-                                    <th class="text-center"><?=number_format($totalTrsDebit, 2, '.', ',')?></th>
-                                    <th class="text-center"><?=number_format($totalTrsCredit, 2, '.', ',')?></th>
+    <td><?= number_format($openingDebit, 2, '.', ','); ?></td>
+    <td><?= number_format($openingCredit, 2, '.', ','); ?></td>
 
-                                    <th class="text-center"><?=number_format($totalFinalEndDebit, 2, '.', ',')?></th>
-                                    <th class="text-center"><?= number_format($totalFinalEndCredit, 2, '.', ','); ?></th>
+    <td><?= number_format($trsDebit, 2, '.', ','); ?></td>
+    <td><?= number_format($trsCredit, 2, '.', ','); ?></td>
 
-                                </tr>
-                            </tfoot>
+    <td><?= number_format($finalEndDebit, 2, '.', ','); ?></td>
+    <td><?= number_format($finalEndCredit, 2, '.', ','); ?></td>
+</tr>
+<?php
+}
+?>
+</tbody>
+
+<tfoot>
+<tr>
+    <th colspan="6" class="text-right">Total</th>
+
+    <th class="text-center"><?= number_format($totalObDebit, 2, '.', ','); ?></th>
+    <th class="text-center"><?= number_format($totalObCredit, 2, '.', ','); ?></th>
+
+    <th class="text-center"><?= number_format($totalTrsDebit, 2, '.', ','); ?></th>
+    <th class="text-center"><?= number_format($totalTrsCredit, 2, '.', ','); ?></th>
+
+    <th class="text-center"><?= number_format($totalFinalEndDebit, 2, '.', ','); ?></th>
+    <th class="text-center"><?= number_format($totalFinalEndCredit, 2, '.', ','); ?></th>
+</tr>
+</tfoot>
                         </table>
                     </div>
                 
