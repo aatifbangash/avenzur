@@ -1278,14 +1278,32 @@ class Site extends CI_Model
         )";
 
         if ($warehouse_id) {
-            $wh = (int) $warehouse_id;
+
+            // Warehouse 32 should include warehouse 48 as well
+            if ((int)$warehouse_id === 32) {
+                $warehouseCondition = "IN (32,48)";
+                $warehouseBypassCondition = " = 32";
+            } else {
+                $warehouseCondition = "= " . (int)$warehouse_id;
+            }
+
+            $wh = (int)$warehouse_id;
             $journalSql = $paymentJournalSubquery($wh);
             $memoJournalSql = $memoPaymentJournalSubquery();
+
             return "(
                 (NULLIF({$pid}, '') IS NOT NULL AND NULLIF({$pid}, 0) IS NOT NULL
-                    AND {$pid} IN (SELECT id FROM {$purchases} WHERE warehouse_id = {$wh}))
+                    AND {$pid} IN (
+                        SELECT id
+                        FROM {$purchases}
+                        WHERE warehouse_id {$warehouseBypassCondition}
+                    ))
                 OR (NULLIF({$rsid}, '') IS NOT NULL AND NULLIF({$rsid}, 0) IS NOT NULL
-                    AND {$rsid} IN (SELECT id FROM {$returns} WHERE warehouse_id = {$wh}))
+                    AND {$rsid} IN (
+                        SELECT id
+                        FROM {$returns}
+                        WHERE warehouse_id {$warehouseCondition}
+                    ))
                 OR {$eid} IN ({$journalSql})
                 OR {$eid} IN ({$memoJournalSql})
                 OR {$nonWarehouseLinked}
