@@ -1124,7 +1124,7 @@ class Reports_model extends CI_Model
                     ae.rsid AS supplier_return_id,
                     ae.rid   AS return_id,
                     ae.memo_id,
-                    pr.id   AS payment_id,
+                    pr.payment_id  AS payment_id,
                     m.reference_no AS memo_note,
                     (SELECT SUM(ei2.amount)
                      FROM sma_accounts_entryitems ei2
@@ -1134,7 +1134,12 @@ class Reports_model extends CI_Model
                 FROM sma_accounts_entryitems aei
                 JOIN sma_accounts_entries ae  ON ae.id  = aei.entry_id
                 JOIN sma_accounts_ledgers  al ON al.id  = aei.ledger_id
-                LEFT JOIN sma_payment_reference pr ON pr.journal_id = ae.id
+                LEFT JOIN (
+                    SELECT journal_id, MIN(id) payment_id
+                    FROM sma_payment_reference
+                    GROUP BY journal_id
+                ) pr
+                ON pr.journal_id = ae.id
                 LEFT JOIN sma_memo m ON m.id = ae.memo_id
                 WHERE aei.ledger_id = ?
                 AND ae.date >= ?
