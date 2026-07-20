@@ -2759,7 +2759,7 @@ class Products extends MY_Controller
 
     public function supplier_balance_descrepencies()
     {
-        $supplier_id = 855;
+        $supplier_id = 680;
 
         $purchase_invoices = $this->db
             ->select('id, reference_no, date, grand_total, grand_deal_discount, paid')
@@ -3431,6 +3431,803 @@ class Products extends MY_Controller
         }
         echo '</div>';
         
+    }
+
+    public function supplier_tb_gl_tb_comparison_report(){
+        $start_date = '2020-01-01';
+        $end_date = '2026-06-30';
+        $warehouse_id = 32;
+
+        echo '<style>
+            body { font-family: Arial, sans-serif; }
+            .header { background: #333; color: white; padding: 15px; margin: 20px 0; border-radius: 5px; }
+            .mismatch { background: #ffcccc; color: #cc0000; padding: 10px; margin: 10px 0; border-left: 4px solid #cc0000; }
+            .match { background: #ccffcc; color: #009900; padding: 10px; margin: 10px 0; border-left: 4px solid #009900; }
+            table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+            table th, table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            table th { background: #f0f0f0; font-weight: bold; }
+            .number { text-align: right; }
+            .summary-table { width: 100%; margin: 30px 0; background: #f9f9f9; }
+        </style>';
+        
+        echo '<div class="header"><h2>📊 TRIAL BALANCE COMPARISON: Supplier TB vs GL TB</h2>';
+        echo '<p>Period: ' . $start_date . ' to ' . $end_date . '</p>';
+        echo '</div>';
+
+        // ============================================================
+        // 1. CUSTOMER TRIAL BALANCE (by customer ledger)
+        // ============================================================
+        echo '<h3>1️⃣ SUPPLIER TRIAL BALANCE (Grouped by Supplier)</h3>';
+        
+        $supplier_tb_query = "
+            SELECT sma_companies.id, sma_companies.name, sma_companies.category, 
+            sma_companies.sequence_code, sma_companies.payment_term, 
+            sma_companies.credit_limit, sma_companies.ledger_account,
+            SUM(CASE WHEN sma_accounts_entryitems.dc = 'D' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_debit, 
+            SUM(CASE WHEN sma_accounts_entryitems.dc = 'C' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_credit 
+            FROM sma_accounts_entries 
+            JOIN sma_accounts_entryitems ON sma_accounts_entries.id = sma_accounts_entryitems.entry_id 
+            JOIN sma_companies ON sma_accounts_entries.supplier_id = sma_companies.id 
+            WHERE DATE(sma_accounts_entries.date) >= '{$start_date}' AND DATE(sma_accounts_entries.date) <= '{$end_date}' 
+            AND sma_accounts_entries.supplier_id IS NOT NULL 
+            AND (sma_accounts_entryitems.ledger_id = sma_companies.ledger_account OR ( NULLIF(TRIM(IFNULL(sma_companies.old_ledgers, '')), '') IS NOT NULL AND FIND_IN_SET( CAST(sma_accounts_entryitems.ledger_id AS CHAR), REPLACE(REPLACE(IFNULL(sma_companies.old_ledgers, ''), ' ', ''), ', ', ',') ) > 0 )) 
+            AND ( (NULLIF(sma_accounts_entries.pid, '') IS NOT NULL 
+            AND NULLIF(sma_accounts_entries.pid, 0) IS NOT NULL 
+            AND sma_accounts_entries.pid IN ( SELECT id FROM sma_purchases WHERE warehouse_id = {$warehouse_id} )) OR (NULLIF(sma_accounts_entries.rsid, '') IS NOT NULL AND NULLIF(sma_accounts_entries.rsid, 0) IS NOT NULL AND sma_accounts_entries.rsid IN ( SELECT id FROM sma_returns_supplier WHERE warehouse_id = {$warehouse_id} )) OR sma_accounts_entries.id IN (SELECT DISTINCT pr.journal_id 
+            FROM sma_payment_reference pr 
+            INNER JOIN sma_payments pay ON pay.payment_id = pr.id AND pay.purchase_id IS NOT NULL AND pay.sale_id > 0 
+            INNER JOIN sma_purchases p ON p.id = pay.purchase_id WHERE pr.journal_id IS NOT NULL AND p.warehouse_id = {$warehouse_id}) OR sma_accounts_entries.id IN (SELECT DISTINCT pr.journal_id FROM sma_payment_reference pr INNER JOIN sma_payments pay ON pay.payment_id = pr.id WHERE pr.journal_id IS NOT NULL AND NULLIF(pay.memo_id, '') IS NOT NULL AND NULLIF(pay.memo_id, 0) IS NOT NULL) OR (NULLIF(sma_accounts_entries.memo_id, '') IS NOT NULL AND NULLIF(sma_accounts_entries.memo_id, 0) IS NOT NULL) OR (sma_accounts_entries.transaction_type = 'supplieradvance') ) 
+            GROUP BY sma_accounts_entries.supplier_id, sma_companies.id, sma_companies.name, sma_companies.ledger_account
+            ORDER BY sma_companies.name ASC
+        ";
+        
+        $supplier_tb = $this->db->query($supplier_tb_query)->result();
+        echo '<table>';
+        echo '<tr><th>SUPPLIER ID</th><th>SUPPLIER Name</th><th>Ledger Account</th><th>Total Debit</th><th>Total Credit</th><th>Net Balance</th></tr>';
+        
+        $supplier_total_debit = 0;
+        $supplier_total_credit = 0;
+        $supplier_ledger_map = [];
+        
+        foreach ($supplier_tb as $row) {
+            $debit = (float)$row->total_debit;
+            $credit = (float)$row->total_credit;
+            $net = $debit - $credit;
+            
+            $supplier_total_debit += $debit;
+            $supplier_total_credit += $credit;
+            $supplier_ledger_map[$row->ledger_account][] = [
+                'customer_id' => $row->id,
+                'name' => $row->name,
+                'debit' => $debit,
+                'credit' => $credit,
+                'net' => $net
+            ];
+            
+            echo '<tr>';
+            echo '<td>' . $row->id . '</td>';
+            echo '<td>' . $row->name . '</td>';
+            echo '<td>' . $row->ledger_account . '</td>';
+            echo '<td class="number">' . number_format($debit, 2) . '</td>';
+            echo '<td class="number">' . number_format($credit, 2) . '</td>';
+            echo '<td class="number"><strong>' . number_format($net, 2) . '</strong></td>';
+            echo '</tr>';
+        }
+        
+        echo '<tr style="background:#ffffcc;font-weight:bold;">';
+        echo '<td colspan="3">SUPPLIER TB TOTAL</td>';
+        echo '<td class="number">' . number_format($supplier_total_debit, 2) . '</td>';
+        echo '<td class="number">' . number_format($supplier_total_credit, 2) . '</td>';
+        echo '<td class="number">' . number_format($supplier_total_debit - $supplier_total_credit, 2) . '</td>';
+        echo '</tr>';
+        echo '</table>';
+
+        // ============================================================
+        // 2. GL TRIAL BALANCE (by ledger)
+        // ============================================================
+        echo '<h3>2️⃣ GL TRIAL BALANCE (Grouped by Ledger)</h3>';
+        
+        // Get the list of customer ledgers from the customer TB
+        $supplier_ledger_ids = array_keys($supplier_ledger_map);
+        
+        if (empty($supplier_ledger_ids)) {
+            echo '<p style="color:red;">No Supplier ledgers found in supplier TB.</p>';
+            return;
+        }
+        
+        $ledger_ids_str = implode(',', array_map('intval', $supplier_ledger_ids));
+        
+        $gl_tb_query = "
+            SELECT `al`.`id`, `al`.`name`, `al`.`code`, 
+            COALESCE(SUM(ei.amount), 0) AS total_amount, `ei`.`dc` 
+            FROM `sma_accounts_ledgers` `al` 
+            JOIN `sma_accounts_entryitems` `ei` ON `ei`.`ledger_id` = `al`.`id` 
+            JOIN `sma_accounts_entries` `e` ON `e`.`id` = `ei`.`entry_id` 
+            WHERE DATE(e.date) >= '{$start_date}' AND DATE(e.date) <= '{$end_date}' 
+            AND al.id IN ({$ledger_ids_str})
+            GROUP BY `al`.`id`, `ei`.`dc` 
+            ORDER BY `al`.`code` ASC
+        ";
+        
+        $gl_tb = $this->db->query($gl_tb_query)->result();
+        
+        echo '<table>';
+        echo '<tr><th>Ledger ID</th><th>Ledger Name</th><th>Code</th><th>Type</th><th>Amount</th></tr>';
+        
+        $gl_total_by_ledger = [];
+        $gl_total_debit = 0;
+        $gl_total_credit = 0;
+        
+        foreach ($gl_tb as $row) {
+            $amount = (float)$row->total_amount;
+            $dc = $row->dc;
+            
+            if (!isset($gl_total_by_ledger[$row->id])) {
+                $gl_total_by_ledger[$row->id] = ['name' => $row->name, 'code' => $row->code, 'debit' => 0, 'credit' => 0];
+            }
+            
+            if ($dc === 'D') {
+                $gl_total_by_ledger[$row->id]['debit'] += $amount;
+                $gl_total_debit += $amount;
+            } else {
+                $gl_total_by_ledger[$row->id]['credit'] += $amount;
+                $gl_total_credit += $amount;
+            }
+            
+            echo '<tr>';
+            echo '<td>' . $row->id . '</td>';
+            echo '<td>' . $row->name . '</td>';
+            echo '<td>' . $row->code . '</td>';
+            echo '<td>' . ($dc === 'D' ? 'DEBIT' : 'CREDIT') . '</td>';
+            echo '<td class="number">' . number_format($amount, 2) . '</td>';
+            echo '</tr>';
+        }
+        
+        echo '<tr style="background:#ffffcc;font-weight:bold;">';
+        echo '<td colspan="3">GL TB TOTAL</td>';
+        echo '<td class="number">Debit: ' . number_format($gl_total_debit, 2) . ' / Credit: ' . number_format($gl_total_credit, 2) . '</td>';
+        echo '<td></td>';
+        echo '</tr>';
+        echo '</table>';
+
+        // ============================================================
+        // 3. DETAILED LEDGER COMPARISON
+        // ============================================================
+        echo '<h3>3️⃣ DETAILED LEDGER-BY-LEDGER COMPARISON</h3>';
+        
+        echo '<table>';
+        echo '<tr style="background:#f0f0f0;font-weight:bold;">';
+        echo '<th>Ledger ID</th>';
+        echo '<th>Ledger Name</th>';
+        echo '<th colspan="2">Supplier TB</th>';
+        echo '<th colspan="2">GL TB</th>';
+        echo '<th colspan="2">Difference</th>';
+        echo '<th>Status</th>';
+        echo '</tr>';
+        echo '<tr style="background:#f0f0f0;font-weight:bold;">';
+        echo '<th></th><th></th>';
+        echo '<th>Debit</th><th>Credit</th>';
+        echo '<th>Debit</th><th>Credit</th>';
+        echo '<th>Debit</th><th>Credit</th>';
+        echo '<th></th>';
+        echo '</tr>';
+        
+        $total_diff_debit = 0;
+        $total_diff_credit = 0;
+        $mismatches = [];
+        
+        // Combine all ledger IDs from both sources
+        $all_ledger_ids = array_unique(array_merge(array_keys($supplier_ledger_map), array_keys($gl_total_by_ledger)));
+        sort($all_ledger_ids);
+        
+        foreach ($all_ledger_ids as $ledger_id) {
+            $cust_debit = 0;
+            $cust_credit = 0;
+            $cust_name = '';
+            
+            if (isset($supplier_ledger_map[$ledger_id])) {
+                foreach ($supplier_ledger_map[$ledger_id] as $cust_row) {
+                    $cust_debit += $cust_row['debit'];
+                    $cust_credit += $cust_row['credit'];
+                }
+                $cust_name = $supplier_ledger_map[$ledger_id][0]['name'] ?? 'Multiple Suppliers';
+            }
+            
+            $gl_debit = 0;
+            $gl_credit = 0;
+            $gl_name = '';
+            
+            if (isset($gl_total_by_ledger[$ledger_id])) {
+                $gl_debit = $gl_total_by_ledger[$ledger_id]['debit'];
+                $gl_credit = $gl_total_by_ledger[$ledger_id]['credit'];
+                $gl_name = $gl_total_by_ledger[$ledger_id]['name'];
+            }
+            
+            $diff_debit = $gl_debit - $cust_debit;
+            $diff_credit = $gl_credit - $cust_credit;
+            $total_diff_debit += $diff_debit;
+            $total_diff_credit += $diff_credit;
+            
+            $has_diff = (abs($diff_debit) > 0.01 || abs($diff_credit) > 0.01);
+            
+            if ($has_diff) {
+                $mismatches[] = [
+                    'ledger_id' => $ledger_id,
+                    'ledger_name' => $gl_name ?: $cust_name,
+                    'diff_debit' => $diff_debit,
+                    'diff_credit' => $diff_credit
+                ];
+            }
+            
+            $row_style = $has_diff ? 'background:#ffe6e6;' : '';
+            
+            echo '<tr style="' . $row_style . '">';
+            echo '<td>' . $ledger_id . '</td>';
+            echo '<td>' . ($gl_name ?: $cust_name) . '</td>';
+            echo '<td class="number">' . number_format($cust_debit, 2) . '</td>';
+            echo '<td class="number">' . number_format($cust_credit, 2) . '</td>';
+            echo '<td class="number">' . number_format($gl_debit, 2) . '</td>';
+            echo '<td class="number">' . number_format($gl_credit, 2) . '</td>';
+            echo '<td class="number" style="color:' . (abs($diff_debit) > 0.01 ? 'red' : 'green') . ';">' . number_format($diff_debit, 2) . '</td>';
+            echo '<td class="number" style="color:' . (abs($diff_credit) > 0.01 ? 'red' : 'green') . ';">' . number_format($diff_credit, 2) . '</td>';
+            echo '<td>' . ($has_diff ? '<span style="color:red;">⚠️ MISMATCH</span>' : '<span style="color:green;">✓ Match</span>') . '</td>';
+            echo '</tr>';
+        }
+        
+        echo '<tr style="background:#ffffcc;font-weight:bold;">';
+        echo '<td colspan="2">TOTAL DIFFERENCE</td>';
+        echo '<td colspan="2"></td>';
+        echo '<td colspan="2"></td>';
+        echo '<td class="number" style="background:' . (abs($total_diff_debit) > 0.01 ? '#ffcccc' : '#ccffcc') . ';">' . number_format($total_diff_debit, 2) . '</td>';
+        echo '<td class="number" style="background:' . (abs($total_diff_credit) > 0.01 ? '#ffcccc' : '#ccffcc') . ';">' . number_format($total_diff_credit, 2) . '</td>';
+        echo '<td></td>';
+        echo '</tr>';
+        echo '</table>';
+
+        // ============================================================
+        // 4. SUMMARY & DRILL-DOWN
+        // ============================================================
+        echo '<h3>4️⃣ MISMATCH SUMMARY</h3>';
+        
+        if (empty($mismatches)) {
+            echo '<div class="match"><strong>✅ NO MISMATCHES FOUND:</strong> SUPPLIER TB and GL TB are perfectly balanced!</div>';
+        } else {
+            echo '<div class="mismatch"><strong>⚠️ MISMATCHES FOUND:</strong> ' . count($mismatches) . ' ledger(s) have discrepancies</div>';
+            
+            echo '<table>';
+            echo '<tr><th>Ledger ID</th><th>Ledger Name</th><th>Debit Diff</th><th>Credit Diff</th><th>Total Diff</th></tr>';
+            
+            $grand_total_diff = 0;
+            foreach ($mismatches as $mismatch) {
+                $total_diff = abs($mismatch['diff_debit']) + abs($mismatch['diff_credit']);
+                $grand_total_diff += $total_diff;
+                
+                echo '<tr style="background:#ffe6e6;">';
+                echo '<td>' . $mismatch['ledger_id'] . '</td>';
+                echo '<td>' . $mismatch['ledger_name'] . '</td>';
+                echo '<td class="number" style="color:red;">' . number_format($mismatch['diff_debit'], 2) . '</td>';
+                echo '<td class="number" style="color:red;">' . number_format($mismatch['diff_credit'], 2) . '</td>';
+                echo '<td class="number"><strong>' . number_format($total_diff, 2) . '</strong></td>';
+                echo '</tr>';
+            }
+            
+            echo '<tr style="background:#ffcccc;font-weight:bold;">';
+            echo '<td colspan="4">GRAND TOTAL DIFFERENCE</td>';
+            echo '<td class="number">' . number_format($grand_total_diff, 2) . '</td>';
+            echo '</tr>';
+            echo '</table>';
+            
+            // ============================================================
+            // 5. DRILL-DOWN INTO MISMATCHED LEDGERS
+            // ============================================================
+            echo '<h3>5️⃣ DETAILED ENTRIES FOR MISMATCHED LEDGERS</h3>';
+            
+            foreach ($mismatches as $mismatch) {
+                $ledger_id = (int)$mismatch['ledger_id'];
+                
+                echo '<div style="border:2px solid #ff0000;padding:15px;margin:20px 0;border-radius:5px;background:#fff5f5;">';
+                echo '<h4 style="color:#cc0000;">❌ Ledger ID: ' . $ledger_id . ' - ' . $mismatch['ledger_name'] . '</h4>';
+                echo '<p><strong>Debit Difference:</strong> ' . number_format($mismatch['diff_debit'], 2) . ' | <strong>Credit Difference:</strong> ' . number_format($mismatch['diff_credit'], 2) . '</p>';
+                
+                // Show GL entries that DON'T meet Customer TB filter conditions (PROBLEM ENTRIES)
+                echo '<h5 style="background:#ffcccc;padding:8px;">🔴 PROBLEM ENTRIES (In GL but NOT in Supplier TB)</h5>';
+                
+                $problem_query = "
+                    SELECT e.id, e.date, e.supplier_id, e.pid, e.rsid, e.memo_id, 
+                    c.name as customer_name,
+                    SUM(ei.amount) as total_amount,
+                    GROUP_CONCAT(DISTINCT ei.dc ORDER BY ei.dc) as dcs,
+                    CASE 
+                        WHEN e.pid > 0 THEN 'Purchase'
+                        WHEN e.rsid > 0 THEN 'Return'
+                        WHEN e.memo_id > 0 THEN 'Memo'
+                        ELSE 'Other'
+                    END as entry_type
+                    FROM sma_accounts_entries e
+                    JOIN sma_accounts_entryitems ei ON ei.entry_id = e.id
+                    LEFT JOIN sma_companies c ON e.supplier_id = c.id
+                    WHERE ei.ledger_id = {$ledger_id}
+                    AND DATE(e.date) >= '{$start_date}' AND DATE(e.date) <= '{$end_date}'
+                    AND e.supplier_id IS NOT NULL
+                    AND NOT (
+                        (NULLIF(e.pid, '') IS NOT NULL AND NULLIF(e.pid, 0) IS NOT NULL AND e.pid IN (SELECT id FROM sma_purchases WHERE warehouse_id = {$warehouse_id}))
+                        OR (NULLIF(e.rsid, '') IS NOT NULL AND NULLIF(e.rsid, 0) IS NOT NULL AND e.rsid IN (SELECT id FROM sma_returns_supplier WHERE warehouse_id = {$warehouse_id}))
+                        OR e.id IN (SELECT DISTINCT pr.journal_id FROM sma_payment_reference pr INNER JOIN sma_payments pay ON pay.payment_id = pr.id AND pay.purchase_id IS NOT NULL AND pay.purchase_id > 0 INNER JOIN sma_purchases p ON p.id = pay.purchase_id WHERE pr.journal_id IS NOT NULL AND p.warehouse_id = {$warehouse_id})
+                        OR e.id IN (SELECT DISTINCT pr.journal_id FROM sma_payment_reference pr INNER JOIN sma_payments pay ON pay.payment_id = pr.id WHERE pr.journal_id IS NOT NULL AND NULLIF(pay.memo_id, '') IS NOT NULL AND NULLIF(pay.memo_id, 0) IS NOT NULL)
+                        OR (NULLIF(e.memo_id, '') IS NOT NULL AND NULLIF(e.memo_id, 0) IS NOT NULL)
+                        OR e.transaction_type = 'supplieradvance'
+                    )
+                    GROUP BY e.id
+                    ORDER BY e.date DESC
+                ";
+                
+                $problem_results = $this->db->query($problem_query)->result();
+                
+                if (empty($problem_results)) {
+                    echo '<p style="color:green;"><strong>✓ No problem entries found (all GL entries meet Supplier TB filter conditions)</strong></p>';
+                } else {
+                    echo '<p style="color:red;"><strong>⚠️ Found ' . count($problem_results) . ' problem entry/entries:</strong></p>';
+                    echo '<table style="font-size:12px;background:#fffafb;">';
+                    echo '<tr style="background:#ff9999;color:white;font-weight:bold;">';
+                    echo '<th>Entry ID</th><th>Date</th><th>Customer</th><th>Type</th><th>Amount (D/C)</th><th>Reason Excluded</th>';
+                    echo '</tr>';
+                    
+                    $problem_total = 0;
+                    foreach ($problem_results as $entry) {
+                        $amount = (float)$entry->total_amount;
+                        $problem_total += $amount;
+                        
+                        // Determine why this entry is excluded
+                        $reasons = [];
+                        if (empty($entry->sid) || $entry->sid <= 0) {
+                            if (empty($entry->rid) || $entry->rid <= 0) {
+                                if (empty($entry->memo_id) || $entry->memo_id <= 0) {
+                                    if ($entry->entry_type === 'Other' && $entry->transaction_type !== 'supplieradvance') {
+                                        $reasons[] = 'No linked sale/return/memo/advance';
+                                    }
+                                }
+                            }
+                        }
+                        if ($entry->entry_type === 'Purchase' && !in_array($entry->warehouse_id ?? 32, [$warehouse_id])) {
+                            $reasons[] = 'Purchase not in warehouse ' . $warehouse_id;
+                        }
+                        if ($entry->entry_type === 'Return' && !in_array($entry->warehouse_id ?? 32, [$warehouse_id])) {
+                            $reasons[] = 'Return not in warehouse ' . $warehouse_id;
+                        }
+                        
+                        $reason_text = !empty($reasons) ? implode(' | ', $reasons) : 'Does not meet filter criteria';
+                        
+                        echo '<tr style="background:#ffe6e6;">';
+                        echo '<td><strong>' . $entry->id . '</strong></td>';
+                        echo '<td>' . date('Y-m-d', strtotime($entry->date)) . '</td>';
+                        echo '<td>' . ($entry->customer_name ?: 'N/A (No Customer Linked)') . '</td>';
+                        echo '<td>' . $entry->entry_type . '</td>';
+                        echo '<td class="number"><strong style="color:' . ($amount > 0 ? 'red' : 'blue') . ';">' . ($amount > 0 ? 'D: ' : 'C: ') . number_format(abs($amount), 2) . '</strong></td>';
+                        echo '<td style="color:red;"><strong>' . $reason_text . '</strong></td>';
+                        echo '</tr>';
+                    }
+                    
+                    echo '<tr style="background:#ffcccc;font-weight:bold;color:red;">';
+                    echo '<td colspan="4">💥 PROBLEM ENTRIES TOTAL</td>';
+                    echo '<td class="number"><strong>' . number_format($problem_total, 2) . '</strong></td>';
+                    echo '<td></td>';
+                    echo '</tr>';
+                    echo '</table>';
+                }
+                
+                echo '</div>';
+            }
+        }
+        
+        echo '<hr>';
+        echo '<div style="padding:15px;background:#f9f9f9;border-radius:5px;margin-top:20px;">';
+        echo '<h3>📌 SUMMARY</h3>';
+        echo '<p><strong>Customer TB Total Debit:</strong> ' . number_format($supplier_total_debit, 2) . '</p>';
+        echo '<p><strong>Customer TB Total Credit:</strong> ' . number_format($supplier_total_credit, 2) . '</p>';
+        echo '<p><strong>GL TB Total Debit:</strong> ' . number_format($gl_total_debit, 2) . '</p>';
+        echo '<p><strong>GL TB Total Credit:</strong> ' . number_format($gl_total_credit, 2) . '</p>';
+        echo '<p><strong>Total Debit Difference:</strong> <span style="color:' . (abs($total_diff_debit) > 0.01 ? 'red' : 'green') . ';"><strong>' . number_format($total_diff_debit, 2) . '</strong></span></p>';
+        echo '<p><strong>Total Credit Difference:</strong> <span style="color:' . (abs($total_diff_credit) > 0.01 ? 'red' : 'green') . ';"><strong>' . number_format($total_diff_credit, 2) . '</strong></span></p>';
+        echo '</div>';
+    }
+
+    public function customer_tb_gl_tb_comparison_report(){
+        $start_date = '2020-01-01';
+        $end_date = '2026-06-30';
+        $warehouse_id = 32;
+        
+        echo '<style>
+            body { font-family: Arial, sans-serif; }
+            .header { background: #333; color: white; padding: 15px; margin: 20px 0; border-radius: 5px; }
+            .mismatch { background: #ffcccc; color: #cc0000; padding: 10px; margin: 10px 0; border-left: 4px solid #cc0000; }
+            .match { background: #ccffcc; color: #009900; padding: 10px; margin: 10px 0; border-left: 4px solid #009900; }
+            table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+            table th, table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            table th { background: #f0f0f0; font-weight: bold; }
+            .number { text-align: right; }
+            .summary-table { width: 100%; margin: 30px 0; background: #f9f9f9; }
+        </style>';
+        
+        echo '<div class="header"><h2>📊 TRIAL BALANCE COMPARISON: Customer TB vs GL TB</h2>';
+        echo '<p>Period: ' . $start_date . ' to ' . $end_date . '</p>';
+        echo '</div>';
+        
+        // ============================================================
+        // 1. CUSTOMER TRIAL BALANCE (by customer ledger)
+        // ============================================================
+        echo '<h3>1️⃣ CUSTOMER TRIAL BALANCE (Grouped by Customer)</h3>';
+        
+        $customer_tb_query = "
+            SELECT sma_companies.id, sma_companies.name, sma_companies.category, 
+            sma_companies.sequence_code, sma_companies.payment_term, 
+            sma_companies.credit_limit, sma_companies.ledger_account,
+            SUM(CASE WHEN sma_accounts_entryitems.dc = 'D' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_debit, 
+            SUM(CASE WHEN sma_accounts_entryitems.dc = 'C' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_credit 
+            FROM sma_accounts_entries 
+            JOIN sma_accounts_entryitems ON sma_accounts_entries.id = sma_accounts_entryitems.entry_id 
+            JOIN sma_companies ON sma_accounts_entries.customer_id = sma_companies.id 
+            WHERE DATE(sma_accounts_entries.date) >= '{$start_date}' AND DATE(sma_accounts_entries.date) <= '{$end_date}' 
+            AND sma_accounts_entries.customer_id IS NOT NULL 
+            AND (sma_accounts_entryitems.ledger_id = sma_companies.ledger_account OR ( NULLIF(TRIM(IFNULL(sma_companies.old_ledgers, '')), '') IS NOT NULL AND FIND_IN_SET( CAST(sma_accounts_entryitems.ledger_id AS CHAR), REPLACE(REPLACE(IFNULL(sma_companies.old_ledgers, ''), ' ', ''), ', ', ',') ) > 0 )) 
+            AND ( (NULLIF(sma_accounts_entries.sid, '') IS NOT NULL 
+            AND NULLIF(sma_accounts_entries.sid, 0) IS NOT NULL 
+            AND sma_accounts_entries.sid IN ( SELECT id FROM sma_sales WHERE warehouse_id = {$warehouse_id} )) OR (NULLIF(sma_accounts_entries.rid, '') IS NOT NULL AND NULLIF(sma_accounts_entries.rid, 0) IS NOT NULL AND sma_accounts_entries.rid IN ( SELECT id FROM sma_returns WHERE warehouse_id = {$warehouse_id} )) OR sma_accounts_entries.id IN (SELECT DISTINCT pr.journal_id 
+            FROM sma_payment_reference pr 
+            INNER JOIN sma_payments pay ON pay.payment_id = pr.id AND pay.sale_id IS NOT NULL AND pay.sale_id > 0 
+            INNER JOIN sma_sales s ON s.id = pay.sale_id WHERE pr.journal_id IS NOT NULL AND s.warehouse_id = {$warehouse_id}) OR sma_accounts_entries.id IN (SELECT DISTINCT pr.journal_id FROM sma_payment_reference pr INNER JOIN sma_payments pay ON pay.payment_id = pr.id WHERE pr.journal_id IS NOT NULL AND NULLIF(pay.memo_id, '') IS NOT NULL AND NULLIF(pay.memo_id, 0) IS NOT NULL) OR (NULLIF(sma_accounts_entries.memo_id, '') IS NOT NULL AND NULLIF(sma_accounts_entries.memo_id, 0) IS NOT NULL) OR (sma_accounts_entries.transaction_type = 'customeradvance') ) 
+            GROUP BY sma_accounts_entries.customer_id, sma_companies.id, sma_companies.name, sma_companies.ledger_account
+            ORDER BY sma_companies.name ASC
+        ";
+        
+        $customer_tb = $this->db->query($customer_tb_query)->result();
+        
+        echo '<table>';
+        echo '<tr><th>Customer ID</th><th>Customer Name</th><th>Ledger Account</th><th>Total Debit</th><th>Total Credit</th><th>Net Balance</th></tr>';
+        
+        $customer_total_debit = 0;
+        $customer_total_credit = 0;
+        $customer_ledger_map = [];
+        
+        foreach ($customer_tb as $row) {
+            $debit = (float)$row->total_debit;
+            $credit = (float)$row->total_credit;
+            $net = $debit - $credit;
+            
+            $customer_total_debit += $debit;
+            $customer_total_credit += $credit;
+            $customer_ledger_map[$row->ledger_account][] = [
+                'customer_id' => $row->id,
+                'name' => $row->name,
+                'debit' => $debit,
+                'credit' => $credit,
+                'net' => $net
+            ];
+            
+            echo '<tr>';
+            echo '<td>' . $row->id . '</td>';
+            echo '<td>' . $row->name . '</td>';
+            echo '<td>' . $row->ledger_account . '</td>';
+            echo '<td class="number">' . number_format($debit, 2) . '</td>';
+            echo '<td class="number">' . number_format($credit, 2) . '</td>';
+            echo '<td class="number"><strong>' . number_format($net, 2) . '</strong></td>';
+            echo '</tr>';
+        }
+        
+        echo '<tr style="background:#ffffcc;font-weight:bold;">';
+        echo '<td colspan="3">CUSTOMER TB TOTAL</td>';
+        echo '<td class="number">' . number_format($customer_total_debit, 2) . '</td>';
+        echo '<td class="number">' . number_format($customer_total_credit, 2) . '</td>';
+        echo '<td class="number">' . number_format($customer_total_debit - $customer_total_credit, 2) . '</td>';
+        echo '</tr>';
+        echo '</table>';
+        
+        // ============================================================
+        // 2. GL TRIAL BALANCE (by ledger)
+        // ============================================================
+        echo '<h3>2️⃣ GL TRIAL BALANCE (Grouped by Ledger)</h3>';
+        
+        // Get the list of customer ledgers from the customer TB
+        $customer_ledger_ids = array_keys($customer_ledger_map);
+        
+        if (empty($customer_ledger_ids)) {
+            echo '<p style="color:red;">No customer ledgers found in customer TB.</p>';
+            return;
+        }
+        
+        $ledger_ids_str = implode(',', array_map('intval', $customer_ledger_ids));
+        
+        $gl_tb_query = "
+            SELECT `al`.`id`, `al`.`name`, `al`.`code`, 
+            COALESCE(SUM(ei.amount), 0) AS total_amount, `ei`.`dc` 
+            FROM `sma_accounts_ledgers` `al` 
+            JOIN `sma_accounts_entryitems` `ei` ON `ei`.`ledger_id` = `al`.`id` 
+            JOIN `sma_accounts_entries` `e` ON `e`.`id` = `ei`.`entry_id` 
+            WHERE DATE(e.date) >= '{$start_date}' AND DATE(e.date) <= '{$end_date}' 
+            AND al.id IN ({$ledger_ids_str})
+            GROUP BY `al`.`id`, `ei`.`dc` 
+            ORDER BY `al`.`code` ASC
+        ";
+        
+        $gl_tb = $this->db->query($gl_tb_query)->result();
+        
+        echo '<table>';
+        echo '<tr><th>Ledger ID</th><th>Ledger Name</th><th>Code</th><th>Type</th><th>Amount</th></tr>';
+        
+        $gl_total_by_ledger = [];
+        $gl_total_debit = 0;
+        $gl_total_credit = 0;
+        
+        foreach ($gl_tb as $row) {
+            $amount = (float)$row->total_amount;
+            $dc = $row->dc;
+            
+            if (!isset($gl_total_by_ledger[$row->id])) {
+                $gl_total_by_ledger[$row->id] = ['name' => $row->name, 'code' => $row->code, 'debit' => 0, 'credit' => 0];
+            }
+            
+            if ($dc === 'D') {
+                $gl_total_by_ledger[$row->id]['debit'] += $amount;
+                $gl_total_debit += $amount;
+            } else {
+                $gl_total_by_ledger[$row->id]['credit'] += $amount;
+                $gl_total_credit += $amount;
+            }
+            
+            echo '<tr>';
+            echo '<td>' . $row->id . '</td>';
+            echo '<td>' . $row->name . '</td>';
+            echo '<td>' . $row->code . '</td>';
+            echo '<td>' . ($dc === 'D' ? 'DEBIT' : 'CREDIT') . '</td>';
+            echo '<td class="number">' . number_format($amount, 2) . '</td>';
+            echo '</tr>';
+        }
+        
+        echo '<tr style="background:#ffffcc;font-weight:bold;">';
+        echo '<td colspan="3">GL TB TOTAL</td>';
+        echo '<td class="number">Debit: ' . number_format($gl_total_debit, 2) . ' / Credit: ' . number_format($gl_total_credit, 2) . '</td>';
+        echo '<td></td>';
+        echo '</tr>';
+        echo '</table>';
+        
+        // ============================================================
+        // 3. DETAILED LEDGER COMPARISON
+        // ============================================================
+        echo '<h3>3️⃣ DETAILED LEDGER-BY-LEDGER COMPARISON</h3>';
+        
+        echo '<table>';
+        echo '<tr style="background:#f0f0f0;font-weight:bold;">';
+        echo '<th>Ledger ID</th>';
+        echo '<th>Ledger Name</th>';
+        echo '<th colspan="2">Customer TB</th>';
+        echo '<th colspan="2">GL TB</th>';
+        echo '<th colspan="2">Difference</th>';
+        echo '<th>Status</th>';
+        echo '</tr>';
+        echo '<tr style="background:#f0f0f0;font-weight:bold;">';
+        echo '<th></th><th></th>';
+        echo '<th>Debit</th><th>Credit</th>';
+        echo '<th>Debit</th><th>Credit</th>';
+        echo '<th>Debit</th><th>Credit</th>';
+        echo '<th></th>';
+        echo '</tr>';
+        
+        $total_diff_debit = 0;
+        $total_diff_credit = 0;
+        $mismatches = [];
+        
+        // Combine all ledger IDs from both sources
+        $all_ledger_ids = array_unique(array_merge(array_keys($customer_ledger_map), array_keys($gl_total_by_ledger)));
+        sort($all_ledger_ids);
+        
+        foreach ($all_ledger_ids as $ledger_id) {
+            $cust_debit = 0;
+            $cust_credit = 0;
+            $cust_name = '';
+            
+            if (isset($customer_ledger_map[$ledger_id])) {
+                foreach ($customer_ledger_map[$ledger_id] as $cust_row) {
+                    $cust_debit += $cust_row['debit'];
+                    $cust_credit += $cust_row['credit'];
+                }
+                $cust_name = $customer_ledger_map[$ledger_id][0]['name'] ?? 'Multiple Customers';
+            }
+            
+            $gl_debit = 0;
+            $gl_credit = 0;
+            $gl_name = '';
+            
+            if (isset($gl_total_by_ledger[$ledger_id])) {
+                $gl_debit = $gl_total_by_ledger[$ledger_id]['debit'];
+                $gl_credit = $gl_total_by_ledger[$ledger_id]['credit'];
+                $gl_name = $gl_total_by_ledger[$ledger_id]['name'];
+            }
+            
+            $diff_debit = $gl_debit - $cust_debit;
+            $diff_credit = $gl_credit - $cust_credit;
+            $total_diff_debit += $diff_debit;
+            $total_diff_credit += $diff_credit;
+            
+            $has_diff = (abs($diff_debit) > 0.01 || abs($diff_credit) > 0.01);
+            
+            if ($has_diff) {
+                $mismatches[] = [
+                    'ledger_id' => $ledger_id,
+                    'ledger_name' => $gl_name ?: $cust_name,
+                    'diff_debit' => $diff_debit,
+                    'diff_credit' => $diff_credit
+                ];
+            }
+            
+            $row_style = $has_diff ? 'background:#ffe6e6;' : '';
+            
+            echo '<tr style="' . $row_style . '">';
+            echo '<td>' . $ledger_id . '</td>';
+            echo '<td>' . ($gl_name ?: $cust_name) . '</td>';
+            echo '<td class="number">' . number_format($cust_debit, 2) . '</td>';
+            echo '<td class="number">' . number_format($cust_credit, 2) . '</td>';
+            echo '<td class="number">' . number_format($gl_debit, 2) . '</td>';
+            echo '<td class="number">' . number_format($gl_credit, 2) . '</td>';
+            echo '<td class="number" style="color:' . (abs($diff_debit) > 0.01 ? 'red' : 'green') . ';">' . number_format($diff_debit, 2) . '</td>';
+            echo '<td class="number" style="color:' . (abs($diff_credit) > 0.01 ? 'red' : 'green') . ';">' . number_format($diff_credit, 2) . '</td>';
+            echo '<td>' . ($has_diff ? '<span style="color:red;">⚠️ MISMATCH</span>' : '<span style="color:green;">✓ Match</span>') . '</td>';
+            echo '</tr>';
+        }
+        
+        echo '<tr style="background:#ffffcc;font-weight:bold;">';
+        echo '<td colspan="2">TOTAL DIFFERENCE</td>';
+        echo '<td colspan="2"></td>';
+        echo '<td colspan="2"></td>';
+        echo '<td class="number" style="background:' . (abs($total_diff_debit) > 0.01 ? '#ffcccc' : '#ccffcc') . ';">' . number_format($total_diff_debit, 2) . '</td>';
+        echo '<td class="number" style="background:' . (abs($total_diff_credit) > 0.01 ? '#ffcccc' : '#ccffcc') . ';">' . number_format($total_diff_credit, 2) . '</td>';
+        echo '<td></td>';
+        echo '</tr>';
+        echo '</table>';
+        
+        // ============================================================
+        // 4. SUMMARY & DRILL-DOWN
+        // ============================================================
+        echo '<h3>4️⃣ MISMATCH SUMMARY</h3>';
+        
+        if (empty($mismatches)) {
+            echo '<div class="match"><strong>✅ NO MISMATCHES FOUND:</strong> Customer TB and GL TB are perfectly balanced!</div>';
+        } else {
+            echo '<div class="mismatch"><strong>⚠️ MISMATCHES FOUND:</strong> ' . count($mismatches) . ' ledger(s) have discrepancies</div>';
+            
+            echo '<table>';
+            echo '<tr><th>Ledger ID</th><th>Ledger Name</th><th>Debit Diff</th><th>Credit Diff</th><th>Total Diff</th></tr>';
+            
+            $grand_total_diff = 0;
+            foreach ($mismatches as $mismatch) {
+                $total_diff = abs($mismatch['diff_debit']) + abs($mismatch['diff_credit']);
+                $grand_total_diff += $total_diff;
+                
+                echo '<tr style="background:#ffe6e6;">';
+                echo '<td>' . $mismatch['ledger_id'] . '</td>';
+                echo '<td>' . $mismatch['ledger_name'] . '</td>';
+                echo '<td class="number" style="color:red;">' . number_format($mismatch['diff_debit'], 2) . '</td>';
+                echo '<td class="number" style="color:red;">' . number_format($mismatch['diff_credit'], 2) . '</td>';
+                echo '<td class="number"><strong>' . number_format($total_diff, 2) . '</strong></td>';
+                echo '</tr>';
+            }
+            
+            echo '<tr style="background:#ffcccc;font-weight:bold;">';
+            echo '<td colspan="4">GRAND TOTAL DIFFERENCE</td>';
+            echo '<td class="number">' . number_format($grand_total_diff, 2) . '</td>';
+            echo '</tr>';
+            echo '</table>';
+            
+            // ============================================================
+            // 5. DRILL-DOWN INTO MISMATCHED LEDGERS
+            // ============================================================
+            echo '<h3>5️⃣ DETAILED ENTRIES FOR MISMATCHED LEDGERS</h3>';
+            
+            foreach ($mismatches as $mismatch) {
+                $ledger_id = (int)$mismatch['ledger_id'];
+                
+                echo '<div style="border:2px solid #ff0000;padding:15px;margin:20px 0;border-radius:5px;background:#fff5f5;">';
+                echo '<h4 style="color:#cc0000;">❌ Ledger ID: ' . $ledger_id . ' - ' . $mismatch['ledger_name'] . '</h4>';
+                echo '<p><strong>Debit Difference:</strong> ' . number_format($mismatch['diff_debit'], 2) . ' | <strong>Credit Difference:</strong> ' . number_format($mismatch['diff_credit'], 2) . '</p>';
+                
+                // Show GL entries that DON'T meet Customer TB filter conditions (PROBLEM ENTRIES)
+                echo '<h5 style="background:#ffcccc;padding:8px;">🔴 PROBLEM ENTRIES (In GL but NOT in Customer TB)</h5>';
+                
+                $problem_query = "
+                    SELECT e.id, e.date, e.customer_id, e.sid, e.rid, e.memo_id, 
+                    c.name as customer_name,
+                    SUM(ei.amount) as total_amount,
+                    GROUP_CONCAT(DISTINCT ei.dc ORDER BY ei.dc) as dcs,
+                    CASE 
+                        WHEN e.sid > 0 THEN 'Sale'
+                        WHEN e.rid > 0 THEN 'Return'
+                        WHEN e.memo_id > 0 THEN 'Memo'
+                        ELSE 'Other'
+                    END as entry_type
+                    FROM sma_accounts_entries e
+                    JOIN sma_accounts_entryitems ei ON ei.entry_id = e.id
+                    LEFT JOIN sma_companies c ON e.customer_id = c.id
+                    WHERE ei.ledger_id = {$ledger_id}
+                    AND DATE(e.date) >= '{$start_date}' AND DATE(e.date) <= '{$end_date}'
+                    AND e.customer_id IS NOT NULL
+                    AND NOT (
+                        (NULLIF(e.sid, '') IS NOT NULL AND NULLIF(e.sid, 0) IS NOT NULL AND e.sid IN (SELECT id FROM sma_sales WHERE warehouse_id = {$warehouse_id}))
+                        OR (NULLIF(e.rid, '') IS NOT NULL AND NULLIF(e.rid, 0) IS NOT NULL AND e.rid IN (SELECT id FROM sma_returns WHERE warehouse_id = {$warehouse_id}))
+                        OR e.id IN (SELECT DISTINCT pr.journal_id FROM sma_payment_reference pr INNER JOIN sma_payments pay ON pay.payment_id = pr.id AND pay.sale_id IS NOT NULL AND pay.sale_id > 0 INNER JOIN sma_sales s ON s.id = pay.sale_id WHERE pr.journal_id IS NOT NULL AND s.warehouse_id = {$warehouse_id})
+                        OR e.id IN (SELECT DISTINCT pr.journal_id FROM sma_payment_reference pr INNER JOIN sma_payments pay ON pay.payment_id = pr.id WHERE pr.journal_id IS NOT NULL AND NULLIF(pay.memo_id, '') IS NOT NULL AND NULLIF(pay.memo_id, 0) IS NOT NULL)
+                        OR (NULLIF(e.memo_id, '') IS NOT NULL AND NULLIF(e.memo_id, 0) IS NOT NULL)
+                        OR e.transaction_type = 'customeradvance'
+                    )
+                    GROUP BY e.id
+                    ORDER BY e.date DESC
+                ";
+                
+                $problem_results = $this->db->query($problem_query)->result();
+                
+                if (empty($problem_results)) {
+                    echo '<p style="color:green;"><strong>✓ No problem entries found (all GL entries meet Customer TB filter conditions)</strong></p>';
+                } else {
+                    echo '<p style="color:red;"><strong>⚠️ Found ' . count($problem_results) . ' problem entry/entries:</strong></p>';
+                    echo '<table style="font-size:12px;background:#fffafb;">';
+                    echo '<tr style="background:#ff9999;color:white;font-weight:bold;">';
+                    echo '<th>Entry ID</th><th>Date</th><th>Customer</th><th>Type</th><th>Amount (D/C)</th><th>Reason Excluded</th>';
+                    echo '</tr>';
+                    
+                    $problem_total = 0;
+                    foreach ($problem_results as $entry) {
+                        $amount = (float)$entry->total_amount;
+                        $problem_total += $amount;
+                        
+                        // Determine why this entry is excluded
+                        $reasons = [];
+                        if (empty($entry->sid) || $entry->sid <= 0) {
+                            if (empty($entry->rid) || $entry->rid <= 0) {
+                                if (empty($entry->memo_id) || $entry->memo_id <= 0) {
+                                    if ($entry->entry_type === 'Other' && $entry->transaction_type !== 'customeradvance') {
+                                        $reasons[] = 'No linked sale/return/memo/advance';
+                                    }
+                                }
+                            }
+                        }
+                        if ($entry->entry_type === 'Sale' && !in_array($entry->warehouse_id ?? 32, [$warehouse_id])) {
+                            $reasons[] = 'Sale not in warehouse ' . $warehouse_id;
+                        }
+                        if ($entry->entry_type === 'Return' && !in_array($entry->warehouse_id ?? 32, [$warehouse_id])) {
+                            $reasons[] = 'Return not in warehouse ' . $warehouse_id;
+                        }
+                        
+                        $reason_text = !empty($reasons) ? implode(' | ', $reasons) : 'Does not meet filter criteria';
+                        
+                        echo '<tr style="background:#ffe6e6;">';
+                        echo '<td><strong>' . $entry->id . '</strong></td>';
+                        echo '<td>' . date('Y-m-d', strtotime($entry->date)) . '</td>';
+                        echo '<td>' . ($entry->customer_name ?: 'N/A (No Customer Linked)') . '</td>';
+                        echo '<td>' . $entry->entry_type . '</td>';
+                        echo '<td class="number"><strong style="color:' . ($amount > 0 ? 'red' : 'blue') . ';">' . ($amount > 0 ? 'D: ' : 'C: ') . number_format(abs($amount), 2) . '</strong></td>';
+                        echo '<td style="color:red;"><strong>' . $reason_text . '</strong></td>';
+                        echo '</tr>';
+                    }
+                    
+                    echo '<tr style="background:#ffcccc;font-weight:bold;color:red;">';
+                    echo '<td colspan="4">💥 PROBLEM ENTRIES TOTAL</td>';
+                    echo '<td class="number"><strong>' . number_format($problem_total, 2) . '</strong></td>';
+                    echo '<td></td>';
+                    echo '</tr>';
+                    echo '</table>';
+                }
+                
+                echo '</div>';
+            }
+        }
+        
+        echo '<hr>';
+        echo '<div style="padding:15px;background:#f9f9f9;border-radius:5px;margin-top:20px;">';
+        echo '<h3>📌 SUMMARY</h3>';
+        echo '<p><strong>Customer TB Total Debit:</strong> ' . number_format($customer_total_debit, 2) . '</p>';
+        echo '<p><strong>Customer TB Total Credit:</strong> ' . number_format($customer_total_credit, 2) . '</p>';
+        echo '<p><strong>GL TB Total Debit:</strong> ' . number_format($gl_total_debit, 2) . '</p>';
+        echo '<p><strong>GL TB Total Credit:</strong> ' . number_format($gl_total_credit, 2) . '</p>';
+        echo '<p><strong>Total Debit Difference:</strong> <span style="color:' . (abs($total_diff_debit) > 0.01 ? 'red' : 'green') . ';"><strong>' . number_format($total_diff_debit, 2) . '</strong></span></p>';
+        echo '<p><strong>Total Credit Difference:</strong> <span style="color:' . (abs($total_diff_credit) > 0.01 ? 'red' : 'green') . ';"><strong>' . number_format($total_diff_credit, 2) . '</strong></span></p>';
+        echo '</div>';
     }
 
     public function update_supplier_outstanding_invoices_payment(){
