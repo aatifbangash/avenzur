@@ -132,18 +132,39 @@
             }
         });
 
-        $(window).bind('beforeunload', function (e) {
-            $.get('<?= admin_url('welcome/set_data/remove_tols/1'); ?>');
+        function leaveTransferPage(clearDraft) {
+            window.onbeforeunload = null;
+            $(window).off('beforeunload');
+            if (typeof window.releaseTransferPageLock === 'function') {
+                window.releaseTransferPageLock();
+            }
+            if (clearDraft !== false) {
+                ['toitems', 'toshipping', 'toref', 'to_warehouse', 'tonote', 'from_warehouse', 'todate', 'tostatus', 'currentstatus'].forEach(function (key) {
+                    localStorage.removeItem(key);
+                });
+            }
+        }
+
+        $(document).on('click', '.breadcrumb a, #sidebar a, .sidebar a, .main-sidebar a', function (e) {
+            const href = this.href;
+            if (!href || href.split('#')[0] === window.location.href.split('#')[0]) {
+                return;
+            }
+            e.preventDefault();
+            leaveTransferPage();
+            window.location.href = href;
+        });
+
+        $(window).on('beforeunload', function (e) {
             if (count > 1) {
-                var message = "You will loss data!";
-                return message;
+                return "You will loss data!";
             }
         });
         $('#reset').click(function (e) {
-            $(window).unbind('beforeunload');
+            leaveTransferPage();
         });
         $('#edit_transfer').click(function () {
-            $(window).unbind('beforeunload');
+            leaveTransferPage(false);
             $('form.edit-to-form').submit();
         });
         var to_warehouse;
