@@ -416,8 +416,10 @@ class Reports_model extends CI_Model
         }
 
         $warehouse_filter = $this->site->reportWarehouseAndClause($warehouse_id, 'p');
+        
+        $sql_at = $start_date . ' 23:59:59';
 
-        // Fetch invoices
+        // ====== PURCHASE INVOICES (with date-filtered payments) ======
         $sql = "
             SELECT 
                 p.id AS purchase_id,
@@ -426,12 +428,18 @@ class Reports_model extends CI_Model
                 c.name AS supplier_name,
                 c.sequence_code AS supplier_code,
                 c.category,
-                p.grand_total,
-                p.paid,
+                ROUND(((p.grand_total + COALESCE(p.grand_deal_discount, 0))), 2) AS invoice_total,
+                (SELECT COALESCE(SUM(sp.amount), 0)
+                 FROM {$this->db->dbprefix('payments')} sp
+                 WHERE sp.purchase_id = p.id
+                 AND sp.date <= '{$sql_at}') AS paid,
                 c.payment_term
             FROM sma_purchases p
             JOIN sma_companies c ON p.supplier_id = c.id
-            WHERE p.grand_total > 0
+            WHERE p.purchase_invoice = 1
+            AND p.note != 'import from excel'
+            AND (p.grand_total + COALESCE(p.grand_deal_discount, 0)) > 0
+            AND p.date <= '{$sql_at}'
             $supplier_filter
             $warehouse_filter
         ";
@@ -439,20 +447,15 @@ class Reports_model extends CI_Model
         $invoices = $this->db->query($sql)->result();
 
         $result = [];
-        //echo '<pre>';print_r($invoices);exit;
+        
+        // Process purchase invoices
         foreach ($invoices as $inv) {
-            
-           
             $paid = $inv->paid ? $inv->paid : 0;
-            $outstanding = round($inv->grand_total - $paid, 2);
-            //echo 'Invoice'. $inv->purchase_id . ' Outstanding: '.$outstanding.'<br />';
+            $outstanding = round($inv->invoice_total - $paid, 2);
+            
             if ($outstanding <= 0) {
                 continue;
             }
-            //echo 'Invoice'. $inv->purchase_id . ' Outstanding: '.$outstanding.'<br />';
-            /* ============================
-            🔥 FIX STARTS HERE
-            ============================ */
 
             $invoiceDt = new DateTime(date('Y-m-d', strtotime($inv->date)));
             $reportDt  = new DateTime($start_date);
@@ -463,13 +466,6 @@ class Reports_model extends CI_Model
             }
 
             $days = (int)$invoiceDt->diff($reportDt)->days;
-            /*if($inv->sale_id == 4175) {
-                echo "Invoice Date: " . $inv->date . " | Report Date: " . $start_date . "Paid: ". $paid . " | Days: " . $days . "\n";
-                exit;
-            }*/
-            /* ============================
-            🔥 FIX ENDS HERE
-            ============================ */
 
             // Determine bucket
             $bucket_label = '>' . $duration;
@@ -479,7 +475,7 @@ class Reports_model extends CI_Model
                     break;
                 }
             }
-            //echo 'Bucket Label: '. $bucket_label . '<br />';
+
             // Group by supplier
             if (!isset($result[$inv->supplier_id])) {
                 $result[$inv->supplier_id] = [
@@ -495,10 +491,151 @@ class Reports_model extends CI_Model
             }
             
             $result[$inv->supplier_id][$bucket_label] += $outstanding;
-            //echo 'Outstanding adding: '. $result[$inv->supplier_id][$bucket_label] . '<br /><br />';
+        }
+
+        // ====== SERVICE INVOICES (with hybrid payment logic) ======
+        $sql = "
+            SELECT 
+                m.id AS purchase_id,
+                m.date,
+                m.supplier_id,
+                c.name AS supplier_name,
+                c.sequence_code AS supplier_code,
+                c.category,
+                m.payment_amount AS invoice_total,
+                CASE
+                    WHEN m.date < '2026-06-20' THEN COALESCE(m.used_amount, 0)
+                    ELSE COALESCE((SELECT COALESCE(SUM(sp.amount), 0)
+                        FROM {$this->db->dbprefix('payments')} sp
+                        WHERE sp.memo_id = m.id
+                        AND sp.date <= '{$sql_at}'), 0)
+                END AS paid,
+                0 AS payment_term
+            FROM sma_memo m
+            JOIN sma_companies c ON m.supplier_id = c.id
+            WHERE m.type = 'serviceinvoice'
+            AND m.supplier_id > 0
+            AND m.payment_amount > 0
+            AND m.date <= '{$sql_at}'
+            $supplier_filter
+        ";
+
+        $service_invoices = $this->db->query($sql)->result();
+
+        // Process service invoices
+        foreach ($service_invoices as $inv) {
+            $paid = $inv->paid ? $inv->paid : 0;
+            $outstanding = round($inv->invoice_total - $paid, 2);
+            
+            if ($outstanding <= 0) {
+                continue;
+            }
+
+            $invoiceDt = new DateTime(date('Y-m-d', strtotime($inv->date)));
+            $reportDt  = new DateTime($start_date);
+
+            if ($invoiceDt > $reportDt) {
+                continue;
+            }
+
+            $days = (int)$invoiceDt->diff($reportDt)->days;
+
+            $bucket_label = '>' . $duration;
+            foreach ($buckets as $b) {
+                if ($days >= $b['from'] && $days <= $b['to']) {
+                    $bucket_label = $b['label'];
+                    break;
+                }
+            }
+
+            if (!isset($result[$inv->supplier_id])) {
+                $result[$inv->supplier_id] = [
+                    'supplier_id'   => $inv->supplier_id,
+                    'supplier_name' => $inv->supplier_name,
+                    'supplier_code' => $inv->supplier_code,
+                    'category'      => $inv->category,
+                    'payment_term'  => $inv->payment_term,
+                ];
+                foreach ($buckets as $b) {
+                    $result[$inv->supplier_id][$b['label']] = 0;
+                }
+            }
+            
+            $result[$inv->supplier_id][$bucket_label] += $outstanding;
+        }
+
+        // ====== CREDIT MEMOS (with hybrid payment logic) ======
+        $sql = "
+            SELECT 
+                m.id AS purchase_id,
+                m.date,
+                m.supplier_id,
+                c.name AS supplier_name,
+                c.sequence_code AS supplier_code,
+                c.category,
+                m.payment_amount AS invoice_total,
+                CASE
+                    WHEN m.date < '2026-06-20' THEN COALESCE(m.used_amount, 0)
+                    ELSE COALESCE((SELECT COALESCE(SUM(sp.amount), 0)
+                        FROM {$this->db->dbprefix('payments')} sp
+                        WHERE sp.memo_id = m.id
+                        AND sp.date <= '{$sql_at}'), 0)
+                END AS paid,
+                0 AS payment_term
+            FROM sma_memo m
+            JOIN sma_companies c ON m.supplier_id = c.id
+            WHERE m.type = 'memo'
+            AND m.supplier_id > 0
+            AND m.supplier_entry_type = 'C'
+            AND m.payment_amount > 0
+            AND m.date <= '{$sql_at}'
+            $supplier_filter
+        ";
+
+        $credit_memos = $this->db->query($sql)->result();
+
+        // Process credit memos
+        foreach ($credit_memos as $inv) {
+            $paid = $inv->paid ? $inv->paid : 0;
+            $outstanding = round($inv->invoice_total - $paid, 2);
+            
+            if ($outstanding <= 0) {
+                continue;
+            }
+
+            $invoiceDt = new DateTime(date('Y-m-d', strtotime($inv->date)));
+            $reportDt  = new DateTime($start_date);
+
+            if ($invoiceDt > $reportDt) {
+                continue;
+            }
+
+            $days = (int)$invoiceDt->diff($reportDt)->days;
+
+            $bucket_label = '>' . $duration;
+            foreach ($buckets as $b) {
+                if ($days >= $b['from'] && $days <= $b['to']) {
+                    $bucket_label = $b['label'];
+                    break;
+                }
+            }
+
+            if (!isset($result[$inv->supplier_id])) {
+                $result[$inv->supplier_id] = [
+                    'supplier_id'   => $inv->supplier_id,
+                    'supplier_name' => $inv->supplier_name,
+                    'supplier_code' => $inv->supplier_code,
+                    'category'      => $inv->category,
+                    'payment_term'  => $inv->payment_term,
+                ];
+                foreach ($buckets as $b) {
+                    $result[$inv->supplier_id][$b['label']] = 0;
+                }
+            }
+            
+            $result[$inv->supplier_id][$bucket_label] += $outstanding;
         }
         
-        //echo '<pre>';print_r($result);exit;
         return $result;
     }
 
@@ -609,11 +746,18 @@ class Reports_model extends CI_Model
         }
         $buckets[] = ['from' => $prev + 1, 'to' => 99999, 'label' => '>' . $duration];
 
-        // Customer filter
-        $customer_filter = '';
+        // Customer filter (for sales invoices using 's' alias)
+        $customer_filter_sales = '';
         if (!empty($customer_id_array)) {
             $ids = implode(',', array_map('intval', $customer_id_array));
-            $customer_filter = " AND s.customer_id IN ($ids)";
+            $customer_filter_sales = " AND s.customer_id IN ($ids)";
+        }
+
+        // Customer filter (for service invoices using 'm' alias)
+        $customer_filter_memo = '';
+        if (!empty($customer_id_array)) {
+            $ids = implode(',', array_map('intval', $customer_id_array));
+            $customer_filter_memo = " AND m.customer_id IN ($ids)";
         }
 
         // Salesman filter
@@ -623,8 +767,10 @@ class Reports_model extends CI_Model
         }
 
         $warehouse_filter = $this->site->reportWarehouseAndClause($warehouse_id, 's');
+        
+        $sql_at = $start_date . ' 23:59:59';
 
-        // Fetch invoices
+        // ====== SALES INVOICES (with date-filtered payments) ======
         $sql = "
             SELECT 
                 s.id AS sale_id,
@@ -634,14 +780,18 @@ class Reports_model extends CI_Model
                 c.sequence_code AS customer_code,
                 c.sales_agent,
                 s.grand_total,
-                s.paid,
+                (SELECT COALESCE(SUM(sp.amount), 0)
+                 FROM {$this->db->dbprefix('payments')} sp
+                 WHERE sp.sale_id = s.id
+                 AND sp.date <= '{$sql_at}') AS paid,
                 c.payment_term,
                 c.category,
                 c.credit_limit
             FROM sma_sales s
             JOIN sma_companies c ON s.customer_id = c.id
             WHERE s.grand_total > 0 AND s.sale_invoice = 1
-            $customer_filter
+            AND s.date <= '{$sql_at}'
+            $customer_filter_sales
             $salesman_filter
             $warehouse_filter
         ";
@@ -649,20 +799,15 @@ class Reports_model extends CI_Model
         $invoices = $this->db->query($sql)->result();
 
         $result = [];
-        //echo '<pre>';print_r($invoices);exit;
+        
+        // Process sales invoices
         foreach ($invoices as $inv) {
-            
-           
             $paid = $inv->paid ? $inv->paid : 0;
             $outstanding = round($inv->grand_total - $paid, 2);
-            //echo 'Invoice'. $inv->sale_id . ' Outstanding: '.$outstanding.'<br />';
+            
             if ($outstanding <= 0) {
                 continue;
             }
-
-            /* ============================
-            🔥 FIX STARTS HERE
-            ============================ */
 
             $invoiceDt = new DateTime(date('Y-m-d', strtotime($inv->date)));
             $reportDt  = new DateTime($start_date);
@@ -673,13 +818,6 @@ class Reports_model extends CI_Model
             }
 
             $days = (int)$invoiceDt->diff($reportDt)->days;
-            /*if($inv->sale_id == 4175) {
-                echo "Invoice Date: " . $inv->date . " | Report Date: " . $start_date . "Paid: ". $paid . " | Days: " . $days . "\n";
-                exit;
-            }*/
-            /* ============================
-            🔥 FIX ENDS HERE
-            ============================ */
 
             // Determine bucket
             $bucket_label = '>' . $duration;
@@ -689,7 +827,7 @@ class Reports_model extends CI_Model
                     break;
                 }
             }
-            //echo 'Bucket Label: '. $bucket_label . '<br />';
+
             // Group by customer
             if (!isset($result[$inv->customer_id])) {
                 $result[$inv->customer_id] = [
@@ -707,10 +845,83 @@ class Reports_model extends CI_Model
             }
             
             $result[$inv->customer_id][$bucket_label] += $outstanding;
-            //echo 'Outstanding adding: '. $result[$inv->customer_id][$bucket_label] . '<br /><br />';
+        }
+
+        // ====== SERVICE INVOICES (with date-filtered payments) ======
+        if ($warehouse_id) {
+            $sql = "
+                SELECT 
+                    m.id AS sale_id,
+                    m.date,
+                    m.customer_id,
+                    c.name AS customer_name,
+                    c.sequence_code AS customer_code,
+                    c.sales_agent,
+                    m.payment_amount AS grand_total,
+                    (SELECT COALESCE(SUM(sp.amount), 0)
+                     FROM {$this->db->dbprefix('payments')} sp
+                     WHERE sp.memo_id = m.id
+                     AND sp.date <= '{$sql_at}') AS paid,
+                    0 AS payment_term,
+                    c.category,
+                    c.credit_limit
+                FROM sma_memo m
+                JOIN sma_companies c ON m.customer_id = c.id
+                WHERE m.type = 'serviceinvoice'
+                AND m.customer_id > 0
+                AND m.payment_amount > 0
+                AND m.date <= '{$sql_at}'
+                $customer_filter_memo
+                $salesman_filter
+            ";
+
+            $service_invoices = $this->db->query($sql)->result();
+
+            // Process service invoices
+            foreach ($service_invoices as $inv) {
+                $paid = $inv->paid ? $inv->paid : 0;
+                $outstanding = round($inv->grand_total - $paid, 2);
+                
+                if ($outstanding <= 0) {
+                    continue;
+                }
+
+                $invoiceDt = new DateTime(date('Y-m-d', strtotime($inv->date)));
+                $reportDt  = new DateTime($start_date);
+
+                if ($invoiceDt > $reportDt) {
+                    continue;
+                }
+
+                $days = (int)$invoiceDt->diff($reportDt)->days;
+
+                $bucket_label = '>' . $duration;
+                foreach ($buckets as $b) {
+                    if ($days >= $b['from'] && $days <= $b['to']) {
+                        $bucket_label = $b['label'];
+                        break;
+                    }
+                }
+
+                if (!isset($result[$inv->customer_id])) {
+                    $result[$inv->customer_id] = [
+                        'customer_id'   => $inv->customer_id,
+                        'customer_name' => $inv->customer_name,
+                        'customer_code' => $inv->customer_code,
+                        'sales_agent'   => $inv->sales_agent,
+                        'payment_term'  => $inv->payment_term,
+                        'credit_limit'  => $inv->credit_limit,
+                        'category'      => $inv->category
+                    ];
+                    foreach ($buckets as $b) {
+                        $result[$inv->customer_id][$b['label']] = 0;
+                    }
+                }
+                
+                $result[$inv->customer_id][$bucket_label] += $outstanding;
+            }
         }
         
-        //echo '<pre>';print_r($result);exit;
         return array_values($result);
     }
 
@@ -913,7 +1124,7 @@ class Reports_model extends CI_Model
                     ae.rsid AS supplier_return_id,
                     ae.rid   AS return_id,
                     ae.memo_id,
-                    pr.id   AS payment_id,
+                    pr.payment_id  AS payment_id,
                     m.reference_no AS memo_note,
                     (SELECT SUM(ei2.amount)
                      FROM sma_accounts_entryitems ei2
@@ -923,7 +1134,12 @@ class Reports_model extends CI_Model
                 FROM sma_accounts_entryitems aei
                 JOIN sma_accounts_entries ae  ON ae.id  = aei.entry_id
                 JOIN sma_accounts_ledgers  al ON al.id  = aei.ledger_id
-                LEFT JOIN sma_payment_reference pr ON pr.journal_id = ae.id
+                LEFT JOIN (
+                    SELECT journal_id, MIN(id) payment_id
+                    FROM sma_payment_reference
+                    GROUP BY journal_id
+                ) pr
+                ON pr.journal_id = ae.id
                 LEFT JOIN sma_memo m ON m.id = ae.memo_id
                 WHERE aei.ledger_id = ?
                 AND ae.date >= ?
@@ -6092,12 +6308,11 @@ class Reports_model extends CI_Model
     {
         // Supplier invoice payment report: filter by payment date so it matches
         // the supplier payments list and show invoice-level payment totals.
-        $dateFilterExpr = "DATE(pr.date)";
+        $dateFilterExpr = "pr.date";
         $dateWhere = "";
 
         if ($start_date && $end_date) {
-            $dateWhere = " AND " . $dateFilterExpr . " >= '" . trim($start_date) . "'
-                AND " . $dateFilterExpr . " <= '" . trim($end_date) . "' ";
+            $dateWhere = " AND " . $dateFilterExpr . " >= '" . trim($start_date) . "'\n                AND " . $dateFilterExpr . " <= '" . trim($end_date) . "' ";
         } elseif ($start_date) {
             $dateWhere = " AND " . $dateFilterExpr . " >= '" . trim($start_date) . "' ";
         } elseif ($end_date) {
@@ -6105,16 +6320,30 @@ class Reports_model extends CI_Model
         }
 
         $warehouse_purchase_sql = '';
+        $warehouse_adjustment_sql = '';
         if ($warehouse) {
             $warehouse_purchase_sql = ' AND pu.warehouse_id = ' . (int) $warehouse;
+            $warehouse_adjustment_sql = ' AND pux.warehouse_id = ' . (int) $warehouse;
         } else {
             $warehouse_purchase_sql = $this->site->reportWarehouseAndClause(null, 'pu');
+            $warehouse_adjustment_sql = $this->site->reportWarehouseAndClause(null, 'pux');
         }
 
         $supplierWhere = '';
+        $supplierWherePr = '';
         if (!empty($supplier_id)) {
             $supplierWhere = ' AND pu.supplier_id = ' . (int) $supplier_id;
+            $supplierWherePr = ' AND pr.supplier_id = ' . (int) $supplier_id;
         }
+
+        $serviceSupplierWhere = "
+                AND (
+                    sup.category IS NULL
+                    OR (
+                        TRIM(LOWER(sup.category)) <> 'services'
+                        AND sup.category NOT LIKE '%خدمات%'
+                    )
+                )";
 
         $sql = "
             SELECT
@@ -6131,7 +6360,7 @@ class Reports_model extends CI_Model
                     pu.due_date,
                     DATE_ADD(DATE(pu.date), INTERVAL COALESCE(NULLIF(pu.payment_term, 0), NULLIF(sup.payment_term, 0), 0) DAY)
                 ) AS due_date,
-                ROUND(SUM(COALESCE(p.amount, 0)), 2) AS paid_amount,
+                SUM(COALESCE(p.amount, 0)) AS paid_amount,
                 ROUND(pu.grand_total - COALESCE(pu.paid, 0), 2) AS balance_amount,
                 MAX(DATE(COALESCE(p.date, pr.date))) AS last_payment_date,
                 pu.payment_status
@@ -6151,8 +6380,63 @@ class Reports_model extends CI_Model
                 " . $dateWhere . "
                 " . $warehouse_purchase_sql . "
                 " . $supplierWhere . "
+                " . $serviceSupplierWhere . "
             GROUP BY pu.id
-            HAVING ROUND(SUM(COALESCE(p.amount, 0)), 2) > 0";
+            HAVING SUM(COALESCE(p.amount, 0)) > 0
+
+            UNION ALL
+
+            SELECT
+                NULL AS purchase_id,
+                CONCAT('Adjustment #', pr.id) AS invoice_no,
+                NULL AS purchase_date,
+                sup.sequence_code AS sequence_code,
+                sup.id AS supplier_id,
+                sup.name AS supplier_name,
+                '' AS warehouse_name,
+                0 AS grand_total,
+                0 AS payment_term,
+                NULL AS due_date,
+                (
+                    pr.amount - COALESCE((
+                        SELECT SUM(px.amount)
+                        FROM sma_payments px
+                        INNER JOIN sma_purchases pux ON pux.id = px.purchase_id
+                        WHERE px.payment_id = pr.id
+                        " . $warehouse_adjustment_sql . "
+                    ), 0)
+                ) AS paid_amount,
+                0 AS balance_amount,
+                DATE(pr.date) AS last_payment_date,
+                'adjustment' AS payment_status
+            FROM sma_payment_reference pr
+            LEFT JOIN sma_companies sup
+                ON sup.id = pr.supplier_id
+            WHERE pr.supplier_id IS NOT NULL
+                AND pr.supplier_id <> 0
+                AND (pr.added_via IS NULL OR pr.added_via NOT IN ('auto_script', 'advance_settlement'))
+                " . $dateWhere . "
+                " . $supplierWherePr . "
+                " . $serviceSupplierWhere . "
+                AND (
+                    EXISTS (
+                        SELECT 1
+                        FROM sma_payments p2
+                        INNER JOIN sma_purchases pu2 ON pu2.id = p2.purchase_id
+                        WHERE p2.payment_id = pr.id
+                            AND p2.purchase_id IS NOT NULL
+                            AND p2.purchase_id > 0
+                            " . str_replace('pux.', 'pu2.', $warehouse_adjustment_sql) . "
+                    )
+                    OR EXISTS (
+                        SELECT 1
+                        FROM sma_payments p3
+                        WHERE p3.payment_id = pr.id
+                            AND NULLIF(p3.memo_id, '') IS NOT NULL
+                            AND NULLIF(p3.memo_id, 0) IS NOT NULL
+                    )
+                )
+            HAVING ABS(paid_amount) > 0.00001";
         $sql .= "
              ORDER BY last_payment_date, invoice_no;
         ";
