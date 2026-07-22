@@ -7792,9 +7792,12 @@ class Reports_model extends CI_Model
         
         // Build WHERE clauses for purchase returns
         $return_where_clauses = [];
-        $return_wh_filter = ltrim($this->site->reportWarehouseAndClause($warehouse_id, 'pr'), ' AND ');
-        if ($return_wh_filter) {
-            $return_where_clauses[] = $return_wh_filter;
+        //$return_wh_filter = ltrim($this->site->reportWarehouseAndClause($warehouse_id, 'pr'), ' AND ');
+        
+        if ($warehouse_id) {
+            $return_where_clauses[] = "pr.warehouse_id = ".$warehouse_id;
+        }else{
+            $return_where_clauses[] = "pr.warehouse_id IN (32,48)";
         }
         
         if ($start_date && $end_date) {
