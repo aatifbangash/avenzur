@@ -7975,11 +7975,11 @@ class Reports_model extends CI_Model
         if (!empty($supplier_id)) {
             $this->db->where('p.supplier_id', $supplier_id);
         }
-
+        
         if (!empty($pharmacy_id)) {
             $this->db->where('p.warehouse_id', $pharmacy_id);
-        } else {
-            $this->site->applyReportWarehouseScope($this->db, null, 'p.warehouse_id');
+        }else{
+            $this->db->where_in('p.warehouse_id', [32, 48]);
         }
         
         if (!empty($purchase_id)) {
@@ -8029,7 +8029,7 @@ class Reports_model extends CI_Model
         // Exclude returns with note "import from excel"
         $this->db->where('(rs.note IS NULL OR rs.note != "import from excel")');
         $this->db->where('rs.status', 'completed'); // Only include completed returns
-
+        //echo $pharmacy_id;exit;
         // Apply filters
         if (!empty($supplier_id)) {
             $this->db->where('rs.supplier_id', $supplier_id);
@@ -8037,8 +8037,8 @@ class Reports_model extends CI_Model
 
         if (!empty($pharmacy_id)) {
             $this->db->where('rs.warehouse_id', $pharmacy_id);
-        } else {
-            $this->site->applyReportWarehouseScope($this->db, null, 'rs.warehouse_id');
+        }else{
+            $this->db->where_in('rs.warehouse_id', [32, 48]); 
         }
         
         if (!empty($purchase_id)) {
@@ -8047,7 +8047,7 @@ class Reports_model extends CI_Model
 
         $this->db->order_by('rs.date', 'DESC');
         $query = $this->db->get();
-
+        
         // Log the query for debugging
         log_message('debug', 'Return Query: ' . $this->db->last_query());
 
