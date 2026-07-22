@@ -135,10 +135,10 @@ foreach ($payments as $p):
         <td><strong>Supplier Advance:</strong></td>
         <td class="right"><strong><?= number_format($supplier_balance ?? 0, 2) ?></strong></td>
     </tr>
-    <tr>
+    <!--<tr>
         <td><strong>Supplier Balance:</strong></td>
         <td class="right"><strong><?= number_format($total_due ?? 0, 2) ?></strong></td>
-    </tr>
+    </tr>-->
 
     <!--<tr>
         <td><strong>Supplier Due:</strong></td>
