@@ -1554,6 +1554,108 @@ class Suppliers extends MY_Controller
         admin_redirect('suppliers/list_service_invoice');
     }
 
+    /**
+     * Lock Petty Cash - Finance Manager Only
+     */
+    public function lock_petty_cash()
+    {
+        // Check permission - Finance Manager role only
+        if (!$this->sma->in_group('financemanager')) {
+            $this->session->set_flashdata('error', 'You do not have permission to lock petty cash.');
+            admin_redirect($_SERVER['HTTP_REFERER']);
+            return;
+        }
+
+        $memo_id = $this->input->post('memo_id');
+        
+        if (!$memo_id) {
+            $this->session->set_flashdata('error', 'Petty Cash ID not provided.');
+            admin_redirect('suppliers/list_petty_cash');
+            return;
+        }
+
+        $memo = $this->db->get_where('sma_memo', ['id' => $memo_id], 1)->row();
+        
+        if (!$memo) {
+            $this->session->set_flashdata('error', 'Petty Cash not found.');
+            admin_redirect('suppliers/list_petty_cash');
+            return;
+        }
+
+        if (($memo->status ?? 'open') === 'locked') {
+            $this->session->set_flashdata('warning', 'This petty cash is already locked.');
+            admin_redirect('suppliers/list_petty_cash');
+            return;
+        }
+
+        // Lock the petty cash
+        $update_data = [
+            'status' => 'locked',
+            'locked_by' => $this->loggedIn,
+            'locked_at' => date('Y-m-d H:i:s')
+        ];
+
+        $this->db->where('id', $memo_id);
+        if ($this->db->update('sma_memo', $update_data)) {
+            $this->session->set_flashdata('success', 'Petty Cash has been locked.');
+        } else {
+            $this->session->set_flashdata('error', 'Failed to lock petty cash.');
+        }
+
+        admin_redirect('suppliers/list_petty_cash');
+    }
+
+    /**
+     * Unlock Petty Cash - Finance Manager Only
+     */
+    public function unlock_petty_cash()
+    {
+        // Check permission - Finance Manager role only
+        if (!$this->sma->in_group('financemanager')) {
+            $this->session->set_flashdata('error', 'You do not have permission to unlock petty cash.');
+            admin_redirect($_SERVER['HTTP_REFERER']);
+            return;
+        }
+
+        $memo_id = $this->input->post('memo_id');
+        
+        if (!$memo_id) {
+            $this->session->set_flashdata('error', 'Petty Cash ID not provided.');
+            admin_redirect('suppliers/list_petty_cash');
+            return;
+        }
+
+        $memo = $this->db->get_where('sma_memo', ['id' => $memo_id], 1)->row();
+        
+        if (!$memo) {
+            $this->session->set_flashdata('error', 'Petty Cash not found.');
+            admin_redirect('suppliers/list_petty_cash');
+            return;
+        }
+
+        if (($memo->status ?? 'open') !== 'locked') {
+            $this->session->set_flashdata('warning', 'This petty cash is not locked.');
+            admin_redirect('suppliers/list_petty_cash');
+            return;
+        }
+
+        // Unlock the petty cash
+        $update_data = [
+            'status' => 'open',
+            'locked_by' => null,
+            'locked_at' => null
+        ];
+
+        $this->db->where('id', $memo_id);
+        if ($this->db->update('sma_memo', $update_data)) {
+            $this->session->set_flashdata('success', 'Petty Cash has been unlocked and is now editable.');
+        } else {
+            $this->session->set_flashdata('error', 'Failed to unlock petty cash.');
+        }
+
+        admin_redirect('suppliers/list_petty_cash');
+    }
+
     public function print_payment_pdf($id = null)
     {
         if ($this->input->get('id')) {
@@ -1596,7 +1698,7 @@ class Suppliers extends MY_Controller
         $total_paid = $total_debit;
         //echo $total_due; exit;
         // Get supplier aging (180 days)
-        $aging = $this->Reports_model->getSupplierAgingNew(180, $today, [$supplier_id]);
+        $aging = $this->Reports_model->getSupplierAgingNew(180, $today, [$supplier_id], 32);
         $supplier_aging = !empty($aging) ? $aging[$supplier_id] : null;
         //echo '<pre>';print_r($supplier_aging);exit;
 
@@ -2924,6 +3026,19 @@ class Suppliers extends MY_Controller
 
         $petty_cash_data = $this->purchases_model->getDebitMemoData($id);
         $petty_cash_entries_data = $this->purchases_model->getDebitMemoEntriesData($id);
+
+        if (!$petty_cash_data) {
+            $this->session->set_flashdata('error', 'Petty Cash not found.');
+            admin_redirect('suppliers/list_petty_cash');
+            return;
+        }
+
+        // Check if locked
+        if (($petty_cash_data->status ?? 'open') === 'locked') {
+            $this->session->set_flashdata('warning', 'This petty cash is locked and cannot be edited.');
+            admin_redirect('suppliers/list_petty_cash');
+            return;
+        }
 
         $this->data['memo_data'] = $petty_cash_data;
         $this->data['memo_entries_data'] = $petty_cash_entries_data;
@@ -4375,7 +4490,7 @@ class Suppliers extends MY_Controller
         ')
         ->from('sma_memo m')
         ->where('m.supplier_id', $supplier_id)
-        ->where('m.type', 'serviceinvoice')
+        ->where_in('m.type', ['serviceinvoice', 'pettycash'])
         ->where('m.payment_amount > COALESCE(m.used_amount, 0)');
 
         $memos = $this->db->get()->result();
