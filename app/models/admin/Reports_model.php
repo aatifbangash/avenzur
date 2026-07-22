@@ -7877,6 +7877,187 @@ class Reports_model extends CI_Model
         return [];
     }
 
+    public function get_purchase_per_invoice_data_old($start_date, $end_date, $supplier_id = '', $pharmacy_id = '', $purchase_id = '')
+    {
+        $result = [];
+
+        // Get all purchases (excluding imports from excel)
+        $this->db->select("
+            'Purchase' as type,
+            p.date,
+            p.id as invoice,
+            '-' as return_inv,
+            COALESCE(agent.name, '') as agent_name,
+            s.id as supplier_no,
+            s.name as supplier_name,
+            s.sequence_code as supplier_code,
+            (p.total) as purchase,
+            p.total_tax as vat,
+            p.grand_total + COALESCE(p.grand_deal_discount, 0) as payable,
+            0 as payment,
+            0 as return_amount,
+            COALESCE(p.total_discount, 0) - COALESCE(p.grand_deal_discount, 0) as invoice_discount,
+            COALESCE(p.grand_deal_discount, 0) as deal_discount
+        ");
+        $this->db->from('sma_purchases p');
+        $this->db->join('sma_companies s', 'p.supplier_id = s.id', 'left');
+        // Get agent name: supplier -> parent_code -> agent (by sequence_code)
+        $this->db->join('sma_companies agent', 'agent.sequence_code = s.parent_code', 'left');
+
+        // Fix date comparison - ensure we're comparing dates properly
+        $this->db->where('p.date >=', $start_date . ' 00:00:00');
+        $this->db->where('p.date <=', $end_date . ' 23:59:59');
+
+        // Exclude purchases with note "import from excel"
+        $this->db->where('(p.note IS NULL OR p.note != "import from excel")');
+
+        // Exclude returns (returns have return_purchase_ref)
+        $this->db->where('(p.return_purchase_ref IS NULL OR p.return_purchase_ref = "")');
+
+        // Apply filters
+        if (!empty($supplier_id)) {
+            $this->db->where('p.supplier_id', $supplier_id);
+        }
+        if (!empty($pharmacy_id)) {
+            $this->db->where('p.warehouse_id', $pharmacy_id);
+        }
+        if (!empty($purchase_id)) {
+            $this->db->where('p.id', $purchase_id);
+        }
+
+        $this->db->order_by('p.date', 'DESC');
+        $query = $this->db->get();
+
+        // Log the query for debugging
+        log_message('debug', 'Purchase Query: ' . $this->db->last_query());
+
+        $purchases = $query->result_array();
+
+        // Get all payments for suppliers with proper supplier details
+        $this->db->select("
+            'Payment' as type,
+            pay.date,
+            p.id as invoice,
+            '-' as return_inv,
+            COALESCE(agent.name, '') as agent_name,
+            COALESCE(s.id, '') as supplier_no,
+            COALESCE(s.name, 'Direct Payment') as supplier_name,
+            s.sequence_code as supplier_code,
+            0 as purchase,
+            0 as vat,
+            0 as payable,
+            pay.amount as payment,
+            0 as return_amount,
+            0 as invoice_discount,
+            0 as deal_discount
+        ");
+        $this->db->from('sma_payments pay');
+        $this->db->join('sma_purchases p', 'pay.purchase_id = p.id', 'left');
+        $this->db->join('sma_companies s', 'p.supplier_id = s.id', 'left');
+        // Get agent name: supplier -> parent_code -> agent (by sequence_code)
+        $this->db->join('sma_companies agent', 'agent.sequence_code = s.parent_code', 'left');
+
+        // Only include purchase-related payments (not sale or return payments)
+        $this->db->where('pay.purchase_id IS NOT NULL');
+        $this->db->where('(pay.sale_id IS NULL OR pay.sale_id = 0)');
+        $this->db->where('(pay.return_id IS NULL OR pay.return_id = 0)');
+
+        // Fix date comparison
+        $this->db->where('pay.date >=', $start_date . ' 00:00:00');
+        $this->db->where('pay.date <=', $end_date . ' 23:59:59');
+
+        // Exclude payments related to purchases with note "import from excel" (if linked to purchase)
+        $this->db->where('(p.note IS NULL OR p.note != "import from excel")');
+
+        // Apply filters - only if there's a related purchase
+        if (!empty($supplier_id)) {
+            $this->db->where('p.supplier_id', $supplier_id);
+        }
+
+        if (!empty($pharmacy_id)) {
+            $this->db->where('p.warehouse_id', $pharmacy_id);
+        }
+        
+        if (!empty($purchase_id)) {
+            $this->db->where('pay.purchase_id', $purchase_id);
+        }
+
+        $this->db->order_by('pay.date', 'DESC');
+        $query = $this->db->get();
+
+        // Log the query for debugging
+        log_message('debug', 'Payment Query: ' . $this->db->last_query());
+
+        $payments = $query->result_array();
+
+        // Get all purchase returns from sma_returns_supplier table
+        $this->db->select("
+            'Return' as type,
+            rs.date,
+            rs.reference_no as invoice,
+            rs.id as return_inv,
+            COALESCE(agent.name, '-') as agent_name,
+            COALESCE(s.id, '') as supplier_no,
+            COALESCE(s.sequence_code, '') as supplier_code,
+            COALESCE(s.name, rs.supplier) as supplier_name,
+            rs.total_net_purchase as purchase,
+            rs.total_tax as vat,
+            rs.grand_total as payable,
+            0 as payment,
+            COALESCE(rs.grand_total, 0) as return_amount,
+            0 as invoice_discount,
+            0 as deal_discount
+        ");
+        $this->db->from('sma_returns_supplier rs');
+        $this->db->join('sma_companies s', 'rs.supplier_id = s.id', 'left');
+        // Get agent name: supplier -> parent_code -> agent (by sequence_code)
+        $this->db->join('sma_companies agent', 'agent.sequence_code = s.parent_code', 'left');
+        
+        // Join with purchases table to filter by purchase_id if needed
+        if (!empty($purchase_id)) {
+            $this->db->join('sma_purchases p', 'rs.reference_no = p.id', 'left');
+        }
+
+        // Fix date comparison
+        $this->db->where('rs.date >=', $start_date . ' 00:00:00');
+        $this->db->where('rs.date <=', $end_date . ' 23:59:59');
+
+        // Exclude returns with note "import from excel"
+        $this->db->where('(rs.note IS NULL OR rs.note != "import from excel")');
+        $this->db->where('rs.status', 'completed'); // Only include completed returns
+
+        // Apply filters
+        if (!empty($supplier_id)) {
+            $this->db->where('rs.supplier_id', $supplier_id);
+        }
+
+        if (!empty($pharmacy_id)) {
+            $this->db->where('rs.warehouse_id', $pharmacy_id);
+        }
+        
+        if (!empty($purchase_id)) {
+            $this->db->where('rs.reference_no', $purchase_id);
+        }
+
+        $this->db->order_by('rs.date', 'DESC');
+        $query = $this->db->get();
+
+        // Log the query for debugging
+        log_message('debug', 'Return Query: ' . $this->db->last_query());
+
+        $returns = $query->result_array();
+
+        // Merge purchases, payments, and returns
+        $result = array_merge($purchases, $payments, $returns);
+
+        // Sort by date descending
+        usort($result, function($a, $b) {
+            return strtotime($b['date']) - strtotime($a['date']);
+        });
+
+        return $result;
+    }
+
     /**
      * Get Purchase Per Invoice Report (simplified version for single-select filters)
      */
@@ -7966,6 +8147,7 @@ class Reports_model extends CI_Model
         $this->db->where('pay.purchase_id IS NOT NULL');
         $this->db->where('(pay.sale_id IS NULL OR pay.sale_id = 0)');
         $this->db->where('(pay.return_id IS NULL OR pay.return_id = 0)');
+        $this->db->where('(pay.supplier_return_id IS NULL OR pay.return_id = 0)');
 
         // Fix date comparison
         $this->db->where('pay.date >=', $start_date . ' 00:00:00');
@@ -8065,6 +8247,319 @@ class Reports_model extends CI_Model
         });
 
         return $result;
+    }
+
+    /**
+     * Compare Purchase Per Item vs Purchase Per Invoice totals/docs for the same period.
+     * Returns summary + document-level diffs for manual checking.
+     *
+     * @param string   $start_date Y-m-d
+     * @param string   $end_date   Y-m-d
+     * @param int|null $warehouse_id
+     * @param int|null $supplier_id
+     *
+     * @return array
+     */
+    public function get_purchase_item_vs_invoice_comparison($start_date, $end_date, $warehouse_id = null, $supplier_id = null)
+    {
+        $start_date = trim((string) $start_date);
+        $end_date = trim((string) $end_date);
+        $pfx = $this->db->dbprefix;
+
+        $item_rows = $this->getPurchasePerItem($start_date, $end_date, null, $supplier_id, null, 'all', $warehouse_id);
+        $invoice_rows = $this->get_purchase_per_invoice_data($start_date, $end_date, $supplier_id ?: '', $warehouse_id ?: '', '');
+
+        $item_docs = [];
+        $item_summary = [
+            'purchase_count' => 0,
+            'return_count' => 0,
+            'purchase' => 0.0,
+            'net_purchase' => 0.0,
+            'vat' => 0.0,
+            'payable' => 0.0,
+            'purchase_only_purchase' => 0.0,
+            'purchase_only_vat' => 0.0,
+            'purchase_only_payable' => 0.0,
+            'return_only_purchase' => 0.0,
+            'return_only_vat' => 0.0,
+            'return_only_payable' => 0.0,
+        ];
+
+        foreach ($item_rows as $row) {
+            $type = (string) ($row->type ?? '');
+            $is_return = ($type === 'Return');
+            $doc_id = $is_return ? (string) ($row->return_ref ?? '') : (string) ($row->purchase_ref ?? '');
+            if ($doc_id === '' || $doc_id === '0') {
+                continue;
+            }
+            $key = ($is_return ? 'R:' : 'P:') . $doc_id;
+
+            if (!isset($item_docs[$key])) {
+                $item_docs[$key] = [
+                    'key' => $key,
+                    'type' => $is_return ? 'Return' : 'Purchase',
+                    'doc_id' => $doc_id,
+                    'linked_purchase_id' => $is_return ? (string) ($row->purchase_ref ?? '') : (string) ($row->purchase_ref ?? ''),
+                    'date' => (string) ($row->date ?? ''),
+                    'supplier_no' => (string) ($row->supplier_no ?? ''),
+                    'supplier_name' => (string) ($row->supplier_name ?? ''),
+                    'line_count' => 0,
+                    'purchase' => 0.0,
+                    'net_purchase' => 0.0,
+                    'vat' => 0.0,
+                    'payable' => 0.0,
+                ];
+                if ($is_return) {
+                    $item_summary['return_count']++;
+                } else {
+                    $item_summary['purchase_count']++;
+                }
+            }
+
+            $purchase = (float) ($row->purchase ?? 0);
+            $net_purchase = (float) ($row->net_purchase ?? 0);
+            $vat = (float) ($row->vat ?? 0);
+            $payable = (float) ($row->payable ?? 0);
+
+            $item_docs[$key]['line_count']++;
+            $item_docs[$key]['purchase'] += $purchase;
+            $item_docs[$key]['net_purchase'] += $net_purchase;
+            $item_docs[$key]['vat'] += $vat;
+            $item_docs[$key]['payable'] += $payable;
+
+            $item_summary['purchase'] += $purchase;
+            $item_summary['net_purchase'] += $net_purchase;
+            $item_summary['vat'] += $vat;
+            $item_summary['payable'] += $payable;
+
+            if ($is_return) {
+                $item_summary['return_only_purchase'] += abs($purchase);
+                $item_summary['return_only_vat'] += abs($vat);
+                $item_summary['return_only_payable'] += abs($payable);
+            } else {
+                $item_summary['purchase_only_purchase'] += $purchase;
+                $item_summary['purchase_only_vat'] += $vat;
+                $item_summary['purchase_only_payable'] += $payable;
+            }
+        }
+
+        $invoice_docs = [];
+        $invoice_summary = [
+            'purchase_count' => 0,
+            'return_count' => 0,
+            'payment_count' => 0,
+            'purchase' => 0.0,
+            'vat' => 0.0,
+            'payable' => 0.0,
+            'payment' => 0.0,
+            'return_amount' => 0.0,
+            'purchase_only_purchase' => 0.0,
+            'purchase_only_vat' => 0.0,
+            'purchase_only_payable' => 0.0,
+            'return_only_purchase' => 0.0,
+            'return_only_vat' => 0.0,
+            'return_only_payable' => 0.0,
+            'purchase_statuses' => [],
+        ];
+
+        foreach ($invoice_rows as $row) {
+            $type = (string) ($row['type'] ?? 'Purchase');
+            if ($type === 'Payment') {
+                $invoice_summary['payment_count']++;
+                $invoice_summary['payment'] += (float) ($row['payment'] ?? 0);
+                continue;
+            }
+
+            $is_return = ($type === 'Return');
+            $doc_id = $is_return ? (string) ($row['return_inv'] ?? '') : (string) ($row['invoice'] ?? '');
+            if ($doc_id === '' || $doc_id === '-' || $doc_id === '0') {
+                continue;
+            }
+            $key = ($is_return ? 'R:' : 'P:') . $doc_id;
+
+            $purchase = (float) ($row['purchase'] ?? 0);
+            $vat = (float) ($row['vat'] ?? 0);
+            $payable = (float) ($row['payable'] ?? 0);
+            $return_amount = (float) ($row['return_amount'] ?? 0);
+
+            $invoice_docs[$key] = [
+                'key' => $key,
+                'type' => $is_return ? 'Return' : 'Purchase',
+                'doc_id' => $doc_id,
+                'linked_purchase_id' => $is_return ? (string) ($row['invoice'] ?? '') : (string) ($row['invoice'] ?? ''),
+                'date' => !empty($row['date']) ? date('d-M-y', strtotime($row['date'])) : '',
+                'supplier_no' => (string) ($row['supplier_no'] ?? ''),
+                'supplier_name' => (string) ($row['supplier_name'] ?? ''),
+                'purchase' => $purchase,
+                'vat' => $vat,
+                'payable' => $payable,
+                'return_amount' => $return_amount,
+            ];
+
+            if ($is_return) {
+                $invoice_summary['return_count']++;
+                $invoice_summary['return_amount'] += $return_amount;
+                $invoice_summary['return_only_purchase'] += abs($purchase);
+                $invoice_summary['return_only_vat'] += abs($vat);
+                $invoice_summary['return_only_payable'] += abs($payable);
+            } else {
+                $invoice_summary['purchase_count']++;
+                $invoice_summary['purchase_only_purchase'] += $purchase;
+                $invoice_summary['purchase_only_vat'] += $vat;
+                $invoice_summary['purchase_only_payable'] += $payable;
+            }
+
+            // Invoice report stores return purchase/vat/payable as positive; keep raw sum for footer parity.
+            $invoice_summary['purchase'] += $purchase;
+            $invoice_summary['vat'] += $vat;
+            $invoice_summary['payable'] += $payable;
+        }
+
+        // Enrich purchase docs with status / note (common cause of mismatches).
+        $purchase_ids = [];
+        foreach (array_merge(array_keys($item_docs), array_keys($invoice_docs)) as $key) {
+            if (strpos($key, 'P:') === 0) {
+                $purchase_ids[] = (int) substr($key, 2);
+            }
+        }
+        $purchase_ids = array_values(array_unique(array_filter($purchase_ids)));
+        $purchase_meta = [];
+        if (!empty($purchase_ids)) {
+            $this->db->select('id, status, note, return_purchase_ref, warehouse_id, DATE(date) as date_only');
+            $this->db->from($pfx . 'purchases');
+            $this->db->where_in('id', $purchase_ids);
+            foreach ($this->db->get()->result_array() as $meta) {
+                $purchase_meta[(int) $meta['id']] = $meta;
+            }
+        }
+
+        $all_keys = array_unique(array_merge(array_keys($item_docs), array_keys($invoice_docs)));
+        sort($all_keys);
+
+        $diffs = [];
+        $only_item = [];
+        $only_invoice = [];
+        $matched_ok = 0;
+
+        foreach ($all_keys as $key) {
+            $in_item = isset($item_docs[$key]);
+            $in_invoice = isset($invoice_docs[$key]);
+            $item = $in_item ? $item_docs[$key] : null;
+            $inv = $in_invoice ? $invoice_docs[$key] : null;
+            $type = $in_item ? $item['type'] : $inv['type'];
+            $doc_id = $in_item ? $item['doc_id'] : $inv['doc_id'];
+
+            // Normalize signs for comparison: item returns are negative, invoice returns are positive.
+            $item_purchase = $in_item ? abs((float) $item['purchase']) : 0.0;
+            $item_vat = $in_item ? abs((float) $item['vat']) : 0.0;
+            $item_payable = $in_item ? abs((float) $item['payable']) : 0.0;
+            $item_net = $in_item ? abs((float) $item['net_purchase']) : 0.0;
+
+            $inv_purchase = $in_invoice ? abs((float) $inv['purchase']) : 0.0;
+            $inv_vat = $in_invoice ? abs((float) $inv['vat']) : 0.0;
+            $inv_payable = $in_invoice ? abs((float) $inv['payable']) : 0.0;
+
+            $diff_purchase = round($item_purchase - $inv_purchase, 2);
+            $diff_vat = round($item_vat - $inv_vat, 2);
+            $diff_payable = round($item_payable - $inv_payable, 2);
+
+            $reasons = [];
+            if (!$in_item) {
+                $reasons[] = 'Missing in Purchase Per Item';
+            }
+            if (!$in_invoice) {
+                $reasons[] = 'Missing in Purchase Per Invoice';
+            }
+
+            $meta = null;
+            if ($type === 'Purchase' && isset($purchase_meta[(int) $doc_id])) {
+                $meta = $purchase_meta[(int) $doc_id];
+                if (!$in_item && !empty($meta['status']) && $meta['status'] !== 'received') {
+                    $reasons[] = "Purchase status is '{$meta['status']}' (item report only includes received)";
+                }
+                if (!empty($meta['note']) && strtolower(trim($meta['note'])) === 'import from excel') {
+                    $reasons[] = 'Import from excel (normally excluded by both)';
+                }
+                if (!$in_invoice && !empty($meta['return_purchase_ref'])) {
+                    $reasons[] = 'Has return_purchase_ref (invoice report excludes these purchase rows)';
+                }
+            }
+
+            $has_amount_diff = (abs($diff_purchase) > 0.009 || abs($diff_vat) > 0.009 || abs($diff_payable) > 0.009);
+            if ($in_item && $in_invoice && $has_amount_diff) {
+                $reasons[] = 'Amount mismatch (item lines total vs invoice header)';
+                // Common formula gap: item uses sum(subtotal/totalbeforevat+deal), invoice uses p.total / grand_total.
+                if (abs($diff_purchase) > 0.009 && abs(round($item_net - $inv_purchase, 2)) <= 0.009) {
+                    $reasons[] = 'Item purchase(subtotal) differs, but item net_purchase matches invoice purchase';
+                }
+            }
+
+            $row = [
+                'key' => $key,
+                'type' => $type,
+                'doc_id' => $doc_id,
+                'linked_purchase_id' => $in_item ? $item['linked_purchase_id'] : ($inv['linked_purchase_id'] ?? ''),
+                'date' => $in_item ? $item['date'] : ($inv['date'] ?? ''),
+                'supplier_no' => $in_item ? $item['supplier_no'] : ($inv['supplier_no'] ?? ''),
+                'supplier_name' => $in_item ? $item['supplier_name'] : ($inv['supplier_name'] ?? ''),
+                'in_item' => $in_item,
+                'in_invoice' => $in_invoice,
+                'item_lines' => $in_item ? (int) $item['line_count'] : 0,
+                'item_purchase' => $item_purchase,
+                'item_net_purchase' => $item_net,
+                'item_vat' => $item_vat,
+                'item_payable' => $item_payable,
+                'invoice_purchase' => $inv_purchase,
+                'invoice_vat' => $inv_vat,
+                'invoice_payable' => $inv_payable,
+                'diff_purchase' => $diff_purchase,
+                'diff_vat' => $diff_vat,
+                'diff_payable' => $diff_payable,
+                'status' => $meta['status'] ?? '',
+                'warehouse_id' => $meta['warehouse_id'] ?? '',
+                'reasons' => $reasons,
+            ];
+
+            if (!$in_item && $in_invoice) {
+                $only_invoice[] = $row;
+            } elseif ($in_item && !$in_invoice) {
+                $only_item[] = $row;
+            } elseif ($has_amount_diff) {
+                $diffs[] = $row;
+            } else {
+                $matched_ok++;
+            }
+        }
+
+        // Comparable nets: item already nets returns as negative; invoice needs purchases - returns.
+        $invoice_comparable = [
+            'purchase' => $invoice_summary['purchase_only_purchase'] - $invoice_summary['return_only_purchase'],
+            'vat' => $invoice_summary['purchase_only_vat'] - $invoice_summary['return_only_vat'],
+            'payable' => $invoice_summary['purchase_only_payable'] - $invoice_summary['return_only_payable'],
+        ];
+
+        return [
+            'item_summary' => $item_summary,
+            'invoice_summary' => $invoice_summary,
+            'invoice_comparable' => $invoice_comparable,
+            'summary_diff' => [
+                'purchase' => round($item_summary['purchase'] - $invoice_comparable['purchase'], 2),
+                'vat' => round($item_summary['vat'] - $invoice_comparable['vat'], 2),
+                'payable' => round($item_summary['payable'] - $invoice_comparable['payable'], 2),
+                'raw_invoice_purchase_footer' => round($item_summary['purchase'] - $invoice_summary['purchase'], 2),
+                'raw_invoice_payable_footer' => round($item_summary['payable'] - $invoice_summary['payable'], 2),
+            ],
+            'matched_ok' => $matched_ok,
+            'amount_mismatches' => $diffs,
+            'only_in_item' => $only_item,
+            'only_in_invoice' => $only_invoice,
+            'notes' => [
+                'Purchase Per Item includes only purchases with status=received; Purchase Per Invoice does not filter by status.',
+                'Purchase Per Invoice includes Payment rows (ignored in amount comparison).',
+                'Item report returns are negative; Invoice report return purchase/vat/payable are positive (comparison uses absolute values per document).',
+                'Comparable totals use Item net (purchases - returns) vs Invoice (purchase rows - return rows).',
+            ],
+        ];
     }
 
     public function get_shelving_report($filters = [])

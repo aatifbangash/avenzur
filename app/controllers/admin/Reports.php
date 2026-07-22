@@ -8828,6 +8828,51 @@ class Reports extends MY_Controller
         $this->page_construct('reports/purchase_per_invoice', $meta, $this->data);
     }
 
+    /**
+     * Compare Purchase Per Item vs Purchase Per Invoice and flag document-level differences.
+     * URL: admin/reports/purchase_item_vs_invoice_comparison
+     */
+    public function purchase_item_vs_invoice_comparison()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
+        $this->data['supplier_id'] = null;
+        $this->data['warehouse_id'] = $this->site->resolveReportWarehouseFilter('warehouse_id');
+        $this->data['comparison'] = null;
+
+        $from_date = $this->input->post('from_date') ?: null;
+        $to_date = $this->input->post('to_date') ?: null;
+
+        if ($from_date) {
+            $start_date = trim($this->sma->fld($from_date));
+            $end_date = trim($this->sma->fld($to_date));
+            $supplier_id = $this->input->post('supplier_id') ?: null;
+            $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+
+            $this->data['comparison'] = $this->reports_model->get_purchase_item_vs_invoice_comparison(
+                $start_date,
+                $end_date,
+                $warehouse_id,
+                $supplier_id
+            );
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['supplier_id'] = $supplier_id;
+            $this->data['warehouse_id'] = $warehouse_id;
+        }
+
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => '#', 'page' => 'Purchase Item vs Invoice Comparison'],
+        ];
+        $meta = ['page_title' => 'Purchase Item vs Invoice Comparison', 'bc' => $bc];
+        $this->page_construct('reports/purchase_item_vs_invoice_comparison', $meta, $this->data);
+    }
+
     /* -----------------------------------------------------------------------
      * TEMPORARY DIAGNOSTIC — remove after investigation
      * URL: admin/reports/debug_trial_balance_diff?from=YYYY-MM-DD&to=YYYY-MM-DD
