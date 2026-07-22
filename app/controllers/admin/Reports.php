@@ -6122,6 +6122,47 @@ class Reports extends MY_Controller
         }
     }
 
+    public function supplier_tb_gl_tb_comparison_report()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
+        $this->data['comparison_result'] = null;
+        $this->data['ledger_ids'] = [62, 63];
+        $this->data['warehouse_id'] = $this->site->resolveReportWarehouseFilter('warehouse_id');
+
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+
+            $comparison = $this->reports_model->get_supplier_tb_gl_tb_comparison(
+                $start_date,
+                $end_date,
+                $warehouse_id,
+                [62, 63]
+            );
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['comparison_result'] = $comparison;
+            $this->data['ledger_ids'] = $comparison['ledger_ids'];
+            $this->data['warehouse_id'] = $warehouse_id;
+        }
+
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => '#', 'page' => 'Supplier TB vs GL TB Comparison'],
+        ];
+        $meta = ['page_title' => 'Supplier TB vs GL TB Comparison', 'bc' => $bc];
+        $this->page_construct('reports/supplier_tb_gl_tb_comparison_report', $meta, $this->data);
+    }
+
     public function financial_position()
     {
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');

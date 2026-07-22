@@ -413,8 +413,9 @@ class Reports_model extends CI_Model
         if (!empty($supplier_id_array)) {
             $ids = implode(',', array_map('intval', $supplier_id_array));
             $supplier_filter = " AND p.supplier_id IN ($ids)";
+            $memo_supplier_filter = " AND m.supplier_id IN ($ids)";
         }
-
+        //echo '<pre>';print_r($supplier_filter);exit;
         $warehouse_filter = $this->site->reportWarehouseAndClause($warehouse_id, 'p');
         
         $sql_at = $start_date . ' 23:59:59';
@@ -517,7 +518,7 @@ class Reports_model extends CI_Model
             AND m.supplier_id > 0
             AND m.payment_amount > 0
             AND m.date <= '{$sql_at}'
-            $supplier_filter
+            $memo_supplier_filter
         ";
 
         $service_invoices = $this->db->query($sql)->result();
@@ -589,7 +590,7 @@ class Reports_model extends CI_Model
             AND m.supplier_entry_type = 'C'
             AND m.payment_amount > 0
             AND m.date <= '{$sql_at}'
-            $supplier_filter
+            $memo_supplier_filter
         ";
 
         $credit_memos = $this->db->query($sql)->result();
@@ -2397,6 +2398,167 @@ class Reports_model extends CI_Model
         }
 
         return $balances;
+    }
+
+    /**
+     * Compare GL movement on selected ledgers against supplier TB movement logic.
+     *
+     * @param string   $start_date Y-m-d
+     * @param string   $end_date   Y-m-d
+     * @param int|null $warehouse_id
+     * @param int[]    $ledger_ids
+     *
+     * @return array
+     */
+    public function get_supplier_tb_gl_tb_comparison($start_date, $end_date, $warehouse_id = null, array $ledger_ids = [62, 63])
+    {
+        $ledger_ids = array_values(array_filter(array_map('intval', $ledger_ids), function ($id) {
+            return $id > 0;
+        }));
+        if (empty($ledger_ids)) {
+            $ledger_ids = [62, 63];
+        }
+
+        $purchase_wh = $this->site->reportPurchaseLedgerWarehouseCondition($warehouse_id);
+
+        $this->db
+            ->select("
+                ei.id AS entry_item_id,
+                e.id AS entry_id,
+                DATE(e.date) AS date,
+                e.reference_no,
+                e.transaction_type,
+                e.supplier_id,
+                c.name AS supplier_name,
+                c.sequence_code AS supplier_code,
+                c.ledger_account AS supplier_ledger_account,
+                ei.ledger_id,
+                al.code AS ledger_code,
+                al.name AS ledger_name,
+                ei.dc,
+                ei.amount,
+                CASE
+                    WHEN e.supplier_id IS NULL OR e.supplier_id = 0 THEN 0
+                    WHEN c.id IS NULL THEN 0
+                    WHEN c.ledger_account = ei.ledger_id THEN 1
+                    ELSE 0
+                END AS in_supplier_tb
+            ", false)
+            ->from('sma_accounts_entryitems ei')
+            ->join('sma_accounts_entries e', 'e.id = ei.entry_id')
+            ->join('sma_accounts_ledgers al', 'al.id = ei.ledger_id', 'left')
+            ->join('sma_companies c', 'c.id = e.supplier_id', 'left')
+            ->where_in('ei.ledger_id', $ledger_ids)
+            ->where('DATE(e.date) >=', $start_date)
+            ->where('DATE(e.date) <=', $end_date)
+            ->where($purchase_wh, null, false)
+            ->order_by('e.date', 'ASC')
+            ->order_by('e.id', 'ASC')
+            ->order_by('ei.id', 'ASC');
+
+        $q = $this->db->get();
+        $gl_rows = $q->num_rows() > 0 ? $q->result_array() : [];
+
+        $summary = [
+            'gl_total_debit'             => 0.0,
+            'gl_total_credit'            => 0.0,
+            'gl_in_tb_total_debit'       => 0.0,
+            'gl_in_tb_total_credit'      => 0.0,
+            'supplier_tb_total_debit'    => 0.0,
+            'supplier_tb_total_credit'   => 0.0,
+            'manual_flag_count'          => 0,
+            'supplier_mismatch_count'    => 0,
+        ];
+
+        $flagged_rows = [];
+        $gl_included_supplier_map = [];
+
+        foreach ($gl_rows as &$row) {
+            $amount = (float) $row['amount'];
+            $is_debit = strtoupper((string) $row['dc']) === 'D';
+
+            if ($is_debit) {
+                $summary['gl_total_debit'] += $amount;
+            } else {
+                $summary['gl_total_credit'] += $amount;
+            }
+
+            $reason = '';
+            if ((int) $row['supplier_id'] <= 0) {
+                $reason = 'Missing supplier_id on accounting entry';
+            } elseif (empty($row['supplier_name'])) {
+                $reason = 'Supplier on entry not found in companies';
+            } elseif ((int) $row['supplier_ledger_account'] !== (int) $row['ledger_id']) {
+                $reason = 'Supplier ledger_account differs from GL line ledger';
+            }
+
+            $row['manual_check_reason'] = $reason;
+            if ($reason !== '') {
+                $summary['manual_flag_count']++;
+                $flagged_rows[] = $row;
+            }
+
+            if ((int) $row['in_supplier_tb'] === 1 && (int) $row['supplier_id'] > 0) {
+                if ($is_debit) {
+                    $summary['gl_in_tb_total_debit'] += $amount;
+                    $gl_included_supplier_map[(int) $row['supplier_id']]['trsDebit'] =
+                        ($gl_included_supplier_map[(int) $row['supplier_id']]['trsDebit'] ?? 0) + $amount;
+                } else {
+                    $summary['gl_in_tb_total_credit'] += $amount;
+                    $gl_included_supplier_map[(int) $row['supplier_id']]['trsCredit'] =
+                        ($gl_included_supplier_map[(int) $row['supplier_id']]['trsCredit'] ?? 0) + $amount;
+                }
+                $gl_included_supplier_map[(int) $row['supplier_id']]['name'] = (string) ($row['supplier_name'] ?? '');
+                $gl_included_supplier_map[(int) $row['supplier_id']]['sequence_code'] = (string) ($row['supplier_code'] ?? '');
+            }
+        }
+        unset($row);
+
+        $supplier_tb = $this->get_suppliers_trial_balance($start_date, $end_date, [], $warehouse_id, 'all');
+        $supplier_differences = [];
+
+        $all_supplier_ids = array_unique(array_merge(
+            array_map('intval', array_keys($gl_included_supplier_map)),
+            array_map('intval', array_keys($supplier_tb ?: []))
+        ));
+        sort($all_supplier_ids);
+
+        foreach ($all_supplier_ids as $supplier_id) {
+            $gl_debit = (float) ($gl_included_supplier_map[$supplier_id]['trsDebit'] ?? 0);
+            $gl_credit = (float) ($gl_included_supplier_map[$supplier_id]['trsCredit'] ?? 0);
+            $tb_debit = (float) ($supplier_tb[$supplier_id]['trsDebit'] ?? 0);
+            $tb_credit = (float) ($supplier_tb[$supplier_id]['trsCredit'] ?? 0);
+
+            $summary['supplier_tb_total_debit'] += $tb_debit;
+            $summary['supplier_tb_total_credit'] += $tb_credit;
+
+            $diff_debit = round($gl_debit - $tb_debit, 2);
+            $diff_credit = round($gl_credit - $tb_credit, 2);
+            if (abs($diff_debit) > 0.009 || abs($diff_credit) > 0.009) {
+                $summary['supplier_mismatch_count']++;
+                $supplier_differences[] = [
+                    'supplier_id' => $supplier_id,
+                    'sequence_code' => $supplier_tb[$supplier_id]['sequence_code']
+                        ?? ($gl_included_supplier_map[$supplier_id]['sequence_code'] ?? ''),
+                    'name' => $supplier_tb[$supplier_id]['name']
+                        ?? ($gl_included_supplier_map[$supplier_id]['name'] ?? ''),
+                    'gl_trs_debit' => $gl_debit,
+                    'gl_trs_credit' => $gl_credit,
+                    'supplier_tb_trs_debit' => $tb_debit,
+                    'supplier_tb_trs_credit' => $tb_credit,
+                    'diff_debit' => $diff_debit,
+                    'diff_credit' => $diff_credit,
+                ];
+            }
+        }
+
+        return [
+            'gl_rows' => $gl_rows,
+            'flagged_rows' => $flagged_rows,
+            'supplier_differences' => $supplier_differences,
+            'summary' => $summary,
+            'ledger_ids' => $ledger_ids,
+        ];
     }
 
     public function getCustomersTrialBalance($start_date, $end_date)
