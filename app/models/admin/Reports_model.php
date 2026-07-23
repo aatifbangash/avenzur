@@ -6320,13 +6320,25 @@ class Reports_model extends CI_Model
         }
         $dateWherePr2 = str_replace('DATE(pr.date)', 'DATE(pr2.date)', $dateWhere);
 
-        $warehouse_sale_sql = '';
+        // Sale lines are warehouse-scoped; service-invoice / memo payment lines are not (same as receipt list).
+        $warehouse_line_sql = '';
         if ($warehouse) {
-            $warehouse_sale_sql = ' AND s.warehouse_id = ' . (int) $warehouse;
+            $warehouse_line_sql = ' AND (
+                (p.sale_id IS NOT NULL AND p.sale_id > 0 AND s.warehouse_id = ' . (int) $warehouse . ')
+                OR (NULLIF(p.memo_id, \'\') IS NOT NULL AND NULLIF(p.memo_id, 0) IS NOT NULL)
+                OR ((p.sale_id IS NULL OR p.sale_id = 0 OR p.sale_id = \'\')
+                    AND (p.memo_id IS NULL OR p.memo_id = \'\' OR p.memo_id = 0))
+            )';
         } else {
-            $warehouse_sale_sql = $this->site->reportWarehouseAndClause(null, 's');
+            $osw_id = (int) $this->site->getOverseasWarehouseId();
+            if ($osw_id) {
+                $warehouse_line_sql = ' AND (
+                    p.sale_id IS NULL OR p.sale_id = 0 OR p.sale_id = \'\'
+                    OR s.warehouse_id IS NULL
+                    OR s.warehouse_id != ' . $osw_id . '
+                )';
+            }
         }
-        $include_service_union = !$warehouse;
 
         // Totals must match Customer Payments (sum of payment_reference.amount).. The list uses receipt headers, not raw line sums
         // Allocate each receipt's pr.amount across its payment lines in proportion to line amounts so the report footer equals the list
@@ -6336,7 +6348,7 @@ class Reports_model extends CI_Model
                          ELSE p.amount
                     END";
 
-        // Part 1: sales (and other) payment lines — allocated share of receipt header when multiple lines exist.
+        // Part 1: sales + memo (service invoice) payment lines — allocated share of receipt header when multiple lines exist.
         // Part 2: receipts with no sma_payments rows (typical Rent Client / service-invoice collections).
         $sql = "
             SELECT 
@@ -6358,17 +6370,25 @@ class Reports_model extends CI_Model
                 END AS paid_amount,
                 p.paid_by,
                 p.return_id,
-                s.date AS sale_date,
-                s.id AS sale_id,
-                s.grand_total,
+                COALESCE(s.date, m.date) AS sale_date,
+                COALESCE(s.id, m.id) AS sale_id,
+                COALESCE(s.grand_total, m.payment_amount, pr.amount) AS grand_total,
                 COALESCE(NULLIF(s.payment_term, 0), NULLIF(cm.payment_term, 0), 0) AS payment_term,
                 cm.city AS area,
                 pr.transfer_from_ledger,
                 lg.name AS ledger_name,
                 pr.reference_no AS payment_ref_id,
-                'sale' AS collection_type
+                CASE
+                    WHEN NULLIF(p.memo_id, '') IS NOT NULL AND NULLIF(p.memo_id, 0) IS NOT NULL
+                         AND m.type = 'serviceinvoice'
+                    THEN 'service_invoice'
+                    WHEN NULLIF(p.memo_id, '') IS NOT NULL AND NULLIF(p.memo_id, 0) IS NOT NULL
+                    THEN COALESCE(m.type, 'memo')
+                    ELSE 'sale'
+                END AS collection_type
             FROM sma_payments p
             LEFT JOIN sma_sales s ON s.id = p.sale_id
+            LEFT JOIN sma_memo m ON m.id = p.memo_id
             INNER JOIN sma_payment_reference pr ON pr.id = p.payment_id
             INNER JOIN (
                 SELECT
@@ -6388,19 +6408,16 @@ class Reports_model extends CI_Model
                     ".$dateWherePr2."
                 GROUP BY p2.payment_id
             ) line_sums ON line_sums.payment_id = pr.id
-            LEFT JOIN sma_companies cm ON cm.id = COALESCE(s.customer_id, pr.customer_id)
+            LEFT JOIN sma_companies cm ON cm.id = COALESCE(s.customer_id, m.customer_id, pr.customer_id)
             LEFT JOIN sma_accounts_ledgers lg ON lg.id = pr.transfer_from_ledger
             WHERE pr.customer_id IS NOT NULL
                 AND pr.customer_id <> 0
                 AND (pr.added_via IS NULL OR pr.added_via NOT IN ('customer_return_modu', 'credit_memo_module', 'auto_script'))
                 AND (pr.note IS NULL OR pr.note NOT LIKE '%Reconciliation payment for sale ID%')
                 ".$dateWhere."
-                ".$warehouse_sale_sql."
+                ".$warehouse_line_sql."
             GROUP BY p.id
-            HAVING paid_amount > 0.001";
-
-        if ($include_service_union) {
-            $sql .= "
+            HAVING paid_amount > 0.001
 
             UNION ALL
 
@@ -6447,10 +6464,7 @@ class Reports_model extends CI_Model
                     SELECT 1 FROM sma_payments p0 WHERE p0.payment_id = pr.id
                 )
                 AND pr.amount > 0.01
-                ".$dateWhere;
-        }
-
-        $sql .= "
+                ".$dateWhere."
 
             ORDER BY collection_date
         ";
