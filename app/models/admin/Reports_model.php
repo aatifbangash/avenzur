@@ -8190,7 +8190,7 @@ class Reports_model extends CI_Model
             COALESCE(s.sequence_code, '') as supplier_code,
             COALESCE(s.name, rs.supplier) as supplier_name,
             0 as purchase,
-            rs.total_tax as vat,
+            -1*(rs.total_tax) as vat,
             0 as payable,
             0 as payment,
             COALESCE(rs.grand_total, 0) as return_amount,
