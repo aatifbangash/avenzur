@@ -739,13 +739,24 @@ class Sales_model extends CI_Model
         $payments_tbl = $dbp . 'payments';
         $sales_tbl = $dbp . 'sales';
         $payment_ref_tbl = $dbp . 'payment_reference';
+        // Service-invoice / memo collections are not tied to a sale warehouse.
+        // Match supplier getPaymentReferences: keep memo-linked receipts visible under warehouse filter.
+        // Also keep receipts with no sale-linked payment lines (header-only service collections).
         if ($warehouse_id) {
             $this->db->where(
-                "EXISTS (SELECT 1 FROM {$payments_tbl} p
-                    INNER JOIN {$sales_tbl} s ON s.id = p.sale_id
-                    WHERE p.payment_id = {$payment_ref_tbl}.id
-                    AND p.sale_id IS NOT NULL AND p.sale_id > 0
-                    AND s.warehouse_id = {$warehouse_id})",
+                "(
+                    EXISTS (SELECT 1 FROM {$payments_tbl} p
+                        INNER JOIN {$sales_tbl} s ON s.id = p.sale_id
+                        WHERE p.payment_id = {$payment_ref_tbl}.id
+                        AND p.sale_id IS NOT NULL AND p.sale_id > 0
+                        AND s.warehouse_id = {$warehouse_id})
+                    OR EXISTS (SELECT 1 FROM {$payments_tbl} p
+                        WHERE p.payment_id = {$payment_ref_tbl}.id
+                        AND NULLIF(p.memo_id, '') IS NOT NULL AND NULLIF(p.memo_id, 0) IS NOT NULL)
+                    OR NOT EXISTS (SELECT 1 FROM {$payments_tbl} p
+                        WHERE p.payment_id = {$payment_ref_tbl}.id
+                        AND p.sale_id IS NOT NULL AND p.sale_id > 0)
+                )",
                 null,
                 false
             );
@@ -753,11 +764,19 @@ class Sales_model extends CI_Model
             $osw_id = $this->site->getOverseasWarehouseId();
             if ($osw_id) {
                 $this->db->where(
-                    "NOT EXISTS (SELECT 1 FROM {$payments_tbl} p
-                        INNER JOIN {$sales_tbl} s ON s.id = p.sale_id
-                        WHERE p.payment_id = {$payment_ref_tbl}.id
-                        AND p.sale_id IS NOT NULL AND p.sale_id > 0
-                        AND s.warehouse_id = {$osw_id})",
+                    "(
+                        NOT EXISTS (SELECT 1 FROM {$payments_tbl} p
+                            INNER JOIN {$sales_tbl} s ON s.id = p.sale_id
+                            WHERE p.payment_id = {$payment_ref_tbl}.id
+                            AND p.sale_id IS NOT NULL AND p.sale_id > 0
+                            AND s.warehouse_id = {$osw_id})
+                        OR EXISTS (SELECT 1 FROM {$payments_tbl} p
+                            WHERE p.payment_id = {$payment_ref_tbl}.id
+                            AND NULLIF(p.memo_id, '') IS NOT NULL AND NULLIF(p.memo_id, 0) IS NOT NULL)
+                        OR NOT EXISTS (SELECT 1 FROM {$payments_tbl} p
+                            WHERE p.payment_id = {$payment_ref_tbl}.id
+                            AND p.sale_id IS NOT NULL AND p.sale_id > 0)
+                    )",
                     null,
                     false
                 );
