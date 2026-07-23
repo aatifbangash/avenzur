@@ -8191,7 +8191,7 @@ class Reports_model extends CI_Model
             COALESCE(s.name, rs.supplier) as supplier_name,
             rs.total_net_purchase as purchase,
             rs.total_tax as vat,
-            rs.grand_total as payable,
+            0 as payable,
             0 as payment,
             COALESCE(rs.grand_total, 0) as return_amount,
             0 as invoice_discount,
