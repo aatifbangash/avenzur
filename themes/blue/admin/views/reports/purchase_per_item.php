@@ -138,7 +138,35 @@
                             </div>
                         </div>
 
-                        <?php $this->load->view($this->theme . 'reports/partials/warehouse_filter_field', ['wh_col' => 'col-md-2']); ?>
+                        <?php
+                        $wh_field = $wh_field ?? 'warehouse_id';
+                        $wh_val = $wh_val ?? ($warehouse_id ?? ($warehouse ?? ($pharmacy_id ?? '')));
+                        if (($wh_val === '' || $wh_val === null)
+                            && !array_key_exists($wh_field, $_GET)
+                            && !array_key_exists($wh_field, $_POST)
+                            && !$this->site->listingShowsAllLocalWarehouses()) {
+                            $wh_val = $this->site->getDefaultListingWarehouseId();
+                        }
+                        $wh_col = $wh_col ?? 'col-md-3';
+                        $wh_label = 'All Local Warehouses';
+                        ?>
+                        <div class="<?= $wh_col ?>">
+                            <div class="form-group">
+                                <?= lang('warehouse', $wh_field); ?>
+                                <?php
+                                $opts = ['' => $wh_label];
+                                foreach ($warehouses as $wh) {
+                                    $opts[$wh->id] = $wh->name;
+                                }
+                                echo form_dropdown(
+                                    $wh_field,
+                                    $opts,
+                                    $wh_val,
+                                    'id="' . $wh_field . '" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" style="width:100%;"'
+                                );
+                                ?>
+                            </div>
+                        </div>
 
                         <div class="col-md-2">
                             <div class="form-group">
