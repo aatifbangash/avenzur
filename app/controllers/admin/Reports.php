@@ -6307,25 +6307,37 @@ class Reports extends MY_Controller
             $trial_balance_array = $this->reports_model->get_customer_trial_balance($start_date, $end_date, $warehouse_id, $customer_rent_type);
             $response_arr = array();
 
+            // Seed from period rows (includes all customers, even with zero movement).
             foreach ($trial_balance_array['trs'] as $trans) {
-                $response_arr[$trans->id]["name"] = $trans->name;
-                $response_arr[$trans->id]["sequence_code"] = $trans->sequence_code;
-                $response_arr[$trans->id]["category"] = $trans->category;
-                $response_arr[$trans->id]["payment_term"] = $trans->payment_term;
-                $response_arr[$trans->id]["credit_limit"] = $trans->credit_limit;
-                $response_arr[$trans->id]["trsDebit"] = $trans->total_debit;
-                $response_arr[$trans->id]["trsCredit"] = $trans->total_credit;
+                $response_arr[$trans->id] = [
+                    'name' => $trans->name,
+                    'sequence_code' => $trans->sequence_code,
+                    'category' => $trans->category,
+                    'payment_term' => $trans->payment_term,
+                    'credit_limit' => $trans->credit_limit,
+                    'trsDebit' => (float) $trans->total_debit,
+                    'trsCredit' => (float) $trans->total_credit,
+                    'obDebit' => 0,
+                    'obCredit' => 0,
+                ];
             }
 
-
             foreach ($trial_balance_array['ob'] as $trans) {
-                $response_arr[$trans->id]["name"] = $trans->name;
-                $response_arr[$trans->id]["sequence_code"] = $trans->sequence_code;
-                $response_arr[$trans->id]["category"] = $trans->category;
-                $response_arr[$trans->id]["payment_term"] = $trans->payment_term;
-                $response_arr[$trans->id]["credit_limit"] = $trans->credit_limit;
-                $response_arr[$trans->id]["obDebit"] = $trans->total_debit;
-                $response_arr[$trans->id]["obCredit"] = $trans->total_credit;
+                if (!isset($response_arr[$trans->id])) {
+                    $response_arr[$trans->id] = [
+                        'name' => $trans->name,
+                        'sequence_code' => $trans->sequence_code,
+                        'category' => $trans->category,
+                        'payment_term' => $trans->payment_term,
+                        'credit_limit' => $trans->credit_limit,
+                        'trsDebit' => 0,
+                        'trsCredit' => 0,
+                        'obDebit' => 0,
+                        'obCredit' => 0,
+                    ];
+                }
+                $response_arr[$trans->id]['obDebit'] = (float) $trans->total_debit;
+                $response_arr[$trans->id]['obCredit'] = (float) $trans->total_credit;
             }
 
             $this->data['start_date'] = $from_date;

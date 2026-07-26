@@ -2656,6 +2656,8 @@ class Reports_model extends CI_Model
     public function get_customer_trial_balance($start_date, $end_date, $warehouse_id = null, $rent_type = 'non_rental')
     {
         $response = array();
+        $start_date = trim((string) $start_date);
+        $end_date = trim((string) $end_date);
         $warehouse_sql = $this->site->reportLedgerWarehouseExistsSql($warehouse_id);
         $rent_sql = $this->apply_customer_rent_type_sql($rent_type);
         // Include receivable lines on current ledger_account and on comma-separated old_ledgers (same rule as customer statement).
@@ -2667,31 +2669,36 @@ class Reports_model extends CI_Model
                         REPLACE(REPLACE(IFNULL(sma_companies.old_ledgers, ''), ' ', ''), ', ', ',')
                     ) > 0
                 ))";
-        $q = $this->db->query("SELECT 
-                sma_companies.id, 
+
+        // Period movements — start from all customers so zero-activity rows are included.
+        $q = $this->db->query("SELECT
+                sma_companies.id,
                 sma_companies.name,
                 sma_companies.category,
                 sma_companies.sequence_code,
                 sma_companies.payment_term,
                 sma_companies.credit_limit,
-                SUM(CASE WHEN sma_accounts_entryitems.dc = 'D' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_debit, 
-                SUM(CASE WHEN sma_accounts_entryitems.dc = 'C' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_credit 
-            FROM 
-                sma_accounts_entries 
-            JOIN 
-                sma_accounts_entryitems ON sma_accounts_entries.id = sma_accounts_entryitems.entry_id 
-            JOIN 
-                sma_companies ON sma_accounts_entries.customer_id = sma_companies.id 
-            WHERE 
-                date(sma_accounts_entries.date) >= '{$start_date}' 
-                AND date(sma_accounts_entries.date) <= '{$end_date}' 
-                AND sma_accounts_entries.customer_id IS NOT NULL 
-                AND {$ledgerMatch}
-                {$warehouse_sql}
+                COALESCE(trs.total_debit, 0) AS total_debit,
+                COALESCE(trs.total_credit, 0) AS total_credit
+            FROM sma_companies
+            LEFT JOIN (
+                SELECT
+                    sma_accounts_entries.customer_id,
+                    SUM(CASE WHEN sma_accounts_entryitems.dc = 'D' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_debit,
+                    SUM(CASE WHEN sma_accounts_entryitems.dc = 'C' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_credit
+                FROM sma_accounts_entries
+                JOIN sma_accounts_entryitems ON sma_accounts_entries.id = sma_accounts_entryitems.entry_id
+                JOIN sma_companies ON sma_accounts_entries.customer_id = sma_companies.id
+                WHERE date(sma_accounts_entries.date) >= '{$start_date}'
+                    AND date(sma_accounts_entries.date) <= '{$end_date}'
+                    AND sma_accounts_entries.customer_id IS NOT NULL
+                    AND {$ledgerMatch}
+                    {$warehouse_sql}
+                GROUP BY sma_accounts_entries.customer_id
+            ) trs ON trs.customer_id = sma_companies.id
+            WHERE sma_companies.group_name = 'customer'
                 {$rent_sql}
-            GROUP BY 
-                sma_accounts_entries.customer_id, 
-                sma_companies.name");
+            ORDER BY sma_companies.name ASC");
 
         $data = array();
         if ($q->num_rows() > 0) {
@@ -2699,35 +2706,37 @@ class Reports_model extends CI_Model
                 $data[] = $row;
             }
         }
-
         $response['trs'] = $data;
 
-        $q = $this->db->query("SELECT 
-                    sma_companies.id, 
-                    sma_companies.name, 
-                    sma_companies.category,
-                    sma_companies.sequence_code,
-                    sma_companies.payment_term,
-                    sma_companies.credit_limit,
-                    SUM(CASE WHEN sma_accounts_entryitems.dc = 'D' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_debit, 
-                    SUM(CASE WHEN sma_accounts_entryitems.dc = 'C' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_credit 
-                    FROM 
-                    sma_accounts_entries 
-                    JOIN 
-                    sma_accounts_entryitems ON sma_accounts_entries.id = sma_accounts_entryitems.entry_id 
-                    JOIN 
-                    sma_companies ON sma_accounts_entries.customer_id = sma_companies.id 
-                    WHERE 
-                    date(sma_accounts_entries.date) < '{$start_date}' 
+        // Opening balances — same full customer list, zeros when no prior activity.
+        $q = $this->db->query("SELECT
+                sma_companies.id,
+                sma_companies.name,
+                sma_companies.category,
+                sma_companies.sequence_code,
+                sma_companies.payment_term,
+                sma_companies.credit_limit,
+                COALESCE(ob.total_debit, 0) AS total_debit,
+                COALESCE(ob.total_credit, 0) AS total_credit
+            FROM sma_companies
+            LEFT JOIN (
+                SELECT
+                    sma_accounts_entries.customer_id,
+                    SUM(CASE WHEN sma_accounts_entryitems.dc = 'D' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_debit,
+                    SUM(CASE WHEN sma_accounts_entryitems.dc = 'C' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_credit
+                FROM sma_accounts_entries
+                JOIN sma_accounts_entryitems ON sma_accounts_entries.id = sma_accounts_entryitems.entry_id
+                JOIN sma_companies ON sma_accounts_entries.customer_id = sma_companies.id
+                WHERE date(sma_accounts_entries.date) < '{$start_date}'
+                    AND sma_accounts_entries.customer_id IS NOT NULL
                     AND {$ledgerMatch}
-                    AND sma_accounts_entries.customer_id IS NOT NULL 
                     {$warehouse_sql}
-                    {$rent_sql}
-                    GROUP BY 
-                    sma_accounts_entries.customer_id, 
-                    sma_companies.name
-                ");
-        //echo $this->db->last_query();
+                GROUP BY sma_accounts_entries.customer_id
+            ) ob ON ob.customer_id = sma_companies.id
+            WHERE sma_companies.group_name = 'customer'
+                {$rent_sql}
+            ORDER BY sma_companies.name ASC");
+
         $data2 = array();
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -2737,7 +2746,6 @@ class Reports_model extends CI_Model
         $response['ob'] = $data2;
 
         return $response;
-
     }
 
 
