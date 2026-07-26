@@ -3,68 +3,249 @@ $spi_export_q = $_GET;
 $spi_export_q['export_excel'] = '1';
 unset($spi_export_q['spi_page']);
 $spi_export_url = admin_url('reports/sales_per_item?' . http_build_query($spi_export_q));
+$spi_total_rows = isset($sales_data_total) ? (int) $sales_data_total : 0;
+$spi_per_page = isset($sales_per_page) ? (int) $sales_per_page : 100;
+$spi_page_num = isset($sales_page) ? (int) $sales_page : 1;
+$spi_total_pages = $spi_per_page > 0 ? (int) ceil($spi_total_rows / $spi_per_page) : 1;
+if ($spi_total_pages < 1) {
+    $spi_total_pages = 1;
+}
+$spi_from = $spi_total_rows ? (($spi_page_num - 1) * $spi_per_page) + 1 : 0;
+$spi_to = min($spi_page_num * $spi_per_page, $spi_total_rows);
 ?>
 <style>
-    .sales-pi-root .spi-table-block {
+    .sales-pi-root,
+    .sales-pi-root .box-content,
+    .sales-pi-root .spi-report-shell,
+    .sales-pi-root .spi-table-card,
+    .sales-pi-root .spi-table-card .col-lg-12 {
         min-width: 0;
         max-width: 100%;
+        overflow-x: hidden;
     }
-    .sales-pi-root .spi-table-block .table-responsive {
+    .sales-pi-root {
+        background: linear-gradient(180deg, #f7f9fc 0%, #eef3f8 100%);
+    }
+    .sales-pi-root .box-header {
+        display: none;
+    }
+    .sales-pi-root .box-content {
+        padding: 22px;
+    }
+    .sales-pi-root .spi-report-shell {
+        display: grid;
+        gap: 18px;
+    }
+    .sales-pi-root .spi-surface {
+        background: #ffffff;
+        border: 1px solid #dde5ef;
+        border-radius: 14px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    }
+    .sales-pi-root .spi-report-hero {
+        padding: 22px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+    }
+    .sales-pi-root .spi-report-title {
+        margin: 0;
+        font-size: 24px;
+        line-height: 1.2;
+        font-weight: 700;
+        color: #183153;
+    }
+    .sales-pi-root .spi-report-subtitle {
+        margin: 6px 0 0;
+        color: #60758b;
+        font-size: 13px;
+    }
+    .sales-pi-root .spi-hero-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .sales-pi-root .spi-export-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 10px;
+        background: #1f7ae0;
+        color: #fff;
+        text-decoration: none;
+        padding: 10px 14px;
+        font-size: 13px;
+        font-weight: 600;
+        box-shadow: 0 8px 18px rgba(31, 122, 224, 0.2);
+    }
+    .sales-pi-root .spi-export-btn:hover,
+    .sales-pi-root .spi-export-btn:focus {
+        color: #fff;
+        text-decoration: none;
+        background: #1667c1;
+    }
+    .sales-pi-root .spi-kpis {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        padding: 0 24px 22px;
+    }
+    .sales-pi-root .spi-kpi {
+        border: 1px solid #e5ebf3;
+        border-radius: 12px;
+        background: #f8fbff;
+        padding: 14px 16px;
+    }
+    .sales-pi-root .spi-kpi-label {
+        display: block;
+        color: #6b7c8f;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 6px;
+    }
+    .sales-pi-root .spi-kpi-value {
+        display: block;
+        color: #16263d;
+        font-size: 18px;
+        font-weight: 700;
+    }
+    .sales-pi-root .spi-filter-card {
+        padding: 22px 24px 10px;
+    }
+    .sales-pi-root .spi-section-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    .sales-pi-root .spi-section-title {
+        margin: 0;
+        color: #183153;
+        font-size: 16px;
+        font-weight: 700;
+    }
+    .sales-pi-root .spi-section-note {
+        margin: 4px 0 0;
+        color: #75879b;
+        font-size: 12px;
+    }
+    .sales-pi-root .spi-filter-grid .col-md-3,
+    .sales-pi-root .spi-filter-grid .col-md-2 {
+        margin-bottom: 14px;
+    }
+    .sales-pi-root .spi-filter-card .form-group label,
+    .sales-pi-root .spi-filter-card .form-group .control-label,
+    .sales-pi-root .spi-filter-card .form-group > label {
+        display: inline-block;
+        margin-bottom: 6px;
+        color: #344a60;
+        font-size: 12px;
+        font-weight: 700;
+    }
+    .sales-pi-root .spi-filter-card .form-control {
+        height: 42px;
+        border-radius: 10px;
+        border-color: #d7e1ec;
+        box-shadow: none;
+        padding: 10px 12px;
+    }
+    .sales-pi-root .spi-filter-card .form-control:focus {
+        border-color: #1f7ae0;
+        box-shadow: 0 0 0 3px rgba(31, 122, 224, 0.12);
+    }
+    .sales-pi-root .spi-filter-actions {
+        display: flex;
+        align-items: flex-end;
+    }
+    .sales-pi-root .spi-load-btn {
+        width: 100%;
+        height: 42px;
+        border-radius: 10px;
+        font-weight: 700;
+    }
+    .sales-pi-root .spi-table-card {
+        padding: 20px 0 0;
+    }
+    .sales-pi-root .spi-table-toolbar {
+        padding: 0 24px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .sales-pi-root .spi-table-toolbar .spi-section-note {
+        margin: 0;
+    }
+    .sales-pi-root .spi-table-scroll {
+        display: block;
         width: 100%;
         max-width: 100%;
         overflow-x: auto;
+        overflow-y: hidden;
         -webkit-overflow-scrolling: touch;
+        border-top: 1px solid #e5ebf3;
+        border-bottom: 1px solid #e5ebf3;
     }
     .sales-pi-root #salesItemTable {
+        width: 100%;
+        min-width: 1760px;
         margin-bottom: 0;
+        background: #fff;
     }
-    .sales-pi-root #salesItemTable th:nth-child(-n+5),
-    .sales-pi-root #salesItemTable td:nth-child(-n+5),
-    .sales-pi-root #salesItemTable th:nth-child(12),
-    .sales-pi-root #salesItemTable td:nth-child(12),
-    .sales-pi-root #salesItemTable th:nth-child(n+14),
-    .sales-pi-root #salesItemTable td:nth-child(n+14) {
+    .sales-pi-root #salesItemTable th,
+    .sales-pi-root #salesItemTable td {
         white-space: nowrap;
         font-size: 12px;
-        padding: 4px 6px;
+        padding: 9px 10px;
         vertical-align: middle;
+        border-color: #e7edf4;
     }
-    .sales-pi-root #salesItemTable th:nth-child(n+6):nth-child(-n+11),
-    .sales-pi-root #salesItemTable td:nth-child(n+6):nth-child(-n+11) {
-        white-space: normal;
-        word-break: break-word;
-        overflow-wrap: anywhere;
-        font-size: 12px;
-        padding: 4px 6px;
-        vertical-align: middle;
-        max-width: 9rem;
+    .sales-pi-root #salesItemTable thead th {
+        background: #1f7ae0;
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
     }
-    .sales-pi-root #salesItemTable th:nth-child(13),
-    .sales-pi-root #salesItemTable td:nth-child(13) {
-        white-space: normal;
-        word-break: break-word;
-        overflow-wrap: anywhere;
-        font-size: 12px;
-        padding: 4px 6px;
-        vertical-align: middle;
-        max-width: 16rem;
+    .sales-pi-root #salesItemTable tbody tr:hover td {
+        background: #f9fbfe;
     }
-    .sales-pi-root #salesItemTable th:nth-child(5),
-    .sales-pi-root #salesItemTable td:nth-child(5) {
-        min-width: 6.5rem;
-        max-width: 8.5rem;
-        width: 1%;
-        padding: 4px 5px;
-        font-size: 12px;
-    }
-    .sales-pi-root #salesItemTable th:nth-child(5) {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+    .sales-pi-root .spi-pager-wrap {
+        padding: 16px 24px 20px;
     }
     .sales-pi-root .spi-pager-well {
+        margin: 0;
+        border-radius: 12px;
+        border: 1px solid #dde6f0;
+        background: #f8fbff;
         max-width: 100%;
         overflow-wrap: anywhere;
+    }
+    @media (max-width: 991px) {
+        .sales-pi-root .box-content {
+            padding: 14px;
+        }
+        .sales-pi-root .spi-report-hero,
+        .sales-pi-root .spi-kpis,
+        .sales-pi-root .spi-filter-card,
+        .sales-pi-root .spi-table-toolbar,
+        .sales-pi-root .spi-pager-wrap {
+            padding-left: 16px;
+            padding-right: 16px;
+        }
+        .sales-pi-root .spi-report-hero {
+            flex-direction: column;
+        }
+        .sales-pi-root .spi-kpis {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
 
@@ -80,13 +261,24 @@ $spi_export_url = admin_url('reports/sales_per_item?' . http_build_query($spi_ex
         </div>
     </div>
     <div class="box-content">
-        <div class="row">
-            <div class="col-lg-12">
+        <div class="spi-report-shell">
+            <div class="spi-surface">
+                <div class="spi-report-hero">
+                    <div>
+                        <h1 class="spi-report-title"><?= lang('Sales Per Item'); ?></h1>
+                    </div>
+                    <div class="spi-hero-actions">
+                       <a href="<?= $spi_export_url ?>" class="tip" title="<?= lang('download'); ?> CSV (<?= lang('all'); ?>)" id="xls"><i class="icon fa fa-file-excel-o"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="spi-surface spi-filter-card">
                 <?php
                 $attrib = ['data-toggle' => 'validator', 'role' => 'form', 'id' => 'searchForm', 'method' => 'get'];
                 echo admin_form_open_multipart('reports/sales_per_item', $attrib)
                 ?>
-                <div class="row">
+                <div class="row spi-filter-grid">
                     <div class="col-lg-12">
                         <div class="col-md-3">
                             <div class="form-group">
@@ -130,7 +322,7 @@ $spi_export_url = admin_url('reports/sales_per_item?' . http_build_query($spi_ex
                         </div>
                     </div>
                 </div>
-                <div class="row">
+                <div class="row spi-filter-grid">
                     <div class="col-lg-12">
                         <?php $this->load->view($this->theme . 'reports/partials/warehouse_filter_field', ['wh_col' => 'col-md-3']); ?>
                         <div class="col-md-3">
@@ -145,21 +337,21 @@ $spi_export_url = admin_url('reports/sales_per_item?' . http_build_query($spi_ex
                                 ?>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
+                        <div class="col-md-3 spi-filter-actions">
+                            <div class="form-group" style="width:100%;">
                                 <label>&nbsp;</label><br>
-                                <button type="submit" style="margin-top: 0px;" class="btn btn-primary" id="load_report"><?= lang('Load Report') ?></button>
+                                <button type="submit" class="btn btn-primary spi-load-btn" id="load_report"><i class="fa fa-search"></i> <?= lang('Load Report') ?></button>
                             </div>
                         </div>
                     </div>
                 </div>
                 <?php echo form_close(); ?>
+            </div>
 
-                <hr />
-
-                <div class="row spi-table-block">
+            <div class="spi-surface spi-table-card">
+                <div class="row">
                     <div class="col-lg-12">
-                        <div class="table-responsive">
+                        <div class="table-responsive spi-table-scroll">
                             <table id="salesItemTable" class="table table-bordered table-striped table-condensed table-hover">
                                 <thead>
                                     <tr>
@@ -191,14 +383,6 @@ $spi_export_url = admin_url('reports/sales_per_item?' . http_build_query($spi_ex
                                 </thead>
                                 <tbody>
                                     <?php
-                                    $spi_total_rows = isset($sales_data_total) ? (int) $sales_data_total : 0;
-                                    $spi_per_page = isset($sales_per_page) ? (int) $sales_per_page : 100;
-                                    $spi_page_num = isset($sales_page) ? (int) $sales_page : 1;
-                                    $spi_total_pages = $spi_per_page > 0 ? (int) ceil($spi_total_rows / $spi_per_page) : 1;
-                                    if ($spi_total_pages < 1) {
-                                        $spi_total_pages = 1;
-                                    }
-
                                     if (isset($sales_data) && !empty($sales_data)) {
                                         $count = ($spi_page_num - 1) * $spi_per_page;
                                         $use_sql_totals = !empty($sales_data_totals);
@@ -274,20 +458,20 @@ $spi_export_url = admin_url('reports/sales_per_item?' . http_build_query($spi_ex
                                     $spi_link[$__k] = ${$__k};
                                 }
                             }
-                            $spi_from = $spi_total_rows ? (($spi_page_num - 1) * $spi_per_page) + 1 : 0;
-                            $spi_to = min($spi_page_num * $spi_per_page, $spi_total_rows);
                             ?>
-                        <div class="well well-sm spi-pager-well" style="margin-top:10px; display:flex; align-items:center; flex-wrap:wrap; gap:10px;">
-                            <span class="text-muted">Rows <?= (int) $spi_from ?>–<?= (int) $spi_to ?> of <?= (int) $spi_total_rows ?> · Page <?= (int) $spi_page_num ?> / <?= (int) $spi_total_pages ?></span>
-                            <?php if ($spi_total_pages > 1) {
-                                $spi_link['spi_page'] = max(1, $spi_page_num - 1);
-                                $prev_u = admin_url('reports/sales_per_item?' . http_build_query($spi_link));
-                                $spi_link['spi_page'] = min($spi_total_pages, $spi_page_num + 1);
-                                $next_u = admin_url('reports/sales_per_item?' . http_build_query($spi_link));
-                                ?>
-                            <a class="btn btn-default btn-sm<?= $spi_page_num <= 1 ? ' disabled' : '' ?>" href="<?= $spi_page_num <= 1 ? '#' : $prev_u ?>"><i class="fa fa-chevron-left"></i> Prev</a>
-                            <a class="btn btn-default btn-sm<?= $spi_page_num >= $spi_total_pages ? ' disabled' : '' ?>" href="<?= $spi_page_num >= $spi_total_pages ? '#' : $next_u ?>">Next <i class="fa fa-chevron-right"></i></a>
-                            <?php } ?>
+                        <div class="spi-pager-wrap">
+                            <div class="well well-sm spi-pager-well" style="display:flex; align-items:center; flex-wrap:wrap; gap:10px;">
+                                <span class="text-muted">Rows <?= (int) $spi_from ?>-<?= (int) $spi_to ?> of <?= (int) $spi_total_rows ?> · Page <?= (int) $spi_page_num ?> / <?= (int) $spi_total_pages ?></span>
+                                <?php if ($spi_total_pages > 1) {
+                                    $spi_link['spi_page'] = max(1, $spi_page_num - 1);
+                                    $prev_u = admin_url('reports/sales_per_item?' . http_build_query($spi_link));
+                                    $spi_link['spi_page'] = min($spi_total_pages, $spi_page_num + 1);
+                                    $next_u = admin_url('reports/sales_per_item?' . http_build_query($spi_link));
+                                    ?>
+                                <a class="btn btn-default btn-sm<?= $spi_page_num <= 1 ? ' disabled' : '' ?>" href="<?= $spi_page_num <= 1 ? '#' : $prev_u ?>"><i class="fa fa-chevron-left"></i> Prev</a>
+                                <a class="btn btn-default btn-sm<?= $spi_page_num >= $spi_total_pages ? ' disabled' : '' ?>" href="<?= $spi_page_num >= $spi_total_pages ? '#' : $next_u ?>">Next <i class="fa fa-chevron-right"></i></a>
+                                <?php } ?>
+                            </div>
                         </div>
                         <?php } ?>
                     </div>
