@@ -8026,7 +8026,7 @@ class Reports extends MY_Controller
             $this->db->select("DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%d-%b-%y') as date,
                 {$this->db->dbprefix('sales')}.id as sale_id,
                 {$this->db->dbprefix('sales')}.reference_no as invoice,
-                {$this->db->dbprefix('companies')}.city as area,
+                {$this->db->dbprefix('companies')}.state as area,
                 COALESCE({$this->db->dbprefix('companies')}.sales_agent, '') as sales_man,
                 {$this->db->dbprefix('companies')}.company as customer_no,
                 {$this->db->dbprefix('companies')}.name as customer_name,
