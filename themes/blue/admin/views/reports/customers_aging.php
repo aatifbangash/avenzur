@@ -48,15 +48,11 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('Duration', 'duration'); ?>
+                                <?php $selected_duration = isset($duration) ? (string) $duration : '120'; ?>
                                 <select id="duration" name="duration" class="form-control input-tip select" required="required" style="width:100%;">
-                                    <option value="30">30 Days</option>
-                                    <option value="60">60 Days</option>
-                                    <option value="90">90 Days</option>
-                                    <option value="120" selected>120 Days</option>
-                                    <option value="150">150 Days</option>
-                                    <option value="180">180 Days</option>
-                                    <option value="210">210 Days</option>
-                                    <option value="240">240 Days</option>
+                                    <?php foreach ([30, 60, 90, 120, 150, 180, 210, 240] as $duration_option): ?>
+                                        <option value="<?= $duration_option; ?>" <?= $selected_duration === (string) $duration_option ? 'selected="selected"' : ''; ?>><?= $duration_option; ?> Days</option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
                         </div>
@@ -140,7 +136,7 @@
                                 <th><?= lang('Credit Term'); ?></th>
                                 <th><?= lang('Credit Limit'); ?></th>
                                 <?php
-                                    $duration = $this->input->post('duration') ? $this->input->post('duration') : 120;
+                                    $duration = isset($duration) ? (int) $duration : 120;
                                     $intervals = [30, 60, 90, 120, 150, 180, 210, 240];
                                     $previous_limit = 0;
                                     $count = 1;
@@ -238,40 +234,35 @@
                                 ?>
                                 
                             </tbody>
-                            <tfoot style="text-align:center;">
-                                <tr>
-                                    <td colspan="4"><strong></strong></td>
-                                    <td><strong></strong></td>
-                                    <td><strong></strong></td>
+                            <tfoot>
+                                <tr style="font-weight: bold; background-color: #f5f5f5;">
+                                    <td colspan="6" style="text-align: right;">Total:</td>
                                     <?php
-                                        $previous_limit = 0;
-                                        $i=1;
-                                        foreach ($intervals as $interval) {
-                                            if ($interval > $duration) {
-                                                break;
-                                            }
-                                            if($i == 1) {
-                                                $start = $previous_limit;
-                                            }else{
-                                                $start = $previous_limit + 1;
-                                            }
-                                            $end = $interval;
-                                            $previous_limit = $end;
-                                            echo "<td><strong>" . number_format($totals["{$start}-{$end}"], 2, '.', ',') . "</strong></td>";
-                                            $i=$i+1;
+                                    $i = 1;
+                                    $previous_limit = 0;
+                                    foreach ($intervals as $interval) {
+                                        if ($interval > $duration) {
+                                            break;
                                         }
-
-                                        echo "<td><strong>" . number_format($totals[">{$duration}"], 2, '.', ',') . "</strong></td>";
+                                        if ($i == 1) {
+                                            $start = $previous_limit;
+                                        } else {
+                                            $start = $previous_limit + 1;
+                                        }
+                                        $end = $interval;
+                                        $previous_limit = $end;
+                                        echo "<td>" . number_format($totals["{$start}-{$end}"], 2, '.', ',') . "</td>";
+                                        $i++;
+                                    }
+                                    echo "<td>" . number_format($totals[">{$duration}"], 2, '.', ',') . "</td>";
                                     ?>
-                                    <td><strong><?= number_format($totals['total'], 2, '.', ','); ?></strong></td>
+                                    <td><?= number_format($totals['total'], 2, '.', ','); ?></td>
                                 </tr>
                             </tfoot>
                         </table>
                     </div>
-                
+                </div>
             </div>
-
         </div>
     </div>
-    
 </div>
