@@ -10930,10 +10930,16 @@ class Reports extends MY_Controller
 
         $filters = [
             'supplier_id'  => $this->input->get('supplier_id') ?: '',
+            'category'     => $this->input->get('category') ?: '',
             'from_date'    => $from_date_in_query ? trim((string) $this->input->get('from_date')) : '',
             'to_date'      => $this->input->get('to_date')     ?: '',
+            'status'       => $this->input->get('status')      ?: '',
             'warehouse_id' => $this->site->resolveReportWarehouseFilter('warehouse_id'),
         ];
+
+        if (empty($filters['from_date'])) {
+            $filters['from_date'] = date('d/m/Y', mktime(0, 0, 0, 1, 1, (int) date('Y')));
+        }
 
         // Convert display date (d/m/Y) to Y-m-d
         foreach (['from_date', 'to_date'] as $f) {
@@ -10948,12 +10954,6 @@ class Reports extends MY_Controller
 
         $payments = $this->purchases_model->getPaymentReferences($filters);
 
-        // Exclude suppliers whose category contains خدمات
-        $payments = array_values(array_filter($payments, function ($p) {
-            return strcasecmp(trim($p->supplier_group ?? ''), 'Services') !== 0
-                && stripos($p->supplier_group ?? '', 'خدمات') === false;
-        }));
-
         $total    = count($payments);
         $offset   = ($page - 1) * $per_page;
         $paged    = array_slice($payments, $offset, $per_page);
@@ -10967,6 +10967,16 @@ class Reports extends MY_Controller
         $this->data['page']            = $page;
         $this->data['per_page']        = $per_page;
         $this->data['suppliers']       = $this->site->getAllCompanies('supplier');
+        $categories = [];
+        if (!empty($this->data['suppliers'])) {
+            foreach ($this->data['suppliers'] as $supplier) {
+                if (!empty($supplier->category) && !in_array($supplier->category, $categories, true)) {
+                    $categories[] = $supplier->category;
+                }
+            }
+            sort($categories);
+        }
+        $this->data['supplier_categories'] = $categories;
         $this->data['warehouses']      = $this->site->getAllWarehouses();
         $this->data['warehouse_id']    = $filters['warehouse_id'];
 
