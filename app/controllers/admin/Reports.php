@@ -5745,7 +5745,7 @@ class Reports extends MY_Controller
         //$this->sma->checkPermissions('customers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
-        $duration = $this->input->post('duration') ? $this->input->post('duration') : null;
+        $duration = $this->input->post('duration') ? (int) $this->input->post('duration') : 120;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $salesman = $this->input->post('salesman');
         if ($salesman === '' || $salesman === null) {
@@ -5767,14 +5767,11 @@ class Reports extends MY_Controller
             $start_date = $this->sma->fld($from_date);
         }
 
-        if ($duration) {
-            $supplier_aging_array = $this->reports_model->getCustomerAgingNew($duration, $start_date, $customer_id_array, $salesman, $warehouse_id);
-        } else {
-            $supplier_aging_array = $this->reports_model->getCustomerAgingNew($duration = 120, $start_date, $customer_id_array, $salesman, $warehouse_id);
-        }
+        $supplier_aging_array = $this->reports_model->getCustomerAgingNew($duration, $start_date, $customer_id_array, $salesman, $warehouse_id);
 
         $this->data['customer_id_array'] = $customer_id_array;
         $this->data['start_date'] = $this->input->post('from_date');
+        $this->data['duration'] = $duration;
         $this->data['salesman'] = $salesman;
         $this->data['selected_salesman'] = $salesman; // Add this for clarity
 

@@ -781,21 +781,28 @@ class Reports_model extends CI_Model
                 c.sequence_code AS customer_code,
                 c.sales_agent,
                 s.grand_total,
-                (SELECT COALESCE(SUM(sp.amount), 0)
-                 FROM {$this->db->dbprefix('payments')} sp
-                 WHERE sp.sale_id = s.id
-                 AND sp.date <= '{$sql_at}') AS paid,
+                COALESCE(p.paid, 0) AS paid,
                 c.payment_term,
                 c.category,
                 c.credit_limit
             FROM sma_sales s
             JOIN sma_companies c ON s.customer_id = c.id
+            LEFT JOIN (
+                SELECT
+                    sale_id,
+                    SUM(amount) AS paid
+                FROM {$this->db->dbprefix('payments')}
+                WHERE date <= '{$sql_at}'
+                AND sale_id IS NOT NULL
+                GROUP BY sale_id
+            ) p ON p.sale_id = s.id
             WHERE s.grand_total > 0 AND s.sale_invoice = 1
             AND s.date <= '{$sql_at}'
             $customer_filter_sales
             $salesman_filter
             $warehouse_filter
         ";
+
 
         $invoices = $this->db->query($sql)->result();
 
