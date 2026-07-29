@@ -827,6 +827,23 @@ class Purchases_model extends CI_Model
             $this->db->where('payment_reference.status', $filters['status']);
         }
 
+        // Trade vs service invoice payments (default: trade = exclude serviceinvoice memo payments).
+        $invoice_type = !empty($filters['invoice_type']) ? $filters['invoice_type'] : 'trade';
+        $memo_tbl = $dbp . 'memo';
+        $service_invoice_exists_sql = "EXISTS (
+            SELECT 1 FROM {$payments_tbl} p
+            INNER JOIN {$memo_tbl} m ON m.id = p.memo_id AND m.type = 'serviceinvoice'
+            WHERE p.payment_id = {$payment_ref_tbl}.id
+              AND NULLIF(p.memo_id, '') IS NOT NULL
+              AND NULLIF(p.memo_id, 0) IS NOT NULL
+        )";
+        if ($invoice_type === 'trade') {
+            $this->db->where("NOT ({$service_invoice_exists_sql})", null, false);
+        } elseif ($invoice_type === 'service') {
+            $this->db->where($service_invoice_exists_sql, null, false);
+        }
+        // 'all' — no invoice-type restriction
+
         $warehouse_id = !empty($filters['warehouse_id']) ? (int) $filters['warehouse_id'] : null;
         $purchases_tbl = $dbp . 'purchases';
         if ($warehouse_id) {
