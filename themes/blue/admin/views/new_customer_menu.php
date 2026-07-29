@@ -336,7 +336,9 @@
                         <?php if($Admin || $Owner || !empty($this->GP['reports-unpaid-invoices-ar'])){ ?>
                             <li><a href="<?= admin_url('reports/unpaid_invoices_ar'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Unpaid Invoices Report'); ?> (AR)</a></li>
                         <?php } ?>
+                        <?php if($Admin || $Owner){ ?>
                         <li><a href="<?= admin_url('reports/onhold_sales'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Onhold Sales'); ?></a></li>
+                        <?php } ?>
                         <li><a href="<?= admin_url('reports/collections_by_location'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Collection Per Invoice'); ?></a></li>
                         <li><a href="<?= admin_url('reports/invoice_status'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Invoice Status'); ?></a></li>
                         <li><a href="<?= admin_url('reports/sales_per_invoice'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Sales Per Invoice'); ?></a></li>
