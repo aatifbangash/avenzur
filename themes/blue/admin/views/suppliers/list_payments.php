@@ -77,6 +77,19 @@ if (!empty($filters['to_date'])) {
                     </div>
                 </div>
 
+                <?php if ($can_filter_invoice_type): ?>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label for="invoice_type" style="font-size:12px; font-weight:600;"><?= lang('Invoice Type') ?></label>
+                        <select name="invoice_type" id="invoice_type" class="form-control input-sm" style="width:100%;">
+                            <option value="trade" <?= $filter_invoice_type === 'trade' ? 'selected' : '' ?>><?= lang('Trade Invoices') ?></option>
+                            <option value="service" <?= $filter_invoice_type === 'service' ? 'selected' : '' ?>><?= lang('Service Invoices') ?></option>
+                            <option value="all" <?= $filter_invoice_type === 'all' ? 'selected' : '' ?>><?= lang('All Invoices') ?></option>
+                        </select>
+                    </div>
+                </div>
+                <?php endif; ?>
+
                 <?php $this->load->view($this->theme . 'reports/partials/warehouse_filter_field', ['wh_col' => 'col-md-2', 'wh_val' => $filter_warehouse_id]); ?>
 
                 <div class="col-md-2">
@@ -93,19 +106,6 @@ if (!empty($filters['to_date'])) {
                         </select>
                     </div>
                 </div>
-
-                <?php if ($can_filter_invoice_type): ?>
-                <div class="col-md-2">
-                    <div class="form-group">
-                        <label for="invoice_type" style="font-size:12px; font-weight:600;"><?= lang('Invoice Type') ?></label>
-                        <select name="invoice_type" id="invoice_type" class="form-control input-sm" style="width:100%;">
-                            <option value="trade" <?= $filter_invoice_type === 'trade' ? 'selected' : '' ?>><?= lang('Trade Invoices') ?></option>
-                            <option value="service" <?= $filter_invoice_type === 'service' ? 'selected' : '' ?>><?= lang('Service Invoices') ?></option>
-                            <option value="all" <?= $filter_invoice_type === 'all' ? 'selected' : '' ?>><?= lang('All Invoices') ?></option>
-                        </select>
-                    </div>
-                </div>
-                <?php endif; ?>
 
                 <div class="col-md-2" style="padding-top:22px;">
                     <button type="submit" class="btn btn-primary btn-sm">
