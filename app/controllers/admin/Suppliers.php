@@ -1795,6 +1795,16 @@ class Suppliers extends MY_Controller
         $meta = ['page_title' => lang('Supplier Payments'), 'bc' => $bc];
 
         // Build filters from GET
+        $can_filter_invoice_type = !empty($this->Owner) || !empty($this->Admin) || !empty($this->FinanceManager)
+            || $this->sma->in_group('financemanager');
+        $invoice_type = 'trade';
+        if ($can_filter_invoice_type) {
+            $invoice_type = $this->input->get('invoice_type') ?: $this->input->post('invoice_type') ?: 'trade';
+            if (!in_array($invoice_type, ['trade', 'service', 'all'], true)) {
+                $invoice_type = 'trade';
+            }
+        }
+
         $filters = [
             'supplier_id'  => $this->input->get('supplier_id') ?: $this->input->post('supplier_id'),
             'category'     => $this->input->get('category')    ?: $this->input->post('category'),
@@ -1802,6 +1812,7 @@ class Suppliers extends MY_Controller
             'from_date'    => $this->input->get('from_date')   ?: $this->input->post('from_date'),
             'to_date'      => $this->input->get('to_date')     ?: $this->input->post('to_date'),
             'status'       => $this->input->get('status')      ?: $this->input->post('status'),
+            'invoice_type' => $invoice_type,
         ];
         // Default from_date to January 1st of the current year
         if (empty($filters['from_date'])) {
@@ -1820,6 +1831,7 @@ class Suppliers extends MY_Controller
         $this->data['filters']    = $filters;
         $this->data['warehouses'] = $this->site->getAllWarehouses();
         $this->data['warehouse_id'] = $filters['warehouse_id'];
+        $this->data['can_filter_invoice_type'] = $can_filter_invoice_type;
 
         // Build distinct category list from suppliers
         $categories = [];
