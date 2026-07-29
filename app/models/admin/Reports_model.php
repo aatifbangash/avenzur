@@ -6495,10 +6495,11 @@ class Reports_model extends CI_Model
         return $data;
     }
 
-    public function getPaymentsByLocation($start_date, $end_date, $warehouse, $supplier_id = null)
+    public function getPaymentsByLocation($start_date, $end_date, $warehouse, $supplier_id = null, $invoice_type = 'trade')
     {
         // Supplier invoice payment report: filter by payment date so it matches
         // the supplier payments list and show invoice-level payment totals.
+        $invoice_type = in_array($invoice_type, ['trade', 'service', 'all'], true) ? $invoice_type : 'trade';
         $dateFilterExpr = "DATE(pr.date)";
         $dateWhere = "";
 
@@ -6523,7 +6524,12 @@ class Reports_model extends CI_Model
             $supplierWhere = ' AND pu.supplier_id = ' . (int) $supplier_id;
         }
 
-        $sql = "
+        $supplierWhereMemo = '';
+        if (!empty($supplier_id)) {
+            $supplierWhereMemo = ' AND m.supplier_id = ' . (int) $supplier_id;
+        }
+
+        $trade_sql = "
             SELECT
                 pu.id AS purchase_id,
                 pu.reference_no AS invoice_no,
@@ -6541,7 +6547,8 @@ class Reports_model extends CI_Model
                 ROUND(SUM(COALESCE(p.amount, 0)), 2) AS paid_amount,
                 ROUND(pu.grand_total - COALESCE(pu.paid, 0), 2) AS balance_amount,
                 MAX(DATE(COALESCE(p.date, pr.date))) AS last_payment_date,
-                pu.payment_status
+                pu.payment_status,
+                'trade' AS invoice_type
             FROM sma_purchases pu
             INNER JOIN sma_payments p
                 ON p.purchase_id = pu.id
@@ -6560,9 +6567,57 @@ class Reports_model extends CI_Model
                 " . $supplierWhere . "
             GROUP BY pu.id
             HAVING ROUND(SUM(COALESCE(p.amount, 0)), 2) > 0";
-        $sql .= "
-             ORDER BY last_payment_date, invoice_no;
-        ";
+
+        $service_sql = "
+            SELECT
+                m.id AS purchase_id,
+                m.reference_no AS invoice_no,
+                DATE(m.date) AS purchase_date,
+                sup.sequence_code AS sequence_code,
+                COALESCE(sup.id, pr.supplier_id) AS supplier_id,
+                COALESCE(sup.name, '') AS supplier_name,
+                'Service Invoice' AS warehouse_name,
+                COALESCE(m.payment_amount, 0) AS grand_total,
+                COALESCE(NULLIF(sup.payment_term, 0), 0) AS payment_term,
+                NULL AS due_date,
+                ROUND(SUM(COALESCE(p.amount, 0)), 2) AS paid_amount,
+                ROUND(
+                    COALESCE(m.payment_amount, 0) - COALESCE(m.used_amount, 0),
+                    2
+                ) AS balance_amount,
+                MAX(DATE(COALESCE(p.date, pr.date))) AS last_payment_date,
+                CASE
+                    WHEN COALESCE(m.used_amount, 0) >= COALESCE(m.payment_amount, 0) - 0.01 THEN 'paid'
+                    WHEN COALESCE(m.used_amount, 0) > 0 THEN 'partial'
+                    ELSE 'pending'
+                END AS payment_status,
+                'service' AS invoice_type
+            FROM sma_memo m
+            INNER JOIN sma_payments p
+                ON p.memo_id = m.id
+                AND NULLIF(p.memo_id, '') IS NOT NULL
+                AND NULLIF(p.memo_id, 0) IS NOT NULL
+            INNER JOIN sma_payment_reference pr
+                ON pr.id = p.payment_id
+                AND pr.supplier_id IS NOT NULL
+                AND pr.supplier_id <> 0
+                AND (pr.added_via IS NULL OR pr.added_via NOT IN ('auto_script', 'advance_settlement'))
+            LEFT JOIN sma_companies sup
+                ON sup.id = m.supplier_id
+            WHERE m.type = 'serviceinvoice'
+                " . $dateWhere . "
+                " . $supplierWhereMemo . "
+            GROUP BY m.id
+            HAVING ROUND(SUM(COALESCE(p.amount, 0)), 2) > 0";
+
+        if ($invoice_type === 'service') {
+            $sql = $service_sql . " ORDER BY last_payment_date, invoice_no";
+        } elseif ($invoice_type === 'all') {
+            $sql = "(" . $trade_sql . ") UNION ALL (" . $service_sql . ") ORDER BY last_payment_date, invoice_no";
+        } else {
+            $sql = $trade_sql . " ORDER BY last_payment_date, invoice_no";
+        }
+
         $q = $this->db->query($sql);
         $data = array();
         if ($q->num_rows() > 0) {

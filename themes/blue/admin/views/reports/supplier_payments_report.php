@@ -6,6 +6,8 @@ $filter_from        = '';
 $filter_to          = '';
 $filter_supplier_id = !empty($filters['supplier_id']) ? $filters['supplier_id'] : '';
 $filter_warehouse_id = $filters['warehouse_id'] ?? '';
+$filter_invoice_type = $filters['invoice_type'] ?? 'trade';
+$can_filter_invoice_type = !empty($can_filter_invoice_type);
 if (!empty($filters['from_date'])) {
     $d = DateTime::createFromFormat('Y-m-d', $filters['from_date']);
     $filter_from = $d ? $d->format('d/m/Y') : $filters['from_date'];
@@ -20,7 +22,15 @@ $page_start   = $total_records > 0 ? (($page - 1) * $per_page) + 1 : 0;
 $page_end     = min($page * $per_page, $total_records);
 
 // Build pagination base URL (preserve all filters)
-$base_params = ['supplier_id' => $filter_supplier_id, 'from_date' => $filter_from, 'to_date' => $filter_to, 'warehouse_id' => $filter_warehouse_id];
+$base_params = [
+    'supplier_id'  => $filter_supplier_id,
+    'from_date'    => $filter_from,
+    'to_date'      => $filter_to,
+    'warehouse_id' => $filter_warehouse_id,
+];
+if ($can_filter_invoice_type) {
+    $base_params['invoice_type'] = $filter_invoice_type;
+}
 $base_qs     = http_build_query($base_params);
 $base_url    = admin_url('reports/supplier_payments_report') . ($base_qs ? '?' . $base_qs . '&' : '?');
 ?>
@@ -71,6 +81,19 @@ $base_url    = admin_url('reports/supplier_payments_report') . ($base_qs ? '?' .
                         </select>
                     </div>
                 </div>
+
+                <?php if ($can_filter_invoice_type): ?>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label for="invoice_type" style="font-size:12px; font-weight:600;"><?= lang('Invoice Type') ?></label>
+                        <select name="invoice_type" id="invoice_type" class="form-control input-sm" style="width:100%;">
+                            <option value="trade" <?= $filter_invoice_type === 'trade' ? 'selected' : '' ?>><?= lang('Trade Invoices') ?></option>
+                            <option value="service" <?= $filter_invoice_type === 'service' ? 'selected' : '' ?>><?= lang('Service Invoices') ?></option>
+                            <option value="all" <?= $filter_invoice_type === 'all' ? 'selected' : '' ?>><?= lang('All Invoices') ?></option>
+                        </select>
+                    </div>
+                </div>
+                <?php endif; ?>
 
                 <?php $this->load->view($this->theme . 'reports/partials/warehouse_filter_field', ['wh_col' => 'col-md-2', 'wh_val' => $filter_warehouse_id]); ?>
 
