@@ -7427,6 +7427,16 @@ class Reports extends MY_Controller
         $supplier = $this->input->get('supplier') ? $this->input->get('supplier') : null;
         $warehouse = $this->site->resolveReportWarehouseFilter('pharmacy');
 
+        $can_filter_invoice_type = !empty($this->Owner) || !empty($this->Admin) || !empty($this->FinanceManager)
+            || $this->sma->in_group('financemanager');
+        $invoice_type = 'trade';
+        if ($can_filter_invoice_type) {
+            $invoice_type = $this->input->get('invoice_type') ?: 'trade';
+            if (!in_array($invoice_type, ['trade', 'service', 'all'], true)) {
+                $invoice_type = 'trade';
+            }
+        }
+
         $this->data['warehouses'] = $this->site->getAllWarehouses();
         $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
         $this->data['warehouse_id'] = $warehouse;
@@ -7434,13 +7444,21 @@ class Reports extends MY_Controller
         $this->data['end_date'] = $to_date;
         $this->data['warehouse'] = $warehouse;
         $this->data['supplier'] = $supplier;
+        $this->data['invoice_type'] = $invoice_type;
+        $this->data['can_filter_invoice_type'] = $can_filter_invoice_type;
         
         // If any filter submitted, fetch data
-        if ($from_date || $to_date || $supplier || array_key_exists('pharmacy', $_GET)) {
+        if ($from_date || $to_date || $supplier || array_key_exists('pharmacy', $_GET) || array_key_exists('invoice_type', $_GET)) {
             $start_date = $from_date ? $this->sma->fld($from_date) : null;
             $end_date = $to_date ? $this->sma->fld($to_date) : null;
             
-            $this->data['payments_data'] = $this->reports_model->getPaymentsByLocation($start_date, $end_date, $warehouse, $supplier);
+            $this->data['payments_data'] = $this->reports_model->getPaymentsByLocation(
+                $start_date,
+                $end_date,
+                $warehouse,
+                $supplier,
+                $invoice_type
+            );
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => 'Supplier Payment by Invoice']];
             $meta = ['page_title' => 'Supplier Payment by Invoice', 'bc' => $bc];
@@ -10945,6 +10963,16 @@ class Reports extends MY_Controller
 
         $from_date_in_query = array_key_exists('from_date', $_GET);
 
+        $can_filter_invoice_type = !empty($this->Owner) || !empty($this->Admin) || !empty($this->FinanceManager)
+            || $this->sma->in_group('financemanager');
+        $invoice_type = 'trade';
+        if ($can_filter_invoice_type) {
+            $invoice_type = $this->input->get('invoice_type') ?: 'trade';
+            if (!in_array($invoice_type, ['trade', 'service', 'all'], true)) {
+                $invoice_type = 'trade';
+            }
+        }
+
         $filters = [
             'supplier_id'  => $this->input->get('supplier_id') ?: '',
             'category'     => $this->input->get('category') ?: '',
@@ -10952,6 +10980,7 @@ class Reports extends MY_Controller
             'to_date'      => $this->input->get('to_date')     ?: '',
             'status'       => $this->input->get('status')      ?: '',
             'warehouse_id' => $this->site->resolveReportWarehouseFilter('warehouse_id'),
+            'invoice_type' => $invoice_type,
         ];
 
         if (empty($filters['from_date'])) {
@@ -10996,6 +11025,7 @@ class Reports extends MY_Controller
         $this->data['supplier_categories'] = $categories;
         $this->data['warehouses']      = $this->site->getAllWarehouses();
         $this->data['warehouse_id']    = $filters['warehouse_id'];
+        $this->data['can_filter_invoice_type'] = $can_filter_invoice_type;
 
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => 'Supplier Payments Report']];
         $meta = ['page_title' => 'Supplier Payments Report', 'bc' => $bc];
