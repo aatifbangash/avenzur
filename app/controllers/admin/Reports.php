@@ -5745,7 +5745,7 @@ class Reports extends MY_Controller
         //$this->sma->checkPermissions('customers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
-        $duration = $this->input->post('duration') ? $this->input->post('duration') : null;
+        $duration = $this->input->post('duration') ? (int) $this->input->post('duration') : 120;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $salesman = $this->input->post('salesman');
         if ($salesman === '' || $salesman === null) {
@@ -5767,14 +5767,11 @@ class Reports extends MY_Controller
             $start_date = $this->sma->fld($from_date);
         }
 
-        if ($duration) {
-            $supplier_aging_array = $this->reports_model->getCustomerAgingNew($duration, $start_date, $customer_id_array, $salesman, $warehouse_id);
-        } else {
-            $supplier_aging_array = $this->reports_model->getCustomerAgingNew($duration = 120, $start_date, $customer_id_array, $salesman, $warehouse_id);
-        }
+        $supplier_aging_array = $this->reports_model->getCustomerAgingNew($duration, $start_date, $customer_id_array, $salesman, $warehouse_id);
 
         $this->data['customer_id_array'] = $customer_id_array;
         $this->data['start_date'] = $this->input->post('from_date');
+        $this->data['duration'] = $duration;
         $this->data['salesman'] = $salesman;
         $this->data['selected_salesman'] = $salesman; // Add this for clarity
 
@@ -10498,6 +10495,8 @@ class Reports extends MY_Controller
         // - Sales unpaid invoices
         // - Customer service invoices from memo
         $sql_at = $at_date ? $this->sma->fld($at_date) . ' 23:59:59' : null;
+        $payments_table = $this->db->dbprefix('payments');
+        $returns_table = $this->db->dbprefix('returns');
         $salesman_name = null;
         if ($salesman_id) {
             $sm_row = $this->db->select('name')->from('sales_man')->where('id', (int)$salesman_id)->get()->row();
@@ -10506,11 +10505,16 @@ class Reports extends MY_Controller
             }
         }
 
-        $paid_subquery = "(SELECT COALESCE(SUM(sp.amount), 0)
-                        FROM {$this->db->dbprefix('payments')} sp
-                        WHERE sp.sale_id = s.id" .
-                        ($sql_at ? " AND sp.date <= '{$sql_at}'" : "") .
-                        ")";
+        $sales_paid_join = "(SELECT sp.sale_id, COALESCE(SUM(sp.amount), 0) AS paid
+            FROM {$payments_table} sp
+            WHERE sp.sale_id IS NOT NULL" .
+            ($sql_at ? " AND sp.date <= '{$sql_at}'" : "") .
+            " GROUP BY sp.sale_id) spaid";
+
+        $sales_returns_join = "(SELECT r.sale_id, COALESCE(SUM(r.grand_total), 0) AS return_amount
+            FROM {$returns_table} r
+            WHERE r.sale_id IS NOT NULL
+            GROUP BY r.sale_id) sret";
 
         $this->db->select("
             s.id            AS invoice_id,
@@ -10527,11 +10531,9 @@ class Reports extends MY_Controller
             w.name          AS warehouse_name,
             s.grand_total   AS invoice_total,
             s.total_discount AS discount,
-            COALESCE((SELECT SUM(grand_total)
-                    FROM {$this->db->dbprefix('returns')}
-                    WHERE sale_id = s.id), 0) AS return_amount,
-            {$paid_subquery} AS paid,
-            ROUND((s.grand_total - {$paid_subquery}), 2) AS outstanding,
+            COALESCE(sret.return_amount, 0) AS return_amount,
+            COALESCE(spaid.paid, 0) AS paid,
+            ROUND((s.grand_total - COALESCE(spaid.paid, 0)), 2) AS outstanding,
             COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) AS payment_term_days,
             DATE_ADD(DATE(s.date), INTERVAL COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY) AS due_date_calc,
             DATEDIFF(CURDATE(), DATE_ADD(DATE(s.date), INTERVAL COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY)) AS days_overdue
@@ -10540,9 +10542,11 @@ class Reports extends MY_Controller
         ->join('companies c', 'c.id = s.customer_id', 'left')
         ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
         ->join('warehouses w', 'w.id = s.warehouse_id', 'left')
+        ->join($sales_returns_join, 'sret.sale_id = s.id', 'left', false)
+        ->join($sales_paid_join, 'spaid.sale_id = s.id', 'left', false)
         ->where('s.sale_invoice', 1)
         ->where('s.grand_total >', 0)
-        ->having('outstanding >', 0)
+        ->where('ROUND((s.grand_total - COALESCE(spaid.paid, 0)), 2) >', 0, false)
         ->order_by('s.date', 'asc');
 
         if ($sql_at) {
@@ -10570,11 +10574,11 @@ class Reports extends MY_Controller
         }
 
         if ($warehouse_id) {
-        $memo_paid_subquery = "(SELECT COALESCE(SUM(sp.amount), 0)
-                            FROM {$this->db->dbprefix('payments')} sp
-                            WHERE sp.memo_id = m.id" .
-                            ($sql_at ? " AND sp.date <= '{$sql_at}'" : "") .
-                            ")";
+        $memo_paid_join = "(SELECT sp.memo_id, COALESCE(SUM(sp.amount), 0) AS paid
+            FROM {$payments_table} sp
+            WHERE sp.memo_id IS NOT NULL" .
+            ($sql_at ? " AND sp.date <= '{$sql_at}'" : "") .
+            " GROUP BY sp.memo_id) mpaid";
                             
         $this->db->select("
             m.id            AS invoice_id,
@@ -10591,8 +10595,8 @@ class Reports extends MY_Controller
             m.payment_amount AS invoice_total,
             0               AS discount,
             0               AS return_amount,
-            {$memo_paid_subquery}                                    AS paid,
-            ROUND(m.payment_amount - ({$memo_paid_subquery}), 2)    AS outstanding,
+            COALESCE(mpaid.paid, 0)                                 AS paid,
+            ROUND(m.payment_amount - COALESCE(mpaid.paid, 0), 2)    AS outstanding,
             0               AS payment_term_days,
             NULL            AS due_date_calc,
             0               AS days_overdue,
@@ -10601,9 +10605,10 @@ class Reports extends MY_Controller
         ->from('memo m')
         ->join('companies c', 'c.id = m.customer_id', 'left')
         ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
+        ->join($memo_paid_join, 'mpaid.memo_id = m.id', 'left', false)
         ->where('m.type', 'serviceinvoice')
         ->where('m.customer_id >', 0)
-        ->having('outstanding >', 0)
+        ->where('ROUND(m.payment_amount - COALESCE(mpaid.paid, 0), 2) >', 0, false)
         ->order_by('m.date', 'asc');
 
         if ($sql_at) {
