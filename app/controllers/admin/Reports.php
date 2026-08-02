@@ -6160,6 +6160,62 @@ class Reports extends MY_Controller
         $this->page_construct('reports/supplier_tb_gl_tb_comparison_report', $meta, $this->data);
     }
 
+    /**
+     * Compare Supplier Trial Balance (EB Credit) vs Unpaid AP outstanding.
+     * URL: admin/reports/supplier_tb_vs_unpaid_ap_comparison
+     */
+    public function supplier_tb_vs_unpaid_ap_comparison()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
+        $this->data['comparison_result'] = null;
+        $this->data['warehouse_id'] = $this->site->resolveReportWarehouseFilter('warehouse_id');
+
+        $supplier_trade_type = $this->input->post('supplier_trade_type') ?: 'trade';
+        if (!in_array($supplier_trade_type, ['trade', 'non_trade', 'all'], true)) {
+            $supplier_trade_type = 'trade';
+        }
+        $this->data['supplier_trade_type'] = $supplier_trade_type;
+
+        $all_suppliers = $this->site->getAllCompanies('supplier') ?: [];
+        $this->data['suppliers'] = $this->filter_suppliers_by_trade_type($all_suppliers, $supplier_trade_type);
+        $this->data['selected_suppliers'] = $this->input->post('supplier_ids') ?: [];
+
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+            $supplier_ids = $this->input->post('supplier_ids') ?: [];
+
+            $comparison = $this->reports_model->get_supplier_tb_vs_unpaid_ap_comparison(
+                $start_date,
+                $end_date,
+                $warehouse_id,
+                $supplier_trade_type,
+                $supplier_ids
+            );
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['warehouse_id'] = $warehouse_id;
+            $this->data['comparison_result'] = $comparison;
+            $this->data['selected_suppliers'] = $supplier_ids;
+        }
+
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => '#', 'page' => 'Supplier TB vs Unpaid AP Comparison'],
+        ];
+        $meta = ['page_title' => 'Supplier TB vs Unpaid AP Comparison', 'bc' => $bc];
+        $this->page_construct('reports/supplier_tb_vs_unpaid_ap_comparison', $meta, $this->data);
+    }
+
     public function financial_position()
     {
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');

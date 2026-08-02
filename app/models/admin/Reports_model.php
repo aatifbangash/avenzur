@@ -2568,6 +2568,450 @@ class Reports_model extends CI_Model
         ];
     }
 
+    /**
+     * Compare Supplier Trial Balance (EB Credit) vs Unpaid AP outstanding by supplier.
+     * Surfaces structural mismatch areas (returns, debit memos, GL credits without purchase, memos).
+     *
+     * @param string     $start_date Y-m-d
+     * @param string     $end_date   Y-m-d (also unpaid as-of date)
+     * @param int|null   $warehouse_id
+     * @param string     $trade_type trade|non_trade|all
+     * @param array      $supplier_ids
+     * @return array
+     */
+    public function get_supplier_tb_vs_unpaid_ap_comparison($start_date, $end_date, $warehouse_id = null, $trade_type = 'trade', array $supplier_ids = [])
+    {
+        $trade_type = in_array($trade_type, ['trade', 'non_trade', 'all'], true) ? $trade_type : 'trade';
+        $sql_at = $end_date . ' 23:59:59';
+        $pfx = $this->db->dbprefix;
+
+        // ── 1) Supplier TB EB Credit (same as suppliers_trial_balance) ──
+        $tb_rows = $this->get_suppliers_trial_balance($start_date, $end_date, $supplier_ids, $warehouse_id, $trade_type) ?: [];
+        $tb = [];
+        foreach ($tb_rows as $sid => $data) {
+            if (
+                (float) ($data['trsDebit'] ?? 0) == 0
+                && (float) ($data['trsCredit'] ?? 0) == 0
+                && (float) ($data['obDebit'] ?? 0) == 0
+                && (float) ($data['obCredit'] ?? 0) == 0
+            ) {
+                continue;
+            }
+            $eb_credit = (float) $data['obCredit'] + (float) $data['trsCredit'];
+            $eb_debit  = (float) $data['obDebit'] + (float) $data['trsDebit'];
+            $final_credit = 0.0;
+            $final_debit  = 0.0;
+            if ($eb_credit >= $eb_debit) {
+                $final_credit = round($eb_credit - $eb_debit, 2);
+            } else {
+                $final_debit = round($eb_debit - $eb_credit, 2);
+            }
+            $tb[(int) $sid] = [
+                'supplier_id'   => (int) $sid,
+                'sequence_code' => $data['sequence_code'] ?? '',
+                'name'          => $data['name'] ?? '',
+                'ob_debit'      => round((float) $data['obDebit'], 2),
+                'ob_credit'     => round((float) $data['obCredit'], 2),
+                'trs_debit'     => round((float) $data['trsDebit'], 2),
+                'trs_credit'    => round((float) $data['trsCredit'], 2),
+                'eb_debit'      => $final_debit,
+                'eb_credit'     => $final_credit,
+            ];
+        }
+
+        // ── 2) Unpaid AP components (aligned with unpaid_invoices_ap) ──
+        $purchase_wh_sql = '';
+        if ($warehouse_id) {
+            $purchase_wh_sql = ' AND p.warehouse_id = ' . (int) $warehouse_id;
+        } else {
+            // Match reportWarehouseAndClause / applyReportWarehouseScope on purchases
+            $wh_clause = $this->site->reportWarehouseAndClause(null, 'p');
+            if ($wh_clause) {
+                $purchase_wh_sql = ' ' . $wh_clause;
+            }
+        }
+
+        $trade_sql_c = '';
+        if ($trade_type === 'non_trade') {
+            $trade_sql_c = " AND (c.category = 'Services' OR c.category LIKE '%خدمات%' OR c.category LIKE '%service%')";
+        } elseif ($trade_type === 'trade') {
+            $trade_sql_c = " AND (c.category IS NULL OR (c.category != 'Services' AND c.category NOT LIKE '%خدمات%' AND c.category NOT LIKE '%service%'))";
+        }
+
+        $supplier_sql_p = '';
+        $supplier_sql_m = '';
+        if (!empty($supplier_ids)) {
+            $ids = implode(',', array_map('intval', $supplier_ids));
+            $supplier_sql_p = " AND p.supplier_id IN ({$ids})";
+            $supplier_sql_m = " AND m.supplier_id IN ({$ids})";
+        }
+
+        $unpaid_purchases = [];
+        $purchase_q = $this->db->query("
+            SELECT supplier_id, ROUND(SUM(outstanding), 2) AS amt, COUNT(*) AS cnt
+            FROM (
+                SELECT p.supplier_id,
+                    ROUND(
+                        (p.grand_total + COALESCE(p.grand_deal_discount, 0))
+                        - COALESCE((
+                            SELECT SUM(sp.amount) FROM {$pfx}payments sp
+                            WHERE sp.purchase_id = p.id AND sp.date <= '{$sql_at}'
+                        ), 0),
+                    2) AS outstanding
+                FROM {$pfx}purchases p
+                INNER JOIN {$pfx}companies c ON c.id = p.supplier_id
+                WHERE p.purchase_invoice = 1
+                  AND p.note != 'import from excel'
+                  AND (p.grand_total + COALESCE(p.grand_deal_discount, 0)) > 0
+                  AND p.date <= '{$sql_at}'
+                  {$purchase_wh_sql}
+                  {$trade_sql_c}
+                  {$supplier_sql_p}
+            ) inv
+            WHERE outstanding > 0
+            GROUP BY supplier_id
+        ");
+        foreach ($purchase_q->result() as $r) {
+            $unpaid_purchases[(int) $r->supplier_id] = [
+                'amt' => (float) $r->amt,
+                'cnt' => (int) $r->cnt,
+            ];
+        }
+
+        // Memo outstanding always computed for diagnostics.
+        // unpaid_invoices_ap only merges memos when warehouse_id == 32.
+        $include_memos_in_unpaid = ((int) $warehouse_id === 32);
+
+        // Match unpaid_invoices_ap memo paid expression (warehouse 32 path)
+        $memo_paid_expr = "CASE
+            WHEN m.date < '2026-06-20' THEN COALESCE(m.used_amount, 0)
+            ELSE COALESCE((
+                SELECT COALESCE(SUM(sp.amount), 0)
+                FROM {$pfx}payments sp
+                WHERE sp.memo_id = m.id AND sp.date <= '{$sql_at}'
+            ), 0)
+        END";
+        // When memos are only diagnostic (not in unpaid report), used_amount is the operational balance.
+        if (!$include_memos_in_unpaid) {
+            $memo_paid_expr = 'COALESCE(m.used_amount, 0)';
+        }
+
+        $unpaid_service = [];
+        $unpaid_credit  = [];
+        $memo_q = $this->db->query("
+            SELECT m.supplier_id, m.type, m.supplier_entry_type,
+                ROUND(SUM(m.payment_amount - ({$memo_paid_expr})), 2) AS amt,
+                COUNT(*) AS cnt
+            FROM {$pfx}memo m
+            INNER JOIN {$pfx}companies c ON c.id = m.supplier_id
+            WHERE m.supplier_id > 0
+              AND m.date <= '{$end_date}'
+              AND (m.payment_amount - ({$memo_paid_expr})) > 0.01
+              AND (
+                    m.type = 'serviceinvoice'
+                 OR (m.type = 'memo' AND m.supplier_entry_type = 'C')
+              )
+              {$trade_sql_c}
+              {$supplier_sql_m}
+            GROUP BY m.supplier_id, m.type, m.supplier_entry_type
+        ");
+        foreach ($memo_q->result() as $r) {
+            $sid = (int) $r->supplier_id;
+            if ($r->type === 'serviceinvoice') {
+                $unpaid_service[$sid] = [
+                    'amt' => ($unpaid_service[$sid]['amt'] ?? 0) + (float) $r->amt,
+                    'cnt' => ($unpaid_service[$sid]['cnt'] ?? 0) + (int) $r->cnt,
+                ];
+            } else {
+                $unpaid_credit[$sid] = [
+                    'amt' => ($unpaid_credit[$sid]['amt'] ?? 0) + (float) $r->amt,
+                    'cnt' => ($unpaid_credit[$sid]['cnt'] ?? 0) + (int) $r->cnt,
+                ];
+            }
+        }
+
+        // ── 3) Structural mismatch drivers (in TB / ops but not Unpaid AP) ──
+        $supplier_sql_e = !empty($supplier_ids)
+            ? ' AND e.supplier_id IN (' . implode(',', array_map('intval', $supplier_ids)) . ')'
+            : '';
+
+        $unsettled_returns = [];
+        $supplier_sql_rs = !empty($supplier_ids)
+            ? ' AND rs.supplier_id IN (' . implode(',', array_map('intval', $supplier_ids)) . ')'
+            : '';
+        foreach ($this->db->query("
+            SELECT rs.supplier_id, ROUND(SUM(rs.grand_total - COALESCE(rs.paid, 0)), 2) AS amt
+            FROM {$pfx}returns_supplier rs
+            INNER JOIN {$pfx}companies c ON c.id = rs.supplier_id
+            WHERE (rs.grand_total - COALESCE(rs.paid, 0)) > 0.01
+              {$trade_sql_c}
+              {$supplier_sql_rs}
+            GROUP BY rs.supplier_id
+        ")->result() as $r) {
+            $unsettled_returns[(int) $r->supplier_id] = (float) $r->amt;
+        }
+
+        $unsettled_debit_memos = [];
+        foreach ($this->db->query("
+            SELECT m.supplier_id,
+                ROUND(SUM(
+                    (m.payment_amount * (1 + COALESCE(m.vat_percent, 0) / 100)) - COALESCE(m.used_amount, 0)
+                ), 2) AS amt
+            FROM {$pfx}memo m
+            INNER JOIN {$pfx}companies c ON c.id = m.supplier_id
+            WHERE m.type = 'memo' AND m.supplier_entry_type = 'D'
+              AND ((m.payment_amount * (1 + COALESCE(m.vat_percent, 0) / 100)) - COALESCE(m.used_amount, 0)) > 0.01
+              {$trade_sql_c}
+              {$supplier_sql_m}
+            GROUP BY m.supplier_id
+        ")->result() as $r) {
+            $unsettled_debit_memos[(int) $r->supplier_id] = (float) $r->amt;
+        }
+
+        $gl_credits_no_pid = [];
+        $wh_e = $this->site->reportPurchaseLedgerWarehouseCondition($warehouse_id, 'e');
+        foreach ($this->db->query("
+            SELECT e.supplier_id, ROUND(SUM(ei.amount), 2) AS amt
+            FROM {$pfx}accounts_entries e
+            JOIN {$pfx}accounts_entryitems ei ON e.id = ei.entry_id
+            JOIN {$pfx}companies c ON e.supplier_id = c.id AND ei.ledger_id = c.ledger_account
+            WHERE e.supplier_id IS NOT NULL AND ei.dc = 'C'
+              AND DATE(e.date) <= '{$end_date}'
+              AND (e.pid IS NULL OR e.pid = '' OR e.pid = 0)
+              AND {$wh_e}
+              {$trade_sql_c}
+              {$supplier_sql_e}
+            GROUP BY e.supplier_id
+        ")->result() as $r) {
+            $gl_credits_no_pid[(int) $r->supplier_id] = (float) $r->amt;
+        }
+
+        // ── 4) Merge + classify ──
+        $all_ids = array_unique(array_merge(
+            array_keys($tb),
+            array_keys($unpaid_purchases),
+            array_keys($unpaid_service),
+            array_keys($unpaid_credit)
+        ));
+        sort($all_ids);
+
+        $rows = [];
+        $summary = [
+            'grand_tb_credit'      => 0.0,
+            'grand_unpaid'         => 0.0,
+            'grand_diff'           => 0.0,
+            'mismatch_count'       => 0,
+            'include_memos_in_unpaid' => $include_memos_in_unpaid,
+            'category_counts'      => [],
+        ];
+
+        foreach ($all_ids as $sid) {
+            $sid = (int) $sid;
+            $tb_credit = (float) ($tb[$sid]['eb_credit'] ?? 0);
+
+            $purch_amt = (float) ($unpaid_purchases[$sid]['amt'] ?? 0);
+            $svc_amt   = (float) ($unpaid_service[$sid]['amt'] ?? 0);
+            $cm_amt    = (float) ($unpaid_credit[$sid]['amt'] ?? 0);
+            $memo_amt  = round($svc_amt + $cm_amt, 2);
+
+            $unpaid_in_report = $purch_amt;
+            if ($include_memos_in_unpaid) {
+                $unpaid_in_report = round($purch_amt + $memo_amt, 2);
+            }
+
+            $diff = round($tb_credit - $unpaid_in_report, 2);
+            $returns_amt = (float) ($unsettled_returns[$sid] ?? 0);
+            $debit_amt   = (float) ($unsettled_debit_memos[$sid] ?? 0);
+            $gl_no_pid   = (float) ($gl_credits_no_pid[$sid] ?? 0);
+            $memos_excluded = $include_memos_in_unpaid ? 0.0 : $memo_amt;
+
+            // Skip fully zero / matched within 0.01
+            if (
+                abs($diff) < 0.01
+                && $tb_credit < 0.01
+                && $unpaid_in_report < 0.01
+                && $returns_amt < 0.01
+                && $debit_amt < 0.01
+                && $memos_excluded < 0.01
+            ) {
+                continue;
+            }
+
+            $name = $tb[$sid]['name'] ?? null;
+            $code = $tb[$sid]['sequence_code'] ?? '';
+            if ($name === null) {
+                $c = $this->db->select('name, sequence_code')->from('companies')->where('id', $sid)->get()->row();
+                $name = $c->name ?? ('Supplier #' . $sid);
+                $code = $c->sequence_code ?? '';
+            }
+
+            $issue = $this->classify_supplier_tb_vs_unpaid_issue([
+                'diff'                 => $diff,
+                'tb'                   => $tb_credit,
+                'unpaid'               => $unpaid_in_report,
+                'unpaid_purchases'     => $purch_amt,
+                'unpaid_memos'         => $memo_amt,
+                'memos_excluded'       => $memos_excluded,
+                'unsettled_returns'    => $returns_amt,
+                'unsettled_debit_memos'=> $debit_amt,
+                'ledger_credits_no_pid'=> $gl_no_pid,
+            ]);
+
+            $summary['grand_tb_credit'] += $tb_credit;
+            $summary['grand_unpaid'] += $unpaid_in_report;
+
+            if (abs($diff) >= 0.01) {
+                $summary['mismatch_count']++;
+                $ck = $issue['key'];
+                $summary['category_counts'][$ck] = ($summary['category_counts'][$ck] ?? 0) + 1;
+
+                $rows[] = [
+                    'supplier_id'           => $sid,
+                    'sequence_code'         => $code,
+                    'name'                  => $name,
+                    'tb_eb_credit'          => $tb_credit,
+                    'tb_eb_debit'           => (float) ($tb[$sid]['eb_debit'] ?? 0),
+                    'unpaid_purchases'      => $purch_amt,
+                    'open_purchase_count'   => (int) ($unpaid_purchases[$sid]['cnt'] ?? 0),
+                    'unpaid_service'        => $svc_amt,
+                    'unpaid_credit_memos'   => $cm_amt,
+                    'unpaid_memos_total'    => $memo_amt,
+                    'memos_excluded_from_unpaid' => $memos_excluded,
+                    'unpaid_total'          => $unpaid_in_report,
+                    'difference'            => $diff,
+                    'unsettled_returns'     => $returns_amt,
+                    'unsettled_debit_memos' => $debit_amt,
+                    'ledger_credits_no_pid' => $gl_no_pid,
+                    'issue'                 => $issue,
+                ];
+            }
+        }
+
+        usort($rows, function ($a, $b) {
+            return abs($b['difference']) <=> abs($a['difference']);
+        });
+
+        $summary['grand_tb_credit'] = round($summary['grand_tb_credit'], 2);
+        $summary['grand_unpaid'] = round($summary['grand_unpaid'], 2);
+        $summary['grand_diff'] = round($summary['grand_tb_credit'] - $summary['grand_unpaid'], 2);
+
+        // Group by issue category for the UI
+        $grouped = [];
+        foreach ($rows as $row) {
+            $key = $row['issue']['key'];
+            if (!isset($grouped[$key])) {
+                $grouped[$key] = [
+                    'key'         => $key,
+                    'label'       => $row['issue']['label'],
+                    'description' => $row['issue']['description'],
+                    'priority'    => $row['issue']['priority'],
+                    'action'      => $row['issue']['action'],
+                    'suppliers'   => [],
+                    'sum_abs_diff'=> 0.0,
+                ];
+            }
+            $grouped[$key]['suppliers'][] = $row;
+            $grouped[$key]['sum_abs_diff'] += abs($row['difference']);
+        }
+
+        $order = ['tb_only', 'unpaid_only', 'memos_excluded', 'gl_payments', 'tb_gt_unpaid', 'returns_debit', 'mixed'];
+        $grouped_ordered = [];
+        foreach ($order as $key) {
+            if (isset($grouped[$key])) {
+                $grouped_ordered[] = $grouped[$key];
+            }
+        }
+        foreach ($grouped as $key => $g) {
+            if (!in_array($key, $order, true)) {
+                $grouped_ordered[] = $g;
+            }
+        }
+
+        return [
+            'rows'    => $rows,
+            'grouped' => $grouped_ordered,
+            'summary' => $summary,
+        ];
+    }
+
+    /**
+     * @param array<string,float> $d
+     * @return array{key:string,label:string,description:string,priority:string,action:string}
+     */
+    private function classify_supplier_tb_vs_unpaid_issue(array $d)
+    {
+        $diff = (float) ($d['diff'] ?? 0);
+        $tb = (float) ($d['tb'] ?? 0);
+        $unpaid = (float) ($d['unpaid'] ?? 0);
+        $gl = (float) ($d['ledger_credits_no_pid'] ?? 0);
+        $returns = (float) ($d['unsettled_returns'] ?? 0);
+        $debit = (float) ($d['unsettled_debit_memos'] ?? 0);
+        $memos_ex = (float) ($d['memos_excluded'] ?? 0);
+        $absDiff = abs($diff);
+
+        if ($tb < 0.01 && $unpaid > 0.01) {
+            return [
+                'key' => 'unpaid_only',
+                'label' => 'B — Unpaid AP only (no TB credit)',
+                'description' => 'Open purchases/memos appear in Unpaid AP, but Payable TB has no ending credit.',
+                'priority' => 'high',
+                'action' => 'Review supplier ledger posting / wrong ledger / net debit TB balance.',
+            ];
+        }
+        if ($unpaid < 0.01 && $tb > 0.01) {
+            return [
+                'key' => 'tb_only',
+                'label' => 'A — TB credit only (no Unpaid AP lines)',
+                'description' => 'Payable TB shows credit, but Unpaid AP has no open purchase/memo rows.',
+                'priority' => 'high',
+                'action' => 'Check GL credits without purchase link, opening balance, or settled docs still in ledger.',
+            ];
+        }
+        if ($memos_ex > 0.01 && abs($diff - $memos_ex) < 1.0) {
+            return [
+                'key' => 'memos_excluded',
+                'label' => 'G — Service/credit memos excluded from Unpaid AP',
+                'description' => 'Unpaid AP only includes service/credit memos when warehouse filter is HQ (32). TB still includes those payables.',
+                'priority' => 'medium',
+                'action' => 'Run Unpaid AP with warehouse HQ (32), or treat memo outstanding as the known gap.',
+            ];
+        }
+        if ($gl > 100) {
+            return [
+                'key' => 'gl_payments',
+                'label' => 'C — GL credits without purchase link',
+                'description' => 'Supplier ledger has credit entries not linked to purchase_id (pid), so Unpaid AP does not reduce.',
+                'priority' => 'high',
+                'action' => 'Link supplier payments/journals to purchases or update memo used_amount.',
+            ];
+        }
+        if (($returns > 0.01 || $debit > 0.01) && $absDiff <= max(1.0, $returns + $debit)) {
+            return [
+                'key' => 'returns_debit',
+                'label' => 'E — Unsettled returns / debit memos',
+                'description' => 'Returns and debit memos reduce TB but are not shown as open Unpaid AP invoices.',
+                'priority' => 'medium',
+                'action' => 'Settle returns/debit memos against invoices (auto settlement script) or accept as timing difference.',
+            ];
+        }
+        if ($diff > 0.01 && (float) ($d['unpaid_purchases'] ?? 0) > 0.01) {
+            return [
+                'key' => 'tb_gt_unpaid',
+                'label' => 'D — TB higher than Unpaid (open purchases exist)',
+                'description' => 'TB credit exceeds open purchase outstanding — partial GL settlement or extra ledger credits.',
+                'priority' => 'medium',
+                'action' => 'Compare GL credits vs sma_payments per open purchase invoice.',
+            ];
+        }
+        return [
+            'key' => 'mixed',
+            'label' => 'Other — Mixed / review',
+            'description' => 'Multiple drivers; review returns, debit memos, memos, and unlinked GL credits.',
+            'priority' => 'medium',
+            'action' => 'Inspect supplier statement and unpaid AP side by side.',
+        ];
+    }
+
     public function getCustomersTrialBalance($start_date, $end_date)
     {
 
