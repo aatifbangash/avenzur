@@ -104,8 +104,16 @@ function parseAcct(v) {
 }
 
 function fmtAcctRaw(n, decimals) {
-    decimals = (decimals === undefined || decimals === null) ? 2 : decimals;
-    return parseAcct(n).toFixed(decimals);
+    // Default 5 dp to match DB decimal(x,5) money columns.
+    decimals = (decimals === undefined || decimals === null) ? 5 : decimals;
+    return moneyRound(n, decimals).toFixed(decimals);
+}
+
+/** Round money to N decimals (default 5, matching DB). */
+function moneyRound(n, decimals) {
+    decimals = (decimals === undefined || decimals === null) ? 5 : decimals;
+    var f = Math.pow(10, decimals);
+    return Math.round((parseAcct(n) + Number.EPSILON) * f) / f;
 }
 
 $(document).ready(function () {
@@ -179,13 +187,13 @@ $(document).ready(function () {
 
         if (invoices.length > 0) {
             $.each(invoices, function (i, inv) {
-                var outstanding = parseFloat(inv.outstanding_amount);
-                totalGrand += parseFloat(inv.grand_total);
-                totalPaid  += parseFloat(inv.paid || 0);
-                totalOut   += outstanding;
+                var outstanding = moneyRound(inv.outstanding_amount);
+                totalGrand = moneyRound(totalGrand + parseFloat(inv.grand_total));
+                totalPaid  = moneyRound(totalPaid + parseFloat(inv.paid || 0));
+                totalOut   = moneyRound(totalOut + outstanding);
 
                 var row = '<tr>' +
-                    '<td><input type="checkbox" class="invoice-checkbox" name="invoice_ids[]" value="' + inv.id + '" data-amount="' + outstanding + '"></td>' +
+                    '<td><input type="checkbox" class="invoice-checkbox" name="invoice_ids[]" value="' + inv.id + '" data-amount="' + outstanding.toFixed(5) + '"></td>' +
                     '<td>' + inv.date + '</td>' +
                     '<td>' + inv.reference_no + '</td>' +
                     '<td class="text-right">' + fmtAcct(inv.grand_total) + '</td>' +
@@ -193,7 +201,7 @@ $(document).ready(function () {
                     '<td class="text-right">' + fmtAcct(outstanding) + '</td>' +
                     '<td class="text-right">' +
                         '<span id="inv-amount-display-' + inv.id + '">' + fmtAcct(0) + '</span>' +
-                        '<input type="hidden" name="invoice_amounts[' + inv.id + ']" id="inv-amount-' + inv.id + '" value="0.00">' +
+                        '<input type="hidden" name="invoice_amounts[' + inv.id + ']" id="inv-amount-' + inv.id + '" value="0.00000">' +
                     '</td>' +
                     '</tr>';
                 tbody.append(row);
@@ -234,13 +242,13 @@ $(document).ready(function () {
 
         if (memos.length > 0) {
             $.each(memos, function (i, memo) {
-                var available = parseFloat(memo.available_balance);
-                totalAmt   += parseFloat(memo.amount);
-                totalUsed  += parseFloat(memo.used_amount || 0);
-                totalAvail += available;
+                var available = moneyRound(memo.available_balance);
+                totalAmt   = moneyRound(totalAmt + parseFloat(memo.amount));
+                totalUsed  = moneyRound(totalUsed + parseFloat(memo.used_amount || 0));
+                totalAvail = moneyRound(totalAvail + available);
 
                 var row = '<tr>' +
-                    '<td><input type="checkbox" class="debitmemo-checkbox" name="debitmemo_ids_ui[]" value="' + memo.id + '" data-amount="' + available + '"></td>' +
+                    '<td><input type="checkbox" class="debitmemo-checkbox" name="debitmemo_ids_ui[]" value="' + memo.id + '" data-amount="' + available.toFixed(5) + '"></td>' +
                     '<td>' + memo.date + '</td>' +
                     '<td>' + memo.reference_no + '</td>' +
                     '<td class="text-right">' + fmtAcct(memo.amount) + '</td>' +
@@ -248,7 +256,7 @@ $(document).ready(function () {
                     '<td class="text-right">' + fmtAcct(available) + '</td>' +
                     '<td class="text-right">' +
                         '<span id="dm-amount-display-' + memo.id + '">' + fmtAcct(0) + '</span>' +
-                        '<input type="hidden" name="debit_memo_amounts[' + memo.id + ']" id="dm-amount-' + memo.id + '" value="0.00">' +
+                        '<input type="hidden" name="debit_memo_amounts[' + memo.id + ']" id="dm-amount-' + memo.id + '" value="0.00000">' +
                     '</td>' +
                     '</tr>';
                 tbody.append(row);
@@ -306,13 +314,13 @@ $(document).ready(function () {
 
         if (memos.length > 0) {
             $.each(memos, function (i, memo) {
-                var outstanding = parseFloat(memo.outstanding_amount);
-                totalAmt  += parseFloat(memo.grand_total);
-                totalPaid += parseFloat(memo.total_paid);
-                totalOut  += outstanding;
+                var outstanding = moneyRound(memo.outstanding_amount);
+                totalAmt  = moneyRound(totalAmt + parseFloat(memo.grand_total));
+                totalPaid = moneyRound(totalPaid + parseFloat(memo.total_paid));
+                totalOut  = moneyRound(totalOut + outstanding);
 
                 var row = '<tr>' +
-                    '<td><input type="checkbox" class="creditmemo-checkbox" name="creditmemo_ids_ui[]" value="' + memo.id + '" data-amount="' + outstanding + '"></td>' +
+                    '<td><input type="checkbox" class="creditmemo-checkbox" name="creditmemo_ids_ui[]" value="' + memo.id + '" data-amount="' + outstanding.toFixed(5) + '"></td>' +
                     '<td>' + memo.date + '</td>' +
                     '<td>' + memo.reference_no + '</td>' +
                     '<td>' + memo.type + '</td>' +
@@ -321,7 +329,7 @@ $(document).ready(function () {
                     '<td class="text-right">' + fmtAcct(outstanding) + '</td>' +
                     '<td class="text-right">' +
                         '<span id="cm-amount-display-' + memo.id + '">' + fmtAcct(0) + '</span>' +
-                        '<input type="hidden" name="credit_memo_amounts[' + memo.id + ']" id="cm-amount-' + memo.id + '" value="0.00">' +
+                        '<input type="hidden" name="credit_memo_amounts[' + memo.id + ']" id="cm-amount-' + memo.id + '" value="0.00000">' +
                     '</td>' +
                     '</tr>';
                 tbody.append(row);
@@ -347,13 +355,13 @@ $(document).ready(function () {
 
         if (invoices.length > 0) {
             $.each(invoices, function (i, inv) {
-                var outstanding = parseFloat(inv.outstanding_amount);
-                totalAmt  += parseFloat(inv.grand_total);
-                totalPaid += parseFloat(inv.total_paid);
-                totalOut  += outstanding;
+                var outstanding = moneyRound(inv.outstanding_amount);
+                totalAmt  = moneyRound(totalAmt + parseFloat(inv.grand_total));
+                totalPaid = moneyRound(totalPaid + parseFloat(inv.total_paid));
+                totalOut  = moneyRound(totalOut + outstanding);
 
                 var row = '<tr>' +
-                    '<td><input type="checkbox" class="serviceinvoice-checkbox" name="service_invoice_ids[]" value="' + inv.id + '" data-amount="' + outstanding + '"></td>' +
+                    '<td><input type="checkbox" class="serviceinvoice-checkbox" name="service_invoice_ids[]" value="' + inv.id + '" data-amount="' + outstanding.toFixed(5) + '"></td>' +
                     '<td>' + inv.date + '</td>' +
                     '<td>' + inv.reference_no + '</td>' +
                     '<td>' + inv.type + '</td>' +
@@ -362,7 +370,7 @@ $(document).ready(function () {
                     '<td class="text-right">' + fmtAcct(outstanding) + '</td>' +
                     '<td class="text-right">' +
                         '<span id="si-amount-display-' + inv.id + '">' + fmtAcct(0) + '</span>' +
-                        '<input type="hidden" name="service_invoice_amounts[' + inv.id + ']" id="si-amount-' + inv.id + '" value="0.00">' +
+                        '<input type="hidden" name="service_invoice_amounts[' + inv.id + ']" id="si-amount-' + inv.id + '" value="0.00000">' +
                     '</td>' +
                     '</tr>';
                 tbody.append(row);
@@ -450,13 +458,13 @@ $(document).ready(function () {
     function syncPaymentAmount() {
         var totalChecked = 0;
         $('.invoice-checkbox:checked, .serviceinvoice-checkbox:checked, .creditmemo-checkbox:checked').each(function () {
-            totalChecked += parseFloat($(this).data('amount')) || 0;
+            totalChecked = moneyRound(totalChecked + moneyRound($(this).data('amount')));
         });
         var totalDMCoverage = 0;
         $('.debitmemo-checkbox:checked').each(function () {
-            totalDMCoverage += parseFloat($(this).data('amount')) || 0;
+            totalDMCoverage = moneyRound(totalDMCoverage + moneyRound($(this).data('amount')));
         });
-        var needed = Math.max(0, totalChecked - totalDMCoverage);
+        var needed = moneyRound(Math.max(0, totalChecked - totalDMCoverage));
         $('#total_invoices_checked').val(fmtAcctRaw(needed));
     }
 
@@ -500,17 +508,21 @@ $(document).ready(function () {
                 $el.val(fmtAcctRaw($el.val()));
             }
         });
+        $('input[id^="inv-amount-"], input[id^="si-amount-"], input[id^="cm-amount-"], input[id^="dm-amount-"]').each(function () {
+            $(this).val(fmtAcctRaw($(this).val()));
+        });
     });
 
     // ── Main recalculate ─────────────────────────────────────────────
     // Auto-distributes available budget across checked invoices (greedy, DOM order).
     // Debit memos are applied at full available balance when checked.
+    // All money math uses 5-decimal rounding so posted amounts match cash sources / DB.
     function recalculate() {
-        var cashPayment    = parseAcct($('#payment_amount').val());
-        var advanceMax     = parseAcct($('#advance-balance-raw').val());
+        var cashPayment    = moneyRound($('#payment_amount').val());
+        var advanceMax     = moneyRound($('#advance-balance-raw').val());
         var advanceApplied = 0;
         if ($('#use-advance').is(':checked')) {
-            advanceApplied = Math.min(parseAcct($('#advance_amount').val()), advanceMax);
+            advanceApplied = moneyRound(Math.min(parseAcct($('#advance_amount').val()), advanceMax));
         }
 
         // Debit memos: each checked memo applies its full available balance
@@ -518,8 +530,8 @@ $(document).ready(function () {
         $('.debitmemo-checkbox').each(function () {
             var memoId = $(this).val();
             if ($(this).is(':checked')) {
-                var amt = parseFloat($(this).data('amount')) || 0;
-                totalDMApplied += amt;
+                var amt = moneyRound($(this).data('amount'));
+                totalDMApplied = moneyRound(totalDMApplied + amt);
                 $('#dm-amount-' + memoId).val(fmtAcctRaw(amt));
                 $('#dm-amount-display-' + memoId).text(fmtAcct(amt));
             } else {
@@ -529,8 +541,8 @@ $(document).ready(function () {
         });
         $('#dm-total-applied').text(fmtAcct(totalDMApplied));
 
-        var totalSources = cashPayment + advanceApplied + totalDMApplied;
-        var budgetLeft      = Math.round(totalSources * 1e5) / 1e5;
+        var totalSources = moneyRound(cashPayment + advanceApplied + totalDMApplied);
+        var budgetLeft      = totalSources;
         var totalInvApplied = 0;
         var totalSIPayment  = 0;
         var totalCMPayment  = 0;
@@ -540,17 +552,17 @@ $(document).ready(function () {
             var id           = $(this).val();
             var isServiceInv = $(this).hasClass('serviceinvoice-checkbox');
             var isCreditMemo = $(this).hasClass('creditmemo-checkbox');
-            var outstanding  = Math.round((parseFloat($(this).data('amount')) || 0) * 1e5) / 1e5;
+            var outstanding  = moneyRound($(this).data('amount'));
             if ($(this).is(':checked')) {
-                var apply = Math.round(Math.min(outstanding, budgetLeft) * 1e5) / 1e5;
-                budgetLeft      = Math.round((budgetLeft - apply) * 1e5) / 1e5;
-                totalInvApplied = Math.round((totalInvApplied + apply) * 1e5) / 1e5;
+                var apply = moneyRound(Math.min(outstanding, budgetLeft));
+                budgetLeft      = moneyRound(budgetLeft - apply);
+                totalInvApplied = moneyRound(totalInvApplied + apply);
                 if (isServiceInv) {
-                    totalSIPayment += apply;
+                    totalSIPayment = moneyRound(totalSIPayment + apply);
                     $('#si-amount-' + id).val(fmtAcctRaw(apply));
                     $('#si-amount-display-' + id).text(fmtAcct(apply));
                 } else if (isCreditMemo) {
-                    totalCMPayment += apply;
+                    totalCMPayment = moneyRound(totalCMPayment + apply);
                     $('#cm-amount-' + id).val(fmtAcctRaw(apply));
                     $('#cm-amount-display-' + id).text(fmtAcct(apply));
                 } else {
@@ -576,7 +588,7 @@ $(document).ready(function () {
         // diff < 0: excess cash (sources > invoices applied) — orange
         // diff > 0: impossible with greedy fill, but guard anyway
         // diff = 0: balanced — green, enable submit
-        var diff = totalInvApplied - totalSources;
+        var diff = moneyRound(totalInvApplied - totalSources);
 
         $('#summary-inv-applied').text(fmtAcct(totalInvApplied));
         $('#summary-cash').text(fmtAcct(cashPayment));
@@ -585,7 +597,7 @@ $(document).ready(function () {
         $('#summary-remaining').text(fmtAcct(diff));
 
         var $summaryRem = $('#summary-remaining');
-        if (Math.abs(diff) < 0.01) {
+        if (Math.abs(diff) < 0.00001) {
             $summaryRem.css('color', '#28a745');
             $('#submit-btn').prop('disabled', false);
         } else {

@@ -882,9 +882,9 @@ class Suppliers extends MY_Controller
                 $ledger_account     = $this->input->post('ledger');
                 $date_raw           = $this->input->post('date');
                 $note               = $this->input->post('note');
-                $bank_charges       = (float)($this->input->post('bank_charges') ?: 0);
-                $payment_amount     = (float)($this->input->post('payment_amount') ?: 0);
-                $advance_amount     = (float)($this->input->post('advance_amount') ?: 0);
+                $bank_charges       = round((float)($this->input->post('bank_charges') ?: 0), 5);
+                $payment_amount     = round((float)($this->input->post('payment_amount') ?: 0), 5);
+                $advance_amount     = round((float)($this->input->post('advance_amount') ?: 0), 5);
 
                 // Parse date
                 $fmt = DateTime::createFromFormat('d/m/Y', $date_raw);
@@ -968,7 +968,7 @@ class Suppliers extends MY_Controller
                 $invoice_details = [];
                 $total_payments_from_invoices = 0;
                 foreach ($invoice_amounts as $inv_id => $applied) {
-                    $applied = (float)$applied;
+                    $applied = round((float)$applied, 5);
                     if ($applied > 0) {
                         $purchase = $this->purchases_model->getPurchaseByID($inv_id);
                         if (!$purchase) {
@@ -976,7 +976,7 @@ class Suppliers extends MY_Controller
                             admin_redirect('suppliers/edit_payment?id=' . $id);
                             return;
                         }
-                        $total_payments_from_invoices += $applied;
+                        $total_payments_from_invoices = round($total_payments_from_invoices + $applied, 5);
                         $invoice_details[$inv_id] = [
                             'grand_total'   => $purchase->grand_total,
                             'total_paid'    => $purchase->paid ?? 0,
@@ -989,7 +989,7 @@ class Suppliers extends MY_Controller
                 $debit_memo_details = [];
                 $total_applied_debit_memos = 0;
                 foreach ($debit_memo_amounts as $memo_id => $applied) {
-                    $applied = (float)$applied;
+                    $applied = round((float)$applied, 5);
                     if ($applied > 0) {
                         $memo = $this->purchases_model->getDebitMemoData($memo_id);
                         if (!$memo) {
@@ -1000,12 +1000,12 @@ class Suppliers extends MY_Controller
                         $vat_pct      = isset($memo->vat_percent) ? (float)$memo->vat_percent : 0;
                         $gross_amount = $memo->payment_amount * (1 + $vat_pct / 100);
                         $available    = $gross_amount - ($memo->used_amount ?? 0);
-                        if ($applied > $available) {
+                        if ($applied > $available + 0.00001) {
                             $this->session->set_flashdata('error', 'Applied debit-memo amount exceeds available balance.');
                             admin_redirect('suppliers/edit_payment?id=' . $id);
                             return;
                         }
-                        $total_applied_debit_memos += $applied;
+                        $total_applied_debit_memos = round($total_applied_debit_memos + $applied, 5);
                         $debit_memo_details[$memo_id] = [
                             'used'   => $memo->used_amount ?? 0,
                             'paying' => $applied,
@@ -1017,7 +1017,7 @@ class Suppliers extends MY_Controller
                 $service_invoice_details = [];
                 $total_service_inv_payments = 0;
                 foreach ($service_invoice_amounts as $memo_id => $applied) {
-                    $applied = (float)$applied;
+                    $applied = round((float)$applied, 5);
                     if ($applied > 0) {
                         $memo = $this->purchases_model->getDebitMemoData($memo_id);
                         if (!$memo) {
@@ -1026,12 +1026,12 @@ class Suppliers extends MY_Controller
                             return;
                         }
                         $available = $memo->payment_amount - ($memo->used_amount ?? 0);
-                        if ($applied > $available) {
+                        if ($applied > $available + 0.00001) {
                             $this->session->set_flashdata('error', 'Applied service invoice amount exceeds available balance.');
                             admin_redirect('suppliers/edit_payment?id=' . $id);
                             return;
                         }
-                        $total_service_inv_payments += $applied;
+                        $total_service_inv_payments = round($total_service_inv_payments + $applied, 5);
                         $service_invoice_details[$memo_id] = [
                             'used'   => $memo->used_amount ?? 0,
                             'paying' => $applied,
@@ -1043,7 +1043,7 @@ class Suppliers extends MY_Controller
                 $credit_memo_details = [];
                 $total_credit_memo_payments = 0;
                 foreach ($credit_memo_amounts as $memo_id => $applied) {
-                    $applied = (float)$applied;
+                    $applied = round((float)$applied, 5);
                     if ($applied > 0) {
                         $memo = $this->purchases_model->getDebitMemoData($memo_id);
                         if (!$memo) {
@@ -1052,12 +1052,12 @@ class Suppliers extends MY_Controller
                             return;
                         }
                         $available = $memo->payment_amount - ($memo->used_amount ?? 0);
-                        if ($applied > $available) {
+                        if ($applied > $available + 0.00001) {
                             $this->session->set_flashdata('error', 'Applied credit memo amount exceeds available balance.');
                             admin_redirect('suppliers/edit_payment?id=' . $id);
                             return;
                         }
-                        $total_credit_memo_payments += $applied;
+                        $total_credit_memo_payments = round($total_credit_memo_payments + $applied, 5);
                         $credit_memo_details[$memo_id] = [
                             'used'   => $memo->used_amount ?? 0,
                             'paying' => $applied,
@@ -1066,10 +1066,10 @@ class Suppliers extends MY_Controller
                 }
 
                 // Verify totals
-                $total_sources = $payment_amount + $advance_amount + $total_applied_debit_memos;
-                $total_invoices_to_settle = $total_payments_from_invoices + $total_service_inv_payments + $total_credit_memo_payments;
+                $total_sources = round($payment_amount + $advance_amount + $total_applied_debit_memos, 5);
+                $total_invoices_to_settle = round($total_payments_from_invoices + $total_service_inv_payments + $total_credit_memo_payments, 5);
 
-                if (($total_invoices_to_settle - $total_sources) > 0.01) {
+                if (($total_invoices_to_settle - $total_sources) > 0.00001) {
                     $this->session->set_flashdata('error', 'Total payment sources are insufficient to cover applied amounts.');
                     admin_redirect('suppliers/edit_payment?id=' . $id);
                     return;
@@ -3999,9 +3999,9 @@ class Suppliers extends MY_Controller
             $ledger_account = $this->input->post('ledger');
             $date_raw       = $this->input->post('date');
             $note           = $this->input->post('note');
-            $bank_charges   = (float)($this->input->post('bank_charges') ?: 0);
-            $payment_amount = (float)($this->input->post('payment_amount') ?: 0);
-            $advance_amount = (float)($this->input->post('advance_amount') ?: 0);
+            $bank_charges   = round((float)($this->input->post('bank_charges') ?: 0), 5);
+            $payment_amount = round((float)($this->input->post('payment_amount') ?: 0), 5);
+            $advance_amount = round((float)($this->input->post('advance_amount') ?: 0), 5);
 
             // Duplicate reference check
             /*$this->db->where('reference_no', $reference_no);
@@ -4060,14 +4060,14 @@ class Suppliers extends MY_Controller
             $invoice_details             = [];
             $total_payments_from_invoices = 0;
             foreach ($invoice_amounts as $inv_id => $applied) {
-                $applied = (float)$applied;
+                $applied = round((float)$applied, 5);
                 if ($applied > 0) {
                     $purchase = $this->purchases_model->getPurchaseByID($inv_id);
                     if (!$purchase) {
                         $this->session->set_flashdata('error', 'Purchase invoice not found: ' . $inv_id);
                         admin_redirect('suppliers/payment_to_supplier_new');
                     }
-                    $total_payments_from_invoices += $applied;
+                    $total_payments_from_invoices = round($total_payments_from_invoices + $applied, 5);
                     $invoice_details[$inv_id] = [
                         'grand_total'   => $purchase->grand_total,
                         'total_paid'    => $purchase->paid ?? 0,
@@ -4080,7 +4080,7 @@ class Suppliers extends MY_Controller
             $debit_memo_details        = [];
             $total_applied_debit_memos = 0;
             foreach ($debit_memo_amounts as $memo_id => $applied) {
-                $applied = (float)$applied;
+                $applied = round((float)$applied, 5);
                 if ($applied > 0) {
                     $memo = $this->purchases_model->getDebitMemoData($memo_id);
                     if (!$memo) {
@@ -4090,11 +4090,11 @@ class Suppliers extends MY_Controller
                     $vat_pct      = isset($memo->vat_percent) ? (float)$memo->vat_percent : 0;
                     $gross_amount = $memo->payment_amount * (1 + $vat_pct / 100);
                     $available    = $gross_amount - ($memo->used_amount ?? 0);
-                    if ($applied > $available) {
+                    if ($applied > $available + 0.00001) {
                         $this->session->set_flashdata('error', 'Applied debit-memo amount exceeds available balance for memo ID: ' . $memo_id);
                         admin_redirect('suppliers/payment_to_supplier_new');
                     }
-                    $total_applied_debit_memos += $applied;
+                    $total_applied_debit_memos = round($total_applied_debit_memos + $applied, 5);
                     $debit_memo_details[$memo_id] = [
                         'used'   => $memo->used_amount ?? 0,
                         'paying' => $applied,
@@ -4106,7 +4106,7 @@ class Suppliers extends MY_Controller
             $service_invoice_details    = [];
             $total_service_inv_payments = 0;
             foreach ($service_invoice_amounts as $memo_id => $applied) {
-                $applied = (float)$applied;
+                $applied = round((float)$applied, 5);
                 
                 if ($applied > 0) {
                     $memo = $this->purchases_model->getDebitMemoData($memo_id);
@@ -4115,12 +4115,11 @@ class Suppliers extends MY_Controller
                         admin_redirect('suppliers/payment_to_supplier_new');
                     }
                     $available = $memo->payment_amount - ($memo->used_amount ?? 0);
-                    if ($applied > $available) {
+                    if ($applied > $available + 0.00001) {
                         $this->session->set_flashdata('error', 'Applied service invoice amount exceeds outstanding balance for service invoice ID: ' . $memo_id);
                         admin_redirect('suppliers/payment_to_supplier_new');
                     }
-                    //echo 'Applied: '.$applied. ' Available: '.$available;exit;
-                    $total_service_inv_payments += $applied;
+                    $total_service_inv_payments = round($total_service_inv_payments + $applied, 5);
                     $service_invoice_details[$memo_id] = [
                         'used'   => $memo->used_amount ?? 0,
                         'paying' => $applied,
@@ -4132,7 +4131,7 @@ class Suppliers extends MY_Controller
             $credit_memo_details        = [];
             $total_credit_memo_payments = 0;
             foreach ($credit_memo_amounts as $memo_id => $applied) {
-                $applied = (float)$applied;
+                $applied = round((float)$applied, 5);
                 if ($applied > 0) {
                     $memo = $this->purchases_model->getDebitMemoData($memo_id);
                     if (!$memo) {
@@ -4140,11 +4139,11 @@ class Suppliers extends MY_Controller
                         admin_redirect('suppliers/payment_to_supplier_new');
                     }
                     $available = $memo->payment_amount - ($memo->used_amount ?? 0);
-                    if ($applied > $available) {
+                    if ($applied > $available + 0.00001) {
                         $this->session->set_flashdata('error', 'Applied credit memo amount exceeds outstanding balance for credit memo ID: ' . $memo_id);
                         admin_redirect('suppliers/payment_to_supplier_new');
                     }
-                    $total_credit_memo_payments += $applied;
+                    $total_credit_memo_payments = round($total_credit_memo_payments + $applied, 5);
                     $credit_memo_details[$memo_id] = [
                         'used'   => $memo->used_amount ?? 0,
                         'paying' => $applied,
@@ -4161,11 +4160,11 @@ class Suppliers extends MY_Controller
             }
 
             // Total sources must cover total invoice applied amounts
-            $total_sources = $payment_amount + $advance_amount + $total_applied_debit_memos;
-            $total_invoices_to_settle = $total_payments_from_invoices + $total_service_inv_payments + $total_credit_memo_payments;
-
-            if (($total_invoices_to_settle - $total_sources) > 0.01) {
-                $this->session->set_flashdata('error', 'Total payment sources (' . number_format($total_sources, 2) . ') are insufficient to cover the applied invoice amounts (' . number_format($total_invoices_to_settle, 2) . ').');
+            $total_sources = round($payment_amount + $advance_amount + $total_applied_debit_memos, 5);
+            $total_invoices_to_settle = round($total_payments_from_invoices + $total_service_inv_payments + $total_credit_memo_payments, 5);
+            //echo $total_invoices_to_settle . ' - ' . $total_sources;
+            if (($total_invoices_to_settle - $total_sources) > 0.00001) {
+                $this->session->set_flashdata('error', 'Total payment sources (' . number_format($total_sources, 5) . ') are insufficient to cover the applied invoice amounts (' . number_format($total_invoices_to_settle, 5) . ').');
                 admin_redirect('suppliers/payment_to_supplier_new');
             }
 
