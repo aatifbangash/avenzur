@@ -762,6 +762,20 @@
                     </ul>
                 </li>
                 <?php } ?>
+
+                <?php if($Admin || $Owner || $this->sma->in_group('financemanager')) { ?>
+                <li class="newmenu-item has-sub">
+                    <a href="#" class="newmenu-link">
+                        <i class="fa fa-pencil-square-o"></i>
+                        <span><?= lang('Comparison Reports'); ?></span>
+                        <i class="fa fa-chevron-right newmenu-chevron"></i>
+                    </a>
+                    <ul class="newmenu-sub">
+                        <li><a href="<?= admin_url('reports/supplier_tb_vs_unpaid_ap_comparison'); ?>" class="newmenu-link"><i class="fa fa-exchange"></i> <?= lang('Supplier TB vs Unpaid AP'); ?></a></li>
+                        <li><a href="<?= admin_url('reports/supplier_tb_gl_tb_comparison_report'); ?>" class="newmenu-link"><i class="fa fa-exchange"></i> <?= lang('Supplier TB vs GL TB'); ?></a></li>
+                    </ul>
+                </li>
+                <?php } ?>
             </ul>
         </li>
         <?php } ?>
