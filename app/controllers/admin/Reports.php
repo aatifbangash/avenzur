@@ -6272,6 +6272,74 @@ class Reports extends MY_Controller
         $this->page_construct('reports/supplier_tb_vs_unpaid_ap_comparison', $meta, $this->data);
     }
 
+    /**
+     * Compare Customer Trial Balance (EB Debit) vs Unpaid AR outstanding.
+     * URL: admin/reports/customer_tb_vs_unpaid_ar_comparison
+     * Defaults to all local warehouses for a fair match.
+     */
+    public function customer_tb_vs_unpaid_ar_comparison()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
+        $this->data['comparison_result'] = null;
+
+        // Prefer all local warehouses for this report unless user explicitly picks one.
+        if (array_key_exists('warehouse_id', $_POST) || array_key_exists('warehouse_id', $_GET)) {
+            $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+        } else {
+            $warehouse_id = null;
+        }
+        $this->data['warehouse_id'] = $warehouse_id;
+
+        $customer_rent_type = $this->input->post('customer_rent_type') ?: 'non_rental';
+        if (!in_array($customer_rent_type, ['non_rental', 'rental', 'all'], true)) {
+            $customer_rent_type = 'non_rental';
+        }
+        $this->data['customer_rent_type'] = $customer_rent_type;
+
+        $all_customers = $this->site->getAllCompanies('customer') ?: [];
+        $this->data['customers'] = $this->filter_customers_by_rent_type($all_customers, $customer_rent_type);
+        $this->data['selected_customers'] = $this->input->post('customer_ids') ?: [];
+
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            if (array_key_exists('warehouse_id', $_POST) || array_key_exists('warehouse_id', $_GET)) {
+                $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+            } else {
+                $warehouse_id = null;
+            }
+            $customer_ids = $this->input->post('customer_ids') ?: [];
+
+            $comparison = $this->reports_model->get_customer_tb_vs_unpaid_ar_comparison(
+                $start_date,
+                $end_date,
+                $warehouse_id,
+                $customer_rent_type,
+                $customer_ids
+            );
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['warehouse_id'] = $warehouse_id;
+            $this->data['comparison_result'] = $comparison;
+            $this->data['selected_customers'] = $customer_ids;
+        }
+
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => '#', 'page' => 'Customer TB vs Unpaid AR Comparison'],
+        ];
+        $meta = ['page_title' => 'Customer TB vs Unpaid AR Comparison', 'bc' => $bc];
+        $this->page_construct('reports/customer_tb_vs_unpaid_ar_comparison', $meta, $this->data);
+    }
+
     public function financial_position()
     {
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
