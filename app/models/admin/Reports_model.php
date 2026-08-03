@@ -2678,11 +2678,12 @@ class Reports_model extends CI_Model
             ];
         }
 
-        // Memo outstanding always computed for diagnostics.
-        // unpaid_invoices_ap only merges memos when warehouse_id == 32.
-        $include_memos_in_unpaid = ((int) $warehouse_id === 32);
+        // Include service/credit memos on the Unpaid side when comparing all local warehouses
+        // (warehouse_id null) — that is the fair match against Payable TB. Also include for HQ (32)
+        // to stay aligned with unpaid_invoices_ap. Single branch warehouses stay purchase-only.
+        $include_memos_in_unpaid = ($warehouse_id === null || $warehouse_id === '' || (int) $warehouse_id === 0 || (int) $warehouse_id === 32);
 
-        // Match unpaid_invoices_ap memo paid expression (warehouse 32 path)
+        // Match unpaid_invoices_ap memo paid expression when memos are part of Unpaid totals
         $memo_paid_expr = "CASE
             WHEN m.date < '2026-06-20' THEN COALESCE(m.used_amount, 0)
             ELSE COALESCE((
@@ -2691,7 +2692,6 @@ class Reports_model extends CI_Model
                 WHERE sp.memo_id = m.id AND sp.date <= '{$sql_at}'
             ), 0)
         END";
-        // When memos are only diagnostic (not in unpaid report), used_amount is the operational balance.
         if (!$include_memos_in_unpaid) {
             $memo_paid_expr = 'COALESCE(m.used_amount, 0)';
         }
@@ -2970,10 +2970,10 @@ class Reports_model extends CI_Model
         if ($memos_ex > 0.01 && abs($diff - $memos_ex) < 1.0) {
             return [
                 'key' => 'memos_excluded',
-                'label' => 'G — Service/credit memos excluded from Unpaid AP',
-                'description' => 'Unpaid AP only includes service/credit memos when warehouse filter is HQ (32). TB still includes those payables.',
+                'label' => 'G — Service/credit memos excluded from Unpaid side',
+                'description' => 'Single-branch Unpaid side is purchases only. Service/credit memos still sit in Payable TB.',
                 'priority' => 'medium',
-                'action' => 'Run Unpaid AP with warehouse HQ (32), or treat memo outstanding as the known gap.',
+                'action' => 'Re-run with All Local Warehouses (recommended), or treat memo outstanding as the known gap.',
             ];
         }
         if ($gl > 100) {

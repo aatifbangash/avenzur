@@ -6163,6 +6163,7 @@ class Reports extends MY_Controller
     /**
      * Compare Supplier Trial Balance (EB Credit) vs Unpaid AP outstanding.
      * URL: admin/reports/supplier_tb_vs_unpaid_ap_comparison
+     * Defaults to all local warehouses (not Settings/Al Rawabi default) for a fair match.
      */
     public function supplier_tb_vs_unpaid_ap_comparison()
     {
@@ -6171,7 +6172,14 @@ class Reports extends MY_Controller
         $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
         $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
         $this->data['comparison_result'] = null;
-        $this->data['warehouse_id'] = $this->site->resolveReportWarehouseFilter('warehouse_id');
+
+        // Prefer all local warehouses for this report unless user explicitly picks one.
+        if (array_key_exists('warehouse_id', $_POST) || array_key_exists('warehouse_id', $_GET)) {
+            $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+        } else {
+            $warehouse_id = null;
+        }
+        $this->data['warehouse_id'] = $warehouse_id;
 
         $supplier_trade_type = $this->input->post('supplier_trade_type') ?: 'trade';
         if (!in_array($supplier_trade_type, ['trade', 'non_trade', 'all'], true)) {
@@ -6189,7 +6197,11 @@ class Reports extends MY_Controller
         if ($from_date) {
             $start_date = $this->sma->fld($from_date);
             $end_date = $this->sma->fld($to_date);
-            $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+            if (array_key_exists('warehouse_id', $_POST) || array_key_exists('warehouse_id', $_GET)) {
+                $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+            } else {
+                $warehouse_id = null;
+            }
             $supplier_ids = $this->input->post('supplier_ids') ?: [];
 
             $comparison = $this->reports_model->get_supplier_tb_vs_unpaid_ap_comparison(

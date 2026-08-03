@@ -52,7 +52,10 @@
                             </select>
                         </div>
                     </div>
-                    <?php $this->load->view($this->theme . 'reports/partials/warehouse_filter_field', ['wh_col' => 'col-md-3']); ?>
+                    <?php $this->load->view($this->theme . 'reports/partials/warehouse_filter_field', [
+                        'wh_col' => 'col-md-3',
+                        'wh_val' => ($warehouse_id ?: ''),
+                    ]); ?>
                     <div class="col-md-4">
                         <div class="form-group">
                             <?= lang('Suppliers', 'suppliers'); ?>
@@ -99,11 +102,15 @@
                 <strong>Suppliers with mismatch:</strong> <?= (int) $summary['mismatch_count']; ?><br>
                 <?php if (empty($summary['include_memos_in_unpaid'])): ?>
                     <span class="text-warning">
-                        Note: Unpaid AP only includes service invoices / credit memos when warehouse = HQ (32).
-                        Those memo balances are shown in the “Memos excluded” column / category when they drive the gap.
+                        Note: for a single branch warehouse, Unpaid side is purchases only.
+                        Service/credit memos are shown under “Memos excluded”. Prefer
+                        <strong>All Local Warehouses</strong> for the closest TB match.
                     </span>
                 <?php else: ?>
-                    <span class="text-success">Service invoices &amp; credit memos are included in Unpaid AP totals (warehouse HQ).</span>
+                    <span class="text-success">
+                        Scope: <?= empty($warehouse_id) ? 'All local warehouses' : 'selected warehouse'; ?>.
+                        Service invoices &amp; credit memos are included in Unpaid AP totals.
+                    </span>
                 <?php endif; ?>
             </div>
 
@@ -152,6 +159,9 @@
                                         if (!empty($warehouse_id)) {
                                             $stmt_url .= '&warehouse_id=' . (int) $warehouse_id;
                                             $unpaid_url .= '&warehouse_id=' . (int) $warehouse_id;
+                                        } else {
+                                            $stmt_url .= '&all=1';
+                                            $unpaid_url .= '&all=1&warehouse_id=';
                                         }
                                         $diff_cls = $row['difference'] > 0.01 ? 'diff-pos' : ($row['difference'] < -0.01 ? 'diff-neg' : '');
                                         ?>
