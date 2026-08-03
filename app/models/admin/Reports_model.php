@@ -2426,14 +2426,14 @@ class Reports_model extends CI_Model
             $ledger_ids = [62, 63];
         }
 
-        $purchase_wh = $this->site->reportPurchaseLedgerWarehouseCondition($warehouse_id);
+        $purchase_wh = $this->site->reportPurchaseLedgerWarehouseCondition($warehouse_id, 'e');
 
         $this->db
             ->select("
                 ei.id AS entry_item_id,
                 e.id AS entry_id,
                 DATE(e.date) AS date,
-                e.reference_no,
+                e.number AS reference_no,
                 e.transaction_type,
                 e.supplier_id,
                 c.name AS supplier_name,
@@ -2445,7 +2445,7 @@ class Reports_model extends CI_Model
                 ei.dc,
                 ei.amount,
                 CASE
-                    WHEN e.supplier_id IS NULL OR e.supplier_id = 0 THEN 0
+                    WHEN IFNULL(e.supplier_id, 0) = 0 THEN 0
                     WHEN c.id IS NULL THEN 0
                     WHEN c.ledger_account = ei.ledger_id THEN 1
                     ELSE 0
