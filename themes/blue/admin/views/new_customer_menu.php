@@ -773,6 +773,7 @@
                     <ul class="newmenu-sub">
                         <li><a href="<?= admin_url('reports/supplier_tb_vs_unpaid_ap_comparison'); ?>" class="newmenu-link"><i class="fa fa-exchange"></i> <?= lang('Supplier TB vs Unpaid AP'); ?></a></li>
                         <li><a href="<?= admin_url('reports/supplier_tb_gl_tb_comparison_report'); ?>" class="newmenu-link"><i class="fa fa-exchange"></i> <?= lang('Supplier TB vs GL TB'); ?></a></li>
+                        <li><a href="<?= admin_url('reports/customer_tb_gl_tb_comparison_report'); ?>" class="newmenu-link"><i class="fa fa-exchange"></i> <?= lang('Customer TB vs GL TB'); ?></a></li>
                     </ul>
                 </li>
                 <?php } ?>

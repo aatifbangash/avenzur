@@ -2569,6 +2569,247 @@ class Reports_model extends CI_Model
     }
 
     /**
+     * Distinct receivable ledger IDs used by customers (for GL TB comparison).
+     *
+     * @return int[]
+     */
+    public function get_customer_receivable_ledger_ids()
+    {
+        $this->db->select('ledger_account')
+            ->from('companies')
+            ->where('group_name', 'customer')
+            ->where('ledger_account IS NOT NULL', null, false)
+            ->where('ledger_account >', 0)
+            ->group_by('ledger_account')
+            ->order_by('ledger_account', 'ASC');
+        $q = $this->db->get();
+        $ids = [];
+        if ($q->num_rows() > 0) {
+            foreach ($q->result() as $row) {
+                $id = (int) $row->ledger_account;
+                if ($id > 0) {
+                    $ids[] = $id;
+                }
+            }
+        }
+        return $ids;
+    }
+
+    /**
+     * Compare GL movement on all customer receivable ledgers against Customer TB movement logic.
+     *
+     * @param string   $start_date Y-m-d
+     * @param string   $end_date   Y-m-d
+     * @param int|null $warehouse_id
+     * @param int[]    $ledger_ids Optional override; empty = all customer ledger_account values
+     *
+     * @return array
+     */
+    public function get_customer_tb_gl_tb_comparison($start_date, $end_date, $warehouse_id = null, array $ledger_ids = [])
+    {
+        $start_date = trim((string) $start_date);
+        $end_date = trim((string) $end_date);
+
+        $ledger_ids = array_values(array_filter(array_map('intval', $ledger_ids), function ($id) {
+            return $id > 0;
+        }));
+        if (empty($ledger_ids)) {
+            $ledger_ids = $this->get_customer_receivable_ledger_ids();
+        }
+        if (empty($ledger_ids)) {
+            return [
+                'gl_rows' => [],
+                'flagged_rows' => [],
+                'customer_differences' => [],
+                'summary' => [
+                    'gl_total_debit' => 0,
+                    'gl_total_credit' => 0,
+                    'gl_in_tb_total_debit' => 0,
+                    'gl_in_tb_total_credit' => 0,
+                    'customer_tb_total_debit' => 0,
+                    'customer_tb_total_credit' => 0,
+                    'manual_flag_count' => 0,
+                    'customer_mismatch_count' => 0,
+                ],
+                'ledger_ids' => [],
+            ];
+        }
+
+        $customer_wh = $this->site->reportCustomerLedgerWarehouseCondition($warehouse_id, 'e');
+
+        // Same receivable matching rule as get_customer_trial_balance (current + old_ledgers).
+        $in_customer_tb_case = "
+            CASE
+                WHEN IFNULL(e.customer_id, 0) = 0 THEN 0
+                WHEN c.id IS NULL THEN 0
+                WHEN c.ledger_account = ei.ledger_id THEN 1
+                WHEN NULLIF(TRIM(IFNULL(c.old_ledgers, '')), '') IS NOT NULL
+                    AND FIND_IN_SET(
+                        CAST(ei.ledger_id AS CHAR),
+                        REPLACE(REPLACE(IFNULL(c.old_ledgers, ''), ' ', ''), ', ', ',')
+                    ) > 0 THEN 1
+                ELSE 0
+            END
+        ";
+
+        $this->db
+            ->select("
+                ei.id AS entry_item_id,
+                e.id AS entry_id,
+                DATE(e.date) AS date,
+                e.number AS reference_no,
+                e.transaction_type,
+                e.customer_id,
+                c.name AS customer_name,
+                c.sequence_code AS customer_code,
+                c.ledger_account AS customer_ledger_account,
+                c.old_ledgers AS customer_old_ledgers,
+                ei.ledger_id,
+                al.code AS ledger_code,
+                al.name AS ledger_name,
+                ei.dc,
+                ei.amount,
+                {$in_customer_tb_case} AS in_customer_tb
+            ", false)
+            ->from('sma_accounts_entryitems ei')
+            ->join('sma_accounts_entries e', 'e.id = ei.entry_id')
+            ->join('sma_accounts_ledgers al', 'al.id = ei.ledger_id', 'left')
+            ->join('sma_companies c', 'c.id = e.customer_id', 'left')
+            ->where_in('ei.ledger_id', $ledger_ids)
+            ->where('DATE(e.date) >=', $start_date)
+            ->where('DATE(e.date) <=', $end_date)
+            ->where($customer_wh, null, false)
+            ->order_by('e.date', 'ASC')
+            ->order_by('e.id', 'ASC')
+            ->order_by('ei.id', 'ASC');
+
+        $q = $this->db->get();
+        $gl_rows = $q->num_rows() > 0 ? $q->result_array() : [];
+
+        $summary = [
+            'gl_total_debit'            => 0.0,
+            'gl_total_credit'           => 0.0,
+            'gl_in_tb_total_debit'      => 0.0,
+            'gl_in_tb_total_credit'     => 0.0,
+            'customer_tb_total_debit'   => 0.0,
+            'customer_tb_total_credit'  => 0.0,
+            'manual_flag_count'         => 0,
+            'customer_mismatch_count'   => 0,
+        ];
+
+        $flagged_rows = [];
+        $gl_included_customer_map = [];
+
+        foreach ($gl_rows as &$row) {
+            $amount = (float) $row['amount'];
+            $is_debit = strtoupper((string) $row['dc']) === 'D';
+
+            if ($is_debit) {
+                $summary['gl_total_debit'] += $amount;
+            } else {
+                $summary['gl_total_credit'] += $amount;
+            }
+
+            $reason = '';
+            if ((int) $row['customer_id'] <= 0) {
+                $reason = 'Missing customer_id on accounting entry';
+            } elseif (empty($row['customer_name'])) {
+                $reason = 'Customer on entry not found in companies';
+            } elseif ((int) $row['in_customer_tb'] !== 1) {
+                $reason = 'Line ledger is not customer ledger_account / old_ledgers';
+            }
+
+            $row['manual_check_reason'] = $reason;
+            if ($reason !== '') {
+                $summary['manual_flag_count']++;
+                $flagged_rows[] = $row;
+            }
+
+            if ((int) $row['in_customer_tb'] === 1 && (int) $row['customer_id'] > 0) {
+                $cid = (int) $row['customer_id'];
+                if ($is_debit) {
+                    $summary['gl_in_tb_total_debit'] += $amount;
+                    $gl_included_customer_map[$cid]['trsDebit'] =
+                        ($gl_included_customer_map[$cid]['trsDebit'] ?? 0) + $amount;
+                } else {
+                    $summary['gl_in_tb_total_credit'] += $amount;
+                    $gl_included_customer_map[$cid]['trsCredit'] =
+                        ($gl_included_customer_map[$cid]['trsCredit'] ?? 0) + $amount;
+                }
+                $gl_included_customer_map[$cid]['name'] = (string) ($row['customer_name'] ?? '');
+                $gl_included_customer_map[$cid]['sequence_code'] = (string) ($row['customer_code'] ?? '');
+            }
+        }
+        unset($row);
+
+        $customer_tb_raw = $this->get_customer_trial_balance($start_date, $end_date, $warehouse_id, 'all');
+        $customer_tb = [];
+        foreach (($customer_tb_raw['trs'] ?? []) as $row) {
+            $td = (float) $row->total_debit;
+            $tc = (float) $row->total_credit;
+            if ($td == 0 && $tc == 0) {
+                continue;
+            }
+            $cid = (int) $row->id;
+            $customer_tb[$cid] = [
+                'name' => $row->name,
+                'sequence_code' => $row->sequence_code,
+                'trsDebit' => $td,
+                'trsCredit' => $tc,
+            ];
+        }
+
+        $customer_differences = [];
+        $all_customer_ids = array_unique(array_merge(
+            array_map('intval', array_keys($gl_included_customer_map)),
+            array_map('intval', array_keys($customer_tb))
+        ));
+        sort($all_customer_ids);
+
+        foreach ($all_customer_ids as $customer_id) {
+            $gl_debit = (float) ($gl_included_customer_map[$customer_id]['trsDebit'] ?? 0);
+            $gl_credit = (float) ($gl_included_customer_map[$customer_id]['trsCredit'] ?? 0);
+            $tb_debit = (float) ($customer_tb[$customer_id]['trsDebit'] ?? 0);
+            $tb_credit = (float) ($customer_tb[$customer_id]['trsCredit'] ?? 0);
+
+            // Skip customers with no movement on either side
+            if ($gl_debit == 0 && $gl_credit == 0 && $tb_debit == 0 && $tb_credit == 0) {
+                continue;
+            }
+
+            $summary['customer_tb_total_debit'] += $tb_debit;
+            $summary['customer_tb_total_credit'] += $tb_credit;
+
+            $diff_debit = round($gl_debit - $tb_debit, 2);
+            $diff_credit = round($gl_credit - $tb_credit, 2);
+            if (abs($diff_debit) > 0.009 || abs($diff_credit) > 0.009) {
+                $summary['customer_mismatch_count']++;
+                $customer_differences[] = [
+                    'customer_id' => $customer_id,
+                    'sequence_code' => $customer_tb[$customer_id]['sequence_code']
+                        ?? ($gl_included_customer_map[$customer_id]['sequence_code'] ?? ''),
+                    'name' => $customer_tb[$customer_id]['name']
+                        ?? ($gl_included_customer_map[$customer_id]['name'] ?? ''),
+                    'gl_trs_debit' => $gl_debit,
+                    'gl_trs_credit' => $gl_credit,
+                    'customer_tb_trs_debit' => $tb_debit,
+                    'customer_tb_trs_credit' => $tb_credit,
+                    'diff_debit' => $diff_debit,
+                    'diff_credit' => $diff_credit,
+                ];
+            }
+        }
+
+        return [
+            'gl_rows' => $gl_rows,
+            'flagged_rows' => $flagged_rows,
+            'customer_differences' => $customer_differences,
+            'summary' => $summary,
+            'ledger_ids' => $ledger_ids,
+        ];
+    }
+
+    /**
      * Compare Supplier Trial Balance (EB Credit) vs Unpaid AP outstanding by supplier.
      * Surfaces structural mismatch areas (returns, debit memos, GL credits without purchase, memos).
      *
