@@ -3253,6 +3253,479 @@ class Reports_model extends CI_Model
         ];
     }
 
+    /**
+     * Compare Customer Trial Balance (EB Debit) vs Unpaid AR outstanding by customer.
+     * Surfaces structural mismatch areas (returns, credit memos, GL debits without sale, service invoices).
+     *
+     * @param string   $start_date Y-m-d
+     * @param string   $end_date   Y-m-d (also unpaid as-of date)
+     * @param int|null $warehouse_id
+     * @param string   $rent_type non_rental|rental|all
+     * @param array    $customer_ids
+     * @return array
+     */
+    public function get_customer_tb_vs_unpaid_ar_comparison($start_date, $end_date, $warehouse_id = null, $rent_type = 'non_rental', array $customer_ids = [])
+    {
+        $rent_type = in_array($rent_type, ['non_rental', 'rental', 'all'], true) ? $rent_type : 'non_rental';
+        $sql_at = $end_date . ' 23:59:59';
+        $pfx = $this->db->dbprefix;
+        $customer_ids = array_values(array_filter(array_map('intval', $customer_ids), function ($id) {
+            return $id > 0;
+        }));
+
+        // ── 1) Customer TB EB Debit (same netting as customers_trial_balance view) ──
+        $tb_raw = $this->get_customer_trial_balance($start_date, $end_date, $warehouse_id, $rent_type);
+        $tb = [];
+        $seed = [];
+        foreach (($tb_raw['trs'] ?? []) as $trans) {
+            $cid = (int) $trans->id;
+            $seed[$cid] = [
+                'name' => $trans->name,
+                'sequence_code' => $trans->sequence_code,
+                'trsDebit' => (float) $trans->total_debit,
+                'trsCredit' => (float) $trans->total_credit,
+                'obDebit' => 0.0,
+                'obCredit' => 0.0,
+            ];
+        }
+        foreach (($tb_raw['ob'] ?? []) as $trans) {
+            $cid = (int) $trans->id;
+            if (!isset($seed[$cid])) {
+                $seed[$cid] = [
+                    'name' => $trans->name,
+                    'sequence_code' => $trans->sequence_code,
+                    'trsDebit' => 0.0,
+                    'trsCredit' => 0.0,
+                    'obDebit' => 0.0,
+                    'obCredit' => 0.0,
+                ];
+            }
+            $seed[$cid]['obDebit'] = (float) $trans->total_debit;
+            $seed[$cid]['obCredit'] = (float) $trans->total_credit;
+        }
+
+        foreach ($seed as $cid => $data) {
+            if (!empty($customer_ids) && !in_array($cid, $customer_ids, true)) {
+                continue;
+            }
+            if (
+                (float) $data['trsDebit'] == 0
+                && (float) $data['trsCredit'] == 0
+                && (float) $data['obDebit'] == 0
+                && (float) $data['obCredit'] == 0
+            ) {
+                continue;
+            }
+
+            $ob_debit = (float) $data['obDebit'];
+            $ob_credit = (float) $data['obCredit'];
+            if ($ob_debit >= $ob_credit) {
+                $opening_debit = $ob_debit - $ob_credit;
+                $opening_credit = 0.0;
+            } else {
+                $opening_debit = 0.0;
+                $opening_credit = $ob_credit - $ob_debit;
+            }
+
+            $ending_debit = $opening_debit + (float) $data['trsDebit'];
+            $ending_credit = $opening_credit + (float) $data['trsCredit'];
+            if ($ending_debit >= $ending_credit) {
+                $final_debit = round($ending_debit - $ending_credit, 2);
+                $final_credit = 0.0;
+            } else {
+                $final_debit = 0.0;
+                $final_credit = round($ending_credit - $ending_debit, 2);
+            }
+
+            $tb[$cid] = [
+                'customer_id'   => $cid,
+                'sequence_code' => $data['sequence_code'] ?? '',
+                'name'          => $data['name'] ?? '',
+                'ob_debit'      => round($opening_debit, 2),
+                'ob_credit'     => round($opening_credit, 2),
+                'trs_debit'     => round((float) $data['trsDebit'], 2),
+                'trs_credit'    => round((float) $data['trsCredit'], 2),
+                'eb_debit'      => $final_debit,
+                'eb_credit'     => $final_credit,
+            ];
+        }
+
+        // ── 2) Unpaid AR components (aligned with unpaid_invoices_ar) ──
+        $sale_wh_sql = '';
+        if ($warehouse_id) {
+            $sale_wh_sql = ' AND s.warehouse_id = ' . (int) $warehouse_id;
+        } else {
+            $wh_clause = $this->site->reportWarehouseAndClause(null, 's');
+            if ($wh_clause) {
+                $sale_wh_sql = ' ' . $wh_clause;
+            }
+        }
+
+        $rent_sql_c = $this->apply_customer_rent_type_sql($rent_type, 'c.category');
+
+        $customer_sql_s = '';
+        $customer_sql_m = '';
+        if (!empty($customer_ids)) {
+            $ids = implode(',', $customer_ids);
+            $customer_sql_s = " AND s.customer_id IN ({$ids})";
+            $customer_sql_m = " AND m.customer_id IN ({$ids})";
+        }
+
+        $unpaid_sales = [];
+        $sales_q = $this->db->query("
+            SELECT customer_id, ROUND(SUM(outstanding), 2) AS amt, COUNT(*) AS cnt
+            FROM (
+                SELECT s.customer_id,
+                    ROUND(
+                        s.grand_total - COALESCE((
+                            SELECT SUM(sp.amount) FROM {$pfx}payments sp
+                            WHERE sp.sale_id = s.id AND sp.date <= '{$sql_at}'
+                        ), 0),
+                    2) AS outstanding
+                FROM {$pfx}sales s
+                INNER JOIN {$pfx}companies c ON c.id = s.customer_id
+                WHERE s.sale_invoice = 1
+                  AND s.grand_total > 0
+                  AND s.date <= '{$sql_at}'
+                  {$sale_wh_sql}
+                  {$rent_sql_c}
+                  {$customer_sql_s}
+            ) inv
+            WHERE outstanding > 0
+            GROUP BY customer_id
+        ");
+        foreach ($sales_q->result() as $r) {
+            $unpaid_sales[(int) $r->customer_id] = [
+                'amt' => (float) $r->amt,
+                'cnt' => (int) $r->cnt,
+            ];
+        }
+
+        // Include customer service invoices on Unpaid side when comparing all local warehouses
+        // or HQ (32) — fair match against Receivable TB. Single branch stays sales-only.
+        $include_memos_in_unpaid = ($warehouse_id === null || $warehouse_id === '' || (int) $warehouse_id === 0 || (int) $warehouse_id === 32);
+
+        $memo_paid_expr = "COALESCE((
+            SELECT COALESCE(SUM(sp.amount), 0)
+            FROM {$pfx}payments sp
+            WHERE sp.memo_id = m.id AND sp.date <= '{$sql_at}'
+        ), 0)";
+        if (!$include_memos_in_unpaid) {
+            $memo_paid_expr = 'COALESCE(m.used_amount, 0)';
+        }
+
+        $unpaid_service = [];
+        $memo_q = $this->db->query("
+            SELECT m.customer_id,
+                ROUND(SUM(m.payment_amount - ({$memo_paid_expr})), 2) AS amt,
+                COUNT(*) AS cnt
+            FROM {$pfx}memo m
+            INNER JOIN {$pfx}companies c ON c.id = m.customer_id
+            WHERE m.customer_id > 0
+              AND m.type = 'serviceinvoice'
+              AND m.date <= '{$end_date}'
+              AND (m.payment_amount - ({$memo_paid_expr})) > 0.01
+              {$rent_sql_c}
+              {$customer_sql_m}
+            GROUP BY m.customer_id
+        ");
+        foreach ($memo_q->result() as $r) {
+            $unpaid_service[(int) $r->customer_id] = [
+                'amt' => (float) $r->amt,
+                'cnt' => (int) $r->cnt,
+            ];
+        }
+
+        // ── 3) Structural mismatch drivers (in TB / ops but not Unpaid AR) ──
+        $customer_sql_e = !empty($customer_ids)
+            ? ' AND e.customer_id IN (' . implode(',', $customer_ids) . ')'
+            : '';
+        $customer_sql_r = !empty($customer_ids)
+            ? ' AND r.customer_id IN (' . implode(',', $customer_ids) . ')'
+            : '';
+
+        $unsettled_returns = [];
+        foreach ($this->db->query("
+            SELECT r.customer_id, ROUND(SUM(r.grand_total - COALESCE(r.paid, 0)), 2) AS amt
+            FROM {$pfx}returns r
+            INNER JOIN {$pfx}companies c ON c.id = r.customer_id
+            WHERE r.status = 'completed'
+              AND (r.grand_total - COALESCE(r.paid, 0)) > 0.01
+              {$rent_sql_c}
+              {$customer_sql_r}
+            GROUP BY r.customer_id
+        ")->result() as $r) {
+            $unsettled_returns[(int) $r->customer_id] = (float) $r->amt;
+        }
+
+        $unsettled_credit_memos = [];
+        foreach ($this->db->query("
+            SELECT m.customer_id,
+                ROUND(SUM(m.payment_amount - COALESCE(m.used_amount, 0)), 2) AS amt
+            FROM {$pfx}memo m
+            INNER JOIN {$pfx}companies c ON c.id = m.customer_id
+            WHERE m.customer_id > 0
+              AND m.customer_entry_type = 'C'
+              AND m.type != 'serviceinvoice'
+              AND (m.payment_amount - COALESCE(m.used_amount, 0)) > 0.01
+              {$rent_sql_c}
+              {$customer_sql_m}
+            GROUP BY m.customer_id
+        ")->result() as $r) {
+            $unsettled_credit_memos[(int) $r->customer_id] = (float) $r->amt;
+        }
+
+        $gl_debits_no_sid = [];
+        $wh_e = $this->site->reportCustomerLedgerWarehouseCondition($warehouse_id, 'e');
+        $ledger_match = "(
+            c.ledger_account = ei.ledger_id
+            OR (
+                NULLIF(TRIM(IFNULL(c.old_ledgers, '')), '') IS NOT NULL
+                AND FIND_IN_SET(
+                    CAST(ei.ledger_id AS CHAR),
+                    REPLACE(REPLACE(IFNULL(c.old_ledgers, ''), ' ', ''), ', ', ',')
+                ) > 0
+            )
+        )";
+        foreach ($this->db->query("
+            SELECT e.customer_id, ROUND(SUM(ei.amount), 2) AS amt
+            FROM {$pfx}accounts_entries e
+            JOIN {$pfx}accounts_entryitems ei ON e.id = ei.entry_id
+            JOIN {$pfx}companies c ON e.customer_id = c.id AND {$ledger_match}
+            WHERE e.customer_id IS NOT NULL AND ei.dc = 'D'
+              AND DATE(e.date) <= '{$end_date}'
+              AND (e.sid IS NULL OR e.sid = '' OR e.sid = 0)
+              AND {$wh_e}
+              {$rent_sql_c}
+              {$customer_sql_e}
+            GROUP BY e.customer_id
+        ")->result() as $r) {
+            $gl_debits_no_sid[(int) $r->customer_id] = (float) $r->amt;
+        }
+
+        // ── 4) Merge + classify ──
+        $all_ids = array_unique(array_merge(
+            array_keys($tb),
+            array_keys($unpaid_sales),
+            array_keys($unpaid_service)
+        ));
+        sort($all_ids);
+
+        $rows = [];
+        $summary = [
+            'grand_tb_debit'           => 0.0,
+            'grand_unpaid'             => 0.0,
+            'grand_diff'               => 0.0,
+            'mismatch_count'           => 0,
+            'include_memos_in_unpaid'  => $include_memos_in_unpaid,
+            'category_counts'          => [],
+        ];
+
+        foreach ($all_ids as $cid) {
+            $cid = (int) $cid;
+            if (!empty($customer_ids) && !in_array($cid, $customer_ids, true)) {
+                continue;
+            }
+
+            $tb_debit = (float) ($tb[$cid]['eb_debit'] ?? 0);
+
+            $sales_amt = (float) ($unpaid_sales[$cid]['amt'] ?? 0);
+            $svc_amt   = (float) ($unpaid_service[$cid]['amt'] ?? 0);
+
+            $unpaid_in_report = $sales_amt;
+            if ($include_memos_in_unpaid) {
+                $unpaid_in_report = round($sales_amt + $svc_amt, 2);
+            }
+
+            $diff = round($tb_debit - $unpaid_in_report, 2);
+            $returns_amt = (float) ($unsettled_returns[$cid] ?? 0);
+            $credit_amt  = (float) ($unsettled_credit_memos[$cid] ?? 0);
+            $gl_no_sid   = (float) ($gl_debits_no_sid[$cid] ?? 0);
+            $memos_excluded = $include_memos_in_unpaid ? 0.0 : $svc_amt;
+
+            if (
+                abs($diff) < 0.01
+                && $tb_debit < 0.01
+                && $unpaid_in_report < 0.01
+                && $returns_amt < 0.01
+                && $credit_amt < 0.01
+                && $memos_excluded < 0.01
+            ) {
+                continue;
+            }
+
+            $name = $tb[$cid]['name'] ?? null;
+            $code = $tb[$cid]['sequence_code'] ?? '';
+            if ($name === null) {
+                $c = $this->db->select('name, sequence_code')->from('companies')->where('id', $cid)->get()->row();
+                $name = $c->name ?? ('Customer #' . $cid);
+                $code = $c->sequence_code ?? '';
+            }
+
+            $issue = $this->classify_customer_tb_vs_unpaid_issue([
+                'diff'                  => $diff,
+                'tb'                    => $tb_debit,
+                'unpaid'                => $unpaid_in_report,
+                'unpaid_sales'          => $sales_amt,
+                'unpaid_memos'          => $svc_amt,
+                'memos_excluded'        => $memos_excluded,
+                'unsettled_returns'     => $returns_amt,
+                'unsettled_credit_memos'=> $credit_amt,
+                'ledger_debits_no_sid'  => $gl_no_sid,
+            ]);
+
+            $summary['grand_tb_debit'] += $tb_debit;
+            $summary['grand_unpaid'] += $unpaid_in_report;
+
+            if (abs($diff) >= 0.01) {
+                $summary['mismatch_count']++;
+                $ck = $issue['key'];
+                $summary['category_counts'][$ck] = ($summary['category_counts'][$ck] ?? 0) + 1;
+
+                $rows[] = [
+                    'customer_id'            => $cid,
+                    'sequence_code'          => $code,
+                    'name'                   => $name,
+                    'tb_eb_debit'            => $tb_debit,
+                    'tb_eb_credit'           => (float) ($tb[$cid]['eb_credit'] ?? 0),
+                    'unpaid_sales'           => $sales_amt,
+                    'open_sale_count'        => (int) ($unpaid_sales[$cid]['cnt'] ?? 0),
+                    'unpaid_service'         => $svc_amt,
+                    'memos_excluded_from_unpaid' => $memos_excluded,
+                    'unpaid_total'           => $unpaid_in_report,
+                    'difference'             => $diff,
+                    'unsettled_returns'      => $returns_amt,
+                    'unsettled_credit_memos' => $credit_amt,
+                    'ledger_debits_no_sid'   => $gl_no_sid,
+                    'issue'                  => $issue,
+                ];
+            }
+        }
+
+        usort($rows, function ($a, $b) {
+            return abs($b['difference']) <=> abs($a['difference']);
+        });
+
+        $summary['grand_tb_debit'] = round($summary['grand_tb_debit'], 2);
+        $summary['grand_unpaid'] = round($summary['grand_unpaid'], 2);
+        $summary['grand_diff'] = round($summary['grand_tb_debit'] - $summary['grand_unpaid'], 2);
+
+        $grouped = [];
+        foreach ($rows as $row) {
+            $key = $row['issue']['key'];
+            if (!isset($grouped[$key])) {
+                $grouped[$key] = [
+                    'key'          => $key,
+                    'label'        => $row['issue']['label'],
+                    'description'  => $row['issue']['description'],
+                    'priority'     => $row['issue']['priority'],
+                    'action'       => $row['issue']['action'],
+                    'customers'    => [],
+                    'sum_abs_diff' => 0.0,
+                ];
+            }
+            $grouped[$key]['customers'][] = $row;
+            $grouped[$key]['sum_abs_diff'] += abs($row['difference']);
+        }
+
+        $order = ['tb_only', 'unpaid_only', 'memos_excluded', 'gl_payments', 'tb_gt_unpaid', 'returns_credit', 'mixed'];
+        $grouped_ordered = [];
+        foreach ($order as $key) {
+            if (isset($grouped[$key])) {
+                $grouped_ordered[] = $grouped[$key];
+            }
+        }
+        foreach ($grouped as $key => $g) {
+            if (!in_array($key, $order, true)) {
+                $grouped_ordered[] = $g;
+            }
+        }
+
+        return [
+            'rows'    => $rows,
+            'grouped' => $grouped_ordered,
+            'summary' => $summary,
+        ];
+    }
+
+    /**
+     * @param array<string,float> $d
+     * @return array{key:string,label:string,description:string,priority:string,action:string}
+     */
+    private function classify_customer_tb_vs_unpaid_issue(array $d)
+    {
+        $diff = (float) ($d['diff'] ?? 0);
+        $tb = (float) ($d['tb'] ?? 0);
+        $unpaid = (float) ($d['unpaid'] ?? 0);
+        $gl = (float) ($d['ledger_debits_no_sid'] ?? 0);
+        $returns = (float) ($d['unsettled_returns'] ?? 0);
+        $credit = (float) ($d['unsettled_credit_memos'] ?? 0);
+        $memos_ex = (float) ($d['memos_excluded'] ?? 0);
+        $absDiff = abs($diff);
+
+        if ($tb < 0.01 && $unpaid > 0.01) {
+            return [
+                'key' => 'unpaid_only',
+                'label' => 'B — Unpaid AR only (no TB debit)',
+                'description' => 'Open sales/service invoices appear in Unpaid AR, but Receivable TB has no ending debit.',
+                'priority' => 'high',
+                'action' => 'Review customer ledger posting / wrong ledger / net credit TB balance.',
+            ];
+        }
+        if ($unpaid < 0.01 && $tb > 0.01) {
+            return [
+                'key' => 'tb_only',
+                'label' => 'A — TB debit only (no Unpaid AR lines)',
+                'description' => 'Receivable TB shows debit, but Unpaid AR has no open sale/service rows.',
+                'priority' => 'high',
+                'action' => 'Check GL debits without sale link, opening balance, or settled docs still in ledger.',
+            ];
+        }
+        if ($memos_ex > 0.01 && abs($diff - $memos_ex) < 1.0) {
+            return [
+                'key' => 'memos_excluded',
+                'label' => 'G — Service invoices excluded from Unpaid side',
+                'description' => 'Single-branch Unpaid side is sales only. Customer service invoices still sit in Receivable TB.',
+                'priority' => 'medium',
+                'action' => 'Re-run with All Local Warehouses (recommended), or treat service outstanding as the known gap.',
+            ];
+        }
+        if ($gl > 100) {
+            return [
+                'key' => 'gl_payments',
+                'label' => 'C — GL debits without sale link',
+                'description' => 'Customer ledger has debit entries not linked to sale_id (sid), so Unpaid AR does not increase.',
+                'priority' => 'high',
+                'action' => 'Link customer journals to sales or review opening/manual receivable postings.',
+            ];
+        }
+        if (($returns > 0.01 || $credit > 0.01) && $absDiff <= max(1.0, $returns + $credit)) {
+            return [
+                'key' => 'returns_credit',
+                'label' => 'E — Unsettled returns / credit memos',
+                'description' => 'Returns and credit memos reduce TB but are not shown as open Unpaid AR invoices.',
+                'priority' => 'medium',
+                'action' => 'Apply returns/credit memos against invoices or accept as timing difference.',
+            ];
+        }
+        if ($diff > 0.01 && (float) ($d['unpaid_sales'] ?? 0) > 0.01) {
+            return [
+                'key' => 'tb_gt_unpaid',
+                'label' => 'D — TB higher than Unpaid (open sales exist)',
+                'description' => 'TB debit exceeds open sale outstanding — partial GL settlement or extra ledger debits.',
+                'priority' => 'medium',
+                'action' => 'Compare GL debits vs sma_payments per open sale invoice.',
+            ];
+        }
+        return [
+            'key' => 'mixed',
+            'label' => 'Other — Mixed / review',
+            'description' => 'Multiple drivers; review returns, credit memos, service invoices, and unlinked GL debits.',
+            'priority' => 'medium',
+            'action' => 'Inspect customer statement and unpaid AR side by side.',
+        ];
+    }
+
     public function getCustomersTrialBalance($start_date, $end_date)
     {
 
