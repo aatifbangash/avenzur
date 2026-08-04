@@ -552,6 +552,10 @@ class Settings_model extends CI_Model
 
     public function getGroupPermissions($id)
     {
+        if ($this->usesNormalizedPermissions()) {
+            return $this->getNormalizedGroupPermissionsObject($id);
+        }
+
         $q = $this->db->get_where('permissions', ['group_id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->row();
@@ -736,6 +740,12 @@ class Settings_model extends CI_Model
 
     public function GroupPermissions($id)
     {
+        if ($this->usesNormalizedPermissions()) {
+            $permissions = $this->getNormalizedGroupPermissionsArray($id);
+
+            return !empty($permissions) ? [$permissions] : false;
+        }
+
         $q = $this->db->get_where('permissions', ['group_id' => $id], 1);
         if ($q->num_rows() > 0) {
             return $q->result_array();
@@ -870,10 +880,350 @@ class Settings_model extends CI_Model
 
     public function updatePermissions($id, $data = [])
     {
-        if ($this->db->update('permissions', $data, ['group_id' => $id]) && $this->db->update('users', ['show_price' => $data['products-price'], 'show_cost' => $data['products-cost']], ['group_id' => $id])) {
-            return true;
+        $this->db->trans_start();
+
+        if ($this->usesNormalizedPermissions()) {
+            $this->syncNormalizedGroupPermissions($id, $data);
         }
-        return false;
+
+        $legacyData = $this->filterLegacyPermissionColumns($data);
+        if (!empty($legacyData) && $this->db->table_exists('permissions')) {
+            $legacyRowExists = $this->db->where('group_id', $id)->count_all_results('permissions') > 0;
+            if ($legacyRowExists) {
+                $this->db->update('permissions', $legacyData, ['group_id' => $id]);
+            } else {
+                $legacyData['group_id'] = $id;
+                $this->db->insert('permissions', $legacyData);
+            }
+        }
+
+        $this->db->update('users', [
+            'show_price' => !empty($data['products-price']) ? 1 : 0,
+            'show_cost'  => !empty($data['products-cost']) ? 1 : 0,
+        ], ['group_id' => $id]);
+
+        $this->db->trans_complete();
+
+        return $this->db->trans_status();
+    }
+
+    public function normalizedPermissionsAvailable()
+    {
+        return $this->usesNormalizedPermissions();
+    }
+
+    public function getPermissionCatalog()
+    {
+        if (!$this->usesNormalizedPermissions()) {
+            return [];
+        }
+
+        $definitions = $this->db
+            ->select('id, permission_key, name, module')
+            ->order_by('module', 'asc')
+            ->order_by('permission_key', 'asc')
+            ->get('permission_definitions')
+            ->result_array();
+
+        return is_array($definitions) ? $definitions : [];
+    }
+
+    private function usesNormalizedPermissions()
+    {
+        return $this->db->table_exists('permission_definitions') && $this->db->table_exists('permission_assignments');
+    }
+
+    private function getNormalizedGroupPermissionsObject($groupId)
+    {
+        $permissions = $this->getNormalizedGroupPermissionsArray($groupId);
+        if (empty($permissions)) {
+            return false;
+        }
+
+        $object = new stdClass();
+        foreach ($permissions as $key => $value) {
+            $object->{$key} = $value;
+        }
+
+        return $object;
+    }
+
+    private function getNormalizedGroupPermissionsArray($groupId)
+    {
+        $definitions = $this->db
+            ->select('id, permission_key')
+            ->order_by('id', 'asc')
+            ->get('permission_definitions')
+            ->result_array();
+
+        if (empty($definitions)) {
+            return [];
+        }
+
+        $permissions = ['group_id' => (int) $groupId];
+        $definitionIds = [];
+        foreach ($definitions as $definition) {
+            $permissions[$definition['permission_key']] = 0;
+            $definitionIds[(int) $definition['id']] = $definition['permission_key'];
+        }
+
+        $assignments = $this->db
+            ->select('permission_id, access')
+            ->where('group_id', (int) $groupId)
+            ->where('user_id IS NULL', null, false)
+            ->get('permission_assignments')
+            ->result_array();
+
+        foreach ($assignments as $assignment) {
+            $permissionId = (int) $assignment['permission_id'];
+            if (isset($definitionIds[$permissionId])) {
+                $permissions[$definitionIds[$permissionId]] = (int) $assignment['access'];
+            }
+        }
+
+        return $permissions;
+    }
+
+    private function syncNormalizedGroupPermissions($groupId, $data = [])
+    {
+        if (empty($data)) {
+            return;
+        }
+
+        $keys = array_keys($data);
+        $this->ensurePermissionDefinitions($keys);
+
+        $definitions = $this->db
+            ->select('id, permission_key')
+            ->where_in('permission_key', $keys)
+            ->get('permission_definitions')
+            ->result_array();
+
+        $definitionMap = [];
+        foreach ($definitions as $definition) {
+            $definitionMap[$definition['permission_key']] = (int) $definition['id'];
+        }
+
+        if (!empty($definitionMap)) {
+            $this->db
+                ->where('group_id', (int) $groupId)
+                ->where('user_id IS NULL', null, false)
+                ->where_in('permission_id', array_values($definitionMap))
+                ->delete('permission_assignments');
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $batch = [];
+        foreach ($data as $permissionKey => $value) {
+            if (empty($definitionMap[$permissionKey]) || empty($value)) {
+                continue;
+            }
+
+            $batch[] = [
+                'permission_id' => $definitionMap[$permissionKey],
+                'group_id'      => (int) $groupId,
+                'user_id'       => null,
+                'access'        => 1,
+                'created_at'    => $now,
+                'updated_at'    => $now,
+            ];
+        }
+
+        if (!empty($batch)) {
+            $this->db->insert_batch('permission_assignments', $batch);
+        }
+    }
+
+    private function ensurePermissionDefinitions($keys = [])
+    {
+        $keys = array_values(array_filter(array_unique($keys)));
+        if (empty($keys)) {
+            return;
+        }
+
+        $existing = $this->db
+            ->select('permission_key')
+            ->where_in('permission_key', $keys)
+            ->get('permission_definitions')
+            ->result_array();
+
+        $existingKeys = [];
+        foreach ($existing as $row) {
+            $existingKeys[] = $row['permission_key'];
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $batch = [];
+        foreach ($keys as $key) {
+            if (in_array($key, $existingKeys, true)) {
+                continue;
+            }
+
+            $batch[] = [
+                'permission_key' => $key,
+                'name'           => ucwords(str_replace(['-', '_'], ' ', $key)),
+                'module'         => strpos($key, '-') !== false ? strtok($key, '-') : $key,
+                'created_at'     => $now,
+                'updated_at'     => $now,
+            ];
+        }
+
+        if (!empty($batch)) {
+            $this->db->insert_batch('permission_definitions', $batch);
+        }
+    }
+
+    private function filterLegacyPermissionColumns($data = [])
+    {
+        if (!$this->db->table_exists('permissions')) {
+            return [];
+        }
+
+        $fields = $this->db->list_fields('permissions');
+        $allowed = [];
+        foreach ($fields as $field) {
+            if (in_array($field, ['id', 'group_id'], true)) {
+                continue;
+            }
+            $allowed[$field] = true;
+        }
+
+        $filtered = [];
+        foreach ($data as $key => $value) {
+            if (isset($allowed[$key])) {
+                $filtered[$key] = !empty($value) ? 1 : 0;
+            }
+        }
+
+        return $filtered;
+    }
+
+    public function getEffectiveUserPermissions($userId)
+    {
+        if (!$this->usesNormalizedPermissions()) {
+            return false;
+        }
+
+        $user = $this->db->select('id, group_id')->get_where('users', ['id' => (int) $userId], 1)->row();
+        if (!$user) {
+            return false;
+        }
+
+        $permissions = $this->getNormalizedGroupPermissionsArray((int) $user->group_id);
+        if (empty($permissions)) {
+            $permissions = ['group_id' => (int) $user->group_id];
+        }
+
+        $overrides = $this->getUserPermissionOverrides($userId);
+        if (!empty($overrides)) {
+            foreach ($overrides as $key => $value) {
+                $permissions[$key] = $value;
+            }
+        }
+
+        $object = new stdClass();
+        foreach ($permissions as $key => $value) {
+            $object->{$key} = $value;
+        }
+
+        return $object;
+    }
+
+    public function getUserPermissionOverrides($userId)
+    {
+        if (!$this->usesNormalizedPermissions()) {
+            return false;
+        }
+
+        $rows = $this->db
+            ->select('permission_definitions.permission_key, permission_assignments.access')
+            ->from('permission_assignments')
+            ->join('permission_definitions', 'permission_definitions.id = permission_assignments.permission_id', 'inner')
+            ->where('permission_assignments.user_id', (int) $userId)
+            ->get()
+            ->result_array();
+
+        if (empty($rows)) {
+            return [];
+        }
+
+        $permissions = [];
+        foreach ($rows as $row) {
+            $permissions[$row['permission_key']] = (int) $row['access'];
+        }
+
+        return $permissions;
+    }
+
+    public function updateUserPermissionOverrides($userId, $data = [])
+    {
+        if (!$this->usesNormalizedPermissions()) {
+            return false;
+        }
+
+        $this->db->trans_start();
+        $this->syncNormalizedUserPermissions($userId, $data);
+        $this->db->trans_complete();
+
+        return $this->db->trans_status();
+    }
+
+    private function syncNormalizedUserPermissions($userId, $data = [])
+    {
+        if (empty($data)) {
+            return;
+        }
+
+        $keys = array_keys($data);
+        $this->ensurePermissionDefinitions($keys);
+
+        $definitions = $this->db
+            ->select('id, permission_key')
+            ->where_in('permission_key', $keys)
+            ->get('permission_definitions')
+            ->result_array();
+
+        $definitionMap = [];
+        foreach ($definitions as $definition) {
+            $definitionMap[$definition['permission_key']] = (int) $definition['id'];
+        }
+
+        if (!empty($definitionMap)) {
+            $this->db
+                ->where('user_id', (int) $userId)
+                ->where_in('permission_id', array_values($definitionMap))
+                ->delete('permission_assignments');
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $batch = [];
+        foreach ($data as $permissionKey => $value) {
+            if (empty($definitionMap[$permissionKey])) {
+                continue;
+            }
+
+            if ($value === '' || $value === null) {
+                continue;
+            }
+
+            $access = is_numeric($value) ? (int) $value : (!empty($value) ? 1 : 0);
+            if ($access !== 0 && $access !== 1) {
+                $access = 1;
+            }
+
+            $batch[] = [
+                'permission_id' => $definitionMap[$permissionKey],
+                'group_id'      => null,
+                'user_id'       => (int) $userId,
+                'access'        => $access,
+                'created_at'    => $now,
+                'updated_at'    => $now,
+            ];
+        }
+
+        if (!empty($batch)) {
+            $this->db->insert_batch('permission_assignments', $batch);
+        }
     }
 
     public function updatePriceGroup($id, $data = [])

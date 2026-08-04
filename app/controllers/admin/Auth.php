@@ -11,6 +11,7 @@ class Auth extends MY_Controller
         $this->load->library('form_validation');
         $this->form_validation->set_error_delimiters($this->config->item('error_start_delimiter', 'ion_auth'), $this->config->item('error_end_delimiter', 'ion_auth'));
         $this->load->admin_model('auth_model');
+        $this->load->admin_model('settings_model');
         $this->load->library('ion_auth');
     }
 
@@ -337,6 +338,11 @@ class Auth extends MY_Controller
             //$this->sma->print_arrays($data);
         }
         if ($this->form_validation->run() === true && $this->ion_auth->update($user->id, $data)) {
+            if ($this->Owner && $id != $this->session->userdata('user_id') && $this->settings_model->normalizedPermissionsAvailable()) {
+                $permissionOverrides = $this->input->post('permission_overrides');
+                $permissionOverrides = is_array($permissionOverrides) ? $permissionOverrides : [];
+                $this->settings_model->updateUserPermissionOverrides($user->id, $permissionOverrides);
+            }
             $this->session->set_flashdata('message', lang('user_updated'));
             admin_redirect('auth/profile/' . $id);
         } else {
@@ -630,6 +636,17 @@ class Auth extends MY_Controller
             'type' => 'hidden',
             'value' => $user->id,
         ];
+
+        $this->data['normalized_permissions_available'] = $this->settings_model->normalizedPermissionsAvailable();
+        $this->data['permission_catalog'] = [];
+        $this->data['group_permissions'] = [];
+        $this->data['user_permission_overrides'] = [];
+        if ($this->data['normalized_permissions_available']) {
+            $this->data['permission_catalog'] = $this->settings_model->getPermissionCatalog();
+            $groupPermissions = $this->settings_model->getGroupPermissions((int) $user->group_id);
+            $this->data['group_permissions'] = $groupPermissions ? get_object_vars($groupPermissions) : [];
+            $this->data['user_permission_overrides'] = $this->settings_model->getUserPermissionOverrides((int) $user->id);
+        }
 
         $this->data['id'] = $id;
 

@@ -177,11 +177,94 @@ class Site extends CI_Model
 
     public function checkPermissions()
     {
-        $q = $this->db->get_where('permissions', ['group_id' => $this->session->userdata('group_id')], 1);
+        if ($this->usesNormalizedPermissions()) {
+            $permissions = $this->buildEffectivePermissionsMap(
+                (int) $this->session->userdata('group_id'),
+                (int) $this->session->userdata('user_id')
+            );
+
+            return !empty($permissions) ? [$permissions] : false;
+        }
+
+        return $this->getLegacyPermissionsRow((int) $this->session->userdata('group_id'));
+    }
+
+    private function buildEffectivePermissionsMap($groupId, $userId = 0)
+    {
+        $permissions = $this->getPermissionDefinitionMap();
+        if (empty($permissions)) {
+            return [];
+        }
+
+        $groupAssignments = $this->getPermissionAssignments(['group_id' => $groupId]);
+        foreach ($groupAssignments as $assignment) {
+            $permissions[$assignment['permission_key']] = (int) $assignment['access'];
+        }
+
+        if ($userId > 0) {
+            $userAssignments = $this->getPermissionAssignments(['user_id' => $userId]);
+            foreach ($userAssignments as $assignment) {
+                $permissions[$assignment['permission_key']] = (int) $assignment['access'];
+            }
+        }
+
+        return $permissions;
+    }
+
+    private function getPermissionAssignments($filters = [])
+    {
+        $this->db
+            ->select('permission_definitions.permission_key, permission_assignments.access')
+            ->from('permission_assignments')
+            ->join('permission_definitions', 'permission_definitions.id = permission_assignments.permission_id', 'inner');
+
+        if (array_key_exists('group_id', $filters)) {
+            $this->db->where('permission_assignments.group_id', (int) $filters['group_id']);
+            $this->db->where('permission_assignments.user_id IS NULL', null, false);
+        }
+
+        if (array_key_exists('user_id', $filters)) {
+            $this->db->where('permission_assignments.user_id', (int) $filters['user_id']);
+        }
+
+        $rows = $this->db->get()->result_array();
+
+        return is_array($rows) ? $rows : [];
+    }
+
+    private function getPermissionDefinitionMap()
+    {
+        $definitions = $this->db
+            ->select('permission_key')
+            ->order_by('id', 'asc')
+            ->get('permission_definitions')
+            ->result_array();
+
+        if (empty($definitions)) {
+            return [];
+        }
+
+        $permissions = [];
+        foreach ($definitions as $definition) {
+            $permissions[$definition['permission_key']] = 0;
+        }
+
+        return $permissions;
+    }
+
+    private function getLegacyPermissionsRow($groupId)
+    {
+        $q = $this->db->get_where('permissions', ['group_id' => $groupId], 1);
         if ($q->num_rows() > 0) {
             return $q->result_array();
         }
+
         return false;
+    }
+
+    private function usesNormalizedPermissions()
+    {
+        return $this->db->table_exists('permission_definitions') && $this->db->table_exists('permission_assignments');
     }
 
     public function checkSlug($slug, $type = null)
