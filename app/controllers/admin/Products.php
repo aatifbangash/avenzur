@@ -4654,7 +4654,7 @@ class Products extends MY_Controller
             ->get('sma_returns')
             ->result();
         //echo "<pre>";print_r($unsettled_returns);echo "</pre>";exit;
-        echo $this->db->last_query();exit;
+        //echo $this->db->last_query();exit;
         foreach ($unsettled_returns as $return) {
             $return_id   = (int) $return->id;
             $customer_id = (int) $return->customer_id;
