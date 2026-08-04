@@ -256,6 +256,82 @@ class Sales_model extends CI_Model
         return false;
     }
 
+    public function update_service_invoice_paid_amount_new($id, $amount)
+    {
+        $q = $this->db->get_where('memo', ['id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            $data = array(
+                'used_amount' => $amount
+            );
+            $this->db->update('memo', $data, array('id' => $id));
+            return true;
+        }
+        return false;
+    }
+
+    public function getCustomerServiceInvoicesWithPaymentsNew($customer_id)
+    {
+        $this->db->select('m.id, m.date, m.reference_no, m.customer_id, m.used_amount,
+                          (m.payment_amount - COALESCE(m.used_amount, 0)) as available_balance', false);
+        $this->db->from('memo m');
+        $this->db->where('m.customer_id', $customer_id);
+        $this->db->where('m.type', 'serviceinvoice');
+        $this->db->group_by('m.id');
+        $this->db->order_by('m.date', 'asc');
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            return $q->result();
+        }
+        return [];
+    }
+
+    public function getCustomerInvoicesWithPaymentsNew($customer_id, $reference_no = null)
+    {
+        $this->db->select('s.id, s.date, s.reference_no, s.customer_id, s.customer, s.grand_total,
+                          COALESCE(SUM(p.amount), 0) as total_paid,
+                          s.payment_status, s.due_date', false);
+        $this->db->from('sales s');
+        $this->db->join('payments p', 'p.sale_id = s.id', 'left');
+        $this->db->where('s.customer_id', $customer_id);
+        $this->db->where('s.sale_invoice', 1);
+        $this->db->group_by('s.id');
+        $this->db->order_by('s.date', 'asc');
+
+        $q = $this->db->get();
+
+        if ($q->num_rows() == 0) {
+            return [];
+        }
+
+        $invoices = [];
+        $priorityInvoice = null;
+
+        foreach ($q->result() as $invoice) {
+            $invoice->outstanding_amount = round(
+                round($invoice->grand_total, 2) - round($invoice->total_paid, 2),
+                2
+            );
+            $invoice->type = 'Sales Invoice';
+
+            if ($invoice->outstanding_amount <= 0) {
+                continue;
+            }
+
+            // Prefer the sale that matches returns.reference_no (sale id)
+            if (!empty($reference_no) && $invoice->id == $reference_no) {
+                $priorityInvoice = $invoice;
+            } else {
+                $invoices[] = $invoice;
+            }
+        }
+
+        if ($priorityInvoice) {
+            array_unshift($invoices, $priorityInvoice);
+        }
+
+        return $invoices;
+    }
+
     public function getSaleInvoiceTotalPaid($customer_id, $sale_id)
     {
         $this->db->select('
