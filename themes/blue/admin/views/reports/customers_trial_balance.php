@@ -122,9 +122,7 @@ foreach ($trial_balance as $data) {
     $obDebit   = isset($data['obDebit']) ? (float)$data['obDebit'] : 0;
     $obCredit  = isset($data['obCredit']) ? (float)$data['obCredit'] : 0;
 
-    if ($trsDebit == 0 && $trsCredit == 0 && $obDebit == 0 && $obCredit == 0) {
-        continue;
-    }
+    // Keep customers with zero activity so the full customer list is visible.
 
     // Net Opening Balance
     if ($obDebit >= $obCredit) {

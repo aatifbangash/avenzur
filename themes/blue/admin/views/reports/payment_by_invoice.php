@@ -107,6 +107,19 @@
                             </div>
                         </div>
 
+                        <?php if (!empty($can_filter_invoice_type)): ?>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('Invoice Type', 'invoice_type'); ?>
+                                <select name="invoice_type" id="invoice_type" class="form-control input-tip" style="width:100%;">
+                                    <option value="trade" <?= (($invoice_type ?? 'trade') === 'trade') ? 'selected' : '' ?>><?= lang('Trade Invoices') ?></option>
+                                    <option value="service" <?= (($invoice_type ?? '') === 'service') ? 'selected' : '' ?>><?= lang('Service Invoices') ?></option>
+                                    <option value="all" <?= (($invoice_type ?? '') === 'all') ? 'selected' : '' ?>><?= lang('All Invoices') ?></option>
+                                </select>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
                         <div class="col-md-4">
                             <div class="form-group">
                             <?= lang('warehouse', 'pharmacy'); ?>

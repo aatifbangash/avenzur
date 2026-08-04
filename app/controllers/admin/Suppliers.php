@@ -882,9 +882,9 @@ class Suppliers extends MY_Controller
                 $ledger_account     = $this->input->post('ledger');
                 $date_raw           = $this->input->post('date');
                 $note               = $this->input->post('note');
-                $bank_charges       = (float)($this->input->post('bank_charges') ?: 0);
-                $payment_amount     = (float)($this->input->post('payment_amount') ?: 0);
-                $advance_amount     = (float)($this->input->post('advance_amount') ?: 0);
+                $bank_charges       = round((float)($this->input->post('bank_charges') ?: 0), 5);
+                $payment_amount     = round((float)($this->input->post('payment_amount') ?: 0), 5);
+                $advance_amount     = round((float)($this->input->post('advance_amount') ?: 0), 5);
 
                 // Parse date
                 $fmt = DateTime::createFromFormat('d/m/Y', $date_raw);
@@ -968,7 +968,7 @@ class Suppliers extends MY_Controller
                 $invoice_details = [];
                 $total_payments_from_invoices = 0;
                 foreach ($invoice_amounts as $inv_id => $applied) {
-                    $applied = (float)$applied;
+                    $applied = round((float)$applied, 5);
                     if ($applied > 0) {
                         $purchase = $this->purchases_model->getPurchaseByID($inv_id);
                         if (!$purchase) {
@@ -976,7 +976,7 @@ class Suppliers extends MY_Controller
                             admin_redirect('suppliers/edit_payment?id=' . $id);
                             return;
                         }
-                        $total_payments_from_invoices += $applied;
+                        $total_payments_from_invoices = round($total_payments_from_invoices + $applied, 5);
                         $invoice_details[$inv_id] = [
                             'grand_total'   => $purchase->grand_total,
                             'total_paid'    => $purchase->paid ?? 0,
@@ -989,7 +989,7 @@ class Suppliers extends MY_Controller
                 $debit_memo_details = [];
                 $total_applied_debit_memos = 0;
                 foreach ($debit_memo_amounts as $memo_id => $applied) {
-                    $applied = (float)$applied;
+                    $applied = round((float)$applied, 5);
                     if ($applied > 0) {
                         $memo = $this->purchases_model->getDebitMemoData($memo_id);
                         if (!$memo) {
@@ -1000,12 +1000,12 @@ class Suppliers extends MY_Controller
                         $vat_pct      = isset($memo->vat_percent) ? (float)$memo->vat_percent : 0;
                         $gross_amount = $memo->payment_amount * (1 + $vat_pct / 100);
                         $available    = $gross_amount - ($memo->used_amount ?? 0);
-                        if ($applied > $available) {
+                        if ($applied > $available + 0.00001) {
                             $this->session->set_flashdata('error', 'Applied debit-memo amount exceeds available balance.');
                             admin_redirect('suppliers/edit_payment?id=' . $id);
                             return;
                         }
-                        $total_applied_debit_memos += $applied;
+                        $total_applied_debit_memos = round($total_applied_debit_memos + $applied, 5);
                         $debit_memo_details[$memo_id] = [
                             'used'   => $memo->used_amount ?? 0,
                             'paying' => $applied,
@@ -1017,7 +1017,7 @@ class Suppliers extends MY_Controller
                 $service_invoice_details = [];
                 $total_service_inv_payments = 0;
                 foreach ($service_invoice_amounts as $memo_id => $applied) {
-                    $applied = (float)$applied;
+                    $applied = round((float)$applied, 5);
                     if ($applied > 0) {
                         $memo = $this->purchases_model->getDebitMemoData($memo_id);
                         if (!$memo) {
@@ -1026,12 +1026,12 @@ class Suppliers extends MY_Controller
                             return;
                         }
                         $available = $memo->payment_amount - ($memo->used_amount ?? 0);
-                        if ($applied > $available) {
+                        if ($applied > $available + 0.00001) {
                             $this->session->set_flashdata('error', 'Applied service invoice amount exceeds available balance.');
                             admin_redirect('suppliers/edit_payment?id=' . $id);
                             return;
                         }
-                        $total_service_inv_payments += $applied;
+                        $total_service_inv_payments = round($total_service_inv_payments + $applied, 5);
                         $service_invoice_details[$memo_id] = [
                             'used'   => $memo->used_amount ?? 0,
                             'paying' => $applied,
@@ -1043,7 +1043,7 @@ class Suppliers extends MY_Controller
                 $credit_memo_details = [];
                 $total_credit_memo_payments = 0;
                 foreach ($credit_memo_amounts as $memo_id => $applied) {
-                    $applied = (float)$applied;
+                    $applied = round((float)$applied, 5);
                     if ($applied > 0) {
                         $memo = $this->purchases_model->getDebitMemoData($memo_id);
                         if (!$memo) {
@@ -1052,12 +1052,12 @@ class Suppliers extends MY_Controller
                             return;
                         }
                         $available = $memo->payment_amount - ($memo->used_amount ?? 0);
-                        if ($applied > $available) {
+                        if ($applied > $available + 0.00001) {
                             $this->session->set_flashdata('error', 'Applied credit memo amount exceeds available balance.');
                             admin_redirect('suppliers/edit_payment?id=' . $id);
                             return;
                         }
-                        $total_credit_memo_payments += $applied;
+                        $total_credit_memo_payments = round($total_credit_memo_payments + $applied, 5);
                         $credit_memo_details[$memo_id] = [
                             'used'   => $memo->used_amount ?? 0,
                             'paying' => $applied,
@@ -1066,10 +1066,10 @@ class Suppliers extends MY_Controller
                 }
 
                 // Verify totals
-                $total_sources = $payment_amount + $advance_amount + $total_applied_debit_memos;
-                $total_invoices_to_settle = $total_payments_from_invoices + $total_service_inv_payments + $total_credit_memo_payments;
+                $total_sources = round($payment_amount + $advance_amount + $total_applied_debit_memos, 5);
+                $total_invoices_to_settle = round($total_payments_from_invoices + $total_service_inv_payments + $total_credit_memo_payments, 5);
 
-                if (($total_invoices_to_settle - $total_sources) > 0.01) {
+                if (($total_invoices_to_settle - $total_sources) > 0.00001) {
                     $this->session->set_flashdata('error', 'Total payment sources are insufficient to cover applied amounts.');
                     admin_redirect('suppliers/edit_payment?id=' . $id);
                     return;
@@ -1554,6 +1554,108 @@ class Suppliers extends MY_Controller
         admin_redirect('suppliers/list_service_invoice');
     }
 
+    /**
+     * Lock Petty Cash - Finance Manager Only
+     */
+    public function lock_petty_cash()
+    {
+        // Check permission - Finance Manager role only
+        if (!$this->sma->in_group('financemanager')) {
+            $this->session->set_flashdata('error', 'You do not have permission to lock petty cash.');
+            admin_redirect($_SERVER['HTTP_REFERER']);
+            return;
+        }
+
+        $memo_id = $this->input->post('memo_id');
+        
+        if (!$memo_id) {
+            $this->session->set_flashdata('error', 'Petty Cash ID not provided.');
+            admin_redirect('suppliers/list_petty_cash');
+            return;
+        }
+
+        $memo = $this->db->get_where('sma_memo', ['id' => $memo_id], 1)->row();
+        
+        if (!$memo) {
+            $this->session->set_flashdata('error', 'Petty Cash not found.');
+            admin_redirect('suppliers/list_petty_cash');
+            return;
+        }
+
+        if (($memo->status ?? 'open') === 'locked') {
+            $this->session->set_flashdata('warning', 'This petty cash is already locked.');
+            admin_redirect('suppliers/list_petty_cash');
+            return;
+        }
+
+        // Lock the petty cash
+        $update_data = [
+            'status' => 'locked',
+            'locked_by' => $this->loggedIn,
+            'locked_at' => date('Y-m-d H:i:s')
+        ];
+
+        $this->db->where('id', $memo_id);
+        if ($this->db->update('sma_memo', $update_data)) {
+            $this->session->set_flashdata('success', 'Petty Cash has been locked.');
+        } else {
+            $this->session->set_flashdata('error', 'Failed to lock petty cash.');
+        }
+
+        admin_redirect('suppliers/list_petty_cash');
+    }
+
+    /**
+     * Unlock Petty Cash - Finance Manager Only
+     */
+    public function unlock_petty_cash()
+    {
+        // Check permission - Finance Manager role only
+        if (!$this->sma->in_group('financemanager')) {
+            $this->session->set_flashdata('error', 'You do not have permission to unlock petty cash.');
+            admin_redirect($_SERVER['HTTP_REFERER']);
+            return;
+        }
+
+        $memo_id = $this->input->post('memo_id');
+        
+        if (!$memo_id) {
+            $this->session->set_flashdata('error', 'Petty Cash ID not provided.');
+            admin_redirect('suppliers/list_petty_cash');
+            return;
+        }
+
+        $memo = $this->db->get_where('sma_memo', ['id' => $memo_id], 1)->row();
+        
+        if (!$memo) {
+            $this->session->set_flashdata('error', 'Petty Cash not found.');
+            admin_redirect('suppliers/list_petty_cash');
+            return;
+        }
+
+        if (($memo->status ?? 'open') !== 'locked') {
+            $this->session->set_flashdata('warning', 'This petty cash is not locked.');
+            admin_redirect('suppliers/list_petty_cash');
+            return;
+        }
+
+        // Unlock the petty cash
+        $update_data = [
+            'status' => 'open',
+            'locked_by' => null,
+            'locked_at' => null
+        ];
+
+        $this->db->where('id', $memo_id);
+        if ($this->db->update('sma_memo', $update_data)) {
+            $this->session->set_flashdata('success', 'Petty Cash has been unlocked and is now editable.');
+        } else {
+            $this->session->set_flashdata('error', 'Failed to unlock petty cash.');
+        }
+
+        admin_redirect('suppliers/list_petty_cash');
+    }
+
     public function print_payment_pdf($id = null)
     {
         if ($this->input->get('id')) {
@@ -1596,7 +1698,7 @@ class Suppliers extends MY_Controller
         $total_paid = $total_debit;
         //echo $total_due; exit;
         // Get supplier aging (180 days)
-        $aging = $this->Reports_model->getSupplierAgingNew(180, $today, [$supplier_id]);
+        $aging = $this->Reports_model->getSupplierAgingNew(180, $today, [$supplier_id], 32);
         $supplier_aging = !empty($aging) ? $aging[$supplier_id] : null;
         //echo '<pre>';print_r($supplier_aging);exit;
 
@@ -1693,6 +1795,16 @@ class Suppliers extends MY_Controller
         $meta = ['page_title' => lang('Supplier Payments'), 'bc' => $bc];
 
         // Build filters from GET
+        $can_filter_invoice_type = !empty($this->Owner) || !empty($this->Admin) || !empty($this->FinanceManager)
+            || $this->sma->in_group('financemanager');
+        $invoice_type = 'trade';
+        if ($can_filter_invoice_type) {
+            $invoice_type = $this->input->get('invoice_type') ?: $this->input->post('invoice_type') ?: 'trade';
+            if (!in_array($invoice_type, ['trade', 'service', 'all'], true)) {
+                $invoice_type = 'trade';
+            }
+        }
+
         $filters = [
             'supplier_id'  => $this->input->get('supplier_id') ?: $this->input->post('supplier_id'),
             'category'     => $this->input->get('category')    ?: $this->input->post('category'),
@@ -1700,6 +1812,7 @@ class Suppliers extends MY_Controller
             'from_date'    => $this->input->get('from_date')   ?: $this->input->post('from_date'),
             'to_date'      => $this->input->get('to_date')     ?: $this->input->post('to_date'),
             'status'       => $this->input->get('status')      ?: $this->input->post('status'),
+            'invoice_type' => $invoice_type,
         ];
         // Default from_date to January 1st of the current year
         if (empty($filters['from_date'])) {
@@ -1718,6 +1831,7 @@ class Suppliers extends MY_Controller
         $this->data['filters']    = $filters;
         $this->data['warehouses'] = $this->site->getAllWarehouses();
         $this->data['warehouse_id'] = $filters['warehouse_id'];
+        $this->data['can_filter_invoice_type'] = $can_filter_invoice_type;
 
         // Build distinct category list from suppliers
         $categories = [];
@@ -2925,6 +3039,19 @@ class Suppliers extends MY_Controller
         $petty_cash_data = $this->purchases_model->getDebitMemoData($id);
         $petty_cash_entries_data = $this->purchases_model->getDebitMemoEntriesData($id);
 
+        if (!$petty_cash_data) {
+            $this->session->set_flashdata('error', 'Petty Cash not found.');
+            admin_redirect('suppliers/list_petty_cash');
+            return;
+        }
+
+        // Check if locked
+        if (($petty_cash_data->status ?? 'open') === 'locked') {
+            $this->session->set_flashdata('warning', 'This petty cash is locked and cannot be edited.');
+            admin_redirect('suppliers/list_petty_cash');
+            return;
+        }
+
         $this->data['memo_data'] = $petty_cash_data;
         $this->data['memo_entries_data'] = $petty_cash_entries_data;
         $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
@@ -3872,9 +3999,9 @@ class Suppliers extends MY_Controller
             $ledger_account = $this->input->post('ledger');
             $date_raw       = $this->input->post('date');
             $note           = $this->input->post('note');
-            $bank_charges   = (float)($this->input->post('bank_charges') ?: 0);
-            $payment_amount = (float)($this->input->post('payment_amount') ?: 0);
-            $advance_amount = (float)($this->input->post('advance_amount') ?: 0);
+            $bank_charges   = round((float)($this->input->post('bank_charges') ?: 0), 5);
+            $payment_amount = round((float)($this->input->post('payment_amount') ?: 0), 5);
+            $advance_amount = round((float)($this->input->post('advance_amount') ?: 0), 5);
 
             // Duplicate reference check
             /*$this->db->where('reference_no', $reference_no);
@@ -3933,14 +4060,14 @@ class Suppliers extends MY_Controller
             $invoice_details             = [];
             $total_payments_from_invoices = 0;
             foreach ($invoice_amounts as $inv_id => $applied) {
-                $applied = (float)$applied;
+                $applied = round((float)$applied, 5);
                 if ($applied > 0) {
                     $purchase = $this->purchases_model->getPurchaseByID($inv_id);
                     if (!$purchase) {
                         $this->session->set_flashdata('error', 'Purchase invoice not found: ' . $inv_id);
                         admin_redirect('suppliers/payment_to_supplier_new');
                     }
-                    $total_payments_from_invoices += $applied;
+                    $total_payments_from_invoices = round($total_payments_from_invoices + $applied, 5);
                     $invoice_details[$inv_id] = [
                         'grand_total'   => $purchase->grand_total,
                         'total_paid'    => $purchase->paid ?? 0,
@@ -3953,7 +4080,7 @@ class Suppliers extends MY_Controller
             $debit_memo_details        = [];
             $total_applied_debit_memos = 0;
             foreach ($debit_memo_amounts as $memo_id => $applied) {
-                $applied = (float)$applied;
+                $applied = round((float)$applied, 5);
                 if ($applied > 0) {
                     $memo = $this->purchases_model->getDebitMemoData($memo_id);
                     if (!$memo) {
@@ -3963,11 +4090,11 @@ class Suppliers extends MY_Controller
                     $vat_pct      = isset($memo->vat_percent) ? (float)$memo->vat_percent : 0;
                     $gross_amount = $memo->payment_amount * (1 + $vat_pct / 100);
                     $available    = $gross_amount - ($memo->used_amount ?? 0);
-                    if ($applied > $available) {
+                    if ($applied > $available + 0.00001) {
                         $this->session->set_flashdata('error', 'Applied debit-memo amount exceeds available balance for memo ID: ' . $memo_id);
                         admin_redirect('suppliers/payment_to_supplier_new');
                     }
-                    $total_applied_debit_memos += $applied;
+                    $total_applied_debit_memos = round($total_applied_debit_memos + $applied, 5);
                     $debit_memo_details[$memo_id] = [
                         'used'   => $memo->used_amount ?? 0,
                         'paying' => $applied,
@@ -3979,7 +4106,7 @@ class Suppliers extends MY_Controller
             $service_invoice_details    = [];
             $total_service_inv_payments = 0;
             foreach ($service_invoice_amounts as $memo_id => $applied) {
-                $applied = (float)$applied;
+                $applied = round((float)$applied, 5);
                 
                 if ($applied > 0) {
                     $memo = $this->purchases_model->getDebitMemoData($memo_id);
@@ -3988,12 +4115,11 @@ class Suppliers extends MY_Controller
                         admin_redirect('suppliers/payment_to_supplier_new');
                     }
                     $available = $memo->payment_amount - ($memo->used_amount ?? 0);
-                    if ($applied > $available) {
+                    if ($applied > $available + 0.00001) {
                         $this->session->set_flashdata('error', 'Applied service invoice amount exceeds outstanding balance for service invoice ID: ' . $memo_id);
                         admin_redirect('suppliers/payment_to_supplier_new');
                     }
-                    //echo 'Applied: '.$applied. ' Available: '.$available;exit;
-                    $total_service_inv_payments += $applied;
+                    $total_service_inv_payments = round($total_service_inv_payments + $applied, 5);
                     $service_invoice_details[$memo_id] = [
                         'used'   => $memo->used_amount ?? 0,
                         'paying' => $applied,
@@ -4005,7 +4131,7 @@ class Suppliers extends MY_Controller
             $credit_memo_details        = [];
             $total_credit_memo_payments = 0;
             foreach ($credit_memo_amounts as $memo_id => $applied) {
-                $applied = (float)$applied;
+                $applied = round((float)$applied, 5);
                 if ($applied > 0) {
                     $memo = $this->purchases_model->getDebitMemoData($memo_id);
                     if (!$memo) {
@@ -4013,11 +4139,11 @@ class Suppliers extends MY_Controller
                         admin_redirect('suppliers/payment_to_supplier_new');
                     }
                     $available = $memo->payment_amount - ($memo->used_amount ?? 0);
-                    if ($applied > $available) {
+                    if ($applied > $available + 0.00001) {
                         $this->session->set_flashdata('error', 'Applied credit memo amount exceeds outstanding balance for credit memo ID: ' . $memo_id);
                         admin_redirect('suppliers/payment_to_supplier_new');
                     }
-                    $total_credit_memo_payments += $applied;
+                    $total_credit_memo_payments = round($total_credit_memo_payments + $applied, 5);
                     $credit_memo_details[$memo_id] = [
                         'used'   => $memo->used_amount ?? 0,
                         'paying' => $applied,
@@ -4034,11 +4160,11 @@ class Suppliers extends MY_Controller
             }
 
             // Total sources must cover total invoice applied amounts
-            $total_sources = $payment_amount + $advance_amount + $total_applied_debit_memos;
-            $total_invoices_to_settle = $total_payments_from_invoices + $total_service_inv_payments + $total_credit_memo_payments;
-
-            if (($total_invoices_to_settle - $total_sources) > 0.01) {
-                $this->session->set_flashdata('error', 'Total payment sources (' . number_format($total_sources, 2) . ') are insufficient to cover the applied invoice amounts (' . number_format($total_invoices_to_settle, 2) . ').');
+            $total_sources = round($payment_amount + $advance_amount + $total_applied_debit_memos, 5);
+            $total_invoices_to_settle = round($total_payments_from_invoices + $total_service_inv_payments + $total_credit_memo_payments, 5);
+            //echo $total_invoices_to_settle . ' - ' . $total_sources;
+            if (($total_invoices_to_settle - $total_sources) > 0.00001) {
+                $this->session->set_flashdata('error', 'Total payment sources (' . number_format($total_sources, 5) . ') are insufficient to cover the applied invoice amounts (' . number_format($total_invoices_to_settle, 5) . ').');
                 admin_redirect('suppliers/payment_to_supplier_new');
             }
 
@@ -4375,7 +4501,7 @@ class Suppliers extends MY_Controller
         ')
         ->from('sma_memo m')
         ->where('m.supplier_id', $supplier_id)
-        ->where('m.type', 'serviceinvoice')
+        ->where_in('m.type', ['serviceinvoice', 'pettycash'])
         ->where('m.payment_amount > COALESCE(m.used_amount, 0)');
 
         $memos = $this->db->get()->result();

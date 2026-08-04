@@ -781,21 +781,28 @@ class Reports_model extends CI_Model
                 c.sequence_code AS customer_code,
                 c.sales_agent,
                 s.grand_total,
-                (SELECT COALESCE(SUM(sp.amount), 0)
-                 FROM {$this->db->dbprefix('payments')} sp
-                 WHERE sp.sale_id = s.id
-                 AND sp.date <= '{$sql_at}') AS paid,
+                COALESCE(p.paid, 0) AS paid,
                 c.payment_term,
                 c.category,
                 c.credit_limit
             FROM sma_sales s
             JOIN sma_companies c ON s.customer_id = c.id
+            LEFT JOIN (
+                SELECT
+                    sale_id,
+                    SUM(amount) AS paid
+                FROM {$this->db->dbprefix('payments')}
+                WHERE date <= '{$sql_at}'
+                AND sale_id IS NOT NULL
+                GROUP BY sale_id
+            ) p ON p.sale_id = s.id
             WHERE s.grand_total > 0 AND s.sale_invoice = 1
             AND s.date <= '{$sql_at}'
             $customer_filter_sales
             $salesman_filter
             $warehouse_filter
         ";
+
 
         $invoices = $this->db->query($sql)->result();
 
@@ -2419,14 +2426,14 @@ class Reports_model extends CI_Model
             $ledger_ids = [62, 63];
         }
 
-        $purchase_wh = $this->site->reportPurchaseLedgerWarehouseCondition($warehouse_id);
+        $purchase_wh = $this->site->reportPurchaseLedgerWarehouseCondition($warehouse_id, 'e');
 
         $this->db
             ->select("
                 ei.id AS entry_item_id,
                 e.id AS entry_id,
                 DATE(e.date) AS date,
-                e.reference_no,
+                e.number AS reference_no,
                 e.transaction_type,
                 e.supplier_id,
                 c.name AS supplier_name,
@@ -2438,7 +2445,7 @@ class Reports_model extends CI_Model
                 ei.dc,
                 ei.amount,
                 CASE
-                    WHEN e.supplier_id IS NULL OR e.supplier_id = 0 THEN 0
+                    WHEN IFNULL(e.supplier_id, 0) = 0 THEN 0
                     WHEN c.id IS NULL THEN 0
                     WHEN c.ledger_account = ei.ledger_id THEN 1
                     ELSE 0
@@ -2561,6 +2568,1164 @@ class Reports_model extends CI_Model
         ];
     }
 
+    /**
+     * Distinct receivable ledger IDs used by customers (for GL TB comparison).
+     *
+     * @return int[]
+     */
+    public function get_customer_receivable_ledger_ids()
+    {
+        $this->db->select('ledger_account')
+            ->from('companies')
+            ->where('group_name', 'customer')
+            ->where('ledger_account IS NOT NULL', null, false)
+            ->where('ledger_account >', 0)
+            ->group_by('ledger_account')
+            ->order_by('ledger_account', 'ASC');
+        $q = $this->db->get();
+        $ids = [];
+        if ($q->num_rows() > 0) {
+            foreach ($q->result() as $row) {
+                $id = (int) $row->ledger_account;
+                if ($id > 0) {
+                    $ids[] = $id;
+                }
+            }
+        }
+        return $ids;
+    }
+
+    /**
+     * Compare GL movement on all customer receivable ledgers against Customer TB movement logic.
+     *
+     * @param string   $start_date Y-m-d
+     * @param string   $end_date   Y-m-d
+     * @param int|null $warehouse_id
+     * @param int[]    $ledger_ids Optional override; empty = all customer ledger_account values
+     *
+     * @return array
+     */
+    public function get_customer_tb_gl_tb_comparison($start_date, $end_date, $warehouse_id = null, array $ledger_ids = [])
+    {
+        $start_date = trim((string) $start_date);
+        $end_date = trim((string) $end_date);
+
+        $ledger_ids = array_values(array_filter(array_map('intval', $ledger_ids), function ($id) {
+            return $id > 0;
+        }));
+        if (empty($ledger_ids)) {
+            $ledger_ids = $this->get_customer_receivable_ledger_ids();
+        }
+        if (empty($ledger_ids)) {
+            return [
+                'gl_rows' => [],
+                'flagged_rows' => [],
+                'customer_differences' => [],
+                'summary' => [
+                    'gl_total_debit' => 0,
+                    'gl_total_credit' => 0,
+                    'gl_in_tb_total_debit' => 0,
+                    'gl_in_tb_total_credit' => 0,
+                    'customer_tb_total_debit' => 0,
+                    'customer_tb_total_credit' => 0,
+                    'manual_flag_count' => 0,
+                    'customer_mismatch_count' => 0,
+                ],
+                'ledger_ids' => [],
+            ];
+        }
+
+        $customer_wh = $this->site->reportCustomerLedgerWarehouseCondition($warehouse_id, 'e');
+
+        // Same receivable matching rule as get_customer_trial_balance (current + old_ledgers).
+        $in_customer_tb_case = "
+            CASE
+                WHEN IFNULL(e.customer_id, 0) = 0 THEN 0
+                WHEN c.id IS NULL THEN 0
+                WHEN c.ledger_account = ei.ledger_id THEN 1
+                WHEN NULLIF(TRIM(IFNULL(c.old_ledgers, '')), '') IS NOT NULL
+                    AND FIND_IN_SET(
+                        CAST(ei.ledger_id AS CHAR),
+                        REPLACE(REPLACE(IFNULL(c.old_ledgers, ''), ' ', ''), ', ', ',')
+                    ) > 0 THEN 1
+                ELSE 0
+            END
+        ";
+
+        $this->db
+            ->select("
+                ei.id AS entry_item_id,
+                e.id AS entry_id,
+                DATE(e.date) AS date,
+                e.number AS reference_no,
+                e.transaction_type,
+                e.customer_id,
+                c.name AS customer_name,
+                c.sequence_code AS customer_code,
+                c.ledger_account AS customer_ledger_account,
+                c.old_ledgers AS customer_old_ledgers,
+                ei.ledger_id,
+                al.code AS ledger_code,
+                al.name AS ledger_name,
+                ei.dc,
+                ei.amount,
+                {$in_customer_tb_case} AS in_customer_tb
+            ", false)
+            ->from('sma_accounts_entryitems ei')
+            ->join('sma_accounts_entries e', 'e.id = ei.entry_id')
+            ->join('sma_accounts_ledgers al', 'al.id = ei.ledger_id', 'left')
+            ->join('sma_companies c', 'c.id = e.customer_id', 'left')
+            ->where_in('ei.ledger_id', $ledger_ids)
+            ->where('DATE(e.date) >=', $start_date)
+            ->where('DATE(e.date) <=', $end_date)
+            ->where($customer_wh, null, false)
+            ->order_by('e.date', 'ASC')
+            ->order_by('e.id', 'ASC')
+            ->order_by('ei.id', 'ASC');
+
+        $q = $this->db->get();
+        $gl_rows = $q->num_rows() > 0 ? $q->result_array() : [];
+
+        $summary = [
+            'gl_total_debit'            => 0.0,
+            'gl_total_credit'           => 0.0,
+            'gl_in_tb_total_debit'      => 0.0,
+            'gl_in_tb_total_credit'     => 0.0,
+            'customer_tb_total_debit'   => 0.0,
+            'customer_tb_total_credit'  => 0.0,
+            'manual_flag_count'         => 0,
+            'customer_mismatch_count'   => 0,
+        ];
+
+        $flagged_rows = [];
+        $gl_included_customer_map = [];
+
+        foreach ($gl_rows as &$row) {
+            $amount = (float) $row['amount'];
+            $is_debit = strtoupper((string) $row['dc']) === 'D';
+
+            if ($is_debit) {
+                $summary['gl_total_debit'] += $amount;
+            } else {
+                $summary['gl_total_credit'] += $amount;
+            }
+
+            $reason = '';
+            if ((int) $row['customer_id'] <= 0) {
+                $reason = 'Missing customer_id on accounting entry';
+            } elseif (empty($row['customer_name'])) {
+                $reason = 'Customer on entry not found in companies';
+            } elseif ((int) $row['in_customer_tb'] !== 1) {
+                $reason = 'Line ledger is not customer ledger_account / old_ledgers';
+            }
+
+            $row['manual_check_reason'] = $reason;
+            if ($reason !== '') {
+                $summary['manual_flag_count']++;
+                $flagged_rows[] = $row;
+            }
+
+            if ((int) $row['in_customer_tb'] === 1 && (int) $row['customer_id'] > 0) {
+                $cid = (int) $row['customer_id'];
+                if ($is_debit) {
+                    $summary['gl_in_tb_total_debit'] += $amount;
+                    $gl_included_customer_map[$cid]['trsDebit'] =
+                        ($gl_included_customer_map[$cid]['trsDebit'] ?? 0) + $amount;
+                } else {
+                    $summary['gl_in_tb_total_credit'] += $amount;
+                    $gl_included_customer_map[$cid]['trsCredit'] =
+                        ($gl_included_customer_map[$cid]['trsCredit'] ?? 0) + $amount;
+                }
+                $gl_included_customer_map[$cid]['name'] = (string) ($row['customer_name'] ?? '');
+                $gl_included_customer_map[$cid]['sequence_code'] = (string) ($row['customer_code'] ?? '');
+            }
+        }
+        unset($row);
+
+        $customer_tb_raw = $this->get_customer_trial_balance($start_date, $end_date, $warehouse_id, 'all');
+        $customer_tb = [];
+        foreach (($customer_tb_raw['trs'] ?? []) as $row) {
+            $td = (float) $row->total_debit;
+            $tc = (float) $row->total_credit;
+            if ($td == 0 && $tc == 0) {
+                continue;
+            }
+            $cid = (int) $row->id;
+            $customer_tb[$cid] = [
+                'name' => $row->name,
+                'sequence_code' => $row->sequence_code,
+                'trsDebit' => $td,
+                'trsCredit' => $tc,
+            ];
+        }
+
+        $customer_differences = [];
+        $all_customer_ids = array_unique(array_merge(
+            array_map('intval', array_keys($gl_included_customer_map)),
+            array_map('intval', array_keys($customer_tb))
+        ));
+        sort($all_customer_ids);
+
+        foreach ($all_customer_ids as $customer_id) {
+            $gl_debit = (float) ($gl_included_customer_map[$customer_id]['trsDebit'] ?? 0);
+            $gl_credit = (float) ($gl_included_customer_map[$customer_id]['trsCredit'] ?? 0);
+            $tb_debit = (float) ($customer_tb[$customer_id]['trsDebit'] ?? 0);
+            $tb_credit = (float) ($customer_tb[$customer_id]['trsCredit'] ?? 0);
+
+            // Skip customers with no movement on either side
+            if ($gl_debit == 0 && $gl_credit == 0 && $tb_debit == 0 && $tb_credit == 0) {
+                continue;
+            }
+
+            $summary['customer_tb_total_debit'] += $tb_debit;
+            $summary['customer_tb_total_credit'] += $tb_credit;
+
+            $diff_debit = round($gl_debit - $tb_debit, 2);
+            $diff_credit = round($gl_credit - $tb_credit, 2);
+            if (abs($diff_debit) > 0.009 || abs($diff_credit) > 0.009) {
+                $summary['customer_mismatch_count']++;
+                $customer_differences[] = [
+                    'customer_id' => $customer_id,
+                    'sequence_code' => $customer_tb[$customer_id]['sequence_code']
+                        ?? ($gl_included_customer_map[$customer_id]['sequence_code'] ?? ''),
+                    'name' => $customer_tb[$customer_id]['name']
+                        ?? ($gl_included_customer_map[$customer_id]['name'] ?? ''),
+                    'gl_trs_debit' => $gl_debit,
+                    'gl_trs_credit' => $gl_credit,
+                    'customer_tb_trs_debit' => $tb_debit,
+                    'customer_tb_trs_credit' => $tb_credit,
+                    'diff_debit' => $diff_debit,
+                    'diff_credit' => $diff_credit,
+                ];
+            }
+        }
+
+        return [
+            'gl_rows' => $gl_rows,
+            'flagged_rows' => $flagged_rows,
+            'customer_differences' => $customer_differences,
+            'summary' => $summary,
+            'ledger_ids' => $ledger_ids,
+        ];
+    }
+
+    /**
+     * Compare Supplier Trial Balance (EB Credit) vs Unpaid AP outstanding by supplier.
+     * Surfaces structural mismatch areas (returns, debit memos, GL credits without purchase, memos).
+     *
+     * @param string     $start_date Y-m-d
+     * @param string     $end_date   Y-m-d (also unpaid as-of date)
+     * @param int|null   $warehouse_id
+     * @param string     $trade_type trade|non_trade|all
+     * @param array      $supplier_ids
+     * @return array
+     */
+    public function get_supplier_tb_vs_unpaid_ap_comparison($start_date, $end_date, $warehouse_id = null, $trade_type = 'trade', array $supplier_ids = [])
+    {
+        $trade_type = in_array($trade_type, ['trade', 'non_trade', 'all'], true) ? $trade_type : 'trade';
+        $sql_at = $end_date . ' 23:59:59';
+        $pfx = $this->db->dbprefix;
+
+        // ── 1) Supplier TB EB Credit (same as suppliers_trial_balance) ──
+        $tb_rows = $this->get_suppliers_trial_balance($start_date, $end_date, $supplier_ids, $warehouse_id, $trade_type) ?: [];
+        $tb = [];
+        foreach ($tb_rows as $sid => $data) {
+            if (
+                (float) ($data['trsDebit'] ?? 0) == 0
+                && (float) ($data['trsCredit'] ?? 0) == 0
+                && (float) ($data['obDebit'] ?? 0) == 0
+                && (float) ($data['obCredit'] ?? 0) == 0
+            ) {
+                continue;
+            }
+            $eb_credit = (float) $data['obCredit'] + (float) $data['trsCredit'];
+            $eb_debit  = (float) $data['obDebit'] + (float) $data['trsDebit'];
+            $final_credit = 0.0;
+            $final_debit  = 0.0;
+            if ($eb_credit >= $eb_debit) {
+                $final_credit = round($eb_credit - $eb_debit, 2);
+            } else {
+                $final_debit = round($eb_debit - $eb_credit, 2);
+            }
+            $tb[(int) $sid] = [
+                'supplier_id'   => (int) $sid,
+                'sequence_code' => $data['sequence_code'] ?? '',
+                'name'          => $data['name'] ?? '',
+                'ob_debit'      => round((float) $data['obDebit'], 2),
+                'ob_credit'     => round((float) $data['obCredit'], 2),
+                'trs_debit'     => round((float) $data['trsDebit'], 2),
+                'trs_credit'    => round((float) $data['trsCredit'], 2),
+                'eb_debit'      => $final_debit,
+                'eb_credit'     => $final_credit,
+            ];
+        }
+
+        // ── 2) Unpaid AP components (aligned with unpaid_invoices_ap) ──
+        $purchase_wh_sql = '';
+        if ($warehouse_id) {
+            $purchase_wh_sql = ' AND p.warehouse_id = ' . (int) $warehouse_id;
+        } else {
+            // Match reportWarehouseAndClause / applyReportWarehouseScope on purchases
+            $wh_clause = $this->site->reportWarehouseAndClause(null, 'p');
+            if ($wh_clause) {
+                $purchase_wh_sql = ' ' . $wh_clause;
+            }
+        }
+
+        $trade_sql_c = '';
+        if ($trade_type === 'non_trade') {
+            $trade_sql_c = " AND (c.category = 'Services' OR c.category LIKE '%خدمات%' OR c.category LIKE '%service%')";
+        } elseif ($trade_type === 'trade') {
+            $trade_sql_c = " AND (c.category IS NULL OR (c.category != 'Services' AND c.category NOT LIKE '%خدمات%' AND c.category NOT LIKE '%service%'))";
+        }
+
+        $supplier_sql_p = '';
+        $supplier_sql_m = '';
+        if (!empty($supplier_ids)) {
+            $ids = implode(',', array_map('intval', $supplier_ids));
+            $supplier_sql_p = " AND p.supplier_id IN ({$ids})";
+            $supplier_sql_m = " AND m.supplier_id IN ({$ids})";
+        }
+
+        $unpaid_purchases = [];
+        $purchase_q = $this->db->query("
+            SELECT supplier_id, ROUND(SUM(outstanding), 2) AS amt, COUNT(*) AS cnt
+            FROM (
+                SELECT p.supplier_id,
+                    ROUND(
+                        (p.grand_total + COALESCE(p.grand_deal_discount, 0))
+                        - COALESCE((
+                            SELECT SUM(sp.amount) FROM {$pfx}payments sp
+                            WHERE sp.purchase_id = p.id AND sp.date <= '{$sql_at}'
+                        ), 0),
+                    2) AS outstanding
+                FROM {$pfx}purchases p
+                INNER JOIN {$pfx}companies c ON c.id = p.supplier_id
+                WHERE p.purchase_invoice = 1
+                  AND p.note != 'import from excel'
+                  AND (p.grand_total + COALESCE(p.grand_deal_discount, 0)) > 0
+                  AND p.date <= '{$sql_at}'
+                  {$purchase_wh_sql}
+                  {$trade_sql_c}
+                  {$supplier_sql_p}
+            ) inv
+            WHERE outstanding > 0
+            GROUP BY supplier_id
+        ");
+        foreach ($purchase_q->result() as $r) {
+            $unpaid_purchases[(int) $r->supplier_id] = [
+                'amt' => (float) $r->amt,
+                'cnt' => (int) $r->cnt,
+            ];
+        }
+
+        // Include service/credit memos on the Unpaid side when comparing all local warehouses
+        // (warehouse_id null) — that is the fair match against Payable TB. Also include for HQ (32)
+        // to stay aligned with unpaid_invoices_ap. Single branch warehouses stay purchase-only.
+        $include_memos_in_unpaid = ($warehouse_id === null || $warehouse_id === '' || (int) $warehouse_id === 0 || (int) $warehouse_id === 32);
+
+        // Match unpaid_invoices_ap memo paid expression when memos are part of Unpaid totals
+        $memo_paid_expr = "CASE
+            WHEN m.date < '2026-06-20' THEN COALESCE(m.used_amount, 0)
+            ELSE COALESCE((
+                SELECT COALESCE(SUM(sp.amount), 0)
+                FROM {$pfx}payments sp
+                WHERE sp.memo_id = m.id AND sp.date <= '{$sql_at}'
+            ), 0)
+        END";
+        if (!$include_memos_in_unpaid) {
+            $memo_paid_expr = 'COALESCE(m.used_amount, 0)';
+        }
+
+        $unpaid_service = [];
+        $unpaid_credit  = [];
+        $memo_q = $this->db->query("
+            SELECT m.supplier_id, m.type, m.supplier_entry_type,
+                ROUND(SUM(m.payment_amount - ({$memo_paid_expr})), 2) AS amt,
+                COUNT(*) AS cnt
+            FROM {$pfx}memo m
+            INNER JOIN {$pfx}companies c ON c.id = m.supplier_id
+            WHERE m.supplier_id > 0
+              AND m.date <= '{$end_date}'
+              AND (m.payment_amount - ({$memo_paid_expr})) > 0.01
+              AND (
+                    m.type = 'serviceinvoice'
+                 OR (m.type = 'memo' AND m.supplier_entry_type = 'C')
+              )
+              {$trade_sql_c}
+              {$supplier_sql_m}
+            GROUP BY m.supplier_id, m.type, m.supplier_entry_type
+        ");
+        foreach ($memo_q->result() as $r) {
+            $sid = (int) $r->supplier_id;
+            if ($r->type === 'serviceinvoice') {
+                $unpaid_service[$sid] = [
+                    'amt' => ($unpaid_service[$sid]['amt'] ?? 0) + (float) $r->amt,
+                    'cnt' => ($unpaid_service[$sid]['cnt'] ?? 0) + (int) $r->cnt,
+                ];
+            } else {
+                $unpaid_credit[$sid] = [
+                    'amt' => ($unpaid_credit[$sid]['amt'] ?? 0) + (float) $r->amt,
+                    'cnt' => ($unpaid_credit[$sid]['cnt'] ?? 0) + (int) $r->cnt,
+                ];
+            }
+        }
+
+        // ── 3) Structural mismatch drivers (in TB / ops but not Unpaid AP) ──
+        $supplier_sql_e = !empty($supplier_ids)
+            ? ' AND e.supplier_id IN (' . implode(',', array_map('intval', $supplier_ids)) . ')'
+            : '';
+
+        $unsettled_returns = [];
+        $supplier_sql_rs = !empty($supplier_ids)
+            ? ' AND rs.supplier_id IN (' . implode(',', array_map('intval', $supplier_ids)) . ')'
+            : '';
+        foreach ($this->db->query("
+            SELECT rs.supplier_id, ROUND(SUM(rs.grand_total - COALESCE(rs.paid, 0)), 2) AS amt
+            FROM {$pfx}returns_supplier rs
+            INNER JOIN {$pfx}companies c ON c.id = rs.supplier_id
+            WHERE (rs.grand_total - COALESCE(rs.paid, 0)) > 0.01
+              {$trade_sql_c}
+              {$supplier_sql_rs}
+            GROUP BY rs.supplier_id
+        ")->result() as $r) {
+            $unsettled_returns[(int) $r->supplier_id] = (float) $r->amt;
+        }
+
+        $unsettled_debit_memos = [];
+        foreach ($this->db->query("
+            SELECT m.supplier_id,
+                ROUND(SUM(
+                    (m.payment_amount * (1 + COALESCE(m.vat_percent, 0) / 100)) - COALESCE(m.used_amount, 0)
+                ), 2) AS amt
+            FROM {$pfx}memo m
+            INNER JOIN {$pfx}companies c ON c.id = m.supplier_id
+            WHERE m.type = 'memo' AND m.supplier_entry_type = 'D'
+              AND ((m.payment_amount * (1 + COALESCE(m.vat_percent, 0) / 100)) - COALESCE(m.used_amount, 0)) > 0.01
+              {$trade_sql_c}
+              {$supplier_sql_m}
+            GROUP BY m.supplier_id
+        ")->result() as $r) {
+            $unsettled_debit_memos[(int) $r->supplier_id] = (float) $r->amt;
+        }
+
+        $gl_credits_no_pid = [];
+        $wh_e = $this->site->reportPurchaseLedgerWarehouseCondition($warehouse_id, 'e');
+        foreach ($this->db->query("
+            SELECT e.supplier_id, ROUND(SUM(ei.amount), 2) AS amt
+            FROM {$pfx}accounts_entries e
+            JOIN {$pfx}accounts_entryitems ei ON e.id = ei.entry_id
+            JOIN {$pfx}companies c ON e.supplier_id = c.id AND ei.ledger_id = c.ledger_account
+            WHERE e.supplier_id IS NOT NULL AND ei.dc = 'C'
+              AND DATE(e.date) <= '{$end_date}'
+              AND (e.pid IS NULL OR e.pid = '' OR e.pid = 0)
+              AND {$wh_e}
+              {$trade_sql_c}
+              {$supplier_sql_e}
+            GROUP BY e.supplier_id
+        ")->result() as $r) {
+            $gl_credits_no_pid[(int) $r->supplier_id] = (float) $r->amt;
+        }
+
+        // ── 4) Merge + classify ──
+        $all_ids = array_unique(array_merge(
+            array_keys($tb),
+            array_keys($unpaid_purchases),
+            array_keys($unpaid_service),
+            array_keys($unpaid_credit)
+        ));
+        sort($all_ids);
+
+        $rows = [];
+        $summary = [
+            'grand_tb_credit'      => 0.0,
+            'grand_unpaid'         => 0.0,
+            'grand_diff'           => 0.0,
+            'mismatch_count'       => 0,
+            'include_memos_in_unpaid' => $include_memos_in_unpaid,
+            'category_counts'      => [],
+        ];
+
+        foreach ($all_ids as $sid) {
+            $sid = (int) $sid;
+            $tb_credit = (float) ($tb[$sid]['eb_credit'] ?? 0);
+
+            $purch_amt = (float) ($unpaid_purchases[$sid]['amt'] ?? 0);
+            $svc_amt   = (float) ($unpaid_service[$sid]['amt'] ?? 0);
+            $cm_amt    = (float) ($unpaid_credit[$sid]['amt'] ?? 0);
+            $memo_amt  = round($svc_amt + $cm_amt, 2);
+
+            $unpaid_in_report = $purch_amt;
+            if ($include_memos_in_unpaid) {
+                $unpaid_in_report = round($purch_amt + $memo_amt, 2);
+            }
+
+            $diff = round($tb_credit - $unpaid_in_report, 2);
+            $returns_amt = (float) ($unsettled_returns[$sid] ?? 0);
+            $debit_amt   = (float) ($unsettled_debit_memos[$sid] ?? 0);
+            $gl_no_pid   = (float) ($gl_credits_no_pid[$sid] ?? 0);
+            $memos_excluded = $include_memos_in_unpaid ? 0.0 : $memo_amt;
+
+            // Skip fully zero / matched within 0.01
+            if (
+                abs($diff) < 0.01
+                && $tb_credit < 0.01
+                && $unpaid_in_report < 0.01
+                && $returns_amt < 0.01
+                && $debit_amt < 0.01
+                && $memos_excluded < 0.01
+            ) {
+                continue;
+            }
+
+            $name = $tb[$sid]['name'] ?? null;
+            $code = $tb[$sid]['sequence_code'] ?? '';
+            if ($name === null) {
+                $c = $this->db->select('name, sequence_code')->from('companies')->where('id', $sid)->get()->row();
+                $name = $c->name ?? ('Supplier #' . $sid);
+                $code = $c->sequence_code ?? '';
+            }
+
+            $issue = $this->classify_supplier_tb_vs_unpaid_issue([
+                'diff'                 => $diff,
+                'tb'                   => $tb_credit,
+                'unpaid'               => $unpaid_in_report,
+                'unpaid_purchases'     => $purch_amt,
+                'unpaid_memos'         => $memo_amt,
+                'memos_excluded'       => $memos_excluded,
+                'unsettled_returns'    => $returns_amt,
+                'unsettled_debit_memos'=> $debit_amt,
+                'ledger_credits_no_pid'=> $gl_no_pid,
+            ]);
+
+            $summary['grand_tb_credit'] += $tb_credit;
+            $summary['grand_unpaid'] += $unpaid_in_report;
+
+            if (abs($diff) >= 0.01) {
+                $summary['mismatch_count']++;
+                $ck = $issue['key'];
+                $summary['category_counts'][$ck] = ($summary['category_counts'][$ck] ?? 0) + 1;
+
+                $rows[] = [
+                    'supplier_id'           => $sid,
+                    'sequence_code'         => $code,
+                    'name'                  => $name,
+                    'tb_eb_credit'          => $tb_credit,
+                    'tb_eb_debit'           => (float) ($tb[$sid]['eb_debit'] ?? 0),
+                    'unpaid_purchases'      => $purch_amt,
+                    'open_purchase_count'   => (int) ($unpaid_purchases[$sid]['cnt'] ?? 0),
+                    'unpaid_service'        => $svc_amt,
+                    'unpaid_credit_memos'   => $cm_amt,
+                    'unpaid_memos_total'    => $memo_amt,
+                    'memos_excluded_from_unpaid' => $memos_excluded,
+                    'unpaid_total'          => $unpaid_in_report,
+                    'difference'            => $diff,
+                    'unsettled_returns'     => $returns_amt,
+                    'unsettled_debit_memos' => $debit_amt,
+                    'ledger_credits_no_pid' => $gl_no_pid,
+                    'issue'                 => $issue,
+                ];
+            }
+        }
+
+        usort($rows, function ($a, $b) {
+            return abs($b['difference']) <=> abs($a['difference']);
+        });
+
+        $summary['grand_tb_credit'] = round($summary['grand_tb_credit'], 2);
+        $summary['grand_unpaid'] = round($summary['grand_unpaid'], 2);
+        $summary['grand_diff'] = round($summary['grand_tb_credit'] - $summary['grand_unpaid'], 2);
+
+        // Group by issue category for the UI
+        $grouped = [];
+        foreach ($rows as $row) {
+            $key = $row['issue']['key'];
+            if (!isset($grouped[$key])) {
+                $grouped[$key] = [
+                    'key'         => $key,
+                    'label'       => $row['issue']['label'],
+                    'description' => $row['issue']['description'],
+                    'priority'    => $row['issue']['priority'],
+                    'action'      => $row['issue']['action'],
+                    'suppliers'   => [],
+                    'sum_abs_diff'=> 0.0,
+                ];
+            }
+            $grouped[$key]['suppliers'][] = $row;
+            $grouped[$key]['sum_abs_diff'] += abs($row['difference']);
+        }
+
+        $order = ['tb_only', 'unpaid_only', 'memos_excluded', 'gl_payments', 'tb_gt_unpaid', 'returns_debit', 'mixed'];
+        $grouped_ordered = [];
+        foreach ($order as $key) {
+            if (isset($grouped[$key])) {
+                $grouped_ordered[] = $grouped[$key];
+            }
+        }
+        foreach ($grouped as $key => $g) {
+            if (!in_array($key, $order, true)) {
+                $grouped_ordered[] = $g;
+            }
+        }
+
+        return [
+            'rows'    => $rows,
+            'grouped' => $grouped_ordered,
+            'summary' => $summary,
+        ];
+    }
+
+    /**
+     * @param array<string,float> $d
+     * @return array{key:string,label:string,description:string,priority:string,action:string}
+     */
+    private function classify_supplier_tb_vs_unpaid_issue(array $d)
+    {
+        $diff = (float) ($d['diff'] ?? 0);
+        $tb = (float) ($d['tb'] ?? 0);
+        $unpaid = (float) ($d['unpaid'] ?? 0);
+        $gl = (float) ($d['ledger_credits_no_pid'] ?? 0);
+        $returns = (float) ($d['unsettled_returns'] ?? 0);
+        $debit = (float) ($d['unsettled_debit_memos'] ?? 0);
+        $memos_ex = (float) ($d['memos_excluded'] ?? 0);
+        $absDiff = abs($diff);
+
+        if ($tb < 0.01 && $unpaid > 0.01) {
+            return [
+                'key' => 'unpaid_only',
+                'label' => 'B — Unpaid AP only (no TB credit)',
+                'description' => 'Open purchases/memos appear in Unpaid AP, but Payable TB has no ending credit.',
+                'priority' => 'high',
+                'action' => 'Review supplier ledger posting / wrong ledger / net debit TB balance.',
+            ];
+        }
+        if ($unpaid < 0.01 && $tb > 0.01) {
+            return [
+                'key' => 'tb_only',
+                'label' => 'A — TB credit only (no Unpaid AP lines)',
+                'description' => 'Payable TB shows credit, but Unpaid AP has no open purchase/memo rows.',
+                'priority' => 'high',
+                'action' => 'Check GL credits without purchase link, opening balance, or settled docs still in ledger.',
+            ];
+        }
+        if ($memos_ex > 0.01 && abs($diff - $memos_ex) < 1.0) {
+            return [
+                'key' => 'memos_excluded',
+                'label' => 'G — Service/credit memos excluded from Unpaid side',
+                'description' => 'Single-branch Unpaid side is purchases only. Service/credit memos still sit in Payable TB.',
+                'priority' => 'medium',
+                'action' => 'Re-run with All Local Warehouses (recommended), or treat memo outstanding as the known gap.',
+            ];
+        }
+        if ($gl > 100) {
+            return [
+                'key' => 'gl_payments',
+                'label' => 'C — GL credits without purchase link',
+                'description' => 'Supplier ledger has credit entries not linked to purchase_id (pid), so Unpaid AP does not reduce.',
+                'priority' => 'high',
+                'action' => 'Link supplier payments/journals to purchases or update memo used_amount.',
+            ];
+        }
+        if (($returns > 0.01 || $debit > 0.01) && $absDiff <= max(1.0, $returns + $debit)) {
+            return [
+                'key' => 'returns_debit',
+                'label' => 'E — Unsettled returns / debit memos',
+                'description' => 'Returns and debit memos reduce TB but are not shown as open Unpaid AP invoices.',
+                'priority' => 'medium',
+                'action' => 'Settle returns/debit memos against invoices (auto settlement script) or accept as timing difference.',
+            ];
+        }
+        if ($diff > 0.01 && (float) ($d['unpaid_purchases'] ?? 0) > 0.01) {
+            return [
+                'key' => 'tb_gt_unpaid',
+                'label' => 'D — TB higher than Unpaid (open purchases exist)',
+                'description' => 'TB credit exceeds open purchase outstanding — partial GL settlement or extra ledger credits.',
+                'priority' => 'medium',
+                'action' => 'Compare GL credits vs sma_payments per open purchase invoice.',
+            ];
+        }
+        return [
+            'key' => 'mixed',
+            'label' => 'Other — Mixed / review',
+            'description' => 'Multiple drivers; review returns, debit memos, memos, and unlinked GL credits.',
+            'priority' => 'medium',
+            'action' => 'Inspect supplier statement and unpaid AP side by side.',
+        ];
+    }
+
+    /**
+     * Compare Customer Trial Balance (EB Debit) vs Unpaid AR outstanding by customer.
+     * Surfaces structural mismatch areas (returns, credit memos, GL debits without sale, service invoices).
+     *
+     * @param string   $start_date Y-m-d
+     * @param string   $end_date   Y-m-d (also unpaid as-of date)
+     * @param int|null $warehouse_id
+     * @param string   $rent_type non_rental|rental|all
+     * @param array    $customer_ids
+     * @return array
+     */
+    public function get_customer_tb_vs_unpaid_ar_comparison($start_date, $end_date, $warehouse_id = null, $rent_type = 'non_rental', array $customer_ids = [])
+    {
+        $rent_type = in_array($rent_type, ['non_rental', 'rental', 'all'], true) ? $rent_type : 'non_rental';
+        $sql_at = $end_date . ' 23:59:59';
+        $pfx = $this->db->dbprefix;
+        $customer_ids = array_values(array_filter(array_map('intval', $customer_ids), function ($id) {
+            return $id > 0;
+        }));
+
+        // ── 1) Customer TB EB Debit (same netting as customers_trial_balance view) ──
+        $tb_raw = $this->get_customer_trial_balance($start_date, $end_date, $warehouse_id, $rent_type);
+        $tb = [];
+        $seed = [];
+        foreach (($tb_raw['trs'] ?? []) as $trans) {
+            $cid = (int) $trans->id;
+            $seed[$cid] = [
+                'name' => $trans->name,
+                'sequence_code' => $trans->sequence_code,
+                'trsDebit' => (float) $trans->total_debit,
+                'trsCredit' => (float) $trans->total_credit,
+                'obDebit' => 0.0,
+                'obCredit' => 0.0,
+            ];
+        }
+        foreach (($tb_raw['ob'] ?? []) as $trans) {
+            $cid = (int) $trans->id;
+            if (!isset($seed[$cid])) {
+                $seed[$cid] = [
+                    'name' => $trans->name,
+                    'sequence_code' => $trans->sequence_code,
+                    'trsDebit' => 0.0,
+                    'trsCredit' => 0.0,
+                    'obDebit' => 0.0,
+                    'obCredit' => 0.0,
+                ];
+            }
+            $seed[$cid]['obDebit'] = (float) $trans->total_debit;
+            $seed[$cid]['obCredit'] = (float) $trans->total_credit;
+        }
+
+        foreach ($seed as $cid => $data) {
+            if (!empty($customer_ids) && !in_array($cid, $customer_ids, true)) {
+                continue;
+            }
+            if (
+                (float) $data['trsDebit'] == 0
+                && (float) $data['trsCredit'] == 0
+                && (float) $data['obDebit'] == 0
+                && (float) $data['obCredit'] == 0
+            ) {
+                continue;
+            }
+
+            $ob_debit = (float) $data['obDebit'];
+            $ob_credit = (float) $data['obCredit'];
+            if ($ob_debit >= $ob_credit) {
+                $opening_debit = $ob_debit - $ob_credit;
+                $opening_credit = 0.0;
+            } else {
+                $opening_debit = 0.0;
+                $opening_credit = $ob_credit - $ob_debit;
+            }
+
+            $ending_debit = $opening_debit + (float) $data['trsDebit'];
+            $ending_credit = $opening_credit + (float) $data['trsCredit'];
+            if ($ending_debit >= $ending_credit) {
+                $final_debit = round($ending_debit - $ending_credit, 2);
+                $final_credit = 0.0;
+            } else {
+                $final_debit = 0.0;
+                $final_credit = round($ending_credit - $ending_debit, 2);
+            }
+
+            $tb[$cid] = [
+                'customer_id'   => $cid,
+                'sequence_code' => $data['sequence_code'] ?? '',
+                'name'          => $data['name'] ?? '',
+                'ob_debit'      => round($opening_debit, 2),
+                'ob_credit'     => round($opening_credit, 2),
+                'trs_debit'     => round((float) $data['trsDebit'], 2),
+                'trs_credit'    => round((float) $data['trsCredit'], 2),
+                'eb_debit'      => $final_debit,
+                'eb_credit'     => $final_credit,
+            ];
+        }
+
+        // ── 2) Unpaid AR components (aligned with unpaid_invoices_ar) ──
+        $sale_wh_sql = '';
+        if ($warehouse_id) {
+            $sale_wh_sql = ' AND s.warehouse_id = ' . (int) $warehouse_id;
+        } else {
+            $wh_clause = $this->site->reportWarehouseAndClause(null, 's');
+            if ($wh_clause) {
+                $sale_wh_sql = ' ' . $wh_clause;
+            }
+        }
+
+        $rent_sql_c = $this->apply_customer_rent_type_sql($rent_type, 'c.category');
+
+        $customer_sql_s = '';
+        $customer_sql_m = '';
+        if (!empty($customer_ids)) {
+            $ids = implode(',', $customer_ids);
+            $customer_sql_s = " AND s.customer_id IN ({$ids})";
+            $customer_sql_m = " AND m.customer_id IN ({$ids})";
+        }
+
+        $unpaid_sales = [];
+        $sales_q = $this->db->query("
+            SELECT customer_id, ROUND(SUM(outstanding), 2) AS amt, COUNT(*) AS cnt
+            FROM (
+                SELECT s.customer_id,
+                    ROUND(
+                        s.grand_total - COALESCE((
+                            SELECT SUM(sp.amount) FROM {$pfx}payments sp
+                            WHERE sp.sale_id = s.id AND sp.date <= '{$sql_at}'
+                        ), 0),
+                    2) AS outstanding
+                FROM {$pfx}sales s
+                INNER JOIN {$pfx}companies c ON c.id = s.customer_id
+                WHERE s.sale_invoice = 1
+                  AND s.grand_total > 0
+                  AND s.date <= '{$sql_at}'
+                  {$sale_wh_sql}
+                  {$rent_sql_c}
+                  {$customer_sql_s}
+            ) inv
+            WHERE outstanding > 0
+            GROUP BY customer_id
+        ");
+        foreach ($sales_q->result() as $r) {
+            $unpaid_sales[(int) $r->customer_id] = [
+                'amt' => (float) $r->amt,
+                'cnt' => (int) $r->cnt,
+            ];
+        }
+
+        // Include customer service invoices on Unpaid side when comparing all local warehouses
+        // or HQ (32) — fair match against Receivable TB. Single branch stays sales-only.
+        $include_memos_in_unpaid = ($warehouse_id === null || $warehouse_id === '' || (int) $warehouse_id === 0 || (int) $warehouse_id === 32);
+
+        $memo_paid_expr = "COALESCE((
+            SELECT COALESCE(SUM(sp.amount), 0)
+            FROM {$pfx}payments sp
+            WHERE sp.memo_id = m.id AND sp.date <= '{$sql_at}'
+        ), 0)";
+        if (!$include_memos_in_unpaid) {
+            $memo_paid_expr = 'COALESCE(m.used_amount, 0)';
+        }
+
+        $unpaid_service = [];
+        $memo_q = $this->db->query("
+            SELECT m.customer_id,
+                ROUND(SUM(m.payment_amount - ({$memo_paid_expr})), 2) AS amt,
+                COUNT(*) AS cnt
+            FROM {$pfx}memo m
+            INNER JOIN {$pfx}companies c ON c.id = m.customer_id
+            WHERE m.customer_id > 0
+              AND m.type = 'serviceinvoice'
+              AND m.date <= '{$end_date}'
+              AND (m.payment_amount - ({$memo_paid_expr})) > 0.01
+              {$rent_sql_c}
+              {$customer_sql_m}
+            GROUP BY m.customer_id
+        ");
+        foreach ($memo_q->result() as $r) {
+            $unpaid_service[(int) $r->customer_id] = [
+                'amt' => (float) $r->amt,
+                'cnt' => (int) $r->cnt,
+            ];
+        }
+
+        // ── 3) Structural mismatch drivers (in TB / ops but not Unpaid AR) ──
+        $customer_sql_e = !empty($customer_ids)
+            ? ' AND e.customer_id IN (' . implode(',', $customer_ids) . ')'
+            : '';
+        $customer_sql_r = !empty($customer_ids)
+            ? ' AND r.customer_id IN (' . implode(',', $customer_ids) . ')'
+            : '';
+
+        $unsettled_returns = [];
+        foreach ($this->db->query("
+            SELECT r.customer_id, ROUND(SUM(r.grand_total - COALESCE(r.paid, 0)), 2) AS amt
+            FROM {$pfx}returns r
+            INNER JOIN {$pfx}companies c ON c.id = r.customer_id
+            WHERE r.status = 'completed'
+              AND (r.grand_total - COALESCE(r.paid, 0)) > 0.01
+              {$rent_sql_c}
+              {$customer_sql_r}
+            GROUP BY r.customer_id
+        ")->result() as $r) {
+            $unsettled_returns[(int) $r->customer_id] = (float) $r->amt;
+        }
+
+        $unsettled_credit_memos = [];
+        foreach ($this->db->query("
+            SELECT m.customer_id,
+                ROUND(SUM(m.payment_amount - COALESCE(m.used_amount, 0)), 2) AS amt
+            FROM {$pfx}memo m
+            INNER JOIN {$pfx}companies c ON c.id = m.customer_id
+            WHERE m.customer_id > 0
+              AND m.customer_entry_type = 'C'
+              AND m.type != 'serviceinvoice'
+              AND (m.payment_amount - COALESCE(m.used_amount, 0)) > 0.01
+              {$rent_sql_c}
+              {$customer_sql_m}
+            GROUP BY m.customer_id
+        ")->result() as $r) {
+            $unsettled_credit_memos[(int) $r->customer_id] = (float) $r->amt;
+        }
+
+        $gl_debits_no_sid = [];
+        $wh_e = $this->site->reportCustomerLedgerWarehouseCondition($warehouse_id, 'e');
+        $ledger_match = "(
+            c.ledger_account = ei.ledger_id
+            OR (
+                NULLIF(TRIM(IFNULL(c.old_ledgers, '')), '') IS NOT NULL
+                AND FIND_IN_SET(
+                    CAST(ei.ledger_id AS CHAR),
+                    REPLACE(REPLACE(IFNULL(c.old_ledgers, ''), ' ', ''), ', ', ',')
+                ) > 0
+            )
+        )";
+        foreach ($this->db->query("
+            SELECT e.customer_id, ROUND(SUM(ei.amount), 2) AS amt
+            FROM {$pfx}accounts_entries e
+            JOIN {$pfx}accounts_entryitems ei ON e.id = ei.entry_id
+            JOIN {$pfx}companies c ON e.customer_id = c.id AND {$ledger_match}
+            WHERE e.customer_id IS NOT NULL AND ei.dc = 'D'
+              AND DATE(e.date) <= '{$end_date}'
+              AND (e.sid IS NULL OR e.sid = '' OR e.sid = 0)
+              AND {$wh_e}
+              {$rent_sql_c}
+              {$customer_sql_e}
+            GROUP BY e.customer_id
+        ")->result() as $r) {
+            $gl_debits_no_sid[(int) $r->customer_id] = (float) $r->amt;
+        }
+
+        // ── 4) Merge + classify ──
+        $all_ids = array_unique(array_merge(
+            array_keys($tb),
+            array_keys($unpaid_sales),
+            array_keys($unpaid_service)
+        ));
+        sort($all_ids);
+
+        $rows = [];
+        $summary = [
+            'grand_tb_debit'           => 0.0,
+            'grand_unpaid'             => 0.0,
+            'grand_diff'               => 0.0,
+            'mismatch_count'           => 0,
+            'include_memos_in_unpaid'  => $include_memos_in_unpaid,
+            'category_counts'          => [],
+        ];
+
+        foreach ($all_ids as $cid) {
+            $cid = (int) $cid;
+            if (!empty($customer_ids) && !in_array($cid, $customer_ids, true)) {
+                continue;
+            }
+
+            $tb_debit = (float) ($tb[$cid]['eb_debit'] ?? 0);
+
+            $sales_amt = (float) ($unpaid_sales[$cid]['amt'] ?? 0);
+            $svc_amt   = (float) ($unpaid_service[$cid]['amt'] ?? 0);
+
+            $unpaid_in_report = $sales_amt;
+            if ($include_memos_in_unpaid) {
+                $unpaid_in_report = round($sales_amt + $svc_amt, 2);
+            }
+
+            $diff = round($tb_debit - $unpaid_in_report, 2);
+            $returns_amt = (float) ($unsettled_returns[$cid] ?? 0);
+            $credit_amt  = (float) ($unsettled_credit_memos[$cid] ?? 0);
+            $gl_no_sid   = (float) ($gl_debits_no_sid[$cid] ?? 0);
+            $memos_excluded = $include_memos_in_unpaid ? 0.0 : $svc_amt;
+
+            if (
+                abs($diff) < 0.01
+                && $tb_debit < 0.01
+                && $unpaid_in_report < 0.01
+                && $returns_amt < 0.01
+                && $credit_amt < 0.01
+                && $memos_excluded < 0.01
+            ) {
+                continue;
+            }
+
+            $name = $tb[$cid]['name'] ?? null;
+            $code = $tb[$cid]['sequence_code'] ?? '';
+            if ($name === null) {
+                $c = $this->db->select('name, sequence_code')->from('companies')->where('id', $cid)->get()->row();
+                $name = $c->name ?? ('Customer #' . $cid);
+                $code = $c->sequence_code ?? '';
+            }
+
+            $issue = $this->classify_customer_tb_vs_unpaid_issue([
+                'diff'                  => $diff,
+                'tb'                    => $tb_debit,
+                'unpaid'                => $unpaid_in_report,
+                'unpaid_sales'          => $sales_amt,
+                'unpaid_memos'          => $svc_amt,
+                'memos_excluded'        => $memos_excluded,
+                'unsettled_returns'     => $returns_amt,
+                'unsettled_credit_memos'=> $credit_amt,
+                'ledger_debits_no_sid'  => $gl_no_sid,
+            ]);
+
+            $summary['grand_tb_debit'] += $tb_debit;
+            $summary['grand_unpaid'] += $unpaid_in_report;
+
+            if (abs($diff) >= 0.01) {
+                $summary['mismatch_count']++;
+                $ck = $issue['key'];
+                $summary['category_counts'][$ck] = ($summary['category_counts'][$ck] ?? 0) + 1;
+
+                $rows[] = [
+                    'customer_id'            => $cid,
+                    'sequence_code'          => $code,
+                    'name'                   => $name,
+                    'tb_eb_debit'            => $tb_debit,
+                    'tb_eb_credit'           => (float) ($tb[$cid]['eb_credit'] ?? 0),
+                    'unpaid_sales'           => $sales_amt,
+                    'open_sale_count'        => (int) ($unpaid_sales[$cid]['cnt'] ?? 0),
+                    'unpaid_service'         => $svc_amt,
+                    'memos_excluded_from_unpaid' => $memos_excluded,
+                    'unpaid_total'           => $unpaid_in_report,
+                    'difference'             => $diff,
+                    'unsettled_returns'      => $returns_amt,
+                    'unsettled_credit_memos' => $credit_amt,
+                    'ledger_debits_no_sid'   => $gl_no_sid,
+                    'issue'                  => $issue,
+                ];
+            }
+        }
+
+        usort($rows, function ($a, $b) {
+            return abs($b['difference']) <=> abs($a['difference']);
+        });
+
+        $summary['grand_tb_debit'] = round($summary['grand_tb_debit'], 2);
+        $summary['grand_unpaid'] = round($summary['grand_unpaid'], 2);
+        $summary['grand_diff'] = round($summary['grand_tb_debit'] - $summary['grand_unpaid'], 2);
+
+        $grouped = [];
+        foreach ($rows as $row) {
+            $key = $row['issue']['key'];
+            if (!isset($grouped[$key])) {
+                $grouped[$key] = [
+                    'key'          => $key,
+                    'label'        => $row['issue']['label'],
+                    'description'  => $row['issue']['description'],
+                    'priority'     => $row['issue']['priority'],
+                    'action'       => $row['issue']['action'],
+                    'customers'    => [],
+                    'sum_abs_diff' => 0.0,
+                ];
+            }
+            $grouped[$key]['customers'][] = $row;
+            $grouped[$key]['sum_abs_diff'] += abs($row['difference']);
+        }
+
+        $order = ['tb_only', 'unpaid_only', 'memos_excluded', 'gl_payments', 'tb_gt_unpaid', 'returns_credit', 'mixed'];
+        $grouped_ordered = [];
+        foreach ($order as $key) {
+            if (isset($grouped[$key])) {
+                $grouped_ordered[] = $grouped[$key];
+            }
+        }
+        foreach ($grouped as $key => $g) {
+            if (!in_array($key, $order, true)) {
+                $grouped_ordered[] = $g;
+            }
+        }
+
+        return [
+            'rows'    => $rows,
+            'grouped' => $grouped_ordered,
+            'summary' => $summary,
+        ];
+    }
+
+    /**
+     * @param array<string,float> $d
+     * @return array{key:string,label:string,description:string,priority:string,action:string}
+     */
+    private function classify_customer_tb_vs_unpaid_issue(array $d)
+    {
+        $diff = (float) ($d['diff'] ?? 0);
+        $tb = (float) ($d['tb'] ?? 0);
+        $unpaid = (float) ($d['unpaid'] ?? 0);
+        $gl = (float) ($d['ledger_debits_no_sid'] ?? 0);
+        $returns = (float) ($d['unsettled_returns'] ?? 0);
+        $credit = (float) ($d['unsettled_credit_memos'] ?? 0);
+        $memos_ex = (float) ($d['memos_excluded'] ?? 0);
+        $absDiff = abs($diff);
+
+        if ($tb < 0.01 && $unpaid > 0.01) {
+            return [
+                'key' => 'unpaid_only',
+                'label' => 'B — Unpaid AR only (no TB debit)',
+                'description' => 'Open sales/service invoices appear in Unpaid AR, but Receivable TB has no ending debit.',
+                'priority' => 'high',
+                'action' => 'Review customer ledger posting / wrong ledger / net credit TB balance.',
+            ];
+        }
+        if ($unpaid < 0.01 && $tb > 0.01) {
+            return [
+                'key' => 'tb_only',
+                'label' => 'A — TB debit only (no Unpaid AR lines)',
+                'description' => 'Receivable TB shows debit, but Unpaid AR has no open sale/service rows.',
+                'priority' => 'high',
+                'action' => 'Check GL debits without sale link, opening balance, or settled docs still in ledger.',
+            ];
+        }
+        if ($memos_ex > 0.01 && abs($diff - $memos_ex) < 1.0) {
+            return [
+                'key' => 'memos_excluded',
+                'label' => 'G — Service invoices excluded from Unpaid side',
+                'description' => 'Single-branch Unpaid side is sales only. Customer service invoices still sit in Receivable TB.',
+                'priority' => 'medium',
+                'action' => 'Re-run with All Local Warehouses (recommended), or treat service outstanding as the known gap.',
+            ];
+        }
+        if ($gl > 100) {
+            return [
+                'key' => 'gl_payments',
+                'label' => 'C — GL debits without sale link',
+                'description' => 'Customer ledger has debit entries not linked to sale_id (sid), so Unpaid AR does not increase.',
+                'priority' => 'high',
+                'action' => 'Link customer journals to sales or review opening/manual receivable postings.',
+            ];
+        }
+        if (($returns > 0.01 || $credit > 0.01) && $absDiff <= max(1.0, $returns + $credit)) {
+            return [
+                'key' => 'returns_credit',
+                'label' => 'E — Unsettled returns / credit memos',
+                'description' => 'Returns and credit memos reduce TB but are not shown as open Unpaid AR invoices.',
+                'priority' => 'medium',
+                'action' => 'Apply returns/credit memos against invoices or accept as timing difference.',
+            ];
+        }
+        if ($diff > 0.01 && (float) ($d['unpaid_sales'] ?? 0) > 0.01) {
+            return [
+                'key' => 'tb_gt_unpaid',
+                'label' => 'D — TB higher than Unpaid (open sales exist)',
+                'description' => 'TB debit exceeds open sale outstanding — partial GL settlement or extra ledger debits.',
+                'priority' => 'medium',
+                'action' => 'Compare GL debits vs sma_payments per open sale invoice.',
+            ];
+        }
+        return [
+            'key' => 'mixed',
+            'label' => 'Other — Mixed / review',
+            'description' => 'Multiple drivers; review returns, credit memos, service invoices, and unlinked GL debits.',
+            'priority' => 'medium',
+            'action' => 'Inspect customer statement and unpaid AR side by side.',
+        ];
+    }
+
     public function getCustomersTrialBalance($start_date, $end_date)
     {
 
@@ -2656,6 +3821,8 @@ class Reports_model extends CI_Model
     public function get_customer_trial_balance($start_date, $end_date, $warehouse_id = null, $rent_type = 'non_rental')
     {
         $response = array();
+        $start_date = trim((string) $start_date);
+        $end_date = trim((string) $end_date);
         $warehouse_sql = $this->site->reportLedgerWarehouseExistsSql($warehouse_id);
         $rent_sql = $this->apply_customer_rent_type_sql($rent_type);
         // Include receivable lines on current ledger_account and on comma-separated old_ledgers (same rule as customer statement).
@@ -2667,31 +3834,36 @@ class Reports_model extends CI_Model
                         REPLACE(REPLACE(IFNULL(sma_companies.old_ledgers, ''), ' ', ''), ', ', ',')
                     ) > 0
                 ))";
-        $q = $this->db->query("SELECT 
-                sma_companies.id, 
+
+        // Period movements — start from all customers so zero-activity rows are included.
+        $q = $this->db->query("SELECT
+                sma_companies.id,
                 sma_companies.name,
                 sma_companies.category,
                 sma_companies.sequence_code,
                 sma_companies.payment_term,
                 sma_companies.credit_limit,
-                SUM(CASE WHEN sma_accounts_entryitems.dc = 'D' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_debit, 
-                SUM(CASE WHEN sma_accounts_entryitems.dc = 'C' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_credit 
-            FROM 
-                sma_accounts_entries 
-            JOIN 
-                sma_accounts_entryitems ON sma_accounts_entries.id = sma_accounts_entryitems.entry_id 
-            JOIN 
-                sma_companies ON sma_accounts_entries.customer_id = sma_companies.id 
-            WHERE 
-                date(sma_accounts_entries.date) >= '{$start_date}' 
-                AND date(sma_accounts_entries.date) <= '{$end_date}' 
-                AND sma_accounts_entries.customer_id IS NOT NULL 
-                AND {$ledgerMatch}
-                {$warehouse_sql}
+                COALESCE(trs.total_debit, 0) AS total_debit,
+                COALESCE(trs.total_credit, 0) AS total_credit
+            FROM sma_companies
+            LEFT JOIN (
+                SELECT
+                    sma_accounts_entries.customer_id,
+                    SUM(CASE WHEN sma_accounts_entryitems.dc = 'D' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_debit,
+                    SUM(CASE WHEN sma_accounts_entryitems.dc = 'C' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_credit
+                FROM sma_accounts_entries
+                JOIN sma_accounts_entryitems ON sma_accounts_entries.id = sma_accounts_entryitems.entry_id
+                JOIN sma_companies ON sma_accounts_entries.customer_id = sma_companies.id
+                WHERE date(sma_accounts_entries.date) >= '{$start_date}'
+                    AND date(sma_accounts_entries.date) <= '{$end_date}'
+                    AND sma_accounts_entries.customer_id IS NOT NULL
+                    AND {$ledgerMatch}
+                    {$warehouse_sql}
+                GROUP BY sma_accounts_entries.customer_id
+            ) trs ON trs.customer_id = sma_companies.id
+            WHERE sma_companies.group_name = 'customer'
                 {$rent_sql}
-            GROUP BY 
-                sma_accounts_entries.customer_id, 
-                sma_companies.name");
+            ORDER BY sma_companies.name ASC");
 
         $data = array();
         if ($q->num_rows() > 0) {
@@ -2699,35 +3871,37 @@ class Reports_model extends CI_Model
                 $data[] = $row;
             }
         }
-
         $response['trs'] = $data;
 
-        $q = $this->db->query("SELECT 
-                    sma_companies.id, 
-                    sma_companies.name, 
-                    sma_companies.category,
-                    sma_companies.sequence_code,
-                    sma_companies.payment_term,
-                    sma_companies.credit_limit,
-                    SUM(CASE WHEN sma_accounts_entryitems.dc = 'D' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_debit, 
-                    SUM(CASE WHEN sma_accounts_entryitems.dc = 'C' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_credit 
-                    FROM 
-                    sma_accounts_entries 
-                    JOIN 
-                    sma_accounts_entryitems ON sma_accounts_entries.id = sma_accounts_entryitems.entry_id 
-                    JOIN 
-                    sma_companies ON sma_accounts_entries.customer_id = sma_companies.id 
-                    WHERE 
-                    date(sma_accounts_entries.date) < '{$start_date}' 
+        // Opening balances — same full customer list, zeros when no prior activity.
+        $q = $this->db->query("SELECT
+                sma_companies.id,
+                sma_companies.name,
+                sma_companies.category,
+                sma_companies.sequence_code,
+                sma_companies.payment_term,
+                sma_companies.credit_limit,
+                COALESCE(ob.total_debit, 0) AS total_debit,
+                COALESCE(ob.total_credit, 0) AS total_credit
+            FROM sma_companies
+            LEFT JOIN (
+                SELECT
+                    sma_accounts_entries.customer_id,
+                    SUM(CASE WHEN sma_accounts_entryitems.dc = 'D' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_debit,
+                    SUM(CASE WHEN sma_accounts_entryitems.dc = 'C' THEN sma_accounts_entryitems.amount ELSE 0 END) AS total_credit
+                FROM sma_accounts_entries
+                JOIN sma_accounts_entryitems ON sma_accounts_entries.id = sma_accounts_entryitems.entry_id
+                JOIN sma_companies ON sma_accounts_entries.customer_id = sma_companies.id
+                WHERE date(sma_accounts_entries.date) < '{$start_date}'
+                    AND sma_accounts_entries.customer_id IS NOT NULL
                     AND {$ledgerMatch}
-                    AND sma_accounts_entries.customer_id IS NOT NULL 
                     {$warehouse_sql}
-                    {$rent_sql}
-                    GROUP BY 
-                    sma_accounts_entries.customer_id, 
-                    sma_companies.name
-                ");
-        //echo $this->db->last_query();
+                GROUP BY sma_accounts_entries.customer_id
+            ) ob ON ob.customer_id = sma_companies.id
+            WHERE sma_companies.group_name = 'customer'
+                {$rent_sql}
+            ORDER BY sma_companies.name ASC");
+
         $data2 = array();
         if ($q->num_rows() > 0) {
             foreach (($q->result()) as $row) {
@@ -2737,7 +3911,6 @@ class Reports_model extends CI_Model
         $response['ob'] = $data2;
 
         return $response;
-
     }
 
 
@@ -6320,13 +7493,25 @@ class Reports_model extends CI_Model
         }
         $dateWherePr2 = str_replace('DATE(pr.date)', 'DATE(pr2.date)', $dateWhere);
 
-        $warehouse_sale_sql = '';
+        // Sale lines are warehouse-scoped; service-invoice / memo payment lines are not (same as receipt list).
+        $warehouse_line_sql = '';
         if ($warehouse) {
-            $warehouse_sale_sql = ' AND s.warehouse_id = ' . (int) $warehouse;
+            $warehouse_line_sql = ' AND (
+                (p.sale_id IS NOT NULL AND p.sale_id > 0 AND s.warehouse_id = ' . (int) $warehouse . ')
+                OR (NULLIF(p.memo_id, \'\') IS NOT NULL AND NULLIF(p.memo_id, 0) IS NOT NULL)
+                OR ((p.sale_id IS NULL OR p.sale_id = 0 OR p.sale_id = \'\')
+                    AND (p.memo_id IS NULL OR p.memo_id = \'\' OR p.memo_id = 0))
+            )';
         } else {
-            $warehouse_sale_sql = $this->site->reportWarehouseAndClause(null, 's');
+            $osw_id = (int) $this->site->getOverseasWarehouseId();
+            if ($osw_id) {
+                $warehouse_line_sql = ' AND (
+                    p.sale_id IS NULL OR p.sale_id = 0 OR p.sale_id = \'\'
+                    OR s.warehouse_id IS NULL
+                    OR s.warehouse_id != ' . $osw_id . '
+                )';
+            }
         }
-        $include_service_union = !$warehouse;
 
         // Totals must match Customer Payments (sum of payment_reference.amount).. The list uses receipt headers, not raw line sums
         // Allocate each receipt's pr.amount across its payment lines in proportion to line amounts so the report footer equals the list
@@ -6336,7 +7521,7 @@ class Reports_model extends CI_Model
                          ELSE p.amount
                     END";
 
-        // Part 1: sales (and other) payment lines — allocated share of receipt header when multiple lines exist.
+        // Part 1: sales + memo (service invoice) payment lines — allocated share of receipt header when multiple lines exist.
         // Part 2: receipts with no sma_payments rows (typical Rent Client / service-invoice collections).
         $sql = "
             SELECT 
@@ -6358,17 +7543,25 @@ class Reports_model extends CI_Model
                 END AS paid_amount,
                 p.paid_by,
                 p.return_id,
-                s.date AS sale_date,
-                s.id AS sale_id,
-                s.grand_total,
+                COALESCE(s.date, m.date) AS sale_date,
+                COALESCE(s.id, m.id) AS sale_id,
+                COALESCE(s.grand_total, m.payment_amount, pr.amount) AS grand_total,
                 COALESCE(NULLIF(s.payment_term, 0), NULLIF(cm.payment_term, 0), 0) AS payment_term,
-                cm.city AS area,
+                cm.state AS area,
                 pr.transfer_from_ledger,
                 lg.name AS ledger_name,
                 pr.reference_no AS payment_ref_id,
-                'sale' AS collection_type
+                CASE
+                    WHEN NULLIF(p.memo_id, '') IS NOT NULL AND NULLIF(p.memo_id, 0) IS NOT NULL
+                         AND m.type = 'serviceinvoice'
+                    THEN 'service_invoice'
+                    WHEN NULLIF(p.memo_id, '') IS NOT NULL AND NULLIF(p.memo_id, 0) IS NOT NULL
+                    THEN COALESCE(m.type, 'memo')
+                    ELSE 'sale'
+                END AS collection_type
             FROM sma_payments p
             LEFT JOIN sma_sales s ON s.id = p.sale_id
+            LEFT JOIN sma_memo m ON m.id = p.memo_id
             INNER JOIN sma_payment_reference pr ON pr.id = p.payment_id
             INNER JOIN (
                 SELECT
@@ -6388,19 +7581,16 @@ class Reports_model extends CI_Model
                     ".$dateWherePr2."
                 GROUP BY p2.payment_id
             ) line_sums ON line_sums.payment_id = pr.id
-            LEFT JOIN sma_companies cm ON cm.id = COALESCE(s.customer_id, pr.customer_id)
+            LEFT JOIN sma_companies cm ON cm.id = COALESCE(s.customer_id, m.customer_id, pr.customer_id)
             LEFT JOIN sma_accounts_ledgers lg ON lg.id = pr.transfer_from_ledger
             WHERE pr.customer_id IS NOT NULL
                 AND pr.customer_id <> 0
                 AND (pr.added_via IS NULL OR pr.added_via NOT IN ('customer_return_modu', 'credit_memo_module', 'auto_script'))
                 AND (pr.note IS NULL OR pr.note NOT LIKE '%Reconciliation payment for sale ID%')
                 ".$dateWhere."
-                ".$warehouse_sale_sql."
+                ".$warehouse_line_sql."
             GROUP BY p.id
-            HAVING paid_amount > 0.001";
-
-        if ($include_service_union) {
-            $sql .= "
+            HAVING paid_amount > 0.001
 
             UNION ALL
 
@@ -6419,7 +7609,7 @@ class Reports_model extends CI_Model
                 m.id AS sale_id,
                 COALESCE(m.payment_amount, pr.amount) AS grand_total,
                 COALESCE(NULLIF(cm.payment_term, 0), 0) AS payment_term,
-                cm.city AS area,
+                cm.state AS area,
                 pr.transfer_from_ledger,
                 lg.name AS ledger_name,
                 pr.reference_no AS payment_ref_id,
@@ -6447,10 +7637,7 @@ class Reports_model extends CI_Model
                     SELECT 1 FROM sma_payments p0 WHERE p0.payment_id = pr.id
                 )
                 AND pr.amount > 0.01
-                ".$dateWhere;
-        }
-
-        $sql .= "
+                ".$dateWhere."
 
             ORDER BY collection_date
         ";
@@ -6466,10 +7653,11 @@ class Reports_model extends CI_Model
         return $data;
     }
 
-    public function getPaymentsByLocation($start_date, $end_date, $warehouse, $supplier_id = null)
+    public function getPaymentsByLocation($start_date, $end_date, $warehouse, $supplier_id = null, $invoice_type = 'trade')
     {
         // Supplier invoice payment report: filter by payment date so it matches
         // the supplier payments list and show invoice-level payment totals.
+        $invoice_type = in_array($invoice_type, ['trade', 'service', 'all'], true) ? $invoice_type : 'trade';
         $dateFilterExpr = "DATE(pr.date)";
         $dateWhere = "";
 
@@ -6494,7 +7682,12 @@ class Reports_model extends CI_Model
             $supplierWhere = ' AND pu.supplier_id = ' . (int) $supplier_id;
         }
 
-        $sql = "
+        $supplierWhereMemo = '';
+        if (!empty($supplier_id)) {
+            $supplierWhereMemo = ' AND m.supplier_id = ' . (int) $supplier_id;
+        }
+
+        $trade_sql = "
             SELECT
                 pu.id AS purchase_id,
                 pu.reference_no AS invoice_no,
@@ -6512,7 +7705,8 @@ class Reports_model extends CI_Model
                 ROUND(SUM(COALESCE(p.amount, 0)), 2) AS paid_amount,
                 ROUND(pu.grand_total - COALESCE(pu.paid, 0), 2) AS balance_amount,
                 MAX(DATE(COALESCE(p.date, pr.date))) AS last_payment_date,
-                pu.payment_status
+                pu.payment_status,
+                'trade' AS invoice_type
             FROM sma_purchases pu
             INNER JOIN sma_payments p
                 ON p.purchase_id = pu.id
@@ -6531,9 +7725,57 @@ class Reports_model extends CI_Model
                 " . $supplierWhere . "
             GROUP BY pu.id
             HAVING ROUND(SUM(COALESCE(p.amount, 0)), 2) > 0";
-        $sql .= "
-             ORDER BY last_payment_date, invoice_no;
-        ";
+
+        $service_sql = "
+            SELECT
+                m.id AS purchase_id,
+                m.reference_no AS invoice_no,
+                DATE(m.date) AS purchase_date,
+                sup.sequence_code AS sequence_code,
+                COALESCE(sup.id, pr.supplier_id) AS supplier_id,
+                COALESCE(sup.name, '') AS supplier_name,
+                'Service Invoice' AS warehouse_name,
+                COALESCE(m.payment_amount, 0) AS grand_total,
+                COALESCE(NULLIF(sup.payment_term, 0), 0) AS payment_term,
+                NULL AS due_date,
+                ROUND(SUM(COALESCE(p.amount, 0)), 2) AS paid_amount,
+                ROUND(
+                    COALESCE(m.payment_amount, 0) - COALESCE(m.used_amount, 0),
+                    2
+                ) AS balance_amount,
+                MAX(DATE(COALESCE(p.date, pr.date))) AS last_payment_date,
+                CASE
+                    WHEN COALESCE(m.used_amount, 0) >= COALESCE(m.payment_amount, 0) - 0.01 THEN 'paid'
+                    WHEN COALESCE(m.used_amount, 0) > 0 THEN 'partial'
+                    ELSE 'pending'
+                END AS payment_status,
+                'service' AS invoice_type
+            FROM sma_memo m
+            INNER JOIN sma_payments p
+                ON p.memo_id = m.id
+                AND NULLIF(p.memo_id, '') IS NOT NULL
+                AND NULLIF(p.memo_id, 0) IS NOT NULL
+            INNER JOIN sma_payment_reference pr
+                ON pr.id = p.payment_id
+                AND pr.supplier_id IS NOT NULL
+                AND pr.supplier_id <> 0
+                AND (pr.added_via IS NULL OR pr.added_via NOT IN ('auto_script', 'advance_settlement'))
+            LEFT JOIN sma_companies sup
+                ON sup.id = m.supplier_id
+            WHERE m.type = 'serviceinvoice'
+                " . $dateWhere . "
+                " . $supplierWhereMemo . "
+            GROUP BY m.id
+            HAVING ROUND(SUM(COALESCE(p.amount, 0)), 2) > 0";
+
+        if ($invoice_type === 'service') {
+            $sql = $service_sql . " ORDER BY last_payment_date, invoice_no";
+        } elseif ($invoice_type === 'all') {
+            $sql = "(" . $trade_sql . ") UNION ALL (" . $service_sql . ") ORDER BY last_payment_date, invoice_no";
+        } else {
+            $sql = $trade_sql . " ORDER BY last_payment_date, invoice_no";
+        }
+
         $q = $this->db->query($sql);
         $data = array();
         if ($q->num_rows() > 0) {
@@ -7165,7 +8407,7 @@ class Reports_model extends CI_Model
                 DATE_FORMAT(s.date, '%d-%b-%y') AS date,
                 s.id AS invoice,
                 '0' AS return_inv,
-                c.city AS area,
+                c.state AS area,
                 c.sales_agent AS sales_man,
                 COALESCE(p.main_agent, '') AS agent,
                 COALESCE(c.category, '') AS category,
@@ -7236,7 +8478,7 @@ class Reports_model extends CI_Model
                 DATE_FORMAT(r.date, '%d-%b-%y') AS date,
                 s.id AS invoice,
                 r.id AS return_inv,
-                c.city AS area,
+                c.state AS area,
                 c.sales_agent AS sales_man,
                 COALESCE(p.main_agent, '') AS agent,
                 COALESCE(c.category, '') AS category,
@@ -7580,7 +8822,7 @@ class Reports_model extends CI_Model
                 s.date,
                 s.id as sale_invoice_no,
                 '0' as return_inv_no,
-                COALESCE(c.city, '') as area,
+                COALESCE(c.state, '') as area,
                 s.customer_id as customer_no,
                 s.customer as customer_name,
                 c.sales_agent as sales_man,
@@ -7615,7 +8857,7 @@ class Reports_model extends CI_Model
                 r.date,
                 r.sale_id as sale_invoice_no,
                 r.id as return_inv_no,
-                COALESCE(c.city, '') as area,
+                COALESCE(c.state, '') as area,
                 r.customer_id as customer_no,
                 r.customer as customer_name,
                 c.sales_agent as sales_man,
@@ -7792,9 +9034,12 @@ class Reports_model extends CI_Model
         
         // Build WHERE clauses for purchase returns
         $return_where_clauses = [];
-        $return_wh_filter = ltrim($this->site->reportWarehouseAndClause($warehouse_id, 'pr'), ' AND ');
-        if ($return_wh_filter) {
-            $return_where_clauses[] = $return_wh_filter;
+        //$return_wh_filter = ltrim($this->site->reportWarehouseAndClause($warehouse_id, 'pr'), ' AND ');
+        
+        if ($warehouse_id) {
+            $return_where_clauses[] = "pr.warehouse_id = ".$warehouse_id;
+        }else{
+            $return_where_clauses[] = "pr.warehouse_id IN (32,48)";
         }
         
         if ($start_date && $end_date) {
@@ -7872,6 +9117,187 @@ class Reports_model extends CI_Model
         }
         
         return [];
+    }
+
+    public function get_purchase_per_invoice_data_old($start_date, $end_date, $supplier_id = '', $pharmacy_id = '', $purchase_id = '')
+    {
+        $result = [];
+
+        // Get all purchases (excluding imports from excel)
+        $this->db->select("
+            'Purchase' as type,
+            p.date,
+            p.id as invoice,
+            '-' as return_inv,
+            COALESCE(agent.name, '') as agent_name,
+            s.id as supplier_no,
+            s.name as supplier_name,
+            s.sequence_code as supplier_code,
+            (p.total) as purchase,
+            p.total_tax as vat,
+            p.grand_total + COALESCE(p.grand_deal_discount, 0) as payable,
+            0 as payment,
+            0 as return_amount,
+            COALESCE(p.total_discount, 0) - COALESCE(p.grand_deal_discount, 0) as invoice_discount,
+            COALESCE(p.grand_deal_discount, 0) as deal_discount
+        ");
+        $this->db->from('sma_purchases p');
+        $this->db->join('sma_companies s', 'p.supplier_id = s.id', 'left');
+        // Get agent name: supplier -> parent_code -> agent (by sequence_code)
+        $this->db->join('sma_companies agent', 'agent.sequence_code = s.parent_code', 'left');
+
+        // Fix date comparison - ensure we're comparing dates properly
+        $this->db->where('p.date >=', $start_date . ' 00:00:00');
+        $this->db->where('p.date <=', $end_date . ' 23:59:59');
+
+        // Exclude purchases with note "import from excel"
+        $this->db->where('(p.note IS NULL OR p.note != "import from excel")');
+
+        // Exclude returns (returns have return_purchase_ref)
+        $this->db->where('(p.return_purchase_ref IS NULL OR p.return_purchase_ref = "")');
+
+        // Apply filters
+        if (!empty($supplier_id)) {
+            $this->db->where('p.supplier_id', $supplier_id);
+        }
+        if (!empty($pharmacy_id)) {
+            $this->db->where('p.warehouse_id', $pharmacy_id);
+        }
+        if (!empty($purchase_id)) {
+            $this->db->where('p.id', $purchase_id);
+        }
+
+        $this->db->order_by('p.date', 'DESC');
+        $query = $this->db->get();
+
+        // Log the query for debugging
+        log_message('debug', 'Purchase Query: ' . $this->db->last_query());
+
+        $purchases = $query->result_array();
+
+        // Get all payments for suppliers with proper supplier details
+        $this->db->select("
+            'Payment' as type,
+            pay.date,
+            p.id as invoice,
+            '-' as return_inv,
+            COALESCE(agent.name, '') as agent_name,
+            COALESCE(s.id, '') as supplier_no,
+            COALESCE(s.name, 'Direct Payment') as supplier_name,
+            s.sequence_code as supplier_code,
+            0 as purchase,
+            0 as vat,
+            0 as payable,
+            pay.amount as payment,
+            0 as return_amount,
+            0 as invoice_discount,
+            0 as deal_discount
+        ");
+        $this->db->from('sma_payments pay');
+        $this->db->join('sma_purchases p', 'pay.purchase_id = p.id', 'left');
+        $this->db->join('sma_companies s', 'p.supplier_id = s.id', 'left');
+        // Get agent name: supplier -> parent_code -> agent (by sequence_code)
+        $this->db->join('sma_companies agent', 'agent.sequence_code = s.parent_code', 'left');
+
+        // Only include purchase-related payments (not sale or return payments)
+        $this->db->where('pay.purchase_id IS NOT NULL');
+        $this->db->where('(pay.sale_id IS NULL OR pay.sale_id = 0)');
+        $this->db->where('(pay.return_id IS NULL OR pay.return_id = 0)');
+
+        // Fix date comparison
+        $this->db->where('pay.date >=', $start_date . ' 00:00:00');
+        $this->db->where('pay.date <=', $end_date . ' 23:59:59');
+
+        // Exclude payments related to purchases with note "import from excel" (if linked to purchase)
+        $this->db->where('(p.note IS NULL OR p.note != "import from excel")');
+
+        // Apply filters - only if there's a related purchase
+        if (!empty($supplier_id)) {
+            $this->db->where('p.supplier_id', $supplier_id);
+        }
+
+        if (!empty($pharmacy_id)) {
+            $this->db->where('p.warehouse_id', $pharmacy_id);
+        }
+        
+        if (!empty($purchase_id)) {
+            $this->db->where('pay.purchase_id', $purchase_id);
+        }
+
+        $this->db->order_by('pay.date', 'DESC');
+        $query = $this->db->get();
+
+        // Log the query for debugging
+        log_message('debug', 'Payment Query: ' . $this->db->last_query());
+
+        $payments = $query->result_array();
+
+        // Get all purchase returns from sma_returns_supplier table
+        $this->db->select("
+            'Return' as type,
+            rs.date,
+            rs.reference_no as invoice,
+            rs.id as return_inv,
+            COALESCE(agent.name, '-') as agent_name,
+            COALESCE(s.id, '') as supplier_no,
+            COALESCE(s.sequence_code, '') as supplier_code,
+            COALESCE(s.name, rs.supplier) as supplier_name,
+            rs.total_net_purchase as purchase,
+            rs.total_tax as vat,
+            rs.grand_total as payable,
+            0 as payment,
+            COALESCE(rs.grand_total, 0) as return_amount,
+            0 as invoice_discount,
+            0 as deal_discount
+        ");
+        $this->db->from('sma_returns_supplier rs');
+        $this->db->join('sma_companies s', 'rs.supplier_id = s.id', 'left');
+        // Get agent name: supplier -> parent_code -> agent (by sequence_code)
+        $this->db->join('sma_companies agent', 'agent.sequence_code = s.parent_code', 'left');
+        
+        // Join with purchases table to filter by purchase_id if needed
+        if (!empty($purchase_id)) {
+            $this->db->join('sma_purchases p', 'rs.reference_no = p.id', 'left');
+        }
+
+        // Fix date comparison
+        $this->db->where('rs.date >=', $start_date . ' 00:00:00');
+        $this->db->where('rs.date <=', $end_date . ' 23:59:59');
+
+        // Exclude returns with note "import from excel"
+        $this->db->where('(rs.note IS NULL OR rs.note != "import from excel")');
+        $this->db->where('rs.status', 'completed'); // Only include completed returns
+
+        // Apply filters
+        if (!empty($supplier_id)) {
+            $this->db->where('rs.supplier_id', $supplier_id);
+        }
+
+        if (!empty($pharmacy_id)) {
+            $this->db->where('rs.warehouse_id', $pharmacy_id);
+        }
+        
+        if (!empty($purchase_id)) {
+            $this->db->where('rs.reference_no', $purchase_id);
+        }
+
+        $this->db->order_by('rs.date', 'DESC');
+        $query = $this->db->get();
+
+        // Log the query for debugging
+        log_message('debug', 'Return Query: ' . $this->db->last_query());
+
+        $returns = $query->result_array();
+
+        // Merge purchases, payments, and returns
+        $result = array_merge($purchases, $payments, $returns);
+
+        // Sort by date descending
+        usort($result, function($a, $b) {
+            return strtotime($b['date']) - strtotime($a['date']);
+        });
+
+        return $result;
     }
 
     /**
@@ -7963,6 +9389,7 @@ class Reports_model extends CI_Model
         $this->db->where('pay.purchase_id IS NOT NULL');
         $this->db->where('(pay.sale_id IS NULL OR pay.sale_id = 0)');
         $this->db->where('(pay.return_id IS NULL OR pay.return_id = 0)');
+        $this->db->where('(pay.supplier_return_id IS NULL OR pay.return_id = 0)');
 
         // Fix date comparison
         $this->db->where('pay.date >=', $start_date . ' 00:00:00');
@@ -7975,11 +9402,11 @@ class Reports_model extends CI_Model
         if (!empty($supplier_id)) {
             $this->db->where('p.supplier_id', $supplier_id);
         }
-
+        
         if (!empty($pharmacy_id)) {
             $this->db->where('p.warehouse_id', $pharmacy_id);
-        } else {
-            $this->site->applyReportWarehouseScope($this->db, null, 'p.warehouse_id');
+        }else{
+            $this->db->where_in('p.warehouse_id', [32, 48]);
         }
         
         if (!empty($purchase_id)) {
@@ -8004,9 +9431,9 @@ class Reports_model extends CI_Model
             COALESCE(s.id, '') as supplier_no,
             COALESCE(s.sequence_code, '') as supplier_code,
             COALESCE(s.name, rs.supplier) as supplier_name,
-            rs.total_net_purchase as purchase,
-            rs.total_tax as vat,
-            rs.grand_total as payable,
+            0 as purchase,
+            -1*(rs.total_tax) as vat,
+            0 as payable,
             0 as payment,
             COALESCE(rs.grand_total, 0) as return_amount,
             0 as invoice_discount,
@@ -8029,7 +9456,7 @@ class Reports_model extends CI_Model
         // Exclude returns with note "import from excel"
         $this->db->where('(rs.note IS NULL OR rs.note != "import from excel")');
         $this->db->where('rs.status', 'completed'); // Only include completed returns
-
+        //echo $pharmacy_id;exit;
         // Apply filters
         if (!empty($supplier_id)) {
             $this->db->where('rs.supplier_id', $supplier_id);
@@ -8037,8 +9464,8 @@ class Reports_model extends CI_Model
 
         if (!empty($pharmacy_id)) {
             $this->db->where('rs.warehouse_id', $pharmacy_id);
-        } else {
-            $this->site->applyReportWarehouseScope($this->db, null, 'rs.warehouse_id');
+        }else{
+            $this->db->where_in('rs.warehouse_id', [32, 48]); 
         }
         
         if (!empty($purchase_id)) {
@@ -8047,7 +9474,7 @@ class Reports_model extends CI_Model
 
         $this->db->order_by('rs.date', 'DESC');
         $query = $this->db->get();
-
+        
         // Log the query for debugging
         log_message('debug', 'Return Query: ' . $this->db->last_query());
 
@@ -8062,6 +9489,319 @@ class Reports_model extends CI_Model
         });
 
         return $result;
+    }
+
+    /**
+     * Compare Purchase Per Item vs Purchase Per Invoice totals/docs for the same period.
+     * Returns summary + document-level diffs for manual checking.
+     *
+     * @param string   $start_date Y-m-d
+     * @param string   $end_date   Y-m-d
+     * @param int|null $warehouse_id
+     * @param int|null $supplier_id
+     *
+     * @return array
+     */
+    public function get_purchase_item_vs_invoice_comparison($start_date, $end_date, $warehouse_id = null, $supplier_id = null)
+    {
+        $start_date = trim((string) $start_date);
+        $end_date = trim((string) $end_date);
+        $pfx = $this->db->dbprefix;
+
+        $item_rows = $this->getPurchasePerItem($start_date, $end_date, null, $supplier_id, null, 'all', $warehouse_id);
+        $invoice_rows = $this->get_purchase_per_invoice_data($start_date, $end_date, $supplier_id ?: '', $warehouse_id ?: '', '');
+
+        $item_docs = [];
+        $item_summary = [
+            'purchase_count' => 0,
+            'return_count' => 0,
+            'purchase' => 0.0,
+            'net_purchase' => 0.0,
+            'vat' => 0.0,
+            'payable' => 0.0,
+            'purchase_only_purchase' => 0.0,
+            'purchase_only_vat' => 0.0,
+            'purchase_only_payable' => 0.0,
+            'return_only_purchase' => 0.0,
+            'return_only_vat' => 0.0,
+            'return_only_payable' => 0.0,
+        ];
+
+        foreach ($item_rows as $row) {
+            $type = (string) ($row->type ?? '');
+            $is_return = ($type === 'Return');
+            $doc_id = $is_return ? (string) ($row->return_ref ?? '') : (string) ($row->purchase_ref ?? '');
+            if ($doc_id === '' || $doc_id === '0') {
+                continue;
+            }
+            $key = ($is_return ? 'R:' : 'P:') . $doc_id;
+
+            if (!isset($item_docs[$key])) {
+                $item_docs[$key] = [
+                    'key' => $key,
+                    'type' => $is_return ? 'Return' : 'Purchase',
+                    'doc_id' => $doc_id,
+                    'linked_purchase_id' => $is_return ? (string) ($row->purchase_ref ?? '') : (string) ($row->purchase_ref ?? ''),
+                    'date' => (string) ($row->date ?? ''),
+                    'supplier_no' => (string) ($row->supplier_no ?? ''),
+                    'supplier_name' => (string) ($row->supplier_name ?? ''),
+                    'line_count' => 0,
+                    'purchase' => 0.0,
+                    'net_purchase' => 0.0,
+                    'vat' => 0.0,
+                    'payable' => 0.0,
+                ];
+                if ($is_return) {
+                    $item_summary['return_count']++;
+                } else {
+                    $item_summary['purchase_count']++;
+                }
+            }
+
+            $purchase = (float) ($row->purchase ?? 0);
+            $net_purchase = (float) ($row->net_purchase ?? 0);
+            $vat = (float) ($row->vat ?? 0);
+            $payable = (float) ($row->payable ?? 0);
+
+            $item_docs[$key]['line_count']++;
+            $item_docs[$key]['purchase'] += $purchase;
+            $item_docs[$key]['net_purchase'] += $net_purchase;
+            $item_docs[$key]['vat'] += $vat;
+            $item_docs[$key]['payable'] += $payable;
+
+            $item_summary['purchase'] += $purchase;
+            $item_summary['net_purchase'] += $net_purchase;
+            $item_summary['vat'] += $vat;
+            $item_summary['payable'] += $payable;
+
+            if ($is_return) {
+                $item_summary['return_only_purchase'] += abs($purchase);
+                $item_summary['return_only_vat'] += abs($vat);
+                $item_summary['return_only_payable'] += abs($payable);
+            } else {
+                $item_summary['purchase_only_purchase'] += $purchase;
+                $item_summary['purchase_only_vat'] += $vat;
+                $item_summary['purchase_only_payable'] += $payable;
+            }
+        }
+
+        $invoice_docs = [];
+        $invoice_summary = [
+            'purchase_count' => 0,
+            'return_count' => 0,
+            'payment_count' => 0,
+            'purchase' => 0.0,
+            'vat' => 0.0,
+            'payable' => 0.0,
+            'payment' => 0.0,
+            'return_amount' => 0.0,
+            'purchase_only_purchase' => 0.0,
+            'purchase_only_vat' => 0.0,
+            'purchase_only_payable' => 0.0,
+            'return_only_purchase' => 0.0,
+            'return_only_vat' => 0.0,
+            'return_only_payable' => 0.0,
+            'purchase_statuses' => [],
+        ];
+
+        foreach ($invoice_rows as $row) {
+            $type = (string) ($row['type'] ?? 'Purchase');
+            if ($type === 'Payment') {
+                $invoice_summary['payment_count']++;
+                $invoice_summary['payment'] += (float) ($row['payment'] ?? 0);
+                continue;
+            }
+
+            $is_return = ($type === 'Return');
+            $doc_id = $is_return ? (string) ($row['return_inv'] ?? '') : (string) ($row['invoice'] ?? '');
+            if ($doc_id === '' || $doc_id === '-' || $doc_id === '0') {
+                continue;
+            }
+            $key = ($is_return ? 'R:' : 'P:') . $doc_id;
+
+            $purchase = (float) ($row['purchase'] ?? 0);
+            $vat = (float) ($row['vat'] ?? 0);
+            $payable = (float) ($row['payable'] ?? 0);
+            $return_amount = (float) ($row['return_amount'] ?? 0);
+
+            $invoice_docs[$key] = [
+                'key' => $key,
+                'type' => $is_return ? 'Return' : 'Purchase',
+                'doc_id' => $doc_id,
+                'linked_purchase_id' => $is_return ? (string) ($row['invoice'] ?? '') : (string) ($row['invoice'] ?? ''),
+                'date' => !empty($row['date']) ? date('d-M-y', strtotime($row['date'])) : '',
+                'supplier_no' => (string) ($row['supplier_no'] ?? ''),
+                'supplier_name' => (string) ($row['supplier_name'] ?? ''),
+                'purchase' => $purchase,
+                'vat' => $vat,
+                'payable' => $payable,
+                'return_amount' => $return_amount,
+            ];
+
+            if ($is_return) {
+                $invoice_summary['return_count']++;
+                $invoice_summary['return_amount'] += $return_amount;
+                $invoice_summary['return_only_purchase'] += abs($purchase);
+                $invoice_summary['return_only_vat'] += abs($vat);
+                $invoice_summary['return_only_payable'] += abs($payable);
+            } else {
+                $invoice_summary['purchase_count']++;
+                $invoice_summary['purchase_only_purchase'] += $purchase;
+                $invoice_summary['purchase_only_vat'] += $vat;
+                $invoice_summary['purchase_only_payable'] += $payable;
+            }
+
+            // Invoice report stores return purchase/vat/payable as positive; keep raw sum for footer parity.
+            $invoice_summary['purchase'] += $purchase;
+            $invoice_summary['vat'] += $vat;
+            $invoice_summary['payable'] += $payable;
+        }
+
+        // Enrich purchase docs with status / note (common cause of mismatches).
+        $purchase_ids = [];
+        foreach (array_merge(array_keys($item_docs), array_keys($invoice_docs)) as $key) {
+            if (strpos($key, 'P:') === 0) {
+                $purchase_ids[] = (int) substr($key, 2);
+            }
+        }
+        $purchase_ids = array_values(array_unique(array_filter($purchase_ids)));
+        $purchase_meta = [];
+        if (!empty($purchase_ids)) {
+            $this->db->select('id, status, note, return_purchase_ref, warehouse_id, DATE(date) as date_only');
+            $this->db->from($pfx . 'purchases');
+            $this->db->where_in('id', $purchase_ids);
+            foreach ($this->db->get()->result_array() as $meta) {
+                $purchase_meta[(int) $meta['id']] = $meta;
+            }
+        }
+
+        $all_keys = array_unique(array_merge(array_keys($item_docs), array_keys($invoice_docs)));
+        sort($all_keys);
+
+        $diffs = [];
+        $only_item = [];
+        $only_invoice = [];
+        $matched_ok = 0;
+
+        foreach ($all_keys as $key) {
+            $in_item = isset($item_docs[$key]);
+            $in_invoice = isset($invoice_docs[$key]);
+            $item = $in_item ? $item_docs[$key] : null;
+            $inv = $in_invoice ? $invoice_docs[$key] : null;
+            $type = $in_item ? $item['type'] : $inv['type'];
+            $doc_id = $in_item ? $item['doc_id'] : $inv['doc_id'];
+
+            // Normalize signs for comparison: item returns are negative, invoice returns are positive.
+            $item_purchase = $in_item ? abs((float) $item['purchase']) : 0.0;
+            $item_vat = $in_item ? abs((float) $item['vat']) : 0.0;
+            $item_payable = $in_item ? abs((float) $item['payable']) : 0.0;
+            $item_net = $in_item ? abs((float) $item['net_purchase']) : 0.0;
+
+            $inv_purchase = $in_invoice ? abs((float) $inv['purchase']) : 0.0;
+            $inv_vat = $in_invoice ? abs((float) $inv['vat']) : 0.0;
+            $inv_payable = $in_invoice ? abs((float) $inv['payable']) : 0.0;
+
+            $diff_purchase = round($item_purchase - $inv_purchase, 2);
+            $diff_vat = round($item_vat - $inv_vat, 2);
+            $diff_payable = round($item_payable - $inv_payable, 2);
+
+            $reasons = [];
+            if (!$in_item) {
+                $reasons[] = 'Missing in Purchase Per Item';
+            }
+            if (!$in_invoice) {
+                $reasons[] = 'Missing in Purchase Per Invoice';
+            }
+
+            $meta = null;
+            if ($type === 'Purchase' && isset($purchase_meta[(int) $doc_id])) {
+                $meta = $purchase_meta[(int) $doc_id];
+                if (!$in_item && !empty($meta['status']) && $meta['status'] !== 'received') {
+                    $reasons[] = "Purchase status is '{$meta['status']}' (item report only includes received)";
+                }
+                if (!empty($meta['note']) && strtolower(trim($meta['note'])) === 'import from excel') {
+                    $reasons[] = 'Import from excel (normally excluded by both)';
+                }
+                if (!$in_invoice && !empty($meta['return_purchase_ref'])) {
+                    $reasons[] = 'Has return_purchase_ref (invoice report excludes these purchase rows)';
+                }
+            }
+
+            $has_amount_diff = (abs($diff_purchase) > 0.009 || abs($diff_vat) > 0.009 || abs($diff_payable) > 0.009);
+            if ($in_item && $in_invoice && $has_amount_diff) {
+                $reasons[] = 'Amount mismatch (item lines total vs invoice header)';
+                // Common formula gap: item uses sum(subtotal/totalbeforevat+deal), invoice uses p.total / grand_total.
+                if (abs($diff_purchase) > 0.009 && abs(round($item_net - $inv_purchase, 2)) <= 0.009) {
+                    $reasons[] = 'Item purchase(subtotal) differs, but item net_purchase matches invoice purchase';
+                }
+            }
+
+            $row = [
+                'key' => $key,
+                'type' => $type,
+                'doc_id' => $doc_id,
+                'linked_purchase_id' => $in_item ? $item['linked_purchase_id'] : ($inv['linked_purchase_id'] ?? ''),
+                'date' => $in_item ? $item['date'] : ($inv['date'] ?? ''),
+                'supplier_no' => $in_item ? $item['supplier_no'] : ($inv['supplier_no'] ?? ''),
+                'supplier_name' => $in_item ? $item['supplier_name'] : ($inv['supplier_name'] ?? ''),
+                'in_item' => $in_item,
+                'in_invoice' => $in_invoice,
+                'item_lines' => $in_item ? (int) $item['line_count'] : 0,
+                'item_purchase' => $item_purchase,
+                'item_net_purchase' => $item_net,
+                'item_vat' => $item_vat,
+                'item_payable' => $item_payable,
+                'invoice_purchase' => $inv_purchase,
+                'invoice_vat' => $inv_vat,
+                'invoice_payable' => $inv_payable,
+                'diff_purchase' => $diff_purchase,
+                'diff_vat' => $diff_vat,
+                'diff_payable' => $diff_payable,
+                'status' => $meta['status'] ?? '',
+                'warehouse_id' => $meta['warehouse_id'] ?? '',
+                'reasons' => $reasons,
+            ];
+
+            if (!$in_item && $in_invoice) {
+                $only_invoice[] = $row;
+            } elseif ($in_item && !$in_invoice) {
+                $only_item[] = $row;
+            } elseif ($has_amount_diff) {
+                $diffs[] = $row;
+            } else {
+                $matched_ok++;
+            }
+        }
+
+        // Comparable nets: item already nets returns as negative; invoice needs purchases - returns.
+        $invoice_comparable = [
+            'purchase' => $invoice_summary['purchase_only_purchase'] - $invoice_summary['return_only_purchase'],
+            'vat' => $invoice_summary['purchase_only_vat'] - $invoice_summary['return_only_vat'],
+            'payable' => $invoice_summary['purchase_only_payable'] - $invoice_summary['return_only_payable'],
+        ];
+
+        return [
+            'item_summary' => $item_summary,
+            'invoice_summary' => $invoice_summary,
+            'invoice_comparable' => $invoice_comparable,
+            'summary_diff' => [
+                'purchase' => round($item_summary['purchase'] - $invoice_comparable['purchase'], 2),
+                'vat' => round($item_summary['vat'] - $invoice_comparable['vat'], 2),
+                'payable' => round($item_summary['payable'] - $invoice_comparable['payable'], 2),
+                'raw_invoice_purchase_footer' => round($item_summary['purchase'] - $invoice_summary['purchase'], 2),
+                'raw_invoice_payable_footer' => round($item_summary['payable'] - $invoice_summary['payable'], 2),
+            ],
+            'matched_ok' => $matched_ok,
+            'amount_mismatches' => $diffs,
+            'only_in_item' => $only_item,
+            'only_in_invoice' => $only_invoice,
+            'notes' => [
+                'Purchase Per Item includes only purchases with status=received; Purchase Per Invoice does not filter by status.',
+                'Purchase Per Invoice includes Payment rows (ignored in amount comparison).',
+                'Item report returns are negative; Invoice report return purchase/vat/payable are positive (comparison uses absolute values per document).',
+                'Comparable totals use Item net (purchases - returns) vs Invoice (purchase rows - return rows).',
+            ],
+        ];
     }
 
     public function get_shelving_report($filters = [])

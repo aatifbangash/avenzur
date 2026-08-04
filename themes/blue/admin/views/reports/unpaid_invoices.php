@@ -285,7 +285,7 @@
                         </td>
                         <td><?= htmlspecialchars($inv->party_name) ?></td>
                         <td><?= htmlspecialchars($inv->sequence_code ?? '') ?></td>
-                        <td><?= htmlspecialchars($inv->ledger_name ?? '') ?></td>
+                        <td><?= htmlspecialchars($inv->category ?? '') ?></td>
                         <?php if ($type === 'ar'): ?><td><?= htmlspecialchars($inv->area ?? '') ?></td><?php endif; ?>
                         <?php if ($type === 'ar'): ?><td class="text-center"><?= ($inv->payment_term_days > 0) ? (int)$inv->payment_term_days . 'd' : '-' ?></td><?php endif; ?>
                         <td class="text-right"><?= number_format($inv->invoice_total ,2) ?></td>

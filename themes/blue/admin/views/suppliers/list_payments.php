@@ -7,6 +7,8 @@ $filter_to          = '';
 $filter_supplier_id = !empty($filters['supplier_id']) ? $filters['supplier_id'] : '';
 $filter_category    = !empty($filters['category'])    ? $filters['category']    : '';
 $filter_warehouse_id = $filters['warehouse_id'] ?? '';
+$filter_invoice_type = $filters['invoice_type'] ?? 'trade';
+$can_filter_invoice_type = !empty($can_filter_invoice_type);
 if (!empty($filters['from_date'])) {
     $d = DateTime::createFromFormat('Y-m-d', $filters['from_date']);
     $filter_from = $d ? $d->format('d/m/Y') : $filters['from_date'];
@@ -75,6 +77,19 @@ if (!empty($filters['to_date'])) {
                     </div>
                 </div>
 
+                <?php if ($can_filter_invoice_type): ?>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label for="invoice_type" style="font-size:12px; font-weight:600;"><?= lang('Invoice Type') ?></label>
+                        <select name="invoice_type" id="invoice_type" class="form-control input-sm" style="width:100%;">
+                            <option value="trade" <?= $filter_invoice_type === 'trade' ? 'selected' : '' ?>><?= lang('Trade Invoices') ?></option>
+                            <option value="service" <?= $filter_invoice_type === 'service' ? 'selected' : '' ?>><?= lang('Service Invoices') ?></option>
+                            <option value="all" <?= $filter_invoice_type === 'all' ? 'selected' : '' ?>><?= lang('All Invoices') ?></option>
+                        </select>
+                    </div>
+                </div>
+                <?php endif; ?>
+
                 <?php $this->load->view($this->theme . 'reports/partials/warehouse_filter_field', ['wh_col' => 'col-md-2', 'wh_val' => $filter_warehouse_id]); ?>
 
                 <div class="col-md-2">
@@ -83,10 +98,10 @@ if (!empty($filters['to_date'])) {
                         <select name="status" id="status" class="form-control input-sm" style="width:100%;">
                             <option value=""><?= lang('All Payments') ?></option>
                             <option value="open" <?= ($filters['status'] ?? '') === 'open' ? 'selected' : '' ?>>
-                                <i class="fa fa-unlock-alt"></i> <?= lang('Open') ?>
+                                <?= lang('Open') ?>
                             </option>
                             <option value="closed" <?= ($filters['status'] ?? '') === 'closed' ? 'selected' : '' ?>>
-                                <i class="fa fa-lock"></i> <?= lang('Closed') ?>
+                                <?= lang('Closed') ?>
                             </option>
                         </select>
                     </div>
@@ -108,14 +123,19 @@ if (!empty($filters['to_date'])) {
         <div class="row" style="margin-bottom:10px;">
             <div class="col-md-12 text-right">
                 <?php
-                $export_params = http_build_query([
+                $export_params = [
                     'supplier_id'  => $filter_supplier_id,
                     'category'     => $filter_category,
                     'warehouse_id' => $filter_warehouse_id,
                     'from_date'    => $filter_from,
                     'to_date'      => $filter_to,
+                    'status'       => $filters['status'] ?? '',
                     'export_excel' => 1,
-                ]);
+                ];
+                if ($can_filter_invoice_type) {
+                    $export_params['invoice_type'] = $filter_invoice_type;
+                }
+                $export_params = http_build_query($export_params);
                 ?>
                 <a href="<?= admin_url('suppliers/list_payments') ?>?<?= $export_params ?>"
                    class="btn btn-success btn-sm">

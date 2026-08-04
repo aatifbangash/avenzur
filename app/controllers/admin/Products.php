@@ -4260,8 +4260,11 @@ class Products extends MY_Controller
                 ->get('sma_accounts_entries')
                 ->row();
 
-            $pending_invoices = $this->purchases_model->getSupplierInvoicesWithPayments($supplier_id);
-            if (empty($pending_invoices)) {
+            $pending_invoices = $this->purchases_model->getSupplierInvoicesWithPaymentsNew($supplier_id, $return->reference_no);
+            $pending_service_invoices = $this->purchases_model->getSupplierServiceInvoicesWithPaymentsNew($supplier_id, $return->reference_no);
+            $pending_credit_memos = $this->purchases_model->getSupplierCreditMemosForPaymentNew($supplier_id, $return->reference_no);
+
+            if (empty($pending_invoices) && empty($pending_service_invoices) && empty($pending_credit_memos)) {
                 echo "Skipped Return ID: {$return_id} — supplier {$supplier_id} has no outstanding purchase invoices.<br>";
                 continue;
             }
@@ -4273,6 +4276,20 @@ class Products extends MY_Controller
                     : ((float) $invoice->grand_total + (float) ($invoice->grand_deal_discount ?? 0) - (float) $invoice->total_paid);
                 if ($invoice_outstanding > 0) {
                     $total_outstanding += $invoice_outstanding;
+                }
+            }
+
+            foreach ($pending_service_invoices as $service_invoice) {
+                $service_invoice_outstanding = (float) $service_invoice->available_balance ?? 0;
+                if ($service_invoice_outstanding > 0) {
+                    $total_outstanding += $service_invoice_outstanding;
+                }
+            }
+
+            foreach ($pending_credit_memos as $credit_memo) {
+                $credit_memo_outstanding = (float) $credit_memo->available_balance ?? 0;
+                if ($credit_memo_outstanding > 0) {
+                    $total_outstanding += $credit_memo_outstanding;
                 }
             }
 
@@ -4338,6 +4355,80 @@ class Products extends MY_Controller
                 $total_applied += $apply_amount;
             }
 
+            foreach ($pending_service_invoices as $service_invoice) {
+                if ($remaining_amount <= 0) {
+                    break;
+                }
+
+                $outstanding = (float) $service_invoice->available_balance ?? 0;
+
+                if ($outstanding <= 0) {
+                    continue;
+                }
+
+                $apply_amount = min($remaining_amount, $outstanding);
+
+                $payment = [
+                    'date'                 => $return->date,
+                    'memo_id'          => (int) $service_invoice->id,
+                    'supplier_return_id'   => $return_id,
+                    'reference_no'         => '',
+                    'amount'               => $apply_amount,
+                    'note'                 => 'Auto-settled to supplier return #' . $return_id,
+                    'created_by'           => $this->session->userdata('user_id'),
+                    'paid_by'              => 'return',
+                    'type'                 => 'received',
+                    'supplier_id'          => $supplier_id,
+                    'payment_id'           => $payment_reference_id,
+                ];
+
+                $this->purchases_model->addPayment($payment);
+                $this->purchases_model->update_service_invoice_paid_amount_new(
+                    (int) $service_invoice->id,
+                    ((float) $service_invoice->used_amount + $apply_amount)
+                );
+
+                $remaining_amount -= $apply_amount;
+                $total_applied += $apply_amount;
+            }
+
+            foreach ($pending_credit_memos as $credit_memo) {
+                if ($remaining_amount <= 0) {
+                    break;
+                }
+
+                $outstanding = (float) $credit_memo->available_balance ?? 0;
+
+                if ($outstanding <= 0) {
+                    continue;
+                }
+
+                $apply_amount = min($remaining_amount, $outstanding);
+
+                $payment = [
+                    'date'                 => $return->date,
+                    'memo_id'          => (int) $credit_memo->id,
+                    'supplier_return_id'   => $return_id,
+                    'reference_no'         => '',
+                    'amount'               => $apply_amount,
+                    'note'                 => 'Auto-settled to supplier return #' . $return_id,
+                    'created_by'           => $this->session->userdata('user_id'),
+                    'paid_by'              => 'return',
+                    'type'                 => 'received',
+                    'supplier_id'          => $supplier_id,
+                    'payment_id'           => $payment_reference_id,
+                ];
+
+                $this->purchases_model->addPayment($payment);
+                $this->purchases_model->update_credit_memo_paid_amount_new(
+                    (int) $credit_memo->id,
+                    ((float) $credit_memo->used_amount + $apply_amount)
+                );
+
+                $remaining_amount -= $apply_amount;
+                $total_applied += $apply_amount;
+            }
+
             if ($total_applied > 0) {
                 if ($journal_details) {
                     $this->purchases_model->update_payment_reference($payment_reference_id, $journal_details->id);
@@ -4368,8 +4459,12 @@ class Products extends MY_Controller
                 continue;
             }
 
-            $pending_invoices = $this->purchases_model->getSupplierInvoicesWithPayments($supplier_id);
-            if (empty($pending_invoices)) {
+            $pending_invoices = $this->purchases_model->getSupplierInvoicesWithPaymentsNew($supplier_id, $debit_memo->reference_no);
+            $pending_service_invoices = $this->purchases_model->getSupplierServiceInvoicesWithPaymentsNew($supplier_id, $debit_memo->reference_no);
+            $pending_credit_memos = $this->purchases_model->getSupplierCreditMemosForPaymentNew($supplier_id, $debit_memo->reference_no);
+
+            if (empty($pending_invoices) && empty($pending_service_invoices) && empty($pending_credit_memos)) {
+                echo "Skipped Debit Memo ID: {$memo_id} — supplier {$supplier_id} has no outstanding purchase invoices.<br>";
                 continue;
             }
             
@@ -4387,10 +4482,25 @@ class Products extends MY_Controller
                     $total_outstanding += $invoice_outstanding;
                 }
             }
+
+            foreach ($pending_service_invoices as $service_invoice) {
+                $service_invoice_outstanding = (float) $service_invoice->available_balance ?? 0;
+                if ($service_invoice_outstanding > 0) {
+                    $total_outstanding += $service_invoice_outstanding;
+                }
+            }
+
+            foreach ($pending_credit_memos as $credit_memo) {
+                $credit_memo_outstanding = (float) $credit_memo->available_balance ?? 0;
+                if ($credit_memo_outstanding > 0) {
+                    $total_outstanding += $credit_memo_outstanding;
+                }
+            }
             
             $allocatable_amount = min($remaining_amount, $total_outstanding);
             if ($allocatable_amount <= 0) {
-                return false;
+                echo "Skipped Memo ID: {$memo_id} — nothing to allocate (memo remaining: {$remaining_amount}, invoice outstanding: {$total_outstanding}).<br>";
+                continue;
             }
 
             $remaining_amount = $allocatable_amount;
@@ -4402,6 +4512,11 @@ class Products extends MY_Controller
                 $supplier_id,
                 null
             );
+
+            if (!$payment_reference_id) {
+                echo "Failed to create payment reference for Debit Memo ID: {$memo_id}.<br>";
+                continue;
+            }
 
             $total_applied = 0;
             foreach ($pending_invoices as $invoice) {
@@ -4442,6 +4557,72 @@ class Products extends MY_Controller
                 $total_applied += $apply_amount;
             }
 
+            foreach ($pending_service_invoices as $service_invoice) {
+                if ($remaining_amount <= 0) {
+                    break;
+                }
+
+                $outstanding = (float) $service_invoice->available_balance ?? 0;
+
+                if ($outstanding <= 0) {
+                    continue;
+                }
+
+                $apply_amount = min($remaining_amount, $outstanding);
+                
+                $payment = [
+                    'date'                 => $debit_memo->date,
+                    'memo_id'          => (int) $service_invoice->id,
+                    'reference_no'         => '',
+                    'amount'               => $apply_amount,
+                    'note'                 => 'Auto-settled from debit memo #' . $memo_id,
+                    'created_by'           => $this->session->userdata('user_id'),
+                    'paid_by'              => 'debit_memo',
+                    'type'                 => 'received',
+                    'supplier_id'          => $supplier_id,
+                    'payment_id'   => $payment_reference_id,
+                ];
+
+                $this->purchases_model->addPayment($payment);
+                $this->purchases_model->update_service_invoice_paid_amount_new((int) $service_invoice->id, ((float) $service_invoice->used_amount + $apply_amount));
+
+                $remaining_amount -= $apply_amount;
+                $total_applied += $apply_amount;
+            }
+
+            foreach ($pending_credit_memos as $credit_memo) {
+                if ($remaining_amount <= 0) {
+                    break;
+                }
+
+                $outstanding = (float) $credit_memo->available_balance ?? 0;
+
+                if ($outstanding <= 0) {
+                    continue;
+                }
+
+                $apply_amount = min($remaining_amount, $outstanding);
+                
+                $payment = [
+                    'date'                 => $debit_memo->date,
+                    'memo_id'          => (int) $credit_memo->id,
+                    'reference_no'         => '',
+                    'amount'               => $apply_amount,
+                    'note'                 => 'Auto-settled from debit memo #' . $memo_id,
+                    'created_by'           => $this->session->userdata('user_id'),
+                    'paid_by'              => 'debit_memo',
+                    'type'                 => 'received',
+                    'supplier_id'          => $supplier_id,
+                    'payment_id'   => $payment_reference_id,
+                ];
+
+                $this->purchases_model->addPayment($payment);
+                $this->purchases_model->update_credit_memo_paid_amount_new((int) $credit_memo->id, ((float) $credit_memo->used_amount + $apply_amount));
+
+                $remaining_amount -= $apply_amount;
+                $total_applied += $apply_amount;
+            }
+
             if ($total_applied > 0) {
                 $memo = $this->purchases_model->getDebitMemoByID($memo_id);
                 $existing_used_amount = $memo && isset($memo->used_amount) ? (float) $memo->used_amount : 0;
@@ -4449,7 +4630,9 @@ class Products extends MY_Controller
             }
 
             if ($payment_reference_id) {
-                $this->purchases_model->update_payment_reference($payment_reference_id, $Journal_details->id);
+                if ($Journal_details) {
+                    $this->purchases_model->update_payment_reference($payment_reference_id, $Journal_details->id);
+                } 
             }
 
             echo "Settled Debit Memo ID: {$memo_id} For Supplier ID: {$supplier_id} - Total Applied: {$total_applied} against outstanding invoices.<br>";

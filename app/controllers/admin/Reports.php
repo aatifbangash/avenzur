@@ -5745,7 +5745,7 @@ class Reports extends MY_Controller
         //$this->sma->checkPermissions('customers');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $viewtype = $this->input->post('viewtype') ? $this->input->post('viewtype') : null;
-        $duration = $this->input->post('duration') ? $this->input->post('duration') : null;
+        $duration = $this->input->post('duration') ? (int) $this->input->post('duration') : 120;
         $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
         $salesman = $this->input->post('salesman');
         if ($salesman === '' || $salesman === null) {
@@ -5767,14 +5767,11 @@ class Reports extends MY_Controller
             $start_date = $this->sma->fld($from_date);
         }
 
-        if ($duration) {
-            $supplier_aging_array = $this->reports_model->getCustomerAgingNew($duration, $start_date, $customer_id_array, $salesman, $warehouse_id);
-        } else {
-            $supplier_aging_array = $this->reports_model->getCustomerAgingNew($duration = 120, $start_date, $customer_id_array, $salesman, $warehouse_id);
-        }
+        $supplier_aging_array = $this->reports_model->getCustomerAgingNew($duration, $start_date, $customer_id_array, $salesman, $warehouse_id);
 
         $this->data['customer_id_array'] = $customer_id_array;
         $this->data['start_date'] = $this->input->post('from_date');
+        $this->data['duration'] = $duration;
         $this->data['salesman'] = $salesman;
         $this->data['selected_salesman'] = $salesman; // Add this for clarity
 
@@ -6163,6 +6160,186 @@ class Reports extends MY_Controller
         $this->page_construct('reports/supplier_tb_gl_tb_comparison_report', $meta, $this->data);
     }
 
+    /**
+     * Compare Customer Trial Balance movement vs GL lines on all customer receivable ledgers.
+     * URL: admin/reports/customer_tb_gl_tb_comparison_report
+     */
+    public function customer_tb_gl_tb_comparison_report()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
+        $this->data['comparison_result'] = null;
+        $this->data['ledger_ids'] = $this->reports_model->get_customer_receivable_ledger_ids();
+        $this->data['warehouse_id'] = $this->site->resolveReportWarehouseFilter('warehouse_id');
+
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+
+            $comparison = $this->reports_model->get_customer_tb_gl_tb_comparison(
+                $start_date,
+                $end_date,
+                $warehouse_id
+            );
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['comparison_result'] = $comparison;
+            $this->data['ledger_ids'] = $comparison['ledger_ids'];
+            $this->data['warehouse_id'] = $warehouse_id;
+        }
+
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => '#', 'page' => 'Customer TB vs GL TB Comparison'],
+        ];
+        $meta = ['page_title' => 'Customer TB vs GL TB Comparison', 'bc' => $bc];
+        $this->page_construct('reports/customer_tb_gl_tb_comparison_report', $meta, $this->data);
+    }
+
+    /**
+     * Compare Supplier Trial Balance (EB Credit) vs Unpaid AP outstanding.
+     * URL: admin/reports/supplier_tb_vs_unpaid_ap_comparison
+     * Defaults to all local warehouses (not Settings/Al Rawabi default) for a fair match.
+     */
+    public function supplier_tb_vs_unpaid_ap_comparison()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
+        $this->data['comparison_result'] = null;
+
+        // Prefer all local warehouses for this report unless user explicitly picks one.
+        if (array_key_exists('warehouse_id', $_POST) || array_key_exists('warehouse_id', $_GET)) {
+            $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+        } else {
+            $warehouse_id = null;
+        }
+        $this->data['warehouse_id'] = $warehouse_id;
+
+        $supplier_trade_type = $this->input->post('supplier_trade_type') ?: 'trade';
+        if (!in_array($supplier_trade_type, ['trade', 'non_trade', 'all'], true)) {
+            $supplier_trade_type = 'trade';
+        }
+        $this->data['supplier_trade_type'] = $supplier_trade_type;
+
+        $all_suppliers = $this->site->getAllCompanies('supplier') ?: [];
+        $this->data['suppliers'] = $this->filter_suppliers_by_trade_type($all_suppliers, $supplier_trade_type);
+        $this->data['selected_suppliers'] = $this->input->post('supplier_ids') ?: [];
+
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            if (array_key_exists('warehouse_id', $_POST) || array_key_exists('warehouse_id', $_GET)) {
+                $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+            } else {
+                $warehouse_id = null;
+            }
+            $supplier_ids = $this->input->post('supplier_ids') ?: [];
+
+            $comparison = $this->reports_model->get_supplier_tb_vs_unpaid_ap_comparison(
+                $start_date,
+                $end_date,
+                $warehouse_id,
+                $supplier_trade_type,
+                $supplier_ids
+            );
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['warehouse_id'] = $warehouse_id;
+            $this->data['comparison_result'] = $comparison;
+            $this->data['selected_suppliers'] = $supplier_ids;
+        }
+
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => '#', 'page' => 'Supplier TB vs Unpaid AP Comparison'],
+        ];
+        $meta = ['page_title' => 'Supplier TB vs Unpaid AP Comparison', 'bc' => $bc];
+        $this->page_construct('reports/supplier_tb_vs_unpaid_ap_comparison', $meta, $this->data);
+    }
+
+    /**
+     * Compare Customer Trial Balance (EB Debit) vs Unpaid AR outstanding.
+     * URL: admin/reports/customer_tb_vs_unpaid_ar_comparison
+     * Defaults to all local warehouses for a fair match.
+     */
+    public function customer_tb_vs_unpaid_ar_comparison()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
+        $this->data['comparison_result'] = null;
+
+        // Prefer all local warehouses for this report unless user explicitly picks one.
+        if (array_key_exists('warehouse_id', $_POST) || array_key_exists('warehouse_id', $_GET)) {
+            $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+        } else {
+            $warehouse_id = null;
+        }
+        $this->data['warehouse_id'] = $warehouse_id;
+
+        $customer_rent_type = $this->input->post('customer_rent_type') ?: 'non_rental';
+        if (!in_array($customer_rent_type, ['non_rental', 'rental', 'all'], true)) {
+            $customer_rent_type = 'non_rental';
+        }
+        $this->data['customer_rent_type'] = $customer_rent_type;
+
+        $all_customers = $this->site->getAllCompanies('customer') ?: [];
+        $this->data['customers'] = $this->filter_customers_by_rent_type($all_customers, $customer_rent_type);
+        $this->data['selected_customers'] = $this->input->post('customer_ids') ?: [];
+
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+            if (array_key_exists('warehouse_id', $_POST) || array_key_exists('warehouse_id', $_GET)) {
+                $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+            } else {
+                $warehouse_id = null;
+            }
+            $customer_ids = $this->input->post('customer_ids') ?: [];
+
+            $comparison = $this->reports_model->get_customer_tb_vs_unpaid_ar_comparison(
+                $start_date,
+                $end_date,
+                $warehouse_id,
+                $customer_rent_type,
+                $customer_ids
+            );
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['warehouse_id'] = $warehouse_id;
+            $this->data['comparison_result'] = $comparison;
+            $this->data['selected_customers'] = $customer_ids;
+        }
+
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => '#', 'page' => 'Customer TB vs Unpaid AR Comparison'],
+        ];
+        $meta = ['page_title' => 'Customer TB vs Unpaid AR Comparison', 'bc' => $bc];
+        $this->page_construct('reports/customer_tb_vs_unpaid_ar_comparison', $meta, $this->data);
+    }
+
     public function financial_position()
     {
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
@@ -6307,25 +6484,37 @@ class Reports extends MY_Controller
             $trial_balance_array = $this->reports_model->get_customer_trial_balance($start_date, $end_date, $warehouse_id, $customer_rent_type);
             $response_arr = array();
 
+            // Seed from period rows (includes all customers, even with zero movement).
             foreach ($trial_balance_array['trs'] as $trans) {
-                $response_arr[$trans->id]["name"] = $trans->name;
-                $response_arr[$trans->id]["sequence_code"] = $trans->sequence_code;
-                $response_arr[$trans->id]["category"] = $trans->category;
-                $response_arr[$trans->id]["payment_term"] = $trans->payment_term;
-                $response_arr[$trans->id]["credit_limit"] = $trans->credit_limit;
-                $response_arr[$trans->id]["trsDebit"] = $trans->total_debit;
-                $response_arr[$trans->id]["trsCredit"] = $trans->total_credit;
+                $response_arr[$trans->id] = [
+                    'name' => $trans->name,
+                    'sequence_code' => $trans->sequence_code,
+                    'category' => $trans->category,
+                    'payment_term' => $trans->payment_term,
+                    'credit_limit' => $trans->credit_limit,
+                    'trsDebit' => (float) $trans->total_debit,
+                    'trsCredit' => (float) $trans->total_credit,
+                    'obDebit' => 0,
+                    'obCredit' => 0,
+                ];
             }
 
-
             foreach ($trial_balance_array['ob'] as $trans) {
-                $response_arr[$trans->id]["name"] = $trans->name;
-                $response_arr[$trans->id]["sequence_code"] = $trans->sequence_code;
-                $response_arr[$trans->id]["category"] = $trans->category;
-                $response_arr[$trans->id]["payment_term"] = $trans->payment_term;
-                $response_arr[$trans->id]["credit_limit"] = $trans->credit_limit;
-                $response_arr[$trans->id]["obDebit"] = $trans->total_debit;
-                $response_arr[$trans->id]["obCredit"] = $trans->total_credit;
+                if (!isset($response_arr[$trans->id])) {
+                    $response_arr[$trans->id] = [
+                        'name' => $trans->name,
+                        'sequence_code' => $trans->sequence_code,
+                        'category' => $trans->category,
+                        'payment_term' => $trans->payment_term,
+                        'credit_limit' => $trans->credit_limit,
+                        'trsDebit' => 0,
+                        'trsCredit' => 0,
+                        'obDebit' => 0,
+                        'obCredit' => 0,
+                    ];
+                }
+                $response_arr[$trans->id]['obDebit'] = (float) $trans->total_debit;
+                $response_arr[$trans->id]['obCredit'] = (float) $trans->total_credit;
             }
 
             $this->data['start_date'] = $from_date;
@@ -7418,6 +7607,16 @@ class Reports extends MY_Controller
         $supplier = $this->input->get('supplier') ? $this->input->get('supplier') : null;
         $warehouse = $this->site->resolveReportWarehouseFilter('pharmacy');
 
+        $can_filter_invoice_type = !empty($this->Owner) || !empty($this->Admin) || !empty($this->FinanceManager)
+            || $this->sma->in_group('financemanager');
+        $invoice_type = 'trade';
+        if ($can_filter_invoice_type) {
+            $invoice_type = $this->input->get('invoice_type') ?: 'trade';
+            if (!in_array($invoice_type, ['trade', 'service', 'all'], true)) {
+                $invoice_type = 'trade';
+            }
+        }
+
         $this->data['warehouses'] = $this->site->getAllWarehouses();
         $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
         $this->data['warehouse_id'] = $warehouse;
@@ -7425,13 +7624,21 @@ class Reports extends MY_Controller
         $this->data['end_date'] = $to_date;
         $this->data['warehouse'] = $warehouse;
         $this->data['supplier'] = $supplier;
+        $this->data['invoice_type'] = $invoice_type;
+        $this->data['can_filter_invoice_type'] = $can_filter_invoice_type;
         
         // If any filter submitted, fetch data
-        if ($from_date || $to_date || $supplier || array_key_exists('pharmacy', $_GET)) {
+        if ($from_date || $to_date || $supplier || array_key_exists('pharmacy', $_GET) || array_key_exists('invoice_type', $_GET)) {
             $start_date = $from_date ? $this->sma->fld($from_date) : null;
             $end_date = $to_date ? $this->sma->fld($to_date) : null;
             
-            $this->data['payments_data'] = $this->reports_model->getPaymentsByLocation($start_date, $end_date, $warehouse, $supplier);
+            $this->data['payments_data'] = $this->reports_model->getPaymentsByLocation(
+                $start_date,
+                $end_date,
+                $warehouse,
+                $supplier,
+                $invoice_type
+            );
 
             $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => 'Supplier Payment by Invoice']];
             $meta = ['page_title' => 'Supplier Payment by Invoice', 'bc' => $bc];
@@ -8026,7 +8233,7 @@ class Reports extends MY_Controller
             $this->db->select("DATE_FORMAT({$this->db->dbprefix('sales')}.date, '%d-%b-%y') as date,
                 {$this->db->dbprefix('sales')}.id as sale_id,
                 {$this->db->dbprefix('sales')}.reference_no as invoice,
-                {$this->db->dbprefix('companies')}.city as area,
+                {$this->db->dbprefix('companies')}.state as area,
                 COALESCE({$this->db->dbprefix('companies')}.sales_agent, '') as sales_man,
                 {$this->db->dbprefix('companies')}.company as customer_no,
                 {$this->db->dbprefix('companies')}.name as customer_name,
@@ -8826,6 +9033,51 @@ class Reports extends MY_Controller
         ];
         $meta = ['page_title' => 'Purchase Per Invoice', 'bc' => $bc];
         $this->page_construct('reports/purchase_per_invoice', $meta, $this->data);
+    }
+
+    /**
+     * Compare Purchase Per Item vs Purchase Per Invoice and flag document-level differences.
+     * URL: admin/reports/purchase_item_vs_invoice_comparison
+     */
+    public function purchase_item_vs_invoice_comparison()
+    {
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['suppliers'] = $this->site->getAllCompanies('supplier');
+        $this->data['start_date'] = $this->sma->hrsd(date('Y-01-01'));
+        $this->data['end_date'] = $this->sma->hrsd(date('Y-m-d'));
+        $this->data['supplier_id'] = null;
+        $this->data['warehouse_id'] = $this->site->resolveReportWarehouseFilter('warehouse_id');
+        $this->data['comparison'] = null;
+
+        $from_date = $this->input->post('from_date') ?: null;
+        $to_date = $this->input->post('to_date') ?: null;
+
+        if ($from_date) {
+            $start_date = trim($this->sma->fld($from_date));
+            $end_date = trim($this->sma->fld($to_date));
+            $supplier_id = $this->input->post('supplier_id') ?: null;
+            $warehouse_id = $this->site->resolveReportWarehouseFilter('warehouse_id');
+
+            $this->data['comparison'] = $this->reports_model->get_purchase_item_vs_invoice_comparison(
+                $start_date,
+                $end_date,
+                $warehouse_id,
+                $supplier_id
+            );
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['supplier_id'] = $supplier_id;
+            $this->data['warehouse_id'] = $warehouse_id;
+        }
+
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => '#', 'page' => 'Purchase Item vs Invoice Comparison'],
+        ];
+        $meta = ['page_title' => 'Purchase Item vs Invoice Comparison', 'bc' => $bc];
+        $this->page_construct('reports/purchase_item_vs_invoice_comparison', $meta, $this->data);
     }
 
     /* -----------------------------------------------------------------------
@@ -10441,6 +10693,8 @@ class Reports extends MY_Controller
         // - Sales unpaid invoices
         // - Customer service invoices from memo
         $sql_at = $at_date ? $this->sma->fld($at_date) . ' 23:59:59' : null;
+        $payments_table = $this->db->dbprefix('payments');
+        $returns_table = $this->db->dbprefix('returns');
         $salesman_name = null;
         if ($salesman_id) {
             $sm_row = $this->db->select('name')->from('sales_man')->where('id', (int)$salesman_id)->get()->row();
@@ -10449,11 +10703,16 @@ class Reports extends MY_Controller
             }
         }
 
-        $paid_subquery = "(SELECT COALESCE(SUM(sp.amount), 0)
-                        FROM {$this->db->dbprefix('payments')} sp
-                        WHERE sp.sale_id = s.id" .
-                        ($sql_at ? " AND sp.date <= '{$sql_at}'" : "") .
-                        ")";
+        $sales_paid_join = "(SELECT sp.sale_id, COALESCE(SUM(sp.amount), 0) AS paid
+            FROM {$payments_table} sp
+            WHERE sp.sale_id IS NOT NULL" .
+            ($sql_at ? " AND sp.date <= '{$sql_at}'" : "") .
+            " GROUP BY sp.sale_id) spaid";
+
+        $sales_returns_join = "(SELECT r.sale_id, COALESCE(SUM(r.grand_total), 0) AS return_amount
+            FROM {$returns_table} r
+            WHERE r.sale_id IS NOT NULL
+            GROUP BY r.sale_id) sret";
 
         $this->db->select("
             s.id            AS invoice_id,
@@ -10463,16 +10722,16 @@ class Reports extends MY_Controller
             c.company       AS party_code,
             c.sequence_code AS sequence_code,
             al.name         AS ledger_name,
-            c.city          AS area,
+            c.city          AS city,
+            c.state         AS area,
             c.sales_agent   AS sales_man,
+            c.category      AS category,
             w.name          AS warehouse_name,
             s.grand_total   AS invoice_total,
             s.total_discount AS discount,
-            COALESCE((SELECT SUM(grand_total)
-                    FROM {$this->db->dbprefix('returns')}
-                    WHERE sale_id = s.id), 0) AS return_amount,
-            {$paid_subquery} AS paid,
-            ROUND((s.grand_total - {$paid_subquery}), 2) AS outstanding,
+            COALESCE(sret.return_amount, 0) AS return_amount,
+            COALESCE(spaid.paid, 0) AS paid,
+            ROUND((s.grand_total - COALESCE(spaid.paid, 0)), 2) AS outstanding,
             COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) AS payment_term_days,
             DATE_ADD(DATE(s.date), INTERVAL COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY) AS due_date_calc,
             DATEDIFF(CURDATE(), DATE_ADD(DATE(s.date), INTERVAL COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY)) AS days_overdue
@@ -10481,9 +10740,11 @@ class Reports extends MY_Controller
         ->join('companies c', 'c.id = s.customer_id', 'left')
         ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
         ->join('warehouses w', 'w.id = s.warehouse_id', 'left')
+        ->join($sales_returns_join, 'sret.sale_id = s.id', 'left', false)
+        ->join($sales_paid_join, 'spaid.sale_id = s.id', 'left', false)
         ->where('s.sale_invoice', 1)
         ->where('s.grand_total >', 0)
-        ->having('outstanding >', 0)
+        ->where('ROUND((s.grand_total - COALESCE(spaid.paid, 0)), 2) >', 0, false)
         ->order_by('s.date', 'asc');
 
         if ($sql_at) {
@@ -10511,11 +10772,11 @@ class Reports extends MY_Controller
         }
 
         if ($warehouse_id) {
-        $memo_paid_subquery = "(SELECT COALESCE(SUM(sp.amount), 0)
-                            FROM {$this->db->dbprefix('payments')} sp
-                            WHERE sp.memo_id = m.id" .
-                            ($sql_at ? " AND sp.date <= '{$sql_at}'" : "") .
-                            ")";
+        $memo_paid_join = "(SELECT sp.memo_id, COALESCE(SUM(sp.amount), 0) AS paid
+            FROM {$payments_table} sp
+            WHERE sp.memo_id IS NOT NULL" .
+            ($sql_at ? " AND sp.date <= '{$sql_at}'" : "") .
+            " GROUP BY sp.memo_id) mpaid";
                             
         $this->db->select("
             m.id            AS invoice_id,
@@ -10525,13 +10786,15 @@ class Reports extends MY_Controller
             c.company       AS party_code,
             c.sequence_code AS sequence_code,
             al.name         AS ledger_name,
-            c.city          AS area,
+            c.city          AS city,
+            c.state         AS area,
+            c.category      AS category,
             NULL            AS warehouse_name,
             m.payment_amount AS invoice_total,
             0               AS discount,
             0               AS return_amount,
-            {$memo_paid_subquery}                                    AS paid,
-            ROUND(m.payment_amount - ({$memo_paid_subquery}), 2)    AS outstanding,
+            COALESCE(mpaid.paid, 0)                                 AS paid,
+            ROUND(m.payment_amount - COALESCE(mpaid.paid, 0), 2)    AS outstanding,
             0               AS payment_term_days,
             NULL            AS due_date_calc,
             0               AS days_overdue,
@@ -10540,9 +10803,10 @@ class Reports extends MY_Controller
         ->from('memo m')
         ->join('companies c', 'c.id = m.customer_id', 'left')
         ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
+        ->join($memo_paid_join, 'mpaid.memo_id = m.id', 'left', false)
         ->where('m.type', 'serviceinvoice')
         ->where('m.customer_id >', 0)
-        ->having('outstanding >', 0)
+        ->where('ROUND(m.payment_amount - COALESCE(mpaid.paid, 0), 2) >', 0, false)
         ->order_by('m.date', 'asc');
 
         if ($sql_at) {
@@ -10879,12 +11143,29 @@ class Reports extends MY_Controller
 
         $from_date_in_query = array_key_exists('from_date', $_GET);
 
+        $can_filter_invoice_type = !empty($this->Owner) || !empty($this->Admin) || !empty($this->FinanceManager)
+            || $this->sma->in_group('financemanager');
+        $invoice_type = 'trade';
+        if ($can_filter_invoice_type) {
+            $invoice_type = $this->input->get('invoice_type') ?: 'trade';
+            if (!in_array($invoice_type, ['trade', 'service', 'all'], true)) {
+                $invoice_type = 'trade';
+            }
+        }
+
         $filters = [
             'supplier_id'  => $this->input->get('supplier_id') ?: '',
+            'category'     => $this->input->get('category') ?: '',
             'from_date'    => $from_date_in_query ? trim((string) $this->input->get('from_date')) : '',
             'to_date'      => $this->input->get('to_date')     ?: '',
+            'status'       => $this->input->get('status')      ?: '',
             'warehouse_id' => $this->site->resolveReportWarehouseFilter('warehouse_id'),
+            'invoice_type' => $invoice_type,
         ];
+
+        if (empty($filters['from_date'])) {
+            $filters['from_date'] = date('d/m/Y', mktime(0, 0, 0, 1, 1, (int) date('Y')));
+        }
 
         // Convert display date (d/m/Y) to Y-m-d
         foreach (['from_date', 'to_date'] as $f) {
@@ -10899,12 +11180,6 @@ class Reports extends MY_Controller
 
         $payments = $this->purchases_model->getPaymentReferences($filters);
 
-        // Exclude suppliers whose category contains خدمات
-        $payments = array_values(array_filter($payments, function ($p) {
-            return strcasecmp(trim($p->supplier_group ?? ''), 'Services') !== 0
-                && stripos($p->supplier_group ?? '', 'خدمات') === false;
-        }));
-
         $total    = count($payments);
         $offset   = ($page - 1) * $per_page;
         $paged    = array_slice($payments, $offset, $per_page);
@@ -10918,8 +11193,19 @@ class Reports extends MY_Controller
         $this->data['page']            = $page;
         $this->data['per_page']        = $per_page;
         $this->data['suppliers']       = $this->site->getAllCompanies('supplier');
+        $categories = [];
+        if (!empty($this->data['suppliers'])) {
+            foreach ($this->data['suppliers'] as $supplier) {
+                if (!empty($supplier->category) && !in_array($supplier->category, $categories, true)) {
+                    $categories[] = $supplier->category;
+                }
+            }
+            sort($categories);
+        }
+        $this->data['supplier_categories'] = $categories;
         $this->data['warehouses']      = $this->site->getAllWarehouses();
         $this->data['warehouse_id']    = $filters['warehouse_id'];
+        $this->data['can_filter_invoice_type'] = $can_filter_invoice_type;
 
         $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('reports'), 'page' => lang('reports')], ['link' => '#', 'page' => 'Supplier Payments Report']];
         $meta = ['page_title' => 'Supplier Payments Report', 'bc' => $bc];

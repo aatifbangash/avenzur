@@ -827,6 +827,23 @@ class Purchases_model extends CI_Model
             $this->db->where('payment_reference.status', $filters['status']);
         }
 
+        // Trade vs service invoice payments (default: trade = exclude serviceinvoice memo payments).
+        $invoice_type = !empty($filters['invoice_type']) ? $filters['invoice_type'] : 'trade';
+        $memo_tbl = $dbp . 'memo';
+        $service_invoice_exists_sql = "EXISTS (
+            SELECT 1 FROM {$payments_tbl} p
+            INNER JOIN {$memo_tbl} m ON m.id = p.memo_id AND m.type = 'serviceinvoice'
+            WHERE p.payment_id = {$payment_ref_tbl}.id
+              AND NULLIF(p.memo_id, '') IS NOT NULL
+              AND NULLIF(p.memo_id, 0) IS NOT NULL
+        )";
+        if ($invoice_type === 'trade') {
+            $this->db->where("NOT ({$service_invoice_exists_sql})", null, false);
+        } elseif ($invoice_type === 'service') {
+            $this->db->where($service_invoice_exists_sql, null, false);
+        }
+        // 'all' — no invoice-type restriction
+
         $warehouse_id = !empty($filters['warehouse_id']) ? (int) $filters['warehouse_id'] : null;
         $purchases_tbl = $dbp . 'purchases';
         if ($warehouse_id) {
@@ -1260,6 +1277,46 @@ class Purchases_model extends CI_Model
         return false;
     }
 
+    public function update_service_invoice_paid_amount_new($id, $amount)
+    {
+        $q = $this->db->get_where('memo', ['id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            $row = $q->row();
+            //$paid_amount = $row->used_amount;
+            $new_amount = $amount;
+
+            $data = array(
+                'used_amount' => $new_amount
+            );
+
+            $this->db->update('memo', $data, array('id' => $id));
+            return true;
+        }else{
+            return false;
+        }
+        return false;
+    }
+
+    public function update_credit_memo_paid_amount_new($id, $amount)
+    {
+        $q = $this->db->get_where('memo', ['id' => $id], 1);
+        if ($q->num_rows() > 0) {
+            $row = $q->row();
+            //$paid_amount = $row->used_amount;
+            $new_amount = $amount;
+
+            $data = array(
+                'used_amount' => $new_amount
+            );
+
+            $this->db->update('memo', $data, array('id' => $id));
+            return true;
+        }else{
+            return false;
+        }
+        return false;
+    }
+
     public function update_purchase_paid_amount_new($id, $amount)
     {
         $q = $this->db->get_where('purchases', ['id' => $id], 1);
@@ -1394,6 +1451,94 @@ class Purchases_model extends CI_Model
             $data = array();
             return $data;
         }
+    }
+
+    public function getSupplierCreditMemosForPaymentNew($supplier_id){
+        $this->db->select('m.id, m.date, m.reference_no, m.supplier_id, m.used_amount,
+                          (m.payment_amount - COALESCE(m.used_amount, 0)) as available_balance', false);
+        $this->db->from('memo m');
+        $this->db->where('m.supplier_id', $supplier_id);
+        $this->db->where('m.supplier_entry_type', 'C');
+        $this->db->where('m.type', 'memo');
+        $this->db->group_by('m.id');
+        $this->db->order_by('m.date', 'asc');
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            $invoices = $q->result();
+            return $invoices;
+        } else {
+            return [];
+        }
+    }
+
+    public function getSupplierServiceInvoicesWithPaymentsNew($supplier_id){
+        $this->db->select('m.id, m.date, m.reference_no, m.supplier_id, m.used_amount,
+                          (m.payment_amount - COALESCE(m.used_amount, 0)) as available_balance', false);
+        $this->db->from('memo m');
+        $this->db->where('m.supplier_id', $supplier_id);
+        $this->db->where('m.supplier_entry_type', 'D');
+        $this->db->where('m.type', 'serviceinvoice');
+        $this->db->group_by('m.id');
+        $this->db->order_by('m.date', 'asc');
+        $q = $this->db->get();
+        if ($q->num_rows() > 0) {
+            $invoices = $q->result();
+            return $invoices;
+        } else {
+            return [];
+        }
+    }
+
+    public function getSupplierInvoicesWithPaymentsNew($supplier_id, $reference_no = null)
+    {
+        $this->db->select('p.id, p.date, p.reference_no, p.supplier_id, p.supplier,
+                        (p.grand_total + COALESCE(p.grand_deal_discount, 0)) as grand_total,
+                        COALESCE(SUM(pm.amount), 0) as total_paid,
+                        p.payment_status, p.due_date', false);
+        $this->db->from('purchases p');
+        $this->db->join('payments pm', 'p.id = pm.purchase_id', 'left');
+        $this->db->where('p.supplier_id', $supplier_id);
+        $this->db->where('p.purchase_invoice', 1);
+        $this->db->group_by('p.id');
+        $this->db->order_by('p.date', 'asc');
+
+        $q = $this->db->get();
+
+        if ($q->num_rows() == 0) {
+            return [];
+        }
+
+        $invoices = [];
+        $priorityInvoice = null;
+
+        foreach ($q->result() as $invoice) {
+
+            $invoice->outstanding_amount = round(
+                round($invoice->grand_total, 2) - round($invoice->total_paid, 2),
+                2
+            );
+
+            $invoice->type = 'Purchases Invoice';
+
+            // Skip fully paid invoices
+            if ($invoice->outstanding_amount <= 0) {
+                continue;
+            }
+
+            // Keep matching invoice separately
+            if (!empty($reference_no) && $invoice->id == $reference_no) {
+                $priorityInvoice = $invoice;
+            } else {
+                $invoices[] = $invoice;
+            }
+        }
+
+        // Put matching invoice first
+        if ($priorityInvoice) {
+            array_unshift($invoices, $priorityInvoice);
+        }
+
+        return $invoices;
     }
 
     public function getSupplierInvoicesWithPayments($supplier_id) {

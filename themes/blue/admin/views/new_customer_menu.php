@@ -336,7 +336,9 @@
                         <?php if($Admin || $Owner || !empty($this->GP['reports-unpaid-invoices-ar'])){ ?>
                             <li><a href="<?= admin_url('reports/unpaid_invoices_ar'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Unpaid Invoices Report'); ?> (AR)</a></li>
                         <?php } ?>
+                        <?php if($Admin || $Owner){ ?>
                         <li><a href="<?= admin_url('reports/onhold_sales'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Onhold Sales'); ?></a></li>
+                        <?php } ?>
                         <li><a href="<?= admin_url('reports/collections_by_location'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Collection Per Invoice'); ?></a></li>
                         <li><a href="<?= admin_url('reports/invoice_status'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Invoice Status'); ?></a></li>
                         <li><a href="<?= admin_url('reports/sales_per_invoice'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Sales Per Invoice'); ?></a></li>
@@ -757,6 +759,22 @@
                         <li><a href="<?= admin_url('reports/general_ledger_trial_balance'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i><?= lang('Trial Balance'); ?></a></li>
                         <li><a href="<?= admin_url('reports/GLReport'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('General Ledger Report'); ?></a></li>
                         <li><a href="<?= admin_url('reports/vat_report'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Vat Report'); ?></a></li>
+                    </ul>
+                </li>
+                <?php } ?>
+
+                <?php if($Admin || $Owner || $this->sma->in_group('financemanager')) { ?>
+                <li class="newmenu-item has-sub">
+                    <a href="#" class="newmenu-link">
+                        <i class="fa fa-pencil-square-o"></i>
+                        <span><?= lang('Comparison Reports'); ?></span>
+                        <i class="fa fa-chevron-right newmenu-chevron"></i>
+                    </a>
+                    <ul class="newmenu-sub">
+                        <li><a href="<?= admin_url('reports/supplier_tb_vs_unpaid_ap_comparison'); ?>" class="newmenu-link"><i class="fa fa-exchange"></i> <?= lang('Supplier TB vs Unpaid AP'); ?></a></li>
+                        <li><a href="<?= admin_url('reports/customer_tb_vs_unpaid_ar_comparison'); ?>" class="newmenu-link"><i class="fa fa-exchange"></i> <?= lang('Customer TB vs Unpaid AR'); ?></a></li>
+                        <li><a href="<?= admin_url('reports/supplier_tb_gl_tb_comparison_report'); ?>" class="newmenu-link"><i class="fa fa-exchange"></i> <?= lang('Supplier TB vs GL TB'); ?></a></li>
+                        <li><a href="<?= admin_url('reports/customer_tb_gl_tb_comparison_report'); ?>" class="newmenu-link"><i class="fa fa-exchange"></i> <?= lang('Customer TB vs GL TB'); ?></a></li>
                     </ul>
                 </li>
                 <?php } ?>

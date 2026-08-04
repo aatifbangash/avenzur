@@ -2755,8 +2755,20 @@ class Customers extends MY_Controller
                 $this->sales_model->update_credit_memo($creditmemo_id, ($creditmemo_detail['used'] + $creditmemo_detail['paying']));
             }
 
-            // Update used_amount for service invoices in sma_memo
+            // Create payment lines + update used_amount for service invoices (same as edit_payment)
             foreach ($service_invoice_details as $memo_id => $detail) {
+                if (!empty($detail['paying']) && (float) $detail['paying'] > 0) {
+                    $this->db->insert('payments', [
+                        'date'         => $date,
+                        'reference_no' => $reference_no,
+                        'amount'       => (float) $detail['paying'],
+                        'note'         => $note,
+                        'created_by'   => $this->session->userdata('user_id'),
+                        'type'         => 'received',
+                        'payment_id'   => $payment_id,
+                        'memo_id'      => $memo_id,
+                    ]);
+                }
                 $this->sales_model->update_credit_memo($memo_id, ($detail['used'] + $detail['paying']));
             }
 
