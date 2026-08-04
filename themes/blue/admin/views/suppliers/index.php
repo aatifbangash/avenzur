@@ -67,17 +67,13 @@
                             </a>
                         </li>-->
                         <?php 
-                        if($this->Owner || $this->Admin || $this->GP['suppliers-add']){
+                        if($this->Owner || $this->Admin){
                         ?>
                         <li>
                             <a href="<?= admin_url('suppliers/import_excel'); ?>" data-toggle="modal" data-target="#myModal">
                                 <i class="fa fa-plus-circle"></i> <?= lang('import_by_excel'); ?>
                             </a>
                         </li>
-                        <?php } ?>
-                        <?php 
-                        if($this->Owner || $this->Admin || $this->GP['suppliers-index']){
-                        ?>
                         <li>
                             <a href="#" id="excel" data-action="export_excel">
                                 <i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?>

@@ -10250,6 +10250,11 @@ error_reporting(E_ALL);
 
     public function import_excel()
     {
+        if (!$this->Owner && !$this->Admin) {
+            $this->session->set_flashdata('warning', lang('access_denied'));
+            admin_redirect('products');
+        }
+
         $this->load->library('excel');
 
         $file_path = 'C:\Users\faisa\Downloads\discounts-sheet.xls';
@@ -11334,6 +11339,10 @@ error_reporting(E_ALL);
                     $meta = ['page_title' => lang('print_barcodes'), 'bc' => $bc];
                     $this->page_construct('products/print_barcodes', $meta, $this->data);
                 } elseif ($this->input->post('form_action') == 'export_excel') {
+                    if (!$this->Owner && !$this->Admin) {
+                        $this->session->set_flashdata('warning', lang('access_denied'));
+                        redirect($_SERVER['HTTP_REFERER']);
+                    }
                     $this->load->library('excel');
                     $this->excel->setActiveSheetIndex(0);
                     $this->excel->getActiveSheet()->setTitle('Products');
