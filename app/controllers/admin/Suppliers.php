@@ -2514,6 +2514,11 @@ class Suppliers extends MY_Controller
 
     public function process_import()
     {
+        if (!$this->Owner && !$this->Admin) {
+            $this->session->set_flashdata('warning', lang('access_denied'));
+            admin_redirect('suppliers');
+        }
+
         $mapping  = $this->input->post('mapping');    // mapping array: file column index => db field
         $filePath = $this->input->post('file_path');  // uploaded Excel file path
 
@@ -2606,6 +2611,11 @@ class Suppliers extends MY_Controller
 
     
     public function import_excel(){
+        if (!$this->Owner && !$this->Admin) {
+            $this->session->set_flashdata('warning', lang('access_denied'));
+            admin_redirect('suppliers');
+        }
+
         $this->load->helper('security');
         $this->form_validation->set_rules('excel_file', lang('upload_file'), 'xss_clean');
 
@@ -2881,6 +2891,10 @@ class Suppliers extends MY_Controller
                 }
 
                 if ($this->input->post('form_action') == 'export_excel') {
+                    if (!$this->Owner && !$this->Admin) {
+                        $this->session->set_flashdata('warning', lang('access_denied'));
+                        redirect($_SERVER['HTTP_REFERER']);
+                    }
                     $this->load->library('excel');
                     $this->excel->setActiveSheetIndex(0);
                     $this->excel->getActiveSheet()->setTitle(lang('customer'));
