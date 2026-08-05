@@ -2875,7 +2875,7 @@ class Customers extends MY_Controller
             return false;
         }
 
-        $pending_invoices = $this->sales_model->getCustomerInvoicesWithPayments($customer_id);
+        $pending_invoices = $this->sales_model->getCustomerInvoicesWithPaymentsNew($customer_id, $reference_no);
         if (empty($pending_invoices)) {
             return false;
         }
