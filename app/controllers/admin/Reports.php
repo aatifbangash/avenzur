@@ -8119,7 +8119,8 @@ class Reports extends MY_Controller
             // Build query
             $this->db->select("DATE_FORMAT({$this->db->dbprefix('quotes')}.date, '%d-%b-%y') as date,
                 {$this->db->dbprefix('sales')}.id as sale_id,
-                {$this->db->dbprefix('sales')}.sale_status,
+                {$this->db->dbprefix('quotes')}.status as sale_status,
+                {$this->db->dbprefix('sales')}.customer_balance as customer_balance,
                 {$this->db->dbprefix('quotes')}.id as quote_id,
                 {$this->db->dbprefix('quotes')}.reference_no as invoice,
                 {$this->db->dbprefix('quotes')}.trade_note as trade_note,

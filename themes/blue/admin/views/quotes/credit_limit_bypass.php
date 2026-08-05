@@ -42,9 +42,12 @@
             </div>
 
             <div class="form-group">
-                <button type="submit" class="btn btn-danger">
+                <button type="submit" class="btn btn-success">
                     <i class="fa fa-check"></i> <?= lang('Override &amp; Convert to Sale') ?>
                 </button>
+                <a href="<?= admin_url('quotes/reject_credit_hold/' . $quote->id) ?>" class="btn btn-danger">
+                    <i class="fa fa-ban"></i> <?= lang('Reject Quote') ?>
+                </a>
                 <a href="<?= admin_url('quotes') ?>" class="btn btn-default">
                     <i class="fa fa-times"></i> <?= lang('Cancel') ?>
                 </a>

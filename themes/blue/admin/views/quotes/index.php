@@ -19,6 +19,17 @@
         'fnRowCallback': function (nRow, aData, iDisplayIndex) {
             nRow.id = aData[0];
             nRow.className = "quote_link";
+            var status = aData[9];
+            if (status === 'rejected' || status === 'converted_to_sale') {
+                $(nRow).find('a[href*="quotes/edit/"]').closest('li').remove();
+                $(nRow).find('a[href*="sales/add_from_quote/"]').closest('li').remove();
+            }
+            if (status === 'rejected' || status === 'converted_to_sale' || status === 'approved') {
+                $(nRow).find('a.po[title*="delete"], a.po').filter(function () {
+                    return $(this).attr('title') && $(this).attr('title').toLowerCase().indexOf('delete') !== -1;
+                }).closest('li').remove();
+                $(nRow).find('a[href*="quotes/delete/"]').closest('li').remove();
+            }
             return nRow;
         },
         "aoColumns": [
@@ -31,8 +42,12 @@
             {"mRender": currencyFormat}, 
             {
                 "mRender": function(data, type, row) {
-                    if(data === 'converted_to_sale'){
+                    if (data === 'converted_to_sale') {
                         return '<span class="badge badge-success" style="background-color: #28a745 !important; color: white;">Converted</span>';
+                    } else if (data === 'rejected') {
+                        return '<span class="badge badge-danger" style="background-color: #dc3545 !important; color: white;">Rejected</span>';
+                    } else if (data === 'approved') {
+                        return '<span class="badge badge-success" style="background-color: #28a745 !important; color: white;">Approved</span>';
                     } else {
                         return '<span class="badge badge-secondary" style="color:white; background-color:orange;">'+data+'</span>';
                     }

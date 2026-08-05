@@ -563,6 +563,11 @@ class Sales extends MY_Controller
             $this->session->set_flashdata('error', 'Quote already converted to sale order');
             admin_redirect('quotes');
         }
+
+        if($quote->status == 'rejected'){
+            $this->session->set_flashdata('error', 'Rejected quotes cannot be converted to sale order');
+            admin_redirect('quotes');
+        }
         
         if($quote->status != 'approved'){
             $this->session->set_flashdata('error', 'Approved quotes are converted to sale order');
@@ -574,11 +579,11 @@ class Sales extends MY_Controller
         $creditLimit    = $customer_obj ? (float)($customer_obj->credit_limit ?? 0) : 0;
         $currentBalance = (float)$this->companies_model->getCustomerBalance($quote->customer_id);
         
-        if ($creditLimit > 0 && $currentBalance >= $creditLimit) {
+        if ($creditLimit > 0 && ($currentBalance + $quote->grand_total) >= $creditLimit) {
             $canOverride = $this->Admin || $this->Owner
                         || $this->sma->in_group('financemanager')
                         || $this->sma->in_group('trademanager');
-
+            
             if (!$canOverride) {
                 $this->session->set_flashdata('error',
                     sprintf('Cannot convert to sale order. Customer credit limit of %s has been exceeded (Outstanding: %s). This quote has been added to Credit Hold and requires approval.',
@@ -587,7 +592,7 @@ class Sales extends MY_Controller
                 admin_redirect('quotes');
                 return;
             }
-
+            
             // Authorized user (Admin / Finance Manager / Trade Manager): require a justification note
             $trade_note = trim($this->input->post('trade_note'));
             if (!$trade_note) {
@@ -772,10 +777,11 @@ class Sales extends MY_Controller
             'payment_term'      => $payment_term,
             'due_date'          => $due_date,
             'paid'              => 0,
+            'customer_balance'  => $currentBalance,
             'created_by'        => $this->session->userdata('user_id'),
             'hash'              => hash('sha256', microtime() . mt_rand()),
         ];
-
+        //echo '<pre>';print_r($data);exit;
         $payment = [];
 
         if ($product_error = $this->_validateSaleProductLines($warehouse_id, $products, 'ready')) {

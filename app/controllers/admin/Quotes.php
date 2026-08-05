@@ -604,6 +604,17 @@ class Quotes extends MY_Controller
             $this->sma->send_json(['error' => 1, 'msg' => lang('id_not_found')]);
         }
 
+        $quote = $this->quotes_model->getQuoteByID($id);
+        if ($quote && in_array($quote->status, ['approved', 'converted_to_sale', 'rejected'], true)) {
+            $msg = 'Cannot delete approved, converted, or rejected quotes';
+            if ($this->input->is_ajax_request()) {
+                $this->sma->send_json(['error' => 1, 'msg' => $msg]);
+            }
+            $this->session->set_flashdata('error', $msg);
+            admin_redirect('quotes');
+            return;
+        }
+
         if ($this->quotes_model->deleteQuote($id)) {
             if ($this->input->is_ajax_request()) {
                 $this->sma->send_json(['error' => 0, 'msg' => lang('quote_deleted')]);
@@ -627,8 +638,8 @@ class Quotes extends MY_Controller
 
         $inv = $this->quotes_model->getQuoteByID($id);
         
-        if($inv->status == 'converted_to_sale'){
-            $this->session->set_flashdata('error', 'Cannot edit completed or converted quotes');
+        if($inv->status == 'converted_to_sale' || $inv->status == 'rejected'){
+            $this->session->set_flashdata('error', 'Cannot edit completed, converted, or rejected quotes');
 
             admin_redirect('quotes');
         }
@@ -1790,10 +1801,24 @@ class Quotes extends MY_Controller
             if (!empty($_POST['val'])) {
                 if ($this->input->post('form_action') == 'delete') {
                     $this->sma->checkPermissions('delete');
+                    $deleted = 0;
+                    $skipped = 0;
                     foreach ($_POST['val'] as $id) {
+                        $quote = $this->quotes_model->getQuoteByID($id);
+                        if ($quote && in_array($quote->status, ['approved', 'converted_to_sale', 'rejected'], true)) {
+                            $skipped++;
+                            continue;
+                        }
                         $this->quotes_model->deleteQuote($id);
+                        $deleted++;
                     }
-                    $this->session->set_flashdata('message', $this->lang->line('quotes_deleted'));
+                    if ($skipped > 0 && $deleted === 0) {
+                        $this->session->set_flashdata('error', 'Cannot delete approved, converted, or rejected quotes');
+                    } elseif ($skipped > 0) {
+                        $this->session->set_flashdata('message', $this->lang->line('quotes_deleted') . " ({$skipped} skipped)");
+                    } else {
+                        $this->session->set_flashdata('message', $this->lang->line('quotes_deleted'));
+                    }
                     redirect($_SERVER['HTTP_REFERER']);
                 } elseif ($this->input->post('form_action') == 'combine') {
                     $html = $this->combine_pdf($_POST['val']);
