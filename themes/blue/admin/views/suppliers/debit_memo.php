@@ -1,6 +1,10 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <script>
     $(document).ready(function () {
+        $('#poref').on('input', function () {
+            this.value = this.value.replace(/\D/g, '');
+        });
+
         $('#addRowBtn').click(function() {
             var newRow = '<tr>' +
                 '<td><input type="text" placeholder="Enter Description" class="form-control" name="description[]" /></td>' +
@@ -45,7 +49,14 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('reference_no', 'poref'); ?>
-                                <?php echo form_input('reference_no', ($memo_data->reference_no ?? $memo_data->reference_no), 'class="form-control input-tip" id="poref"'); ?>
+                                <?php echo form_input('reference_no', ($memo_data->reference_no ?? ''), 'class="form-control input-tip" id="poref" inputmode="numeric" pattern="[0-9]+" required="required" title="Digits only"'); ?>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('Description', 'memo_description'); ?>
+                                <?php echo form_input('memo_description', ($memo_data->description ?? ''), 'class="form-control input-tip" id="memo_description" placeholder="Optional description"'); ?>
                             </div>
                         </div>
 
@@ -126,7 +137,7 @@
 
 
 
-                    <div class="controls table-controls" style="font-size: 12px !important;">
+                    <div class="controls table-controls" style="font-size: 12px !important; clear: both; padding-top: 25px;">
                         <table id="poTable"
                                 class="table items table-striped table-bordered table-condensed table-hover sortable_table">
                             <thead>

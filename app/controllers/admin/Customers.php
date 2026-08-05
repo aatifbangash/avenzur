@@ -3138,6 +3138,12 @@ class Customers extends MY_Controller
     public function credit_memo(){
         //$this->sma->checkPermissions(false, true);
         $this->form_validation->set_rules('customer', $this->lang->line('customer'), 'required');
+        $this->form_validation->set_rules(
+            'reference_no',
+            $this->lang->line('reference_no'),
+            'required|regex_match[/^[0-9]+$/]',
+            ['regex_match' => 'The reference number may contain digits only.']
+        );
 
         $data = [];
         $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('credit memo')]];
@@ -3149,6 +3155,7 @@ class Customers extends MY_Controller
             $descriptions_array      = $this->input->post('description');
             $item_ids = $this->input->post('item_id');
             $reference_no = $this->input->post('reference_no');
+            $memo_description = trim((string) $this->input->post('memo_description', true));
             $payment_total = $this->input->post('payment_total');
             $ledger_account = $this->input->post('ledger_account');
             $vat_account = $this->input->post('vat_account');
@@ -3199,6 +3206,7 @@ class Customers extends MY_Controller
                 'supplier_id' => 0,
                 'customer_id' => $customer_id,
                 'reference_no' => $reference_no,
+                'description' => $memo_description !== '' ? $memo_description : null,
                 'payment_amount' => $payment_total,
                 'vat_percent' => $vat_percent,
                 'ledger_account' => $ledger_account,
