@@ -554,6 +554,7 @@ class Returns extends MY_Controller
                 $journal_id = $this->convert_return_invoice($return_insert_id);
                 $this->settle_return_against_oldest_invoices(
                     $return_insert_id,
+                    $data['reference_no'],
                     (int) $data['customer_id'],
                     (float) $data['grand_total'],
                     $journal_id
@@ -694,10 +695,10 @@ class Returns extends MY_Controller
             }
         }
 
-        return $this->settle_return_against_oldest_invoices($return_insert_id, $customer_id, $net_amount, $journal_id);
+        return $this->settle_return_against_oldest_invoices($return_insert_id, $return_invoice->reference_no, $customer_id, $net_amount, $journal_id);
     }
 
-    private function settle_return_against_oldest_invoices($return_id, $customer_id, $amount, $journal_id = null)
+    private function settle_return_against_oldest_invoices($return_id, $reference_no, $customer_id, $amount, $journal_id = null)
     {
         $return_id = (int) $return_id;
         $customer_id = (int) $customer_id;
@@ -707,7 +708,7 @@ class Returns extends MY_Controller
             return false;
         }
 
-        $pending_invoices = $this->sales_model->getCustomerInvoicesWithPayments($customer_id);
+        $pending_invoices = $this->sales_model->getCustomerInvoicesWithPaymentsNew($customer_id, $reference_no);
         if (empty($pending_invoices)) {
             return false;
         }
@@ -1282,6 +1283,7 @@ class Returns extends MY_Controller
                 $journal_id = $this->convert_return_invoice($id);
                 $this->settle_return_against_oldest_invoices(
                     $id,
+                    $inv->reference_no,
                     (int) $data['customer_id'],
                     (float) $data['grand_total'],
                     $journal_id
