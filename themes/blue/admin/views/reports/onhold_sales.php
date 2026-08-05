@@ -110,6 +110,7 @@
                                     <th><?= lang('customer_no'); ?></th>
                                     <th><?= lang('customer_name'); ?></th>
                                     <th><?= lang('invoice_total'); ?></th>
+                                    <th><?= lang('Customer Balance'); ?></th>
                                     <th><?= lang('sale_status'); ?></th>
                                     <th><?= lang('trade note'); ?></th>
                                 </tr>
@@ -123,14 +124,16 @@
                                     $grand_discount = 0;
                                     $grand_paid = 0;
                                     $grand_outstanding = 0;
+                                    $grand_customer_balance = 0;
 
                                     foreach ($invoice_data as $data) {
                                         $count++;
                                         $grand_invoice_total += $data->invoice_total;
                                         $grand_return += $data->return_amount;
                                         $grand_discount += $data->discount;
-                                        $grand_paid += $data->paid;
-                                        $grand_outstanding += $data->outstanding;
+                                        $grand_paid += $data->paid ?? 0;
+                                        $grand_outstanding += $data->outstanding ?? 0;
+                                        $grand_customer_balance += (float) ($data->customer_balance ?? 0);
                                 ?>
                                         <tr>
                                             <td><?= $count; ?></td>
@@ -141,6 +144,7 @@
                                             <td><?= $data->customer_no; ?></td>
                                             <td><?= $data->customer_name; ?></td>
                                             <td><?= $this->sma->formatMoney($data->invoice_grand_total); ?></td>
+                                            <td><?= $this->sma->formatMoney($data->customer_balance ?? 0); ?></td>
                                             <td><?= $data->sale_status; ?></td>
                                             
                                             <td><?= $data->trade_note; ?></td>
@@ -151,13 +155,13 @@
                                     <tr style="font-weight: bold; background-color: #f0f0f0;">
                                         <td colspan="7" style="text-align: right;"><?= lang('total'); ?></td>
                                         <td><?= $this->sma->formatMoney($grand_invoice_total); ?></td>
-                                        
+                                        <td><?= $this->sma->formatMoney($grand_customer_balance); ?></td>
                                         <td></td>
                                         <td></td>
                                     </tr>
                                 <?php
                                 } else {
-                                    echo '<tr><td colspan="12" class="text-center">' . lang('no_data_available') . '</td></tr>';
+                                    echo '<tr><td colspan="11" class="text-center">' . lang('no_data_available') . '</td></tr>';
                                 }
                                 ?>
                             </tbody>
