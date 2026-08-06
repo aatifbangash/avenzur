@@ -11,7 +11,7 @@
     <div class="box-content">
 
         <p class="text-muted" style="margin-bottom:15px;">
-            Approved quotes where the customer's outstanding balance has reached or exceeded their credit limit.
+            Approved quotes where the customer's outstanding balance plus this quote total reaches or exceeds their credit limit.
             Only Finance Managers and Trade Managers may convert or reject these quotes.
         </p>
 
