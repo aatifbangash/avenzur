@@ -2077,10 +2077,11 @@ class Quotes extends MY_Controller
             $creditLimit = (float)($customer_obj->credit_limit ?? 0);
             if ($creditLimit <= 0) continue;
             $currentBalance = (float)$this->companies_model->getCustomerBalance($q->customer_id);
-            if ($currentBalance >= $creditLimit) {
+            // Match sales/add_from_quote: hold when balance + this quote total reaches/exceeds limit
+            if (($currentBalance + (float)$q->grand_total) >= $creditLimit) {
                 $q->credit_limit     = $creditLimit;
                 $q->current_balance  = $currentBalance;
-                $q->overage          = $currentBalance - $creditLimit;
+                $q->overage          = ($currentBalance + (float)$q->grand_total) - $creditLimit;
                 $exceeded[] = $q;
             }
         }
