@@ -18,6 +18,58 @@ class Cmt_model extends CI_Model
         }
     }
 
+      public function add_rasd_transactions($payload_used,$function,$is_success, $response, $request){
+     
+        $source_gln = "";
+        $source_gln = "";
+        $destination_gln = "";
+        $gin = "";
+        $batch = "";
+        $warehouse_id = "";
+        $warehouse_type = 'warehouse';
+    
+        if($function == "accept_dispatch"){
+            $source_gln = $payload_used['supplier_gln'];
+            $destination_gln = $payload_used['warehouse_gln'];
+            $gin = "";
+            $batch = "";
+            $warehouse_id = $payload_used['warehouse_id'];
+            $warehouse_type = 'warehouse';
+        }
+        if($function == "dispatch_product"){
+            $source_gln = $payload_used['source_gln'];
+            $destination_gln = $payload_used['destination_gln'];
+            $warehouse_id = $payload_used['warehouse_id'];
+            $warehouse_type = 'pharmacy';
+        }
+
+        if($function == "pharmacy_sale_product"){
+            $source_gln = $payload_used['source_gln'];
+            $destination_gln = $payload_used['destination_gln'];
+            $warehouse_id = $payload_used['warehouse_id'];
+            $warehouse_type = 'pharmacy';
+        }
+
+
+        $transaction = [
+            "date" => date("Y-m-d"),
+            "function" => $function,
+            "source_gln" => $source_gln,
+            "destination_gln" => $destination_gln,
+            "gtin" => $gtin,
+            "batch" => $batch,
+            "warehouse_id" => $warehouse_id,
+            "warehouse_type" => $warehouse_type,
+            "response" => $response,
+            "is_success" => $is_success,
+            "request" => json_encode($request,true),
+            "response" => json_encode($response, true)
+
+        ];
+
+
+        return $this->db->insert('sma_rasd_transactions',$transaction);
+    }
     public function getRasdNotifications(){
         $this->db->where('status', 'pending');
         $notifications = $this->db->get('sma_rasd_notifications');
@@ -32,8 +84,13 @@ class Cmt_model extends CI_Model
         }
     }
 
-    public function addRasdNotification($data){
+    public function addRasdNotification($data, $batch_data){
         if ($this->db->insert('rasd_notifications', $data)) {
+
+            if(sizeOf($batch_data) > 0){
+                $this->db->insert_batch('sma_notification_serials', $batch_data);
+            }
+
             return true;
         } else {
             return false;

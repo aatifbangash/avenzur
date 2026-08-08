@@ -213,3 +213,4 @@ $lang['products_avg_cost_set']                    = 'Average Cost has been corre
 $lang['product_country']                    	  = 'Product Country';
 $lang['product_precription']                      = 'Product Required Prescription';
 $lang['shelf']                      		      = 'Shelf Name';
+$lang['overseas_product_only']                    = 'Overseas product only (OSW001)';

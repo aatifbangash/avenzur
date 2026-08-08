@@ -23,4 +23,26 @@ class Tec_qrcode
     {
         return (new QRCode(new QROptions(['imageBase64' => false, 'outputType' => QRCode::OUTPUT_MARKUP_SVG])))->render($params['data']);
     }
+
+    public function generate_new($params = [])
+    {
+        $data = $params['data'] ?? '';
+        $asPng = $params['png'] ?? false; // 👈 allow PNG option
+
+        if ($asPng) {
+            // Generate PNG instead of SVG
+            $options = new QROptions([
+                'outputType' => QRCode::OUTPUT_IMAGE_PNG,
+                'imageBase64' => false,
+            ]);
+            return (new QRCode($options))->render($data);
+        } else {
+            // Default SVG (original behavior)
+            $options = new QROptions([
+                'imageBase64' => false,
+                'outputType'  => QRCode::OUTPUT_MARKUP_SVG,
+            ]);
+            return (new QRCode($options))->render($data);
+        }
+    }
 }

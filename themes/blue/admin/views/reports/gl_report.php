@@ -1,0 +1,266 @@
+<?php defined('BASEPATH') or exit('No direct script access allowed');
+
+if (!function_exists('gl_report_row_link')) {
+    function gl_report_row_link($row)
+    {
+        $link = '';
+        if ($row->voucher == 'Sales Invoice') {
+            $link = admin_url('sales/view/' . $row->voucher_id);
+        } elseif ($row->voucher == 'Purchase Invoice') {
+            $link = admin_url('purchases/view/' . $row->voucher_id);
+        } elseif ($row->voucher == 'Sales Return') {
+            $link = admin_url('returns/view/' . $row->voucher_id);
+        } elseif ($row->voucher == 'Credit Note') {
+            $link = admin_url('customers/view_credit_memo/' . $row->voucher_id);
+        } elseif ($row->voucher == 'Debit Note') {
+            $link = admin_url('suppliers/view_debit_memo/' . $row->voucher_id);
+        } elseif ($row->voucher == 'Supplier Payment') {
+            $link = admin_url('suppliers/view_payment/' . $row->voucher_id);
+        } elseif ($row->voucher == 'Collection' || $row->voucher == 'Customer Advance') {
+            $link = admin_url('customers/view_payment/' . $row->voucher_id);
+        }
+
+        return $link;
+    }
+}
+?>
+<style>
+    #poTable_wrapper {
+        overflow-x: auto;
+    }
+    #poTable {
+        table-layout: fixed;
+        width: 100%;
+        min-width: 1260px;
+        margin-bottom: 0;
+    }
+    #poTable thead th {
+        background: #3c8dbc;
+        color: #fff;
+        font-weight: 600;
+        white-space: nowrap;
+        border-color: #367fa9 !important;
+    }
+    #poTable th,
+    #poTable td {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        vertical-align: middle;
+    }
+    #poTable .gl-date,
+    #poTable th:nth-child(5),
+    #poTable td:nth-child(5) {
+        white-space: nowrap;
+    }
+    #poTable th:nth-child(2),
+    #poTable td:nth-child(2) {
+        white-space: nowrap;
+    }
+    #poTable th:nth-child(9),
+    #poTable td:nth-child(9) {
+        white-space: normal;
+        word-break: break-word;
+    }
+</style>
+<script>
+    function generatePDF(){
+       $('#viewtype').val('pdf');
+       document.getElementById("searchForm").submit();
+       $('#viewtype').val('');
+    }
+    <?php if (!empty($gl_load_table) && $viewtype != 'pdf'): ?>
+    $(document).ready(function() {
+        $('#poTable').dataTable({
+            'bProcessing': true,
+            'bServerSide': true,
+            'bSort': false,
+            'bAutoWidth': false,
+            'iDisplayLength': 100,
+            'aLengthMenu': [[50, 100, 250, 500], [50, 100, 250, 500]],
+            'sAjaxSource': '<?= admin_url('reports/get_gl_report') ?>',
+            'fnServerData': function (sSource, aoData, fnCallback) {
+                aoData.push({name: 'from_date', value: <?= json_encode($start_date ?? '') ?>});
+                aoData.push({name: 'to_date', value: <?= json_encode($end_date ?? '') ?>});
+                aoData.push({
+                    name: '<?= $this->security->get_csrf_token_name() ?>',
+                    value: '<?= $this->security->get_csrf_hash() ?>'
+                });
+                $.ajax({dataType: 'json', type: 'POST', url: sSource, data: aoData, success: fnCallback});
+            },
+            'aoColumnDefs': [
+                {'sWidth': '40px', 'aTargets': [0]},
+                {'sWidth': '110px', 'aTargets': [1]},
+                {'sWidth': '80px', 'aTargets': [2, 3, 5, 11]},
+                {'sWidth': '92px', 'aTargets': [4]},
+                {'sWidth': '120px', 'aTargets': [6]},
+                {'sWidth': '160px', 'aTargets': [7, 8]},
+                {'sWidth': '100px', 'sClass': 'text-right', 'aTargets': [9, 10]}
+            ],
+            'oLanguage': {
+                'sSearch': '<?= lang('search') ?>:',
+                'sLengthMenu': '<?= lang('show') ?> _MENU_ <?= lang('entries') ?>',
+                'sInfo': '<?= lang('showing') ?> _START_ <?= lang('to') ?> _END_ <?= lang('of') ?> _TOTAL_ <?= lang('entries') ?>',
+                'oPaginate': {
+                    'sFirst': '&laquo;',
+                    'sLast': '&raquo;',
+                    'sNext': '&rsaquo;',
+                    'sPrevious': '&lsaquo;'
+                }
+            }
+        });
+    });
+    <?php endif; ?>
+</script>
+<?php if($viewtype=='pdf'){ ?>
+    <link href="<?= $assets ?>styles/pdf/pdf.css" rel="stylesheet">
+  <?php  } ?>
+<div class="box">
+    <div class="box-header">
+        <h2 class="blue"><i class="fa-fw fa fa-book"></i><?= lang('general_ledger_report'); ?></h2>
+        <?php  if($viewtype!='pdf'){?>
+        <div class="box-icon">
+            <ul class="btn-tasks">
+                <li class="dropdown">
+                    <?php
+                    $export_params = $_GET;
+                    $export_params['export_excel'] = 1;
+                    unset($export_params['viewtype']);
+                    ?>
+                    <a href="<?= admin_url('reports/GLReport?' . http_build_query($export_params)) ?>"
+                       class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a>
+                </li>
+                <li class="dropdown"> <a href="javascript:void(0);" onclick="generatePDF()" id="pdf" class="tip" title="<?= lang('download_PDF') ?>"><i class="icon fa fa-file-pdf-o"></i></a></li>
+            </ul>
+        </div>
+        <?php } ?>
+    </div>
+    <div class="box-content">
+        <div class="row">
+            <div class="col-lg-12">
+                <?php
+                if($viewtype!='pdf')
+                {
+                    $attrib = ['data-toggle' => 'validator', 'role' => 'form', 'id' => 'searchForm', 'method' => 'get'];
+                    echo admin_form_open_multipart('reports/GLReport', $attrib)
+                    ?>
+                    <input type="hidden" name="viewtype" id="viewtype" value="">
+
+                <div class="row">
+                    <div class="col-lg-12">
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('From Date', 'podate'); ?>
+                                <?php echo form_input('from_date', ($start_date ?? ''), 'class="form-control input-tip date" id="fromdate"'); ?>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('To Date', 'podate'); ?>
+                                <?php echo form_input('to_date', ($end_date ?? ''), 'class="form-control input-tip date" id="todate"'); ?>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="from-group">
+                                <button type="submit" style="margin-top: 28px;" class="btn btn-primary"
+                                        id="load_report"><?= lang('Load Report') ?></button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <?php echo form_close();
+                } ?>
+                <hr/>
+                <div class="row">
+                    <div class="controls table-controls" style="font-size: 12px !important;">
+                        <table id="poTable"
+                               class="table items table-striped table-bordered table-condensed table-hover sortable_table tbl_pdf">
+                            <colgroup>
+                                <col style="width:40px">
+                                <col style="width:110px">
+                                <col style="width:80px">
+                                <col style="width:80px">
+                                <col style="width:92px">
+                                <col style="width:80px">
+                                <col style="width:120px">
+                                <col style="width:160px">
+                                <col style="width:220px">
+                                <col style="width:100px">
+                                <col style="width:100px">
+                                <col style="width:78px">
+                            </colgroup>
+                            <thead>
+                            <tr>
+                                <th>#</th>
+                                <th><?= lang('voucher'); ?></th>
+                                <th><?= lang('voucher_id'); ?></th>
+                                <th><?= lang('trx_id'); ?></th>
+                                <th><?= lang('date'); ?></th>
+                                <th><?= lang('reference'); ?></th>
+                                <th><?= lang('account_number'); ?></th>
+                                <th><?= lang('account_name'); ?></th>
+                                <th><?= lang('description'); ?></th>
+                                <th><?= lang('debit'); ?></th>
+                                <th><?= lang('credit'); ?></th>
+                                <th><?= lang('userid'); ?></th>
+                            </tr>
+                            </thead>
+                            <tbody style="text-align:center;">
+                            <?php
+                            $total_debit = !empty($gl_report_totals) ? (float) $gl_report_totals->total_debit : 0;
+                            $total_credit = !empty($gl_report_totals) ? (float) $gl_report_totals->total_credit : 0;
+
+                            if (!empty($gl_report)) {
+                                $count = 0;
+                                foreach ($gl_report as $row) {
+                                    $link = gl_report_row_link($row);
+                                    $count++;
+                                    ?>
+                                    <tr>
+                                        <td><?= $count; ?></td>
+                                        <td><?= $row->voucher; ?></td>
+                                        <td><?php if ($link) { ?><a href="<?= $link; ?>" target="_blank"><?= $row->voucher_id; ?></a><?php } else { echo $row->voucher_id; } ?></td>
+                                        <td><a href="<?= admin_url('entries/view/journal/' . $row->trx_id); ?>" target="_blank"><?= $row->trx_id; ?></a></td>
+                                        <td class="gl-date"><?= $row->date; ?></td>
+                                        <td><?= $row->reference; ?></td>
+                                        <td><?= $row->account_number; ?></td>
+                                        <td><?= $row->account_name; ?></td>
+                                        <td><?= $row->description; ?></td>
+                                        <td class="text-right"><?= $row->debit > 0 ? $this->sma->formatNumber($row->debit) : '0'; ?></td>
+                                        <td class="text-right"><?= $row->credit > 0 ? $this->sma->formatNumber($row->credit) : '0'; ?></td>
+                                        <td><?= $row->user_id; ?></td>
+                                    </tr>
+                                    <?php
+                                }
+                            } elseif (empty($gl_load_table) && ($start_date || $end_date)) {
+                                ?>
+                                <tr>
+                                    <td colspan="12" class="text-center">No data found for the selected date range.</td>
+                                </tr>
+                                <?php
+                            }
+                            ?>
+
+                            </tbody>
+                            <tfoot>
+                            <?php if (!empty($gl_report_totals) && ($total_debit > 0 || $total_credit > 0)) { ?>
+                            <tr class="active">
+                                <th colspan="9" class="text-right"><?= lang('total'); ?></th>
+                                <th class="text-right"><?= $this->sma->formatNumber($total_debit); ?></th>
+                                <th class="text-right"><?= $this->sma->formatNumber($total_credit); ?></th>
+                                <th>&nbsp;</th>
+                            </tr>
+                            <?php } ?>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

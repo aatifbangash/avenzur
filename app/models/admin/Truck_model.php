@@ -5,15 +5,15 @@ defined('BASEPATH') or exit('No direct script access allowed');
 class Truck_model extends CI_Model
 {
 
-	public function addTruck($data,$purchaseId)
+	public function addTruck($data)
     {
       
          $save = $this->db->insert('sma_truck_registration', $data);
-         if($save){
+         /*if($save){
             $updatedStatus = array('status'=>'arrived');
             $this->db->update('purchases', $updatedStatus, ['id' => $purchaseId]);
             return $data;
-         }
+         }*/
         
     }
 

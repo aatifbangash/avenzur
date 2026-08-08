@@ -124,7 +124,7 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <?= lang('date', 'rsedate'); ?>
-                                    <?php echo form_input('date', (isset($_POST['date']) ? $_POST['date'] : ''), 'class="form-control input-tip datetime" id="rsedate" required="required"'); ?>
+                                    <?php echo form_input('date', (isset($_POST['date']) ? $_POST['date'] : date("d/m/Y H:i")), 'class="form-control input-tip datetime" id="rsedate" required="required"'); ?>
                                 </div>
                             </div>
                         <?php
@@ -169,7 +169,7 @@
                                     <?php
                                     $wh[''] = '';
                     foreach ($warehouses as $warehouse) {
-                        $wh[$warehouse->id] = $warehouse->name;
+                        $wh[$warehouse->id] = $warehouse->name.' ('.$warehouse->code.')';
                     }
                     echo form_dropdown('warehouse', $wh, (isset($_POST['warehouse']) ? $_POST['warehouse'] : $Settings->default_warehouse), 'id="rsewarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" required="required" style="width:100%;" '); ?>
                                 </div>

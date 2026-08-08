@@ -51,6 +51,16 @@
                                 <i class="fa fa-file-pdf-o"></i> <?= lang('export_to_pdf') ?>
                             </a>
                         </li>
+                        <li>
+                            <a href="<?= admin_url('sales/pdf_zatka_invoice/' . $inv->id) ?>" target="_blank">
+                                <i class="fa fa-file-text-o"></i> Zatka Invoice (PDF)
+                            </a>
+                        </li>
+                        <li>
+                            <a href="<?= admin_url('sales/pdf_zatka_invoice/' . $inv->id . '/1') ?>" target="_blank">
+                                <i class="fa fa-eye"></i> Zatka Invoice (Preview)
+                            </a>
+                        </li>
                         <?php if (!$inv->sale_id) {
                             ?>
                         <li>
