@@ -56,7 +56,7 @@ class Entries extends MY_Controller
 			$this->db->where("id LIKE '%$eid%'");	
 		}
 		if(!empty($tran_number)){
-			$this->db->where("number LIKE '%$tran_number%'");	
+			$this->db->where("sequence_code LIKE '%$tran_number%'");
 		}
 		if (!empty($transaction_type)) {
 			$this->db->where('transaction_type', $transaction_type);
@@ -274,7 +274,7 @@ class Entries extends MY_Controller
 			$this->db->where("id LIKE '%$eid%'");	
 		}
 		if(!empty($tran_number)){
-			$this->db->where("number LIKE '%$tran_number%'");	
+			$this->db->where("sequence_code LIKE '%$tran_number%'");
 		}
 		if (!empty($transaction_type)) {
 			$this->db->where('transaction_type', $transaction_type);
