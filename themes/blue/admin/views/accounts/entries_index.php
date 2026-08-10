@@ -99,7 +99,7 @@
                 </div>
                 <div class="col-sm-4">
                     <div class="form-group">
-                    <label class="control-label" for="trans_number"><?= lang('entries_views_index_th_number'); ?></label>
+                    <label class="control-label" for="tran_number"><?= lang('Sequence Code'); ?></label>
                     <?php echo form_input('tran_number', (isset($_GET['tran_number']) ? $_GET['tran_number'] : ''), 'class="form-control" id="tran_number"'); ?>
                     </div>
                 </div>
@@ -181,7 +181,7 @@
                     <tr>
                         <th><?= lang('Id'); ?></th>
                         <th><?= lang('entries_views_index_th_date'); ?></th>
-                        <th><?= lang('entries_views_index_th_number'); ?></th>
+                        <th><?= lang('Sequence Code'); ?></th>
                         <th><?= lang('entries_views_index_th_ledger'); ?></th>
                         <th><?= lang('entries_views_index_th_type'); ?></th>
                         <th><?= lang('entries_views_index_th_tag'); ?></th>
@@ -209,7 +209,7 @@
                         <tr>
                             <td><?= $counter ?></td>
                             <td><?=  $this->functionscore->dateFromSql($entry['date']) ?></td>
-                            <td><?= $entry['number'] ?></td>
+                            <td><?= $entry['sequence_code'] ?? '' ?></td>
                             <td><?= ($this->functionscore->entryLedgers($entry['id'])) ?></td>
                             <td><?= $this->functionscore->transactionTypeLabel($entry['transaction_type']) ?></td>
                             <td><?= $this->functionscore->showTag($entry['tag_id']) ?></td>
