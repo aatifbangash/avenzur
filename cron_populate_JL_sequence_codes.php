@@ -12,15 +12,15 @@
 
 define('BASEPATH', true);
 
-/*$hostname = "81.208.168.52";
+$hostname = "81.208.168.52";
 $username =  "remote_user";
 $password = 're$Pa1msee$ot_ur';
-$database = "rawabi";*/
+$database = "rawabi_jeddah";
 
-$hostname = "localhost";
+/*$hostname = "localhost";
 $username = 'dev_user';
 $password = 'rootR00T';
-$database = "rawabi_jeddah";
+$database = "rawabi_jeddah";*/
 
 $conn = new mysqli($hostname, $username, $password, $database);
 
