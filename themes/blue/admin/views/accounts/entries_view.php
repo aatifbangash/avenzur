@@ -73,11 +73,9 @@
                                     echo (lang('Entry_Id')) . ' : ' . ($entry['id']) . '<br>';
                                     if ($entry['pid'] > 0) {
                                         echo (lang('Supplier_name')) . ' : ' . ($supplier['name']) . '<br>';
-                                        echo (lang('Supplier_Sequence_code')) . ' : ' . ($supplier['sequence_code']) . '<br>';
 
                                         echo (lang('Purchase_id')) . ' : ' . ($purchase['id']) . '<br>';
                                         echo (lang('invoice_number')) . ' : ' . ($purchase['invoice_number']) . '<br>';
-                                        echo (lang('sequence_code')) . ' : ' . ($purchase['sequence_code']) . '<br>';
                                     }
 
                                     if($payement_reference_id > 0){
@@ -90,7 +88,6 @@
 
                                         echo (lang('Sale_id')) . ' : ' . ($sales['id']) . '<br>';
                                         echo (lang('invoice_number')) . ' : ' . ($sales['invoice_number']) . '<br>';
-                                        echo (lang('sequence_code')) . ' : ' . ($sales['sequence_code']) . '<br>';
                                         //   echo (lang('Customer')) . ' : ' . ($customer['name']) .'<br>';
                                         echo (lang('Customer')) . ' : ' . ($sales['customer']) . '<br>';
                                     }
@@ -98,7 +95,6 @@
                                     if ($entry['tid'] > 0) {
                                         echo (lang('Transfer_ID')) . ' : ' . ($entry['tid']) . '<br>';
                                         echo (lang('invoice_number')) . ' : ' . ($transfer['invoice_number']) . '<br>';
-                                        echo (lang('sequence_code')) . ' : ' . ($transfer['sequence_code']) . '<br>';
                                         echo (lang('transfer_no')) . ' : ' . ($transfer['transfer_no']) . '<br>';
                                     }
 
