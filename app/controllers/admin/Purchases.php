@@ -492,7 +492,7 @@ class Purchases extends MY_Controller
                         $landed_per_unit = $line_qty > 0 ? $this->sma->formatDecimal($landed_cost / $line_qty, 5) : 0;
                     }
                     $final_net_unit_cost = $is_po_invoice
-                        ? $this->sma->formatDecimal($item_net_cost + $landed_per_unit, 5)
+                        ? $this->sma->formatDecimal($_POST['item_unit_cost'][$r] + $landed_per_unit, 5)
                         : $_POST['item_unit_cost'][$r];
 
                     /**
