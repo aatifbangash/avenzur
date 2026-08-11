@@ -4975,7 +4975,7 @@ class Products extends MY_Controller
     }
 
     public function upload_customer_returns(){
-        $excelFile = $this->upload_path . 'csv/Return-Apr-2026-2.xlsx'; // Excel file
+        $excelFile = $this->upload_path . 'csv/returns_rawabi_2026-08-09.xlsx'; // Excel file
         if (!file_exists($excelFile)) {
             echo "Excel file not found.";
             return;
@@ -4995,7 +4995,7 @@ class Products extends MY_Controller
         foreach ($rows as $i => $row) {
             if ($i == 0) continue; // Skip header
 
-            $returnInvoiceNo = trim($row[7]);
+            $returnInvoiceNo = trim($row[6]);
             if (!$returnInvoiceNo) continue;
 
             $groupedReturns[$returnInvoiceNo][] = $row;
@@ -5029,11 +5029,11 @@ class Products extends MY_Controller
             $returnDate = date('Y-m-d H:i:s');
         }*/
 
-        $returnDate = date('Y-m-d H:i:s', strtotime('2026-04-30'));
+        $returnDate = date('Y-m-d H:i:s', strtotime('2026-07-15'));
         //$customerNo = trim($firstRow[1]);
         $customerCode = trim($firstRow[0]);
         $customerName = trim($firstRow[1]);
-        $saleInvoiceNo = trim($firstRow[7]);
+        $saleInvoiceNo = trim($firstRow[6]);
         $avz_item_code = $this->sma->generateUUIDv4();
 
         $customer_details = $this->db
@@ -5089,25 +5089,26 @@ class Products extends MY_Controller
 
             $item_code       = trim($row[2]);
             $qty             = (float)$row[4];
-            $net_amount      = (float)$row[9];    
+            //$net_amount      = (float)$row[10];    
 
-            $sale_price      = (float)$net_amount / $qty;
-            $total_amount    = $sale_price * $qty;
-            //$net_amount      = (float)str_replace(',', '', $row[12]);
-            $vat_amount      = (float)$row[10];
-            $purchase_price  = (float)$row[9];
+            $sale_price      = (float)$row[8];
+            $total_amount    = (float)$row[10];
+            
+            $vat_amount      = (float)$row[9];
+            $net_amount      = $total_amount - $vat_amount;
+            $purchase_price  = (float)$row[8];
             // Convert Excel serial date to PHP DateTime
             try {
-                if (is_numeric($row[6]) && $row[6] > 0) {
-                    $expiry = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row[6])->format('Y-m-d H:i:s');
+                if (is_numeric($row[5]) && $row[5] > 0) {
+                    $expiry = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row[5])->format('Y-m-d H:i:s');
                 } else {
-                    $expiry = date('Y-m-d H:i:s', strtotime($row[6]));
+                    $expiry = date('Y-m-d H:i:s', strtotime($row[5]));
                 }
             } catch (Exception $e) {
                 $expiry = null;
             }
             $item_name       = trim($row[3]);
-            $batch_number =    trim($row[5]);
+            $batch_number =    trim($row[7]);
             $cost_price =    trim($row[8]);
             //$dis1_precent =   $row[9] * 100;
             //$dis2_precent =   $row[10] * 100;
