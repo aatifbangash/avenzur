@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title><?= ucfirst($entrytype['label']) ?> Entry #<?= $entry['number'] ?></title>
+    <title><?= ucfirst($entrytype['label']) ?> Entry #<?= $entry['sequence_code'] ?? '' ?></title>
     <style>
         body {
             font-family: 'DejaVu Sans', Arial, sans-serif;
@@ -72,7 +72,7 @@
 </head>
 <body>
     <div class="header">
-        <h2><?= ucfirst($entrytype['label']) ?> <?= lang('entry_title') ?> #<?= $entry['number'] ?></h2>
+        <h2><?= ucfirst($entrytype['label']) ?> <?= lang('entry_title') ?> #<?= $entry['sequence_code'] ?? '' ?></h2>
         <p><strong><?= lang('entries_views_add_label_date') ?>:</strong> <?= $entry['date'] ?></p>
     </div>
 

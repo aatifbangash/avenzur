@@ -102,8 +102,7 @@
                                         echo (lang('transfer_no')) . ' : ' . ($transfer['transfer_no']) . '<br>';
                                     }
 
-                                    //echo (lang('entries_views_views_label_number')) . ' : ' . ($this->functionscore->toEntryNumber($entry['number'], $entry['entrytype_id']));
-                                    //echo '<br /><br />';
+                                    echo (lang('Sequence Code')) . ' : ' . ($entry['sequence_code'] ?? '') . '<br>';
                                     echo (lang('entries_views_views_label_date')) . ' : ' . ($this->functionscore->dateFromSql($entry['date']));
                                     echo '<br /><br /> </div>';
 
