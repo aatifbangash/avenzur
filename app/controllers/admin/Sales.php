@@ -574,25 +574,43 @@ class Sales extends MY_Controller
             admin_redirect('quotes');
         }
 
-        // --- Credit Limit Check ---
+        // --- On Hold Checks (credit limit + overdue payment term) ---
         $customer_obj   = $this->companies_model->getCompanyByID($quote->customer_id);
         $creditLimit    = $customer_obj ? (float)($customer_obj->credit_limit ?? 0) : 0;
         $currentBalance = (float)$this->companies_model->getCustomerBalance($quote->customer_id);
-        
-        if ($creditLimit > 0 && ($currentBalance + $quote->grand_total) >= $creditLimit) {
+
+        $onholdReasons = [];
+        $creditLimitExceeded = $creditLimit > 0 && ($currentBalance + $quote->grand_total) >= $creditLimit;
+        if ($creditLimitExceeded) {
+            $onholdReasons[] = sprintf(
+                'Credit limit exceeded (Limit: %s, Outstanding: %s, Quote: %s)',
+                number_format($creditLimit, 2),
+                number_format($currentBalance, 2),
+                number_format($quote->grand_total, 2)
+            );
+        }
+
+        $overdueDetail = $this->sales_model->getCustomerOverdueInvoicesDetail($quote->customer_id);
+        if ($overdueDetail['count'] > 0) {
+            $onholdReasons[] = $overdueDetail['reason'];
+        }
+
+        if (!empty($onholdReasons)) {
+            $onhold_reason = implode('; ', $onholdReasons);
+            $this->db->where('id', $quote_id)->update('sma_quotes', ['onhold_reason' => $onhold_reason]);
+
             $canOverride = $this->Admin || $this->Owner
                         || $this->sma->in_group('financemanager')
                         || $this->sma->in_group('trademanager');
-            
+
             if (!$canOverride) {
                 $this->session->set_flashdata('error',
-                    sprintf('Cannot convert to sale order. Customer credit limit of %s has been exceeded (Outstanding: %s). This quote has been added to Credit Hold and requires approval.',
-                        number_format($creditLimit, 2), number_format($currentBalance, 2))
+                    'Cannot convert to sale order. ' . $onhold_reason . ' This quote has been put on hold and requires approval.'
                 );
                 admin_redirect('quotes');
                 return;
             }
-            
+
             // Authorized user (Admin / Finance Manager / Trade Manager): require a justification note
             $trade_note = trim($this->input->post('trade_note'));
             if (!$trade_note) {
@@ -602,12 +620,15 @@ class Sales extends MY_Controller
                 $this->data['customer_name']  = $customerName;
                 $this->data['credit_limit']   = $creditLimit;
                 $this->data['pending_amount'] = $currentBalance;
+                $this->data['onhold_reason']  = $onhold_reason;
+                $this->data['credit_limit_exceeded'] = $creditLimitExceeded;
+                $this->data['payment_term_exceeded'] = $overdueDetail['count'] > 0;
                 $bc   = [
                     ['link' => base_url(),                             'page' => lang('home')],
                     ['link' => admin_url('quotes/credit_hold'),        'page' => 'Credit Hold Quotes'],
                     ['link' => '#',                                    'page' => 'Override'],
                 ];
-                $meta = ['page_title' => 'Credit Limit Override – Convert Quote to Sale', 'bc' => $bc];
+                $meta = ['page_title' => 'Quote On Hold – Convert to Sale', 'bc' => $bc];
                 $this->page_construct('quotes/credit_limit_bypass', $meta, $this->data);
                 return;
             }
