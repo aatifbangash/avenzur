@@ -8077,6 +8077,8 @@ class Reports extends MY_Controller
 
     public function onhold_sales()
     {
+        $this->ensure_quotes_onhold_reason_column();
+
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         
         // Get filter parameters from GET (changed from POST to match stock report pattern)
@@ -8116,23 +8118,32 @@ class Reports extends MY_Controller
                 }
             }
             
+            $quotes_table = $this->db->dbprefix('quotes');
+            $sales_table = $this->db->dbprefix('sales');
+            $companies_table = $this->db->dbprefix('companies');
+            $returns_table = $this->db->dbprefix('returns');
+            $has_onhold_reason = $this->db->field_exists('onhold_reason', 'quotes');
+            $onhold_reason_select = $has_onhold_reason
+                ? "{$quotes_table}.onhold_reason AS onhold_reason"
+                : "'' AS onhold_reason";
+
             // Build query
-            $this->db->select("DATE_FORMAT({$this->db->dbprefix('quotes')}.date, '%d-%b-%y') as date,
-                {$this->db->dbprefix('sales')}.id as sale_id,
-                {$this->db->dbprefix('quotes')}.status as sale_status,
-                {$this->db->dbprefix('sales')}.customer_balance as customer_balance,
-                {$this->db->dbprefix('quotes')}.id as quote_id,
-                {$this->db->dbprefix('quotes')}.reference_no as invoice,
-                {$this->db->dbprefix('quotes')}.trade_note as trade_note,
-                {$this->db->dbprefix('quotes')}.warehouse_id as warehouse_id,
-                {$this->db->dbprefix('companies')}.city as area,
-                COALESCE({$this->db->dbprefix('companies')}.sales_agent, '') as sales_man,
-                {$this->db->dbprefix('companies')}.sequence_code as customer_no,
-                {$this->db->dbprefix('companies')}.name as customer_name,
-                {$this->db->dbprefix('quotes')}.total as invoice_total,
-                {$this->db->dbprefix('quotes')}.grand_total as invoice_grand_total,
-                COALESCE((SELECT SUM(grand_total) FROM {$this->db->dbprefix('returns')} WHERE sale_id = {$this->db->dbprefix('quotes')}.id), 0) as return_amount,
-                {$this->db->dbprefix('quotes')}.total_discount as discount", false)
+            $this->db->select("DATE_FORMAT({$quotes_table}.date, '%d-%b-%y') AS date,
+                {$sales_table}.id AS sale_id,
+                {$quotes_table}.status AS sale_status,
+                {$sales_table}.customer_balance AS customer_balance,
+                {$quotes_table}.id AS quote_id,
+                {$quotes_table}.reference_no AS invoice,
+                {$quotes_table}.trade_note AS trade_note,
+                {$onhold_reason_select},
+                {$quotes_table}.warehouse_id AS warehouse_id,
+                {$quotes_table}.payment_term AS payment_term,
+                COALESCE({$companies_table}.sales_agent, '') AS sales_man,
+                {$companies_table}.name AS customer_name,
+                {$quotes_table}.total AS invoice_total,
+                {$quotes_table}.grand_total AS invoice_grand_total,
+                COALESCE((SELECT SUM(grand_total) FROM {$returns_table} WHERE sale_id = {$quotes_table}.id), 0) AS return_amount,
+                {$quotes_table}.total_discount AS discount", false)
                 ->from('quotes')
                 ->join('companies', 'companies.id = quotes.customer_id', 'left')
                 ->join('sales', 'sales.sale_id = quotes.id', 'left')
@@ -8142,10 +8153,23 @@ class Reports extends MY_Controller
             if ($start_date && $end_date) {
                 $formatted_start_date = $this->sma->fld($start_date) . ' 00:00:00';
                 $formatted_end_date = $this->sma->fld($end_date) . ' 23:59:59';
-                $this->db->where("{$this->db->dbprefix('quotes')}.date >= '{$formatted_start_date}' AND {$this->db->dbprefix('quotes')}.date <= '{$formatted_end_date}'");
+                $this->db->where("{$quotes_table}.date >= '{$formatted_start_date}' AND {$quotes_table}.date <= '{$formatted_end_date}'");
             }
-            
-            $this->db->where('quotes.trade_note IS NOT NULL AND quotes.trade_note != ""');
+
+            $this->db->group_start();
+            if ($has_onhold_reason) {
+                $this->db->group_start();
+                $this->db->where("`{$quotes_table}`.`onhold_reason` IS NOT NULL", null, false);
+                $this->db->where("`{$quotes_table}`.`onhold_reason` <>", '');
+                $this->db->group_end();
+                $this->db->or_group_start();
+            }
+            $this->db->where("`{$quotes_table}`.`trade_note` IS NOT NULL", null, false);
+            $this->db->where("`{$quotes_table}`.`trade_note` <>", '');
+            if ($has_onhold_reason) {
+                $this->db->group_end();
+            }
+            $this->db->group_end();
 
             // Apply filters
             if ($invoice_id) {
@@ -11937,6 +11961,22 @@ class Reports extends MY_Controller
         } else {
             redirect(admin_url('reports/customer_advances'));
         }
+    }
+
+    private function ensure_quotes_onhold_reason_column()
+    {
+        if ($this->db->field_exists('onhold_reason', 'quotes')) {
+            return;
+        }
+
+        $quotes_table = $this->db->dbprefix('quotes');
+        $sql = "ALTER TABLE `{$quotes_table}`
+                ADD COLUMN `onhold_reason` TEXT NULL DEFAULT NULL
+                COMMENT 'Why quote was put on hold when converting to sale'";
+        if ($this->db->field_exists('trade_note', 'quotes')) {
+            $sql .= " AFTER `trade_note`";
+        }
+        $this->db->query($sql);
     }
 
 }

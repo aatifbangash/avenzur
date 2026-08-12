@@ -376,6 +376,68 @@ class Sales_model extends CI_Model
         }
     }
 
+    /**
+     * Pending customer invoices (sale_invoice) past payment term due date.
+     *
+     * @param int $customer_id
+     * @return array{count:int,invoices:array,reason:string}
+     */
+    public function getCustomerOverdueInvoicesDetail($customer_id)
+    {
+        $customer_id = (int) $customer_id;
+        if ($customer_id <= 0) {
+            return ['count' => 0, 'invoices' => [], 'reason' => ''];
+        }
+
+        $payments_table = $this->db->dbprefix('payments');
+        $sales_table = $this->db->dbprefix('sales');
+        $companies_table = $this->db->dbprefix('companies');
+
+        $sql = "SELECT s.id, s.reference_no, s.date,
+                COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) AS payment_term_days,
+                DATE_ADD(DATE(s.date), INTERVAL COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY) AS due_date,
+                DATEDIFF(CURDATE(), DATE_ADD(DATE(s.date), INTERVAL COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY)) AS days_overdue,
+                ROUND((s.grand_total - COALESCE(spaid.paid, 0)), 2) AS outstanding
+            FROM {$sales_table} s
+            LEFT JOIN {$companies_table} c ON c.id = s.customer_id
+            LEFT JOIN (
+                SELECT sale_id, COALESCE(SUM(amount), 0) AS paid
+                FROM {$payments_table}
+                WHERE sale_id IS NOT NULL
+                GROUP BY sale_id
+            ) spaid ON spaid.sale_id = s.id
+            WHERE s.customer_id = ?
+            AND s.sale_invoice = 1
+            AND s.grand_total > 0
+            AND ROUND((s.grand_total - COALESCE(spaid.paid, 0)), 2) > 0
+            AND DATEDIFF(CURDATE(), DATE_ADD(DATE(s.date), INTERVAL COALESCE(NULLIF(s.payment_term, 0), NULLIF(c.payment_term, 0), 0) DAY)) > 0
+            ORDER BY s.date ASC";
+
+        $q = $this->db->query($sql, [$customer_id]);
+        $invoices = $q->result();
+
+        if (empty($invoices)) {
+            return ['count' => 0, 'invoices' => [], 'reason' => ''];
+        }
+
+        $refs = [];
+        foreach ($invoices as $inv) {
+            $refs[] = $inv->reference_no ?: (string) $inv->id;
+        }
+
+        return [
+            'count' => count($invoices),
+            'invoices' => $invoices,
+            'reason' => 'Customer has overdue invoice(s) past payment term: ' . implode(', ', $refs),
+        ];
+    }
+
+    public function customerHasOverdueInvoices($customer_id)
+    {
+        $detail = $this->getCustomerOverdueInvoicesDetail($customer_id);
+        return $detail['count'] > 0;
+    }
+
     public function getAllCustomerInvoicesWithPayments($customer_id){
         $this->db->select('s.id, s.date, s.reference_no, s.customer_id, s.customer, s.grand_total, 
                           COALESCE(SUM(p.amount), 0) as total_paid,
