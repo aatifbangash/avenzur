@@ -8077,7 +8077,7 @@ class Reports extends MY_Controller
 
     public function onhold_sales()
     {
-        $this->ensure_quotes_onhold_reason_column();
+        //$this->ensure_quotes_onhold_reason_column();
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         
@@ -11961,22 +11961,6 @@ class Reports extends MY_Controller
         } else {
             redirect(admin_url('reports/customer_advances'));
         }
-    }
-
-    private function ensure_quotes_onhold_reason_column()
-    {
-        if ($this->db->field_exists('onhold_reason', 'quotes')) {
-            return;
-        }
-
-        $quotes_table = $this->db->dbprefix('quotes');
-        $sql = "ALTER TABLE `{$quotes_table}`
-                ADD COLUMN `onhold_reason` TEXT NULL DEFAULT NULL
-                COMMENT 'Why quote was put on hold when converting to sale'";
-        if ($this->db->field_exists('trade_note', 'quotes')) {
-            $sql .= " AFTER `trade_note`";
-        }
-        $this->db->query($sql);
     }
 
 }
