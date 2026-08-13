@@ -718,33 +718,33 @@
         </div>
         <div class="section-body">
             <ul class="nav-tabs" id="dbTab">
-                <?php if ($Owner || $Admin || $GP['sales-index']) { ?>
+                <?php if ($Owner || $GP['sales-index']) { ?>
                     <li><a href="#sales" onclick="switchTab(event, 'sales')" class="active"><?= lang('sales') ?></a></li>
                 <?php } ?>
                 
-                <?php if ($Owner || $Admin || $GP['quotes-index']) { ?>
+                <?php if ($Owner || $GP['quotes-index']) { ?>
                     <li><a href="#quotes" onclick="switchTab(event, 'quotes')"><?= lang('quotes') ?></a></li>
                 <?php } ?>
                 
-                <?php if ($Owner || $Admin || $GP['purchases-index']) { ?>
+                <?php if ($Owner || $GP['purchases-index']) { ?>
                     <li><a href="#purchases" onclick="switchTab(event, 'purchases')"><?= lang('purchases') ?></a></li>
                 <?php } ?>
                 
-                <?php if ($Owner || $Admin || $GP['suppliers-index']) { ?>
+                <?php if ($Owner || $GP['suppliers-index']) { ?>
                     <li><a href="#suppliers" onclick="switchTab(event, 'suppliers')"><?= lang('suppliers') ?></a></li>
                 <?php } ?>
                 
-                <?php if ($Owner || $Admin || $GP['customers-index']) { ?>
+                <?php if ($Owner || $GP['customers-index']) { ?>
                     <li><a href="#customers" onclick="switchTab(event, 'customers')"><?= lang('customers') ?></a></li>
                 <?php } ?>
                 
-                <?php if ($Owner || $Admin || $GP['transfers-index']) { ?>
+                <?php if ($Owner || $GP['transfers-index']) { ?>
                     <li><a href="#transfers" onclick="switchTab(event, 'transfers')"><?= lang('transfers') ?></a></li>
                 <?php } ?>
             </ul>
 
             <!-- Sales Tab -->
-            <?php if ($Owner || $Admin || $GP['sales-index']) { ?>
+            <?php if ($Owner || $GP['sales-index']) { ?>
                 <div id="sales" class="tab-content active">
                     <table class="data-table">
                         <thead>
@@ -776,7 +776,7 @@
             <?php } ?>
 
             <!-- Quotes Tab -->
-            <?php if ($Owner || $Admin || $GP['quotes-index']) { ?>
+            <?php if ($Owner || $GP['quotes-index']) { ?>
                 <div id="quotes" class="tab-content">
                     <table class="data-table">
                         <thead>
@@ -808,7 +808,7 @@
             <?php } ?>
 
             <!-- Purchases Tab -->
-            <?php if ($Owner || $Admin || $GP['purchases-index']) { ?>
+            <?php if ($Owner || $GP['purchases-index']) { ?>
                 <div id="purchases" class="tab-content">
                     <table class="data-table">
                         <thead>
@@ -840,7 +840,7 @@
             <?php } ?>
 
             <!-- Suppliers Tab -->
-            <?php if ($Owner || $Admin || $GP['suppliers-index']) { ?>
+            <?php if ($Owner || $GP['suppliers-index']) { ?>
                 <div id="suppliers" class="tab-content">
                     <table class="data-table">
                         <thead>
@@ -872,7 +872,7 @@
             <?php } ?>
 
             <!-- Customers Tab -->
-            <?php if ($Owner || $Admin || $GP['customers-index']) { ?>
+            <?php if ($Owner || $GP['customers-index']) { ?>
                 <div id="customers" class="tab-content">
                     <table class="data-table">
                         <thead>
@@ -904,7 +904,7 @@
             <?php } ?>
 
             <!-- Transfers Tab -->
-            <?php if ($Owner || $Admin || $GP['transfers-index']) { ?>
+            <?php if ($Owner || $GP['transfers-index']) { ?>
                 <div id="transfers" class="tab-content">
                     <table class="data-table">
                         <thead>

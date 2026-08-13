@@ -121,7 +121,7 @@
                 </ul>
                 <ul class="nav navbar-nav pull-right">
                 <?php
-                    $admin_home_path = $this->sma->adminHomePath($Owner || $Admin || !empty($GP['accountant']));
+                    $admin_home_path = $this->sma->adminHomePath($Owner || !empty($GP['accountant']));
                     $admin_home_title = ($admin_home_path === 'cost_center/dashboard') ? lang('dashboard') : lang('Quick Search');
                 ?>
                 <li class="dropdown hidden-xs"><a class="btn tip" title="<?= lang('Print Barcode') ?>" data-placement="bottom" href="<?= admin_url('products/print_barcodes') ?>"><i class="fa fa-barcode"></i></a></li>
@@ -277,7 +277,7 @@
                         </a>
                     </li>
                         <?php } */ ?>
-                    <?php if (($Owner || $Admin || $GP['reports-quantity_alerts'] || $GP['reports-expiry_alerts']) && ($qty_alert_num > 0 || $exp_alert_num > 0 || $shop_sale_alerts)) {
+                    <?php if (($Owner || $GP['reports-quantity_alerts'] || $GP['reports-expiry_alerts']) && ($qty_alert_num > 0 || $exp_alert_num > 0 || $shop_sale_alerts)) {
                         ?>
                         <li class="dropdown hidden-sm">
                             <a class="btn blightOrange tip" title="<?= lang('alerts') ?>"
@@ -1518,7 +1518,7 @@
                                         </li>
                                         <li id="system_settings_user_groups">
                                             <a href="<?= admin_url('system_settings/user_groups') ?>">
-                                                <i class="fa fa-key"></i><span class="text"> <?= lang('group_permissions'); ?></span>
+                                                <i class="fa fa-key"></i><span class="text"> <?= lang('user_groups'); ?></span>
                                             </a>
                                         </li>
                                         <li id="site_logs_index">

@@ -1136,7 +1136,7 @@ class Purchases extends MY_Controller
 
     public function delete($id = null)
     {
-        $this->sma->checkPermissions(null, true);
+        $this->sma->checkPermissions('expenses', true);
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -1198,7 +1198,7 @@ class Purchases extends MY_Controller
 
     public function edit($id = null)
     {
-        //$this->sma->checkPermissions();
+        $this->sma->checkPermissions('expenses', true);
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -1793,7 +1793,7 @@ class Purchases extends MY_Controller
 
     public function email($purchase_id = null)
     {
-        $this->sma->checkPermissions(false, true);
+        $this->sma->checkPermissions('email', true);
 
         if ($this->input->get('id')) {
             $purchase_id = $this->input->get('id');
@@ -1924,17 +1924,12 @@ class Purchases extends MY_Controller
 
     public function expense_actions()
     {
-        if (!$this->Owner && !$this->GP['bulk_actions']) {
-            $this->session->set_flashdata('warning', lang('access_denied'));
-            redirect($_SERVER['HTTP_REFERER']);
-        }
-
         $this->form_validation->set_rules('form_action', lang('form_action'), 'required');
 
         if ($this->form_validation->run() == true) {
             if (!empty($_POST['val'])) {
                 if ($this->input->post('form_action') == 'delete') {
-                    $this->sma->checkPermissions('delete');
+                    $this->sma->checkPermissions('expenses');
                     foreach ($_POST['val'] as $id) {
                         $this->purchases_model->deleteExpense($id);
                     }
@@ -1943,6 +1938,7 @@ class Purchases extends MY_Controller
                 }
 
                 if ($this->input->post('form_action') == 'export_excel') {
+                    $this->sma->checkPermissions('expenses_export_excel');
                     $this->load->library('excel');
                     $this->excel->setActiveSheetIndex(0);
                     $this->excel->getActiveSheet()->setTitle(lang('expenses'));
@@ -1999,7 +1995,7 @@ class Purchases extends MY_Controller
 
     public function expenses($id = null)
     {
-        $this->sma->checkPermissions();
+        $this->sma->checkPermissions('expenses');
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('expenses')]];
@@ -2011,6 +2007,7 @@ class Purchases extends MY_Controller
     {
         $this->sma->checkPermissions('expenses');
 
+        $canExpenseAccess = $this->Owner || !empty($this->GP['purchases-expenses']);
         $detail_link = anchor('admin/purchases/expense_note/$1', '<i class="fa fa-file-text-o"></i> ' . lang('expense_note'), 'data-toggle="modal" data-target="#myModal2"');
         $edit_link = anchor('admin/purchases/edit_expense/$1', '<i class="fa fa-edit"></i> ' . lang('edit_expense'), 'data-toggle="modal" data-target="#myModal"');
         //$attachment_link = '<a href="'.base_url('assets/uploads/$1').'" target="_blank"><i class="fa fa-chain"></i></a>';
@@ -2021,12 +2018,11 @@ class Purchases extends MY_Controller
         $action = '<div class="text-center"><div class="btn-group text-left">'
             . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
             . lang('actions') . ' <span class="caret"></span></button>
-        <ul class="dropdown-menu pull-right" role="menu">
-            <li>' . $detail_link . '</li>
-            <li>' . $edit_link . '</li>
-            <li>' . $delete_link . '</li>
-        </ul>
-        </div></div>';
+        <ul class="dropdown-menu pull-right" role="menu">';
+        if ($canExpenseAccess) {
+            $action .= '<li>' . $detail_link . '</li><li>' . $edit_link . '</li><li>' . $delete_link . '</li>';
+        }
+        $action .= '</ul></div></div>';
 
         $this->load->library('datatables');
 
@@ -2177,7 +2173,7 @@ class Purchases extends MY_Controller
 
     public function getPurchases($warehouse_id = null)
     {
-        //$this->sma->checkPermissions('index');
+        $this->sma->checkPermissions('index');
         $warehouse_id = $this->site->resolveListingWarehouseId($warehouse_id);
 
         $pid = $this->input->get('pid');
@@ -2188,6 +2184,13 @@ class Purchases extends MY_Controller
             $user = $this->site->getUser();
             $warehouse_id = $user->warehouse_id;
         }
+        $canPurchaseView = $this->Owner || !empty($this->GP['purchases-index']);
+        $canPurchaseEdit = $this->Owner || !empty($this->GP['purchases-edit']);
+        $canPurchaseDelete = $this->Owner || !empty($this->GP['purchases-delete']);
+        $canPurchasePayments = $this->Owner || !empty($this->GP['purchases-payments']);
+        $canPurchasePdf = $this->Owner || !empty($this->GP['purchases-pdf']);
+        $canPurchaseEmail = $this->Owner || !empty($this->GP['purchases-email']);
+        $canReturnPurchase = $this->Owner || !empty($this->GP['purchases-return_purchases']);
         $detail_link = anchor('admin/purchases/view/$1', '<i class="fa fa-file-text-o"></i> ' . lang('purchase_details'));
         $payments_link = anchor('admin/purchases/payments/$1', '<i class="fa fa-money"></i> ' . lang('view_payments'), 'data-toggle="modal" data-target="#myModal"');
         $transfer_link = anchor('admin/purchases/transfer/$1', '<i class="fa fa-money"></i> ' . lang('Transfer to Pharmacy'), 'data-toggle="modal" data-target="#myModal"');
@@ -2209,56 +2212,76 @@ class Purchases extends MY_Controller
             . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i> "
             . lang('delete_purchase') . '</a>';
 
-
         if (isset($this->GP) && $this->GP['accountant']) {
 
             $action = '<div class="text-center"><div class="btn-group text-left">'
                 . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
                 . lang('actions') . ' <span class="caret"></span></button>
-            <ul class="dropdown-menu pull-right" role="menu">
-                <li>' . $convert_purchase_invoice . '</li>
-                <li>' . $detail_link . '</li>
-                <li>' . $payments_link . '</li>
-                <li>' . $add_payment_link . '</li>
-                <li>' . $edit_link . '</li>
-                <li>' . $pdf_link . '</li>
-                <li>' . $email_link . '</li>
-                <li>' . $print_barcode . '</li>
-                <li>' . $return_link . '</li>
-                <li>' . $journal_entry_link . '</li>
-                <li>' . $delete_link . '</li> 
-            </ul>
-            </div></div>';
+            <ul class="dropdown-menu pull-right" role="menu">';
+            if ($canPurchaseView) {
+                $action .= '<li>' . $convert_purchase_invoice . '</li><li>' . $detail_link . '</li>';
+            }
+            if ($canPurchasePayments) {
+                $action .= '<li>' . $payments_link . '</li><li>' . $add_payment_link . '</li>';
+            }
+            if ($canPurchaseEdit) {
+                $action .= '<li>' . $edit_link . '</li>';
+            }
+            if ($canPurchasePdf) {
+                $action .= '<li>' . $pdf_link . '</li>';
+            }
+            if ($canPurchaseEmail) {
+                $action .= '<li>' . $email_link . '</li>';
+            }
+            if ($this->Owner || $this->Admin) {
+                $action .= '<li>' . $print_barcode . '</li>';
+            }
+            if ($canReturnPurchase) {
+                $action .= '<li>' . $return_link . '</li>';
+            }
+            $action .= '<li>' . $journal_entry_link . '</li>';
+            if ($canPurchaseDelete) {
+                $action .= '<li>' . $delete_link . '</li>';
+            }
+            $action .= '</ul></div></div>';
 
         } else {
 
             $action = '<div class="text-center"><div class="btn-group text-left">'
                 . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
                 . lang('actions') . ' <span class="caret"></span></button>
-            <ul class="dropdown-menu pull-right" role="menu">
-                <li>' . $detail_link . '</li>
-                <li>' . $payments_link . '</li>
-                <li>' . $add_payment_link . '</li>
-                <li>' . $edit_link . '</li>
-                <li>' . $pdf_link . '</li>
-                <li>' . $email_link . '</li>';
+            <ul class="dropdown-menu pull-right" role="menu">';
+            if ($canPurchaseView) {
+                $action .= '<li>' . $detail_link . '</li>';
+            }
+            if ($canPurchasePayments) {
+                $action .= '<li>' . $payments_link . '</li><li>' . $add_payment_link . '</li>';
+            }
+            if ($canPurchaseEdit) {
+                $action .= '<li>' . $edit_link . '</li>';
+            }
+            if ($canPurchasePdf) {
+                $action .= '<li>' . $pdf_link . '</li>';
+            }
+            if ($canPurchaseEmail) {
+                $action .= '<li>' . $email_link . '</li>';
+            }
             if($this->Owner || $this->Admin){
                 $action .= '<li>' . $print_barcode . '</li>';
             }
-            if($this->Owner || $this->Admin || $this->GP['supplier-returns-add']){
+            if($canReturnPurchase){
                 $action .= '<li>' . $return_link . '</li>';
             }
-            if($this->Owner || $this->Admin || $this->GP['purchases-deleted']){
+            if($canPurchaseDelete){
                 $action .= '<li>' . $delete_link . '</li>';
             }
-            if($this->Owner || $this->Admin || $this->GP['transfers-add']){
+            if($this->Owner || !empty($this->GP['transfers-add'])){
                 $action .= '<li>' . $transfer_link . '</li>';
             }
             if($this->Owner || $this->Admin || $this->Accountant){
                $action .= '<li>' . $journal_entry_link . '</li>';
             }
-            $action .= '</ul>
-            </div></div>';
+            $action .= '</ul></div></div>';
 
 
         }
@@ -2340,12 +2363,15 @@ class Purchases extends MY_Controller
 
     public function getstatusPurchases($statuswise = null, $warehouse_id = null)
     {
-        //$this->sma->checkPermissions('index');
+        $this->sma->checkPermissions('index');
 
-        if ((!$this->Owner || !$this->Admin) && !$warehouse_id) {
-            $user = $this->site->getUser();
-            $warehouse_id = $user->warehouse_id;
-        }
+        $canPurchaseView = $this->Owner || !empty($this->GP['purchases-index']);
+        $canPurchaseEdit = $this->Owner || !empty($this->GP['purchases-edit']);
+        $canPurchaseDelete = $this->Owner || !empty($this->GP['purchases-delete']);
+        $canPurchasePayments = $this->Owner || !empty($this->GP['purchases-payments']);
+        $canPurchasePdf = $this->Owner || !empty($this->GP['purchases-pdf']);
+        $canPurchaseEmail = $this->Owner || !empty($this->GP['purchases-email']);
+        $canReturnPurchase = $this->Owner || !empty($this->GP['purchases-return_purchases']);
         $detail_link = anchor('admin/purchases/view/$1', '<i class="fa fa-file-text-o"></i> ' . lang('purchase_details'));
         $payments_link = anchor('admin/purchases/payments/$1', '<i class="fa fa-money"></i> ' . lang('view_payments'), 'data-toggle="modal" data-target="#myModal"');
         $add_payment_link = anchor('admin/purchases/add_payment/$1', '<i class="fa fa-money"></i> ' . lang('add_payment'), 'data-toggle="modal" data-target="#myModal"');
@@ -2361,18 +2387,32 @@ class Purchases extends MY_Controller
         $action = '<div class="text-center"><div class="btn-group text-left">'
             . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
             . lang('actions') . ' <span class="caret"></span></button>
-        <ul class="dropdown-menu pull-right" role="menu">
-            <li>' . $detail_link . '</li>
-            <li>' . $payments_link . '</li>
-            <li>' . $add_payment_link . '</li>
-            <li>' . $edit_link . '</li>
-            <li>' . $pdf_link . '</li>
-            <li>' . $email_link . '</li>
-            <li>' . $print_barcode . '</li>
-            <li>' . $return_link . '</li>
-            <li>' . $delete_link . '</li>
-        </ul>
-        </div></div>';
+        <ul class="dropdown-menu pull-right" role="menu">';
+        if ($canPurchaseView) {
+            $action .= '<li>' . $detail_link . '</li>';
+        }
+        if ($canPurchasePayments) {
+            $action .= '<li>' . $payments_link . '</li><li>' . $add_payment_link . '</li>';
+        }
+        if ($canPurchaseEdit) {
+            $action .= '<li>' . $edit_link . '</li>';
+        }
+        if ($canPurchasePdf) {
+            $action .= '<li>' . $pdf_link . '</li>';
+        }
+        if ($canPurchaseEmail) {
+            $action .= '<li>' . $email_link . '</li>';
+        }
+        if ($this->Owner || $this->Admin) {
+            $action .= '<li>' . $print_barcode . '</li>';
+        }
+        if ($canReturnPurchase) {
+            $action .= '<li>' . $return_link . '</li>';
+        }
+        if ($canPurchaseDelete) {
+            $action .= '<li>' . $delete_link . '</li>';
+        }
+        $action .= '</ul></div></div>';
         //$action = '<div class="text-center">' . $detail_link . ' ' . $edit_link . ' ' . $email_link . ' ' . $delete_link . '</div>';
 
         $this->load->library('datatables');
@@ -2590,7 +2630,7 @@ class Purchases extends MY_Controller
 
     public function payments($id = null)
     {
-        $this->sma->checkPermissions(false, true);
+        $this->sma->checkPermissions('payments', true);
 
         $this->data['payments'] = $this->purchases_model->getPurchasePayments($id);
         $this->data['inv'] = $this->purchases_model->getPurchaseByID($id);
@@ -2891,6 +2931,7 @@ class Purchases extends MY_Controller
 
      public function pdf($purchase_id)
     {
+        $this->sma->checkPermissions('pdf');
         $this->load->library('inv_qrcode');
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
@@ -3108,11 +3149,6 @@ class Purchases extends MY_Controller
 
     public function purchase_actions()
     {
-        if (!$this->Owner && !$this->GP['bulk_actions']) {
-            $this->session->set_flashdata('warning', lang('access_denied'));
-            redirect($_SERVER['HTTP_REFERER']);
-        }
-
         $this->form_validation->set_rules('form_action', lang('form_action'), 'required');
 
         if ($this->form_validation->run() == true) {
@@ -3125,8 +3161,10 @@ class Purchases extends MY_Controller
                     $this->session->set_flashdata('message', $this->lang->line('purchases_deleted'));
                     redirect($_SERVER['HTTP_REFERER']);
                 } elseif ($this->input->post('form_action') == 'combine') {
+                    $this->sma->checkPermissions('pdf');
                     $html = $this->combine_pdf($_POST['val']);
                 } elseif ($this->input->post('form_action') == 'export_excel') {
+                    $this->sma->checkPermissions('export_excel');
                     $this->load->library('excel');
                     $this->excel->setActiveSheetIndex(0);
                     $this->excel->getActiveSheet()->setTitle(lang('purchases'));

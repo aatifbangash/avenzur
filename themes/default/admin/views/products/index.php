@@ -90,7 +90,7 @@
 
     });
 </script>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner || ($GP && ($GP['products-add'] || $GP['products-update_price'] || $GP['products-sync_quantity'] || $GP['products-set_avg_cost'] || $GP['products-export_excel'] || $GP['products-delete']))) {
                 echo admin_form_open('products/product_actions' . ($warehouse_id ? '/' . $warehouse_id : ''), 'id="action-form"');
 } ?>
 <div class="box">
@@ -247,7 +247,7 @@
         </div>
     </div>
 </div>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner || ($GP && ($GP['products-add'] || $GP['products-update_price'] || $GP['products-sync_quantity'] || $GP['products-set_avg_cost'] || $GP['products-export_excel'] || $GP['products-delete']))) {
     ?>
     <div style="display: none;">
         <input type="hidden" name="form_action" value="" id="form_action"/>

@@ -71,7 +71,7 @@
     });
 </script>
 
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner || ($GP && $GP['products-adjustments'])) {
             echo admin_form_open('products/adjustment_actions', 'id="action-form"');
 }
 ?>
@@ -171,7 +171,7 @@
     </div>
 </div>
 
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner || ($GP && $GP['products-adjustments'])) {
     ?>
     <div style="display: none;">
         <input type="hidden" name="form_action" value="" id="form_action"/>

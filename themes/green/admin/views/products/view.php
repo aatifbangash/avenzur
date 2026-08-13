@@ -1,5 +1,5 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<?php if ($Owner || $Admin) {
+<?php if ($Owner) {
     ?>
     <ul id="myTab" class="nav nav-tabs">
         <li class=""><a href="#details" class="tab-grey"><?= lang('product_details') ?></a></li>
@@ -31,29 +31,35 @@
                             </a>
                             <ul class="dropdown-menu pull-right tasks-menus" role="menu"
                                 aria-labelledby="dLabel">
-                                <li>
-                                    <a href="<?= admin_url('products/edit/' . $product->id) ?>">
-                                        <i class="fa fa-edit"></i> <?= lang('edit') ?>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="<?= admin_url('products/print_barcodes/' . $product->id) ?>">
-                                        <i class="fa fa-print"></i> <?= lang('print_barcode_label') ?>
-                                    </a>
-                                </li>
+                                <?php if ($Owner || !empty($GP['products-edit'])) { ?>
+                                    <li>
+                                        <a href="<?= admin_url('products/edit/' . $product->id) ?>">
+                                            <i class="fa fa-edit"></i> <?= lang('edit') ?>
+                                        </a>
+                                    </li>
+                                <?php } ?>
+                                <?php if ($Owner || !empty($GP['products-barcode'])) { ?>
+                                    <li>
+                                        <a href="<?= admin_url('products/print_barcodes/' . $product->id) ?>">
+                                            <i class="fa fa-print"></i> <?= lang('print_barcode_label') ?>
+                                        </a>
+                                    </li>
+                                <?php } ?>
                                 <li>
                                     <a href="<?= admin_url('products/pdf/' . $product->id) ?>">
                                         <i class="fa fa-download"></i> <?= lang('pdf') ?>
                                     </a>
                                 </li>
-                                <li class="divider"></li>
-                                <li>
-                                    <a href="#" class="bpo" title="<b><?= lang('delete_product') ?></b>"
-                                        data-content="<div style='width:150px;'><p><?= lang('r_u_sure') ?></p><a class='btn btn-danger' href='<?= admin_url('products/delete/' . $product->id) ?>'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button></div>"
-                                        data-html="true" data-placement="left">
-                                        <i class="fa fa-trash-o"></i> <?= lang('delete') ?>
-                                    </a>
-                                </li>
+                                <?php if ($Owner || !empty($GP['products-delete'])) { ?>
+                                    <li class="divider"></li>
+                                    <li>
+                                        <a href="#" class="bpo" title="<b><?= lang('delete_product') ?></b>"
+                                            data-content="<div style='width:150px;'><p><?= lang('r_u_sure') ?></p><a class='btn btn-danger' href='<?= admin_url('products/delete/' . $product->id) ?>'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button></div>"
+                                            data-html="true" data-placement="left">
+                                            <i class="fa fa-trash-o"></i> <?= lang('delete') ?>
+                                        </a>
+                                    </li>
+                                <?php } ?>
                             </ul>
                         </li>
                     </ul>
@@ -74,7 +80,7 @@
         echo '<a class="img-thumbnail" data-toggle="lightbox" data-gallery="multiimages" data-parent="#multiimages" href="' . base_url() . 'assets/uploads/' . $product->image . '" style="margin-right:5px;"><img class="img-responsive" src="' . base_url() . 'assets/uploads/thumbs/' . $product->image . '" alt="' . $product->image . '" style="width:' . $Settings->twidth . 'px; height:' . $Settings->theight . 'px;" /></a>';
         foreach ($images as $ph) {
             echo '<div class="gallery-image"><a class="img-thumbnail" data-toggle="lightbox" data-gallery="multiimages" data-parent="#multiimages" href="' . base_url() . 'assets/uploads/' . $ph->photo . '" style="margin-right:5px;"><img class="img-responsive" src="' . base_url() . 'assets/uploads/thumbs/' . $ph->photo . '" alt="' . $ph->photo . '" style="width:' . $Settings->twidth . 'px; height:' . $Settings->theight . 'px;" /></a>';
-            if ($Owner || $Admin || $GP['products-edit']) {
+            if ($Owner || $GP['products-edit']) {
                 echo '<a href="#" class="delimg" data-item-id="' . $ph->id . '"><i class="fa fa-times"></i></a>';
             }
             echo '</div>';
@@ -134,7 +140,7 @@
                                             <td><?= lang('unit'); ?></td>
                                             <td><?= $unit ? $unit->name . ' (' . $unit->code . ')' : ''; ?></td>
                                         </tr>
-                                        <?php if ($Owner || $Admin) {
+                                        <?php if ($Owner) {
                                         echo '<tr><td>' . lang('cost') . '</td><td>' . $this->sma->formatMoney($product->cost) . '</td></tr>';
                                         echo '<tr><td>' . lang('price') . '</td><td>' . $this->sma->formatMoney($product->price) . '</td></tr>';
                                         if ($product->promotion) {
@@ -241,7 +247,7 @@
                                                         <th><?= lang('warehouse_name') ?></th>
                                                         <th><?= lang('quantity') . ' (' . lang('rack') . ')'; ?></th>
                                                         <?php
-                                                        if ($Owner || $Admin || $this->session->userdata('show_cost')) {
+                                                        if ($Owner || $this->session->userdata('show_cost')) {
                                                             echo '<th>' . lang('avg_cost') . '</th>';
                                                         } ?>
                                                     </tr>
@@ -249,7 +255,7 @@
                                                     <tbody>
                                                     <?php foreach ($warehouses as $warehouse) {
                                                             if ($warehouse->quantity != 0) {
-                                                                echo '<tr><td>' . $warehouse->name . ' (' . $warehouse->code . ')</td><td><strong>' . $this->sma->formatQuantity($warehouse->quantity) . '</strong>' . ($warehouse->rack ? ' (' . $warehouse->rack . ')' : '') . '</td>' . (($Owner || $Admin || $this->session->userdata('show_cost')) ? '<td>' . $this->sma->formatDecimal($warehouse->avg_cost) . '</td>' : '') . '</tr>';
+                                                                echo '<tr><td>' . $warehouse->name . ' (' . $warehouse->code . ')</td><td><strong>' . $this->sma->formatQuantity($warehouse->quantity) . '</strong>' . ($warehouse->rack ? ' (' . $warehouse->rack . ')' : '') . '</td>' . (($Owner || $this->session->userdata('show_cost')) ? '<td>' . $this->sma->formatDecimal($warehouse->avg_cost) . '</td>' : '') . '</tr>';
                                                             }
                                                         } ?>
                                                     </tbody>
@@ -291,7 +297,7 @@
                                                         <th><?= lang('warehouse_name') ?></th>
                                                         <th><?= lang('product_variant'); ?></th>
                                                         <th><?= lang('quantity') . ' (' . lang('rack') . ')'; ?></th>
-                                                        <?php if ($Owner || $Admin) {
+                                                        <?php if ($Owner) {
                                                 echo '<th>' . lang('cost') . '</th>';
                                                 echo '<th>' . lang('price') . '</th>';
                                             } ?>
@@ -366,7 +372,7 @@
     <?php
                                         } ?>
 
-        <?php if ($Owner || $Admin) {
+        <?php if ($Owner) {
                                             ?>
     </div>
     <div id="chart" class="tab-pane fade">

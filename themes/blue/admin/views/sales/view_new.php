@@ -403,7 +403,7 @@
                 ?>
 
                 <?php 
-                    if(($this->Admin || $this->Owner || $this->GP['sales-create-invoice']) && ($inv->sale_status == 'delivered')){
+                    if(($this->Owner || $this->GP['sales-create-invoice']) && ($inv->sale_status == 'delivered')){
                 ?>
                 <div class="btn-group">
                     <a href="<?= admin_url('sales/create_sale_invoice/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-primary" title="<?= lang('sale_invoice') ?>">

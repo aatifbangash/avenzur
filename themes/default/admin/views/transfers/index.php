@@ -50,7 +50,7 @@
         ], "footer");
     });
 </script>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner || ($GP && ($GP['transfers-delete'] || $GP['transfers-pdf'] || $GP['transfers-export_excel']))) {
     echo admin_form_open('transfers/transfer_actions', 'id="action-form"');
 } ?>
 <div class="box">
@@ -139,7 +139,7 @@
         </div>
     </div>
 </div>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner || ($GP && ($GP['transfers-delete'] || $GP['transfers-pdf'] || $GP['transfers-export_excel']))) {
     ?>
     <div style="display: none;">
         <input type="hidden" name="form_action" value="" id="form_action"/>

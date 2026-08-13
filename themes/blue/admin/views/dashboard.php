@@ -464,27 +464,27 @@ function row_status($x)
                     <div class="col-md-12">
 
                         <ul id="dbTab" class="nav nav-tabs">
-                            <?php if ($Owner || $Admin || $GP['sales-index']) {
+                            <?php if ($Owner || $GP['sales-index']) {
         ?>
                             <li class=""><a href="#sales"><?= lang('sales') ?></a></li>
                             <?php
-    } if ($Owner || $Admin || $GP['quotes-index']) {
+    } if ($Owner || $GP['quotes-index']) {
         ?>
                             <li class=""><a href="#quotes"><?= lang('quotes') ?></a></li>
                             <?php
-    } if ($Owner || $Admin || $GP['purchases-index']) {
+    } if ($Owner || $GP['purchases-index']) {
         ?>
                             <li class=""><a href="#purchases"><?= lang('purchases') ?></a></li>
                             <?php
-    } if ($Owner || $Admin || $GP['transfers-index']) {
+    } if ($Owner || $GP['transfers-index']) {
         ?>
                             <li class=""><a href="#transfers"><?= lang('transfers') ?></a></li>
                             <?php
-    } if ($Owner || $Admin || $GP['customers-index']) {
+    } if ($Owner || $GP['customers-index']) {
         ?>
                             <li class=""><a href="#customers"><?= lang('customers') ?></a></li>
                             <?php
-    } if ($Owner || $Admin || $GP['suppliers-index']) {
+    } if ($Owner || $GP['suppliers-index']) {
         ?>
                             <li class=""><a href="#suppliers"><?= lang('suppliers') ?></a></li>
                             <?php
@@ -492,7 +492,7 @@ function row_status($x)
                         </ul>
 
                         <div class="tab-content">
-                        <?php if ($Owner || $Admin || $GP['sales-index']) {
+                        <?php if ($Owner || $GP['sales-index']) {
         ?>
 
                             <div id="sales" class="tab-pane fade in">
@@ -545,7 +545,7 @@ function row_status($x)
                             </div>
 
                             <?php
-    } if ($Owner || $Admin || $GP['quotes-index']) {
+    } if ($Owner || $GP['quotes-index']) {
         ?>
 
                             <div id="quotes" class="tab-pane fade">
@@ -594,7 +594,7 @@ function row_status($x)
                             </div>
 
                             <?php
-    } if ($Owner || $Admin || $GP['purchases-index']) {
+    } if ($Owner || $GP['purchases-index']) {
         ?>
 
                             <div id="purchases" class="tab-pane fade in">
@@ -643,7 +643,7 @@ function row_status($x)
                             </div>
 
                             <?php
-    } if ($Owner || $Admin || $GP['transfers-index']) {
+    } if ($Owner || $GP['transfers-index']) {
         ?>
 
                             <div id="transfers" class="tab-pane fade">
@@ -694,7 +694,7 @@ function row_status($x)
                             </div>
 
                             <?php
-    } if ($Owner || $Admin || $GP['customers-index']) {
+    } if ($Owner || $GP['customers-index']) {
         ?>
 
                             <div id="customers" class="tab-pane fade in">
@@ -743,7 +743,7 @@ function row_status($x)
                             </div>
 
                             <?php
-    } if ($Owner || $Admin || $GP['suppliers-index']) {
+    } if ($Owner || $GP['suppliers-index']) {
         ?>
 
                             <div id="suppliers" class="tab-pane fade">

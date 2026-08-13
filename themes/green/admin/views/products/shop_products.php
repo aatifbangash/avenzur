@@ -3,13 +3,13 @@
     #PRData td:nth-child(7) {
         text-align: right;
     }
-    <?php if ($Owner || $Admin || $this->session->userdata('show_cost')) {
+    <?php if ($Owner || $this->session->userdata('show_cost')) {
         ?>
     #PRData td:nth-child(9) {
         text-align: right;
     }
         <?php
-    } if ($Owner || $Admin || $this->session->userdata('show_price')) {
+    } if ($Owner || $this->session->userdata('show_price')) {
         ?>
     #PRData td:nth-child(8) {
         text-align: right;
@@ -41,7 +41,7 @@
                 return nRow;
             },
             "aoColumns": [
-                {"bSortable": false, "mRender": checkbox}, {"bSortable": false,"mRender": img_hl}, null, null, null, null, null, <?php if ($Owner || $Admin) {
+                {"bSortable": false, "mRender": checkbox}, {"bSortable": false,"mRender": img_hl}, null, null, null, null, null, <?php if ($Owner) {
                     echo '{"mRender": currencyFormat}, {"mRender": currencyFormat},';
                                                                                                                            } else {
                                                                                                                                if ($this->session->userdata('show_cost')) {
@@ -63,7 +63,7 @@
             {column_number: 5, filter_default_label: "[<?=lang('brand');?>]", filter_type: "text", data: []},
             {column_number: 6, filter_default_label: "[<?=lang('category');?>]", filter_type: "text", data: []},
             <?php $col = 6;
-            if ($Owner || $Admin) {
+            if ($Owner) {
                 echo '{column_number : 7, filter_default_label: "[' . lang('cost') . ']", filter_type: "text", data: [] },';
                 echo '{column_number : 8, filter_default_label: "[' . lang('price') . ']", filter_type: "text", data: [] },';
                 $col += 2;
@@ -91,7 +91,7 @@
 
     });
 </script>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner || ($GP && (!empty($GP['products-add']) || !empty($GP['products-update_price']) || !empty($GP['products-sync_quantity']) || !empty($GP['products-set_avg_cost']) || !empty($GP['products-export_excel']) || !empty($GP['products-delete']) || !empty($GP['products-edit']))) {
                 echo admin_form_open('products/product_actions' . ($warehouse_id ? '/' . $warehouse_id : ''), 'id="action-form"');
 } ?>
 <div class="box">
@@ -210,7 +210,7 @@
                             <th><?= lang('brand') ?></th>
                             <th><?= lang('category') ?></th>
                             <?php
-                            if ($Owner || $Admin) {
+                            if ($Owner) {
                                 echo '<th>' . lang('cost') . '</th>';
                                 echo '<th>' . lang('price') . '</th>';
                             } else {
@@ -247,7 +247,7 @@
                             <th></th>
                             <th></th>
                             <?php
-                            if ($Owner || $Admin) {
+                            if ($Owner) {
                                 echo '<th></th>';
                                 echo '<th></th>';
                             } else {
@@ -272,7 +272,7 @@
         </div>
     </div>
 </div>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner || ($GP && (!empty($GP['products-add']) || !empty($GP['products-update_price']) || !empty($GP['products-sync_quantity']) || !empty($GP['products-set_avg_cost']) || !empty($GP['products-export_excel']) || !empty($GP['products-delete']) || !empty($GP['products-edit']))) {
     ?>
     <div style="display: none;">
         <input type="hidden" name="form_action" value="" id="form_action"/>

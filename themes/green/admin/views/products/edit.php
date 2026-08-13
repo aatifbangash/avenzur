@@ -490,7 +490,7 @@ if (!empty($variants)) {
                                                 if ($ph->photo != $product->image)
                                                 {
                                                     echo '<div class="gallery-image "><a class="img-thumbnail" data-toggle="lightbox" data-gallery="multiimages" data-parent="#multiimages" href="' . base_url() . 'assets/uploads/' . $ph->photo . '" style="margin-right:5px;"><img class="img-responsive" src="' . base_url() . 'assets/uploads/' . $ph->photo . '" alt="" style="width: 100px; height: 100px;" /></a>';
-                                                    if ($Owner || $Admin || $GP['products-edit']) {
+                                                    if ($Owner || $GP['products-edit']) {
                                                         echo '<a href="#" class="delimg" data-item-id="' . $ph->id . '"><i class="fa fa-times"></i></a>';
                                                     }
                                                     echo '</div>';

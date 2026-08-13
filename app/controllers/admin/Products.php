@@ -6620,6 +6620,7 @@ class Products extends MY_Controller
     }
     public function add($id = null)
     {
+        $this->sma->checkPermissions('add');
         //$this->sma->checkPermissions();
         $this->load->helper('security');
         $warehouses = $this->site->getAllWarehouses();
@@ -7301,7 +7302,7 @@ class Products extends MY_Controller
     }
     public function combo_actions()
     {
-        if (!$this->Owner && !$this->GP['bulk_actions']) {
+        if (!$this->Owner && empty($this->GP['products-combos'])) {
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect($_SERVER['HTTP_REFERER']);
         }
@@ -8031,7 +8032,7 @@ error_reporting(E_ALL);
 
     public function bundle_actions()
     {
-        if (!$this->Owner && !$this->GP['bulk_actions']) {
+        if (!$this->Owner && empty($this->GP['products-bundles'])) {
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect($_SERVER['HTTP_REFERER']);
         }
@@ -8059,7 +8060,7 @@ error_reporting(E_ALL);
     }
     public function adjustment_actions()
     {
-        if (!$this->Owner && !$this->GP['bulk_actions']) {
+        if (!$this->Owner && empty($this->GP['products-adjustments'])) {
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect($_SERVER['HTTP_REFERER']);
         }
@@ -8076,6 +8077,7 @@ error_reporting(E_ALL);
                     $this->session->set_flashdata('message', $this->lang->line('adjustment_deleted'));
                     redirect($_SERVER['HTTP_REFERER']);
                 } elseif ($this->input->post('form_action') == 'export_excel') {
+                    $this->sma->checkPermissions('adjustments');
                     $this->load->library('excel');
                     $this->excel->setActiveSheetIndex(0);
                     $this->excel->getActiveSheet()->setTitle('quantity_adjustments');
@@ -8881,6 +8883,7 @@ error_reporting(E_ALL);
     }
     public function edit($id = null)
     {
+        $this->sma->checkPermissions('edit');
         //$this->sma->checkPermissions();
         $this->load->helper('security');
         if ($this->input->post('id')) {
@@ -9711,6 +9714,13 @@ error_reporting(E_ALL);
         $this->sma->checkPermissions('index', true);
         $supplier = $this->input->get('supplier') ? $this->input->get('supplier') : null;
 
+        $canDuplicateProduct = $this->Owner || !empty($this->GP['products-add']);
+        $canEditProduct = $this->Owner || !empty($this->GP['products-edit']);
+        $canSetRack = $this->Owner || !empty($this->GP['products-set_rack']);
+        $canViewImage = $this->Owner || !empty($this->GP['products-view_image']);
+        $canPrintBarcode = $this->Owner || !empty($this->GP['products-barcode']);
+        $canDeleteProduct = $this->Owner || !empty($this->GP['products-delete']);
+
         if ((!$this->Owner && !$this->Admin) && !$warehouse_id) {
             $user = $this->site->getUser();
             $warehouse_id = $user->warehouse_id;
@@ -9726,19 +9736,29 @@ error_reporting(E_ALL);
             . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
             . lang('actions') . ' <span class="caret"></span></button>
         <ul class="dropdown-menu pull-right" role="menu">
-            <li>' . $detail_link . '</li>
-            <li><a href="' . admin_url('products/add/$1') . '"><i class="fa fa-plus-square"></i> ' . lang('duplicate_product') . '</a></li>
-            <li><a href="' . admin_url('products/edit/$1') . '"><i class="fa fa-edit"></i> ' . lang('edit_product') . '</a></li>';
-        if ($warehouse_id) {
+            <li>' . $detail_link . '</li>';
+        if ($canDuplicateProduct) {
+            $action .= '<li><a href="' . admin_url('products/add/$1') . '"><i class="fa fa-plus-square"></i> ' . lang('duplicate_product') . '</a></li>';
+        }
+        if ($canEditProduct) {
+            $action .= '<li><a href="' . admin_url('products/edit/$1') . '"><i class="fa fa-edit"></i> ' . lang('edit_product') . '</a></li>';
+        }
+        if ($warehouse_id && $canSetRack) {
             $action .= '<li><a href="' . admin_url('products/set_rack/$1/' . $warehouse_id) . '" data-toggle="modal" data-target="#myModal"><i class="fa fa-bars"></i> '
                 . lang('set_rack') . '</a></li>';
         }
-        $action .= '<li><a href="' . base_url() . 'assets/uploads/$2" data-type="image" data-toggle="lightbox"><i class="fa fa-file-photo-o"></i> '
-            . lang('view_image') . '</a></li>
-            <li>' . $single_barcode . '</li>
-            <li class="divider"></li>
-            <li>' . $delete_link . '</li>
-            </ul>
+        if ($canViewImage) {
+            $action .= '<li><a href="' . base_url() . 'assets/uploads/$2" data-type="image" data-toggle="lightbox"><i class="fa fa-file-photo-o"></i> '
+                . lang('view_image') . '</a></li>';
+        }
+        if ($canPrintBarcode) {
+            $action .= '<li>' . $single_barcode . '</li>';
+        }
+        if ($canDeleteProduct) {
+            $action .= '<li class="divider"></li>
+            <li>' . $delete_link . '</li>';
+        }
+        $action .= '</ul>
         </div></div>';
         $this->load->library('datatables');
         if ($warehouse_id) {
@@ -9805,6 +9825,13 @@ error_reporting(E_ALL);
         $this->sma->checkPermissions('index', true);
         $supplier = $this->input->get('supplier') ? $this->input->get('supplier') : null;
 
+        $canDuplicateProduct = $this->Owner || !empty($this->GP['products-add']);
+        $canEditProduct = $this->Owner || !empty($this->GP['products-edit']);
+        $canSetRack = $this->Owner || !empty($this->GP['products-set_rack']);
+        $canViewImage = $this->Owner || !empty($this->GP['products-view_image']);
+        $canPrintBarcode = $this->Owner || !empty($this->GP['products-barcode']);
+        $canDeleteProduct = $this->Owner || !empty($this->GP['products-delete']);
+
         if ((!$this->Owner && !$this->Admin) && !$warehouse_id) {
             $user = $this->site->getUser();
             $warehouse_id = $user->warehouse_id;
@@ -9820,19 +9847,29 @@ error_reporting(E_ALL);
             . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
             . lang('actions') . ' <span class="caret"></span></button>
         <ul class="dropdown-menu pull-right" role="menu">
-            <li>' . $detail_link . '</li>
-            <li><a href="' . admin_url('products/add/$1') . '"><i class="fa fa-plus-square"></i> ' . lang('duplicate_product') . '</a></li>
-            <li><a href="' . admin_url('products/edit/$1') . '"><i class="fa fa-edit"></i> ' . lang('edit_product') . '</a></li>';
-        if ($warehouse_id) {
+            <li>' . $detail_link . '</li>';
+        if ($canDuplicateProduct) {
+            $action .= '<li><a href="' . admin_url('products/add/$1') . '"><i class="fa fa-plus-square"></i> ' . lang('duplicate_product') . '</a></li>';
+        }
+        if ($canEditProduct) {
+            $action .= '<li><a href="' . admin_url('products/edit/$1') . '"><i class="fa fa-edit"></i> ' . lang('edit_product') . '</a></li>';
+        }
+        if ($warehouse_id && $canSetRack) {
             $action .= '<li><a href="' . admin_url('products/set_rack/$1/' . $warehouse_id) . '" data-toggle="modal" data-target="#myModal"><i class="fa fa-bars"></i> '
                 . lang('set_rack') . '</a></li>';
         }
-        $action .= '<li><a href="' . base_url() . 'assets/uploads/$2" data-type="image" data-toggle="lightbox"><i class="fa fa-file-photo-o"></i> '
-            . lang('view_image') . '</a></li>
-            <li>' . $single_barcode . '</li>
-            <li class="divider"></li>
-            <li>' . $delete_link . '</li>
-            </ul>
+        if ($canViewImage) {
+            $action .= '<li><a href="' . base_url() . 'assets/uploads/$2" data-type="image" data-toggle="lightbox"><i class="fa fa-file-photo-o"></i> '
+                . lang('view_image') . '</a></li>';
+        }
+        if ($canPrintBarcode) {
+            $action .= '<li>' . $single_barcode . '</li>';
+        }
+        if ($canDeleteProduct) {
+            $action .= '<li class="divider"></li>
+            <li>' . $delete_link . '</li>';
+        }
+        $action .= '</ul>
         </div></div>';
         $this->load->library('datatables');
         if ($warehouse_id) {
@@ -9895,6 +9932,13 @@ error_reporting(E_ALL);
         $this->sma->checkPermissions('index', true);
         $supplier = $this->input->get('supplier') ? $this->input->get('supplier') : null;
 
+        $canDuplicateProduct = $this->Owner || !empty($this->GP['products-add']);
+        $canEditProduct = $this->Owner || !empty($this->GP['products-edit']);
+        $canSetRack = $this->Owner || !empty($this->GP['products-set_rack']);
+        $canViewImage = $this->Owner || !empty($this->GP['products-view_image']);
+        $canPrintBarcode = $this->Owner || !empty($this->GP['products-barcode']);
+        $canDeleteProduct = $this->Owner || !empty($this->GP['products-delete']);
+
         if ((!$this->Owner && !$this->Admin) && !$warehouse_id) {
             $user = $this->site->getUser();
             $warehouse_id = $user->warehouse_id;
@@ -9910,19 +9954,29 @@ error_reporting(E_ALL);
             . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
             . lang('actions') . ' <span class="caret"></span></button>
         <ul class="dropdown-menu pull-right" role="menu">
-            <li>' . $detail_link . '</li>
-            <li><a href="' . admin_url('products/add/$1') . '"><i class="fa fa-plus-square"></i> ' . lang('duplicate_product') . '</a></li>
-            <li><a href="' . admin_url('products/edit/$1') . '"><i class="fa fa-edit"></i> ' . lang('edit_product') . '</a></li>';
-        if ($warehouse_id) {
+            <li>' . $detail_link . '</li>';
+        if ($canDuplicateProduct) {
+            $action .= '<li><a href="' . admin_url('products/add/$1') . '"><i class="fa fa-plus-square"></i> ' . lang('duplicate_product') . '</a></li>';
+        }
+        if ($canEditProduct) {
+            $action .= '<li><a href="' . admin_url('products/edit/$1') . '"><i class="fa fa-edit"></i> ' . lang('edit_product') . '</a></li>';
+        }
+        if ($warehouse_id && $canSetRack) {
             $action .= '<li><a href="' . admin_url('products/set_rack/$1/' . $warehouse_id) . '" data-toggle="modal" data-target="#myModal"><i class="fa fa-bars"></i> '
                 . lang('set_rack') . '</a></li>';
         }
-        $action .= '<li><a href="' . base_url() . 'assets/uploads/$2" data-type="image" data-toggle="lightbox"><i class="fa fa-file-photo-o"></i> '
-            . lang('view_image') . '</a></li>
-            <li>' . $single_barcode . '</li>
-            <li class="divider"></li>
-            <li>' . $delete_link . '</li>
-            </ul>
+        if ($canViewImage) {
+            $action .= '<li><a href="' . base_url() . 'assets/uploads/$2" data-type="image" data-toggle="lightbox"><i class="fa fa-file-photo-o"></i> '
+                . lang('view_image') . '</a></li>';
+        }
+        if ($canPrintBarcode) {
+            $action .= '<li>' . $single_barcode . '</li>';
+        }
+        if ($canDeleteProduct) {
+            $action .= '<li class="divider"></li>
+            <li>' . $delete_link . '</li>';
+        }
+        $action .= '</ul>
         </div></div>';
         $this->load->library('datatables');
         if ($warehouse_id) {
@@ -10059,6 +10113,13 @@ error_reporting(E_ALL);
         $this->sma->checkPermissions('index', true);
         $supplier = $this->input->get('supplier') ? $this->input->get('supplier') : null;
 
+        $canDuplicateProduct = $this->Owner || !empty($this->GP['products-add']);
+        $canEditProduct = $this->Owner || !empty($this->GP['products-edit']);
+        $canSetRack = $this->Owner || !empty($this->GP['products-set_rack']);
+        $canViewImage = $this->Owner || !empty($this->GP['products-view_image']);
+        $canPrintBarcode = $this->Owner || !empty($this->GP['products-barcode']);
+        $canDeleteProduct = $this->Owner || !empty($this->GP['products-delete']);
+
         $warehouse_id = $this->resolveProductsListingWarehouseId($warehouse_id);
         $detail_link = anchor('admin/products/view/$1', '<i class="fa fa-file-text-o"></i> ' . lang('product_details'));
         $delete_link = "<a href='#' class='tip po' title='<b>" . $this->lang->line('delete_product') . "</b>' data-content=\"<p>"
@@ -10072,31 +10133,31 @@ error_reporting(E_ALL);
             . lang('actions') . ' <span class="caret"></span></button>
         <ul class="dropdown-menu pull-right" role="menu">
             <li>' . $detail_link . '</li>';
-        if ($this->Admin || $this->Owner) {
+        if ($canDuplicateProduct) {
             $action .= '<li><a href="' . admin_url('products/add/$1') . '"><i class="fa fa-plus-square"></i> ' . lang('duplicate_product') . '</a></li>';
         }
 
-
-//        new lines here for Avnzor edit product link (edit_new_product)
-        if($this->Settings->site_name == 'Avnzor'){
-            $action .= '<li><a href="' . admin_url('products/edit_new/$1') . '"><i class="fa fa-edit"></i> ' . lang('edit_product') . '</a></li>';
-             }else{
-            $action .= '<li><a href="' . admin_url('products/edit/$1') . '"><i class="fa fa-edit"></i> ' . lang('edit_product') . '</a></li>';
+        if ($canEditProduct) {
+            if ($this->Settings->site_name == 'Avnzor') {
+                $action .= '<li><a href="' . admin_url('products/edit_new/$1') . '"><i class="fa fa-edit"></i> ' . lang('edit_product') . '</a></li>';
+            } else {
+                $action .= '<li><a href="' . admin_url('products/edit/$1') . '"><i class="fa fa-edit"></i> ' . lang('edit_product') . '</a></li>';
+            }
         }
 
-
-        if ($warehouse_id) {
+        if ($warehouse_id && $canSetRack) {
             $action .= '<li><a href="' . admin_url('products/set_rack/$1/' . $warehouse_id) . '" data-toggle="modal" data-target="#myModal"><i class="fa fa-bars"></i> '
                 . lang('set_rack') . '</a></li>';
         }
-        $action .= '<li><a href="' . base_url() . 'assets/uploads/$2" data-type="image" data-toggle="lightbox"><i class="fa fa-file-photo-o"></i> '
-            . lang('view_image') . '</a></li>';
-        if ($this->Admin || $this->Owner) {
+        if ($canViewImage) {
+            $action .= '<li><a href="' . base_url() . 'assets/uploads/$2" data-type="image" data-toggle="lightbox"><i class="fa fa-file-photo-o"></i> '
+                . lang('view_image') . '</a></li>';
+        }
+        if ($canPrintBarcode) {
             $action .= '<li>' . $single_barcode . '</li>';
         }
-
-        $action .= '<li class="divider"></li>';
-        if ($this->Admin || $this->Owner) {
+        if ($canDeleteProduct) {
+            $action .= '<li class="divider"></li>';
             $action .= '<li>' . $delete_link . '</li>';
         }
         $action .= '</ul>
@@ -11266,22 +11327,19 @@ error_reporting(E_ALL);
 
     public function product_actions($wh = null)
     {
-        if (!$this->Owner && !$this->GP['bulk_actions']) {
-            $this->session->set_flashdata('warning', lang('access_denied'));
-            redirect($_SERVER['HTTP_REFERER']);
-        }
-
         $this->form_validation->set_rules('form_action', lang('form_action'), 'required');
 
         if ($this->form_validation->run() == true) {
             if (!empty($_POST['val'])) {
                 if ($this->input->post('form_action') == 'sync_quantity') {
+                    $this->sma->checkPermissions('sync_quantity');
                     foreach ($_POST['val'] as $id) {
                         $this->site->syncQuantity(null, null, null, $id);
                     }
                     $this->session->set_flashdata('message', $this->lang->line('products_quantity_sync'));
                     redirect($_SERVER['HTTP_REFERER']);
                 } elseif ($this->input->post('form_action') == 'set_avg_cost') {
+                    $this->sma->checkPermissions('set_avg_cost');
                     foreach ($_POST['val'] as $id) {
                         $this->products_model->setAvgCost($id);
                     }
@@ -11322,6 +11380,7 @@ error_reporting(E_ALL);
                     $this->session->set_flashdata('message', $this->lang->line('Added as deactivated'));
                     redirect($_SERVER['HTTP_REFERER']);
                 } elseif ($this->input->post('form_action') == 'labels') {
+                    $this->sma->checkPermissions('barcode');
                     foreach ($_POST['val'] as $id) {
                         $row = $this->products_model->getProductByID($id);
                         $selected_variants = false;
@@ -11339,10 +11398,7 @@ error_reporting(E_ALL);
                     $meta = ['page_title' => lang('print_barcodes'), 'bc' => $bc];
                     $this->page_construct('products/print_barcodes', $meta, $this->data);
                 } elseif ($this->input->post('form_action') == 'export_excel') {
-                    if (!$this->Owner && !$this->Admin) {
-                        $this->session->set_flashdata('warning', lang('access_denied'));
-                        redirect($_SERVER['HTTP_REFERER']);
-                    }
+                    $this->sma->checkPermissions('export_excel');
                     $this->load->library('excel');
                     $this->excel->setActiveSheetIndex(0);
                     $this->excel->getActiveSheet()->setTitle('Products');
@@ -11615,7 +11671,7 @@ error_reporting(E_ALL);
 
     public function set_rack($product_id = null, $warehouse_id = null)
     {
-        $this->sma->checkPermissions('edit', true);
+        $this->sma->checkPermissions('set_rack', true);
 
         $this->form_validation->set_rules('rack', lang('rack_location'), 'trim|required');
 
@@ -11686,7 +11742,7 @@ error_reporting(E_ALL);
 
     public function update_price()
     {
-        $this->sma->checkPermissions('csv');
+        $this->sma->checkPermissions('update_price');
         $this->load->helper('security');
         $this->form_validation->set_rules('userfile', lang('upload_file'), 'xss_clean');
 

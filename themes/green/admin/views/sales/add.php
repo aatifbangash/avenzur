@@ -348,7 +348,7 @@ table#slTable td input.form-control {
                                                         <i class="fa fa-eye" id="addIcon" style="font-size: 1.2em;"></i>
                                                     </a>
                                                 </div>
-                                                <?php if ($Owner || $Admin || $GP['customers-add']) {
+                                                <?php if ($Owner || $GP['customers-add']) {
                                                     ?>
                                                 <div class="input-group-addon no-print" style="padding: 2px 8px;">
                                                     <a href="<?= admin_url('customers/add'); ?>" id="add-customer"class="external" data-toggle="modal" data-target="#myModal">
@@ -373,7 +373,7 @@ table#slTable td input.form-control {
                                         <div class="input-group-addon" style="padding-left: 10px; padding-right: 10px;">
                                             <i class="fa fa-2x fa-barcode addIcon"></i></a></div>
                                         <?php echo form_input('add_item', '', 'class="form-control input-lg" id="add_item" placeholder="' . lang('add_product_to_order') . '"'); ?>
-                                        <?php if ($Owner || $Admin || $GP['products-add']) {
+                                        <?php if ($Owner || $GP['products-add']) {
                                                     ?>
                                         <div class="input-group-addon" style="padding-left: 10px; padding-right: 10px;">
                                             <a href="#" id="addManually" class="tip" title="<?= lang('add_product_manually') ?>">
@@ -381,7 +381,7 @@ table#slTable td input.form-control {
                                             </a>
                                         </div>
                                         <?php
-                                                } if ($Owner || $Admin || $GP['sales-add_gift_card']) {
+                                                } if ($Owner || $GP['sales-add_gift_card']) {
                                                     ?>
                                         <div class="input-group-addon" style="padding-left: 10px; padding-right: 10px;">
                                             <a href="#" id="sellGiftCard" class="tip" title="<?= lang('sell_gift_card') ?>">
@@ -507,7 +507,7 @@ table#slTable td input.form-control {
                         </div>
 
 
-                             <?php if ($Owner || $Admin || $GP['sales-coordinator']) { ?>
+                             <?php if ($Owner || $GP['sales-coordinator']) { ?>
                                 <?php echo form_input('sale_status', 'pending','hidden', 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('sale_status') . '" id="slsale_status"'); ?>
                              <?php  } ?>
 
@@ -541,7 +541,7 @@ table#slTable td input.form-control {
                                 echo form_dropdown('payment_term', $data, '', 'id="payment_term" data-placeholder="' . lang('select') . ' ' . lang('payment_term') . '" class="form-control input-tip select" style="width:100%;"'); ?>
                             </div>
                         </div>
-                        <?php if ($Owner || $Admin || $GP['sales-payments']) {
+                        <?php if ($Owner || $GP['sales-payments']) {
                                     ?>
                         <div class="col-sm-4">
                             <div class="form-group">
@@ -805,7 +805,7 @@ table#slTable td input.form-control {
                         <label for="pprice" class="col-sm-4 control-label"><?= lang('unit_price') ?></label>
 
                         <div class="col-sm-8">
-                            <input type="text" class="form-control" id="pprice" <?= ($Owner || $Admin || $GP['edit_price']) ? '' : 'readonly'; ?>>
+                            <input type="text" class="form-control" id="pprice" <?= ($Owner || $GP['edit_price']) ? '' : 'readonly'; ?>>
                         </div>
                     </div>
                     <table class="table table-bordered table-striped">

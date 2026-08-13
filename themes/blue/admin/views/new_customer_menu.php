@@ -118,7 +118,7 @@
 
 <div class="newmenu-wrapper">
     <ul class="newmenu-nav">
-        <?php if($Admin || $Owner || $GP['products-index']){ ?>
+        <?php if($Owner || $GP['products-index']){ ?>
         <!-- ==================== -->
         <!-- ACCOUNT PAYABLE -->
         <!-- ==================== -->
@@ -138,25 +138,25 @@
                         <i class="fa fa-chevron-right newmenu-chevron"></i>
                     </a>
                     <ul class="newmenu-sub">
-                        <?php if($Admin || $Owner || $GP['products-add']){
+                        <?php if($Owner || $GP['products-add']){
                             if($this->Settings->site_name == 'Avnzor'){ ?>
                                 <li><a href="<?= admin_url('products/add_new'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('Add Product'); ?></a></li>
                             <?php }else{ ?>
                                 <li><a href="<?= admin_url('products/add'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('Add Product'); ?></a></li>
                             <?php }
                          } ?>
-<!--                        --><?php //if($Admin || $Owner || $GP['products-index']){ ?>
+<!--                        --><?php //if($Owner || $GP['products-index']){ ?>
 <!--                            <li><a href="--><?php //= admin_url('products'); ?><!--" class="newmenu-link"><i class="fa fa-list"></i> --><?php //= lang('List Products'); ?><!--</a></li>-->
 <!--                        --><?php //} ?>
 
-                        <?php if($Admin || $Owner || $GP['products-index']){
+                        <?php if($Owner || $GP['products-index']){
                             if($this->Settings->site_name == 'Avnzor'){ ?>
                                 <li><a href="<?= admin_url('products/list_products'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('List Products'); ?></a></li>
                             <?php }else{ ?>
                                 <li><a href="<?= admin_url('products'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('List Products'); ?></a></li>
                             <?php }
                         } ?>
-                         <?php if($Admin || $Owner || $GP['products-upload']){
+                         <?php if($Owner || $GP['products-upload']){
                             if($this->Settings->site_name == 'Avnzor'){ ?>
                                 <li><a href="<?= admin_url('products/upload_products'); ?>" class="newmenu-link"><i class="fa fa-upload"></i> <?= lang('Upload Products'); ?></a></li>
                             <?php }else{ ?>
@@ -173,7 +173,7 @@
 
         <?php 
         
-        if($Admin || $Owner || $GP['sales-index'] || $GP['reports-customer-aging'] || !empty($GP['reports-unpaid-invoices-ar'])){
+        if($Owner || $GP['sales-index'] || $GP['reports-customer-aging'] || !empty($GP['reports-unpaid-invoices-ar'])){
         ?>
         <!-- ==================== -->
         <!-- ACCOUNT RECEIVABLE -->
@@ -195,11 +195,11 @@
                     </a>
                     <ul class="newmenu-sub">
                         <?php 
-                        if($Admin || $Owner || $GP['quotes-add']){ ?>
+                        if($Owner || $GP['quotes-add']){ ?>
                         <li><a href="<?= admin_url('quotes/add'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('Add Quote'); ?></a></li>
                         <?php } ?>
                         <?php 
-                        if($Admin || $Owner || $GP['quotes-index']){ ?>
+                        if($Owner || $GP['quotes-index']){ ?>
                         <li><a href="<?= admin_url('quotes'); ?>" class="newmenu-link"><i class="fa fa-file-text-o"></i> <?= lang('Quotes List'); ?></a></li>
                         <?php } ?>
                         <?php if($Admin || $Owner || $this->GP['sales-index']){ ?>
@@ -355,7 +355,7 @@
 
         <?php } ?>
 
-        <?php if($Admin || $Owner || $GP['purchases-index'] || $GP['po-index'] || $GP['reports-supplier-aging'] || !empty($GP['reports-unpaid-invoices-ap'])){ ?>
+        <?php if($Owner || $GP['purchases-index'] || $GP['po-index'] || $GP['reports-supplier-aging'] || !empty($GP['reports-unpaid-invoices-ap'])){ ?>
         <!-- ==================== -->
         <!-- ACCOUNT PAYABLE -->
         <!-- ==================== -->
@@ -367,7 +367,7 @@
             </a>
             <ul class="newmenu-sub">
 
-                <?php if($Admin || $Owner || $GP['contract-deals-index']){ ?>
+                <?php if($Owner || $GP['contract-deals-index']){ ?>
                 <!-- Purchase Contract Deals -->
                 <li class="newmenu-item has-sub">
                     <a href="#" class="newmenu-link">
@@ -376,17 +376,17 @@
                         <i class="fa fa-chevron-right newmenu-chevron"></i>
                     </a>
                     <ul class="newmenu-sub">
-                        <?php if($Admin || $Owner || $GP['contract-deals-add']){ ?>
+                        <?php if($Owner || $GP['contract-deals-add']){ ?>
                             <li><a href="<?= admin_url('purchase_contract_deals/add'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('Add Contract Deals'); ?></a></li>
                         <?php } ?>
-                        <?php if($Admin || $Owner || $GP['contract-deals-index']){ ?>
+                        <?php if($Owner || $GP['contract-deals-index']){ ?>
                             <li><a href="<?= admin_url('purchase_contract_deals'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('List Contract Deals'); ?></a></li>
                         <?php } ?>
                     </ul>
                 </li>
                 <?php } ?>
 
-                <?php if($Admin || $Owner || $GP['pr-index']){ ?>
+                <?php if($Owner || $GP['pr-index']){ ?>
                 <!-- Purchase Requisition -->
                 <li class="newmenu-item has-sub">
                     <a href="#" class="newmenu-link">
@@ -395,17 +395,17 @@
                         <i class="fa fa-chevron-right newmenu-chevron"></i>
                     </a>
                     <ul class="newmenu-sub">
-                        <?php if($Admin || $Owner || $GP['pr-add']){ ?>
+                        <?php if($Owner || $GP['pr-add']){ ?>
                             <li><a href="<?= admin_url('purchase_requisition/save'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('Create PR'); ?></a></li>
                         <?php } ?>
-                        <?php if($Admin || $Owner || $GP['pr-index']){ ?>
+                        <?php if($Owner || $GP['pr-index']){ ?>
                             <li><a href="<?= admin_url('purchase_requisition'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('List PR'); ?></a></li>
                         <?php } ?>
                     </ul>
                 </li>
                 <?php } ?>
 
-                <?php if($Admin || $Owner || $GP['po-index']){ ?>
+                <?php if($Owner || $GP['po-index']){ ?>
                 <!-- Purchase Order -->
                 <li class="newmenu-item has-sub">
                     <a href="#" class="newmenu-link">
@@ -414,16 +414,16 @@
                         <i class="fa fa-chevron-right newmenu-chevron"></i>
                     </a>
                     <ul class="newmenu-sub">
-                        <?php if($Admin || $Owner || $GP['po-add']){ ?>
+                        <?php if($Owner || $GP['po-add']){ ?>
                             <li><a href="<?= admin_url('purchase_order/add'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('Create PO'); ?></a></li>
                         <?php } ?>
-                        <?php if($Admin || $Owner || $GP['po-index']){ ?>
+                        <?php if($Owner || $GP['po-index']){ ?>
                             <li><a href="<?= admin_url('purchase_order'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('List PO'); ?></a></li>
                         <?php } ?>
                     </ul>
                 </li>
                 <?php } ?>
-                <?php if($Admin || $Owner || $GP['po-index']){ ?>
+                <?php if($Owner || $GP['po-index']){ ?>
                 <!-- Purchase Order -->
                 <li class="newmenu-item has-sub">
                     <a href="#" class="newmenu-link">
@@ -432,19 +432,19 @@
                         <i class="fa fa-chevron-right newmenu-chevron"></i>
                     </a>
                     <ul class="newmenu-sub">
-                        <?php if($Admin || $Owner || $GP['po-index']){ ?>
+                        <?php if($Owner || $GP['po-index']){ ?>
                             <li><a href="<?= admin_url('purchase_order_sync'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('PO Sync'); ?></a></li>
                         <?php } ?>
                     </ul>
                     <ul class="newmenu-sub">
-                        <?php if($Admin || $Owner || $GP['po-index']){ ?>
+                        <?php if($Owner || $GP['po-index']){ ?>
                             <li><a href="<?= admin_url('purchase_order_sync/view'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('List PO Sync'); ?></a></li>
                         <?php } ?>
                     </ul>
                 </li>
                 <?php } ?>
 
-                <?php if($Admin || $Owner || $GP['po-index']){ ?>
+                <?php if($Owner || $GP['po-index']){ ?>
                 <!-- Purchase Order -->
                 <li class="newmenu-item has-sub">
                     <a href="#" class="newmenu-link">
@@ -453,14 +453,14 @@
                         <i class="fa fa-chevron-right newmenu-chevron"></i>
                     </a>
                     <ul class="newmenu-sub">
-                        <?php if($Admin || $Owner || $GP['po-index']){ ?>
+                        <?php if($Owner || $GP['po-index']){ ?>
                             <li>
                                 <a href="<?= admin_url('purchase_order_upload'); ?>" class="newmenu-link">
                                     <i class="fa fa-upload"></i> <?= lang('Upload PO'); ?>
                                 </a>
                             </li>
                         <?php } ?>
-                        <?php if($Admin || $Owner || $GP['po-index']){ ?>
+                        <?php if($Owner || $GP['po-index']){ ?>
                             <li>
                                 <a href="<?= admin_url('purchase_order_upload/review'); ?>" class="newmenu-link">
                                     <i class="fa fa-eye"></i> <?= lang('Review PO'); ?>
@@ -472,7 +472,7 @@
                 <?php } ?>
                 
                 <!-- Purchases -->
-                 <?php if($Admin || $Owner || $GP['purchases-index']){ ?>
+                 <?php if($Owner || $GP['purchases-index']){ ?>
                 <li class="newmenu-item has-sub">
                     <a href="#" class="newmenu-link">
                         <i class="fa fa-shopping-cart"></i>
@@ -480,17 +480,17 @@
                         <i class="fa fa-chevron-right newmenu-chevron"></i>
                     </a>
                     <ul class="newmenu-sub">
-                        <?php if($Admin || $Owner || $GP['purchases-add']){ ?>
+                        <?php if($Owner || $GP['purchases-add']){ ?>
                             <li><a href="<?= admin_url('purchases/add'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('Request Purchase'); ?></a></li>
                         <?php } ?>
-                        <?php if($Admin || $Owner || $GP['purchases-index']){ ?>
+                        <?php if($Owner || $GP['purchases-index']){ ?>
                             <li><a href="<?= admin_url('purchases'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('Purchase List'); ?></a></li>
                         <?php } ?>
                     </ul>
                 </li>
                 <?php } ?>
 
-                <?php if($Admin || $Owner || $GP['supplier-returns-index']){ ?>
+                <?php if($Owner || $GP['supplier-returns-index']){ ?>
                 <!-- Returns -->
                 <li class="newmenu-item has-sub">
                     <a href="#" class="newmenu-link">
@@ -499,10 +499,10 @@
                         <i class="fa fa-chevron-right newmenu-chevron"></i>
                     </a>
                     <ul class="newmenu-sub">
-                        <?php if($Admin || $Owner || $GP['supplier-returns-index']){ ?>
+                        <?php if($Owner || $GP['supplier-returns-index']){ ?>
                             <li><a href="<?= admin_url('returns_supplier'); ?>" class="newmenu-link"><i class="fa fa-list"></i> <?= lang('Supplier Returns List'); ?></a></li>
                         <?php } ?>
-                        <?php if($Admin || $Owner || $GP['supplier-returns-add']){ ?>
+                        <?php if($Owner || $GP['supplier-returns-add']){ ?>
                             <li><a href="<?= admin_url('returns_supplier/add'); ?>" class="newmenu-link"><i class="fa fa-plus-circle"></i> <?= lang('Add Supplier Return'); ?></a></li>
                         <?php } ?>
                     </ul>
@@ -641,6 +641,7 @@
         <!-- ==================== -->
         <!-- INVENTORY -->
         <!-- ==================== -->
+        <?php if($Admin || $Owner || $this->GP['transfers-index'] || $this->GP['reports-item-movement'] ||  $this->GP['report-stock'] ||  $this->GP['reports-inventory-tb'] || $this->GP['reports-revenue'] || $this->GP['reports-purchase'] || $this->GP['reports-transfer'] || $this->GP['reports-warehouse-stock'] || $this->GP['reports-warehouse-stock'] ){ ?> 
         <li class="newmenu-item has-sub">
             <a href="#" class="newmenu-link bluecolor">
                 <i class="fa fa-archive"></i>
@@ -667,8 +668,6 @@
                     </ul>
                 </li>
                 <?php } ?>
-                
-
                 <li class="newmenu-item has-sub">
                     <a href="#" class="newmenu-link"><i class="fa fa-bar-chart"></i> <?= lang('Reports'); ?> <i class="fa fa-chevron-right newmenu-chevron"></i></a>
                     <ul class="newmenu-sub">
@@ -703,6 +702,7 @@
                 <!--<li><a href="<?= admin_url('reports/cost_analysis'); ?>" class="newmenu-link"><i class="fa fa-balance-scale"></i> <?= lang('Cost Analysis'); ?></a></li>-->
             </ul>
         </li>
+        <?php } ?>
 
         <?php if($Admin || $Owner || $this->GP['finance-view']){ ?>
         <!-- FINANCE -->

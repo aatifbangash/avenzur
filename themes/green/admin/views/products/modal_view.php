@@ -22,7 +22,7 @@
     echo '<a class="img-thumbnail change_img" href="' . base_url() . 'assets/uploads/' . $product->image . '" style="margin-right:5px;"><img class="img-responsive" src="' . base_url() . 'assets/uploads/thumbs/' . $product->image . '" alt="' . $product->image . '" style="width:' . $Settings->twidth . 'px; height:' . $Settings->theight . 'px;" /></a>';
     foreach ($images as $ph) {
         echo '<div class="gallery-image"><a class="img-thumbnail change_img" href="' . base_url() . 'assets/uploads/' . $ph->photo . '" style="margin-right:5px;"><img class="img-responsive" src="' . base_url() . 'assets/uploads/thumbs/' . $ph->photo . '" alt="' . $ph->photo . '" style="width:' . $Settings->twidth . 'px; height:' . $Settings->theight . 'px;" /></a>';
-        if ($Owner || $Admin || $GP['products-edit']) {
+        if ($Owner || $GP['products-edit']) {
             echo '<a href="#" class="delimg" data-item-id="' . $ph->id . '"><i class="fa fa-times"></i></a>';
         }
         echo '</div>';
@@ -78,7 +78,7 @@
                                         <td><?= lang('unit'); ?></td>
                                         <td><?= $unit ? $unit->name . ' (' . $unit->code . ')' : ''; ?></td>
                                     </tr>
-                                    <?php if ($Owner || $Admin) {
+                                    <?php if ($Owner) {
                             echo '<tr><td>' . lang('cost') . '</td><td>' . $this->sma->formatMoney($product->cost) . '</td></tr>';
                             echo '<tr><td>' . lang('price') . '</td><td>' . $this->sma->formatMoney($product->price) . '</td></tr>';
                             if ($product->promotion) {
@@ -184,7 +184,7 @@
                                     <tr>
                                         <th><?= lang('warehouse_name') ?></th>
                                         <th><?= lang('quantity') . ' (' . lang('rack') . ')'; ?></th>
-                                        <?php if ($Owner || $Admin || $this->session->userdata('show_cost')) {
+                                        <?php if ($Owner || $this->session->userdata('show_cost')) {
                                             echo '<th>' . lang('avg_cost') . '</th>';
                                         } ?>
                                     </tr>
@@ -192,7 +192,7 @@
                                 <tbody>
                                     <?php foreach ($warehouses as $warehouse) {
                                             if ($warehouse->quantity != 0) {
-                                                echo '<tr><td>' . $warehouse->name . ' (' . $warehouse->code . ')</td><td><strong>' . $this->sma->formatQuantity($warehouse->quantity) . '</strong>' . ($warehouse->rack ? ' (' . $warehouse->rack . ')' : '') . '</td>' . (($Owner || $Admin || $this->session->userdata('show_cost')) ? '<td>' . $warehouse->avg_cost . '</td>' : '') . '</tr>';
+                                                echo '<tr><td>' . $warehouse->name . ' (' . $warehouse->code . ')</td><td><strong>' . $this->sma->formatQuantity($warehouse->quantity) . '</strong>' . ($warehouse->rack ? ' (' . $warehouse->rack . ')' : '') . '</td>' . (($Owner || $this->session->userdata('show_cost')) ? '<td>' . $warehouse->avg_cost . '</td>' : '') . '</tr>';
                                             }
                                         } ?>
                                 </tbody>
@@ -234,7 +234,7 @@
                                 <th><?= lang('warehouse_name') ?></th>
                                 <th><?= lang('product_variant'); ?></th>
                                 <th><?= lang('quantity') . ' (' . lang('rack') . ')'; ?></th>
-                                <?php if ($Owner || $Admin) {
+                                <?php if ($Owner) {
                                             echo '<th>' . lang('price_addition') . '</th>';
                                         } ?>
                             </tr>
@@ -271,10 +271,12 @@
     <div class="buttons">
         <div class="btn-group btn-group-justified">
             <div class="btn-group">
-                <a href="<?= admin_url('products/print_barcodes/' . $product->id) ?>" class="tip btn btn-primary" title="<?= lang('print_barcode_label') ?>">
-                    <i class="fa fa-print"></i>
-                    <span class="hidden-sm hidden-xs"><?= lang('print_barcode_label') ?></span>
-                </a>
+                <?php if ($Owner || !empty($GP['products-barcode'])) { ?>
+                    <a href="<?= admin_url('products/print_barcodes/' . $product->id) ?>" class="tip btn btn-primary" title="<?= lang('print_barcode_label') ?>">
+                        <i class="fa fa-print"></i>
+                        <span class="hidden-sm hidden-xs"><?= lang('print_barcode_label') ?></span>
+                    </a>
+                <?php } ?>
             </div>
             <div class="btn-group">
                 <a href="<?= admin_url('products/pdf/' . $product->id) ?>" class="tip btn btn-primary" title="<?= lang('pdf') ?>">
@@ -283,18 +285,22 @@
                 </a>
             </div>
             <div class="btn-group">
-                <a href="<?= admin_url('products/edit/' . $product->id) ?>" class="tip btn btn-warning tip" title="<?= lang('edit_product') ?>">
-                    <i class="fa fa-edit"></i>
-                    <span class="hidden-sm hidden-xs"><?= lang('edit') ?></span>
-                </a>
+                <?php if ($Owner || !empty($GP['products-edit'])) { ?>
+                    <a href="<?= admin_url('products/edit/' . $product->id) ?>" class="tip btn btn-warning tip" title="<?= lang('edit_product') ?>">
+                        <i class="fa fa-edit"></i>
+                        <span class="hidden-sm hidden-xs"><?= lang('edit') ?></span>
+                    </a>
+                <?php } ?>
             </div>
             <div class="btn-group">
-                <a href="#" class="tip btn btn-danger bpo" title="<b><?= lang('delete_product') ?></b>"
-                    data-content="<div style='width:150px;'><p><?= lang('r_u_sure') ?></p><a class='btn btn-danger' href='<?= admin_url('products/delete/' . $product->id) ?>'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button></div>"
-                    data-html="true" data-placement="top">
-                    <i class="fa fa-trash-o"></i>
-                    <span class="hidden-sm hidden-xs"><?= lang('delete') ?></span>
-                </a>
+                <?php if ($Owner || !empty($GP['products-delete'])) { ?>
+                    <a href="#" class="tip btn btn-danger bpo" title="<b><?= lang('delete_product') ?></b>"
+                        data-content="<div style='width:150px;'><p><?= lang('r_u_sure') ?></p><a class='btn btn-danger' href='<?= admin_url('products/delete/' . $product->id) ?>'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button></div>"
+                        data-html="true" data-placement="top">
+                        <i class="fa fa-trash-o"></i>
+                        <span class="hidden-sm hidden-xs"><?= lang('delete') ?></span>
+                    </a>
+                <?php } ?>
             </div>
         </div>
     </div>

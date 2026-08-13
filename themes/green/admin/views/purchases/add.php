@@ -333,7 +333,7 @@ table#poTable td input.form-control {
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <?= lang('supplier', 'posupplier'); ?>
-                                            <?php if ($Owner || $Admin || $GP['suppliers-add'] || $GP['suppliers-index']) {
+                                            <?php if ($Owner || $GP['suppliers-add'] || $GP['suppliers-index']) {
                                     ?><div class="input-group"><?php
                                 } ?>
                                                 <input type="hidden" name="supplier" value="" id="posupplier"
@@ -341,7 +341,7 @@ table#poTable td input.form-control {
                                                        placeholder="<?= lang('select') . ' ' . lang('supplier') ?>">
                                                 <input type="hidden" name="supplier_id" value="" id="supplier_id"
                                                        class="form-control">
-                                                <?php if ($Owner || $Admin || $GP['suppliers-index']) {
+                                                <?php if ($Owner || $GP['suppliers-index']) {
                                     ?>
                                                     <div class="input-group-addon no-print" style="padding: 2px 5px; border-left: 0;">
                                                         <a href="#" id="view-supplier" class="external" data-toggle="modal" data-target="#myModal">
@@ -350,7 +350,7 @@ table#poTable td input.form-control {
                                                     </div>
                                                 <?php
                                 } ?>
-                                                <?php if ($Owner || $Admin || $GP['suppliers-add']) {
+                                                <?php if ($Owner || $GP['suppliers-add']) {
                                     ?>
                                                 <div class="input-group-addon no-print" style="padding: 2px 5px;">
                                                     <a href="<?= admin_url('suppliers/add'); ?>" id="add-supplier" class="external" data-toggle="modal" data-target="#myModal">
@@ -359,7 +359,7 @@ table#poTable td input.form-control {
                                                 </div>
                                             <?php
                                 } ?>
-                                            <?php if ($Owner || $Admin || $GP['suppliers-add'] || $GP['suppliers-index']) {
+                                            <?php if ($Owner || $GP['suppliers-add'] || $GP['suppliers-index']) {
                                     ?></div><?php
                                 } ?>
                                         </div>
@@ -378,7 +378,7 @@ table#poTable td input.form-control {
                                         <div class="input-group-addon" style="padding-left: 10px; padding-right: 10px;">
                                             <i class="fa fa-2x fa-barcode addIcon"></i></a></div>
                                         <?php echo form_input('add_item', '', 'class="form-control input-lg" id="add_item" placeholder="' . $this->lang->line('add_product_to_order') . '"'); ?>
-                                        <?php if ($Owner || $Admin || $GP['products-add']) {
+                                        <?php if ($Owner || $GP['products-add']) {
                                     ?>
                                         <div class="input-group-addon" style="padding-left: 10px; padding-right: 10px;">
                                             <a href="<?= admin_url('products/add') ?>" id="addManually1"><i

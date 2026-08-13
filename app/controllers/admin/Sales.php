@@ -58,7 +58,7 @@ class Sales extends MY_Controller
     /* ------------------------------------------------------------------ */
 
     public function showUploadSales() {
-        //$this->sma->checkPermissions();
+        $this->sma->checkPermissions('gift_cards');
 
         $this->data['warehouses'] = $this->site->getAllWarehouses();
         $this->data['customers'] = $this->site->getAllCompanies('customer');
@@ -1338,7 +1338,7 @@ class Sales extends MY_Controller
 
     public function add_delivery($id = null)
     {
-        //$this->sma->checkPermissions();
+        $this->sma->checkPermissions('add_delivery', true);
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -1419,6 +1419,7 @@ class Sales extends MY_Controller
 
     public function add_gift_card()
     {
+        $this->sma->checkPermissions('add_gift_card', true);
         $this->sma->checkPermissions(false, true);
 
         $this->form_validation->set_rules('card_no', lang('card_no'), 'trim|is_unique[gift_cards.card_no]|required');
@@ -1703,6 +1704,7 @@ class Sales extends MY_Controller
 
     public function delete_gift_card($id = null)
     {
+        $this->sma->checkPermissions('delete_gift_card', true);
         //$this->sma->checkPermissions();
 
         if ($this->sales_model->deleteGiftCard($id)) {
@@ -1752,7 +1754,7 @@ class Sales extends MY_Controller
 
     public function deliveries()
     {
-        //$this->sma->checkPermissions();
+        $this->sma->checkPermissions('deliveries');
 
         $data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
         $bc            = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('sales'), 'page' => lang('sales')], ['link' => '#', 'page' => lang('deliveries')]];
@@ -1762,11 +1764,6 @@ class Sales extends MY_Controller
 
     public function delivery_actions()
     {
-        if (!$this->Owner && !$this->GP['bulk_actions']) {
-            $this->session->set_flashdata('warning', lang('access_denied'));
-            redirect($_SERVER['HTTP_REFERER']);
-        }
-
         $this->form_validation->set_rules('form_action', lang('form_action'), 'required');
 
         if ($this->form_validation->run() == true) {
@@ -1781,6 +1778,7 @@ class Sales extends MY_Controller
                 }
 
                 if ($this->input->post('form_action') == 'export_excel') {
+                    $this->sma->checkPermissions('export_excel_delivery');
                     $this->load->library('excel');
                     $this->excel->setActiveSheetIndex(0);
                     $this->excel->getActiveSheet()->setTitle(lang('deliveries'));
@@ -2420,7 +2418,7 @@ class Sales extends MY_Controller
 
     public function edit_delivery($id = null)
     {
-        //$this->sma->checkPermissions();
+        $this->sma->checkPermissions('edit_delivery', true);
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -2541,6 +2539,7 @@ class Sales extends MY_Controller
 
     public function edit_gift_card($id = null)
     {
+        $this->sma->checkPermissions('edit_gift_card', true);
         $this->sma->checkPermissions(false, true);
 
         $this->form_validation->set_rules('card_no', lang('card_no'), 'trim|required');
@@ -2664,7 +2663,7 @@ class Sales extends MY_Controller
 
     public function email($id = null)
     {
-        $this->sma->checkPermissions(false, true);
+        $this->sma->checkPermissions('email', true);
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -2821,7 +2820,11 @@ class Sales extends MY_Controller
 
     public function getDeliveries()
     {
-        //$this->sma->checkPermissions('deliveries');
+        $this->sma->checkPermissions('deliveries');
+
+        $canDeliveryPdf = $this->Owner || !empty($this->GP['sales-pdf_delivery']);
+        $canDeliveryEdit = $this->Owner || !empty($this->GP['sales-edit_delivery']);
+        $canDeliveryDelete = $this->Owner || !empty($this->GP['sales-delete_delivery']);
 
         $detail_link = anchor('admin/sales/view_delivery/$1', '<i class="fa fa-file-text-o"></i> ' . lang('delivery_details'), 'data-toggle="modal" data-target="#myModal"');
         $email_link  = anchor('admin/sales/email_delivery/$1', '<i class="fa fa-envelope"></i> ' . lang('email_delivery'), 'data-toggle="modal" data-target="#myModal"');
@@ -2835,9 +2838,17 @@ class Sales extends MY_Controller
         . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
         . lang('actions') . ' <span class="caret"></span></button>
     <ul class="dropdown-menu pull-right" role="menu">
-        <li>' . $detail_link . '</li>
-        <li>' . $pdf_link . '</li>
-    </ul>
+        <li>' . $detail_link . '</li>';
+        if ($canDeliveryPdf) {
+            $action .= '<li>' . $pdf_link . '</li>';
+        }
+        if ($canDeliveryEdit) {
+            $action .= '<li>' . $edit_link . '</li>';
+        }
+        if ($canDeliveryDelete) {
+            $action .= '<li>' . $delete_link . '</li>';
+        }
+        $action .= '</ul>
 </div></div>';
 
         $this->load->library('datatables');
@@ -3959,10 +3970,15 @@ class Sales extends MY_Controller
         $this->sma->checkPermissions('index');
         $warehouse_id = $this->site->resolveListingWarehouseId($warehouse_id);
         $sid = $this->input->get('sid');
-        if ((!$this->Owner && !$this->Admin && !$this->GP['sales-index']) && !$warehouse_id) {
+        if ((!$this->Owner && !$this->GP['sales-index']) && !$warehouse_id) {
             $user         = $this->site->getUser();
             $warehouse_id = $user->warehouse_id;
         }
+        $canSaleEdit = $this->Owner || !empty($this->GP['sales-edit']);
+        $canSaleDelete = $this->Owner || !empty($this->GP['sales-delete']);
+        $canSalePdf = $this->Owner || !empty($this->GP['sales-pdf']);
+        $canSaleExcel = $this->Owner || !empty($this->GP['sales-export_excel']);
+        $canReturnSale = $this->Owner || !empty($this->GP['sales-return_sales']);
         $detail_link       = anchor('admin/sales/view/$1', '<i class="fa fa-file-text-o"></i> ' . lang('sale_details'));
         $duplicate_link    = anchor('admin/sales/add?sale_id=$1', '<i class="fa fa-plus-circle"></i> ' . lang('duplicate_sale'));
         $payments_link     = anchor('admin/sales/payments/$1', '<i class="fa fa-money"></i> ' . lang('view_payments'), 'data-toggle="modal" data-target="#myModal"');
@@ -3996,64 +4012,76 @@ class Sales extends MY_Controller
             $action = '<div class="text-center"><div class="btn-group text-left">'
                 . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
                 . lang('actions') . ' <span class="caret"></span></button>
-                <ul class="dropdown-menu pull-right" role="menu">
-                    
-                    <li>' . $detail_link . '</li>
-                    <li>' . $pdf_link . '</li>
-                    <li>' . $excel_link . '</li>
-                    <li>' . $zatka_invoice_link . '</li>
-                    <li>' . $journal_entry_link . '</li>
-                </ul>
-            </div></div>';
+                <ul class="dropdown-menu pull-right" role="menu">'
+                . '<li>' . $detail_link . '</li>';
+            if ($canSalePdf) {
+                $action .= '<li>' . $pdf_link . '</li>';
+            }
+            if ($canSaleExcel) {
+                $action .= '<li>' . $excel_link . '</li>';
+            }
+            if ($canSalePdf) {
+                $action .= '<li>' . $zatka_invoice_link . '</li>';
+            }
+            $action .= '<li>' . $journal_entry_link . '</li></ul></div></div>';
         }else if(isset($this->GP) && $this->Settings->site_name == 'Avnzor' && $this->sma->in_group('warehouseofficer'))
         {
 
             $action = '<div class="text-center"><div class="btn-group text-left">'
                 . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
                 . lang('actions') . ' <span class="caret"></span></button>
-                <ul class="dropdown-menu pull-right" role="menu">
-                    
-                    <li>' . $detail_link . '</li>
-                    <li>' . $return_link . '</li>
-                    <li>' . $order_picker_link . '</li>
-                </ul>
-            </div></div>';
+                <ul class="dropdown-menu pull-right" role="menu">'
+                . '<li>' . $detail_link . '</li>';
+            if ($canReturnSale) {
+                $action .= '<li>' . $return_link . '</li>';
+            }
+            if ($canSalePdf) {
+                $action .= '<li>' . $order_picker_link . '</li>';
+            }
+            $action .= '</ul></div></div>';
         }else if(isset($this->GP) && $this->Settings->site_name == 'Hills Business Medical' && $this->sma->in_group('warehouseofficer'))
         {
 
             $action = '<div class="text-center"><div class="btn-group text-left">'
                 . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
                 . lang('actions') . ' <span class="caret"></span></button>
-                <ul class="dropdown-menu pull-right" role="menu">
-                    
-                    <li>' . $detail_link . '</li>
-                    <li>' . $return_link . '</li>
-                    <li>' . $sale_order_link . '</li>
-                    <li>' . $zatka_invoice_link . '</li>
-                </ul>
-            </div></div>';
+                <ul class="dropdown-menu pull-right" role="menu">'
+                . '<li>' . $detail_link . '</li>';
+            if ($canReturnSale) {
+                $action .= '<li>' . $return_link . '</li>';
+            }
+            if ($canSalePdf) {
+                $action .= '<li>' . $sale_order_link . '</li>';
+                $action .= '<li>' . $zatka_invoice_link . '</li>';
+            }
+            $action .= '</ul></div></div>';
         }else{
 
             $action = '<div class="text-center"><div class="btn-group text-left">'
             . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
             . lang('actions') . ' <span class="caret"></span></button>
-            <ul class="dropdown-menu pull-right" role="menu">
-                <li>' . $order_picker_link . '</li>
-                <li>' . $detail_link . '</li>';
+            <ul class="dropdown-menu pull-right" role="menu">';
+            if ($canSalePdf) {
+                $action .= '<li>' . $order_picker_link . '</li>';
+            }
+            $action .= '<li>' . $detail_link . '</li>';
 
-            if($this->Settings->site_name != 'Hills Business Medical' && $this->Settings->site_name != 'Demo Company'){
+            if($canSaleEdit && $this->Settings->site_name != 'Hills Business Medical' && $this->Settings->site_name != 'Demo Company'){
                 $action .= '<li>' . $edit_link . '</li>';
             }
             
-            $action .=  '<li>' . $pdf_link . '</li>
-                <li>' . $excel_link . '</li>
-                <li>' . $zatka_invoice_link . '</li>';
+            if ($canSalePdf) {
+                $action .=  '<li>' . $pdf_link . '</li><li>' . $zatka_invoice_link . '</li>';
+            }
+            if ($canSaleExcel) {
+                $action .= '<li>' . $excel_link . '</li>';
+            }
 
-            if($this->Owner || $this->Admin || $this->GP['returns-add']){
+            if($canReturnSale){
                 $action .=  '<li>' . $return_link . '</li>';
             }
 
-            if(($this->Admin || $this->Owner)){
+            if($canSaleDelete){
                 $action .=  '<li>' . $delete_link . '</li>';
             }
             if(($this->Admin || $this->Owner || $this->Accountant)){
@@ -4140,7 +4168,7 @@ class Sales extends MY_Controller
             }
         }
         $this->datatables->where('pos !=', 1); // ->where('sale_status !=', 'returned');
-        if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->Admin && !$this->GP['sales-index']) {
+        if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->GP['sales-index']) {
             $this->datatables->where('created_by', $this->session->userdata('user_id'));
         } elseif ($this->Customer) {
             $this->datatables->where('customer_id', $this->session->userdata('user_id'));
@@ -4153,10 +4181,14 @@ class Sales extends MY_Controller
             $this->sma->checkPermissions('index');
             $warehouse_id = $this->site->resolveListingWarehouseId($warehouse_id);
             $sid = $this->input->get('sid');
-            if ((!$this->Owner && !$this->Admin && !$this->GP['sales-index']) && !$warehouse_id) {
+            if ((!$this->Owner && !$this->GP['sales-index']) && !$warehouse_id) {
                 $user         = $this->site->getUser();
                 $warehouse_id = $user->warehouse_id;
             }
+            $canSaleEdit = $this->Owner || !empty($this->GP['sales-edit']);
+            $canSaleDelete = $this->Owner || !empty($this->GP['sales-delete']);
+            $canSalePdf = $this->Owner || !empty($this->GP['sales-pdf']);
+            $canReturnSale = $this->Owner || !empty($this->GP['sales-return_sales']);
             $detail_link       = anchor('admin/sales/view/$1', '<i class="fa fa-file-text-o"></i> ' . lang('sale_details'));
             $duplicate_link    = anchor('admin/sales/add?sale_id=$1', '<i class="fa fa-plus-circle"></i> ' . lang('duplicate_sale'));
             $payments_link     = anchor('admin/sales/payments/$1', '<i class="fa fa-money"></i> ' . lang('view_payments'), 'data-toggle="modal" data-target="#myModal"');
@@ -4189,62 +4221,67 @@ class Sales extends MY_Controller
                 $action = '<div class="text-center"><div class="btn-group text-left">'
                     . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
                     . lang('actions') . ' <span class="caret"></span></button>
-                    <ul class="dropdown-menu pull-right" role="menu">
-                        
-                        <li>' . $detail_link . '</li>
-                        <li>' . $pdf_link . '</li>
-                        <li>' . $zatka_invoice_link . '</li>
-                        <li>' . $journal_entry_link . '</li>
-                    </ul>
-                </div></div>';
+                    <ul class="dropdown-menu pull-right" role="menu">'
+                    . '<li>' . $detail_link . '</li>';
+                if ($canSalePdf) {
+                    $action .= '<li>' . $pdf_link . '</li>';
+                    $action .= '<li>' . $zatka_invoice_link . '</li>';
+                }
+                $action .= '<li>' . $journal_entry_link . '</li></ul></div></div>';
             }else if(isset($this->GP) && $this->Settings->site_name == 'Avnzor' && $this->sma->in_group('warehouseofficer'))
             {
 
                 $action = '<div class="text-center"><div class="btn-group text-left">'
                     . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
                     . lang('actions') . ' <span class="caret"></span></button>
-                    <ul class="dropdown-menu pull-right" role="menu">
-                        
-                        <li>' . $detail_link . '</li>
-                        <li>' . $return_link . '</li>
-                        <li>' . $order_picker_link . '</li>
-                    </ul>
-                </div></div>';
+                    <ul class="dropdown-menu pull-right" role="menu">'
+                    . '<li>' . $detail_link . '</li>';
+                if ($canReturnSale) {
+                    $action .= '<li>' . $return_link . '</li>';
+                }
+                if ($canSalePdf) {
+                    $action .= '<li>' . $order_picker_link . '</li>';
+                }
+                $action .= '</ul></div></div>';
             }else if(isset($this->GP) && $this->Settings->site_name == 'Hills Business Medical' && $this->sma->in_group('warehouseofficer'))
             {
 
                 $action = '<div class="text-center"><div class="btn-group text-left">'
                     . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
                     . lang('actions') . ' <span class="caret"></span></button>
-                    <ul class="dropdown-menu pull-right" role="menu">
-                        
-                        <li>' . $detail_link . '</li>
-                        <li>' . $return_link . '</li>
-                        <li>' . $sale_order_link . '</li>
-                    </ul>
-                </div></div>';
+                    <ul class="dropdown-menu pull-right" role="menu">'
+                    . '<li>' . $detail_link . '</li>';
+                if ($canReturnSale) {
+                    $action .= '<li>' . $return_link . '</li>';
+                }
+                if ($canSalePdf) {
+                    $action .= '<li>' . $sale_order_link . '</li>';
+                }
+                $action .= '</ul></div></div>';
             }else{
 
                 $action = '<div class="text-center"><div class="btn-group text-left">'
                 . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
                 . lang('actions') . ' <span class="caret"></span></button>
-                <ul class="dropdown-menu pull-right" role="menu">
-                    <li>' . $order_picker_link . '</li>
-                    <li>' . $detail_link . '</li>';
+                <ul class="dropdown-menu pull-right" role="menu">';
+                if ($canSalePdf) {
+                    $action .= '<li>' . $order_picker_link . '</li>';
+                }
+                $action .= '<li>' . $detail_link . '</li>';
 
-                if($this->Settings->site_name != 'Hills Business Medical' && $this->Settings->site_name != 'Demo Company'){
+                if($canSaleEdit && $this->Settings->site_name != 'Hills Business Medical' && $this->Settings->site_name != 'Demo Company'){
                     $action .= '<li>' . $edit_link . '</li>';
                 }
                 
-                $action .=  '<li>' . $pdf_link . '</li>
-                    <li>' . $zatka_invoice_link . '</li>
-                    <li>' . $journal_entry_link . '</li>';
+                if ($canSalePdf) {
+                    $action .= '<li>' . $pdf_link . '</li><li>' . $zatka_invoice_link . '</li>';
+                }
 
-                if($Admin || $Owner || $this->GP['returns-add']){
+                if($canReturnSale){
                     $action .=  '<li>' . $return_link . '</li>';
                 }
 
-                if(($Admin || $Owner)){
+                if($canSaleDelete){
                     $action .=  '<li>' . $delete_link . '</li>';
                 }
                 if(($Admin || $Owner || $this->Accountant)){
@@ -4292,7 +4329,7 @@ class Sales extends MY_Controller
                 $this->datatables->where('payment_status !=', 'paid')->where('attachment !=', null);
             }
             //$this->datatables->where('pos !=', 1); // ->where('sale_status !=', 'returned');
-            if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->Admin && !$this->GP['sales-index']) {
+            if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->GP['sales-index']) {
                 //$this->datatables->where('created_by', $this->session->userdata('user_id'));
             } elseif ($this->Customer) {
                 //$this->datatables->where('customer_id', $this->session->userdata('user_id'));
@@ -4302,7 +4339,7 @@ class Sales extends MY_Controller
         }
     public function gift_card_actions()
     {
-        if (!$this->Owner && !$this->GP['bulk_actions']) {
+        if (!$this->Owner && empty($this->GP['sales-delete_gift_card']) && empty($this->GP['sales-export_gift_cards'])) {
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect($_SERVER['HTTP_REFERER']);
         }
@@ -4321,6 +4358,7 @@ class Sales extends MY_Controller
                 }
 
                 if ($this->input->post('form_action') == 'export_excel') {
+                    $this->sma->checkPermissions('export_gift_cards');
                     $this->load->library('excel');
                     $this->excel->setActiveSheetIndex(0);
                     $this->excel->getActiveSheet()->setTitle(lang('gift_cards'));
@@ -4358,7 +4396,7 @@ class Sales extends MY_Controller
 
     public function gift_cards()
     {
-        //$this->sma->checkPermissions();
+        $this->sma->checkPermissions('gift_cards');
 
         $this->data['error'] = validation_errors() ? validation_errors() : $this->session->flashdata('error');
 
@@ -4481,7 +4519,7 @@ class Sales extends MY_Controller
             $this->datatables->where("DATE({$this->db->dbprefix('sales')}.date) <=", $converted_to);
         }
 
-        if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->Admin && !$this->GP['sales-index']) {
+        if (!$this->Customer && !$this->Supplier && !$this->Owner && !$this->GP['sales-index']) {
             $this->datatables->where('created_by', $this->session->userdata('user_id'));
         } elseif ($this->Customer) {
             $this->datatables->where('customer_id', $this->session->userdata('user_id'));
@@ -4611,7 +4649,7 @@ class Sales extends MY_Controller
 
     public function payments($id = null)
     {
-        $this->sma->checkPermissions(false, true);
+        $this->sma->checkPermissions('payments', true);
         $this->data['payments'] = $this->sales_model->getInvoicePayments($id);
         $this->data['inv']      = $this->sales_model->getInvoiceByID($id);
         $this->load->view($this->theme . 'sales/payments', $this->data);
@@ -4619,7 +4657,7 @@ class Sales extends MY_Controller
 
     public function pdf($id = null, $view = null, $save_bufffer = null)
     {
-        //$this->sma->checkPermissions();
+        $this->sma->checkPermissions('pdf');
         $this->load->library('inv_qrcode');
 
         if ($this->input->get('id')) {
@@ -5046,7 +5084,7 @@ if($inv->warning_note != ""){
 
     public function pdf_new($id = null, $view = null, $save_bufffer = null)
     {   
-        //$this->sma->checkPermissions();
+        $this->sma->checkPermissions('pdf');
         $this->load->library('inv_qrcode');
 
         if ($this->input->get('id')) {
@@ -5466,6 +5504,7 @@ if($inv->warning_note != ""){
      */
     public function excel_new($id = null)
     {
+        $this->sma->checkPermissions('export_excel');
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
         }
@@ -5767,7 +5806,7 @@ if($inv->warning_note != ""){
 
     public function pdf_delivery($id = null, $view = null, $save_bufffer = null)
     {
-        //$this->sma->checkPermissions();
+        $this->sma->checkPermissions('pdf_delivery');
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -6065,11 +6104,6 @@ if($inv->warning_note != ""){
 
     public function sale_actions()
     {
-        if (!$this->Owner && !$this->GP['bulk_actions']) {
-            $this->session->set_flashdata('warning', lang('access_denied'));
-            redirect($_SERVER['HTTP_REFERER']);
-        }
-
         $this->form_validation->set_rules('form_action', lang('form_action'), 'required');
 
         if ($this->form_validation->run() == true) {
@@ -6082,8 +6116,10 @@ if($inv->warning_note != ""){
                     $this->session->set_flashdata('message', lang('sales_deleted'));
                     redirect($_SERVER['HTTP_REFERER']);
                 } elseif ($this->input->post('form_action') == 'combine') {
+                    $this->sma->checkPermissions('pdf');
                     $html = $this->combine_pdf($_POST['val']);
                 } elseif ($this->input->post('form_action') == 'export_excel') {
+                    $this->sma->checkPermissions('export_excel');
                     $this->load->library('excel');
                     $this->excel->setActiveSheetIndex(0);
                     $this->excel->getActiveSheet()->setTitle(lang('sales'));
@@ -7420,7 +7456,7 @@ if($inv->warning_note != ""){
 
     public function view($id = null)
     {
-        //$this->sma->checkPermissions('index');
+        $this->sma->checkPermissions('index');
         $this->load->library('inv_qrcode');
 
         if ($this->input->get('id')) {
@@ -7453,7 +7489,7 @@ if($inv->warning_note != ""){
 
     public function view_delivery($id = null)
     {
-        //$this->sma->checkPermissions('deliveries');
+        $this->sma->checkPermissions('deliveries');
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
