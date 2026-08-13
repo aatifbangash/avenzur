@@ -311,10 +311,10 @@
                                                 <td><?php 
                                                     if($balance >= 0){
                                                         echo number_format($balance, 2, '.', ','); 
-                                                        echo ' Dr';
+                                                        //echo ' Dr';
                                                     }else if($balance < 0){
                                                         echo number_format(abs($balance), 2, '.', ','); 
-                                                        echo ' Cr';
+                                                        //echo ' Cr';
                                                     }
                                                 ?></td>
                                             </tr>
@@ -348,10 +348,10 @@
                                         
                                         if($balance >= 0){
                                             echo number_format($balance, 2, '.', ','); 
-                                            echo ' Dr';
+                                            //echo ' Dr';
                                         }else if($balance < 0){
                                             echo number_format($balance, 2, '.', ','); 
-                                            echo ' Cr';
+                                            //echo ' Cr';
                                         }
                                     ?>
                                 </th>
