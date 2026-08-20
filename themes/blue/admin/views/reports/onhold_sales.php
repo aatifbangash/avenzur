@@ -105,13 +105,13 @@
                                     <th>#</th>
                                     <th><?= lang('date'); ?></th>
                                     <th><?= lang('invoice'); ?></th>
-                                    <th><?= lang('area'); ?></th>
                                     <th><?= lang('sales_man'); ?></th>
-                                    <th><?= lang('customer_no'); ?></th>
                                     <th><?= lang('customer_name'); ?></th>
+                                    <th><?= lang('payment_term'); ?></th>
                                     <th><?= lang('invoice_total'); ?></th>
                                     <th><?= lang('Customer Balance'); ?></th>
                                     <th><?= lang('sale_status'); ?></th>
+                                    <th><?= lang('On Hold Reason'); ?></th>
                                     <th><?= lang('trade note'); ?></th>
                                 </tr>
                             </thead>
@@ -139,23 +139,23 @@
                                             <td><?= $count; ?></td>
                                             <td><?= $data->date; ?></td>
                                             <td><a target="_blank" href="<?= admin_url('sales/'.$data->warehouse_id.'?sid=' . $data->sale_id); ?>"><?= $data->sale_id; ?></a></td>
-                                            <td><?= $data->area; ?></td>
                                             <td><?= $data->sales_man; ?></td>
-                                            <td><?= $data->customer_no; ?></td>
                                             <td><?= $data->customer_name; ?></td>
+                                            <td><?= (!empty($data->payment_term) && $data->payment_term > 0) ? (int) $data->payment_term . 'd' : '-'; ?></td>
                                             <td><?= $this->sma->formatMoney($data->invoice_grand_total); ?></td>
                                             <td><?= $this->sma->formatMoney($data->customer_balance ?? 0); ?></td>
                                             <td><?= $data->sale_status; ?></td>
-                                            
+                                            <td><?= htmlspecialchars($data->onhold_reason ?? ''); ?></td>
                                             <td><?= $data->trade_note; ?></td>
                                         </tr>
                                 <?php
                                     }
                                 ?>
                                     <tr style="font-weight: bold; background-color: #f0f0f0;">
-                                        <td colspan="7" style="text-align: right;"><?= lang('total'); ?></td>
+                                        <td colspan="6" style="text-align: right;"><?= lang('total'); ?></td>
                                         <td><?= $this->sma->formatMoney($grand_invoice_total); ?></td>
                                         <td><?= $this->sma->formatMoney($grand_customer_balance); ?></td>
+                                        <td></td>
                                         <td></td>
                                         <td></td>
                                     </tr>

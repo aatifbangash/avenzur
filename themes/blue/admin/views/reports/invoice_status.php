@@ -142,22 +142,22 @@
                                             <td><?= $data->sales_man; ?></td>
                                             <td><?= $data->customer_no; ?></td>
                                             <td><?= $data->customer_name; ?></td>
-                                            <td><?= $this->sma->formatMoney($data->invoice_total); ?></td>
-                                            <td><?= $this->sma->formatMoney($data->return_amount); ?></td>
-                                            <td><?= $this->sma->formatMoney($data->discount); ?></td>
-                                            <td><?= $this->sma->formatMoney($data->paid); ?></td>
-                                            <td><?= $this->sma->formatMoney($data->outstanding); ?></td>
+                                            <td><?= $this->sma->formatDecimal($data->invoice_total); ?></td>
+                                            <td><?= $this->sma->formatDecimal($data->return_amount); ?></td>
+                                            <td><?= $this->sma->formatDecimal($data->discount); ?></td>
+                                            <td><?= $this->sma->formatDecimal($data->paid); ?></td>
+                                            <td><?= $this->sma->formatDecimal($data->outstanding); ?></td>
                                         </tr>
                                 <?php
                                     }
                                 ?>
                                     <tr style="font-weight: bold; background-color: #f0f0f0;">
                                         <td colspan="7" style="text-align: right;"><?= lang('total'); ?></td>
-                                        <td><?= $this->sma->formatMoney($grand_invoice_total); ?></td>
-                                        <td><?= $this->sma->formatMoney($grand_return); ?></td>
-                                        <td><?= $this->sma->formatMoney($grand_discount); ?></td>
-                                        <td><?= $this->sma->formatMoney($grand_paid); ?></td>
-                                        <td><?= $this->sma->formatMoney($grand_outstanding); ?></td>
+                                        <td><?= $this->sma->formatDecimal($grand_invoice_total); ?></td>
+                                        <td><?= $this->sma->formatDecimal($grand_return); ?></td>
+                                        <td><?= $this->sma->formatDecimal($grand_discount); ?></td>
+                                        <td><?= $this->sma->formatDecimal($grand_paid); ?></td>
+                                        <td><?= $this->sma->formatDecimal($grand_outstanding); ?></td>
                                     </tr>
                                 <?php
                                 } else {

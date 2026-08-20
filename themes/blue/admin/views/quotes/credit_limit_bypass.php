@@ -1,17 +1,18 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <div class="box">
     <div class="box-header">
-        <h2 class="red"><i class="fa fa-fw fa fa-exclamation-triangle"></i><?= lang('Credit Limit Override') ?></h2>
+        <h2 class="red"><i class="fa fa-fw fa fa-exclamation-triangle"></i><?= lang('Quote On Hold Override') ?></h2>
     </div>
     <div class="box-content">
 
         <div class="alert alert-danger">
-            <h4><i class="fa fa-ban"></i> <?= lang('Customer Credit Limit Exceeded') ?></h4>
+            <h4><i class="fa fa-ban"></i> <?= lang('Quote On Hold') ?></h4>
             <table class="table table-condensed" style="margin-top:10px; margin-bottom:0; background:transparent;">
                 <tr>
                     <th style="border:none; width:220px;"><?= lang('Customer') ?></th>
                     <td style="border:none;"><strong><?= htmlspecialchars($customer_name) ?></strong></td>
                 </tr>
+                <?php if (!empty($credit_limit_exceeded)) { ?>
                 <tr>
                     <th style="border:none;"><?= lang('Credit Limit') ?></th>
                     <td style="border:none;"><?= number_format($credit_limit, 2) ?></td>
@@ -20,10 +21,17 @@
                     <th style="border:none;"><?= lang('Outstanding Balance') ?></th>
                     <td style="border:none;"><strong><?= number_format($pending_amount, 2) ?></strong></td>
                 </tr>
+                <?php } ?>
                 <tr>
                     <th style="border:none;"><?= lang('Quote') ?> #</th>
                     <td style="border:none;"><?= htmlspecialchars($quote->id) ?></td>
                 </tr>
+                <?php if (!empty($onhold_reason)) { ?>
+                <tr>
+                    <th style="border:none;"><?= lang('On Hold Reason') ?></th>
+                    <td style="border:none;"><strong><?= htmlspecialchars($onhold_reason) ?></strong></td>
+                </tr>
+                <?php } ?>
             </table>
         </div>
 
@@ -36,7 +44,7 @@
             <div class="form-group">
                 <label for="trade_note"><strong><?= lang('Override Justification Note') ?> <span class="required">*</span></strong></label>
                 <textarea name="trade_note" id="trade_note" class="form-control" rows="4"
-                    placeholder="<?= lang('Enter reason for overriding the credit limit...') ?>"
+                    placeholder="<?= lang('Enter reason for overriding the hold...') ?>"
                     required><?= $this->input->post('trade_note') ? htmlspecialchars($this->input->post('trade_note')) : '' ?></textarea>
                 <span class="help-block"><?= lang('This note will be saved to the quote record for audit purposes.') ?></span>
             </div>

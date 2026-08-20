@@ -2084,15 +2084,40 @@ class Quotes extends MY_Controller
         foreach ($approved_quotes as $q) {
             $customer_obj = $this->companies_model->getCompanyByID($q->customer_id);
             if (!$customer_obj) continue;
+
+            $onholdReasons = [];
             $creditLimit = (float)($customer_obj->credit_limit ?? 0);
-            if ($creditLimit <= 0) continue;
             $currentBalance = (float)$this->companies_model->getCustomerBalance($q->customer_id);
-            if ($currentBalance >= $creditLimit) {
-                $q->credit_limit     = $creditLimit;
-                $q->current_balance  = $currentBalance;
-                $q->overage          = $currentBalance - $creditLimit;
-                $exceeded[] = $q;
+            $creditExceeded = $creditLimit > 0 && ($currentBalance + (float)$q->grand_total) >= $creditLimit;
+
+            if ($creditExceeded) {
+                $onholdReasons[] = sprintf(
+                    'Credit limit exceeded (Limit: %s, Outstanding: %s)',
+                    number_format($creditLimit, 2),
+                    number_format($currentBalance, 2)
+                );
             }
+
+            $overdueDetail = $this->sales_model->getCustomerOverdueInvoicesDetail($q->customer_id);
+            if ($overdueDetail['count'] > 0) {
+                $onholdReasons[] = $overdueDetail['reason'];
+            }
+
+            if (empty($onholdReasons)) {
+                continue;
+            }
+
+            $onhold_reason = implode('; ', $onholdReasons);
+            $this->db->where('id', $q->id)->update('sma_quotes', ['onhold_reason' => $onhold_reason]);
+
+            $q->onhold_reason     = $onhold_reason;
+            $q->credit_limit      = $creditLimit;
+            $q->current_balance   = $currentBalance;
+            $q->overage           = $creditExceeded
+                ? ($currentBalance + (float)$q->grand_total) - $creditLimit
+                : null;
+            $q->payment_term_hold = $overdueDetail['count'] > 0;
+            $exceeded[] = $q;
         }
 
         $this->data['exceeded_quotes'] = $exceeded;

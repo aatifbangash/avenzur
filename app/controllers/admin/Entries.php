@@ -56,7 +56,7 @@ class Entries extends MY_Controller
 			$this->db->where("id LIKE '%$eid%'");	
 		}
 		if(!empty($tran_number)){
-			$this->db->where("number LIKE '%$tran_number%'");	
+			$this->db->where("sequence_code LIKE '%$tran_number%'");
 		}
 		if (!empty($transaction_type)) {
 			$this->db->where('transaction_type', $transaction_type);
@@ -274,7 +274,7 @@ class Entries extends MY_Controller
 			$this->db->where("id LIKE '%$eid%'");	
 		}
 		if(!empty($tran_number)){
-			$this->db->where("number LIKE '%$tran_number%'");	
+			$this->db->where("sequence_code LIKE '%$tran_number%'");
 		}
 		if (!empty($transaction_type)) {
 			$this->db->where('transaction_type', $transaction_type);
@@ -1969,7 +1969,8 @@ class Entries extends MY_Controller
 				);
 				
 				// Generate filename
-				$filename = ucfirst($entrytypeLabel) . '_Entry_' . $entry['number'] . '.pdf';
+				$entryRef = !empty($entry['sequence_code']) ? $entry['sequence_code'] : $entry['number'];
+				$filename = ucfirst($entrytypeLabel) . '_Entry_' . $entryRef . '.pdf';
 				
 				// Load view and get HTML
 				$html = $this->load->view($this->theme . 'accounts/entries_export_pdf', $view_data, true);
@@ -2001,9 +2002,10 @@ class Entries extends MY_Controller
 				} else {
 					$drcr_toby = lang('entries_views_views_th_dr_cr');
 				}
-				$this->excel->getActiveSheet()->setTitle(ucfirst($entrytypeLabel).lang('entry_title')."  #".$entry['number']);
+				$entryRef = !empty($entry['sequence_code']) ? $entry['sequence_code'] : $entry['number'];
+				$this->excel->getActiveSheet()->setTitle(ucfirst($entrytypeLabel).lang('entry_title')."  #".$entryRef);
 
-				$this->excel->getActiveSheet()->SetCellValue('A1', ucfirst($entrytypeLabel).lang('entry_title')."  #".$entry['number']);
+				$this->excel->getActiveSheet()->SetCellValue('A1', ucfirst($entrytypeLabel).lang('entry_title')."  #".$entryRef);
 				$this->excel->getActiveSheet()->mergeCells('A1:E1');
 
 				$this->excel->getActiveSheet()->SetCellValue('A2', lang('entries_views_add_label_date').": ".$entry['date']);
