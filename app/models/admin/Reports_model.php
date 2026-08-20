@@ -4679,12 +4679,7 @@ class Reports_model extends CI_Model
         }
 
         if ($supplier_id) {
-            $stockQuery .= "
-                AND inv.type = 'purchase'
-                AND inv.reference_id IN (
-                    SELECT id FROM sma_purchases WHERE supplier_id = '{$supplier_id}'
-                )
-            ";
+            $stockQuery .= $this->stockSupplierAvzFilterSql($supplier_id);
         }
 
         $stockQuery .= " GROUP BY inv.product_id, inv.avz_item_code HAVING quantity != 0";
@@ -4765,12 +4760,7 @@ class Reports_model extends CI_Model
             $stockQuery .= " AND p.agent2 = '{$agent2}' ";
         }
         if ($supplier_id) {
-            $stockQuery .= "
-                AND inv.type = 'purchase'
-                AND inv.reference_id IN (
-                    SELECT id FROM sma_purchases WHERE supplier_id = '{$supplier_id}'
-                )
-            ";
+            $stockQuery .= $this->stockSupplierAvzFilterSql($supplier_id);
         }
           $stockResults = $this->db->query($stockQuery);
        // echo $this->db->last_query(); exit; 
@@ -4886,12 +4876,7 @@ class Reports_model extends CI_Model
         }
 
         if ($supplier_id) {
-            $stockQuery .= "
-                AND inv.type = 'purchase'
-                AND inv.reference_id IN (
-                    SELECT id FROM sma_purchases WHERE supplier_id = '{$supplier_id}'
-                )
-            ";
+            $stockQuery .= $this->stockSupplierAvzFilterSql($supplier_id);
         }
 
         $stockQuery .= " GROUP BY inv.product_id, inv.avz_item_code HAVING quantity != 0 ORDER BY p.id DESC";
@@ -4907,6 +4892,32 @@ class Reports_model extends CI_Model
             }
         }
         return $stockArray;
+    }
+
+    /**
+     * Limit stock movements to lots (avz_item_code) purchased from the given supplier,
+     * while still including sales/returns/transfers/adjustments for those lots.
+     */
+    private function stockSupplierAvzFilterSql($supplier_id)
+    {
+        $supplier_id = (int) $supplier_id;
+        if ($supplier_id <= 0) {
+            return '';
+        }
+
+        $purchase_items = $this->db->dbprefix('purchase_items');
+        $purchases = $this->db->dbprefix('purchases');
+
+        return "
+            AND inv.avz_item_code IN (
+                SELECT pi.avz_item_code
+                FROM {$purchase_items} pi
+                INNER JOIN {$purchases} p ON p.id = pi.purchase_id
+                WHERE p.supplier_id = {$supplier_id}
+                AND pi.avz_item_code IS NOT NULL
+                AND pi.avz_item_code != ''
+            )
+        ";
     }
 
 
