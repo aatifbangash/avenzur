@@ -311,10 +311,8 @@
                                                 <td><?php 
                                                     if($balance >= 0){
                                                         echo number_format($balance, 2, '.', ','); 
-                                                        echo ' Dr';
                                                     }else if($balance < 0){
                                                         echo number_format(abs($balance), 2, '.', ','); 
-                                                        echo ' Cr';
                                                     }
                                                 ?></td>
                                             </tr>
@@ -341,17 +339,15 @@
                                 <th>&nbsp;</th>
                                 <th>&nbsp;</th>
                                 
-                                <th><?= number_format($totalDebit, 2, '.', ',').' Dr'; ?></th>
-                                <th><?= number_format($totalCredit, 2, '.', ',').' Cr'; ?></th>
+                                <th><?= number_format($totalDebit, 2, '.', ',');?></th>
+                                <th><?= number_format($totalCredit, 2, '.', ',');?></th>
                                 <th>
                                     <?php 
                                         
                                         if($balance >= 0){
                                             echo number_format($balance, 2, '.', ','); 
-                                            echo ' Dr';
                                         }else if($balance < 0){
                                             echo number_format($balance, 2, '.', ','); 
-                                            echo ' Cr';
                                         }
                                     ?>
                                 </th>
