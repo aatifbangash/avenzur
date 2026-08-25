@@ -5600,8 +5600,9 @@ if($inv->warning_note != ""){
         $sheet->setCellValue('C' . $row, 'Description');
         $sheet->setCellValue('D' . $row, 'Avz Code');
         $sheet->setCellValue('E' . $row, 'Batch No');
+        $sheet->setCellValue('F' . $row, 'Expiry Date');
 
-        $colIndex = 'F';
+        $colIndex = 'G';
         if ($this->Settings->indian_gst) {
             $sheet->setCellValue($colIndex . $row, 'HSN/SAC Code');
             $colIndex++;
@@ -5690,6 +5691,9 @@ if($inv->warning_note != ""){
 
             // Batch No
             $sheet->setCellValue($colIndex . $r, $item->batch_no ?: '');
+            $colIndex++;
+            // Expiry Date
+            $sheet->setCellValue($colIndex . $r, ($item->expiry && $item->expiry != '0000-00-00') ? $this->sma->hrsd($item->expiry) : '');
             $colIndex++;
 
             // HSN/SAC Code (if applicable)
