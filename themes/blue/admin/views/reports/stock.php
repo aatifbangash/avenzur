@@ -33,7 +33,7 @@
         if (warehouse && warehouse !== '0') {
             params.set('warehouse', warehouse);
         } else {
-            params.delete('warehouse');
+           // params.delete('warehouse');
         }
         const itemGroup = $('#item_group').val();
         if (itemGroup) {
@@ -276,6 +276,7 @@
                                 <th><?= lang('Old Code'); ?></th>
                                 <th><?= lang('Avz Code'); ?></th>
                                 <th><?= lang('Item Name'); ?></th>
+                                <th><?= lang('Store'); ?></th>
                                 <?php 
                                     if($this->Settings->site_name == 'Hills Business Medical'){  ?>
                                         <th><?= lang('Shelf'); ?></th>
@@ -329,6 +330,7 @@
                                         <td><?= $row->itm_code ?></td>
                                         <td><?= $row->avz_item_code ?></td>
                                         <td><?= $row->name ?></td>
+                                        <td><?= html_escape($row->warehouse_name); ?></td>
                                         <?php 
                                         if($this->Settings->site_name == 'Hills Business Medical'){  ?>
                                         <td><?= $row->shelf ?></td>
@@ -357,7 +359,7 @@
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <th colspan="12">No records to show.</th>
+                                    <th colspan="<?= $this->Settings->site_name == 'Hills Business Medical' ? 16 : 15 ?>">No records to show.</th>
                                 </tr>
                             <?php endif; ?>
 
@@ -365,6 +367,7 @@
                             <tfoot>
                             <tr>
                                 <th>Total</th>
+                                <th>&nbsp;</th>
                                 <?php 
                                     if($this->Settings->site_name == 'Hills Business Medical'){  ?>
                                         <th>&nbsp;</th>
