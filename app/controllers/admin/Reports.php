@@ -601,43 +601,46 @@ class Reports extends MY_Controller
             $this->excel->getActiveSheet()->SetCellValue('B1', lang('Old Code'));
             $this->excel->getActiveSheet()->SetCellValue('C1', lang('Avz Code'));
             $this->excel->getActiveSheet()->SetCellValue('D1', lang('Item Name'));
-            $this->excel->getActiveSheet()->SetCellValue('E1', lang('Shelf'));
-            $this->excel->getActiveSheet()->SetCellValue('F1', lang('Batch'));
-            $this->excel->getActiveSheet()->SetCellValue('G1', lang('Expiry'));
-            $this->excel->getActiveSheet()->SetCellValue('H1', lang('Quantity'));
-            $this->excel->getActiveSheet()->SetCellValue('I1', lang('Sale Price'));
-            $this->excel->getActiveSheet()->SetCellValue('J1', lang('Total Sale'));
-            $this->excel->getActiveSheet()->SetCellValue('K1', lang('Purchase Price'));
-            $this->excel->getActiveSheet()->SetCellValue('L1', lang('Total Purchase'));
-            $this->excel->getActiveSheet()->SetCellValue('M1', lang('Cost Price'));
-            $this->excel->getActiveSheet()->SetCellValue('N1', lang('Total Cost'));
+            $this->excel->getActiveSheet()->SetCellValue('E1', lang('Store'));
+            $this->excel->getActiveSheet()->SetCellValue('F1', lang('Shelf'));
+            $this->excel->getActiveSheet()->SetCellValue('G1', lang('Batch'));
+            $this->excel->getActiveSheet()->SetCellValue('H1', lang('Expiry'));
+            $this->excel->getActiveSheet()->SetCellValue('I1', lang('Quantity'));
+            $this->excel->getActiveSheet()->SetCellValue('J1', lang('Sale Price'));
+            $this->excel->getActiveSheet()->SetCellValue('K1', lang('Total Sale'));
+            $this->excel->getActiveSheet()->SetCellValue('L1', lang('Purchase Price'));
+            $this->excel->getActiveSheet()->SetCellValue('M1', lang('Total Purchase'));
+            $this->excel->getActiveSheet()->SetCellValue('N1', lang('Cost Price'));
+            $this->excel->getActiveSheet()->SetCellValue('O1', lang('Total Cost'));
 
             $row = 2;
             $total_quantity = $total_sale = $total_purchase = $total_cost = 0;
             $parsed_at_date = !empty($at_date) ? strtotime(substr($this->sma->fld($at_date), 0, 10)) : time();
             $use_inventory_cost = $parsed_at_date >= strtotime('2026-01-01');
             foreach ($data as $data_row) {
+                $store_name = preg_replace('/\s+/', ' ', trim((string) ($data_row->warehouse_name ?? '')));
                 $this->excel->getActiveSheet()->SetCellValue('A' . $row, $data_row->item_code);
                 $this->excel->getActiveSheet()->SetCellValue('B' . $row, $data_row->itm_code);
                 $this->excel->getActiveSheet()->SetCellValue('C' . $row, $data_row->avz_item_code);
                 $this->excel->getActiveSheet()->SetCellValue('D' . $row, $data_row->name);
-                $this->excel->getActiveSheet()->SetCellValue('E' . $row, $data_row->shelf ?? '');
-                $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data_row->batch_no);
-                $this->excel->getActiveSheet()->SetCellValue('G' . $row, $data_row->expiry);
-                $this->excel->getActiveSheet()->SetCellValue('H' . $row, $data_row->quantity);
-                $this->excel->getActiveSheet()->SetCellValue('I' . $row, ($data_row->sale_price));
-                $this->excel->getActiveSheet()->SetCellValue('J' . $row, ($data_row->sale_price * $data_row->quantity));
-                $this->excel->getActiveSheet()->SetCellValue('K' . $row, ($data_row->purchase_price));
-                $this->excel->getActiveSheet()->SetCellValue('L' . $row, ($data_row->purchase_price * $data_row->quantity));
+                $this->excel->getActiveSheet()->SetCellValue('E' . $row, $store_name);
+                $this->excel->getActiveSheet()->SetCellValue('F' . $row, $data_row->shelf ?? '');
+                $this->excel->getActiveSheet()->SetCellValue('G' . $row, $data_row->batch_no);
+                $this->excel->getActiveSheet()->SetCellValue('H' . $row, $data_row->expiry);
+                $this->excel->getActiveSheet()->SetCellValue('I' . $row, $data_row->quantity);
+                $this->excel->getActiveSheet()->SetCellValue('J' . $row, ($data_row->sale_price));
+                $this->excel->getActiveSheet()->SetCellValue('K' . $row, ($data_row->sale_price * $data_row->quantity));
+                $this->excel->getActiveSheet()->SetCellValue('L' . $row, ($data_row->purchase_price));
+                $this->excel->getActiveSheet()->SetCellValue('M' . $row, ($data_row->purchase_price * $data_row->quantity));
                 $excel_cost_price = $this->stockReportUnitCost($data_row, $use_inventory_cost);
                 $excel_total_cost = $excel_cost_price * $data_row->quantity;
-                $this->excel->getActiveSheet()->SetCellValue('M' . $row, $excel_cost_price);
-                $this->excel->getActiveSheet()->SetCellValue('N' . $row, $excel_total_cost);
+                $this->excel->getActiveSheet()->SetCellValue('N' . $row, $excel_cost_price);
+                $this->excel->getActiveSheet()->SetCellValue('O' . $row, $excel_total_cost);
                 
                 $total_quantity += $data_row->quantity;
                 $row++;
             }
-            $this->excel->getActiveSheet()->getStyle('E' . $row . ':J' . $row)->getBorders()
+            $this->excel->getActiveSheet()->getStyle('F' . $row . ':K' . $row)->getBorders()
                 ->getTop()->setBorderStyle('medium');
             //$this->excel->getActiveSheet()->SetCellValue('E' . $row, $this->sma->formatDecimal($igst));
             //$this->excel->getActiveSheet()->SetCellValue('F' . $row, $this->sma->formatDecimal($cgst));
@@ -656,7 +659,9 @@ class Reports extends MY_Controller
             //$this->excel->getActiveSheet()->getColumnDimension('H')->setWidth(15);
             //$this->excel->getActiveSheet()->getColumnDimension('I')->setWidth(20);
             $this->excel->getDefaultStyle()->getAlignment()->setVertical('center');
-            $this->excel->getActiveSheet()->getStyle('E2:E' . $row)->getAlignment()->setWrapText(true);
+            $this->excel->getActiveSheet()->getColumnDimension('E')->setWidth(24);
+            $this->excel->getActiveSheet()->getStyle('E2:E' . $row)->getAlignment()->setWrapText(false);
+            $this->excel->getActiveSheet()->getStyle('F2:F' . $row)->getAlignment()->setWrapText(true);
             $filename = 'stock_report';
             $this->load->helper('excel');
             create_excel($this->excel, $filename);
@@ -718,7 +723,7 @@ class Reports extends MY_Controller
         $this->data['at_date'] = $at_date;
 
         $this->data['warehouse'] = $warehouse;
-        $this->data['warehouses'] = $this->site->getAllWarehouses();
+        $this->data['warehouses'] = array_values(array_filter($this->site->getAllWarehouses(), function ($warehouse_row) { return strcasecmp(trim((string) $warehouse_row->name), 'Adjustment Store') !== 0; }));
         //$this->data['suppliers'] = $this->deals_model->getAllSuppliersList();
         $this->data['categories'] = $this->site->getAllCategories();
         $bc = [

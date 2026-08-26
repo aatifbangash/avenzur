@@ -4658,6 +4658,7 @@ class Reports_model extends CI_Model
         if ($at_date) {
             $stockQuery .= " AND date(inv.movement_date)<= '{$at_date}' ";
         }
+        $stockQuery .= " AND inv.location_id NOT IN (SELECT id FROM sma_warehouses WHERE name = 'Adjustment Store') ";
         if ($warehouse) {
             $stockQuery .= " AND inv.location_id = {$warehouse} ";
         }
@@ -4682,7 +4683,7 @@ class Reports_model extends CI_Model
             $stockQuery .= $this->stockSupplierAvzFilterSql($supplier_id);
         }
 
-        $stockQuery .= " GROUP BY inv.product_id, inv.avz_item_code HAVING quantity != 0";
+        $stockQuery .= " GROUP BY inv.product_id, inv.avz_item_code, inv.location_id HAVING quantity != 0";
         $stockResults = $this->db->query($stockQuery);
         //echo $this->db->last_query(); exit; 
         if ($stockResults->num_rows() > 0) {
@@ -4740,6 +4741,7 @@ class Reports_model extends CI_Model
         if ($at_date) {
             $stockQuery .= " AND date(inv.movement_date)<= '{$at_date}' ";
         }
+        $stockQuery .= " AND inv.location_id NOT IN (SELECT id FROM sma_warehouses WHERE name = 'Adjustment Store') ";
         if ($warehouse) {
             $stockQuery .= " AND inv.location_id = {$warehouse} ";
         }
@@ -4822,6 +4824,7 @@ class Reports_model extends CI_Model
             p.code item_code, 
             p.item_code as itm_code,
             p.name as name, 
+            w.name as warehouse_name,
             inv.avz_item_code,
             inv.batch_number as batch_no,
             inv.expiry_date as expiry,
@@ -4834,12 +4837,15 @@ class Reports_model extends CI_Model
             p.warehouse_shelf as shelf
             FROM `sma_inventory_movements` inv 
             INNER JOIN sma_products p on p.id=inv.product_id
+            LEFT JOIN sma_warehouses w ON w.id = inv.location_id
+            WHERE 1=1
             ";
         }else{
             $stockQuery = " SELECT p.id,
             p.code item_code, 
             p.item_code as itm_code,
             p.name as name, 
+            w.name as warehouse_name,
             inv.avz_item_code,
             inv.batch_number as batch_no,
             inv.expiry_date as expiry,
@@ -4849,12 +4855,15 @@ class Reports_model extends CI_Model
             sum(inv.net_unit_cost * inv.quantity) as total_cost_price,
             inv.real_unit_cost as purchase_price  
             FROM `sma_inventory_movements` inv 
-            INNER JOIN sma_products p on p.id=inv.product_id";
+            INNER JOIN sma_products p on p.id=inv.product_id
+            LEFT JOIN sma_warehouses w ON w.id = inv.location_id
+            WHERE 1=1";
         }
         
         if ($at_date) {
             $stockQuery .= " AND date(inv.movement_date)<= '{$at_date}' ";
         }
+        $stockQuery .= " AND inv.location_id NOT IN (SELECT id FROM sma_warehouses WHERE name = 'Adjustment Store') ";
         if ($warehouse) {
             $stockQuery .= " AND inv.location_id = {$warehouse} ";
         }
@@ -4879,7 +4888,7 @@ class Reports_model extends CI_Model
             $stockQuery .= $this->stockSupplierAvzFilterSql($supplier_id);
         }
 
-        $stockQuery .= " GROUP BY inv.product_id, inv.avz_item_code HAVING quantity != 0 ORDER BY p.id DESC";
+        $stockQuery .= " GROUP BY inv.product_id, inv.avz_item_code, inv.location_id HAVING quantity != 0 ORDER BY p.id DESC";
         
         if($page != ''){
             $stockQuery .= " LIMIT {$per_page} OFFSET {$offset}";
