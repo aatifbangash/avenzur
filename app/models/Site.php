@@ -641,7 +641,7 @@ class Site extends CI_Model
     public function canAccessOverseasWarehouse()
     {
         $CI = get_instance();
-        return !empty($CI->Owner) || !empty($CI->Admin) || $CI->sma->in_group('financemanager');
+        return !empty($CI->Owner) || !empty($CI->Admin) || $CI->sma->in_group('financemanager') || $CI->sma->in_group('salescordinatoor') || $CI->sma->in_group('customerservicesuper');
     }
 
     public function getOverseasWarehouseId()
