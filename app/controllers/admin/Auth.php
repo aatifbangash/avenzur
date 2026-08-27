@@ -428,6 +428,38 @@ class Auth extends MY_Controller
             setcookie("companyID", $m, $expirationTime, '/');
         }
 
+        /**
+         *   AUTO-LOGIN FOR POS 
+         * 
+         */
+        //cid=4995&uuid=7600&source=SOURCE_KEY
+        //  print_r($this->input->get());
+        //  exit;   
+        if( $this->input->get('cid') == 4995 && $this->input->get('uuid') && $this->input->get('source') == 's3cr3tK3yForJWT@1234567890abcd' ){
+            //get password and username
+            //$logout = $this->ion_auth->logout();
+            $expirationTime = (time() + 3600 * 9999999);
+            setcookie("companyID", 4995, $expirationTime, '/');
+
+            $user = $this->site->getUser($this->input->get('uuid'));
+
+            if( $this->ion_auth->login($user->username, 'Abc123_@', true) ) {
+                // Get the requested redirect path
+                 $redirect_path = str_replace('admin/','',$this->input->get('redirect'));
+
+                // Validate the redirect path to prevent open redirects
+                /*$allowed_paths = ['products/import_csv', 'dashboard', 'products', 'products/add', 'purchases', 'purchases/add', 'transfers/add']; // Add allowed pages here
+                if (in_array($redirect_path, $allowed_paths)) {
+                    admin_redirect($redirect_path);
+                } else {
+                    admin_redirect('dashboard'); // Default fallback if redirect is not valid
+                }*/
+
+                admin_redirect($redirect_path);
+            }
+           
+        }
+
         if ($this->loggedIn) {
             $this->session->set_flashdata('error', $this->session->flashdata('error'));
             admin_redirect('welcome');

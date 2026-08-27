@@ -25,7 +25,7 @@
             "aLengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "<?= lang('all') ?>"]],
             "iDisplayLength": <?= $Settings->rows_per_page ?>,
             'bProcessing': true, 'bServerSide': true,
-            'sAjaxSource': '<?= admin_url('products/getProducts' . ($warehouse_id ? '/' . $warehouse_id : '') . ($supplier ? '?supplier=' . $supplier->id : '')) ?>',
+            'sAjaxSource': '<?= $products_ajax_url ?>',
             'fnServerData': function (sSource, aoData, fnCallback) {
                 aoData.push({
                     "name": "<?= $this->security->get_csrf_token_name() ?>",
@@ -149,6 +149,43 @@
                             <i class="fa fa-trash-o"></i> <?= lang('delete_products') ?>
                              </a>
                          </li>
+                         <!-- Option for snapchat -->
+                         <!-- <li>
+                            <a href="#" class="bpo" title="<b><?= $this->lang->line('Add to catalog') ?></b>"
+                                data-content="<p><?= lang('r_u_sure') ?></p><button type='button' class='btn btn-danger' id='add_to_catalog' data-action='add_to_catalog'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button>"
+                                data-html="true" data-placement="left">
+                            <i class="fa fa-barcode"></i> <?= lang('Add to catalog') ?>
+                             </a>
+                         </li>
+                         <li>
+                            <a href="#" class="bpo" title="<b><?= $this->lang->line('Out of stock') ?></b>"
+                                data-content="<p><?= lang('r_u_sure') ?></p><button type='button' class='btn btn-danger' id='out_of_stock' data-action='out_of_stock'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button>"
+                                data-html="true" data-placement="left">
+                            <i class="fa fa-barcode"></i> <?= lang('Out of stock') ?>
+                             </a>
+                         </li>
+                         <li>
+                            <a href="#" class="bpo" title="<b><?= $this->lang->line('Deactivated') ?></b>"
+                                data-content="<p><?= lang('r_u_sure') ?></p><button type='button' class='btn btn-danger' id='out_of_stock' data-action='deactivated'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button>"
+                                data-html="true" data-placement="left">
+                            <i class="fa fa-barcode"></i> <?= lang('Deactivated') ?>
+                             </a>
+                         </li> -->
+                         <!-- end option for snap chat -->
+                         <!-- <li>
+                            <a href="#" class="bpo" title="<b><?= $this->lang->line('delete_products') ?></b>"
+                                data-content="<p><?= lang('r_u_sure') ?></p><button type='button' class='btn btn-danger' id='delete' data-action='delete'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button>"
+                                data-html="true" data-placement="left">
+                            <i class="fa fa-trash-o"></i> <?= lang('delete_products') ?>
+                             </a>
+                         </li>
+                         <li>
+                            <a href="#" class="bpo" title="<b><?= $this->lang->line('delete_products') ?></b>"
+                                data-content="<p><?= lang('r_u_sure') ?></p><button type='button' class='btn btn-danger' id='delete' data-action='delete'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button>"
+                                data-html="true" data-placement="left">
+                            <i class="fa fa-trash-o"></i> <?= lang('delete_products') ?>
+                             </a>
+                         </li> -->
                     </ul>
                 </li>
                 <?php if (!empty($warehouses)) {
@@ -156,7 +193,7 @@
                     <li class="dropdown">
                         <a data-toggle="dropdown" class="dropdown-toggle" href="#"><i class="icon fa fa-building-o tip" data-placement="left" title="<?= lang('warehouses') ?>"></i></a>
                         <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
-                            <li><a href="<?= admin_url('products') ?>"><i class="fa fa-building-o"></i> <?= lang('all_warehouses') ?></a></li>
+                            <li><a href="<?= admin_url('products?all=1') ?>"><i class="fa fa-building-o"></i> <?= lang('all_warehouses') ?></a></li>
                             <li class="divider"></li>
                             <?php
                             foreach ($warehouses as $warehouse) {

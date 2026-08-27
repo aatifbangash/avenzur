@@ -22,7 +22,7 @@ class Shop_settings extends MY_Controller
         $this->load->admin_model('shop_admin_model');
         $this->upload_path       = 'assets/uploads/';
         $this->image_types       = 'gif|jpg|jpeg|png';
-        $this->allowed_file_size = '1024';
+        $this->allowed_file_size = '2048';
     }
 
     public function add_page()
@@ -247,6 +247,38 @@ class Shop_settings extends MY_Controller
         $this->page_construct('shop/pages', $meta, $this->data);
     }
 
+    public function abandoned_cart(){
+        $this->sma->checkPermissions();
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        
+        $response_arr = array();
+        $from_date = $this->input->post('from_date') ? $this->input->post('from_date') : null;
+        $to_date = $this->input->post('to_date') ? $this->input->post('to_date') : null;
+
+        if ($from_date) {
+            $start_date = $this->sma->fld($from_date);
+            $end_date = $this->sma->fld($to_date);
+
+            $abandoned_cart_array = $this->shop_admin_model->getAbandonedCart($start_date, $end_date);
+
+            $this->data['start_date'] = $from_date;
+            $this->data['end_date'] = $to_date;
+            $this->data['abandoned_cart_array'] = $abandoned_cart_array;
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('shop_settings'), 'page' => lang('shop_settings')], ['link' => '#', 'page' => lang('shop_settings')]];
+            $meta = ['page_title' => lang('abandoned_cart'), 'bc' => $bc];
+            $this->page_construct('settings/abandoned_cart', $meta, $this->data);
+        } else {
+
+            $abandoned_cart_array = $this->shop_admin_model->getAbandonedCart(NULL, NULL);
+            $this->data['abandoned_cart_array'] = $abandoned_cart_array;
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('shop_settings'), 'page' => lang('shop_settings')], ['link' => '#', 'page' => lang('shop_settings')]];
+            $meta = ['page_title' => lang('abandoned_cart'), 'bc' => $bc];
+            $this->page_construct('settings/abandoned_cart', $meta, $this->data);
+        }
+    }
+
     public function send_sms($date = null)
     {
         $this->form_validation->set_rules('mobile', lang('mobile'), 'trim|required');
@@ -271,7 +303,7 @@ class Shop_settings extends MY_Controller
     public function sitemap()
     {
         $categories = $this->shop_admin_model->getAllCategories();
-        $products   = $this->shop_admin_model->getAllProducts();
+        $products   = $this->shop_admin_model->getAllActiveProducts();
         $brands     = $this->shop_admin_model->getAllBrands();
         $pages      = $this->shop_admin_model->getAllPages();
         $map        = '<?xml version="1.0" encoding="UTF-8" ?>';
@@ -334,9 +366,77 @@ class Shop_settings extends MY_Controller
         }
 
         $map .= '</urlset>';
-        file_put_contents('sitemap.xml', $map);
-        header('Location: ' . base_url('sitemap.xml'));
-        exit;
+        if (file_put_contents('sitemap.xml', $map) === false) {
+            echo "Error writing to sitemap.xml";exit;
+        } else {
+            header('Location: ' . base_url('sitemap.xml'));
+            exit;
+        }
+        
+    }
+
+    public function delete_tag(){
+        $tag_id = $_POST['id'];
+        $this->shop_admin_model->deleteTag($tag_id);
+
+        header('Location: ' . admin_url('shop_settings/tags'));
+    }
+
+    public function activate_tag(){
+        $tag_id = $_POST['id'];
+        $tag_detail = $this->shop_admin_model->getTagById($tag_id);
+        $field_detail = json_decode($tag_detail->field, true);
+        $operator = $tag_detail->operator;
+        $value = $tag_detail->value;
+        $tag_name = $tag_detail->name;
+
+        $field_arr = json_decode($field_detail, true);
+        $source_table = $field_arr['source_table'];
+        $source_field = $field_arr['source_field'];
+        $destination_field = $field_arr['destination_field'];
+        $destination_table = $field_arr['destination_table'];
+        
+        $field_type = str_replace('sma_', "", $destination_table);
+        $records = $this->shop_admin_model->executeTag($source_table, $source_field, $operator, $value, $tag_id);
+        foreach ($records as $record){
+            $inserted = $this->shop_admin_model->assignTag($record->{$destination_field}, $tag_id, $field_type);
+        }
+
+        $this->shop_admin_model->updateTagStatus($tag_id);
+
+        header('Location: ' . admin_url('shop_settings/tags'));
+    }
+
+    public function tags(){
+        $this->sma->checkPermissions();
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        
+        $response_arr = array();
+        if (isset($_POST['add_tag'])) {
+            $this->shop_admin_model->addTag($_POST);
+
+            $tags_array = $this->shop_admin_model->getAllTags();
+            $this->data['tags_array'] = $tags_array;
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('shop_settings'), 'page' => lang('shop_settings')], ['link' => '#', 'page' => lang('shop_settings')]];
+            $meta = ['page_title' => lang('tags'), 'bc' => $bc];
+            $this->page_construct('settings/tags', $meta, $this->data);
+        } else {
+
+            $tags_array = $this->shop_admin_model->getAllTags();
+            $this->data['tags_array'] = $tags_array;
+
+            $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('shop_settings'), 'page' => lang('shop_settings')], ['link' => '#', 'page' => lang('shop_settings')]];
+            $meta = ['page_title' => lang('tags'), 'bc' => $bc];
+            $this->page_construct('settings/tags', $meta, $this->data);
+        }
+    }
+
+    public function addTag(){
+        $this->sma->checkPermissions();
+
+        $this->data[] = [];
+        $this->load->view($this->theme . 'settings/add_tags', $this->data);
     }
 
     public function slider()

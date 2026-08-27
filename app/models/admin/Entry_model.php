@@ -60,18 +60,52 @@ Class Entry_model extends CI_Model {
 	}
 
 	/**
-	 * Calculate the next number for a entry based on entry type
+	 * Next formatted voucher number using a fixed prefix and numeric suffix.
+	 * e.g. JV-00192, SAL-00004
 	 */
-		public function nextNumber($id)	{
+	public function nextVoucherNumber($entrytypeId, $prefix = 'JV-', $padding = 5)
+	{
+		$startPos = strlen($prefix) + 1;
+		$regex = '^' . preg_quote($prefix, '/') . '[0-9]+$';
 
-			$this->db->where('entrytype_id', $id);
-			$max = $this->db->select('MAX(number) AS max')->get('sma_accounts_entries')->row_array();
-			if (empty($max['max'])) {
-				$maxNumber = 0;
-			} else {
-				$maxNumber = $max['max'];
-			}
-			return (int)$maxNumber + 1;
+		$row = $this->db->query(
+			"SELECT MAX(CAST(SUBSTRING(number, " . (int) $startPos . ") AS UNSIGNED)) AS mx
+			 FROM " . $this->db->dbprefix('accounts_entries') . "
+			 WHERE entrytype_id = ? AND number REGEXP ?",
+			[(int) $entrytypeId, $regex]
+		)->row_array();
+
+		$next = ((int) ($row['mx'] ?? 0)) + 1;
+		return $prefix . str_pad($next, $padding, '0', STR_PAD_LEFT);
+	}
+
+	/**
+	 * Prefix for auto-numbering by transaction type.
+	 */
+	public function voucherPrefixForType($transactionType)
+	{
+		$map = [
+			'journal'       => 'JV-',
+			'salary'        => 'SAL-',
+			'depreciation'  => 'DEP-',
+		];
+
+		return $map[$transactionType] ?? 'JV-';
+	}
+
+	/**
+	 * Calculate the next number for an entry based on entry type.
+	 */
+	public function nextNumber($id)
+	{
+		$entrytype = $this->db->where('id', (int) $id)->get('accounts_entrytypes')->row();
+		if ($entrytype && $entrytype->label === 'journal') {
+			return $this->nextVoucherNumber((int) $id, 'JV-', 5);
 		}
+
+		$this->db->where('entrytype_id', (int) $id);
+		$max = $this->db->select('MAX(CAST(number AS UNSIGNED)) AS max')->get('accounts_entries')->row_array();
+		return ((int) ($max['max'] ?? 0)) + 1;
+	}
 
 }
