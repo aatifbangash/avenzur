@@ -347,6 +347,20 @@
                     </ul>
                 </li>
 
+                <?php if($Admin || $Owner || $this->GP['sales-index']){ ?>
+                <!-- POS Reports -->
+                <li class="newmenu-item has-sub">
+                    <a href="#" class="newmenu-link">
+                        <i class="fa fa-desktop"></i>
+                        <span><?= lang('pos_reports'); ?></span>
+                        <i class="fa fa-chevron-right newmenu-chevron"></i>
+                    </a>
+                    <ul class="newmenu-sub">
+                        <li><a href="<?= admin_url('reports/pos_shop_sales'); ?>" class="newmenu-link"><i class="fa fa-shopping-cart"></i> <?= lang('sales_report'); ?></a></li>
+                    </ul>
+                </li>
+                <?php } ?>
+
                 <?php if($Admin || $Owner || $this->GP['customers-index']){ ?>
                 <li><a href="<?= admin_url('customers'); ?>" class="newmenu-link"><i class="fa fa-users"></i> <?= lang('Customers'); ?></a></li>
                 <?php } ?>

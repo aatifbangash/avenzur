@@ -1,35 +1,110 @@
 $(document).ready(function () {
 
 
- const pageKey = window.location.pathname; // e.g. "/transfer/add" or "/transfer/edit"
+const pageKey = window.location.pathname;
 const lockKey = "pageLock_" + pageKey;
+const LOCK_TTL_MS = 120000;
+const TAB_ID = "tab_" + Date.now() + "_" + Math.random().toString(36).slice(2);
 
-console.log(window.location);
-function checkPageLock() {
-  // Check if this page is already open in another tab
-  if (localStorage.getItem(lockKey)) {
-    // Redirect to a common page (dashboard or list page)
-    alert("This page is already open in another tab. Redirecting you...");
-	if(window.location.origin != "http://localhost"){ 
-    	window.location.href ="/admin/transfers";
-	}
-	else{
-		window.location.href ="/avenzur/admin/transfers";
-	}
-  } else {
-    // Lock this page for this tab
-    localStorage.setItem(lockKey, "locked");
-
-    // Release the lock when tab is closed or refreshed
-    window.addEventListener("beforeunload", function () {
+function releaseTransferPageLock() {
+  const current = localStorage.getItem(lockKey);
+  if (!current) {
+    return;
+  }
+  try {
+    const lock = JSON.parse(current);
+    if (lock.tabId === TAB_ID) {
       localStorage.removeItem(lockKey);
+    }
+  } catch (e) {
+    localStorage.removeItem(lockKey);
+  }
+}
+window.releaseTransferPageLock = releaseTransferPageLock;
+
+function checkPageLock() {
+  const now = Date.now();
+  const raw = localStorage.getItem(lockKey);
+
+  if (raw) {
+    try {
+      const lock = JSON.parse(raw);
+      if (lock.tabId !== TAB_ID && (now - lock.at) < LOCK_TTL_MS) {
+        alert("This page is already open in another tab. Redirecting you...");
+        if (window.location.origin != "http://localhost") {
+          window.location.href = "/admin/transfers";
+        } else {
+          window.location.href = "/avenzur/admin/transfers";
+        }
+        return;
+      }
+    } catch (e) {
+      localStorage.removeItem(lockKey);
+    }
+  }
+
+  localStorage.setItem(lockKey, JSON.stringify({ tabId: TAB_ID, at: now }));
+
+  window.addEventListener("beforeunload", releaseTransferPageLock);
+  window.addEventListener("pagehide", releaseTransferPageLock);
+
+  setInterval(function () {
+    const current = localStorage.getItem(lockKey);
+    if (!current) {
+      return;
+    }
+    try {
+      const lock = JSON.parse(current);
+      if (lock.tabId === TAB_ID) {
+        lock.at = Date.now();
+        localStorage.setItem(lockKey, JSON.stringify(lock));
+      }
+    } catch (e) {
+      localStorage.removeItem(lockKey);
+    }
+  }, 30000);
+}
+
+function allowTransferPageExit(clearDraft) {
+  window.onbeforeunload = null;
+  $(window).off("beforeunload");
+  releaseTransferPageLock();
+  if (clearDraft !== false) {
+    ["toitems", "toshipping", "toref", "to_warehouse", "tonote", "from_warehouse", "todate", "tostatus", "currentstatus"].forEach(function (key) {
+      localStorage.removeItem(key);
     });
   }
 }
 
 checkPageLock();
 
-	$("body a, body button").attr("tabindex", -1);
+$(document).on("click", "a[href]", function (e) {
+  const href = this.getAttribute("href");
+  if (!href || href.charAt(0) === "#" || href.indexOf("javascript:") === 0) {
+    return;
+  }
+
+  let targetPath = "";
+  try {
+    targetPath = new URL(this.href, window.location.origin).pathname;
+  } catch (err) {
+    return;
+  }
+
+  const currentPath = window.location.pathname;
+  if (
+    targetPath !== currentPath &&
+    (currentPath.indexOf("/transfers/add") !== -1 ||
+      currentPath.indexOf("/transfers/edit") !== -1) &&
+    !$(this).closest(".breadcrumb, #sidebar, .sidebar, .main-sidebar").length
+  ) {
+    e.preventDefault();
+    allowTransferPageExit();
+    window.location.href = this.href;
+  }
+});
+
+	$("body a, body button").not(".breadcrumb a, #sidebar a, .sidebar a, .main-sidebar a").attr("tabindex", -1);
 	//check_add_item_val();
 	if (site.settings.set_focus != 1) {
 		$("#add_item").focus();

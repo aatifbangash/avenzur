@@ -604,6 +604,7 @@ $lang['product_deleted_x_edit'] = 'The record can not be edited after you have d
 /* ---------------------- Front End Settings ---------------------- */
 $lang['shop']                       = 'Shop';
 $lang['shop_sales']                 = 'Shop Sales';
+$lang['pos_reports']                = 'POS Reports';
 $lang['front_end']                  = 'Front End';
 $lang['site_offline']               = 'Site Offline';
 $lang['visit_us_later']             = 'Please visit us again in few days.';
