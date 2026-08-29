@@ -1,4 +1,10 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<?php
+$canBillerAdd = $Owner || ($GP && !empty($GP['billers-add']));
+$canBillerExportExcel = $Owner || ($GP && !empty($GP['billers-export_excel']));
+$canBillerDelete = $Owner || ($GP && !empty($GP['billers-delete']));
+$hasBillerBulkAction = $canBillerExportExcel || $canBillerDelete;
+?>
 <script>
     $(document).ready(function () {
         oTable = $('#SupData').dataTable({
@@ -29,7 +35,7 @@
         ], "footer");
     });
 </script>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($hasBillerBulkAction) {
     echo admin_form_open('billers/biller_actions', 'id="action-form"');
 } ?>
 <div class="box">
@@ -41,10 +47,10 @@
                 <li class="dropdown">
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#"><i class="icon fa fa-tasks tip" data-placement="left" title="<?= lang('actions') ?>"></i></a>
                     <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
-                        <li><a href="<?= admin_url('billers/add'); ?>" data-toggle="modal" data-target="#myModal" id="add"><i class="fa fa-plus-circle"></i> <?= lang('add_biller'); ?></a></li>
-                        <li><a href="#" id="excel" data-action="export_excel"><i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?></a></li>
-                        <li class="divider"></li>
-                        <li><a href="#" class="bpo" title="<b><?= $this->lang->line('delete_billers') ?></b>" data-content="<p><?= lang('r_u_sure') ?></p><button type='button' class='btn btn-danger' id='delete' data-action='delete'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button>" data-html="true" data-placement="left"><i class="fa fa-trash-o"></i> <?= lang('delete_billers') ?></a></li>
+                        <?php if ($canBillerAdd) { ?><li><a href="<?= admin_url('billers/add'); ?>" data-toggle="modal" data-target="#myModal" id="add"><i class="fa fa-plus-circle"></i> <?= lang('add_biller'); ?></a></li><?php } ?>
+                        <?php if ($canBillerExportExcel) { ?><li><a href="#" id="excel" data-action="export_excel"><i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?></a></li><?php } ?>
+                        <?php if ($canBillerDelete) { ?><li class="divider"></li>
+                        <li><a href="#" class="bpo" title="<b><?= $this->lang->line('delete_billers') ?></b>" data-content="<p><?= lang('r_u_sure') ?></p><button type='button' class='btn btn-danger' id='delete' data-action='delete'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button>" data-html="true" data-placement="left"><i class="fa fa-trash-o"></i> <?= lang('delete_billers') ?></a></li><?php } ?>
                     </ul>
                 </li>
             </ul>
@@ -100,7 +106,7 @@
         </div>
     </div>
 </div>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($hasBillerBulkAction) {
     ?>
     <div style="display: none;">
         <input type="hidden" name="form_action" value="" id="form_action"/>

@@ -93,26 +93,26 @@
 </div>
 <div style="clear:both;height:20px;"></div>
 <ul id="myTab" class="nav nav-tabs no-print">
-    <?php if ($Owner || $Admin || $GP['reports-daily_sales']) { ?>
+    <?php if ($Owner || $GP['reports-daily_sales']) { ?>
     <li class=""><a href="#daily-con" class="tab-grey"><?= lang('staff_daily_sales') ?></a></li>
     <?php } ?>
-    <?php if ($Owner || $Admin || $GP['reports-monthly_sales']) { ?>
+    <?php if ($Owner || $GP['reports-monthly_sales']) { ?>
     <li class=""><a href="#monthly-con" class="tab-grey"><?= lang('staff_monthly_sales') ?></a></li>
     <?php } ?>
-    <?php if ($Owner || $Admin || $GP['reports-sales']) { ?>
+    <?php if ($Owner || $GP['reports-sales']) { ?>
     <li class=""><a href="#sales-con" class="tab-grey"><?= lang('staff_sales_report') ?></a></li>
     <?php } ?>
-    <?php if ($Owner || $Admin || $GP['reports-purchases']) { ?>
+    <?php if ($Owner || $GP['reports-purchases']) { ?>
     <li class=""><a href="#purchases-con" class="tab-grey"><?= lang('staff_purchases_report') ?></a></li>
     <?php } ?>
-    <?php if ($Owner || $Admin || $GP['reports-payments']) { ?>
+    <?php if ($Owner || $GP['reports-payments']) { ?>
     <li class=""><a href="#payments-con" class="tab-grey"><?= lang('staff_payments_report') ?></a></li>
     <?php } ?>
     <li class=""><a href="#logins-con" class="tab-grey"><?= lang('staff_logins_report') ?></a></li>
 </ul>
 
 <div class="tab-content">
-    <?php if ($Owner || $Admin || $GP['reports-daily_sales']) { ?>
+    <?php if ($Owner || $GP['reports-daily_sales']) { ?>
     <div id="daily-con" class="tab-pane fade in">
         <div class="box">
             <div class="box-header">
@@ -140,7 +140,7 @@
         </div>
     </div>
     <?php } ?>
-    <?php if ($Owner || $Admin || $GP['reports-monthly_sales']) { ?>
+    <?php if ($Owner || $GP['reports-monthly_sales']) { ?>
     <div id="monthly-con" class="tab-pane fade in">
         <div class="box">
             <div class="box-header">
@@ -224,7 +224,7 @@
         </div>
     </div>
     <?php } ?>
-    <?php if ($Owner || $Admin || $GP['reports-sales']) { ?>
+    <?php if ($Owner || $GP['reports-sales']) { ?>
     <div id="sales-con" class="tab-pane fade in">
 
         <?php
@@ -458,7 +458,7 @@
         </div>
     </div>
     <?php } ?>
-    <?php if ($Owner || $Admin || $GP['reports-purchases']) { ?>
+    <?php if ($Owner || $GP['reports-purchases']) { ?>
     <div id="purchases-con" class="tab-pane fade in">
         <?php
         $v1 = '&user=' . $user_id;
@@ -663,7 +663,7 @@
         </div>
     </div>
     <?php } ?>
-    <?php if ($Owner || $Admin || $GP['reports-payments']) { ?>
+    <?php if ($Owner || $GP['reports-payments']) { ?>
     <div id="payments-con" class="tab-pane fade in">
         <?php
         $p = '&user=' . $user_id;

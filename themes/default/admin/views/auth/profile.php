@@ -1,4 +1,16 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<?php
+$permissionSections = [];
+if (!empty($permission_catalog) && is_array($permission_catalog)) {
+    foreach ($permission_catalog as $permissionDefinition) {
+        $module = !empty($permissionDefinition['module']) ? $permissionDefinition['module'] : 'general';
+        if (!isset($permissionSections[$module])) {
+            $permissionSections[$module] = [];
+        }
+        $permissionSections[$module][] = $permissionDefinition;
+    }
+}
+?>
 <div class="row">
 
     <div class="col-sm-2">
@@ -59,14 +71,14 @@
                                             <?php if (!$this->ion_auth->in_group('customer', $id) && !$this->ion_auth->in_group('supplier', $id)) {
                                     ?>
                                                 <div class="form-group">
-                                                    <?php echo lang('company', 'company'); ?>
+                                                    <?php echo lang('Country', 'Country'); ?>
                                                     <div class="controls">
-                                                        <?php echo form_input('company', $user->company, 'class="form-control" id="company" required="required"'); ?>
+                                                        <?php echo form_input('company', $user->country, 'class="form-control" id="country" required="required"'); ?>
                                                     </div>
                                                 </div>
                                             <?php
                                 } else {
-                                    echo form_hidden('company', $user->company);
+                                    echo form_hidden('company', $user->country);
                                 } ?>
                                             <div class="form-group">
 
@@ -191,7 +203,7 @@
                                                                             <?= lang('allow_discount', 'allow_discount'); ?>
                                                                             <?= form_dropdown('allow_discount', $opts, ($_POST['allow_discount'] ?? $user->allow_discount), 'id="allow_discount" class="form-control select" style="width:100%;"'); ?>
                                                                         </div>
-                                                                        </div>
+                                                                                                                                                </div>
                                                                         <?php
                                                     } ?>
                                                                     </div>
@@ -206,6 +218,55 @@
                                         </div>
                                     </div>
                                 </div>
+                                <?php if (($Owner || $Admin) && $id != $this->session->userdata('user_id') && !empty($normalized_permissions_available) && !empty($permissionSections)) { ?>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <?php if (!empty($user->group_id)) { ?>
+                                        <p class="help-block"><a href="<?= admin_url('system_settings/permissions_view/' . $user->group_id); ?>" target="_blank"><i class="fa fa-eye"></i> View this user's group default permissions</a></p>
+                                        <?php } ?>
+                                        <div class="panel panel-info">
+                                            <div class="panel-heading">Extra Access Overrides</div>
+                                            <div class="panel-body" style="max-height: 420px; overflow-y: auto;">
+                                                <p class="help-block">Use this section as the primary access control for this user. If you leave a permission unchecked, the user falls back to the hidden group default.</p>
+                                                <?php foreach ($permissionSections as $module => $modulePermissions) { ?>
+                                                    <div class="panel panel-default">
+                                                        <div class="panel-heading" style="padding: 8px 12px;">
+                                                            <strong><?= ucwords(str_replace(['-', '_'], ' ', $module)); ?></strong>
+                                                        </div>
+                                                        <div class="panel-body" style="padding: 10px 12px;">
+                                                            <div class="row">
+                                                                <?php foreach ($modulePermissions as $permissionDefinition) {
+                                                                    $permissionKey = $permissionDefinition['permission_key'];
+                                                                    $permissionLabel = !empty($permissionDefinition['name']) ? $permissionDefinition['name'] : ucwords(str_replace(['-', '_'], ' ', $permissionKey));
+                                                                    $inheritsGroup = !empty($group_permissions[$permissionKey]);
+                                                                    $hasOverride = array_key_exists($permissionKey, $user_permission_overrides);
+                                                                    $isChecked = $hasOverride ? ((int) $user_permission_overrides[$permissionKey] === 1) : $inheritsGroup;
+                                                                ?>
+                                                                    <div class="col-sm-6">
+                                                                        <div class="checkbox" style="margin-top: 0; margin-bottom: 10px;">
+                                                                            <input type="hidden" name="permission_overrides[<?= html_escape($permissionKey); ?>]" value="0">
+                                                                            <label>
+                                                                                <input type="checkbox" name="permission_overrides[<?= html_escape($permissionKey); ?>]" value="1" <?= $isChecked ? 'checked' : ''; ?>>
+                                                                                <?= html_escape($permissionLabel); ?>
+                                                                                <?php if ($inheritsGroup) { ?>
+                                                                                    <small class="text-muted">(group default)</small>
+                                                                                <?php } ?>
+                                                                                <?php if ($hasOverride) { ?>
+                                                                                    <small class="text-info">(user override)</small>
+                                                                                <?php } ?>
+                                                                            </label>
+                                                                        </div>
+                                                                    </div>
+                                                                <?php } ?>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                <?php } ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <?php } ?>
                                 <p><?php echo form_submit('update', lang('update'), 'class="btn btn-primary"'); ?></p>
                                 <?php echo form_close(); ?>
                             </div>

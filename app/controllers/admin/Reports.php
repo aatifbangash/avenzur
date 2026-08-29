@@ -4904,7 +4904,7 @@ class Reports extends MY_Controller
      */
     public function debug_supplier_balance($supplier_id = null)
     {
-        if (!$this->Owner && !$this->Admin && empty($this->GP['reports-supplier-statement'])) {
+        if (!$this->Owner && empty($this->GP['reports-supplier-statement'])) {
             show_error('Access denied', 403);
         }
 
@@ -10590,7 +10590,7 @@ class Reports extends MY_Controller
     {
         $this->data['error'] = $this->session->flashdata('error');
         // AR access is controlled independently from AP through group permissions.
-        $can_view_ar = ($this->Owner || $this->Admin || !empty($this->GP['reports-unpaid-invoices-ar']));
+        $can_view_ar = ($this->Owner || !empty($this->GP['reports-unpaid-invoices-ar']));
         if (!$can_view_ar) {
             $this->session->set_flashdata('error', lang('access_denied'));
             admin_redirect('reports');
@@ -10643,7 +10643,7 @@ class Reports extends MY_Controller
     {
         $this->data['error'] = $this->session->flashdata('error');
         // AP access is controlled independently from AR through group permissions.
-        $can_view_ap = ($this->Owner || $this->Admin || !empty($this->GP['reports-unpaid-invoices-ap']));
+        $can_view_ap = ($this->Owner || !empty($this->GP['reports-payment_by_invoice']));
         if (!$can_view_ap) {
             $this->session->set_flashdata('error', lang('access_denied'));
             admin_redirect('reports');

@@ -25,10 +25,12 @@
                 <li class="dropdown">
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#"><i class="icon fa fa-tasks tip" data-placement="left" title="<?= lang('actions') ?>"></i></a>
                     <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
+                        <?php if ($Owner) { ?>
                         <li><a href="<?= admin_url('system_settings/create_group'); ?>" data-toggle="modal" data-target="#myModal"><i class="fa fa-plus"></i> <?= lang('add_group') ?></a></li>
                         <li><a href="#" id="excelProducts" data-action="export_excel"><i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?></a></li>
                         <li class="divider"></li>
                         <li><a href="#" id="deleteGroups" data-action="delete"><i class="fa fa-trash-o"></i> <?= lang('delete_groups') ?></a></li>
+                        <?php } ?>
                     </ul>
                 </li>
             </ul>
@@ -54,7 +56,8 @@
                         </thead>
                         <tbody>
                         <?php
-                        foreach ($groups as $group) {
+                        if (!empty($groups)) {
+                            foreach ($groups as $group) {
                             ?>
                             <tr>
                                 <td>
@@ -65,10 +68,11 @@
                                 <td><?php echo $group->name; ?></td>
                                 <td><?php echo $group->description; ?></td>
                                 <td style="text-align:center;">
-                                    <?php echo '<a class="tip" title="' . $this->lang->line('change_permissions') . '" href="' . admin_url('system_settings/permissions/' . $group->id) . '"><i class="fa fa-tasks"></i></a> <a class="tip" title="' . $this->lang->line('edit_group') . '" data-toggle="modal" data-target="#myModal" href="' . admin_url('system_settings/edit_group/' . $group->id) . '"><i class="fa fa-edit"></i></a> <a href="#" class="tip po" title="' . $this->lang->line('delete_group') . '" data-content="<p>' . lang('r_u_sure') . '</p><a class=\'btn btn-danger\' href=\'' . admin_url('system_settings/delete_group/' . $group->id) . '\'>' . lang('i_m_sure') . '</a> <button class=\'btn po-close\'>' . lang('no') . '</button>"><i class="fa fa-trash-o"></i></a>'; ?>
+                                    <?php echo '<a class="tip" title="' . $this->lang->line('view') . '" href="' . admin_url('system_settings/permissions_view/' . $group->id) . '"><i class="fa fa-eye"></i></a>'; ?> <?php if ($Owner) { ?><?php echo '<a class="tip" title="' . $this->lang->line('edit_group') . '" data-toggle="modal" data-target="#myModal" href="' . admin_url('system_settings/edit_group/' . $group->id) . '"><i class="fa fa-edit"></i></a> <a href="#" class="tip po" title="' . $this->lang->line('delete_group') . '" data-content="<p>' . lang('r_u_sure') . '</p><a class=\'btn btn-danger\' href=\'' . admin_url('system_settings/delete_group/' . $group->id) . '\'>' . lang('i_m_sure') . '</a> <button class=\'btn po-close\'>' . lang('no') . '</button>"><i class="fa fa-trash-o"></i></a>'; ?><?php } ?>
                                 </td>
                             </tr>
                         <?php
+                            }
                         }
                         ?>
                         </tbody>

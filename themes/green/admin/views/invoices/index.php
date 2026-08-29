@@ -89,7 +89,7 @@
 
 </script>
 
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner || ($GP && (!empty($GP['purchases-add']) || !empty($GP['purchases-export_excel']) || !empty($GP['purchases-pdf']) || !empty($GP['purchases-delete']))) {
             echo admin_form_open('purchases/purchase_actions', 'id="action-form"');
 }
 ?>
@@ -202,7 +202,7 @@
         </div>
     </div>
 </div>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner || ($GP && (!empty($GP['purchases-add']) || !empty($GP['purchases-export_excel']) || !empty($GP['purchases-pdf']) || !empty($GP['purchases-delete']))) {
     ?>
     <div style="display: none;">
         <input type="hidden" name="form_action" value="" id="form_action"/>

@@ -252,7 +252,7 @@ class Returns extends MY_Controller
         $this->form_validation->set_rules('customer', lang('customer'), 'required');
         $this->form_validation->set_rules('biller', lang('biller'), 'required');
 
-        if (!$this->Owner && !$this->Admin && !$this->GP['returns-add']) {
+        if (!$this->Owner && !$this->GP['returns-add']) {
             $this->session->set_flashdata('warning', lang('access_denied'));
             admin_redirect($_SERVER['HTTP_REFERER']);
         }
@@ -1021,7 +1021,7 @@ class Returns extends MY_Controller
             admin_redirect('returns');
         }
 
-        if (!$this->Owner && !$this->Admin && !$this->GP['returns-edit']) {
+        if (!$this->Owner && !$this->GP['returns-edit']) {
             $this->session->set_flashdata('warning', lang('access_denied'));
             admin_redirect($_SERVER['HTTP_REFERER']);
         }
@@ -1409,7 +1409,7 @@ class Returns extends MY_Controller
         . lang('actions') . ' <span class="caret"></span></button>
         <ul class="dropdown-menu pull-right" role="menu">';
 
-        if($this->Owner || $this->Admin || $this->GP['returns-edit']){
+        if($this->Owner || $this->GP['returns-edit']){
             $action .= '<li>' . $edit_link . '</li>';
         } 
         
@@ -1417,7 +1417,7 @@ class Returns extends MY_Controller
             $action .= '<li>' . $journal_entry_link . '</li>';
         }
                 
-        /*if($this->Owner || $this->Admin || $this->GP['returns-delete']){
+        /*if($this->Owner || $this->GP['returns-delete']){
             $action .= '<li>' . $delete_link . '</li>';
         }*/
         $action .= '</ul></div></div>';
@@ -1431,7 +1431,7 @@ class Returns extends MY_Controller
     {
         //$this->sma->checkPermissions();
 
-        if (!$this->Owner && !$this->Admin && !$this->GP['returns-index']) {
+        if (!$this->Owner && !$this->GP['returns-index']) {
             $this->session->set_flashdata('warning', lang('access_denied'));
             admin_redirect($_SERVER['HTTP_REFERER']);
         }

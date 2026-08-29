@@ -202,7 +202,7 @@
                                         <div class="input-group-addon" style="padding-left: 10px; padding-right: 10px;">
                                             <i class="fa fa-2x fa-barcode addIcon"></i></a></div>
                                         <?php echo form_input('add_item', '', 'class="form-control input-lg" id="add_item" placeholder="' . lang('add_product_to_order') . '"'); ?>
-                                        <?php if ($Owner || $Admin || $GP['products-add']) {
+                                        <?php if ($Owner || $GP['products-add']) {
                                     ?>
                                         <div class="input-group-addon" style="padding-left: 10px; padding-right: 10px;">
                                             <a href="#" id="addManually" class="tip" title="<?= lang('add_product_manually') ?>">
@@ -384,7 +384,7 @@
                         <label for="pprice" class="col-sm-4 control-label"><?= lang('unit_price') ?></label>
 
                         <div class="col-sm-8">
-                            <input type="text" class="form-control" id="pprice" <?= ($Owner || $Admin || $GP['edit_price']) ? '' : 'readonly'; ?>>
+                            <input type="text" class="form-control" id="pprice" <?= ($Owner || $GP['edit_price']) ? '' : 'readonly'; ?>>
                         </div>
                     </div>
                     <table class="table table-bordered table-striped">

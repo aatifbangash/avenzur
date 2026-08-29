@@ -98,7 +98,7 @@
 
 </script>
 
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner || ($GP && ($GP['sales-add'] || $GP['sales-export_excel'] || $GP['sales-delete']))) {
     echo admin_form_open('sales/sale_actions', 'id="action-form"');
 } ?>
 <div class="box">
@@ -188,7 +188,7 @@
         </div>
     </div>
 </div>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner || ($GP && ($GP['sales-add'] || $GP['sales-export_excel'] || $GP['sales-delete']))) {
     ?>
     <div style="display: none;">
         <input type="hidden" name="form_action" value="" id="form_action"/>

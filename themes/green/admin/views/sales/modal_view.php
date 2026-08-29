@@ -426,38 +426,48 @@
                 ?>
                 <div class="buttons">
                     <div class="btn-group btn-group-justified">
+                        <?php if ($Owner || !empty($GP['sales-payments'])) { ?>
                         <div class="btn-group">
                             <a href="<?= admin_url('sales/add_payment/' . $inv->id) ?>" class="tip btn btn-primary" title="<?= lang('add_payment') ?>" data-toggle="modal" data-target="#myModal2">
                                 <i class="fa fa-dollar"></i>
                                 <span class="hidden-sm hidden-xs"><?= lang('payment') ?></span>
                             </a>
                         </div>
+                        <?php } ?>
+                        <?php if ($Owner || !empty($GP['sales-add_delivery'])) { ?>
                         <div class="btn-group">
                             <a href="<?= admin_url('sales/add_delivery/' . $inv->id) ?>" class="tip btn btn-primary" title="<?= lang('add_delivery') ?>" data-toggle="modal" data-target="#myModal2">
                                 <i class="fa fa-truck"></i>
                                 <span class="hidden-sm hidden-xs"><?= lang('delivery') ?></span>
                             </a>
                         </div>
+                        <?php } ?>
+                        <?php if ($Owner || !empty($GP['sales-email'])) { ?>
                         <div class="btn-group">
                             <a href="<?= admin_url('sales/email/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal2" class="tip btn btn-primary" title="<?= lang('email') ?>">
                                 <i class="fa fa-envelope-o"></i>
                                 <span class="hidden-sm hidden-xs"><?= lang('email') ?></span>
                             </a>
                         </div>
+                        <?php } ?>
+                        <?php if ($Owner || !empty($GP['sales-pdf'])) { ?>
                         <div class="btn-group">
                             <a href="<?= admin_url('sales/pdf/' . $inv->id) ?>" class="tip btn btn-primary" title="<?= lang('download_pdf') ?>">
                                 <i class="fa fa-download"></i>
                                 <span class="hidden-sm hidden-xs"><?= lang('pdf') ?></span>
                             </a>
                         </div>
-                        <?php if (!$inv->sale_id) {
-                            ?>
+                        <?php } ?>
+                        <?php if (!$inv->sale_id) { ?>
+                            <?php if ($Owner || !empty($GP['sales-edit'])) { ?>
                         <div class="btn-group">
                             <a href="<?= admin_url('sales/edit/' . $inv->id) ?>" class="tip btn btn-warning sledit" title="<?= lang('edit') ?>">
                                 <i class="fa fa-edit"></i>
                                 <span class="hidden-sm hidden-xs"><?= lang('edit') ?></span>
                             </a>
                         </div>
+                            <?php } ?>
+                            <?php if ($Owner || !empty($GP['sales-delete'])) { ?>
                         <div class="btn-group">
                             <a href="#" class="tip btn btn-danger bpo" title="<b><?= $this->lang->line('delete_sale') ?></b>"
                                 data-content="<div style='width:150px;'><p><?= lang('r_u_sure') ?></p><a class='btn btn-danger' href='<?= admin_url('sales/delete/' . $inv->id) ?>'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button></div>"
@@ -466,8 +476,8 @@
                                 <span class="hidden-sm hidden-xs"><?= lang('delete') ?></span>
                             </a>
                         </div>
-                            <?php
-                        } ?>
+                            <?php } ?>
+                        <?php } ?>
                     </div>
                 </div>
                 <?php

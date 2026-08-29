@@ -90,8 +90,14 @@
 
 </script>
 
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
-            echo admin_form_open('purchases/purchase_actions', 'id="action-form"');
+<?php
+$canAddPurchase = $Owner || !empty($GP['purchases-add']);
+$canPurchaseExportExcel = $Owner || !empty($GP['purchases-export_excel']);
+$canPurchaseCombinePdf = $Owner || !empty($GP['purchases-pdf']);
+$canDeletePurchases = $Owner || !empty($GP['purchases-delete']);
+$hasPurchaseBulkAction = $canPurchaseExportExcel || $canPurchaseCombinePdf || $canDeletePurchases;
+if ($hasPurchaseBulkAction) {
+    echo admin_form_open('purchases/purchase_actions', 'id="action-form"');
 }
 ?>
 <div class="box">
@@ -105,29 +111,29 @@
                 <li class="dropdown">
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#"><i class="icon fa fa-tasks tip" data-placement="left" title="<?=lang('actions')?>"></i></a>
                     <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
-                        <li>
+                        <?php if ($canAddPurchase) { ?><li>
                             <a href="<?=admin_url('purchases/add')?>">
                                 <i class="fa fa-plus-circle"></i> <?=lang('add_purchase')?>
                             </a>
-                        </li>
-                        <li>
+                        </li><?php } ?>
+                        <?php if ($canPurchaseExportExcel) { ?><li>
                             <a href="#" id="excel" data-action="export_excel">
                                 <i class="fa fa-file-excel-o"></i> <?=lang('export_to_excel')?>
                             </a>
-                        </li>
-                        <li>
+                        </li><?php } ?>
+                        <?php if ($canPurchaseCombinePdf) { ?><li>
                             <a href="#" id="combine" data-action="combine">
                                 <i class="fa fa-file-pdf-o"></i> <?=lang('combine_to_pdf')?>
                             </a>
-                        </li>
-                        <li class="divider"></li>
+                        </li><?php } ?>
+                        <?php if ($canDeletePurchases) { ?><li class="divider"></li>
                         <li>
                             <a href="#" class="bpo" title="<b><?=lang('delete_purchases')?></b>"
                                 data-content="<p><?=lang('r_u_sure')?></p><button type='button' class='btn btn-danger' id='delete' data-action='delete'><?=lang('i_m_sure')?></a> <button class='btn bpo-close'><?=lang('no')?></button>"
                                 data-html="true" data-placement="left">
                                 <i class="fa fa-trash-o"></i> <?=lang('delete_purchases')?>
                             </a>
-                        </li>
+                        </li><?php } ?>
                     </ul>
                 </li>
                 <?php if (!empty($warehouses)) {
@@ -205,7 +211,7 @@
         </div>
     </div>
 </div>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($hasPurchaseBulkAction) {
     ?>
     <div style="display: none;">
         <input type="hidden" name="form_action" value="" id="form_action"/>

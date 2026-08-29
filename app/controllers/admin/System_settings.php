@@ -13,7 +13,10 @@ class system_settings extends MY_Controller
             $this->sma->md('login');
         }
 
-        if (!$this->Owner) {
+        $allowedAdminMethods = ['user_groups', 'permissions_view'];
+        $currentMethod = strtolower((string) $this->uri->rsegment(2));
+
+        if (!$this->Owner && !($this->Admin && in_array($currentMethod, $allowedAdminMethods, true))) {
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect('admin');
         }
@@ -1442,7 +1445,7 @@ class system_settings extends MY_Controller
 
         if ($this->form_validation->run() == true && ($new_group_id = $this->settings_model->addGroup($data))) {
             $this->session->set_flashdata('message', lang('group_added'));
-            admin_redirect('system_settings/permissions/' . $new_group_id);
+            admin_redirect('system_settings/user_groups');
         } else {
             $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
 
@@ -3187,195 +3190,25 @@ class system_settings extends MY_Controller
 
     public function permissions($id = null)
     {
-        $this->form_validation->set_rules('group', lang('group'), 'is_natural_no_zero');
+        $this->data['normalized_permissions_available'] = $this->settings_model->normalizedPermissionsAvailable();
+        $this->data['permission_catalog'] = $this->data['normalized_permissions_available']
+            ? $this->settings_model->getPermissionCatalog()
+            : [];
+
+        $this->form_validation->set_rules('group', lang('group'), 'required|is_natural_no_zero');
         if ($this->form_validation->run() == true) {
-            $data = [
-                'products-index'             => $this->input->post('products-index'),
-                'products-edit'              => $this->input->post('products-edit'),
-                'products-add'               => $this->input->post('products-add'),
-                'products-delete'            => $this->input->post('products-delete'),
-                'products-cost'              => $this->input->post('products-cost'),
-                'products-price'             => $this->input->post('products-price'),
-                'customers-index'            => $this->input->post('customers-index'),
-                'customers-edit'             => $this->input->post('customers-edit'),
-                'customers-add'              => $this->input->post('customers-add'),
-                'customers-delete'           => $this->input->post('customers-delete'),
-                'suppliers-index'            => $this->input->post('suppliers-index'),
-                'suppliers-edit'             => $this->input->post('suppliers-edit'),
-                'suppliers-add'              => $this->input->post('suppliers-add'),
-                'suppliers-delete'           => $this->input->post('suppliers-delete'),
-                'sales-index'                => $this->input->post('sales-index'),
-                'sales-edit'                 => $this->input->post('sales-edit'),
-                'sales-add'                  => $this->input->post('sales-add'),
-                'sales-delete'               => $this->input->post('sales-delete'),
-                'sales-email'                => $this->input->post('sales-email'),
-                'sales-add-label'            => $this->input->post('sales-add-label'),
-                'sales-verify-label'         => $this->input->post('sales-verify-label'),
-                'sales-rsd'                  => $this->input->post('sales-rsd'),
-                'sales-create-invoice'       => $this->input->post('sales-create-invoice'),
-                'sales-view-invoice'         => $this->input->post('sales-view-invoice'),
-                'sales-pdf'                  => $this->input->post('sales-pdf'),
-                'sales-deliveries'           => $this->input->post('sales-deliveries'),
-                'sales-edit_delivery'        => $this->input->post('sales-edit_delivery'),
-                'sales-add_delivery'         => $this->input->post('sales-add_delivery'),
-                'sales-delete_delivery'      => $this->input->post('sales-delete_delivery'),
-                'sales-email_delivery'       => $this->input->post('sales-email_delivery'),
-                'sales-pdf_delivery'         => $this->input->post('sales-pdf_delivery'),
-                //'sales-gift_cards'           => $this->input->post('sales-gift_cards'),
-                //'sales-edit_gift_card'       => $this->input->post('sales-edit_gift_card'),
-                //'sales-add_gift_card'        => $this->input->post('sales-add_gift_card'),
-                //'sales-delete_gift_card'     => $this->input->post('sales-delete_gift_card'),
-                'sales-coordinator'          => $this->input->post('sales-coordinator'),
-                'sales-warehouse_supervisor' => $this->input->post('sales-warehouse_supervisor'),
-        'sales-warehouse_supervisor_shipping'=> $this->input->post('sales-warehouse_supervisor_shipping'),
-                'sales-accountant'           => $this->input->post('sales-accountant'),
-                'sales-quality_supervisor'   => $this->input->post('sales-quality_supervisor'),
-                'quotes-index'               => $this->input->post('quotes-index'),
-                'quotes-edit'                => $this->input->post('quotes-edit'),
-                'quotes-add'                 => $this->input->post('quotes-add'),
-                'quotes-delete'              => $this->input->post('quotes-delete'),
-                //'quotes-email'               => $this->input->post('quotes-email'),
-                'quotes-pdf'                 => $this->input->post('quotes-pdf'),
-                'purchases-index'            => $this->input->post('purchases-index'),
-                'purchases-edit'             => $this->input->post('purchases-edit'),
-                'purchases-add'              => $this->input->post('purchases-add'),
-                'purchases-delete'           => $this->input->post('purchases-delete'),
-                'purchases-email'            => $this->input->post('purchases-email'),
-                'purchases-pdf'              => $this->input->post('purchases-pdf'),
-                'po-index'                   => $this->input->post('po-index'),
-                'po-edit'                   => $this->input->post('po-edit'),
-                'po-add'                    => $this->input->post('po-add'),
-                'po-delete'                 => $this->input->post('po-delete'),
-                'po-email'                  => $this->input->post('po-email'),
-                'po-pdf'                    => $this->input->post('po-pdf'),
-                'po-approve'                => $this->input->post('po-approve'),
-                'po-create-invoice'         => $this->input->post('po-create-invoice'),
-                'grn-add'                   => $this->input->post('grn-add'),
-                'pr-index'                  => $this->input->post('pr-index'),
-                'pr-edit'                   => $this->input->post('pr-edit'),
-                'pr-add'                    => $this->input->post('pr-add'),
-                'pr-delete'                 => $this->input->post('pr-delete'),
-                'pr-email'                  => $this->input->post('pr-email'),
-                'pr-pdf'                    => $this->input->post('pr-pdf'),
-                'contract-deals-index'      => $this->input->post('contract-deals-index'),
-                'contract-deals-edit'       => $this->input->post('contract-deals-edit'),
-                'contract-deals-add'        => $this->input->post('contract-deals-add'),
-                'contract-deals-delete'     => $this->input->post('contract-deals-delete'),
-                'contract-deals-email'      => $this->input->post('contract-deals-email'),
-                'contract-deals-pdf'        => $this->input->post('contract-deals-pdf'),
-                'transfers-index'            => $this->input->post('transfers-index'),
-                'transfers-edit'             => $this->input->post('transfers-edit'),
-                'transfers-add'              => $this->input->post('transfers-add'),
-                'transfers-delete'           => $this->input->post('transfers-delete'),
-                'transfers-email'            => $this->input->post('transfers-email'),
-                'transfers-pdf'              => $this->input->post('transfers-pdf'),
-                'sales-return_sales'         => $this->input->post('sales-return_sales'),
-                'finance-view'                => $this->input->post('finance-view'),
-                'finance-chart-accounts'     => $this->input->post('finance-chart-accounts'),
-                'finance-view-reports'       => $this->input->post('finance-view-reports'),
-                'finance-jv'              => $this->input->post('finance-jv'),
-                'finance-jv-templates'      => $this->input->post('finance-jv-templates'),
-                //'reports-quantity_alerts'    => $this->input->post('reports-quantity_alerts'),
-                //'reports-expiry_alerts'      => $this->input->post('reports-expiry_alerts'),
-                //'reports-products'           => $this->input->post('reports-products'),
-                //'reports-daily_sales'        => $this->input->post('reports-daily_sales'),
-                //'reports-monthly_sales'      => $this->input->post('reports-monthly_sales'),
-                //'reports-payments'           => $this->input->post('reports-payments'),
-                //'reports-sales'              => $this->input->post('reports-sales'),
-                //'reports-purchases'          => $this->input->post('reports-purchases'),
-                //'reports-customers'          => $this->input->post('reports-customers'),
-                //'reports-suppliers'          => $this->input->post('reports-suppliers'),
-                //'reports-staff'              => $this->input->post('reports-staff'),
-                'report-stock'               => $this->input->post('report-stock'),
-                'reports-item-movement'      => $this->input->post('reports-item-movement'),
-                'reports-revenue'            => $this->input->post('reports-revenue'),
-                'reports-purchase'           => $this->input->post('reports-purchase'),
-                'reports-transfer'           => $this->input->post('reports-transfer'),
-                'reports-inventory-tb'       => $this->input->post('reports-inventory-tb'),
-                'reports-customer-tb'        => $this->input->post('reports-customer-tb'),
-                'reports-customer-statement' => $this->input->post('reports-customer-statement'),
-                'reports-customer-aging'     => $this->input->post('reports-customer-aging'),
-                'reports-unpaid-invoices-ar' => $this->input->post('reports-unpaid-invoices-ar'),
-                'reports-supplier-tb'        => $this->input->post('reports-supplier-tb'),
-                'reports-supplier-statement' => $this->input->post('reports-supplier-statement'),
-                'reports-supplier-aging'     => $this->input->post('reports-supplier-aging'),
-                'reports-unpaid-invoices-ap' => $this->input->post('reports-unpaid-invoices-ap'),
-                'reports-consumption'        => $this->input->post('reports-consumption'),
-                'reports-purchase-per-item'  => $this->input->post('reports-purchase-per-item'),
-                'reports-purchase-per-invoice'  => $this->input->post('reports-purchase-per-invoice'),
-                'reports-collections-by-location'  => $this->input->post('reports-collections-by-location'),
-                'reports-invoice-status'  => $this->input->post('reports-invoice-status'),
-                'reports-sales-per-invoice'  => $this->input->post('reports-sales-per-invoice'),
-                'reports-sales-per-item'  => $this->input->post('reports-sales-per-item'),
-                'sales-payments'             => $this->input->post('sales-payments'),
-                'purchases-payments'         => $this->input->post('purchases-payments'),
-                'purchases-expenses'         => $this->input->post('purchases-expenses'),
-                'products-adjustments'       => $this->input->post('products-adjustments'),
-                'bulk_actions'               => $this->input->post('bulk_actions'),
-                'customers-deposits'         => $this->input->post('customers-deposits'),
-                'customers-delete_deposit'   => $this->input->post('customers-delete_deposit'),
-                'products-barcode'           => $this->input->post('products-barcode'),
-                'purchases-return_purchases' => $this->input->post('purchases-return_purchases'),
-                'reports-expenses'           => $this->input->post('reports-expenses'),
-                'reports-daily_purchases'    => $this->input->post('reports-daily_purchases'),
-                'reports-monthly_purchases'  => $this->input->post('reports-monthly_purchases'),
-                'products-stock_count'       => $this->input->post('products-stock_count'),
-                'edit_price'                 => $this->input->post('edit_price'),
-                'supplier-returns-index'      => $this->input->post('supplier-returns-index'),
-                'supplier-returns-edit'       => $this->input->post('supplier-returns-edit'),
-                'supplier-returns-add'        => $this->input->post('supplier-returns-add'),
-                'supplier-returns-delete'     => $this->input->post('supplier-returns-delete'),
-                'supplier-returns-approve'     => $this->input->post('supplier-returns-approve'),
-                'supplier-returns-email'      => $this->input->post('supplier-returns-email'),
-                'supplier-returns-pdf'        => $this->input->post('supplier-returns-pdf'),
+            $data = [];
+            $submittedPermissions = $this->input->post('permissions');
+            $submittedPermissions = is_array($submittedPermissions) ? $submittedPermissions : [];
 
-                'supplier-payment-index'      => $this->input->post('supplier-payment-index'),
-                'supplier-payment-edit'       => $this->input->post('supplier-payment-edit'),
-                'supplier-payment-add'        => $this->input->post('supplier-payment-add'),
-                'supplier-payment-delete'     => $this->input->post('supplier-payment-delete'),
-                'supplier-payment-email'      => $this->input->post('supplier-payment-email'),
-                'supplier-payment-pdf'        => $this->input->post('supplier-payment-pdf'),
+            foreach ($this->data['permission_catalog'] as $permissionDefinition) {
+                $permissionKey = isset($permissionDefinition['permission_key']) ? (string) $permissionDefinition['permission_key'] : '';
+                if ($permissionKey === '') {
+                    continue;
+                }
 
-                'customer-payment-index'      => $this->input->post('customer-payment-index'),
-                'customer-payment-edit'       => $this->input->post('customer-payment-edit'),
-                'customer-payment-add'        => $this->input->post('customer-payment-add'),
-                'customer-payment-delete'     => $this->input->post('customer-payment-delete'),
-                'customer-payment-email'      => $this->input->post('customer-payment-email'),
-                'customer-payment-pdf'        => $this->input->post('customer-payment-pdf'),
-
-                'returns-index'              => $this->input->post('returns-index'),
-                'returns-edit'               => $this->input->post('returns-edit'),
-                'returns-add'                => $this->input->post('returns-add'),
-                'returns-delete'             => $this->input->post('returns-delete'),
-                'returns-email'              => $this->input->post('returns-email'),
-                'returns-approve'            => $this->input->post('returns-approve'),
-                'returns-pdf'                => $this->input->post('returns-pdf'),
-                'reports-tax'                => $this->input->post('reports-tax'),
-                'stock_request_view'         => $this->input->post('stock_request_view'),
-                'stock_request_approval'     => $this->input->post('stock_request_approval'),
-                'truck_registration_view'    => $this->input->post('truck_registration_view'),
-                'purchase_manager'           => $this->input->post('purchase_manager'),
-                'purchase_receiving_supervisor' => $this->input->post('purchase_receiving_supervisor'),
-                'purchase_warehouse_supervisor' => $this->input->post('purchase_warehouse_supervisor'),
-                'purchase_supervisor'        => $this->input->post('purchase_supervisor'),
-                'accountant'        => $this->input->post('accountant'),
-                'stock_pharmacist'        => $this->input->post('stock_pharmacist'),
-                'stock_warehouse_supervisor'        => $this->input->post('stock_warehouse_supervisor'),
-                'transfer_pharmacist'        => $this->input->post('transfer_pharmacist'),
-                'transfer_warehouse_supervisor'        => $this->input->post('transfer_warehouse_supervisor'),
-                'inventory-check'        => $this->input->post('inventory-check'),
-                'inventory-requests'    => $this->input->post('inventory-requests')
-                //'blog_view'                  => $this->input->post('blog_view'),
-                //'blog_edit'                  => $this->input->post('blog_edit'),
-                //'blog_add'                   => $this->input->post('blog_add')
-                
-            ];
-
-            if (POS) {
-                $data['pos-index'] = $this->input->post('pos-index');
+                $data[$permissionKey] = !empty($submittedPermissions[$permissionKey]) ? 1 : 0;
             }
-
-            //$this->sma->print_arrays($data);
         }
 
         if ($this->form_validation->run() == true && $this->settings_model->updatePermissions($id, $data)) {
@@ -3386,6 +3219,7 @@ class system_settings extends MY_Controller
 
             $this->data['id']    = $id;
             $this->data['p']     = $this->settings_model->getGroupPermissions($id);
+            $this->data['group_permissions'] = $this->data['p'] ? get_object_vars($this->data['p']) : [];
             $this->data['group'] = $this->settings_model->getGroupByID($id);
 
             $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('system_settings'), 'page' => lang('system_settings')], ['link' => '#', 'page' => lang('group_permissions')]];
@@ -3893,17 +3727,40 @@ public function aramex()
 
     public function user_groups()
     {
-        if (!$this->Owner) {
+        if (!$this->Owner && !$this->Admin) {
             $this->session->set_flashdata('error', lang('access_denied'));
             admin_redirect('auth');
         }
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
 
-        $this->data['groups'] = $this->settings_model->getGroups();
+        $this->data['groups'] = $this->settings_model->getGroups() ?: [];
         $bc                   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('system_settings'), 'page' => lang('system_settings')], ['link' => '#', 'page' => lang('groups')]];
         $meta                 = ['page_title' => lang('groups'), 'bc' => $bc];
         $this->page_construct('settings/user_groups', $meta, $this->data);
+    }
+
+    public function permissions_view($id = null)
+    {
+        if (!$this->Owner && !$this->Admin) {
+            $this->session->set_flashdata('error', lang('access_denied'));
+            admin_redirect('auth');
+        }
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['id']    = $id;
+        $this->data['p']     = $this->settings_model->getGroupPermissions($id);
+        $this->data['group_permissions'] = $this->data['p'] ? get_object_vars($this->data['p']) : [];
+        $this->data['group'] = $this->settings_model->getGroupByID($id);
+        $this->data['normalized_permissions_available'] = $this->settings_model->normalizedPermissionsAvailable();
+        $this->data['permission_catalog'] = $this->data['normalized_permissions_available']
+            ? $this->settings_model->getPermissionCatalog()
+            : [];
+        $this->data['permissions_readonly'] = true;
+
+        $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('system_settings/user_groups'), 'page' => lang('user_groups')], ['link' => '#', 'page' => lang('group_permissions')]];
+        $meta = ['page_title' => lang('group_permissions'), 'bc' => $bc];
+        $this->page_construct('settings/permissions', $meta, $this->data);
     }
 
     public function variants()

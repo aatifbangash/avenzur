@@ -418,7 +418,7 @@
                                                 <i class="fa fa-2x fa-barcode addIcon"></i></a>
                                             </div>
                                             <?php echo form_input('add_item', '', 'class="form-control input-lg" id="add_item_old" placeholder="' . $this->lang->line('add_product_to_order') . '"'); ?>
-                                            <?php if ($Owner || $Admin || $GP['products-add']) {
+                                            <?php if ($Owner || $GP['products-add']) {
                                             ?>
                                                 <div class="input-group-addon" style="padding-left: 10px; padding-right: 10px;">
                                                     <a href="<?= admin_url('products/add') ?>" id="addManually1"><i

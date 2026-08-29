@@ -28,7 +28,7 @@
         ], "footer");
     });
 </script>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner) {
     echo admin_form_open('promos/promo_actions', 'id="action-form"');
 } ?>
 <div class="box">
@@ -81,7 +81,7 @@
         </div>
     </div>
 </div>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner) {
     ?>
     <div style="display: none;">
         <input type="hidden" name="form_action" value="" id="form_action"/>

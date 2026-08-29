@@ -90,13 +90,13 @@ class Transfers extends MY_Controller
     }
     public function add()
     {
-        //$this->sma->checkPermissions();
+        $this->sma->checkPermissions('index');
         $this->form_validation->set_rules('quantity[]', lang('quantity'), 'callback_greater_than_zero');
         $this->form_validation->set_message('is_natural_no_zero', lang('no_zero_required'));
         $this->form_validation->set_rules('to_warehouse', lang('warehouse') . ' (' . lang('to') . ')', 'required|is_natural_no_zero');
         $this->form_validation->set_rules('from_warehouse', lang('warehouse') . ' (' . lang('from') . ')', 'required|is_natural_no_zero');
 
-        if (!$this->Owner && !$this->Admin && !$this->GP['transfers-add']) {
+        if (!$this->Owner && !$this->GP['transfers-add']) {
             $this->session->set_flashdata('warning', lang('access_denied'));
             admin_redirect($_SERVER['HTTP_REFERER']);
         }
@@ -684,7 +684,7 @@ class Transfers extends MY_Controller
     {
         //$this->sma->checkPermissions();
 
-        if (!$this->Owner && !$this->Admin && !$this->GP['transfers-edit']) {
+        if (!$this->Owner && !$this->GP['transfers-edit']) {
             $this->session->set_flashdata('warning', lang('access_denied'));
             admin_redirect($_SERVER['HTTP_REFERER']);
         }
@@ -1115,7 +1115,7 @@ class Transfers extends MY_Controller
 
     public function email($transfer_id = null)
     {
-        $this->sma->checkPermissions(false, true);
+        $this->sma->checkPermissions('email', true);
 
         if ($this->input->get('id')) {
             $transfer_id = $this->input->get('id');
@@ -1197,7 +1197,7 @@ class Transfers extends MY_Controller
 
     public function getTransfers()
     {
-        //$this->sma->checkPermissions('index');
+        $this->sma->checkPermissions('index');
         $tid = $this->input->get('tid');
         $detail_link   = anchor('admin/transfers/view/$1', '<i class="fa fa-file-text-o"></i> ' . lang('transfer_details'), 'data-toggle="modal" data-target="#myModal"');
         $email_link    = anchor('admin/transfers/email/$1', '<i class="fa fa-envelope"></i> ' . lang('email_transfer'), 'data-toggle="modal" data-target="#myModal"');
@@ -1215,11 +1215,15 @@ class Transfers extends MY_Controller
             . lang('actions') . ' <span class="caret"></span></button>
         <ul class="dropdown-menu pull-right" role="menu">';
 
-        if($this->Owner || $this->Admin || $this->GP['transfers-edit']){    
+        if ($this->Owner || !empty($this->GP['transfers-index'])) { $action .= '<li>' . $detail_link . '</li>'; }
+        if ($this->Owner || !empty($this->GP['transfers-email'])) { $action .= '<li>' . $email_link . '</li>'; }
+        if($this->Owner || !empty($this->GP['transfers-edit'])){    
             $action .= '<li>' . $edit_link . '</li>';
         }
-        if($this->Owner || $this->Admin || $this->GP['transfers-pdf']){
+        if($this->Owner || !empty($this->GP['transfers-pdf'])){
             $action .= '<li>' . $pdf_link . '</li>';
+        }
+        if($this->Owner || !empty($this->GP['transfers-export_excel'])){
             $action .= '<li>' . $excel_link . '</li>';
         }
         if($this->Owner || $this->Admin){
@@ -1228,7 +1232,7 @@ class Transfers extends MY_Controller
         if($this->Owner || $this->Admin){
             $action .= '<li>' . $journal_entry_link . '</li>';
         }
-        if($this->GP['transfers-delete']){ 
+        if($this->Owner || !empty($this->GP['transfers-delete'])){ 
             $action .= '<li>' . $delete_link . '</li>';
         }
         $action .= '</ul>
@@ -1242,7 +1246,7 @@ class Transfers extends MY_Controller
             ->edit_column('fname', '$1 ($2)', 'fname, fcode')
             ->edit_column('tname', '$1 ($2)', 'tname, tcode');
 
-        if (!$this->Owner && !$this->Admin && !$this->Owner && !$this->Admin && !$this->GP['transfers-index']) {
+        if (!$this->Owner && !$this->Admin && !$this->Owner && !$this->GP['transfers-index']) {
             // $this->datatables->where('created_by', $this->session->userdata('user_id'));
             $this->datatables->where('from_warehouse_id', $this->session->userdata('warehouse_id'));
         } else if ($this->Admin || $this->Owner) {
@@ -1265,8 +1269,7 @@ class Transfers extends MY_Controller
 
     public function index()
     {
-       
-        //$this->sma->checkPermissions();
+        $this->sma->checkPermissions('index');
 
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         
@@ -1280,6 +1283,7 @@ class Transfers extends MY_Controller
 
     public function pdf($transfer_id = null, $view = null, $save_bufffer = null)
     {
+        $this->sma->checkPermissions('pdf');
         if ($this->input->get('id')) {
             $transfer_id = $this->input->get('id');
         }
@@ -1311,6 +1315,7 @@ class Transfers extends MY_Controller
 
     public function excel($transfer_id = null)
     {
+        $this->sma->checkPermissions('export_excel');
         if ($this->input->get('id')) {
             $transfer_id = $this->input->get('id');
         }
@@ -1716,7 +1721,7 @@ class Transfers extends MY_Controller
 
     public function transfer_actions()
     {
-        if (!$this->Owner) {
+        if (!$this->Owner && empty($this->GP['transfers-delete']) && empty($this->GP['transfers-pdf']) && empty($this->GP['transfers-export_excel'])) {
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect($_SERVER['HTTP_REFERER']);
         }
@@ -1726,14 +1731,17 @@ class Transfers extends MY_Controller
         if ($this->form_validation->run() == true) {
             if (!empty($_POST['val'])) {
                 if ($this->input->post('form_action') == 'delete') {
+                    $this->sma->checkPermissions('delete');
                     foreach ($_POST['val'] as $id) {
                         $this->transfers_model->deleteTransfer($id);
                     }
                     $this->session->set_flashdata('message', lang('transfers_deleted'));
                     redirect($_SERVER['HTTP_REFERER']);
                 } elseif ($this->input->post('form_action') == 'combine') {
+                    $this->sma->checkPermissions('pdf');
                     $html = $this->combine_pdf($_POST['val']);
                 } elseif ($this->input->post('form_action') == 'export_excel') {
+                    $this->sma->checkPermissions('export_excel');
                     $this->load->library('excel');
                     $this->excel->setActiveSheetIndex(0);
                     $this->excel->getActiveSheet()->setTitle(lang('transfers'));

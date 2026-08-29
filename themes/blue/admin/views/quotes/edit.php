@@ -396,7 +396,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
 
                 <div class="row">
                     <div class="col-lg-12">
-                        <?php //if ($Owner || $Admin || $GP['sales-coordinator']) {
+                        <?php //if ($Owner || $GP['sales-coordinator']) {
                     ?>
                             <div class="col-md-4">
                                 <div class="form-group">
@@ -412,7 +412,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                                 <?php echo form_input('reference_no', ($_POST['reference_no'] ?? ''), 'class="form-control input-tip" id="slref" required="required"'); ?>
                             </div>
                         </div>-->
-                        <?php //if ($Owner || $Admin || $GP['sales-coordinator']) {
+                        <?php //if ($Owner || $GP['sales-coordinator']) {
                             //echo '<pre>';print_r($billers);exit;
                             ?>
                                     <div class="col-md-4">
@@ -429,7 +429,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                                 <?php
                         //}  ?>
 
-                        <?php //if ($Owner || $Admin || $GP['sales-coordinator']) {
+                        <?php //if ($Owner || $GP['sales-coordinator']) {
                     ?>
                                         <div class="col-md-4">
                                             <div class="form-group">
@@ -521,7 +521,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                                         <div class="input-group-addon" style="padding-left: 10px; padding-right: 10px;">
                                             <i class="fa fa-2x fa-barcode addIcon"></i></a></div>
                                         <?php echo form_input('add_item', '', 'class="form-control input-lg" id="add_item" placeholder="' . lang('add_product_to_order') . '"'); ?>
-                                        <?php if ($Owner || $Admin || $GP['products-add']) {
+                                        <?php if ($Owner || $GP['products-add']) {
                                                     ?>
                                         <div class="input-group-addon" style="padding-left: 10px; padding-right: 10px;">
                                             <a href="#" id="addManually">
@@ -639,7 +639,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                         <?php echo form_input('quote_status', 'open','hidden', 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('quote_status') . '" id="qtquote_status"'); ?>
                         <?php  } ?>
 
-                             <?php //if ($Owner || $Admin || $GP['sales-coordinator']) { ?>
+                             <?php //if ($Owner || $GP['sales-coordinator']) { ?>
                             <div class="col-sm-4">
                             <div class="form-group">
                             <?= lang('quote_status', 'qtquote_status'); ?>
@@ -830,7 +830,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                         <label for="pprice" class="col-sm-4 control-label"><?= lang('unit_price') ?></label>
 
                         <div class="col-sm-8">
-                            <input type="text" class="form-control" id="pprice" <?= ($Owner || $Admin || $GP['edit_price']) ? '' : 'readonly'; ?>>
+                            <input type="text" class="form-control" id="pprice" <?= ($Owner || $GP['edit_price']) ? '' : 'readonly'; ?>>
                         </div>
                     </div>
                     <table class="table table-bordered table-striped">

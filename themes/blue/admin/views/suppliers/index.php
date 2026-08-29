@@ -52,7 +52,7 @@
                     </a>
                     <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
                         <?php 
-                        if($this->Owner || $this->Admin || $this->GP['suppliers-add']){
+                        if($this->Owner || $this->GP['suppliers-add']){
                         ?>
                         <li>
                             <a href="<?= admin_url('suppliers/add'); ?>" data-toggle="modal" data-target="#myModal" id="add">

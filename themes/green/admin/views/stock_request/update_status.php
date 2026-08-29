@@ -44,15 +44,15 @@
                // $opts = ['completed' => lang('completed'), 'pending' => lang('pending'), 'sent' => lang('sent')];
               
                 
-                if($Owner || $Admin || $GP['stock_warehouse_supervisor'] && $inv->status == 'pending'){
+                if($Owner || $GP['stock_warehouse_supervisor'] && $inv->status == 'pending'){
                     $opts = ['sent' => lang('sent')];
                 }
 
-                if($Owner || $Admin || $GP['stock_pharmacist'] && $inv->status == 'sent'){
+                if($Owner || $GP['stock_pharmacist'] && $inv->status == 'sent'){
                     $opts = ['approved' => lang('Approved')];
                 }
 
-                if($Owner || $Admin || $GP['stock_pharmacist'] && $inv->status == 'approved'){
+                if($Owner || $GP['stock_pharmacist'] && $inv->status == 'approved'){
                     $opts = ['completed' => lang('completed')];
                 }
 

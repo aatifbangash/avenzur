@@ -103,7 +103,7 @@ class Welcome extends MY_Controller
             admin_redirect('sync');
         }
 
-        if ($this->Admin || $this->Owner || !empty($this->GP['accountant'])) {
+        if ($this->Owner || !empty($this->GP['accountant'])) {
             admin_redirect($this->sma->adminHomePath(true));
         }
 

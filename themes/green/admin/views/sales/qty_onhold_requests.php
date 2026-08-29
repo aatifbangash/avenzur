@@ -1,7 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); 
 ?>
 
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner || ($GP && ($GP['sales-delete'] || $GP['sales-export_excel'] || $GP['sales-pdf']))) {
            // echo admin_form_open('sales/qty_onhold_actions', 'id="action-form"');
 }
 ?>
@@ -73,7 +73,7 @@
         </div>
     </div>
 </div>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner || ($GP && ($GP['sales-delete'] || $GP['sales-export_excel'] || $GP['sales-pdf']))) {
     ?>
     <div style="display: none;">
         <input type="hidden" name="form_action" value="" id="form_action"/>
