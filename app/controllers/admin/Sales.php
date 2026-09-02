@@ -7176,6 +7176,28 @@ if($inv->warning_note != ""){
         $this->data['rows']        = $this->sales_model->getAllInvoiceItems($id);
         $this->data['return_sale'] = $inv->return_id ? $this->sales_model->getInvoiceByID($inv->return_id) : null;
         $this->data['return_rows'] = $inv->return_id ? $this->sales_model->getAllInvoiceItems($inv->return_id) : null;
+
+        // Baseline ZATCA QR (Phase 1): render the Base64-encoded TLV payload,
+        // never a human-readable, application-specific string.
+        $seller_name = !empty($this->data['biller']->name_ar) && $this->data['biller']->name_ar !== '-'
+            ? $this->data['biller']->name_ar
+            : $this->data['biller']->name;
+        $invoice_total = $this->data['return_sale']
+            ? ($inv->grand_total + $this->data['return_sale']->grand_total)
+            : $inv->grand_total;
+        $tax_total = $this->data['return_sale']
+            ? ($inv->total_tax + $this->data['return_sale']->total_tax)
+            : $inv->total_tax;
+        $qr_payload = $this->inv_qrcode->base64([
+            'seller'           => $seller_name,
+            'vat_no'           => $this->data['biller']->vat_no ?: $this->data['biller']->get_no,
+            'date'             => $inv->date,
+            'timezone'         => 'Asia/Riyadh',
+            'grand_total'      => $invoice_total,
+            'total_tax_amount' => $tax_total,
+        ]);
+        $this->data['zatca_qr_payload'] = $qr_payload;
+        $this->data['qr_code_image'] = $this->sma->qrcode('text', $qr_payload, 4, 'H');
         //$this->data['paypal'] = $this->sales_model->getPaypalSettings();
         //$this->data['skrill'] = $this->sales_model->getSkrillSettings();
 

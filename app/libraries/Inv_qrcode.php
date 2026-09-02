@@ -21,12 +21,23 @@ use Salla\ZATCA\Tags\InvoiceTotalAmount;
 
 class Inv_qrcode
 {
+    private function invoiceDate(array $params)
+    {
+        // Invoice dates in this Saudi deployment are stored without an offset.
+        // Encode the QR timestamp explicitly in Saudi Arabia Standard Time.
+        $timezone = new DateTimeZone($params['timezone'] ?? 'Asia/Riyadh');
+        $date = new DateTime($params['date'], $timezone);
+        $date->setTimezone($timezone);
+
+        return $date->format(DateTime::ATOM);
+    }
+
     public function base64($params = [])
     {
         return GenerateQrCode::fromArray([
             new Seller($params['seller']),
             new TaxNumber($params['vat_no']),
-            new InvoiceDate(date('c', strtotime($params['date']))),
+            new InvoiceDate($this->invoiceDate($params)),
             new InvoiceTotalAmount($params['grand_total']),
             new InvoiceTaxAmount($params['total_tax_amount'])
         ])->toBase64();
@@ -37,7 +48,7 @@ class Inv_qrcode
         return GenerateQrCode::fromArray([
             new Seller($params['seller']),
             new TaxNumber($params['vat_no']),
-            new InvoiceDate(date('c', strtotime($params['date']))),
+            new InvoiceDate($this->invoiceDate($params)),
             new InvoiceTotalAmount($params['grand_total']),
             new InvoiceTaxAmount($params['total_tax_amount'])
         ])->render();
@@ -48,7 +59,7 @@ class Inv_qrcode
         return GenerateQrCode::fromArray([
             new Seller($params['seller']),
             new TaxNumber($params['vat_no']),
-            new InvoiceDate(date('c', strtotime($params['date']))),
+            new InvoiceDate($this->invoiceDate($params)),
             new InvoiceTotalAmount($params['grand_total']),
             new InvoiceTaxAmount($params['total_tax_amount'])
         ])->toTLV();
