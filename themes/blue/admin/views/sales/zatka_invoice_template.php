@@ -152,20 +152,7 @@ div.box-content span {
 <tr>
     <td width="20%" align="center">
         <div style="height:100px; display:flex; align-items:center; justify-content:center;">
-            <?php
-            // Custom readable QR code format
-            $company_name = $biller->name_ar && $biller->name_ar != '-' ? $biller->name_ar : $biller->name;
-            $vat_number = $biller->vat_no ?: $biller->get_no;
-            $invoice_no = $inv->reference_no;
-            $invoice_date = date('d/m/Y H:i:s', strtotime($inv->date));
-            $grand_total = $return_sale ? ($inv->grand_total + $return_sale->grand_total) : $inv->grand_total;
-            $total_tax = $return_sale ? ($inv->total_tax + $return_sale->total_tax) : $inv->total_tax;
-            $invoice_id = $inv->id;
-            
-            $qr_data = "#" . $vat_number . "_" . $company_name . "_" . $invoice_no . "_" . $invoice_date . "_" . number_format($grand_total, 2, '.', '') . "_SAR_Tax:" . number_format($total_tax, 2, '.', '') . "#" . $invoice_id . "#";
-            
-            echo $this->sma->qrcode('text', $qr_data, 2);
-            ?>
+            <?php echo $qr_code_image; ?>
         </div>
     </td>
     <td width="60%" align="center" height="100">
