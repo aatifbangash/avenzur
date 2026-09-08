@@ -10950,104 +10950,104 @@ class Reports extends MY_Controller
         $invoices = $this->db->get()->result();
 
         if ($warehouse_id == 32) {
-        $ap_memo_paid_expr = "CASE
-            WHEN m.date < '2026-06-20' THEN COALESCE(m.used_amount, 0)
-            ELSE COALESCE((SELECT COALESCE(SUM(sp.amount), 0)
-                FROM {$this->db->dbprefix('payments')} sp
-                WHERE sp.memo_id = m.id
-                AND sp.date <= " . ($sql_at ? "'{$sql_at}'" : "NOW()") . "), 0)
-        END";
+            $ap_memo_paid_expr = "CASE
+                WHEN m.date < '2026-06-20' THEN COALESCE(m.used_amount, 0)
+                ELSE COALESCE((SELECT COALESCE(SUM(sp.amount), 0)
+                    FROM {$this->db->dbprefix('payments')} sp
+                    WHERE sp.memo_id = m.id
+                    AND sp.date <= " . ($sql_at ? "'{$sql_at}'" : "NOW()") . "), 0)
+            END";
+                
+            $this->db->select("
+                m.id                                                     AS invoice_id,
+                m.date,
+                m.reference_no,
+                c.name                                                   AS party_name,
+                c.company                                                AS party_code,
+                c.sequence_code                                          AS sequence_code,
+                al.name                                                  AS ledger_name,
+                NULL                                                     AS warehouse_name,
+                m.payment_amount                                         AS invoice_total,
+                0                                                        AS discount,
+                0                                                        AS return_amount,
+                ({$ap_memo_paid_expr})                                   AS paid,
+                ROUND(m.payment_amount - ({$ap_memo_paid_expr}), 2)      AS outstanding,
+                0                                                        AS payment_term_days,
+                NULL                                                     AS due_date_calc,
+                0                                                        AS days_overdue,
+                'service'                                                AS source
+            ", false)
+            ->from('memo m')
+            ->join('companies c', 'c.id = m.supplier_id', 'left')
+            ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
+            ->where('m.type', 'serviceinvoice')
+            ->where('m.supplier_id >', 0)
+            ->having('outstanding >', 0)
+            ->order_by('m.date', 'asc');
+
+            if ($sql_at) {
+                $sql_date_only = explode(' ', $sql_at)[0];
+                $this->db->where("m.date <= '{$sql_date_only}'");
+            }
+            if ($party_id) {
+                $this->db->where('m.supplier_id', (int)$party_id);
+            }
+            if ($ref_no) {
+                $this->db->like('m.reference_no', $ref_no, 'both');
+            }
+            $this->apply_supplier_trade_type_where($trade_type);
+            $service_invoices = $this->db->get()->result();
             
-        $this->db->select("
-            m.id                                                     AS invoice_id,
-            m.date,
-            m.reference_no,
-            c.name                                                   AS party_name,
-            c.company                                                AS party_code,
-            c.sequence_code                                          AS sequence_code,
-            al.name                                                  AS ledger_name,
-            NULL                                                     AS warehouse_name,
-            m.payment_amount                                         AS invoice_total,
-            0                                                        AS discount,
-            0                                                        AS return_amount,
-            ({$ap_memo_paid_expr})                                   AS paid,
-            ROUND(m.payment_amount - ({$ap_memo_paid_expr}), 2)      AS outstanding,
-            0                                                        AS payment_term_days,
-            NULL                                                     AS due_date_calc,
-            0                                                        AS days_overdue,
-            'service'                                                AS source
-        ", false)
-        ->from('memo m')
-        ->join('companies c', 'c.id = m.supplier_id', 'left')
-        ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
-        ->where('m.type', 'serviceinvoice')
-        ->where('m.supplier_id >', 0)
-        ->having('outstanding >', 0)
-        ->order_by('m.date', 'asc');
+            $ap_memo_credit_paid_expr = "CASE
+                WHEN m.date < '2026-06-20' THEN COALESCE(m.used_amount, 0)
+                ELSE COALESCE((SELECT COALESCE(SUM(sp.amount), 0)
+                    FROM {$this->db->dbprefix('payments')} sp
+                    WHERE sp.memo_id = m.id
+                    AND sp.date <= " . ($sql_at ? "'{$sql_at}'" : "NOW()") . "), 0)
+            END";
+                
+            $this->db->select("
+                m.id                                                     AS invoice_id,
+                m.date,
+                m.reference_no,
+                c.name                                                   AS party_name,
+                c.company                                                AS party_code,
+                c.sequence_code                                          AS sequence_code,
+                al.name                                                  AS ledger_name,
+                NULL                                                     AS warehouse_name,
+                m.payment_amount                                         AS invoice_total,
+                0                                                        AS discount,
+                0                                                        AS return_amount,
+                ({$ap_memo_credit_paid_expr})                            AS paid,
+                ROUND(m.payment_amount - ({$ap_memo_credit_paid_expr}), 2) AS outstanding,
+                0                                                        AS payment_term_days,
+                NULL                                                     AS due_date_calc,
+                0                                                        AS days_overdue,
+                'credit_memo'                                            AS source
+            ", false)
+            ->from('memo m')
+            ->join('companies c', 'c.id = m.supplier_id', 'left')
+            ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
+            ->where('m.type', 'memo')
+            ->where('m.supplier_id >', 0)
+            ->where('m.supplier_entry_type', 'C')
+            ->having('outstanding >', 0)
+            ->order_by('m.date', 'asc');
 
-        if ($sql_at) {
-            $sql_date_only = explode(' ', $sql_at)[0];
-            $this->db->where("m.date <= '{$sql_date_only}'");
-        }
-        if ($party_id) {
-            $this->db->where('m.supplier_id', (int)$party_id);
-        }
-        if ($ref_no) {
-            $this->db->like('m.reference_no', $ref_no, 'both');
-        }
-        $this->apply_supplier_trade_type_where($trade_type);
-        $service_invoices = $this->db->get()->result();
-        
-        $ap_memo_credit_paid_expr = "CASE
-            WHEN m.date < '2026-06-20' THEN COALESCE(m.used_amount, 0)
-            ELSE COALESCE((SELECT COALESCE(SUM(sp.amount), 0)
-                FROM {$this->db->dbprefix('payments')} sp
-                WHERE sp.memo_id = m.id
-                AND sp.date <= " . ($sql_at ? "'{$sql_at}'" : "NOW()") . "), 0)
-        END";
-            
-        $this->db->select("
-            m.id                                                     AS invoice_id,
-            m.date,
-            m.reference_no,
-            c.name                                                   AS party_name,
-            c.company                                                AS party_code,
-            c.sequence_code                                          AS sequence_code,
-            al.name                                                  AS ledger_name,
-            NULL                                                     AS warehouse_name,
-            m.payment_amount                                         AS invoice_total,
-            0                                                        AS discount,
-            0                                                        AS return_amount,
-            ({$ap_memo_credit_paid_expr})                            AS paid,
-            ROUND(m.payment_amount - ({$ap_memo_credit_paid_expr}), 2) AS outstanding,
-            0                                                        AS payment_term_days,
-            NULL                                                     AS due_date_calc,
-            0                                                        AS days_overdue,
-            'credit_memo'                                            AS source
-        ", false)
-        ->from('memo m')
-        ->join('companies c', 'c.id = m.supplier_id', 'left')
-        ->join('accounts_ledgers al', 'al.id = c.ledger_account', 'left')
-        ->where('m.type', 'memo')
-        ->where('m.supplier_id >', 0)
-        ->where('m.supplier_entry_type', 'C')
-        ->having('outstanding >', 0)
-        ->order_by('m.date', 'asc');
+            if ($sql_at) {
+                $sql_date_only = explode(' ', $sql_at)[0];
+                $this->db->where("m.date <= '{$sql_date_only}'");
+            }
+            if ($party_id) {
+                $this->db->where('m.supplier_id', (int)$party_id);
+            }
+            if ($ref_no) {
+                $this->db->like('m.reference_no', $ref_no, 'both');
+            }
+            $this->apply_supplier_trade_type_where($trade_type);
+            $credit_memos = $this->db->get()->result();
 
-        if ($sql_at) {
-            $sql_date_only = explode(' ', $sql_at)[0];
-            $this->db->where("m.date <= '{$sql_date_only}'");
-        }
-        if ($party_id) {
-            $this->db->where('m.supplier_id', (int)$party_id);
-        }
-        if ($ref_no) {
-            $this->db->like('m.reference_no', $ref_no, 'both');
-        }
-        $this->apply_supplier_trade_type_where($trade_type);
-        $credit_memos = $this->db->get()->result();
-
-        $invoices = array_merge($invoices, $service_invoices, $credit_memos);
+            $invoices = array_merge($invoices, $service_invoices, $credit_memos);
         }
         usort($invoices, function ($a, $b) {
             return strcmp($a->date, $b->date);
