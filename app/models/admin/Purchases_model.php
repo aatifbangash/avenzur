@@ -1761,7 +1761,7 @@ class Purchases_model extends CI_Model
         $this->db->order_by('date', 'asc');
         $this->db->where('supplier_id', $supplier_id);
         $this->db->where('purchase_invoice', 1);
-        $this->db->where_in('payment_status', ['pending', 'due', 'partial']);
+        //$this->db->where_in('payment_status', ['pending', 'due', 'partial']);
         $q = $this->db->get('sma_purchases');
 
         $this->db->select("
@@ -1772,13 +1772,23 @@ class Purchases_model extends CI_Model
         $this->db->order_by('date', 'asc');
         $this->db->where('supplier_id', $supplier_id);
         $this->db->where('purchase_invoice', 1);
-        $this->db->where_in('payment_status', ['pending', 'due', 'partial']);
+        //$this->db->where_in('payment_status', ['pending', 'due', 'partial']);
 
         $q = $this->db->get('sma_purchases');
-
+        //echo $this->db->last_query();exit;
         $purchase_invoices = [];
+
         if ($q->num_rows() > 0) {
-            $purchase_invoices = $q->result();
+            $purchase_invoices = array_filter(
+                $q->result(),
+                function ($invoice) {
+                    return (float) $invoice->grand_total
+                        > (float) $invoice->paid;
+                }
+            );
+
+            // Optional: reset array indexes
+            $purchase_invoices = array_values($purchase_invoices);
         }
 
         // Fetch service invoices from sma_memo
