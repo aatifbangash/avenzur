@@ -4975,7 +4975,7 @@ class Products extends MY_Controller
     }
 
     public function upload_customer_returns(){
-        $excelFile = $this->upload_path . 'csv/returns_rawabi_2026-08-09.xlsx'; // Excel file
+        $excelFile = $this->upload_path . 'csv/RETURN_CUS-00066.xlsx'; // Excel file
         if (!file_exists($excelFile)) {
             echo "Excel file not found.";
             return;
@@ -5029,7 +5029,7 @@ class Products extends MY_Controller
             $returnDate = date('Y-m-d H:i:s');
         }*/
 
-        $returnDate = date('Y-m-d H:i:s', strtotime('2026-07-15'));
+        $returnDate = date('Y-m-d H:i:s', strtotime('2026-08-31'));
         //$customerNo = trim($firstRow[1]);
         $customerCode = trim($firstRow[0]);
         $customerName = trim($firstRow[1]);
