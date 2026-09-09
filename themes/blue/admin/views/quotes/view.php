@@ -17,6 +17,7 @@
                             </li>
                         <?php
 } ?>
+                        <?php if (($inv->status ?? '') !== 'rejected' && ($inv->status ?? '') !== 'converted_to_sale') { ?>
                         <li>
                             <a href="<?= admin_url('quotes/edit/' . $inv->id) ?>">
                                 <i class="fa fa-edit"></i> <?= lang('edit_quote') ?>
@@ -27,6 +28,7 @@
                                 <i class="fa fa-plus-circle"></i> <?= lang('create_invoice') ?>
                             </a>
                         </li>
+                        <?php } ?>
                         <li>
                             <a href="<?= admin_url('quotes/email/' . $inv->id) ?>" data-target="#myModal" data-toggle="modal">
                                 <i class="fa fa-envelope-o"></i> <?= lang('send_email') ?>
@@ -342,11 +344,13 @@
                 <?php
                             } ?>
                 <div class="btn-group btn-group-justified">
+                    <?php if (!in_array(($inv->status ?? ''), ['rejected', 'converted_to_sale'], true)) { ?>
                     <div class="btn-group">
                         <a href="<?= admin_url('sales/add/' . $inv->id) ?>" class="tip btn btn-primary" title="<?= lang('create_invoice') ?>">
                             <i class="fa fa-plus-circle"></i> <span class="hidden-sm hidden-xs"><?= lang('create_invoice') ?></span>
                         </a>
                     </div>
+                    <?php } ?>
                     <div class="btn-group">
                         <a href="<?= admin_url('quotes/pdf/' . $inv->id) ?>" class="tip btn btn-primary" title="<?= lang('download_pdf') ?>">
                             <i class="fa fa-download"></i> <span class="hidden-sm hidden-xs"><?= lang('pdf') ?></span>
@@ -357,11 +361,14 @@
                             <i class="fa fa-envelope-o"></i> <span class="hidden-sm hidden-xs"><?= lang('email') ?></span>
                         </a>
                     </div>
+                    <?php if (!in_array(($inv->status ?? ''), ['rejected', 'converted_to_sale'], true)) { ?>
                     <div class="btn-group">
                         <a href="<?= admin_url('quotes/edit/' . $inv->id) ?>" class="tip btn btn-warning tip" title="<?= lang('edit') ?>">
                             <i class="fa fa-edit"></i> <span class="hidden-sm hidden-xs"><?= lang('edit') ?></span>
                         </a>
                     </div>
+                    <?php } ?>
+                    <?php if (!in_array(($inv->status ?? ''), ['approved', 'rejected', 'converted_to_sale'], true)) { ?>
                     <div class="btn-group">
                         <a href="#" class="tip btn btn-danger bpo" title="<b><?= $this->lang->line('delete_quote') ?></b>"
                             data-content="<div style='width:150px;'><p><?= lang('r_u_sure') ?></p><a class='btn btn-danger' href='<?= admin_url('quotes/delete/' . $inv->id) ?>'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button></div>"
@@ -369,6 +376,7 @@
                             <i class="fa fa-trash-o"></i> <span class="hidden-sm hidden-xs"><?= lang('delete') ?></span>
                         </a>
                     </div>
+                    <?php } ?>
                 </div>
             </div>
         <?php

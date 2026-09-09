@@ -19,6 +19,10 @@ class Products_api extends CI_Model
             $brand = $this->getBrandByCode($filters['brand']);
             $this->db->where('brand', $brand->id);
         }
+        if ($filters['warehouse_id']) {
+            $this->db->join('inventory_movements', 'inventory_movements.product_id=products.id', 'inner');
+            $this->db->where("{$this->db->dbprefix('inventory_movements')}.location_id", $filters['warehouse_id']);
+        }
         $this->db->from('products');
         return $this->db->count_all_results();
     }
@@ -61,7 +65,7 @@ class Products_api extends CI_Model
     public function getProducts($filters = [])
     {
         $uploads_url = base_url('assets/uploads/');
-        $this->db->select("{$this->db->dbprefix('products')}.id, {$this->db->dbprefix('products')}.code, {$this->db->dbprefix('products')}.name, {$this->db->dbprefix('products')}.type, {$this->db->dbprefix('products')}.slug, price, CONCAT('{$uploads_url}', {$this->db->dbprefix('products')}.image) as image_url, tax_method, tax_rate, unit");
+        $this->db->select("{$this->db->dbprefix('products')}.id, {$this->db->dbprefix('products')}.code, {$this->db->dbprefix('products')}.name, {$this->db->dbprefix('products')}.type, price, tax_method, tax_rate, unit");
 
         if (!empty($filters['include'])) {
             foreach ($filters['include'] as $include) {
@@ -71,6 +75,10 @@ class Products_api extends CI_Model
                     $this->db->select('category_id as category');
                 }
             }
+        }
+        if ($filters['warehouse_id']) {
+            $this->db->join('inventory_movements', 'inventory_movements.product_id=products.id', 'inner');
+            $this->db->where("{$this->db->dbprefix('inventory_movements')}.location_id", $filters['warehouse_id']);
         }
         if ($filters['category']) {
             $this->db->join('categories', 'categories.id=products.category_id', 'left');
@@ -84,9 +92,11 @@ class Products_api extends CI_Model
             $this->db->where('code', $filters['code']);
         } else {
             $this->db->order_by($filters['order_by'][0], $filters['order_by'][1] ? $filters['order_by'][1] : 'asc');
-            $this->db->limit($filters['limit'], ($filters['start'] - 1));
+            //$this->db->limit($filters['limit'], ($filters['start'] - 1));
         }
 
+        //$this->db->get('products')->result();
+        //echo $this->db->last_query();exit;
         return $this->db->get('products')->result();
     }
 

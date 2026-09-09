@@ -36,7 +36,7 @@
             "aoColumns": [{
                 "bSortable": false,
                 "mRender": checkbox
-            }, {"mRender": fld}, null, null, null, null, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": balance}, {"mRender": row_status}, {"mRender": pay_status}, {"bSortable": false}],
+            }, {"mRender": fld}, null, null, null, null, {"mRender": currencyFormat}, {"mRender": currencyFormat}, {"mRender": balance}, {"mRender": row_status}, {"mRender": pay_status}, {"bSortable": false},{"bSortable": false}],
             "fnFooterCallback": function (nRow, aaData, iStart, iEnd, aiDisplay) {
                 var gtotal = 0, paid = 0, bal = 0;
                 for (var i = 0; i < aaData.length; i++) {
@@ -158,6 +158,7 @@
                             <th><?= lang('balance'); ?></th>
                             <th><?= lang('sale_status'); ?></th>
                             <th><?= lang('payment_status'); ?></th>
+                            <th><?= lang('pickup'); ?></th>
                             <th style="width:80px; text-align:center;"><?= lang('actions'); ?></th>
                         </tr>
                         </thead>
@@ -178,6 +179,7 @@
                             <th><?= lang('grand_total'); ?></th>
                             <th><?= lang('paid'); ?></th>
                             <th><?= lang('balance'); ?></th>
+                            <th class="defaul-color"></th>
                             <th class="defaul-color"></th>
                             <th class="defaul-color"></th>
                             <th style="width:80px; text-align:center;"><?= lang('actions'); ?></th>

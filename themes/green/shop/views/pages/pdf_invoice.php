@@ -28,8 +28,8 @@
                                 style="margin: 0; text-align: left !important;"><?= lang('invoice'); ?></h2>
                             <table style="font-size: 10px !important;">
                                 <tr>
-                                    <td><?= lang('ref'); ?> </td>
-                                    <td>: <strong><?= $inv->reference_no; ?></strong></td>
+                                    <td><?= lang('Invoice no'); ?> </td>
+                                    <td>: <strong><?= $inv->id; ?></strong></td>
                                 </tr>
                                 <tr>
                                     <td><?= lang('date'); ?></td>
@@ -74,7 +74,7 @@
                         if ($biller->cf6 != '-' && $biller->cf6 != '') {
                             echo '<br>' . lang('bcf6') . ': ' . $biller->cf6;
                         }
-                        echo '<br>' . lang('tel') . ': ' . $biller->phone . ' ' . lang('email') . ': ' . $biller->email;
+                        echo '<br>' . lang('tel') . ': ' . $biller->phone . '<br /> ' . lang('email') . ': ' . $biller->email;
                         ?>
 
                     </td>

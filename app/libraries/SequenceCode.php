@@ -95,6 +95,12 @@ class SequenceCode
                 $this->_ci->db->select('MAX(sequence_code) as maxNumber');
                 $latestCode = $this->_ci->db->get('sma_transfers')->row_array();
                 break;
+            
+            // Return Supplier Code
+            case 'SRTN':
+                $this->_ci->db->select('MAX(sequence_code) as maxNumber');
+                $latestCode = $this->_ci->db->get('sma_returns_supplier')->row_array();
+                break;
 
                 // Department Code
             case 'DP':
@@ -106,6 +112,25 @@ class SequenceCode
             case 'EM':
                 $this->_ci->db->select('MAX(code) as maxNumber');
                 $latestCode = $this->_ci->db->get('sma_employees')->row_array();
+                break;
+
+            // Payment Code
+            case 'PAY':
+                $this->_ci->db->select('MAX(sequence_code) as maxNumber');
+                $latestCode = $this->_ci->db->get('sma_payment_reference')->row_array();
+                break;
+            // Supplier Service Code
+            case 'SSI':
+                $this->_ci->db->select('MAX(sequence_code) as maxNumber');
+                $latestCode = $this->_ci->db->get('sma_memo')->row_array();
+                break;
+            case 'SCI':
+                $this->_ci->db->select('MAX(sequence_code) as maxNumber');
+                $latestCode = $this->_ci->db->get('sma_memo')->row_array();
+                break;
+            case 'PCI':
+                $this->_ci->db->select('MAX(sequence_code) as maxNumber');
+                $latestCode = $this->_ci->db->get('sma_memo')->row_array();
                 break;
         }
 
@@ -121,5 +146,59 @@ class SequenceCode
             $newSequenceCode = $prefix . '-' . $paddedNumber;
         }
         return $newSequenceCode;
+    }
+
+    /**
+     * Petty cash reference: PT-{YY}{###} e.g. PT-26001 (resets sequence each calendar year).
+     *
+     * @param string|null $date Y-m-d or strtotime-parsable date; defaults to today
+     */
+    public function generatePettyCashReference($date = null)
+    {
+        $ts = $date ? strtotime($date) : time();
+        $year = date('y', $ts);
+        $prefix = 'PT-' . $year;
+
+        $this->_ci->db->select('reference_no');
+        $this->_ci->db->from('sma_memo');
+        $this->_ci->db->where('type', 'pettycash');
+        $this->_ci->db->like('reference_no', $prefix, 'after');
+        $this->_ci->db->order_by('reference_no', 'DESC');
+        $this->_ci->db->limit(1);
+        $row = $this->_ci->db->get()->row();
+
+        $next = 1;
+        if ($row && preg_match('/^PT-' . preg_quote($year, '/') . '(\d{3})$/', $row->reference_no, $m)) {
+            $next = (int) $m[1] + 1;
+        }
+
+        return $prefix . str_pad($next, 3, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Service invoice reference: SI-{YY}{###} e.g. SI-26001 (resets sequence each calendar year).
+     *
+     * @param string|null $date Y-m-d or strtotime-parsable date; defaults to today
+     */
+    public function generateServiceInvoiceReference($date = null)
+    {
+        $ts = $date ? strtotime($date) : time();
+        $year = date('y', $ts);
+        $prefix = 'SI-' . $year;
+
+        $this->_ci->db->select('reference_no');
+        $this->_ci->db->from('sma_memo');
+        $this->_ci->db->where('type', 'serviceinvoice');
+        $this->_ci->db->like('reference_no', $prefix, 'after');
+        $this->_ci->db->order_by('reference_no', 'DESC');
+        $this->_ci->db->limit(1);
+        $row = $this->_ci->db->get()->row();
+
+        $next = 1;
+        if ($row && preg_match('/^SI-' . preg_quote($year, '/') . '(\d{3})$/', $row->reference_no, $m)) {
+            $next = (int) $m[1] + 1;
+        }
+
+        return $prefix . str_pad($next, 3, '0', STR_PAD_LEFT);
     }
 }

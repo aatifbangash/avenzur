@@ -69,6 +69,27 @@
                 ?>
             </div>
 
+            <?php if (!empty($warehouse->is_overseas)) { ?>
+            <div class="form-group overseas_ledgers_group">
+                <?= lang('Sales Account', 'sales_ledger'); ?>
+                <?php
+                echo form_dropdown('sales_ledger', $LO, $warehouse->sales_ledger, 'id="sales_ledger" class="ledger-dropdown form-control" required="required"', $DIS);
+                ?>
+            </div>
+            <div class="form-group overseas_ledgers_group">
+                <?= lang('Cogs Account', 'cogs_ledger'); ?>
+                <?php
+                echo form_dropdown('cogs_ledger', $LO, $warehouse->cogs_ledger, 'id="cogs_ledger" class="ledger-dropdown form-control" required="required"', $DIS);
+                ?>
+            </div>
+            <div class="form-group overseas_ledgers_group">
+                <?= lang('landed_cost_git_ledger', 'landed_cost_ledger'); ?>
+                <?php
+                echo form_dropdown('landed_cost_ledger', $LO, $warehouse->landed_cost_ledger ?? 0, 'id="landed_cost_ledger" class="ledger-dropdown form-control" required="required"', $DIS);
+                ?>
+            </div>
+            <?php } ?>
+
 
 
             <div class="form-group ledgers_group" style="display: <?= $warehouse->warehouse_type == 'warehouse' ? 'none' : 'block' ?>;">
@@ -108,14 +129,14 @@
                 ?>
             </div>
 
-            <!--<div class="form-group ledgers_group" style="display: <?= $warehouse->warehouse_type == 'warehouse' ? 'none' : 'block' ?>;">
-                <?php //echo lang('Price Difference Account', 'Price Difference Account'); 
+            <div class="form-group ledgers_group" style="display: <?= $warehouse->warehouse_type == 'warehouse' ? 'none' : 'block' ?>;">
+                <?php echo lang('Halala Account', 'Halala Account'); 
                 ?>
                 <?php
 
-                //echo form_dropdown('price_difference_ledger', $LO, $warehouse->price_difference_ledger, 'id="price_difference_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
+                echo form_dropdown('price_difference_ledger', $LO, $warehouse->price_difference_ledger, 'id="price_difference_ledger" class="ledger-dropdown form-control" required="required"',$DIS);  
                 ?>
-            </div>-->
+            </div>
             <div class="form-group ledgers_group" style="display: <?= $warehouse->warehouse_type == 'warehouse' ? 'none' : 'block' ?>;">
                 <?= lang('Vat Account', 'vat_on_sales_ledger'); ?>
                 <?php
@@ -212,6 +233,36 @@
 
             $('#crud-warehouse-form').bootstrapValidator('resetForm');
             var dynamicFields = {};
+
+            if (<?= !empty($warehouse->is_overseas) ? 'true' : 'false' ?>) {
+                dynamicFields.sales_ledger = {
+                    validators: {
+                        notEmpty: { message: 'Please select a Ledger' },
+                        callback: {
+                            message: 'Please select a Ledger',
+                            callback: function(value) { return value !== '0'; }
+                        }
+                    }
+                };
+                dynamicFields.cogs_ledger = {
+                    validators: {
+                        notEmpty: { message: 'Please select a Ledger' },
+                        callback: {
+                            message: 'Please select a Ledger',
+                            callback: function(value) { return value !== '0'; }
+                        }
+                    }
+                };
+                dynamicFields.landed_cost_ledger = {
+                    validators: {
+                        notEmpty: { message: 'Please select a Ledger' },
+                        callback: {
+                            message: 'Please select a Ledger',
+                            callback: function(value) { return value !== '0'; }
+                        }
+                    }
+                };
+            }
 
             if (selectedValue === 'pharmacy') {
                 dynamicFields = {

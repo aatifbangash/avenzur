@@ -193,7 +193,7 @@
                                 <?php
                                 $wh[''] = '';
                                 foreach ($warehouses as $warehouse) {
-                                    $wh[$warehouse->id] = $warehouse->name;
+                                    $wh[$warehouse->id] = $warehouse->name.' ('.$warehouse->code.')';
                                 }
                                 // echo form_dropdown('to_warehouse', $wh, ($_POST['to_warehouse'] ?? $Settings->default_warehouse), 'id="to_warehouse"  class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('to_warehouse') . '" required="required" style="width:100%;" ');
                                 ?>  
@@ -206,7 +206,7 @@
                             <div class="form-group">
                                 <?= lang('status', 'tostatus'); ?>
                                 <?php
-                                 $post = ['save' => lang('save'), 'sent' => lang('sent'), 'approved' => lang('Approved'), 'completed' => lang('completed')];
+                                 $post = ['save' => lang('save'), 'completed' => lang('completed')];
                                  echo form_dropdown('status', $post, ($_POST['status'] ?? ''), 'id="tostatus" class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . '" required="required" style="width:100%;" ');
                                 ?>
                             </div>
@@ -218,7 +218,7 @@
                             <div class="form-group">
                                 <?= lang('status', 'tostatus'); ?>
                                 <?php
-                                 $post = ['save' => lang('save'), 'sent' => lang('sent')];
+                                 $post = ['save' => lang('save')];
                                  echo form_dropdown('status', $post, ($_POST['status'] ?? ''), 'id="tostatus" class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . '" required="required" style="width:100%;" ');
                                 ?>
                             </div>
@@ -230,7 +230,7 @@
                             <div class="form-group">
                                 <?= lang('status', 'tostatus'); ?>
                                 <?php
-                                 $post = ['save' => lang('save'), 'sent' => lang('sent'), 'completed' => lang('completed')];
+                                 $post = ['save' => lang('save'), 'completed' => lang('completed')];
                                  echo form_dropdown('status', $post, ($_POST['status'] ?? ''), 'id="tostatus" class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('status') . '" required="required" style="width:100%;" ');
                                 ?>
                             </div>

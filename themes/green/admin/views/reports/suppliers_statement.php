@@ -47,7 +47,7 @@
                                 <?php
                                 $sp[''] = '';
                                 foreach ($suppliers as $supplier) {
-                                    $sp[$supplier->id] = $supplier->company . ' (' . $supplier->name . ')';
+                                    $sp[$supplier->id] = $supplier->company . ' (' . $supplier->name . ') - '. $supplier->sequence_code;
                                 }
                                 echo form_dropdown('supplier', $sp, ($supplier_id ?? $supplier_id), 'id="supplier_id" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('supplier') . '" required="required" style="width:100%;" '); ?>
                             </div>

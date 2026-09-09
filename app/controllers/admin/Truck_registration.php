@@ -28,15 +28,18 @@ class Truck_registration extends MY_Controller
 
     public function save()
     {
+        $dateObj = DateTime::createFromFormat('d/m/Y', $this->input->post('ddate'));
+        $formattedDate = $dateObj->format('Y-m-d');
         $data['truck_no'] = $this->input->post('truck_no');
-        $data['truck_date'] =  $this->sma->fld(trim($this->input->post('ddate')));
-        $data['truck_time'] = $this->input->post('truck_time');   
-        $referenceNo = $this->input->post('reference_no');   
+        $data['truck_date'] =  $formattedDate;
+        $data['truck_time'] = $this->input->post('truck_time'); 
+        $data['status'] = 'available';   
+        /*$referenceNo = $this->input->post('reference_no');   
         $purchase =explode("@/",$referenceNo);
         $data['reference_no'] = $purchase[0];
-        $data['purchase_id']  = $purchase[1];
+        $data['purchase_id']  = $purchase[1];*/
        
-         $this->truck_model->addTruck($data,$purchase[1]);
+         $this->truck_model->addTruck($data);
          $this->session->set_flashdata('message', lang('Truck Registration added'));
          admin_redirect('truck_registration');
     }
@@ -47,7 +50,7 @@ class Truck_registration extends MY_Controller
         $this->load->library('datatables');
       
         $this->datatables
-            ->select('id,truck_no,reference_no,truck_date,truck_time')
+            ->select('id,truck_no,truck_date,truck_time,status')
             ->from('truck_registration')
             ->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('truck_registration/edit/$1') . "' class='tip' title='" . lang('edit_notification') . "'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . $this->lang->line('delete_notification') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('truck_registration/delete/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
             $this->datatables->unset_column('id');
@@ -82,7 +85,7 @@ class Truck_registration extends MY_Controller
         }
 	        $truck = $this->truck_model->getTruckById($id);
 	        $this->data['truck'] = $truck;
-            $this->data['purchase']  = $this->truck_model->getReferenceNo();
+            //$this->data['purchase']  = $this->truck_model->getReferenceNo();
             $this->session->flashdata('error');
 	            $bc                  = [['link' => base_url(), 'page' => lang('home')], ['link' => '#', 'page' => lang('Edit Deal')]];
 	            $meta                = ['page_title' => lang('Edit Truck Registration'), 'bc' => $bc];

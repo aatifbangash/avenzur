@@ -26,6 +26,23 @@
                     </div>
                 </div>
             </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="control-label" for="pickupLocation"><?php echo $this->lang->line('Pickup Location'); ?></label>
+                        <?php
+                        $whs = array();
+                        foreach ($warehouses as $warehouse) {
+                            if($warehouse->is_courier == 1) {
+                                $whs[$warehouse->id] = $warehouse->name;
+                            }
+                           
+                        }
+                        echo form_dropdown('pickupLocation', $whs, '', 'class="form-control select" id="pickupLocation" style="width:100%;" required="required"');
+                        ?>
+                    </div>
+                </div>
+            </div>
         </div>
         <input type="hidden" type="sale_id" name="sale_id" value="<?= $sale_id; ?>" />
         <div class="modal-footer">

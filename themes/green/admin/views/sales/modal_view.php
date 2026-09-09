@@ -21,7 +21,8 @@
                     <div class="col-xs-5">
                     <p class="bold">
                         <?= lang('date'); ?>: <?= $this->sma->hrld($inv->date); ?><br>
-                        <?= lang('ref'); ?>: <?= $inv->reference_no; ?><br>
+                        <?= lang('Invoice_Number'); ?>: <?= ($inv->invoice_number !== null ? $inv->invoice_number :'INV-'.$inv->sequence_code); ?><br>
+                        <?= lang('ref'); ?>: <?= ($inv->reference_no != '0' ? $inv->reference_no :'AVN-'.$inv->sequence_code); ?><br>
                         <?php if (!empty($inv->return_sale_ref)) {
                             echo lang('return_ref') . ': ' . $inv->return_sale_ref;
                             if ($inv->return_id) {
@@ -73,11 +74,9 @@
 
                 <div class="col-xs-6">
                     <?php echo $this->lang->line('to'); ?>:<br/>
-                    <h2 style="margin-top:10px;"><?= $customer->company && $customer->company != '-' ? $customer->company : $customer->name; ?></h2>
-                    <?= $customer->company                              && $customer->company != '-' ? '' : 'Attn: ' . $customer->name ?>
-
+                    <h2 style="margin-top:10px;"><?= $customer->first_name .' '.$customer->last_name; ?></h2>
                     <?php
-                    echo $customer->address . '<br>' . $customer->city . ' ' . $customer->postal_code . ' ' . $customer->state . '<br>' . $customer->country;
+                    echo 'Attn: '. $customer->address . '<br>' . $customer->city . ' ' . $customer->postal_code . ' ' . $customer->state . '<br>' . $customer->country;
 
                     echo '<p>';
 
@@ -110,7 +109,8 @@
                     echo lang('tel') . ': ' . $customer->phone . '<br>' . lang('email') . ': ' . $customer->email;
                     ?>
                     <h2 style="margin-top:10px;">Shipping to:</h2>
-                    <?php //echo $customer->company ? '' : $customer->name ?>
+                    <?php if(!empty($address)) {?>
+                    <?php echo $address->first_name .' '.$address->last_name;?>
                     <p>
                         <?= $address->line1; ?><br>
                         <?= $address->line2; ?><br>
@@ -118,6 +118,15 @@
                         <?= $address->postal_code; ?> <?= $address->country; ?><br>
                         <?= lang('phone') . ': ' . $address->phone; ?>
                     </p>
+                    <?php } else {?>
+                    <p>
+                        <?= $customer->address; ?><br>
+                        <?= $customer->line2; ?><br>
+                        <?= $customer->city; ?> <?= $customer->state; ?><br>
+                        <?= $customer->postal_code; ?> <?= $customer->country; ?><br>
+                        <?= lang('phone') . ': ' . $customer->phone; ?>
+                    </p>
+                     <?php }?>   
                 </div>
 
                 <div class="col-xs-6">

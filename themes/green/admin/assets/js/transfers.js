@@ -399,8 +399,8 @@ $(document).on('click', '#editItem', function () {
 /* -----------------------
  * Misc Actions
  ----------------------- */
-
-function loadItems() {
+   
+function loadItems() { 
     if (localStorage.getItem('toitems')) {
         total = 0;
         count = 1;
@@ -426,8 +426,9 @@ function loadItems() {
                 check = false;
 
             var item_expiry='';
-            if(item.row.expiry != null){                
-                item_expiry = new Date(item.row.expiry).toLocaleDateString('en-GB')
+            if(item.row.expiry != null){   
+                  // item_expiry = new Date(item.row.expiry).toLocaleDateString('en-GB'); 
+                  item_expiry = item.row.expiry;
             }
 
             item.row.cost = item.row.price;
@@ -562,7 +563,7 @@ function loadItems() {
                     item_id +
                     '" id="expiry_' +
                     row_no +
-                    '"></td>';
+                    '" autocomplete="off"></td>';
             }
             
             /*tr_html +=
@@ -667,7 +668,7 @@ function loadItems() {
 
         });
 
-        var col = 2;
+        var col = 4;
         if (site.settings.product_expiry == 1) {
             col++;
         }
@@ -677,6 +678,8 @@ function loadItems() {
             '">Total</th><th class="text-center">' +
             formatQty(parseFloat(count) - 1) +
             '</th>';
+
+            tfoot += '<th class="text-right"></th>'; 
         if (site.settings.tax1 == 1) {
             tfoot += '<th class="text-right">' + formatMoney(product_tax) + '</th>';
         }
@@ -707,7 +710,7 @@ function loadItems() {
  * @param {json} item
  * @returns {Boolean}
  ---------------------------- */
-function add_transfer_item(item) {
+function add_transfer_item(item) { 
     if (count == 1) {
         toitems = {};
         if ($('#from_warehouse').val()) {

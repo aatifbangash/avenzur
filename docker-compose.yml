@@ -1,0 +1,54 @@
+services:
+  web:
+    build: .
+    container_name: avenzur_web
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html/avenzur
+    # depends_on:
+    #   - db  # Commented out - using local MySQL instead of Docker MySQL
+    environment:
+      - APACHE_RUN_USER=www-data
+      - APACHE_RUN_GROUP=www-data
+    # Use extra_hosts to allow container to access host's MySQL
+    # 'host.docker.internal' resolves to host machine IP
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # MySQL Database Service - COMMENTED OUT (Using local MySQL at localhost:3306)
+  # Uncomment below to use Docker MySQL instead of local MySQL
+  # db:
+  #   image: mysql:8
+  #   container_name: avenzur_db
+  #   restart: always
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: pass123
+  #     MYSQL_DATABASE: avenzur
+  #     MYSQL_USER: avenzur
+  #     MYSQL_PASSWORD: 123456
+  #   ports:
+  #     - "3310:3310"
+  #   volumes:
+  #     - db_data:/var/lib/mysql
+
+  # PHPMyAdmin - COMMENTED OUT (Not needed with local MySQL)
+  # Uncomment below to use PHPMyAdmin with Docker MySQL
+  # phpmyadmin:
+  #   image: phpmyadmin/phpmyadmin
+  #   container_name: avenzur_phpmyadmin
+  #   restart: always
+  #   ports:
+  #     - "8081:80"
+  #   environment:
+  #     PMA_HOST: db
+  #     MYSQL_ROOT_PASSWORD: pass123
+  #     UPLOAD_LIMIT: 64M
+  #     MEMORY_LIMIT: 128M
+  #     MAX_EXECUTION_TIME: 600
+  #   depends_on:
+  #     - db
+
+# Volumes - COMMENTED OUT (Not needed without Docker MySQL)
+# volumes:
+#   db_data:

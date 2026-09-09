@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+</body>
+
+<script>
+     function calculateTotalAmountSimple(unitCost, quantity, dis1, dis2, dis3, dealPercent) {
+        const taxRate = 0; // Adjust if needed
+        unitCost = parseFloat(unitCost) || 0;
+        quantity = parseFloat(quantity) || 0;
+        
+        // Apply cascading discounts
+        let price = unitCost;
+        price = price * (1 - (parseFloat(dis1) || 0) / 100);
+        price = price * (1 - (parseFloat(dis2) || 0) / 100);
+        price = price * (1 - (parseFloat(dis3) || 0) / 100);
+        price = price * (1 - (parseFloat(dealPercent) || 0) / 100);
+        
+        // Calculate subtotal
+        const subtotal = price * quantity;
+        
+        // Apply tax
+        const totalAmount = subtotal * (1 + (parseFloat(taxRate) || 0) / 100);
+        
+        return parseFloat(totalAmount.toFixed(2));
+    }
+
+    let x = 0;
+    let quantity = [222, 55,3322]
+    for (let i = 4; i < 7; i++) {
+
+            x+=calculateTotalAmountSimple(i, quantity[i-4], i, i, i, i);
+
+    }
+    console.log(x);
+
+</script>
+</html>

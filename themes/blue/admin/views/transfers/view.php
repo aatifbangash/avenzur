@@ -10,15 +10,19 @@
             </button>
             <?php if ($logo) {
     ?>
-            <div class="text-center" style="margin-bottom:20px;">
-                <img src="<?= base_url() . 'assets/uploads/logos/' . $Settings->logo; ?>"
-                alt="<?= $Settings->site_name; ?>">
+            <div class="text-center" style="margin-bottom:20px; font-weight: bold">
+                <!-- <img src="<?= base_url() . 'assets/uploads/logos/' . $Settings->logo; ?>"
+                
+                alt="<?= $Settings->site_name; ?>"> -->
+                Transfer Invoice
             </div>
             <?php
 } ?>
             <div class="well well-sm">
                 <div class="row bold">
-                    <div class="col-xs-4"><?= lang('date'); ?>: <?= $this->sma->hrld($transfer->date); ?>
+                    <div class="col-xs-4">
+                    <?= lang('Serial Number'); ?>: <?php echo $tid; ?><br>
+                        <?= lang('date'); ?>: <?= $this->sma->hrld($transfer->date); ?>
                         <br><?= lang('ref'); ?>: <?= $transfer->transfer_no; ?>
                         <br><?= lang('Transfer No'); ?>: <?= $transfer->sequence_code; ?>
                     </div>
@@ -32,18 +36,19 @@
             </div>
 
             <div class="row">
+            <div class="col-xs-6">
+                    <?= lang('from'); ?>:
+                    <h3 style="margin-top:10px;"><?= $from_warehouse->name . ' ( ' . $from_warehouse->code . ' )'; ?></h3>
+                    <?= '<p>' . $from_warehouse->address . '</p><p>' . $from_warehouse->phone . '<br>' . $from_warehouse->email . '</p>';
+                    ?>
+                </div>
                 <div class="col-xs-6">
                     <?= lang('to'); ?>:<br/>
                     <h3 style="margin-top:10px;"><?= $to_warehouse->name . ' ( ' . $to_warehouse->code . ' )'; ?></h3>
                     <?= '<p>' . $to_warehouse->address . '</p><p>' . $to_warehouse->phone . '<br>' . $to_warehouse->email . '</p>';
                     ?>
                 </div>
-                <div class="col-xs-6">
-                    <?= lang('from'); ?>:
-                    <h3 style="margin-top:10px;"><?= $from_warehouse->name . ' ( ' . $from_warehouse->code . ' )'; ?></h3>
-                    <?= '<p>' . $from_warehouse->address . '</p><p>' . $from_warehouse->phone . '<br>' . $from_warehouse->email . '</p>';
-                    ?>
-                </div>
+               
             </div>
 
             <div class="table-responsive">
@@ -57,8 +62,11 @@
                                 <th><?= lang('hsn_code'); ?></th>
                             <?php
                     } ?>
+                            <th style="text-align:center; vertical-align:middle;"><?= lang('Avz Code'); ?></th>
+                            <th style="text-align:center; vertical-align:middle;"><?= lang('batch_no'); ?></th>
+                            <th style="text-align:center; vertical-align:middle;"><?= lang('Expiry'); ?></th>
                             <th style="text-align:center; vertical-align:middle;"><?= lang('quantity'); ?></th>
-                            <th style="text-align:center; vertical-align:middle;"><?= lang('unit_cost'); ?></th>
+                            <th style="text-align:center; vertical-align:middle;"><?= lang('Sale_price'); ?></th>
                             <?php if ($Settings->tax1) {
                         echo '<th style="text-align:center; vertical-align:middle;">' . lang('tax') . '</th>';
                     } ?>
@@ -68,7 +76,9 @@
 
                     <tbody>
                         <?php $r = 1;
+                        $grand_total_by_row = 0;
                         foreach ($rows as $row): ?>
+                        <?php $grand_total_by_row = $grand_total_by_row + $row->subtotal ?>
                         <tr>
                             <td style="text-align:center; width:25px;"><?= $r; ?></td>
                             <td style="text-align:left;">
@@ -80,47 +90,28 @@
                             <td style="width: 80px; text-align:center; vertical-align:middle;"><?= $row->hsn_code; ?></td>
                             <?php
                         } ?>
+                            <td style="text-align:center; width:80px; "><?= $row->avz_item_code; ?></td>
+                            <td style="text-align:center; width:80px; "><?= $row->batchno; ?></td>
+                            <td style="text-align:center; width:80px; "><?= $row->expiry; ?></td>
                             <td style="text-align:center; width:80px; "><?= $this->sma->formatQuantity($row->unit_quantity); ?></td>
-                            <td style="width: 100px; text-align:right; vertical-align:middle;"><?= $this->sma->formatMoney($row->net_unit_cost); ?></td>
+                            <td style="width: 100px; text-align:right; vertical-align:middle;"><?= $this->sma->formatNumber($row->sale_price); ?></td>
                             <?php if ($Settings->tax1) {
                             echo '<td style="width: 80px; text-align:right; vertical-align:middle;">' . ($Settings->indian_gst ? '<small>(' . $row->tax . ')</small>' : '') . ' ' . $this->sma->formatMoney($row->item_tax) . '</td>';
                         } ?>
-                            <td style="width:100px; text-align:right; vertical-align:middle;"><?= $this->sma->formatMoney($row->subtotal); ?></td>
+                            <td style="width:100px; text-align:right; vertical-align:middle;"><?= $this->sma->formatNumber($row->subtotal); ?></td>
                         </tr>
                         <?php $r++;
                         endforeach; ?>
                     </tbody>
                     <tfoot>
-                        <?php $col = $Settings->indian_gst ? 4 : 3;
+                        <?php $col = $Settings->indian_gst ? 6 : 5;
                         if ($Settings->tax1) {
                             $col += 1;
                         } ?>
 
+                       
                         <tr>
-                            <td colspan="<?= $col; ?>"
-                                style="text-align:right;"><?= lang('total'); ?>
-                                (<?= $default_currency->code; ?>)
-                            </td>
-                            <td style="text-align:right;">
-                                <?= $this->sma->formatMoney($transfer->total_tax); ?>
-                            </td>
-                            <td style="text-align:right;">
-                                <?= $this->sma->formatMoney($transfer->total + $transfer->total_tax); ?>
-                            </td>
-                        </tr>
-                        <?php if ($Settings->indian_gst) {
-                            if ($transfer->cgst > 0) {
-                                echo '<tr><td colspan="' . ($col + 1) . '" class="text-right">' . lang('cgst') . ' (' . $default_currency->code . ')</td><td class="text-right">' . ($Settings->format_gst ? $this->sma->formatMoney($transfer->cgst) : $transfer->cgst) . '</td></tr>';
-                            }
-                            if ($transfer->sgst > 0) {
-                                echo '<tr><td colspan="' . ($col + 1) . '" class="text-right">' . lang('sgst') . ' (' . $default_currency->code . ')</td><td class="text-right">' . ($Settings->format_gst ? $this->sma->formatMoney($transfer->sgst) : $transfer->sgst) . '</td></tr>';
-                            }
-                            if ($transfer->igst > 0) {
-                                echo '<tr><td colspan="' . ($col + 1) . '" class="text-right">' . lang('igst') . ' (' . $default_currency->code . ')</td><td class="text-right">' . ($Settings->format_gst ? $this->sma->formatMoney($transfer->igst) : $transfer->igst) . '</td></tr>';
-                            }
-                        } ?>
-                        <tr>
-                            <td colspan="<?= $col + 1; ?>"
+                            <td colspan="<?= $col + 2; ?>"
                                 style="text-align:right; font-weight:bold;"><?= lang('total_amount'); ?>
                                 (<?= $default_currency->code; ?>)
                             </td>
