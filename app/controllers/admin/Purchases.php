@@ -2927,20 +2927,27 @@ class Purchases extends MY_Controller
         }
         $deal_disc_label_e = htmlspecialchars($deal_disc_label, ENT_QUOTES, 'UTF-8');
 
-        // Generate QR code Base64 string
+        // Generate ZATCA Phase-1 QR (TLV tags 1–5 → Base64) for ZATCA app scan
         if ($this->Settings->ksa_qrcode) {
-            $payload = [
-                //'seller' => $biller->company && $biller->company != '-' ? $biller->company : $biller->name,
-                //'vat_no' => $biller->vat_no ?: $biller->get_no,
-                'date' => $inv->date,
-                'grand_total' => $inv->grand_total,
-                'total_tax_amount' => $inv->total_tax,
-            ];
+            $this->load->helper('zatka');
+            $seller_name = '';
+            if (!empty($supplier->name_ar) && $supplier->name_ar != '-') {
+                $seller_name = $supplier->name_ar;
+            } elseif (!empty($supplier->company) && $supplier->company != '-') {
+                $seller_name = $supplier->company;
+            } else {
+                $seller_name = $supplier->name ?? '';
+            }
 
-            // Convert to JSON directly
-            $qrtext = json_encode($payload);
-            $qr_code = $this->sma->qrcodepng('text', $qrtext, 2, $level = 'H', $sq = null, $svg = false);
-            //echo $qr_code;exit;
+            $qr_payload = generate_zatka_qr_code([
+                'seller_name' => $seller_name,
+                'vat_no'      => $supplier->vat_no ?: ($supplier->get_no ?? ''),
+                'date'        => $inv->date,
+                'grand_total' => $total_after_vat_pdf,
+                'total_tax'   => $inv->total_tax,
+            ]);
+
+            $qr_code = $this->sma->qrcodepng('text', $qr_payload, 2, $level = 'H', $sq = null, $svg = false);
             $png_base64 = base64_encode($qr_code);
         } else {
             // 1x1 transparent PNG placeholder so header markup stays valid

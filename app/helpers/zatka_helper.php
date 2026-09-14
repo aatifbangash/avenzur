@@ -112,47 +112,51 @@ if (!function_exists('validate_saudi_tax_id')) {
 
 if (!function_exists('generate_zatka_qr_code')) {
     /**
-     * Generate Zatka-compliant QR code data using TLV (Tag-Length-Value) format
-     * 
-     * According to ZATCA specifications, the QR code must contain:
+     * Generate ZATCA Phase-1 QR payload (TLV tags 1–5, Base64).
+     * No cryptographic stamp (tags 6–9) — for ZATCA mobile app scan only.
+     *
      * Tag 1: Seller name (UTF-8)
      * Tag 2: VAT registration number
-     * Tag 3: Timestamp (ISO 8601 format)
-     * Tag 4: Invoice total (including VAT)
+     * Tag 3: Invoice timestamp (ISO 8601 with offset)
+     * Tag 4: Invoice total including VAT
      * Tag 5: VAT amount
-     * 
+     *
      * @param array $data Invoice data array
      * @return string Base64 encoded QR code data
      */
     function generate_zatka_qr_code($data)
     {
-        // TLV encoding function
-        $encode_tlv = function($tag, $value) {
-            $tag_hex = chr($tag);
-            $length_hex = chr(strlen($value));
-            return $tag_hex . $length_hex . $value;
+        $encode_tlv = function ($tag, $value) {
+            $value = (string) $value;
+            $len = strlen($value); // byte length required by TLV
+            if ($len > 255) {
+                $value = substr($value, 0, 255);
+                $len = 255;
+            }
+            return chr((int) $tag) . chr($len) . $value;
         };
-        
-        // Build TLV structure
+
+        $seller_name = trim((string) ($data['seller_name'] ?? ''));
+        $vat_no = preg_replace('/[^0-9]/', '', (string) ($data['vat_no'] ?? ''));
+
+        $tz = new DateTimeZone('Asia/Riyadh');
+        try {
+            $dt = new DateTime((string) ($data['date'] ?? 'now'), $tz);
+        } catch (Exception $e) {
+            $dt = new DateTime('now', $tz);
+        }
+        $timestamp = $dt->format('Y-m-d\TH:i:sP'); // e.g. 2026-09-14T13:00:00+03:00
+
+        $grand_total = number_format((float) ($data['grand_total'] ?? 0), 2, '.', '');
+        $total_tax = number_format((float) ($data['total_tax'] ?? 0), 2, '.', '');
+
         $tlv_data = '';
-        
-        // Tag 1: Seller Name
-        $tlv_data .= $encode_tlv(1, $data['seller_name']);
-        
-        // Tag 2: VAT Registration Number
-        $tlv_data .= $encode_tlv(2, $data['vat_no']);
-        
-        // Tag 3: Timestamp (ISO 8601 format)
-        $timestamp = date('Y-m-d\TH:i:s\Z', strtotime($data['date']));
+        $tlv_data .= $encode_tlv(1, $seller_name);
+        $tlv_data .= $encode_tlv(2, $vat_no);
         $tlv_data .= $encode_tlv(3, $timestamp);
-        
-        // Tag 4: Invoice Total (including VAT)
-        $tlv_data .= $encode_tlv(4, number_format($data['grand_total'], 2, '.', ''));
-        
-        // Tag 5: VAT Amount
-        $tlv_data .= $encode_tlv(5, number_format($data['total_tax'], 2, '.', ''));
-        
-        // Base64 encode the TLV data
+        $tlv_data .= $encode_tlv(4, $grand_total);
+        $tlv_data .= $encode_tlv(5, $total_tax);
+
         return base64_encode($tlv_data);
     }
 }
