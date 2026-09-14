@@ -3353,20 +3353,28 @@ class Customers extends MY_Controller
         $this->data['service_invoice_entries'] = $service_invoice_entries_data;
         $this->data['transport_capacities'] = $this->getTransportCapacities();
 
-        // Generate QR code for service invoice (similar to sales)
+        // Generate ZATCA Phase-1 QR (TLV tags 1–5 → Base64)
         if ($this->Settings->ksa_qrcode) {
+            $this->load->helper('zatka');
             $biller = $this->data['biller'];
-            $payload = [
-                'seller' => $biller->company && $biller->company != '-' ? $biller->company : $biller->name,
-                'vat_no' => $biller->vat_no ?: $biller->get_no,
-                'date' => $service_invoice_data->date,
-                'grand_total' => $service_invoice_data->payment_amount,
-                'total_tax_amount' => $service_invoice_data->vat_value,
-            ];
+            $seller_name = '';
+            if (!empty($biller->name_ar) && $biller->name_ar != '-') {
+                $seller_name = $biller->name_ar;
+            } elseif (!empty($biller->company) && $biller->company != '-') {
+                $seller_name = $biller->company;
+            } else {
+                $seller_name = $biller->name ?? '';
+            }
 
-            // Convert to JSON directly
-            $qrtext = json_encode($payload);
-            $qr_code = $this->sma->qrcodepng('text', $qrtext, 2, $level = 'H', $sq = null, $svg = false);
+            $qr_payload = generate_zatka_qr_code([
+                'seller_name' => $seller_name,
+                'vat_no'      => $biller->vat_no ?: ($biller->get_no ?? ''),
+                'date'        => $service_invoice_data->date,
+                'grand_total' => (float) $service_invoice_data->payment_amount,
+                'total_tax'   => (float) ($service_invoice_data->vat_value ?? 0),
+            ]);
+
+            $qr_code = $this->sma->qrcodepng('text', $qr_payload, 2, $level = 'H', $sq = null, $svg = false);
             $this->data['qr_code_base64'] = base64_encode($qr_code);
         } else {
             $qr_code = $this->sma->qrcode('link', urlencode(site_url('view/service_invoice/' . $service_invoice_data->id)), 2);
