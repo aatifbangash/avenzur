@@ -196,27 +196,30 @@
 
 
                                 $transaction_type = '';
-                                $transaction_id = 0;
+                                $transaction_id = '';
                                 $note = '';
+                                $link = '';
+                                $jl_link = admin_url('entries/view/journal/' . $statement->entry_id);
+
                                 if($statement->transaction_type == 'journal'){
-                                    $link = admin_url('entries/view/journal/' . $statement->entry_id);
+                                    $link = $jl_link;
                                     $transaction_type = 'Journal';
                                     $transaction_id = $statement->entry_id;
                                     $note = $statement->narration;
                                 }else if($statement->transaction_type == 'payment'){
                                     $link = admin_url('entries/view/payment/' . $statement->entry_id);
                                     $transaction_type = 'Payment';
-                                    $transaction_id = $statement->code;
+                                    $transaction_id = $statement->entry_id;
                                     $note = $statement->narration;
                                 }else if($statement->transaction_type == 'receipt'){
                                     $link = admin_url('entries/view/receipt/' . $statement->entry_id);
                                     $transaction_type = 'Receipt';
-                                    $transaction_id = $statement->code;
+                                    $transaction_id = $statement->entry_id;
                                     $note = $statement->narration;
                                 }else if($statement->transaction_type == 'contra'){
                                     $link = admin_url('entries/view/contra/' . $statement->entry_id);
                                     $transaction_type = 'Contra';
-                                    $transaction_id = $statement->code;
+                                    $transaction_id = $statement->entry_id;
                                     $note = $statement->narration;
                                 }else if($statement->transaction_type == 'sales_invoice' || $statement->transaction_type == 'saleorder'){
                                     $link = admin_url('sales/view/' . $statement->sale_id);
@@ -249,12 +252,12 @@
                                 }else if($statement->transaction_type == 'serviceinvoice'){
                                     $link = admin_url('customers/list_service_invoice');
                                     $transaction_type = 'Service Invoice';
-                                    $transaction_id = $statement->memo_note;
+                                    $transaction_id = $statement->memo_id ?: $statement->memo_note;
                                     $note = strip_tags(html_entity_decode($statement->memo_note));
                                 }else if($statement->transaction_type == 'pettycash'){
-                                    $link = !empty($statement->memo_id) ? admin_url('suppliers/petty_cash_pdf/' . $statement->memo_id) : admin_url('entries/view/journal/' . $statement->entry_id);
+                                    $link = !empty($statement->memo_id) ? admin_url('suppliers/petty_cash_pdf/' . $statement->memo_id) : $jl_link;
                                     $transaction_type = 'Petty Cash';
-                                    $transaction_id = $statement->memo_note ?: $statement->entry_id;
+                                    $transaction_id = $statement->memo_id ?: ($statement->memo_note ?: $statement->entry_id);
                                     $note = $statement->narration ? strip_tags(html_entity_decode($statement->narration)) : ($statement->memo_note ?: '-');
                                 }else if($statement->transaction_type == 'returncustomerorder'){
                                     $link = admin_url('returns/view/' . $statement->return_id);
@@ -267,10 +270,23 @@
                                     $transaction_id = $statement->supplier_return_id;
                                     $note = strip_tags(html_entity_decode($statement->narration));
                                 }else{
-                                    $link = admin_url('entries/view/journal/' . $statement->entry_id);
-                                    $transaction_type = $statement->transaction_type;
-                                    $transaction_id = $statement->code;
+                                    // Unknown / unmatched type → open the JL entry itself
+                                    $link = $jl_link;
+                                    $transaction_type = !empty($statement->transaction_type) ? $statement->transaction_type : 'Journal';
+                                    $transaction_id = $statement->entry_id;
                                     $note = $statement->narration;
+                                }
+
+                                // Known type but related document missing → still open JL entry
+                                if (empty($transaction_id) || empty($link)) {
+                                    $link = $jl_link;
+                                    if ($transaction_type === '' || $transaction_type === null) {
+                                        $transaction_type = !empty($statement->transaction_type) ? $statement->transaction_type : 'Journal';
+                                    }
+                                    $transaction_id = $statement->entry_id;
+                                    if ($note === '' || $note === null) {
+                                        $note = $statement->narration;
+                                    }
                                 }
 
                                 ?>
