@@ -7187,6 +7187,7 @@ if($inv->warning_note != ""){
     {
         //$this->sma->checkPermissions();
         $this->load->library('inv_qrcode');
+        $this->load->helper('zatka');
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');

@@ -153,18 +153,24 @@ div.box-content span {
     <td width="20%" align="center">
         <div style="height:100px; display:flex; align-items:center; justify-content:center;">
             <?php
-            // Custom readable QR code format
-            $company_name = $biller->name_ar && $biller->name_ar != '-' ? $biller->name_ar : $biller->name;
+            // ZATCA Phase-1 QR (TLV tags 1–5 → Base64) for ZATCA app scan
+            $this->load->helper('zatka');
+            $company_name = !empty($biller->name_ar) && $biller->name_ar != '-'
+                ? $biller->name_ar
+                : (($biller->company && $biller->company != '-') ? $biller->company : $biller->name);
             $vat_number = $biller->vat_no ?: $biller->get_no;
-            $invoice_no = $inv->reference_no;
-            $invoice_date = date('d/m/Y H:i:s', strtotime($inv->date));
             $grand_total = $return_sale ? ($inv->grand_total + $return_sale->grand_total) : $inv->grand_total;
             $total_tax = $return_sale ? ($inv->total_tax + $return_sale->total_tax) : $inv->total_tax;
-            $invoice_id = $inv->id;
-            
-            $qr_data = "#" . $vat_number . "_" . $company_name . "_" . $invoice_no . "_" . $invoice_date . "_" . number_format($grand_total, 2, '.', '') . "_SAR_Tax:" . number_format($total_tax, 2, '.', '') . "#" . $invoice_id . "#";
-            
-            echo $this->sma->qrcode('text', $qr_data, 2);
+
+            $qr_payload = generate_zatka_qr_code([
+                'seller_name' => $company_name,
+                'vat_no'      => $vat_number,
+                'date'        => $inv->date,
+                'grand_total' => $grand_total,
+                'total_tax'   => $total_tax,
+            ]);
+
+            echo $this->sma->qrcode('text', $qr_payload, 2);
             ?>
         </div>
     </td>
