@@ -1,4 +1,12 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<?php
+$canQuoteEdit = $Owner || ($GP && !empty($GP['quotes-edit']));
+$canQuoteEmail = $Owner || ($GP && !empty($GP['quotes-email']));
+$canQuotePdf = $Owner || ($GP && !empty($GP['quotes-pdf']));
+$canQuoteExportExcel = $Owner || ($GP && !empty($GP['quotes-export_excel']));
+$canQuoteDelete = $Owner || ($GP && !empty($GP['quotes-delete']));
+$canCreateSaleFromQuote = $Owner || ($GP && !empty($GP['sales-add']));
+?>
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-file"></i><?= lang('quote_no') . '. ' . $inv->id; ?></h2>
@@ -17,26 +25,41 @@
                             </li>
                         <?php
 } ?>
+                        <?php if ($canQuoteEdit) { ?>
                         <li>
                             <a href="<?= admin_url('quotes/edit/' . $inv->id) ?>">
                                 <i class="fa fa-edit"></i> <?= lang('edit_quote') ?>
                             </a>
                         </li>
+                        <?php } ?>
+                        <?php if ($canCreateSaleFromQuote) { ?>
                         <li>
                             <a href="<?= admin_url('sales/add/' . $inv->id) ?>">
                                 <i class="fa fa-plus-circle"></i> <?= lang('create_invoice') ?>
                             </a>
                         </li>
+                        <?php } ?>
+                        <?php if ($canQuoteEmail) { ?>
                         <li>
                             <a href="<?= admin_url('quotes/email/' . $inv->id) ?>" data-target="#myModal" data-toggle="modal">
                                 <i class="fa fa-envelope-o"></i> <?= lang('send_email') ?>
                             </a>
                         </li>
+                        <?php } ?>
+                        <?php if ($canQuotePdf) { ?>
                         <li>
                             <a href="<?= admin_url('quotes/pdf/' . $inv->id) ?>">
                                 <i class="fa fa-file-pdf-o"></i> <?= lang('export_to_pdf') ?>
                             </a>
                         </li>
+                        <?php } ?>
+                        <?php if ($canQuoteExportExcel) { ?>
+                        <li>
+                            <a href="<?= admin_url('quotes/excel_new/' . $inv->id) ?>">
+                                <i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?>
+                            </a>
+                        </li>
+                        <?php } ?>
                         <!--<li><a href="<?= admin_url('quotes/excel/' . $inv->id) ?>"><i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?></a></li>-->
                     </ul>
                 </li>
@@ -325,6 +348,7 @@
                         } ?>
                         </div>
                     </div>
+                    <?php } ?>
                 </div>
             </div>
         </div>
@@ -342,26 +366,42 @@
                 <?php
                             } ?>
                 <div class="btn-group btn-group-justified">
+                    <?php if ($canCreateSaleFromQuote) { ?>
                     <div class="btn-group">
                         <a href="<?= admin_url('sales/add/' . $inv->id) ?>" class="tip btn btn-primary" title="<?= lang('create_invoice') ?>">
                             <i class="fa fa-plus-circle"></i> <span class="hidden-sm hidden-xs"><?= lang('create_invoice') ?></span>
                         </a>
                     </div>
+                    <?php } ?>
+                    <?php if ($canQuotePdf) { ?>
                     <div class="btn-group">
                         <a href="<?= admin_url('quotes/pdf/' . $inv->id) ?>" class="tip btn btn-primary" title="<?= lang('download_pdf') ?>">
                             <i class="fa fa-download"></i> <span class="hidden-sm hidden-xs"><?= lang('pdf') ?></span>
                         </a>
                     </div>
+                    <?php } ?>
+                    <?php if ($canQuoteExportExcel) { ?>
+                    <div class="btn-group">
+                        <a href="<?= admin_url('quotes/excel_new/' . $inv->id) ?>" class="tip btn btn-primary" title="<?= lang('export_to_excel') ?>">
+                            <i class="fa fa-file-excel-o"></i> <span class="hidden-sm hidden-xs"><?= lang('excel') ?></span>
+                        </a>
+                    </div>
+                    <?php } ?>
+                    <?php if ($canQuoteEmail) { ?>
                     <div class="btn-group">
                         <a href="<?= admin_url('quotes/email/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal" class="tip btn btn-info tip" title="<?= lang('email') ?>">
                             <i class="fa fa-envelope-o"></i> <span class="hidden-sm hidden-xs"><?= lang('email') ?></span>
                         </a>
                     </div>
+                    <?php } ?>
+                    <?php if ($canQuoteEdit) { ?>
                     <div class="btn-group">
                         <a href="<?= admin_url('quotes/edit/' . $inv->id) ?>" class="tip btn btn-warning tip" title="<?= lang('edit') ?>">
                             <i class="fa fa-edit"></i> <span class="hidden-sm hidden-xs"><?= lang('edit') ?></span>
                         </a>
                     </div>
+                    <?php } ?>
+                    <?php if ($canQuoteDelete) { ?>
                     <div class="btn-group">
                         <a href="#" class="tip btn btn-danger bpo" title="<b><?= $this->lang->line('delete_quote') ?></b>"
                             data-content="<div style='width:150px;'><p><?= lang('r_u_sure') ?></p><a class='btn btn-danger' href='<?= admin_url('quotes/delete/' . $inv->id) ?>'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button></div>"

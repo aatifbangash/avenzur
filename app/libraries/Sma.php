@@ -25,10 +25,7 @@ class Sma
 
     public function actionPermissions($action = null, $module = null)
     {
-        if ($this->Owner || $this->Admin) {
-            if ($this->Admin && stripos($action, 'delete') !== false) {
-                return false;
-            }
+        if ($this->Owner) {
             return true;
         } elseif ($this->Customer || $this->Supplier) {
             return false;
@@ -40,18 +37,12 @@ class Sma
             $action = $this->v;
         }
         //$gp = $this->site->checkPermissions();
-        if ($this->GP[$module . '-' . $action] == 1) {
-            return true;
-        }
-        return false;
+        return !empty($this->GP[$module . '-' . $action]);
     }
     
     public function checkPermissionsForRequest($action = null) // $this->sma->checkPermissionsForRequest('truck_registration')
     {
-        if($this->GP[$action] == 1){
-             return true;
-        }
-         return false;
+        return !empty($this->GP[$action]);
     }
 
     public function analyze_term($term)

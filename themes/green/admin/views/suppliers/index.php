@@ -1,4 +1,10 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<?php
+$canSupplierAdd = $Owner || ($GP && !empty($GP['suppliers-add']));
+$canSupplierExportExcel = $Owner || ($GP && !empty($GP['suppliers-export_excel']));
+$canSupplierDelete = $Owner || ($GP && !empty($GP['suppliers-delete']));
+$hasSupplierBulkAction = $canSupplierExportExcel || $canSupplierDelete;
+?>
 <script>
     $(document).ready(function () {
         oTable = $('#SupData').dataTable({
@@ -36,7 +42,7 @@
         ], "footer");
     });
 </script>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($hasSupplierBulkAction) {
     echo admin_form_open('suppliers/supplier_actions', 'id="action-form"');
 } ?>
 <div class="box">
@@ -50,22 +56,29 @@
                         <i class="icon fa fa-tasks tip"  data-placement="left" title="<?= lang('actions') ?>"></i>
                     </a>
                     <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
+                        <?php if ($canSupplierAdd) { ?>
                         <li>
                             <a href="<?= admin_url('suppliers/add'); ?>" data-toggle="modal" data-target="#myModal" id="add">
                                 <i class="fa fa-plus-circle"></i> <?= lang('add_supplier'); ?>
                             </a>
                         </li>
+                        <?php } ?>
+                        <?php if ($canSupplierAdd) { ?>
                         <li>
                             <a href="<?= admin_url('suppliers/import_csv'); ?>" data-toggle="modal" data-target="#myModal">
                                 <i class="fa fa-plus-circle"></i> <?= lang('import_by_csv'); ?>
 
                             </a>
                         </li>
+                        <?php } ?>
+                        <?php if ($canSupplierExportExcel) { ?>
                         <li>
                             <a href="#" id="excel" data-action="export_excel">
                                 <i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?>
                             </a>
                         </li>
+                        <?php } ?>
+                        <?php if ($canSupplierDelete) { ?>
                         <li class="divider"></li>
                         <li>
                             <a href="#" class="bpo" title="<b><?= $this->lang->line('delete_suppliers') ?></b>"
@@ -73,6 +86,7 @@
                                 <i class="fa fa-trash-o"></i> <?= lang('delete_suppliers') ?>
                             </a>
                         </li>
+                        <?php } ?>
                     </ul>
                 </li>
             </ul>
@@ -124,7 +138,7 @@
         </div>
     </div>
 </div>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($hasSupplierBulkAction) {
     ?>
     <div style="display: none;">
         <input type="hidden" name="form_action" value="" id="form_action"/>

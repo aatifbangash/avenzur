@@ -43,7 +43,11 @@
         ], "footer");
     });
 </script>
-<?php if ($Owner) {
+<?php
+$canDeliveryExportExcel = $Owner || !empty($GP['sales-export_excel_delivery']);
+$canDeleteDeliveries = $Owner || !empty($GP['sales-delete_delivery']);
+$hasDeliveryBulkAction = $canDeliveryExportExcel || $canDeleteDeliveries;
+if ($hasDeliveryBulkAction) {
     ?><?= admin_form_open('sales/delivery_actions', 'id="action-form"') ?><?php
 } ?>
 <div class="box">
@@ -57,15 +61,15 @@
                         <i class="icon fa fa-tasks tip" data-placement="left" title="<?= lang('actions') ?>"></i>
                     </a>
                     <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
-                        <li><a href="#" id="excel" data-action="export_excel"><i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?></a></li>
-                        <li class="divider"></li>
+                        <?php if ($canDeliveryExportExcel) { ?><li><a href="#" id="excel" data-action="export_excel"><i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?></a></li><?php } ?>
+                        <?php if ($canDeleteDeliveries) { ?><li class="divider"></li>
                         <li>
                             <a href="#" class="bpo" title="<b><?= $this->lang->line('delete_deliveries') ?></b>"
                                 data-content="<p><?= lang('r_u_sure') ?></p><button type='button' class='btn btn-danger' id='delete' data-action='delete'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button>"
                                 data-html="true" data-placement="left">
                                 <i class="fa fa-trash-o"></i> <?= lang('delete_deliveries') ?>
                             </a>
-                        </li>
+                        </li><?php } ?>
                     </ul>
                 </li>
             </ul>
@@ -112,7 +116,7 @@
         </div>
     </div>
 </div>
-<?php if ($Owner) {
+<?php if ($hasDeliveryBulkAction) {
         ?>
     <div style="display: none;">
         <input type="hidden" name="form_action" value="" id="form_action"/>

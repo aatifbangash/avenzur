@@ -12,7 +12,7 @@ class Billers extends MY_Controller
             $this->session->set_userdata('requested_page', $this->uri->uri_string());
             $this->sma->md('login');
         }
-        if (!$this->Owner) {
+        if (!$this->Owner && empty($this->GP['billers-index']) && empty($this->GP['billers-add']) && empty($this->GP['billers-edit']) && empty($this->GP['billers-delete']) && empty($this->GP['billers-export_excel'])) {
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect($_SERVER['HTTP_REFERER']);
         }
@@ -23,7 +23,7 @@ class Billers extends MY_Controller
 
     public function add()
     {
-        $this->sma->checkPermissions(false, true);
+        $this->sma->checkPermissions('add', true);
 
         $this->form_validation->set_rules('email', $this->lang->line('email_address'), 'is_unique[companies.email]');
 
@@ -69,7 +69,7 @@ class Billers extends MY_Controller
 
     public function biller_actions()
     {
-        if (!$this->Owner && !$this->GP['bulk_actions']) {
+        if (!$this->Owner && empty($this->GP['billers-delete']) && empty($this->GP['billers-export_excel'])) {
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect($_SERVER['HTTP_REFERER']);
         }
@@ -95,6 +95,7 @@ class Billers extends MY_Controller
                 }
 
                 if ($this->input->post('form_action') == 'export_excel') {
+                    $this->sma->checkPermissions('export_excel');
                     $this->load->library('excel');
                     $this->excel->setActiveSheetIndex(0);
                     $this->excel->getActiveSheet()->setTitle(lang('billers'));
@@ -134,7 +135,7 @@ class Billers extends MY_Controller
 
     public function delete($id = null)
     {
-        $this->sma->checkPermissions(null, true);
+        $this->sma->checkPermissions('delete', true);
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -152,7 +153,7 @@ class Billers extends MY_Controller
 
     public function edit($id = null)
     {
-        $this->sma->checkPermissions(false, true);
+        $this->sma->checkPermissions('edit', true);
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -248,7 +249,7 @@ class Billers extends MY_Controller
 
     public function index($action = null)
     {
-        $this->sma->checkPermissions();
+        $this->sma->checkPermissions('index');
 
         $this->data['error']  = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         $this->data['action'] = $action;

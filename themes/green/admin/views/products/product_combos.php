@@ -74,7 +74,7 @@
     });
 </script>
 
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner || ($GP && !empty($GP['products-combos']))) {
             echo admin_form_open('products/combo_actions', 'id="action-form"');
 }
 ?>
@@ -170,7 +170,7 @@
     </div>
 </div>
 
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner || ($GP && !empty($GP['products-combos']))) {
     ?>
     <div style="display: none;">
         <input type="hidden" name="form_action" value="" id="form_action"/>

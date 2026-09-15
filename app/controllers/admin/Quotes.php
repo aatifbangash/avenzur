@@ -37,7 +37,7 @@ class Quotes extends MY_Controller
     }
 
     public function add(){
-        //$this->sma->checkPermissions();
+        $this->sma->checkPermissions('index');
         //$sale_id = $this->input->get('sale_id') ? $this->input->get('sale_id') : null;
 
         if(!$this->Admin && !$this->Owner){
@@ -1411,7 +1411,7 @@ class Quotes extends MY_Controller
 
     public function email($quote_id = null)
     {
-        $this->sma->checkPermissions(false, true);
+        $this->sma->checkPermissions('email', true);
 
         if ($this->input->get('id')) {
             $quote_id = $this->input->get('id');
@@ -1499,9 +1499,9 @@ class Quotes extends MY_Controller
     public function getQuotes($warehouse_id = null)
     {
         $warehouse_id = $this->site->resolveListingWarehouseId($warehouse_id);
-        //$this->sma->checkPermissions('index');
+        $this->sma->checkPermissions('index');
 
-        if (!$this->Owner && !$this->Admin && empty($this->GP['quotes-index']) && !$warehouse_id) {
+        if (!$this->Owner && empty($this->GP['quotes-index']) && !$warehouse_id) {
             $user         = $this->site->getUser();
             $warehouse_id = $user->warehouse_id;
         }
@@ -1524,20 +1524,26 @@ class Quotes extends MY_Controller
         . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
         . lang('actions') . ' <span class="caret"></span></button>
                     <ul class="dropdown-menu pull-right" role="menu">';
-                        if($this->Admin || $this->Owner || $this->GP['quotes-edit']){
+                        if ($this->Owner || !empty($this->GP['quotes-index'])) {
+                            $action .= '<li>' . $detail_link . '</li>';
+                        }
+                        if ($this->Owner || !empty($this->GP['quotes-email'])) {
+                            $action .= '<li>' . $email_link . '</li>';
+                        }
+                        if ($this->Owner || !empty($this->GP['quotes-edit'])) {
                             $action .= '<li>' . $edit_link . '</li>';
                         }
-                        if($this->Admin || $this->Owner || $this->GP['sales-add']){
-                            //if($this->Settings->site_name == 'Hills Business Medical' || $this->Settings->site_name == 'Demo Company' || $this->Settings->site_name == 'Avnzor'){
-                                $action .= '<li>' . $convert_link . '</li>';
-                            //}
-                        } 
-                        if($this->Admin || $this->Owner || $this->GP['quotes-pdf']){ 
+                        if ($this->Owner || !empty($this->GP['sales-add'])) {
+                            $action .= '<li>' . $convert_link . '</li>';
+                        }
+                        if ($this->Owner || !empty($this->GP['quotes-pdf'])) {
                             $action .= '<li>' . $pdf_link . '</li>';
                             $action .= '<li>' . $new_pdf_link . '</li>';
+                        }
+                        if ($this->Owner || !empty($this->GP['quotes-export_excel'])) {
                             $action .= '<li>' . $excel_download . '</li>';
                         }
-                        if($this->Admin || $this->Owner || $this->GP['quotes-delete']){ 
+                        if ($this->Owner || !empty($this->GP['quotes-delete'])) {
                             $action .= '<li>' . $delete_link . '</li>';
                         }
                     $action .= '</ul>
@@ -1556,7 +1562,7 @@ class Quotes extends MY_Controller
                 ->from('quotes');
             $this->site->applyListingWarehouseScope($this->datatables, $warehouse_id);
         }
-        if (!$this->Owner && !$this->Admin && !$this->GP['quotes-index']) {
+        if (!$this->Owner && !$this->GP['quotes-index']) {
             $this->datatables->where('created_by', $this->session->userdata('user_id'));
         } elseif ($this->Customer) {
             $this->datatables->where('customer_id', $this->session->userdata('user_id'));
@@ -1567,7 +1573,7 @@ class Quotes extends MY_Controller
 
     public function index($warehouse_id = null)
     {
-        //$this->sma->checkPermissions();
+        $this->sma->checkPermissions('index');
         $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
         if(empty($this->data['error'])){
             $this->data['error'] = $this->session->flashdata('error');
@@ -1593,7 +1599,7 @@ class Quotes extends MY_Controller
 
     public function modal_view($quote_id = null)
     {
-        //$this->sma->checkPermissions('index', true);
+        $this->sma->checkPermissions('index', true);
         $this->load->library('inv_qrcode');
         if ($this->input->get('id')) {
             $quote_id = $this->input->get('id');
@@ -1640,6 +1646,8 @@ class Quotes extends MY_Controller
 
     public function excel_new($quote_id = null)
     {
+        $this->sma->checkPermissions('export_excel');
+
         if ($this->input->get('id')) {
             $quote_id = $this->input->get('id');
         }
@@ -1724,7 +1732,7 @@ class Quotes extends MY_Controller
 
     public function pdf_new($quote_id = null, $view = null, $save_bufffer = null)
     {
-        // /$this->sma->checkPermissions();
+        $this->sma->checkPermissions('pdf');
 
         if ($this->input->get('id')) {
             $quote_id = $this->input->get('id');
@@ -1757,7 +1765,7 @@ class Quotes extends MY_Controller
 
     public function pdf($quote_id = null, $view = null, $save_bufffer = null)
     {
-        // /$this->sma->checkPermissions();
+        $this->sma->checkPermissions('pdf');
 
         if ($this->input->get('id')) {
             $quote_id = $this->input->get('id');
@@ -1790,7 +1798,7 @@ class Quotes extends MY_Controller
 
     public function quote_actions()
     {
-        if (!$this->Owner && !$this->GP['bulk_actions']) {
+        if (!$this->Owner && empty($this->GP['quotes-delete']) && empty($this->GP['quotes-pdf']) && empty($this->GP['quotes-export_excel'])) {
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect($_SERVER['HTTP_REFERER']);
         }
@@ -1821,8 +1829,10 @@ class Quotes extends MY_Controller
                     }
                     redirect($_SERVER['HTTP_REFERER']);
                 } elseif ($this->input->post('form_action') == 'combine') {
+                    $this->sma->checkPermissions('pdf');
                     $html = $this->combine_pdf($_POST['val']);
                 } elseif ($this->input->post('form_action') == 'export_excel') {
+                    $this->sma->checkPermissions('export_excel');
                     $this->load->library('excel');
                     $this->excel->setActiveSheetIndex(0);
                     $this->excel->getActiveSheet()->setTitle(lang('quotes'));

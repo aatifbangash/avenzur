@@ -1,4 +1,11 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<?php
+$canAddQuote = $Owner || ($GP && !empty($GP['quotes-add']));
+$canQuoteExportExcel = $Owner || ($GP && !empty($GP['quotes-export_excel']));
+$canQuoteCombinePdf = $Owner || ($GP && !empty($GP['quotes-pdf']));
+$canDeleteQuotes = $Owner || ($GP && !empty($GP['quotes-delete']));
+$hasQuoteBulkAction = $canQuoteExportExcel || $canQuoteCombinePdf || $canDeleteQuotes;
+?>
 <script>
     $(document).ready(function () {
         oTable = $('#QUData').dataTable({
@@ -77,7 +84,7 @@
 
 </script>
 
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($hasQuoteBulkAction) {
     echo admin_form_open('quotes/quote_actions', 'id="action-form"');
 } ?>
 <div class="box">
@@ -91,21 +98,28 @@
                 <li class="dropdown">
                     <a data-toggle="dropdown" class="dropdown-toggle" href="#"><i class="icon fa fa-tasks tip" data-placement="left" title="<?= lang('actions') ?>"></i></a>
                     <ul class="dropdown-menu pull-right" class="tasks-menus" role="menu" aria-labelledby="dLabel">
+                        <?php if ($canAddQuote) { ?>
                         <li>
                             <a href="<?= admin_url('quotes/add') ?>">
                                 <i class="fa fa-plus-circle"></i> <?= lang('add_quote') ?>
                             </a>
                         </li>
+                        <?php } ?>
+                        <?php if ($canQuoteExportExcel) { ?>
                         <li>
                             <a href="#" id="excel" data-action="export_excel">
                                 <i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?>
                             </a>
                         </li>
+                        <?php } ?>
+                        <?php if ($canQuoteCombinePdf) { ?>
                         <li>
                             <a href="#" id="combine" data-action="combine">
                                 <i class="fa fa-file-pdf-o"></i> <?=lang('combine_to_pdf')?>
                             </a>
                         </li>
+                        <?php } ?>
+                        <?php if ($canDeleteQuotes) { ?>
                         <li class="divider"></li>
                         <li>
                             <a href="#" class="bpo" title="<b><?= $this->lang->line('delete_quotes') ?></b>"
@@ -113,6 +127,7 @@
                                 data-html="true" data-placement="left"><i class="fa fa-trash-o"></i> <?= lang('delete_quotes') ?>
                             </a>
                         </li>
+                        <?php } ?>
                     </ul>
                 </li>
                 <?php if (!empty($warehouses)) {
@@ -179,7 +194,7 @@
         </div>
     </div>
 </div>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($hasQuoteBulkAction) {
     ?>
     <div style="display: none;">
         <input type="hidden" name="form_action" value="" id="form_action"/>

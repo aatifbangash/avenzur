@@ -2218,8 +2218,8 @@ class Suppliers extends MY_Controller
 
     public function add()
     {
+        $this->sma->checkPermissions('add', true);
         $parent_code = null;
-        //$this->sma->checkPermissions(false, true);
 
         //$this->form_validation->set_rules('email', $this->lang->line('email_address'), 'is_unique[companies.email]');
 
@@ -2305,7 +2305,7 @@ class Suppliers extends MY_Controller
 
     public function add_user($company_id = null)
     {
-        //$this->sma->checkPermissions(false, true);
+        $this->sma->checkPermissions('add', true);
 
         if ($this->input->get('id')) {
             $company_id = $this->input->get('id');
@@ -2350,7 +2350,7 @@ class Suppliers extends MY_Controller
 
     public function delete($id = null)
     {
-        //$this->sma->checkPermissions(null, true);
+        $this->sma->checkPermissions('delete', true);
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -2368,7 +2368,7 @@ class Suppliers extends MY_Controller
 
     public function edit($id = null)
     {
-        //$this->sma->checkPermissions(false, true);
+        $this->sma->checkPermissions('edit', true);
 
         if ($this->input->get('id')) {
             $id = $this->input->get('id');
@@ -2451,15 +2451,15 @@ class Suppliers extends MY_Controller
     }
 
     public function getChildSuppliers(){
-        //$this->sma->checkPermissions('index');
+        $this->sma->checkPermissions('index');
 
         $actions = "<div class=\"text-center\">";
 
-        if($this->Owner || $this->Admin || $this->GP['suppliers-edit']){
+        if($this->Owner || $this->GP['suppliers-edit']){
             $actions .= "<a class=\"tip\" title='" . $this->lang->line('edit_supplier') . "' href='" . admin_url('suppliers/edit/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-edit\"></i></a>";
         }
 
-        if($this->Owner || $this->Admin || $this->GP['suppliers-delete']){
+        if($this->Owner || $this->GP['suppliers-delete']){
             $actions .= "<a href='#' class='tip po' title='<b>" . $this->lang->line('delete_supplier') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('suppliers/delete/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a>";
         }
         $actions .= "</div>";
@@ -2477,14 +2477,26 @@ class Suppliers extends MY_Controller
 
     public function getSuppliers()
     {
-        //$this->sma->checkPermissions('index');
+        $this->sma->checkPermissions('index');
+
+        $actions = "<div class=\"text-center\"><a class=\"tip\" title='" . $this->lang->line('list_products') . "' href='" . admin_url('products?supplier=$1') . "'><i class=\"fa fa-list\"></i></a> <a class=\"tip\" title='" . $this->lang->line('list_users') . "' href='" . admin_url('suppliers/users/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-users\"></i></a>";
+        if ($this->Owner || !empty($this->GP['suppliers-add'])) {
+            $actions .= " <a class=\"tip\" title='" . $this->lang->line('add_user') . "' href='" . admin_url('suppliers/add_user/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-plus-circle\"></i></a>";
+        }
+        if ($this->Owner || !empty($this->GP['suppliers-edit'])) {
+            $actions .= " <a class=\"tip\" title='" . $this->lang->line('edit_supplier') . "' href='" . admin_url('suppliers/edit/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-edit\"></i></a>";
+        }
+        if ($this->Owner || !empty($this->GP['suppliers-delete'])) {
+            $actions .= " <a href='#' class='tip po' title='<b>" . $this->lang->line('delete_supplier') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('suppliers/delete/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a>";
+        }
+        $actions .= "</div>";
 
         $this->load->library('datatables');
         $this->datatables
             ->select('id, company, sequence_code, name, email, phone, city, country, vat_no, gst_no')
             ->from('companies')
             ->where('group_name', 'supplier')
-            ->add_column('Actions', "<div class=\"text-center\"><a class=\"tip\" title='" . $this->lang->line('list_products') . "' href='" . admin_url('products?supplier=$1') . "'><i class=\"fa fa-list\"></i></a> <a class=\"tip\" title='" . $this->lang->line('list_users') . "' href='" . admin_url('suppliers/users/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-users\"></i></a> <a class=\"tip\" title='" . $this->lang->line('add_user') . "' href='" . admin_url('suppliers/add_user/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-plus-circle\"></i></a> <a class=\"tip\" title='" . $this->lang->line('edit_supplier') . "' href='" . admin_url('suppliers/edit/$1') . "' data-toggle='modal' data-target='#myModal'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . $this->lang->line('delete_supplier') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('suppliers/delete/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
+            ->add_column('Actions', $actions, 'id');
         //->unset_column('id');
         echo $this->datatables->generate();
     }
@@ -2522,10 +2534,7 @@ class Suppliers extends MY_Controller
 
     public function process_import()
     {
-        if (!$this->Owner && !$this->Admin) {
-            $this->session->set_flashdata('warning', lang('access_denied'));
-            admin_redirect('suppliers');
-        }
+        $this->sma->checkPermissions('add');
 
         $mapping  = $this->input->post('mapping');    // mapping array: file column index => db field
         $filePath = $this->input->post('file_path');  // uploaded Excel file path
@@ -2619,10 +2628,7 @@ class Suppliers extends MY_Controller
 
     
     public function import_excel(){
-        if (!$this->Owner && !$this->Admin) {
-            $this->session->set_flashdata('warning', lang('access_denied'));
-            admin_redirect('suppliers');
-        }
+        $this->sma->checkPermissions('add', true);
 
         $this->load->helper('security');
         $this->form_validation->set_rules('excel_file', lang('upload_file'), 'xss_clean');
@@ -2873,7 +2879,7 @@ class Suppliers extends MY_Controller
 
     public function supplier_actions()
     {
-        if (!$this->Owner && !$this->GP['bulk_actions']) {
+        if (!$this->Owner && empty($this->GP['suppliers-delete']) && empty($this->GP['suppliers-export_excel'])) {
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect($_SERVER['HTTP_REFERER']);
         }
@@ -2883,7 +2889,7 @@ class Suppliers extends MY_Controller
         if ($this->form_validation->run() == true) {
             if (!empty($_POST['val'])) {
                 if ($this->input->post('form_action') == 'delete') {
-                    //$this->sma->checkPermissions('delete');
+                    $this->sma->checkPermissions('delete');
                     $error = false;
                     foreach ($_POST['val'] as $id) {
                         if (!$this->companies_model->deleteSupplier($id)) {
@@ -2899,10 +2905,7 @@ class Suppliers extends MY_Controller
                 }
 
                 if ($this->input->post('form_action') == 'export_excel') {
-                    if (!$this->Owner && !$this->Admin) {
-                        $this->session->set_flashdata('warning', lang('access_denied'));
-                        redirect($_SERVER['HTTP_REFERER']);
-                    }
+                    $this->sma->checkPermissions('export_excel');
                     $this->load->library('excel');
                     $this->excel->setActiveSheetIndex(0);
                     $this->excel->getActiveSheet()->setTitle(lang('customer'));

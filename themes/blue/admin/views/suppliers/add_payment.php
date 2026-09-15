@@ -410,7 +410,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('supplier', 'pssupplier'); ?>
-                                <?php if ($Owner || $Admin || $GP['suppliers-add'] || $GP['suppliers-index']) {
+                                <?php if ($Owner || $GP['suppliers-add'] || $GP['suppliers-index']) {
                                     ?><div class="input-group"><?php
                                 } ?>
                                     <input type="hidden" name="supplier" value="" id="pssupplier"
@@ -418,7 +418,7 @@
                                             placeholder="<?= lang('select') . ' ' . lang('supplier') ?>">
                                     <input type="hidden" name="supplier_id" value="" id="supplier_id"
                                             class="form-control">
-                                    <?php if ($Owner || $Admin || $GP['suppliers-index']) {
+                                    <?php if ($Owner || $GP['suppliers-index']) {
                                     ?>
                                         <div class="input-group-addon no-print" style="padding: 2px 5px; border-left: 0;">
                                             <a href="#" id="view-supplier" class="external" data-toggle="modal" data-target="#myModal">
@@ -427,7 +427,7 @@
                                         </div>
                                     <?php
                                     } ?>
-                                    <?php if ($Owner || $Admin || $GP['suppliers-add']) {
+                                    <?php if ($Owner || $GP['suppliers-add']) {
                                     ?>
                                     <div class="input-group-addon no-print" style="padding: 2px 5px;">
                                         <a href="<?= admin_url('suppliers/add'); ?>" id="add-supplier" class="external" data-toggle="modal" data-target="#myModal">
@@ -436,7 +436,7 @@
                                     </div>
                                     <?php
                                     } ?>
-                                    <?php if ($Owner || $Admin || $GP['suppliers-add'] || $GP['suppliers-index']) {
+                                    <?php if ($Owner || $GP['suppliers-add'] || $GP['suppliers-index']) {
                                     ?></div><?php
                                     } ?>
                             </div>

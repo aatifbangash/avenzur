@@ -1,4 +1,12 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<?php
+$canQuoteEdit = $Owner || ($GP && !empty($GP['quotes-edit']));
+$canQuoteEmail = $Owner || ($GP && !empty($GP['quotes-email']));
+$canQuotePdf = $Owner || ($GP && !empty($GP['quotes-pdf']));
+$canQuoteDelete = $Owner || ($GP && !empty($GP['quotes-delete']));
+$canCreateSaleFromQuote = $Owner || ($GP && !empty($GP['sales-add']));
+$canCreatePurchaseFromQuote = $Owner || ($GP && !empty($GP['purchases-add']));
+?>
 <div class="modal-dialog modal-lg no-modal-header">
     <div class="modal-content">
         <div class="modal-body">
@@ -297,36 +305,47 @@
                         <?php
                     } ?>
                     <div class="btn-group btn-group-justified">
+                        <?php if ($canCreateSaleFromQuote) { ?>
                         <div class="btn-group">
                             <a href="<?= admin_url('sales/add/' . $inv->id) ?>" class="tip btn btn-primary" title="<?= lang('create_sale') ?>">
                                 <i class="fa fa-heart"></i>
                                 <span class="hidden-sm hidden-xs"><?= lang('create_sale') ?></span>
                             </a>
                         </div>
+                        <?php } ?>
+                        <?php if ($canCreatePurchaseFromQuote) { ?>
                         <div class="btn-group">
                             <a href="<?= admin_url('purchases/add/' . $inv->id) ?>" class="tip btn btn-primary" title="<?= lang('create_purchase') ?>">
                                 <i class="fa fa-star"></i>
                                 <span class="hidden-sm hidden-xs"><?= lang('create_purchase') ?></span>
                             </a>
                         </div>
+                        <?php } ?>
+                        <?php if ($canQuoteEmail) { ?>
                         <div class="btn-group">
                             <a href="<?= admin_url('quotes/email/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal2" class="tip btn btn-primary" title="<?= lang('email') ?>">
                                 <i class="fa fa-envelope-o"></i>
                                 <span class="hidden-sm hidden-xs"><?= lang('email') ?></span>
                             </a>
                         </div>
+                        <?php } ?>
+                        <?php if ($canQuotePdf) { ?>
                         <div class="btn-group">
                             <a href="<?= admin_url('quotes/pdf/' . $inv->id) ?>" class="tip btn btn-primary" title="<?= lang('download_pdf') ?>">
                                 <i class="fa fa-download"></i>
                                 <span class="hidden-sm hidden-xs"><?= lang('pdf') ?></span>
                             </a>
                         </div>
+                        <?php } ?>
+                        <?php if ($canQuoteEdit) { ?>
                         <div class="btn-group">
                             <a href="<?= admin_url('quotes/edit/' . $inv->id) ?>" class="tip btn btn-warning sledit" title="<?= lang('edit') ?>">
                                 <i class="fa fa-edit"></i>
                                 <span class="hidden-sm hidden-xs"><?= lang('edit') ?></span>
                             </a>
                         </div>
+                        <?php } ?>
+                        <?php if ($canQuoteDelete) { ?>
                         <div class="btn-group">
                             <a href="#" class="tip btn btn-danger bpo" title="<b><?= $this->lang->line('delete') ?></b>"
                                 data-content="<div style='width:150px;'><p><?= lang('r_u_sure') ?></p><a class='btn btn-danger' href='<?= admin_url('quotes/delete/' . $inv->id) ?>'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button></div>"
@@ -335,6 +354,7 @@
                                 <span class="hidden-sm hidden-xs"><?= lang('delete') ?></span>
                             </a>
                         </div>
+                        <?php } ?>
                     </div>
                 </div>
                 <?php

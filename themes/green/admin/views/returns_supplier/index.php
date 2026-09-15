@@ -120,7 +120,7 @@
 
 </script>
 
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner || ($GP && (!empty($GP['supplier-returns-add']) || !empty($GP['supplier-returns-delete']) || !empty($GP['supplier-returns-index']))) {
             echo admin_form_open('returns_supplier/return_actions', 'id="action-form"');
 }
 ?>
@@ -218,7 +218,7 @@
         </div>
     </div>
 </div>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner || ($GP && (!empty($GP['supplier-returns-add']) || !empty($GP['supplier-returns-delete']) || !empty($GP['supplier-returns-index']))) {
     ?>
     <div style="display: none;">
         <input type="hidden" name="form_action" value="" id="form_action"/>

@@ -35,7 +35,7 @@
         ], "footer");
     });
 </script>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner || ($GP && ($GP['suppliers-add'] || $GP['suppliers-export_excel'] || $GP['suppliers-delete']))) {
     echo admin_form_open('suppliers/supplier_actions', 'id="action-form"');
 } ?>
 <div class="box">
@@ -122,7 +122,7 @@
         </div>
     </div>
 </div>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner || ($GP && ($GP['suppliers-add'] || $GP['suppliers-export_excel'] || $GP['suppliers-delete']))) {
     ?>
     <div style="display: none;">
         <input type="hidden" name="form_action" value="" id="form_action"/>

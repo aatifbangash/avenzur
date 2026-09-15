@@ -597,7 +597,7 @@
                             }
                             ?>
                         </div>
-                        <?php if (($Owner || $Admin || $GP['sales-payments']) && ($inv->payment_status == 'paid' || $inv->payment_status == 'partial')) {
+                        <?php if (($Owner || $GP['sales-payments']) && ($inv->payment_status == 'paid' || $inv->payment_status == 'partial')) {
                                 ?>
                         <div id="payments">
                             <div class="col-md-12">

@@ -95,12 +95,12 @@
             </div>
             <div class="modal-footer no-print">
                 <button type="button" class="btn btn-default pull-left" data-dismiss="modal"><?= lang('close'); ?></button>
-                <?php if ($Owner || $Admin || $GP['reports-customers']) {
+                <?php if ($Owner || $GP['reports-customers']) {
     ?>
                     <a href="<?=admin_url('reports/customer_report/' . $customer->id); ?>" target="_blank" class="btn btn-primary"><?= lang('customers_report'); ?></a>
                 <?php
 } ?>
-                <?php if ($Owner || $Admin || $GP['customers-edit']) {
+                <?php if ($Owner || $GP['customers-edit']) {
         ?>
                     <a href="<?=admin_url('customers/edit/' . $customer->id); ?>" data-toggle="modal" data-target="#myModal2" class="btn btn-primary"><?= lang('edit_customer'); ?></a>
                 <?php

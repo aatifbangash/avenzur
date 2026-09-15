@@ -234,7 +234,7 @@
                                             <i class="fa fa-eye" id="addIcon" style="font-size: 1.2em;"></i>
                                         </a>
                                     </div>
-                                <?php if ($Owner || $Admin || $GP['customers-add']) {
+                                <?php if ($Owner || $GP['customers-add']) {
                                     ?>
                                     <div class="input-group-addon no-print" style="padding: 2px 8px;">
                                         <a href="<?=admin_url('customers/add'); ?>" id="add-customer" class="external" data-toggle="modal" data-target="#myModal">
@@ -270,13 +270,13 @@
                                 }
                                 ?>
                                 <div class="form-group" id="ui">
-                                    <?php if ($Owner || $Admin || $GP['products-add']) {
+                                    <?php if ($Owner || $GP['products-add']) {
                                         ?>
                                     <div class="input-group">
                                         <?php
                                     } ?>
                                     <?php echo form_input('add_item', '', 'class="form-control pos-tip" id="add_item" data-placement="top" data-trigger="focus" placeholder="' . $this->lang->line('search_product_by_name_code') . '" title="' . $this->lang->line('au_pr_name_tip') . '"'); ?>
-                                    <?php if ($Owner || $Admin || $GP['products-add']) {
+                                    <?php if ($Owner || $GP['products-add']) {
                                         ?>
                                         <div class="input-group-addon" style="padding: 2px 8px;">
                                             <a href="#" id="addManually">
@@ -454,7 +454,7 @@
                                                     <i class="fa fa-chevron-left"></i>
                                                 </button>
                                             </div>
-                                            <?php if ($Owner || $Admin || $GP['sales-add_gift_card']) {
+                                            <?php if ($Owner || $GP['sales-add_gift_card']) {
                                                 ?>
                                             <div class="btn-group">
                                                 <button style="z-index:10003;" class="btn btn-primary pos-tip" type="button" id="sellGiftCard" title="<?=lang('sell_gift_card')?>">
@@ -883,7 +883,7 @@
                         <label for="pprice" class="col-sm-4 control-label"><?=lang('unit_price')?></label>
 
                         <div class="col-sm-8">
-                            <input type="text" class="form-control kb-pad" id="pprice" <?= ($Owner || $Admin || $GP['edit_price']) ? '' : 'readonly'; ?>>
+                            <input type="text" class="form-control kb-pad" id="pprice" <?= ($Owner || $GP['edit_price']) ? '' : 'readonly'; ?>>
                         </div>
                     </div>
                     <table class="table table-bordered table-striped">

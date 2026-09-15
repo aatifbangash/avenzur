@@ -41,7 +41,7 @@
 
     });
 </script>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner || ($GP && $GP['products-stock_count'])) {
     echo admin_form_open('products/count_actions' . ($warehouse_id ? '/' . $warehouse_id : ''), 'id="action-form"');
 } ?>
 <div class="box">
@@ -122,7 +122,7 @@
         </div>
     </div>
 </div>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($Owner || ($GP && $GP['products-stock_count'])) {
     ?>
     <div style="display: none;">
         <input type="hidden" name="form_action" value="" id="form_action"/>

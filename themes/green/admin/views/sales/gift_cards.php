@@ -1,4 +1,11 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<?php
+$canGiftCardsIndex = $Owner || ($GP && !empty($GP['sales-gift_cards']));
+$canGiftCardAdd = $Owner || ($GP && !empty($GP['sales-add_gift_card']));
+$canGiftCardExport = $Owner || ($GP && !empty($GP['sales-export_gift_cards']));
+$canGiftCardDelete = $Owner || ($GP && !empty($GP['sales-delete_gift_card']));
+$hasGiftCardBulkAction = $canGiftCardExport || $canGiftCardDelete;
+?>
 <script>
     $(document).ready(function () {
         $('#GCData').dataTable({
@@ -21,7 +28,7 @@
         });
     });
 </script>
-<?= admin_form_open('sales/gift_card_actions', 'id="action-form"') ?>
+<?php if ($hasGiftCardBulkAction) { echo admin_form_open('sales/gift_card_actions', 'id="action-form"'); } ?>
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-gift"></i><?= lang('gift_cards') ?></h2>
@@ -33,22 +40,28 @@
                         <i class="icon fa fa-tasks tip"  data-placement="left" title="<?= lang('actions') ?>"></i>
                     </a>
                     <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
+                        <?php if ($canGiftCardAdd) { ?>
                         <li>
                             <a href="<?php echo admin_url('sales/add_gift_card'); ?>" data-toggle="modal" data-target="#myModal">
                                 <i class="fa fa-plus"></i> <?= lang('add_gift_card') ?>
                             </a>
                         </li>
+                        <?php } ?>
+                        <?php if ($canGiftCardExport) { ?>
                         <li>
                             <a href="#" id="excel" data-action="export_excel">
                                 <i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?>
                             </a>
                         </li>
+                        <?php } ?>
+                        <?php if ($canGiftCardDelete) { ?>
                         <li class="divider"></li>
                         <li>
                             <a href="#" id="delete" data-action="delete">
                                 <i class="fa fa-trash-o"></i> <?= lang('delete_gift_cards') ?>
                             </a>
                         </li>
+                        <?php } ?>
                     </ul>
                 </li>
             </ul>
@@ -91,11 +104,13 @@
     </div>
 </div>
 
+<?php if ($hasGiftCardBulkAction) { ?>
 <div style="display: none;">
     <input type="hidden" name="form_action" value="" id="form_action"/>
     <?= form_submit('submit', 'submit', 'id="action-form-submit"') ?>
 </div>
 <?= form_close() ?>
+<?php } ?>
 <script language="javascript">
     $(document).ready(function () {
 

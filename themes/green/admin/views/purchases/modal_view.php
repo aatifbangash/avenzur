@@ -1,4 +1,10 @@
-<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<?php defined('BASEPATH') or exit('No direct script access allowed');
+$canPurchasePayments = $Owner || !empty($GP['purchases-payments']);
+$canPurchaseEdit = $Owner || !empty($GP['purchases-edit']);
+$canPurchaseEmail = $Owner || !empty($GP['purchases-email']);
+$canPurchasePdf = $Owner || !empty($GP['purchases-pdf']);
+$canPurchaseDelete = $Owner || !empty($GP['purchases-delete']);
+?>
 <div class="modal-dialog modal-lg no-modal-header">
     <div class="modal-content">
         <div class="modal-body">
@@ -382,38 +388,38 @@
                             ?>
                 <div class="buttons">
                     <div class="btn-group btn-group-justified">
-                        <div class="btn-group">
+                        <?php if ($canPurchasePayments) { ?><div class="btn-group">
                             <a href="<?= admin_url('purchases/add_payment/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal2" class="tip btn btn-primary" title="<?= lang('add_payment') ?>">
                                 <i class="fa fa-dollar"></i>
                                 <span class="hidden-sm hidden-xs"><?= lang('add_payment') ?></span>
                             </a>
-                        </div>
-                        <div class="btn-group">
+                        </div><?php } ?>
+                        <?php if ($canPurchaseEmail) { ?><div class="btn-group">
                             <a href="<?= admin_url('purchases/email/' . $inv->id) ?>" data-toggle="modal" data-target="#myModal2" class="tip btn btn-primary" title="<?= lang('email') ?>">
                                 <i class="fa fa-envelope-o"></i>
                                 <span class="hidden-sm hidden-xs"><?= lang('email') ?></span>
                             </a>
-                        </div>
-                        <div class="btn-group">
+                        </div><?php } ?>
+                        <?php if ($canPurchasePdf) { ?><div class="btn-group">
                             <a href="<?= admin_url('purchases/pdf/' . $inv->id) ?>" class="tip btn btn-primary" title="<?= lang('download_pdf') ?>">
                                 <i class="fa fa-download"></i>
                                 <span class="hidden-sm hidden-xs"><?= lang('pdf') ?></span>
                             </a>
-                        </div>
-                        <div class="btn-group">
+                        </div><?php } ?>
+                        <?php if ($canPurchaseEdit) { ?><div class="btn-group">
                             <a href="<?= admin_url('purchases/edit/' . $inv->id) ?>" class="tip btn btn-warning sledit" title="<?= lang('edit') ?>">
                                 <i class="fa fa-edit"></i>
                                 <span class="hidden-sm hidden-xs"><?= lang('edit') ?></span>
                             </a>
-                        </div>
-                        <div class="btn-group">
+                        </div><?php } ?>
+                        <?php if ($canPurchaseDelete) { ?><div class="btn-group">
                             <a href="#" class="tip btn btn-danger bpo" title="<b><?= $this->lang->line('delete') ?></b>"
                                 data-content="<div style='width:150px;'><p><?= lang('r_u_sure') ?></p><a class='btn btn-danger' href='<?= admin_url('purchases/delete/' . $inv->id) ?>'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button></div>"
                                 data-html="true" data-placement="top">
                                 <i class="fa fa-trash-o"></i>
                                 <span class="hidden-sm hidden-xs"><?= lang('delete') ?></span>
                             </a>
-                        </div>
+                        </div><?php } ?>
                     </div>
                 </div>
             <?php

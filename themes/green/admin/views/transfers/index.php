@@ -1,4 +1,11 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<?php
+$canTransferAdd = $Owner || ($GP && !empty($GP['transfers-add']));
+$canTransferExportExcel = $Owner || ($GP && !empty($GP['transfers-export_excel']));
+$canTransferCombinePdf = $Owner || ($GP && !empty($GP['transfers-pdf']));
+$canTransferDelete = $Owner || ($GP && !empty($GP['transfers-delete']));
+$hasTransferBulkAction = $canTransferExportExcel || $canTransferCombinePdf || $canTransferDelete;
+?>
 <script>
     $(document).ready(function () {
         oTable = $('#TOData').dataTable({
@@ -50,7 +57,7 @@
         ], "footer");
     });
 </script>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($hasTransferBulkAction) {
     echo admin_form_open('transfers/transfer_actions', 'id="action-form"');
 } ?>
 <div class="box">
@@ -64,21 +71,28 @@
                         <i class="icon fa fa-tasks tip"  data-placement="left" title="<?= lang('actions') ?>"></i>
                     </a>
                     <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
+                        <?php if ($canTransferAdd) { ?>
                         <li>
                             <a href="<?= admin_url('transfers/add') ?>">
                                 <i class="fa fa-plus-circle"></i> <?= lang('add_transfer') ?>
                             </a>
                         </li>
+                        <?php } ?>
+                        <?php if ($canTransferExportExcel) { ?>
                         <li>
                             <a href="#" id="excel" data-action="export_excel">
                                 <i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?>
                             </a>
                         </li>
+                        <?php } ?>
+                        <?php if ($canTransferCombinePdf) { ?>
                         <li>
                             <a href="#" id="combine" data-action="combine">
                                 <i class="fa fa-file-pdf-o"></i> <?=lang('combine_to_pdf')?>
                             </a>
                         </li>
+                        <?php } ?>
+                        <?php if ($canTransferDelete) { ?>
                         <li class="divider"></li>
                         <li>
                             <a href="#" class="bpo" title="<b><?= $this->lang->line('delete_transfers') ?></b>"
@@ -87,6 +101,7 @@
                              <i class="fa fa-trash-o"></i> <?= lang('delete_transfers') ?>
                          </a>
                      </li>
+                        <?php } ?>
                  </ul>
              </li>
             </ul>
@@ -140,7 +155,7 @@
         </div>
     </div>
 </div>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($hasTransferBulkAction) {
     ?>
     <div style="display: none;">
         <input type="hidden" name="form_action" value="" id="form_action"/>

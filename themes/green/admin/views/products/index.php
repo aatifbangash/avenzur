@@ -3,13 +3,13 @@
     #PRData td:nth-child(7) {
         text-align: right;
     }
-    <?php if ($Owner || $Admin || $this->session->userdata('show_cost')) {
+    <?php if ($Owner || $this->session->userdata('show_cost')) {
         ?>
     #PRData td:nth-child(9) {
         text-align: right;
     }
         <?php
-    } if ($Owner || $Admin || $this->session->userdata('show_price')) {
+    } if ($Owner || $this->session->userdata('show_price')) {
         ?>
     #PRData td:nth-child(8) {
         text-align: right;
@@ -41,7 +41,7 @@
                 return nRow;
             },
             "aoColumns": [
-                {"bSortable": false, "mRender": checkbox}, {"bSortable": false,"mRender": img_hl}, null, null, null, null, null, <?php if ($Owner || $Admin) {
+                {"bSortable": false, "mRender": checkbox}, {"bSortable": false,"mRender": img_hl}, null, null, null, null, null, <?php if ($Owner) {
                     echo '{"mRender": currencyFormat}, {"mRender": currencyFormat},';
                                                                                                                            } else {
                                                                                                                                if ($this->session->userdata('show_cost')) {
@@ -63,7 +63,7 @@
             {column_number: 5, filter_default_label: "[<?=lang('brand');?>]", filter_type: "text", data: []},
             {column_number: 6, filter_default_label: "[<?=lang('category');?>]", filter_type: "text", data: []},
             <?php $col = 6;
-            if ($Owner || $Admin) {
+            if ($Owner) {
                 echo '{column_number : 7, filter_default_label: "[' . lang('cost') . ']", filter_type: "text", data: [] },';
                 echo '{column_number : 8, filter_default_label: "[' . lang('price') . ']", filter_type: "text", data: [] },';
                 $col += 2;
@@ -91,9 +91,20 @@
 
     });
 </script>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
-                echo admin_form_open('products/product_actions' . ($warehouse_id ? '/' . $warehouse_id : ''), 'id="action-form"');
-} ?>
+<?php
+$canAddProduct = $Owner || !empty($GP['products-add']);
+$canUpdatePrice = !$warehouse_id && ($Owner || !empty($GP['products-update_price']));
+$canPrintProductLabels = $Owner || !empty($GP['products-barcode']);
+$canSyncQuantity = $Owner || !empty($GP['products-sync_quantity']);
+$canSetAvgCost = $Owner || !empty($GP['products-set_avg_cost']);
+$canExportProducts = $Owner || !empty($GP['products-export_excel']);
+$canDeleteProducts = $Owner || !empty($GP['products-delete']);
+$hasProductBulkAction = $canPrintProductLabels || $canSyncQuantity || $canSetAvgCost || $canExportProducts || $canDeleteProducts;
+
+if ($hasProductBulkAction) {
+    echo admin_form_open('products/product_actions' . ($warehouse_id ? '/' . $warehouse_id : ''), 'id="action-form"');
+}
+?>
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i
@@ -107,48 +118,58 @@
                         <i class="icon fa fa-tasks tip" data-placement="left" title="<?= lang('actions') ?>"></i>
                     </a>
                     <ul class="dropdown-menu pull-right tasks-menus" role="menu" aria-labelledby="dLabel">
-                        <li>
-                            <a href="<?= admin_url('products/add') ?>">
-                                <i class="fa fa-plus-circle"></i> <?= lang('add_product') ?>
-                            </a>
-                        </li>
-                        <?php if (!$warehouse_id) {
-                            ?>
-                        <li>
-                            <a href="<?= admin_url('products/update_price') ?>" data-toggle="modal" data-target="#myModal">
-                                <i class="fa fa-file-excel-o"></i> <?= lang('update_price') ?>
-                            </a>
-                        </li>
-                            <?php
-                        } ?>
-                        <li>
-                            <a href="#" id="labelProducts" data-action="labels">
-                                <i class="fa fa-print"></i> <?= lang('print_barcode_label') ?>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" id="sync_quantity" data-action="sync_quantity">
-                                <i class="fa fa-arrows-v"></i> <?= lang('sync_quantity') ?>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" id="set_avg_cost" data-action="set_avg_cost">
-                                <i class="fa fa-dollar"></i> <?= lang('set_avg_cost') ?>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" id="excel" data-action="export_excel">
-                                <i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?>
-                            </a>
-                        </li>
-                        <li class="divider"></li>
-                        <li>
-                            <a href="#" class="bpo" title="<b><?= $this->lang->line('delete_products') ?></b>"
-                                data-content="<p><?= lang('r_u_sure') ?></p><button type='button' class='btn btn-danger' id='delete' data-action='delete'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button>"
-                                data-html="true" data-placement="left">
-                            <i class="fa fa-trash-o"></i> <?= lang('delete_products') ?>
-                             </a>
-                         </li>
+                        <?php if ($canAddProduct) { ?>
+                            <li>
+                                <a href="<?= admin_url('products/add') ?>">
+                                    <i class="fa fa-plus-circle"></i> <?= lang('add_product') ?>
+                                </a>
+                            </li>
+                        <?php } ?>
+                        <?php if ($canUpdatePrice) { ?>
+                            <li>
+                                <a href="<?= admin_url('products/update_price') ?>" data-toggle="modal" data-target="#myModal">
+                                    <i class="fa fa-file-excel-o"></i> <?= lang('update_price') ?>
+                                </a>
+                            </li>
+                        <?php } ?>
+                        <?php if ($canPrintProductLabels) { ?>
+                            <li>
+                                <a href="#" id="labelProducts" data-action="labels">
+                                    <i class="fa fa-print"></i> <?= lang('print_barcode_label') ?>
+                                </a>
+                            </li>
+                        <?php } ?>
+                        <?php if ($canSyncQuantity) { ?>
+                            <li>
+                                <a href="#" id="sync_quantity" data-action="sync_quantity">
+                                    <i class="fa fa-arrows-v"></i> <?= lang('sync_quantity') ?>
+                                </a>
+                            </li>
+                        <?php } ?>
+                        <?php if ($canSetAvgCost) { ?>
+                            <li>
+                                <a href="#" id="set_avg_cost" data-action="set_avg_cost">
+                                    <i class="fa fa-dollar"></i> <?= lang('set_avg_cost') ?>
+                                </a>
+                            </li>
+                        <?php } ?>
+                        <?php if ($canExportProducts) { ?>
+                            <li>
+                                <a href="#" id="excel" data-action="export_excel">
+                                    <i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?>
+                                </a>
+                            </li>
+                        <?php } ?>
+                        <?php if ($canDeleteProducts) { ?>
+                            <li class="divider"></li>
+                            <li>
+                                <a href="#" class="bpo" title="<b><?= $this->lang->line('delete_products') ?></b>"
+                                    data-content="<p><?= lang('r_u_sure') ?></p><button type='button' class='btn btn-danger' id='delete' data-action='delete'><?= lang('i_m_sure') ?></a> <button class='btn bpo-close'><?= lang('no') ?></button>"
+                                    data-html="true" data-placement="left">
+                                <i class="fa fa-trash-o"></i> <?= lang('delete_products') ?>
+                                 </a>
+                             </li>
+                        <?php } ?>
                          <!-- Option for snapchat -->
                          <!-- <li>
                             <a href="#" class="bpo" title="<b><?= $this->lang->line('Add to catalog') ?></b>"
@@ -225,7 +246,7 @@
                             <th><?= lang('brand') ?></th>
                             <th><?= lang('category') ?></th>
                             <?php
-                            if ($Owner || $Admin) {
+                            if ($Owner) {
                                 echo '<th>' . lang('cost') . '</th>';
                                 echo '<th>' . lang('price') . '</th>';
                             } else {
@@ -262,7 +283,7 @@
                             <th></th>
                             <th></th>
                             <?php
-                            if ($Owner || $Admin) {
+                            if ($Owner) {
                                 echo '<th></th>';
                                 echo '<th></th>';
                             } else {
@@ -287,7 +308,7 @@
         </div>
     </div>
 </div>
-<?php if ($Owner || ($GP && $GP['bulk_actions'])) {
+<?php if ($hasProductBulkAction) {
     ?>
     <div style="display: none;">
         <input type="hidden" name="form_action" value="" id="form_action"/>

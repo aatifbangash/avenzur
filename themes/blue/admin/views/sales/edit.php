@@ -433,7 +433,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                                         <div class="input-group-addon" style="padding-left: 10px; padding-right: 10px;">
                                             <i class="fa fa-2x fa-barcode addIcon"></i></a></div>
                                         <?php echo form_input('add_item', '', 'class="form-control input-lg" id="add_item" placeholder="' . lang('add_product_to_order') . '"'); ?>
-                                        <?php if ($Owner || $Admin || $GP['products-add']) {
+                                        <?php if ($Owner || $GP['products-add']) {
                                                     ?>
                                         <div class="input-group-addon" style="padding-left: 10px; padding-right: 10px;">
                                             <a href="#" id="addManually">
@@ -546,24 +546,24 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
 
 
 
-                        <?php if ($Owner || $Admin || $GP['sales-coordinator'] && $inv->sale_status =="pending") { ?>
+                        <?php if ($Owner || $GP['sales-coordinator'] && $inv->sale_status =="pending") { ?>
                         <?php echo form_input('sale_status', 'pending','hidden', 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('sale_status') . '" id="slsale_status"'); ?>
                         <?php  } ?>
 
-                        <?php if ($Owner || $Admin || $GP['sales-warehouse_supervisor_shipping'] && $inv->sale_status =="pending") { ?>
+                        <?php if ($Owner || $GP['sales-warehouse_supervisor_shipping'] && $inv->sale_status =="pending") { ?>
                                <?php echo form_input('sale_status', 'Ready','hidden', 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('sale_status') . '" id="slsale_status"'); ?>
                              <?php  } ?>
 
-                             <?php if ($Owner || $Admin || $GP['sales-quality_supervisor'] && $inv->sale_status =="Ready") { ?>
+                             <?php if ($Owner || $GP['sales-quality_supervisor'] && $inv->sale_status =="Ready") { ?>
                                <?php echo form_input('sale_status', 'Approved','hidden', 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('sale_status') . '" id="slsale_status"'); ?>
                              <?php  } ?>
 
-                           <?php if ($Owner || $Admin || $GP['sales-warehouse_supervisor'] && $inv->sale_status =="Approved") { ?>
+                           <?php if ($Owner || $GP['sales-warehouse_supervisor'] && $inv->sale_status =="Approved") { ?>
                             <?php echo form_input('sale_status', 'Shipped','hidden', 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('sale_status') . '" id="slsale_status"'); ?>
                              <?php  } ?>
 
                           
-                              <?php if ($Owner || $Admin || $GP['sales-warehouse_supervisor_shipping'] && $inv->sale_status =="Shipped") { ?>
+                              <?php if ($Owner || $GP['sales-warehouse_supervisor_shipping'] && $inv->sale_status =="Shipped") { ?>
                                <?php echo form_input('sale_status', 'completed','hidden', 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('sale_status') . '" id="slsale_status"'); ?>
                              <?php  } ?>
 
@@ -758,7 +758,7 @@ $allow_discount = ($Owner || $Admin || $this->session->userdata('allow_discount'
                         <label for="pprice" class="col-sm-4 control-label"><?= lang('unit_price') ?></label>
 
                         <div class="col-sm-8">
-                            <input type="text" class="form-control" id="pprice" <?= ($Owner || $Admin || $GP['edit_price']) ? '' : 'readonly'; ?>>
+                            <input type="text" class="form-control" id="pprice" <?= ($Owner || $GP['edit_price']) ? '' : 'readonly'; ?>>
                         </div>
                     </div>
                     <table class="table table-bordered table-striped">
