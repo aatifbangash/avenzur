@@ -876,6 +876,106 @@ class Settings_model extends CI_Model
         return false;
     }
 
+    /**
+     * Create sma_user_permissions if missing (clone of permissions, keyed by user_id).
+     */
+    public function ensure_user_permissions_table()
+    {
+        if ($this->db->table_exists('user_permissions')) {
+            return true;
+        }
+
+        $permissions = $this->db->dbprefix('permissions');
+        $user_permissions = $this->db->dbprefix('user_permissions');
+
+        $this->db->query("CREATE TABLE IF NOT EXISTS `{$user_permissions}` LIKE `{$permissions}`");
+
+        if ($this->db->field_exists('group_id', 'user_permissions')) {
+            $this->db->query("ALTER TABLE `{$user_permissions}` CHANGE `group_id` `user_id` INT(11) NOT NULL");
+            // Drop leftover index names safely
+            $idx = $this->db->query("SHOW INDEX FROM `{$user_permissions}` WHERE Key_name = 'group_id'");
+            if ($idx && $idx->num_rows() > 0) {
+                $this->db->query("ALTER TABLE `{$user_permissions}` DROP INDEX `group_id`");
+            }
+        }
+
+        $uidx = $this->db->query("SHOW INDEX FROM `{$user_permissions}` WHERE Key_name = 'user_id'");
+        if (!$uidx || $uidx->num_rows() === 0) {
+            $this->db->query("ALTER TABLE `{$user_permissions}` ADD UNIQUE KEY `user_id` (`user_id`)");
+        }
+
+        return $this->db->table_exists('user_permissions');
+    }
+
+    public function getUserPermissions($user_id)
+    {
+        $this->ensure_user_permissions_table();
+        $q = $this->db->get_where('user_permissions', ['user_id' => (int) $user_id], 1);
+        if ($q->num_rows() > 0) {
+            return $q->row();
+        }
+        return false;
+    }
+
+    public function userHasCustomPermissions($user_id)
+    {
+        return (bool) $this->getUserPermissions($user_id);
+    }
+
+    /**
+     * Build permission flag array from POST using current permission columns.
+     */
+    public function permissionFlagsFromPost()
+    {
+        $this->ensure_user_permissions_table();
+        $fields = $this->db->list_fields('permissions');
+        $data = [];
+        foreach ($fields as $field) {
+            if ($field === 'id' || $field === 'group_id') {
+                continue;
+            }
+            $data[$field] = $this->input->post($field) ? 1 : 0;
+        }
+        return $data;
+    }
+
+    public function updateUserPermissions($user_id, $data = [])
+    {
+        $this->ensure_user_permissions_table();
+        $user_id = (int) $user_id;
+        unset($data['id'], $data['group_id'], $data['user_id']);
+        $data['user_id'] = $user_id;
+
+        $existing = $this->getUserPermissions($user_id);
+        if ($existing) {
+            unset($data['user_id']);
+            $ok = $this->db->update('user_permissions', $data, ['user_id' => $user_id]);
+        } else {
+            $ok = $this->db->insert('user_permissions', $data);
+        }
+
+        if ($ok) {
+            $price = isset($data['products-price']) ? $data['products-price'] : ($existing->{'products-price'} ?? 0);
+            $cost = isset($data['products-cost']) ? $data['products-cost'] : ($existing->{'products-cost'} ?? 0);
+            // Re-read after upsert for accurate flags
+            $row = $this->getUserPermissions($user_id);
+            if ($row) {
+                $this->db->update('users', [
+                    'show_price' => !empty($row->{'products-price'}) ? 1 : 0,
+                    'show_cost'  => !empty($row->{'products-cost'}) ? 1 : 0,
+                ], ['id' => $user_id]);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public function deleteUserPermissions($user_id)
+    {
+        $this->ensure_user_permissions_table();
+        return $this->db->delete('user_permissions', ['user_id' => (int) $user_id]);
+    }
+
     public function updatePriceGroup($id, $data = [])
     {
         $this->db->where('id', $id);

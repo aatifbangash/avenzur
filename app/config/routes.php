@@ -63,6 +63,7 @@ $route['admin']                      = 'admin/welcome';
 $route['admin/users']                = 'admin/auth/users';
 $route['admin/users/create_user']    = 'admin/auth/create_user';
 $route['admin/users/profile/(:num)'] = 'admin/auth/profile/$1';
+$route['admin/users/permissions/(:num)'] = 'admin/auth/user_permissions/$1';
 $route['admin/avzlogin']                = 'admin/avzAdmin/index';
 $route['admin/avzlogin/(:any)']         = 'admin/avzAdmin/index/$1';
 $route['admin/login']                = 'admin/auth/login';
