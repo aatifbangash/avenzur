@@ -177,11 +177,29 @@ class Site extends CI_Model
 
     public function checkPermissions()
     {
-        $q = $this->db->get_where('permissions', ['group_id' => $this->session->userdata('group_id')], 1);
-        if ($q->num_rows() > 0) {
-            return $q->result_array();
+        $group_id = $this->session->userdata('group_id');
+        $user_id = $this->session->userdata('user_id');
+
+        $q = $this->db->get_where('permissions', ['group_id' => $group_id], 1);
+        $group_perms = ($q->num_rows() > 0) ? $q->result_array() : false;
+
+        // Optional per-user override: if a personal row exists, it becomes the effective GP.
+        // Group membership checks (in_group) are unchanged and still use users.group_id.
+        if ($user_id && $this->db->table_exists('user_permissions')) {
+            $uq = $this->db->get_where('user_permissions', ['user_id' => (int) $user_id], 1);
+            if ($uq->num_rows() > 0) {
+                $user_row = $uq->row_array();
+                unset($user_row['id'], $user_row['user_id']);
+                if ($group_perms && isset($group_perms[0]['group_id'])) {
+                    $user_row['group_id'] = $group_perms[0]['group_id'];
+                } else {
+                    $user_row['group_id'] = $group_id;
+                }
+                return [$user_row];
+            }
         }
-        return false;
+
+        return $group_perms;
     }
 
     public function checkSlug($slug, $type = null)

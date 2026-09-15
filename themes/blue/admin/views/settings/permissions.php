@@ -1,4 +1,9 @@
-<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<?php defined('BASEPATH') or exit('No direct script access allowed');
+$permission_mode = isset($permission_mode) ? $permission_mode : 'group';
+$has_custom_permissions = !empty($has_custom_permissions);
+$form_action = isset($form_action) ? $form_action : ('system_settings/permissions/' . $id);
+$page_heading = isset($page_heading) ? $page_heading : lang('group_permissions');
+?>
 <style>
     .table td:first-child {
         font-weight: bold;
@@ -7,10 +12,67 @@
     label {
         margin-right: 10px;
     }
+
+    .perm-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .perm-toolbar .perm-search {
+        max-width: 320px;
+    }
+
+    .perm-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 3px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .perm-badge-custom {
+        background: #fcf8e3;
+        color: #8a6d3b;
+        border: 1px solid #faebcc;
+    }
+
+    .perm-badge-group {
+        background: #dff0d8;
+        color: #3c763d;
+        border: 1px solid #d6e9c6;
+    }
+
+    .perm-row-hidden {
+        display: none !important;
+    }
 </style>
+<script>
+    $(document).ready(function () {
+        $('#perm-search').on('keyup', function () {
+            var q = $(this).val().toLowerCase();
+            $('#permissions-table tbody tr').each(function () {
+                var text = $(this).text().toLowerCase();
+                $(this).toggleClass('perm-row-hidden', q !== '' && text.indexOf(q) === -1);
+            });
+        });
+
+        $('#perm-select-visible').on('click', function (e) {
+            e.preventDefault();
+            $('#permissions-table tbody tr:not(.perm-row-hidden) input.checkbox').prop('checked', true);
+        });
+
+        $('#perm-clear-visible').on('click', function (e) {
+            e.preventDefault();
+            $('#permissions-table tbody tr:not(.perm-row-hidden) input.checkbox').prop('checked', false);
+        });
+    });
+</script>
 <div class="box">
     <div class="box-header">
-        <h2 class="blue"><i class="fa-fw fa fa-folder-open"></i><?= lang('group_permissions'); ?></h2>
+        <h2 class="blue"><i class="fa-fw fa fa-folder-open"></i><?= $page_heading; ?></h2>
     </div>
     <div class="box-content">
         <div class="row">
@@ -19,15 +81,49 @@
                 <p class="introtext"><?= lang('set_permissions'); ?></p>
 
                 <?php if (!empty($p)) {
-    if ($p->group_id != 1) {
-        echo admin_form_open('system_settings/permissions/' . $id); ?>
+    if ($permission_mode === 'user' || (isset($p->group_id) && $p->group_id != 1)) {
+        echo admin_form_open($form_action); ?>
+                        <?php if ($permission_mode === 'user') { ?>
+                            <input type="hidden" name="user_id" value="<?= (int) $id; ?>">
+                        <?php } else { ?>
+                            <input type="hidden" name="group" value="<?= (int) $id; ?>">
+                        <?php } ?>
+
+                        <div class="perm-toolbar">
+                            <input type="text" id="perm-search" class="form-control perm-search" placeholder="<?= lang('search') ?: 'Search modules / permissions...'; ?>">
+                            <a href="#" id="perm-select-visible" class="btn btn-default btn-sm"><i class="fa fa-check-square-o"></i> <?= lang('select_all') ?: 'Select visible'; ?></a>
+                            <a href="#" id="perm-clear-visible" class="btn btn-default btn-sm"><i class="fa fa-square-o"></i> <?= lang('clear') ?: 'Clear visible'; ?></a>
+                            <?php if ($permission_mode === 'user') { ?>
+                                <?php if ($has_custom_permissions) { ?>
+                                    <span class="perm-badge perm-badge-custom"><?= lang('custom_permissions') ?: 'Custom permissions active'; ?></span>
+                                    <a href="<?= admin_url('auth/user_permissions/' . $id . '?reset=1'); ?>" class="btn btn-warning btn-sm"
+                                       onclick="return confirm('<?= lang('r_u_sure') ?: 'Are you sure?'; ?>');">
+                                        <i class="fa fa-undo"></i> <?= lang('reset_to_group') ?: 'Reset to group defaults'; ?>
+                                    </a>
+                                <?php } else { ?>
+                                    <span class="perm-badge perm-badge-group"><?= lang('using_group_defaults') ?: 'Showing group defaults (save to create custom permissions)'; ?></span>
+                                <?php } ?>
+                                <a href="<?= admin_url('users'); ?>" class="btn btn-default btn-sm"><i class="fa fa-arrow-left"></i> <?= lang('users'); ?></a>
+                            <?php } ?>
+                        </div>
+
                         <div class="table-responsive">
-                            <table class="table table-bordered table-hover table-striped reports-table">
+                            <table id="permissions-table" class="table table-bordered table-hover table-striped reports-table">
 
                                 <thead>
                                 <tr>
                                     <th colspan="6"
-                                        class="text-center"><?php echo $group->description . ' ( ' . $group->name . ' ) ' . $this->lang->line('group_permissions'); ?></th>
+                                        class="text-center">
+                                        <?php if ($permission_mode === 'user' && !empty($user)) {
+                                            echo htmlspecialchars($user->first_name . ' ' . $user->last_name . ' (' . $user->email . ')');
+                                            if (!empty($group)) {
+                                                echo ' — ' . htmlspecialchars($group->description . ' / ' . $group->name);
+                                            }
+                                            echo ' — ' . (lang('user_permissions') ?: 'User Permissions');
+                                        } else {
+                                            echo $group->description . ' ( ' . $group->name . ' ) ' . $this->lang->line('group_permissions');
+                                        } ?>
+                                    </th>
                                 </tr>
                                 <tr>
                                     <th rowspan="2" class="text-center"><?= lang('module_name'); ?>

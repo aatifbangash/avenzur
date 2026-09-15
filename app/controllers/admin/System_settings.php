@@ -3387,6 +3387,11 @@ class system_settings extends MY_Controller
             $this->data['id']    = $id;
             $this->data['p']     = $this->settings_model->getGroupPermissions($id);
             $this->data['group'] = $this->settings_model->getGroupByID($id);
+            $this->data['permission_mode'] = 'group';
+            $this->data['has_custom_permissions'] = false;
+            $this->data['form_action'] = 'system_settings/permissions/' . $id;
+            $this->data['page_heading'] = lang('group_permissions');
+            $this->data['user'] = null;
 
             $bc   = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('system_settings'), 'page' => lang('system_settings')], ['link' => '#', 'page' => lang('group_permissions')]];
             $meta = ['page_title' => lang('group_permissions'), 'bc' => $bc];
