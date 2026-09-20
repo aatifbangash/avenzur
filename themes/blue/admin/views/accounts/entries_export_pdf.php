@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title><?= ucfirst($entrytype['label']) ?> Entry #<?= $entry['sequence_code'] ?? '' ?></title>
+    <title><?= ucfirst($entrytype['label']) ?> Entry #<?= (int) $entry['id'] ?></title>
     <style>
         body {
             font-family: 'DejaVu Sans', Arial, sans-serif;
@@ -72,11 +72,14 @@
 </head>
 <body>
     <div class="header">
-        <h2><?= ucfirst($entrytype['label']) ?> <?= lang('entry_title') ?> #<?= $entry['sequence_code'] ?? '' ?></h2>
+        <h2><?= ucfirst($entrytype['label']) ?> <?= lang('entry_title') ?> #<?= (int) $entry['id'] ?></h2>
         <p><strong><?= lang('entries_views_add_label_date') ?>:</strong> <?= $entry['date'] ?></p>
     </div>
 
     <div class="info-section">
+        <p><strong><?= lang('Entry_Id') ?: 'Entry Id' ?>:</strong> <?= (int) $entry['id'] ?></p>
+        <p><strong><?= lang('Sequence Code') ?: 'Sequence Code' ?>:</strong> <?= htmlspecialchars($entry['sequence_code'] ?? '') ?></p>
+
         <?php if (isset($entry['pid']) && $entry['pid'] > 0): ?>
             <p><strong><?= lang('Purchase_id') ?>:</strong> <?= $entry['pid'] ?></p>
         <?php endif; ?>

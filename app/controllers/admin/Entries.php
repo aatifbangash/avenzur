@@ -1969,7 +1969,7 @@ class Entries extends MY_Controller
 				);
 				
 				// Generate filename
-				$entryRef = !empty($entry['sequence_code']) ? $entry['sequence_code'] : $entry['number'];
+				$entryRef = !empty($entry['sequence_code']) ? $entry['sequence_code'] : $entry['id'];
 				$filename = ucfirst($entrytypeLabel) . '_Entry_' . $entryRef . '.pdf';
 				
 				// Load view and get HTML
