@@ -1812,9 +1812,9 @@ class Purchases_model extends CI_Model
         $service_q = $this->db->get('sma_memo');
 
         $service_invoices = [];
-        if ($service_q->num_rows() > 0) {
+        /*if ($service_q->num_rows() > 0) {
             $service_invoices = $service_q->result();
-        }
+        }*/
 
         // Merge both arrays
         $all_invoices = array_merge($purchase_invoices, $service_invoices);
