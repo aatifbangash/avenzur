@@ -1005,6 +1005,7 @@ class Auth extends MY_Controller
 
         $this->load->admin_model('settings_model');
         $this->lang->admin_load('settings', $this->Settings->user_language);
+        $this->settings_model->ensure_permission_columns();
         $this->settings_model->ensure_user_permissions_table();
 
         $id = (int) ($id ?: $this->input->get('id'));

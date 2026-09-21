@@ -113,11 +113,11 @@
                             </a>
                         </li>-->
                         
-                        <li>
+                        <!--<li>
                             <a href="#" id="labelProducts" data-action="labels">
                                 <i class="fa fa-print"></i> <?= lang('print_barcode_label') ?>
                             </a>
-                        </li>
+                        </li>-->
                         <!--<li>
                             <a href="#" id="sync_quantity" data-action="sync_quantity">
                                 <i class="fa fa-arrows-v"></i> <?= lang('sync_quantity') ?>
@@ -128,17 +128,17 @@
                                 <i class="fa fa-dollar"></i> <?= lang('set_avg_cost') ?>
                             </a>
                         </li>-->
-                        <?php if ($this->Owner || $this->Admin) { ?>
+                        <?php if ($this->Owner || $this->Admin || $GP['products-export']) { ?>
                         <li>
                             <a href="#" id="excel" data-action="export_excel">
                                 <i class="fa fa-file-excel-o"></i> <?= lang('export_to_excel') ?>
                             </a>
                         </li>
-                        <li>
+                        <!--<li>
                             <a href="products/import_excel" id="excel" data-action="import_excel">
                                 <i class="fa fa-file-excel-o"></i> <?= lang('import_to_excel') ?>
                             </a>
-                        </li>
+                        </li>-->
                         <?php } ?>
                         <li class="divider"></li>
                         <!--<li>
