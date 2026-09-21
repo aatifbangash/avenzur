@@ -3109,6 +3109,13 @@ class Suppliers extends MY_Controller
             return;
         }
 
+        // Payment linked via payments.memo_id — editing would drop the payment link
+        if ($this->purchases_model->memoHasPayment($id)) {
+            $this->session->set_flashdata('warning', 'This service invoice has a payment recorded and cannot be edited.');
+            admin_redirect('suppliers/list_service_invoice');
+            return;
+        }
+
         $data = [];
         $this->data['memo_data'] = $service_invoice_data;
         $this->data['memo_entries_data'] = $service_invoice_entries_data;
@@ -3418,6 +3425,12 @@ class Suppliers extends MY_Controller
                 $request_type = $this->input->post('request_type');
                 if($request_type == 'update'){
                     $memo_id2 = $this->input->post('memo_id');
+
+                    if ($this->purchases_model->memoHasPayment($memo_id2)) {
+                        $this->session->set_flashdata('warning', 'This service invoice has a payment recorded and cannot be edited.');
+                        admin_redirect('suppliers/list_service_invoice');
+                        return;
+                    }
                    
                     // Delete older data
                     $this->db->delete('sma_memo_entries', ['memo_id' => $memo_id2]);
