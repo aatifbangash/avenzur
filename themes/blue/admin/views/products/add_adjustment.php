@@ -142,7 +142,7 @@
                                     <?php
                                     $wh[''] = '';
                     foreach ($warehouses as $warehouse) {
-                        $wh[$warehouse->id] = $warehouse->name;
+                        $wh[$warehouse->id] = $warehouse->name.' ('.$warehouse->code.')';
                     }
                     echo form_dropdown('warehouse', $wh, (isset($_POST['warehouse']) ? $_POST['warehouse'] : ($warehouse_id ? $warehouse_id : $Settings->default_warehouse)), 'id="qawarehouse" class="form-control input-tip select" data-placeholder="' . lang('select') . ' ' . lang('warehouse') . '" required="required" ' . ($warehouse_id ? 'readonly' : '') . ' style="width:100%;"'); ?>
                                 </div>
@@ -191,14 +191,14 @@
                                         <thead>
                                         <tr>
                                             <th><?= lang('product_name') . ' (' . lang('product_code') . ')'; ?></th>
-                                            <th class="col-md-2"><?= lang('variant'); ?></th>
                                             <th class="col-md-1"><?= lang('type'); ?></th>
+                                            <th class="col-md-1"><?= lang('batch'); ?></th>
+                                            <th class="col-md-1"><?= lang('expiry'); ?></th>
+                                            <th class="col-md-1"><?= lang('avz_code'); ?></th>
+                                            <th class="col-md-1"><?= lang('purchase_price'); ?></th>
+                                            <th class="col-md-1"><?= lang('cost_price'); ?></th>
+                                            <th class="col-md-1"><?= lang('sale_price'); ?></th>
                                             <th class="col-md-1"><?= lang('quantity'); ?></th>
-                                            <?php
-                                            if ($Settings->product_serial) {
-                                                echo '<th class="col-md-4">' . lang('serial_no') . '</th>';
-                                            }
-                                            ?>
                                             <th style="max-width: 30px !important; text-align: center;">
                                                 <i class="fa fa-trash-o" style="opacity:0.5; filter:alpha(opacity=50);"></i>
                                             </th>

@@ -1,30 +1,51 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
 <script>
-    $(document).ready(function () {
-        
+    function exportTableToExcel(tableId, filename = 'table.xlsx') {
+        const table = document.getElementById(tableId);
+        const wb = XLSX.utils.table_to_book(table, {
+            sheet: 'Sheet 1'
+        });
+        XLSX.writeFile(wb, filename);
+    }
+
+    function generatePDF(){
+       $('.viewtype').val('pdf');  
+       document.getElementById("searchForm").submit();
+       $('.viewtype').val(''); 
+    } 
+    $(document).ready(function() {
+
     });
 </script>
+<?php if($viewtype=='pdf'){ ?>
+    <link href="<?= $assets ?>styles/pdf/pdf.css" rel="stylesheet"> 
+  <?php  } ?>
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-users"></i><?= lang('customers_trial_balance'); ?></h2>
-
+        <?php  if($viewtype!='pdf'){?>
         <div class="box-icon">
             <ul class="btn-tasks">
-                <li class="dropdown"><a href="#" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a></li>
-                <li class="dropdown"><a href="#" id="image" class="tip" title="<?= lang('save_image') ?>"><i class="icon fa fa-file-picture-o"></i></a></li>
+                <li class="dropdown"><a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'Customer_Trial_Balance_Report.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a></li>
+                <li class="dropdown"> <a href="javascript:void(0);" onclick="generatePDF()" id="pdf" class="tip" title="<?= lang('download_PDF') ?>"><i
+                class="icon fa fa-file-pdf-o"></i></a></li>
             </ul>
         </div>
+        <?php } ?>
     </div>
     <div class="box-content">
         <div class="row">
+            <div class="col-lg-12">
         <?php
-            $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
-            echo admin_form_open_multipart('reports/customers_trial_balance', $attrib)
-        ?>
-        <div class="col-lg-12">
+          if($viewtype!='pdf')
+          { 
+                $attrib = ['data-toggle' => 'validator', 'role' => 'form', 'id' => 'searchForm'];
+                echo admin_form_open_multipart('reports/customers_trial_balance', $attrib)
+                ?>
+                <input type="hidden" name="viewtype" id="viewtype" class="viewtype" value="" > 
                 <div class="row">
-                    <div class="col-lg-12">
-                       
+                    <div class="col-lg-12"> 
                         <div class="col-md-4">
                             <div class="form-group">
                                 <?= lang('From Date', 'podate'); ?>
@@ -40,6 +61,19 @@
                         </div>
 
                         <div class="col-md-4">
+                            <div class="form-group">
+                                <?= lang('customer_type', 'customer_rent_type'); ?>
+                                <select name="customer_rent_type" id="customer_rent_type" class="form-control select" style="width:100%;">
+                                    <option value="non_rental" <?= (($customer_rent_type ?? 'non_rental') === 'non_rental') ? 'selected' : ''; ?>><?= lang('non_rental_customers'); ?></option>
+                                    <option value="rental" <?= (($customer_rent_type ?? '') === 'rental') ? 'selected' : ''; ?>><?= lang('rental_customers'); ?></option>
+                                    <option value="all" <?= (($customer_rent_type ?? '') === 'all') ? 'selected' : ''; ?>><?= lang('all_customers'); ?></option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <?php $this->load->view($this->theme . 'reports/partials/warehouse_filter_field', ['wh_col' => 'col-md-4']); ?>
+
+                        <div class="col-md-4">
                             <div class="from-group">
                                 <button type="submit" style="margin-top: 28px;" class="btn btn-primary" id="load_report"><?= lang('Load Report') ?></button>
                             </div>
@@ -47,17 +81,21 @@
                             
                     </div>
                 </div>
+              <?php echo form_close();
+              } ?>
                 <hr />
                 <div class="row">
                     <div class="controls table-controls" style="font-size: 12px !important;">
                         <table id="poTable"
-                                class="table items table-striped table-bordered table-condensed table-hover sortable_table">
+                                class="table items table-striped table-bordered table-condensed table-hover tbl_pdf">
                             <thead>
                             <tr>
                                 <th>#</th>
                                 <th><?= lang('Sequence Code'); ?></th>
                                 <th><?= lang('name'); ?></th>
-                                <th><?= lang('Company'); ?></th>
+                                <th><?= lang('Category'); ?></th>
+                                <th><?= lang('Payment Term'); ?></th>
+                                <th><?= lang('Credit Limit'); ?></th>
                                 <th><?= lang('OB Debit'); ?></th>
                                 <th><?= lang('OB Credit'); ?></th>
                                 <th><?= lang('Trs Debit'); ?></th>
@@ -67,87 +105,94 @@
                             </tr>
                             </thead>
                             <tbody style="text-align:center;">
-                                <?php
-                                    $count = 0;
+<?php
+$count = 0;
 
-                                    $totalObDebit = 0;
-                                    $totalObCredit = 0;
-                                    $totalTrsDebit = 0;
-                                    $totalTrsCredit = 0;
-                                    $totalFinalEndDebit = 0;
-                                    $totalFinalEndCredit = 0;
+$totalObDebit = 0;
+$totalObCredit = 0;
+$totalTrsDebit = 0;
+$totalTrsCredit = 0;
+$totalFinalEndDebit = 0;
+$totalFinalEndCredit = 0;
 
+foreach ($trial_balance as $data) {
 
-                                    foreach ($trial_balance as $data){
-                                        if ($data['trsDebit'] == 0 && $data['trsCredit'] == 0 && $data['obDebit'] == 0 && $data['obCredit'] == 0) continue;
-                                        //sale_total + payment_total
+    $trsDebit  = isset($data['trsDebit']) ? (float)$data['trsDebit'] : 0;
+    $trsCredit = isset($data['trsCredit']) ? (float)$data['trsCredit'] : 0;
+    $obDebit   = isset($data['obDebit']) ? (float)$data['obDebit'] : 0;
+    $obCredit  = isset($data['obCredit']) ? (float)$data['obCredit'] : 0;
 
-                                        // $ob_debit = $data->ob_debit > $data->ob_credit ? $data->ob_debit - $data->ob_credit : 0;
-                                        // $ob_credit = $data->ob_credit > $data->ob_debit ? $data->ob_credit - $data->ob_debit : 0;
+    // Keep customers with zero activity so the full customer list is visible.
 
-                                        // $eb_debit = $ob_debit - $data->trs_credit + $data->trs_debit;
-                                         $eb_credit = $data['obCredit'] + $data['trsCredit'];
-                                         $eb_debit = $data['obDebit'] + $data['trsDebit'];
+    // Net Opening Balance
+    if ($obDebit >= $obCredit) {
+        $openingDebit = $obDebit - $obCredit;
+        $openingCredit = 0;
+    } else {
+        $openingDebit = 0;
+        $openingCredit = $obCredit - $obDebit;
+    }
 
-                                         $finalEndDebit = "-";
-                                         $finalEndCredit = "-";
-                                         if( $eb_credit >= $eb_debit){
-                                            $finalEndCredit = $eb_credit - $eb_debit;
-                                         }else{
-                                            $finalEndDebit = $eb_debit - $eb_credit;
-                                         }
+    // Ending Balance
+    $endingDebit = $openingDebit + $trsDebit;
+    $endingCredit = $openingCredit + $trsCredit;
 
-                                         $totalObDebit += $data['obDebit'];
-                                         $totalObCredit += $data['obCredit'];
-                                         $totalTrsDebit += $data['trsDebit'];
-                                         $totalTrsCredit += $data['trsCredit'];
-//                                         $totalFinalEndDebit += $finalEndDebit;
-//                                         $totalFinalEndCredit += $finalEndCredit;
+    if ($endingDebit >= $endingCredit) {
+        $finalEndDebit = $endingDebit - $endingCredit;
+        $finalEndCredit = 0;
+    } else {
+        $finalEndDebit = 0;
+        $finalEndCredit = $endingCredit - $endingDebit;
+    }
 
-                                        if (gettype($finalEndDebit) != 'string')
-                                            $totalFinalEndDebit += $finalEndDebit;
+    // Totals
+    $totalObDebit += $openingDebit;
+    $totalObCredit += $openingCredit;
 
-                                        if (gettype($finalEndCredit) != 'string')
-                                            $totalFinalEndCredit += $finalEndCredit;
+    $totalTrsDebit += $trsDebit;
+    $totalTrsCredit += $trsCredit;
 
-                                        $count++;
-                                        ?>
-                                            <tr>
-                                                <td><?= $count; ?></td>
-                                                <td><?= $data['sequence_code']; ?></td>
-                                                <td><?= $data['name']; ?></td>
-                                                <td><?= $data['company']; ?></td>
-                                                <td><?= $data['obDebit'] > 0 ? number_format($data['obDebit'], 2, '.', ',') : '-'; ?></td>
-                                                <td><?= $data['obCredit'] > 0 ? number_format($data['obCredit'], 2, '.', ',') : '-'; ?></td>
-                                                <td><?= $data['trsDebit'] > 0 ? number_format($data['trsDebit'], 2, '.', ',') : '-'; ?></td>
-                                                <td><?= $data['trsCredit'] >0 ? number_format($data['trsCredit'], 2, '.', ',') : '-'; ?></td>
-                                                <td><?= $finalEndDebit > 0 ? number_format($finalEndDebit, 2, '.', ',') : '-'; ?></td>
-                                                <td><?= $finalEndCredit > 0 ? number_format($finalEndCredit, 2, '.', ',') : '-'; ?></td>
-                                            </tr>
-                                        <?php
-                                    }
-                                ?>
-                                
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <th>&nbsp;</th>
-                                    <th>&nbsp;</th>
-                                    <th>&nbsp;</th>
-                                    <th>&nbsp;</th>
+    $totalFinalEndDebit += $finalEndDebit;
+    $totalFinalEndCredit += $finalEndCredit;
 
-                                 
-                                    <th class="text-center"><?=number_format($totalObDebit, 2, '.', ',')?></th>
-                                    <th class="text-center"><?=number_format($totalObCredit, 2, '.', ',')?></th>
+    $count++;
+?>
+<tr>
+    <td><?= $count; ?></td>
+    <td><?= $data['sequence_code']; ?></td>
+    <td><?= $data['name']; ?></td>
+    <td><?= $data['category']; ?></td>
+    <td><?= $data['payment_term'] ?? '-'; ?></td>
+    <td><?= !empty($data['credit_limit']) ? number_format($data['credit_limit'], 2, '.', ',') : '-'; ?></td>
 
-                                    <th class="text-center"><?=number_format($totalTrsDebit, 2, '.', ',')?></th>
-                                    <th class="text-center"><?=number_format($totalTrsCredit, 2, '.', ',')?></th>
+    <td><?= number_format($openingDebit, 2, '.', ','); ?></td>
+    <td><?= number_format($openingCredit, 2, '.', ','); ?></td>
 
-                                    <th class="text-center"><?=number_format($totalFinalEndDebit, 2, '.', ',')?></th>
-                                    <th class="text-center"><?= number_format($totalFinalEndCredit, 2, '.', ','); ?></th>
+    <td><?= number_format($trsDebit, 2, '.', ','); ?></td>
+    <td><?= number_format($trsCredit, 2, '.', ','); ?></td>
 
-                                </tr>
-                            </tfoot>
+    <td><?= number_format($finalEndDebit, 2, '.', ','); ?></td>
+    <td><?= number_format($finalEndCredit, 2, '.', ','); ?></td>
+</tr>
+<?php
+}
+?>
+</tbody>
+
+<tfoot>
+<tr>
+    <th colspan="6" class="text-right">Total</th>
+
+    <th class="text-center"><?= number_format($totalObDebit, 2, '.', ','); ?></th>
+    <th class="text-center"><?= number_format($totalObCredit, 2, '.', ','); ?></th>
+
+    <th class="text-center"><?= number_format($totalTrsDebit, 2, '.', ','); ?></th>
+    <th class="text-center"><?= number_format($totalTrsCredit, 2, '.', ','); ?></th>
+
+    <th class="text-center"><?= number_format($totalFinalEndDebit, 2, '.', ','); ?></th>
+    <th class="text-center"><?= number_format($totalFinalEndCredit, 2, '.', ','); ?></th>
+</tr>
+</tfoot>
                         </table>
                     </div>
                 
@@ -155,5 +200,5 @@
 
         </div>
     </div>
-    <?php echo form_close(); ?>
+
 </div>

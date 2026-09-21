@@ -1,27 +1,49 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
 <script>
-    $(document).ready(function () {
-        
+    function exportTableToExcel(tableId, filename = 'table.xlsx') {
+        const table = document.getElementById(tableId);
+        const wb = XLSX.utils.table_to_book(table, {
+            sheet: 'Sheet 1'
+        });
+        XLSX.writeFile(wb, filename);
+    }
+    function generatePDF(){
+       $('.viewtype').val('pdf');  
+       document.getElementById("searchForm").submit();
+       $('.viewtype').val(''); 
+    } 
+    $(document).ready(function() {
+
     });
 </script>
+<?php if($viewtype=='pdf'){ ?>
+    <link href="<?= $assets ?>styles/pdf/pdf.css" rel="stylesheet"> 
+  <?php  } ?>
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-users"></i><?= lang('vat_purchase_report').' (Ledger)'; ?></h2>
-
+        <?php  if($viewtype!='pdf'){?>
         <div class="box-icon">
             <ul class="btn-tasks">
-                <li class="dropdown"><a href="#" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a></li>
-                <li class="dropdown"><a href="#" id="image" class="tip" title="<?= lang('save_image') ?>"><i class="icon fa fa-file-picture-o"></i></a></li>
+                <li class="dropdown"><a href="javascript:void(0);" onclick="exportTableToExcel('poTable', 'Vat_Purchase_Report.xlsx')" id="xls" class="tip" title="<?= lang('download_xls') ?>"><i class="icon fa fa-file-excel-o"></i></a></li>
+                <li class="dropdown"> <a href="javascript:void(0);" onclick="generatePDF()" id="pdf" class="tip" title="<?= lang('download_PDF') ?>"><i
+                class="icon fa fa-file-pdf-o"></i></a></li>
             </ul>
         </div>
+        <?php } ?>
     </div>
     <div class="box-content">
         <div class="row">
+        <div class="col-lg-12">
         <?php
-            $attrib = ['data-toggle' => 'validator', 'role' => 'form'];
+        if($viewtype!='pdf')
+        {
+            $attrib = ['data-toggle' => 'validator', 'role' => 'form','id' => 'searchForm'];
             echo admin_form_open_multipart('reports/vat_purchase_ledger', $attrib)
         ?>
-        <div class="col-lg-12">
+         <input type="hidden" name="viewtype" id="viewtype" class="viewtype" value="" > 
+        
                 <div class="row">
                     <div class="col-lg-12">
                        
@@ -47,11 +69,13 @@
                             
                     </div>
                 </div>
+                <?php echo form_close(); 
+                } ?>
                 <hr />
                 <div class="row">
                     <div class="controls table-controls" style="font-size: 12px !important;">
                         <table id="poTable"
-                                class="table items table-striped table-bordered table-condensed table-hover sortable_table">
+                                class="table items table-striped table-bordered table-condensed table-hover sortable_table tbl_pdf tbl_vat_purchase">
                             <thead>
                             <tr>
                                 <th>#</th>
@@ -110,9 +134,9 @@
                                                 <td><?= $data->type; ?></td>
                                                 <td><?= $this->sma->formatQuantity($data->total_quantity); ?></td>
                                                 <!-- <td><?= $data->tax_name; ?></td> -->
-                                                <td><?=  $this->sma->formatDecimal($data->total_with_vat - $data->total_tax); ?></td>
-                                                <td><?= $this->sma->formatDecimal($data->total_tax); ?></td>
-                                                <td><?= $this->sma->formatDecimal($data->total_with_vat); ?></td>
+                                                <td><?=  $this->sma->formatNumber($data->total_with_vat - $data->total_tax); ?></td>
+                                                <td><?= $this->sma->formatNumber($data->total_tax); ?></td>
+                                                <td><?= $this->sma->formatNumber($data->total_with_vat); ?></td>
                                             </tr>
                                         <?php
                                         $count++;
@@ -133,9 +157,9 @@
                                     <th>&nbsp;</th>
                                     <th class="text-center"><?= $this->sma->formatQuantity($totalQty); ?></th>
                                     <!-- <th>&nbsp;</th> -->
-                                    <th class="text-center"><?= $this->sma->formatDecimal($totalWithoutTax); ?></th>
-                                    <th class="text-center"><?= $this->sma->formatDecimal($totalTax); ?></th>
-                                    <th class="text-center"><?= $this->sma->formatDecimal($totalWithTax); ?></th>
+                                    <th class="text-center"><?= $this->sma->formatNumber($totalWithoutTax); ?></th>
+                                    <th class="text-center"><?= $this->sma->formatNumber($totalTax); ?></th>
+                                    <th class="text-center"><?= $this->sma->formatNumber($totalWithTax); ?></th>
                                 </tr>
                             </tfoot>
                         </table>
@@ -145,5 +169,5 @@
 
         </div>
     </div>
-    <?php echo form_close(); ?>
+    
 </div>

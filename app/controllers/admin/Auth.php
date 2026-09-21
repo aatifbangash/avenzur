@@ -403,7 +403,7 @@ class Auth extends MY_Controller
             ->group_by('users.id')
             ->where('company_id', null)
             ->edit_column('active', '$1__$2', 'active, id')
-            ->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('auth/profile/$1') . "' class='tip' title='" . lang('edit_user') . "'><i class=\"fa fa-edit\"></i></a></div>", 'id');
+            ->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('auth/user_permissions/$1') . "' class='tip' title='" . lang('change_permissions') . "'><i class=\"fa fa-key\"></i></a> <a href='" . admin_url('auth/profile/$1') . "' class='tip' title='" . lang('edit_user') . "'><i class=\"fa fa-edit\"></i></a></div>", 'id');
 
         if (!$this->Owner) {
             $this->datatables->unset_column('id');
@@ -426,6 +426,38 @@ class Auth extends MY_Controller
         if (!empty($m)) {
             $expirationTime = (time() + 3600 * 9999999);
             setcookie("companyID", $m, $expirationTime, '/');
+        }
+
+        /**
+         *   AUTO-LOGIN FOR POS 
+         * 
+         */
+        //cid=4995&uuid=7600&source=SOURCE_KEY
+        //  print_r($this->input->get());
+        //  exit;   
+        if( $this->input->get('cid') == 4995 && $this->input->get('uuid') && $this->input->get('source') == 's3cr3tK3yForJWT@1234567890abcd' ){
+            //get password and username
+            //$logout = $this->ion_auth->logout();
+            $expirationTime = (time() + 3600 * 9999999);
+            setcookie("companyID", 4995, $expirationTime, '/');
+
+            $user = $this->site->getUser($this->input->get('uuid'));
+
+            if( $this->ion_auth->login($user->username, 'Abc123_@', true) ) {
+                // Get the requested redirect path
+                 $redirect_path = str_replace('admin/','',$this->input->get('redirect'));
+
+                // Validate the redirect path to prevent open redirects
+                /*$allowed_paths = ['products/import_csv', 'dashboard', 'products', 'products/add', 'purchases', 'purchases/add', 'transfers/add']; // Add allowed pages here
+                if (in_array($redirect_path, $allowed_paths)) {
+                    admin_redirect($redirect_path);
+                } else {
+                    admin_redirect('dashboard'); // Default fallback if redirect is not valid
+                }*/
+
+                admin_redirect($redirect_path);
+            }
+           
         }
 
         if ($this->loggedIn) {
@@ -962,6 +994,79 @@ class Auth extends MY_Controller
             $this->session->set_flashdata('error', validation_errors());
             redirect($_SERVER['HTTP_REFERER']);
         }
+    }
+
+    public function user_permissions($id = null)
+    {
+        if (!$this->Owner) {
+            $this->session->set_flashdata('warning', lang('access_denied'));
+            admin_redirect('users');
+        }
+
+        $this->load->admin_model('settings_model');
+        $this->lang->admin_load('settings', $this->Settings->user_language);
+        $this->settings_model->ensure_permission_columns();
+        $this->settings_model->ensure_user_permissions_table();
+
+        $id = (int) ($id ?: $this->input->get('id'));
+        $user = $this->site->getUser($id);
+        if (!$user) {
+            $this->session->set_flashdata('error', lang('user_x_found') ?: 'User not found');
+            admin_redirect('users');
+        }
+
+        // Owner/Admin bypass GP at runtime — personal flags are not applied for them
+        if ((int) $user->group_id === 1 || (int) $user->group_id === 2) {
+            $this->session->set_flashdata('warning', lang('user_permissions_owner_admin_skip') ?: 'Owner and Admin users already have full access. Personal permissions are not applied to them.');
+            admin_redirect('users');
+        }
+
+        if ($this->input->get('reset')) {
+            $this->settings_model->deleteUserPermissions($id);
+            $this->session->set_flashdata('message', lang('user_permissions_reset') ?: 'User permissions reset to group defaults.');
+            admin_redirect('auth/user_permissions/' . $id);
+        }
+
+        $this->form_validation->set_rules('user_id', lang('user'), 'is_natural_no_zero');
+        if ($this->form_validation->run() == true) {
+            $data = $this->settings_model->permissionFlagsFromPost();
+            if ($this->settings_model->updateUserPermissions($id, $data)) {
+                $this->session->set_flashdata('message', lang('user_permissions_updated') ?: 'User permissions successfully updated');
+                admin_redirect('auth/user_permissions/' . $id);
+            }
+            $this->session->set_flashdata('error', lang('update_failed') ?: 'Update failed');
+            admin_redirect('auth/user_permissions/' . $id);
+        }
+
+        $custom = $this->settings_model->getUserPermissions($id);
+        $group_perms = $this->settings_model->getGroupPermissions($user->group_id);
+        $group = $this->settings_model->getGroupByID($user->group_id);
+
+        // Display custom row if present; otherwise show group as starting template (unsaved)
+        $p = $custom ? $custom : $group_perms;
+        if (!$p) {
+            $p = (object) ['group_id' => $user->group_id];
+        } else {
+            $p->group_id = $user->group_id;
+        }
+
+        $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
+        $this->data['id'] = $id;
+        $this->data['p'] = $p;
+        $this->data['group'] = $group;
+        $this->data['user'] = $user;
+        $this->data['permission_mode'] = 'user';
+        $this->data['has_custom_permissions'] = (bool) $custom;
+        $this->data['form_action'] = 'auth/user_permissions/' . $id;
+        $this->data['page_heading'] = lang('user_permissions') ?: 'User Permissions';
+
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('users'), 'page' => lang('users')],
+            ['link' => '#', 'page' => lang('change_permissions')],
+        ];
+        $meta = ['page_title' => lang('user_permissions') ?: 'User Permissions', 'bc' => $bc];
+        $this->page_construct('settings/permissions', $meta, $this->data);
     }
 
     public function users()

@@ -453,18 +453,23 @@ $(document).ready(function () {
                 'unorderedlist',
                 'orderedlist',
                 '|',
+                'image',
                 /*'image', 'video',*/ 'link',
                 '|',
                 'html',
             ],
-            formattingTags: ['p', 'pre', 'h3', 'h4'],
+            formattingTags: ['p', 'pre', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
             minHeight: 100,
+            imageUpload: site.base_url +'Editor/image_upload/',
             changeCallback: function (e) {
                 var editor = this.$editor.next('textarea');
                 if ($(editor).attr('required')) {
                     $('form[data-toggle="validator"]').bootstrapValidator('revalidateField', $(editor).attr('name'));
                 }
             },
+            uploadFields: {
+                ['token']: $("input[name='token']").val() 
+            }
         });
     $(document).on('click', '.file-caption', function () {
         $(this).next('.input-group-btn').children('.btn-file').children('input.file').trigger('click');
@@ -958,7 +963,7 @@ function check_add_item_val() {
     $('#add_item').bind('keypress', function (e) {
         if (e.keyCode == 13 || e.keyCode == 9) {
             e.preventDefault();
-            $(this).autocomplete('search');
+            //$(this).autocomplete('search');
         }
     });
 }
@@ -1038,9 +1043,33 @@ function formatNumber(x, d) {
     if (site.settings.sac == 1) {
         return formatSA(parseFloat(x).toFixed(d));
     }
-    return accounting.formatNumber(x, d, site.settings.thousands_sep == 0 ? ' ' : site.settings.thousands_sep, site.settings.decimals_sep);
+    return accounting.toFixed(x, d);
+    //return accounting.formatNumber(x, d, site.settings.thousands_sep == 0 ? ' ' : site.settings.thousands_sep, site.settings.decimals_sep);
 }
-function formatMoney(x, symbol) {
+
+function formatMoney(x, symbol = 'SR') {
+    function truncateToDecimal(num, precision = 2) {
+        let parts = num.toString().split('.');
+        if (parts.length < 2) {
+            return num.toFixed(precision);
+        }
+        const integerPart = parts[0];
+        let decimalPart = parts[1].substring(0, precision);
+        while (decimalPart.length < precision) {
+            decimalPart += "0";
+        }
+        return parseFloat(integerPart + '.' + decimalPart).toFixed(precision);
+    }
+
+    // Parse the input to ensure it is a number and truncate
+    const truncated = truncateToDecimal(parseFloat(x));
+
+    // Return the number formatted with the currency symbol
+    return truncated + symbol;
+}
+
+
+function formatMoneyOld(x, symbol) {
     if (!symbol) {
         symbol = '';
     }
@@ -1090,14 +1119,12 @@ function formatDecimal(x, d) {
     if (!d) {
         d = site.settings.decimals;
     }
-    return parseFloat(accounting.formatNumber(x, d, '', '.'));
+  //  return x;
+    return parseFloat(accounting.toFixed(x,d));
+    //return parseFloat(accounting.formatNumber(x, d, '', '.'));
+    
 }
-function formatDecimals(x, d) {
-    if (!d) {
-        d = site.settings.decimals;
-    }
-    return parseFloat(accounting.formatNumber(x, d, '', '.')).toFixed(d);
-}
+
 function pqFormat(x) {
     if (x != null) {
         var d = '',
@@ -1385,19 +1412,44 @@ $(document).ready(function () {
         });
         $('#myModal').modal('show');
     });
+
+    $('body').on('click', '.report_transfer_link td:not(:first-child, :nth-last-child(3), :nth-last-child(2), :last-child)', function () {
+        $parent = $(this).parent('.report_transfer_link');
+        const year = $parent.attr('year') ;
+        const month = $parent.attr('month') ;
+        const from_date = $parent.attr('from_date') ;
+        const to_date = $parent.attr('to_date') ;
+        const from_pharmacy = $parent.attr('from_pharmacy') ;
+        const to_pharmacy = $parent.attr('to_pharmacy') ;
+        $('#myModal').modal({
+            remote: site.base_url + 'reports/get_item_deatils/?year=' + year+'&month='+month+'&from_date='+from_date+'&to_date='+to_date+
+            '&from_pharmacy='+from_pharmacy+'&to_pharmacy='+to_pharmacy,
+            //remote: site.base_url + 'transfers/view/2',
+        });
+        $('#myModal').modal('show');
+    });
+
+    $('#myModal').on('click', '.report_transfer_link td:not(:first-child, :nth-last-child(3), :nth-last-child(2), :last-child)', function () {
+        alert('test');
+        $('#myModal2').modal({
+            remote: site.base_url + 'transfers/view/' + $(this).parent('.transfer_link').attr('id'),
+        });
+        $('#myModal2').modal('show');
+    });
+
     $('body').on('click', '.transfer_link2', function () {
         $('#myModal').modal({ remote: site.base_url + 'transfers/view/' + $(this).attr('id') });
         $('#myModal').modal('show');
     });
     $('body').on('click', '.oreturn_link td:not(:first-child, :last-child)', function () {
         $('#myModal').modal({
-            remote: site.base_url + 'returns/view/' + $(this).parent('.oreturn_link').attr('id'),
+            remote: site.base_url + 'returns/modal_view/' + $(this).parent('.oreturn_link').attr('id'),
         });
         $('#myModal').modal('show');
     });
     $('body').on('click', '.oreturn_supplier_link td:not(:first-child, :last-child)', function () {
         $('#myModal').modal({
-            remote: site.base_url + 'returns_supplier/view/' + $(this).parent('.oreturn_supplier_link').attr('id'),
+            remote: site.base_url + 'returns_supplier/modal_view/' + $(this).parent('.oreturn_supplier_link').attr('id'),
         });
         $('#myModal').modal('show');
     });
@@ -1628,3 +1680,356 @@ function parse_scale_barcode(barcode) {
 
     return { item_code: item_code, price: price, weight: weight };
 }
+
+const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(5, Decimal.ROUND_DOWN);
+
+function calculatePurchaseInventory(item) {
+    console.log(item)
+    // Convert all inputs to Decimal and ensure precision
+    const cost_price = toTwoDecimals(item.cost);
+    const sale_price = toTwoDecimals(item.sale_price);
+    const base_quantity = new Decimal(item.qty);
+    const bonus = new Decimal(item.bonus);
+    const tax_rate = toTwoDecimals(item.tax_rate !== null ? item.tax_rate : 0);
+    const discount1 = toTwoDecimals(item.dis1);
+    const discount2 = toTwoDecimals(item.dis2);
+    const discount3 = toTwoDecimals(item.dis3 || 0);
+    const deal_discount = toTwoDecimals(item.deal_discount || 0);
+
+
+    // Calculations
+    const total_quantity = base_quantity.plus(bonus);
+    const total_purchase = toTwoDecimals(cost_price.times(base_quantity));
+    const total_sale = toTwoDecimals(sale_price.times(total_quantity));
+
+    // Discounts
+    const first_discount = toTwoDecimals(total_purchase.times(discount1.dividedBy(100)));
+    const after_first_discount = toTwoDecimals(total_purchase.minus(first_discount));
+    const second_discount = toTwoDecimals(after_first_discount.times(discount2.dividedBy(100)));
+
+
+    let net_purchase = toTwoDecimals(total_purchase.minus(first_discount).minus(second_discount));
+    let net_cost = total_quantity.greaterThan(0)
+        ? toTwoDecimals(net_purchase.dividedBy(total_quantity))
+        : new Decimal(0);
+
+    // SPECIAL DISCOUNT 3 - RECALCULATE THE NET PURCHASE AND NET COST EXCLUDED VAT
+     let third_discount = new Decimal(0);
+    if( discount3.greaterThan(0) ) {
+                 third_discount = toTwoDecimals(net_purchase.times(discount3.dividedBy(100)));
+                console.log('third_discount', third_discount.toNumber());
+                net_purchase = toTwoDecimals( net_purchase.minus(third_discount) );
+
+         net_cost = total_quantity.greaterThan(0)
+        ? toTwoDecimals(net_purchase.dividedBy(total_quantity))
+        : new Decimal(0);     
+    }
+
+    // VAT Calculation (15% if tax_rate is 5) - AFTER discount 3
+    let total_vat = new Decimal(0);
+    if (tax_rate.equals(5)) {
+        total_vat = toTwoDecimals(net_purchase.times(new Decimal(15).dividedBy(100)));
+    }
+
+    // DEAL DISCOUNT - Applied to amount after other discounts (cascading)
+    let deal_discount_amount = new Decimal(0);
+    if( deal_discount.greaterThan(0) ) {
+        deal_discount_amount = toTwoDecimals(net_purchase.times(deal_discount.dividedBy(100)));
+        console.log('deal_discount_amount', deal_discount_amount.toNumber());
+        net_purchase = toTwoDecimals( net_purchase.minus(deal_discount_amount) );
+
+        net_cost = total_quantity.greaterThan(0)
+            ? toTwoDecimals(net_purchase.dividedBy(total_quantity))
+            : new Decimal(0);     
+    }
+
+    // Calculate total discount (sum of all discounts)
+    const total_discount = toTwoDecimals(first_discount.plus(second_discount).plus(third_discount).plus(deal_discount_amount));
+
+   
+    // Grant Total
+    const grant_total = toTwoDecimals(net_purchase.plus(total_vat));
+
+    // Return calculated values
+    return {
+        new_cost_price: cost_price.toNumber(),
+        new_sale_price: sale_price.toNumber(),
+        new_total_purchase: total_purchase.toNumber(),
+        new_total_discount: total_discount.toNumber(),
+        new_net_purchase: net_purchase.toNumber(),
+        new_total_sale: total_sale.toNumber(),
+        new_first_discount: first_discount.toNumber(),
+        new_second_discount: second_discount.toNumber(),
+        new_vat_value: total_vat.toNumber(),
+        new_unit_cost: net_cost.toNumber(),
+        new_grant_total: grant_total.toNumber(),
+        new_third_discount: third_discount.toNumber(),
+        deal_discount: deal_discount_amount.toNumber(),
+    };
+}
+
+function calculateQuoteInventory(item) {
+    //const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(2, Decimal.ROUND_DOWN);
+    // Convert all inputs to Decimal and ensure precision
+    const cost_price = toTwoDecimals(item.cost);
+    const sale_price = toTwoDecimals(item.sale_price);
+    const base_quantity = new Decimal(item.qty);
+    const bonus = new Decimal(item.bonus);
+    const tax_rate = toTwoDecimals(item.tax_rate);
+    const discount1 = toTwoDecimals(item.dis1);
+    const discount2 = toTwoDecimals(item.dis2);
+    const discount3 = toTwoDecimals(item.dis3);
+    const net_unit_cost = toTwoDecimals(item.net_unit_cost);
+
+    // Calculations
+    const total_quantity = base_quantity.plus(bonus);
+    const total_purchase = toTwoDecimals(cost_price.times(base_quantity));
+    const total_sale = toTwoDecimals(sale_price.times(base_quantity));
+
+    // Discounts
+    const first_discount = toTwoDecimals(total_sale.times(discount1.dividedBy(100)));
+    const after_first_discount = toTwoDecimals(total_sale.minus(first_discount));
+    const second_discount = toTwoDecimals(after_first_discount.times(discount2.dividedBy(100)));
+    const after_second_discount = toTwoDecimals(after_first_discount.minus(second_discount));
+    const third_discount = toTwoDecimals(after_second_discount.times(discount3.dividedBy(100)));
+    const t_discount = toTwoDecimals(first_discount.plus(second_discount));
+    const total_discount = toTwoDecimals(t_discount.plus(third_discount));
+
+    const net_sale = toTwoDecimals(total_sale.minus(first_discount).minus(second_discount).minus(third_discount));
+    const net_sale_for_vat = toTwoDecimals(total_sale.minus(first_discount).minus(second_discount));
+    const net_unit_sale = total_quantity.greaterThan(0)
+        ? toTwoDecimals(net_sale.dividedBy(total_quantity))
+        : new Decimal(0);
+
+    // VAT Calculation (15% if tax_rate is 5)
+    let total_vat = new Decimal(0);
+    if (tax_rate.equals(5)) {
+        total_vat = toTwoDecimals(net_sale_for_vat.times(new Decimal(15).dividedBy(100)));
+    }
+
+    // Grant Total
+    const grant_total = toTwoDecimals(net_sale.plus(total_vat));
+
+    // cost of goods sold
+    const cost_goods_sold = toTwoDecimals( net_unit_cost.times(total_quantity) );
+
+    // Return calculated values
+    return {
+        new_cost_price: cost_price.toNumber(),
+        new_sale_price: sale_price.toNumber(),
+        new_total_purchase: total_purchase.toNumber(),
+        new_total_discount: total_discount.toNumber(),
+        new_net_sale: net_sale.toNumber(),
+        new_total_sale: total_sale.toNumber(),
+        new_first_discount: first_discount.toNumber(),
+        new_second_discount: second_discount.toNumber(),
+        new_third_discount: third_discount.toNumber(),
+        new_vat_value: total_vat.toNumber(),
+        new_unit_sale: net_unit_sale.toNumber(),
+        new_grant_total: grant_total.toNumber(),
+        new_cost_goods_sold: cost_goods_sold.toNumber(),
+    };
+}
+
+function calculateSaleInventory(item) {
+    //const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(2, Decimal.ROUND_DOWN);
+    // Convert all inputs to Decimal and ensure precision
+    const cost_price = toTwoDecimals(item.cost);
+    const sale_price = toTwoDecimals(item.sale_price);
+    const base_quantity = new Decimal(item.qty);
+    const bonus = new Decimal(item.bonus);
+    const tax_rate = toTwoDecimals(item.tax_rate);
+    const discount1 = toTwoDecimals(item.dis1);
+    const discount2 = toTwoDecimals(item.dis2);
+    const net_unit_cost = toTwoDecimals(item.net_unit_cost);
+
+    // Calculations
+    const total_quantity = base_quantity.plus(bonus);
+    const total_purchase = toTwoDecimals(cost_price.times(base_quantity));
+    const total_sale = toTwoDecimals(sale_price.times(base_quantity));
+
+    // Discounts
+    const first_discount = toTwoDecimals(total_sale.times(discount1.dividedBy(100)));
+    const after_first_discount = toTwoDecimals(total_sale.minus(first_discount));
+    const second_discount = toTwoDecimals(after_first_discount.times(discount2.dividedBy(100)));
+    const total_discount = toTwoDecimals(first_discount.plus(second_discount));
+
+
+    const net_sale = toTwoDecimals(total_sale.minus(first_discount).minus(second_discount));
+    const net_unit_sale = total_quantity.greaterThan(0)
+        ? toTwoDecimals(net_sale.dividedBy(total_quantity))
+        : new Decimal(0);
+
+    // VAT Calculation (15% if tax_rate is 5)
+    let total_vat = new Decimal(0);
+    if (tax_rate.equals(5)) {
+        total_vat = toTwoDecimals(net_sale.times(new Decimal(15).dividedBy(100)));
+    }
+
+    // Grant Total
+    const grant_total = toTwoDecimals(net_sale.plus(total_vat));
+
+    // cost of goods sold
+    const cost_goods_sold = toTwoDecimals( net_unit_cost.times(total_quantity) );
+
+    // Return calculated values
+    return {
+        new_cost_price: cost_price.toNumber(),
+        new_sale_price: sale_price.toNumber(),
+        new_total_purchase: total_purchase.toNumber(),
+        new_total_discount: total_discount.toNumber(),
+        new_net_sale: net_sale.toNumber(),
+        new_total_sale: total_sale.toNumber(),
+        new_first_discount: first_discount.toNumber(),
+        new_second_discount: second_discount.toNumber(),
+        new_vat_value: total_vat.toNumber(),
+        new_unit_sale: net_unit_sale.toNumber(),
+        new_grant_total: grant_total.toNumber(),
+        new_cost_goods_sold: cost_goods_sold.toNumber(),
+    };
+}
+
+function calculateReturnSupplierInventory(item) {
+   // const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(2, Decimal.ROUND_DOWN);
+    // Convert all inputs to Decimal and ensure precision
+    const cost_price = toTwoDecimals(item.cost);
+    const sale_price = toTwoDecimals(item.sale_price);
+    const base_quantity = new Decimal(item.qty);
+    const bonus = new Decimal(item.bonus);
+    const tax_rate = toTwoDecimals(item.tax_rate);
+    const discount1 = toTwoDecimals(item.dis1);
+    const discount2 = toTwoDecimals(item.dis2);
+
+    // Calculations
+    const total_quantity = base_quantity.plus(bonus);
+    const total_purchase = toTwoDecimals(cost_price.times(base_quantity));
+    const total_sale = toTwoDecimals(sale_price.times(total_quantity));
+
+    // Discounts
+    const first_discount = toTwoDecimals(total_purchase.times(discount1.dividedBy(100)));
+    const after_first_discount = toTwoDecimals(total_purchase.minus(first_discount));
+    const second_discount = toTwoDecimals(after_first_discount.times(discount2.dividedBy(100)));
+    const total_discount = toTwoDecimals(first_discount.plus(second_discount));
+   
+
+    const net_purchase = toTwoDecimals(total_purchase.minus(first_discount).minus(second_discount));
+    const net_cost = total_quantity.greaterThan(0)
+        ? toTwoDecimals(net_purchase.dividedBy(total_quantity))
+        : new Decimal(0);
+
+    // VAT Calculation (15% if tax_rate is 5)
+    let total_vat = new Decimal(0);
+    if (tax_rate.equals(5)) {
+        total_vat = toTwoDecimals(net_purchase.times(new Decimal(15).dividedBy(100)));
+    }
+
+    // Grant Total
+    const grant_total = toTwoDecimals(net_purchase.plus(total_vat));
+
+    // Return calculated values
+    return {
+        new_cost_price: cost_price.toNumber(),
+        new_sale_price: sale_price.toNumber(),
+        new_total_purchase: total_purchase.toNumber(),
+        new_total_discount: total_discount.toNumber(),
+        new_net_purchase: net_purchase.toNumber(),
+        new_total_sale: total_sale.toNumber(),
+        new_first_discount: first_discount.toNumber(),
+        new_second_discount: second_discount.toNumber(),
+        new_vat_value: total_vat.toNumber(),
+        new_unit_cost: net_cost.toNumber(),
+        new_grant_total: grant_total.toNumber(),
+    };
+}
+
+function calculateTransferInventory(item) {
+    console.log('pass item', item);
+    //const toTwoDecimals = (value) => new Decimal(value).toDecimalPlaces(2, Decimal.ROUND_DOWN);
+    // Convert all inputs to Decimal and ensure precision
+    const cost_price = toTwoDecimals(item.cost);
+    const sale_price = toTwoDecimals(item.sale_price);
+    const base_quantity = new Decimal(item.qty);
+    const bonus = new Decimal(item.bonus);
+    const tax_rate = toTwoDecimals(item.tax_rate);
+    const discount1 = toTwoDecimals(item.dis1);
+    const discount2 = toTwoDecimals(item.dis2);
+    const net_unit_cost = toTwoDecimals(item.net_unit_cost);
+
+    // Calculations
+    const total_quantity = base_quantity.plus(bonus);
+    const total_purchase = toTwoDecimals(cost_price.times(base_quantity));
+    const total_sale = toTwoDecimals(sale_price.times(base_quantity));
+
+    // Discounts
+    const first_discount = toTwoDecimals(total_sale.times(discount1.dividedBy(100)));
+    const after_first_discount = toTwoDecimals(total_sale.minus(first_discount));
+    const second_discount = toTwoDecimals(after_first_discount.times(discount2.dividedBy(100)));
+    const total_discount = toTwoDecimals(first_discount.plus(second_discount));
+
+
+    const net_sale = toTwoDecimals(total_sale.minus(first_discount).minus(second_discount));
+    const net_unit_sale = total_quantity.greaterThan(0)
+        ? toTwoDecimals(net_sale.dividedBy(total_quantity))
+        : new Decimal(0);
+
+    // VAT Calculation (15% if tax_rate is 5)
+    let total_vat = new Decimal(0);
+    if (tax_rate.equals(5)) {
+        total_vat = toTwoDecimals(net_sale.times(new Decimal(15).dividedBy(100)));
+    }
+
+    // Grant Total
+    const grant_total = toTwoDecimals(net_sale.plus(total_vat));
+
+    // cost of goods sold
+    const cost_goods_sold = toTwoDecimals( net_unit_cost.times(total_quantity) );
+
+    // Return calculated values
+    return {
+        new_cost_price: cost_price.toNumber(),
+        new_sale_price: sale_price.toNumber(),
+        new_total_purchase: total_purchase.toNumber(),
+        new_total_discount: total_discount.toNumber(),
+        new_net_sale: net_sale.toNumber(),
+        new_total_sale: total_sale.toNumber(),
+        new_first_discount: first_discount.toNumber(),
+        new_second_discount: second_discount.toNumber(),
+        new_vat_value: total_vat.toNumber(),
+        new_unit_sale: net_unit_sale.toNumber(),
+        new_grant_total: grant_total.toNumber(),
+        new_cost_goods_sold: cost_goods_sold.toNumber(),
+    };
+}
+
+
+
+function calculateInventory(item, module) {
+console.log(module);
+    if( module == 'purchase' ) {
+        return calculatePurchaseInventory(item) ;
+    }
+    else if(module == 'sale') {
+        return calculateSaleInventory(item);
+    }
+    else if(module == 'quote') {
+        return calculateQuoteInventory(item);
+    }
+    else if(module == 'return_supplier') {
+        return calculateReturnSupplierInventory(item);
+    }
+    else if(module == 'transfer') {
+        return calculateTransferInventory(item);
+    }
+}
+
+window.onload = function() {
+    // Select all input elements with class 'date'
+    var dateInputs = document.querySelectorAll('input.date');
+    
+    // Loop through each input and set the autocomplete attribute to "off"
+    dateInputs.forEach(function(input) {
+        input.setAttribute('autocomplete', 'off');
+    });
+}
+
+

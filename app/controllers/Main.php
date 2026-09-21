@@ -106,6 +106,12 @@ class Main extends MY_Shop_Controller
 
     public function index()
     {
+        /*if ($_SERVER['HTTP_HOST'] === 'www.avenzur.com') {
+            header('Location: https://avenzur.com');
+        }*/
+
+        //header('Location: https://avnzor.com');
+
         $config = array();
         $config["base_url"] = base_url() . "";
         $config["total_rows"] = $this->Shop_model->get_count();
@@ -122,10 +128,10 @@ class Main extends MY_Shop_Controller
 
 
         if (!SHOP) {
-            redirect('admin');
+            redirect('/');
         }
         if ($this->shop_settings->private && !$this->loggedIn) {
-            redirect('/login');
+            redirect('/');
         }
         /*else if(!$this->loggedIn){
 
@@ -136,11 +142,14 @@ class Main extends MY_Shop_Controller
 
             $this->session->sess_destroy();
         }*/
+
+        $this->site->logVisitor();
+
         $this->data['all_categories'] = $this->shop_model->getAllCategories();
         $this->data['featured_categories'] = $this->shop_model->getFeaturedCategories();
         $this->data['popular_categories'] = $this->shop_model->getPopularCategories();
 
-        $this->data['best_sellers'] = $this->shop_model->getBestSellers();
+        $this->data['best_sellers'] = $this->shop_model->getBestSellers(16, true, []);
         $this->data['best_sellers_additional'] = $this->shop_model->getBestSellersAdditional();
         $this->data['featured_products'] = $this->shop_model->getFeaturedProducts();
         $this->data['special_offers'] = $this->shop_model->getSpecialOffers();
@@ -267,10 +276,10 @@ class Main extends MY_Shop_Controller
     }*/
 
     public function logout($m = null)
-    {
-        if (!SHOP) {
-            redirect('admin/logout');
-        }
+    {  
+        // if (!SHOP) {
+        //     redirect('admin/logout');
+        // }
         $logout = $this->ion_auth->logout();
         $this->cart->destroy();
         if (isset($_COOKIE['companyID'])) {
@@ -397,8 +406,25 @@ class Main extends MY_Shop_Controller
 
             if ($medium == 'email') {
                 $this->sma->send_email($identifier, 'OTP Verification', $message, null, null, $attachment, ['fabbas@pharma.com.sa'], ['faisalabbas67@gmail.com']);
+                echo json_encode(['status' => 'success', 'message' => 'OTP sent to email']);
             } else {
-                $sms_sent = $this->sma->send_sms($identifier, $otp);
+                $whatsapp_sent = $this->sma->send_whatsapp_msg($identifier, $otp);
+                $whatsapp_data = json_decode($whatsapp_sent, true);
+
+                /*if ($whatsapp_data && isset($whatsapp_data['messageId'])) {
+                    echo json_encode(['status' => 'success', 'message' => 'OTP sent to whatsapp']);
+                } else {
+                    $sms_sent = $this->sma->send_sms($identifier, $otp);
+                }*/
+
+                //$sms_sent = $this->sma->send_sms($identifier, $otp);
+
+                // uncomment below lines
+                $message_to_send = 'Your OTP verification code is '.$otp;
+                $sms_sent = $this->sma->send_sms_new($identifier, $message_to_send);
+                echo $sms_sent;
+
+                //echo json_encode(['status' => 'success', 'message' => 'OTP sent to whatsapp']);
             }
 
             return true;
@@ -467,7 +493,7 @@ class Main extends MY_Shop_Controller
 
             $this->load->library('ion_auth');
         }
-        
+
         if ($this->form_validation->run() == true) {
             if (filter_var($identity, FILTER_VALIDATE_EMAIL)) {
                 $type = 'email';
@@ -485,15 +511,20 @@ class Main extends MY_Shop_Controller
                 if ($validate) {
                     if ($this->form_validation->run('auth/login') == true) {
                         $remember = true;
-                        if(!empty($company_data->email)) {
+                        if (!empty($company_data->email)) {
                             $login_column = $company_data->email;
-                        }else{
+                        } else {
                             $login_column = $company_data->phone;
                         }
                         //echo $login_column;exit;
                         $this->shop_model->activate_user($login_column);
-                       
+
                         if ($this->ion_auth->login($login_column, '12345', $remember)) {
+                            // login success
+                            if ($type == 'mobile') {
+                                $this->shop_model->updateCompany($company_data->id, ['mobile_verified' => 1]);
+                            }
+
                             if ($this->Settings->mmode) {
                                 if (!$this->ion_auth->in_group('owner')) {
                                     $this->session->set_flashdata('error', lang('site_is_offline_plz_try_later'));
@@ -503,7 +534,7 @@ class Main extends MY_Shop_Controller
 
                             $cart_contents = $this->cart->contents();
                             if ($cart_contents) {
-                                redirect('cart/checkout');
+                                redirect('cart');
                             } else {
                                 $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : '/';
                                 redirect($referrer);
@@ -568,7 +599,7 @@ class Main extends MY_Shop_Controller
                 $type = 'mobile';
                 $company_data = $this->shop_model->getUniqueCustomer($type, $identity);
             }
-
+            
             if ($company_data) {
 
                 $otp = $opt_part1 . $opt_part2 . $opt_part3 . $opt_part4 . $opt_part5 . $opt_part6;
@@ -578,18 +609,33 @@ class Main extends MY_Shop_Controller
                     if ($this->form_validation->run('auth/login') == true) {
                         $remember = true;
 
-                        $user_data = $this->shop_model->getUserByEmail($company_data->email);
-                        if($user_data->active == 0){
-                            $this->shop_model->activate_user($company_data->email);
+                        // $user_data = $this->shop_model->getUserByEmail($company_data->email);
+                        // if ($user_data->active == 0) {
+                        //     $this->shop_model->activate_user($company_data->email);
+                        // }
+
+                        /* New changes as login failed after signup */
+
+                        if (!empty($company_data->email)) {
+                            $login_column = $company_data->email;
+                        } else {
+                            $login_column = $company_data->phone;
                         }
 
-                        if ($this->ion_auth->login($company_data->email, '12345', $remember)) {
+                        $this->shop_model->activate_user($login_column);
+
+                        /* Changes End */
+                        if ($this->ion_auth->login($login_column, '12345', $remember)) {
                             if ($this->Settings->mmode) {
                                 if (!$this->ion_auth->in_group('owner')) {
                                     $this->session->set_flashdata('error', lang('site_is_offline_plz_try_later'));
                                     //redirect('logout');
                                     echo json_encode(['status' => 'success', 'redirect' => base_url() . 'logout']);
                                 }
+                            }
+                            // login success
+                            if ($type == 'mobile') {
+                                $this->shop_model->updateCompany($company_data->id, ['mobile_verified' => 1]);
                             }
 
                             $this->session->set_flashdata('message', $this->ion_auth->messages());
@@ -598,7 +644,7 @@ class Main extends MY_Shop_Controller
                             if ($cart_contents) {
                                 //redirect('cart/checkout');
                                 header('Content-Type: application/json');
-                                echo json_encode(['status' => 'success', 'redirect' => base_url() . 'cart/checkout']);
+                                echo json_encode(['status' => 'success', 'redirect' => base_url() . 'cart']);
                             } else {
                                 $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : base_url();
                                 //redirect($referrer);
@@ -608,7 +654,8 @@ class Main extends MY_Shop_Controller
 
                         } else {
                             header('Content-Type: application/json');
-                            echo json_encode(['status' => 'error', 'message' => $this->ion_auth->errors()]);
+                            //echo json_encode(['status' => 'error', 'message' => $this->ion_auth->errors()]);
+                            echo json_encode(['status' => 'error', 'message' => 'login error']);
                             // $this->session->set_flashdata('error', $this->ion_auth->errors());
                             // $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : '/';
                             // redirect($referrer);
@@ -667,28 +714,57 @@ class Main extends MY_Shop_Controller
             }
 
             if ($company_data) {
-                if ($type == 'mobile' && $company_data->mobile_verified == 0) {
-                    echo json_encode(['status' => 'error', 'message' => 'Mobile Number Not verified']);
-                } else {
-                    $otp_sent = $this->sendOTP($company_data->id, $identity, $type);
-
-                    if ($otp_sent) {
-                        if ($type == 'email') {
-                            echo json_encode(['status' => 'success', 'message' => 'OTP is sent for verification']);
-                        }
-                    } else {
-                        echo json_encode(['status' => 'error', 'message' => 'Could not send OTP at this time']);
-                    }
-                }
+                 $this->sendOTP($company_data->id, $identity, $type);
 
             } else {
-                echo json_encode(['status' => 'error', 'message' => 'Data not found in system']);
+                //register
+                $company_data = [
+                    'group_id' => 3,
+                    'group_name' => 'customer',
+                    'customer_group_id' => (!empty($customer_group)) ? $customer_group->id : null,
+                    'customer_group_name' => (!empty($customer_group)) ? $customer_group->name : null,
+                    'price_group_id' => (!empty($price_group)) ? $price_group->id : null,
+                    'price_group_name' => (!empty($price_group)) ? $price_group->name : null,
+                    'sequence_code' => $this->sequenceCode->generate('CUS', 5)
+                ];
+                $this->addNewCustomer($type, $company_data );
             }
 
         } else {
             $this->page_construct('user/login', $this->data);
         }
     }
+
+    public function addNewCustomer($type, $company_data)
+    {
+        $username = strtolower($this->input->post('identity'));
+        $email = strtolower($this->input->post('identity'));
+
+        if ($type == 'email') {
+            $company_data['email'] = $this->input->post('identity');
+        } elseif ($type == 'mobile') {
+            $company_data['phone'] = $this->input->post('identity');
+        }
+
+        $company_id = $this->shop_model->addUniqueCustomer($company_data);
+
+        $additional_data = [
+            'gender' => 'male',
+            'company_id' => $company_id,
+            'group_id' => 3,
+        ];
+        $this->load->library('ion_auth');
+
+        $this->ion_auth->register($username, '12345', $email, $additional_data, false, false);
+
+        if ($this->form_validation->run() == true) {
+            $this->sendOTP($company_id, $email, $type);
+
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Something went wrong!']);
+        }
+    }
+
 
     /*public function verify_phone(){
         $company_id = $this->session->userdata('company_id');
@@ -782,7 +858,7 @@ class Main extends MY_Shop_Controller
         $company_data = $this->shop_model->getCompanyByID($company_id);
         //get customer verified numbers
         $verify_phone_numbers = $this->shop_model->getCustomerVerifiedNumbers();
-
+       
         if ($company_data) {
             if ($this->input->post('mobile_number')) {
                 $mobile = $this->input->post('mobile_number');
@@ -806,14 +882,8 @@ class Main extends MY_Shop_Controller
         if ($this->shop_settings->private) {
             redirect('/login');
         }
-        //$this->form_validation->set_rules('first_name', lang('first_name'), 'required');
-        //$this->form_validation->set_rules('last_name', lang('last_name'), 'required');
-        //$this->form_validation->set_rules('phone', lang('phone'), 'required');
+
         $this->form_validation->set_rules('email', lang('email_address'), 'required');
-        //$this->form_validation->set_rules('username', lang('username'), 'required|is_unique[users.username]');
-        //$this->form_validation->set_rules('password', lang('password'), 'required|min_length[5]|max_length[20]|matches[password_confirm]');
-        //$this->form_validation->set_rules('password_confirm', lang('confirm_password'), 'required');
-        //$this->form_validation->set_rules('country', lang('country'), 'required');
 
         if ($this->form_validation->run('') == true) {
             $email = strtolower($this->input->post('email'));
@@ -825,14 +895,11 @@ class Main extends MY_Shop_Controller
             if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $type = 'email';
                 $company_found = $this->shop_model->getUniqueCustomer('email', $email);
-                //$company_data = $this->shop_model->getUniqueCustomer($type, $identity);
             } else {
                 $type = 'mobile';
                 $company_found = $this->shop_model->getUniqueCustomer('mobile', str_replace("+966", "", $email));
-                //$company_data = $this->shop_model->getUniqueCustomer($type, $identity);
             }
 
-            //$company_found = $this->shop_model->getUniqueCustomer('email', $email);
             if ($company_found) {
                 if (!empty($company_found->email)) {
                     $user_data = $this->shop_model->getUserByEmail($company_found->email);
@@ -844,52 +911,12 @@ class Main extends MY_Shop_Controller
 
                 if ($this->form_validation->run() == true) {
 
-                    if ($type == 'email') {
-                        $otp_sent = $this->sendOTP($company_found->id, $email, 'email');
-
-                        if ($otp_sent) {
-                            echo json_encode(['status' => 'success', 'message' => 'An OTP is sent to your email']);
-                        } else {
-                            echo json_encode(['status' => 'error', 'message' => 'Could not send OTP at this time']);
-                        }
-                    } else {
-                        $otp_sent = $this->sendOTP($company_found->id, $email, 'mobile');
-                    }
+                    $this->sendOTP($company_found->id, $email, $type);
 
                 } else {
-                    echo json_encode(['status' => 'error', 'message' => 'Email Validation Failed']);
+                    echo json_encode(['status' => 'error', 'message' => 'Register Validation Failed']);
                 }
 
-                /*if($user_data->active == 1){
-                    $remember = true;
-                    $this->load->library('ion_auth');
-                    if ($this->ion_auth->login($company_found->email, '12345', $remember)) {
-                        $cart_contents = $this->cart->contents();
-                        if($cart_contents){
-                            //redirect('cart/checkout');
-                            echo json_encode(['status' => 'success', 'message' => 'Email already exists', 'link' => 'cart/checkout']);
-                        }else{
-                            $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : '/';
-                            echo json_encode(['status' => 'success', 'message' => 'Email already exists', 'link' => $referrer]);
-                            //redirect($referrer);
-                        }
-                    }
-
-                }else{
-                    $this->load->library('ion_auth');
-
-                    if ($this->form_validation->run() == true){
-                        $otp_sent = $this->sendOTP($company_found->id, $email, 'email');
-            
-                        if($otp_sent){
-                            echo json_encode(['status' => 'success', 'message' => 'An OTP is sent to your email']);  
-                        }else{
-                            echo json_encode(['status' => 'error', 'message' => 'Could not send OTP at this time']);
-                        }
-                    }else{
-                        echo json_encode(['status' => 'error', 'message' => 'Email Validation Failed']);
-                    }
-                }*/
             } else if ($type == 'email' || $type == 'mobile') {
                 $company_data = [
                     'group_id' => 3,
@@ -911,10 +938,6 @@ class Main extends MY_Shop_Controller
                 $company_id = $this->shop_model->addUniqueCustomer($company_data);
 
                 $additional_data = [
-                    //'first_name' => $this->input->post('first_name'),
-                    //'last_name'  => $this->input->post('last_name'),
-                    //'phone'      => $this->input->post('phone'),
-                    //'country'    => $this->input->post('country'),
                     'gender' => 'male',
                     'company_id' => $company_id,
                     'group_id' => 3,
@@ -924,11 +947,8 @@ class Main extends MY_Shop_Controller
                 $this->ion_auth->register($username, '12345', $email, $additional_data, false, false);
 
                 if ($this->form_validation->run() == true) {
-                    $otp_sent = $this->sendOTP($company_id, $email, $type);
+                    $this->sendOTP($company_id, $email, $type);
 
-                    if (!$otp_sent) {
-                        echo json_encode(['status' => 'error', 'message' => 'Could not send OTP at this time']);
-                         }
                 } else {
                     echo json_encode(['status' => 'error', 'message' => 'Email Validation Failed']);
                 }
@@ -938,37 +958,6 @@ class Main extends MY_Shop_Controller
 
         }
 
-
-        /*if ($this->form_validation->run() == true && $this->ion_auth->register($username, $password, $email, $additional_data)) {
-            if ($this->ion_auth->login($email, $password, 1)) {
-                if ($this->Settings->mmode) {
-                    if (!$this->ion_auth->in_group('owner')) {
-                        $this->session->set_flashdata('error', lang('site_is_offline_plz_try_later'));
-                        admin_redirect('auth/logout');
-                    }
-                }
-                if ($this->ion_auth->in_group('customer') || $this->ion_auth->in_group('supplier')) {
-                    if (file_exists(APPPATH . 'controllers' . DIRECTORY_SEPARATOR . 'shop' . DIRECTORY_SEPARATOR . 'Shop.php')) {
-                        $this->session->set_flashdata('message', $this->ion_auth->messages());
-                        redirect(base_url());
-                    } else {
-                        admin_redirect('auth/logout/1');
-                    }
-                }
-                $this->session->set_flashdata('message', $this->ion_auth->messages());
-                $referrer = ($this->session->userdata('requested_page') && $this->session->userdata('requested_page') != 'admin') ? $this->session->userdata('requested_page') : 'welcome';
-                admin_redirect($referrer);
-            } else {
-                $this->session->set_flashdata('error', $this->ion_auth->errors());
-                admin_redirect('login');
-            }
-            
-            //$this->session->set_flashdata('message', lang('account_created'));
-            //redirect('login');
-        } else {
-            $this->session->set_flashdata('error', validation_errors());
-            redirect('login#register');
-        }*/
     }
 
     public function reset_password($code = null)
@@ -1050,4 +1039,50 @@ class Main extends MY_Shop_Controller
             redirect('/');
         }
     }
+
+    public function notify_me()
+    {
+        // Check if it's a POST request
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+            // Get the post data
+            $notify_email = $this->input->post('notify_email');
+            $product_input = $this->input->post('product_input');
+
+            // Validate email
+            if (empty($notify_email) || !filter_var($notify_email, FILTER_VALIDATE_EMAIL)) {
+                return $this->sma->send_json(['status' => 'error', 'color' => '#FF5252', 'message' => 'Invalid or empty email address.']);
+            }
+
+            if (empty($product_input) || !is_numeric($product_input) || $product_input <= 0) {
+                return $this->sma->send_json(['status' => 'error', 'color' => '#FF5252', 'message' => 'Please select product.']);
+            }
+
+            // Check if the email already exists for the given product_id
+            $existing_data = $this->Shop_model->get_notify_data($notify_email, $product_input);
+            if ($existing_data > 0) {
+                return $this->sma->send_json(['status' => 'info', 'color' => '#2196F3', 'message' => 'Email already added for this product.']);
+            }
+
+            // Insert into the database
+            $data_to_insert = [
+                'email' => $notify_email,
+                'product_id' => $product_input,
+                'date_created' => date('Y-m-d H:i:s')
+                // Add other fields as needed
+            ];
+
+            $insert_result = $this->Shop_model->insert_notify_data($data_to_insert);
+
+            if ($insert_result) {
+                return $this->sma->send_json(['status' => 'success', 'color' => '#4CAF50', 'message' => 'Successfully saved!']);
+            } else {
+                return $this->sma->send_json(['status' => 'error', 'color' => '#FF5252', 'message' => 'Failed to save data.']);
+            }
+        }
+
+        // Handle non-POST requests if needed
+        return $this->sma->send_json(['status' => 'error', 'color' => '#FF5252', 'message' => 'Invalid request.']);
+    }
+
 }

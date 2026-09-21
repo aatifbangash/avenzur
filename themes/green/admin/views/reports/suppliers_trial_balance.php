@@ -1,7 +1,12 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <script>
     $(document).ready(function () {
-
+        $('#poTable tbody tr.supplier-tb-row').on('click', function () {
+            var href = $(this).data('href');
+            if (href) {
+                window.location.href = href;
+            }
+        });
     });
 </script>
 <div class="box">
@@ -103,9 +108,16 @@
                                     $totalFinalEndCredit += $finalEndCredit;
 
 
+                                $detail_url = admin_url('reports/supplier_statement')
+                                    . '?supplier=' . (int) $data['supplier_id']
+                                    . '&from_date=' . urlencode($start_date ?? '')
+                                    . '&to_date=' . urlencode($end_date ?? '');
+                                if (!empty($warehouse_id)) {
+                                    $detail_url .= '&warehouse_id=' . (int) $warehouse_id;
+                                }
                                 $count++;
                                 ?>
-                                <tr>
+                                <tr class="supplier-tb-row" style="cursor:pointer;" data-href="<?= $detail_url; ?>" title="<?= lang('click_to_view_supplier_statement'); ?>">
                                     <td><?= $count; ?></td>
                                     <td><?= $data['sequence_code']; ?></td>
                                     <td><?= $data['name']; ?></td>

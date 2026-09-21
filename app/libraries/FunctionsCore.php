@@ -123,30 +123,30 @@ Class FunctionsCore {
 		$decimal_places = $this->_ci->mAccountSettings->decimal_places;
 
 		if ($this->calculate($amount, 0, '==')) {
-			return $this->curreny_format(number_format(0, $decimal_places, '.', ''));
+			return $this->formatAmount(0);
 		}
 
 		if ($dc == 'D') {
 			if ($this->calculate($amount, 0, '>')) {
-				return 'Dr ' . $this->curreny_format(number_format($amount, $decimal_places, '.', ''));
+				return 'Dr ' . $this->formatAmount($amount);
 			} else {
-				return 'Cr ' . $this->curreny_format(number_format($this->calculate($amount, 0, 'n'), $decimal_places, '.', ''));
+				return 'Cr ' . $this->formatAmount($this->calculate($amount, 0, 'n'));
 			}
 		} else if ($dc == 'C') {
 			if ($this->calculate($amount, 0, '>')) {
-				return 'Cr ' . $this->curreny_format(number_format($amount, $decimal_places, '.', ''));
+				return 'Cr ' . $this->formatAmount($amount);
 			} else {
-				return 'Dr ' . $this->curreny_format(number_format($this->calculate($amount, 0, 'n'), $decimal_places, '.', ''));
+				return 'Dr ' . $this->formatAmount($this->calculate($amount, 0, 'n'));
 			}
 		} else if ($dc == 'X') {
 			/* Dr for positive and Cr for negative value */
 			if ($this->calculate($amount, 0, '>')) {
-				return 'Dr ' . $this->curreny_format(number_format($amount, $decimal_places, '.', ''));
+				return 'Dr ' . $this->formatAmount($amount);
 			} else {
-				return 'Cr ' . $this->curreny_format(number_format($this->calculate($amount, 0, 'n'), $decimal_places, '.', ''));
+				return 'Cr ' . $this->formatAmount($this->calculate($amount, 0, 'n'));
 			}
 		} else {
-			return $this->curreny_format(number_format($amount, $decimal_places, '.', ''));
+			return $this->formatAmount($amount);
 		}
 		return lang('search_views_amounts_td_error');
 	}
@@ -315,6 +315,14 @@ Class FunctionsCore {
 
 
 	/**
+	 * Format a numeric amount for display (no Dr/Cr prefix).
+	 * Uses Western thousands grouping (e.g. 106,199.78) regardless of account currency_format.
+	 */
+	function formatAmount($amount) {
+		return $this->_currency_3_3_style($amount);
+	}
+
+	/**
 	 * This function formats the currency as per the currency format in account settings
 	 *
 	 * $input format is xxxxxxx.xx
@@ -443,6 +451,63 @@ Class FunctionsCore {
 
 		return '<span class="tag" style="color:#' . ($tag['color']) .
 			'; background-color:#' . ($tag['background']) . ';"><span style="color: #'.$tag['color'].';">' .$tag['title']. '</span></span>';
+	}
+
+	/**
+	 * Human-readable label for an accounts entry transaction_type value.
+	 */
+	function transactionTypeLabel($type) {
+		if (empty($type)) {
+			return '';
+		}
+
+		$labels = [
+			'customerpayment'      => 'Customer Payment',
+			'supplierpayment'      => 'Supplier Payment',
+			'customeradvance'      => 'Customer Advance',
+			'supplieradvance'      => 'Supplier Advance',
+			'advancesettlement'    => 'Advance Settlement',
+			'creditmemo'           => 'Credit Memo',
+			'debitmemo'            => 'Debit Memo',
+			'serviceinvoice'       => 'Service Invoice',
+			'pettycash'            => 'Petty Cash',
+			'returncustomerorder'  => 'Customer Return',
+			'returnorder'          => 'Supplier Return',
+			'purchaseorder'        => 'Purchase Order',
+			'saleorder'            => 'Sales Order',
+			'transferorder'        => 'Transfer Order',
+			'purchase_invoice'     => 'Purchase Invoice',
+			'sales_invoice'        => 'Sales Invoice',
+			'trial_balance_import' => 'Trial Balance Import',
+			'opening_balance'      => 'Opening Balance',
+			'balanceupload'        => 'Balance Upload',
+			'customerdiscount'     => 'Customer Discount',
+			'adjustment'           => 'Adjustment',
+			'journal'              => 'Journal',
+			'salaries'             => 'Salaries',
+			'salary'               => 'Salary',
+			'pos'                  => 'POS',
+			'advance'              => 'Advance',
+		];
+
+		$key = strtolower(trim($type));
+		if (isset($labels[$key])) {
+			return $labels[$key];
+		}
+
+		$humanized = str_replace('_', ' ', $key);
+		$segments = [
+			'customer', 'supplier', 'payment', 'invoice', 'order', 'return', 'memo',
+			'advance', 'settlement', 'balance', 'purchase', 'sale', 'transfer',
+			'trial', 'import', 'opening', 'petty', 'cash', 'discount', 'adjustment',
+			'salary', 'salaries', 'upload', 'journal',
+		];
+		foreach ($segments as $segment) {
+			$humanized = preg_replace('/' . $segment . '/', ' ' . $segment . ' ', $humanized);
+		}
+		$humanized = preg_replace('/\s+/', ' ', trim($humanized));
+
+		return ucwords($humanized);
 	}
 
 	/**

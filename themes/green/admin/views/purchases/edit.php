@@ -286,7 +286,7 @@
                         } ?>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <?= lang('reference_no', 'poref'); ?>
+                                <?= lang('Supplier Reference Number', 'poref'); ?>
                                 <?php echo form_input('reference_no', ($_POST['reference_no'] ?? $purchase->reference_no), 'class="form-control input-tip" id="poref" required="required"'); ?>
                             </div>
                         </div>
@@ -296,7 +296,7 @@
                                 <?php
                                 $wh[''] = '';
                                 foreach ($warehouses as $warehouse) {
-                                    $wh[$warehouse->id] = $warehouse->name;
+                                    $wh[$warehouse->id] = $warehouse->name.' ('.$warehouse->code.')';
                                 }
                                 echo form_dropdown('warehouse', $wh, ($_POST['warehouse'] ?? $purchase->warehouse_id), 'id="powarehouse" class="form-control input-tip select" data-placeholder="' . $this->lang->line('select') . ' ' . $this->lang->line('warehouse') . '" required="required" style="width:100%;" ');
                                 ?>
@@ -504,7 +504,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <?= lang('payment_term', 'popayment_term'); ?>
-                                        <?php echo form_input('payment_term', '', 'class="form-control tip" data-trigger="focus" data-placement="top" title="' . lang('payment_term_tip') . '" id="popayment_term"'); ?>
+                                        <?php echo form_input('payment_term', '', 'class="form-control tip" data-trigger="focus" readonly data-placement="top" title="' . lang('payment_term_tip') . '" id="popayment_term"'); ?>
                                     </div>
                                 </div>
                             </div>

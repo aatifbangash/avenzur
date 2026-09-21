@@ -23,6 +23,35 @@ class Warehouses extends REST_Controller
         return $warehouse;
     }
 
+    public function get_all()
+    {
+        if ($warehouses = $this->warehouses_api->getWarehouses()) {
+            $pr_data = [];
+            foreach ($warehouses as $warehouse) {
+                if (!empty($filters['include'])) {
+                    foreach ($filters['include'] as $include) {
+                        if ($include == 'price_group') {
+                            $warehouse->price_group = $this->warehouses_api->getPriceGroupByID($warehouse->price_group_id);
+                        }
+                    }
+                }
+                $pr_data[] = $this->setWarehouse($warehouse);
+            }
+            $data = [
+                'data'  => $pr_data,
+                'limit' => $filters['limit'],
+                'start' => $filters['start'],
+                'total' => $this->warehouses_api->countWarehouses($filters),
+            ];
+            $this->response($data, REST_Controller::HTTP_OK);
+        } else {
+            $this->response([
+                'message' => 'No warehouse were found.',
+                'status'  => false,
+            ], REST_Controller::HTTP_NOT_FOUND);
+        }
+    }
+
     public function index_get()
     {
         $code = $this->get('code');
