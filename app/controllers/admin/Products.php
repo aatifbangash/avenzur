@@ -10068,25 +10068,22 @@ error_reporting(E_ALL);
             . lang('delete_product') . '</a>';
         $single_barcode = anchor('admin/products/print_barcodes/$1', '<i class="fa fa-print"></i> ' . lang('print_barcode_label'));
         // $single_label = anchor_popup('products/single_label/$1/' . ($warehouse_id ? $warehouse_id : ''), '<i class="fa fa-print"></i> ' . lang('print_label'), $this->popup_attributes);
+        if($this->Admin || $this->Owner || $this->GP['products-index']) {
         $action = '<div class="text-center"><div class="btn-group text-left">'
             . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
             . lang('actions') . ' <span class="caret"></span></button>
         <ul class="dropdown-menu pull-right" role="menu">
             <li>' . $detail_link . '</li>';
-        if ($this->Admin || $this->Owner) {
-            $action .= '<li><a href="' . admin_url('products/add/$1') . '"><i class="fa fa-plus-square"></i> ' . lang('duplicate_product') . '</a></li>';
         }
-
+        /*if ($this->Admin || $this->Owner) {
+            $action .= '<li><a href="' . admin_url('products/add/$1') . '"><i class="fa fa-plus-square"></i> ' . lang('duplicate_product') . '</a></li>';
+        }*/
 
 //        new lines here for Avnzor edit product link (edit_new_product)
-        if($this->Settings->site_name == 'Avnzor'){
-            $action .= '<li><a href="' . admin_url('products/edit_new/$1') . '"><i class="fa fa-edit"></i> ' . lang('edit_product') . '</a></li>';
-             }else{
+        if($this->Admin || $this->Owner || $this->GP['products-edit']) {
             $action .= '<li><a href="' . admin_url('products/edit/$1') . '"><i class="fa fa-edit"></i> ' . lang('edit_product') . '</a></li>';
         }
-
-
-        if ($warehouse_id) {
+        /*if ($warehouse_id) {
             $action .= '<li><a href="' . admin_url('products/set_rack/$1/' . $warehouse_id) . '" data-toggle="modal" data-target="#myModal"><i class="fa fa-bars"></i> '
                 . lang('set_rack') . '</a></li>';
         }
@@ -10094,10 +10091,10 @@ error_reporting(E_ALL);
             . lang('view_image') . '</a></li>';
         if ($this->Admin || $this->Owner) {
             $action .= '<li>' . $single_barcode . '</li>';
-        }
+        }*/
 
         $action .= '<li class="divider"></li>';
-        if ($this->Admin || $this->Owner) {
+        if ($this->Admin || $this->Owner || $this->GP['products-delete']) {
             $action .= '<li>' . $delete_link . '</li>';
         }
         $action .= '</ul>
