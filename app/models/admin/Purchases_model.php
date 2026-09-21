@@ -1411,7 +1411,9 @@ class Purchases_model extends CI_Model
     public function getDebitMemo($type, $filters = [])
     {
         $this->db->order_by('sma_memo.date', 'desc');
-        $this->db->select('sma_memo.*, companies.company, companies.sequence_code');
+        $this->db->select('sma_memo.*, companies.company, companies.sequence_code,
+            (SELECT COUNT(p.id) FROM ' . $this->db->dbprefix('payments') . ' p
+             WHERE p.memo_id = sma_memo.id) AS payment_count', false);
         $this->db->from('memo');
         $this->db->join('companies', 'sma_memo.supplier_id = companies.id', 'left');
         $this->db->where('sma_memo.type', $type);
@@ -1433,6 +1435,23 @@ class Purchases_model extends CI_Model
             return $query->result();
         }
         return [];
+    }
+
+    /**
+     * True when any sma_payments row references this memo (e.g. service invoice paid).
+     */
+    public function memoHasPayment($memo_id)
+    {
+        $memo_id = (int) $memo_id;
+        if ($memo_id <= 0) {
+            return false;
+        }
+        $q = $this->db->select('id')
+            ->from('payments')
+            ->where('memo_id', $memo_id)
+            ->limit(1)
+            ->get();
+        return $q && $q->num_rows() > 0;
     }
 
     public function getCreditMemo($type)
