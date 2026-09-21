@@ -138,10 +138,10 @@ if (!empty($filters['to_date'])) {
                                             <i class="fa fa-file-pdf-o"></i>
                                         </a>
                                         <?php if (($invoice->status ?? 'open') !== 'locked'): ?>
-                                            <!--<a href="<?= admin_url('suppliers/edit_service_invoice/' . $invoice->id) ?>"
+                                            <a href="<?= admin_url('suppliers/edit_service_invoice/' . $invoice->id) ?>"
                                                class="tip btn btn-xs btn-warning" title="Edit">
                                                 <i class="fa fa-edit"></i>
-                                            </a>-->
+                                            </a>
                                         <?php endif; ?>
                                         <?php if ($this->sma->in_group('financemanager')): ?>
                                             <?php if (($invoice->status ?? 'open') === 'locked'): ?>
