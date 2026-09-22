@@ -30,6 +30,7 @@ class Returns extends MY_Controller
         $this->load->library('form_validation');
         $this->load->admin_model('returns_model');
         $this->load->admin_model('sales_model');
+        $this->load->admin_model('period_closing_model');
         $this->digital_upload_path = 'files/';
         $this->upload_path         = 'assets/uploads/';
         $this->thumbs_path         = 'assets/uploads/thumbs/';
@@ -261,6 +262,10 @@ class Returns extends MY_Controller
             $return_screen     = $this->input->post('return_screen');
 
             $date             = ($this->Owner || $this->Admin) ? $this->sma->fld(trim($this->input->post('date'))) : date('Y-m-d H:i:s');
+            if ($this->period_closing_model->isPeriodClosed('ar', $date)) {
+                $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $date));
+                admin_redirect('returns/add');
+            }
             $reference        = $this->input->post('reference_no') ? $this->input->post('reference_no') : $this->site->getReference('reference');
             $sale_reference_no = $this->input->post('sale_reference_no') ? $this->input->post('sale_reference_no') : '0';
             $warehouse_id     = $this->input->post('warehouse');
@@ -992,6 +997,17 @@ class Returns extends MY_Controller
             $this->sma->send_json(['error' => 1, 'msg' => lang('id_not_found')]);
         }
 
+        $inv = $this->returns_model->getReturnByID($id);
+        if ($inv && $this->period_closing_model->isPeriodClosed('ar', $inv->date)) {
+            $msg = $this->period_closing_model->closedMessage('ar', $inv->date);
+            if ($this->input->is_ajax_request()) {
+                $this->sma->send_json(['error' => 1, 'msg' => $msg]);
+            }
+            $this->session->set_flashdata('error', $msg);
+            admin_redirect('returns');
+            return;
+        }
+
         if ($this->returns_model->deleteReturn($id)) {
             if ($this->input->is_ajax_request()) {
                 $this->sma->send_json(['error' => 0, 'msg' => lang('return_deleted')]);
@@ -1021,6 +1037,11 @@ class Returns extends MY_Controller
             admin_redirect('returns');
         }
 
+        if ($this->period_closing_model->isPeriodClosed('ar', $inv->date)) {
+            $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $inv->date));
+            admin_redirect('returns');
+        }
+
         if (!$this->Owner && !$this->Admin && !$this->GP['returns-edit']) {
             $this->session->set_flashdata('warning', lang('access_denied'));
             admin_redirect($_SERVER['HTTP_REFERER']);
@@ -1032,6 +1053,10 @@ class Returns extends MY_Controller
 
         if ($this->form_validation->run() == true) {
             $date             = ($this->Owner || $this->Admin) ? $this->sma->fld(trim($this->input->post('date'))) : $inv->date;
+            if ($this->period_closing_model->isPeriodClosed('ar', $date)) {
+                $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $date));
+                admin_redirect('returns/edit/' . $id);
+            }
             $reference        = $this->input->post('reference_no');
             $warehouse_id     = $this->input->post('warehouse');
             $customer_id      = $this->input->post('customer');
@@ -1395,35 +1420,15 @@ class Returns extends MY_Controller
         //if (!$this->Owner && !$this->Admin) {
         //    $this->datatables->where('created_by', $this->session->userdata('user_id'));
         //}
-       
 
-        $edit_link         = anchor('admin/returns/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_return'), 'class="tip"');
-        $delete_link       = "<a href='#' class='po' title='<b>" . lang('delete_return') . "</b>' data-content=\"<p>"
-        . lang('r_u_sure') . "</p><a class='btn btn-danger po po-delete' href='" . admin_url('returns/delete/$1') . "'>"
-        . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i> "
-        . lang('delete_return') . '</a>';
-        $journal_entry_link      = anchor('admin/entries/view/journal/?rid=$1', '<i class="fa fa-eye"></i> ' . lang('Journal Entry'));
-        
-        $action = '<div class="text-center"><div class="btn-group text-left">'
-        . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
-        . lang('actions') . ' <span class="caret"></span></button>
-        <ul class="dropdown-menu pull-right" role="menu">';
+        $can_edit = ($this->Owner || $this->Admin || !empty($this->GP['returns-edit'])) ? 1 : 0;
+        $is_owner_admin = ($this->Owner || $this->Admin) ? 1 : 0;
 
-        if($this->Owner || $this->Admin || $this->GP['returns-edit']){
-            $action .= '<li>' . $edit_link . '</li>';
-        } 
-        
-        if($this->Owner || $this->Admin){
-            $action .= '<li>' . $journal_entry_link . '</li>';
-        }
-                
-        /*if($this->Owner || $this->Admin || $this->GP['returns-delete']){
-            $action .= '<li>' . $delete_link . '</li>';
-        }*/
-        $action .= '</ul></div></div>';
-         
-    $this->datatables->add_column('Actions', $action, 'id');
-       // $this->datatables->add_column('Actions', "<div class=\"text-center\"><a href='" . admin_url('returns/edit/$1') . "' class='tip' title='" . lang('edit_return') . "'><i class=\"fa fa-edit\"></i></a> <a href='#' class='tip po' title='<b>" . lang('delete_return') . "</b>' data-content=\"<p>" . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('returns/delete/$1') . "'>" . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i></a></div>", 'id');
+        $this->datatables->add_column(
+            'Actions',
+            '$1',
+            "returns_dt_actions(id, date, {$can_edit}, {$is_owner_admin})"
+        );
         echo $this->datatables->generate();
     }
 
@@ -1737,3 +1742,33 @@ class Returns extends MY_Controller
         $this->load->view($this->theme . 'returns/view', $this->data);
     }
 }
+
+/**
+ * Datatables action menu for returns — hides edit when AR period is closed.
+ */
+if (!function_exists('returns_dt_actions')) {
+    function returns_dt_actions($id, $date, $can_edit = 0, $is_owner_admin = 0)
+    {
+        $CI = get_instance();
+        if (!isset($CI->period_closing_model)) {
+            $CI->load->admin_model('period_closing_model');
+        }
+        $period_closed = $CI->period_closing_model->isPeriodClosed('ar', $date);
+
+        $action = '<div class="text-center"><div class="btn-group text-left">'
+            . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+            . lang('actions') . ' <span class="caret"></span></button>
+        <ul class="dropdown-menu pull-right" role="menu">';
+
+        if ($can_edit && !$period_closed) {
+            $action .= '<li>' . anchor('admin/returns/edit/' . $id, '<i class="fa fa-edit"></i> ' . lang('edit_return'), 'class="tip"') . '</li>';
+        }
+        if ($is_owner_admin) {
+            $action .= '<li>' . anchor('admin/entries/view/journal/?rid=' . $id, '<i class="fa fa-eye"></i> ' . lang('Journal Entry')) . '</li>';
+        }
+        $action .= '</ul></div></div>';
+
+        return $action;
+    }
+}
+

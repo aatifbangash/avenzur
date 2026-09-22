@@ -11,8 +11,27 @@ class Delivery extends MY_Controller
         parent::__construct();
         $this->load->admin_model('delivery_model');
         $this->load->admin_model('sales_model');
+        $this->load->admin_model('period_closing_model');
         $this->load->library('form_validation');
         $this->load->library('datatables');
+    }
+
+    /**
+     * First closed AR message for any of the given sale IDs, or null if all open.
+     */
+    private function arClosedForSaleIds($invoice_ids)
+    {
+        if (empty($invoice_ids)) {
+            return null;
+        }
+        foreach ($invoice_ids as $invoice_id) {
+            $sale = $this->sales_model->getSaleByID($invoice_id);
+            if ($sale && $this->period_closing_model->isPeriodClosed('ar', $sale->date)) {
+                return $this->period_closing_model->closedMessage('ar', $sale->date)
+                    . ' (Sale #' . $invoice_id . ')';
+            }
+        }
+        return null;
     }
 
     /**
@@ -205,6 +224,12 @@ class Delivery extends MY_Controller
             'assigned_by' => $this->session->userdata('user_id')
         ];
 
+        if ($this->period_closing_model->isPeriodClosed('ar', $delivery_data['date_string'])) {
+            $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $delivery_data['date_string']));
+            redirect(admin_url('delivery/add'));
+            return;
+        }
+
         // Add optional fields only if they are provided
         $odometer = $this->input->post('odometer');
         if (!empty($odometer)) {
@@ -218,6 +243,12 @@ class Delivery extends MY_Controller
 
         // Get selected invoices
         $invoice_ids = $this->input->post('invoice_ids');
+        if ($closed_msg = $this->arClosedForSaleIds($invoice_ids)) {
+            $this->session->set_flashdata('error', $closed_msg);
+            redirect(admin_url('delivery/add'));
+            return;
+        }
+
         $items = [];
         if (!empty($invoice_ids)) {
             foreach ($invoice_ids as $invoice_id) {
@@ -266,6 +297,12 @@ class Delivery extends MY_Controller
 
         if (!$delivery_id || !$invoice_id) {
             echo json_encode(['error' => 1, 'msg' => 'Invalid request.']);
+            return;
+        }
+
+        $sale = $this->sales_model->getSaleByID($invoice_id);
+        if ($sale && $this->period_closing_model->isPeriodClosed('ar', $sale->date)) {
+            echo json_encode(['error' => 1, 'msg' => $this->period_closing_model->closedMessage('ar', $sale->date)]);
             return;
         }
 
@@ -443,6 +480,27 @@ class Delivery extends MY_Controller
             exit;
 
         }
+
+        if ($this->data['delivery'] && $this->period_closing_model->isPeriodClosed('ar', $this->data['delivery']->date_string)) {
+            $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $this->data['delivery']->date_string));
+            redirect(admin_url('delivery'));
+            return;
+        }
+
+        if (!empty($this->data['items'])) {
+            $item_sale_ids = [];
+            foreach ($this->data['items'] as $item) {
+                if (!empty($item->invoice_id)) {
+                    $item_sale_ids[] = $item->invoice_id;
+                }
+            }
+            if ($closed_msg = $this->arClosedForSaleIds($item_sale_ids)) {
+                $this->session->set_flashdata('error', $closed_msg);
+                redirect(admin_url('delivery'));
+                return;
+            }
+        }
+
         //echo '<pre>';print_r($this->data['delivery']);exit;
 
         // Get registered drivers for dropdown
@@ -558,6 +616,27 @@ class Delivery extends MY_Controller
             'updated_by' => $this->session->userdata('user_id'),
             'updated_at' => date('Y-m-d H:i:s')
         ];
+
+        $check_date = !empty($delivery_data['date_string']) ? $delivery_data['date_string'] : ($delivery_info->date_string ?? null);
+        if ($check_date && $this->period_closing_model->isPeriodClosed('ar', $check_date)) {
+            $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $check_date));
+            redirect(admin_url('delivery/edit/' . $delivery_id));
+            return;
+        }
+
+        if (!empty($delivery_items)) {
+            $item_sale_ids = [];
+            foreach ($delivery_items as $item) {
+                if (!empty($item->invoice_id)) {
+                    $item_sale_ids[] = $item->invoice_id;
+                }
+            }
+            if ($closed_msg = $this->arClosedForSaleIds($item_sale_ids)) {
+                $this->session->set_flashdata('error', $closed_msg);
+                redirect(admin_url('delivery/edit/' . $delivery_id));
+                return;
+            }
+        }
 
         if ($receipt_filename) {
             $delivery_data['receipt'] = $receipt_filename;

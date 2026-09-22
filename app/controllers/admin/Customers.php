@@ -30,6 +30,7 @@ class Customers extends MY_Controller
         $this->load->admin_model('purchases_model');
         $this->load->library('form_validation');
         $this->load->admin_model('companies_model');
+        $this->load->admin_model('period_closing_model');
 
         // Sequence-Code
         $this->load->library('SequenceCode');
@@ -1199,6 +1200,11 @@ class Customers extends MY_Controller
             admin_redirect('customers/list_payments');
         }
 
+        if ($this->period_closing_model->isPeriodClosed('ar', $payment_ref->date)) {
+            $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $payment_ref->date));
+            admin_redirect('customers/list_payments');
+        }
+
         // Check if payment is closed
         $is_closed = ($payment_ref->status ?? 'open') === 'closed';
 
@@ -1427,6 +1433,12 @@ class Customers extends MY_Controller
                 return;
             }
 
+            if ($this->period_closing_model->isPeriodClosed('ar', $payment_ref->date)) {
+                $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $payment_ref->date));
+                admin_redirect('customers/list_payments');
+                return;
+            }
+
             // Get new form data
             $date_raw = $this->input->post('date');
             $reference_no = $this->input->post('reference_no');
@@ -1442,6 +1454,12 @@ class Customers extends MY_Controller
                 return;
             }
             $date = $fmt->format('Y-m-d');
+
+            if ($this->period_closing_model->isPeriodClosed('ar', $date)) {
+                $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $date));
+                admin_redirect('customers/edit_payment_reference/' . $payment_id);
+                return;
+            }
 
             // Collect selected line items from form
             $invoice_ids     = $this->input->post('invoice_ids') ?: [];
@@ -1702,6 +1720,11 @@ class Customers extends MY_Controller
             } else {
                 echo 'Invalid date format!';
                 $date = null; // Handle invalid input as needed
+            }
+
+            if ($date && $this->period_closing_model->isPeriodClosed('ar', $date)) {
+                $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $date));
+                admin_redirect('customers/add_advance');
             }
 
             // Get customer advance ledger from settings
@@ -2532,6 +2555,12 @@ class Customers extends MY_Controller
                 $this->session->set_flashdata('error', 'Invalid date format');
                 admin_redirect('customers/payment_from_customer_new');
             }
+
+            if ($this->period_closing_model->isPeriodClosed('ar', $date)) {
+                $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $date));
+                admin_redirect('customers/payment_from_customer_new');
+            }
+
             // Get selected items
             $invoice_ids = $this->input->post('invoice_ids') ?: [];
             $return_ids = $this->input->post('return_ids') ?: [];
@@ -3041,6 +3070,13 @@ class Customers extends MY_Controller
         //$this->sma->checkPermissions('delete');
 
         if ($id) {
+            $memo = $this->purchases_model->getDebitMemoData($id);
+            if ($memo && $this->period_closing_model->isPeriodClosed('ar', $memo->date)) {
+                $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $memo->date));
+                admin_redirect('customers/list_credit_memo');
+                return;
+            }
+
             // Delete in correct order to avoid foreign key constraints
             // 1. Delete memo entries
             $this->db->where('memo_id', $id);
@@ -3184,9 +3220,19 @@ class Customers extends MY_Controller
                 $date = $formattedDate->format('Y-m-d');
             }
 
+            if ($this->period_closing_model->isPeriodClosed('ar', $date)) {
+                $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $date));
+                admin_redirect('customers/credit_memo');
+            }
+
             // Remove breakdown matching validation - not required
             if($request_type == 'update'){
                 $old_memo_id = $this->input->post('memo_id');
+                $old_memo = $this->purchases_model->getDebitMemoData($old_memo_id);
+                if ($old_memo && $this->period_closing_model->isPeriodClosed('ar', $old_memo->date)) {
+                    $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $old_memo->date));
+                    admin_redirect('customers/list_credit_memo');
+                }
 
                 // Delete all older data completely in correct order
                 // 1. First delete memo entries
@@ -3516,6 +3562,11 @@ class Customers extends MY_Controller
                     admin_redirect('customers/service_invoice');
                 }
                 $date = $formattedDate->format('Y-m-d');
+            }
+
+            if ($this->period_closing_model->isPeriodClosed('ar', $date)) {
+                $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $date));
+                admin_redirect('customers/service_invoice');
             }
 
             if ($date < date('Y-m-d')) {

@@ -27,6 +27,7 @@ class Sales extends MY_Controller
         $this->load->admin_model('companies_model');
         $this->load->admin_model('products_model');
         $this->load->admin_model('settings_model');
+        $this->load->admin_model('period_closing_model');
         $this->digital_upload_path = 'files/';
         $this->upload_path         = 'assets/uploads/';
         $this->thumbs_path         = 'assets/uploads/thumbs/';
@@ -571,6 +572,12 @@ class Sales extends MY_Controller
         
         if($quote->status != 'approved'){
             $this->session->set_flashdata('error', 'Approved quotes are converted to sale order');
+            admin_redirect('quotes');
+        }
+
+        $this->load->admin_model('period_closing_model');
+        if ($this->period_closing_model->isPeriodClosed('ar', $quote->date)) {
+            $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $quote->date));
             admin_redirect('quotes');
         }
 
@@ -1693,6 +1700,16 @@ class Sales extends MY_Controller
         $inv = $this->sales_model->getInvoiceByID($id);
         if ($inv->sale_status == 'returned') {
             $this->sma->send_json(['error' => 1, 'msg' => lang('sale_x_action')]);
+        }
+
+        if ($this->period_closing_model->isPeriodClosed('ar', $inv->date)) {
+            $msg = $this->period_closing_model->closedMessage('ar', $inv->date);
+            if ($this->input->is_ajax_request()) {
+                $this->sma->send_json(['error' => 1, 'msg' => $msg]);
+            }
+            $this->session->set_flashdata('error', $msg);
+            admin_redirect('sales');
+            return;
         }
 
         if ($this->sales_model->deleteSale($id)) {
@@ -7232,6 +7249,14 @@ if($inv->warning_note != ""){
         if ($this->form_validation->run() == true) {
             $sale_id = $this->input->post('sale_id');
             $send_to_rasd = $this->input->post('send_to_rasd');
+
+            $sale_check = $this->sales_model->getSaleByID($sale_id);
+            if ($sale_check && $this->period_closing_model->isPeriodClosed('ar', $sale_check->date)) {
+                $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $sale_check->date));
+                admin_redirect('sales/view/' . $sale_id);
+                return;
+            }
+
             if($send_to_rasd == "1"){
                 $sale = $this->sales_model->getSaleByID($sale_id);
                 $products = $this->sales_model->getAllSaleItems($sale_id);
@@ -7372,7 +7397,7 @@ if($inv->warning_note != ""){
             }
             $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
             $inv                 = $this->sales_model->getInvoiceByID($id);
-            
+
             $this->data['sale_id'] = $id;
             
             $this->load->view($this->theme . 'sales/send_to_rasd', $this->data);
@@ -7391,6 +7416,13 @@ if($inv->warning_note != ""){
             $number_of_cartons = $this->input->post('number_of_cartons');
             $refrigirated_items = $this->input->post('refrigirated_items');
 
+            $sale_check = $this->sales_model->getSaleByID($sale_id);
+            if ($sale_check && $this->period_closing_model->isPeriodClosed('ar', $sale_check->date)) {
+                $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $sale_check->date));
+                admin_redirect('sales/view/' . $sale_id);
+                return;
+            }
+
             if($label_id = $this->sales_model->addSaleLabel($sale_id, $number_of_cartons, $refrigirated_items)){
                 $this->session->set_flashdata('message', lang('label_added_successfully'));
                 admin_redirect('sales/view/'.$sale_id);
@@ -7405,6 +7437,7 @@ if($inv->warning_note != ""){
             }
             $this->data['error'] = (validation_errors()) ? validation_errors() : $this->session->flashdata('error');
             $inv                 = $this->sales_model->getInvoiceByID($id);
+
             if (!$this->GP['sales-index']) {
                 $this->sma->view_rights($inv->created_by, true);
             }
@@ -7435,7 +7468,14 @@ if($inv->warning_note != ""){
     }
 
     public function label_verification($id = null){
-        
+        $sale = $this->sales_model->getSaleByID($id);
+
+        if ($sale && $this->period_closing_model->isPeriodClosed('ar', $sale->date)) {
+            $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $sale->date));
+            admin_redirect('sales/view/' . $id);
+            return;
+        }
+
         if($label_id = $this->sales_model->verifyLabel($id)){
             echo json_encode(['status' => 'success', 'message' => 'Label verified successfully']);
         }else{

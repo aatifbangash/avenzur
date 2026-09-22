@@ -167,6 +167,8 @@ if (!empty($filters['to_date'])) {
                                     $count++;
                                     $grand_total += (float) $payment->amount;
                                     $is_closed = ($payment->status ?? 'open') === 'closed';
+                                    $period_closed = $this->period_closing_model->isPeriodClosed('ar', $payment->date);
+                                    $can_edit = !$is_closed && !$period_closed;
                             ?>
                             <tr>
                                 <td><?= $count ?></td>
@@ -187,7 +189,9 @@ if (!empty($filters['to_date'])) {
                                 </td>
                                 <td><?= htmlspecialchars($payment->ledger_name ?? '') ?></td>
                                 <td>
-                                    <?php if ($is_closed): ?>
+                                    <?php if ($period_closed): ?>
+                                        <span class="label label-danger tip" title="AR period closed for this payment date"><i class="fa fa-lock"></i> Period Closed</span>
+                                    <?php elseif ($is_closed): ?>
                                         <span class="label label-danger"><i class="fa fa-lock"></i> <?= lang('Locked') ?></span>
                                     <?php else: ?>
                                         <span class="label label-info"><i class="fa fa-unlock-alt"></i> <?= lang('Open') ?></span>
@@ -198,7 +202,7 @@ if (!empty($filters['to_date'])) {
                                        class="btn btn-info btn-xs" title="<?= lang('View Payment') ?>">
                                         <i class="fa fa-eye"></i>
                                     </a>
-                                    <?php if (!$is_closed && 1 != 1): ?>
+                                    <?php if ($can_edit): ?>
                                         <a href="<?= admin_url('customers/edit_payment_reference/' . $payment->id) ?>"
                                            class="btn btn-primary btn-xs" title="<?= lang('Edit') ?>">
                                             <i class="fa fa-edit"></i>
@@ -211,11 +215,9 @@ if (!empty($filters['to_date'])) {
                                                 <i class="fa fa-lock"></i>
                                             </button>
                                         </form>
-                                        <?php if (!$is_closed): ?>
                                         <button type="button" class="btn btn-danger btn-xs" title="<?= lang('Delete Payment') ?>" data-toggle="modal" data-target="#deletePaymentModal" onclick="setDeletePaymentId(<?= $payment->id ?>);">
                                             <i class="fa fa-trash"></i>
                                         </button>
-                                        <?php endif; ?>
                                         <?php } ?>
                                     <?php endif; ?>
                                 </td>
