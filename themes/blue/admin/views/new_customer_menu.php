@@ -783,7 +783,7 @@
         <?php } ?>
 
          
-        <?php if($Admin || $Owner || $this->GP['accountant']){ ?>
+        <?php if($Admin || $Owner || $this->GP['accountant'] || $this->sma->in_group('financemanager')){ ?>
         <!-- SETTINGS -->
         <li class="newmenu-item has-sub">
             <a href="#" class="newmenu-link bluecolor">
@@ -802,6 +802,13 @@
                 <li><a href="<?= admin_url('system_settings/add_ledgers'); ?>" class="newmenu-link">
                     <i class="fa fa-sliders"></i> <span class="text"><?= lang('Account Settings'); ?></span></a></li>
                 
+                <?php } ?>
+                <?php if($Admin || $Owner || $this->sma->in_group('financemanager')){ ?>
+                <li>
+                    <a href="<?= admin_url('period_closing') ?>" class="newmenu-link">
+                        <i class="fa fa-lock"></i> <span class="text">Period Closing</span>
+                    </a>
+                </li>
                 <?php } ?>
                 <?php if($Admin || $Owner || $this->GP['accountant']){ ?>
                

@@ -43,6 +43,7 @@ class Transfers extends MY_Controller
         $this->load->library('SequenceCode');
         $this->sequenceCode = new SequenceCode();
         $this->load->admin_model('products_model');
+        $this->load->admin_model('period_closing_model');
     }
 
     public function push_serials_to_rasd_manually(){
@@ -107,7 +108,11 @@ class Transfers extends MY_Controller
                 $date = $this->sma->fld(trim($this->input->post('date')));
             } else {
                 $date = date('Y-m-d H:i:s');
-            } 
+            }
+            if ($this->period_closing_model->isPeriodClosed('inventory', $date)) {
+                $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('inventory', $date));
+                admin_redirect('transfers/add');
+            }
             $to_warehouse           = $this->input->post('to_warehouse');
             $from_warehouse         = $this->input->post('from_warehouse');
             if ($transfer_error = $this->site->validateOverseasTransfer($from_warehouse, $to_warehouse)) {
@@ -536,6 +541,16 @@ class Transfers extends MY_Controller
             $this->sma->send_json(['error' => 1, 'msg' => lang('id_not_found')]);
         }
 
+        $transfer = $this->transfers_model->getTransferByID($id);
+        if ($transfer && $this->period_closing_model->isPeriodClosed('inventory', $transfer->date)) {
+            $msg = $this->period_closing_model->closedMessage('inventory', $transfer->date);
+            if ($this->input->is_ajax_request()) {
+                $this->sma->send_json(['error' => 1, 'msg' => $msg]);
+            }
+            $this->session->set_flashdata('error', $msg);
+            admin_redirect('transfers');
+        }
+
         if ($this->transfers_model->deleteTransfer($id)) {
             if ($this->input->is_ajax_request()) {
                 $this->sma->send_json(['error' => 0, 'msg' => lang('transfer_deleted')]);
@@ -700,6 +715,11 @@ class Transfers extends MY_Controller
             admin_redirect('transfers');
         }
 
+        if ($this->period_closing_model->isPeriodClosed('inventory', $transfer->date)) {
+            $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('inventory', $transfer->date));
+            admin_redirect('transfers');
+        }
+
         $this->form_validation->set_message('is_natural_no_zero', lang('no_zero_required'));
         $this->form_validation->set_rules('reference_no', lang('reference_no'), 'required');
         $this->form_validation->set_rules('to_warehouse', lang('warehouse') . ' (' . lang('to') . ')', 'required|is_natural_no_zero');
@@ -711,6 +731,10 @@ class Transfers extends MY_Controller
                 $date = $this->sma->fld(trim($this->input->post('date')));
             } else {
                 $date = date('Y-m-d H:i:s');
+            }
+            if ($this->period_closing_model->isPeriodClosed('inventory', $date)) {
+                $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('inventory', $date));
+                admin_redirect('transfers/edit/' . $id);
             }
             $to_warehouse           = $this->input->post('to_warehouse');
             $from_warehouse         = $this->input->post('from_warehouse');
@@ -1199,40 +1223,11 @@ class Transfers extends MY_Controller
     {
         //$this->sma->checkPermissions('index');
         $tid = $this->input->get('tid');
-        $detail_link   = anchor('admin/transfers/view/$1', '<i class="fa fa-file-text-o"></i> ' . lang('transfer_details'), 'data-toggle="modal" data-target="#myModal"');
-        $email_link    = anchor('admin/transfers/email/$1', '<i class="fa fa-envelope"></i> ' . lang('email_transfer'), 'data-toggle="modal" data-target="#myModal"');
-        $edit_link     = anchor('admin/transfers/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_transfer'));
-        $pdf_link      = anchor('admin/transfers/pdf/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf'));
-        $excel_link    = anchor('admin/transfers/excel/$1', '<i class="fa fa-file-excel-o"></i> Download Excel');
-        $print_barcode = anchor('admin/products/print_barcodes/?transfer=$1', '<i class="fa fa-print"></i> ' . lang('print_barcodes'));
-        $delete_link   = "<a href='#' class='tip po' title='<b>" . lang('delete_transfer') . "</b>' data-content=\"<p>"
-            . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' id='a__$1' href='" . admin_url('transfers/delete/$1') . "'>"
-            . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i> "
-            . lang('delete_transfer') . '</a>'; 
-        $journal_entry_link      = anchor('admin/entries/view/journal/?tid=$1', '<i class="fa fa-eye"></i> ' . lang('Journal Entry'));
-        $action = '<div class="text-center"><div class="btn-group text-left">'
-            . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
-            . lang('actions') . ' <span class="caret"></span></button>
-        <ul class="dropdown-menu pull-right" role="menu">';
 
-        if($this->Owner || $this->Admin || $this->GP['transfers-edit']){    
-            $action .= '<li>' . $edit_link . '</li>';
-        }
-        if($this->Owner || $this->Admin || $this->GP['transfers-pdf']){
-            $action .= '<li>' . $pdf_link . '</li>';
-            $action .= '<li>' . $excel_link . '</li>';
-        }
-        if($this->Owner || $this->Admin){
-            $action .= '<li>' . $print_barcode . '</li>';
-        }
-        if($this->Owner || $this->Admin){
-            $action .= '<li>' . $journal_entry_link . '</li>';
-        }
-        if($this->GP['transfers-delete']){ 
-            $action .= '<li>' . $delete_link . '</li>';
-        }
-        $action .= '</ul>
-       </div></div>';
+        $can_edit   = ($this->Owner || $this->Admin || !empty($this->GP['transfers-edit'])) ? 1 : 0;
+        $can_pdf    = ($this->Owner || $this->Admin || !empty($this->GP['transfers-pdf'])) ? 1 : 0;
+        $can_delete = !empty($this->GP['transfers-delete']) ? 1 : 0;
+        $is_owner_admin = ($this->Owner || $this->Admin) ? 1 : 0;
 
         $this->load->library('datatables');
 
@@ -1257,7 +1252,11 @@ class Transfers extends MY_Controller
             $this->datatables->where('id', $tid);
         }
 
-            $this->datatables->add_column('Actions', $action, 'id')
+        $this->datatables->add_column(
+            'Actions',
+            '$1',
+            "transfers_dt_actions(id, date, {$can_edit}, {$can_pdf}, {$can_delete}, {$is_owner_admin})"
+        )
             ->unset_column('fcode')
             ->unset_column('tcode');
         echo $this->datatables->generate();
@@ -2042,3 +2041,44 @@ class Transfers extends MY_Controller
         $this->load->view($this->theme . 'transfers/view', $this->data);
     }
 }
+
+/**
+ * Datatables action menu for transfers — hides edit/delete when Inventory period is closed.
+ */
+if (!function_exists('transfers_dt_actions')) {
+    function transfers_dt_actions($id, $date, $can_edit = 0, $can_pdf = 0, $can_delete = 0, $is_owner_admin = 0)
+    {
+        $CI = get_instance();
+        if (!isset($CI->period_closing_model)) {
+            $CI->load->admin_model('period_closing_model');
+        }
+        $period_closed = $CI->period_closing_model->isPeriodClosed('inventory', $date);
+
+        $action = '<div class="text-center"><div class="btn-group text-left">'
+            . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+            . lang('actions') . ' <span class="caret"></span></button>
+        <ul class="dropdown-menu pull-right" role="menu">';
+
+        if ($can_edit && !$period_closed) {
+            $action .= '<li>' . anchor('admin/transfers/edit/' . $id, '<i class="fa fa-edit"></i> ' . lang('edit_transfer')) . '</li>';
+        }
+        if ($can_pdf) {
+            $action .= '<li>' . anchor('admin/transfers/pdf/' . $id, '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf')) . '</li>';
+            $action .= '<li>' . anchor('admin/transfers/excel/' . $id, '<i class="fa fa-file-excel-o"></i> Download Excel') . '</li>';
+        }
+        if ($is_owner_admin) {
+            $action .= '<li>' . anchor('admin/products/print_barcodes/?transfer=' . $id, '<i class="fa fa-print"></i> ' . lang('print_barcodes')) . '</li>';
+            $action .= '<li>' . anchor('admin/entries/view/journal/?tid=' . $id, '<i class="fa fa-eye"></i> ' . lang('Journal Entry')) . '</li>';
+        }
+        if ($can_delete && !$period_closed) {
+            $action .= "<li><a href='#' class='tip po' title='<b>" . lang('delete_transfer') . "</b>' data-content=\"<p>"
+                . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' id='a__" . $id . "' href='" . admin_url('transfers/delete/' . $id) . "'>"
+                . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i> "
+                . lang('delete_transfer') . '</a></li>';
+        }
+        $action .= '</ul></div></div>';
+
+        return $action;
+    }
+}
+

@@ -25,7 +25,7 @@ class Entries extends MY_Controller
     
 	public function index() {
 
-		$this->ensure_jl_lock_columns();
+		$this->load->admin_model('period_closing_model');
 		$this->load->library('pagination'); 
 		$config['base_url'] = admin_url('entries'); 
 		$config['total_rows'] = $this->count_entries();
@@ -61,13 +61,8 @@ class Entries extends MY_Controller
 		if (!empty($transaction_type)) {
 			$this->db->where('transaction_type', $transaction_type);
 		}
-		if (!empty($status)) {
-			if ($status === 'closed') {
-				$this->db->where('status', 'closed');
-			} elseif ($status === 'open') {
-				$this->db->where("(status IS NULL OR status = 'open')", null, false);
-			}
-		}
+		// Period open/closed (finance module), not per-entry lock
+		$this->period_closing_model->applyPeriodStatusFilter($status, 'date', 'finance');
 
 		$this->db->where("transaction_type NOT IN ('purchase_invoice', 'sales_invoice')");
 
@@ -82,6 +77,7 @@ class Entries extends MY_Controller
 		// pass an array of all entries to view
 		$this->data['entries'] = $query->result_array();
 		$this->data['transaction_types'] = $this->get_entry_transaction_types();
+		$this->data['period_closing_model'] = $this->period_closing_model;
 		
 		// render page
 		$bc  = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('Entries'), 'page' => lang('Entries')], ['link' => '#', 'page' => lang('Entries')]];
@@ -248,7 +244,7 @@ class Entries extends MY_Controller
 
 	public function count_entries(){
 
-		$this->ensure_jl_lock_columns();
+		$this->load->admin_model('period_closing_model');
 		$eid              = $this->input->get('eid');
         $tran_number      = $this->input->get('tran_number');
 		$start_date       = $this->input->get('start_date');
@@ -279,22 +275,13 @@ class Entries extends MY_Controller
 		if (!empty($transaction_type)) {
 			$this->db->where('transaction_type', $transaction_type);
 		}
-		if (!empty($status)) {
-			if ($status === 'closed') {
-				$this->db->where('status', 'closed');
-			} elseif ($status === 'open') {
-				$this->db->where("(status IS NULL OR status = 'open')", null, false);
-			}
-		}
+		$this->period_closing_model->applyPeriodStatusFilter($status, 'date', 'finance');
 
 		$this->db->where("transaction_type NOT IN ('purchase_invoice', 'sales_invoice')");
 
 		$query = $this->db->get();
-		 // echo $this->db->last_query(); exit;
 		$row = $query->row();
-		$count = $row->total_record;
-		return $count;   
-
+		return $row ? (int) $row->total_record : 0;
 	}
 
 	private function ensure_jl_lock_columns()
@@ -325,50 +312,13 @@ class Entries extends MY_Controller
 		$this->dbforge->add_column('accounts_entries', $fields);
 	}
 
+	/**
+	 * Individual JL lock removed — use Settings → Period Closing instead.
+	 */
 	public function close_entry()
 	{
-		$this->ensure_jl_lock_columns();
-
-		if ($this->sma->in_group('financemanager') === false) {
-			$this->session->set_flashdata('error', 'You do not have permission to close JL entries.');
-			admin_redirect($_SERVER['HTTP_REFERER']);
-			return;
-		}
-
-		$entry_id = $this->input->post('entry_id');
-
-		if (!$entry_id) {
-			$this->session->set_flashdata('error', 'Entry ID not provided.');
-			admin_redirect('entries');
-			return;
-		}
-
-		$entry = $this->db->where('id', $entry_id)->get('sma_accounts_entries')->row();
-
-		if (!$entry) {
-			$this->session->set_flashdata('error', 'JL entry not found.');
-			admin_redirect('entries');
-			return;
-		}
-
-		if (($entry->status ?? 'open') === 'closed') {
-			$this->session->set_flashdata('warning', 'This JL entry is already closed.');
-			admin_redirect('entries');
-			return;
-		}
-
-		$this->db->where('id', $entry_id);
-		if ($this->db->update('sma_accounts_entries', [
-			'status'    => 'closed',
-			'closed_by' => $this->session->userdata('user_id'),
-			'closed_at' => date('Y-m-d H:i:s'),
-		])) {
-			$this->session->set_flashdata('success', 'JL entry has been closed and locked from further editing.');
-		} else {
-			$this->session->set_flashdata('error', 'Failed to close JL entry.');
-		}
-
-		admin_redirect('entries');
+		$this->session->set_flashdata('warning', 'Individual JL locking has been replaced by Period Closing. Use Settings → Period Closing to close Finance for a month.');
+		admin_redirect('period_closing');
 	}
 
 	private function get_entry_transaction_types() {
@@ -431,6 +381,15 @@ class Entries extends MY_Controller
 
 		// load entry model
 		$this->load->admin_model('entry_model');
+		$this->load->admin_model('period_closing_model');
+
+		if ($this->input->post('date')) {
+			$post_date = $this->functionscore->dateToSql($this->input->post('date'));
+			if ($this->period_closing_model->isPeriodClosed('finance', $post_date ?: $this->input->post('date'))) {
+				$this->session->set_flashdata('error', $this->period_closing_model->closedMessage('finance', $post_date ?: $this->input->post('date')));
+				admin_redirect('entries/add/' . $entrytypeLabel);
+			}
+		}
 
 		$this->data['entrytypeLabel'] = $entrytypeLabel;
 
@@ -895,7 +854,7 @@ class Entries extends MY_Controller
 	*/
 	public function edit($entrytypeLabel = null, $id = null)
 	{
-		$this->ensure_jl_lock_columns();
+		$this->load->admin_model('period_closing_model');
 		// load model - entry_model
 		$this->load->admin_model('entry_model');
 
@@ -940,9 +899,13 @@ class Entries extends MY_Controller
 		$this->form_validation->set_rules('employee_id', 'Employee ID', 'callback_at_least_one_selected');
 
 		$q = $this->db->get_where('sma_accounts_entries', array('id' => $id))->row();
-		if ($q && ($q->status ?? 'open') === 'closed') {
-			$this->session->set_flashdata('error', 'This JL entry is locked and cannot be edited.');
+		if ($q && $this->period_closing_model->isPeriodClosed('finance', $q->date)) {
+			$this->session->set_flashdata('error', $this->period_closing_model->closedMessage('finance', $q->date));
 			admin_redirect('entries');
+		}
+		if ($q && $this->input->post('date') && $this->period_closing_model->isPeriodClosed('finance', $this->input->post('date'))) {
+			$this->session->set_flashdata('error', $this->period_closing_model->closedMessage('finance', $this->input->post('date')));
+			admin_redirect('entries/edit/' . $entrytypeLabel . '/' . $id);
 		}
 		if ($this->input->post('number') != $q->number) {
 			$this->form_validation->set_rules('number', lang('entries_cntrler_add_form_validation_number_label'), 'is_db1_unique[sma_accounts_entries.number]');
@@ -1511,7 +1474,7 @@ class Entries extends MY_Controller
 	*/
 	public function delete($entrytypeLabel = null, $id = null)
 	{
-		$this->ensure_jl_lock_columns();
+		$this->load->admin_model('period_closing_model');
 		/* Check for valid entry type */
 		if (empty($entrytypeLabel))
 		{
@@ -1554,8 +1517,8 @@ class Entries extends MY_Controller
 			admin_redirect('entries');
 		}
 
-		if (($entry['status'] ?? 'open') === 'closed') {
-			$this->session->set_flashdata('error', 'This JL entry is locked and cannot be deleted.');
+		if ($this->period_closing_model->isPeriodClosed('finance', $entry['date'])) {
+			$this->session->set_flashdata('error', $this->period_closing_model->closedMessage('finance', $entry['date']));
 			admin_redirect('entries');
 		}
 

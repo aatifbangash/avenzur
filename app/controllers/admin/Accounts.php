@@ -663,10 +663,17 @@ class Accounts extends MY_Controller
 		$this->load->admin_model('department_model');
 		$this->load->admin_model('employee_model');
 		$this->load->admin_model('entry_model');
+		$this->load->admin_model('period_closing_model');
 
 		// Handle POST submission
 		if ($this->input->method() == 'post') {
 			$data = $this->input->post();
+
+			$entry_date = $data['entry_date'] ?? null;
+			if ($this->period_closing_model->isPeriodClosed('finance', $entry_date)) {
+				$this->session->set_flashdata('error', $this->period_closing_model->closedMessage('finance', $entry_date));
+				admin_redirect('accounts/jl_entry');
+			}
 
 			$dr_total = 0;
 			$cr_total = 0;
@@ -769,8 +776,6 @@ class Accounts extends MY_Controller
 
 	public function jl_entry_edit($id = null)
 	{
-		$this->ensure_jl_lock_columns();
-
 		if (!$id) {
 			$this->session->set_flashdata('error', 'Invalid entry ID');
 			admin_redirect('entries');
@@ -779,6 +784,7 @@ class Accounts extends MY_Controller
 		$this->load->admin_model('reports_model');
 		$this->load->admin_model('department_model');
 		$this->load->admin_model('employee_model');
+		$this->load->admin_model('period_closing_model');
 
 		// Get entry data
 		$entry = $this->db->get_where('sma_accounts_entries', array('id' => $id))->row();
@@ -787,8 +793,8 @@ class Accounts extends MY_Controller
 			admin_redirect('entries');
 		}
 
-		if (($entry->status ?? 'open') === 'closed') {
-			$this->session->set_flashdata('error', 'This JL entry is locked and cannot be edited.');
+		if ($this->period_closing_model->isPeriodClosed('finance', $entry->date)) {
+			$this->session->set_flashdata('error', $this->period_closing_model->closedMessage('finance', $entry->date));
 			admin_redirect('entries');
 		}
 
@@ -801,6 +807,12 @@ class Accounts extends MY_Controller
 		// Handle POST submission (update)
 		if ($this->input->method() == 'post') {
 			$data = $this->input->post();
+
+			$entry_date = $data['entry_date'] ?? $entry->date;
+			if ($this->period_closing_model->isPeriodClosed('finance', $entry_date)) {
+				$this->session->set_flashdata('error', $this->period_closing_model->closedMessage('finance', $entry_date));
+				admin_redirect('accounts/jl_entry_edit/' . $id);
+			}
 
 			$dr_total = 0;
 			$cr_total = 0;
