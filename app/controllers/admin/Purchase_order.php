@@ -39,6 +39,7 @@ class Purchase_order extends MY_Controller
         $this->load->admin_model('Inventory_model');
         $this->load->admin_model('deals_model');
         $this->load->admin_model('purchase_requisition_model');
+        $this->load->admin_model('period_closing_model');
         $this->digital_upload_path = 'files/';
         $this->upload_path = 'assets/uploads/';
         $this->thumbs_path = 'assets/uploads/thumbs/';
@@ -560,6 +561,11 @@ class Purchase_order extends MY_Controller
             } else {
                 $date = date('Y-m-d H:i:s');
             }
+            if ($this->period_closing_model->isPeriodClosed('ap', $date)) {
+                $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ap', $date));
+                admin_redirect('purchase_order/add');
+                return;
+            }
             $warehouse_id = $this->input->post('warehouse');
             $child_supplier_id = $this->input->post('childsupplier') ? $this->input->post('childsupplier') : 0;
             $supplier_id = $child_supplier_id ? $child_supplier_id : $this->input->post('supplier');
@@ -867,6 +873,13 @@ class Purchase_order extends MY_Controller
         if (!$this->session->userdata('edit_right')) {
             $this->sma->view_rights($inv->created_by);
         }
+
+        if ($inv && $this->period_closing_model->isPeriodClosed('ap', $inv->date)) {
+            $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ap', $inv->date));
+            admin_redirect($_SERVER['HTTP_REFERER'] ?? 'purchase_order');
+            return;
+        }
+
         $this->form_validation->set_message('is_natural_no_zero', $this->lang->line('no_zero_required'));
         // Reference number already exists, no need to require it on edit
         // $this->form_validation->set_rules('reference_no', $this->lang->line('ref_no'), 'required');
@@ -887,6 +900,11 @@ class Purchase_order extends MY_Controller
                 $date = $this->input->post('date') ? $this->sma->fld(trim($this->input->post('date'))) : $inv->date;
             } else {
                 $date = $inv->date;
+            }
+            if ($this->period_closing_model->isPeriodClosed('ap', $date)) {
+                $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ap', $date));
+                admin_redirect('purchase_order/edit/' . $id);
+                return;
             }
             $warehouse_id = $this->input->post('warehouse');
             $supplier_id = $this->input->post('supplier');
@@ -2123,6 +2141,15 @@ class Purchase_order extends MY_Controller
         $purchase_id = $this->input->post('purchase_order_id');
         $notes = $this->input->post('notes');
 
+        $inv = $this->purchase_order_model->getPurchaseByID($purchase_id);
+        if ($inv && $this->period_closing_model->isPeriodClosed('ap', $inv->date)) {
+            echo json_encode([
+                'success' => false,
+                'message' => $this->period_closing_model->closedMessage('ap', $inv->date),
+            ]);
+            return;
+        }
+
         //send email to supplier can be added here
         //send whatever notification needed
         $identifier = '540369101'; //phone number or whatsapp number
@@ -2310,6 +2337,15 @@ class Purchase_order extends MY_Controller
                 admin_redirect('purchase_order/add_grn/' . $po_id);
                 return;
             }
+
+            $date_received_raw = $this->input->post('date_received');
+            $date_received = $date_received_raw ? str_replace('T', ' ', $date_received_raw) : date('Y-m-d H:i:s');
+            if ($this->period_closing_model->isPeriodClosed('ap', $date_received)) {
+                $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ap', $date_received));
+                admin_redirect('purchase_order/add_grn/' . $po_id);
+                return;
+            }
+
             $this->load->library('upload', [
                 'upload_path'   => FCPATH . 'files/receipts/',
                 'allowed_types' => 'jpg|jpeg|png|gif|pdf',
@@ -2613,6 +2649,14 @@ class Purchase_order extends MY_Controller
         if (!$id) {
             $this->session->set_flashdata('error', 'Invalid purchase order ID');
             echo json_encode(['status' => 'error', 'message' => 'Invalid purchase order ID']);
+            return;
+        }
+
+        $inv = $this->purchase_order_model->getPurchaseByID($id);
+        if ($inv && $this->period_closing_model->isPeriodClosed('ap', $inv->date)) {
+            $msg = $this->period_closing_model->closedMessage('ap', $inv->date);
+            $this->session->set_flashdata('error', $msg);
+            echo json_encode(['status' => 'error', 'message' => $msg]);
             return;
         }
         

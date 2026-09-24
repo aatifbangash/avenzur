@@ -115,6 +115,7 @@ if (!empty($filters['to_date'])) {
                                     $net       = $amount - $vat;
                                     $total_amount += $amount;
                                     $total_vat    += $vat;
+                                    $period_closed = $this->period_closing_model->isPeriodClosed('ap', $invoice->date);
                             ?>
                                 <tr>
                                     <td><?= $count ?></td>
@@ -126,7 +127,9 @@ if (!empty($filters['to_date'])) {
                                     <td class="text-right"><?= number_format($vat, 2) ?></td>
                                     <td class="text-right"><?= number_format($amount, 2) ?></td>
                                     <td>
-                                        <?php if (($invoice->status ?? 'open') === 'locked'): ?>
+                                        <?php if ($period_closed): ?>
+                                            <span class="label label-danger tip" title="AP period closed for this invoice date"><i class="fa fa-lock"></i> Period Closed</span>
+                                        <?php elseif (($invoice->status ?? 'open') === 'locked'): ?>
                                             <span class="label label-danger"><i class="fa fa-lock"></i> Locked</span>
                                         <?php else: ?>
                                             <span class="label label-info">Open</span>
@@ -137,17 +140,17 @@ if (!empty($filters['to_date'])) {
                                            class="tip btn btn-xs btn-default" title="Download PDF">
                                             <i class="fa fa-file-pdf-o"></i>
                                         </a>
-                                        <?php if (($invoice->status ?? 'open') !== 'locked' && empty($invoice->payment_count)): ?>
+                                        <?php if (!$period_closed && ($invoice->status ?? 'open') !== 'locked' && empty($invoice->payment_count)): ?>
                                             <a href="<?= admin_url('suppliers/edit_service_invoice/' . $invoice->id) ?>"
                                                class="tip btn btn-xs btn-warning" title="Edit">
                                                 <i class="fa fa-edit"></i>
                                             </a>
-                                        <?php elseif (!empty($invoice->payment_count)): ?>
+                                        <?php elseif (!$period_closed && !empty($invoice->payment_count)): ?>
                                             <span class="tip btn btn-xs btn-default disabled" title="Cannot edit — payment recorded against this invoice">
                                                 <i class="fa fa-edit"></i>
                                             </span>
                                         <?php endif; ?>
-                                        <?php if ($this->sma->in_group('financemanager')): ?>
+                                        <?php if (!$period_closed && $this->sma->in_group('financemanager')): ?>
                                             <?php if (($invoice->status ?? 'open') === 'locked'): ?>
                                                 <form method="POST" action="<?= admin_url('suppliers/unlock_service_invoice') ?>" style="display:inline;">
                                                     <input type="hidden" name="memo_id" value="<?= $invoice->id ?>">

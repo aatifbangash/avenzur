@@ -575,11 +575,11 @@ class Sales extends MY_Controller
             admin_redirect('quotes');
         }
 
-        $this->load->admin_model('period_closing_model');
+        /*$this->load->admin_model('period_closing_model');
         if ($this->period_closing_model->isPeriodClosed('ar', $quote->date)) {
             $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $quote->date));
             admin_redirect('quotes');
-        }
+        }*/
 
         // --- On Hold Checks (credit limit + overdue payment term) ---
         $customer_obj   = $this->companies_model->getCompanyByID($quote->customer_id);

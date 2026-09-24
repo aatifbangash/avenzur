@@ -777,15 +777,19 @@
     $.ajax({
       url: '<?= admin_url("purchase_order/send_to_supplier") ?>',
       type: 'POST',
+      dataType: 'json',
       data: {
         purchase_order_id: <?= $inv->id; ?>,
         notes: notes
       },
       success: function(response) {
-        //console.log(response);
+        if (response && response.success === false) {
+          alert(response.message || 'This purchase order cannot be sent because the AP period is closed.');
+          return;
+        }
         $('#sendToSupplierModal').modal('hide');
         alert('Purchase Order sent successfully!');
-        //location.reload();
+        location.reload();
       },
       error: function() {
         alert('Something went wrong. Please try again.');

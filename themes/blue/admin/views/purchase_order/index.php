@@ -114,6 +114,7 @@
                             if (!empty($purchases)): ?>
                                 <?php foreach ($purchases as $purchase):
                                     $pid = $purchase->id;
+                                    $period_closed = $this->period_closing_model->isPeriodClosed('ap', $purchase->date);
                                     $detail_link = anchor('admin/purchase_order/view/'.$pid, '<i class="fa fa-file-text-o"></i> ' . lang('purchase_order_details'));
                                     
                                   
@@ -163,11 +164,14 @@
                                                         data-toggle="dropdown">Action<span class="caret"></span></button>
                                                     <ul class="dropdown-menu pull-right" role="menu">
                                                         
-                                                        <?php if($purchase->status == "pending" && ($Admin || $Owner || $this->GP['po-add'])) {?>
+                                                        <?php if (!$period_closed && $purchase->status == "pending" && ($Admin || $Owner || $this->GP['po-add'])) {?>
                                                         <li><?= $edit_link ?></li>
                                                         <?php }?>
                                                         <li><?= $detail_link ?></li>
-                                                        <?php if ($Owner || $Admin) { ?>
+                                                        <?php if ($period_closed) { ?>
+                                                        <li class="divider"></li>
+                                                        <li><a href="javascript:void(0);" class="text-danger tip" title="AP period closed for this order date"><i class="fa fa-lock"></i> Period Closed</a></li>
+                                                        <?php } elseif ($Owner || $Admin) { ?>
                                                         <li class="divider"></li>
                                                         <li>
                                                             <a href="#" onclick="deletePO(<?= $pid ?>, '<?= $purchase->reference_no ?>'); return false;">

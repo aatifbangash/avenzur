@@ -31,6 +31,7 @@ class Purchases extends MY_Controller
         $this->load->admin_model('deals_model');
         $this->load->admin_model('purchase_order_model');
         $this->load->admin_model('purchase_contract_deals_model');
+        $this->load->admin_model('period_closing_model');
         $this->digital_upload_path = 'files/';
         $this->upload_path = 'assets/uploads/';
         $this->thumbs_path = 'assets/uploads/thumbs/';
@@ -355,6 +356,11 @@ class Purchases extends MY_Controller
                 $date = $this->sma->fld(trim($this->input->post('date')));
             } else {
                 $date = date('Y-m-d H:i:s');
+            }
+            if ($this->period_closing_model->isPeriodClosed('ap', $date)) {
+                $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ap', $date));
+                admin_redirect('purchases/add');
+                return;
             }
             $warehouse_id = $this->input->post('warehouse');
             $child_supplier_id = $this->input->post('childsupplier') ? $this->input->post('childsupplier') : 0;
@@ -1145,6 +1151,17 @@ class Purchases extends MY_Controller
             $this->sma->send_json(['error' => 1, 'msg' => lang('id_not_found')]);
         }
 
+        $purchase = $this->purchases_model->getPurchaseByID($id);
+        if ($purchase && $this->period_closing_model->isPeriodClosed('ap', $purchase->date)) {
+            $msg = $this->period_closing_model->closedMessage('ap', $purchase->date);
+            if ($this->input->is_ajax_request()) {
+                $this->sma->send_json(['error' => 1, 'msg' => $msg]);
+            }
+            $this->session->set_flashdata('error', $msg);
+            admin_redirect($_SERVER['HTTP_REFERER'] ?? 'purchases');
+            return;
+        }
+
         if ($this->purchases_model->deletePurchase($id)) {
             if ($this->input->is_ajax_request()) {
                 $this->sma->send_json(['error' => 0, 'msg' => lang('purchase_deleted')]);
@@ -1222,6 +1239,12 @@ class Purchases extends MY_Controller
              admin_redirect('purchases');
         }*/
 
+        if ($inv && $this->period_closing_model->isPeriodClosed('ap', $inv->date)) {
+            $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ap', $inv->date));
+            admin_redirect($_SERVER['HTTP_REFERER'] ?? 'purchases');
+            return;
+        }
+
         $supplier_purchase_discount = $this->deals_model->getPurchaseDiscount($inv->supplier_id);
         if ($inv->status == 'returned' || $inv->return_id || $inv->return_purchase_ref) {
             $this->session->set_flashdata('error', lang('purchase_x_action'));
@@ -1248,6 +1271,11 @@ class Purchases extends MY_Controller
                 $date = $this->sma->fld(trim($this->input->post('date')));
             } else {
                 $date = $inv->date;
+            }
+            if ($this->period_closing_model->isPeriodClosed('ap', $date)) {
+                $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ap', $date));
+                admin_redirect('purchases/edit/' . $id);
+                return;
             }
             $warehouse_id = $this->input->post('warehouse');
             $supplier_id = $this->input->post('supplier');
@@ -2188,81 +2216,13 @@ class Purchases extends MY_Controller
             $user = $this->site->getUser();
             $warehouse_id = $user->warehouse_id;
         }
-        $detail_link = anchor('admin/purchases/view/$1', '<i class="fa fa-file-text-o"></i> ' . lang('purchase_details'));
-        $payments_link = anchor('admin/purchases/payments/$1', '<i class="fa fa-money"></i> ' . lang('view_payments'), 'data-toggle="modal" data-target="#myModal"');
-        $transfer_link = anchor('admin/purchases/transfer/$1', '<i class="fa fa-money"></i> ' . lang('Transfer to Pharmacy'), 'data-toggle="modal" data-target="#myModal"');
-        $journal_entry_link = anchor('admin/entries/view/journal/?pid=$1', '<i class="fa fa-eye"></i> ' . lang('Journal Entry'));
 
-        if (isset($this->GP) && $this->GP['accountant']) {
-            $convert_purchase_invoice = anchor('admin/purchases/convert_purchse_invoice/$1', '<i class="fa fa-money"></i> ' . lang('Convert to Invoice'));
-        }
-
-        $add_payment_link = anchor('admin/purchases/add_payment/$1', '<i class="fa fa-money"></i> ' . lang('add_payment'), 'data-toggle="modal" data-target="#myModal"');
-
-        $email_link = anchor('admin/purchases/email/$1', '<i class="fa fa-envelope"></i> ' . lang('email_purchase'), 'data-toggle="modal" data-target="#myModal"');
-        $edit_link = anchor('admin/purchases/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_purchase'));
-        $pdf_link = anchor('admin/purchases/pdf/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf'));
-        $print_barcode = anchor('admin/products/print_barcodes/?purchase=$1', '<i class="fa fa-print"></i> ' . lang('print_barcodes'));
-        $return_link = anchor('admin/returns_supplier/add/?purchase=$1', '<i class="fa fa-angle-double-left"></i> ' . lang('return_purchase'));
-        $delete_link = "<a href='#' class='po' title='<b>" . $this->lang->line('delete_purchase') . "</b>' data-content=\"<p>"
-            . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('purchases/delete/$1') . "'>"
-            . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i> "
-            . lang('delete_purchase') . '</a>';
-
-
-        if (isset($this->GP) && $this->GP['accountant']) {
-
-            $action = '<div class="text-center"><div class="btn-group text-left">'
-                . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
-                . lang('actions') . ' <span class="caret"></span></button>
-            <ul class="dropdown-menu pull-right" role="menu">
-                <li>' . $convert_purchase_invoice . '</li>
-                <li>' . $detail_link . '</li>
-                <li>' . $payments_link . '</li>
-                <li>' . $add_payment_link . '</li>
-                <li>' . $edit_link . '</li>
-                <li>' . $pdf_link . '</li>
-                <li>' . $email_link . '</li>
-                <li>' . $print_barcode . '</li>
-                <li>' . $return_link . '</li>
-                <li>' . $journal_entry_link . '</li>
-                <li>' . $delete_link . '</li> 
-            </ul>
-            </div></div>';
-
-        } else {
-
-            $action = '<div class="text-center"><div class="btn-group text-left">'
-                . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
-                . lang('actions') . ' <span class="caret"></span></button>
-            <ul class="dropdown-menu pull-right" role="menu">
-                <li>' . $detail_link . '</li>
-                <li>' . $payments_link . '</li>
-                <li>' . $add_payment_link . '</li>
-                <li>' . $edit_link . '</li>
-                <li>' . $pdf_link . '</li>
-                <li>' . $email_link . '</li>';
-            if($this->Owner || $this->Admin){
-                $action .= '<li>' . $print_barcode . '</li>';
-            }
-            if($this->Owner || $this->Admin || $this->GP['supplier-returns-add']){
-                $action .= '<li>' . $return_link . '</li>';
-            }
-            if($this->Owner || $this->Admin || $this->GP['purchases-deleted']){
-                $action .= '<li>' . $delete_link . '</li>';
-            }
-            if($this->Owner || $this->Admin || $this->GP['transfers-add']){
-                $action .= '<li>' . $transfer_link . '</li>';
-            }
-            if($this->Owner || $this->Admin || $this->Accountant){
-               $action .= '<li>' . $journal_entry_link . '</li>';
-            }
-            $action .= '</ul>
-            </div></div>';
-
-
-        }
-        //$action = '<div class="text-center">' . $detail_link . ' ' . $edit_link . ' ' . $email_link . ' ' . $delete_link . '</div>';
+        $is_accountant = (isset($this->GP) && $this->GP['accountant']) ? 1 : 0;
+        $can_print_barcode = ($this->Owner || $this->Admin) ? 1 : 0;
+        $can_return = ($this->Owner || $this->Admin || !empty($this->GP['supplier-returns-add'])) ? 1 : 0;
+        $can_delete = ($this->Owner || $this->Admin || !empty($this->GP['purchases-deleted'])) ? 1 : 0;
+        $can_transfer = ($this->Owner || $this->Admin || !empty($this->GP['transfers-add'])) ? 1 : 0;
+        $can_journal = ($this->Owner || $this->Admin || $this->Accountant) ? 1 : 0;
 
         $this->load->library('datatables');
         if ($warehouse_id) {
@@ -2334,7 +2294,11 @@ class Purchases extends MY_Controller
         } elseif ($this->Supplier) {
             $this->datatables->where('supplier_id', $this->session->userdata('user_id'));
         }
-        $this->datatables->add_column('Actions', $action, 'id');
+        $this->datatables->add_column(
+            'Actions',
+            '$1',
+            "purchases_dt_actions(id, date, {$is_accountant}, {$can_print_barcode}, {$can_return}, {$can_delete}, {$can_transfer}, {$can_journal})"
+        );
         echo $this->datatables->generate();
     }
 
@@ -4269,5 +4233,66 @@ class Purchases extends MY_Controller
         $bc = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('check_status'), 'page' => lang('Check Status')], ['link' => '#', 'page' => lang('Check Status')]];
         $meta = ['page_title' => lang('Check Status'), 'bc' => $bc];
         $this->page_construct('purchases/check_status_list', $meta, $this->data);
+    }
+}
+
+/**
+ * Datatables action menu for purchases — hides mutating actions when AP period is closed.
+ */
+if (!function_exists('purchases_dt_actions')) {
+    function purchases_dt_actions($id, $date, $is_accountant = 0, $can_print_barcode = 0, $can_return = 0, $can_delete = 0, $can_transfer = 0, $can_journal = 0)
+    {
+        $CI = get_instance();
+        if (!isset($CI->period_closing_model)) {
+            $CI->load->admin_model('period_closing_model');
+        }
+        $period_closed = $CI->period_closing_model->isPeriodClosed('ap', $date);
+
+        $action = '<div class="text-center"><div class="btn-group text-left">'
+            . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+            . lang('actions') . ' <span class="caret"></span></button>
+            <ul class="dropdown-menu pull-right" role="menu">';
+
+        if ($is_accountant && !$period_closed) {
+            $action .= '<li>' . anchor('admin/purchases/convert_purchse_invoice/' . $id, '<i class="fa fa-money"></i> ' . lang('Convert to Invoice')) . '</li>';
+        }
+
+        $action .= '<li>' . anchor('admin/purchases/view/' . $id, '<i class="fa fa-file-text-o"></i> ' . lang('purchase_details')) . '</li>';
+        $action .= '<li>' . anchor('admin/purchases/payments/' . $id, '<i class="fa fa-money"></i> ' . lang('view_payments'), 'data-toggle="modal" data-target="#myModal"') . '</li>';
+
+        if (!$period_closed) {
+            $action .= '<li>' . anchor('admin/purchases/add_payment/' . $id, '<i class="fa fa-money"></i> ' . lang('add_payment'), 'data-toggle="modal" data-target="#myModal"') . '</li>';
+            $action .= '<li>' . anchor('admin/purchases/edit/' . $id, '<i class="fa fa-edit"></i> ' . lang('edit_purchase')) . '</li>';
+        }
+
+        $action .= '<li>' . anchor('admin/purchases/pdf/' . $id, '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf')) . '</li>';
+        $action .= '<li>' . anchor('admin/purchases/email/' . $id, '<i class="fa fa-envelope"></i> ' . lang('email_purchase'), 'data-toggle="modal" data-target="#myModal"') . '</li>';
+
+        if ($is_accountant || $can_print_barcode) {
+            $action .= '<li>' . anchor('admin/products/print_barcodes/?purchase=' . $id, '<i class="fa fa-print"></i> ' . lang('print_barcodes')) . '</li>';
+        }
+
+        if (($is_accountant || $can_return) && !$period_closed) {
+            $action .= '<li>' . anchor('admin/returns_supplier/add/?purchase=' . $id, '<i class="fa fa-angle-double-left"></i> ' . lang('return_purchase')) . '</li>';
+        }
+
+        if (($is_accountant || $can_journal)) {
+            $action .= '<li>' . anchor('admin/entries/view/journal/?pid=' . $id, '<i class="fa fa-eye"></i> ' . lang('Journal Entry')) . '</li>';
+        }
+
+        if (!$is_accountant && $can_transfer && !$period_closed) {
+            $action .= '<li>' . anchor('admin/purchases/transfer/' . $id, '<i class="fa fa-money"></i> ' . lang('Transfer to Pharmacy'), 'data-toggle="modal" data-target="#myModal"') . '</li>';
+        }
+
+        if (($is_accountant || $can_delete) && !$period_closed) {
+            $action .= "<li><a href='#' class='po' title='<b>" . lang('delete_purchase') . "</b>' data-content=\"<p>"
+                . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('purchases/delete/' . $id) . "'>"
+                . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i> "
+                . lang('delete_purchase') . '</a></li>';
+        }
+
+        $action .= '</ul></div></div>';
+
+        return $action;
     }
 }
