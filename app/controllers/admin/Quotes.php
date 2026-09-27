@@ -34,6 +34,7 @@ class Quotes extends MY_Controller
             'types'    => $this->digital_file_types,
             'max_size' => $this->allowed_file_size,
         ]);
+        $this->load->admin_model('period_closing_model');
     }
 
     public function add(){
@@ -83,6 +84,10 @@ class Quotes extends MY_Controller
                 $date = $this->sma->fld(trim($this->input->post('date')));
             } else {
                 $date = date('Y-m-d H:i:s');
+            }
+            if ($this->period_closing_model->isPeriodClosed('ar', $date)) {
+                $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $date));
+                admin_redirect('quotes/add');
             }
             $warehouse_id     = $this->input->post('warehouse');
             $customer_id      = $this->input->post('customer');
@@ -615,6 +620,16 @@ class Quotes extends MY_Controller
             return;
         }
 
+        if ($quote && $this->period_closing_model->isPeriodClosed('ar', $quote->date)) {
+            $msg = $this->period_closing_model->closedMessage('ar', $quote->date);
+            if ($this->input->is_ajax_request()) {
+                $this->sma->send_json(['error' => 1, 'msg' => $msg]);
+            }
+            $this->session->set_flashdata('error', $msg);
+            admin_redirect('quotes');
+            return;
+        }
+
         if ($this->quotes_model->deleteQuote($id)) {
             if ($this->input->is_ajax_request()) {
                 $this->sma->send_json(['error' => 0, 'msg' => lang('quote_deleted')]);
@@ -641,6 +656,11 @@ class Quotes extends MY_Controller
         if($inv->status == 'converted_to_sale' || $inv->status == 'rejected'){
             $this->session->set_flashdata('error', 'Cannot edit completed, converted, or rejected quotes');
 
+            admin_redirect('quotes');
+        }
+
+        if ($this->period_closing_model->isPeriodClosed('ar', $inv->date)) {
+            $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $inv->date));
             admin_redirect('quotes');
         }
 
@@ -672,6 +692,10 @@ class Quotes extends MY_Controller
                 $date = $this->sma->fld(trim($this->input->post('date')));
             } else {
                 $date = $inv->date;
+            }
+            if ($this->period_closing_model->isPeriodClosed('ar', $date)) {
+                $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $date));
+                admin_redirect('quotes/edit/' . $id);
             }
             $warehouse_id     = $this->input->post('warehouse');
             $customer_id      = $this->input->post('customer');
@@ -1505,44 +1529,11 @@ class Quotes extends MY_Controller
             $user         = $this->site->getUser();
             $warehouse_id = $user->warehouse_id;
         }
-        $detail_link  = anchor('admin/quotes/view/$1', '<i class="fa fa-file-text-o"></i> ' . lang('quote_details'));
-        $email_link   = anchor('admin/quotes/email/$1', '<i class="fa fa-envelope"></i> ' . lang('email_quote'), 'data-toggle="modal" data-target="#myModal"');
-        $edit_link    = anchor('admin/quotes/edit/$1', '<i class="fa fa-edit"></i> ' . lang('edit_quote'));
-        //$convert_link = anchor('admin/sales/add_from_quote/$1', '<i class="fa fa-heart"></i> ' . lang('create_sale_order'));
-        $convert_link = "<a href='" . admin_url('sales/add_from_quote/$1') . "' 
-                        onclick=\"return confirm('Are you sure you want to convert this quotation to a sale order?');\" >
-                        <i class='fa fa-heart-o'></i> " . lang('create_sale_order') . "</a>";
-        $pc_link      = anchor('admin/purchases/add/$1', '<i class="fa fa-star"></i> ' . lang('create_purchase'));
-        $pdf_link     = anchor('admin/quotes/pdf/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf'));
-        $new_pdf_link     = anchor('admin/quotes/pdf_new/$1', '<i class="fa fa-file-pdf-o"></i> ' . lang('Download Quotation'));
-        $excel_download = anchor('admin/quotes/excel_new/$1', '<i class="fa fa-file-excel-o"></i> ' . lang('Download_Excel'));
-        $delete_link  = "<a href='#' class='po' title='<b>" . $this->lang->line('delete_quote') . "</b>' data-content=\"<p>"
-        . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('quotes/delete/$1') . "'>"
-        . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i> "
-        . lang('delete_quote') . '</a>';
-        $action = '<div class="text-center"><div class="btn-group text-left">'
-        . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
-        . lang('actions') . ' <span class="caret"></span></button>
-                    <ul class="dropdown-menu pull-right" role="menu">';
-                        if($this->Admin || $this->Owner || $this->GP['quotes-edit']){
-                            $action .= '<li>' . $edit_link . '</li>';
-                        }
-                        if($this->Admin || $this->Owner || $this->GP['sales-add']){
-                            //if($this->Settings->site_name == 'Hills Business Medical' || $this->Settings->site_name == 'Demo Company' || $this->Settings->site_name == 'Avnzor'){
-                                $action .= '<li>' . $convert_link . '</li>';
-                            //}
-                        } 
-                        if($this->Admin || $this->Owner || $this->GP['quotes-pdf']){ 
-                            $action .= '<li>' . $pdf_link . '</li>';
-                            $action .= '<li>' . $new_pdf_link . '</li>';
-                            $action .= '<li>' . $excel_download . '</li>';
-                        }
-                        if($this->Admin || $this->Owner || $this->GP['quotes-delete']){ 
-                            $action .= '<li>' . $delete_link . '</li>';
-                        }
-                    $action .= '</ul>
-                </div></div>';
-        //$action = '<div class="text-center">' . $detail_link . ' ' . $edit_link . ' ' . $email_link . ' ' . $delete_link . '</div>';
+
+        $can_edit    = ($this->Admin || $this->Owner || !empty($this->GP['quotes-edit'])) ? 1 : 0;
+        $can_convert = ($this->Admin || $this->Owner || !empty($this->GP['sales-add'])) ? 1 : 0;
+        $can_pdf     = ($this->Admin || $this->Owner || !empty($this->GP['quotes-pdf'])) ? 1 : 0;
+        $can_delete  = ($this->Admin || $this->Owner || !empty($this->GP['quotes-delete'])) ? 1 : 0;
 
         $this->load->library('datatables');
         if ($warehouse_id) {
@@ -1561,7 +1552,11 @@ class Quotes extends MY_Controller
         } elseif ($this->Customer) {
             $this->datatables->where('customer_id', $this->session->userdata('user_id'));
         }
-        $this->datatables->add_column('Actions', $action, 'id');
+        $this->datatables->add_column(
+            'Actions',
+            '$1',
+            "quotes_dt_actions(id, date, {$can_edit}, {$can_convert}, {$can_pdf}, {$can_delete})"
+        );
         echo $this->datatables->generate();
     }
 
@@ -2317,3 +2312,46 @@ class Quotes extends MY_Controller
         $this->page_construct('quotes/view', $meta, $this->data);
     }
 }
+
+/**
+ * Datatables action menu for quotes — hides edit / convert / delete when AR period is closed.
+ */
+if (!function_exists('quotes_dt_actions')) {
+    function quotes_dt_actions($id, $date, $can_edit = 0, $can_convert = 0, $can_pdf = 0, $can_delete = 0)
+    {
+        $CI = get_instance();
+        if (!isset($CI->period_closing_model)) {
+            $CI->load->admin_model('period_closing_model');
+        }
+        $period_closed = $CI->period_closing_model->isPeriodClosed('ar', $date);
+
+        $action = '<div class="text-center"><div class="btn-group text-left">'
+            . '<button type="button" class="btn btn-default btn-xs btn-primary dropdown-toggle" data-toggle="dropdown">'
+            . lang('actions') . ' <span class="caret"></span></button>
+                    <ul class="dropdown-menu pull-right" role="menu">';
+
+        if ($can_edit && !$period_closed) {
+            $action .= '<li>' . anchor('admin/quotes/edit/' . $id, '<i class="fa fa-edit"></i> ' . lang('edit_quote')) . '</li>';
+        }
+        if ($can_convert && !$period_closed) {
+            $action .= "<li><a href='" . admin_url('sales/add_from_quote/' . $id) . "'
+                        onclick=\"return confirm('Are you sure you want to convert this quotation to a sale order?');\">
+                        <i class='fa fa-heart-o'></i> " . lang('create_sale_order') . '</a></li>';
+        }
+        if ($can_pdf) {
+            $action .= '<li>' . anchor('admin/quotes/pdf/' . $id, '<i class="fa fa-file-pdf-o"></i> ' . lang('download_pdf')) . '</li>';
+            $action .= '<li>' . anchor('admin/quotes/pdf_new/' . $id, '<i class="fa fa-file-pdf-o"></i> ' . lang('Download Quotation')) . '</li>';
+            $action .= '<li>' . anchor('admin/quotes/excel_new/' . $id, '<i class="fa fa-file-excel-o"></i> ' . lang('Download_Excel')) . '</li>';
+        }
+        if ($can_delete && !$period_closed) {
+            $action .= "<li><a href='#' class='po' title='<b>" . lang('delete_quote') . "</b>' data-content=\"<p>"
+                . lang('r_u_sure') . "</p><a class='btn btn-danger po-delete' href='" . admin_url('quotes/delete/' . $id) . "'>"
+                . lang('i_m_sure') . "</a> <button class='btn po-close'>" . lang('no') . "</button>\"  rel='popover'><i class=\"fa fa-trash-o\"></i> "
+                . lang('delete_quote') . '</a></li>';
+        }
+        $action .= '</ul></div></div>';
+
+        return $action;
+    }
+}
+

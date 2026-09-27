@@ -10,7 +10,7 @@
 
                 <p class="introtext">
                     Close a calendar month per module. While closed, add / edit / delete in that module for dates in the month are blocked where enforcement is enabled.
-                    <strong>Enforced now:</strong> Finance (JL entries), Inventory (transfers add/edit/delete).
+                    <strong>Enforced now:</strong> Finance (JL), Inventory (transfers), AR (quotes, sale delete/label/RASD, delivery add/edit/mark delivered).
                 </p>
 
                 <form method="get" action="<?= admin_url('period_closing') ?>" class="form-inline" style="margin-bottom:15px;">

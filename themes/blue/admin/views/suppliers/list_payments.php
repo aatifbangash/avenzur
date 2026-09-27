@@ -173,6 +173,7 @@ if (!empty($filters['to_date'])) {
                                 foreach ($payments as $payment):
                                     $count++;
                                     $grand_total += (float) $payment->amount;
+                                    $period_closed = $this->period_closing_model->isPeriodClosed('ap', $payment->date);
                             ?>
                             <tr>
                                 <td><?= $count ?></td>
@@ -199,7 +200,11 @@ if (!empty($filters['to_date'])) {
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <?php if (($payment->status ?? 'open') === 'closed'): ?>
+                                    <?php if ($period_closed): ?>
+                                        <span class="label label-danger tip" title="AP period closed for this payment date">
+                                            <i class="fa fa-lock"></i> Period Closed
+                                        </span>
+                                    <?php elseif (($payment->status ?? 'open') === 'closed'): ?>
                                         <span class="label label-danger">
                                             <i class="fa fa-lock"></i> Locked
                                         </span>
@@ -212,13 +217,13 @@ if (!empty($filters['to_date'])) {
                                        class="tip btn btn-xs btn-default" title="<?= lang('View Payment') ?>">
                                         <i class="fa fa-eye"></i>
                                     </a>
-                                    <?php if (($payment->status ?? 'open') !== 'closed'): ?>
+                                    <?php if (!$period_closed && ($payment->status ?? 'open') !== 'closed'): ?>
                                         <a href="<?= admin_url('suppliers/edit_payment?id=' . $payment->id) ?>"
                                            class="tip btn btn-xs btn-warning" title="<?= lang('Edit Payment') ?>">
                                             <i class="fa fa-edit"></i>
                                         </a>
                                     <?php endif; ?>
-                                    <?php if ($this->sma->in_group('financemanager') && ($payment->status ?? 'open') !== 'closed'): ?>
+                                    <?php if (!$period_closed && $this->sma->in_group('financemanager') && ($payment->status ?? 'open') !== 'closed'): ?>
                                         <form method="POST" action="<?= admin_url('suppliers/close_payment') ?>" style="display:inline;">
                                             <input type="hidden" name="payment_id" value="<?= $payment->id ?>">
                                             <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">

@@ -28,6 +28,7 @@ class Suppliers extends MY_Controller
         $this->load->admin_model('purchases_model');
         $this->load->library('form_validation');
         $this->load->admin_model('companies_model');
+        $this->load->admin_model('period_closing_model');
 
         // Sequence-Code
         $this->load->library('SequenceCode');
@@ -669,6 +670,13 @@ class Suppliers extends MY_Controller
         //$this->sma->checkPermissions('delete');
 
         if ($id) {
+            $memo = $this->purchases_model->getDebitMemoData($id);
+            if ($memo && $this->period_closing_model->isPeriodClosed('ap', $memo->date)) {
+                $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ap', $memo->date));
+                admin_redirect('suppliers/list_debit_memo');
+                return;
+            }
+
             // Delete in correct order to avoid foreign key constraints
             // 1. Delete memo entries
             $this->db->where('memo_id', $id);
@@ -785,10 +793,22 @@ class Suppliers extends MY_Controller
                 $formattedDate = DateTime::createFromFormat('d/m/Y', $date_fmt);
                 $date = $formattedDate->format('Y-m-d');
             }
+
+            if ($this->period_closing_model->isPeriodClosed('ap', $date)) {
+                $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ap', $date));
+                admin_redirect('suppliers/debit_memo');
+                return;
+            }
             
             // Remove breakdown matching validation - not required
             if($request_type == 'update'){
                 $old_memo_id = $this->input->post('memo_id');
+                $old_memo = $this->purchases_model->getDebitMemoData($old_memo_id);
+                if ($old_memo && $this->period_closing_model->isPeriodClosed('ap', $old_memo->date)) {
+                    $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ap', $old_memo->date));
+                    admin_redirect('suppliers/list_debit_memo');
+                    return;
+                }
                
                 // Delete all older data completely in correct order
                 // 1. First delete memo entries
@@ -865,6 +885,18 @@ class Suppliers extends MY_Controller
             return;
         }
 
+        if (($payment_ref->status ?? 'open') === 'closed') {
+            $this->session->set_flashdata('error', 'Cannot edit a closed payment');
+            admin_redirect('suppliers/list_payments');
+            return;
+        }
+
+        if ($this->period_closing_model->isPeriodClosed('ap', $payment_ref->date)) {
+            $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ap', $payment_ref->date));
+            admin_redirect('suppliers/list_payments');
+            return;
+        }
+
         // Get supplier
         $supplier = $this->companies_model->getCompanyByID($payment_ref->supplier_id);
         if (!$supplier) {
@@ -902,6 +934,12 @@ class Suppliers extends MY_Controller
                     return;
                 }
                 $date = $fmt->format('Y-m-d');
+
+                if ($this->period_closing_model->isPeriodClosed('ap', $date)) {
+                    $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ap', $date));
+                    admin_redirect('suppliers/edit_payment?id=' . $id);
+                    return;
+                }
 
                 // Collect selected invoices/memos from form
                 $invoice_ids     = $this->input->post('invoice_ids') ?: [];
@@ -3116,6 +3154,12 @@ class Suppliers extends MY_Controller
             return;
         }
 
+        if ($this->period_closing_model->isPeriodClosed('ap', $service_invoice_data->date)) {
+            $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ap', $service_invoice_data->date));
+            admin_redirect('suppliers/list_service_invoice');
+            return;
+        }
+
         $data = [];
         $this->data['memo_data'] = $service_invoice_data;
         $this->data['memo_entries_data'] = $service_invoice_entries_data;
@@ -3214,6 +3258,12 @@ class Suppliers extends MY_Controller
                 $date = $formattedDate->format('Y-m-d');
             }
 
+            if ($this->period_closing_model->isPeriodClosed('ap', $date)) {
+                $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ap', $date));
+                admin_redirect('suppliers/petty_cash');
+                return;
+            }
+
             $reference_no = $this->sequenceCode->generatePettyCashReference($date);
 
             $payment_total = 0;
@@ -3253,6 +3303,12 @@ class Suppliers extends MY_Controller
 
                 if($request_type == 'update'){
                     $memo_id2 = $this->input->post('memo_id');
+                    $old_memo = $this->purchases_model->getDebitMemoData($memo_id2);
+                    if ($old_memo && $this->period_closing_model->isPeriodClosed('ap', $old_memo->date)) {
+                        $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ap', $old_memo->date));
+                        admin_redirect('suppliers/list_petty_cash');
+                        return;
+                    }
                    
                     // Delete older data
                     $this->db->delete('sma_memo_entries', ['memo_id' => $memo_id2]);
@@ -3391,6 +3447,12 @@ class Suppliers extends MY_Controller
                 $date = $formattedDate->format('Y-m-d');
             }
 
+            if ($this->period_closing_model->isPeriodClosed('ap', $date)) {
+                $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ap', $date));
+                admin_redirect('suppliers/service_invoice');
+                return;
+            }
+
             $payment_total = 0;
             $vat_charges = 0;
             $service_data = [];
@@ -3428,6 +3490,13 @@ class Suppliers extends MY_Controller
 
                     if ($this->purchases_model->memoHasPayment($memo_id2)) {
                         $this->session->set_flashdata('warning', 'This service invoice has a payment recorded and cannot be edited.');
+                        admin_redirect('suppliers/list_service_invoice');
+                        return;
+                    }
+
+                    $old_memo = $this->purchases_model->getDebitMemoData($memo_id2);
+                    if ($old_memo && $this->period_closing_model->isPeriodClosed('ap', $old_memo->date)) {
+                        $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ap', $old_memo->date));
                         admin_redirect('suppliers/list_service_invoice');
                         return;
                     }
@@ -4058,6 +4127,12 @@ class Suppliers extends MY_Controller
                 admin_redirect('suppliers/payment_to_supplier_new');
             }
             $date = $fmt->format('Y-m-d');
+
+            if ($this->period_closing_model->isPeriodClosed('ap', $date)) {
+                $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ap', $date));
+                admin_redirect('suppliers/payment_to_supplier_new');
+                return;
+            }
 
             $supplier_advance_ledger = isset($this->Settings->supplier_advance_ledger) && !empty($this->Settings->supplier_advance_ledger)
                 ? $this->Settings->supplier_advance_ledger : null;
