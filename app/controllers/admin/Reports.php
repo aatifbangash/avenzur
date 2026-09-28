@@ -6278,6 +6278,46 @@ class Reports extends MY_Controller
     }
 
     /**
+     * Per-invoice debug for one supplier row of supplier_tb_vs_unpaid_ap_comparison.
+     * URL: admin/reports/supplier_tb_vs_unpaid_ap_debug?supplier_id=&from_date=&to_date=&warehouse_id=
+     */
+    public function supplier_tb_vs_unpaid_ap_debug()
+    {
+        $supplier_id = (int) $this->input->get('supplier_id');
+        $from_date = $this->input->get('from_date') ?: $this->sma->hrsd(date('Y-01-01'));
+        $to_date = $this->input->get('to_date') ?: $this->sma->hrsd(date('Y-m-d'));
+        $warehouse_id = $this->input->get('warehouse_id') ? (int) $this->input->get('warehouse_id') : null;
+
+        // fld() returns "Y-m-d " (trailing time part); keep the date only.
+        $start = substr(trim($this->sma->fld($from_date . ' 00:00')), 0, 10);
+        $end = substr(trim($this->sma->fld($to_date . ' 00:00')), 0, 10);
+
+        $debug = $supplier_id > 0
+            ? $this->reports_model->get_supplier_tb_vs_unpaid_debug($start, $end, $warehouse_id, $supplier_id)
+            : null;
+
+        if (!$debug) {
+            $this->session->set_flashdata('error', 'Supplier not found.');
+            admin_redirect('reports/supplier_tb_vs_unpaid_ap_comparison');
+            return;
+        }
+
+        $this->data['debug'] = $debug;
+        $this->data['start_date'] = $from_date;
+        $this->data['end_date'] = $to_date;
+        $this->data['warehouse_id'] = $warehouse_id;
+
+        $bc = [
+            ['link' => base_url(), 'page' => lang('home')],
+            ['link' => admin_url('reports'), 'page' => lang('reports')],
+            ['link' => admin_url('reports/supplier_tb_vs_unpaid_ap_comparison'), 'page' => 'Supplier TB vs Unpaid AP Comparison'],
+            ['link' => '#', 'page' => 'Debug'],
+        ];
+        $meta = ['page_title' => 'Supplier TB vs Unpaid AP Debug', 'bc' => $bc];
+        $this->page_construct('reports/supplier_tb_vs_unpaid_ap_debug', $meta, $this->data);
+    }
+
+    /**
      * Compare Customer Trial Balance (EB Debit) vs Unpaid AR outstanding.
      * URL: admin/reports/customer_tb_vs_unpaid_ar_comparison
      * Defaults to all local warehouses for a fair match.

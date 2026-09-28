@@ -3254,6 +3254,530 @@ class Reports_model extends CI_Model
     }
 
     /**
+     * Per-invoice debug for one supplier of get_supplier_tb_vs_unpaid_ap_comparison().
+     * Uses the same GL / purchase / memo scopes, so TB and Unpaid match that report's row.
+     *
+     * Every supplier-ledger GL line is assigned to a target (purchase / service or credit memo),
+     * a source (payment journal / supplier return / debit memo) or "unlinked". Every sma_payments
+     * allocation moves value from a source to a target, so the bridge closes exactly:
+     *   TB − Unpaid = Σ target gaps + Σ source unallocated + Σ unlinked GL + TB debit adjustment
+     *
+     * @return array|null
+     */
+    public function get_supplier_tb_vs_unpaid_debug($start_date, $end_date, $warehouse_id, $supplier_id)
+    {
+        $supplier_id = (int) $supplier_id;
+        $supplier = $this->db->select('id, name, company, sequence_code, ledger_account')
+            ->get_where('companies', ['id' => $supplier_id], 1)->row();
+        if (!$supplier) {
+            return null;
+        }
+
+        $pfx    = $this->db->dbprefix;
+        $end_q  = $this->db->escape($end_date);
+        $sql_at = $this->db->escape($end_date . ' 23:59:59');
+
+        // ── Scopes (identical to the comparison report) ──
+        if ($warehouse_id) {
+            $purchase_wh_sql = ' AND p.warehouse_id = ' . (int) $warehouse_id;
+        } else {
+            $purchase_wh_sql = (string) $this->site->reportWarehouseAndClause(null, 'p');
+        }
+        $include_memos = ($warehouse_id === null || $warehouse_id === '' || (int) $warehouse_id === 0 || (int) $warehouse_id === 32);
+        $memo_paid_expr = $include_memos
+            ? "CASE
+                WHEN m.date < '2026-06-20' THEN COALESCE(m.used_amount, 0)
+                ELSE COALESCE((
+                    SELECT SUM(sp.amount) FROM {$pfx}payments sp
+                    WHERE sp.memo_id = m.id AND sp.date <= {$sql_at}
+                ), 0)
+            END"
+            : 'COALESCE(m.used_amount, 0)';
+        $wh_e = $this->site->reportPurchaseLedgerWarehouseCondition($warehouse_id, 'e');
+
+        $net = function ($dc, $amount) {
+            return $dc === 'C' ? (float) $amount : -(float) $amount;
+        };
+
+        // ── 1) Supplier ledger GL lines (same filter as suppliers_trial_balance) ──
+        $gl_rows = $this->db->query("
+            SELECT e.id AS entry_id, e.date, e.number, e.transaction_type, e.pid, e.memo_id, e.rsid,
+                ei.dc, ei.amount, ei.narration,
+                (SELECT MIN(pr.id) FROM {$pfx}payment_reference pr WHERE pr.journal_id = e.id) AS pr_id
+            FROM {$pfx}accounts_entries e
+            JOIN {$pfx}accounts_entryitems ei ON ei.entry_id = e.id
+            WHERE e.supplier_id = {$supplier_id}
+              AND ei.ledger_id = " . (int) $supplier->ledger_account . "
+              AND e.date <= {$end_q}
+              AND {$wh_e}
+            ORDER BY e.date, e.id, ei.id
+        ")->result();
+
+        $payment_txn_types = ['supplierpayment', 'supplieradvance', 'advancesettlement'];
+        $gl_net_total = 0.0;
+        $gl_pid  = [];   // purchase_id => net credit
+        $gl_memo = [];   // memo_id     => net credit
+        $gl_rs   = [];   // rsid        => net credit
+        $journals = [];  // entry_id    => journal info
+        $gl_unlinked = [];
+
+        foreach ($gl_rows as $r) {
+            $amt = $net($r->dc, $r->amount);
+            $gl_net_total += $amt;
+            $pid = (int) $r->pid;
+            $mid = (int) $r->memo_id;
+            $rsid = (int) $r->rsid;
+
+            if (!empty($r->pr_id) || in_array($r->transaction_type, $payment_txn_types, true)) {
+                $eid = (int) $r->entry_id;
+                if (!isset($journals[$eid])) {
+                    $journals[$eid] = [
+                        'entry_id' => $eid,
+                        'date'     => $r->date,
+                        'number'   => $r->number,
+                        'type'     => $r->transaction_type,
+                        'pr_id'    => (int) $r->pr_id,
+                        'gl'       => 0.0,
+                    ];
+                }
+                $journals[$eid]['gl'] += $amt;
+            } elseif ($pid > 0) {
+                $gl_pid[$pid] = ($gl_pid[$pid] ?? 0) + $amt;
+            } elseif ($mid > 0) {
+                $gl_memo[$mid] = ($gl_memo[$mid] ?? 0) + $amt;
+            } elseif ($rsid > 0) {
+                $gl_rs[$rsid] = ($gl_rs[$rsid] ?? 0) + $amt;
+            } else {
+                $gl_unlinked[] = [
+                    'entry_id'  => (int) $r->entry_id,
+                    'date'      => $r->date,
+                    'number'    => $r->number,
+                    'type'      => $r->transaction_type,
+                    'narration' => $r->narration,
+                    'amount'    => round($amt, 2),
+                    'raw'       => $amt,
+                ];
+            }
+        }
+
+        // ── 2) Memos of this supplier (targets: service invoice / credit memo; sources: debit memo) ──
+        $memo_ids_sql = $gl_memo ? ' OR m.id IN (' . implode(',', array_map('intval', array_keys($gl_memo))) . ')' : '';
+        $memos = [];
+        foreach ($this->db->query("
+            SELECT m.id, m.type, m.supplier_entry_type, m.reference_no, m.date,
+                m.payment_amount, m.used_amount, m.vat_percent,
+                ({$memo_paid_expr}) AS paid_report
+            FROM {$pfx}memo m
+            WHERE (m.supplier_id = {$supplier_id} AND m.date <= {$end_q}) {$memo_ids_sql}
+        ")->result() as $m) {
+            $is_target = $m->type === 'serviceinvoice' || ($m->type === 'memo' && $m->supplier_entry_type === 'C');
+            $is_source = $m->type === 'memo' && $m->supplier_entry_type === 'D';
+            $memos[(int) $m->id] = [
+                'row'  => $m,
+                'role' => $is_target ? 'target' : ($is_source ? 'source' : 'other'),
+            ];
+        }
+
+        // ── 3) Allocations (sma_payments) touching this supplier's documents ──
+        $allocations = $this->db->query("
+            SELECT sp.id, DATE(sp.date) AS date, sp.amount, sp.type, sp.paid_by, sp.reference_no,
+                sp.purchase_id, sp.memo_id, sp.supplier_return_id, sp.payment_id,
+                pr.journal_id, pr.sequence_code AS pr_code
+            FROM {$pfx}payments sp
+            LEFT JOIN {$pfx}payment_reference pr ON pr.id = sp.payment_id
+            WHERE sp.date <= {$sql_at}
+              AND (
+                    sp.purchase_id IN (SELECT id FROM {$pfx}purchases WHERE supplier_id = {$supplier_id})
+                 OR sp.memo_id IN (SELECT id FROM {$pfx}memo WHERE supplier_id = {$supplier_id})
+                 OR pr.supplier_id = {$supplier_id}
+              )
+            ORDER BY sp.date, sp.id
+        ")->result();
+
+        // ── 4) Purchases of this supplier (plus any purchase posted to this ledger or allocated to) ──
+        $extra_pids = array_keys($gl_pid);
+        foreach ($allocations as $a) {
+            if ((int) $a->purchase_id > 0) {
+                $extra_pids[] = (int) $a->purchase_id;
+            }
+        }
+        $extra_pids = array_unique(array_map('intval', $extra_pids));
+        $pur_ids_sql = $extra_pids ? ' OR p.id IN (' . implode(',', $extra_pids) . ')' : '';
+        $purchases = [];
+        foreach ($this->db->query("
+            SELECT p.id, p.supplier_id, p.reference_no, p.invoice_number, DATE(p.date) AS date, p.warehouse_id,
+                w.name AS warehouse, p.purchase_invoice, p.note, p.paid AS paid_field,
+                (p.grand_total + COALESCE(p.grand_deal_discount, 0)) AS invoice_amount,
+                CASE WHEN p.supplier_id = {$supplier_id}
+                      AND p.date <= {$sql_at}
+                      AND p.purchase_invoice = 1
+                      AND p.note != 'import from excel'
+                      AND (p.grand_total + COALESCE(p.grand_deal_discount, 0)) > 0
+                      {$purchase_wh_sql}
+                     THEN 1 ELSE 0 END AS in_scope
+            FROM {$pfx}purchases p
+            LEFT JOIN {$pfx}warehouses w ON w.id = p.warehouse_id
+            WHERE (p.supplier_id = {$supplier_id} AND p.date <= {$sql_at}) {$pur_ids_sql}
+        ")->result() as $p) {
+            $purchases[(int) $p->id] = $p;
+        }
+
+        // ── 5) Sources: seeded from GL, then fed by allocations ──
+        $sources = [];
+        $add_source = function ($key, array $init) use (&$sources) {
+            if (!isset($sources[$key])) {
+                $sources[$key] = $init + ['gl' => 0.0, 'allocated' => 0.0, 'advance' => 0.0, 'lines' => 0];
+            }
+        };
+        foreach ($journals as $j) {
+            $add_source('J' . $j['entry_id'], [
+                'kind' => 'payment', 'id' => $j['entry_id'], 'pr_id' => $j['pr_id'],
+                'reference' => $j['number'], 'date' => $j['date'], 'txn' => $j['type'],
+            ]);
+            $sources['J' . $j['entry_id']]['gl'] = $j['gl'];
+        }
+        foreach ($gl_rs as $rsid => $amt) {
+            $add_source('R' . $rsid, ['kind' => 'return', 'id' => $rsid]);
+            $sources['R' . $rsid]['gl'] = $amt;
+        }
+        foreach ($gl_memo as $mid => $amt) {
+            if (($memos[$mid]['role'] ?? 'other') === 'source') {
+                $add_source('M' . $mid, ['kind' => 'debit_memo', 'id' => $mid]);
+                $sources['M' . $mid]['gl'] = $amt;
+            } elseif (!isset($memos[$mid]) || $memos[$mid]['role'] === 'other') {
+                $gl_unlinked[] = [
+                    'entry_id' => 0, 'date' => null, 'number' => 'memo #' . $mid,
+                    'type' => 'memo', 'narration' => 'GL linked to memo that is neither a target nor a debit memo',
+                    'amount' => round($amt, 2),
+                    'raw' => $amt,
+                ];
+            }
+        }
+
+        $alloc_by_purchase = [];
+        $alloc_by_memo = [];
+        foreach ($allocations as $a) {
+            $amount = (float) $a->amount;
+            $mid = (int) $a->memo_id;
+            $pid = (int) $a->purchase_id;
+            $mem_role = $memos[$mid]['role'] ?? null;
+
+            // Source: the payment journal on this statement first (debit-memo / return settlements
+            // are posted through a payment_reference journal too), then the memo / return itself.
+            if ((int) $a->journal_id > 0 && isset($journals[(int) $a->journal_id])) {
+                $skey = 'J' . (int) $a->journal_id;
+                $src_label = ($a->pr_code ?: 'Payment') . ' / JV ' . (int) $a->journal_id;
+            } elseif ($mid > 0 && $mem_role === 'source') {
+                $skey = 'M' . $mid;
+                $add_source($skey, ['kind' => 'debit_memo', 'id' => $mid]);
+                $src_label = 'Debit memo ' . ($memos[$mid]['row']->reference_no ?? ('#' . $mid));
+            } elseif ($a->paid_by === 'return' || (int) $a->supplier_return_id > 0) {
+                $rsid = (int) $a->supplier_return_id;
+                $skey = 'R' . $rsid;
+                $add_source($skey, ['kind' => 'return', 'id' => $rsid]);
+                $src_label = 'Return #' . $rsid;
+            } elseif ((int) $a->journal_id > 0) {
+                $skey = 'J' . (int) $a->journal_id;
+                $add_source($skey, [
+                    'kind' => 'payment', 'id' => (int) $a->journal_id, 'pr_id' => (int) $a->payment_id,
+                    'reference' => $a->pr_code, 'date' => $a->date, 'txn' => null, 'off_statement' => true,
+                ]);
+                $src_label = ($a->pr_code ?: 'Payment') . ' / JV ' . (int) $a->journal_id;
+            } else {
+                $skey = 'X' . ((int) $a->payment_id ?: 'sp' . (int) $a->id);
+                $add_source($skey, [
+                    'kind' => 'no_journal', 'id' => (int) $a->payment_id, 'pr_id' => (int) $a->payment_id,
+                    'reference' => $a->pr_code ?: $a->reference_no, 'date' => $a->date,
+                ]);
+                $src_label = 'No payment journal (' . ($a->reference_no ?: ('payment #' . (int) $a->id)) . ')';
+            }
+
+            // Target
+            $line = [
+                'id' => (int) $a->id, 'date' => $a->date, 'amount' => round($amount, 2), 'raw' => $amount,
+                'paid_by' => $a->paid_by, 'type' => $a->type, 'source' => $src_label, 'pr_id' => (int) $a->payment_id,
+            ];
+            if ($pid > 0) {
+                $alloc_by_purchase[$pid][] = $line;
+            } elseif ($mid > 0 && $mem_role === 'target') {
+                $alloc_by_memo[$mid][] = $line;
+            } else {
+                // Advance / unallocated payment line: informational only, does not move value.
+                if ($a->type === 'advance') {
+                    $sources[$skey]['advance'] += $amount;
+                }
+                continue;
+            }
+            $sources[$skey]['allocated'] += $amount;
+            $sources[$skey]['lines']++;
+        }
+
+        // ── 6) Invoice (target) rows ──
+        $sum = function (array $lines) {
+            return array_sum(array_column($lines, 'raw'));
+        };
+        $invoice_rows = [];
+        foreach ($purchases as $pid => $p) {
+            $gl_raw = (float) ($gl_pid[$pid] ?? 0);
+            $gl = round($gl_raw, 2);
+            $lines = $alloc_by_purchase[$pid] ?? [];
+            $paid_raw = $sum($lines);
+            $paid = round($paid_raw, 2);
+            $inv = (float) $p->invoice_amount;
+            $in_scope = (int) $p->in_scope === 1;
+            if (!$in_scope && abs($gl) < 0.01 && abs($paid) < 0.01) {
+                continue;
+            }
+            // Same as the report: ROUND(invoice − paid, 2) per invoice, only when > 0
+            $raw_out = round($inv - $paid_raw, 2);
+            $unpaid = ($in_scope && $raw_out > 0) ? $raw_out : 0.0;
+            $stmt_bal = round($gl - $paid, 2);
+
+            $flags = [];
+            if (!$in_scope) {
+                if ((int) $p->supplier_id !== $supplier_id) {
+                    $flags[] = 'Belongs to another supplier (#' . (int) $p->supplier_id . ')';
+                } elseif ($p->date > $end_date) {
+                    $flags[] = 'Dated after as-of date — excluded from Unpaid';
+                } elseif ((int) $p->purchase_invoice !== 1) {
+                    $flags[] = 'Not a purchase invoice — excluded from Unpaid';
+                } elseif ($p->note === null || $p->note === 'import from excel') {
+                    $flags[] = ($p->note === null ? 'Note is NULL' : 'Imported from excel') . ' — excluded from Unpaid';
+                } elseif ($inv <= 0) {
+                    $flags[] = 'Zero invoice amount — excluded from Unpaid';
+                } else {
+                    $flags[] = 'Outside warehouse scope — excluded from Unpaid';
+                }
+            }
+            if (abs($gl) < 0.01) {
+                $flags[] = 'Not posted to supplier ledger';
+            } elseif (abs($gl - $inv) >= 0.01) {
+                $flags[] = 'Statement posts ' . number_format($gl, 2) . ' vs invoice ' . number_format($inv, 2);
+            }
+            if (abs((float) $p->paid_field - $paid) >= 0.01) {
+                $flags[] = 'purchases.paid = ' . number_format((float) $p->paid_field, 2);
+            }
+
+            $invoice_rows[] = [
+                'kind'          => 'purchase',
+                'id'            => $pid,
+                'reference_no'  => $p->reference_no,
+                'invoice_number'=> $p->invoice_number,
+                'date'          => $p->date,
+                'warehouse'     => $p->warehouse,
+                'invoice_amount'=> round($inv, 2),
+                'gl'            => $gl,
+                'paid'          => $paid,
+                'paid_count'    => count($lines),
+                'stmt_balance'  => $stmt_bal,
+                'unpaid'        => $unpaid,
+                'unpaid_raw'    => $unpaid,
+                'gap'           => round($stmt_bal - $unpaid, 2),
+                'gap_raw'       => ($gl_raw - $paid_raw) - $unpaid,
+                'status'        => $this->supplier_debug_payment_status($inv, $paid),
+                'flags'         => $flags,
+                'allocations'   => $lines,
+            ];
+        }
+
+        foreach ($memos as $mid => $info) {
+            if ($info['role'] !== 'target') {
+                continue;
+            }
+            $m = $info['row'];
+            $gl_raw = (float) ($gl_memo[$mid] ?? 0);
+            $gl = round($gl_raw, 2);
+            $lines = $alloc_by_memo[$mid] ?? [];
+            $paid_raw = $sum($lines);
+            $paid = round($paid_raw, 2);
+            $amt = (float) $m->payment_amount;
+            $paid_report = (float) $m->paid_report;
+            // Same as the report: memo outstanding summed unrounded, only when > 0.01
+            $unpaid_raw = ($include_memos && ($amt - $paid_report) > 0.01) ? ($amt - $paid_report) : 0.0;
+            $unpaid = round($unpaid_raw, 2);
+            $stmt_bal = round($gl - $paid, 2);
+            if (abs($gl) < 0.01 && abs($paid) < 0.01 && $unpaid < 0.01) {
+                continue;
+            }
+
+            $flags = [];
+            if (!$include_memos) {
+                $flags[] = 'Memos excluded from Unpaid for this warehouse';
+            }
+            if (abs($gl) < 0.01) {
+                $flags[] = 'Not posted to supplier ledger';
+            } elseif (abs($gl - $amt) >= 0.01) {
+                $flags[] = 'Statement posts ' . number_format($gl, 2) . ' vs memo ' . number_format($amt, 2);
+            }
+            if (abs($paid_report - $paid) >= 0.01) {
+                $flags[] = 'Unpaid report treats paid as ' . number_format($paid_report, 2)
+                    . ($m->date < '2026-06-20' ? ' (used_amount, pre 2026-06-20)' : '');
+            }
+
+            $invoice_rows[] = [
+                'kind'          => $m->type === 'serviceinvoice' ? 'service_invoice' : 'credit_memo',
+                'id'            => $mid,
+                'reference_no'  => $m->reference_no,
+                'invoice_number'=> null,
+                'date'          => $m->date,
+                'warehouse'     => null,
+                'invoice_amount'=> round($amt, 2),
+                'gl'            => $gl,
+                'paid'          => $paid,
+                'paid_count'    => count($lines),
+                'stmt_balance'  => $stmt_bal,
+                'unpaid'        => $unpaid,
+                'unpaid_raw'    => $unpaid_raw,
+                'gap'           => round($stmt_bal - $unpaid, 2),
+                'gap_raw'       => ($gl_raw - $paid_raw) - $unpaid_raw,
+                'status'        => $this->supplier_debug_payment_status($amt, $paid),
+                'flags'         => $flags,
+                'allocations'   => $lines,
+            ];
+        }
+
+        usort($invoice_rows, function ($a, $b) {
+            return [$a['date'], $a['id']] <=> [$b['date'], $b['id']];
+        });
+
+        // ── 7) Source rows (labels + unallocated) ──
+        $return_meta = [];
+        $rs_ids = [];
+        foreach ($sources as $s) {
+            if ($s['kind'] === 'return' && $s['id'] > 0) {
+                $rs_ids[] = (int) $s['id'];
+            }
+        }
+        if ($rs_ids) {
+            foreach ($this->db->query("SELECT id, reference_no, DATE(date) AS date FROM {$pfx}returns_supplier WHERE id IN (" . implode(',', $rs_ids) . ")")->result() as $r) {
+                $return_meta[(int) $r->id] = $r;
+            }
+        }
+
+        $off_ids = [];
+        foreach ($sources as $s) {
+            if (!empty($s['off_statement'])) {
+                $off_ids[] = (int) $s['id'];
+            }
+        }
+        $existing_journals = [];
+        if ($off_ids) {
+            foreach ($this->db->query("SELECT id FROM {$pfx}accounts_entries WHERE id IN (" . implode(',', array_unique($off_ids)) . ")")->result() as $r) {
+                $existing_journals[(int) $r->id] = true;
+            }
+        }
+
+        $source_rows = [];
+        foreach ($sources as $key => $s) {
+            if ($s['kind'] === 'return') {
+                $rs_ref = $return_meta[$s['id']]->reference_no ?? '';
+                $s['reference'] = ($rs_ref !== '' && $rs_ref !== '0') ? $rs_ref : ('#' . $s['id']);
+                $s['date'] = $return_meta[$s['id']]->date ?? null;
+            } elseif ($s['kind'] === 'debit_memo') {
+                $s['reference'] = $memos[$s['id']]['row']->reference_no ?? ('#' . $s['id']);
+                $s['date'] = $memos[$s['id']]['row']->date ?? null;
+            }
+            $s['unallocated_raw'] = $s['gl'] + $s['allocated'];
+            $s['gl'] = round($s['gl'], 2);
+            $s['allocated'] = round($s['allocated'], 2);
+            $s['advance'] = round($s['advance'], 2);
+            $s['unallocated'] = round($s['unallocated_raw'], 2);
+
+            if (!empty($s['off_statement']) || $s['kind'] === 'no_journal') {
+                if ($s['kind'] === 'no_journal') {
+                    $s['note'] = 'Allocated to invoices but the payment has no GL journal';
+                } elseif (!isset($existing_journals[(int) $s['id']])) {
+                    $s['note'] = 'Journal JV ' . (int) $s['id'] . ' does not exist (deleted) — reduces Unpaid but not the statement';
+                } else {
+                    $s['note'] = 'Journal not on this supplier statement (other ledger / after as-of date / warehouse scope)';
+                }
+            } elseif ($s['unallocated'] < -0.01) {
+                $s['note'] = 'Reduces statement but not allocated to any invoice'
+                    . ($s['advance'] > 0.01 ? ' (advance recorded ' . number_format($s['advance'], 2) . ')' : '');
+            } elseif ($s['unallocated'] > 0.01) {
+                $s['note'] = 'Allocated to invoices more than posted on statement';
+            } else {
+                $s['note'] = '';
+            }
+            $s['key'] = $key;
+            $source_rows[] = $s;
+        }
+        usort($source_rows, function ($a, $b) {
+            return [(string) $a['date'], $a['key']] <=> [(string) $b['date'], $b['key']];
+        });
+
+        // ── 8) Bridge ──
+        $tb_net = round($gl_net_total, 2);
+        $tb_credit = $tb_net > 0 ? $tb_net : 0.0;
+        $unpaid_total = round(array_sum(array_column($invoice_rows, 'unpaid_raw')), 2);
+
+        $gap_of = function (array $rows, $kinds) {
+            $t = 0.0;
+            foreach ($rows as $r) {
+                if (in_array($r['kind'], (array) $kinds, true)) {
+                    $t += $r['gap_raw'];
+                }
+            }
+            return round($t, 2);
+        };
+        $unalloc_of = function ($kinds) use ($source_rows) {
+            $t = 0.0;
+            foreach ($source_rows as $s) {
+                if (in_array($s['kind'], (array) $kinds, true)) {
+                    $t += $s['unallocated_raw'];
+                }
+            }
+            return round($t, 2);
+        };
+
+        $bridge = [
+            ['label' => 'Purchase invoices: statement balance vs unpaid outstanding', 'amount' => $gap_of($invoice_rows, 'purchase')],
+            ['label' => 'Service invoices / credit memos: statement balance vs unpaid', 'amount' => $gap_of($invoice_rows, ['service_invoice', 'credit_memo'])],
+            ['label' => 'Payments not allocated to invoices (advances / over-allocation)', 'amount' => $unalloc_of(['payment', 'no_journal'])],
+            ['label' => 'Supplier returns not settled against invoices', 'amount' => $unalloc_of('return')],
+            ['label' => 'Debit memos not applied to invoices', 'amount' => $unalloc_of('debit_memo')],
+            ['label' => 'GL entries not linked to any document', 'amount' => round(array_sum(array_column($gl_unlinked, 'raw')), 2)],
+        ];
+        if (abs($tb_credit - $tb_net) >= 0.01) {
+            $bridge[] = ['label' => 'Supplier TB is in debit — comparison shows TB credit as 0', 'amount' => round($tb_credit - $tb_net, 2)];
+        }
+        $bridge_total = round(array_sum(array_column($bridge, 'amount')), 2);
+        $difference = round($tb_credit - $unpaid_total, 2);
+
+        return [
+            'supplier'         => $supplier,
+            'include_memos'    => $include_memos,
+            'tb_net'           => $tb_net,
+            'tb_credit'        => $tb_credit,
+            'unpaid_total'     => $unpaid_total,
+            'difference'       => $difference,
+            'bridge'           => $bridge,
+            'bridge_total'     => $bridge_total,
+            'unexplained'      => round($difference - $bridge_total, 2),
+            'invoices'         => $invoice_rows,
+            'sources'          => $source_rows,
+            'gl_unlinked'      => $gl_unlinked,
+        ];
+    }
+
+    /**
+     * @return array{key:string,label:string,amount:float}
+     */
+    private function supplier_debug_payment_status($invoice_amount, $paid)
+    {
+        $bal = round((float) $invoice_amount - (float) $paid, 2);
+        if ($bal < -0.01) {
+            return ['key' => 'overpaid', 'label' => 'Overpaid', 'amount' => -$bal];
+        }
+        if ($bal > 0.01) {
+            return $paid > 0.01
+                ? ['key' => 'partial', 'label' => 'Underpaid', 'amount' => $bal]
+                : ['key' => 'unpaid', 'label' => 'Unpaid', 'amount' => $bal];
+        }
+        return ['key' => 'paid', 'label' => 'Fully paid', 'amount' => 0.0];
+    }
+
+    /**
      * Compare Customer Trial Balance (EB Debit) vs Unpaid AR outstanding by customer.
      * Surfaces structural mismatch areas (returns, credit memos, GL debits without sale, service invoices).
      *

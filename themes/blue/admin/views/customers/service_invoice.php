@@ -20,25 +20,36 @@
     var transportRates = <?= json_encode($transport_rates ?? new stdClass()) ?>;
     var transportRegions = <?= json_encode($transport_regions ?? []) ?>;
     var transportCapacities = <?= json_encode($transport_capacities ?? new stdClass()) ?>;
+    var isEditMode = <?= !empty($memo_data) ? 'true' : 'false' ?>;
+    var existingServiceEntries = <?= !empty($memo_entries_data) ? json_encode($memo_entries_data) : '[]' ?>;
 
     var serviceInvoiceMinDate = "<?= $this->sma->hrsd(date('Y-m-d')); ?>";
 
     $(document).ready(function () {
-        $('#podate').datetimepicker({
+        var datepickerOpts = {
             format: site.dateFormats.js_sdate,
             fontAwesome: true,
             language: 'sma',
             todayBtn: 1,
             autoclose: 1,
-            minView: 2,
-            startDate: serviceInvoiceMinDate
-        });
+            minView: 2
+        };
+        if (!isEditMode) {
+            datepickerOpts.startDate = serviceInvoiceMinDate;
+        }
+        $('#podate').datetimepicker(datepickerOpts);
 
         if ($('#serviceTable tbody tr').length === 0) {
-            addServiceRow(true);
-            var firstRow = $('#serviceTable tbody tr:first');
-            firstRow.find('select.service-type').val('transportation');
-            updateServiceColumns(firstRow, 'transportation');
+            if (existingServiceEntries && existingServiceEntries.length > 0) {
+                existingServiceEntries.forEach(function(entry) {
+                    populateServiceRow(entry);
+                });
+            } else {
+                addServiceRow(true);
+                var firstRow = $('#serviceTable tbody tr:first');
+                firstRow.find('select.service-type').val('transportation');
+                updateServiceColumns(firstRow, 'transportation');
+            }
         }
 
         $('#addRowBtn').click(function() {
@@ -62,7 +73,7 @@
             var errorMessages = [];
 
             var invoiceDateStr = $('#podate').val();
-            if (invoiceDateStr) {
+            if (!isEditMode && invoiceDateStr) {
                 var invoiceMoment = moment(invoiceDateStr, site.dateFormats.js_sdate.toUpperCase());
                 if (invoiceMoment.isValid() && invoiceMoment.isBefore(moment().startOf('day'), 'day')) {
                     isValid = false;
@@ -81,37 +92,19 @@
                     errorMessages.push('Row ' + (index + 1) + ': Please select a service type');
                 }
 
-                if (serviceType === 'transportation') {
-                    var fromCity = row.find('select.from-region').val();
-                    var toCity = row.find('select.to-region').val();
-                    var capacity = row.find('select.capacity-field').val();
-                    if (!fromCity || !toCity) {
-                        isValid = false;
-                        errorMessages.push('Row ' + (index + 1) + ': From and To regions are required for Transportation');
-                    }
-                    if (!capacity) {
-                        isValid = false;
-                        errorMessages.push('Row ' + (index + 1) + ': Capacity is required for Transportation');
-                    }
-                }
-
-                if (serviceType === 'storage_fees') {
-                    var fromDate = row.find('.from-date-field').val();
-                    var toDate = row.find('.to-date-field').val();
-                    if (!fromDate || !toDate) {
-                        isValid = false;
-                        errorMessages.push('Row ' + (index + 1) + ': From Date and To Date are required for Storage Fees');
-                    }
-                }
-
-                if (amount <= 0) {
-                    isValid = false;
-                    errorMessages.push('Row ' + (index + 1) + ': Unit price must be greater than 0');
-                }
-
                 if (quantity <= 0) {
                     isValid = false;
                     errorMessages.push('Row ' + (index + 1) + ': Quantity must be greater than 0');
+                }
+
+                if (serviceType === 'transportation') {
+                    if (!row.find('select.to-region').val() || !row.find('select.capacity-field').val()) {
+                        isValid = false;
+                        errorMessages.push('Row ' + (index + 1) + ': To region and capacity are required');
+                    }
+                } else if (amount <= 0) {
+                    isValid = false;
+                    errorMessages.push('Row ' + (index + 1) + ': Unit price must be greater than 0');
                 }
             });
 
@@ -124,18 +117,9 @@
             return true;
         });
 
-        $(document).on('input', '.amount, .quantity', function() {
+        $('#serviceTable').on('input', '.amount, .quantity', function() {
             var row = $(this).closest('tr');
-            if (row.find('select.service-type').val() !== 'transportation') {
-                calculateRowTotals(row);
-            }
-        });
-
-        $(document).on('input', '.quantity', function() {
-            var row = $(this).closest('tr');
-            if (row.find('select.service-type').val() === 'transportation') {
-                calculateRowTotals(row);
-            }
+            calculateRowTotals(row);
         });
 
         $(document).on('click', '.remove-row', function() {
@@ -146,6 +130,50 @@
                 alert('At least one row is required');
             }
         });
+
+        function capacityKeyFromLabel(label) {
+            if (!label) {
+                return '';
+            }
+            for (var key in transportCapacities) {
+                if (transportCapacities.hasOwnProperty(key) && transportCapacities[key] === label) {
+                    return key;
+                }
+            }
+            return label;
+        }
+
+        function populateServiceRow(entry) {
+            addServiceRow(false);
+            var row = $('#serviceTable tbody tr:last');
+            var serviceType = entry.service_type || '';
+            var quantity = parseFloat(entry.quantity) || 1;
+            var unitValue = parseFloat(entry.unit_value) || 0;
+            var unitPrice = quantity > 0 ? (unitValue / quantity) : unitValue;
+            var vat = parseFloat(entry.vat) || 0;
+            var total = parseFloat(entry.payment_amount) || (unitValue + vat);
+
+            row.find('select.service-type').val(serviceType);
+            updateServiceColumns(row, serviceType, true);
+
+            if (serviceType === 'transportation') {
+                row.find('select.from-region').val(entry.from_val || 'Jeddah');
+                row.find('select.to-region').val(entry.to_val || '');
+                row.find('select.capacity-field').val(capacityKeyFromLabel(entry.name || ''));
+                row.find('.amount').val(unitPrice.toFixed(2));
+            } else if (serviceType === 'storage_fees') {
+                row.find('.from-date-field').val(entry.from_val || '');
+                row.find('.to-date-field').val(entry.to_val || '');
+                row.find('.amount').val(unitPrice.toFixed(2));
+            } else {
+                row.find('.amount').val(unitPrice.toFixed(2));
+            }
+
+            row.find('.quantity').val(quantity);
+            row.find('.unit-price').val(unitValue.toFixed(2));
+            row.find('.vat').val(vat.toFixed(2));
+            row.find('.total').val(total.toFixed(2));
+        }
 
         function buildRegionOptions(selected) {
             var html = '<option value="">Select Region</option>';
@@ -247,7 +275,7 @@
             $('#serviceTable tbody').append(newRow);
         }
 
-        function updateServiceColumns(row, serviceType) {
+        function updateServiceColumns(row, serviceType, skipRecalc) {
             row.find('select.from-region, select.to-region, select.capacity-field, .from-date-field, .to-date-field').hide().prop('required', false);
 
             if (serviceType === 'transportation') {
@@ -258,17 +286,23 @@
                     row.find('select.from-region').val('Jeddah');
                 }
                 row.find('.amount').prop('readonly', true);
-                applyTransportPrice(row);
+                if (!skipRecalc) {
+                    applyTransportPrice(row);
+                }
             } else if (serviceType === 'storage_fees') {
                 row.find('.from-date-field').show().prop('required', true);
                 row.find('.to-date-field').show().prop('required', true);
-                row.find('.amount').prop('readonly', false).val('');
+                row.find('.amount').prop('readonly', false);
                 row.find('select.capacity-field').val('');
-                calculateRowTotals(row);
+                if (!skipRecalc) {
+                    calculateRowTotals(row);
+                }
             } else {
-                row.find('.amount').prop('readonly', false).val('');
+                row.find('.amount').prop('readonly', false);
                 row.find('select.capacity-field').val('');
-                calculateRowTotals(row);
+                if (!skipRecalc) {
+                    calculateRowTotals(row);
+                }
             }
         }
 
@@ -293,7 +327,6 @@
         }
     });
 </script>
-
 <div class="box">
     <div class="box-header">
         <h2 class="blue"><i class="fa-fw fa fa-info-circle"></i><?= lang('service_invoice'); ?></h2>
@@ -398,7 +431,7 @@
                     <div class="col-md-12">
                         <div class="form-group">
                             <button type="submit" class="btn btn-primary" id="add_payment">
-                                <?= lang('Add Service Invoice') ?>
+                                <?= !empty($memo_data) ? lang('Update Service Invoice') : lang('Add Service Invoice') ?>
                             </button>
                         </div>
                     </div>

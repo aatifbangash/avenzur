@@ -62,9 +62,22 @@
                                                         <i class="fa fa-book"></i>
                                                     </a>
                                                     <?php } ?>
-                                                    <!--<a href="<?php echo admin_url('suppliers/edit_petty_cash/' . $entry->id); ?>" class="tip" title="Edit Petty Cash">
+                                                    <?php
+                                                    $period_closed = $this->period_closing_model->isPeriodClosed('ap', $entry->date);
+                                                    $entry_locked = ($entry->status ?? 'open') === 'locked';
+                                                    $entry_paid = !empty($entry->payment_count) || (float)($entry->used_amount ?? 0) > 0;
+                                                    if (!$period_closed && !$entry_paid):
+                                                    ?>
+                                                    <a href="<?php echo admin_url('suppliers/edit_petty_cash/' . $entry->id); ?>" class="tip" title="Edit Petty Cash">
                                                         <i class="fa fa-edit"></i>
-                                                    </a>-->
+                                                    </a>
+                                                    <?php elseif (!$period_closed && $entry_paid): ?>
+                                                    <span class="tip" title="Cannot edit — payment recorded against this entry"><i class="fa fa-edit text-muted"></i></span>
+                                                    
+                                                    <?php elseif ($period_closed): ?>
+                                                    <span class="tip" title="Period Closed — cannot edit"><i class="fa fa-lock text-muted"></i></span>
+                                                    
+                                                    <?php endif; ?>
                                                 </td>
                                             </tr>
                                         <?php
