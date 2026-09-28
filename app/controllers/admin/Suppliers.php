@@ -677,6 +677,12 @@ class Suppliers extends MY_Controller
                 return;
             }
 
+            if ($this->purchases_model->memoHasPayment($id) || (float)($memo->used_amount ?? 0) > 0) {
+                $this->session->set_flashdata('warning', 'This debit memo has a payment recorded and cannot be deleted.');
+                admin_redirect('suppliers/list_debit_memo');
+                return;
+            }
+
             // Delete in correct order to avoid foreign key constraints
             // 1. Delete memo entries
             $this->db->where('memo_id', $id);
@@ -733,12 +739,29 @@ class Suppliers extends MY_Controller
 
         $debit_memo_data = $this->purchases_model->getDebitMemoData($id);
         $debit_memo_entries_data = $this->purchases_model->getDebitMemoEntriesData($id);
+
+        if (!$debit_memo_data) {
+            $this->session->set_flashdata('error', 'Debit Memo not found.');
+            admin_redirect('suppliers/list_debit_memo');
+            return;
+        }
+
+        if ($this->purchases_model->memoHasPayment($id) || (float)($debit_memo_data->used_amount ?? 0) > 0) {
+            $this->session->set_flashdata('warning', 'This debit memo has a payment recorded and cannot be edited.');
+            admin_redirect('suppliers/list_debit_memo');
+            return;
+        }
+
+        if ($this->period_closing_model->isPeriodClosed('ap', $debit_memo_data->date)) {
+            $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ap', $debit_memo_data->date));
+            admin_redirect('suppliers/list_debit_memo');
+            return;
+        }
         
         $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('suppliers/list_debit_memo'), 'page' => lang('Debit Memo List')], ['link' => '#', 'page' => lang('Edit Debit Memo')]];
         $meta = ['page_title' => lang('Edit Debit Memo'), 'bc' => $bc];
         
         $this->data['memo_data'] = $debit_memo_data;
-        
         $this->data['memo_entries_data'] = $debit_memo_entries_data;
         $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
         $this->page_construct('suppliers/debit_memo', $meta, $this->data);
@@ -796,7 +819,7 @@ class Suppliers extends MY_Controller
 
             if ($this->period_closing_model->isPeriodClosed('ap', $date)) {
                 $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ap', $date));
-                admin_redirect('suppliers/debit_memo');
+                admin_redirect($request_type == 'update' ? 'suppliers/edit_debit_memo/' . $this->input->post('memo_id') : 'suppliers/debit_memo');
                 return;
             }
             
@@ -804,6 +827,13 @@ class Suppliers extends MY_Controller
             if($request_type == 'update'){
                 $old_memo_id = $this->input->post('memo_id');
                 $old_memo = $this->purchases_model->getDebitMemoData($old_memo_id);
+
+                if ($this->purchases_model->memoHasPayment($old_memo_id) || (float)($old_memo->used_amount ?? 0) > 0) {
+                    $this->session->set_flashdata('warning', 'This debit memo has a payment recorded and cannot be edited.');
+                    admin_redirect('suppliers/list_debit_memo');
+                    return;
+                }
+
                 if ($old_memo && $this->period_closing_model->isPeriodClosed('ap', $old_memo->date)) {
                     $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ap', $old_memo->date));
                     admin_redirect('suppliers/list_debit_memo');
@@ -855,7 +885,9 @@ class Suppliers extends MY_Controller
             }
 
             $this->convert_debit_memo_invoice($memo_id, $supplier_id, $ledger_account, $payment_total, $reference_no, 'debitmemo', $date, $supplier_entry_type, $vat_account, $vat_percent);
-            $this->session->set_flashdata('message', lang('Debit Memo invoice added Successfully!'));
+            $this->session->set_flashdata('message', $request_type == 'update'
+                ? lang('Debit Memo updated Successfully!')
+                : lang('Debit Memo invoice added Successfully!'));
             admin_redirect('suppliers/list_debit_memo');
         } else {
             $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
@@ -3112,6 +3144,18 @@ class Suppliers extends MY_Controller
             return;
         }
 
+        if ($this->purchases_model->memoHasPayment($id) || (float)($petty_cash_data->used_amount ?? 0) > 0) {
+            $this->session->set_flashdata('warning', 'This petty cash has a payment recorded and cannot be edited.');
+            admin_redirect('suppliers/list_petty_cash');
+            return;
+        }
+
+        if ($this->period_closing_model->isPeriodClosed('ap', $petty_cash_data->date)) {
+            $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ap', $petty_cash_data->date));
+            admin_redirect('suppliers/list_petty_cash');
+            return;
+        }
+
         $this->data['memo_data'] = $petty_cash_data;
         $this->data['memo_entries_data'] = $petty_cash_entries_data;
         $this->data['suppliers']  = $this->site->getAllCompanies('supplier');
@@ -3260,11 +3304,15 @@ class Suppliers extends MY_Controller
 
             if ($this->period_closing_model->isPeriodClosed('ap', $date)) {
                 $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ap', $date));
-                admin_redirect('suppliers/petty_cash');
+                admin_redirect($request_type == 'update' ? 'suppliers/edit_petty_cash/' . $this->input->post('memo_id') : 'suppliers/petty_cash');
                 return;
             }
 
-            $reference_no = $this->sequenceCode->generatePettyCashReference($date);
+            if ($request_type == 'update') {
+                $reference_no = $this->input->post('reference_no') ?: $this->sequenceCode->generatePettyCashReference($date);
+            } else {
+                $reference_no = $this->sequenceCode->generatePettyCashReference($date);
+            }
 
             $payment_total = 0;
             $vat_charges = 0;
@@ -3304,6 +3352,19 @@ class Suppliers extends MY_Controller
                 if($request_type == 'update'){
                     $memo_id2 = $this->input->post('memo_id');
                     $old_memo = $this->purchases_model->getDebitMemoData($memo_id2);
+
+                    if ($this->purchases_model->memoHasPayment($memo_id2) || (float)($old_memo->used_amount ?? 0) > 0) {
+                        $this->session->set_flashdata('warning', 'This petty cash has a payment recorded and cannot be edited.');
+                        admin_redirect('suppliers/list_petty_cash');
+                        return;
+                    }
+
+                    if ($old_memo && ($old_memo->status ?? 'open') === 'locked') {
+                        $this->session->set_flashdata('warning', 'This petty cash is locked and cannot be edited.');
+                        admin_redirect('suppliers/list_petty_cash');
+                        return;
+                    }
+
                     if ($old_memo && $this->period_closing_model->isPeriodClosed('ap', $old_memo->date)) {
                         $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ap', $old_memo->date));
                         admin_redirect('suppliers/list_petty_cash');

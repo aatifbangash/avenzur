@@ -78,8 +78,11 @@
             });
         }
 
-        // Initialize with one row
-        if ($('#pettyCashTable tbody tr').length === 0) {
+        // Edit: rebuild saved rows; add: start with one empty row
+        var existingEntries = <?= json_encode(array_values($memo_entries_data ?? [])); ?>;
+        if (existingEntries.length > 0) {
+            populateExistingRows(existingEntries);
+        } else if ($('#pettyCashTable tbody tr').length === 0) {
             addServiceRow();
         }
 
@@ -94,7 +97,7 @@
             var errorMessages = [];
 
             // Check each service row
-            $('#serviceTable tbody tr').each(function(index) {
+            $('#pettyCashTable tbody tr').each(function(index) {
                 var row = $(this);
                 var ledgerElement = row.find('.ledger-account');
                 var selectedLedger = ledgerElement.val();
@@ -268,89 +271,36 @@
             });
         }
 
-        // Populate existing data when editing
-        <?php if(isset($memo_entries_data) && !empty($memo_entries_data)): ?>
-        $(document).ready(function() {
-            var existingData = <?php echo json_encode($memo_entries_data); ?>;
-            $('#pettyCashTable tbody').empty(); // Clear existing rows
+        // Populate existing data when editing. DB decimals arrive as strings; supplier name and
+        // invoice no are stored in memo_entries.name / reference_no (see petty_cash save).
+        function populateExistingRows(entries) {
+            $('#pettyCashTable tbody').empty();
+            entries.forEach(function (entry) {
+                var total = parseFloat(entry.payment_amount) || 0;
+                var vat = parseFloat(entry.vat) || 0;
+                var amount = total - vat;
+                var vatRate = (amount > 0 && vat > 0) ? 15 : 0;
 
-            existingData.forEach(function(entry, index) {
-                var rowCount = index + 1;
-                var ledgers = <?php echo json_encode($ledgers ?? []); ?>;
-                var ledgerOptions = '<option value="">Select Ledger Account</option>';
-                for (var i = 0; i < ledgers.length; i++) {
-                    var ledger = ledgers[i];
-                    var selected = (ledger.id == entry.ledger_account) ? 'selected' : '';
-                    ledgerOptions += '<option value="' + ledger.id + '" ' + selected + '>' + ledger.name +' - ' + ledger.code + '</option>';
-                }
-
-                // Calculate VAT rate from existing data
-                var amount = entry.payment_amount - entry.vat;
-                var vatRate = 0;
-                if (amount > 0) {
-                    vatRate = Math.round((entry.vat / amount) * 100);
-                }
-
-                var newRow = `
-                    <tr>
-                        <td class="text-center">${rowCount}</td>
-                        <td>
-                            <input type="text" class="form-control supplier-name" name="supplier_name[]" placeholder="Enter supplier name" value="${entry.supplier_name || ''}">
-                        </td>
-                        <td>
-                            <input type="text" class="form-control invoice-no" name="invoice_no[]" placeholder="Invoice No" value="${entry.invoice_no || ''}">
-                        </td>
-                        <td>
-                            <input type="text" class="form-control vat-number" name="vat_number[]" placeholder="VAT Number" value="${entry.vat_number || ''}">
-                        </td>
-                        <td>
-                            <input type="text" class="form-control description" name="description[]" placeholder="Description" value="${entry.description || ''}">
-                        </td>
-                        <td>
-                            <select class="form-control ledger-account" name="ledger_account[]" required>
-                                ${ledgerOptions}
-                            </select>
-                        </td>
-                        <td>
-                            <input type="number" step="0.01" class="form-control amount" name="amount[]" placeholder="0.00" value="${(entry.payment_amount - entry.vat).toFixed(2)}" required>
-                        </td>
-                        <td class="petty-cash-vat-cell">
-                            <select class="form-control skip vat-rate" name="vat_rate[]" required>
-                                <option value="0" ${vatRate === 0 ? 'selected' : ''}>0%</option>
-                                <option value="15" ${vatRate !== 0 ? 'selected' : ''}>15%</option>
-                            </select>
-                            <input type="number" step="0.01" class="form-control vat" name="vat[]" placeholder="0.00" value="${entry.vat.toFixed(2)}" readonly>
-                        </td>
-                        <td>
-                            <input type="number" step="0.01" class="form-control total" name="total[]" placeholder="0.00" value="${entry.payment_amount.toFixed(2)}" readonly>
-                        </td>
-                        <td class="text-center">
-                            <button type="button" class="btn btn-danger btn-sm remove-row">
-                                <i class="fa fa-minus"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-                $('#pettyCashTable tbody').append(newRow);
-                var lastRow = $('#pettyCashTable tbody tr:last');
-                normalizePettyCashVatRate(lastRow);
-                lastRow.find('.vat-rate').val(vatRate);
+                addServiceRow();
+                var row = $('#pettyCashTable tbody tr:last');
+                row.attr('data-existing', '1');
+                row.find('.supplier-name').val(entry.name || '');
+                row.find('.invoice-no').val(entry.reference_no || '');
+                row.find('.vat-number').val(entry.vat_number || '');
+                row.find('.description').val(entry.description || '');
+                row.find('.ledger-account').val(String(entry.ledger_account || ''));
+                row.find('.amount').val(amount.toFixed(2));
+                row.find('.vat-rate').val(vatRate);
+                // Keep the saved VAT / total rather than recalculating (avoids rounding drift)
+                row.find('.vat').val(vat.toFixed(2));
+                row.find('.total').val(total.toFixed(2));
             });
+        }
 
-            normalizePettyCashVatRate($('#pettyCashTable'));
-            // Calculate totals for all existing rows
-            $('#pettyCashTable tbody tr').each(function() {
-                calculateRowTotals($(this));
-            });
-        });
-        <?php endif; ?>
-
-        // Calculate totals for initial row on page load
-        $(document).ready(function() {
-            normalizePettyCashVatRate($('#pettyCashTable'));
-            $('#pettyCashTable tbody tr').each(function() {
-                calculateRowTotals($(this));
-            });
+        // Calculate totals for new rows on page load (saved rows keep their stored values)
+        normalizePettyCashVatRate($('#pettyCashTable'));
+        $('#pettyCashTable tbody tr').not('[data-existing]').each(function() {
+            calculateRowTotals($(this));
         });
 
         // Run after global select2 init in core.js

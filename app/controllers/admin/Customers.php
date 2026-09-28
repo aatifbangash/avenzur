@@ -2959,8 +2959,9 @@ class Customers extends MY_Controller
                 'created_by'   => $this->session->userdata('user_id'),
                 'type'         => 'received',
                 'paid_by'      => 'credit_memo',
-                'customer_id' => $customer_id,
+                'customer_id'  => $customer_id,
                 'payment_id'   => $payment_reference_id,
+                'memo_id'      => $memo_id,
             ];
 
             $this->sales_model->addPayment($payment);
@@ -3077,6 +3078,12 @@ class Customers extends MY_Controller
                 return;
             }
 
+            if ($this->purchases_model->memoHasPayment($id) || (float)($memo->used_amount ?? 0) > 0) {
+                $this->session->set_flashdata('warning', 'This credit memo has a payment recorded and cannot be deleted.');
+                admin_redirect('customers/list_credit_memo');
+                return;
+            }
+
             // Delete in correct order to avoid foreign key constraints
             // 1. Delete memo entries
             $this->db->where('memo_id', $id);
@@ -3161,11 +3168,28 @@ class Customers extends MY_Controller
         $credit_memo_data = $this->purchases_model->getDebitMemoData($id);
         $credit_memo_entries_data = $this->purchases_model->getDebitMemoEntriesData($id);
 
+        if (!$credit_memo_data) {
+            $this->session->set_flashdata('error', 'Credit Memo not found.');
+            admin_redirect('customers/list_credit_memo');
+            return;
+        }
+
+        if ($this->purchases_model->memoHasPayment($id) || (float)($credit_memo_data->used_amount ?? 0) > 0) {
+            $this->session->set_flashdata('warning', 'This credit memo has a payment recorded and cannot be edited.');
+            admin_redirect('customers/list_credit_memo');
+            return;
+        }
+
+        if ($this->period_closing_model->isPeriodClosed('ar', $credit_memo_data->date)) {
+            $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $credit_memo_data->date));
+            admin_redirect('customers/list_credit_memo');
+            return;
+        }
+
         $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('customers/list_credit_memo'), 'page' => lang('Credit Memo List')], ['link' => '#', 'page' => lang('Edit Credit Memo')]];
         $meta = ['page_title' => lang('Edit Credit Memo'), 'bc' => $bc];
 
         $this->data['memo_data'] = $credit_memo_data;
-
         $this->data['memo_entries_data'] = $credit_memo_entries_data;
         $this->data['customers']  = $this->site->getAllCompanies('customer');
         $this->page_construct('customers/credit_memo', $meta, $this->data);
@@ -3222,17 +3246,30 @@ class Customers extends MY_Controller
 
             if ($this->period_closing_model->isPeriodClosed('ar', $date)) {
                 $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $date));
-                admin_redirect('customers/credit_memo');
+                admin_redirect($request_type == 'update' ? 'customers/edit_credit_memo/' . $this->input->post('memo_id') : 'customers/credit_memo');
+                return;
             }
+
+            $old_sequence_code = null;
 
             // Remove breakdown matching validation - not required
             if($request_type == 'update'){
                 $old_memo_id = $this->input->post('memo_id');
                 $old_memo = $this->purchases_model->getDebitMemoData($old_memo_id);
+
+                if ($this->purchases_model->memoHasPayment($old_memo_id) || (float)($old_memo->used_amount ?? 0) > 0) {
+                    $this->session->set_flashdata('warning', 'This credit memo has a payment recorded and cannot be edited.');
+                    admin_redirect('customers/list_credit_memo');
+                    return;
+                }
+
                 if ($old_memo && $this->period_closing_model->isPeriodClosed('ar', $old_memo->date)) {
                     $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $old_memo->date));
                     admin_redirect('customers/list_credit_memo');
+                    return;
                 }
+
+                $old_sequence_code = $old_memo->sequence_code ?? null;
 
                 // Delete all older data completely in correct order
                 // 1. First delete memo entries
@@ -3260,7 +3297,9 @@ class Customers extends MY_Controller
                 'customer_entry_type' => $customer_entry_type,
                 'type' => $customer_entry_type == 'C' ? 'creditmemo' : 'debitmemo',
                 'date' => $date,
-                'sequence_code' => $this->sequenceCode->generate('CSI', 5)
+                'sequence_code' => ($request_type == 'update' && !empty($old_sequence_code))
+                    ? $old_sequence_code
+                    : $this->sequenceCode->generate('CSI', 5)
             );
 
             $this->db->insert('sma_memo', $memoData);
@@ -3293,7 +3332,9 @@ class Customers extends MY_Controller
                     $reference_no
                 );
             }
-            $this->session->set_flashdata('message', lang('Credit Memo invoice added Successfully!'));
+            $this->session->set_flashdata('message', $request_type == 'update'
+                ? lang('Credit Memo updated Successfully!')
+                : lang('Credit Memo invoice added Successfully!'));
             admin_redirect('customers/list_credit_memo');
         } else {
             $this->data['error'] = (validation_errors() ? validation_errors() : $this->session->flashdata('error'));
@@ -3455,9 +3496,35 @@ class Customers extends MY_Controller
         $service_invoice_data = $this->purchases_model->getDebitMemoData($id);
         $service_invoice_entries_data = $this->purchases_model->getDebitMemoEntriesData($id);
 
-        $data = [];
-        $this->data['memo_data'] = $service_invoice_data;
+        if (!$service_invoice_data) {
+            $this->session->set_flashdata('error', 'Service Invoice not found.');
+            admin_redirect('customers/list_service_invoice');
+            return;
+        }
 
+        if (($service_invoice_data->status ?? 'open') === 'locked') {
+            $this->session->set_flashdata('warning', 'This service invoice is locked and cannot be edited.');
+            admin_redirect('customers/list_service_invoice');
+            return;
+        }
+
+        // Payment linked via payments.memo_id — editing would drop the payment link
+        if ($this->purchases_model->memoHasPayment($id)) {
+            $this->session->set_flashdata('warning', 'This service invoice has a payment recorded and cannot be edited.');
+            admin_redirect('customers/list_service_invoice');
+            return;
+        }
+
+        if ($this->period_closing_model->isPeriodClosed('ar', $service_invoice_data->date)) {
+            $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $service_invoice_data->date));
+            admin_redirect('customers/list_service_invoice');
+            return;
+        }
+
+        $bc    = [['link' => base_url(), 'page' => lang('home')], ['link' => admin_url('customers/list_service_invoice'), 'page' => lang('Service Invoice')], ['link' => '#', 'page' => lang('Edit Service Invoice')]];
+        $meta = ['page_title' => lang('Edit Service Invoice'), 'bc' => $bc];
+
+        $this->data['memo_data'] = $service_invoice_data;
         $this->data['memo_entries_data'] = $service_invoice_entries_data;
         $this->data['customers']  = $this->site->getAllCompanies('customer');
         $this->_loadTransportInvoiceViewData();
@@ -3566,15 +3633,40 @@ class Customers extends MY_Controller
 
             if ($this->period_closing_model->isPeriodClosed('ar', $date)) {
                 $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $date));
-                admin_redirect('customers/service_invoice');
+                admin_redirect($request_type == 'update' ? 'customers/edit_service_invoice/' . $this->input->post('memo_id') : 'customers/service_invoice');
+                return;
             }
 
-            if ($date < date('Y-m-d')) {
+            if ($request_type != 'update' && $date < date('Y-m-d')) {
                 $this->session->set_flashdata('error', 'Invoice date cannot be earlier than today.');
                 admin_redirect('customers/service_invoice');
+                return;
             }
 
-            $reference_no = $this->sequenceCode->generateServiceInvoiceReference($date);
+            if ($request_type == 'update') {
+                $memo_id2 = $this->input->post('memo_id');
+                $reference_no = $this->input->post('reference_no');
+
+                if ($this->purchases_model->memoHasPayment($memo_id2)) {
+                    $this->session->set_flashdata('warning', 'This service invoice has a payment recorded and cannot be edited.');
+                    admin_redirect('customers/list_service_invoice');
+                    return;
+                }
+
+                $old_memo = $this->purchases_model->getDebitMemoData($memo_id2);
+                if ($old_memo && ($old_memo->status ?? 'open') === 'locked') {
+                    $this->session->set_flashdata('warning', 'This service invoice is locked and cannot be edited.');
+                    admin_redirect('customers/list_service_invoice');
+                    return;
+                }
+                if ($old_memo && $this->period_closing_model->isPeriodClosed('ar', $old_memo->date)) {
+                    $this->session->set_flashdata('error', $this->period_closing_model->closedMessage('ar', $old_memo->date));
+                    admin_redirect('customers/list_service_invoice');
+                    return;
+                }
+            } else {
+                $reference_no = $this->sequenceCode->generateServiceInvoiceReference($date);
+            }
 
             $payment_total = 0;
             $vat_charges = 0;
@@ -3591,7 +3683,8 @@ class Customers extends MY_Controller
 
                         if ($unitPrice === null || $quantity <= 0) {
                             $this->session->set_flashdata('error', 'Invalid transportation pricing on row ' . ($index + 1));
-                            admin_redirect('customers/service_invoice');
+                            admin_redirect($request_type == 'update' ? 'customers/edit_service_invoice/' . $this->input->post('memo_id') : 'customers/service_invoice');
+                            return;
                         }
 
                         $subtotal = $unitPrice * $quantity;
@@ -3637,6 +3730,14 @@ class Customers extends MY_Controller
             }
 
             if($payment_total > 0){
+                if ($request_type == 'update') {
+                    $memo_id2 = $this->input->post('memo_id');
+                    // Delete older data so we can recreate with updated values
+                    $this->db->delete('sma_memo_entries', ['memo_id' => $memo_id2]);
+                    $this->deleteFromAccounting($memo_id2);
+                    $this->db->delete('sma_memo', ['id' => $memo_id2]);
+                }
+
                 // For now, we'll use default ledger accounts since they're not in the simplified form
                 // In the future, these might need to be configured or selected differently
 
@@ -3698,7 +3799,7 @@ class Customers extends MY_Controller
             unset($entryData);
 
             $this->convert_service_invoice($memo_id, $customer_id, $vat_account, $payment_total, $vat_charges, $reference_no, 'serviceinvoice', $date, $memoEntryData);
-            $this->session->set_flashdata('message', lang('Service Invoice added Successfully!'));
+            $this->session->set_flashdata('message', $request_type == 'update' ? lang('Service Invoice updated Successfully!') : lang('Service Invoice added Successfully!'));
             admin_redirect('customers/list_service_invoice');
 
         } else {

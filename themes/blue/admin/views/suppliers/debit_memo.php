@@ -129,7 +129,7 @@
 
                         <div class="col-md-4">
                             <div class="from-group">
-                                <button type="submit" style="margin-top: 18px;margin-bottom: 28px;" class="btn btn-primary" id="add_payment"><?= lang('Add Payments') ?></button>
+                                <button type="submit" style="margin-top: 18px;margin-bottom: 28px;" class="btn btn-primary" id="add_payment"><?= !empty($memo_data) ? lang('Update Memo') : lang('Add Payments') ?></button>
                             </div>
                         </div>
                         
@@ -171,7 +171,7 @@
                         </table>
                         <button id="addRowBtn" class="btn btn-primary mt-2">+</button>
                         <?php 
-                            if(isset($memo_entries_data) && !empty($memo_entries_data)){
+                            if(isset($memo_data) && !empty($memo_data)){
                                 ?>
                                     <input type="hidden" name="memo_id" value="<?= $memo_data->id; ?>" />
                                     <input type="hidden" name="request_type" value="update" />

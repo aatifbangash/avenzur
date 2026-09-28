@@ -156,9 +156,14 @@
                                             . '?at_date=' . urlencode($end_date ?? '')
                                             . '&party_id=' . (int) $row['supplier_id']
                                             . '&supplier_trade_type=' . urlencode($supplier_trade_type ?? 'trade');
+                                        $debug_url = admin_url('reports/supplier_tb_vs_unpaid_ap_debug')
+                                            . '?supplier_id=' . (int) $row['supplier_id']
+                                            . '&from_date=' . urlencode($start_date ?? '')
+                                            . '&to_date=' . urlencode($end_date ?? '');
                                         if (!empty($warehouse_id)) {
                                             $stmt_url .= '&warehouse_id=' . (int) $warehouse_id;
                                             $unpaid_url .= '&warehouse_id=' . (int) $warehouse_id;
+                                            $debug_url .= '&warehouse_id=' . (int) $warehouse_id;
                                         } else {
                                             $stmt_url .= '&all=1';
                                             $unpaid_url .= '&all=1&warehouse_id=';
@@ -184,6 +189,7 @@
                                             <td class="text-nowrap">
                                                 <a class="btn btn-xs btn-default" href="<?= $stmt_url; ?>" target="_blank">Statement</a>
                                                 <a class="btn btn-xs btn-default" href="<?= $unpaid_url; ?>" target="_blank">Unpaid</a>
+                                                <a class="btn btn-xs btn-warning" href="<?= $debug_url; ?>" target="_blank"><i class="fa fa-bug"></i> Debug</a>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>

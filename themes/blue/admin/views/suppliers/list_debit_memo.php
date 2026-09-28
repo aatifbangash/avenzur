@@ -62,8 +62,14 @@
                                                 </td>
                                                 <td>
                                                     <a href="<?php echo admin_url('suppliers/view_debit_memo/' . $memo->id); ?>" class="tip" title="View Debit Memo"><i class="fa fa-eye"></i></a>
-                                                    <?php if (!$period_closed): ?>
+                                                    <?php
+                                                    $memo_paid = !empty($memo->payment_count) || (float)($memo->used_amount ?? 0) > 0;
+                                                    if (!$period_closed && !$memo_paid):
+                                                    ?>
+                                                    <a href="<?php echo admin_url('suppliers/edit_debit_memo/' . $memo->id); ?>" class="tip" title="Edit Debit Memo"><i class="fa fa-edit"></i></a>
                                                     <a href="<?php echo admin_url('suppliers/delete_debit_memo/' . $memo->id); ?>" class="tip" title="Delete Debit Memo" onclick="return confirm('Are you sure you want to delete this debit memo?');"><i class="fa fa-trash"></i></a>
+                                                    <?php elseif (!$period_closed && $memo_paid): ?>
+                                                    <span class="tip" title="Cannot edit — payment recorded against this memo"><i class="fa fa-edit text-muted"></i></span>
                                                     <?php endif; ?>
                                                 </td>
                                             </tr>

@@ -33,7 +33,7 @@
                             <tr>
                                 <th>#</th>
                                 <th><?php echo $this->lang->line('Reference No.'); ?></th>
-                                <th><?php echo $this->lang->line('Supplier') ?></th>
+                                <th><?php echo $this->lang->line('Customer') ?></th>
                                 <th><?php echo $this->lang->line('Date') ?></th>
                                 <th><?php echo $this->lang->line('Payment Amount') ?></th>
                                 <th><?php echo $this->lang->line('Status') ?></th>
@@ -62,8 +62,14 @@
                                                 </td>
                                                 <td>
                                                     <a href="<?php echo admin_url('customers/view_credit_memo/' . $memo->id); ?>" class="tip" title="View Credit Memo"><i class="fa fa-eye"></i></a>
-                                                    <?php if (!$period_closed): ?>
+                                                    <?php
+                                                    $memo_paid = !empty($memo->payment_count) || (float)($memo->used_amount ?? 0) > 0;
+                                                    if (!$period_closed && !$memo_paid):
+                                                    ?>
+                                                    <a href="<?php echo admin_url('customers/edit_credit_memo/' . $memo->id); ?>" class="tip" title="Edit Credit Memo"><i class="fa fa-edit"></i></a>
                                                     <a href="<?php echo admin_url('customers/delete_credit_memo/' . $memo->id); ?>" class="tip" title="Delete Credit Memo" onclick="return confirm('Are you sure you want to delete this credit memo?');"><i class="fa fa-trash"></i></a>
+                                                    <?php elseif (!$period_closed && $memo_paid): ?>
+                                                    <span class="tip" title="Cannot edit — payment recorded against this memo"><i class="fa fa-edit text-muted"></i></span>
                                                     <?php endif; ?>
                                                 </td>
                                             </tr>

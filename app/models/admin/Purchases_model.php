@@ -1390,7 +1390,9 @@ class Purchases_model extends CI_Model
             . ' COALESCE(SUM(sma_memo_entries.vat), 0) AS lines_vat_total,'
             . ' COALESCE(SUM(sma_memo_entries.payment_amount - sma_memo_entries.vat), 0) AS lines_net_total,'
             . ' (SELECT MIN(e.id) FROM sma_accounts_entries e'
-            . '   WHERE e.memo_id = sma_memo.id AND e.transaction_type = \'pettycash\') AS journal_entry_id',
+            . '   WHERE e.memo_id = sma_memo.id AND e.transaction_type = \'pettycash\') AS journal_entry_id,'
+            . ' (SELECT COUNT(p.id) FROM ' . $this->db->dbprefix('payments') . ' p'
+            . '   WHERE p.memo_id = sma_memo.id) AS payment_count',
             false
         );
         $this->db->from('memo');
@@ -1457,7 +1459,9 @@ class Purchases_model extends CI_Model
     public function getCreditMemo($type)
     {
         $this->db->order_by('date', 'asc');
-        $this->db->select('sma_memo.*, companies.company');
+        $this->db->select('sma_memo.*, companies.company,
+            (SELECT COUNT(p.id) FROM ' . $this->db->dbprefix('payments') . ' p
+             WHERE p.memo_id = sma_memo.id) AS payment_count', false);
         $this->db->from('memo');
         $this->db->join('companies', 'sma_memo.customer_id = companies.id');
         $this->db->where(['type' => $type]);
