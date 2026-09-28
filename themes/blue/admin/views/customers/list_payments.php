@@ -203,10 +203,10 @@ if (!empty($filters['to_date'])) {
                                         <i class="fa fa-eye"></i>
                                     </a>
                                     <?php if ($can_edit): ?>
-                                        <a href="<?= admin_url('customers/edit_payment_reference/' . $payment->id) ?>"
+                                        <!--<a href="<?= admin_url('customers/edit_payment_reference/' . $payment->id) ?>"
                                            class="btn btn-primary btn-xs" title="<?= lang('Edit') ?>">
                                             <i class="fa fa-edit"></i>
-                                        </a>
+                                        </a>-->
                                         <?php if ($this->sma->in_group('financemanager')) { ?>
                                         <form method="post" action="<?= admin_url('customers/close_payment') ?>" style="display:inline;">
                                             <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
