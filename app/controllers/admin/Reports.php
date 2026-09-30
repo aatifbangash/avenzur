@@ -8828,6 +8828,10 @@ class Reports extends MY_Controller
         $this->data['salesman_id']  = null;
         $this->data['record_type']  = 'all';
 
+        // Service invoices are visible to admin / finance manager only
+        $can_view_service_invoices = !empty($this->Owner) || !empty($this->Admin) || !empty($this->FinanceManager);
+        $this->data['can_view_service_invoices'] = $can_view_service_invoices;
+
         // Check if form is submitted
         $from_date = $this->input->post('from_date');
         $to_date   = $this->input->post('to_date');
@@ -8838,6 +8842,10 @@ class Reports extends MY_Controller
             $pharmacy_id = $this->site->resolveReportWarehouseFilter('pharmacy_id');
             $salesman_id = $this->input->post('salesman');
             $record_type = $this->input->post('record_type') ?: 'all';
+            $allowed_types = $can_view_service_invoices ? ['all', 'sale', 'return', 'service'] : ['all', 'sale', 'return'];
+            if (!in_array($record_type, $allowed_types, true)) {
+                $record_type = 'all';
+            }
 
             // Pre-fetch salesman name
             $salesman_name = null;
@@ -8853,7 +8861,7 @@ class Reports extends MY_Controller
             $end_date   = $this->sma->fld($to_date);
 
             // Get sales data from model
-            $invoices = $this->reports_model->getSalesPerInvoice($start_date, $end_date, $customer_id, $pharmacy_id, $salesman_name, $record_type);
+            $invoices = $this->reports_model->getSalesPerInvoice($start_date, $end_date, $customer_id, $pharmacy_id, $salesman_name, $record_type, $can_view_service_invoices);
 
             // Calculate totals
             $totals = [
