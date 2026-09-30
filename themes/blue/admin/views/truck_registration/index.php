@@ -34,7 +34,7 @@
 
 <div class="box">
     <div class="box-header">
-        <h2 class="blue"><i class="fa-fw fa fa-info-circle"></i><?= lang('notifications'); ?></h2>
+        <h2 class="blue"><i class="fa-fw fa fa-info-circle"></i><?= lang('Registered Trucks'); ?></h2>
 
         <div class="box-icon">
             <ul class="btn-tasks">
@@ -57,9 +57,9 @@
                                 <input class="checkbox checkth" type="checkbox" name="check"/>
                             </th> -->
                             <th><?php echo $this->lang->line('Truck No'); ?> </th>
-                            <th><?php echo $this->lang->line('Reference no') ?></th>
                             <th><?php echo $this->lang->line('Date'); ?></th>
                             <th><?php echo $this->lang->line('Time'); ?></th>
+                            <th><?php echo $this->lang->line('Status'); ?></th>
                             <th><?php echo $this->lang->line('actions'); ?></th>
                         </tr>
                         </thead>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>ECharts Example</title>
+		<style>
+			#main {
+				width: 100%;
+				height: 400px;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>ECharts Integration Example</h1>
+
+		<!-- Container for the chart -->
+		<div id="main"></div>
+
+		<!-- Include ECharts -->
+		<script src="../themes/default/admin/assets/js/echarts.min.js"></script>
+
+		<script type="text/javascript">
+			// Initialize the echarts instance
+			var myChart = echarts.init(document.getElementById("main"));
+
+			// Specify the configuration items and data for the chart
+			var option = {
+				title: {
+					text: "Sample Chart",
+				},
+				tooltip: {},
+				legend: {
+					data: ["Sales"],
+				},
+				xAxis: {
+					data: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+				},
+				yAxis: {},
+				series: [
+					{
+						name: "Sales",
+						type: "bar",
+						data: [5, 20, 36, 10, 10, 20],
+					},
+				],
+			};
+
+			// Use the specified configuration items and data to display the chart
+			myChart.setOption(option);
+
+			// Make the chart responsive
+			window.addEventListener("resize", function () {
+				myChart.resize();
+			});
+		</script>
+	</body>
+</html>

@@ -12,7 +12,7 @@ class Blog extends MY_Controller {
             $this->sma->md('login');
         }
 
-        if (!$this->Owner) {
+        if (!$this->Owner && !$this->GP['blog_view']) {
             $this->session->set_flashdata('warning', lang('access_denied'));
             redirect('admin');
         }

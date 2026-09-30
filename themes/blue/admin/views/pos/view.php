@@ -97,7 +97,7 @@
                 if ($Settings->invoice_view == 1 || $Settings->indian_gst) {
                     ?>
                     <div class="col-sm-12 text-center">
-                        <h4 style="font-weight:bold;"><?=lang('VAT_INVOICE'); ?></h4>
+                        <h4 style="font-weight:bold;"><?=lang('INVOICE'); ?></h4>
                     </div>
                     <?php
                 }
@@ -159,14 +159,14 @@
                                 $category = $row->category_id;
                                 echo '<tr><td colspan="100%" class="no-border"><strong>' . $row->category_name . '</strong></td></tr>';
                             }
-                            echo '<tr><td colspan="2" class="no-border">#' . $r . ': &nbsp;&nbsp;' . product_name($row->product_name, ($printer ? $printer->char_per_line : null)) . ($row->variant ? ' (' . $row->variant . ')' : '') , ($row->serial_no ? '<br>' . $row->serial_no : '') . '<span class="pull-right">' . ($row->tax_code ? '*' . $row->tax_code : '') . '</span></td></tr>';
+                            echo '<tr><td colspan="2" class="no-border">#' . $r . ': &nbsp;&nbsp;' . product_name($row->product_name, ($printer ? $printer->char_per_line : null)) . '</td></tr>';
                             if (!empty($row->second_name)) {
                                 echo '<tr><td colspan="2" class="no-border">' . $row->second_name . '</td></tr>';
                             }
                             if (!empty($row->comment)) {
                                 echo '<tr><td colspan="2" class="no-border">' . $row->comment . '</td></tr>';
                             }
-                            echo '<tr><td class="no-border border-bottom">' . $this->sma->formatQuantity($row->unit_quantity) . ($row->product_unit_code ? $row->product_unit_code : '') . ' x ' . ($row->item_discount != 0 ? '(' . $this->sma->formatMoney($row->unit_price + ($row->item_discount / $row->unit_quantity)) . ' - ' . $this->sma->formatMoney($row->item_discount / $row->unit_quantity) . ')' : $this->sma->formatMoney($row->unit_price)) . ($row->item_tax != 0 ? ' [' . lang('tax') . ' <small>(' . ($Settings->indian_gst ? $row->tax : $row->tax_code) . ')</small> ' . $this->sma->formatMoney($row->item_tax) . ($row->hsn_code ? ' (' . lang($row->product_type == 'service' ? 'sac_code' : 'hsn_code') . ': ' . $row->hsn_code . ')' : '') . ']' : '') . '</td><td class="no-border border-bottom text-right">' . $this->sma->formatMoney($row->subtotal) . '</td></tr>';
+                            echo '<tr><td class="no-border border-bottom">' . $this->sma->formatQuantity($row->unit_quantity).'</td><td class="no-border border-bottom text-right">' . $this->sma->formatMoney($row->subtotal) . '</td></tr>';
 
                             $r++;
                         }
@@ -194,14 +194,16 @@
                     <tfoot>
                         <tr>
                             <th><?=lang('total');?></th>
-                            <th class="text-right"><?=$this->sma->formatMoney($return_sale ? (($inv->total + $inv->product_tax) + ($return_sale->total + $return_sale->product_tax)) : ($inv->total + $inv->product_tax));?></th>
+                            <th class="text-right"><?=$this->sma->formatMoney($return_sale ? (($inv->total) + ($return_sale->total)) : ($inv->total ));?></th>
                         </tr>
                         <?php
-                        if ($inv->order_tax != 0) {
-                            echo '<tr><th>' . lang('tax') . '</th><th class="text-right">' . $this->sma->formatMoney($return_sale ? ($inv->order_tax + $return_sale->order_tax) : $inv->order_tax) . '</th></tr>';
-                        }
+                        
                         if ($inv->order_discount != 0) {
-                            echo '<tr><th>' . lang('order_discount') . '</th><th class="text-right">' . $this->sma->formatMoney($return_sale ? ($inv->order_discount + $return_sale->order_discount) : $inv->order_discount) . '</th></tr>';
+                            echo '<tr><th>' . lang('order_discount') . '</th><th class="text-right">' . $this->sma->formatMoney($return_sale ? ($inv->total_discount) : $inv->total_discount) . '</th></tr>';
+                        }
+
+                        if ($inv->total_tax != 0) {
+                            echo '<tr><th>' . lang('tax') . '</th><th class="text-right">' . $this->sma->formatMoney($return_sale ? ($inv->total_tax ) : $inv->total_tax) . '</th></tr>';
                         }
 
                         if ($inv->shipping != 0) {
@@ -271,7 +273,7 @@
                             echo '<td>' . lang('paid_by') . ': ' . lang($payment->paid_by) . '</td>';
                             echo '<td colspan="2">' . lang('amount') . ': ' . $this->sma->formatMoney($payment->pos_paid == 0 ? $payment->amount : $payment->pos_paid) . ($payment->return_id ? ' (' . lang('returned') . ')' : '') . '</td>';
                             echo '<td>' . lang('change') . ': ' . ($payment->pos_balance > 0 ? $this->sma->formatMoney($payment->pos_balance) : 0) . '</td>';
-                        } elseif (($payment->paid_by == 'CC' || $payment->paid_by == 'ppp' || $payment->paid_by == 'stripe') && $payment->cc_no) {
+                        } elseif (($payment->paid_by == 'CC' || $payment->paid_by == 'ppp' || $payment->paid_by == 'stripe')) {
                             echo '<td>' . lang('paid_by') . ': ' . lang($payment->paid_by) . '</td>';
                             echo '<td>' . lang('amount') . ': ' . $this->sma->formatMoney($payment->pos_paid) . ($payment->return_id ? ' (' . lang('returned') . ')' : '') . '</td>';
                             echo '<td>' . lang('no') . ': ' . 'xxxx xxxx xxxx ' . substr($payment->cc_no, -4) . '</td>';
@@ -329,7 +331,7 @@
                 }
                 ?>
 
-                <?= $Settings->invoice_view > 0 ? $this->gst->summary($rows, $return_rows, ($return_sale ? $inv->product_tax + $return_sale->product_tax : $inv->product_tax)) : ''; ?>
+                <?php //$Settings->invoice_view > 0 ? $this->gst->summary($rows, $return_rows, ($return_sale ? $inv->total_tax + $return_sale->total_tax : $inv->total_tax)) : ''; ?>
 
                 <?= $customer->id != 1 && $customer->award_points != 0 && $Settings->each_spent > 0 ? '<p class="text-center">' . lang('this_sale') . ': ' . floor(($inv->grand_total / $Settings->each_spent) * $Settings->ca_point)
                 . '<br>' . lang('total') . ' ' . lang('award_points') . ': ' . $customer->award_points . '</p>' : ''; ?>
@@ -385,8 +387,12 @@
                     </div>
                     <div class="btn-group" role="group">
                         <?php
+                        if(trim($biller->name) == 'Jarir Alkhair') {
+                                echo '<a href="<?= admin_url("pos/view/'.$sid.'?mode=print_instructions"); ?>" <button  class="btn btn-block btn-primary">' . lang('Print Instructions') . '</button>';
+                        }else {
                             echo '<button onclick="print_instructions();" class="btn btn-block btn-primary">' . lang('Print Instructions') . '</button>';
-                        ?>
+                        }
+                    ?>
                     </div>
                     <div class="btn-group" role="group">
                         <a class="btn btn-block btn-success" href="#" id="email"><?= lang('email'); ?></a>
@@ -410,7 +416,12 @@
                 </span>
                 <span class="pull-left col-xs-12">
                         <?php
+                         
+                        if(trim($biller->name) == 'Jarir Alkhair') {
+                                echo '<a href="'.admin_url("pos/view/".$sid."?mode=print_instructions").'"> <button  class="btn btn-block btn-primary">' . lang('Print Instructions') . '</button></a>';
+                        }else {
                             echo '<button onclick="print_instructions();" class="btn btn-block btn-primary">' . lang('Print Instructions') . '</button>';
+                        }
                         ?>
                 </span>
                 <span class="pull-left col-xs-12"><a class="btn btn-block btn-success" href="#" id="email"><?= lang('email'); ?></a></span>
@@ -492,40 +503,66 @@
             var pharmacy_name = '<?php echo $pharmacy_name; ?>';
             var pharmacy_address = '<?php echo $pharmacy_address; ?>';
             var printing_date = '<?php echo date('Y-m-d'); ?>';
+            var invoice_no = '<?php echo $inv->reference_no; ?>';
+            var customer_name = '<?php echo $inv->customer_name; ?>';
 
+            var printWindow = window.open('', 'Instructions', 'height=400,width=250');
+            printWindow.document.write('<html><head><title>Medication Instructions</title>');
+            printWindow.document.write('<style>');
+            printWindow.document.write('@page { margin: 0; size: 86mm 70mm portrait; }');
+            printWindow.document.write('* { margin: 0; padding: 0; box-sizing: border-box; }');
+            printWindow.document.write('body { font-family: Arial, sans-serif; font-size: 9.5px; line-height: 1.45; margin: 0; padding: 0; width: 86mm; }');
+            printWindow.document.write('.instruction-page { page-break-after: auto; page-break-inside: avoid; border: 1px solid #000; padding: 1mm; padding-bottom: 0.5mm; margin: 0; width: 86mm; height: 70mm; max-height: 70mm; overflow: hidden; }');
+            printWindow.document.write('.instruction-page:last-child { page-break-after: auto; }');
+            printWindow.document.write('.header { background: #000; color: white; padding: 1mm; margin-bottom: 1mm; text-align: left; }');
+            printWindow.document.write('.header h2 { font-size: 9.5px; margin: 0; font-weight: bold; line-height: 1.45; }');
+            printWindow.document.write('.header .logo-text { font-size: 7.7px; margin: 0.3mm 0 0 0; line-height: 1.45; }');
+            printWindow.document.write('.info-section { margin: 0; padding: 0; }');
+            printWindow.document.write('.info-row { display: flex; padding: 0.55mm 0; border-bottom: 0.3px solid #ccc; }');
+            printWindow.document.write('.info-row:last-child { border-bottom: none; padding-bottom: 0; }');
+            printWindow.document.write('.info-label { font-weight: bold; color: #000; width: 26mm; font-size: 8.25px; line-height: 1.45; }');
+            printWindow.document.write('.info-value { flex: 1; color: #000; font-size: 8.25px; word-wrap: break-word; line-height: 1.45; }');
+            printWindow.document.write('.footer { margin: 0; padding: 0; border: none; text-align: left; }');
+            printWindow.document.write('.tel { color: #000; font-weight: bold; font-size: 7.7px; line-height: 1.45; margin: 0; padding: 0; }');
+            printWindow.document.write('@media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0 !important; padding: 0 !important; } }');
+            printWindow.document.write('</style>');
+            printWindow.document.write('</head><body>');
+            
+            var html = '';
             for (var medication in instructionsData) {
                 if (instructionsData.hasOwnProperty(medication)) {
                     var instruction = instructionsData[medication];
-
-                    var printWindow = window.open('', 'Instructions', 'height=200,width=400');
-                    printWindow.document.write('<html><head><title>Instructions</title>');
-                    printWindow.document.write('<style>');
-                    // Set the top margin to 0.5 inch (or adjust as needed)
-                    printWindow.document.write('@page { margin: 0.15in; }');
-                    printWindow.document.write('body { font-family: Arial, sans-serif; }');
-                    printWindow.document.write('b { font-size: 16px; }');
-                    printWindow.document.write('</style>');
-                    printWindow.document.write('</head><body>');
-
                     var instrt = instruction.split(':');
-                    var html = '<b>' + medication + '</b><br />';
-                    html += instrt[0] + '<br />';
-                    html += pharmacy_name + '<br />';
-                    html += pharmacy_address + '<br />';
-                    html += pharmacist_name + '<br />';
-                    html += 'Date. ' + printing_date + '<br />';
-                    html += 'Exp. ' + instrt[1] + '<br />';
-                    html += 'اسم المريض';
-
-                    printWindow.document.write(html);
-
-                    printWindow.document.write('</body></html>');
-
-                    printWindow.print();
-                    printWindow.close();
+                    var dosage = instrt[0] || '';
+                    var expiry = instrt[1] || '';
+                    
+                    html += '<div class="instruction-page">';
+                    html += '<div class="header">';
+                    html += '<h2>Pharmacy : ' + pharmacy_name + '</h2>';
+                    html += '<div class="logo-text">' + pharmacy_address + '</div>';
+                    html += '</div>';
+                    
+                    html += '<div class="info-section">';
+                    html += '<div class="info-row"><div class="info-label">Invoice No:</div><div class="info-value">' + invoice_no + '</div></div>';
+                    html += '<div class="info-row"><div class="info-label">Patient name :</div><div class="info-value">' + customer_name + '</div></div>';
+                    html += '<div class="info-row"><div class="info-label">Medication :</div><div class="info-value">' + medication + '</div></div>';
+                    html += '<div class="info-row"><div class="info-label">Dosage :</div><div class="info-value">' + dosage + '</div></div>';
+                    html += '<div class="info-row"><div class="info-label">Expiry Date :</div><div class="info-value">' + expiry + '</div></div>';
+                    html += '<div class="info-row"><div class="info-label">Dispensed by :</div><div class="info-value">' + pharmacist_name + '</div></div>';
+                    html += '<div class="info-row"><div class="info-label">Dispensing Date :</div><div class="info-value">' + printing_date + '</div></div>';
+                    html += '</div>';
+                    
+                    html += '<div class="footer">';
+                    html += '<div class="tel">Tel No : <?php echo $warehouse->phone ?? "+966 50 760 1593"; ?></div>';
+                    html += '</div>';
+                    html += '</div>';
                 }
             }
 
+            printWindow.document.write(html);
+            printWindow.document.write('</body></html>');
+            printWindow.print();
+            printWindow.close();
             return true;
         }
 

@@ -195,8 +195,8 @@ body:after {
 }
 #pos #pos-sale-form {
     min-width: 400px;
-    width: 33%;
-    max-width: 500px;
+    width: 37%; 
+    /* max-width: 500px; */
     /*padding: 10px 10px 5px 10px;*/
 }
 #pos #leftdiv {

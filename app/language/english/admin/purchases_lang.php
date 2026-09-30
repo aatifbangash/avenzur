@@ -121,3 +121,7 @@ $lang['purchase_already_paid']               = 'Payment status is already paid f
 $lang['payment_sent']                        = 'Payment Sent';
 $lang['update_supplier_email']               = 'Please update supplier email address';
 $lang['product_x_found']                     = 'System can not find the product %s';
+$lang['landed_cost']                         = 'Landed Cost';
+$lang['landed_cost_per_unit']                = 'Landed Cost / Unit';
+$lang['landed_cost_ledger_required']         = 'Goods in Transit ledger is not configured on the Overseas Warehouse. Cannot post landed cost.';
+$lang['landed_cost_git_ledger']              = 'Goods in Transit Account (Landed Cost)';

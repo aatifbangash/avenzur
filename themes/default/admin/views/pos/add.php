@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="<?=$assets?>pos/css/posajax.css" type="text/css"/>
     <link rel="stylesheet" href="<?=$assets?>pos/css/print.css" type="text/css" media="print"/>
     <link href="<?= base_url('assets/custom/pos.css') ?>" rel="stylesheet"/>
+    <link href="<?= base_url('assets/css/wasfaty.css') ?>" rel="stylesheet"/>
     <script type="text/javascript" src="<?=$assets?>js/jquery-2.0.3.min.js"></script>
     <script type="text/javascript" src="<?=$assets?>js/jquery-migrate-1.2.1.min.js"></script>
     <!--[if lt IE 9]>
@@ -169,6 +170,11 @@
                     <li class="dropdown hidden-xs">
                         <a class="btn bred pos-tip" title="<?=lang('clear_ls')?>" data-placement="bottom" id="clearLS" href="#">
                             <i class="fa fa-eraser"></i>
+                        </a>
+                    </li>
+                    <li class="dropdown">
+                        <a class="btn" style="background: #2196F3; color: white;" id="wasfaty-btn" title="<span>Wasfaty Prescription</span>" data-placement="bottom" data-html="true" href="#" data-toggle="modal" data-target="#wasfatyModal">
+                            <i class="fa fa-heartbeat"></i> Wasfaty
                         </a>
                     </li>
                 </ul>
@@ -1340,7 +1346,9 @@ var lang = {
         }
         ?>
         if (!localStorage.getItem('postax2')) {
-            localStorage.setItem('postax2', <?=$Settings->default_tax_rate2;?>);
+            <?php if (!empty($Settings->default_tax_rate2)): ?>
+            localStorage.setItem('postax2', '<?=$Settings->default_tax_rate2;?>');
+            <?php endif; ?>
         }
         $('.select').select2({minimumResultsForSearch: 7});
         // var customers = [{
@@ -2155,9 +2163,11 @@ if (!$pos_settings->remote_printing) {
         }
     </script>
     <?php
-} elseif ($pos_settings->remote_printing == 2) {
+    } elseif ($pos_settings->remote_printing == 2) {
     ?>
     <script src="<?= $assets ?>js/socket.io.min.js" type="text/javascript"></script>
+    <!-- Wasfaty Integration Script -->
+    <script src="<?= base_url('assets/js/wasfaty.js') ?>" type="text/javascript"></script>
     <script type="text/javascript">
         socket = io.connect('http://localhost:6440', {'reconnection': false});
 
@@ -2256,6 +2266,144 @@ $('.sortable_table tbody').sortable({
 });
 </script>
 <script type="text/javascript" charset="UTF-8"><?=$s2_file_date?></script>
+
+<!-- Wasfaty Prescription Modal -->
+<!-- Wasfaty Prescription Modal - Two Column Layout -->
+<div class="modal fade" id="wasfatyModal" tabindex="-1" role="dialog" aria-labelledby="wasfatyModalLabel">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); color: white;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="wasfatyModalLabel">
+                    <i class="fa fa-heartbeat"></i> Wasfaty Prescription Lookup
+                </h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- Left Column: Form -->
+                    <div class="col-md-5" id="wasfaty-left-column">
+                        <h5 style="color: #2196F3; margin-top: 0;">
+                            <i class="fa fa-search"></i> Search Prescription
+                        </h5>
+                        <hr style="border-color: #2196F3; margin-top: 10px; margin-bottom: 15px;">
+                        
+                        <form id="wasfaty-lookup-form">
+                            <div class="form-group">
+                                <label for="patient-phone">Patient Phone Number *</label>
+                                <input type="text" 
+                                       class="form-control input-lg" 
+                                       id="patient-phone" 
+                                       name="phone" 
+                                       placeholder="05XXXXXXXX" 
+                                       maxlength="10"
+                                       required>
+                                <small class="help-block">Saudi mobile format (10 digits starting with 05)</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="prescription-code">Prescription Code *</label>
+                                <input type="text" 
+                                       class="form-control input-lg" 
+                                       id="prescription-code" 
+                                       name="prescription_code" 
+                                       placeholder="6-digit code" 
+                                       maxlength="6"
+                                       required>
+                                <small class="help-block">6-digit prescription code</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary btn-lg btn-block" id="fetch-prescription-btn">
+                                    <i class="fa fa-search"></i> Fetch Prescription
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <!-- Error Alert -->
+                        <div id="wasfaty-error" class="alert alert-danger" style="display:none; margin-top:15px;"></div>
+                    </div>
+                    
+                    <!-- Right Column: Prescription Details -->
+                    <div class="col-md-7" id="wasfaty-right-column">
+                        <!-- Loading State -->
+                        <div id="wasfaty-loading" style="display:none; text-align:center; padding:60px 20px;">
+                            <i class="fa fa-spinner fa-spin fa-4x text-primary" style="color: #2196F3;"></i>
+                            <p class="text-muted" style="margin-top:20px; font-size: 16px;">Fetching prescription from Wasfaty...</p>
+                        </div>
+                        
+                        <!-- Empty State -->
+                        <div id="prescription-empty-state" style="text-align:center; padding:60px 20px;">
+                            <i class="fa fa-file-text-o" style="font-size: 80px; color: #ddd; margin-bottom: 20px;"></i>
+                            <h4 style="color: #999; font-weight: 400;">No Prescription Loaded</h4>
+                            <p class="text-muted">Enter phone number and code to fetch prescription details</p>
+                        </div>
+                        
+                        <!-- Prescription Details (shown after fetch) -->
+                        <div id="prescription-details" style="display:none;">
+                            <h5 style="color: #2196F3; margin-top: 0;">
+                                <i class="fa fa-file-text-o"></i> Prescription Details
+                            </h5>
+                            <hr style="border-color: #2196F3; margin-top: 10px; margin-bottom: 15px;">
+                            
+                            <div class="alert alert-info" style="background: #e3f2fd; border-color: #2196f3; border-left: 5px solid #2196f3;">
+                                <table class="table info-table table-condensed" style="margin-bottom: 0;">
+                                    <tr>
+                                        <th>Phone Number:</th>
+                                        <td id="modal-phone"></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Prescription Code:</th>
+                                        <td id="modal-prescription-code"></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Customer Type:</th>
+                                        <td>
+                                            <span id="modal-customer-type" class="label label-warning label-lg"></span>
+                                            <span id="modal-discount-text" class="text-success"></span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            
+                            <h5 style="color: #2196F3; margin-top: 20px; margin-bottom: 15px;">
+                                <i class="fa fa-pills"></i> Prescribed Medications
+                            </h5>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped table-condensed">
+                                    <thead style="background: #2196F3; color: white;">
+                                        <tr>
+                                            <th>Medicine</th>
+                                            <th width="10%">Qty</th>
+                                            <th>Dosage</th>
+                                            <th width="15%">Duration</th>
+                                            <th width="12%">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="modal-medications-list"></tbody>
+                                </table>
+                            </div>
+                            
+                            <p class="text-muted" style="margin-top: 10px;">
+                                <small><i class="fa fa-info-circle"></i> Total quantity = Quantity × Duration Days</small>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    <i class="fa fa-times"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-success btn-lg" id="convert-to-order-btn" style="display:none;">
+                    <i class="fa fa-shopping-cart"></i> Add to Cart
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="ajaxCall"><i class="fa fa-spinner fa-pulse"></i></div>
 <?php
 if (isset($print) && !empty($print)) {
@@ -2264,5 +2412,7 @@ if (isset($print) && !empty($print)) {
 }
 ?>
 <script type="text/javascript" src="<?= base_url('assets/custom/pos.js') ?>"></script>
+<!-- Wasfaty Integration Script -->
+<script type="text/javascript" src="<?= base_url('assets/js/wasfaty.js') ?>"></script>
 </body>
 </html>
