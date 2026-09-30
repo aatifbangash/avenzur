@@ -115,6 +115,9 @@ echo admin_form_open('reports/sales_per_invoice', $attrib);
                 <option value="all" <?= (isset($record_type) && $record_type == 'all') ? 'selected' : '' ?>>All</option>
                 <option value="sale" <?= (isset($record_type) && $record_type == 'sale') ? 'selected' : '' ?>>Sales Only</option>
                 <option value="return" <?= (isset($record_type) && $record_type == 'return') ? 'selected' : '' ?>>Returns Only</option>
+                <?php if (!empty($can_view_service_invoices)): ?>
+                <option value="service" <?= (isset($record_type) && $record_type == 'service') ? 'selected' : '' ?>>Service Invoices Only</option>
+                <?php endif; ?>
             </select>
         </div>
     </div>
@@ -184,7 +187,7 @@ echo admin_form_open('reports/sales_per_invoice', $attrib);
                                 </thead>
                                 <tbody>
                                     <?php foreach ($invoices as $invoice): ?>
-                                        <tr class="spinv-data-row <?= (isset($invoice->type) && $invoice->type == 'Return') ? 'return-row' : '' ?>">
+                                        <tr class="spinv-data-row <?= (isset($invoice->type) && $invoice->type == 'Return') ? 'return-row' : ((isset($invoice->type) && $invoice->type == 'Service') ? 'service-row' : '') ?>">
                                             <td><?= isset($invoice->type) ? $invoice->type : 'Sale' ?></td>
                                             <td><?= isset($invoice->date) ? date('d M y', strtotime($invoice->date)) : '' ?></td>
                                             <td><?= isset($invoice->sale_invoice_no) ? $invoice->sale_invoice_no : '' ?></td>
@@ -327,6 +330,12 @@ function exportToExcel() {
     }
     .return-row:hover {
         background-color: #ffe69c !important;
+    }
+    .service-row {
+        background-color: #e8f4fd !important;
+    }
+    .service-row:hover {
+        background-color: #d0e9fb !important;
     }
 </style>
 

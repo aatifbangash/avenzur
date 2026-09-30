@@ -9333,7 +9333,7 @@ class Reports_model extends CI_Model
         ];
     }
 
-    public function getSalesPerInvoice($start_date, $end_date, $customer_id = null, $pharmacy_id = null, $salesman_name = null, $record_type = 'all')
+    public function getSalesPerInvoice($start_date, $end_date, $customer_id = null, $pharmacy_id = null, $salesman_name = null, $record_type = 'all', $include_service_invoices = false)
     {
         // Build WHERE conditions for filtering
         $date_condition = "";
@@ -9456,10 +9456,59 @@ class Reports_model extends CI_Model
 
         $sql .= ")";
 
+        // Customer service invoices (sma_memo type=serviceinvoice) — restricted to privileged roles by the caller.
+        // Memos carry no warehouse, so they are skipped when a specific warehouse is selected.
+        $has_pharmacy = !empty($pharmacy_id) && $pharmacy_id !== '' && $pharmacy_id !== '0';
+        if ($include_service_invoices && !$has_pharmacy) {
+            $sql .= "
+            UNION ALL
+
+            (SELECT
+                'Service' as type,
+                m.date,
+                m.reference_no as sale_invoice_no,
+                '0' as return_inv_no,
+                COALESCE(c.state, '') as area,
+                m.customer_id as customer_no,
+                COALESCE(NULLIF(c.company, ''), c.name) as customer_name,
+                c.sales_agent as sales_man,
+                c.sequence_code as customer_sequence,
+                COALESCE(c.category, '') as category,
+                COALESCE(m.vat_value, 0) as vat,
+                0 as discount,
+                (COALESCE(m.payment_amount, 0) - COALESCE(m.vat_value, 0)) as sales,
+                (COALESCE(m.payment_amount, 0) - COALESCE(m.vat_value, 0)) as net_sales,
+                0 as cogs,
+                (COALESCE(m.payment_amount, 0) - COALESCE(m.vat_value, 0)) as profit,
+                0 as total_items,
+                COALESCE(m.payment_amount, 0) as receivable
+            FROM sma_memo m
+            LEFT JOIN sma_companies c ON c.id = m.customer_id
+            WHERE m.type = 'serviceinvoice'
+            AND m.customer_id > 0";
+
+            if ($start_date) {
+                $sql .= " AND m.date >= '{$start_date}'";
+            }
+            if ($end_date) {
+                $sql .= " AND m.date < DATE_ADD('{$end_date}', INTERVAL 1 DAY)";
+            }
+            if (!empty($customer_id) && $customer_id !== '' && $customer_id !== '0') {
+                $sql .= " AND m.customer_id = " . (int) $customer_id;
+            }
+            if (!empty($salesman_name)) {
+                $sql .= " AND c.sales_agent = '{$this->db->escape_str($salesman_name)}'";
+            }
+
+            $sql .= ")";
+        }
+
         if ($record_type === 'sale') {
             $sql = "SELECT * FROM ({$sql}) AS combined WHERE type = 'Sale' ORDER BY date DESC";
         } elseif ($record_type === 'return') {
             $sql = "SELECT * FROM ({$sql}) AS combined WHERE type = 'Return' ORDER BY date DESC";
+        } elseif ($record_type === 'service') {
+            $sql = "SELECT * FROM ({$sql}) AS combined WHERE type = 'Service' ORDER BY date DESC";
         } else {
             $sql = "SELECT * FROM ({$sql}) AS combined ORDER BY date DESC";
         }
