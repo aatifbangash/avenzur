@@ -172,11 +172,21 @@ $(document).ready(function (e) {
   }
 
   $("#rsewarehouse").change(function (e) {
+    // A return can only hold items from one warehouse: revert if items are already added
+    if (rseHasItems()) {
+      var locked = localStorage.getItem("rsewarehouse");
+      if (locked && $(this).val() != locked) {
+        $(this).select2("val", locked);
+        bootbox.alert("Warehouse cannot be changed after items are added. Remove all items first to change the warehouse.");
+        return;
+      }
+    }
     localStorage.setItem("rsewarehouse", $(this).val());
   });
   if ((rsewarehouse = localStorage.getItem("rsewarehouse"))) {
     $("#rsewarehouse").select2("val", rsewarehouse);
   }
+  rseToggleWarehouseLock();
 
   /*$('#rsesupplier').change(function (e) {
         localStorage.setItem('rsesupplier', $(this).val());
@@ -1869,6 +1879,27 @@ function loadItems() {
     }
     set_page_focus();
   }
+  rseToggleWarehouseLock();
+}
+
+/* -----------------------------
+ * Warehouse lock: once an item is added, the warehouse is fixed for this return
+ ---------------------------- */
+function rseHasItems() {
+  try {
+    var items = JSON.parse(localStorage.getItem("rseitems") || "{}");
+    return !!items && Object.keys(items).length > 0;
+  } catch (e) {
+    return false;
+  }
+}
+
+function rseToggleWarehouseLock() {
+  var $wh = $("#rsewarehouse");
+  if (!$wh.length) return;
+  var lock = rseHasItems();
+  $wh.select2("readonly", lock);
+  $wh.attr("title", lock ? "Warehouse is locked because items are added. Remove all items to change it." : "");
 }
 
 /* -----------------------------
